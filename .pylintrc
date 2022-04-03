@@ -1,0 +1,12 @@
+[MESSAGES CONTROL]
+
+disable=protected-access,no-self-use,abstract-method,arguments-renamed,arguments-differ,logging-fstring-interpolation
+
+enable=bad-indentation,line-too-long
+
+
+[FORMAT]
+
+indent-string='    '
+
+max-line-length=120
