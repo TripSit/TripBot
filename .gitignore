@@ -348,3 +348,24 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# Dont need to send my envionrment settings
+.env
+
+# Dont need to send my vscode settings
+.vscode/settings.json
+tripsit.code-workspace
+
+# Database stuff can be re-downloaded
+allDrugInfo.data
+allDrugInfo.json
+allDrugNames.data
+
+# "Personal" information that shouldnt be uploaded
+userdb.json
+
+# Ignore the examples folder
+examples/
+
+# Ignore venv
+venv/
