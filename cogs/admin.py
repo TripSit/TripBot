@@ -20,7 +20,7 @@ logger.addHandler(handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 PREFIX = "admin"
-my_guild = os.getenv('luna_guild_id')
+my_guild = os.getenv('dev_guild_id')
 ts_guild = os.getenv('tripsit_guild_id')
 guild_list = [my_guild]
 
@@ -143,7 +143,6 @@ class Admin(commands.Cog):
     #     if message.content.startswith(f'{PREFIX}svsnick'):
     #         await sandbox_channel.send("I would change someone's nickname on IRC now, but i dont know how!")
 
-    # @permissions.is_owner()
     # @slash_command(name = "blacklist",
     #     description = "Add to blacklist",
     #     guild_ids=guild_list)
@@ -153,7 +152,6 @@ class Admin(commands.Cog):
     #     '''
     #     await self.blacklist.put(object_id, True)
 
-    # @permissions.is_owner()
     # @slash_command(name = "whitelist",
     #     description = "Remove from blacklist",
     #     guild_ids=guild_list)

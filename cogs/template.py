@@ -20,7 +20,7 @@ logger.addHandler(handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 PREFIX = "template"
-my_guild = os.getenv('luna_guild_id')
+my_guild = os.getenv('dev_guild_id')
 ts_guild = os.getenv('tripsit_guild_id')
 guild_list = [my_guild, ts_guild]
 
@@ -33,7 +33,6 @@ class ModuleName(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @permissions.is_owner()
     @commands.cooldown(1, 5, commands.BucketType.user)
     @slash_command(name = "command_name",
         description = "description",
