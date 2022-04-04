@@ -19,7 +19,7 @@ logger.addHandler(handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 PREFIX = "TSAPI"
-my_guild = os.getenv('luna_guild_id')
+my_guild = os.getenv('dev_guild_id')
 ts_guild = os.getenv('tripsit_guild_id')
 guild_list = [my_guild, ts_guild]
 ICON_URL = 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png'
@@ -31,7 +31,6 @@ class TSAPI(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @permissions.is_owner()
     @slash_command(name = "refreshdb",
         description = "Gets all drugs, saves them to a file",
         guild_ids=guild_list)
@@ -53,6 +52,7 @@ class TSAPI(commands.Cog):
             pass
         finally:
             logger.info(output)
+            
         url = 'https://tripbot.tripsit.me/api/tripsit/getAllDrugs'
         response = requests.get(url)
         ts_data = response.json()["data"][0]

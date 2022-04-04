@@ -369,3 +369,4 @@ examples/
 
 # Ignore venv
 venv/
+userdb copy.json

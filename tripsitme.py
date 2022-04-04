@@ -36,6 +36,7 @@ initial_extensions = [
     "topic",
     "tsapi",
     "admin",
+    'tripsit',
     # "db",
     # "sopel",
 ]

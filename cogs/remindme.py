@@ -17,7 +17,7 @@ logger.addHandler(handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 PREFIX = "rmind"
-my_guild = os.getenv('luna_guild_id')
+my_guild = os.getenv('dev_guild_id')
 ts_guild = os.getenv('tripsit_guild_id')
 guild_list = [my_guild, ts_guild]
 TS_ICON = 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png'
@@ -32,7 +32,6 @@ class RemindMe(commands.Cog):
 
     # @commands.dm_only()
     @commands.cooldown(1, 5, commands.BucketType.user)  # the command can only be used once in 5 seconds
-    @permissions.is_owner()
     @slash_command(name = "remindme",
         description = "Set reminders",
         guild_ids=guild_list)
@@ -41,6 +40,10 @@ class RemindMe(commands.Cog):
         Function for setting reminders
         '''
         #TODO The entire remindme function
+        if ctx.author.id != 177537158419054592:
+            await ctx.respond('You need to be an admin to do this!')
+            return
+
         output = f"[{PREFIX}] {ctx.author.name}#{ctx.author.discriminator} activated"
         try:
             output = f"{output} on {ctx.guild.name}"

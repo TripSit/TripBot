@@ -19,7 +19,7 @@ logger.addHandler(handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 PREFIX = "idose"
-my_guild = os.getenv('luna_guild_id')
+my_guild = os.getenv('dev_guild_id')
 ts_guild = os.getenv('tripsit_guild_id')
 guild_list = [my_guild, ts_guild]
 TS_ICON = 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png'
@@ -41,7 +41,6 @@ class IDose(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @permissions.is_owner()
     @slash_command(name = "idosetest",
         description = "Log your dosages",
         guild_ids=guild_list)
@@ -63,17 +62,22 @@ class IDose(commands.Cog):
         '''
         Function to log your dosages
         '''
-        output = f"[{PREFIX}] {ctx.author.name}#{ctx.author.discriminator} activated"
+        if ctx.author.id != 177537158419054592:
+            await ctx.respond('You need to be an admin to do this!')
+            return
+
+        output = f"[{PREFIX}] activated by {ctx.author.name}#{ctx.author.discriminator} "
         try:
             output = f"{output} on {ctx.guild.name}"
         except AttributeError:
             pass
         finally:
             logger.info(output)
-        
+
         now = discord.utils.utcnow()
+        formatted_now = discord.utils.format_dt(now, style = "t")
         relative_now = discord.utils.format_dt(now, style = "R")
-        
+
         embed = discord.Embed(
             color = discord.Colour.random()
         )
@@ -83,7 +87,7 @@ class IDose(commands.Cog):
             icon_url = TS_ICON)
         embed.add_field(
             name= f"You dosed {volume} {unit} of {substance}",
-            value= f"{relative_now}",
+            value= f"{relative_now} at {formatted_now}",
             inline=False)
         await ctx.respond(embed=embed)
 
@@ -110,17 +114,18 @@ class IDose(commands.Cog):
         '''
         Function to log your dosages
         '''
-        output = f"{ctx.author.name}#{ctx.author.discriminator} activated {PREFIX}"
+        output = f"[{PREFIX}] activated by {ctx.author.name}#{ctx.author.discriminator} "
         try:
             output = f"{output} on {ctx.guild.name}"
         except AttributeError:
             pass
         finally:
             logger.info(output)
-        
+
         now = discord.utils.utcnow()
+        formatted_now = discord.utils.format_dt(now, style = "t")
         relative_now = discord.utils.format_dt(now, style = "R")
-        
+
         embed = discord.Embed(
             color = discord.Colour.random()
         )
@@ -130,7 +135,7 @@ class IDose(commands.Cog):
             icon_url = TS_ICON)
         embed.add_field(
             name= f"You dosed {volume} {unit} of {substance}",
-            value= f"{relative_now}",
+            value= f"{relative_now} at {formatted_now}",
             inline=False)
         await ctx.respond(embed=embed)
 

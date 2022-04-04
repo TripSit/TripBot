@@ -17,12 +17,12 @@ logger.addHandler(handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 PREFIX = "topic"
-my_guild = os.getenv('luna_guild_id')
-ts_guild = os.getenv('tripsit_guild_id')
-guild_list = [my_guild, ts_guild]
+DEV_GUILD_ID = os.getenv('dev_guild_id')
+TRIPSIT_GUILD_ID = os.getenv('tripsit_guild_id')
+guild_list = [DEV_GUILD_ID, TRIPSIT_GUILD_ID]
 TS_ICON = 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png'
-WELCOME_CHANNEL_ID = 538811092084850708
-SANDBOX_CHANNEL_ID = 551898502335299599
+TRIPSIT_WELCOME_CHANNEL_ID = os.getenv('tripsit_welcome_channel')
+DEV_WELCOME_CHANNEL_ID = os.getenv('tripsit_welcome_channel')
 
 # https://docs.pycord.dev/en/master/faq.html#how-do-i-send-a-dm
 
@@ -34,14 +34,28 @@ class Topic(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_member_join(self, ctx):
+    async def on_member_join(self, member):
         '''
         When someone joins
         '''
-        logger.info(f"[{PREFIX}] {ctx.member.name} has joined {ctx.guild.name}")
-        welcome_channel = self.get_channel(id=SANDBOX_CHANNEL_ID)
-        await welcome_channel.send(rtopic())
+        if member.guild.id == TRIPSIT_GUILD_ID:
+            logger.info(f"[{PREFIX}] {member} has joined {member.guild}")
+
+            embed = discord.Embed(
+                color = discord.Colour.random()
+            )
+            embed.set_author(
+                name="TripSit.Me",
+                url="http://www.tripsit.me",
+                icon_url = TS_ICON)
+            embed.add_field(
+                name=f"Welcome to {member.guild}, {member}!",
+                value= rtopic(),
+                inline=False)
+            welcome_channel = self.bot.get_channel(TRIPSIT_WELCOME_CHANNEL_ID)
+            await welcome_channel.send(embed=embed)
         return
+
 
     @slash_command(name = "topic",
         description = "Random Topic",
@@ -70,7 +84,6 @@ class Topic(commands.Cog):
             value= rtopic(),
             inline=False)
         await ctx.respond(embed=embed)
-
 
 def rtopic():
     '''Returns a random karma quote'''

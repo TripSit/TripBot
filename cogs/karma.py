@@ -23,7 +23,7 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 
 PREFIX = "karma"
 TS_ICON = 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png'
-my_guild = os.getenv('luna_guild_id')
+my_guild = os.getenv('dev_guild_id')
 ts_guild = os.getenv('tripsit_guild_id')
 guild_list = [my_guild, ts_guild]
 
@@ -35,7 +35,6 @@ class Karma(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @permissions.is_owner()
     @slash_command(name = "karma",
         description = "Karma module",
         guild_ids=guild_list)
