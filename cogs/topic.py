@@ -17,12 +17,13 @@ logger.addHandler(handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 PREFIX = "topic"
-DEV_GUILD_ID = os.getenv('dev_guild_id')
-TRIPSIT_GUILD_ID = os.getenv('tripsit_guild_id')
-guild_list = [DEV_GUILD_ID, TRIPSIT_GUILD_ID]
+GUILD_ID_DEV = os.getenv('GUILD_ID_DEV')
+GUILD_ID_PRD = os.getenv('GUILD_ID_PRD')
+guild_list = [GUILD_ID_DEV, GUILD_ID_PRD]
 TS_ICON = 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png'
-TRIPSIT_WELCOME_CHANNEL_ID = os.getenv('tripsit_welcome_channel')
-DEV_WELCOME_CHANNEL_ID = os.getenv('tripsit_welcome_channel')
+CHANNEL_WELCOME_PRD = os.getenv('CHANNEL_WELCOME_PRD')
+CHANNEL_WELCOME_DEV = os.getenv('CHANNEL_WELCOME_PRD')
+CHANNEL_WELCOME_ID = int(CHANNEL_WELCOME_PRD)
 
 # https://docs.pycord.dev/en/master/faq.html#how-do-i-send-a-dm
 
@@ -38,7 +39,7 @@ class Topic(commands.Cog):
         '''
         When someone joins
         '''
-        if member.guild.id == TRIPSIT_GUILD_ID:
+        if member.guild.id == GUILD_ID_PRD:
             logger.info(f"[{PREFIX}] {member} has joined {member.guild}")
 
             embed = discord.Embed(
@@ -52,7 +53,9 @@ class Topic(commands.Cog):
                 name=f"Welcome to {member.guild}, {member}!",
                 value= rtopic(),
                 inline=False)
-            welcome_channel = self.bot.get_channel(TRIPSIT_WELCOME_CHANNEL_ID)
+            welcome_channel = self.bot.get_channel(CHANNEL_WELCOME_ID)
+            await welcome_channel.send(embed=embed)
+            welcome_channel = self.bot.get_channel(CHANNEL_WELCOME_DEV)
             await welcome_channel.send(embed=embed)
         return
 

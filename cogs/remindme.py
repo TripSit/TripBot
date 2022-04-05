@@ -5,8 +5,7 @@ import logging
 import discord
 from discord.ext import commands
 from discord.commands import (
-    slash_command,
-    permissions
+    slash_command
 )
 
 logger = logging.getLogger(__file__)
@@ -17,8 +16,8 @@ logger.addHandler(handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 PREFIX = "rmind"
-my_guild = os.getenv('dev_guild_id')
-ts_guild = os.getenv('tripsit_guild_id')
+my_guild = os.getenv('GUILD_ID_DEV')
+ts_guild = os.getenv('GUILD_ID_PRD')
 guild_list = [my_guild, ts_guild]
 TS_ICON = 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png'
 
@@ -32,6 +31,7 @@ class RemindMe(commands.Cog):
 
     # @commands.dm_only()
     @commands.cooldown(1, 5, commands.BucketType.user)  # the command can only be used once in 5 seconds
+    @commands.is_owner()
     @slash_command(name = "remindme",
         description = "Set reminders",
         guild_ids=guild_list)

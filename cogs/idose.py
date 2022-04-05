@@ -7,7 +7,6 @@ import discord
 from discord.ext import commands
 from discord.commands import (
     slash_command,
-    permissions,
     Option
 )
 
@@ -19,8 +18,8 @@ logger.addHandler(handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 PREFIX = "idose"
-my_guild = os.getenv('dev_guild_id')
-ts_guild = os.getenv('tripsit_guild_id')
+my_guild = os.getenv('GUILD_ID_DEV')
+ts_guild = os.getenv('GUILD_ID_PRD')
 guild_list = [my_guild, ts_guild]
 TS_ICON = 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png'
 with open('allDrugNames.data', 'rb') as filehandle:
@@ -44,6 +43,7 @@ class IDose(commands.Cog):
     @slash_command(name = "idosetest",
         description = "Log your dosages",
         guild_ids=guild_list)
+    @commands.is_owner()
     async def idosetest(
         self,
         ctx,

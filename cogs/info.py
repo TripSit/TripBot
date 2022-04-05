@@ -72,7 +72,9 @@ class Info(commands.Cog):
             pass
         finally:
             logger.info(output)
+        logger.debug(f"[{PREFIX}] parameters: {substance} {view}")
         wiki_url = f"https://wiki.tripsit.me/wiki/{substance}"
+
         # We now store the TS Database locally so we don't need to call the server for every request!
         # url = f'https://tripbot.tripsit.me/api/tripsit/getDrug?name={substance}'
         # response = requests.get(url)

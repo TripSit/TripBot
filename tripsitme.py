@@ -8,7 +8,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 load_dotenv() # load all the variables from the env file
 my_guild = os.getenv('luna_guild_id')
-ts_guild = os.getenv('tripsit_guild_id')
+ts_guild = os.getenv('GUILD_ID_TRIPSIT')
 guild_list = [my_guild, ts_guild]
 
 logger = logging.getLogger(__file__)
@@ -28,15 +28,15 @@ initial_extensions = [
     "combo",
     "contact",
     "hydrate",
-    "idose",
+    "idose",    # PM only
     "info",
     "kipp",
-    "remindme",
-    "karma",
+    "remindme", # in dev
+    "karma",    # tripsit only
     "topic",
-    "tsapi",
-    "admin",
-    'tripsit',
+    "tsapi",    # admin only
+    "admin",    # admin only
+    'tripsit',  # tripsit only
     # "db",
     # "sopel",
 ]
@@ -47,11 +47,11 @@ class MyDiscordClient(discord.Bot):
     '''
     def __init__(self):
         intents = discord.Intents(
-            guilds=True,    # In case i need to ban a guild
-            members=True,   # To grab member information like their ID
-            bans=True,      # To ban users via command from IRC
-            emojis=True,    # To use emojis
-            reactions=True, # For the karma module
+            guilds=True,        # In case i need to ban a guild
+            members=True,       # To grab member information like their ID
+            bans=True,          # To ban users via command from IRC
+            emojis=True,        # To use emojis
+            reactions=True,     # For the karma module
             voice_states=False,
             messages=False,
         )
@@ -110,6 +110,8 @@ class MyDiscordClient(discord.Bot):
         if not hasattr(self, 'uptime'):
             self.uptime = discord.utils.utcnow()
         logger.info(f'[{PREFIX}] Ready: {self.user} (ID: {self.user.id})')
+        info = await discord.Bot.application_info(self)
+        logger.info(info)
 
     async def on_command_error(self, ctx, error):
         '''
@@ -148,6 +150,11 @@ class MyDiscordClient(discord.Bot):
             await ctx.respond(error)
         elif isinstance(error, commands.CommandOnCooldown):
             await ctx.respond("This command is currently on cooldown.")
+        elif isinstance(error, commands.MissingPermissions):
+            await ctx.respond(error)
+        elif isinstance(error, commands.NotOwner):
+            print(error)
+            await ctx.respond(error)
         else:
             raise error  # raise other errors so they aren't ignored
 
@@ -155,7 +162,7 @@ class MyDiscordClient(discord.Bot):
         '''
         Starting self!
         '''
-        super().run(os.getenv('tripsitme'), reconnect=True)
+        super().run(os.getenv('TRIPSITMEBOT'), reconnect=True)
         # finally:
         #     with open('prev_events.log', 'w', encoding='utf-8') as log_file:
         #         for data in self._prev_events:

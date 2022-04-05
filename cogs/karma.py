@@ -8,7 +8,6 @@ import discord
 from discord.ext import commands, pages
 from discord.commands import (
     slash_command,
-    permissions,
     Option
 )
 
@@ -23,8 +22,8 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 
 PREFIX = "karma"
 TS_ICON = 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png'
-my_guild = os.getenv('dev_guild_id')
-ts_guild = os.getenv('tripsit_guild_id')
+my_guild = os.getenv('GUILD_ID_DEV')
+ts_guild = os.getenv('GUILD_ID_PRD')
 guild_list = [my_guild, ts_guild]
 
 

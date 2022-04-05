@@ -1,5 +1,4 @@
 '''A module made by Moonbear of Tripsit'''
-from random import choices
 import sys
 import logging
 from discord.ext import commands
