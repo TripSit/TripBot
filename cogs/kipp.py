@@ -46,15 +46,17 @@ class KIPP(commands.Cog):
             '🙂','😆','😋','😛','🙃','😜','🤪','😝','🤗','🤭',
             '😎','😺','😸','😹','😻','👍','✌']
 
-        output = f'{"".join(random.sample(happy_emojis,10))}\n\n' + \
-                '💜Keep It Positive Please!💜\n\n' + \
-                f'{"".join(random.sample(happy_emojis,10))}'
+        emoji_line_a = f'{"".join(random.sample(happy_emojis,10))}'
+        emoji_line_b = f'{"".join(random.sample(happy_emojis,10))}'
+
+        output = '\n💜Keep It Positive Please!💜\n\n' + \
+                f'{emoji_line_b}'
 
         embed = discord.Embed(
             color = discord.Colour.blue()
         )
         embed.add_field(
-            name="<3",
+            name = f"{emoji_line_a}",
             value= output,
             inline=False)
         await ctx.respond(embed=embed)

@@ -7,8 +7,7 @@ import pickle
 import requests
 from discord.ext import commands
 from discord.commands import (
-    slash_command,
-    permissions
+    slash_command
 )
 
 logger = logging.getLogger(__file__)
@@ -19,8 +18,8 @@ logger.addHandler(handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 PREFIX = "TSAPI"
-my_guild = os.getenv('dev_guild_id')
-ts_guild = os.getenv('tripsit_guild_id')
+my_guild = os.getenv('GUILD_ID_DEV')
+ts_guild = os.getenv('GUILD_ID_PRD')
 guild_list = [my_guild, ts_guild]
 ICON_URL = 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png'
 
@@ -34,6 +33,7 @@ class TSAPI(commands.Cog):
     @slash_command(name = "refreshdb",
         description = "Gets all drugs, saves them to a file",
         guild_ids=guild_list)
+    @commands.is_owner()
     async def refreshdb(
         self,
         ctx,
@@ -41,10 +41,6 @@ class TSAPI(commands.Cog):
         '''
         This will make a .txt file
         '''
-        if ctx.author.id != 177537158419054592:
-            await ctx.respond('You need to be an admin to do this!')
-            return
-
         output = f"[{PREFIX}] {ctx.author.name}#{ctx.author.discriminator} activated"
         try:
             output = f"{output} on {ctx.guild.name}"
@@ -52,7 +48,7 @@ class TSAPI(commands.Cog):
             pass
         finally:
             logger.info(output)
-            
+
         url = 'https://tripbot.tripsit.me/api/tripsit/getAllDrugs'
         response = requests.get(url)
         ts_data = response.json()["data"][0]

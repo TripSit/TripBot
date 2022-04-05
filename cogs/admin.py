@@ -8,7 +8,6 @@ import discord
 from discord.ext import commands
 from discord.commands import (
     slash_command,
-    permissions,
     Option
 )
 
@@ -20,8 +19,8 @@ logger.addHandler(handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 PREFIX = "admin"
-my_guild = os.getenv('dev_guild_id')
-ts_guild = os.getenv('tripsit_guild_id')
+my_guild = os.getenv('GUILD_ID_DEV')
+ts_guild = os.getenv('GUILD_ID_PRD')
 guild_list = [my_guild]
 
 class Admin(commands.Cog):
@@ -33,11 +32,6 @@ class Admin(commands.Cog):
         self._last_result = None
         self.sessions = set()
 
-    @slash_command(name = "admin",
-        description = "Handles modules",
-        guild_ids=guild_list
-        )
-
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
         '''
@@ -48,6 +42,11 @@ class Admin(commands.Cog):
         #     logger.info(f'[{PREFIX}] GuildID: {guild.id} is banned, leaving!')
         #     await guild.leave()
 
+    @slash_command(name = "admin",
+        description = "Handles modules",
+        guild_ids=guild_list
+        )
+    @commands.is_owner()
     async def admin(
         self,
         ctx,
@@ -90,7 +89,7 @@ class Admin(commands.Cog):
             pass
         finally:
             logger.info(output)
-        
+
         if task == "Reload":
             # Reloads a module.
             try:
