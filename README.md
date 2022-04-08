@@ -14,30 +14,30 @@ The methods in which we will do this:
 Discuss features/issues you'd like to see taken care of in this thread!
 
 Current features:
-/about
-/breathe
-/combo DrugA DrugB (Now with autocomplete!)
-/contact
-/hydrate
-/info Substance  : Summary | Properties | Everything
-/kipp
-/topic
-/idose - Remind yourself, in private, when you last dosed
-/karma - Records the emojis you've given and received
-/tripsit USER ON/OFF - This command will give the NeedsHelp role and remove all other roles.
+* /about
+* /breathe
+* /combo DrugA DrugB (Now with autocomplete!)
+* /contact
+* /hydrate
+* /info Substance  : Summary | Properties | Everything
+* /kipp
+* /topic
+* /idose - Remind yourself, in private, when you last dosed
+* /karma - Records the emojis you've given and received
+* /tripsit USER ON/OFF - This command will give the NeedsHelp role and remove all other roles.
 It basically forces the user to look at #tripsit
 This can only be done by Tripsitters+
 
 Planned MVP Feature Priority:
 
 Planned Extra Feature Priority:
-/report USER - Much like the IRC, sends a message to the moderation room
-/remindme - Set reminders for yourself in the future
-/qadd Quote
+* /report USER - Much like the IRC, sends a message to the moderation room
+* /remindme - Set reminders for yourself in the future
+* /qadd Quote
 
 Fix Priority:
-Nothing right now!
+* Nothing right now!
 
 Denied Features:
-Rainbow Role  - Changing the role color every few seconds: Discord would want to murder me for abusing the API.
-Karma++ - This would require the Messages privilege, and discord doesn't give out this permission lightly. Instead, the idea is to react with an emoji to show your support! We can try to use the :ts_up: as good karma and the :reddit_downvote:  as bad 
+* Rainbow Role  - Changing the role color every few seconds: Discord would want to murder me for abusing the API.
+* Karma++ - This would require the Messages privilege, and discord doesn't give out this permission lightly. Instead, the idea is to react with an emoji to show your support! We can try to use the :ts_up: as good karma and the :reddit_downvote:  as bad 
