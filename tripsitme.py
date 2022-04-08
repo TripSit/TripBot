@@ -14,7 +14,7 @@ guild_list = [my_guild, ts_guild]
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
 logger.addHandler(handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
@@ -110,8 +110,8 @@ class MyDiscordClient(discord.Bot):
         if not hasattr(self, 'uptime'):
             self.uptime = discord.utils.utcnow()
         logger.info(f'[{PREFIX}] Ready: {self.user} (ID: {self.user.id})')
-        info = await discord.Bot.application_info(self)
-        logger.info(info)
+        # info = await discord.Bot.application_info(self)
+        # logger.info(info)
 
     async def on_command_error(self, ctx, error):
         '''

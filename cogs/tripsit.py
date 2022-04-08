@@ -22,30 +22,31 @@ PREFIX = "trpst"
 GUILD_ID_PRD = os.getenv('GUILD_ID_PRD')
 GUILD_ID_DEV = os.getenv('GUILD_ID_DEV')
 GUILD_ID = GUILD_ID_PRD
-GUILD_LIST = [GUILD_ID_PRD, GUILD_ID_DEV]
+GUILD_LIST = [GUILD_ID_PRD]
 
-CHANNEL_TRIPSIT_DEV =   int(os.getenv('CHANNEL_TRIPSIT_DEV'))
+PRODUCTION = True
+
 CHANNEL_TRIPSIT_PRD =   int(os.getenv('CHANNEL_TRIPSIT_PRD'))
-CHANNEL_SANDBOX_PRD =   int(os.getenv('CHANNEL_SANDBOX_PRD'))
-CHANNEL_SANDBOX_DEV =   int(os.getenv('CHANNEL_SANDBOX_DEV'))
-CHANNEL_TRIPSITME_PRD = int(os.getenv('CHANNEL_TRIPSITME_PRD'))
-CHANNEL_TRIPSIT_ID = CHANNEL_TRIPSIT_PRD
+# CHANNEL_TRIPSIT_DEV =   int(os.getenv('CHANNEL_TRIPSIT_DEV'))
+CHANNEL_TRIPSIT_ID = CHANNEL_TRIPSIT_PRD# if PRODUCTION else CHANNEL_TRIPSIT_DEV
 
 CHANNEL_TRIPSITTERS_PRD = int(os.getenv('CHANNEL_TRIPSITTERS_PRD'))
-CHANNEL_TRIPSITTERS_ID = CHANNEL_TRIPSITTERS_PRD
+# CHANNEL_TRIPSITTERS_DEV = int(os.getenv('CHANNEL_TRIPSITTERS_DEV'))
+CHANNEL_TRIPSITTERS_ID = CHANNEL_TRIPSITTERS_PRD# if PRODUCTION else CHANNEL_TRIPSITTERS_DEV
 
-ROLE_NEEDSHELP_DEV = int(os.getenv('ROLE_NEEDSHELP_DEV'))
 ROLE_NEEDSHELP_PRD = int(os.getenv('ROLE_NEEDSHELP_PRD'))
-NEEDSHELP_ROLE_ID = ROLE_NEEDSHELP_PRD
+# ROLE_NEEDSHELP_DEV = int(os.getenv('ROLE_NEEDSHELP_DEV'))
+NEEDSHELP_ROLE_ID = ROLE_NEEDSHELP_PRD# if PRODUCTION else ROLE_NEEDSHELP_DEV
 
 ROLE_TRIPSITTER_PRD = int(os.getenv('ROLE_TRIPSITTER_PRD'))
 ROLE_TRIPSITTER_DEV = int(os.getenv('ROLE_TRIPSITTER_DEV'))
-ROLE_TRIPSITTER_ID = ROLE_TRIPSITTER_PRD
+ROLE_TRIPSITTER_ID = ROLE_TRIPSITTER_PRD if PRODUCTION else ROLE_TRIPSITTER_DEV
 
 ROLE_HELPER_PRD = int(os.getenv('ROLE_HELPER_PRD'))
-ROLE_HELPER_ID = ROLE_HELPER_PRD
+ROLE_HELPER_DEV = int(os.getenv('ROLE_HELPER_DEV'))
+ROLE_HELPER_ID = ROLE_HELPER_PRD if PRODUCTION else ROLE_HELPER_DEV
 
-DATABASE_NAME = 'userdb copy.json'
+DATABASE_NAME = 'userdb.json'
 
 TS_ICON = 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png'
 
@@ -65,12 +66,17 @@ class Tripsit(commands.Cog):
         '''Create the view that will be used to listen for events'''
         def __init__(self):
             super().__init__(timeout=None) # timeout of the view must be set to None
-            # self.bot = bot
 
         @discord.ui.button(
             label="Click here if you need assistance!",
             custom_id="danger-1",
             style=discord.ButtonStyle.danger,
+        )
+
+        @discord.ui.button(
+            label="All good? Click here!",
+            custom_id="danger-2",
+            style=discord.ButtonStyle.primary,
         )
 
         async def button_callback(self, button, interaction):
@@ -98,37 +104,8 @@ class Tripsit(commands.Cog):
                     embed=embed,
                     ephemeral=True)
             if not member_already_needs_help:
-                # with open(DATABASE_NAME, 'r', encoding='UTF-8') as file:
-                #     all_data = json.load(file)
-                # if str(patientid) in all_data.keys():
-                #     patient_data = all_data[str(patientid)]
-                # else:
-                #     patient_data = {}
-
-                # member_role_list = []
-                # for each in member_roles:
-                #     mod_roles = ["Admin", "Operator", "Moderator", "Tripsitter"]
-                #     if each.name in mod_roles:
-                #         await interaction.response.send_message(f"Check your user! {member.name} is a mod!",
-                #     ephemeral=True)
-                #         return
-                #     member_role_list.append(each.id)
-                # # logger.debug(f"patient_data: {patient_data}")
-                # patient_data['roles'] = member_role_list
-                # # logger.debug(f"patient_data: {patient_data}")
-                # all_data[patientid] = patient_data
-                # with open(DATABASE_NAME, 'w', encoding='UTF-8') as file:
-                #     json.dump(all_data, file, indent=4)
-
-                # for each in member_roles:
-                #     if each.name == "@everyone":
-                #         continue
-                #     role = guild.get_role(int(each.id))
-                #     logger.debug(f"role: {role}")
-                #     await member.remove_roles(role)
-
-                needshelp_role = guild.get_role(NEEDSHELP_ROLE_ID)
-                await member.add_roles(needshelp_role)
+                # needshelp_role = guild.get_role(NEEDSHELP_ROLE_ID)
+                # await member.add_roles(needshelp_role)
 
                 tripsitter_role = guild.get_role(ROLE_TRIPSITTER_ID)
                 helper_role = guild.get_role(ROLE_HELPER_ID)
@@ -203,17 +180,17 @@ use this thread to talk about it!"
     async def button(self, ctx):
         '''Creates a button to be clicked in the #tripsit room'''
         await ctx.respond("Welcome to the TripSit room!\n\n\
-Right now this room is not actively monitored by TripSit staff.\n\n\
+**Right now this room is not actively monitored by TripSit staff.**\n\n\
 **If you need assistance please go to  https://chat.tripsit.me to find our IRC channels!**\n\n\
-If you don't need immediate assistance you can click the button below to create a new thread here and \
-the community may come around to help!\
-", view=Tripsit.MyView())
+If you're okay with things being slower you can click the button below:\n\n\
+This will create a new thread and alert our team that you need assistance, and the community may come to help!\n\n\
+For general questions/advice try the #drug-questions room!", view=Tripsit.MyView())
 
     @slash_command(name = "tripsit",
         description = "description",
         guild_ids=GUILD_LIST)
     # @commands.has_any_role("Admin", "Operator", "Moderator", "Tripsitter")
-    @commands.has_any_role(185175683184590849, 955818629654523914)
+    @commands.has_any_role(327619241953984513, 956960918640656457)
     async def tripsit(
         self,
         ctx,

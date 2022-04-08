@@ -19,14 +19,14 @@ handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(me
 logger.addHandler(handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
-PREFIX = "template"
+PREFIX = "reprt"
 GUILD_ID_DEV = os.getenv('GUILD_ID_DEV')
 GUILD_ID_PRD = os.getenv('GUILD_ID_PRD')
 GUILD_LIST = [GUILD_ID_DEV, GUILD_ID_PRD]
 
 TS_ICON = 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png'
 
-class ModuleName(commands.Cog):
+class Report(commands.Cog):
     '''
     Records when you've dosed
     '''
@@ -35,29 +35,14 @@ class ModuleName(commands.Cog):
         with open('userdb.json', 'r', encoding='UTF-8') as file:
             all_data = json.load(file)
 
-    @commands.Cog.listener()
-    async def on_guild_join(self, guild):
-        '''
-        Check if you're in a banned guild and leave
-        '''
-        logger.info(f"I have joined {guild}!")
-        if guild.id in self.blacklist_guilds:
-            logger.info(f'[{PREFIX}] GuildID: {guild.id} is banned, leaving!')
-            await guild.leave()
-
-    
     @slash_command(
         name = "test",
         aliases = ["testing"],
         usage = "test <id>",
         description = "Does stuff",
         guild_ids=GUILD_LIST)
-    @commands.cooldown(1, 5, commands.BucketType.user)
-    @commands.is_owner()
     async def test(self, ctx):
-        '''
-        Description
-        '''
+        '''Reports a user for something silly'''
         output = f"[{PREFIX}] started by {ctx.author.name}#{ctx.author.discriminator}"
         try:
             output = f"{output} on {ctx.guild.name}"
