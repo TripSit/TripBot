@@ -34,13 +34,8 @@ class TSAPI(commands.Cog):
         description = "Gets all drugs, saves them to a file",
         guild_ids=guild_list)
     @commands.is_owner()
-    async def refreshdb(
-        self,
-        ctx,
-    ):
-        '''
-        This will make a .txt file
-        '''
+    async def refreshdb(self, ctx):
+        '''This will make a .json file'''
         output = f"[{PREFIX}] {ctx.author.name}#{ctx.author.discriminator} activated"
         try:
             output = f"{output} on {ctx.guild.name}"
@@ -48,7 +43,6 @@ class TSAPI(commands.Cog):
             pass
         finally:
             logger.info(output)
-
         url = 'https://tripbot.tripsit.me/api/tripsit/getAllDrugs'
         response = requests.get(url)
         ts_data = response.json()["data"][0]
