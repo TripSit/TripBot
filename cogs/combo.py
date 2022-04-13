@@ -1,8 +1,9 @@
 '''A module made by Moonbear of Tripsit'''
 import sys
 import logging
-import pickle
+import json
 import requests
+from thefuzz import process
 import discord
 from discord.ext import commands
 from discord.commands import (
@@ -20,13 +21,38 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 PREFIX = "combo"
 TS_ICON = 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png'
 DISCLAIMER = "Please dose responsibly, this info does not replace talking with a medical professional."
-with open('allDrugNames.data', 'rb') as filehandle:
-    # read the data as binary data stream
-    ALL_DRUG_NAMES = pickle.load(filehandle)
+with open('allDrugData.json', 'r', encoding='UTF-8') as filehandle:
+    ALL_DRUG_DATA = json.load(filehandle)
 
-async def drug_search(ctx: discord.AutocompleteContext):
+# For each dictionary in the ALL_DRUG_DATA JSON file, find the "name" key and add it to a list
+ALL_DRUG_NAMES = [drug["name"] for drug in ALL_DRUG_DATA]
+# logger.debug(f'[{PREFIX}] ALL_DRUG_NAMES: {ALL_DRUG_NAMES}")
+
+TOP_PSYCHS = ["Cannabis", "MDMA", "LSD", "DMT", "Mushrooms"]
+TOP_DISSOS = ["Zolpidem", "Ketamine", "DXM", "PCP", "Salvia"]
+TOP_OPIATE = ["Alcohol", "Hydrocodone", "Oxycodone", "Tramadol", "Heroin"]
+TOP_BENZOS = ["Alprazolam", "Clonazepam", "Diazepam", "Lorazepam", "Flunitrazepam"]
+TOP_SPEEDS = ["Nicotine", "Amphetamine", "Cocaine", "Methamphetamine", "Methylphenidate"]
+TOP_DRUGS  = TOP_PSYCHS + TOP_DISSOS + TOP_OPIATE + TOP_BENZOS + TOP_SPEEDS
+# logger.debug(f'[{PREFIX}] TOP_DRUGS: {TOP_DRUGS}")
+
+for each_drug in TOP_DRUGS:
+    try:
+        ALL_DRUG_NAMES.remove(each_drug)
+        # logger.debug(f'[{PREFIX}] Removed {each_drug} from ALL_DRUG_NAMES")
+    except ValueError:
+        continue
+
+FINAL_DRUG_LIST = TOP_DRUGS + ALL_DRUG_NAMES
+# logger.debug(f'[{PREFIX}] FINAL_DRUG_LIST: {FINAL_DRUG_LIST}")
+
+async def drug_searcher(ctx: discord.AutocompleteContext):
     """Returns a list of drugs that begin with the characters entered so far."""
-    return [drugname for drugname in ALL_DRUG_NAMES if drugname.startswith(ctx.value.lower())]
+    # return [drugname for drugname in FINAL_DRUG_LIST if drugname.startswith(ctx.value)]
+    if ctx.value != "":
+        return [result[0] for result in process.extract(ctx.value, FINAL_DRUG_LIST)]
+    else:
+        return FINAL_DRUG_LIST
 
 class Combo(commands.Cog):
     '''
