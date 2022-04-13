@@ -59,7 +59,7 @@ async def drug_searcher(ctx: discord.AutocompleteContext):
         return FINAL_DRUG_LIST
 
 
-class Info(commands.Cog):
+class Test(commands.Cog):
     '''
     TODO
     '''
@@ -67,10 +67,11 @@ class Info(commands.Cog):
         self.bot = bot
 
     @slash_command(
-        name = "info",
+        name = "test",
         description = "Lookup substance information!",
         guild_ids=GUILD_LIST)
-    async def info(
+    @commands.is_owner()
+    async def test(
         self,
         ctx,
         substance: Option(
@@ -481,7 +482,7 @@ def setup(bot):
     Note: You must still "bot.load_extension("cogs.external")" in the main file!
     '''
     # logger.debug(f'[{PREFIX}] Starting!')
-    bot.add_cog(Info(bot))
+    bot.add_cog(Test(bot))
 
 def teardown():
     '''Shutdown function'''

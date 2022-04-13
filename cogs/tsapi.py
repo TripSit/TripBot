@@ -72,8 +72,13 @@ class TSAPI(commands.Cog):
                 continue
         final_drug_list = top_25_drugs + drug_names
 
-        with open('allDrugNames.data', mode='wb') as file:
-            pickle.dump(final_drug_list, file)
+        # take the final drug list and make a list of objects with Name as the key
+        js_drug_list = []
+        for each_drug in final_drug_list:
+            my_dict = {}
+            dict["Name"] = each_drug
+            js_drug_list.append(my_dict)
+        # write the list to a file
         await ctx.respond("Got all drugs names!")
 
 def setup(bot):
