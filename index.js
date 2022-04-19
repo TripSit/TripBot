@@ -7,8 +7,9 @@ const winston = require('winston');
 const PREFIX = require('path').parse(__filename).name;
 
 // Check if we're in production and if not, use the .env file
-const production = process.env.NODE_ENV === 'production';
+const production = process.env.production === 'true';
 if (!production) {
+    console.debug(`[${PREFIX}] Using .env file`);
     require('dotenv').config();
 }
 
@@ -102,6 +103,7 @@ const logger = winston.createLogger({
         winston.format.padLevels({ levels: logLevels }),
         winston.format.timestamp(),
         winston.format.printf(info => `${info.timestamp} ${info.level}:${info.message} ${info.stack ? `\n${info.stack}` : ''}`),
+        winston.format.printf(info => `${!production ? `${info.timestamp}` : ''} ${info.level}:${info.message} ${info.stack ? `\n${info.stack}` : ''}`),
     ),
     level: 'debug',
 });
