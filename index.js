@@ -37,21 +37,20 @@ const commands = [];
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
-    const command = require(`../src/commands/${file}`);
+    const command = require(`./src/commands/${file}`);
     commands.push(command.data.toJSON());
     client.commands.set(command.data.name, command);
+
 }
 const rest = new REST({ version: '9' }).setToken(token);
-if (production) {
-    rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands })
-        .then(() => logger.info(`[${PREFIX}] Successfully registered application commands on TripSit Prod!`))
-        .catch(console.error);
-}
+rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands })
+    .then(() => logger.info(`[${PREFIX}] Successfully registered application commands on ${guildId}!`))
+    .catch(console.error);
 
 // Set up events
 const eventFiles = fs.readdirSync('./src/events').filter(file => file.endsWith('.js'));
 for (const file of eventFiles) {
-    const event = require(`./events/${file}`);
+    const event = require(`./src/events/${file}`);
     if (event.once) {
         client.once(event.name, (...args) => event.execute(...args, logger));
     }
