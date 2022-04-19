@@ -1,0 +1,47 @@
+{
+  "name": "tripsit-discord",
+  "version": "1.0.0",
+  "description": "A bot for TripSit",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "nodemon --ignore src/assets/ src/index.js",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx ./",
+    "fix": "eslint --fix --ext .js,.jsx,.ts,.tsx ./",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TripSit/tripbot-discord-js.git"
+  },
+  "keywords": [
+    "Harm",
+    "Reduction",
+    "Bot"
+  ],
+  "author": "Moonbear",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TripSit/tripbot-discord-js/issues"
+  },
+  "homepage": "https://github.com/TripSit/tripbot-discord-js#readme",
+  "dependencies": {
+    "@discordjs/builders": "^0.12.0",
+    "@discordjs/rest": "^0.3.0",
+    "chalk": "4.1.2",
+    "discord-api-types": "^0.31.1",
+    "discord.js": "^13.6.0",
+    "discordjs-button-pagination": "^3.0.1",
+    "dotenv": "^16.0.0",
+    "fuse.js": "^6.5.3",
+    "lodash": "^4.17.19",
+    "winston": "^3.7.2"
+  },
+  "devDependencies": {
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^7.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-prettier": "^3.3.0",
+    "prettier": "^2.2.1"
+  }
+}
