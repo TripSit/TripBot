@@ -7,7 +7,6 @@ const {
     TRIPSITME2BOT_CLIENTID,
     GUILD_ID_DEV,
     TRIPSITME2BOT,
-
 } = require('./data/config.json');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
