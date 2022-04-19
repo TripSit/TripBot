@@ -1,0 +1,52 @@
+const { SlashCommandBuilder } = require('@discordjs/builders');
+const { MessageEmbed } = require('discord.js');
+const { TS_ICON } = require('../data/config.json');
+const PREFIX = require('path').parse(__filename).name;
+const fs = require('fs');
+
+const db_name = 'ts_data.json';
+const rawdata = fs.readFileSync(`./src/data/${db_name}`);
+const ts_data = JSON.parse(rawdata);
+const blacklist_users = ts_data.blacklist.users;
+
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('uunban')
+        .setDescription('Bans a user from the bot')
+        .addStringOption(option => option.setName('user').setDescription('The user to ban')),
+    async execute(interaction, logger) {
+        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
+        const channel = interaction.channel.name;
+        const guild = interaction.guild.name;
+        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
+
+        const userID = interaction.options.getString('user');
+        logger.debug(`[${PREFIX}] userID: ${userID}`);
+
+        // if userID is in black_list user, remove it, and save the new json file
+        if (blacklist_users.includes(userID)) {
+            blacklist_users.splice(blacklist_users.indexOf(userID), 1);
+            logger.debug(`[${PREFIX}] blacklist_users: ${blacklist_users}`);
+            ts_data.blacklist.users = blacklist_users;
+            fs.writeFileSync(`./src/data/${db_name}`, JSON.stringify(ts_data));
+            const embed = new MessageEmbed()
+                .setAuthor({ name: 'TripSit.Me', iconURL: TS_ICON, url: 'http://www.tripsit.me' })
+                .setColor('RED')
+                .setTitle('User Unbanned')
+                .addFields(
+                    { name: 'User ID', value: userID },
+                );
+            return interaction.reply({ embeds: [embed] });
+        }
+        if (!blacklist_users.includes(userID)) {
+            const embed = new MessageEmbed()
+                .setAuthor({ name: 'TripSit.Me', iconURL: TS_ICON, url: 'http://www.tripsit.me' })
+                .setColor('GREEN')
+                .setTitle('User Not Banned')
+                .addFields(
+                    { name: 'User ID', value: userID },
+                );
+            return interaction.reply({ embeds: [embed] });
+        }
+    },
+};

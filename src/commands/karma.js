@@ -1,339 +1,122 @@
-'''A module made by Moonbear of Tripsit'''
-import os
-import sys
-import logging
-import random
-import json
-import discord
-from discord.ext import commands, pages
-from discord.commands import (
-    slash_command,
-    Option
-)
+const fs = require('node:fs');
+const { SlashCommandBuilder } = require('@discordjs/builders');
+const { MessageEmbed, MessageButton } = require('discord.js');
+const {
+    TS_ICON,
+} = require('../data/config.json');
+const paginationEmbed = require('discordjs-button-pagination');
+const PREFIX = require('path').parse(__filename).name;
 
-logger = logging.getLogger(__file__)
-logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-logger.addHandler(handler)
-logger.addHandler(logging.StreamHandler(sys.stdout))
+const button1 = new MessageButton()
+    .setCustomId('previousbtn')
+    .setLabel('Previous')
+    .setStyle('DANGER');
 
-# For most intents and purposes: "karma" is synonymous with "emoji" or "reaction"
+const button2 = new MessageButton()
+    .setCustomId('nextbtn')
+    .setLabel('Next')
+    .setStyle('SUCCESS');
+const buttonList = [
+    button1,
+    button2,
+];
 
-PREFIX = "karma"
-TS_ICON = 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png'
-my_guild = os.getenv('GUILD_ID_DEV')
-ts_guild = os.getenv('GUILD_ID_PRD')
-guild_list = [my_guild, ts_guild]
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('karma')
+        .setDescription('Keep it positive please!')
+        .addUserOption(option =>
+            option.setName('user')
+                .setDescription('User to lookup!')
+            ,
+        ),
+    async execute(interaction, logger) {
+        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
+        const channel = interaction.channel.name;
+        const guild = interaction.guild.name;
+        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
 
+        let patient = interaction.options.getMember('user');
+        // let user_provided = true;
+        // Default to the user who invoked the command if no user is provided
+        if (!patient) {
+            logger.debug(`[${PREFIX}] No user provided, defaulting to ${interaction.member}`);
+            patient = interaction.member;
+            // user_provided = false;
+        }
 
-class Karma(commands.Cog):
-    '''
-    Keep it positive please =)
-    '''
-    def __init__(self, bot):
-        self.bot = bot
+        const patientid = patient.id.toString();
+        logger.debug(`[${PREFIX}] patientid: ${patientid}`);
 
-    @slash_command(name = "karma",
-        description = "Karma module",
-        guild_ids=guild_list)
-    async def karma(
-        self,
-        ctx,
-        user: Option(
-            discord.Member,
-            "Member to look up",
-        )
-    ):
-        '''
-        View emojis sent, received and other stats!
-        '''
-        #TODO all of this
-        output = f"[{PREFIX}] activated by {ctx.author.name}#{ctx.author.discriminator}"
-        try:
-            output = f"{output} on {ctx.guild.name}"
-        except AttributeError:
-            pass
-        finally:
-            logger.info(output)
-        try:
-            member = ctx.guild.get_member_named(user)
-        except TypeError:
-            member = user
+        const db_name = 'ts_data.json';
+        const RAW_TS_DATA = fs.readFileSync(`./src/data/${db_name}`);
+        const ALL_TS_DATA = JSON.parse(RAW_TS_DATA);
+        // logger.debug(`[${PREFIX}] ALL_TS_DATA: ${JSON.stringify(ALL_TS_DATA, null, 4)}`);
 
-        logger.debug(f"member: {member}")
+        let patientData = ALL_TS_DATA['users'][patientid];
+        logger.debug(`[${PREFIX}] patientData: ${JSON.stringify(patientData, null, 4)}`);
 
-        memberid = str(member.id)
-        logger.debug(f"memberid: {memberid}")
+        // Check if the patient data exists, if not create a blank one
+        if (!patientData) {
+            patientData = {
+                'name': patient.user.username,
+                'discriminator': patient.user.discriminator,
+                'roles': [],
+                'karma_given': {},
+                'karma_received': {},
+            };
+        }
 
-        with open('userdb.json', 'r', encoding='UTF-8') as file:
-            all_data = json.load(file)
+        const karma_received = patientData['karma_received'];
+        let karma_received_string = '';
+        if (karma_received) {
+            karma_received_string = Object.entries(karma_received).map(([key, value]) => `${value}: ${key}`).join('\n');
+        }
+        else {
+            karma_received_string = 'Nothing, they are a blank canvas to be discovered!';
+        }
 
-        if memberid in all_data.keys():
-            actor_data = all_data[memberid]
-        else:
-            actor_data = {}
-        logger.debug(f"actor_data: {actor_data}")
+        const karma_given = patientData['karma_given'];
+        let karma_given_string = '';
+        if (karma_given) {
+            karma_given_string = Object.entries(karma_given).map(([key, value]) => `${value}: ${key}`).join('\n');
+        }
+        else {
+            karma_given_string = 'Nothing, they are a wet paintbrush ready to make their mark!';
+        }
 
-        if "karma_given" in actor_data.keys():
-            karma_given = actor_data["karma_given"]
-        else:
-            karma_given = {}
-        logger.debug(f"karma_given: {karma_given}")
+        const book = [];
+        const karma_received_embed = new MessageEmbed()
+            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: TS_ICON })
+            .setColor('RANDOM')
+            .setTitle(`${patient.user.username}'s Karma Received`)
+            .setDescription(`${karma_received_string}\n\n${random_karma_quote()}`);
+        book.push(karma_received_embed);
 
-        if "karma_received" in actor_data.keys():
-            karma_received = actor_data["karma_received"]
-        else:
-            karma_received = {}
-        logger.debug(f"karma_received: {karma_received}")
+        const karma_given_embed = new MessageEmbed()
+            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: TS_ICON })
+            .setColor('RANDOM')
+            .setTitle(`${patient.user.username}'s Karma Given`)
+            .setDescription(`${karma_given_string}\n\n${random_karma_quote()}`);
+        book.push(karma_given_embed);
 
-        if len(karma_given) > 1024:
-            logger.debug(f"[{PREFIX}] {karma_given} is too large at {str(len(karma_given))}")
-            return
+        if (book.length > 0) {
+            paginationEmbed(interaction, book, buttonList);
+            return;
+        }
+        else {
+            const embed = new MessageEmbed()
+                .setColor('RANDOM')
+                .setDescription('Done!');
+            return interaction.reply({ embeds: [embed] });
+        }
 
-        if len(karma_received) > 1024:
-            logger.debug(f"[{PREFIX}] {karma_received} is too large at {str(len(karma_received))}")
-            return
-
-        if len(karma_given) == 0:
-            karma_given = "Nothing, they are a paintbrush ready to make their mark!"
-        if len(karma_received) == 0:
-            karma_received = "Nothing, they are a blank canvas to be discovered!"
-
-        # '''╔ ═ ║ ╚'''
-        # test = '''```
-        # 123456789012345678901234567890123456789012345678901234
-        # 123456789012345678901234567890123456789012345678901234
-        # 123456789012345678901234567890123456789012345678901234
-        # 123456789012345678901234567890123456789012345678901234
-        # ```'''
-
-        book = []
-
-        rec_output = ""
-        if isinstance(karma_received, dict):
-            rec_key_col = 0
-            rec_val_col = 0
-            for key, val in karma_received.items():
-                if len(key) > rec_key_col:
-                    rec_key_col = len(key)
-                if len(str(val)) > rec_val_col:
-                    rec_val_col = len(str(val))
-
-            rec_format = "{:>" + str(rec_val_col) + "}x{:<" + str(rec_key_col) + "}"
-            for key, value in karma_received.items():
-                rec_output = f"{rec_output}{rec_format.format(value, key)}\n"
-        else:
-            rec_output = karma_received
-
-        embed = discord.Embed(
-            color = discord.Colour.random()
-        )
-        embed.set_author(
-            name="TripSit.Me",
-            url="http://www.tripsit.me",
-            icon_url = TS_ICON)
-        embed.add_field(
-            name=f"{user} has received:",
-            value= rec_output,
-            inline=False)
-        embed.set_footer(
-            text = kquote())
-        book.append(embed)
+    },
+};
 
 
-        giv_output = ""
-        if isinstance(karma_given, dict):
-            giv_key_col = 0
-            giv_val_col = 0
-            for key, val in karma_given.items():
-                if len(key) > giv_key_col:
-                    giv_key_col = len(key)
-                if len(str(val)) > giv_val_col:
-                    giv_val_col = len(str(val))
-            giv_format = "{:>" + str(giv_val_col) + "}x{:<" + str(giv_key_col) + "}"
-            for key, value in karma_given.items():
-                giv_output = f"{giv_output}{giv_format.format(value, key)}\n"
-        else:
-            giv_output = karma_given
-
-        embed = discord.Embed(
-            color = discord.Colour.random()
-        )
-        embed.set_author(
-            name="TripSit.Me",
-            url="http://www.tripsit.me",
-            icon_url = TS_ICON)
-        embed.add_field(
-            name=f"{user} has given:",
-            value= giv_output,
-            inline=False)
-        embed.set_footer(
-            text = kquote())
-        book.append(embed)
-
-        paginator = pages.Paginator(pages=book)
-        await paginator.respond(ctx.interaction, ephemeral=False)
-
-    def handle_karma(self, actor, action, emoji, target):
-        '''Handles DB changes from karma modifications'''
-        # output = f"[{PREFIX}] {actor} {action} {emoji} on {target}"
-        # logger.debug(output)
-
-        with open('userdb.json', 'r', encoding='UTF-8') as file:
-            all_data = json.load(file)
-        # logger.debug(f"all_data: {all_data}")
-
-        # logger.debug(f"all_data.keys(): {all_data.keys()}")
-
-        # For Actor
-        actor = str(actor)
-        # logger.debug(f"actor: {actor}")
-
-        if actor in all_data.keys():
-            actor_data = all_data[actor]
-        else:
-            actor_data = {}
-        # logger.debug(f"actor_data: {actor_data}")
-
-        if "karma_given" in actor_data.keys():
-            karma_data = actor_data["karma_given"]
-        else:
-            karma_data = {}
-        # logger.debug(f"karma_data: {karma_data}")
-
-        if emoji in karma_data.keys():
-            emoji_uses = karma_data[emoji]
-        else:
-            emoji_uses = 0
-        # logger.debug(f"emoji_uses: {emoji_uses}")
-
-        if action == "added":
-            emoji_uses += 1
-        else:
-            emoji_uses -= 1
-        # logger.debug(f"emoji_uses: {emoji_uses}")
-
-        karma_data[emoji] = emoji_uses
-        actor_data["karma_given"] = karma_data
-        all_data[actor] = actor_data
-
-        # For Target
-        target = str(target)
-        # logger.debug(f"target: {target}")
-        if target in all_data.keys():
-            target_data = all_data[target]
-        else:
-            target_data = {}
-        # logger.debug(f"target_data: {target_data}")
-
-        if "karma_received" in target_data.keys():
-            karma_data = target_data["karma_received"]
-        else:
-            karma_data = {}
-        # logger.debug(f"karma_received: {karma_data}")
-
-        if emoji in karma_data.keys():
-            emoji_uses = karma_data[emoji]
-        else:
-            emoji_uses = 0
-        # logger.debug(f"emoji_uses: {emoji_uses}")
-
-        if action == "added":
-            emoji_uses += 1
-        else:
-            emoji_uses -= 1
-        # logger.debug(f"emoji_uses: {emoji_uses}")
-
-        karma_data[emoji] = emoji_uses
-        target_data["karma_received"] = karma_data
-        all_data[target] = target_data
-
-        with open('userdb.json', 'w', encoding='UTF-8') as file:
-            json.dump(all_data, file)
-
-    @commands.Cog.listener()
-    async def on_raw_reaction_add(self, ctx):
-        '''
-        <RawReactionActionEvent
-            message_id=int
-            user_id=int
-            channel_id=int
-            guild_id=int
-            emoji=<PartialEmoji
-                animated=bool
-                name='emoji'
-                id=None>
-            event_type='REACTION_ADD'
-            member=<Member
-                id=int
-                name='str'
-                discriminator='int'
-                bot=False
-                nick='str'
-                guild=<Guild
-                    id=int
-                    name='str'
-                    shard_id=None
-                    chunked=False
-                    member_count=int
-                >
-            >
-        >
-        '''
-        guild = ctx.member.guild.name
-        actor = ctx.member
-        action = "added"
-        emoji = ctx.emoji
-        channel = self.bot.get_channel(int(ctx.channel_id))
-        message = await channel.fetch_message(ctx.message_id)
-        target = message.author
-
-        if actor == target:
-            # output = "[karma] Users cannot give themselves awards so ignoring this!"
-            return
-
-        output = f"[{PREFIX}] {actor} {action} {emoji} on {target} in {channel} from {guild}"
-        logger.info(output)
-        self.handle_karma(actor.id, action, emoji.name, target.id)
-
-    @commands.Cog.listener()
-    async def on_raw_reaction_remove(self, ctx):
-        '''
-        <RawReactionActionEvent
-            message_id=int
-            user_id=int
-            channel_id=int
-            guild_id=int
-            emoji=<PartialEmoji
-                animated=bool
-                name='emoji'
-                id=None>
-            event_type='REACTION_REMOVE'
-            member=None
-        >
-        '''
-        guild = self.bot.get_guild(ctx.guild_id)
-        actor = await guild.fetch_member(ctx.user_id)
-        action = "remov"
-        emoji = ctx.emoji
-        channel = self.bot.get_channel(int(ctx.channel_id))
-        message = await channel.fetch_message(ctx.message_id)
-        target = message.author
-
-        if actor == target:
-            output = "[karma] Users cannot take awards from themselves so ignoring this!"
-            return
-
-        output = f"[{PREFIX}] {actor} {action} {emoji} on {target} in {channel} from {guild}"
-        logger.info(output)
-        self.handle_karma(actor.id, action, emoji.name, target.id)
-
-
-def kquote():
-    '''Returns a random karma quote'''
-    # pylint: disable=line-too-long
-    karma_quotes = [
+function random_karma_quote() {
+    const quotes = [
         '1. “A boomerang returns back to the person who throws it.” – Vera Nazarian',
         '2. “A man is born alone and dies alone; and he experiences the good and bad consequences of his karma alone; and he goes alone to hell or the Supreme abode.” — Chanakya',
         '3. “According to the karma of past actions, one’s destiny unfolds, even though everyone wants to be so lucky.” – Sri Guru Grant Sahib',
@@ -552,17 +335,8 @@ def kquote():
         '216. “You must acknowledge and experience this part of the universe. Karma is intricate, too vast. You would, with your limited human senses, consider it too unfair. But you have tools to really, truly love. Loving the children is very important. But love everyone as you would love your children.” – Kuan Yin',
         '217. “You win some, you lose some, let Karma take its course.” – Cocoy McCoy',
         '218. “Your believing or not believing in karma has no effect on its existence, nor on its consequences to you. Just as a refusal to believe in the ocean would not prevent you from drowning.” — F. Paul Wilson',
-        '219. 166. Karma grows from our hearts. Karma terminates from our hearts. – Gautama Buddha'    ]
-    return random.choice(karma_quotes)
-
-def setup(bot):
-    '''
-    This registers this file into to the bot.
-    Note: You must still "bot.load_extension("cogs.external")" in the main file!
-    '''
-    logger.debug(f"[{PREFIX}] Starting!")
-    bot.add_cog(Karma(bot))
-
-def teardown():
-    '''Shutdown function'''
-    logger.debug(f"[{PREFIX}] Stopping!")
+        '219. "Karma grows from our hearts. Karma terminates from our hearts." – Gautama Buddha',
+    ];
+    // Return a random quote
+    return quotes[Math.floor(Math.random() * quotes.length)];
+}
