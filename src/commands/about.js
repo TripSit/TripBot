@@ -6,8 +6,8 @@ const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
-const TS_ICON = process.env.TS_ICON;
-const DISCLAIMER = process.env.DISCLAIMER;
+const ts_icon_url = process.env.ts_icon_url;
+const disclaimer = process.env.disclaimer;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -23,7 +23,7 @@ module.exports = {
         const embed = new MessageEmbed()
             .setAuthor({
                 name: 'TripSit.Me',
-                iconURL: TS_ICON,
+                iconURL: ts_icon_url,
                 url: 'http://www.tripsit.me',
             })
             .setColor('DARK_BLUE')
@@ -35,7 +35,7 @@ module.exports = {
             )
             .addFields(
                 {
-                    name: 'Disclaimer',
+                    name: 'disclaimer',
                     value: 'Although we have a team dedicated to keeping the information on this app up to date, it is not \
                 always possible to provide entirely accurate information on the safety level of drugs. The \
                 information here should be used as guidelines only, and it is important to do your own research from \
@@ -58,7 +58,7 @@ module.exports = {
                     value: 'If you want to add this bot to your server, click the link here: <TBD>',
                 },
             )
-            .setFooter({ text: DISCLAIMER, iconURL: TS_ICON });
+            .setFooter({ text: disclaimer, iconURL: ts_icon_url });
         return interaction.reply({ embeds: [embed] });
     },
 };

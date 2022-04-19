@@ -6,7 +6,7 @@ const fs = require('fs');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
-const TS_ICON = process.env.TS_ICON;
+const ts_icon_url = process.env.ts_icon_url;
 
 const db_name = 'ts_data.json';
 const rawdata = fs.readFileSync(`./src/data/${db_name}`);
@@ -34,7 +34,7 @@ module.exports = {
             ts_data.blacklist.guilds = blacklist_guilds;
             fs.writeFileSync(`./src/data/${db_name}`, JSON.stringify(ts_data));
             const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me', iconURL: TS_ICON, url: 'http://www.tripsit.me' })
+                .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
                 .setColor('RED')
                 .setTitle('Guild Banned')
                 .addFields(
@@ -45,7 +45,7 @@ module.exports = {
 
         if (blacklist_guilds.includes(guildID)) {
             const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me', iconURL: TS_ICON, url: 'http://www.tripsit.me' })
+                .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
                 .setColor('GREEN')
                 .setTitle('Guild Already Banned')
                 .addFields(

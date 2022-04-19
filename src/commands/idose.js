@@ -3,8 +3,8 @@ const { MessageEmbed } = require('discord.js');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
-const TS_ICON = process.env.TS_ICON;
-const DISCLAIMER = process.env.DISCLAIMER;
+const ts_icon_url = process.env.ts_icon_url;
+const disclaimer = process.env.disclaimer;
 
 const PREFIX = require('path').parse(__filename).name;
 
@@ -56,7 +56,7 @@ module.exports = {
         const relative = time(date, 'R');
 
         const embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me', iconURL: TS_ICON, url: 'http://www.tripsit.me' })
+            .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
             .setColor('DARK_BLUE')
             .addFields(
                 {
@@ -64,7 +64,7 @@ module.exports = {
                     value: `${relative} at ${timeString}`,
                 },
             )
-            .setFooter({ text: DISCLAIMER, iconURL: TS_ICON });
+            .setFooter({ text: disclaimer, iconURL: ts_icon_url });
         return interaction.reply({ embeds: [embed] });
     },
 };

@@ -4,19 +4,14 @@ const { MessageEmbed } = require('discord.js');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
-const TS_ICON = process.env.TS_ICON;
-const ROLE_NEEDSHELP_PRD = process.env.ROLE_NEEDSHELP_PRD;
-const ROLE_NEEDSHELP_DEV = process.env.ROLE_NEEDSHELP_DEV;
+const ts_icon_url = process.env.ts_icon_url;
+const role_needshelp = process.env.role_needshelp;
 
 const PREFIX = require('path').parse(__filename).name;
 
 const db_name = 'ts_data.json';
 const RAW_TS_DATA = fs.readFileSync(`./src/data/${db_name}`);
 const ALL_TS_DATA = JSON.parse(RAW_TS_DATA);
-
-const DEVELOPMENT = true;
-
-const ROLE_NEEDSHELP_ID = DEVELOPMENT ? ROLE_NEEDSHELP_DEV : ROLE_NEEDSHELP_PRD;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -60,7 +55,7 @@ module.exports = {
         const patientRoleNames = patientRoles.map(role => role.name);
         logger.debug(`[${PREFIX}] userRoles: ${patientRoleNames}`);
 
-        const needsHelpRole = interaction.guild.roles.cache.find(role => role.id === ROLE_NEEDSHELP_ID);
+        const needsHelpRole = interaction.guild.roles.cache.find(role => role.id === role_needshelp);
 
         // Loop through userRoles and check if the patient has the needsHelp role
         const hasNeedsHelpRole = patientRoleNames.some(role => role === needsHelpRole.name);
@@ -72,9 +67,9 @@ module.exports = {
         if (enable == 'On') {
             if (hasNeedsHelpRole) {
                 const embed = new MessageEmbed()
-                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: TS_ICON })
+                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                     .setColor('DARK_BLUE')
-                    .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: TS_ICON });
+                    .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_icon_url });
                 if (user_provided) {embed.setDescription(`Hey ${interaction.member}, ${patient.user.username} is already being helped!\n\nCheck your channel list for '${patient.user.username} discuss here!'`);}
                 else {embed.setDescription(`Hey ${interaction.member}, you're already being helped!\n\nCheck your channel list for '${patient.user.username} chat here!'`);}
                 logger.debug(`[${PREFIX}] Patient ${patient} is already being helped!`);
@@ -101,10 +96,10 @@ module.exports = {
                 patientRoleNames.forEach(role => {
                     if (role === 'Admin' || role === 'Operator' || role === 'Moderator' || role === 'Tripsitter') {
                         const embed = new MessageEmbed()
-                            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: TS_ICON })
+                            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                             .setColor('DARK_BLUE')
                             .setDescription('This user is a member of the team and cannot be helped!')
-                            .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: TS_ICON });
+                            .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_icon_url });
                         return interaction.reply({ embeds: [embed] });
                     }
                 });
@@ -133,9 +128,9 @@ module.exports = {
                 logger.debug(`[${PREFIX}] Adding role ${needsHelpRole.name} to ${patient.user.username}`);
                 patient.roles.add(needsHelpRole);
                 const embed = new MessageEmbed()
-                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: TS_ICON })
+                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                     .setColor('DARK_BLUE')
-                    .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: TS_ICON });
+                    .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_icon_url });
                 if (user_provided) {embed.setDescription(`Hey ${interaction.member}, Thanks for the heads up, we'll be helping ${patient.user.username} shortly!\n\nCheck your channel list for '${patient.user.username} discuss here!'`);}
                 else {embed.setDescription(`Hey ${interaction.member}, thanks for reaching out!\n\nCheck your channel list for '${patient.user.username} chat here!'`);}
                 logger.debug(`[${PREFIX}] Patient ${patient} is now being helped!`);
@@ -167,9 +162,9 @@ module.exports = {
                 logger.debug(`[${PREFIX}] ${output}`);
                 await patient.roles.remove(needsHelpRole);
                 const embed = new MessageEmbed()
-                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: TS_ICON })
+                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                     .setColor('DARK_BLUE')
-                    .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: TS_ICON });
+                    .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_icon_url });
                 if (user_provided) {embed.setDescription(`Hey ${interaction.member}, we're glad ${patient.user.username} is feeling better, we've restored their old roles!`);}
                 else {embed.setDescription(`Hey ${interaction.member}, we're glad you're feeling better, we've restored your old roles, happy chatting!`);}
                 logger.debug(`[${PREFIX}] Patient ${patient} is no longer being helped!`);
@@ -177,9 +172,9 @@ module.exports = {
             }
             else {
                 const embed = new MessageEmbed()
-                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: TS_ICON })
+                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                     .setColor('DARK_BLUE')
-                    .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: TS_ICON });
+                    .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_icon_url });
                 if (user_provided) {embed.setDescription(`Hey ${interaction.member}, ${patient.user.username} isnt currently being taken care of!`);}
                 else {embed.setDescription(`Hey ${interaction.member}, you're not currently being taken care of!`);}
                 logger.debug(`[${PREFIX}] Patient ${patient} does not need help!`);
