@@ -4,8 +4,8 @@
   "description": "A bot for TripSit",
   "main": "index.js",
   "scripts": {
-    "start": "node ./index.js",
-    "dev": "nodemon --ignore src/assets/ node ./index.js",
+    "start": "node ./src/index.js",
+    "dev": "nodemon --ignore src/assets/ node ./src/index.js",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx ./",
     "fix": "eslint --fix --ext .js,.jsx,.ts,.tsx ./",
     "test": "echo \"Error: no test specified\" && exit 1"
