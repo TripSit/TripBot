@@ -1,0 +1,16 @@
+runtime: nodejs16
+env_variables:
+  production: true
+  ts_icon_url: https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png
+  disclaimer: Please dose responsibly, this info does not replace talking with a medical professional.
+  ownerId: 177537158419054592
+  clientid: 957780726806380545
+  token: OTU3NzgwNzI2ODA2MzgwNTQ1.YkDwzw.7tsQGr9p76_9LrL57hXbY8amoj0
+  guildId: 179641883222474752
+  channel_welcome: 538811092084850708
+  channel_sandbox: 943599582921756732
+  channel_tripsit: 955834628881653791
+  channel_tripsitters: 955831869549719573
+  role_needshelp: 955853983287754782
+  role_tripsitter: 327619241953984513
+  role_helper: 956960918640656457
