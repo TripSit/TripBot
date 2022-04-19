@@ -5,8 +5,8 @@ const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
-const TS_ICON = process.env.TS_ICON;
-const DISCLAIMER = process.env.DISCLAIMER;
+const ts_icon_url = process.env.ts_icon_url;
+const disclaimer = process.env.disclaimer;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -27,7 +27,7 @@ module.exports = {
 
         const embed = new MessageEmbed()
             .setColor('DARK_BLUE')
-            .setAuthor({ name: 'TripSit.Me', iconURL: TS_ICON, url: 'http://www.tripsit.me' })
+            .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
             .setThumbnail('https://i.imgur.com/AfFp7pu.png')
             .setTitle('About TripSit')
             .setURL('https://tripsit.me/about/')
@@ -36,7 +36,7 @@ module.exports = {
                 { name: 'String', value: 'string' },
                 // { name: 'User', value: user },
             )
-            .setFooter({ text: DISCLAIMER, iconURL: TS_ICON });
+            .setFooter({ text: disclaimer, iconURL: ts_icon_url });
         return interaction.reply({ embeds: [embed] });
     },
 };

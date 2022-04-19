@@ -351,3 +351,4 @@ MigrationBackup/
 .env
 examples/
 src/data/
+.env production

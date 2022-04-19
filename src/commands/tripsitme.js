@@ -3,18 +3,13 @@ const { MessageEmbed } = require('discord.js');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
-const TS_ICON = process.env.TS_ICON;
-const CHANNEL_TRIPSITTERS_PRD = process.env.CHANNEL_TRIPSITTERS_PRD;
-const CHANNEL_TRIPSITTERS_DEV = process.env.CHANNEL_TRIPSITTERS_DEV;
-const ROLE_NEEDSHELP_PRD = process.env.ROLE_NEEDSHELP_PRD;
-const ROLE_NEEDSHELP_DEV = process.env.ROLE_NEEDSHELP_DEV;
-const ROLE_TRIPSITTER_PRD = process.env.ROLE_TRIPSITTER_PRD;
-const ROLE_TRIPSITTER_DEV = process.env.ROLE_TRIPSITTER_DEV;
-const ROLE_HELPER_PRD = process.env.ROLE_HELPER_PRD;
-const ROLE_HELPER_DEV = process.env.ROLE_HELPER_DEV;
+const ts_icon_url = process.env.ts_icon_url;
+const channel_tripsitters = process.env.channel_tripsitters;
+const role_needshelp = process.env.role_needshelp;
+const role_tripsitter = process.env.role_tripsitter;
+const role_helper = process.env.role_helper;
 
 const PREFIX = require('path').parse(__filename).name;
-
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -39,12 +34,9 @@ module.exports = {
         const patientRoleNames = patientRoles.map(role => role.name);
         logger.debug(`[${PREFIX}] userRoles: ${patientRoleNames}`);
 
-        const ROLE_NEEDSHELP_ID = DEVELOPMENT ? ROLE_NEEDSHELP_DEV : ROLE_NEEDSHELP_PRD;
-        const needsHelpRole = interaction.guild.roles.cache.find(role => role.id === ROLE_NEEDSHELP_ID);
-        const ROLE_TRIPSITTER_ID = DEVELOPMENT ? ROLE_TRIPSITTER_DEV : ROLE_TRIPSITTER_PRD;
-        const tripsitterRole = interaction.guild.roles.cache.find(role => role.id === ROLE_TRIPSITTER_ID);
-        const ROLE_HELPER_ID = DEVELOPMENT ? ROLE_HELPER_DEV : ROLE_HELPER_PRD;
-        const helperRole = interaction.guild.roles.cache.find(role => role.id === ROLE_HELPER_ID);
+        const needsHelpRole = interaction.guild.roles.cache.find(role => role.id === role_needshelp);
+        const tripsitterRole = interaction.guild.roles.cache.find(role => role.id === role_tripsitter);
+        const helperRole = interaction.guild.roles.cache.find(role => role.id === role_helper);
 
         // Loop through userRoles and check if the patient has the needsHelp role
         const hasNeedsHelpRole = patientRoleNames.some(role => role === needsHelpRole.name);
@@ -55,10 +47,10 @@ module.exports = {
 
         if (hasNeedsHelpRole) {
             const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: TS_ICON })
+                .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                 .setColor('DARK_BLUE')
                 .setDescription(`Hey ${interaction.member}, you're already being helped!\n\nCheck your channel list for '${patient.user.username} chat here!'`)
-                .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: TS_ICON });
+                .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_icon_url });
             logger.debug(`[${PREFIX}] Done!`);
             return interaction.reply({ embeds: [embed], ephemeral: true });
         }
@@ -66,10 +58,10 @@ module.exports = {
             const msg = `Hey ${patient}, thank you for asking for assistance!\n\n\
             Check your channel list for '${patient.user.username} chat here!'`;
             const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: TS_ICON })
+                .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                 .setColor('DARK_BLUE')
                 .setDescription(msg)
-                .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: TS_ICON });
+                .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_icon_url });
             logger.debug(`[${PREFIX}] Done!`);
 
             interaction.reply({ embeds: [embed], ephemeral: true });
@@ -90,8 +82,7 @@ module.exports = {
 
 
             // Get the tripsitters channel from the guild
-            const CHANNEL_TRIPSITTERS_ID = DEVELOPMENT ? CHANNEL_TRIPSITTERS_DEV : CHANNEL_TRIPSITTERS_PRD;
-            const tripsittersChannel = interaction.guild.channels.cache.find(chan => chan.id === CHANNEL_TRIPSITTERS_ID);
+            const tripsittersChannel = interaction.guild.channels.cache.find(chan => chan.id === channel_tripsitters);
 
             // Create a new thread in the interaction.channel with the patient's name and the priv_message as the startMessage
             const helper_thread = await tripsittersChannel.threads.create({

@@ -12,8 +12,8 @@ const combo_defs = JSON.parse(raw_combo_data);
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
-const TS_ICON = process.env.TS_ICON;
-const DISCLAIMER = process.env.DISCLAIMER;
+const ts_icon_url = process.env.ts_icon_url;
+const disclaimer = process.env.disclaimer;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -46,9 +46,9 @@ module.exports = {
                 if (allDrugData[i]['name'] == drug_a) {
                     logger.debug(`[${PREFIX}] Found drug_a: ${drug_a}`);
                     const embed = new MessageEmbed()
-                        .setAuthor({ name: 'TripSit.Me', iconURL: TS_ICON, url: 'http://www.tripsit.me' })
+                        .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
                         .setTitle(`${drug_a} and ${drug_b} combined:`)
-                        .setFooter({ text: DISCLAIMER, iconURL: TS_ICON });
+                        .setFooter({ text: disclaimer, iconURL: ts_icon_url });
                     if (allDrugData[i]['interactions']) {
                         let result = '';
                         for (let j = 0; j < allDrugData[i]['interactions'].length; j++) {

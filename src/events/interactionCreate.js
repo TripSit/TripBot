@@ -4,9 +4,8 @@ const Fuse = require('fuse.js');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
-const MOONBEARID = process.env.MOONBEARID;
-const GUILD_ID_PRD = process.env.GUILD_ID_PRD;
-const GUILD_ID_DEV = process.env.GUILD_ID_DEV;
+const ownerId = process.env.ownerId;
+const guildId = process.env.guildId;
 
 const cooldown = new Set();
 // /This is 1 minute, you can change it to whatever value
@@ -108,7 +107,7 @@ module.exports = {
         }
 
         // Cooldown logic
-        if (interaction.user.id !== MOONBEARID) {
+        if (interaction.user.id !== ownerId) {
             if (cooldown.has(interaction.user.id)) {
             // / If the cooldown did not end
                 interaction.reply({ content: 'Don\'t be a coconut ( ͡° ͜ʖ ͡°)', ephemeral: true });
@@ -139,7 +138,7 @@ module.exports = {
         const commands_pm = ['idose'];
 
         // Check if the command is in commands_admin list and then check to see if the user is moonbear
-        if (commands_admin.includes(commandName) && interaction.user.id !== MOONBEARID) {
+        if (commands_admin.includes(commandName) && interaction.user.id !== ownerId) {
             interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
             return;
         }
@@ -147,9 +146,8 @@ module.exports = {
         // Check if the command is in the commands_tripsit list and then check to see if the guilds = tripsit
         if (commands_tripsit.includes(commandName)) {
             logger.debug(`[${PREFIX}] int.guild.id: ${interaction.guild.id}`);
-            logger.debug(`[${PREFIX}] GUILD_ID_PRD: ${GUILD_ID_PRD}`);
-            logger.debug(`[${PREFIX}] GUILD_ID_DEV: ${GUILD_ID_DEV}`);
-            if (interaction.guild.id !== GUILD_ID_PRD && interaction.guild.id !== GUILD_ID_DEV && interaction.user.id !== MOONBEARID) {
+            logger.debug(`[${PREFIX}] guildId: ${guildId}`);
+            if (interaction.guild.id !== guildId && interaction.user.id !== ownerId) {
                 interaction.reply({ content: 'This command is only available in the Tripsit server.', ephemeral: true });
                 return;
             }
@@ -157,7 +155,7 @@ module.exports = {
 
         // Check if the command is in the commands_pm list and check if the command came in from a DM
         if (commands_pm.includes(commandName)) {
-            if (!interaction.isDM && interaction.user.id !== MOONBEARID) {
+            if (!interaction.isDM && interaction.user.id !== ownerId) {
                 interaction.reply({ content: 'This command is only available in DMs.', ephemeral: true });
                 return;
             }

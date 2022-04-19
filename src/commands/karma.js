@@ -6,7 +6,7 @@ const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
-const TS_ICON = process.env.TS_ICON;
+const ts_icon_url = process.env.ts_icon_url;
 
 const button1 = new MessageButton()
     .setCustomId('previousbtn')
@@ -88,14 +88,14 @@ module.exports = {
 
         const book = [];
         const karma_received_embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: TS_ICON })
+            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
             .setColor('RANDOM')
             .setTitle(`${patient.user.username}'s Karma Received`)
             .setDescription(`${karma_received_string}\n\n${random_karma_quote()}`);
         book.push(karma_received_embed);
 
         const karma_given_embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: TS_ICON })
+            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
             .setColor('RANDOM')
             .setTitle(`${patient.user.username}'s Karma Given`)
             .setDescription(`${karma_given_string}\n\n${random_karma_quote()}`);

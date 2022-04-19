@@ -9,16 +9,13 @@ const PREFIX = require('path').parse(__filename).name;
 // Check if we're in production and if not, use the .env file
 
 const production = process.env.NODE_ENV === 'production';
-let token = process.env.TRIPSITMEBOT;
-let clientId = process.env.TRIPSITMEBOT_CLIENTID;
-if (process.env.NODE_ENV !== 'production') {
+if (!production) {
     require('dotenv').config();
-    token = process.env.TRIPSITME2BOT;
-    clientId = process.env.TRIPSITME2BOT_CLIENTID;
 }
 
-const GUILD_ID_PRD = process.env.GUILD_ID_PRD;
-const GUILD_ID_DEV = process.env.GUILD_ID_DEV;
+const token = process.env.token;
+const clientId = process.env.clientid;
+const guildId = process.env.guildId;
 
 const client = new Client({
     intents: [
@@ -46,13 +43,8 @@ for (const file of commandFiles) {
 }
 const rest = new REST({ version: '9' }).setToken(token);
 if (production) {
-    rest.put(Routes.applicationGuildCommands(clientId, GUILD_ID_PRD), { body: commands })
+    rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands })
         .then(() => logger.info(`[${PREFIX}] Successfully registered application commands on TripSit Prod!`))
-        .catch(console.error);
-}
-else {
-    rest.put(Routes.applicationGuildCommands(clientId, GUILD_ID_DEV), { body: commands })
-        .then(() => logger.info(`[${PREFIX}] Successfully registered application commands on Development!`))
         .catch(console.error);
 }
 
