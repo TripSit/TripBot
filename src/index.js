@@ -1,34 +1,71 @@
 const fs = require('node:fs');
 const { Client, Collection, Intents } = require('discord.js');
-const {
-    TRIPSITMEBOT_CLIENTID,
-    GUILD_ID_PRD,
-    TRIPSITMEBOT,
-    TRIPSITME2BOT_CLIENTID,
-    GUILD_ID_DEV,
-    TRIPSITME2BOT,
-} = require('./data/config.json');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 // const Fuse = require('fuse.js');
 const winston = require('winston');
 const PREFIX = require('path').parse(__filename).name;
 
-const development = true;
-if (development) {
-    const commands = [];
-    const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
-    for (const file of commandFiles) {
-        const command = require(`../src/commands/${file}`);
-        commands.push(command.data.toJSON());
+// Check if we're in production and if not, use the .env file
+
+const production = process.env.NODE_ENV === 'production';
+let token = process.env.TRIPSITMEBOT;
+let clientId = process.env.TRIPSITMEBOT_CLIENTID;
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+    token = process.env.TRIPSITME2BOT;
+    clientId = process.env.TRIPSITME2BOT_CLIENTID;
+}
+
+const GUILD_ID_PRD = process.env.GUILD_ID_PRD;
+const GUILD_ID_DEV = process.env.GUILD_ID_DEV;
+
+const client = new Client({
+    intents: [
+        Intents.FLAGS.GUILDS,
+        Intents.FLAGS.GUILD_MESSAGES,
+        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+    ],
+    partials: [
+        'MESSAGE',
+        'CHANNEL',
+        'USER',
+        'GUILD_MEMBER',
+        'REACTION',
+    ],
+});
+
+// Set up commands
+const commands = [];
+client.commands = new Collection();
+const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
+for (const file of commandFiles) {
+    const command = require(`../src/commands/${file}`);
+    commands.push(command.data.toJSON());
+    client.commands.set(command.data.name, command);
+}
+const rest = new REST({ version: '9' }).setToken(token);
+if (production) {
+    rest.put(Routes.applicationGuildCommands(clientId, GUILD_ID_PRD), { body: commands })
+        .then(() => logger.info(`[${PREFIX}] Successfully registered application commands on TripSit Prod!`))
+        .catch(console.error);
+}
+else {
+    rest.put(Routes.applicationGuildCommands(clientId, GUILD_ID_DEV), { body: commands })
+        .then(() => logger.info(`[${PREFIX}] Successfully registered application commands on Development!`))
+        .catch(console.error);
+}
+
+// Set up events
+const eventFiles = fs.readdirSync('./src/events').filter(file => file.endsWith('.js'));
+for (const file of eventFiles) {
+    const event = require(`./events/${file}`);
+    if (event.once) {
+        client.once(event.name, (...args) => event.execute(...args, logger));
     }
-    const rest = new REST({ version: '9' }).setToken(TRIPSITMEBOT);
-    rest.put(Routes.applicationGuildCommands(TRIPSITMEBOT_CLIENTID, GUILD_ID_PRD), { body: commands })
-        .then(() => logger.info(`[${PREFIX}] Successfully registered application commands!`))
-        .catch(console.error);
-    rest.put(Routes.applicationGuildCommands(TRIPSITMEBOT_CLIENTID, GUILD_ID_DEV), { body: commands })
-        .then(() => logger.info(`[${PREFIX}] Successfully registered application commands!`))
-        .catch(console.error);
+    else {
+        client.on(event.name, (...args) => event.execute(...args, logger, client));
+    }
 }
 
 const logLevels = {
@@ -89,39 +126,4 @@ winston.addColors({
     debug: 'blue',
 });
 
-const client = new Client({
-    intents: [
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-    ],
-    partials: [
-        'MESSAGE',
-        'CHANNEL',
-        'USER',
-        'GUILD_MEMBER',
-        'REACTION',
-    ],
-});
-
-// Set up commands
-client.commands = new Collection();
-const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
-for (const file of commandFiles) {
-    const command = require(`./commands/${file}`);
-    client.commands.set(command.data.name, command);
-}
-
-// Set up events
-const eventFiles = fs.readdirSync('./src/events').filter(file => file.endsWith('.js'));
-for (const file of eventFiles) {
-    const event = require(`./events/${file}`);
-    if (event.once) {
-        client.once(event.name, (...args) => event.execute(...args, logger));
-    }
-    else {
-        client.on(event.name, (...args) => event.execute(...args, logger, client));
-    }
-}
-
-client.login(TRIPSITMEBOT);
+client.login(token);

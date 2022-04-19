@@ -1,7 +1,12 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const { TS_ICON, DISCLAIMER } = require('../data/config.json');
 const PREFIX = require('path').parse(__filename).name;
+
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+const TS_ICON = process.env.TS_ICON;
+const DISCLAIMER = process.env.DISCLAIMER;
 
 module.exports = {
     data: new SlashCommandBuilder()

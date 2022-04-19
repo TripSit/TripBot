@@ -1,8 +1,12 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const { TS_ICON } = require('../data/config.json');
 const PREFIX = require('path').parse(__filename).name;
 const fs = require('fs');
+
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+const TS_ICON = process.env.TS_ICON;
 
 const db_name = 'ts_data.json';
 const rawdata = fs.readFileSync(`./src/data/${db_name}`);

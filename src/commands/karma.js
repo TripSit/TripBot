@@ -1,11 +1,12 @@
 const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed, MessageButton } = require('discord.js');
-const {
-    TS_ICON,
-} = require('../data/config.json');
 const paginationEmbed = require('discordjs-button-pagination');
 const PREFIX = require('path').parse(__filename).name;
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+const TS_ICON = process.env.TS_ICON;
 
 const button1 = new MessageButton()
     .setCustomId('previousbtn')

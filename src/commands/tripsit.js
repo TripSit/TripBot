@@ -1,11 +1,12 @@
 const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const {
-    TS_ICON,
-    ROLE_NEEDSHELP_PRD,
-    ROLE_NEEDSHELP_DEV,
-} = require('../data/config.json');
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+const TS_ICON = process.env.TS_ICON;
+const ROLE_NEEDSHELP_PRD = process.env.ROLE_NEEDSHELP_PRD;
+const ROLE_NEEDSHELP_DEV = process.env.ROLE_NEEDSHELP_DEV;
 
 const PREFIX = require('path').parse(__filename).name;
 

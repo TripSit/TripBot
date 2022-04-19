@@ -1,7 +1,12 @@
 const fs = require('node:fs');
 const PREFIX = require('path').parse(__filename).name;
 const Fuse = require('fuse.js');
-const { MOONBEARID, GUILD_ID_PRD, GUILD_ID_DEV } = require('../data/config.json');
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+const MOONBEARID = process.env.MOONBEARID;
+const GUILD_ID_PRD = process.env.GUILD_ID_PRD;
+const GUILD_ID_DEV = process.env.GUILD_ID_DEV;
 
 const cooldown = new Set();
 // /This is 1 minute, you can change it to whatever value
@@ -34,8 +39,6 @@ module.exports = {
             return interaction.reply('You are banned from using commands.');
         }
         logger.debug(`[${PREFIX}] ${interaction.user.username} is not banned!`);
-
-
 
         // check if the interaction is a request for autocomplete
         if (interaction.isAutocomplete()) {
@@ -131,7 +134,7 @@ module.exports = {
         if (!command) return;
 
         const commands_tripsit = ['tripsit', 'karma', 'tripsitme'];
-        const commands_global = ['about', 'breathe', 'chitragupta', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic'];
+        // const commands_global = ['about', 'breathe', 'chitragupta', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic'];
         const commands_admin = ['button', 'gban', 'gunban', 'uban', 'uunban', 'test'];
         const commands_pm = ['idose'];
 
