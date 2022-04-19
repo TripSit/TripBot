@@ -7,7 +7,6 @@ const winston = require('winston');
 const PREFIX = require('path').parse(__filename).name;
 
 // Check if we're in production and if not, use the .env file
-
 const production = process.env.NODE_ENV === 'production';
 if (!production) {
     require('dotenv').config();
