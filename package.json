@@ -4,7 +4,7 @@
   "description": "A bot for TripSit",
   "main": "index.js",
   "scripts": {
-    "start": "index.js",
+    "start": "node ./index.js",
     "dev": "nodemon --ignore src/assets/ index.js",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx ./",
     "fix": "eslint --fix --ext .js,.jsx,.ts,.tsx ./",
