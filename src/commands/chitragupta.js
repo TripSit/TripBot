@@ -11,7 +11,7 @@ module.exports = {
         logger.debug(`[${PREFIX}] ${actor} ${action} ${emoji} ${target}!`);
 
         const db_name = 'ts_data.json';
-        const RAW_TS_DATA = fs.readFileSync(`./src/data/${db_name}`);
+        const RAW_TS_DATA = fs.readFileSync(`./src/assets/${db_name}`);
         const ALL_TS_DATA = JSON.parse(RAW_TS_DATA);
 
         let actorData = ALL_TS_DATA['users'][actor.id];

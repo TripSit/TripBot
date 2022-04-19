@@ -54,7 +54,7 @@ module.exports = {
         logger.debug(`[${PREFIX}] patientid: ${patientid}`);
 
         const db_name = 'ts_data.json';
-        const RAW_TS_DATA = fs.readFileSync(`./src/data/${db_name}`);
+        const RAW_TS_DATA = fs.readFileSync(`./src/assets/${db_name}`);
         const ALL_TS_DATA = JSON.parse(RAW_TS_DATA);
         // logger.debug(`[${PREFIX}] ALL_TS_DATA: ${JSON.stringify(ALL_TS_DATA, null, 4)}`);
 
