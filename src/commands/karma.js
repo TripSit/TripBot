@@ -8,23 +8,23 @@ const logger = require('../utils/logger.js');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
-const ts_icon_url = process.env.ts_icon_url;
+
 
 const raw_topics = fs.readFileSync('./src/assets/topics.json');
 const karma_quotes = JSON.parse(raw_topics);
 
-const button1 = new MessageButton()
+const backButton = new MessageButton()
     .setCustomId('previousbtn')
     .setLabel('Previous')
     .setStyle('DANGER');
 
-const button2 = new MessageButton()
+const forwardButton = new MessageButton()
     .setCustomId('nextbtn')
     .setLabel('Next')
     .setStyle('SUCCESS');
 const buttonList = [
-    button1,
-    button2,
+    backButton,
+    forwardButton,
 ];
 
 module.exports = {
