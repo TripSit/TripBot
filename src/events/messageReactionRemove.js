@@ -1,8 +1,9 @@
 const PREFIX = require('path').parse(__filename).name;
+const logger = require('../utils/logger.js');
 
 module.exports = {
     name: 'messageReactionRemove',
-    execute(reaction, user, logger, client) {
+    execute(reaction, user, client) {
         logger.debug(`[${PREFIX}] Reaction removed`);
         // When a reaction is received, check if the structure is partial
         if (reaction.partial) {
@@ -15,7 +16,7 @@ module.exports = {
                     const reaction_emoji = reaction.emoji;
                     console.log(`${user.username} took ${reaction_emoji.name} to ${reaction_author.username} in ${reaction.message.guild}!`);
                     const command = client.commands.get('chitragupta');
-                    command.execute('chitragupta', logger, user, -1, reaction_emoji.toString(), reaction_author);
+                    command.execute('chitragupta', user, -1, reaction_emoji.toString(), reaction_author);
                     return;
                 })
                 .catch((err) => {
@@ -30,7 +31,7 @@ module.exports = {
             const reaction_remoji = reaction.emoji;
             console.log(`${user.username} took ${reaction_remoji.name} from ${reaction_author.username} in ${reaction.message.guild}!`);
             const command = client.commands.get('chitragupta');
-            command.execute('chitragupta', logger, user, -1, reaction_remoji.toString(), reaction_author);
+            command.execute('chitragupta', user, -1, reaction_remoji.toString(), reaction_author);
         }
     },
 };

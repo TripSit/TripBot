@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
+const logger = require('../utils/logger.js');
 const fs = require('fs');
 
 const raw_topics = fs.readFileSync('./src/assets/topics.json');
@@ -12,7 +13,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('topic')
         .setDescription('Sends a random topic!'),
-    async execute(interaction, logger) {
+    async execute(interaction) {
         const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
         const channel = interaction.channel.name;
         const guild = interaction.guild.name;

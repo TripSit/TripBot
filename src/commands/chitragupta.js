@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 
 module.exports = {
@@ -7,7 +8,7 @@ module.exports = {
         .setName('chitragupta')
         .setDescription('Keep it positive please!'),
 
-    async execute(interaction, logger, actor, action, emoji, target) {
+    async execute(interaction, actor, action, emoji, target) {
         logger.debug(`[${PREFIX}] ${actor} ${action} ${emoji} ${target}!`);
 
         const db_name = 'ts_data.json';

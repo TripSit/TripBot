@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const PREFIX = require('path').parse(__filename).name;
+const logger = require('../utils/logger.js');
 const Fuse = require('fuse.js');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
@@ -17,9 +18,9 @@ const allDrugData = JSON.parse(raw_drug_data);
 
 module.exports = {
     name: 'interactionCreate',
-    execute(interaction, logger, client) {
+    execute(interaction, client) {
         // print what the user typed in the interaction
-        logger.debug(`[${PREFIX}] ${interaction.user.username} (${interaction.user.id}) started: ${interaction.message}`);
+        logger.info(`[${PREFIX}] ${interaction.user.username} (${interaction.user.id}) started: ${interaction.message}`);
 
         // check if the user is a bot and if so, ignore it
         if (interaction.user.bot) {
@@ -34,7 +35,7 @@ module.exports = {
         // Check if the user is in blacklist_users and if so, ignore it
         logger.debug(`[${PREFIX}] blacklist_users: ${blacklist_users}`);
         if (blacklist_users.includes(interaction.member.id)) {
-            logger.info(`[${PREFIX}] ${interaction.member.username}#${interaction.member.discriminator} (${interaction.member.id}) is banned from using commands.`);
+            logger.debug(`[${PREFIX}] ${interaction.member.username}#${interaction.member.discriminator} (${interaction.member.id}) is banned from using commands.`);
             return interaction.reply('You are banned from using commands.');
         }
         logger.debug(`[${PREFIX}] ${interaction.user.username} is not banned!`);
@@ -97,7 +98,7 @@ module.exports = {
 
             try {
                 logger.debug(`[${PREFIX}] Executing command: ${command.name}`);
-                command.execute(interaction, logger);
+                command.execute(interaction);
             }
             catch (error) {
                 logger.error(error);
@@ -162,7 +163,7 @@ module.exports = {
         }
 
         try {
-            command.execute(interaction, logger);
+            command.execute(interaction);
         }
         catch (error) {
             logger.error(error);

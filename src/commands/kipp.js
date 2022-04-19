@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
+const logger = require('../utils/logger.js');
 
 const PREFIX = require('path').parse(__filename).name;
 
@@ -7,7 +8,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('kipp')
         .setDescription('Keep it positive please!'),
-    async execute(interaction, logger) {
+    async execute(interaction) {
         const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
         const channel = interaction.channel.name;
         const guild = interaction.guild.name;

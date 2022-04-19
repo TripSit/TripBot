@@ -2,14 +2,13 @@ const fs = require('node:fs');
 const { Client, Collection, Intents } = require('discord.js');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
-// const Fuse = require('fuse.js');
-const winston = require('winston');
 const PREFIX = require('path').parse(__filename).name;
+const logger = require('./src/utils/logger.js');
 
 // Check if we're in production and if not, use the .env file
 const production = process.env.production === 'true';
 if (!production) {
-    console.debug(`[${PREFIX}] Using .env file`);
+    logger.info(`[${PREFIX}] Using .env file`);
     require('dotenv').config();
 }
 
@@ -52,70 +51,11 @@ const eventFiles = fs.readdirSync('./src/events').filter(file => file.endsWith('
 for (const file of eventFiles) {
     const event = require(`./src/events/${file}`);
     if (event.once) {
-        client.once(event.name, (...args) => event.execute(...args, logger));
+        client.once(event.name, (...args) => event.execute(...args));
     }
     else {
-        client.on(event.name, (...args) => event.execute(...args, logger, client));
+        client.on(event.name, (...args) => event.execute(...args, client));
     }
 }
-
-const logLevels = {
-    error: 0,
-    warn: 1,
-    info: 2,
-    modules: 3,
-    modwarn: 4,
-    modinfo: 5,
-    debug: 6,
-};
-
-Object.defineProperty(global, '__stack', {
-    get: function() {
-        const orig = Error.prepareStackTrace;
-        Error.prepareStackTrace = function(_, stack) {
-            return stack;
-        };
-        const err = new Error;
-        Error.captureStackTrace(err, arguments.callee);
-        const stack = err.stack;
-        Error.prepareStackTrace = orig;
-        return stack;
-    },
-});
-
-Object.defineProperty(global, '__line', {
-    get: function() {
-        return __stack[1].getLineNumber();
-    },
-});
-
-Object.defineProperty(global, '__function', {
-    get: function() {
-        return __stack[1].getFunctionName();
-    },
-});
-
-const logger = winston.createLogger({
-    levels: logLevels,
-    transports: [new winston.transports.Console({ colorize: true, timestamp: true })],
-    format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.padLevels({ levels: logLevels }),
-        winston.format.timestamp(),
-        winston.format.printf(info => `${info.timestamp} ${info.level}:${info.message} ${info.stack ? `\n${info.stack}` : ''}`),
-        winston.format.printf(info => `${!production ? `${info.timestamp}` : ''} ${info.level}:${info.message} ${info.stack ? `\n${info.stack}` : ''}`),
-    ),
-    level: 'debug',
-});
-
-winston.addColors({
-    error: 'red',
-    warn: 'yellow',
-    info: 'green',
-    modules: 'cyan',
-    modwarn: 'yellow',
-    modinfo: 'green',
-    debug: 'blue',
-});
 
 client.login(token);

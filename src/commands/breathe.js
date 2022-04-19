@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 
 module.exports = {
@@ -11,7 +12,7 @@ module.exports = {
                 .addChoice('2', '2')
                 .addChoice('1', '1'),
         ),
-    async execute(interaction, logger) {
+    async execute(interaction) {
         const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
         const channel = interaction.channel.name;
         const guild = interaction.guild.name;
