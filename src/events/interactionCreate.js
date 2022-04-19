@@ -27,7 +27,7 @@ module.exports = {
             return;
         }
         const db_name = 'ts_data.json';
-        const raw_ts_data = fs.readFileSync(`./src/data/${db_name}`);
+        const raw_ts_data = fs.readFileSync(`./src/assets/${db_name}`);
         const ts_data = JSON.parse(raw_ts_data);
         const blacklist_users = ts_data.blacklist.users;
 

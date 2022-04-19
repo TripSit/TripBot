@@ -10,7 +10,7 @@ const role_needshelp = process.env.role_needshelp;
 const PREFIX = require('path').parse(__filename).name;
 
 const db_name = 'ts_data.json';
-const RAW_TS_DATA = fs.readFileSync(`./src/data/${db_name}`);
+const RAW_TS_DATA = fs.readFileSync(`./src/assets/${db_name}`);
 const ALL_TS_DATA = JSON.parse(RAW_TS_DATA);
 
 module.exports = {
@@ -141,7 +141,7 @@ module.exports = {
         if (enable == 'Off') {
             if (hasNeedsHelpRole) {
                 // Get fresh data from the DB
-                const RAW_TS_DATA2 = fs.readFileSync(`./src/data/${db_name}`);
+                const RAW_TS_DATA2 = fs.readFileSync(`./src/assets/${db_name}`);
                 const ALL_TS_DATA2 = JSON.parse(RAW_TS_DATA2);
 
                 // Get the patient's data from the db

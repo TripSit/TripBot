@@ -6,3 +6,4 @@ services:
     deploy_on_push: true
     repo: TripSit/tripsit-discord-bot
   name: tripsit-discord-bot
+  http_port: 80
