@@ -3,7 +3,7 @@ const { Client, Collection, Intents } = require('discord.js');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 const PREFIX = require('path').parse(__filename).name;
-const logger = require('./src/utils/logger.js');
+const logger = require('./utils/logger.js');
 
 // Check if we're in production and if not, use the .env file
 const production = process.env.production === 'true';
@@ -36,10 +36,9 @@ const commands = [];
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
-    const command = require(`./src/commands/${file}`);
+    const command = require(`../src/commands/${file}`);
     commands.push(command.data.toJSON());
     client.commands.set(command.data.name, command);
-
 }
 const rest = new REST({ version: '9' }).setToken(token);
 rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands })
@@ -49,7 +48,7 @@ rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands })
 // Set up events
 const eventFiles = fs.readdirSync('./src/events').filter(file => file.endsWith('.js'));
 for (const file of eventFiles) {
-    const event = require(`./src/events/${file}`);
+    const event = require(`../src/events/${file}`);
     if (event.once) {
         client.once(event.name, (...args) => event.execute(...args));
     }
