@@ -1,16 +1,17 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const {
-    TS_ICON,
-    CHANNEL_TRIPSITTERS_PRD,
-    CHANNEL_TRIPSITTERS_DEV,
-    ROLE_NEEDSHELP_PRD,
-    ROLE_NEEDSHELP_DEV,
-    ROLE_TRIPSITTER_PRD,
-    ROLE_TRIPSITTER_DEV,
-    ROLE_HELPER_PRD,
-    ROLE_HELPER_DEV,
-} = require('../data/config.json');
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+const TS_ICON = process.env.TS_ICON;
+const CHANNEL_TRIPSITTERS_PRD = process.env.CHANNEL_TRIPSITTERS_PRD;
+const CHANNEL_TRIPSITTERS_DEV = process.env.CHANNEL_TRIPSITTERS_DEV;
+const ROLE_NEEDSHELP_PRD = process.env.ROLE_NEEDSHELP_PRD;
+const ROLE_NEEDSHELP_DEV = process.env.ROLE_NEEDSHELP_DEV;
+const ROLE_TRIPSITTER_PRD = process.env.ROLE_TRIPSITTER_PRD;
+const ROLE_TRIPSITTER_DEV = process.env.ROLE_TRIPSITTER_DEV;
+const ROLE_HELPER_PRD = process.env.ROLE_HELPER_PRD;
+const ROLE_HELPER_DEV = process.env.ROLE_HELPER_DEV;
 
 const PREFIX = require('path').parse(__filename).name;
 

@@ -1,7 +1,6 @@
 const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const { TS_ICON, DISCLAIMER } = require('../data/config.json');
 const PREFIX = require('path').parse(__filename).name;
 
 const raw_drug_data = fs.readFileSync('./src/assets/allDrugData.json');
@@ -9,6 +8,12 @@ const allDrugData = JSON.parse(raw_drug_data);
 
 const raw_combo_data = fs.readFileSync('./src/assets/combo_definitions.json');
 const combo_defs = JSON.parse(raw_combo_data);
+
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+const TS_ICON = process.env.TS_ICON;
+const DISCLAIMER = process.env.DISCLAIMER;
 
 module.exports = {
     data: new SlashCommandBuilder()
