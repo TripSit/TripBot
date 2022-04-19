@@ -1,5 +1,9 @@
 const fs = require('node:fs');
 const PREFIX = require('path').parse(__filename).name;
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+const PORT = process.env.PORT;
 
 module.exports = {
     name: 'ready',
@@ -23,6 +27,19 @@ module.exports = {
                 guild.leave();
             }
         });
+
+        const express = require('express');
+        const app = express();
+
+        app.get('/', (req, res) => {
+            // res.send('Hello World!');
+            res.status(200).send('Ok');
+        });
+
+        app.listen(PORT, () => {
+            logger.info(`[${PREFIX}] Example app listening on port ${PORT}`);
+        });
+
         logger.info(`[${PREFIX}] Ready to take over the world!`);
     },
 };
