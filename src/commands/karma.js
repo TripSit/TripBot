@@ -3,6 +3,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed, MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const PREFIX = require('path').parse(__filename).name;
+const logger = require('../utils/logger.js');
 
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
@@ -35,7 +36,7 @@ module.exports = {
                 .setDescription('User to lookup!')
             ,
         ),
-    async execute(interaction, logger) {
+    async execute(interaction) {
         const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
         const channel = interaction.channel.name;
         const guild = interaction.guild.name;

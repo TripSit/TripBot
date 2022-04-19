@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
+const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 
 const raw_drug_data = fs.readFileSync('./src/assets/allDrugData.json');
@@ -31,7 +32,7 @@ module.exports = {
                 .setRequired(true)
                 .setAutocomplete(true),
         ),
-    async execute(interaction, logger) {
+    async execute(interaction) {
         const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
         const channel = interaction.channel.name;
         const guild = interaction.guild.name;

@@ -1,9 +1,10 @@
 const fs = require('node:fs');
 const PREFIX = require('path').parse(__filename).name;
+const logger = require('../utils/logger.js');
 
 module.exports = {
     name: 'guildCreate',
-    execute(client, logger, guild) {
+    execute(client, guild) {
         logger.info(`[${PREFIX}] Joined guild: ${guild.name} (id: ${guild.id})`);
         const db_name = 'ts_data.json';
         const raw_ts_data = fs.readFileSync(`./src/assets/${db_name}`);

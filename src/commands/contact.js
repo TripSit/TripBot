@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
+const logger = require('../utils/logger.js');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
@@ -12,7 +13,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('contact')
         .setDescription('How to contact TripSit!'),
-    async execute(interaction, logger) {
+    async execute(interaction) {
         const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
         const channel = interaction.channel.name;
         const guild = interaction.guild.name;

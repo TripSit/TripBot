@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
+const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const fs = require('fs');
 
@@ -18,7 +19,7 @@ module.exports = {
         .setName('gban')
         .setDescription('Bans a guild from the bot')
         .addStringOption(option => option.setName('guild').setDescription('The guild to ban')),
-    async execute(interaction, logger) {
+    async execute(interaction) {
         const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
         const channel = interaction.channel.name;
         const guild = interaction.guild.name;

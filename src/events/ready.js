@@ -1,14 +1,16 @@
 const fs = require('node:fs');
 const PREFIX = require('path').parse(__filename).name;
+const logger = require('../utils/logger.js');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
+
 const PORT = process.env.PORT;
 
 module.exports = {
     name: 'ready',
     once: true,
-    execute(client, logger) {
+    execute(client) {
         const db_name = 'ts_data.json';
         const raw_ts_data = fs.readFileSync(`./src/assets/${db_name}`);
         const ts_data = JSON.parse(raw_ts_data);
