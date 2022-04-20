@@ -1,4 +1,5 @@
 const fs = require('node:fs');
+const { MessageEmbed } = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 const Fuse = require('fuse.js');
@@ -7,6 +8,8 @@ if (process.env.NODE_ENV !== 'production') {
 }
 const ownerId = process.env.ownerId;
 const guildId = process.env.guildId;
+const channel_moderators_id = process.env.channel_moderators;
+const ts_icon_url = process.env.ts_icon_url;
 
 const cooldown = new Set();
 // /This is 1 minute, you can change it to whatever value
@@ -34,8 +37,8 @@ module.exports = {
 
         // Check if the user is in blacklist_users and if so, ignore it
         logger.debug(`[${PREFIX}] blacklist_users: ${blacklist_users}`);
-        if (blacklist_users.includes(interaction.member.id)) {
-            logger.debug(`[${PREFIX}] ${interaction.member.username}#${interaction.member.discriminator} (${interaction.member.id}) is banned from using commands.`);
+        if (blacklist_users.includes(interaction.user.id)) {
+            logger.debug(`[${PREFIX}] ${interaction.user.username}#${interaction.user.discriminator} (${interaction.user.id}) is banned from using commands.`);
             return interaction.reply('You are banned from using commands.');
         }
         logger.debug(`[${PREFIX}] ${interaction.user.username} is not banned!`);
@@ -94,6 +97,38 @@ module.exports = {
             logger.debug(`[${PREFIX}] buttonID: ${buttonID}`);
             const command = client.commands.get(interaction.customId);
             logger.debug(`[${PREFIX}] command: ${command}`);
+            const mod_chan = interaction.client.channels.cache.get(channel_moderators_id);
+
+            if (buttonID == 'acknowledgebtn') {
+                const embed = new MessageEmbed()
+                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+                    .setColor('GREEN')
+                    .setDescription(`${interaction.user.username} has acknowledged their warning.`);
+                mod_chan.send({ embeds: [embed] });
+                interaction.reply('Thanks for understanding!');
+            }
+
+            if (buttonID == 'refusalbtn') {
+                const guild = interaction.client.guilds.resolve(guildId);
+                logger.debug(guild);
+                guild.members.ban(interaction.user, { days: 7, reason: 'Refused warning' });
+                const embed = new MessageEmbed()
+                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+                    .setColor('RED')
+                    .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
+                mod_chan.send({ embeds: [embed] });
+                interaction.reply('Thanks for making this easy!');
+            }
+
+            if (buttonID == 'warnbtn') {
+                const embed = new MessageEmbed()
+                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+                    .setColor('RED')
+                    .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
+                mod_chan.send({ embeds: [embed] });
+                interaction.reply('Thanks for making this easy!');
+            }
+
             if (!command) return;
 
             try {
@@ -133,7 +168,7 @@ module.exports = {
         const command = client.commands.get(commandName);
         if (!command) return;
 
-        const commands_tripsit = ['tripsit', 'karma', 'tripsitme'];
+        const commands_tripsit = ['tripsit', 'karma', 'tripsitme', 'report', 'mod'];
         // const commands_global = ['about', 'breathe', 'chitragupta', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic'];
         const commands_admin = ['button', 'gban', 'gunban', 'uban', 'uunban', 'test'];
         const commands_pm = ['idose'];
