@@ -52,14 +52,10 @@ module.exports = {
                 {
                     name: 'Feedback',
                     value: 'We would love to hear your feedback on this bot, please join discord.gg / TripSit \
-                and talk with Moonbear!',
-                },
-                {
-                    name: 'Add me to your server!',
-                    value: 'If you want to add this bot to your server, click the link here: <TBD>',
+                and talk with Moonbear, or use the /bug command!',
                 },
             )
-            .setFooter({ text: disclaimer, iconURL: ts_icon_url });
+            .setFooter({ text: 'Thanks for asking!' });
         return interaction.reply({ embeds: [embed] });
     },
 };

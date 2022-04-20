@@ -142,11 +142,13 @@ module.exports = {
                 command = 'unban';
                 color = 'GREEN';
                 await interaction.guild.bans.remove(target, reason);
+                logger.debug(`[${PREFIX}] I unbanned ${target}!`);
             }
             else if (command === 'timeout') {
                 target.timeout(0, reason);
                 command = 'untimeout';
                 color = 'GREEN';
+                logger.debug(`[${PREFIX}] I untimed out ${target}!`);
             }
         }
 
@@ -155,6 +157,7 @@ module.exports = {
                 .setColor('RED')
                 .setDescription('target not found, are you sure they are in the server?');
             interaction.reply({ embeds: [embed], ephemeral: true });
+            logger.debug(`[${PREFIX}] Target not found!`);
             return;
         }
 
@@ -167,19 +170,23 @@ module.exports = {
                 .setTimestamp();
             target.send({ embeds: [warn_embed], components: [warn_buttons] });
             color = 'BLUE';
+            logger.debug(`[${PREFIX}] I warned ${target}!`);
         }
         else if (command === 'timeout') {
             // target.timeout(duration * 60 * 1000, reason);
             target.timeout(10, reason);
             color = 'YELLOW';
+            logger.debug(`[${PREFIX}] I timed out ${target}!`);
         }
         else if (command === 'kick') {
             target.kick();
             color = 'ORANGE';
+            logger.debug(`[${PREFIX}] I kicked ${target}!`);
         }
         else if (command === 'ban') {
             interaction.guild.members.ban(target, { days: 7, reason: reason });
             color = 'RED';
+            logger.debug(`[${PREFIX}] I banned ${target}!`);
         }
 
         if (command !== 'info') {
@@ -189,6 +196,7 @@ module.exports = {
                 .setColor(color)
                 .setDescription(title);
             interaction.reply({ embeds: [embed], ephemeral: true });
+            logger.debug(`[${PREFIX}] I replied to ${interaction.member}!`);
         }
 
         let actorData = ALL_TS_DATA['users'][actor.id];
@@ -211,7 +219,8 @@ module.exports = {
             };
         }
         actorData[`${command}_sent`]++;
-        logger.debug(JSON.stringify(actorData, null, 2));
+        logger.debug(`[${PREFIX}] Incremented ${command}_sent on ${actorData.name}`);
+        // logger.debug(JSON.stringify(actorData, null, 2));
         ALL_TS_DATA['users'][actor.id] = actorData;
 
         let targetData = ALL_TS_DATA['users'][target.id];
@@ -235,7 +244,8 @@ module.exports = {
         }
 
         targetData[`${command}_recv`]++;
-        logger.debug(JSON.stringify(targetData, null, 2));
+        logger.debug(`[${PREFIX}] Incremented ${command}_recv on ${targetData.name}`);
+        // logger.debug(JSON.stringify(targetData, null, 2));
         ALL_TS_DATA['users'][target.id] = targetData;
 
         fs.writeFile(`src/assets/${db_name}`, JSON.stringify(ALL_TS_DATA, null, 4), function(err) {
@@ -246,7 +256,7 @@ module.exports = {
 
         // const title = `${actor} ${command}ed ${target} ${duration ? `for ${duration}` : ''} ${reason ? `because ${reason}` : ''}`;
         const title = `${actor} ${command}ed ${target} ${reason ? `because ${reason}` : ''}`;
-        const book = [];
+        // const book = [];
         const target_embed = new MessageEmbed()
             .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
             .setColor('BLUE')
@@ -281,43 +291,43 @@ module.exports = {
                 { name: '# of Bans', value: `${targetData['ban_recv']}`, inline: true },
                 { name: '# of Fucks to give', value: '0', inline: true },
             );
-        book.push(target_embed);
+        // book.push(target_embed);
 
-        const actor_embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-            .setColor('BLUE')
-            .setDescription(title)
-            .addFields(
-                { name: 'Username', value: `${is_member ? actor.user.username : actor.username }#${is_member ? actor.user.discriminator : actor.discriminator}`, inline: true },
-                { name: 'Nickname', value: `${actor.nickname}`, inline: true },
-                { name: 'ID', value: `${is_member ? actor.user.id : actor.id}`, inline: true },
-            )
-            .addFields(
-                { name: 'Account created', value: `${is_member ? time(actor.user.createdAt, 'R') : time(actor.createdAt, 'R')}`, inline: true },
-                { name: 'Joined', value: `${time(actor.joinedAt, 'R')}`, inline: true },
-                { name: 'Timeout until', value: `${time(actor.communicationDisabledUntil, 'R')}`, inline: true },
-            )
-            .addFields(
-                { name: 'Pending', value: `${actor.pending}`, inline: true },
-                { name: 'Moderatable', value: `${actor.moderatable}`, inline: true },
-                { name: 'Muted', value: `${actor.isCommunicationDisabled()}`, inline: true },
-            )
-            .addFields(
-                { name: 'Manageable', value: `${actor.manageable}`, inline: true },
-                { name: 'Bannable', value: `${actor.bannable}`, inline: true },
-                { name: 'Kickable', value: `${actor.kickable}`, inline: true },
-            )
-            .addFields(
-                { name: '# of Reports', value: `${actorData['reports_recv']}`, inline: true },
-                { name: '# of Timeouts', value: `${actorData['timeout_recv']}`, inline: true },
-                { name: '# of Warns', value: `${actorData['warn_recv']}`, inline: true },
-            )
-            .addFields(
-                { name: '# of Kicks', value: `${actorData['kick_recv']}`, inline: true },
-                { name: '# of Bans', value: `${actorData['ban_recv']}`, inline: true },
-                { name: '# of Fucks to give', value: '0', inline: true },
-            );
-        book.push(actor_embed);
+        // const actor_embed = new MessageEmbed()
+        //     .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+        //     .setColor('BLUE')
+        //     .setDescription(title)
+        //     .addFields(
+        //         { name: 'Username', value: `${is_member ? actor.user.username : actor.username }#${is_member ? actor.user.discriminator : actor.discriminator}`, inline: true },
+        //         { name: 'Nickname', value: `${actor.nickname}`, inline: true },
+        //         { name: 'ID', value: `${is_member ? actor.user.id : actor.id}`, inline: true },
+        //     )
+        //     .addFields(
+        //         { name: 'Account created', value: `${is_member ? time(actor.user.createdAt, 'R') : time(actor.createdAt, 'R')}`, inline: true },
+        //         { name: 'Joined', value: `${time(actor.joinedAt, 'R')}`, inline: true },
+        //         { name: 'Timeout until', value: `${time(actor.communicationDisabledUntil, 'R')}`, inline: true },
+        //     )
+        //     .addFields(
+        //         { name: 'Pending', value: `${actor.pending}`, inline: true },
+        //         { name: 'Moderatable', value: `${actor.moderatable}`, inline: true },
+        //         { name: 'Muted', value: `${actor.isCommunicationDisabled()}`, inline: true },
+        //     )
+        //     .addFields(
+        //         { name: 'Manageable', value: `${actor.manageable}`, inline: true },
+        //         { name: 'Bannable', value: `${actor.bannable}`, inline: true },
+        //         { name: 'Kickable', value: `${actor.kickable}`, inline: true },
+        //     )
+        //     .addFields(
+        //         { name: '# of Reports', value: `${actorData['reports_recv']}`, inline: true },
+        //         { name: '# of Timeouts', value: `${actorData['timeout_recv']}`, inline: true },
+        //         { name: '# of Warns', value: `${actorData['warn_recv']}`, inline: true },
+        //     )
+        //     .addFields(
+        //         { name: '# of Kicks', value: `${actorData['kick_recv']}`, inline: true },
+        //         { name: '# of Bans', value: `${actorData['ban_recv']}`, inline: true },
+        //         { name: '# of Fucks to give', value: '0', inline: true },
+        //     );
+        // book.push(actor_embed);
 
         // if (book.length > 0) {
         //     if (command == 'info') {
@@ -341,11 +351,14 @@ module.exports = {
         if (command == 'info') {
             // interaction.reply({ embeds: [target_embed], ephemeral: true, components: [mod_buttons] });
             interaction.reply({ embeds: [target_embed], ephemeral: true });
+            logger.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${target.user.name}`);
             return;
         }
+        logger.debug(`${PREFIX} channel_moderators_id: ${channel_moderators_id}`);
         const mod_chan = interaction.client.channels.cache.get(channel_moderators_id);
         // mod_chan.send({ embeds: [target_embed], components: [mod_buttons] });
         mod_chan.send({ embeds: [target_embed] });
+        logger.debug(`${PREFIX} send a message to the moderators room`);
         return;
     },
 };

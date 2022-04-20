@@ -28,12 +28,12 @@ module.exports = {
             option.setName('units')
                 .setDescription('What units?')
                 .setRequired(true)
-                .addChoice('oz (ounces)', 'oz (ounces)')
-                .addChoice('fl oz (fluid ounces)', 'fl oz (fluid ounces)')
                 .addChoice('g (grams)', 'g (grams)')
                 .addChoice('mg (milligrams)', 'mg (milligrams)')
                 .addChoice('ml (milliliters)', 'ml (milliliters)')
                 .addChoice('µg (micrograms)', 'µg (micrograms)')
+                .addChoice('oz (ounces)', 'oz (ounces)')
+                .addChoice('fl oz (fluid ounces)', 'fl oz (fluid ounces)')
                 .addChoice('tabs', 'tabs')
                 .addChoice('caps', 'caps')
                 .addChoice('pills', 'pills')
@@ -42,10 +42,8 @@ module.exports = {
                 .addChoice('inhales', 'inhales'),
         ),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
+        const username = `${interaction.user.username}#${interaction.user.discriminator}`;
+        logger.info(`[${PREFIX}] Initialized by ${username}`);
 
         const substance = interaction.options.getString('substance');
         const volume = interaction.options.getInteger('volume');
