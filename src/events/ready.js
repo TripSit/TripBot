@@ -39,7 +39,7 @@ module.exports = {
         });
 
         app.listen(PORT, () => {
-            logger.info(`[${PREFIX}] Example app listening on port ${PORT}`);
+            logger.info(`[${PREFIX}] Healthcheck app listening on port ${PORT}`);
         });
 
         logger.info(`[${PREFIX}] Ready to take over the world!`);
