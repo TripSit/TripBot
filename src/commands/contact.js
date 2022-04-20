@@ -31,7 +31,7 @@ module.exports = {
                 { name: 'Bot Issues Email', value: 'discord_bot @ tripsit (dot) me' },
                 { name: 'Drug Information Issues Email', value: 'content @ tripsit (dot) me' },
             )
-            .setFooter({ text: disclaimer, iconURL: ts_icon_url });
+            .setFooter({ text: 'Thanks for asking!' });
         return interaction.reply({ embeds: [embed] });
     },
 };

@@ -11,10 +11,10 @@ const guildId = process.env.guildId;
 const channel_moderators_id = process.env.channel_moderators;
 const ts_icon_url = process.env.ts_icon_url;
 
-const cooldown = new Set();
-// /This is 1 minute, you can change it to whatever value
-const cooldown_seconds = 5;
-const cooldownTime = cooldown_seconds * 1000;
+// const cooldown = new Set();
+// // /This is 1 minute, you can change it to whatever value
+// const cooldown_seconds = 1;
+// const cooldownTime = cooldown_seconds * 1000;
 
 const raw_drug_data = fs.readFileSync('./src/assets/allDrugData.json');
 const allDrugData = JSON.parse(raw_drug_data);
@@ -142,22 +142,22 @@ module.exports = {
             return;
         }
 
-        // Cooldown logic
-        if (interaction.user.id !== ownerId) {
-            if (cooldown.has(interaction.user.id)) {
-            // / If the cooldown did not end
-                interaction.reply({ content: 'Don\'t be a coconut ( ͡° ͜ʖ ͡°)', ephemeral: true });
-                return;
-            }
-            else {
-            // Set cooldown
-                cooldown.add(interaction.user.id);
-                setTimeout(() => {
-                // Removes the user from the set after 1 minute
-                    cooldown.delete(interaction.user.id);
-                }, cooldownTime);
-            }
-        }
+        // // Cooldown logic
+        // if (interaction.user.id !== ownerId) {
+        //     if (cooldown.has(interaction.user.id)) {
+        //     // / If the cooldown did not end
+        //         interaction.reply({ content: 'Don\'t be a coconut ( ͡° ͜ʖ ͡°)', ephemeral: true });
+        //         return;
+        //     }
+        //     else {
+        //     // Set cooldown
+        //         cooldown.add(interaction.user.id);
+        //         setTimeout(() => {
+        //         // Removes the user from the set after 1 minute
+        //             cooldown.delete(interaction.user.id);
+        //         }, cooldownTime);
+        //     }
+        // }
 
         // Failsafe to make sure only commands get past this point
         if (!interaction.isCommand()) return;
@@ -168,9 +168,7 @@ module.exports = {
         const command = client.commands.get(commandName);
         if (!command) return;
 
-        const commands_tripsit = ['tripsit', 'karma', 'tripsitme', 'report', 'mod'];
-        // const commands_global = ['about', 'breathe', 'chitragupta', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic'];
-        const commands_admin = ['button', 'gban', 'gunban', 'uban', 'uunban', 'test'];
+        const commands_admin = ['button', 'gban', 'gunban', 'uban', 'uunban', 'test', 'ping'];
         const commands_pm = ['idose'];
 
         // Check if the command is in commands_admin list and then check to see if the user is moonbear
@@ -179,19 +177,9 @@ module.exports = {
             return;
         }
 
-        // Check if the command is in the commands_tripsit list and then check to see if the guilds = tripsit
-        if (commands_tripsit.includes(commandName)) {
-            logger.debug(`[${PREFIX}] int.guild.id: ${interaction.guild.id}`);
-            logger.debug(`[${PREFIX}] guildId: ${guildId}`);
-            if (interaction.guild.id !== guildId && interaction.user.id !== ownerId) {
-                interaction.reply({ content: 'This command is only available in the Tripsit server.', ephemeral: true });
-                return;
-            }
-        }
-
         // Check if the command is in the commands_pm list and check if the command came in from a DM
         if (commands_pm.includes(commandName)) {
-            if (!interaction.isDM && interaction.user.id !== ownerId) {
+            if (interaction.inGuild() && interaction.user.id !== ownerId) {
                 interaction.reply({ content: 'This command is only available in DMs.', ephemeral: true });
                 return;
             }

@@ -18,7 +18,11 @@ module.exports = {
         const guild = interaction.guild.name;
         logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
 
-        const choice = interaction.options.getString('exercise');
+        let choice = interaction.options.getString('exercise');
+
+        if (!choice) {
+            choice = '2';
+        }
 
         if (choice == '1') {
             return interaction.reply('https://i.imgur.com/XbH6gP4.gif');
