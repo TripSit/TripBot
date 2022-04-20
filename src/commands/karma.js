@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed, MessageButton } = require('discord.js');
+const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
@@ -8,9 +8,9 @@ const logger = require('../utils/logger.js');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
+const ts_icon_url = process.env.ts_icon_url;
 
-
-const raw_topics = fs.readFileSync('./src/assets/topics.json');
+const raw_topics = fs.readFileSync('./src/assets/karma_quotes.json');
 const karma_quotes = JSON.parse(raw_topics);
 
 const backButton = new MessageButton()
@@ -27,14 +27,23 @@ const buttonList = [
     forwardButton,
 ];
 
+const page_buttons = new MessageActionRow()
+    .addComponents(
+        new MessageButton()
+            .setCustomId('previousbtn')
+            .setLabel('Previous')
+            .setStyle('DANGER'),
+        new MessageButton()
+            .setCustomId('nextbtn')
+            .setLabel('Next')
+            .setStyle('SUCCESS'),
+    );
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('karma')
         .setDescription('Keep it positive please!')
-        .addUserOption(option =>
-            option.setName('user')
-                .setDescription('User to lookup!')
-            ,
+        .addUserOption(option => option.setName('user').setDescription('User to lookup!'),
         ),
     async execute(interaction) {
         const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;

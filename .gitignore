@@ -351,3 +351,4 @@ MigrationBackup/
 .env
 .env production
 examples/
+src/assets/ts_data.json

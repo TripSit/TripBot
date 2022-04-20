@@ -12,44 +12,45 @@ const ts_icon_url = process.env.ts_icon_url;
 const db_name = 'ts_data.json';
 const rawdata = fs.readFileSync(`./src/assets/${db_name}`);
 const ts_data = JSON.parse(rawdata);
-const blacklist_users = ts_data.blacklist.users;
+const blacklist_guilds = ts_data.blacklist.guilds;
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('uunban')
-        .setDescription('Bans a user from the bot')
-        .addStringOption(option => option.setName('user').setDescription('The user to ban')),
+        .setName('bot_unban_guild')
+        .setDescription('Un-Bans a guild from the bot')
+        .addStringOption(option => option.setName('guild').setDescription('The guild to ban')),
     async execute(interaction) {
         const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
         const channel = interaction.channel.name;
         const guild = interaction.guild.name;
         logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
 
-        const userID = interaction.options.getString('user');
-        logger.debug(`[${PREFIX}] userID: ${userID}`);
+        const guildID = interaction.options.getString('guild');
+        logger.debug(`[${PREFIX}] guildID: ${guild}`);
 
-        // if userID is in black_list user, remove it, and save the new json file
-        if (blacklist_users.includes(userID)) {
-            blacklist_users.splice(blacklist_users.indexOf(userID), 1);
-            logger.debug(`[${PREFIX}] blacklist_users: ${blacklist_users}`);
-            ts_data.blacklist.users = blacklist_users;
+        // if guildID is in black_list guilds, remove it, and save the new json file
+        if (blacklist_guilds.includes(guildID)) {
+            blacklist_guilds.splice(blacklist_guilds.indexOf(guildID), 1);
+            logger.debug(`[${PREFIX}] blacklist_guilds: ${blacklist_guilds}`);
+            ts_data.blacklist.guilds = blacklist_guilds;
             fs.writeFileSync(`./src/assets/${db_name}`, JSON.stringify(ts_data));
             const embed = new MessageEmbed()
                 .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
                 .setColor('RED')
-                .setTitle('User Unbanned')
+                .setTitle('Guild Unbanned')
                 .addFields(
-                    { name: 'User ID', value: userID },
+                    { name: 'Guild ID', value: guildID },
                 );
             return interaction.reply({ embeds: [embed] });
         }
-        if (!blacklist_users.includes(userID)) {
+
+        if (!blacklist_guilds.includes(guildID)) {
             const embed = new MessageEmbed()
                 .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
                 .setColor('GREEN')
-                .setTitle('User Not Banned')
+                .setTitle('Guild Not Banned')
                 .addFields(
-                    { name: 'User ID', value: userID },
+                    { name: 'Guild ID', value: guildID },
                 );
             return interaction.reply({ embeds: [embed] });
         }
