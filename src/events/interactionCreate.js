@@ -168,8 +168,6 @@ module.exports = {
         const command = client.commands.get(commandName);
         if (!command) return;
 
-        const commands_tripsit = ['tripsit', 'karma', 'tripsitme', 'report', 'mod'];
-        // const commands_global = ['about', 'breathe', 'chitragupta', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic'];
         const commands_admin = ['button', 'gban', 'gunban', 'uban', 'uunban', 'test'];
         const commands_pm = ['idose'];
 
@@ -177,16 +175,6 @@ module.exports = {
         if (commands_admin.includes(commandName) && interaction.user.id !== ownerId) {
             interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
             return;
-        }
-
-        // Check if the command is in the commands_tripsit list and then check to see if the guilds = tripsit
-        if (commands_tripsit.includes(commandName)) {
-            logger.debug(`[${PREFIX}] int.guild.id: ${interaction.guild.id}`);
-            logger.debug(`[${PREFIX}] guildId: ${guildId}`);
-            if (interaction.guild.id !== guildId && interaction.user.id !== ownerId) {
-                interaction.reply({ content: 'This command is only available in the Tripsit server.', ephemeral: true });
-                return;
-            }
         }
 
         // Check if the command is in the commands_pm list and check if the command came in from a DM
