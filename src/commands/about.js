@@ -36,7 +36,7 @@ module.exports = {
             )
             .addFields(
                 {
-                    name: 'disclaimer',
+                    name: 'Disclaimer',
                     value: 'Although we have a team dedicated to keeping the information on this app up to date, it is not \
                 always possible to provide entirely accurate information on the safety level of drugs. The \
                 information here should be used as guidelines only, and it is important to do your own research from \

@@ -33,9 +33,9 @@ const client = new Client({
 
 // Set up commands
 const guild_commands = [];
-const guild_command_names = ['tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button', 'gban', 'gunban', 'uban', 'uunban', 'test'];
+const guild_command_names = ['tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button', 'gban', 'gunban', 'uban', 'uunban', 'chitragupta', 'test'];
 const globl_commands = [];
-const globl_command_names = ['about', 'breathe', 'chitragupta', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
+const globl_command_names = ['help', 'bug', 'about', 'breathe', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
 
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
