@@ -32,17 +32,34 @@ const client = new Client({
 });
 
 // Set up commands
-const commands = [];
+const guild_commands = [];
+const guild_command_names = ['tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button', 'gban', 'gunban', 'uban', 'uunban', 'test'];
+const globl_commands = [];
+const globl_command_names = ['about', 'breathe', 'chitragupta', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
+
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
     const command = require(`../src/commands/${file}`);
-    commands.push(command.data.toJSON());
     client.commands.set(command.data.name, command);
+    if (guild_command_names.includes(command.data.name)) {
+        logger.debug(`[${PREFIX}] Adding command: ${command.data.name} to guild_commands`);
+        guild_commands.push(command.data.toJSON());
+    }
+    else if (globl_command_names.includes(command.data.name)) {
+        logger.debug(`[${PREFIX}] Adding command: ${command.data.name} to globl_commands`);
+        globl_commands.push(command.data.toJSON());
+    }
 }
-const rest = new REST({ version: '9' }).setToken(token);
-rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands })
-    .then(() => logger.info(`[${PREFIX}] Successfully registered application commands on ${guildId}!`))
+
+const guild_rest = new REST({ version: '9' }).setToken(token);
+guild_rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: guild_commands })
+    .then(() => logger.info(`[${PREFIX}] Successfully registered application guild_commands on ${guildId}!`))
+    .catch(console.error);
+
+const globl_rest = new REST({ version: '9' }).setToken(token);
+globl_rest.put(Routes.applicationCommands(clientId), { body: globl_commands })
+    .then(() => logger.info(`[${PREFIX}] Successfully registered application globl_commands!`))
     .catch(console.error);
 
 // Set up events

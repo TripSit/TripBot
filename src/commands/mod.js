@@ -1,6 +1,5 @@
 const fs = require('node:fs');
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
-const paginationEmbed = require('discordjs-button-pagination');
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../utils/logger.js');
 
@@ -9,25 +8,25 @@ if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
 const channel_moderators_id = process.env.channel_moderators;
 
-const mod_buttons = new MessageActionRow()
-    .addComponents(
-        new MessageButton()
-            .setCustomId('warnbtn')
-            .setLabel('Warn')
-            .setStyle('PRIMARY'),
-        new MessageButton()
-            .setCustomId('timeoutbtn')
-            .setLabel('Timeout')
-            .setStyle('SECONDARY'),
-        new MessageButton()
-            .setCustomId('kickbtn')
-            .setLabel('Kick')
-            .setStyle('SECONDARY'),
-        new MessageButton()
-            .setCustomId('banbtn')
-            .setLabel('Ban')
-            .setStyle('DANGER'),
-    );
+// const mod_buttons = new MessageActionRow()
+//     .addComponents(
+//         new MessageButton()
+//             .setCustomId('warnbtn')
+//             .setLabel('Warn')
+//             .setStyle('PRIMARY'),
+//         new MessageButton()
+//             .setCustomId('timeoutbtn')
+//             .setLabel('Timeout')
+//             .setStyle('SECONDARY'),
+//         new MessageButton()
+//             .setCustomId('kickbtn')
+//             .setLabel('Kick')
+//             .setStyle('SECONDARY'),
+//         new MessageButton()
+//             .setCustomId('banbtn')
+//             .setLabel('Ban')
+//             .setStyle('DANGER'),
+//     );
 
 const warn_buttons = new MessageActionRow()
     .addComponents(
