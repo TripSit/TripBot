@@ -3,5 +3,17 @@
         "guilds": [],
         "users": []
     },
-    "users": {}
+    "users": {
+        "332687787172167680": {
+            "name": "cosmicowl",
+            "discriminator": "6529",
+            "roles": [],
+            "karma_given": {
+                "👍": 1
+            },
+            "karma_received": {
+                "👍": 1
+            }
+        }
+    }
 }
