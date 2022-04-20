@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
+const { MessageEmbed, MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
@@ -26,18 +26,6 @@ const buttonList = [
     backButton,
     forwardButton,
 ];
-
-const page_buttons = new MessageActionRow()
-    .addComponents(
-        new MessageButton()
-            .setCustomId('previousbtn')
-            .setLabel('Previous')
-            .setStyle('DANGER'),
-        new MessageButton()
-            .setCustomId('nextbtn')
-            .setLabel('Next')
-            .setStyle('SUCCESS'),
-    );
 
 module.exports = {
     data: new SlashCommandBuilder()
