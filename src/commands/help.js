@@ -29,6 +29,7 @@ module.exports = {
                 { name: 'EMS', value: 'Displays emergency medical service information' },
                 { name: 'Combo', value: 'Checks the interactions between two drugs.' },
                 { name: 'iDose', value: 'This command can be used to remind yourself when you lasted consumed.' },
+                { name: 'DXM Calc', value: 'Use this to calculate dxm dosages' },
                 { name: 'Breathe', value: 'Remind people to breathe.' },
                 { name: 'Hydrate', value: 'Covert others to the hydro homie cause' },
                 { name: 'KIPP', value: 'Keep It Positive Please!' },
