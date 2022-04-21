@@ -9,8 +9,10 @@ module.exports = {
         .addStringOption(option =>
             option.setName('exercise')
                 .setDescription('Which exercise?')
+                .addChoice('1', '1')
                 .addChoice('2', '2')
-                .addChoice('1', '1'),
+                .addChoice('3', '3')
+                .addChoice('4', '4'),
         ),
     async execute(interaction) {
         const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
@@ -18,17 +20,19 @@ module.exports = {
         const guild = interaction.guild.name;
         logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
 
-        let choice = interaction.options.getString('exercise');
+        const choice = interaction.options.getString('exercise');
 
-        if (!choice) {
-            choice = '2';
-        }
-
-        if (choice == '1') {
-            return interaction.reply('https://i.imgur.com/XbH6gP4.gif');
+        if (choice == '1' || !choice) {
+            return interaction.reply('https://i.imgur.com/n5jBp45.gif');
         }
         if (choice == '2') {
-            return interaction.reply('https://i.imgur.com/n5jBp45.gif');
+            return interaction.reply('https://i.imgur.com/XbH6gP4.gif');
+        }
+        if (choice == '3') {
+            return interaction.reply('https://i.imgur.com/g57i96f.gif');
+        }
+        if (choice == '4') {
+            return interaction.reply('https://i.imgur.com/MkUcTPl.gif');
         }
     },
 };
