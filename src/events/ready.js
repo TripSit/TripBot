@@ -1,6 +1,6 @@
-const fs = require('node:fs');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
+const { getFirestore } = require('firebase-admin/firestore');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
@@ -10,18 +10,25 @@ const PORT = process.env.PORT;
 module.exports = {
     name: 'ready',
     once: true,
-    execute(client) {
-        const db_name = 'ts_data.json';
-        const raw_ts_data = fs.readFileSync(`./src/assets/${db_name}`);
-        const ts_data = JSON.parse(raw_ts_data);
-        const blacklist_guilds = ts_data.blacklist.guilds;
+    async execute(client) {
+        const db = getFirestore();
 
-        // logger.debug(`[${PREFIX}] blacklist_guilds: ${blacklist_guilds}`);
+        const snapshot = await db.collection('guilds').get();
+        const blacklist_guilds = [];
+        snapshot.forEach((doc) => {
+            // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc.data()}`);
+            if (doc.data().isBanned == true) {
+                blacklist_guilds.push(doc.data().guild_id);
+            }
+        });
+
+        logger.debug(`[${PREFIX}] blacklist_guilds: ${blacklist_guilds}`);
         // for each guild in client.guilds, print the guild name
         logger.debug(`[${PREFIX}] I am in:`);
         client.guilds.cache.forEach(guild => {
             logger.debug(`[${PREFIX}] ${guild.name}`);
         });
+
         // Check if the guild is in blacklist_guilds and if so, leave it
         client.guilds.cache.forEach(guild => {
             if (blacklist_guilds.includes(guild.id)) {
@@ -39,7 +46,7 @@ module.exports = {
         });
 
         app.listen(PORT, () => {
-            logger.info(`[${PREFIX}] Healthcheck app listening on port ${PORT}`);
+            logger.debug(`[${PREFIX}] Healthcheck app listening on port ${PORT}`);
         });
 
         logger.info(`[${PREFIX}] Ready to take over the world!`);

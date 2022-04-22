@@ -1,7 +1,7 @@
-const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
+const { getFirestore } = require('firebase-admin/firestore');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -11,83 +11,101 @@ module.exports = {
     async execute(interaction, actor, action, emoji, target) {
         logger.debug(`[${PREFIX}] ${actor} ${action} ${emoji} ${target}!`);
 
-        const db_name = 'ts_data.json';
-        const RAW_TS_DATA = fs.readFileSync(`./src/assets/${db_name}`);
-        const ALL_TS_DATA = JSON.parse(RAW_TS_DATA);
+        if (actor === target) {
+            return;
+        }
 
-        let actorData = ALL_TS_DATA['users'][actor.id];
-        // logger.debug(`[${PREFIX}] actorData: ${JSON.stringify(actorData, null, 4)}`);
+        const db = getFirestore();
 
-        // Check if the patient data exists, if not create a blank one
-        if (!actorData) {
+        logger.debug(`[${PREFIX}] actor.id: ${actor.id}`);
+        let actorData = {};
+        let actorFBID = '';
+        let targetData = {};
+        let targetFBID = '';
+        const snapshot = await db.collection('users').get();
+        snapshot.forEach((doc) => {
+            if (doc.data().discord_id === actor.id) {
+                logger.debug(`[${PREFIX}] Found a actor match!`);
+                // console.log(doc.id, '=>', doc.data());
+                actorFBID = doc.id;
+                logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
+                actorData = doc.data();
+            }
+            if (doc.data().discord_id === target.id) {
+                logger.debug(`[${PREFIX}] Found a target match!`);
+                // console.log(doc.id, '=>', doc.data());
+                targetFBID = doc.id;
+                logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
+                targetData = doc.data();
+            }
+        });
+
+        // Check if the actor data exists, if not create a blank one
+        if (Object.keys(actorData).length === 0) {
             logger.debug(`[${PREFIX}] No actor data found, creating a blank one`);
             actorData = {
-                'name': actor.username,
-                'discriminator': actor.discriminator,
-                'roles': [],
-                'karma_given': {},
-                'karma_received': {},
+                discord_username: actor.username,
+                discord_discriminator: actor.discriminator,
+                discord_id: actor.id,
+                isBanned: false,
+                karma_given: { [emoji]: 1 },
             };
         }
-        const karma_given = actorData['karma_given'];
-        if (!karma_given[emoji]) {
-            logger.debug(`[${PREFIX}] No karma_given data found, creating a blank one`);
-            if (action === 1) {
-                karma_given[emoji] = 1;
-            }
-            else {
-                karma_given[emoji] = 0;
-            }
+        else {
+            logger.debug(`[${PREFIX}] Found actor data, updating it`);
+            // logger.debug(`[${PREFIX}] actorData: ${JSON.stringify(actorData, null, 2)}`);
+            // logger.debug(`[${PREFIX}] Object.keys(actorData.karma_given): ${Object.keys(actorData.karma_given)}`);
+            // // if emojis exists in actorData.karma_given, increment it
+            // if (emoji in Object.keys(actorData.karma_given)) {
+            //     logger.debug(`[${PREFIX}] actorData.karma_given[emoji]: ${actorData.karma_given[emoji]}`);
+            //     actorData.karma_given[emoji] += 1;
+            // }
+            // // else create a new entry
+            // else {
+            //     logger.debug(`[${PREFIX}] actorData.karma_given[emoji]: ${actorData.karma_given[emoji]}`);
+            //     actorData.karma_given[emoji] = 1;
+            // }
+
+            actorData.karma_given[emoji] = (actorData.karma_given[emoji] || 0) + action;
+        }
+        // logger.debug(`[${PREFIX}] actorData: ${JSON.stringify(actorData, null, 2)}`);
+        logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
+
+        if (actorFBID !== '') {
+            logger.debug(`[${PREFIX}] Updating actor data`);
+            await db.collection('users').doc(actorFBID).set(actorData);
         }
         else {
-            logger.debug(`[${PREFIX}] karma_given data found, incrementing`);
-            karma_given[emoji] += action;
+            logger.debug(`[${PREFIX}] Creating actor data`);
+            await db.collection('users').doc().set(actorData);
         }
-        actorData['karma_given'] = karma_given;
-        ALL_TS_DATA['users'][actor.id] = actorData;
 
-        fs.writeFile(`src/assets/${db_name}`, JSON.stringify(ALL_TS_DATA, null, 4), function(err) {
-            if (err) {
-                console.log(err);
-            }
-        });
-
-        let targetData = ALL_TS_DATA['users'][target.id];
-        // logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 4)}`);
-
-        // Check if the patient data exists, if not create a blank one
-        if (!targetData) {
+        // Check if the target data exists, if not create a blank one
+        if (Object.keys(targetData).length === 0) {
             logger.debug(`[${PREFIX}] No target data found, creating a blank one`);
             targetData = {
-                'name': target.username,
-                'discriminator': target.discriminator,
-                'roles': [],
-                'karma_given': {},
-                'karma_received': {},
+                discord_username: target.username,
+                discord_discriminator: target.discriminator,
+                discord_id: target.id,
+                isBanned: false,
+                karma_recieved: { [emoji]: 1 },
             };
         }
-        const karma_received = targetData['karma_received'];
-        if (!karma_received[emoji]) {
-            logger.debug(`[${PREFIX}] No karma_received data found, creating a blank one`);
-            if (action === 1) {
-                karma_received[emoji] = 1;
-            }
-            else {
-                karma_received[emoji] = 0;
-            }
+        else {
+            logger.debug(`[${PREFIX}] Found target data, updating it`);
+            // logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
+            targetData.karma_recieved[emoji] = (targetData.karma_recieved[emoji] || 0) + action;
+        }
+        // logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
+        logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
+
+        if (targetFBID !== '') {
+            logger.debug(`[${PREFIX}] Updating target data`);
+            await db.collection('users').doc(targetFBID).set(targetData);
         }
         else {
-            logger.debug(`[${PREFIX}] karma_received data found, incrementing`);
-            karma_received[emoji] += action;
+            logger.debug(`[${PREFIX}] Creating target data`);
+            await db.collection('users').doc().set(targetData);
         }
-
-        targetData['karma_received'] = karma_received;
-        ALL_TS_DATA['users'][target.id] = targetData;
-
-        fs.writeFile(`src/assets/${db_name}`, JSON.stringify(ALL_TS_DATA, null, 4), function(err) {
-            if (err) {
-                console.log(err);
-            }
-        });
     },
 };

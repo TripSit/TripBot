@@ -3,6 +3,7 @@ const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
+const { getFirestore } = require('firebase-admin/firestore');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
 const channel_moderators_id = process.env.channel_moderators;
@@ -59,51 +60,92 @@ module.exports = {
         const target = interaction.options.getMember('user');
         const rchannel = interaction.options.getChannel('channel');
         const reason = interaction.options.getString('reason');
+        const command = 'report';
 
-        const db_name = 'ts_data.json';
-        const RAW_TS_DATA = fs.readFileSync(`./src/assets/${db_name}`);
-        const ALL_TS_DATA = JSON.parse(RAW_TS_DATA);
+        const db = getFirestore();
 
-        let actorData = ALL_TS_DATA['users'][actor.id];
-        if (!actorData) {
-            logger.debug(`[${PREFIX}] No actor data found, creating a blank one`);
-            actorData = {
-                'name': actor.username,
-                'discriminator': actor.discriminator,
-                'reports_sent': 0,
-                'reports_recv': 0,
-                'warns': 0,
-                'timeouts': 0,
-                'kicks': 0,
-                'bans': 0,
-            };
-        }
-
-        actorData['reports_sent']++;
-        ALL_TS_DATA['users'][actor.id] = actorData;
-
-        let targetData = ALL_TS_DATA['users'][target.id];
-        if (!targetData) {
-            logger.debug(`[${PREFIX}] No actor data found, creating a blank one`);
-            targetData = {
-                'name': target.username,
-                'discriminator': target.discriminator,
-                'reports_sent': 0,
-                'reports_recv': 0,
-                'warns': 0,
-                'timeouts': 0,
-                'kicks': 0,
-                'bans': 0,
-            };
-        }
-        targetData['reports_recv']++;
-        ALL_TS_DATA['users'][target.id] = targetData;
-
-        fs.writeFile(`src/assets/${db_name}`, JSON.stringify(ALL_TS_DATA, null, 4), function(err) {
-            if (err) {
-                console.log(err);
+        let actorData = {};
+        let actorFBID = '';
+        let targetData = {};
+        let targetFBID = '';
+        const snapshot = await db.collection('users').get();
+        snapshot.forEach((doc) => {
+            if (doc.data().discord_id === actor.id) {
+                logger.debug(`[${PREFIX}] Found a actor match!`);
+                // console.log(doc.id, '=>', doc.data());
+                actorFBID = doc.id;
+                logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
+                actorData = doc.data();
+            }
+            if (doc.data().discord_id === target.id) {
+                logger.debug(`[${PREFIX}] Found a target match!`);
+                // console.log(doc.id, '=>', doc.data());
+                targetFBID = doc.id;
+                logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
+                targetData = doc.data();
             }
         });
+        const actor_action = `${command}_sent`;
+        if (Object.keys(actorData).length === 0) {
+            logger.debug(`[${PREFIX}] No actor data found, creating a blank one`);
+            actorData = {
+                discord_username: actor.user.username,
+                discord_discriminator: actor.user.discriminator,
+                discord_id: actor.user.id,
+                isBanned: false,
+                mod_actions: { [actor_action]: 1 },
+            };
+        }
+        else {
+            logger.debug(`[${PREFIX}] Found actor data, updating it`);
+            if ('mod_actions' in actorData) {
+                actorData.mod_actions[actor_action] = (actorData.mod_actions[actor_action] || 0) + 1;
+            }
+            else {
+                actorData.mod_actions = { [actor_action]: 1 };
+            }
+        }
+        logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
+
+        if (actorFBID !== '') {
+            logger.debug(`[${PREFIX}] Updating actor data`);
+            await db.collection('users').doc(actorFBID).set(actorData);
+        }
+        else {
+            logger.debug(`[${PREFIX}] Creating actor data`);
+            await db.collection('users').doc().set(actorData);
+        }
+
+        const target_action = `${command}_received`;
+        if (Object.keys(targetData).length === 0) {
+            logger.debug(`[${PREFIX}] No target data found, creating a blank one`);
+            targetData = {
+                discord_username: target.user.username,
+                discord_discriminator: target.user.discriminator,
+                discord_id: target.user.id,
+                isBanned: false,
+                mod_actions: { [target_action]: 1 },
+            };
+        }
+        else {
+            logger.debug(`[${PREFIX}] Found target data, updating it`);
+            if ('mod_actions' in targetData) {
+                targetData.mod_actions[target_action] = (targetData.mod_actions[target_action] || 0) + 1;
+            }
+            else {
+                targetData.mod_actions = { [target_action]: 1 };
+            }
+        }
+        logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
+
+        if (targetFBID !== '') {
+            logger.debug(`[${PREFIX}] Updating target data`);
+            await db.collection('users').doc(targetFBID).set(targetData);
+        }
+        else {
+            logger.debug(`[${PREFIX}] Creating target data`);
+            await db.collection('users').doc().set(targetData);
+        }
 
         const embed_mod = new MessageEmbed()
             .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: target.displayAvatarURL })

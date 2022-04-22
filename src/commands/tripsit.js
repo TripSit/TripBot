@@ -1,7 +1,7 @@
-const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
+const { getFirestore } = require('firebase-admin/firestore');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
@@ -9,10 +9,6 @@ const ts_icon_url = process.env.ts_icon_url;
 const role_needshelp = process.env.role_needshelp;
 
 const PREFIX = require('path').parse(__filename).name;
-
-const db_name = 'ts_data.json';
-const RAW_TS_DATA = fs.readFileSync(`./src/assets/${db_name}`);
-const ALL_TS_DATA = JSON.parse(RAW_TS_DATA);
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -36,65 +32,59 @@ module.exports = {
         const guild = interaction.guild.name;
         logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
 
-        let patient = interaction.options.getMember('user');
+        const actor = interaction.member;
+        let target = interaction.options.getMember('user');
         let user_provided = true;
         // Default to the user who invoked the command if no user is provided
-        if (!patient) {
+        if (!target) {
             logger.debug(`[${PREFIX}] No user provided, defaulting to ${interaction.member}`);
-            patient = interaction.member;
+            target = interaction.member;
             user_provided = false;
         }
-        logger.debug(`[${PREFIX}] patient: ${patient.user.username}#${patient.user.discriminator}`);
+        logger.debug(`[${PREFIX}] target: ${target.user.username}#${target.user.discriminator}`);
 
         let enable = interaction.options.getString('enable');
         // Default to on if no setting is provided
         if (!enable) {enable = 'On';}
         logger.debug(`[${PREFIX}] enable: ${enable}`);
 
-        // Get a list of the patient's roles
-        const patientRoles = patient.roles.cache;
-        const patientRoleNames = patientRoles.map(role => role.name);
-        logger.debug(`[${PREFIX}] userRoles: ${patientRoleNames}`);
-
         const needsHelpRole = interaction.guild.roles.cache.find(role => role.id === role_needshelp);
 
-        // Loop through userRoles and check if the patient has the needsHelp role
-        const hasNeedsHelpRole = patientRoleNames.some(role => role === needsHelpRole.name);
-        logger.debug(`[${PREFIX}] hasNeedsHelpRole: ${hasNeedsHelpRole}`);
+        // Target Informatiion
+        const targetid = target.id.toString();
+        logger.debug(`[${PREFIX}] targetid: ${targetid}`);
+        const targetRoles = target.roles.cache;
+        const targetRoleNames = targetRoles.map(role => role.name);
+        logger.debug(`[${PREFIX}] targetRoleNames: ${targetRoleNames}`);
+        // Loop through userRoles and check if the target has the needsHelp role
+        const targetHasNeedsHelpRole = targetRoleNames.some(role => role === needsHelpRole.name);
+        logger.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
 
-        const patientid = patient.id.toString();
-        logger.debug(`[${PREFIX}] patientid: ${patientid}`);
+        // Actor information
+        const actorid = actor.id.toString();
+        logger.debug(`[${PREFIX}] actorid: ${actorid}`);
+        const actorRoles = actor.roles.cache;
+        const actorRoleNames = actorRoles.map(role => role.name);
+        logger.debug(`[${PREFIX}] actorRoleNames: ${actorRoleNames}`);
+
+        const command = 'tripsit';
+
+        const db = getFirestore();
 
         if (enable == 'On') {
-            if (hasNeedsHelpRole) {
+            if (targetHasNeedsHelpRole) {
                 const embed = new MessageEmbed()
                     .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                     .setColor('DARK_BLUE')
                     .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_icon_url });
-                if (user_provided) {embed.setDescription(`Hey ${interaction.member}, ${patient.user.username} is already being helped!\n\nCheck your channel list for '${patient.user.username} discuss here!'`);}
-                else {embed.setDescription(`Hey ${interaction.member}, you're already being helped!\n\nCheck your channel list for '${patient.user.username} chat here!'`);}
-                logger.debug(`[${PREFIX}] Patient ${patient} is already being helped!`);
+                if (user_provided) {embed.setDescription(`Hey ${interaction.member}, ${target.user.username} is already being helped!\n\nCheck your channel list for '${target.user.username} discuss here!'`);}
+                else {embed.setDescription(`Hey ${interaction.member}, you're already being helped!\n\nCheck your channel list for '${target.user.username} chat here!'`);}
+                logger.debug(`[${PREFIX}] target ${target} is already being helped!`);
                 return interaction.reply({ embeds: [embed] });
             }
-            if (!hasNeedsHelpRole) {
-                // Find the patientid in ALL_TS_DATA keys and store the patent data in patientData
-                let patientData = ALL_TS_DATA[patientid];
-                logger.debug(`[${PREFIX}] patientData length: ${JSON.stringify(patientData, null, 4).length}`);
-
-                // Check if the patient data exists, if not create one
-                if (!patientData) {
-                    logger.debug(`[${PREFIX}] Creating new patient data for ${patient.user.username}`);
-                    patientData = {
-                        'name': patient.user.username,
-                        'discriminator': patient.user.discriminator,
-                        'roles': '',
-                        'karma-given': {},
-                        'karma-received': {},
-                    };
-                }
-
+            if (!targetHasNeedsHelpRole) {
                 // Team check
-                patientRoleNames.forEach(role => {
+                targetRoleNames.forEach(role => {
                     if (role === 'Admin' || role === 'Operator' || role === 'Moderator' || role === 'Tripsitter') {
                         const embed = new MessageEmbed()
                             .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
@@ -105,70 +95,149 @@ module.exports = {
                     }
                 });
 
-                // Get a list of role names
-                patientData['roles'] = patientRoleNames;
-                ALL_TS_DATA[patientid] = patientData;
-
-                // Save those names to the DB
-                fs.writeFile(`src/assets/${db_name}`, JSON.stringify(ALL_TS_DATA, null, 4), function(err) {
-                    if (err) {
-                        console.log(err);
+                let actorData = {};
+                let actorFBID = '';
+                let targetData = {};
+                let targetFBID = '';
+                const snapshot = await db.collection('users').get();
+                snapshot.forEach((doc) => {
+                    if (doc.data().discord_id === actor.id) {
+                        logger.debug(`[${PREFIX}] Found a actor match!`);
+                        // console.log(doc.id, '=>', doc.data());
+                        actorFBID = doc.id;
+                        logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
+                        actorData = doc.data();
+                    }
+                    if (doc.data().discord_id === target.id) {
+                        logger.debug(`[${PREFIX}] Found a target match!`);
+                        // console.log(doc.id, '=>', doc.data());
+                        targetFBID = doc.id;
+                        logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
+                        targetData = doc.data();
                     }
                 });
-                logger.debug(`[${PREFIX}] Saved ALL_TS_DATA`);
+                const actor_action = `${command}_sent`;
+                if (Object.keys(actorData).length === 0) {
+                    logger.debug(`[${PREFIX}] No actor data found, creating a blank one`);
+                    actorData = {
+                        discord_username: actor.user.username,
+                        discord_discriminator: actor.user.discriminator,
+                        discord_id: actor.user.id,
+                        isBanned: false,
+                        mod_actions: { [actor_action]: 1 },
+                        roles: [actorRoleNames],
+                    };
+                }
+                else {
+                    logger.debug(`[${PREFIX}] Found actor data, updating it`);
+                    if ('mod_actions' in actorData) {
+                        actorData.mod_actions[actor_action] = (actorData.mod_actions[actor_action] || 0) + 1;
+                    }
+                    else {
+                        actorData.mod_actions = { [actor_action]: 1 };
+                    }
+                    actorData.roles = actorRoleNames;
+                }
+                logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
 
-                // Remove all roles from the patient
-                patientRoles.forEach(role => {
+                if (actorFBID !== '') {
+                    logger.debug(`[${PREFIX}] Updating actor data`);
+                    await db.collection('users').doc(actorFBID).set(actorData);
+                }
+                else {
+                    logger.debug(`[${PREFIX}] Creating actor data`);
+                    await db.collection('users').doc().set(actorData);
+                }
+
+                const target_action = `${command}_received`;
+                if (Object.keys(targetData).length === 0) {
+                    logger.debug(`[${PREFIX}] No target data found, creating a blank one`);
+                    targetData = {
+                        discord_username: target.user.username,
+                        discord_discriminator: target.user.discriminator,
+                        discord_id: target.user.id,
+                        isBanned: false,
+                        mod_actions: { [target_action]: 1 },
+                        roles: targetRoleNames,
+                    };
+                }
+                else {
+                    logger.debug(`[${PREFIX}] Found target data, updating it`);
+                    if ('mod_actions' in targetData) {
+                        targetData.mod_actions[target_action] = (targetData.mod_actions[target_action] || 0) + 1;
+                    }
+                    else {
+                        targetData.mod_actions = { [target_action]: 1 };
+                    }
+                    targetData.roles = targetRoleNames;
+                }
+                logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
+
+                if (targetFBID !== '') {
+                    logger.debug(`[${PREFIX}] Updating target data`);
+                    await db.collection('users').doc(targetFBID).set(targetData);
+                }
+                else {
+                    logger.debug(`[${PREFIX}] Creating target data`);
+                    await db.collection('users').doc().set(targetData);
+                }
+
+                // Remove all roles from the target
+                targetRoles.forEach(role => {
                     if (role.name !== '@everyone') {
-                        logger.debug(`[${PREFIX}] Removing role ${role.name} from ${patient.user.username}`);
-                        patient.roles.remove(role);
+                        logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.user.username}`);
+                        target.roles.remove(role);
                     }
                 });
 
-                // Get the needshelp role object and add it to the patient
-                logger.debug(`[${PREFIX}] Adding role ${needsHelpRole.name} to ${patient.user.username}`);
-                patient.roles.add(needsHelpRole);
+                // Get the needshelp role object and add it to the target
+                logger.debug(`[${PREFIX}] Adding role ${needsHelpRole.name} to ${target.user.username}`);
+                target.roles.add(needsHelpRole);
                 const embed = new MessageEmbed()
                     .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                     .setColor('DARK_BLUE')
                     .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_icon_url });
-                if (user_provided) {embed.setDescription(`Hey ${interaction.member}, Thanks for the heads up, we'll be helping ${patient.user.username} shortly!\n\nCheck your channel list for '${patient.user.username} discuss here!'`);}
-                else {embed.setDescription(`Hey ${interaction.member}, thanks for reaching out!\n\nCheck your channel list for '${patient.user.username} chat here!'`);}
-                logger.debug(`[${PREFIX}] Patient ${patient} is now being helped!`);
+                if (user_provided) {embed.setDescription(`Hey ${interaction.member}, Thanks for the heads up, we'll be helping ${target.user.username} shortly!\n\nCheck your channel list for '${target.user.username} discuss here!'`);}
+                else {embed.setDescription(`Hey ${interaction.member}, thanks for reaching out!\n\nCheck your channel list for '${target.user.username} chat here!'`);}
+                logger.debug(`[${PREFIX}] target ${target} is now being helped!`);
                 return interaction.reply({ embeds: [embed] });
             }
 
         }
         if (enable == 'Off') {
-            if (hasNeedsHelpRole) {
-                // Get fresh data from the DB
-                const RAW_TS_DATA2 = fs.readFileSync(`./src/assets/${db_name}`);
-                const ALL_TS_DATA2 = JSON.parse(RAW_TS_DATA2);
-
-                // Get the patient's data from the db
-                const patientData2 = ALL_TS_DATA2[patientid];
-                const patientRoles2 = patientData2['roles'];
-                logger.debug(`[${PREFIX}] patient_roles db: ${patientRoles2}`);
-
-                // For each role in patientRoles2, add it to the patient
-                patientRoles2.forEach(role_name => {
-                    if (role_name !== '@everyone') {
-                        const roleObj = interaction.guild.roles.cache.find(r => r.name === role_name);
-                        logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${patient.user.username}`);
-                        patient.roles.add(roleObj);
+            if (targetHasNeedsHelpRole) {
+                let targetData = {};
+                let targetFBID = '';
+                const snapshot = await db.collection('users').get();
+                snapshot.forEach((doc) => {
+                    if (doc.data().discord_id === target.id) {
+                        logger.debug(`[${PREFIX}] Found a target match!`);
+                        // console.log(doc.id, '=>', doc.data());
+                        targetFBID = doc.id;
+                        logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
+                        targetData = doc.data();
                     }
                 });
 
-                const output = `Removed ${needsHelpRole.name} from ${patient.user.username}`;
+                // For each role in targetRoles2, add it to the target
+                targetData.roles.forEach(role_name => {
+                    if (role_name !== '@everyone') {
+                        const roleObj = interaction.guild.roles.cache.find(r => r.name === role_name);
+                        logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.user.username}`);
+                        target.roles.add(roleObj);
+                    }
+                });
+
+                const output = `Removed ${needsHelpRole.name} from ${target.user.username}`;
                 logger.debug(`[${PREFIX}] ${output}`);
-                await patient.roles.remove(needsHelpRole);
+                await target.roles.remove(needsHelpRole);
                 const embed = new MessageEmbed()
                     .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                     .setColor('DARK_BLUE')
                     .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_icon_url });
-                if (user_provided) {embed.setDescription(`Hey ${interaction.member}, we're glad ${patient.user.username} is feeling better, we've restored their old roles!`);}
+                if (user_provided) {embed.setDescription(`Hey ${interaction.member}, we're glad ${target.user.username} is feeling better, we've restored their old roles!`);}
                 else {embed.setDescription(`Hey ${interaction.member}, we're glad you're feeling better, we've restored your old roles, happy chatting!`);}
-                logger.debug(`[${PREFIX}] Patient ${patient} is no longer being helped!`);
+                logger.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
                 return interaction.reply({ embeds: [embed] });
             }
             else {
@@ -176,9 +245,9 @@ module.exports = {
                     .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                     .setColor('DARK_BLUE')
                     .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_icon_url });
-                if (user_provided) {embed.setDescription(`Hey ${interaction.member}, ${patient.user.username} isnt currently being taken care of!`);}
+                if (user_provided) {embed.setDescription(`Hey ${interaction.member}, ${target.user.username} isnt currently being taken care of!`);}
                 else {embed.setDescription(`Hey ${interaction.member}, you're not currently being taken care of!`);}
-                logger.debug(`[${PREFIX}] Patient ${patient} does not need help!`);
+                logger.debug(`[${PREFIX}] target ${target} does not need help!`);
                 return interaction.reply({ embeds: [embed] });
             }
         }
