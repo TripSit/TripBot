@@ -28,6 +28,7 @@
   "dependencies": {
     "@discordjs/builders": "^0.12.0",
     "@discordjs/rest": "^0.3.0",
+    "@octokit/rest": "^18.12.0",
     "chalk": "4.1.2",
     "discord-api-types": "^0.31.1",
     "discord.js": "^13.6.0",
@@ -38,6 +39,7 @@
     "firebase-admin": "^10.0.2",
     "fuse.js": "^6.5.3",
     "lodash": "^4.17.19",
+    "octokit": "^1.7.1",
     "winston": "^3.7.2"
   },
   "devDependencies": {
