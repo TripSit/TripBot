@@ -7,10 +7,11 @@ const logger = require('./utils/logger.js');
 const { initializeApp, cert } = require('firebase-admin/app');
 const serviceAccount = require('./assets/firebase_creds.json');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-serviceAccount.private_key_id = process.env.firebase_private_key_id;
-serviceAccount.private_key = process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined;
-serviceAccount.client_email = process.env.firebase_client_id;
-serviceAccount.client_id = process.env.firebase_client_email;
+serviceAccount.private_key_id = process.env.FIREBASE_PRIVATE_KEY_ID;
+serviceAccount.private_key = process.env.FIREBASE_PRIVATE_KEY;
+serviceAccount.client_email = process.env.FIREBASE_CLIENT_ID;
+serviceAccount.client_id = process.env.FIREBASE_CLIENT_EMAIL;
+console.log(JSON.stringify(serviceAccount, null, 2));
 
 // Initialize firebase app
 initializeApp({
