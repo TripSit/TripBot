@@ -34,8 +34,7 @@ module.exports = {
         octokit.rest.issues.create({
             owner,
             repo,
-            title: `Bug report from ${username} in ${channel} on ${guild}`,
-            body: `${report}`,
+            title: report,
         }).then(() => {
             logger.info(`[${PREFIX}] Successfully created issue on ${owner}/${repo}`);
             const embed = new MessageEmbed()
