@@ -4,6 +4,7 @@ const { MessageEmbed, MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
+const { getFirestore } = require('firebase-admin/firestore');
 
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
@@ -51,20 +52,24 @@ module.exports = {
         const patientid = patient.id.toString();
         logger.debug(`[${PREFIX}] patientid: ${patientid}`);
 
-        const db_name = 'ts_data.json';
-        const RAW_TS_DATA = fs.readFileSync(`./src/assets/${db_name}`);
-        const ALL_TS_DATA = JSON.parse(RAW_TS_DATA);
-        // logger.debug(`[${PREFIX}] ALL_TS_DATA: ${JSON.stringify(ALL_TS_DATA, null, 4)}`);
+        const db = getFirestore();
+        const snapshot = await db.collection('users').get();
 
-        let patientData = ALL_TS_DATA['users'][patientid];
-        logger.debug(`[${PREFIX}] patientData: ${JSON.stringify(patientData, null, 4)}`);
+        let patientData = null;
+        snapshot.forEach((doc) => {
+            // logger.debug(`[${PREFIX}] doc.data(): ${JSON.stringify(doc.data(), null, 2)}`);
+            logger.debug(`[${PREFIX}] doc.data().discord_id: ${doc.data().discord_id}`);
+            if (doc.data().discord_id === patientid) {
+                patientData = doc.data();
+                logger.debug(`[${PREFIX}] patientData: ${JSON.stringify(patientData, null, 4)}`);
+            }
+        });
 
         // Check if the patient data exists, if not create a blank one
         if (!patientData) {
             patientData = {
                 'name': patient.user.username,
                 'discriminator': patient.user.discriminator,
-                'roles': [],
                 'karma_given': {},
                 'karma_received': {},
             };

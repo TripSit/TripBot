@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../utils/logger.js');
+const { getFirestore } = require('firebase-admin/firestore');
 
 const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
@@ -114,10 +115,6 @@ module.exports = {
         const guild = interaction.guild.name;
         logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
 
-        const db_name = 'ts_data.json';
-        const RAW_TS_DATA = fs.readFileSync(`./src/assets/${db_name}`);
-        const ALL_TS_DATA = JSON.parse(RAW_TS_DATA);
-
         const actor = interaction.member;
         logger.debug(`[${PREFIX}] Actor: ${actor}`);
         let command = interaction.options.getSubcommand();
@@ -199,60 +196,91 @@ module.exports = {
             logger.debug(`[${PREFIX}] I replied to ${interaction.member}!`);
         }
 
-        let actorData = ALL_TS_DATA['users'][actor.id];
-        if (!actorData) {
-            logger.debug(`[${PREFIX}] No actor data found, creating a blank one`);
-            logger.debug(`[${PREFIX}] actor.nickname: ${actor.user.username}#${actor.user.discriminator}`);
-            actorData = {
-                'name': actor.user.username,
-                'discriminator': actor.user.discriminator,
-                'reports_sent': 0,
-                'reports_recv': 0,
-                'warn_sent': 0,
-                'warn_recv': 0,
-                'timeout_sent': 0,
-                'timeout_recv': 0,
-                'kick_sent': 0,
-                'kick_recv': 0,
-                'ban_sent': 0,
-                'ban_recv': 0,
-            };
-        }
-        actorData[`${command}_sent`]++;
-        logger.debug(`[${PREFIX}] Incremented ${command}_sent on ${actorData.name}`);
-        // logger.debug(JSON.stringify(actorData, null, 2));
-        ALL_TS_DATA['users'][actor.id] = actorData;
+        const db = getFirestore();
 
-        let targetData = ALL_TS_DATA['users'][target.id];
-        if (!targetData) {
-            logger.debug(`[${PREFIX}] No target data found, creating a blank one`);
-            logger.debug(`[${PREFIX}] target.nickname: ${target.username}#${target.discriminator}`);
-            targetData = {
-                'name': `${is_member ? target.user.username : target.username}`,
-                'discriminator': `${is_member ? target.user.discriminator : target.discriminator}`,
-                'reports_sent': 0,
-                'reports_recv': 0,
-                'warn_sent': 0,
-                'warn_recv': 0,
-                'timeout_sent': 0,
-                'timeout_recv': 0,
-                'kick_sent': 0,
-                'kick_recv': 0,
-                'ban_sent': 0,
-                'ban_recv': 0,
-            };
-        }
-
-        targetData[`${command}_recv`]++;
-        logger.debug(`[${PREFIX}] Incremented ${command}_recv on ${targetData.name}`);
-        // logger.debug(JSON.stringify(targetData, null, 2));
-        ALL_TS_DATA['users'][target.id] = targetData;
-
-        fs.writeFile(`src/assets/${db_name}`, JSON.stringify(ALL_TS_DATA, null, 4), function(err) {
-            if (err) {
-                console.log(err);
+        let actorData = {};
+        let actorFBID = '';
+        let targetData = {};
+        let targetFBID = '';
+        const snapshot = await db.collection('users').get();
+        snapshot.forEach((doc) => {
+            if (doc.data().discord_id === actor.id) {
+                logger.debug(`[${PREFIX}] Found a actor match!`);
+                // console.log(doc.id, '=>', doc.data());
+                actorFBID = doc.id;
+                logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
+                actorData = doc.data();
+            }
+            if (doc.data().discord_id === target.id) {
+                logger.debug(`[${PREFIX}] Found a target match!`);
+                // console.log(doc.id, '=>', doc.data());
+                targetFBID = doc.id;
+                logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
+                targetData = doc.data();
             }
         });
+        const actor_action = `${command}_sent`;
+        if (Object.keys(actorData).length === 0) {
+            logger.debug(`[${PREFIX}] No actor data found, creating a blank one`);
+            actorData = {
+                discord_username: actor.user.username,
+                discord_discriminator: actor.user.discriminator,
+                discord_id: actor.user.id,
+                isBanned: false,
+                mod_actions: { [actor_action]: 1 },
+            };
+        }
+        else {
+            logger.debug(`[${PREFIX}] Found actor data, updating it`);
+            if ('mod_actions' in actorData) {
+                actorData.mod_actions[actor_action] = (actorData.mod_actions[actor_action] || 0) + 1;
+            }
+            else {
+                actorData.mod_actions = { [actor_action]: 1 };
+            }
+        }
+        logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
+
+        if (actorFBID !== '') {
+            logger.debug(`[${PREFIX}] Updating actor data`);
+            await db.collection('users').doc(actorFBID).set(actorData);
+        }
+        else {
+            logger.debug(`[${PREFIX}] Creating actor data`);
+            await db.collection('users').doc().set(actorData);
+        }
+
+        const target_action = `${command}_received`;
+        if (Object.keys(targetData).length === 0) {
+            logger.debug(`[${PREFIX}] No target data found, creating a blank one`);
+            targetData = {
+                discord_username: target.user.username,
+                discord_discriminator: target.user.discriminator,
+                discord_id: target.user.id,
+                isBanned: false,
+                mod_actions: { [target_action]: 1 },
+            };
+        }
+        else {
+            logger.debug(`[${PREFIX}] Found target data, updating it`);
+            if ('mod_actions' in targetData) {
+                targetData.mod_actions[target_action] = (targetData.mod_actions[target_action] || 0) + 1;
+            }
+            else {
+                targetData.mod_actions = { [target_action]: 1 };
+            }
+        }
+        logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
+
+        if (targetFBID !== '') {
+            logger.debug(`[${PREFIX}] Updating target data`);
+            await db.collection('users').doc(targetFBID).set(targetData);
+        }
+        else {
+            logger.debug(`[${PREFIX}] Creating target data`);
+            await db.collection('users').doc().set(targetData);
+        }
+
 
         // const title = `${actor} ${command}ed ${target} ${duration ? `for ${duration}` : ''} ${reason ? `because ${reason}` : ''}`;
         const title = `${actor} ${command}ed ${target} ${reason ? `because ${reason}` : ''}`;
@@ -282,13 +310,13 @@ module.exports = {
                 { name: 'Kickable', value: `${target.kickable}`, inline: true },
             )
             .addFields(
-                { name: '# of Reports', value: `${targetData['reports_recv']}`, inline: true },
-                { name: '# of Timeouts', value: `${targetData['timeout_recv']}`, inline: true },
-                { name: '# of Warns', value: `${targetData['warn_recv']}`, inline: true },
+                { name: '# of Reports', value: `${targetData['reports_recv'] ? targetData['reports_recv'] : 0 }`, inline: true },
+                { name: '# of Timeouts', value: `${targetData['timeout_recv'] ? targetData['timeout_recv'] : 0 }`, inline: true },
+                { name: '# of Warns', value: `${targetData['warn_recv'] ? targetData['warn_recv'] : 0 }`, inline: true },
             )
             .addFields(
-                { name: '# of Kicks', value: `${targetData['kick_recv']}`, inline: true },
-                { name: '# of Bans', value: `${targetData['ban_recv']}`, inline: true },
+                { name: '# of Kicks', value: `${targetData['kick_recv'] ? targetData['kick_recv'] : 0 }`, inline: true },
+                { name: '# of Bans', value: `${targetData['ban_recv'] ? targetData['ban_recv'] : 0 }`, inline: true },
                 { name: '# of Fucks to give', value: '0', inline: true },
             );
         // book.push(target_embed);

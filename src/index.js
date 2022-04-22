@@ -4,11 +4,24 @@ const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('./utils/logger.js');
+const { initializeApp, cert } = require('firebase-admin/app');
+const serviceAccount = require('./assets/firebase_creds.json');
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
+serviceAccount.private_key_id = process.env.firebase_private_key_id;
+serviceAccount.private_key = process.env.firebase_private_key;
+serviceAccount.client_email = process.env.firebase_client_id;
+serviceAccount.client_id = process.env.firebase_client_email;
+
+// Initialize firebase app
+initializeApp({
+    credential: cert(serviceAccount),
+    databaseURL: 'https://tripsit-me-default-rtdb.firebaseio.com',
+});
 
 // Check if we're in production and if not, use the .env file
 const production = process.env.production === 'true';
 if (!production) {
-    logger.info(`[${PREFIX}] Using .env file`);
+    logger.debug(`[${PREFIX}] Using .env file`);
     require('dotenv').config();
 }
 
@@ -33,7 +46,7 @@ const client = new Client({
 
 // Set up commands
 const guild_commands = [];
-const guild_command_names = ['tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button', 'gban', 'gunban', 'uban', 'uunban', 'chitragupta', 'test'];
+const guild_command_names = ['botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button', 'gban', 'gunban', 'uban', 'uunban', 'chitragupta', 'test'];
 const globl_commands = [];
 const globl_command_names = ['dxmcalc', 'ems', 'recovery', 'help', 'bug', 'about', 'breathe', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
 
@@ -54,12 +67,12 @@ for (const file of commandFiles) {
 
 const guild_rest = new REST({ version: '9' }).setToken(token);
 guild_rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: guild_commands })
-    .then(() => logger.info(`[${PREFIX}] Successfully registered application guild_commands on ${guildId}!`))
+    .then(() => logger.debug(`[${PREFIX}] Successfully registered application guild_commands on ${guildId}!`))
     .catch(console.error);
 
 const globl_rest = new REST({ version: '9' }).setToken(token);
 globl_rest.put(Routes.applicationCommands(clientId), { body: globl_commands })
-    .then(() => logger.info(`[${PREFIX}] Successfully registered application globl_commands!`))
+    .then(() => logger.debug(`[${PREFIX}] Successfully registered application globl_commands!`))
     .catch(console.error);
 
 // Set up events

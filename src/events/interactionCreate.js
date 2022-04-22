@@ -3,6 +3,7 @@ const { MessageEmbed } = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 const Fuse = require('fuse.js');
+const { getFirestore } = require('firebase-admin/firestore');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
@@ -21,7 +22,7 @@ const allDrugData = JSON.parse(raw_drug_data);
 
 module.exports = {
     name: 'interactionCreate',
-    execute(interaction, client) {
+    async execute(interaction, client) {
         // print what the user typed in the interaction
         logger.info(`[${PREFIX}] ${interaction.user.username} (${interaction.user.id}) started: ${interaction.message}`);
 
@@ -30,10 +31,16 @@ module.exports = {
             logger.debug(`[${PREFIX}] Ignoring bot interaction`);
             return;
         }
-        const db_name = 'ts_data.json';
-        const raw_ts_data = fs.readFileSync(`./src/assets/${db_name}`);
-        const ts_data = JSON.parse(raw_ts_data);
-        const blacklist_users = ts_data.blacklist.users;
+        const db = getFirestore();
+
+        const snapshot = await db.collection('guilds').get();
+        const blacklist_users = [];
+        snapshot.forEach((doc) => {
+            // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc.data()}`);
+            if (doc.data().isBanned == true) {
+                blacklist_users.push(doc.data().guild_id);
+            }
+        });
 
         // Check if the user is in blacklist_users and if so, ignore it
         logger.debug(`[${PREFIX}] blacklist_users: ${blacklist_users}`);
@@ -118,6 +125,19 @@ module.exports = {
                     .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
                 mod_chan.send({ embeds: [embed] });
                 interaction.reply('Thanks for making this easy!');
+            }
+
+            if (buttonID == 'guildacknowledgebtn') {
+                // Get the owner of the client
+                await interaction.client.application.fetch();
+                const bot_owner = interaction.client.application.owner;
+                logger.debug(`[${PREFIX}] bot_owner: ${bot_owner}`);
+                const embed = new MessageEmbed()
+                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+                    .setColor('GREEN')
+                    .setDescription(`${interaction.user.username} has acknowledged their warning.`);
+                bot_owner.send({ embeds: [embed] });
+                interaction.reply('Thanks for understanding!');
             }
 
             if (buttonID == 'warnbtn') {
