@@ -8,7 +8,7 @@ const { initializeApp, cert } = require('firebase-admin/app');
 const serviceAccount = require('./assets/firebase_creds.json');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 serviceAccount.private_key_id = process.env.firebase_private_key_id;
-serviceAccount.private_key = process.env.firebase_private_key;
+serviceAccount.private_key = process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined;
 serviceAccount.client_email = process.env.firebase_client_id;
 serviceAccount.client_id = process.env.firebase_client_email;
 
@@ -46,7 +46,7 @@ const client = new Client({
 
 // Set up commands
 const guild_commands = [];
-const guild_command_names = ['botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button', 'gban', 'gunban', 'uban', 'uunban', 'chitragupta', 'test'];
+const guild_command_names = ['benzo_convert', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button', 'gban', 'gunban', 'uban', 'uunban', 'chitragupta', 'test'];
 const globl_commands = [];
 const globl_command_names = ['dxmcalc', 'ems', 'recovery', 'help', 'bug', 'about', 'breathe', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
 
