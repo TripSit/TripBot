@@ -28,7 +28,7 @@ module.exports = {
         const dev_embed = new MessageEmbed()
             .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
             .setColor('RANDOM')
-            .setTitle('TripBot But Report')
+            .setTitle(`Bug report from ${username} in ${channel} on ${guild}`)
             .setDescription(bug_report);
         dev_chan.send({ embeds: [dev_embed] });
 
