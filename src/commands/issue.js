@@ -6,8 +6,7 @@ const { Octokit } = require('@octokit/rest');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
-const ts_icon_url = process.env.ts_icon_url;
-// const channel_dev_id = process.env.channel_development;
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -25,7 +24,7 @@ module.exports = {
 
         const owner = 'TripSit';
         const repo = 'tripsit-discord-bot';
-        const token = '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';
+        const token = GITHUB_TOKEN;
 
         const octokit = new Octokit({
             auth: token,
