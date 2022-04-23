@@ -4,6 +4,7 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 const Fuse = require('fuse.js');
 const { getFirestore } = require('firebase-admin/firestore');
+const _ = require('underscore');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
@@ -17,8 +18,12 @@ const ts_icon_url = process.env.ts_icon_url;
 // const cooldown_seconds = 1;
 // const cooldownTime = cooldown_seconds * 1000;
 
-const raw_drug_data = fs.readFileSync('./src/assets/allDrugData.json');
-const allDrugData = JSON.parse(raw_drug_data);
+const raw_drug_data = fs.readFileSync('./src/assets/drug_db_combined.json');
+const drug_data_all = JSON.parse(raw_drug_data);
+
+const raw_ts_data = fs.readFileSync('./src/assets/drug_db_tripsit.json');
+const drug_data_tripsit = JSON.parse(raw_ts_data);
+
 
 module.exports = {
     name: 'interactionCreate',
@@ -52,49 +57,92 @@ module.exports = {
 
         // check if the interaction is a request for autocomplete
         if (interaction.isAutocomplete()) {
-            const options = {
-                shouldSort: true,
-                keys: [
-                    'name',
-                    'aliasesStr',
-                ],
-            };
+            logger.debug(`[${PREFIX}] Autocomplete requested`);
+            logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.options.getString('mg_of')}`);
+            logger.debug(`[${PREFIX}] commandName: ${interaction.commandName}`);
 
-            // For each dictionary in the allDrugData list, find the "name" key and add it to a list
-            const drugNames = allDrugData.map(d => d.name);
-            // logger.debug(`[${PREFIX}] drugNames: ${drugNames}`);
+            if (interaction.commandName == 'benzo_convert') {
+                logger.debug(`[${PREFIX}] Autocomplete requested for benzo_convert`);
+                const options = {
+                    shouldSort: true,
+                    keys: [
+                        'name',
+                        'aliasesStr',
+                    ],
+                };
 
-            const fuse = new Fuse(drugNames, options);
+                // The following code came from the benzo_convert tool in the github
+                const drugCache = drug_data_tripsit;
+                let benzoCache = {};
 
-            const focusedValue = interaction.options.getFocused();
+                benzoCache = {};
+                // Filter any drug not containing the dose_to_diazepam property
+                benzoCache = _.filter((drugCache), function(dCache) {
+                    return _.has(dCache.properties, 'dose_to_diazepam');
+                });
 
-            const results = fuse.search(focusedValue);
-            // logger.debug(`[${PREFIX}] results: ${results}`);
+                _.each(benzoCache, function(benzo) {
+                    _.each(benzo.aliases, function(alias) {
+                        benzoCache.push({
+                            // Add used aliases to new objects
+                            name: alias,
+                            pretty_name: alias.charAt(0).toUpperCase() + alias.slice(1),
+                            properties: benzo.properties,
+                            formatted_dose: benzo.formatted_dose,
+                        });
+                    });
+                });
 
-            let top_25 = [];
-            if (results.length > 0) {
-                top_25 = results.slice(0, 25);
-                // logger.debug(`[${PREFIX}] top_25: ${top_25}`);
-                // for (const result of top_25) {
-                // 	logger.debug(`[${PREFIX}] result: ${result.item}`);
-                // }
-                // await interaction.respond(
-                //     top_25.map(choice => ({ name: choice.item, value: choice.item })),
-                // );
-                interaction.respond(
-                    top_25.map(choice => ({ name: choice.item, value: choice.item })),
-                );
+                benzoCache = _.sortBy(benzoCache, 'name');
+                const regex = /[0-9]+\.?[0-9]?/;
+                benzoCache = _.each(benzoCache, function(bCache) {
+                    bCache.diazvalue = regex.exec(bCache.properties.dose_to_diazepam);
+                });
+                // End borrowed code, thanks bjorn!
+
+                const drugNames = benzoCache.map(d => d.name);
+                const fuse = new Fuse(drugNames, options);
+                const focusedValue = interaction.options.getFocused();
+                const results = fuse.search(focusedValue);
+                if (results.length > 0) {
+                    const top_25 = results.slice(0, 25);
+                    interaction.respond(top_25.map(choice => ({ name: choice.item, value: choice.item })));
+                }
+                else {
+                    const default_names = drugNames.slice(0, 25);
+                    interaction.respond(default_names.map(choice => ({ name: choice, value: choice })));
+                }
             }
+
+            // I need to find the rest of the actions that use autocomplete and define them here
             else {
-                const TOP_PSYCHS = ['Cannabis', 'MDMA', 'LSD', 'DMT', 'Mushrooms'];
-                const TOP_DISSOS = ['Zolpidem', 'Ketamine', 'DXM', 'PCP', 'Salvia'];
-                const TOP_OPIATE = ['Alcohol', 'Hydrocodone', 'Oxycodone', 'Tramadol', 'Heroin'];
-                const TOP_BENZOS = ['Alprazolam', 'Clonazepam', 'Diazepam', 'Lorazepam', 'Flunitrazepam'];
-                const TOP_SPEEDS = ['Nicotine', 'Amphetamine', 'Cocaine', 'Methamphetamine', 'Methylphenidate'];
-                const TOP_DRUGS = TOP_PSYCHS.concat(TOP_DISSOS, TOP_OPIATE, TOP_BENZOS, TOP_SPEEDS);
-                interaction.respond(
-                    TOP_DRUGS.map(choice => ({ name: choice, value: choice })),
-                );
+                const options = {
+                    shouldSort: true,
+                    keys: [
+                        'name',
+                        'aliasesStr',
+                    ],
+                };
+
+                // For each dictionary in the drug_data_all list, find the "name" key and add it to a list
+                const drugNames = drug_data_all.map(d => d.name);
+                const fuse = new Fuse(drugNames, options);
+                const focusedValue = interaction.options.getFocused();
+                const results = fuse.search(focusedValue);
+                let top_25 = [];
+                if (results.length > 0) {
+                    top_25 = results.slice(0, 25);
+                    interaction.respond(top_25.map(choice => ({ name: choice.item, value: choice.item })));
+                }
+                else {
+                    const TOP_PSYCHS = ['Cannabis', 'MDMA', 'LSD', 'DMT', 'Mushrooms'];
+                    const TOP_DISSOS = ['Zolpidem', 'Ketamine', 'DXM', 'PCP', 'Salvia'];
+                    const TOP_OPIATE = ['Alcohol', 'Hydrocodone', 'Oxycodone', 'Tramadol', 'Heroin'];
+                    const TOP_BENZOS = ['Alprazolam', 'Clonazepam', 'Diazepam', 'Lorazepam', 'Flunitrazepam'];
+                    const TOP_SPEEDS = ['Nicotine', 'Amphetamine', 'Cocaine', 'Methamphetamine', 'Methylphenidate'];
+                    const TOP_DRUGS = TOP_PSYCHS.concat(TOP_DISSOS, TOP_OPIATE, TOP_BENZOS, TOP_SPEEDS);
+                    interaction.respond(TOP_DRUGS.map(choice => ({ name: choice, value: choice })));
+                }
             }
         }
 

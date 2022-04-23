@@ -4,8 +4,8 @@ const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 
-const raw_drug_data = fs.readFileSync('./src/assets/allDrugData.json');
-const allDrugData = JSON.parse(raw_drug_data);
+const raw_drug_data = fs.readFileSync('./src/assets/drug_db_combined.json');
+const drug_data_all = JSON.parse(raw_drug_data);
 
 const raw_combo_data = fs.readFileSync('./src/assets/combo_definitions.json');
 const combo_defs = JSON.parse(raw_combo_data);

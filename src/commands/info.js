@@ -11,8 +11,8 @@ if (process.env.NODE_ENV !== 'production') {
 const ts_icon_url = process.env.ts_icon_url;
 const disclaimer = process.env.disclaimer;
 
-const raw_drug_data = fs.readFileSync('./src/assets/allDrugData.json');
-const allDrugData = JSON.parse(raw_drug_data);
+const raw_drug_data = fs.readFileSync('./src/assets/drug_db_combined.json');
+const drug_data_all = JSON.parse(raw_drug_data);
 
 const raw_combo_data = fs.readFileSync('./src/assets/combo_definitions.json');
 const all_combo_data = JSON.parse(raw_combo_data);
@@ -60,14 +60,14 @@ module.exports = {
         const wiki_url = `https://wiki.tripsit.me/wiki/${substance}`;
 
         logger.info(`[${PREFIX}] starting getDrugInfo with parameter: ${substance}`);
-        // loop through allDrugData to find the substance
+        // loop through drug_data_all to find the substance
         let drugData = {};
-        logger.debug(`[${PREFIX}] All drug data length is: ${Object.keys(allDrugData).length}`);
-        for (let i = 0; i < Object.keys(allDrugData).length; i++) {
-            // logger.debug(`[${PREFIX}] allDrugData[i]['name'] is: ${allDrugData[i]['name']}`)
-            if (allDrugData[i]['name'] == substance) {
+        logger.debug(`[${PREFIX}] All drug data length is: ${Object.keys(drug_data_all).length}`);
+        for (let i = 0; i < Object.keys(drug_data_all).length; i++) {
+            // logger.debug(`[${PREFIX}] drug_data_all[i]['name'] is: ${drug_data_all[i]['name']}`)
+            if (drug_data_all[i]['name'] == substance) {
                 logger.debug(`[${PREFIX}] found substance: ${substance}`);
-                drugData = allDrugData[i];
+                drugData = drug_data_all[i];
                 break;
             }
         }
