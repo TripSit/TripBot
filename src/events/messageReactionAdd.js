@@ -27,8 +27,6 @@ module.exports = {
                 });
         }
         else {
-            logger.debug(`[${PREFIX}] reaction3: ${JSON.stringify(reaction, null, 4)}`);
-
             // Now the message has been cached and is fully available
             const reaction_author = reaction.message.author;
             const reaction_remoji = reaction.emoji;

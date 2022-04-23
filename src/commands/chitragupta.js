@@ -48,25 +48,17 @@ module.exports = {
                 discord_discriminator: actor.discriminator,
                 discord_id: actor.id,
                 isBanned: false,
-                karma_given: { [emoji]: 1 },
+                karma_given: { [emoji]: action },
             };
         }
         else {
             logger.debug(`[${PREFIX}] Found actor data, updating it`);
-            // logger.debug(`[${PREFIX}] actorData: ${JSON.stringify(actorData, null, 2)}`);
-            // logger.debug(`[${PREFIX}] Object.keys(actorData.karma_given): ${Object.keys(actorData.karma_given)}`);
-            // // if emojis exists in actorData.karma_given, increment it
-            // if (emoji in Object.keys(actorData.karma_given)) {
-            //     logger.debug(`[${PREFIX}] actorData.karma_given[emoji]: ${actorData.karma_given[emoji]}`);
-            //     actorData.karma_given[emoji] += 1;
-            // }
-            // // else create a new entry
-            // else {
-            //     logger.debug(`[${PREFIX}] actorData.karma_given[emoji]: ${actorData.karma_given[emoji]}`);
-            //     actorData.karma_given[emoji] = 1;
-            // }
-
-            actorData.karma_given[emoji] = (actorData.karma_given[emoji] || 0) + action;
+            if ('karma_given' in targetData) {
+                targetData.karma_given[emoji] = (targetData.karma_given[emoji] || 0) + action;
+            }
+            else {
+                targetData.karma_given = { [emoji]: action };
+            }
         }
         // logger.debug(`[${PREFIX}] actorData: ${JSON.stringify(actorData, null, 2)}`);
         logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
@@ -88,13 +80,18 @@ module.exports = {
                 discord_discriminator: target.discriminator,
                 discord_id: target.id,
                 isBanned: false,
-                karma_recieved: { [emoji]: 1 },
+                karma_recieved: { [emoji]: action },
             };
         }
         else {
             logger.debug(`[${PREFIX}] Found target data, updating it`);
             // logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
-            targetData.karma_recieved[emoji] = (targetData.karma_recieved[emoji] || 0) + action;
+            if ('karma_recieved' in targetData) {
+                targetData.karma_recieved[emoji] = (targetData.karma_recieved[emoji] || 0) + action;
+            }
+            else {
+                targetData.karma_recieved = { [emoji]: action };
+            }
         }
         // logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
         logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
