@@ -40,6 +40,7 @@
     "fuse.js": "^6.5.3",
     "lodash": "^4.17.19",
     "octokit": "^1.7.1",
+    "underscore": "^1.13.2",
     "winston": "^3.7.2"
   },
   "devDependencies": {
