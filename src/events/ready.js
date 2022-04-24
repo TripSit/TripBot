@@ -51,39 +51,39 @@ module.exports = {
             logger.debug(`[${PREFIX}] Healthcheck app listening on port ${PORT}`);
         });
 
-        async function checkReminders() {
-            const reminder_cache = JSON.parse(fs.readFileSync('./src/assets/reminders.json'));
-            // For the keys in reminder_cache, check if the actor is in the key
-            for (const userid in reminder_cache) {
-                // logger.debug(`[${PREFIX}] userid: ${userid}`);
-                // logger.debug(`[${PREFIX}] reminder_cache['${userid}']: ${JSON.stringify(reminder_cache[`${userid}`], null, 2)}`);
-                // logger.debug(`[${PREFIX}] reminders: ${JSON.stringify(reminder_cache[`${userid}`]['reminders'], null, 2)}`);
-                if (Object.keys(reminder_cache[`${userid}`]['reminders']).length > 0) {
-                    for (const remindertime in reminder_cache[userid]['reminders']) {
-                        // logger.debug(`[${PREFIX}] remindertime: ${remindertime}`);
-                        // logger.debug(`[${PREFIX}] now: ${Date.now() / 1000}`);
-                        if (remindertime <= Date.now() / 1000) {
-                            logger.debug(`[${PREFIX}] Sending reminder to ${userid}`);
-                            const reminder = reminder_cache[userid]['reminders'][remindertime];
-                            logger.debug(`[${PREFIX}] reminder: ${reminder}`);
-                            const user = await client.users.fetch(userid);
-                            logger.debug(`[${PREFIX}] user: ${user.id}`);
-                            const reminder_embed = new MessageEmbed()
-                                .setColor('RANDOM')
-                                .setTitle('Reminder!')
-                                .setDescription(`You set a reminder to ${reminder}`)
-                                .setFooter({ text: 'Dose responsibly!', iconURL: ts_icon_url });
-                            user.send({ embeds: [reminder_embed] });
-                            logger.debug(`[${PREFIX}] user: ${user.id}`);
-                            delete reminder_cache[userid]['reminders'][remindertime];
-                            fs.writeFileSync('./src/assets/reminders.json', JSON.stringify(reminder_cache, null, 2));
-                        }
-                    }
-                }
-            }
-        }
-        checkReminders();
-        setInterval(checkReminders, 60000);
+        // async function checkReminders() {
+        //     const reminder_cache = JSON.parse(fs.readFileSync('./src/assets/reminders.json'));
+        //     // For the keys in reminder_cache, check if the actor is in the key
+        //     for (const userid in reminder_cache) {
+        //         // logger.debug(`[${PREFIX}] userid: ${userid}`);
+        //         // logger.debug(`[${PREFIX}] reminder_cache['${userid}']: ${JSON.stringify(reminder_cache[`${userid}`], null, 2)}`);
+        //         // logger.debug(`[${PREFIX}] reminders: ${JSON.stringify(reminder_cache[`${userid}`]['reminders'], null, 2)}`);
+        //         if (Object.keys(reminder_cache[`${userid}`]['reminders']).length > 0) {
+        //             for (const remindertime in reminder_cache[userid]['reminders']) {
+        //                 // logger.debug(`[${PREFIX}] remindertime: ${remindertime}`);
+        //                 // logger.debug(`[${PREFIX}] now: ${Date.now() / 1000}`);
+        //                 if (remindertime <= Date.now() / 1000) {
+        //                     logger.debug(`[${PREFIX}] Sending reminder to ${userid}`);
+        //                     const reminder = reminder_cache[userid]['reminders'][remindertime];
+        //                     logger.debug(`[${PREFIX}] reminder: ${reminder}`);
+        //                     const user = await client.users.fetch(userid);
+        //                     logger.debug(`[${PREFIX}] user: ${user.id}`);
+        //                     const reminder_embed = new MessageEmbed()
+        //                         .setColor('RANDOM')
+        //                         .setTitle('Reminder!')
+        //                         .setDescription(`You set a reminder to ${reminder}`)
+        //                         .setFooter({ text: 'Dose responsibly!', iconURL: ts_icon_url });
+        //                     user.send({ embeds: [reminder_embed] });
+        //                     logger.debug(`[${PREFIX}] user: ${user.id}`);
+        //                     delete reminder_cache[userid]['reminders'][remindertime];
+        //                     fs.writeFileSync('./src/assets/reminders.json', JSON.stringify(reminder_cache, null, 2));
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        // checkReminders();
+        // setInterval(checkReminders, 60000);
 
         logger.info(`[${PREFIX}] Ready to take over the world!`);
     },
