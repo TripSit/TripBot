@@ -6,7 +6,6 @@ const db = getFirestore();
 const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
-const channel_moderators_id = process.env.channel_moderators;
 
 const warn_buttons = new MessageActionRow()
     .addComponents(

@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed, MessageActionRow, MessageSelectMenu } = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 const _ = require('underscore');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
@@ -79,7 +79,7 @@ module.exports = {
             });
         }
 
-        const final_list = drugNames.slice(0, 25);
+        // const final_list = drugNames.slice(0, 25);
 
         let dose_a = 0;
         let dose_b = 0;
@@ -139,13 +139,13 @@ module.exports = {
             ${drug_b_result.formatted_dose.Light.Strong ? `Strong: ${drug_b_result.formatted_dose.Light.Strong}\n` : ''}`;
         }
 
-        const row = new MessageActionRow()
-            .addComponents(
-                new MessageSelectMenu()
-                    .setCustomId('select')
-                    .setPlaceholder('Nothing selected')
-                    .addOptions(final_list),
-            );
+        // const row = new MessageActionRow()
+        //     .addComponents(
+        //         new MessageSelectMenu()
+        //             .setCustomId('select')
+        //             .setPlaceholder('Nothing selected')
+        //             .addOptions(final_list),
+        //     );
 
         const embed = new MessageEmbed()
             .setAuthor({ name: 'TripSit.Me - Benzo Converter', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
