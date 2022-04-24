@@ -30,15 +30,11 @@ async function backup() {
     });
     fs.writeFileSync(`./src/backups/fb_db_backup(${today}).json`, JSON.stringify(users, null, 2));
 }
+
 if (process.env.NODE_ENV !== 'production') {
+    logger.debug(`[${PREFIX}] Taking backup of db`);
     backup();
-}
-
-
-// Check if we're in production and if not, use the .env file
-const production = process.env.production === 'true';
-if (!production) {
-    logger.debug(`[${PREFIX}] Using .env file`);
+    logger.debug(`[${PREFIX}] Running in dev mode`);
     require('dotenv').config();
 }
 
