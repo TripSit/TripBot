@@ -290,7 +290,6 @@ module.exports = {
                 );
 
             if (command == 'info') {
-                // interaction.reply({ embeds: [target_embed], ephemeral: true, components: [mod_buttons] });
                 interaction.reply({ embeds: [target_embed], ephemeral: true });
                 logger.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${targetData.guild_name}`);
                 return;

@@ -42,6 +42,6 @@ module.exports = {
                 { name: 'Mod', value: 'TripSit Only - Applies mod actions on a user.' },
                 { name: 'Report', value: 'TripSit Only - Allows users to report someone to the TripSit Team.' },
             );
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+        return interaction.reply({ embeds: [embed], ephemeral: false });
     },
 };
