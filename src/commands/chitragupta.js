@@ -11,17 +11,14 @@ module.exports = {
     async execute(interaction, actor, action, emoji, target) {
         logger.debug(`[${PREFIX}] ${actor} ${action} ${emoji} ${target}!`);
 
-        if (actor === target) {
-            return;
-        }
+        if (actor === target) {return;}
 
         const db = getFirestore();
 
         logger.debug(`[${PREFIX}] actor.id: ${actor.id}`);
         let actorData = {};
         let actorFBID = '';
-        let targetData = {};
-        let targetFBID = '';
+
         const snapshot = await db.collection('users').get();
         snapshot.forEach((doc) => {
             if (doc.data().discord_id === actor.id) {
@@ -30,13 +27,6 @@ module.exports = {
                 actorFBID = doc.id;
                 logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
                 actorData = doc.data();
-            }
-            if (doc.data().discord_id === target.id) {
-                logger.debug(`[${PREFIX}] Found a target match!`);
-                // console.log(doc.id, '=>', doc.data());
-                targetFBID = doc.id;
-                logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
-                targetData = doc.data();
             }
         });
 
@@ -52,16 +42,15 @@ module.exports = {
             };
         }
         else {
-            logger.debug(`[${PREFIX}] Found actor data, updating it`);
-            if ('karma_given' in targetData) {
-                targetData.karma_given[emoji] = (targetData.karma_given[emoji] || 0) + action;
+            logger.debug(`[${PREFIX}] Updating actor info!`);
+            if ('karma_given' in actorData) {
+                logger.debug(`[${PREFIX}] Creating karma_given info!`);
+                actorData.karma_given[emoji] = (actorData.karma_given[emoji] || 0) + action;
             }
             else {
-                targetData.karma_given = { [emoji]: action };
+                actorData.karma_given = { [emoji]: action };
             }
         }
-        // logger.debug(`[${PREFIX}] actorData: ${JSON.stringify(actorData, null, 2)}`);
-        logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
 
         if (actorFBID !== '') {
             logger.debug(`[${PREFIX}] Updating actor data`);
@@ -71,6 +60,17 @@ module.exports = {
             logger.debug(`[${PREFIX}] Creating actor data`);
             await db.collection('users').doc().set(actorData);
         }
+
+        let targetData = {};
+        let targetFBID = '';
+        snapshot.forEach((doc) => {
+            if (doc.data().discord_id === target.id) {
+                logger.debug(`[${PREFIX}] Found a target match!`);
+                targetFBID = doc.id;
+                logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
+                targetData = doc.data();
+            }
+        });
 
         // Check if the target data exists, if not create a blank one
         if (Object.keys(targetData).length === 0) {
@@ -85,16 +85,14 @@ module.exports = {
         }
         else {
             logger.debug(`[${PREFIX}] Found target data, updating it`);
-            // logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
             if ('karma_recieved' in targetData) {
+                logger.debug(`[${PREFIX}] Creating karma_recieved info!`);
                 targetData.karma_recieved[emoji] = (targetData.karma_recieved[emoji] || 0) + action;
             }
             else {
                 targetData.karma_recieved = { [emoji]: action };
             }
         }
-        // logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
-        logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
 
         if (targetFBID !== '') {
             logger.debug(`[${PREFIX}] Updating target data`);

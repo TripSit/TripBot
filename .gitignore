@@ -352,3 +352,4 @@ MigrationBackup/
 .env production
 examples/
 src/assets/ts_data.json
+src/assets/reminders.json
