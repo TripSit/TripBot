@@ -1,6 +1,6 @@
 // const winston = require('winston');
 const { createLogger, format, transports, addColors } = require('winston');
-const production = process.env.production === 'true';
+const production = process.env.NODE_ENV === 'true';
 const logLevels = {
     error: 0,
     warn: 1,
