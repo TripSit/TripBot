@@ -64,6 +64,6 @@ module.exports = {
                 },
             )
             .setFooter({ text: disclaimer, iconURL: ts_icon_url });
-        return interaction.reply({ embeds: [embed] });
+        return interaction.reply({ embeds: [embed], ephemeral: true });
     },
 };

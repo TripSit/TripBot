@@ -237,7 +237,7 @@ module.exports = {
         if (!command) return;
 
         const commands_admin = ['button', 'gban', 'gunban', 'uban', 'uunban', 'test', 'ping'];
-        const commands_pm = ['idose'];
+        // const commands_pm = ['idose'];
 
         // Check if the command is in commands_admin list and then check to see if the user is moonbear
         if (commands_admin.includes(commandName) && interaction.user.id !== ownerId) {
@@ -245,13 +245,13 @@ module.exports = {
             return;
         }
 
-        // Check if the command is in the commands_pm list and check if the command came in from a DM
-        if (commands_pm.includes(commandName)) {
-            if (interaction.inGuild() && interaction.user.id !== ownerId) {
-                interaction.reply({ content: 'This command is only available in DMs.', ephemeral: true });
-                return;
-            }
-        }
+        // // Check if the command is in the commands_pm list and check if the command came in from a DM
+        // if (commands_pm.includes(commandName)) {
+        //     if (interaction.inGuild() && interaction.user.id !== ownerId) {
+        //         interaction.reply({ content: 'This command is only available in DMs.', ephemeral: true });
+        //         return;
+        //     }
+        // }
 
         try {
             command.execute(interaction);

@@ -6,6 +6,7 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('./utils/logger.js');
 const { initializeApp, cert } = require('firebase-admin/app');
 const serviceAccount = require('./assets/firebase_creds.json');
+const { getFirestore } = require('firebase-admin/firestore');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 serviceAccount.private_key_id = process.env.FIREBASE_PRIVATE_KEY_ID;
 serviceAccount.private_key = process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined;
@@ -17,6 +18,19 @@ initializeApp({
     credential: cert(serviceAccount),
     databaseURL: 'https://tripsit-me-default-rtdb.firebaseio.com',
 });
+
+async function backup() {
+    const db = getFirestore();
+    const snapshot = await db.collection('users').get();
+    const users = [];
+    // Get today's date in unix tiemstamp
+    const today = Math.floor(Date.now() / 1000);
+    snapshot.forEach((doc) => {
+        users.push(doc.data());
+    });
+    fs.writeFileSync(`./src/backups/fb_db_backup(${today}).json`, JSON.stringify(users, null, 2));
+}
+backup();
 
 // Check if we're in production and if not, use the .env file
 const production = process.env.production === 'true';
@@ -46,7 +60,7 @@ const client = new Client({
 
 // Set up commands
 const guild_commands = [];
-const guild_command_names = ['issue', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button', 'gban', 'gunban', 'uban', 'uunban', 'chitragupta', 'test'];
+const guild_command_names = ['remindme', 'issue', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button', 'gban', 'gunban', 'uban', 'uunban', 'chitragupta', 'test'];
 const globl_commands = [];
 const globl_command_names = ['benzo_convert', 'dxmcalc', 'ems', 'recovery', 'help', 'bug', 'about', 'breathe', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
 
@@ -86,5 +100,7 @@ for (const file of eventFiles) {
         client.on(event.name, (...args) => event.execute(...args, client));
     }
 }
+
+
 
 client.login(token);
