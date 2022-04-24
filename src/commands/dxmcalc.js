@@ -78,7 +78,7 @@ For a description of the plateau model, and the effects you can expect at each l
                     { name: 'Maximum', value: `${max} ${unit}`, inline: true },
                 );
             }
-            return interaction.reply({ embeds: [embed], ephemeral: true });
+            return interaction.reply({ embeds: [embed], ephemeral: false });
         };
 
         let calc_weight = 0;
