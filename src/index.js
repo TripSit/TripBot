@@ -30,7 +30,10 @@ async function backup() {
     });
     fs.writeFileSync(`./src/backups/fb_db_backup(${today}).json`, JSON.stringify(users, null, 2));
 }
-backup();
+if (process.env.NODE_ENV !== 'production') {
+    backup();
+}
+
 
 // Check if we're in production and if not, use the .env file
 const production = process.env.production === 'true';
@@ -60,7 +63,7 @@ const client = new Client({
 
 // Set up commands
 const guild_commands = [];
-const guild_command_names = ['remindme', 'issue', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button', 'gban', 'gunban', 'uban', 'uunban', 'chitragupta', 'test'];
+const guild_command_names = ['triptoys', 'remindme', 'issue', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button', 'gban', 'gunban', 'uban', 'uunban', 'chitragupta', 'test'];
 const globl_commands = [];
 const globl_command_names = ['triptoys', 'benzo_convert', 'dxmcalc', 'ems', 'recovery', 'help', 'bug', 'about', 'breathe', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
 
