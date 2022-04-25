@@ -29,10 +29,19 @@ module.exports = {
     name: 'interactionCreate',
     async execute(interaction, client) {
         // print what the user typed in the interaction
-        logger.info(`[${PREFIX}] ${interaction.user.username} (${interaction.user.id}) started: ${interaction.message}`);
+        const username = `${interaction.user.username}#${interaction.user.discriminator}`;
+        const command_name = `${interaction.commandName ? ` used ${interaction.commandName}` : ''}`;
+        const guild = `${interaction.guild.name ? ` in ${interaction.guild.name}` : 'DM'}`;
+        const message = `${interaction.message ? ` saying: ${interaction.message}` : ''}`;
+        const type = interaction.type;
+        // const is_autocomplete = interaction.isAutocomplete();
+        const user_is_bot = interaction.user.bot;
+        // const user_is_blacklisted = blacklist_users.includes(interaction.user.id);
+
+        logger.info(`[${PREFIX}] ${username}${command_name}(${type})${guild}${message}`);
 
         // check if the user is a bot and if so, ignore it
-        if (interaction.user.bot) {
+        if (user_is_bot) {
             logger.debug(`[${PREFIX}] Ignoring bot interaction`);
             return;
         }

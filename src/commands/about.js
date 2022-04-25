@@ -15,12 +15,6 @@ module.exports = {
         .setName('about')
         .setDescription('Shows information about this bot!'),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(
-            `[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`,
-        );
         const embed = new MessageEmbed()
             .setAuthor({
                 name: 'TripSit.Me',

@@ -42,9 +42,6 @@ module.exports = {
                 .addChoice('inhales', 'inhales'),
         ),
     async execute(interaction) {
-        const username = `${interaction.user.username}#${interaction.user.discriminator}`;
-        logger.info(`[${PREFIX}] Initialized by ${username}`);
-
         const substance = interaction.options.getString('substance');
         const volume = interaction.options.getInteger('volume');
         const units = interaction.options.getString('units');

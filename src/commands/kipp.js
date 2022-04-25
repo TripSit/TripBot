@@ -9,11 +9,6 @@ module.exports = {
         .setName('kipp')
         .setDescription('Keep it positive please!'),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
-
         const happy_emojis = [
             '😀', '😃', '😄', '😊', '😁', '🥰', '😇', '😍', '😂', '🤣',
             '🙂', '😆', '😋', '😛', '🙃', '😜', '🤪', '😝', '🤗', '🤭',

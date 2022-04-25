@@ -7,10 +7,6 @@ module.exports = {
         .setName('ping')
         .setDescription('Health check'),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
         return interaction.reply('pong!');
     },
 };

@@ -17,11 +17,6 @@ module.exports = {
         .setName('tripsitme')
         .setDescription('Check substance information'),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
-
         const patient = interaction.member;
 
         let DEVELOPMENT = true;

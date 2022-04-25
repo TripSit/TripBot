@@ -9,10 +9,6 @@ module.exports = {
         .setName('hydrate')
         .setDescription('Remember to hydrate!'),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
         const output = '💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊\n\n' +
         '⚠️ ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ ⚠️\n\n' +
         '💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊';

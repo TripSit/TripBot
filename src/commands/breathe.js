@@ -15,11 +15,6 @@ module.exports = {
                 .addChoice('4', '4'),
         ),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
-
         const choice = interaction.options.getString('exercise');
 
         if (choice == '1' || !choice) {
