@@ -20,6 +20,8 @@ module.exports = {
         const embed = new MessageEmbed()
             .setColor('RANDOM')
             .setDescription(random_topic);
-        return interaction.reply({ embeds: [embed] });
+        interaction.reply({ embeds: [embed], ephemeral: false });
+        logger.debug(`${PREFIX} finished!`);
+        return;
     },
 };

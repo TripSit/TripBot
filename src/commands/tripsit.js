@@ -75,7 +75,9 @@ module.exports = {
                 if (user_provided) {embed.setDescription(`Hey ${interaction.member}, ${target.user.username} is already being helped!\n\nCheck your channel list for '${target.user.username} discuss here!'`);}
                 else {embed.setDescription(`Hey ${interaction.member}, you're already being helped!\n\nCheck your channel list for '${target.user.username} chat here!'`);}
                 logger.debug(`[${PREFIX}] target ${target} is already being helped!`);
-                return interaction.reply({ embeds: [embed] });
+                interaction.reply({ embeds: [embed], ephemeral: true });
+                logger.debug(`${PREFIX} finished!`);
+                return;
             }
             if (!targetHasNeedsHelpRole) {
                 // Team check
@@ -86,7 +88,9 @@ module.exports = {
                             .setColor('DARK_BLUE')
                             .setDescription('This user is a member of the team and cannot be helped!')
                             .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_icon_url });
-                        return interaction.reply({ embeds: [embed] });
+                        interaction.reply({ embeds: [embed], ephemeral: true });
+                        logger.debug(`${PREFIX} finished!`);
+                        return;
                     }
                 });
 
@@ -195,7 +199,9 @@ module.exports = {
                 if (user_provided) {embed.setDescription(`Hey ${interaction.member}, Thanks for the heads up, we'll be helping ${target.user.username} shortly!\n\nCheck your channel list for '${target.user.username} discuss here!'`);}
                 else {embed.setDescription(`Hey ${interaction.member}, thanks for reaching out!\n\nCheck your channel list for '${target.user.username} chat here!'`);}
                 logger.debug(`[${PREFIX}] target ${target} is now being helped!`);
-                return interaction.reply({ embeds: [embed] });
+                interaction.reply({ embeds: [embed], ephemeral: true });
+                logger.debug(`${PREFIX} finished!`);
+                return;
             }
 
         }
@@ -233,7 +239,9 @@ module.exports = {
                 if (user_provided) {embed.setDescription(`Hey ${interaction.member}, we're glad ${target.user.username} is feeling better, we've restored their old roles!`);}
                 else {embed.setDescription(`Hey ${interaction.member}, we're glad you're feeling better, we've restored your old roles, happy chatting!`);}
                 logger.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
-                return interaction.reply({ embeds: [embed] });
+                interaction.reply({ embeds: [embed], ephemeral: true });
+                logger.debug(`${PREFIX} finished!`);
+                return;
             }
             else {
                 const embed = new MessageEmbed()
@@ -243,7 +251,9 @@ module.exports = {
                 if (user_provided) {embed.setDescription(`Hey ${interaction.member}, ${target.user.username} isnt currently being taken care of!`);}
                 else {embed.setDescription(`Hey ${interaction.member}, you're not currently being taken care of!`);}
                 logger.debug(`[${PREFIX}] target ${target} does not need help!`);
-                return interaction.reply({ embeds: [embed] });
+                interaction.reply({ embeds: [embed], ephemeral: true });
+                logger.debug(`${PREFIX} finished!`);
+                return;
             }
         }
     },

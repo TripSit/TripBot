@@ -170,8 +170,8 @@ Note: It\'s a good idea to start with a lower dose than the calculator shows, si
             )
             .setFooter({ text: disclaimer, iconURL: ts_icon_url });
 
-
-        return interaction.reply({ embeds: [embed], ephemeral: false });
-
+        interaction.reply({ embeds: [embed], ephemeral: false });
+        logger.debug(`${PREFIX} finished!`);
+        return;
     },
 };

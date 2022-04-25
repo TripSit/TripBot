@@ -1,9 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
 const channel_tripsitters = process.env.channel_tripsitters;
 const role_needshelp = process.env.role_needshelp;
@@ -18,12 +16,6 @@ module.exports = {
         .setDescription('Check substance information'),
     async execute(interaction) {
         const patient = interaction.member;
-
-        let DEVELOPMENT = true;
-        logger.debug(`[${PREFIX}] guild.name: ${guild.name}`);
-        if (guild === 'TripSit') {
-            DEVELOPMENT = false;
-        }
 
         // Get a list of the patient's roles
         const patientRoles = patient.roles.cache;
@@ -65,7 +57,7 @@ module.exports = {
             const priv_msg = `Hey ${patient}, thank you for asking for assistance!\n\nStart off by telling us what's going on: what did you take, how much, what time?\n\nA ${tripsitterRole} or ${helperRole} will be with you as soon as they're available!`;
 
             // Create a new thread in the interaction.channel with the patient's name and the priv_message as the startMessage
-            const threadType = DEVELOPMENT ? 'GUILD_PUBLIC_THREAD' : 'GUILD_PUBLIC_THREAD';
+            const threadType = process.env.NODE_ENV === 'production' ? 'GUILD_PRIVATE_THREAD' : 'GUILD_PUBLIC_THREAD';
             const thread = await interaction.channel.threads.create({
                 name: `${patient.user.username} chat here!`,
                 autoArchiveDuration: 60,
@@ -92,6 +84,8 @@ module.exports = {
 
             // send a message to the thread
             await helper_thread.send(helper_msg);
+            logger.debug(`${PREFIX} finished!`);
+            return;
         }
     },
 };

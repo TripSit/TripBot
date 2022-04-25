@@ -235,7 +235,9 @@ module.exports = {
                     .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
                     .setDescription(summary)
                     .setFooter({ text: disclaimer, iconURL: ts_icon_url });
-                return interaction.reply({ embeds: [embed] });
+                interaction.reply({ embeds: [embed] });
+                logger.debug(`${PREFIX} finished!`);
+                return;
             }
         }
 
@@ -282,11 +284,14 @@ module.exports = {
                 }
                 if (book.length > 0) {
                     paginationEmbed(interaction, book, buttonList);
+                    logger.debug(`${PREFIX} finished!`);
                     return;
                 }
                 else {
                     // logger.debug(f"[{PREFIX}] No messages to send")
                     await interaction.reply(`No dosage information found for ${substance}`);
+                    logger.debug(`${PREFIX} finished!`);
+                    return;
                 }
             }
         }
@@ -364,11 +369,14 @@ module.exports = {
             }
             if (book.length > 0) {
                 paginationEmbed(interaction, book, buttonList);
+                logger.debug(`${PREFIX} finished!`);
                 return;
             }
             else {
                 // logger.debug(f"[{PREFIX}] No messages to send")
-                await interaction.reply(`No dosage information found for ${substance}`);
+                await interaction.reply(`No combo information found for ${substance}`);
+                logger.debug(`${PREFIX} finished!`);
+                return;
             }
         }
     },

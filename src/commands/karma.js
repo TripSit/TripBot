@@ -107,13 +107,16 @@ module.exports = {
 
         if (book.length > 0) {
             paginationEmbed(interaction, book, buttonList);
+            logger.debug(`${PREFIX} finished!`);
             return;
         }
         else {
             const embed = new MessageEmbed()
                 .setColor('RANDOM')
                 .setDescription('Done!');
-            return interaction.reply({ embeds: [embed] });
+            interaction.reply({ embeds: [embed], ephemeral: false });
+            logger.debug(`${PREFIX} finished!`);
+            return;
         }
 
     },

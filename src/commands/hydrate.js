@@ -15,6 +15,8 @@ module.exports = {
         const embed = new MessageEmbed()
             .setColor('DARK_BLUE')
             .setDescription(output);
-        return interaction.reply({ embeds: [embed] });
+        interaction.reply({ embeds: [embed] });
+        logger.debug(`${PREFIX} finished!`);
+        return;
     },
 };

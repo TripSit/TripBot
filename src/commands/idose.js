@@ -1,9 +1,7 @@
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
 const disclaimer = process.env.disclaimer;
 
@@ -61,6 +59,8 @@ module.exports = {
                 },
             )
             .setFooter({ text: disclaimer, iconURL: ts_icon_url });
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+        interaction.reply({ embeds: [embed], ephemeral: true });
+        logger.debug(`[${PREFIX}] Finsihed!`);
+        return;
     },
 };

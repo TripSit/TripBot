@@ -85,7 +85,9 @@ module.exports = {
                         );
                         break;
                     }
-                    return interaction.reply({ embeds: [embed] });
+                    interaction.reply({ embeds: [embed] });
+                    logger.debug(`${PREFIX} finished!`);
+                    return;
                 }
             }
         }

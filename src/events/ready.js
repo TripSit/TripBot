@@ -1,12 +1,9 @@
-const fs = require('node:fs');
 const PREFIX = require('path').parse(__filename).name;
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const { getFirestore } = require('firebase-admin/firestore');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
-const ts_icon_url = process.env.ts_icon_url;
 const PORT = process.env.PORT;
 
 module.exports = {
