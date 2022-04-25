@@ -374,7 +374,7 @@ module.exports = {
             // interaction.reply({ embeds: [target_embed], ephemeral: true, components: [mod_buttons] });
             interaction.reply({ embeds: [target_embed], ephemeral: true });
             logger.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${target.user.name}`);
-            logger.debug(`${PREFIX} finished!`);
+            logger.debug(`[${PREFIX}] finished!`);
             return;
         }
         logger.debug(`${PREFIX} channel_moderators_id: ${channel_moderators_id}`);
@@ -382,7 +382,7 @@ module.exports = {
         // mod_chan.send({ embeds: [target_embed], components: [mod_buttons] });
         mod_chan.send({ embeds: [target_embed] });
         logger.debug(`${PREFIX} send a message to the moderators room`);
-        logger.debug(`${PREFIX} finished!`);
+        logger.debug(`[${PREFIX}] finished!`);
         return;
     },
 };

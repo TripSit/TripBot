@@ -38,7 +38,7 @@ module.exports = {
                 { name: 'Report', value: 'TripSit Only - Allows users to report someone to the TripSit Team.' },
             );
         interaction.reply({ embeds: [embed], ephemeral: false });
-        logger.debug(`${PREFIX} finished!`);
+        logger.debug(`[${PREFIX}] finished!`);
         return;
     },
 };

@@ -12,6 +12,9 @@ serviceAccount.private_key_id = process.env.FIREBASE_PRIVATE_KEY_ID;
 serviceAccount.private_key = process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined;
 serviceAccount.client_email = process.env.FIREBASE_CLIENT_ID;
 serviceAccount.client_id = process.env.FIREBASE_CLIENT_EMAIL;
+const token = process.env.token;
+const clientId = process.env.clientid;
+const guildId = process.env.guildId;
 
 // Initialize firebase app
 initializeApp({
@@ -20,6 +23,9 @@ initializeApp({
 });
 
 async function backup() {
+    if (process.env.NODE_ENV === 'production') {
+        return;
+    }
     const db = getFirestore();
     const snapshot = await db.collection('users').get();
     const users = [];
@@ -30,17 +36,7 @@ async function backup() {
     });
     fs.writeFileSync(`./src/backups/fb_db_backup(${today}).json`, JSON.stringify(users, null, 2));
 }
-
-if (process.env.NODE_ENV !== 'production') {
-    logger.debug(`[${PREFIX}] Taking backup of db`);
-    backup();
-    logger.debug(`[${PREFIX}] Running in dev mode`);
-    require('dotenv').config();
-}
-
-const token = process.env.token;
-const clientId = process.env.clientid;
-const guildId = process.env.guildId;
+backup();
 
 const client = new Client({
     intents: [
@@ -59,7 +55,7 @@ const client = new Client({
 
 // Set up commands
 const guild_commands = [];
-const guild_command_names = ['triptoys', 'issue', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button', 'gban', 'gunban', 'uban', 'uunban'];
+const guild_command_names = ['remindme', 'triptoys', 'issue', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button', 'gban', 'gunban', 'uban', 'uunban'];
 const globl_commands = [];
 const globl_command_names = ['triptoys', 'benzo_convert', 'dxmcalc', 'ems', 'recovery', 'help', 'bug', 'about', 'breathe', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
 

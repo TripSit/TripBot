@@ -29,7 +29,7 @@ module.exports = {
         if (choice == '4') {
             interaction.reply('https://i.imgur.com/MkUcTPl.gif');
         }
-        logger.debug(`${PREFIX} finished!`);
+        logger.debug(`[${PREFIX}] finished!`);
         return;
     },
 };

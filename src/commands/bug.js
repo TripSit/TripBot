@@ -36,7 +36,7 @@ module.exports = {
             .setTitle('Thank you!')
             .setDescription('I\'ve submitted this feedback to the bot owner. \n\nYou\'re more than welcome to join the TripSit server and speak to Moonbear directly if you want! Check the /contact command for more info.');
         interaction.reply({ embeds: [embed], ephemeral: false });
-        logger.debug(`${PREFIX} finished!`);
+        logger.debug(`[${PREFIX}] finished!`);
         return;
     },
 };

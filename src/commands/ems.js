@@ -20,7 +20,7 @@ module.exports = {
                 { name: 'NORS (Canada)', value: 'Website: https://www.nors.ca/\nPhone: 1 (888) 688-6677', inline: false },
             );
         interaction.reply({ embeds: [embed], ephemeral: false });
-        logger.debug(`${PREFIX} finished!`);
+        logger.debug(`[${PREFIX}] finished!`);
         return;
     },
 };

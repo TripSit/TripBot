@@ -7,7 +7,7 @@ module.exports = {
     async execute(interaction) {
         const url = 'https://i.imgur.com/nTEm0QE.png';
         interaction.reply(url);
-        logger.debug(`${PREFIX} finished!`);
+        logger.debug(`[${PREFIX}] finished!`);
         return;
     },
 };

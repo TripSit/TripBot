@@ -185,7 +185,7 @@ module.exports = {
             .setTitle('Thank you!')
             .setDescription(`${target} has been reported for ${reason} ${rchannel ? `in ${rchannel}` : ''}`);
         interaction.reply({ embeds: [embed], ephemeral: true });
-        logger.debug(`${PREFIX} finished!`);
+        logger.debug(`[${PREFIX}] finished!`);
         return;
     },
 };

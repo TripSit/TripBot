@@ -14,7 +14,7 @@ module.exports = {
             .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
             .setColor('RANDOM')
             .setTitle('PONG');
-        logger.debug(`${PREFIX} finished!`);
+        logger.debug(`[${PREFIX}] finished!`);
         interaction.reply({ embeds: [embed], ephemeral: false });
         return;
     },

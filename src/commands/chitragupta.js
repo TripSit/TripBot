@@ -102,7 +102,7 @@ module.exports = {
             logger.debug(`[${PREFIX}] Creating target data`);
             await db.collection('users').doc().set(targetData);
         }
-        logger.debug(`${PREFIX} finished!`);
+        logger.debug(`[${PREFIX}] finished!`);
         return;
     },
 };
