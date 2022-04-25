@@ -33,11 +33,6 @@ module.exports = {
                 .setAutocomplete(true),
         ),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
-
         const dosage = interaction.options.getInteger('i_have');
         const drug_a = interaction.options.getString('mg_of');
         const drug_b = interaction.options.getString('and_i_want_the_dose_of');

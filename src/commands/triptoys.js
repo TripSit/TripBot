@@ -41,11 +41,6 @@ module.exports = {
                 .addChoice('Balls demo', '23'),
         ),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
-
         let toy_name = interaction.options.getString('toy');
         if (!toy_name) {
             toy_name = '24';

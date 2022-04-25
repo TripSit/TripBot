@@ -51,11 +51,6 @@ module.exports = {
             ,
         ),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
-
         const actor = interaction.member.user;
         const target = interaction.options.getMember('user');
         const rchannel = interaction.options.getChannel('channel');

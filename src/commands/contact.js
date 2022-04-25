@@ -14,10 +14,6 @@ module.exports = {
         .setName('contact')
         .setDescription('How to contact TripSit!'),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
         const embed = new MessageEmbed()
             .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
             .setColor('DARK_BLUE')

@@ -44,11 +44,6 @@ module.exports = {
                 .addChoice('30mg Gelcaps (30 mg caps)', '30mg Gelcaps (30 mg caps)'),
         ),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
-
         // Calculate each plat min/max value
         const addInfo = (weight, unit) => {
             const embed = new MessageEmbed()

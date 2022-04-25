@@ -50,11 +50,6 @@ module.exports = {
                 .addChoice('Combos', 'Combos'),
         ),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
-
         const substance = interaction.options.getString('substance');
         const section = interaction.options.getString('section');
         const wiki_url = `https://wiki.tripsit.me/wiki/${substance}`;

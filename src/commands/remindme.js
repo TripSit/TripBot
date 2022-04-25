@@ -35,11 +35,6 @@ module.exports = {
                 .setRequired(true),
         ),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
-
         const duration = interaction.options.getInteger('duration');
         const units = interaction.options.getString('units');
         const reminder = interaction.options.getString('reminder');

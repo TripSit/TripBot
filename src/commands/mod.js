@@ -109,11 +109,6 @@ module.exports = {
                 .addStringOption(option => option.setName('toggle').setDescription('On off?').addChoice('On', 'on').addChoice('Off', 'off').setRequired(true)),
         ),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
-
         const actor = interaction.member;
         logger.debug(`[${PREFIX}] Actor: ${actor}`);
         let command = interaction.options.getSubcommand();

@@ -14,12 +14,6 @@ module.exports = {
         .setName('topic')
         .setDescription('Sends a random topic!'),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
-
-
         // Pick a random topic from topics.json
         const random_topic = topics[Math.floor(Math.random() * Object.keys(topics).length).toString()];
         logger.debug(`[${PREFIX}] random_topic: ${random_topic}`);

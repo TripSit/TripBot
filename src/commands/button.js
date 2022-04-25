@@ -9,11 +9,6 @@ module.exports = {
         .setName('button')
         .setDescription('Creates a TripSitMe button!'),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
-
         const buttonText = 'Welcome to the TripSit room!\n\n\
         **Right now this room is not actively monitored by TripSit staff.**\n\n\
         **If you need assistance please go to  https://chat.tripsit.me to find our IRC channels!**\n\n\

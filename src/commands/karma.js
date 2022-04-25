@@ -35,11 +35,6 @@ module.exports = {
         .addUserOption(option => option.setName('user').setDescription('User to lookup!'),
         ),
     async execute(interaction) {
-        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
-        const channel = interaction.channel.name;
-        const guild = interaction.guild.name;
-        logger.info(`[${PREFIX}] Initialized by ${username} in ${channel} on ${guild}!`);
-
         let patient = interaction.options.getMember('user');
         // let user_provided = true;
         // Default to the user who invoked the command if no user is provided
