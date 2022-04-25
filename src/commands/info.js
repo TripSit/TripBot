@@ -73,9 +73,7 @@ module.exports = {
         if (drugData['aliases']) {
             // turn aliases into a string with each alias on a new line
             let aliasString = '';
-            for (let i = 0; i < drugData['aliases'].length; i++) {
-                aliasString += drugData['aliases'][i] + '\n';
-            }
+            for (let i = 0; i < drugData['aliases'].length; i++) {aliasString += drugData['aliases'][i] + '\n';}
             summary += 'Also known as: \n' + aliasString + '\n';
         }
         if (drugData['summary']) {summary += drugData['summary'] + '\n\n';}
@@ -86,27 +84,16 @@ module.exports = {
         if (drugData['reagents']) {summary += 'Reagent test results: \n' + drugData['reagents'] + '\n\n';}
         if (drugData['toxicity']) {summary += 'Toxicity: \n' + drugData['toxicity'] + '\n\n';}
         if (drugData['addictionPotential']) {summary += 'Addiction Potential: \n' + drugData['addictionPotential'] + '\n\n';}
-        // if (!!drugData["url"]){summary += "Links: \n" + drugData["url"] + "\n" + drugData["experiencesUrl"]}
-        // if (!!drugData["experiencesUrl"]){summary += "\n" + drugData["experiencesUrl"]}
-
-        // logger.debug(`[${PREFIX}] summary is: ${summary}`);
 
         let dosage = '';
         for (let i = 0; i < drugData['roas'].length; i++) {
-            // logger.debug(`[${PREFIX}] ${drugData["roas"][i].name}`)
             dosage += drugData['roas'][i].name + ' Dosage\n';
-            if (drugData['roas'][i].bioavailability) {
-                dosage += 'Bioavailability: ' + drugData['roas'][i].bioavailability + '\n';
-            }
-
+            if (drugData['roas'][i].bioavailability) {dosage += 'Bioavailability: ' + drugData['roas'][i].bioavailability + '\n';}
             if (drugData['roas'][i].dosage) {
                 for (let j = 0; j < drugData['roas'][i].dosage.length; j++) {
                     if (j == 0) {
-                        if (drugData['roas'][i].dosage[j].note) {
-                            dosage += 'Note: ' + drugData['roas'][i].dosage[j].note + '\n';
-                        }
+                        if (drugData['roas'][i].dosage[j].note) {dosage += 'Note: ' + drugData['roas'][i].dosage[j].note + '\n';}
                     }
-                    // logger.debug(`[${PREFIX}] ${drugData["roas"][i].dosage[j].name}: ${drugData["roas"][i].dosage[j].value}`)
                     dosage += drugData['roas'][i].dosage[j].name + ': ' + drugData['roas'][i].dosage[j].value + '\n';
                 }
             }
@@ -114,9 +101,7 @@ module.exports = {
                 dosage += '\n' + drugData['roas'][i].name + ' Duration' + '\n';
                 for (let j = 0; j < drugData['roas'][i].duration.length; j++) {
                     if (j == 0) {
-                        if (drugData['roas'][i].duration[j].note) {
-                            dosage += 'Note: ' + drugData['roas'][i].duration[j].note + '\n';
-                        }
+                        if (drugData['roas'][i].duration[j].note) {dosage += 'Note: ' + drugData['roas'][i].duration[j].note + '\n';}
                     }
                     // logger.debug(`[${PREFIX}] ${drugData["roas"][i].duration[j].name}: ${drugData["roas"][i].duration[j].value}`)
                     dosage += drugData['roas'][i].duration[j].name + ': ' + drugData['roas'][i].duration[j].value + '\n';
@@ -124,9 +109,7 @@ module.exports = {
                 dosage += '\n';
             }
         }
-
         logger.debug(`[${PREFIX}] dosage is: ${dosage.length}`);
-
         let tolerance = '';
         if (drugData['tolerance']) {
             tolerance += '\nTolerance' + '\n';
@@ -136,12 +119,7 @@ module.exports = {
             if (drugData['crossTolerances']) {tolerance += 'Cross Tolerances:\n' + drugData['crossTolerances'] + '\n';}
         }
 
-        logger.debug(`[${PREFIX}] tolerance is: ${tolerance.length}`);
-
         dosage += tolerance;
-
-
-        logger.debug(`[${PREFIX}] FullDosage is: ${dosage.length}`);
 
         let danger_section = '';
         let unsafe_section = '';
@@ -156,70 +134,42 @@ module.exports = {
             for (let i = 0; i < interactions.length; i++) {
                 if (interactions[i].status == 'Dangerous') {
                     danger_section += interactions[i].name + '\n';
-                    if (interactions[i].note) {
-                        danger_section += 'Note: ' + interactions[i].note + '\n';
-                    }
+                    if (interactions[i].note) {danger_section += 'Note: ' + interactions[i].note + '\n';}
                 }
                 else if (interactions[i].status == 'Unsafe') {
                     unsafe_section += interactions[i].name + '\n';
-                    if (interactions[i].note) {
-                        unsafe_section += 'Note: ' + interactions[i].note + '\n';
-                    }
+                    if (interactions[i].note) {unsafe_section += 'Note: ' + interactions[i].note + '\n';}
                 }
                 else if (interactions[i].status == 'Caution') {
                     caution_section += interactions[i].name + '\n';
-                    if (interactions[i].note) {
-                        caution_section += 'Note: ' + interactions[i].note + '\n';
-                    }
+                    if (interactions[i].note) {caution_section += 'Note: ' + interactions[i].note + '\n';}
                 }
                 else if (interactions[i].status == 'Low Risk & Decrease') {
                     decrease_section += interactions[i].name + '\n';
-                    if (interactions[i].note) {
-                        decrease_section += 'Note: ' + interactions[i].note + '\n';
-                    }
+                    if (interactions[i].note) {decrease_section += 'Note: ' + interactions[i].note + '\n';}
                 }
                 else if (interactions[i].status == 'Low Risk & No Synergy') {
                     nosyn_section += interactions[i].name + '\n';
-                    if (interactions[i].note) {
-                        nosyn_section += 'Note: ' + interactions[i].note + '\n';
-                    }
+                    if (interactions[i].note) {nosyn_section += 'Note: ' + interactions[i].note + '\n';}
                 }
                 else if (interactions[i].status == 'Low Risk & Synergy') {
                     synergy_section += interactions[i].name + '\n';
-                    if (interactions[i].note) {
-                        synergy_section += 'Note: ' + interactions[i].note + '\n';
-                    }
+                    if (interactions[i].note) {synergy_section += 'Note: ' + interactions[i].note + '\n';}
                 }
                 else if (interactions[i].status == 'Unknown') {
                     unknown_section += interactions[i].name + '\n';
-                    if (interactions[i].note) {
-                        unknown_section += 'Note: ' + interactions[i].note + '\n';
-                    }
+                    if (interactions[i].note) {unknown_section += 'Note: ' + interactions[i].note + '\n';}
                 }
 
             }
 
-            if (danger_section != '') {
-                logger.debug(`[${PREFIX}] danger_section is: ${danger_section.length}`);
-            }
-            if (unsafe_section != '') {
-                logger.debug(`[${PREFIX}] unsafe_section is: ${unsafe_section.length}`);
-            }
-            if (caution_section != '') {
-                logger.debug(`[${PREFIX}] caution_section is: ${caution_section.length}`);
-            }
-            if (decrease_section != '') {
-                logger.debug(`[${PREFIX}] decrease_section is: ${decrease_section.length}`);
-            }
-            if (nosyn_section != '') {
-                logger.debug(`[${PREFIX}] nosyn_section is: ${nosyn_section.length}`);
-            }
-            if (synergy_section != '') {
-                logger.debug(`[${PREFIX}] synergy_section is: ${synergy_section.length}`);
-            }
-            if (unknown_section != '') {
-                logger.debug(`[${PREFIX}] unknown_section is: ${unknown_section.length}`);
-            }
+            if (danger_section != '') {logger.debug(`[${PREFIX}] danger_section is: ${danger_section.length}`);}
+            if (unsafe_section != '') {logger.debug(`[${PREFIX}] unsafe_section is: ${unsafe_section.length}`);}
+            if (caution_section != '') {logger.debug(`[${PREFIX}] caution_section is: ${caution_section.length}`);}
+            if (decrease_section != '') {logger.debug(`[${PREFIX}] decrease_section is: ${decrease_section.length}`);}
+            if (nosyn_section != '') {logger.debug(`[${PREFIX}] nosyn_section is: ${nosyn_section.length}`);}
+            if (synergy_section != '') {logger.debug(`[${PREFIX}] synergy_section is: ${synergy_section.length}`);}
+            if (unknown_section != '') {logger.debug(`[${PREFIX}] unknown_section is: ${unknown_section.length}`);}
         }
 
         if (section == 'Summary') {

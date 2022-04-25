@@ -51,12 +51,11 @@ module.exports = {
                             if (drug_data_all[i]['interactions'][j]['name'] == drug_b) {
                                 logger.debug(`[${PREFIX}] Found drug_b: ${drug_b}`);
                                 result = drug_data_all[i]['interactions'][j]['status'];
-                                let definition = 'test';
                                 // Loop through combo_defs and find the object where "status" is equal to result
                                 for (let k = 0; k < combo_defs.length; k++) {
                                     if (combo_defs[k]['status'] == result) {
                                         logger.debug(`[${PREFIX}] Found combo_defs: ${combo_defs[k]['status']}`);
-                                        definition = combo_defs[k]['definition'];
+                                        const definition = combo_defs[k]['definition'];
                                         const emoji = combo_defs[k]['emoji'];
                                         const color = combo_defs[k]['color'];
                                         const thumbnail = combo_defs[k]['thumbnail'];
