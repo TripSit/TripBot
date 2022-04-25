@@ -31,7 +31,7 @@ module.exports = {
         // print what the user typed in the interaction
         const username = `${interaction.user.username}#${interaction.user.discriminator}`;
         const command_name = `${interaction.commandName ? ` used ${interaction.commandName}` : ''}`;
-        const guild_message = `${interaction.guild.name ? ` in ${interaction.guild.name}` : 'DM'}`;
+        const guild_message = `${interaction.guild ? ` in ${interaction.guild.name}` : 'DM'}`;
         const message = `${interaction.message ? ` saying: ${interaction.message}` : ''}`;
         const type = interaction.type;
         // const is_autocomplete = interaction.isAutocomplete();
