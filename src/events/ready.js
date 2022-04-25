@@ -12,9 +12,9 @@ module.exports = {
     name: 'ready',
     once: true,
     async execute(client) {
-        global.firebase_db = getFirestore();
-        global.guild_db = await global.firebase_db.collection(guild_db_name).get();
-        global.user_db = await global.firebase_db.collection(users_db_name).get();
+        const db = getFirestore();
+        global.guild_db = await db.collection(guild_db_name).get();
+        global.user_db = await db.collection(users_db_name).get();
 
         // Print each guild I am in
         logger.debug(`[${PREFIX}] I am in:`);
