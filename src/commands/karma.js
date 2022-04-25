@@ -107,7 +107,7 @@ module.exports = {
 
         if (book.length > 0) {
             paginationEmbed(interaction, book, buttonList);
-            logger.debug(`${PREFIX} finished!`);
+            logger.debug(`[${PREFIX}] finished!`);
             return;
         }
         else {
@@ -115,7 +115,7 @@ module.exports = {
                 .setColor('RANDOM')
                 .setDescription('Done!');
             interaction.reply({ embeds: [embed], ephemeral: false });
-            logger.debug(`${PREFIX} finished!`);
+            logger.debug(`[${PREFIX}] finished!`);
             return;
         }
 

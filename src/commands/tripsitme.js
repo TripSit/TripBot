@@ -84,7 +84,7 @@ module.exports = {
 
             // send a message to the thread
             await helper_thread.send(helper_msg);
-            logger.debug(`${PREFIX} finished!`);
+            logger.debug(`[${PREFIX}] finished!`);
             return;
         }
     },

@@ -46,7 +46,7 @@ module.exports = {
             )
             .setFooter({ text: 'Thanks for asking!' });
         interaction.reply({ embeds: [embed], ephemeral: false });
-        logger.debug(`${PREFIX} finished!`);
+        logger.debug(`[${PREFIX}] finished!`);
         return;
     },
 };

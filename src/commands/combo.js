@@ -86,7 +86,7 @@ module.exports = {
                         break;
                     }
                     interaction.reply({ embeds: [embed] });
-                    logger.debug(`${PREFIX} finished!`);
+                    logger.debug(`[${PREFIX}] finished!`);
                     return;
                 }
             }

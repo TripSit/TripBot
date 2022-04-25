@@ -68,7 +68,7 @@ For a description of the plateau model, and the effects you can expect at each l
                 );
             }
             interaction.reply({ embeds: [embed], ephemeral: false });
-            logger.debug(`${PREFIX} finished!`);
+            logger.debug(`[${PREFIX}] finished!`);
             return;
         };
 

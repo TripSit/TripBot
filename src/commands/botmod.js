@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
-const logger = require('../utils/logger.js');
 const { getFirestore } = require('firebase-admin/firestore');
+const logger = require('../utils/logger.js');
 const db = getFirestore();
 const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
@@ -287,7 +287,7 @@ module.exports = {
             if (command == 'info') {
                 interaction.reply({ embeds: [target_embed], ephemeral: true });
                 logger.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${targetData.guild_name}`);
-                logger.debug(`${PREFIX} finished!`);
+                logger.debug(`[${PREFIX}] finished!`);
                 return;
             }
 
@@ -296,7 +296,7 @@ module.exports = {
             // // mod_chan.send({ embeds: [target_embed], components: [mod_buttons] });
             // mod_chan.send({ embeds: [target_embed] });
             // logger.debug(`${PREFIX} send a message to the moderators room`);
-            logger.debug(`${PREFIX} finished!`);
+            logger.debug(`[${PREFIX}] finished!`);
             return;
         }
     },

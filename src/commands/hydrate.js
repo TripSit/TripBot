@@ -16,7 +16,7 @@ module.exports = {
             .setColor('DARK_BLUE')
             .setDescription(output);
         interaction.reply({ embeds: [embed] });
-        logger.debug(`${PREFIX} finished!`);
+        logger.debug(`[${PREFIX}] finished!`);
         return;
     },
 };

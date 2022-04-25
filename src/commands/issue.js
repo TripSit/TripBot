@@ -37,7 +37,7 @@ module.exports = {
                 .setTitle('Issue created!')
                 .setDescription(`Your issue has been created on ${owner}/${repo}`);
             interaction.reply({ embeds: [embed], ephemeral: false });
-            logger.debug(`${PREFIX} finished!`);
+            logger.debug(`[${PREFIX}] finished!`);
             return;
         }).catch(err => {
             logger.error(`[${PREFIX}] Failed to create issue on ${owner}/${repo}`);
@@ -47,7 +47,7 @@ module.exports = {
                 .setTitle('Issue creation failed!')
                 .setDescription(`Your issue could not be created on ${owner}/${repo}\n\n${err}`);
             interaction.reply({ embeds: [embed], ephemeral: false });
-            logger.debug(`${PREFIX} finished!`);
+            logger.debug(`[${PREFIX}] finished!`);
             return;
         });
     },

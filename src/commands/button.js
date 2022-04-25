@@ -31,7 +31,7 @@ module.exports = {
 
         // Create a new button
         await interaction.reply({ content: buttonText, components: [row] });
-        logger.debug(`${PREFIX} finished!`);
+        logger.debug(`[${PREFIX}] finished!`);
         return;
     },
 };

@@ -38,7 +38,7 @@ module.exports = {
         const user_is_bot = interaction.user.bot;
         // const user_is_blacklisted = blacklist_users.includes(interaction.user.id);
 
-        logger.info(`[${PREFIX}] ${username}${command_name}(${type})${guild_message}${message}`);
+        logger.info(`[${PREFIX}] ${username}${command_name} (${type})${guild_message}${message}`);
 
         // check if the user is a bot and if so, ignore it
         if (user_is_bot) {
@@ -238,7 +238,6 @@ module.exports = {
 
         // Failsafe to make sure only commands get past this point
         if (!interaction.isCommand()) return;
-        logger.debug(`[${PREFIX}] isCommand`);
 
         const commandName = interaction.commandName;
 

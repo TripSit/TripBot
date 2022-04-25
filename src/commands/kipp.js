@@ -28,7 +28,7 @@ module.exports = {
             .setColor('RANDOM')
             .setDescription(output);
         interaction.reply({ embeds: [embed], ephemeral: false });
-        logger.debug(`${PREFIX} finished!`);
+        logger.debug(`[${PREFIX}] finished!`);
         return;
     },
 };
