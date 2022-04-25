@@ -13,6 +13,9 @@ module.exports = {
         .addStringOption(option => option.setName('bug_report').setDescription('What do you want to tell the owner? Please be as detailed as possible!').setRequired(true)),
 
     async execute(interaction) {
+        const username = `${interaction.user.username}#${interaction.user.discriminator}`;
+        const guild_message = `${interaction.guild.name ? ` in ${interaction.guild.name}` : 'DM'}`;
+
         const bug_report = interaction.options.getString('bug_report');
         logger.debug(`[${PREFIX}] bug_report: ${bug_report}`);
 
@@ -23,7 +26,7 @@ module.exports = {
         const dev_embed = new MessageEmbed()
             .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
             .setColor('RANDOM')
-            .setDescription(`Hey ${bot_owner.toString()},\n${username} on ${guild} reports:\n${bug_report}`)
+            .setDescription(`Hey ${bot_owner.toString()},\n${username}${guild_message} reports:\n${bug_report}`)
             .setFooter({ text: 'Good luck!' });
         dev_chan.send({ embeds: [dev_embed] });
 
@@ -32,7 +35,8 @@ module.exports = {
             .setColor('RANDOM')
             .setTitle('Thank you!')
             .setDescription('I\'ve submitted this feedback to the bot owner. \n\nYou\'re more than welcome to join the TripSit server and speak to Moonbear directly if you want! Check the /contact command for more info.');
-        interaction.reply({ embeds: [embed], ephemeral: true });
+        interaction.reply({ embeds: [embed], ephemeral: false });
+        logger.debug(`${PREFIX} finished!`);
         return;
     },
 };

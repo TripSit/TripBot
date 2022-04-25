@@ -1,4 +1,3 @@
-const fs = require('node:fs');
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../utils/logger.js');
@@ -185,6 +184,8 @@ module.exports = {
             .setColor('RANDOM')
             .setTitle('Thank you!')
             .setDescription(`${target} has been reported for ${reason} ${rchannel ? `in ${rchannel}` : ''}`);
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+        interaction.reply({ embeds: [embed], ephemeral: true });
+        logger.debug(`${PREFIX} finished!`);
+        return;
     },
 };

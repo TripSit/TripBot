@@ -287,6 +287,7 @@ module.exports = {
             if (command == 'info') {
                 interaction.reply({ embeds: [target_embed], ephemeral: true });
                 logger.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${targetData.guild_name}`);
+                logger.debug(`${PREFIX} finished!`);
                 return;
             }
 
@@ -295,6 +296,7 @@ module.exports = {
             // // mod_chan.send({ embeds: [target_embed], components: [mod_buttons] });
             // mod_chan.send({ embeds: [target_embed] });
             // logger.debug(`${PREFIX} send a message to the moderators room`);
+            logger.debug(`${PREFIX} finished!`);
             return;
         }
     },

@@ -1,11 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
-const disclaimer = process.env.disclaimer;
 
 const PREFIX = require('path').parse(__filename).name;
 
@@ -28,6 +25,8 @@ module.exports = {
                 { name: 'Drug Information Issues Email', value: 'content @ tripsit (dot) me' },
             )
             .setFooter({ text: 'Thanks for asking!' });
-        return interaction.reply({ embeds: [embed] });
+        interaction.reply({ embeds: [embed], ephemeral: false });
+        logger.debug(`${PREFIX} finished!`);
+        return;
     },
 };

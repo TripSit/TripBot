@@ -1,14 +1,7 @@
-const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
-
-const raw_drug_data = fs.readFileSync('./src/assets/drug_db_combined.json');
-const drug_data_all = JSON.parse(raw_drug_data);
-
-const raw_combo_data = fs.readFileSync('./src/assets/combo_definitions.json');
-const combo_defs = JSON.parse(raw_combo_data);
 
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
@@ -56,6 +49,7 @@ You should always start low and work your way up untill you find the doses that 
 DXM-containing products may also contain several potentially dangerous adulterants; you must make sure that your product contains only DXM as its active ingredient. For more information about DXM adulterants, see: https://wiki.tripsit.me/wiki/DXM#Adulteration\n\n\
 For a description of the plateau model, and the effects you can expect at each level, click: https://wiki.tripsit.me/wiki/DXM#Plateaus')
                 .setFooter({ text: disclaimer, iconURL: ts_icon_url });
+
             const dxm_data = {
                 'First': { 'min': 1.5, 'max': 2.5 },
                 'Second': { 'min': 2.5, 'max': 7.5 },
@@ -73,7 +67,9 @@ For a description of the plateau model, and the effects you can expect at each l
                     { name: 'Maximum', value: `${max} ${unit}`, inline: true },
                 );
             }
-            return interaction.reply({ embeds: [embed], ephemeral: false });
+            interaction.reply({ embeds: [embed], ephemeral: false });
+            logger.debug(`${PREFIX} finished!`);
+            return;
         };
 
         let calc_weight = 0;

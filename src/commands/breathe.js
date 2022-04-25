@@ -18,16 +18,18 @@ module.exports = {
         const choice = interaction.options.getString('exercise');
 
         if (choice == '1' || !choice) {
-            return interaction.reply('https://i.imgur.com/n5jBp45.gif');
+            interaction.reply('https://i.imgur.com/n5jBp45.gif');
         }
         if (choice == '2') {
-            return interaction.reply('https://i.imgur.com/XbH6gP4.gif');
+            interaction.reply('https://i.imgur.com/XbH6gP4.gif');
         }
         if (choice == '3') {
-            return interaction.reply('https://i.imgur.com/g57i96f.gif');
+            interaction.reply('https://i.imgur.com/g57i96f.gif');
         }
         if (choice == '4') {
-            return interaction.reply('https://i.imgur.com/MkUcTPl.gif');
+            interaction.reply('https://i.imgur.com/MkUcTPl.gif');
         }
+        logger.debug(`${PREFIX} finished!`);
+        return;
     },
 };

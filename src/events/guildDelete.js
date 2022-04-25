@@ -1,5 +1,4 @@
 const PREFIX = require('path').parse(__filename).name;
-const { getFirestore } = require('firebase-admin/firestore');
 const logger = require('../utils/logger.js');
 
 module.exports = {

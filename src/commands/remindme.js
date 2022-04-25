@@ -92,6 +92,8 @@ module.exports = {
             .setColor('RANDOM')
             // .setTitle(`${JSON.stringify(actorData, null, 2)}`)
             .setDescription(`In ${duration} ${units} I will remind you: ${reminder}`);
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+        interaction.reply({ embeds: [embed], ephemeral: true });
+        logger.debug(`${PREFIX} finished!`);
+        return;
     },
 };

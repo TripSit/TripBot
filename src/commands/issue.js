@@ -36,7 +36,9 @@ module.exports = {
                 .setColor('#0099ff')
                 .setTitle('Issue created!')
                 .setDescription(`Your issue has been created on ${owner}/${repo}`);
-            return interaction.reply({ embeds: [embed] });
+            interaction.reply({ embeds: [embed], ephemeral: false });
+            logger.debug(`${PREFIX} finished!`);
+            return;
         }).catch(err => {
             logger.error(`[${PREFIX}] Failed to create issue on ${owner}/${repo}`);
             logger.error(err);
@@ -44,7 +46,9 @@ module.exports = {
                 .setColor('#ff0000')
                 .setTitle('Issue creation failed!')
                 .setDescription(`Your issue could not be created on ${owner}/${repo}\n\n${err}`);
-            return interaction.reply({ embeds: [embed] });
+            interaction.reply({ embeds: [embed], ephemeral: false });
+            logger.debug(`${PREFIX} finished!`);
+            return;
         });
     },
 };
