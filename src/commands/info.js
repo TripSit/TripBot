@@ -86,27 +86,29 @@ module.exports = {
         if (drugData['addictionPotential']) {summary += 'Addiction Potential: \n' + drugData['addictionPotential'] + '\n\n';}
 
         let dosage = '';
-        for (let i = 0; i < drugData['roas'].length; i++) {
-            dosage += drugData['roas'][i].name + ' Dosage\n';
-            if (drugData['roas'][i].bioavailability) {dosage += 'Bioavailability: ' + drugData['roas'][i].bioavailability + '\n';}
-            if (drugData['roas'][i].dosage) {
-                for (let j = 0; j < drugData['roas'][i].dosage.length; j++) {
-                    if (j == 0) {
-                        if (drugData['roas'][i].dosage[j].note) {dosage += 'Note: ' + drugData['roas'][i].dosage[j].note + '\n';}
+        if (drugData['roas']) {
+            for (let i = 0; i < drugData['roas'].length; i++) {
+                dosage += drugData['roas'][i].name + ' Dosage\n';
+                if (drugData['roas'][i].bioavailability) {dosage += 'Bioavailability: ' + drugData['roas'][i].bioavailability + '\n';}
+                if (drugData['roas'][i].dosage) {
+                    for (let j = 0; j < drugData['roas'][i].dosage.length; j++) {
+                        if (j == 0) {
+                            if (drugData['roas'][i].dosage[j].note) {dosage += 'Note: ' + drugData['roas'][i].dosage[j].note + '\n';}
+                        }
+                        dosage += drugData['roas'][i].dosage[j].name + ': ' + drugData['roas'][i].dosage[j].value + '\n';
                     }
-                    dosage += drugData['roas'][i].dosage[j].name + ': ' + drugData['roas'][i].dosage[j].value + '\n';
                 }
-            }
-            if (drugData['roas'][i].duration) {
-                dosage += '\n' + drugData['roas'][i].name + ' Duration' + '\n';
-                for (let j = 0; j < drugData['roas'][i].duration.length; j++) {
-                    if (j == 0) {
-                        if (drugData['roas'][i].duration[j].note) {dosage += 'Note: ' + drugData['roas'][i].duration[j].note + '\n';}
+                if (drugData['roas'][i].duration) {
+                    dosage += '\n' + drugData['roas'][i].name + ' Duration' + '\n';
+                    for (let j = 0; j < drugData['roas'][i].duration.length; j++) {
+                        if (j == 0) {
+                            if (drugData['roas'][i].duration[j].note) {dosage += 'Note: ' + drugData['roas'][i].duration[j].note + '\n';}
+                        }
+                        // logger.debug(`[${PREFIX}] ${drugData["roas"][i].duration[j].name}: ${drugData["roas"][i].duration[j].value}`)
+                        dosage += drugData['roas'][i].duration[j].name + ': ' + drugData['roas'][i].duration[j].value + '\n';
                     }
-                    // logger.debug(`[${PREFIX}] ${drugData["roas"][i].duration[j].name}: ${drugData["roas"][i].duration[j].value}`)
-                    dosage += drugData['roas'][i].duration[j].name + ': ' + drugData['roas'][i].duration[j].value + '\n';
+                    dosage += '\n';
                 }
-                dosage += '\n';
             }
         }
         logger.debug(`[${PREFIX}] dosage is: ${dosage.length}`);
