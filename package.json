@@ -1,14 +1,18 @@
 {
   "name": "tripsit-discord",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A bot for TripSit",
   "main": "index.js",
   "scripts": {
     "start": "node ./src/index.js",
-    "dev": "nodemon --ignore src/assets/ --ignore src/backups/ node ./src/index.js",
+    "dev": "npm version patch -git-tag-version false && nodemon --ignore src/assets/ --ignore src/backups/ node ./src/index.js",
     "debug": "nodemon --ignore src/assets/ --ignore src/backups/ --inspect ./src/index.js",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx ./",
     "fix": "eslint --fix --ext .js,.jsx,.ts,.tsx ./",
+    "add": "git add .",
+    "commit": "git commit -m \"Update\"",
+    "minor": "npm version minor -git-tag-version false",
+    "push": "git push",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
