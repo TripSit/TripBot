@@ -1,6 +1,6 @@
 {
   "name": "tripsit-discord",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "A bot for TripSit",
   "main": "index.js",
   "scripts": {
@@ -10,6 +10,7 @@
     "lint": "eslint --ext .js,.jsx,.ts,.tsx ./",
     "fix": "eslint --fix --ext .js,.jsx,.ts,.tsx ./",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "minor": "npm version minor -git-tag-version false",
     "push": "npm version minor -git-tag-version false && git add . && git commit && git push"
   },
   "repository": {

@@ -13,12 +13,12 @@ module.exports = {
         logger.debug(`[${PREFIX}] guildMemberRemove`);
         // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
         if (member.guild.id === guild_id) {
-            console.log(member.joinedTimestamp);
-            console.log(Date.now());
+            // console.log(member.joinedTimestamp);
+            // console.log(Date.now());
             // display the difference between the two dates
             const diff = Math.abs(Date.now() - member.joinedTimestamp);
             const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
-            const months = Math.floor((diff / (1000 * 60 * 60 * 24 * 30)) % 12);
+            const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
             const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
             const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
