@@ -44,10 +44,35 @@ module.exports = {
                 }
             }
 
+            const diff = Math.abs(Date.now() - member.user.createdAt);
+            const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
+            const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
+            const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            // logger.debug(`[${PREFIX}] diff: ${diff}`);
+            // logger.debug(`[${PREFIX}] years: ${years}`);
+            // logger.debug(`[${PREFIX}] months: ${months}`);
+            // logger.debug(`[${PREFIX}] weeks: ${weeks}`);
+            // logger.debug(`[${PREFIX}] days: ${days}`);
+            // logger.debug(`[${PREFIX}] hours: ${hours}`);
+            // logger.debug(`[${PREFIX}] minutes: ${minutes}`);
+            // logger.debug(`[${PREFIX}] seconds: ${seconds}`);
+            let color_value = 'RED';
+            if (years > 0) {color_value = 'LUMINOUS_VIVID_PINK';}
+            else if (years == 0 && months > 0) {color_value = 'PURPLE';}
+            else if (months == 0 && weeks > 0) {color_value = 'BLUE';}
+            else if (weeks == 0 && days > 0) {color_value = 'GREEN';}
+            else if (days == 0 && hours > 0) {color_value = 'YELLOW';}
+            else if (hours == 0 && minutes > 0) {color_value = 'ORANGE';}
+            else if (minutes == 0 && seconds > 0) {color_value = 'RED';}
+            logger.debug(`[${PREFIX}] color_value: ${color_value}`);
             const random_topic = topics[Math.floor(Math.random() * Object.keys(topics).length).toString()];
             const embed = new MessageEmbed()
                 .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-                .setColor('BLUE')
+                .setColor(color_value)
                 .setDescription(`Welcome to the TripSit Network ${member}!\n\n We're a positive-enforced, harm-reduction space.\nHere's a random question to get to know you:\n\n${random_topic}`)
                 .setFooter({ text: footer_text, iconURL: ts_flame_url });
             welcome_channel.send({ embeds: [embed] });
