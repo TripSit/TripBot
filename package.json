@@ -1,22 +1,16 @@
 {
   "name": "tripsit-discord",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "A bot for TripSit",
   "main": "index.js",
   "scripts": {
     "start": "node ./src/index.js",
-    "patch": "npm version patch -git-tag-version false",
-    "nodemon": "nodemon --ignore src/assets/ --ignore src/backups/ node ./src/index.js",
-    "dev": "npm patch && npm nodemon",
+    "dev": "npm version patch -git-tag-version false && nodemon --ignore src/assets/ --ignore src/backups/ --inspect ./src/index.js",
     "debug": "nodemon --ignore src/assets/ --ignore src/backups/ --inspect ./src/index.js",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx ./",
     "fix": "eslint --fix --ext .js,.jsx,.ts,.tsx ./",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "minor": "npm version minor -git-tag-version false",
-    "add": "git add .",
-    "commit": "git commit -m \"Update\"",
-    "push": "git push",
-    "update": "npm run minor && npm run add && npm run commit && npm run push"
+    "push": "npm version minor -git-tag-version false && git add . && git commit && git push"
   },
   "repository": {
     "type": "git",

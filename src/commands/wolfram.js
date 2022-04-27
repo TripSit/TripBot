@@ -6,8 +6,7 @@ const axios = require('axios');
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
-const WR_TOKEN = process.env.wolfram_alpha_token;
-const WR_HOST = process.env.wolfram_alpha_host;
+const WR_TOKEN = process.env.rapid_api_key;
 const WR_API_KEY = process.env.wolfram_alpha_key;
 const ts_icon_url = process.env.ts_icon_url;
 
@@ -29,7 +28,7 @@ module.exports = {
             url: 'https://wolframalphavolodimir-kudriachenkov1.p.rapidapi.com/createQuery',
             headers: {
                 'content-type': 'application/x-www-form-urlencoded',
-                'X-RapidAPI-Host': WR_HOST,
+                'X-RapidAPI-Host': 'WolframAlphavolodimir-kudriachenkoV1.p.rapidapi.com',
                 'X-RapidAPI-Key': WR_TOKEN,
             },
             data: encodedParams,

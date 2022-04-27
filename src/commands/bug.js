@@ -5,6 +5,7 @@ const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
 const channel_dev_id = process.env.channel_development;
+const ts_flame_url = process.env.ts_flame_url;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -27,14 +28,15 @@ module.exports = {
             .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
             .setColor('RANDOM')
             .setDescription(`Hey ${bot_owner.toString()},\n${username}${guild_message} reports:\n${bug_report}`)
-            .setFooter({ text: 'Good luck!' });
+            .setFooter({ text: 'Good luck!', iconURL: ts_flame_url });
         dev_chan.send({ embeds: [dev_embed] });
 
         const embed = new MessageEmbed()
             .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
             .setColor('RANDOM')
             .setTitle('Thank you!')
-            .setDescription('I\'ve submitted this feedback to the bot owner. \n\nYou\'re more than welcome to join the TripSit server and speak to Moonbear directly if you want! Check the /contact command for more info.');
+            .setDescription('I\'ve submitted this feedback to the bot owner. \n\nYou\'re more than welcome to join the TripSit server and speak to Moonbear directly if you want! Check the /contact command for more info.')
+            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
         interaction.reply({ embeds: [embed], ephemeral: false });
         logger.debug(`[${PREFIX}] finished!`);
         return;

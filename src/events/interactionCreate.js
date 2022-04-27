@@ -11,6 +11,7 @@ const ownerId = process.env.ownerId;
 const guildId = process.env.guildId;
 const channel_moderators_id = process.env.channel_moderators;
 const ts_icon_url = process.env.ts_icon_url;
+const ts_flame_url = process.env.ts_flame_url;
 
 // const cooldown = new Set();
 // // /This is 1 minute, you can change it to whatever value
@@ -164,7 +165,8 @@ module.exports = {
                 const embed = new MessageEmbed()
                     .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                     .setColor('GREEN')
-                    .setDescription(`${interaction.user.username} has acknowledged their warning.`);
+                    .setDescription(`${interaction.user.username} has acknowledged their warning.`)
+                    .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
                 mod_chan.send({ embeds: [embed] });
                 interaction.reply('Thanks for understanding!');
             }
@@ -176,7 +178,8 @@ module.exports = {
                 const embed = new MessageEmbed()
                     .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                     .setColor('RED')
-                    .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
+                    .setDescription(`${interaction.user.username} has refused their warning and was banned.`)
+                    .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
                 mod_chan.send({ embeds: [embed] });
                 interaction.reply('Thanks for making this easy!');
             }
@@ -189,7 +192,8 @@ module.exports = {
                 const embed = new MessageEmbed()
                     .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                     .setColor('GREEN')
-                    .setDescription(`${interaction.user.username} has acknowledged their warning.`);
+                    .setDescription(`${interaction.user.username} has acknowledged their warning.`)
+                    .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
                 bot_owner.send({ embeds: [embed] });
                 interaction.reply('Thanks for understanding!');
             }
@@ -198,7 +202,8 @@ module.exports = {
                 const embed = new MessageEmbed()
                     .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                     .setColor('RED')
-                    .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
+                    .setDescription(`${interaction.user.username} has refused their warning and was banned.`)
+                    .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
                 mod_chan.send({ embeds: [embed] });
                 interaction.reply('Thanks for making this easy!');
             }

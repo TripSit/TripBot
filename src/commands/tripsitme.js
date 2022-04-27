@@ -7,7 +7,7 @@ const channel_tripsitters = process.env.channel_tripsitters;
 const role_needshelp = process.env.role_needshelp;
 const role_tripsitter = process.env.role_tripsitter;
 const role_helper = process.env.role_helper;
-
+const ts_flame_url = process.env.ts_flame_url;
 const PREFIX = require('path').parse(__filename).name;
 
 module.exports = {
@@ -38,7 +38,7 @@ module.exports = {
                 .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                 .setColor('DARK_BLUE')
                 .setDescription(`Hey ${interaction.member}, you're already being helped!\n\nCheck your channel list for '${patient.user.username} chat here!'`)
-                .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_icon_url });
+                .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_flame_url });
             logger.debug(`[${PREFIX}] Done!`);
             return interaction.reply({ embeds: [embed], ephemeral: true });
         }
@@ -49,7 +49,7 @@ module.exports = {
                 .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                 .setColor('DARK_BLUE')
                 .setDescription(msg)
-                .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_icon_url });
+                .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_flame_url });
             logger.debug(`[${PREFIX}] Done!`);
 
             interaction.reply({ embeds: [embed], ephemeral: true });

@@ -3,7 +3,7 @@ const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
-
+const ts_flame_url = process.env.ts_flame_url;
 const PREFIX = require('path').parse(__filename).name;
 
 module.exports = {
@@ -24,7 +24,7 @@ module.exports = {
                 { name: 'Bot Issues Email', value: 'discord_bot @ tripsit (dot) me' },
                 { name: 'Drug Information Issues Email', value: 'content @ tripsit (dot) me' },
             )
-            .setFooter({ text: 'Thanks for asking!' });
+            .setFooter({ text: 'Thanks for asking!', iconURL: ts_flame_url });
         interaction.reply({ embeds: [embed], ephemeral: false });
         logger.debug(`[${PREFIX}] finished!`);
         return;

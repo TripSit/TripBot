@@ -6,6 +6,7 @@ const db = getFirestore();
 const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
+const ts_flame_url = process.env.ts_flame_url;
 
 const warn_buttons = new MessageActionRow()
     .addComponents(
@@ -171,9 +172,11 @@ module.exports = {
             if (command === 'warn') {
                 color = 'YELLOW';
                 const warn_embed = new MessageEmbed()
+                    .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
                     .setColor(color)
                     .setTitle('Warned!')
-                    .setDescription(`Your guild has warned by Team TripSit for ${reason}.\n\nPlease read the rules and be respectful of them.\n\nContact Moonbear if you have any questions!`);
+                    .setDescription(`Your guild has warned by Team TripSit for ${reason}.\n\nPlease read the rules and be respectful of them.\n\nContact Moonbear if you have any questions!`)
+                    .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
                 target_guild_owner.send({ embeds: [warn_embed], components: [warn_buttons] });
                 logger.debug(`[${PREFIX}] I warned ${target_guild}'s owner ${target_guild_owner}!`);
             }
@@ -181,9 +184,11 @@ module.exports = {
                 target_guild.leave();
                 color = 'ORANGE';
                 const warn_embed = new MessageEmbed()
+                    .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
                     .setColor(color)
                     .setTitle('Kicked!')
-                    .setDescription(`I have left your guild because ${reason}.\n\nYou have the option to re-add me, but please read the rules and be respectful of them.\n\nContact Moonbear if you have any questions!`);
+                    .setDescription(`I have left your guild because ${reason}.\n\nYou have the option to re-add me, but please read the rules and be respectful of them.\n\nContact Moonbear if you have any questions!`)
+                    .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
                 target_guild_owner.send({ embeds: [warn_embed], components: [warn_buttons] });
                 logger.debug(`[${PREFIX}] I left ${target_guild}!`);
             }
@@ -196,7 +201,8 @@ module.exports = {
                             .setTitle('Guild Already Banned')
                             .addFields(
                                 { name: 'Guild ID', value: target_id },
-                            );
+                            )
+                            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
                         return interaction.reply({ embeds: [embed] });
                     }
 
@@ -204,9 +210,11 @@ module.exports = {
                     target_guild.leave();
                     color = 'RED';
                     const warn_embed = new MessageEmbed()
+                        .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
                         .setColor(color)
                         .setTitle('Banned!')
-                        .setDescription(`I have left your guild permenantly because ${reason}.\n\nContact Moonbear if you have any questions!`);
+                        .setDescription(`I have left your guild permenantly because ${reason}.\n\nContact Moonbear if you have any questions!`)
+                        .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
                     target_guild_owner.send({ embeds: [warn_embed] });
                     logger.debug(`[${PREFIX}] I banned ${target_guild}!`);
                 }
@@ -218,16 +226,19 @@ module.exports = {
                             .setTitle('Guild Not Banned')
                             .addFields(
                                 { name: 'Guild ID', value: target_id },
-                            );
+                            )
+                            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
                         return interaction.reply({ embeds: [embed] });
                     }
 
                     targetData.guild_banned = false;
                     color = 'GREEN';
                     const warn_embed = new MessageEmbed()
+                        .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
                         .setColor(color)
                         .setTitle('Unbanned!')
-                        .setDescription(`I have unbanned your guild because ${reason}.\n\nContact Moonbear if you have any questions!`);
+                        .setDescription(`I have unbanned your guild because ${reason}.\n\nContact Moonbear if you have any questions!`)
+                        .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
                     target_guild_owner.send({ embeds: [warn_embed] });
                     logger.debug(`[${PREFIX}] I unbanned ${target_guild}!`);
                 }
@@ -246,8 +257,10 @@ module.exports = {
             if (command !== 'info') {
                 const title = `I have ${command}ed ${target_guild} ${reason ? `because ${reason}` : ''}`;
                 const embed = new MessageEmbed()
+                    .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
                     .setColor(color)
-                    .setDescription(title);
+                    .setDescription(title)
+                    .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
                 interaction.reply({ embeds: [embed], ephemeral: true });
                 logger.debug(`[${PREFIX}] I replied to ${interaction.member}!`);
                 return;
@@ -282,7 +295,8 @@ module.exports = {
                     { name: 'guild_partner', value: `${targetData.guild_partner}`, inline: true },
                     { name: 'guild_preferredLocale', value: `${targetData.guild_preferredLocale}`, inline: true },
                     { name: 'guild_region', value: `${targetData.guild_region}`, inline: true },
-                );
+                )
+                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
 
             if (command == 'info') {
                 interaction.reply({ embeds: [target_embed], ephemeral: true });

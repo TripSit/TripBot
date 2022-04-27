@@ -4,7 +4,7 @@ const logger = require('../utils/logger.js');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
 const disclaimer = process.env.disclaimer;
-
+const ts_flame_url = process.env.ts_flame_url;
 const PREFIX = require('path').parse(__filename).name;
 
 module.exports = {
@@ -58,7 +58,7 @@ module.exports = {
                     value: `${relative} at ${timeString}`,
                 },
             )
-            .setFooter({ text: disclaimer, iconURL: ts_icon_url });
+            .setFooter({ text: disclaimer, iconURL: ts_flame_url });
         interaction.reply({ embeds: [embed], ephemeral: true });
         logger.debug(`[${PREFIX}] Finsihed!`);
         return;

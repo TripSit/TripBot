@@ -8,6 +8,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 const ts_icon_url = process.env.ts_icon_url;
 const disclaimer = process.env.disclaimer;
+const ts_flame_url = process.env.ts_flame_url;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -48,7 +49,7 @@ Please note, these tools were developed and tested to the best possible ability 
 You should always start low and work your way up untill you find the doses that are right for you.\n\n\
 DXM-containing products may also contain several potentially dangerous adulterants; you must make sure that your product contains only DXM as its active ingredient. For more information about DXM adulterants, see: https://wiki.tripsit.me/wiki/DXM#Adulteration\n\n\
 For a description of the plateau model, and the effects you can expect at each level, click: https://wiki.tripsit.me/wiki/DXM#Plateaus')
-                .setFooter({ text: disclaimer, iconURL: ts_icon_url });
+                .setFooter({ text: disclaimer, iconURL: ts_flame_url });
 
             const dxm_data = {
                 'First': { 'min': 1.5, 'max': 2.5 },
