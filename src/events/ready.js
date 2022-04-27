@@ -2,6 +2,7 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 const { MessageEmbed } = require('discord.js');
 const { getFirestore } = require('firebase-admin/firestore');
+const express = require('express');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const PORT = process.env.PORT;
 const ts_icon_url = process.env.ts_icon_url;
@@ -52,7 +53,7 @@ module.exports = {
 
         // Setup the express server, this is necessary for the DO health check
         function setupExpress() {
-            const express = require('express');
+            
             const app = express();
             app.get('/', (req, res) => {res.status(200).send('Ok');});
             app.listen(PORT, () => {logger.debug(`[${PREFIX}] Healthcheck app listening on port ${PORT}`);});

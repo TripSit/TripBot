@@ -1,7 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
-
 const PREFIX = require('path').parse(__filename).name;
 
 module.exports = {
