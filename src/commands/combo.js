@@ -15,7 +15,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 const ts_icon_url = process.env.ts_icon_url;
 const disclaimer = process.env.disclaimer;
-
+const ts_flame_url = process.env.ts_flame_url;
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('combo')
@@ -44,7 +44,7 @@ module.exports = {
                     const embed = new MessageEmbed()
                         .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
                         .setTitle(`${drug_a} and ${drug_b} combined:`)
-                        .setFooter({ text: disclaimer, iconURL: ts_icon_url });
+                        .setFooter({ text: disclaimer, iconURL: ts_flame_url });
                     if (drug_data_all[i]['interactions']) {
                         let result = '';
                         for (let j = 0; j < drug_data_all[i]['interactions'].length; j++) {

@@ -6,6 +6,7 @@ const { getFirestore } = require('firebase-admin/firestore');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
 const channel_moderators_id = process.env.channel_moderators;
+const ts_flame_url = process.env.ts_flame_url;
 
 const mod_buttons = new MessageActionRow()
     .addComponents(
@@ -183,7 +184,8 @@ module.exports = {
             .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
             .setColor('RANDOM')
             .setTitle('Thank you!')
-            .setDescription(`${target} has been reported for ${reason} ${rchannel ? `in ${rchannel}` : ''}`);
+            .setDescription(`${target} has been reported for ${reason} ${rchannel ? `in ${rchannel}` : ''}`)
+            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
         interaction.reply({ embeds: [embed], ephemeral: true });
         logger.debug(`[${PREFIX}] finished!`);
         return;

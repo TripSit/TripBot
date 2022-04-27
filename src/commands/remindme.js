@@ -5,7 +5,8 @@ const logger = require('../utils/logger.js');
 const { getFirestore } = require('firebase-admin/firestore');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const users_db_name = process.env.users_db_name;
-// const ts_icon_url = process.env.ts_icon_url;
+const ts_icon_url = process.env.ts_icon_url;
+const ts_flame_url = process.env.ts_flame_url;
 
 
 module.exports = {
@@ -95,9 +96,11 @@ module.exports = {
         global.user_db = await db.collection(users_db_name).get();
 
         const embed = new MessageEmbed()
+            .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
             .setColor('RANDOM')
             // .setTitle(`${JSON.stringify(actorData, null, 2)}`)
-            .setDescription(`In ${duration} ${units} I will remind you: ${reminder}`);
+            .setDescription(`In ${duration} ${units} I will remind you: ${reminder}`)
+            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
         interaction.reply({ embeds: [embed], ephemeral: true });
         logger.debug(`[${PREFIX}] finished!`);
         return;

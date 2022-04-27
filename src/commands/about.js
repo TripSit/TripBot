@@ -4,6 +4,7 @@ const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
+const ts_flame_url = process.env.ts_flame_url;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -11,11 +12,7 @@ module.exports = {
         .setDescription('Shows information about this bot!'),
     async execute(interaction) {
         const embed = new MessageEmbed()
-            .setAuthor({
-                name: 'TripSit.Me',
-                iconURL: ts_icon_url,
-                url: 'http://www.tripsit.me',
-            })
+            .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
             .setColor('DARK_BLUE')
             .setTitle('About TripSit')
             .setURL('https://tripsit.me/about/')
@@ -44,7 +41,7 @@ module.exports = {
                 and talk with Moonbear, or use the /bug command!',
                 },
             )
-            .setFooter({ text: 'Thanks for asking!' });
+            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
         interaction.reply({ embeds: [embed], ephemeral: false });
         logger.debug(`[${PREFIX}] finished!`);
         return;

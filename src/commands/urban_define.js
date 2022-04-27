@@ -7,8 +7,8 @@ if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
 const UD_TOKEN = process.env.urban_dict_key;
-const UD_HOST = process.env.urban_dict_host;
 const ts_icon_url = process.env.ts_icon_url;
+const ts_flame_url = process.env.ts_flame_url;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -23,7 +23,7 @@ module.exports = {
             url: 'https://mashape-community-urban-dictionary.p.rapidapi.com/define',
             params: { term: word },
             headers: {
-                'X-RapidAPI-Host': UD_HOST,
+                'X-RapidAPI-Host': 'mashape-community-urban-dictionary.p.rapidapi.com',
                 'X-RapidAPI-Key': UD_TOKEN,
                 useQueryString: true,
             },
@@ -44,7 +44,8 @@ module.exports = {
                     { name: 'Example B', value: data.list[1].example, inline: false },
                     { name: `Definition C (+${data.list[2].thumbs_up}/-${data.list[2].thumbs_down})`, value: `${data.list[2].definition.length > 1024 ? `${data.list[2].definition.slice(0, 1020)}...` : data.list[2].definition}`, inline: false },
                     { name: 'Example C', value: data.list[2].example, inline: false },
-                );
+                )
+                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
             interaction.reply({ embeds: [embed], ephemeral: false });
             logger.debug(`[${PREFIX}] finished!`);
             return;

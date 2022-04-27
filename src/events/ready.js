@@ -8,6 +8,7 @@ const PORT = process.env.PORT;
 const ts_icon_url = process.env.ts_icon_url;
 const guild_db_name = process.env.guild_db_name;
 const users_db_name = process.env.users_db_name;
+const ts_flame_url = process.env.ts_flame_url;
 
 module.exports = {
     name: 'ready',
@@ -53,7 +54,7 @@ module.exports = {
 
         // Setup the express server, this is necessary for the DO health check
         function setupExpress() {
-            
+
             const app = express();
             app.get('/', (req, res) => {res.status(200).send('Ok');});
             app.listen(PORT, () => {logger.debug(`[${PREFIX}] Healthcheck app listening on port ${PORT}`);});
@@ -74,10 +75,11 @@ module.exports = {
                             logger.debug(`[${PREFIX}] Sending reminder to ${userid}`);
                             const user = await client.users.fetch(userid);
                             const reminder_embed = new MessageEmbed()
+                                .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
                                 .setColor('RANDOM')
                                 .setTitle('Reminder!')
                                 .setDescription(`You set a reminder to ${reminder}`)
-                                .setFooter({ text: 'Dose responsibly!', iconURL: ts_icon_url });
+                                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
                             user.send({ embeds: [reminder_embed] });
                             // remove the reminder
                             // delete doc.data().reminders[remindertime];

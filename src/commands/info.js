@@ -10,7 +10,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 const ts_icon_url = process.env.ts_icon_url;
 const disclaimer = process.env.disclaimer;
-
+const ts_flame_url = process.env.ts_flame_url;
 const raw_drug_data = fs.readFileSync('./src/assets/drug_db_combined.json');
 const drug_data_all = JSON.parse(raw_drug_data);
 
@@ -186,7 +186,7 @@ module.exports = {
                     .setTitle(`${substance} Summary`)
                     .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
                     .setDescription(summary)
-                    .setFooter({ text: disclaimer, iconURL: ts_icon_url });
+                    .setFooter({ text: disclaimer, iconURL: ts_flame_url });
                 interaction.reply({ embeds: [embed] });
                 logger.debug(`[${PREFIX}] finished!`);
                 return;
@@ -220,7 +220,7 @@ module.exports = {
                             .setTitle(`${substance} Dosage`)
                             .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
                             .setDescription(message_part)
-                            .setFooter({ text: disclaimer, iconURL: ts_icon_url });
+                            .setFooter({ text: disclaimer, iconURL: ts_flame_url });
                         book.push(embed);
                     }
                 }
@@ -231,7 +231,7 @@ module.exports = {
                         .setTitle(`${substance} Dosage`)
                         .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
                         .setDescription(entire_message)
-                        .setFooter({ text: disclaimer, iconURL: ts_icon_url });
+                        .setFooter({ text: disclaimer, iconURL: ts_flame_url });
                     return interaction.reply({ embeds: [embed] });
                 }
                 if (book.length > 0) {
@@ -302,7 +302,7 @@ module.exports = {
                             .setDescription(message_part)
                             .setColor(color)
                             .setThumbnail(thumbnail)
-                            .setFooter({ text: disclaimer, iconURL: ts_icon_url });
+                            .setFooter({ text: disclaimer, iconURL: ts_flame_url });
                         book.push(embed);
                     }
                 }
@@ -315,7 +315,7 @@ module.exports = {
                         .setDescription(entire_message)
                         .setColor(color)
                         .setThumbnail(thumbnail)
-                        .setFooter({ text: disclaimer, iconURL: ts_icon_url });
+                        .setFooter({ text: disclaimer, iconURL: ts_flame_url });
                     book.push(embed);
                 }
             }

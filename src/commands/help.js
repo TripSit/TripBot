@@ -6,6 +6,7 @@ if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
 const ts_icon_url = process.env.ts_icon_url;
+const ts_flame_url = process.env.ts_flame_url;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -36,7 +37,8 @@ module.exports = {
                 { name: 'Karma', value: 'TripSit Only - Keeps track of karma (reactions) given and received.' },
                 { name: 'Mod', value: 'TripSit Only - Applies mod actions on a user.' },
                 { name: 'Report', value: 'TripSit Only - Allows users to report someone to the TripSit Team.' },
-            );
+            )
+            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
         interaction.reply({ embeds: [embed], ephemeral: false });
         logger.debug(`[${PREFIX}] finished!`);
         return;
