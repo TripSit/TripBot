@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
+const { getFirestore } = require('firebase-admin/firestore');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const users_db_name = process.env.users_db_name;
 // const ts_icon_url = process.env.ts_icon_url;
@@ -77,7 +78,8 @@ module.exports = {
         logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
         // Update firebase
         logger.debug(`[${PREFIX}] Updating firebase`);
-        await global.firebase_db.collection(users_db_name).doc(actorFBID).update({
+        const db = getFirestore();
+        await db.collection(users_db_name).doc(actorFBID).update({
             reminders: actorData.reminders,
         });
         // Update global db
@@ -90,7 +92,7 @@ module.exports = {
         //         logger.debug(`[${PREFIX}] New all reminders ${JSON.stringify(doc.data().reminders, null, 2)}`);
         //     }
         // });
-        global.user_db = await global.firebase_db.collection(users_db_name).get();
+        global.user_db = await db.collection(users_db_name).get();
 
         const embed = new MessageEmbed()
             .setColor('RANDOM')
