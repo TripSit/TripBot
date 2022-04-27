@@ -81,10 +81,10 @@ module.exports = {
                             // remove the reminder
                             // delete doc.data().reminders[remindertime];
                             delete all_reminders[remindertime];
-                            global.firebase_db.collection(users_db_name).doc(user_fb_id).update({
+                            db.collection(users_db_name).doc(user_fb_id).update({
                                 reminders: all_reminders,
                             });
-                            global.user_db = await global.firebase_db.collection(users_db_name).get();
+                            global.user_db = await db.collection(users_db_name).get();
                         }
                     }
                 }
