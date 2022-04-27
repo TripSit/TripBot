@@ -1,6 +1,6 @@
 {
   "name": "tripsit-discord",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A bot for TripSit",
   "main": "index.js",
   "scripts": {
@@ -37,12 +37,11 @@
     "@discordjs/builders": "^0.12.0",
     "@discordjs/rest": "^0.3.0",
     "@octokit/rest": "^18.12.0",
+    "axios": "^0.27.1",
     "chalk": "4.1.2",
     "discord-api-types": "^0.31.1",
     "discord.js": "^13.6.0",
     "discordjs-button-pagination": "^3.0.1",
-    "dotenv": "^16.0.0",
-    "express": "^4.17.3",
     "firebase": "^8.10.1",
     "firebase-admin": "^10.0.2",
     "fuse.js": "^6.5.3",
@@ -52,11 +51,13 @@
     "winston": "^3.7.2"
   },
   "devDependencies": {
+    "dotenv": "^16.0.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-config-prettier": "^7.1.0",
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-prettier": "^3.3.0",
+    "express": "^4.17.3",
     "prettier": "^2.2.1"
   },
   "engines": {
