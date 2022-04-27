@@ -1,19 +1,43 @@
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
-const { MessageEmbed } = require('discord.js');
+const { MessageEmbed, Collection } = require('discord.js');
 const { getFirestore } = require('firebase-admin/firestore');
 const express = require('express');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const PORT = process.env.PORT;
+const guild_id = process.env.guildId;
 const ts_icon_url = process.env.ts_icon_url;
 const guild_db_name = process.env.guild_db_name;
 const users_db_name = process.env.users_db_name;
 const ts_flame_url = process.env.ts_flame_url;
 
+// (*INVITE*) https://github.com/AnIdiotsGuide/discordjs-bot-guide/blob/master/coding-guides/tracking-used-invites.md
+/* Start *INVITE* code */
+// Initialize the invite cache
+// const invites = new Collection();
+// A pretty useful method to create a delay without blocking the whole script.
+const wait = require('timers/promises').setTimeout;
+/* End *INVITE* code */
+
 module.exports = {
     name: 'ready',
     once: true,
     async execute(client) {
+        /* Start *INVITE* code */
+        // "ready" isn't really ready. We need to wait a spell.
+        await wait(1000);
+
+        // Loop over all the guilds
+        client.guilds.cache.forEach(async (guild) => {
+            if (guild.id == guild_id) {
+                // Fetch all Guild tripsit Invites
+                const firstInvites = await guild.invites.fetch();
+                // Set the key as Guild ID, and create a map which has the invite code, and the number of uses
+                client.invites.set(guild.id, new Collection(firstInvites.map((invite) => [invite.code, invite.uses])));
+            }
+        });
+        /* End *INVITE* code */
+
         const db = getFirestore();
         global.guild_db = await db.collection(guild_db_name).get();
         global.user_db = await db.collection(users_db_name).get();

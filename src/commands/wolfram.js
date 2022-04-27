@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
+// const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const axios = require('axios');
@@ -8,7 +8,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 const WR_TOKEN = process.env.rapid_api_key;
 const WR_API_KEY = process.env.wolfram_alpha_key;
-const ts_icon_url = process.env.ts_icon_url;
+// const ts_icon_url = process.env.ts_icon_url;
 
 module.exports = {
     data: new SlashCommandBuilder()
