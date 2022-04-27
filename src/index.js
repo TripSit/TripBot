@@ -41,7 +41,10 @@ const client = new Client({
     intents: [
         Intents.FLAGS.GUILDS,
         Intents.FLAGS.GUILD_MESSAGES,
+        Intents.FLAGS.GUILD_MEMBERS,
+        Intents.FLAGS.GUILD_PRESENCES,
         Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+        Intents.FLAGS.GUILD_INVITES,
     ],
     partials: [
         'MESSAGE',
@@ -52,11 +55,13 @@ const client = new Client({
     ],
 });
 
+client.invites = new Collection();
+
 // Set up commands
 const guild_commands = [];
-const guild_command_names = ['joke', 'motivate', 'urban_define', 'remindme', 'triptoys', 'issue', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button', 'gban', 'gunban', 'uban', 'uunban'];
+const guild_command_names = ['invite', 'issue', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button'];
 const globl_commands = [];
-const globl_command_names = ['urban_define', 'triptoys', 'benzo_convert', 'dxmcalc', 'ems', 'recovery', 'help', 'bug', 'about', 'breathe', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
+const globl_command_names = ['remindme', 'joke', 'motivate', 'urban_define', 'triptoys', 'benzo_convert', 'dxmcalc', 'ems', 'recovery', 'help', 'bug', 'about', 'breathe', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
 
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
@@ -87,6 +92,7 @@ globl_rest.put(Routes.applicationCommands(clientId), { body: globl_commands })
 const eventFiles = fs.readdirSync('./src/events').filter(file => file.endsWith('.js'));
 for (const file of eventFiles) {
     const event = require(`../src/events/${file}`);
+    logger.debug(`[${PREFIX}] Adding event: ${event.name} to bot`);
     if (event.once) {
         client.once(event.name, (...args) => event.execute(...args));
     }
@@ -94,5 +100,14 @@ for (const file of eventFiles) {
         client.on(event.name, (...args) => event.execute(...args, client));
     }
 }
+logger.debug(`[${PREFIX}] Successfully registered application events!`);
+
+// client.on('guildMemberAdd', member => {
+//     console.log(member);
+// });
+
+// client.on('guildMemberRemove', member => {
+//     console.log(member);
+// });
 
 client.login(token);

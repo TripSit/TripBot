@@ -246,7 +246,7 @@ module.exports = {
         const command = client.commands.get(commandName);
         if (!command) return;
 
-        const commands_admin = ['button', 'gban', 'gunban', 'uban', 'uunban', 'test', 'ping'];
+        const commands_admin = ['invite', 'button', 'gban', 'gunban', 'uban', 'uunban', 'test', 'ping'];
         // const commands_pm = ['idose'];
 
         // Check if the command is in commands_admin list and then check to see if the user is moonbear
