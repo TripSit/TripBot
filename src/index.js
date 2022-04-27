@@ -6,7 +6,6 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('./utils/logger.js');
 const { initializeApp, cert } = require('firebase-admin/app');
 const serviceAccount = require('./assets/firebase_creds.json');
-const { getFirestore } = require('firebase-admin/firestore');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 serviceAccount.private_key_id = process.env.FIREBASE_PRIVATE_KEY_ID;
 serviceAccount.private_key = process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined;
@@ -22,21 +21,21 @@ initializeApp({
     databaseURL: 'https://tripsit-me-default-rtdb.firebaseio.com',
 });
 
-async function backup() {
-    if (process.env.NODE_ENV === 'production') {
-        return;
-    }
-    const db = getFirestore();
-    const snapshot = await db.collection('users').get();
-    const users = [];
-    // Get today's date in unix tiemstamp
-    const today = Math.floor(Date.now() / 1000);
-    snapshot.forEach((doc) => {
-        users.push(doc.data());
-    });
-    fs.writeFileSync(`./src/backups/fb_db_backup(${today}).json`, JSON.stringify(users, null, 2));
-}
-backup();
+// async function backup() {
+//     if (process.env.NODE_ENV === 'production') {
+//         return;
+//     }
+//     const db = getFirestore();
+//     const snapshot = await db.collection('users').get();
+//     const users = [];
+//     // Get today's date in unix tiemstamp
+//     const today = Math.floor(Date.now() / 1000);
+//     snapshot.forEach((doc) => {
+//         users.push(doc.data());
+//     });
+//     fs.writeFileSync(`./src/backups/fb_db_backup(${today}).json`, JSON.stringify(users, null, 2));
+// }
+// backup();
 
 const client = new Client({
     intents: [
