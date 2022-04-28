@@ -14,7 +14,7 @@ const disclaimer = process.env.disclaimer;
 module.exports = {
     data: new SlashCommandBuilder()
 
-        .setName('benzo_convert')
+        .setName('benzo_calc')
         .setDescription('Check combo information')
         .addIntegerOption(option =>
             option.setName('i_have')

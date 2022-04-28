@@ -12,8 +12,8 @@ const ts_flame_url = process.env.ts_flame_url;
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('dxmcalc')
-        .setDescription('Check combo information')
+        .setName('dxm_calc')
+        .setDescription('Get DXM dosage information')
         .addIntegerOption(option =>
             option.setName('weight')
                 .setDescription('How much do you weigh?')
@@ -30,6 +30,7 @@ module.exports = {
             option.setName('taking')
                 .setDescription('What are you taking? All products listed here contain DXM hBr as the sole active ingredient.')
                 .setRequired(true)
+                .addChoice('RobotTablets (30 mg tablets)', 'RobotTablets (30 mg tablets)')
                 .addChoice('RoboCough (ml)', 'RoboCough (ml)')
                 .addChoice('Robitussin DX (oz)', 'Robitussin DX (oz)')
                 .addChoice('Robitussin DX (ml)', 'Robitussin DX (ml)')
@@ -94,7 +95,6 @@ For a description of the plateau model, and the effects you can expect at each l
         if (taking == 'RoboCough (ml)') {
             roa_value = 10;
             units = '(ml)';
-
         }
         else if (taking == 'Robitussin DX (oz)') {
             roa_value = 88.5;
@@ -116,6 +116,11 @@ For a description of the plateau model, and the effects you can expect at each l
             roa_value = 30;
             units = '(30 mg caps)';
         }
+        else if (taking == 'RobotTablets (30 mg tablets)') {
+            roa_value = 40.9322;
+            units = '(30 mg tablets)';
+        }
+
         logger.debug(`[${PREFIX}] roa_value: ${roa_value}`);
         logger.debug(`[${PREFIX}] units: ${units}`);
 
