@@ -50,7 +50,7 @@ module.exports = {
         .setDescription('Search by pill qualities!')
         .addStringOption(option =>
             option.setName('imprint')
-                .setDescription('What is the imprint on the pill?')
+                .setDescription('What are the markings on the pill?')
                 .setRequired(true),
         )
         .addStringOption(option =>
@@ -96,6 +96,7 @@ module.exports = {
             url: url,
         };
 
+        logger.debug(`[${PREFIX}] Starting axios base request`);
         axios.request(options).then(async function(response) {
             const { document } = (new JSDOM(response.data, { includeNodeLocations: true })).window;
 
@@ -133,8 +134,6 @@ module.exports = {
             const shape = shapematched[2];
             logger.debug(`[${PREFIX}] shape: ${shape}`);
 
-
-
             const embed = new MessageEmbed()
                 .setAuthor({ name: 'Drugs.com', url: 'https://www.drugs.com/', iconURL: 'https://i.imgur.com/YRTrM0c.png' })
                 .setColor('RANDOM')
@@ -150,6 +149,7 @@ module.exports = {
             // It seems like drugs.com has some weird image handling, so we need to download the image and upload the image to imgur
             // I will eventually cache these images so we don't need to download/upload every time
             let imgur_url = '';
+            logger.debug(`[${PREFIX}] Starting axios image request`);
             axios.request({
                 // Get the image from drug.com
                 method: 'GET',
@@ -157,6 +157,7 @@ module.exports = {
                 responseType: 'stream',
             }).then(function(image_response) {
                 // Upload the image to imgur
+                logger.debug(`[${PREFIX}] Starting imgur upload`);
                 imgur_client.upload({
                     image: image_response.data,
                     type: 'stream',
@@ -169,6 +170,7 @@ module.exports = {
                     const detailsURL = `https://www.drugs.com${first_result.querySelector('.ddc-btn.ddc-btn-sm').getAttribute('href')}`;
                     logger.debug(`[${PREFIX}] detailsURL: ${detailsURL}`);
                     embed.setURL(detailsURL);
+                    logger.debug(`[${PREFIX}] Starting axios details request`);
                     axios.request({
                         // Get the image from drug.com
                         method: 'GET',
@@ -197,7 +199,7 @@ module.exports = {
                         logger.debug(`[${PREFIX}] desc: ${desc}`);
                         embed.setDescription(desc);
 
-                        logger.debug(`[${PREFIX}] first_result: ${first_result}`);
+                        // logger.debug(`[${PREFIX}] first_result: ${first_result}`);
                         embed.addFields(
                             { name: 'Strength', value: strength, inline: true },
                             { name: 'Availability', value: availmatched[2], inline: true },
@@ -206,16 +208,16 @@ module.exports = {
                         interaction.reply({ embeds: [embed], ephemeral: false });
                         logger.debug(`[${PREFIX}] finished!`);
                     }).catch(function(error) {
-                        logger.error(`[${PREFIX}] error: ${error}`);
+                        logger.error(`[${PREFIX}] error4: ${error}`);
                     });
                 }).catch(function(error) {
-                    logger.error(`[${PREFIX}] error: ${error}`);
+                    logger.error(`[${PREFIX}] error3: ${error}`);
                 });
             }).catch(function(error) {
-                logger.error(`[${PREFIX}] error: ${error}`);
+                logger.error(`[${PREFIX}] error2: ${error}`);
             });
         }).catch(function(error) {
-            logger.error(`[${PREFIX}] error: ${error}`);
+            logger.error(`[${PREFIX}] error1: ${error}`);
         });
     },
 };

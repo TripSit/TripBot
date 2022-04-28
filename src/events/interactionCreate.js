@@ -45,7 +45,7 @@ module.exports = {
         const user_is_bot = interaction.user.bot;
         // const user_is_blacklisted = blacklist_users.includes(interaction.user.id);
 
-        logger.info(`[${PREFIX}] ${username}${command_name} (${type})${guild_message}${message}`);
+        // logger.info(`[${PREFIX}] ${username}${command_name} (${type})${guild_message}${message}`);
 
         // check if the user is a bot and if so, ignore it
         if (user_is_bot) {
@@ -61,17 +61,11 @@ module.exports = {
             }
         });
 
-        // Check if the user is in blacklist_users and if so, ignore it
-        logger.debug(`[${PREFIX}] blacklist_users: ${blacklist_users}`);
-        if (blacklist_users.includes(interaction.user.id)) {
-            logger.debug(`[${PREFIX}] ${interaction.user.username}#${interaction.user.discriminator} (${interaction.user.id}) is banned from using commands.`);
-            return interaction.reply('You are banned from using commands.');
-        }
-        logger.debug(`[${PREFIX}] ${interaction.user.username} is not banned!`);
+
 
         // check if the interaction is a request for autocomplete
         if (interaction.isAutocomplete()) {
-            logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
+            // logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
             if (interaction.commandName == 'pill_id') {
                 const focusedOption = interaction.options.getFocused(true).name;
 
@@ -86,20 +80,20 @@ module.exports = {
                 for (let i = 0; i < pill_colors.length; i++) {
                     pill_color_names.push(Object.keys(pill_colors[i])[0]);
                 }
-                logger.debug(`[${PREFIX}] pill_color_names: ${pill_color_names}`);
+                // logger.debug(`[${PREFIX}] pill_color_names: ${pill_color_names}`);
 
                 const pill_shape_names = [];
                 for (let i = 0; i < pill_shapes.length; i++) {
                     pill_shape_names.push(Object.keys(pill_shapes[i])[0]);
                 }
-                logger.debug(`[${PREFIX}] pill_shape_names: ${pill_shape_names}`);
+                // logger.debug(`[${PREFIX}] pill_shape_names: ${pill_shape_names}`);
 
                 if (focusedOption == 'color') {
                     const fuse = new Fuse(pill_color_names, options);
                     const focusedValue = interaction.options.getFocused();
-                    logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
+                    // logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
                     const results = fuse.search(focusedValue);
-                    logger.debug(`[${PREFIX}] Autocomplete results: ${JSON.stringify(results, null, 2)}`);
+                    // logger.debug(`[${PREFIX}] Autocomplete results: ${JSON.stringify(results, null, 2)}`);
                     if (results.length > 0) {
                         const top_25 = results.slice(0, 25);
                         const list_results = top_25.map(choice => ({ name: choice.item, value: choice.item }));
@@ -115,7 +109,7 @@ module.exports = {
                     const focusedValue = interaction.options.getFocused();
                     logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
                     const results = fuse.search(focusedValue);
-                    logger.debug(`[${PREFIX}] Autocomplete results: ${JSON.stringify(results, null, 2)}`);
+                    // logger.debug(`[${PREFIX}] Autocomplete results: ${JSON.stringify(results, null, 2)}`);
                     if (results.length > 0) {
                         const top_25 = results.slice(0, 25);
                         const list_results = top_25.map(choice => ({ name: choice.item, value: choice.item }));
@@ -301,6 +295,14 @@ module.exports = {
 
         // Failsafe to make sure only commands get past this point
         if (!interaction.isCommand()) return;
+
+        // Check if the user is in blacklist_users and if so, ignore it
+        // logger.debug(`[${PREFIX}] blacklist_users: ${blacklist_users}`);
+        if (blacklist_users.includes(interaction.user.id)) {
+            logger.debug(`[${PREFIX}] ${interaction.user.username}#${interaction.user.discriminator} (${interaction.user.id}) is banned from using commands.`);
+            return interaction.reply('You are banned from using commands.');
+        }
+        logger.debug(`[${PREFIX}] ${interaction.user.username} is not banned!`);
 
         const commandName = interaction.commandName;
 
