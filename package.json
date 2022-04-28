@@ -1,6 +1,6 @@
 {
   "name": "tripsit-discord",
-  "version": "1.2.3",
+  "version": "1.2.7",
   "description": "A bot for TripSit",
   "main": "index.js",
   "scripts": {
@@ -42,6 +42,8 @@
     "firebase": "^8.10.1",
     "firebase-admin": "^10.0.2",
     "fuse.js": "^6.5.3",
+    "imgur": "^2.2.0",
+    "jsdom": "^19.0.0",
     "lodash": "^4.17.19",
     "octokit": "^1.7.1",
     "underscore": "^1.13.2",

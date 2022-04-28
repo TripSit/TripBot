@@ -25,7 +25,7 @@ module.exports = {
     async execute(client) {
         /* Start *INVITE* code */
         // "ready" isn't really ready. We need to wait a spell.
-        await wait(1000);
+        // await wait(1000);
 
         // Loop over all the guilds
         client.guilds.cache.forEach(async (guild) => {

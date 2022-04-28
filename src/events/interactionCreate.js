@@ -24,6 +24,13 @@ const drug_data_all = JSON.parse(raw_drug_data);
 const raw_ts_data = fs.readFileSync('./src/assets/drug_db_tripsit.json');
 const drug_data_tripsit = JSON.parse(raw_ts_data);
 
+const raw_pill_colors = fs.readFileSync('./src/assets/pill_colors.json');
+const pill_colors = JSON.parse(raw_pill_colors);
+
+
+const raw_pill_shapes = fs.readFileSync('./src/assets/pill_shapes.json');
+const pill_shapes = JSON.parse(raw_pill_shapes);
+
 
 module.exports = {
     name: 'interactionCreate',
@@ -64,11 +71,63 @@ module.exports = {
 
         // check if the interaction is a request for autocomplete
         if (interaction.isAutocomplete()) {
-            logger.debug(`[${PREFIX}] Autocomplete requested`);
-            logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.options.getString('mg_of')}`);
-            logger.debug(`[${PREFIX}] commandName: ${interaction.commandName}`);
+            logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
+            if (interaction.commandName == 'pill_id') {
+                const focusedOption = interaction.options.getFocused(true).name;
 
-            if (interaction.commandName == 'benzo_convert') {
+                const options = {
+                    shouldSort: true,
+                    keys: [
+                        'name',
+                    ],
+                };
+                // Get a list of keys
+                const pill_color_names = [];
+                for (let i = 0; i < pill_colors.length; i++) {
+                    pill_color_names.push(Object.keys(pill_colors[i])[0]);
+                }
+                logger.debug(`[${PREFIX}] pill_color_names: ${pill_color_names}`);
+
+                const pill_shape_names = [];
+                for (let i = 0; i < pill_shapes.length; i++) {
+                    pill_shape_names.push(Object.keys(pill_shapes[i])[0]);
+                }
+                logger.debug(`[${PREFIX}] pill_shape_names: ${pill_shape_names}`);
+
+                if (focusedOption == 'color') {
+                    const fuse = new Fuse(pill_color_names, options);
+                    const focusedValue = interaction.options.getFocused();
+                    logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
+                    const results = fuse.search(focusedValue);
+                    logger.debug(`[${PREFIX}] Autocomplete results: ${JSON.stringify(results, null, 2)}`);
+                    if (results.length > 0) {
+                        const top_25 = results.slice(0, 25);
+                        const list_results = top_25.map(choice => ({ name: choice.item, value: choice.item }));
+                        interaction.respond(list_results);
+                    }
+                    else {
+                        const default_colors = pill_color_names.slice(0, 25);
+                        interaction.respond(default_colors.map(choice => ({ name: choice, value: choice })));
+                    }
+                }
+                if (focusedOption == 'shape') {
+                    const fuse = new Fuse(pill_shape_names, options);
+                    const focusedValue = interaction.options.getFocused();
+                    logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
+                    const results = fuse.search(focusedValue);
+                    logger.debug(`[${PREFIX}] Autocomplete results: ${JSON.stringify(results, null, 2)}`);
+                    if (results.length > 0) {
+                        const top_25 = results.slice(0, 25);
+                        const list_results = top_25.map(choice => ({ name: choice.item, value: choice.item }));
+                        interaction.respond(list_results);
+                    }
+                    else {
+                        const default_shapes = pill_shape_names.slice(0, 25);
+                        interaction.respond(default_shapes.map(choice => ({ name: choice, value: choice })));
+                    }
+                }
+            }
+            else if (interaction.commandName == 'benzo_convert') {
                 logger.debug(`[${PREFIX}] Autocomplete requested for benzo_convert`);
                 const options = {
                     shouldSort: true,
@@ -108,9 +167,12 @@ module.exports = {
                 // End borrowed code, thanks bjorn!
 
                 const drugNames = benzoCache.map(d => d.name);
+                logger.debug(`[${PREFIX}] drugNames: ${JSON.stringify(drugNames, null, 2)}`);
                 const fuse = new Fuse(drugNames, options);
                 const focusedValue = interaction.options.getFocused();
+                logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
                 const results = fuse.search(focusedValue);
+                logger.debug(`[${PREFIX}] results: ${JSON.stringify(results, null, 2)}`);
                 if (results.length > 0) {
                     const top_25 = results.slice(0, 25);
                     interaction.respond(top_25.map(choice => ({ name: choice.item, value: choice.item })));
@@ -120,7 +182,6 @@ module.exports = {
                     interaction.respond(default_names.map(choice => ({ name: choice, value: choice })));
                 }
             }
-
             // I need to find the rest of the actions that use autocomplete and define them here
             else {
                 const options = {
