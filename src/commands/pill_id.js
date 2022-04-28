@@ -205,17 +205,9 @@ module.exports = {
                         );
                         interaction.reply({ embeds: [embed], ephemeral: false });
                         logger.debug(`[${PREFIX}] finished!`);
-                    }).catch(function(error) {
-                        logger.error(`[${PREFIX}] error4: ${error}`);
-                    });
-                }).catch(function(error) {
-                    logger.error(`[${PREFIX}] error3: ${error}`);
-                });
-            }).catch(function(error) {
-                logger.error(`[${PREFIX}] error2: ${error}`);
-            });
-        }).catch(function(error) {
-            logger.error(`[${PREFIX}] error1: ${error}`);
-        });
+                    }).catch(function(error) {logger.error(`[${PREFIX}] error4: ${error}`);});
+                }).catch(function(error) {logger.error(`[${PREFIX}] error3: ${error}`);});
+            }).catch(function(error) {logger.error(`[${PREFIX}] error2: ${error}`);});
+        })/*.catch(function(error) {logger.error(`[${PREFIX}] error1: ${error}`);});*/
     },
 };
