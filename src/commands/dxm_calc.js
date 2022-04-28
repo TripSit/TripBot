@@ -116,7 +116,7 @@ For a description of the plateau model, and the effects you can expect at each l
             roa_value = 30;
             units = '(30 mg caps)';
         }
-        else if (taking == 'RobotTablets (30 mg tablets)') {
+        else if (taking == 'RoboTablets (30 mg tablets)') {
             roa_value = 40.9322;
             units = '(30 mg tablets)';
         }
