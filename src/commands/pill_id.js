@@ -90,14 +90,12 @@ module.exports = {
         const url = `https://www.drugs.com/imprints.php?imprint=${input_imprint}&color=${pill_color_id}&shape=${pill_shape_id}`;
         // Get info from drugs.com
         // const url = `https://www.drugs.com/imprints.php`
-        logger.debug(`[${PREFIX}] url: ${url}`);
-        const options = {
+        logger.debug(`[${PREFIX}] Starting axios base request to: ${url}`);
+        axios.request({
             method: 'GET',
             url: url,
-        };
-
-        logger.debug(`[${PREFIX}] Starting axios base request`);
-        axios.request(options).then(async function(response) {
+        }).then(async function(response) {
+            logger.debug(`[${PREFIX}] axios base request worked!`);
             const { document } = (new JSDOM(response.data, { includeNodeLocations: true })).window;
 
             if (!document.querySelector('.pid-box-1')) {
