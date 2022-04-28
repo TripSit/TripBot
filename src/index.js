@@ -59,9 +59,9 @@ client.invites = new Collection();
 
 // Set up commands
 const guild_commands = [];
-const guild_command_names = ['dxm_calc', 'keta_calc', 'pill_id', 'invite', 'issue', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button'];
+const guild_command_names = ['reagents', 'dxm_calc', 'keta_calc', 'pill_id', 'invite', 'issue', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button'];
 const globl_commands = [];
-const globl_command_names = ['keta_calc', 'remindme', 'joke', 'motivate', 'urban_define', 'triptoys', 'benzo_calc', 'dxm_calc', 'ems', 'recovery', 'help', 'bug', 'about', 'breathe', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
+const globl_command_names = ['reagents', 'keta_calc', 'remindme', 'joke', 'motivate', 'urban_define', 'triptoys', 'benzo_calc', 'dxm_calc', 'ems', 'recovery', 'help', 'bug', 'about', 'breathe', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
 
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
