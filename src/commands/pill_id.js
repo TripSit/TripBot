@@ -5,8 +5,6 @@ const paginationEmbed = require('discordjs-button-pagination');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const ts_icon_url = process.env.ts_icon_url;
-const disclaimer = process.env.disclaimer;
 const ts_flame_url = process.env.ts_flame_url;
 const imgur_id = process.env.imgur_id;
 const imgur_secret = process.env.imgur_secret;
@@ -25,23 +23,6 @@ const pill_colors = JSON.parse(raw_pill_colors);
 
 const raw_pill_shapes = fs.readFileSync('./src/assets/pill_shapes.json');
 const pill_shapes = JSON.parse(raw_pill_shapes);
-
-async function upload_to_imgur(imageURL) {
-    let imgur_url = 'https://i.imgur.com/mFj3N0D.jpg';
-    axios.request({
-        method: 'GET',
-        url: imageURL,
-        responseType: 'stream',
-    }).then(async function(response) {
-        const img_res = await imgur_client.upload({
-            image: response.data,
-            type: 'stream',
-        });
-        imgur_url = img_res.data.link;
-        logger.debug(`[${PREFIX}] png_image_url: ${imgur_url}`);
-        return imgur_url;
-    });
-}
 
 /* Idea for this code inspired by PsyBot! https://github.com/v0idp/PsyBot */
 module.exports = {
@@ -94,6 +75,7 @@ module.exports = {
         axios.request({
             method: 'GET',
             url: url,
+            headers: { 'User-Agent': 'Axios 0.21.1' },
         }).then(async function(response) {
             logger.debug(`[${PREFIX}] axios base request worked!`);
             const { document } = (new JSDOM(response.data, { includeNodeLocations: true })).window;
