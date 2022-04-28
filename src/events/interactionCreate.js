@@ -107,7 +107,7 @@ module.exports = {
                 if (focusedOption == 'shape') {
                     const fuse = new Fuse(pill_shape_names, options);
                     const focusedValue = interaction.options.getFocused();
-                    logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
+                    // logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
                     const results = fuse.search(focusedValue);
                     // logger.debug(`[${PREFIX}] Autocomplete results: ${JSON.stringify(results, null, 2)}`);
                     if (results.length > 0) {
@@ -122,7 +122,7 @@ module.exports = {
                 }
             }
             else if (interaction.commandName == 'benzo_convert') {
-                logger.debug(`[${PREFIX}] Autocomplete requested for benzo_convert`);
+                // logger.debug(`[${PREFIX}] Autocomplete requested for benzo_convert`);
                 const options = {
                     shouldSort: true,
                     keys: [
