@@ -5,7 +5,7 @@ const logger = require('../utils/logger.js');
 const guild_id = process.env.guildId;
 const ts_icon_url = process.env.ts_icon_url;
 const ts_flame_url = process.env.ts_flame_url;
-const moderator_channel_id = process.env.channel_moderators;
+const moderator_channel_id = process.env.channel_modlog;
 
 module.exports = {
     name: 'guildMemberRemove',
