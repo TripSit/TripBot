@@ -110,15 +110,15 @@ module.exports = {
             const shaperegex = /(\<li\>\<b\>Shape\:\<\/b\> )(.*)(\<\/li\>)/;
 
             const drug = first_result.getElementsByClassName('imprintdruglink')[0].innerHTML;
-            logger.debug(`[${PREFIX}] drug: ${drug}`);
+            // logger.debug(`[${PREFIX}] drug: ${drug}`);
             const details = first_result.getElementsByClassName('ddc-pid-details')[0].innerHTML;
             const strengthmatched = details.match(strengthregex);
             const strength = strengthmatched[2];
-            logger.debug(`[${PREFIX}] strength: ${strength}`);
+            // logger.debug(`[${PREFIX}] strength: ${strength}`);
 
             const imprintmatched = details.match(imprintregex);
             const imprint = imprintmatched[2].toUpperCase();
-            logger.debug(`[${PREFIX}] imprint: ${imprint}`);
+            // logger.debug(`[${PREFIX}] imprint: ${imprint}`);
 
             const colormatched = details.match(colorregex);
             let color = 'Null';
@@ -126,11 +126,11 @@ module.exports = {
                 color = colormatched[2];
                 color = color.replace('&amp;', '&');
             }
-            logger.debug(`[${PREFIX}] color: ${color}`);
+            // logger.debug(`[${PREFIX}] color: ${color}`);
 
             const shapematched = details.match(shaperegex);
             const shape = shapematched[2];
-            logger.debug(`[${PREFIX}] shape: ${shape}`);
+            // logger.debug(`[${PREFIX}] shape: ${shape}`);
 
             const embed = new MessageEmbed()
                 .setAuthor({ name: 'Drugs.com', url: 'https://www.drugs.com/', iconURL: 'https://i.imgur.com/YRTrM0c.png' })
@@ -162,11 +162,11 @@ module.exports = {
                 }).then(function(imgur_resonse) {
                     // Use the link in the thumbnail
                     imgur_url = imgur_resonse.data.link;
-                    logger.debug(`[${PREFIX}] png_image_url: ${imgur_url}`);
+                    // logger.debug(`[${PREFIX}] png_image_url: ${imgur_url}`);
                     embed.setThumbnail(imgur_url);
 
                     const detailsURL = `https://www.drugs.com${first_result.querySelector('.ddc-btn.ddc-btn-sm').getAttribute('href')}`;
-                    logger.debug(`[${PREFIX}] detailsURL: ${detailsURL}`);
+                    // logger.debug(`[${PREFIX}] detailsURL: ${detailsURL}`);
                     embed.setURL(detailsURL);
                     logger.debug(`[${PREFIX}] Starting axios details request`);
                     axios.request({
@@ -186,15 +186,15 @@ module.exports = {
 
                         const avail_regex = /(\<dt\>Availability\<\/dt\>\n.*\>)(.*)(\<\/dd\>)/;
                         const availmatched = details.match(avail_regex);
-                        logger.debug(`[${PREFIX}] availmatched: ${availmatched[2]}`);
+                        // logger.debug(`[${PREFIX}] availmatched: ${availmatched[2]}`);
 
                         const class_regex = /(\<dt\>Drug Class\<\/dt\>\s.*\s.*\"\>)(.*)(\<\/a)/;
                         const class_matched = details.match(class_regex);
-                        logger.debug(`[${PREFIX}] class_matched: ${class_matched[2]}`);
+                        // logger.debug(`[${PREFIX}] class_matched: ${class_matched[2]}`);
 
                         const desc = document.querySelector('meta[name="twitter:description"]').content;
                         // const desc = document.querySelector('meta[property=\'og:description\']');
-                        logger.debug(`[${PREFIX}] desc: ${desc}`);
+                        // logger.debug(`[${PREFIX}] desc: ${desc}`);
                         embed.setDescription(desc);
 
                         // logger.debug(`[${PREFIX}] first_result: ${first_result}`);
@@ -208,6 +208,6 @@ module.exports = {
                     }).catch(function(error) {logger.error(`[${PREFIX}] error4: ${error}`);});
                 }).catch(function(error) {logger.error(`[${PREFIX}] error3: ${error}`);});
             }).catch(function(error) {logger.error(`[${PREFIX}] error2: ${error}`);});
-        })/*.catch(function(error) {logger.error(`[${PREFIX}] error1: ${error}`);});*/
+        }).catch(function(error) {logger.error(`[${PREFIX}] error1: ${error}`);});
     },
 };
