@@ -46,6 +46,7 @@ module.exports = {
                         .setTitle(`${drug_a} and ${drug_b} combined:`)
                         .setFooter({ text: disclaimer, iconURL: ts_flame_url });
                     if (drug_data_all[i]['interactions']) {
+                        logger.debug(`[${PREFIX}] drug_a has interactions`);
                         let result = '';
                         for (let j = 0; j < drug_data_all[i]['interactions'].length; j++) {
                             if (drug_data_all[i]['interactions'][j]['name'] == drug_b) {
@@ -80,9 +81,8 @@ module.exports = {
                     }
                     else {
                         embed.addFields(
-                            { name: 'Result', value: `[${PREFIX}] Drug ${drug_a} has no interactions!` },
+                            { name: 'Result', value: `${drug_a} has no interactions!` },
                         );
-                        break;
                     }
                     interaction.reply({ embeds: [embed] });
                     logger.debug(`[${PREFIX}] finished!`);
