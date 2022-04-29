@@ -30,7 +30,7 @@ module.exports = {
         axios.request(options).then(function(response) {
             data = response.data;
             console.log(data);
-            // logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
+            logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
             const embed = new MessageEmbed()
                 .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
                 .setColor('RANDOM')

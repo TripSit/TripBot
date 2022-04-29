@@ -1,7 +1,9 @@
+const fs = require('node:fs');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 const { MessageEmbed, Collection } = require('discord.js');
 const { getFirestore } = require('firebase-admin/firestore');
+const db = getFirestore();
 const express = require('express');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const PORT = process.env.PORT;
@@ -16,16 +18,27 @@ const ts_flame_url = process.env.ts_flame_url;
 // Initialize the invite cache
 // const invites = new Collection();
 // A pretty useful method to create a delay without blocking the whole script.
-const wait = require('timers/promises').setTimeout;
+// const wait = require('timers/promises').setTimeout;
 /* End *INVITE* code */
 
 module.exports = {
     name: 'ready',
     once: true,
     async execute(client) {
+        // This takes a while so do it first
+        // Setup the express server, this is necessary for the DO health check
+        function setupExpress() {
+
+            const app = express();
+            app.get('/', (req, res) => {res.status(200).send('Ok');});
+            app.listen(PORT, () => {logger.debug(`[${PREFIX}] Healthcheck app listening on port ${PORT}`);});
+        }
+        setupExpress();
+
         /* Start *INVITE* code */
         // "ready" isn't really ready. We need to wait a spell.
         // await wait(1000);
+        const today = Math.floor(Date.now() / 1000);
 
         // Loop over all the guilds
         client.guilds.cache.forEach(async (guild) => {
@@ -37,10 +50,41 @@ module.exports = {
             }
         });
         /* End *INVITE* code */
+        const snapshot_guild = await db.collection(guild_db_name).get();
+        const guild_db = [];
+        snapshot_guild.forEach((doc) => {
+            const key = doc.id;
+            const value = doc.data();
+            guild_db.push({
+                key,
+                value,
+            });
+        });
+        global.guild_db = guild_db;
+        if (process.env.NODE_ENV !== 'production') {
+            fs.writeFileSync(`./src/backups/guild_db_(${today}).json`, JSON.stringify(guild_db, null, 2));
+            logger.debug(`[${PREFIX}] Guild database backedup.`);
+        }
+        logger.debug(`[${PREFIX}] Guild database loaded.`);
+        // logger.debug(`[${PREFIX}] guild_db: ${JSON.stringify(global.guild_db, null, 4)}`);
 
-        const db = getFirestore();
-        global.guild_db = await db.collection(guild_db_name).get();
-        global.user_db = await db.collection(users_db_name).get();
+        const snapshot_user = await db.collection(users_db_name).get();
+        const user_db = [];
+        snapshot_user.forEach((doc) => {
+            const key = doc.id;
+            const value = doc.data();
+            user_db.push({
+                key,
+                value,
+            });
+        });
+        global.user_db = user_db;
+        if (process.env.NODE_ENV !== 'production') {
+            fs.writeFileSync(`./src/backups/user_db_(${today}).json`, JSON.stringify(user_db, null, 2));
+            logger.debug(`[${PREFIX}] User database backedup.`);
+        }
+        logger.debug(`[${PREFIX}] User database loaded.`);
+        // logger.debug(`[${PREFIX}] user_db: ${JSON.stringify(global.user_db, null, 4)}`);
 
         // Print each guild I am in
         logger.debug(`[${PREFIX}] I am in:`);
@@ -51,9 +95,9 @@ module.exports = {
         // Set the global banned guilds
         global.blacklist_guilds = [];
         global.guild_db.forEach((doc) => {
-            // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc.data()}`);
-            if (doc.data().isBanned == true) {
-                global.blacklist_guilds.push(doc.data().guild_id);
+            // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc}`);
+            if (doc.isBanned == true) {
+                global.blacklist_guilds.push(doc.guild_id);
             }
         });
         logger.debug(`[${PREFIX}] blacklist_guilds: ${global.blacklist_guilds}`);
@@ -69,29 +113,20 @@ module.exports = {
         // Set the global banned users
         global.blacklist_users = [];
         global.user_db.forEach((doc) => {
-            // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc.data()}`);
-            if (doc.data().isBanned == true) {
-                global.blacklist_users.push(doc.data().discord_id);
+            // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc}`);
+            if (doc.isBanned == true) {
+                global.blacklist_users.push(doc.discord_id);
             }
         });
         logger.debug(`[${PREFIX}] blacklist_users: ${global.blacklist_users}`);
 
-        // Setup the express server, this is necessary for the DO health check
-        function setupExpress() {
-
-            const app = express();
-            app.get('/', (req, res) => {res.status(200).send('Ok');});
-            app.listen(PORT, () => {logger.debug(`[${PREFIX}] Healthcheck app listening on port ${PORT}`);});
-        }
-        setupExpress();
-
         async function checkReminders() {
             global.user_db.forEach(async (doc) => {
-                if (doc.data().reminders) {
-                    const all_reminders = doc.data().reminders;
-                    for (const reminder_time in doc.data().reminders) {
+                if (doc.reminders) {
+                    const all_reminders = doc.reminders;
+                    for (const reminder_time in doc.reminders) {
                         const user_fb_id = doc.id;
-                        const userid = doc.data().discord_id;
+                        const userid = doc.discord_id;
                         const remindertime = parseInt(reminder_time);
                         const reminder = all_reminders[remindertime];
                         logger.debug(`[${PREFIX}] ${userid} has a reminder on ${remindertime}`);
@@ -106,12 +141,11 @@ module.exports = {
                                 .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
                             user.send({ embeds: [reminder_embed] });
                             // remove the reminder
-                            // delete doc.data().reminders[remindertime];
+                            // delete doc.reminders[remindertime];
                             delete all_reminders[remindertime];
                             db.collection(users_db_name).doc(user_fb_id).update({
                                 reminders: all_reminders,
                             });
-                            global.user_db = await db.collection(users_db_name).get();
                         }
                     }
                 }
@@ -122,18 +156,18 @@ module.exports = {
         setInterval(checkReminders, 60000);
 
         // async function backup_db() {
-        //     const users_db = await global.firebase_db.collection('users').get();
+        //     const users_db = await global.firebase_db.collection(users_db_name).get();
         //     users_db.forEach((doc) => {
         //         const id = doc.id;
-        //         const data = doc.data();
-        //         global.firebase_db.collection('users_dev').doc(id).set(data);
+        //         const data = doc;
+        //         global.firebase_db.collection(users_db_name).doc(id).set(data);
         //     });
 
-        //     const guilds_db = await global.firebase_db.collection('guilds').get();
+        //     const guilds_db = await global.firebase_db.collection(guild_db_name).get();
         //     guilds_db.forEach((doc) => {
         //         const id = doc.id;
-        //         const data = doc.data();
-        //         global.firebase_db.collection('guilds_dev').doc(id).set(data);
+        //         const data = doc;
+        //         global.firebase_db.collection(guild_db_name).doc(id).set(data);
         //     });
         // }
         // backup_db();

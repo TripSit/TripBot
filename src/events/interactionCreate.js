@@ -55,17 +55,15 @@ module.exports = {
 
         const blacklist_users = [];
         global.guild_db.forEach((doc) => {
-            // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc.data()}`);
-            if (doc.data().isBanned == true) {
-                blacklist_users.push(doc.data().guild_id);
+            // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc.value}`);
+            if (doc.value.isBanned == true) {
+                blacklist_users.push(doc.value.guild_id);
             }
         });
 
-
-
         // check if the interaction is a request for autocomplete
         if (interaction.isAutocomplete()) {
-            // logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
+            logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
             if (interaction.commandName == 'pill_id') {
                 const focusedOption = interaction.options.getFocused(true).name;
 
@@ -121,7 +119,7 @@ module.exports = {
                     }
                 }
             }
-            else if (interaction.commandName == 'benzo_convert') {
+            else if (interaction.commandName == 'benzo_calc') {
                 // logger.debug(`[${PREFIX}] Autocomplete requested for benzo_convert`);
                 const options = {
                     shouldSort: true,

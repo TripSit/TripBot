@@ -2,12 +2,13 @@ const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../utils/logger.js');
 const { getFirestore } = require('firebase-admin/firestore');
-
+const db = getFirestore();
 const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
 const channel_moderators_id = process.env.channel_moderators;
 const ts_flame_url = process.env.ts_flame_url;
+const users_db_name = process.env.users_db_name;
 
 // const mod_buttons = new MessageActionRow()
 //     .addComponents(
@@ -197,27 +198,26 @@ module.exports = {
             logger.debug(`[${PREFIX}] I replied to ${interaction.member}!`);
         }
 
-        const db = getFirestore();
 
         let actorData = {};
         let actorFBID = '';
         let targetData = {};
         let targetFBID = '';
-        const snapshot = await db.collection('users').get();
+        const snapshot = global.user_db;
         snapshot.forEach((doc) => {
-            if (doc.data().discord_id === actor.id) {
+            if (doc.value.discord_id === actor.id) {
                 logger.debug(`[${PREFIX}] Found a actor match!`);
-                // console.log(doc.id, '=>', doc.data());
-                actorFBID = doc.id;
+                // console.log(doc.id, '=>', doc.value);
+                actorFBID = doc.key;
                 logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
-                actorData = doc.data();
+                actorData = doc.value;
             }
-            if (doc.data().discord_id === target.id) {
+            if (doc.value.discord_id === target.id) {
                 logger.debug(`[${PREFIX}] Found a target match!`);
-                // console.log(doc.id, '=>', doc.data());
-                targetFBID = doc.id;
+                // console.log(doc.id, '=>', doc.value);
+                targetFBID = doc.key;
                 logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
-                targetData = doc.data();
+                targetData = doc.value;
             }
         });
         const actor_action = `${command}_sent`;
@@ -244,11 +244,11 @@ module.exports = {
 
         if (actorFBID !== '') {
             logger.debug(`[${PREFIX}] Updating actor data`);
-            await db.collection('users').doc(actorFBID).set(actorData);
+            await db.collection(users_db_name).doc(actorFBID).set(actorData);
         }
         else {
             logger.debug(`[${PREFIX}] Creating actor data`);
-            await db.collection('users').doc().set(actorData);
+            await db.collection(users_db_name).doc().set(actorData);
         }
 
         const target_action = `${command}_received`;
@@ -275,11 +275,11 @@ module.exports = {
 
         if (targetFBID !== '') {
             logger.debug(`[${PREFIX}] Updating target data`);
-            await db.collection('users').doc(targetFBID).set(targetData);
+            await db.collection(users_db_name).doc(targetFBID).set(targetData);
         }
         else {
             logger.debug(`[${PREFIX}] Creating target data`);
-            await db.collection('users').doc().set(targetData);
+            await db.collection(users_db_name).doc().set(targetData);
         }
 
 

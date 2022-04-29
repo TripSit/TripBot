@@ -1,10 +1,6 @@
 const PREFIX = require('path').parse(__filename).name;
-// const { getFirestore } = require('firebase-admin/firestore');
 const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
-// const fs = require('fs');
-// const raw_topics = fs.readFileSync('./src/assets/topics.json');
-// const topics = JSON.parse(raw_topics);
 const guild_id = process.env.guildId;
 const ts_icon_url = process.env.ts_icon_url;
 const ts_flame_url = process.env.ts_flame_url;

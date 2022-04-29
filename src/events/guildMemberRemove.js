@@ -1,5 +1,4 @@
 const PREFIX = require('path').parse(__filename).name;
-// const { getFirestore } = require('firebase-admin/firestore');
 const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const guild_id = process.env.guildId;

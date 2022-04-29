@@ -69,11 +69,11 @@ module.exports = {
             .setColor('RANDOM')
             .setFooter({ text: disclaimer, iconURL: ts_flame_url });
 
-        if (weight_units === 'kg' && calc_weight > 179) {
+        if (weight_units === 'kg' && given_weight > 179) {
             embed.setTitle('Please enter a valid weight less than 179 kg.');
             return interaction.reply({ embeds: [embed], ephemeral: true });
         }
-        if (weight_units === 'lbs' && calc_weight > 398) {
+        if (weight_units === 'lbs' && given_weight > 398) {
             embed.setTitle('Please enter a valid weight less than 398 lbs.');
             return interaction.reply({ embeds: [embed], ephemeral: true });
         }

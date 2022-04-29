@@ -1,18 +1,18 @@
 const PREFIX = require('path').parse(__filename).name;
 const { getFirestore } = require('firebase-admin/firestore');
+const db = getFirestore();
 const logger = require('../utils/logger.js');
-
+const guild_db_name = process.env.guild_db_name;
 module.exports = {
     name: 'guildCreate',
     async execute(guild) {
         logger.info(`[${PREFIX}] Joined guild: ${guild.name} (id: ${guild.id})`);
 
-        const db = getFirestore();
-        const snapshot = await db.collection('guilds').get();
+        const snapshot = global.guild_db;
         snapshot.forEach((doc) => {
-            // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc.data()}`);
-            if (doc.data().guild_id == guild.id) {
-                if (doc.data().guild_banned == true) {
+            // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc.value}`);
+            if (doc.value.guild_id == guild.id) {
+                if (doc.value.guild_banned == true) {
                     logger.info(`[${PREFIX}] I'm banned from ${guild.name}, leaving!`);
                     guild.leave();
                     return;
@@ -32,6 +32,6 @@ module.exports = {
             guild_banned: false,
         };
 
-        await db.collection('guilds').doc().set(targetData);
+        await db.collection(guild_db_name).doc().set(targetData);
     },
 };

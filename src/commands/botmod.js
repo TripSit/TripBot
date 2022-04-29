@@ -1,12 +1,14 @@
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const { getFirestore } = require('firebase-admin/firestore');
-const logger = require('../utils/logger.js');
 const db = getFirestore();
+const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
 const ts_flame_url = process.env.ts_flame_url;
+const guild_db_name = process.env.guild_db_name;
+const users_db_name = process.env.users_db_name;
 
 const warn_buttons = new MessageActionRow()
     .addComponents(
@@ -119,18 +121,26 @@ module.exports = {
 
         let color = '';
         if (group === 'guild') {
-            const target_guild = await interaction.client.guilds.fetch(target_id);
-            const target_guild_owner = interaction.client.users.cache.get(target_guild.ownerId);
+            let target_guild = {};
+            let target_guild_owner = {};
+            try {
+                target_guild = await interaction.client.guilds.fetch(target_id);
+                target_guild_owner = interaction.client.users.cache.get(target_guild.ownerId);
+            }
+            catch (e) {
+                interaction.reply('Invalid Guild ID, or i\'m not in that guild!');
+                return;
+            }
             let targetData = {};
             let targetFBID = '';
-            const snapshot = await db.collection('guilds').get();
+            const snapshot = global.guild_db;
             snapshot.forEach((doc) => {
-                if (doc.data().guild_id === target_id) {
+                if (doc.value.guild_id === target_id) {
                     logger.debug(`[${PREFIX}] Found a target match!`);
-                    // console.log(doc.id, '=>', doc.data());
-                    targetFBID = doc.id;
+                    // console.log(doc.id, '=>', doc.value);
+                    targetFBID = doc.key;
                     logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
-                    targetData = doc.data();
+                    targetData = doc.value;
                 }
             });
             const target_action = `${command}_received`;
@@ -247,11 +257,11 @@ module.exports = {
 
             if (targetFBID !== '') {
                 logger.debug(`[${PREFIX}] Updating target guild data`);
-                await db.collection('guilds').doc(targetFBID).set(targetData);
+                await db.collection(guild_db_name).doc(targetFBID).set(targetData);
             }
             else {
                 logger.debug(`[${PREFIX}] Creating target guild data`);
-                await db.collection('guilds').doc().set(targetData);
+                await db.collection(guild_db_name).doc().set(targetData);
             }
 
             if (command !== 'info') {

@@ -4,11 +4,7 @@ const { MessageEmbed, MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
-const { getFirestore } = require('firebase-admin/firestore');
-
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
 const ts_flame_url = process.env.ts_flame_url;
 
@@ -46,23 +42,23 @@ module.exports = {
         }
 
         const patientid = patient.id.toString();
-        logger.debug(`[${PREFIX}] patientid: ${patientid}`);
+        // logger.debug(`[${PREFIX}] patientid: ${patientid}`);
 
-        const db = getFirestore();
-        const snapshot = await db.collection('users').get();
+        const snapshot = global.user_db;
 
         let patientData = null;
         snapshot.forEach((doc) => {
-            // logger.debug(`[${PREFIX}] doc.data(): ${JSON.stringify(doc.data(), null, 2)}`);
-            logger.debug(`[${PREFIX}] doc.data().discord_id: ${doc.data().discord_id}`);
-            if (doc.data().discord_id === patientid) {
-                patientData = doc.data();
-                logger.debug(`[${PREFIX}] patientData: ${JSON.stringify(patientData, null, 4)}`);
+            // logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 2)}`);
+            // logger.debug(`[${PREFIX}] doc.value.discord_id: ${doc.value.discord_id}`);
+            if (doc.value.discord_id === patientid) {
+                patientData = doc.value;
+                // logger.debug(`[${PREFIX}] patientData: ${JSON.stringify(patientData, null, 4)}`);
             }
         });
 
         // Check if the patient data exists, if not create a blank one
         if (!patientData) {
+            logger.debug(`[${PREFIX}] No target data found, creating a blank one`);
             patientData = {
                 'name': patient.user.username,
                 'discriminator': patient.user.discriminator,
@@ -71,7 +67,7 @@ module.exports = {
             };
         }
 
-        const karma_received = patientData['karma_received'];
+        const karma_received = patientData['karma_recieved'];
         let karma_received_string = '';
         if (karma_received) {
             karma_received_string = Object.entries(karma_received).map(([key, value]) => `${value}: ${key}`).join('\n');
@@ -123,6 +119,5 @@ module.exports = {
             logger.debug(`[${PREFIX}] finished!`);
             return;
         }
-
     },
 };

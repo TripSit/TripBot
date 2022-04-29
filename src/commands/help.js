@@ -99,7 +99,6 @@ module.exports = {
                 { name: 'Invite', value: 'Create an invite to the server for a specific room.', inline: true },
                 { name: 'Botmod', value: 'Admin Only - Bans users/guilds from the bot after abuse.', inline: true },
                 { name: '\u200b', value: '\u200b', inline: true },
-
             )
             .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
         const book = [
