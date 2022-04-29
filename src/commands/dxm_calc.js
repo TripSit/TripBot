@@ -30,7 +30,7 @@ module.exports = {
             option.setName('taking')
                 .setDescription('What are you taking? All products listed here contain DXM hBr as the sole active ingredient.')
                 .setRequired(true)
-                .addChoice('RobotTablets (30 mg tablets)', 'RobotTablets (30 mg tablets)')
+                .addChoice('RoboTablets (30 mg tablets)', 'RoboTablets (30 mg tablets)')
                 .addChoice('RoboCough (ml)', 'RoboCough (ml)')
                 .addChoice('Robitussin DX (oz)', 'Robitussin DX (oz)')
                 .addChoice('Robitussin DX (ml)', 'Robitussin DX (ml)')

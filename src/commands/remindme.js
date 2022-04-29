@@ -3,6 +3,7 @@ const { MessageEmbed } = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 const { getFirestore } = require('firebase-admin/firestore');
+const db = getFirestore();
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const users_db_name = process.env.users_db_name;
 const ts_icon_url = process.env.ts_icon_url;
@@ -46,12 +47,12 @@ module.exports = {
         let actorData = {};
         let actorFBID = '';
         global.user_db.forEach((doc) => {
-            if (doc.data().discord_id === actor.id) {
+            if (doc.value.discord_id === actor.id) {
                 logger.debug(`[${PREFIX}] Found a actor match!`);
-                // console.log(doc.id, '=>', doc.data());
-                actorFBID = doc.id;
+                // console.log(doc.id, '=>', doc.value);
+                actorFBID = doc.key;
                 logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
-                actorData = doc.data();
+                actorData = doc.value;
             }
         });
 
@@ -79,21 +80,19 @@ module.exports = {
         logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
         // Update firebase
         logger.debug(`[${PREFIX}] Updating firebase`);
-        const db = getFirestore();
         await db.collection(users_db_name).doc(actorFBID).update({
             reminders: actorData.reminders,
         });
         // Update global db
-        // global.user_db.forEach((doc) => {
-        //     if (doc.id === actorFBID) {
-        //         logger.debug(`[${PREFIX}] Updating global DB!!`);
-        //         logger.debug(`[${PREFIX}] All reminders ${JSON.stringify(doc.data().reminders, null, 2)}`);
-        //         logger.debug(`[${PREFIX}] actorData.reminders ${JSON.stringify(actorData.reminders, null, 2)}`);
-        //         doc.data().reminders = actorData.reminders;
-        //         logger.debug(`[${PREFIX}] New all reminders ${JSON.stringify(doc.data().reminders, null, 2)}`);
-        //     }
-        // });
-        global.user_db = await db.collection(users_db_name).get();
+        global.user_db.forEach((doc) => {
+            if (doc.key === actorFBID) {
+                logger.debug(`[${PREFIX}] Updating global DB!!`);
+                logger.debug(`[${PREFIX}] All reminders ${JSON.stringify(doc.value.reminders, null, 2)}`);
+                logger.debug(`[${PREFIX}] actorData.reminders ${JSON.stringify(actorData.reminders, null, 2)}`);
+                doc.value.reminders = actorData.reminders;
+                logger.debug(`[${PREFIX}] New all reminders ${JSON.stringify(doc.value.reminders, null, 2)}`);
+            }
+        });
 
         const embed = new MessageEmbed()
             .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })

@@ -31,7 +31,7 @@ module.exports = {
             const embed = new MessageEmbed()
                 .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
                 .setColor('RANDOM')
-                .setDescription(data)
+                .setDescription(`${data}`)
                 .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
             interaction.reply({ embeds: [embed], ephemeral: false });
             logger.debug(`[${PREFIX}] finished!`);

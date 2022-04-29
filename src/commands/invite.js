@@ -32,25 +32,32 @@ module.exports = {
         }
         const unique = true;
         const reason = 'Invite requested by ' + interaction.member.user.username;
-
-        channel.createInvite({
-            maxAge,
-            maxUses,
-            temporary,
-            unique,
-            reason,
-        }).then(invite => {
+        try {
+            channel.createInvite({
+                maxAge,
+                maxUses,
+                temporary,
+                unique,
+                reason,
+            }).then(invite => {
+                const embed = new MessageEmbed()
+                    .setColor('RANDOM')
+                    .setDescription(`Created an invite to ${channel} with a code of ${invite.code}`);
+                interaction.reply({ embeds: [embed], ephemeral: false });
+            }).catch(err => {
+                logger.error(`${PREFIX}/invite: ${err}`);
+                const embed = new MessageEmbed()
+                    .setColor('RANDOM')
+                    .setDescription(err);
+                interaction.reply({ embeds: [embed], ephemeral: false });
+            });
+        }
+        catch (err) {
             const embed = new MessageEmbed()
                 .setColor('RANDOM')
-                .setDescription(`Created an invite to ${channel} with a code of ${invite.code}`);
+                .setDescription('Make sure you entered a channel!');
             interaction.reply({ embeds: [embed], ephemeral: false });
-        }).catch(err => {
-            logger.error(`${PREFIX}/invite: ${err}`);
-            const embed = new MessageEmbed()
-                .setColor('RANDOM')
-                .setDescription('error');
-            interaction.reply({ embeds: [embed], ephemeral: false });
-        });
+        }
         logger.debug(`[${PREFIX}] finished!`);
         return;
     },

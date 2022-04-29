@@ -2,6 +2,8 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const { getFirestore } = require('firebase-admin/firestore');
+const db = getFirestore();
+const users_db_name = process.env.users_db_name;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -13,26 +15,24 @@ module.exports = {
 
         if (actor === target) {return;}
 
-        const db = getFirestore();
-
         // logger.debug(`[${PREFIX}] actor.id: ${actor.id}`);
         let actorData = {};
         let actorFBID = '';
 
-        const snapshot = await db.collection('users').get();
+        const snapshot = global.user_db;
         snapshot.forEach((doc) => {
-            if (doc.data().discord_id === actor.id) {
-                // logger.debug(`[${PREFIX}] Found a actor match!`);
-                // console.log(doc.id, '=>', doc.data());
-                actorFBID = doc.id;
+            // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(doc, null, 2)}`);
+            if (doc.value.discord_id === actor.id) {
+                logger.debug(`[${PREFIX}] Found a actor match!`);
+                actorFBID = doc.key;
                 logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
-                actorData = doc.data();
+                actorData = doc.value;
             }
         });
 
         // Check if the actor data exists, if not create a blank one
         if (Object.keys(actorData).length === 0) {
-            // logger.debug(`[${PREFIX}] No actor data found, creating a blank one`);
+            logger.debug(`[${PREFIX}] No actor data found, creating a blank one`);
             actorData = {
                 discord_username: actor.username,
                 discord_discriminator: actor.discriminator,
@@ -41,40 +41,39 @@ module.exports = {
                 karma_given: { [emoji]: action },
             };
         }
-        if (Object.keys(actorData).length !== 0) {
-            // logger.debug(`[${PREFIX}] Updating actor info!`);
-            if ('karma_given' in actorData) {
-                logger.debug(`[${PREFIX}] Creating karma_given info!`);
-                actorData.karma_given[emoji] = (actorData.karma_given[emoji] || 0) + action;
-            }
-            else {
-                actorData.karma_given = { [emoji]: action };
-            }
+
+        if ('karma_given' in actorData) {
+            logger.debug(`[${PREFIX}] Updating karma_given info!`);
+            actorData.karma_given[emoji] = (actorData.karma_given[emoji] || 0) + action;
+        }
+        else {
+            logger.debug(`[${PREFIX}] Creating karma_given info!`);
+            actorData.karma_given = { [emoji]: action };
         }
 
         if (actorFBID !== '') {
-            logger.debug(`[${PREFIX}] Updating actor data`);
-            await db.collection('users').doc(actorFBID).set(actorData);
+            logger.debug(`[${PREFIX}] Updating actor data in firebase`);
+            await db.collection(users_db_name).doc(actorFBID).set(actorData);
         }
         else {
-            logger.debug(`[${PREFIX}] Creating actor data`);
-            await db.collection('users').doc().set(actorData);
+            logger.debug(`[${PREFIX}] Creating actor data in firebase`);
+            await db.collection(users_db_name).doc().set(actorData);
         }
 
         let targetData = {};
         let targetFBID = '';
         snapshot.forEach((doc) => {
-            if (doc.data().discord_id === target.id) {
-                // logger.debug(`[${PREFIX}] Found a target match!`);
-                targetFBID = doc.id;
-                // logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
-                targetData = doc.data();
+            if (doc.value.discord_id === target.id) {
+                logger.debug(`[${PREFIX}] Found a target match!`);
+                targetFBID = doc.key;
+                logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
+                targetData = doc.value;
             }
         });
 
         // Check if the target data exists, if not create a blank one
         if (Object.keys(targetData).length === 0) {
-            // logger.debug(`[${PREFIX}] No target data found, creating a blank one`);
+            logger.debug(`[${PREFIX}] No target data found, creating a blank one`);
             targetData = {
                 discord_username: target.username,
                 discord_discriminator: target.discriminator,
@@ -83,24 +82,23 @@ module.exports = {
                 karma_recieved: { [emoji]: action },
             };
         }
-        if (!Object.keys(targetData).length === 0) {
-            // logger.debug(`[${PREFIX}] Found target data, updating it`);
-            if ('karma_recieved' in targetData) {
-                // logger.debug(`[${PREFIX}] Creating karma_recieved info!`);
-                targetData.karma_recieved[emoji] = (targetData.karma_recieved[emoji] || 0) + action;
-            }
-            else {
-                targetData.karma_recieved = { [emoji]: action };
-            }
+
+        if ('karma_recieved' in targetData) {
+            logger.debug(`[${PREFIX}] Updating karma_recieved info!`);
+            targetData.karma_recieved[emoji] = (targetData.karma_recieved[emoji] || 0) + action;
+        }
+        else {
+            logger.debug(`[${PREFIX}] Creating karma_given info!`);
+            targetData.karma_recieved = { [emoji]: action };
         }
 
         if (targetFBID !== '') {
-            logger.debug(`[${PREFIX}] Updating target data`);
-            await db.collection('users').doc(targetFBID).set(targetData);
+            logger.debug(`[${PREFIX}] Updating target data in firebase`);
+            await db.collection(users_db_name).doc(targetFBID).set(targetData);
         }
         else {
-            logger.debug(`[${PREFIX}] Creating target data`);
-            await db.collection('users').doc().set(targetData);
+            logger.debug(`[${PREFIX}] Creating target data in firebase`);
+            await db.collection(users_db_name).doc().set(targetData);
         }
         logger.debug(`[${PREFIX}] finished!`);
         return;

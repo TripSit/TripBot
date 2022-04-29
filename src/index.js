@@ -21,22 +21,6 @@ initializeApp({
     databaseURL: 'https://tripsit-me-default-rtdb.firebaseio.com',
 });
 
-// async function backup() {
-//     if (process.env.NODE_ENV === 'production') {
-//         return;
-//     }
-//     const db = getFirestore();
-//     const snapshot = await db.collection('users').get();
-//     const users = [];
-//     // Get today's date in unix tiemstamp
-//     const today = Math.floor(Date.now() / 1000);
-//     snapshot.forEach((doc) => {
-//         users.push(doc.data());
-//     });
-//     fs.writeFileSync(`./src/backups/fb_db_backup(${today}).json`, JSON.stringify(users, null, 2));
-// }
-// backup();
-
 const client = new Client({
     intents: [
         Intents.FLAGS.GUILDS,
@@ -59,9 +43,9 @@ client.invites = new Collection();
 
 // Set up commands
 const guild_commands = [];
-const guild_command_names = ['reagents', 'dxm_calc', 'keta_calc', 'pill_id', 'invite', 'issue', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button'];
+const guild_command_names = ['ping', 'reagents', 'dxm_calc', 'keta_calc', 'pill_id', 'invite', 'issue', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button'];
 const globl_commands = [];
-const globl_command_names = ['reagents', 'keta_calc', 'remindme', 'joke', 'motivate', 'urban_define', 'triptoys', 'benzo_calc', 'dxm_calc', 'ems', 'recovery', 'help', 'bug', 'about', 'breathe', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
+const globl_command_names = ['ping', 'reagents', 'keta_calc', 'remindme', 'joke', 'motivate', 'urban_define', 'triptoys', 'benzo_calc', 'dxm_calc', 'ems', 'recovery', 'help', 'bug', 'about', 'breathe', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
 
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
@@ -69,11 +53,11 @@ for (const file of commandFiles) {
     const command = require(`../src/commands/${file}`);
     client.commands.set(command.data.name, command);
     if (guild_command_names.includes(command.data.name)) {
-        logger.debug(`[${PREFIX}] Adding command: ${command.data.name} to guild_commands`);
+        logger.debug(`[${PREFIX}] Adding command: ${command.data.name} to tripsit`);
         guild_commands.push(command.data.toJSON());
     }
     else if (globl_command_names.includes(command.data.name)) {
-        logger.debug(`[${PREFIX}] Adding command: ${command.data.name} to globl_commands`);
+        logger.debug(`[${PREFIX}] Adding command: ${command.data.name} to GLOBAL`);
         globl_commands.push(command.data.toJSON());
     }
 }
@@ -101,13 +85,5 @@ for (const file of eventFiles) {
     }
 }
 logger.debug(`[${PREFIX}] Successfully registered application events!`);
-
-// client.on('guildMemberAdd', member => {
-//     console.log(member);
-// });
-
-// client.on('guildMemberRemove', member => {
-//     console.log(member);
-// });
 
 client.login(token);
