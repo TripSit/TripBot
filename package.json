@@ -1,6 +1,6 @@
 {
   "name": "tripsit-discord",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "A bot for TripSit",
   "main": "index.js",
   "scripts": {

@@ -5,7 +5,7 @@ const logger = require('../utils/logger.js');
 const guild_id = process.env.guildId;
 const ts_icon_url = process.env.ts_icon_url;
 const ts_flame_url = process.env.ts_flame_url;
-const moderator_channel_id = process.env.channel_modlog;
+const channel_modlog = process.env.channel_modlog;
 
 module.exports = {
     name: 'guildMemberRemove',
@@ -44,8 +44,10 @@ module.exports = {
                 ${hours == 0 && minutes > 0 ? `${minutes} minutes` : ''}\
                 ${minutes == 0 && seconds > 0 ? `${seconds} seconds` : ''}`)
                 .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
-            const mod_channel = member.client.channels.cache.get(moderator_channel_id);
-            mod_channel.send({ embeds: [embed] });
+            const modlog_channel = member.client.channels.cache.get(channel_modlog);
+            // logger.debug(`[${PREFIX}] channel_modlog_id: ${channel_modlog}`);
+            // logger.debug(`[${PREFIX}] modlog_channel: ${modlog_channel}`);
+            modlog_channel.send({ embeds: [embed] });
         }
     },
 };
