@@ -31,14 +31,29 @@ module.exports = {
                 },
                 {
                     name: 'Support TripSit',
-                    value: 'TripSit is a completely free service run by volunteers. If you wish to help out, feel free to \
-                join the IRC or the Discord, follow and share our content on social media, or make a donation to keep \
-                the servers running.',
+                    value: '\
+                    TripSit is a completely free service run by volunteers.\
+                    If you wish to help out, feel free to join the IRC or the Discord,\
+                    follow and share our content on social media, or make a donation to keep \
+                    the servers running.',
                 },
                 {
                     name: 'Feedback',
-                    value: 'We would love to hear your feedback on this bot, please join discord.gg / TripSit \
-                and talk with Moonbear, or use the /bug command!',
+                    value: '\
+                    We would love to hear your feedback on this bot!\n\
+                    Join the TripSit discord and talk with Moonbear!\n\
+                    Or use the /bug command and to send a message!\n\
+                    https://discord.gg/TripSit\
+                    ',
+                },
+                {
+                    name: 'Credits',
+                    value: '\
+                    The bot is built using the Discord.js library: https://discordjs.guide/\n\
+                    A majority of this code is original, and is available on GitHub: https://github.com/tripsit/tripsit-discord-bot\n\
+                    The data is sourced from the TripSit and Psychonaut Wiki API combined: https://github.com/NoahSaso/merge-psychonautwiki-tripsit-data\n\
+                    The ketamine calculator code was inspired by PsyBot: https://github.com/v0idp/PsyBot\n\
+                    ',
                 },
             )
             .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
