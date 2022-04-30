@@ -73,10 +73,8 @@ module.exports = {
                             }
                         }
                         if (result == '') {
-                            embed.addFields(
-                                { name: 'Result', value: `Interaction not found between ${drug_a} and ${drug_b}` },
-                            );
-                            break;
+                            embed.setTitle(`${drug_a} and ${drug_b} have no known interactions!`);
+                            embed.setDescription('This does not mean combining them is safe!\nThis means we don\'t have information on it!');
                         }
                     }
                     else {

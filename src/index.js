@@ -66,6 +66,7 @@ const globl_command_names = [
     'calc_benzo',
     'calc_dxm',
     'calc_ketamine',
+    'calc_psychedelics',
     'combo',
     'contact',
     'ems',
@@ -86,7 +87,7 @@ const globl_command_names = [
 ];
 
 // Add global commands to guild commands
-guild_command_names.push(...globl_command_names);
+// guild_command_names.push(...globl_command_names);
 
 // This adds all commands to the bot globally
 client.commands = new Collection();
