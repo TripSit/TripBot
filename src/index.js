@@ -5,6 +5,7 @@ const { Routes } = require('discord-api-types/v9');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('./utils/logger.js');
 const { initializeApp, cert } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
 const serviceAccount = require('./assets/firebase_creds.json');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 serviceAccount.private_key_id = process.env.FIREBASE_PRIVATE_KEY_ID;
@@ -16,10 +17,13 @@ const clientId = process.env.clientid;
 const guildId = process.env.guildId;
 
 // Initialize firebase app
-initializeApp({
-    credential: cert(serviceAccount),
-    databaseURL: 'https://tripsit-me-default-rtdb.firebaseio.com',
-});
+if (serviceAccount.private_key_id) {
+    initializeApp({
+        credential: cert(serviceAccount),
+        databaseURL: 'https://tripsit-me-default-rtdb.firebaseio.com',
+    });
+    global.db = getFirestore();
+}
 
 const client = new Client({
     intents: [
@@ -43,9 +47,9 @@ client.invites = new Collection();
 
 // Set up commands
 const guild_commands = [];
-const guild_command_names = ['ping', 'reagents', 'dxm_calc', 'keta_calc', 'pill_id', 'invite', 'issue', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button'];
+const guild_command_names = ['time', 'pill_id', 'invite', 'issue', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button'];
 const globl_commands = [];
-const globl_command_names = ['ping', 'reagents', 'keta_calc', 'remindme', 'joke', 'motivate', 'urban_define', 'triptoys', 'benzo_calc', 'dxm_calc', 'ems', 'recovery', 'help', 'bug', 'about', 'breathe', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
+const globl_command_names = ['ping', 'reagents', 'dxm_calc', 'keta_calc', 'remindme', 'joke', 'motivate', 'urban_define', 'triptoys', 'benzo_calc', 'dxm_calc', 'ems', 'recovery', 'help', 'bug', 'about', 'breathe', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
 
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
