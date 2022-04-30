@@ -56,8 +56,6 @@ const guild_command_names = [
     'mod',
     'report',
     'tripsit',
-    'time',
-    'pill_id',
 ];
 
 // Set up global commands
@@ -81,6 +79,7 @@ const globl_command_names = [
     'reagents',
     'recovery',
     'remindme',
+    'time',
     'topic',
     'triptoys',
     'urban_define',
