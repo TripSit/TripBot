@@ -1,6 +1,5 @@
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
-const { MessageEmbed, Collection } = require('discord.js');
 
 module.exports = {
     name: 'inviteDelete',

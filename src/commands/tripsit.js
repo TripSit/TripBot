@@ -1,7 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
-const { getFirestore } = require('firebase-admin/firestore');
 const db = global.db;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
@@ -60,8 +59,6 @@ module.exports = {
         // Default to on if no setting is provided
         if (!enable) {enable = 'On';}
         logger.debug(`[${PREFIX}] enable: ${enable}`);
-
-        
 
         const command = 'tripsit';
         if (enable == 'On') {

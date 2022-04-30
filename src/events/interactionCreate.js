@@ -21,11 +21,11 @@ module.exports = {
     name: 'interactionCreate',
     async execute(interaction, client) {
         // print what the user typed in the interaction
-        const username = `${interaction.user.username}#${interaction.user.discriminator}`;
-        const command_name = `${interaction.commandName ? ` used ${interaction.commandName}` : ''}`;
-        const guild_message = `${interaction.guild ? ` in ${interaction.guild.name}` : 'DM'}`;
-        const message = `${interaction.message ? ` saying: ${interaction.message}` : ''}`;
-        const type = interaction.type;
+        // const username = `${interaction.user.username}#${interaction.user.discriminator}`;
+        // const command_name = `${interaction.commandName ? ` used ${interaction.commandName}` : ''}`;
+        // const guild_message = `${interaction.guild ? ` in ${interaction.guild.name}` : 'DM'}`;
+        // const message = `${interaction.message ? ` saying: ${interaction.message}` : ''}`;
+        // const type = interaction.type;
         // const is_autocomplete = interaction.isAutocomplete();
         const user_is_bot = interaction.user.bot;
         // const user_is_blacklisted = blacklist_users.includes(interaction.user.id);

@@ -1,5 +1,4 @@
 const PREFIX = require('path').parse(__filename).name;
-const { getFirestore } = require('firebase-admin/firestore');
 const db = global.db;
 const logger = require('../utils/logger.js');
 const guild_db_name = process.env.guild_db_name;
