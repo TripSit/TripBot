@@ -1,6 +1,6 @@
 const PREFIX = require('path').parse(__filename).name;
 const { getFirestore } = require('firebase-admin/firestore');
-const db = getFirestore();
+const db = global.db;
 const logger = require('../utils/logger.js');
 const guild_db_name = process.env.guild_db_name;
 module.exports = {
@@ -31,7 +31,11 @@ module.exports = {
             guild_icon: guild.iconURL(),
             guild_banned: false,
         };
-
-        await db.collection(guild_db_name).doc().set(targetData);
+        try {
+            await db.collection(guild_db_name).doc(guild.id).set(targetData);
+        }
+        catch (err) {
+            logger.error(`[${PREFIX}] Error adding guild data to firebase: ${err}`);
+        }
     },
 };

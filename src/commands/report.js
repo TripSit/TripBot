@@ -3,7 +3,7 @@ const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const { getFirestore } = require('firebase-admin/firestore');
-const db = getFirestore();
+const db = global.db;
 const users_db_name = process.env.users_db_name;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
@@ -105,11 +105,21 @@ module.exports = {
 
         if (actorFBID !== '') {
             logger.debug(`[${PREFIX}] Updating actor data`);
-            await db.collection(users_db_name).doc(actorFBID).set(actorData);
+            try {
+                await db.collection(users_db_name).doc(actorFBID).set(actorData);
+            }
+            catch (err) {
+                logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
+            }
         }
         else {
             logger.debug(`[${PREFIX}] Creating actor data`);
-            await db.collection(users_db_name).doc().set(actorData);
+            try {
+                await db.collection(users_db_name).set(actorData);
+            }
+            catch (err) {
+                logger.error(`[${PREFIX}] Error creating actor data: ${err}`);
+            }
         }
 
         const target_action = `${command}_received`;
@@ -136,11 +146,21 @@ module.exports = {
 
         if (targetFBID !== '') {
             logger.debug(`[${PREFIX}] Updating target data`);
-            await db.collection(users_db_name).doc(targetFBID).set(targetData);
+            try {
+                await db.collection(users_db_name).doc(targetFBID).set(targetData);
+            }
+            catch (err) {
+                logger.error(`[${PREFIX}] Error updating target data: ${err}`);
+            }
         }
         else {
             logger.debug(`[${PREFIX}] Creating target data`);
-            await db.collection(users_db_name).doc().set(targetData);
+            try {
+                await db.collection(users_db_name).doc().set(targetData);
+            }
+            catch (err) {
+                logger.error(`[${PREFIX}] Error creating target data: ${err}`);
+            }
         }
 
         const embed_mod = new MessageEmbed()

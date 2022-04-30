@@ -3,7 +3,7 @@ const { MessageEmbed } = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 const { getFirestore } = require('firebase-admin/firestore');
-const db = getFirestore();
+const db = global.db;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const users_db_name = process.env.users_db_name;
 const ts_icon_url = process.env.ts_icon_url;

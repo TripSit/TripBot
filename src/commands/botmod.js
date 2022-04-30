@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const { getFirestore } = require('firebase-admin/firestore');
-const db = getFirestore();
+const db = global.db;
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
@@ -257,11 +257,21 @@ module.exports = {
 
             if (targetFBID !== '') {
                 logger.debug(`[${PREFIX}] Updating target guild data`);
-                await db.collection(guild_db_name).doc(targetFBID).set(targetData);
+                try {
+                    await db.collection(guild_db_name).doc(targetFBID).set(targetData);
+                }
+                catch (err) {
+                    logger.error(`[${PREFIX}] Error updating guild data, make sure this is expected: ${err}`);
+                }
             }
             else {
                 logger.debug(`[${PREFIX}] Creating target guild data`);
-                await db.collection(guild_db_name).doc().set(targetData);
+                try {
+                    await db.collection(guild_db_name).doc().set(targetData);
+                }
+                catch (err) {
+                    logger.error(`[${PREFIX}] Error creating guild data, make sure this is expected: ${err}`);
+                }
             }
 
             if (command !== 'info') {

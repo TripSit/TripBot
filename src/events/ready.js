@@ -3,7 +3,7 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 const { MessageEmbed, Collection } = require('discord.js');
 const { getFirestore } = require('firebase-admin/firestore');
-const db = getFirestore();
+const db = global.db;
 const express = require('express');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const PORT = process.env.PORT;
@@ -50,37 +50,51 @@ module.exports = {
             }
         });
         /* End *INVITE* code */
-        const snapshot_guild = await db.collection(guild_db_name).get();
-        const guild_db = [];
-        snapshot_guild.forEach((doc) => {
-            const key = doc.id;
-            const value = doc.data();
-            guild_db.push({
-                key,
-                value,
+
+        try {
+            const guild_db = [];
+            const snapshot_guild = await db.collection(guild_db_name).get();
+            snapshot_guild.forEach((doc) => {
+                const key = doc.id;
+                const value = doc.data();
+                guild_db.push({
+                    key,
+                    value,
+                });
             });
-        });
-        global.guild_db = guild_db;
+            global.guild_db = guild_db;
+        }
+        catch (err) {
+            logger.debug(`[${PREFIX}] Error getting guild firebase, make sure this is expected: ${err}`);
+            global.guild_db = JSON.parse(fs.readFileSync('./src/assets/guild_db_example.json'));
+        }
         if (process.env.NODE_ENV !== 'production') {
-            fs.writeFileSync(`./src/backups/guild_db_(${today}).json`, JSON.stringify(guild_db, null, 2));
+            fs.writeFileSync(`./src/backups/guild_db_(${today}).json`, JSON.stringify(global.guild_db, null, 2));
             logger.debug(`[${PREFIX}] Guild database backedup.`);
         }
         logger.debug(`[${PREFIX}] Guild database loaded.`);
         // logger.debug(`[${PREFIX}] guild_db: ${JSON.stringify(global.guild_db, null, 4)}`);
 
-        const snapshot_user = await db.collection(users_db_name).get();
-        const user_db = [];
-        snapshot_user.forEach((doc) => {
-            const key = doc.id;
-            const value = doc.data();
-            user_db.push({
-                key,
-                value,
+
+        try {
+            const user_db = [];
+            const snapshot_user = await db.collection(users_db_name).get();
+            snapshot_user.forEach((doc) => {
+                const key = doc.id;
+                const value = doc.data();
+                user_db.push({
+                    key,
+                    value,
+                });
             });
-        });
-        global.user_db = user_db;
+            global.user_db = user_db;
+        }
+        catch (err) {
+            logger.debug(`[${PREFIX}] Error getting user firebase, make sure this is expected: ${err}`);
+            global.user_db = JSON.parse(fs.readFileSync('./src/assets/user_db_example.json'));
+        }
         if (process.env.NODE_ENV !== 'production') {
-            fs.writeFileSync(`./src/backups/user_db_(${today}).json`, JSON.stringify(user_db, null, 2));
+            fs.writeFileSync(`./src/backups/user_db_(${today}).json`, JSON.stringify(global.user_db, null, 2));
             logger.debug(`[${PREFIX}] User database backedup.`);
         }
         logger.debug(`[${PREFIX}] User database loaded.`);
@@ -154,23 +168,6 @@ module.exports = {
         }
         checkReminders();
         setInterval(checkReminders, 60000);
-
-        // async function backup_db() {
-        //     const users_db = await global.firebase_db.collection(users_db_name).get();
-        //     users_db.forEach((doc) => {
-        //         const id = doc.id;
-        //         const data = doc;
-        //         global.firebase_db.collection(users_db_name).doc(id).set(data);
-        //     });
-
-        //     const guilds_db = await global.firebase_db.collection(guild_db_name).get();
-        //     guilds_db.forEach((doc) => {
-        //         const id = doc.id;
-        //         const data = doc;
-        //         global.firebase_db.collection(guild_db_name).doc(id).set(data);
-        //     });
-        // }
-        // backup_db();
 
         logger.info(`[${PREFIX}] Ready to take over the world!`);
     },

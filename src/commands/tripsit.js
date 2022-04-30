@@ -2,7 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const { getFirestore } = require('firebase-admin/firestore');
-const db = getFirestore();
+const db = global.db;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
 const role_needshelp = process.env.role_needshelp;
@@ -141,11 +141,21 @@ module.exports = {
 
                 if (actorFBID !== '') {
                     logger.debug(`[${PREFIX}] Updating actor data`);
-                    await db.collection(users_db_name).doc(actorFBID).set(actorData);
+                    try {
+                        await db.collection(users_db_name).doc(actorFBID).set(actorData);
+                    }
+                    catch (error) {
+                        logger.error(`[${PREFIX}] Error updating actor data: ${error}`);
+                    }
                 }
                 else {
                     logger.debug(`[${PREFIX}] Creating actor data`);
-                    await db.collection(users_db_name).doc().set(actorData);
+                    try {
+                        await db.collection(users_db_name).doc().set(actorData);
+                    }
+                    catch (error) {
+                        logger.error(`[${PREFIX}] Error creating actor data: ${error}`);
+                    }
                 }
 
                 const target_action = `${command}_received`;
@@ -174,11 +184,21 @@ module.exports = {
 
                 if (targetFBID !== '') {
                     logger.debug(`[${PREFIX}] Updating target data`);
-                    await db.collection(users_db_name).doc(targetFBID).set(targetData);
+                    try {
+                        await db.collection(users_db_name).doc(targetFBID).set(targetData);
+                    }
+                    catch (error) {
+                        logger.error(`[${PREFIX}] Error updating target data: ${error}`);
+                    }
                 }
                 else {
                     logger.debug(`[${PREFIX}] Creating target data`);
-                    await db.collection(users_db_name).doc().set(targetData);
+                    try {
+                        await db.collection(users_db_name).doc().set(targetData);
+                    }
+                    catch (error) {
+                        logger.error(`[${PREFIX}] Error creating target data: ${error}`);
+                    }
                 }
 
                 // Remove all roles from the target
