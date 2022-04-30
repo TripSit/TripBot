@@ -74,7 +74,7 @@ module.exports = {
         axios.request({
             method: 'GET',
             url: url,
-            headers: { 'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.96 Mobile Safari/537.36' },
+            // headers: { 'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.96 Mobile Safari/537.36' },
             // headers: { 'User-Agent': 'Axios 0.21.1' },
         }).then(async function(response) {
             logger.debug(`[${PREFIX}] axios base request worked!`);
@@ -96,11 +96,11 @@ module.exports = {
             const details = first_result.getElementsByClassName('ddc-pid-details')[0].innerHTML;
             const strengthmatched = details.match(strengthregex);
             const strength = strengthmatched[2];
-            // logger.debug(`[${PREFIX}] strength: ${strength}`);
+            logger.debug(`[${PREFIX}] strength: ${strength}`);
 
             const imprintmatched = details.match(imprintregex);
             const imprint = imprintmatched[2].toUpperCase();
-            // logger.debug(`[${PREFIX}] imprint: ${imprint}`);
+            logger.debug(`[${PREFIX}] imprint: ${imprint}`);
 
             const colormatched = details.match(colorregex);
             let color = 'Null';
@@ -108,11 +108,11 @@ module.exports = {
                 color = colormatched[2];
                 color = color.replace('&amp;', '&');
             }
-            // logger.debug(`[${PREFIX}] color: ${color}`);
+            logger.debug(`[${PREFIX}] color: ${color}`);
 
             const shapematched = details.match(shaperegex);
             const shape = shapematched[2];
-            // logger.debug(`[${PREFIX}] shape: ${shape}`);
+            logger.debug(`[${PREFIX}] shape: ${shape}`);
 
             const embed = new MessageEmbed()
                 .setAuthor({ name: 'Drugs.com', url: 'https://www.drugs.com/', iconURL: 'https://i.imgur.com/YRTrM0c.png' })
@@ -122,74 +122,81 @@ module.exports = {
                     { name: 'Imprint', value: imprint, inline: true },
                     { name: 'Color', value: color, inline: true },
                     { name: 'Shape', value: shape, inline: true },
+                    { name: 'Strength', value: strength, inline: true },
                 )
                 .setFooter({ text: 'Dose responsibly! Click the drug name to get more information!', iconURL: ts_flame_url });
 
             const imageURL = first_result.querySelector('.ddc-pid-img').getAttribute('data-image-src');
-            // It seems like drugs.com has some weird image handling, so we need to download the image and upload the image to imgur
-            // I will eventually cache these images so we don't need to download/upload every time
-            let imgur_url = '';
-            logger.debug(`[${PREFIX}] Starting axios image request`);
+            const detailsURL = `https://www.drugs.com${first_result.querySelector('.ddc-btn.ddc-btn-sm').getAttribute('href')}`;
+            embed.setURL(detailsURL);
             axios.request({
                 // Get the image from drug.com
                 method: 'GET',
-                url: imageURL,
-                responseType: 'stream',
-            }).then(function(image_response) {
-                // Upload the image to imgur
-                logger.debug(`[${PREFIX}] Starting imgur upload`);
-                imgur_client.upload({
-                    image: image_response.data,
-                    type: 'stream',
-                }).then(function(imgur_resonse) {
-                    // Use the link in the thumbnail
-                    imgur_url = imgur_resonse.data.link;
-                    // logger.debug(`[${PREFIX}] png_image_url: ${imgur_url}`);
-                    embed.setThumbnail(imgur_url);
+                url: detailsURL,
+            }).then(async function(details_response) {
+                const body = details_response.data;
+                const { document } = (new JSDOM(body, { includeNodeLocations: true })).window;
+                if (!document.querySelector('.pid-list')) {
+                    logger.debug(`[${PREFIX}] No results found for ${input_imprint} ${input_color} ${input_shape}`);
+                    return;
+                }
+                const details2 = document.querySelector('.pid-list').innerHTML;
+                // logger.debug(`[${PREFIX}] details2: ${details2}`);
 
-                    const detailsURL = `https://www.drugs.com${first_result.querySelector('.ddc-btn.ddc-btn-sm').getAttribute('href')}`;
-                    // logger.debug(`[${PREFIX}] detailsURL: ${detailsURL}`);
-                    embed.setURL(detailsURL);
-                    logger.debug(`[${PREFIX}] Starting axios details request`);
-                    axios.request({
-                        // Get the image from drug.com
-                        method: 'GET',
-                        url: detailsURL,
-                    }).then(async function(details_response) {
-                        const body = details_response.data;
-                        const { document } = (new JSDOM(body, { includeNodeLocations: true })).window;
+                const avail_regex = /(\<dt\>Availability\<\/dt\>\n.*\>)(.*)(\<\/dd\>)/;
+                const availmatched = details2.match(avail_regex);
+                // logger.debug(`[${PREFIX}] availmatched: ${availmatched[2]}`);
 
-                        if (!document.querySelector('.pid-list')) {
-                            logger.debug(`[${PREFIX}] No results found for ${input_imprint} ${input_color} ${input_shape}`);
-                            return;
-                        }
-                        const details = document.querySelector('.pid-list').innerHTML;
-                        // logger.debug(`[${PREFIX}] details: ${details}`);
+                const class_regex = /(\<dt\>Drug Class\<\/dt\>\s.*\s.*\"\>)(.*)(\<\/a)/;
+                const class_matched = details2.match(class_regex);
+                // logger.debug(`[${PREFIX}] class_matched: ${class_matched[2]}`);
 
-                        const avail_regex = /(\<dt\>Availability\<\/dt\>\n.*\>)(.*)(\<\/dd\>)/;
-                        const availmatched = details.match(avail_regex);
-                        // logger.debug(`[${PREFIX}] availmatched: ${availmatched[2]}`);
+                const desc = document.querySelector('meta[name="twitter:description"]').content;
+                // const desc = document.querySelector('meta[property=\'og:description\']');
+                // logger.debug(`[${PREFIX}] desc: ${desc}`);
+                embed.setDescription(desc);
 
-                        const class_regex = /(\<dt\>Drug Class\<\/dt\>\s.*\s.*\"\>)(.*)(\<\/a)/;
-                        const class_matched = details.match(class_regex);
-                        // logger.debug(`[${PREFIX}] class_matched: ${class_matched[2]}`);
-
-                        const desc = document.querySelector('meta[name="twitter:description"]').content;
-                        // const desc = document.querySelector('meta[property=\'og:description\']');
-                        // logger.debug(`[${PREFIX}] desc: ${desc}`);
-                        embed.setDescription(desc);
-
-                        // logger.debug(`[${PREFIX}] first_result: ${first_result}`);
-                        embed.addFields(
-                            { name: 'Strength', value: strength, inline: true },
-                            { name: 'Availability', value: availmatched[2], inline: true },
-                            { name: 'Class', value: class_matched[2], inline: true },
-                        );
+                // logger.debug(`[${PREFIX}] first_result: ${first_result}`);
+                embed.addFields(
+                    { name: 'Availability', value: availmatched[2], inline: true },
+                    { name: 'Class', value: class_matched[2], inline: true },
+                );
+                // It seems like drugs.com has some weird image handling, so we need to download the image and upload the image to imgur
+                // I will eventually cache these images so we don't need to download/upload every time
+                let imgur_url = '';
+                logger.debug(`[${PREFIX}] Starting axios image request`);
+                axios.request({
+                    // Get the image from drug.com
+                    method: 'GET',
+                    url: imageURL,
+                    responseType: 'stream',
+                }).then(function(image_response) {
+                    // Upload the image to imgur
+                    logger.debug(`[${PREFIX}] Starting imgur upload`);
+                    imgur_client.upload({
+                        image: image_response.data,
+                        type: 'stream',
+                    }).then(function(imgur_resonse) {
+                        // Use the link in the thumbnail
+                        imgur_url = imgur_resonse.data.link;
+                        // logger.debug(`[${PREFIX}] png_image_url: ${imgur_url}`);
+                        embed.setThumbnail(imgur_url);
+                        // logger.debug(`[${PREFIX}] detailsURL: ${detailsURL}`);
+                        logger.debug(`[${PREFIX}] Starting axios details2 request`);
                         interaction.reply({ embeds: [embed], ephemeral: false });
                         logger.debug(`[${PREFIX}] finished!`);
-                    }).catch(function(error) {logger.error(`[${PREFIX}] error4: ${error}`);});
-                }).catch(function(error) {logger.error(`[${PREFIX}] error3: ${error}`);});
-            }).catch(function(error) {logger.error(`[${PREFIX}] error2: ${error}`);});
+                    }).catch(function(error) {
+                        logger.error(`[${PREFIX}] error4: ${error}`);
+                        interaction.reply({ embeds: [embed], ephemeral: false });
+                    });
+                }).catch(function(error) {
+                    logger.error(`[${PREFIX}] error3: ${error}`);
+                    interaction.reply({ embeds: [embed], ephemeral: false });
+                });
+            }).catch(function(error) {
+                logger.error(`[${PREFIX}] error2: ${error}`);
+                interaction.reply({ embeds: [embed], ephemeral: false });
+            });
         }).catch(function(error) {logger.error(`[${PREFIX}] error1: ${error}`);});
     },
 };
