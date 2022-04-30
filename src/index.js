@@ -30,7 +30,7 @@ const client = new Client({
         Intents.FLAGS.GUILDS,
         Intents.FLAGS.GUILD_MESSAGES,
         Intents.FLAGS.GUILD_MEMBERS,
-        Intents.FLAGS.GUILD_PRESENCES,
+        // Intents.FLAGS.GUILD_PRESENCES,
         Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
         Intents.FLAGS.GUILD_INVITES,
     ],
@@ -43,25 +43,67 @@ const client = new Client({
     ],
 });
 
+// Initialize this for later
 client.invites = new Collection();
 
-// Set up commands
-const guild_commands = [];
-const guild_command_names = ['time', 'pill_id', 'invite', 'issue', 'botmod', 'tripsit', 'karma', 'tripsitme', 'report', 'mod', 'button'];
-const globl_commands = [];
-const globl_command_names = ['ping', 'reagents', 'dxm_calc', 'keta_calc', 'remindme', 'joke', 'motivate', 'urban_define', 'triptoys', 'benzo_calc', 'dxm_calc', 'ems', 'recovery', 'help', 'bug', 'about', 'breathe', 'combo', 'contact', 'hydrate', 'info', 'kipp', 'topic', 'idose'];
+// Set up guild commands
+const guild_command_names = [
+    'botmod',
+    'button',
+    'invite',
+    'issue',
+    'karma',
+    'mod',
+    'report',
+    'tripsit',
+    'time',
+    'pill_id',
+];
 
+// Set up global commands
+const globl_command_names = [
+    'about',
+    'breathe',
+    'bug',
+    'calc_benzo',
+    'calc_dxm',
+    'calc_ketamine',
+    'combo',
+    'contact',
+    'ems',
+    'help',
+    'hydrate',
+    'idose',
+    'info',
+    'joke',
+    'kipp',
+    'motivate',
+    'reagents',
+    'recovery',
+    'remindme',
+    'topic',
+    'triptoys',
+    'urban_define',
+];
+
+// Add global commands to guild commands
+guild_command_names.push(...globl_command_names);
+
+// This adds all commands to the bot globally
 client.commands = new Collection();
+// This is used down below to sync guild commands on startup
+const globl_commands = [];
+const guild_commands = [];
 const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
     const command = require(`../src/commands/${file}`);
     client.commands.set(command.data.name, command);
     if (guild_command_names.includes(command.data.name)) {
-        logger.debug(`[${PREFIX}] Adding command: ${command.data.name} to tripsit`);
+        logger.debug(`[${PREFIX}] ${command.data.name} added to host guild`);
         guild_commands.push(command.data.toJSON());
     }
-    else if (globl_command_names.includes(command.data.name)) {
-        logger.debug(`[${PREFIX}] Adding command: ${command.data.name} to GLOBAL`);
+    if (globl_command_names.includes(command.data.name)) {
+        logger.debug(`[${PREFIX}] ${command.data.name} added GLOBALLY`);
         globl_commands.push(command.data.toJSON());
     }
 }

@@ -27,7 +27,16 @@ module.exports = {
             ,
         ),
     async execute(interaction) {
+        const needsHelpRole = interaction.guild.roles.cache.find(role => role.id === role_needshelp);
+        // Actor information
         const actor = interaction.member;
+        const actorid = actor.id.toString();
+        logger.debug(`[${PREFIX}] actorid: ${actorid}`);
+        const actorRoles = actor.roles.cache;
+        const actorRoleNames = actorRoles.map(role => role.name);
+        logger.debug(`[${PREFIX}] actorRoleNames: ${actorRoleNames}`);
+
+        // Target Informatiion
         let target = interaction.options.getMember('user');
         let user_provided = true;
         // Default to the user who invoked the command if no user is provided
@@ -37,15 +46,6 @@ module.exports = {
             user_provided = false;
         }
         logger.debug(`[${PREFIX}] target: ${target.user.username}#${target.user.discriminator}`);
-
-        let enable = interaction.options.getString('enable');
-        // Default to on if no setting is provided
-        if (!enable) {enable = 'On';}
-        logger.debug(`[${PREFIX}] enable: ${enable}`);
-
-        const needsHelpRole = interaction.guild.roles.cache.find(role => role.id === role_needshelp);
-
-        // Target Informatiion
         const targetid = target.id.toString();
         logger.debug(`[${PREFIX}] targetid: ${targetid}`);
         const targetRoles = target.roles.cache;
@@ -55,17 +55,15 @@ module.exports = {
         const targetHasNeedsHelpRole = targetRoleNames.some(role => role === needsHelpRole.name);
         logger.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
 
-        // Actor information
-        const actorid = actor.id.toString();
-        logger.debug(`[${PREFIX}] actorid: ${actorid}`);
-        const actorRoles = actor.roles.cache;
-        const actorRoleNames = actorRoles.map(role => role.name);
-        logger.debug(`[${PREFIX}] actorRoleNames: ${actorRoleNames}`);
 
-        const command = 'tripsit';
+        let enable = interaction.options.getString('enable');
+        // Default to on if no setting is provided
+        if (!enable) {enable = 'On';}
+        logger.debug(`[${PREFIX}] enable: ${enable}`);
 
         
 
+        const command = 'tripsit';
         if (enable == 'On') {
             if (targetHasNeedsHelpRole) {
                 const embed = new MessageEmbed()
@@ -241,17 +239,20 @@ module.exports = {
                 });
 
                 // For each role in targetRoles2, add it to the target
-                targetData.roles.forEach(role_name => {
-                    if (role_name !== '@everyone') {
-                        const roleObj = interaction.guild.roles.cache.find(r => r.name === role_name);
-                        logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.user.username}`);
-                        target.roles.add(roleObj);
-                    }
-                });
+                if (targetData.roles) {
+                    targetData.roles.forEach(role_name => {
+                        if (role_name !== '@everyone') {
+                            const roleObj = interaction.guild.roles.cache.find(r => r.name === role_name);
+                            logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.user.username}`);
+                            target.roles.add(roleObj);
+                        }
+                    });
+                }
 
+                await target.roles.remove(needsHelpRole);
                 const output = `Removed ${needsHelpRole.name} from ${target.user.username}`;
                 logger.debug(`[${PREFIX}] ${output}`);
-                await target.roles.remove(needsHelpRole);
+
                 const embed = new MessageEmbed()
                     .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
                     .setColor('DARK_BLUE')

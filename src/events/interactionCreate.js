@@ -4,32 +4,18 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 const Fuse = require('fuse.js');
 const _ = require('underscore');
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ownerId = process.env.ownerId;
 const guildId = process.env.guildId;
 const channel_moderators_id = process.env.channel_moderators;
 const ts_icon_url = process.env.ts_icon_url;
 const ts_flame_url = process.env.ts_flame_url;
 
-// const cooldown = new Set();
-// // /This is 1 minute, you can change it to whatever value
-// const cooldown_seconds = 1;
-// const cooldownTime = cooldown_seconds * 1000;
-
-const raw_drug_data = fs.readFileSync('./src/assets/drug_db_combined.json');
-const drug_data_all = JSON.parse(raw_drug_data);
-
-const raw_ts_data = fs.readFileSync('./src/assets/drug_db_tripsit.json');
-const drug_data_tripsit = JSON.parse(raw_ts_data);
-
-const raw_pill_colors = fs.readFileSync('./src/assets/pill_colors.json');
-const pill_colors = JSON.parse(raw_pill_colors);
-
-
-const raw_pill_shapes = fs.readFileSync('./src/assets/pill_shapes.json');
-const pill_shapes = JSON.parse(raw_pill_shapes);
+const drug_data_all = JSON.parse(fs.readFileSync('./src/assets/drug_db_combined.json'));
+const drug_data_tripsit = JSON.parse(fs.readFileSync('./src/assets/drug_db_tripsit.json'));
+const pill_colors = JSON.parse(fs.readFileSync('./src/assets/pill_colors.json'));
+const pill_shapes = JSON.parse(fs.readFileSync('./src/assets/pill_shapes.json'));
+const timezones = JSON.parse(fs.readFileSync('./src/assets/timezones.json'));
 
 
 module.exports = {
@@ -48,14 +34,10 @@ module.exports = {
         // logger.info(`[${PREFIX}] ${username}${command_name} (${type})${guild_message}${message}`);
 
         // check if the user is a bot and if so, ignore it
-        if (user_is_bot) {
-            logger.debug(`[${PREFIX}] Ignoring bot interaction`);
-            return;
-        }
+        if (user_is_bot) {return logger.debug(`[${PREFIX}] Ignoring bot interaction`);}
 
         const blacklist_users = [];
         global.guild_db.forEach((doc) => {
-            // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc.value}`);
             if (doc.value.isBanned == true) {
                 blacklist_users.push(doc.value.guild_id);
             }
@@ -119,7 +101,7 @@ module.exports = {
                     }
                 }
             }
-            else if (interaction.commandName == 'benzo_calc') {
+            else if (interaction.commandName == 'calc_benzo') {
                 // logger.debug(`[${PREFIX}] Autocomplete requested for benzo_convert`);
                 const options = {
                     shouldSort: true,
@@ -174,7 +156,42 @@ module.exports = {
                     interaction.respond(default_names.map(choice => ({ name: choice, value: choice })));
                 }
             }
-            // I need to find the rest of the actions that use autocomplete and define them here
+            else if (interaction.commandName == 'time') {
+
+                const timezone_names = [];
+                for (let i = 0; i < timezones.length; i++) {
+                    timezone_names.push(timezones[i].label);
+                }
+
+                logger.debug(`[${PREFIX}] timezone_names: ${timezone_names}`);
+
+                const options = {
+                    shouldSort: true,
+                    keys: [
+                        'label',
+                    ],
+                };
+
+                const fuse = new Fuse(timezones, options);
+                const focusedValue = interaction.options.getFocused();
+                // logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
+                const results = fuse.search(focusedValue);
+                logger.debug(`[${PREFIX}] Autocomplete results: ${JSON.stringify(results, null, 2)}`);
+                if (results.length > 0) {
+                    const top_25 = results.slice(0, 25);
+                    const list_results = top_25.map(choice => ({ name: choice.item.label, value: choice.item.label }));
+                    logger.debug(`[${PREFIX}] list_results: ${JSON.stringify(list_results, null, 2)}`);
+                    interaction.respond(list_results);
+                }
+                else {
+                    const default_colors = timezone_names.slice(0, 25);
+                    const list_results = default_colors.map(choice => ({ name: choice, value: choice }));
+                    logger.debug(`[${PREFIX}] list_results: ${JSON.stringify(list_results, null, 2)}`);
+                    interaction.respond(list_results);
+                }
+            }
+
+            // If you don't need a specific autocomplete, return a list of drug names
             else {
                 const options = {
                     shouldSort: true,
