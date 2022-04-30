@@ -1,16 +1,14 @@
 const fs = require('node:fs');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
-const { MessageEmbed, Collection } = require('discord.js');
+const { Collection } = require('discord.js');
 const db = global.db;
 const express = require('express');
-if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const PORT = process.env.PORT;
 const guild_id = process.env.guildId;
-const ts_icon_url = process.env.ts_icon_url;
 const guild_db_name = process.env.guild_db_name;
 const users_db_name = process.env.users_db_name;
-const ts_flame_url = process.env.ts_flame_url;
+const template = require('../utils/embed_template');
 
 // (*INVITE*) https://github.com/AnIdiotsGuide/discordjs-bot-guide/blob/master/coding-guides/tracking-used-invites.md
 /* Start *INVITE* code */
@@ -146,12 +144,9 @@ module.exports = {
                         if (remindertime <= Date.now() / 1000) {
                             logger.debug(`[${PREFIX}] Sending reminder to ${userid}`);
                             const user = await client.users.fetch(userid);
-                            const reminder_embed = new MessageEmbed()
-                                .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
-                                .setColor('RANDOM')
+                            const reminder_embed = template.embed_template()
                                 .setTitle('Reminder!')
-                                .setDescription(`You set a reminder to ${reminder}`)
-                                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                                .setDescription(`You set a reminder to ${reminder}`);
                             user.send({ embeds: [reminder_embed] });
                             // remove the reminder
                             // delete doc.reminders[remindertime];

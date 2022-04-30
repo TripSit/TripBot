@@ -1,16 +1,11 @@
 const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed, MessageButton } = require('discord.js');
+const { MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
+const template = require('../utils/embed_template');
 
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
-const ts_icon_url = process.env.ts_icon_url;
-const disclaimer = process.env.disclaimer;
-const ts_flame_url = process.env.ts_flame_url;
 const raw_drug_data = fs.readFileSync('./src/assets/drug_db_combined.json');
 const drug_data_all = JSON.parse(raw_drug_data);
 
@@ -178,15 +173,11 @@ module.exports = {
             if (summary != '') {
                 logger.debug(`[${PREFIX}] summary.length: ${summary.length}`);
                 logger.debug(`[${PREFIX}] wiki_url: ${wiki_url}`);
-                logger.debug(`[${PREFIX}] ts_icon_url: ${ts_icon_url}`);
-                logger.debug(`[${PREFIX}] disclaimer: ${disclaimer}`);
-                const embed = new MessageEmbed()
-                    .setAuthor({ name: 'TripSit.Me ', url: wiki_url, iconURL: ts_icon_url })
+                const embed = template.embed_template()
                     .setColor('DARK_BLUE')
                     .setTitle(`${substance} Summary`)
                     .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
-                    .setDescription(summary)
-                    .setFooter({ text: disclaimer, iconURL: ts_flame_url });
+                    .setDescription(summary);
                 interaction.reply({ embeds: [embed] });
                 logger.debug(`[${PREFIX}] finished!`);
                 return;
@@ -215,23 +206,19 @@ module.exports = {
                         message_start = message_end;
                         message_end += 1000;
                         messages_built += 1;
-                        const embed = new MessageEmbed()
-                            .setAuthor({ name: `TripSit.Me - ${substance}`, url: wiki_url, iconURL: ts_icon_url })
+                        const embed = template.embed_template()
                             .setTitle(`${substance} Dosage`)
                             .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
-                            .setDescription(message_part)
-                            .setFooter({ text: disclaimer, iconURL: ts_flame_url });
+                            .setDescription(message_part);
                         book.push(embed);
                     }
                 }
                 if (entire_message.length > 0 && entire_message.length <= 1024) {
                     logger.debug(`[{PREFIX}] ${section} is not too long`);
-                    const embed = new MessageEmbed()
-                        .setAuthor({ name: `TripSit.Me - ${substance}`, url: wiki_url, iconURL: ts_icon_url })
+                    const embed = template.embed_template()
                         .setTitle(`${substance} Dosage`)
                         .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
-                        .setDescription(entire_message)
-                        .setFooter({ text: disclaimer, iconURL: ts_flame_url });
+                        .setDescription(entire_message);
                     return interaction.reply({ embeds: [embed] });
                 }
                 if (book.length > 0) {
@@ -295,27 +282,23 @@ module.exports = {
                         message_start = message_end;
                         message_end += 1000;
                         messages_built += 1;
-                        const embed = new MessageEmbed()
-                            .setAuthor({ name: `TripSit.Me - ${substance} combo info`, url: wiki_url, iconURL: ts_icon_url })
+                        const embed = template.embed_template()
                             .setTitle(`${title}`)
                             .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
                             .setDescription(message_part)
                             .setColor(color)
-                            .setThumbnail(thumbnail)
-                            .setFooter({ text: disclaimer, iconURL: ts_flame_url });
+                            .setThumbnail(thumbnail);
                         book.push(embed);
                     }
                 }
                 if (entire_message.length > 0 && entire_message.length <= 1024) {
                     logger.debug(`[{PREFIX}] ${drug_status} is not too long`);
-                    const embed = new MessageEmbed()
-                        .setAuthor({ name: `TripSit.Me - ${substance} combo info`, url: wiki_url, iconURL: ts_icon_url })
+                    const embed = template.embed_template()
                         .setTitle(`${title}`)
                         .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
                         .setDescription(entire_message)
                         .setColor(color)
-                        .setThumbnail(thumbnail)
-                        .setFooter({ text: disclaimer, iconURL: ts_flame_url });
+                        .setThumbnail(thumbnail);
                     book.push(embed);
                 }
             }

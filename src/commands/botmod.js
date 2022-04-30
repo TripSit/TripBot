@@ -1,11 +1,10 @@
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
-const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
+const { MessageActionRow, MessageButton } = require('discord.js');
 const db = global.db;
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const ts_icon_url = process.env.ts_icon_url;
-const ts_flame_url = process.env.ts_flame_url;
+const template = require('../utils/embed_template');
 const guild_db_name = process.env.guild_db_name;
 // const users_db_name = process.env.users_db_name;
 
@@ -180,74 +179,62 @@ module.exports = {
             logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData)}`);
             if (command === 'warn') {
                 color = 'YELLOW';
-                const warn_embed = new MessageEmbed()
-                    .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
+                const warn_embed = template.embed_template()
                     .setColor(color)
                     .setTitle('Warned!')
-                    .setDescription(`Your guild has warned by Team TripSit for ${reason}.\n\nPlease read the rules and be respectful of them.\n\nContact Moonbear if you have any questions!`)
-                    .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                    .setDescription(`Your guild has warned by Team TripSit for ${reason}.\n\nPlease read the rules and be respectful of them.\n\nContact Moonbear if you have any questions!`);
                 target_guild_owner.send({ embeds: [warn_embed], components: [warn_buttons] });
                 logger.debug(`[${PREFIX}] I warned ${target_guild}'s owner ${target_guild_owner}!`);
             }
             else if (command === 'kick') {
                 target_guild.leave();
                 color = 'ORANGE';
-                const warn_embed = new MessageEmbed()
-                    .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
+                const warn_embed = template.embed_template()
                     .setColor(color)
                     .setTitle('Kicked!')
-                    .setDescription(`I have left your guild because ${reason}.\n\nYou have the option to re-add me, but please read the rules and be respectful of them.\n\nContact Moonbear if you have any questions!`)
-                    .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                    .setDescription(`I have left your guild because ${reason}.\n\nYou have the option to re-add me, but please read the rules and be respectful of them.\n\nContact Moonbear if you have any questions!`);
                 target_guild_owner.send({ embeds: [warn_embed], components: [warn_buttons] });
                 logger.debug(`[${PREFIX}] I left ${target_guild}!`);
             }
             else if (command === 'ban') {
                 if (toggle == 'on') {
                     if (targetData.isBanned) {
-                        const embed = new MessageEmbed()
-                            .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
+                        const embed = template.embed_template()
                             .setColor('GREEN')
                             .setTitle('Guild Already Banned')
                             .addFields(
                                 { name: 'Guild ID', value: target_id },
-                            )
-                            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                            );
                         return interaction.reply({ embeds: [embed] });
                     }
 
                     targetData.guild_banned = true;
                     target_guild.leave();
                     color = 'RED';
-                    const warn_embed = new MessageEmbed()
-                        .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
+                    const warn_embed = template.embed_template()
                         .setColor(color)
                         .setTitle('Banned!')
-                        .setDescription(`I have left your guild permenantly because ${reason}.\n\nContact Moonbear if you have any questions!`)
-                        .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                        .setDescription(`I have left your guild permenantly because ${reason}.\n\nContact Moonbear if you have any questions!`);
                     target_guild_owner.send({ embeds: [warn_embed] });
                     logger.debug(`[${PREFIX}] I banned ${target_guild}!`);
                 }
                 else if (toggle == 'off') {
                     if (!targetData.isBanned) {
-                        const embed = new MessageEmbed()
-                            .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
+                        const embed = template.embed_template()
                             .setColor('GREEN')
                             .setTitle('Guild Not Banned')
                             .addFields(
                                 { name: 'Guild ID', value: target_id },
-                            )
-                            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                            );
                         return interaction.reply({ embeds: [embed] });
                     }
 
                     targetData.guild_banned = false;
                     color = 'GREEN';
-                    const warn_embed = new MessageEmbed()
-                        .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
+                    const warn_embed = template.embed_template()
                         .setColor(color)
                         .setTitle('Unbanned!')
-                        .setDescription(`I have unbanned your guild because ${reason}.\n\nContact Moonbear if you have any questions!`)
-                        .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                        .setDescription(`I have unbanned your guild because ${reason}.\n\nContact Moonbear if you have any questions!`);
                     target_guild_owner.send({ embeds: [warn_embed] });
                     logger.debug(`[${PREFIX}] I unbanned ${target_guild}!`);
                 }
@@ -275,19 +262,16 @@ module.exports = {
 
             if (command !== 'info') {
                 const title = `I have ${command}ed ${target_guild} ${reason ? `because ${reason}` : ''}`;
-                const embed = new MessageEmbed()
-                    .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
+                const embed = template.embed_template()
                     .setColor(color)
-                    .setDescription(title)
-                    .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                    .setDescription(title);
                 interaction.reply({ embeds: [embed], ephemeral: true });
                 logger.debug(`[${PREFIX}] I replied to ${interaction.member}!`);
                 return;
             }
 
             const title = `${actor} ${command}ed ${target_guild} ${reason ? `because ${reason}` : ''}`;
-            const target_embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+            const target_embed = template.embed_template()
                 .setColor('BLUE')
                 .setDescription(title)
                 .addFields(
@@ -314,8 +298,7 @@ module.exports = {
                     { name: 'guild_partner', value: `${targetData.guild_partner}`, inline: true },
                     { name: 'guild_preferredLocale', value: `${targetData.guild_preferredLocale}`, inline: true },
                     { name: 'guild_region', value: `${targetData.guild_region}`, inline: true },
-                )
-                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                );
 
             if (command == 'info') {
                 interaction.reply({ embeds: [target_embed], ephemeral: true });

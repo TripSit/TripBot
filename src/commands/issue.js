@@ -1,14 +1,11 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const { Octokit } = require('@octokit/rest');
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
+const template = require('../utils/embed_template');
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const ts_flame_url = process.env.ts_flame_url;
-const ts_icon_url = process.env.ts_icon_url;
+
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -34,20 +31,17 @@ module.exports = {
             title: report,
         }).then(() => {
             logger.info(`[${PREFIX}] Successfully created issue on ${owner}/${repo}`);
-            const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
+            const embed = template.embed_template()
                 .setColor('#0099ff')
                 .setTitle('Issue created!')
-                .setDescription(`Your issue has been created on ${owner}/${repo}`)
-                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                .setDescription(`Your issue has been created on ${owner}/${repo}`);
             interaction.reply({ embeds: [embed], ephemeral: false });
             logger.debug(`[${PREFIX}] finished!`);
             return;
         }).catch(err => {
             logger.error(`[${PREFIX}] Failed to create issue on ${owner}/${repo}`);
             logger.error(err);
-            const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
+            const embed = template.embed_template()
                 .setColor('#ff0000')
                 .setTitle('Issue creation failed!')
                 .setDescription(`Your issue could not be created on ${owner}/${repo}\n\n${err}`);

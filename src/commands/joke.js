@@ -1,11 +1,9 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const axios = require('axios');
 const logger = require('../utils/logger.js');
 const API_KEY = process.env.rapid_api_key;
 const PREFIX = require('path').parse(__filename).name;
-const ts_icon_url = process.env.ts_icon_url;
-const ts_flame_url = process.env.ts_flame_url;
+const template = require('../utils/embed_template');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -31,10 +29,7 @@ module.exports = {
             data = response.data;
             console.log(data);
             logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
-            const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
-                .setColor('RANDOM')
-                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+            const embed = template.embed_template();
             if (data.type == 'twopart') {
                 embed.setTitle(data.setup)
                     .setDescription(data.delivery);

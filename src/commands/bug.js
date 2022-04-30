@@ -1,11 +1,9 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
+const template = require('../utils/embed_template');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const ts_icon_url = process.env.ts_icon_url;
 const channel_dev_id = process.env.channel_development;
-const ts_flame_url = process.env.ts_flame_url;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -24,19 +22,15 @@ module.exports = {
 
         logger.debug(`[${PREFIX}] channel_dev_id: ${channel_dev_id}`);
         const dev_chan = interaction.client.channels.cache.get(channel_dev_id);
-        const dev_embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+        const dev_embed = template.embed_template()
             .setColor('RANDOM')
-            .setDescription(`Hey ${bot_owner.toString()},\n${username}${guild_message} reports:\n${bug_report}`)
-            .setFooter({ text: 'Good luck!', iconURL: ts_flame_url });
+            .setDescription(`Hey ${bot_owner.toString()},\n${username}${guild_message} reports:\n${bug_report}`);
         dev_chan.send({ embeds: [dev_embed] });
 
-        const embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+        const embed = template.embed_template()
             .setColor('RANDOM')
             .setTitle('Thank you!')
-            .setDescription('I\'ve submitted this feedback to the bot owner. \n\nYou\'re more than welcome to join the TripSit server and speak to Moonbear directly if you want! Check the /contact command for more info.')
-            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+            .setDescription('I\'ve submitted this feedback to the bot owner. \n\nYou\'re more than welcome to join the TripSit server and speak to Moonbear directly if you want! Check the /contact command for more info.');
         interaction.reply({ embeds: [embed], ephemeral: false });
         logger.debug(`[${PREFIX}] finished!`);
         return;

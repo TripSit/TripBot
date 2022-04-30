@@ -1,7 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
+const template = require('../utils/embed_template');
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const welcome_channel_id = process.env.channel_welcome;
 
 module.exports = {
@@ -40,21 +41,18 @@ module.exports = {
                 unique,
                 reason,
             }).then(invite => {
-                const embed = new MessageEmbed()
-                    .setColor('RANDOM')
+                const embed = template.embed_template()
                     .setDescription(`Created an invite to ${channel} with a code of ${invite.code}`);
                 interaction.reply({ embeds: [embed], ephemeral: false });
             }).catch(err => {
                 logger.error(`${PREFIX}/invite: ${err}`);
-                const embed = new MessageEmbed()
-                    .setColor('RANDOM')
+                const embed = template.embed_template()
                     .setDescription(err);
                 interaction.reply({ embeds: [embed], ephemeral: false });
             });
         }
         catch (err) {
-            const embed = new MessageEmbed()
-                .setColor('RANDOM')
+            const embed = template.embed_template()
                 .setDescription('Make sure you entered a channel!');
             interaction.reply({ embeds: [embed], ephemeral: false });
         }

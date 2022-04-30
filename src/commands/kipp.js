@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
+const template = require('../utils/embed_template');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -23,9 +23,10 @@ module.exports = {
         const output = row_a.join(' ') + row_b + row_c.join(' ');
         logger.debug(`[${PREFIX}] Output: ${output}`);
 
-        const embed = new MessageEmbed()
-            .setColor('RANDOM')
-            .setDescription(output);
+        const embed = template.embed_template()
+            .setDescription(output)
+            .setAuthor(null)
+            .setFooter(null);
         interaction.reply({ embeds: [embed], ephemeral: false });
         logger.debug(`[${PREFIX}] finished!`);
         return;

@@ -1,10 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
-if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const ts_icon_url = process.env.ts_icon_url;
-const ts_flame_url = process.env.ts_flame_url;
+const template = require('../utils/embed_template');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -73,10 +70,7 @@ module.exports = {
             23: { name: 'Balls demo', value: '[Colorful balls that follow your mouse (Enable fullscreen for best effect)](https://testdrive-archive.azurewebsites.net/Graphics/TouchEffects/Default.html)', inline: true },
         };
 
-        const embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-            .setColor('RANDOM')
-            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+        const embed = template.embed_template();
 
         if (toy_id < 24) {
             embed.setTitle(`${toys_dict[toy_id].name}`);

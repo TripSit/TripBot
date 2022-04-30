@@ -1,15 +1,12 @@
 const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const db = global.db;
-const users_db_name = process.env.users_db_name;
 const timezones = JSON.parse(fs.readFileSync('./src/assets/timezones.json'));
+const template = require('../utils/embed_template');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const ts_icon_url = process.env.ts_icon_url;
-const ts_flame_url = process.env.ts_flame_url;
-// const snapshot = global.user_db;
+const users_db_name = process.env.users_db_name;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -64,11 +61,8 @@ module.exports = {
 
             if ('timezone' in actorData) {
                 if (actorData.timezone == tzCode) {
-                    const embed = new MessageEmbed()
-                        .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
-                        .setColor('RANDOM')
-                        .setDescription(`${timezone} already is your timezone, you don't need to update it!`)
-                        .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                    const embed = template.embed_template()
+                        .setDescription(`${timezone} already is your timezone, you don't need to update it!`);
                     interaction.reply({ embeds: [embed], ephemeral: true });
                     logger.debug(`[${PREFIX}] Done!!`);
                     return;
@@ -107,11 +101,8 @@ module.exports = {
                     logger.error(`[${PREFIX}] Error creating actor data: ${err}`);
                 }
             }
-            const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
-                .setColor('RANDOM')
-                .setDescription(`I set your timezone to ${timezone}`)
-                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+            const embed = template.embed_template()
+                .setDescription(`I set your timezone to ${timezone}`);
             interaction.reply({ embeds: [embed], ephemeral: true });
             logger.debug(`[${PREFIX}] Done!!`);
             return;
@@ -127,11 +118,8 @@ module.exports = {
 
             // Check if the target data exists, if not create a blank one
             if (!tzCode) {
-                const embed = new MessageEmbed()
-                    .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
-                    .setColor('RANDOM')
-                    .setDescription(`${target.user.username} is a timeless treasure <3 (and has not set a time zone)`)
-                    .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                const embed = template.embed_template()
+                    .setDescription(`${target.user.username} is a timeless treasure <3 (and has not set a time zone)`);
                 interaction.reply({ embeds: [embed], ephemeral: false });
                 logger.debug(`[${PREFIX}] Done!!`);
                 return;
@@ -139,11 +127,8 @@ module.exports = {
 
             // get the user's timezone from the database
             const time_string = new Date().toLocaleTimeString('en-US', { timeZone: tzCode });
-            const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
-                .setColor('RANDOM')
-                .setDescription(`It is likely ${time_string} wherever ${target.user.username} is located.`)
-                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+            const embed = template.embed_template()
+                .setDescription(`It is likely ${time_string} wherever ${target.user.username} is located.`);
             interaction.reply({ embeds: [embed], ephemeral: false });
             logger.debug(`[${PREFIX}] finished!`);
             return;

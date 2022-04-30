@@ -1,14 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
-
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
-const ts_icon_url = process.env.ts_icon_url;
-const disclaimer = process.env.disclaimer;
-const ts_flame_url = process.env.ts_flame_url;
+const template = require('../utils/embed_template');
 
 // Calculate insufflated dosages
 function generateInsufflatedDosages(weightInLbs) {
@@ -64,11 +57,7 @@ module.exports = {
         else {calc_weight = given_weight;}
         logger.debug(`[${PREFIX}] calc_weight: ${calc_weight}`);
 
-        const embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-            .setColor('RANDOM')
-            .setFooter({ text: disclaimer, iconURL: ts_flame_url });
-
+        const embed = template.embed_template();
         if (weight_units === 'kg' && given_weight > 179) {
             embed.setTitle('Please enter a valid weight less than 179 kg.');
             return interaction.reply({ embeds: [embed], ephemeral: true });

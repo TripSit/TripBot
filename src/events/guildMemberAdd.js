@@ -1,12 +1,11 @@
 const PREFIX = require('path').parse(__filename).name;
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const guild_id = process.env.guildId;
-const ts_icon_url = process.env.ts_icon_url;
 const ts_flame_url = process.env.ts_flame_url;
 const welcome_channel_id = process.env.channel_welcome;
 const channel_start_id = process.env.channel_start;
 const channel_botspam_id = process.env.channel_botspam;
+const template = require('../utils/embed_template');
 
 module.exports = {
     name: 'guildMemberAdd',
@@ -71,11 +70,9 @@ module.exports = {
             const channel_start = member.client.channels.cache.get(channel_start_id);
             const channel_botspam = member.client.channels.cache.get(channel_botspam_id);
             logger.debug(`[${PREFIX}] channel_botspam: ${channel_botspam}`);
-            const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+            const embed = template.embed_template()
                 .setColor(color_value)
-                .setDescription(`Welcome to the TripSit Network ${member}!\n\n We're a positive-enforced, harm-reduction space.\n\nTry checking out ${channel_start} to set your interests and color!\n\nPlease use ${channel_botspam} to access the bot's commands!\n\nStay safe!\n\n`)
-                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                .setDescription(`Welcome to the TripSit Network ${member}!\n\n We're a positive-enforced, harm-reduction space.\n\nTry checking out ${channel_start} to set your interests and color!\n\nPlease use ${channel_botspam} to access the bot's commands!\n\nStay safe!\n\n`);
             if (footer_text != '') {
                 embed.setFooter({ text: footer_text, iconURL: ts_flame_url });
             }

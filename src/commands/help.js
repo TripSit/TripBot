@@ -1,11 +1,9 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed, MessageButton } = require('discord.js');
+const { MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
-if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const ts_icon_url = process.env.ts_icon_url;
-const ts_flame_url = process.env.ts_flame_url;
+const template = require('../utils/embed_template');
 
 const button1 = new MessageButton()
     .setCustomId('previousbtn')
@@ -27,9 +25,7 @@ module.exports = {
         .setDescription('Information bout TripBot Commands'),
     async execute(interaction) {
 
-        const hr_embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-            .setColor('RANDOM')
+        const hr_embed = template.embed_template()
             .setTitle('Harm Reduction Modules')
             .addFields(
                 { name: 'Info', value: 'This command looks up drug information!', inline: true },
@@ -43,12 +39,9 @@ module.exports = {
                 { name: 'Calc Psychedelics', value: 'Calculate psychedelic dosages', inline: true },
                 { name: 'Pill ID', value: 'Search pill information', inline: true },
                 { name: '\u200b', value: '\u200b', inline: true },
-            )
-            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+            );
 
-        const tripsitting_embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-            .setColor('RANDOM')
+        const tripsitting_embed = template.embed_template()
             .setTitle('Tripsitting Modules')
             .addFields(
                 { name: 'Recovery', value: 'Image: Recovery position.', inline: true },
@@ -66,28 +59,22 @@ module.exports = {
                 { name: 'Triptoys', value: 'Cool toys to play with!', inline: true },
                 { name: 'Urban Define', value: 'Defines a word.', inline: true },
                 { name: 'Remindme', value: 'Sends a reminder in PM.', inline: true },
-            )
-            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+            );
 
-        const utility_embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-            .setColor('RANDOM')
+        const utility_embed = template.embed_template()
             .setTitle('Utility Modules')
             .addFields(
                 { name: 'About', value: 'Information on Team TripSit and who built this bot.', inline: true },
                 { name: 'Contact', value: 'How to contact Team TripSit and the bot builder.', inline: true },
                 { name: 'Help', value: 'Information on all commands, you\'re here now!', inline: true },
 
+                { name: 'Time', value: 'Set and view user\'s timezones', inline: true },
                 { name: 'Bug', value: 'Sends a message to dev.\nAll feedback welcome!', inline: true },
                 { name: 'Ping', value: 'Lets you know the bot is alive and working =)', inline: true },
-                { name: '\u200b', value: '\u200b', inline: true },
-            )
-            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+            );
 
 
-        const tripsit_embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-            .setColor('RANDOM')
+        const tripsit_embed = template.embed_template()
             .setTitle('TripSit Specific Modules')
             .addFields(
                 { name: 'Karma', value: 'Displays karma (reactions) given and received.', inline: true },
@@ -101,8 +88,8 @@ module.exports = {
                 { name: 'Invite', value: 'Create an invite to the server for a specific room.', inline: true },
                 { name: 'Botmod', value: 'Admin Only - Bans users/guilds from the bot after abuse.', inline: true },
                 { name: '\u200b', value: '\u200b', inline: true },
-            )
-            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+            );
+
         const book = [
             hr_embed,
             tripsitting_embed,

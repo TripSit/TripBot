@@ -1,10 +1,8 @@
 const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
-if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const ts_flame_url = process.env.ts_flame_url;
+const template = require('../utils/embed_template');
 const imgur_id = process.env.imgur_id;
 const imgur_secret = process.env.imgur_secret;
 const axios = require('axios');
@@ -114,17 +112,15 @@ module.exports = {
             const shape = shapematched[2];
             logger.debug(`[${PREFIX}] shape: ${shape}`);
 
-            const embed = new MessageEmbed()
+            const embed = template.embed_template()
                 .setAuthor({ name: 'Drugs.com', url: 'https://www.drugs.com/', iconURL: 'https://i.imgur.com/YRTrM0c.png' })
-                .setColor('RANDOM')
                 .setTitle(drug)
                 .addFields(
                     { name: 'Imprint', value: imprint, inline: true },
                     { name: 'Color', value: color, inline: true },
                     { name: 'Shape', value: shape, inline: true },
                     { name: 'Strength', value: strength, inline: true },
-                )
-                .setFooter({ text: 'Dose responsibly! Click the drug name to get more information!', iconURL: ts_flame_url });
+                );
 
             const imageURL = first_result.querySelector('.ddc-pid-img').getAttribute('data-image-src');
             const detailsURL = `https://www.drugs.com${first_result.querySelector('.ddc-btn.ddc-btn-sm').getAttribute('href')}`;

@@ -1,12 +1,10 @@
 const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed, MessageButton } = require('discord.js');
+const { MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
-if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const ts_icon_url = process.env.ts_icon_url;
-const ts_flame_url = process.env.ts_flame_url;
+const template = require('../utils/embed_template');
 
 const raw_topics = fs.readFileSync('./src/assets/karma_quotes.json');
 const karma_quotes = JSON.parse(raw_topics);
@@ -87,21 +85,15 @@ module.exports = {
 
         const book = [];
         const random_quoteA = karma_quotes[Math.floor(Math.random() * Object.keys(karma_quotes).length).toString()];
-        const karma_received_embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-            .setColor('RANDOM')
+        const karma_received_embed = template.embed_template()
             .setTitle(`${patient.user.username}'s Karma Received`)
-            .setDescription(`${karma_received_string}\n\n${random_quoteA}`)
-            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+            .setDescription(`${karma_received_string}\n\n${random_quoteA}`);
         book.push(karma_received_embed);
 
         const random_quoteB = karma_quotes[Math.floor(Math.random() * Object.keys(karma_quotes).length).toString()];
-        const karma_given_embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-            .setColor('RANDOM')
+        const karma_given_embed = template.embed_template()
             .setTitle(`${patient.user.username}'s Karma Given`)
-            .setDescription(`${karma_given_string}\n\n${random_quoteB}`)
-            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+            .setDescription(`${karma_given_string}\n\n${random_quoteB}`);
         book.push(karma_given_embed);
 
         if (book.length > 0) {
@@ -110,11 +102,8 @@ module.exports = {
             return;
         }
         else {
-            const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
-                .setColor('RANDOM')
-                .setDescription('Done!')
-                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+            const embed = template.embed_template()
+                .setDescription('Done!');
             interaction.reply({ embeds: [embed], ephemeral: false });
             logger.debug(`[${PREFIX}] finished!`);
             return;

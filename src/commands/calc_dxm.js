@@ -1,14 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
-
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
-const ts_icon_url = process.env.ts_icon_url;
-const disclaimer = process.env.disclaimer;
-const ts_flame_url = process.env.ts_flame_url;
+const template = require('../utils/embed_template');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -41,16 +34,14 @@ module.exports = {
     async execute(interaction) {
         // Calculate each plat min/max value
         const addInfo = (weight, unit) => {
-            const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+            const embed = template.embed_template()
                 .setColor('RANDOM')
                 .setTitle('DXM Calculator')
                 .setDescription('\
 Please note, these tools were developed and tested to the best possible ability by the TripSit team, and the greatest effort has been made not to produce incorrect or misleading results, though for unforeseen reasons these may occur. Always check your maths, and be careful.\n\n\
 You should always start low and work your way up untill you find the doses that are right for you.\n\n\
 DXM-containing products may also contain several potentially dangerous adulterants; you must make sure that your product contains only DXM as its active ingredient. For more information about DXM adulterants, see: https://wiki.tripsit.me/wiki/DXM#Adulteration\n\n\
-For a description of the plateau model, and the effects you can expect at each level, click: https://wiki.tripsit.me/wiki/DXM#Plateaus')
-                .setFooter({ text: disclaimer, iconURL: ts_flame_url });
+For a description of the plateau model, and the effects you can expect at each level, click: https://wiki.tripsit.me/wiki/DXM#Plateaus');
 
             const dxm_data = {
                 'First': { 'min': 1.5, 'max': 2.5 },

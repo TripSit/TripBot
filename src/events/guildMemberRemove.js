@@ -1,10 +1,8 @@
 const PREFIX = require('path').parse(__filename).name;
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const guild_id = process.env.guildId;
-const ts_icon_url = process.env.ts_icon_url;
-const ts_flame_url = process.env.ts_flame_url;
 const channel_modlog = process.env.channel_modlog;
+const template = require('../utils/embed_template');
 
 module.exports = {
     name: 'guildMemberRemove',
@@ -31,8 +29,7 @@ module.exports = {
             // logger.debug(`[${PREFIX}] hours: ${hours}`);
             // logger.debug(`[${PREFIX}] minutes: ${minutes}`);
             // logger.debug(`[${PREFIX}] seconds: ${seconds}`);
-            const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+            const embed = template.embed_template()
                 .setColor('BLUE')
                 .setDescription(`${member} has left the network after\
                 ${years > 0 ? `${years} years` : ''}\
@@ -41,8 +38,7 @@ module.exports = {
                 ${weeks == 0 && days > 0 ? `${days} days` : ''}\
                 ${days == 0 && hours > 0 ? `${hours} hours` : ''}\
                 ${hours == 0 && minutes > 0 ? `${minutes} minutes` : ''}\
-                ${minutes == 0 && seconds > 0 ? `${seconds} seconds` : ''}`)
-                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                ${minutes == 0 && seconds > 0 ? `${seconds} seconds` : ''}`);
             const modlog_channel = member.client.channels.cache.get(channel_modlog);
             // logger.debug(`[${PREFIX}] channel_modlog_id: ${channel_modlog}`);
             // logger.debug(`[${PREFIX}] modlog_channel: ${modlog_channel}`);
