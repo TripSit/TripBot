@@ -38,9 +38,13 @@ module.exports = {
                 { name: 'Combo', value: 'Checks the interactions between two drugs.', inline: true },
                 { name: 'iDose', value: 'Remind yourself when you last dosed.', inline: true },
 
-                { name: 'DXM Calc', value: 'Use this to calculate dxm dosages', inline: true },
-                { name: 'Benzo Calc', value: 'Calculate dosages between benzos', inline: true },
-                { name: 'Keta Calc', value: 'Calculate ketamine dosages', inline: true },
+                { name: 'Calc DXM', value: 'Use this to calculate dxm dosages', inline: true },
+                { name: 'Calc Benzos', value: 'Calculate dosages between benzos', inline: true },
+                { name: 'Calc Ketamine', value: 'Calculate ketamine dosages', inline: true },
+
+                { name: 'Calc Psychedelics', value: 'Calculate psychedelic dosages', inline: true },
+                { name: '\u200b', value: '\u200b', inline: true },
+                { name: '\u200b', value: '\u200b', inline: true },
             )
             .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
 
