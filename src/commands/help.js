@@ -3,9 +3,7 @@ const { MessageEmbed, MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
 const ts_flame_url = process.env.ts_flame_url;
 
@@ -43,7 +41,7 @@ module.exports = {
                 { name: 'Calc Ketamine', value: 'Calculate ketamine dosages', inline: true },
 
                 { name: 'Calc Psychedelics', value: 'Calculate psychedelic dosages', inline: true },
-                { name: '\u200b', value: '\u200b', inline: true },
+                { name: 'Pill ID', value: 'Search pill information', inline: true },
                 { name: '\u200b', value: '\u200b', inline: true },
             )
             .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
