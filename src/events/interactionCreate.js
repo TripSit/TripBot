@@ -10,7 +10,6 @@ const guildId = process.env.guildId;
 const channel_moderators_id = process.env.channel_moderators;
 const ts_icon_url = process.env.ts_icon_url;
 const ts_flame_url = process.env.ts_flame_url;
-
 const drug_data_all = JSON.parse(fs.readFileSync('./src/assets/drug_db_combined.json'));
 const drug_data_tripsit = JSON.parse(fs.readFileSync('./src/assets/drug_db_tripsit.json'));
 const pill_colors = JSON.parse(fs.readFileSync('./src/assets/pill_colors.json'));
