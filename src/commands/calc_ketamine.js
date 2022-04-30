@@ -39,7 +39,7 @@ function generateRectalDosages(weightInLbs) {
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('keta_calc')
+        .setName('calc_ketamine')
         .setDescription('Get ketamine dosage information')
         .addIntegerOption(option =>
             option.setName('weight')

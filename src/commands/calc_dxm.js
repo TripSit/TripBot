@@ -12,7 +12,7 @@ const ts_flame_url = process.env.ts_flame_url;
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('dxm_calc')
+        .setName('calc_dxm')
         .setDescription('Get DXM dosage information')
         .addIntegerOption(option =>
             option.setName('weight')
