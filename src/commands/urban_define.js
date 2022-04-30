@@ -1,12 +1,10 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const axios = require('axios');
+const template = require('../utils/embed_template');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const UD_TOKEN = process.env.rapid_api_key;
-const ts_icon_url = process.env.ts_icon_url;
-const ts_flame_url = process.env.ts_flame_url;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -31,9 +29,7 @@ module.exports = {
             // Sort data by the thumbs_up value
             data.list.sort((a, b) => b.thumbs_up - a.thumbs_up);
             logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
-            const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-                .setColor('RANDOM')
+            const embed = template.embed_template()
                 .setTitle(`Definition for: ${word}`)
                 .addFields(
                     { name: `Definition A (+${data.list[0].thumbs_up}/-${data.list[0].thumbs_down})`, value: `${data.list[0].definition.length > 1024 ? `${data.list[0].definition.slice(0, 1020)}...` : data.list[0].definition}`, inline: false },
@@ -42,8 +38,7 @@ module.exports = {
                     { name: 'Example B', value: data.list[1].example, inline: false },
                     { name: `Definition C (+${data.list[2].thumbs_up}/-${data.list[2].thumbs_down})`, value: `${data.list[2].definition.length > 1024 ? `${data.list[2].definition.slice(0, 1020)}...` : data.list[2].definition}`, inline: false },
                     { name: 'Example C', value: data.list[2].example, inline: false },
-                )
-                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                );
             interaction.reply({ embeds: [embed], ephemeral: false });
             logger.debug(`[${PREFIX}] finished!`);
             return;

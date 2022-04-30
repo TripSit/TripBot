@@ -1,13 +1,11 @@
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
-const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
+const { MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const db = global.db;
 const users_db_name = process.env.users_db_name;
-if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const ts_icon_url = process.env.ts_icon_url;
 const channel_moderators_id = process.env.channel_moderators;
-const ts_flame_url = process.env.ts_flame_url;
+const template = require('../utils/embed_template');
 
 const mod_buttons = new MessageActionRow()
     .addComponents(
@@ -162,9 +160,7 @@ module.exports = {
             }
         }
 
-        const embed_mod = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: target.displayAvatarURL })
-            .setColor('RANDOM')
+        const embed_mod = template.embed_template()
             .setDescription(`${actor} reported ${target} for ${reason} in ${rchannel}`)
             .addFields(
                 { name: 'Username', value: `${target.user.username}#${target.user.discriminator}`, inline: true },
@@ -200,12 +196,9 @@ module.exports = {
         const mod_chan = interaction.client.channels.cache.get(channel_moderators_id);
         mod_chan.send({ embeds: [embed_mod], components: [mod_buttons] });
 
-        const embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-            .setColor('RANDOM')
+        const embed = template.embed_template()
             .setTitle('Thank you!')
-            .setDescription(`${target} has been reported for ${reason} ${rchannel ? `in ${rchannel}` : ''}`)
-            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+            .setDescription(`${target} has been reported for ${reason} ${rchannel ? `in ${rchannel}` : ''}`);
         interaction.reply({ embeds: [embed], ephemeral: true });
         logger.debug(`[${PREFIX}] finished!`);
         return;

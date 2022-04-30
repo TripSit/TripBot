@@ -1,12 +1,10 @@
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
-const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
+const { MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../utils/logger.js');
 const db = global.db;
 const PREFIX = require('path').parse(__filename).name;
-if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const ts_icon_url = process.env.ts_icon_url;
+const template = require('../utils/embed_template');
 const channel_moderators_id = process.env.channel_moderators;
-const ts_flame_url = process.env.ts_flame_url;
 const users_db_name = process.env.users_db_name;
 
 // const mod_buttons = new MessageActionRow()
@@ -145,11 +143,9 @@ module.exports = {
         }
 
         if (!target) {
-            const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
+            const embed = template.embed_template()
                 .setColor('RED')
-                .setDescription('target not found, are you sure they are in the server?')
-                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                .setDescription('target not found, are you sure they are in the server?');
             interaction.reply({ embeds: [embed], ephemeral: true });
             logger.debug(`[${PREFIX}] Target not found!`);
             return;
@@ -157,13 +153,10 @@ module.exports = {
 
         if (command === 'warn') {
             // Send a message to the target
-            const warn_embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
+            const warn_embed = template.embed_template()
                 .setColor('YELLOW')
                 .setTitle('Warned!')
-                .setDescription(`You have been warned by Team TripSit for ${reason}.\n\nPlease read the rules and be respectful of them.`)
-                .setTimestamp()
-                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                .setDescription(`You have been warned by Team TripSit for ${reason}.\n\nPlease read the rules and be respectful of them.`);
             target.send({ embeds: [warn_embed], components: [warn_buttons] });
             color = 'BLUE';
             logger.debug(`[${PREFIX}] I warned ${target}!`);
@@ -188,11 +181,9 @@ module.exports = {
         if (command !== 'info') {
             // const title = `I have ${command}ed ${target} ${duration ? `for ${duration}` : ''} ${reason ? `because ${reason}` : ''}`;
             const title = `I have ${command}ed ${target} ${reason ? `because ${reason}` : ''}`;
-            const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
+            const embed = template.embed_template()
                 .setColor(color)
-                .setDescription(title)
-                .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+                .setDescription(title);
             interaction.reply({ embeds: [embed], ephemeral: true });
             logger.debug(`[${PREFIX}] I replied to ${interaction.member}!`);
         }
@@ -305,8 +296,7 @@ module.exports = {
         // const title = `${actor} ${command}ed ${target} ${duration ? `for ${duration}` : ''} ${reason ? `because ${reason}` : ''}`;
         const title = `${actor} ${command}ed ${target} ${reason ? `because ${reason}` : ''}`;
         // const book = [];
-        const target_embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+        const target_embed = template.embed_template()
             .setColor('BLUE')
             .setDescription(title)
             .addFields(
@@ -338,12 +328,10 @@ module.exports = {
                 { name: '# of Kicks', value: `${targetData['kick_recv'] ? targetData['kick_recv'] : 0 }`, inline: true },
                 { name: '# of Bans', value: `${targetData['ban_recv'] ? targetData['ban_recv'] : 0 }`, inline: true },
                 { name: '# of Fucks to give', value: '0', inline: true },
-            )
-            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+            );
         // book.push(target_embed);
 
-        // const actor_embed = new MessageEmbed()
-        //     .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+        // const actor_embed = template.embed_template()
         //     .setColor('BLUE')
         //     .setDescription(title)
         //     .addFields(
@@ -375,8 +363,7 @@ module.exports = {
         //         { name: '# of Kicks', value: `${actorData['kick_recv']}`, inline: true },
         //         { name: '# of Bans', value: `${actorData['ban_recv']}`, inline: true },
         //         { name: '# of Fucks to give', value: '0', inline: true },
-        //     )
-        //     .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+        //     );
         // book.push(actor_embed);
 
         // if (book.length > 0) {
@@ -392,10 +379,8 @@ module.exports = {
         //     return;
         // }
         // else {
-        //     const embed = new MessageEmbed()
-        //         .setColor('RANDOM')
+        //     const embed = template.embed_template()
         //         .setDescription('Done!');
-        //         .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
         //     return interaction.reply({ embeds: [embed] });
         // }
 

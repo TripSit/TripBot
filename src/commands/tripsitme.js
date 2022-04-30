@@ -1,14 +1,12 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const ts_icon_url = process.env.ts_icon_url;
 const channel_tripsitters = process.env.channel_tripsitters;
 const role_needshelp = process.env.role_needshelp;
 const role_tripsitter = process.env.role_tripsitter;
 const role_helper = process.env.role_helper;
-const ts_flame_url = process.env.ts_flame_url;
 const PREFIX = require('path').parse(__filename).name;
+const template = require('../utils/embed_template');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -34,22 +32,18 @@ module.exports = {
         logger.debug(`[${PREFIX}] patientid: ${patientid}`);
 
         if (hasNeedsHelpRole) {
-            const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+            const embed = template.embed_template()
                 .setColor('DARK_BLUE')
-                .setDescription(`Hey ${interaction.member}, you're already being helped!\n\nCheck your channel list for '${patient.user.username} chat here!'`)
-                .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_flame_url });
+                .setDescription(`Hey ${interaction.member}, you're already being helped!\n\nCheck your channel list for '${patient.user.username} chat here!'`);
             logger.debug(`[${PREFIX}] Done!`);
             return interaction.reply({ embeds: [embed], ephemeral: true });
         }
         else {
             const msg = `Hey ${patient}, thank you for asking for assistance!\n\n\
             Check your channel list for '${patient.user.username} chat here!'`;
-            const embed = new MessageEmbed()
-                .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+            const embed = template.embed_template()
                 .setColor('DARK_BLUE')
-                .setDescription(msg)
-                .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_flame_url });
+                .setDescription(msg);
             logger.debug(`[${PREFIX}] Done!`);
 
             interaction.reply({ embeds: [embed], ephemeral: true });

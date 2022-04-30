@@ -1,13 +1,10 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const db = global.db;
-if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const ts_icon_url = process.env.ts_icon_url;
 const role_needshelp = process.env.role_needshelp;
-const ts_flame_url = process.env.ts_flame_url;
 const PREFIX = require('path').parse(__filename).name;
 const users_db_name = process.env.users_db_name;
+const template = require('../utils/embed_template');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -63,10 +60,8 @@ module.exports = {
         const command = 'tripsit';
         if (enable == 'On') {
             if (targetHasNeedsHelpRole) {
-                const embed = new MessageEmbed()
-                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-                    .setColor('DARK_BLUE')
-                    .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_flame_url });
+                const embed = template.embed_template()
+                    .setColor('DARK_BLUE');
                 if (user_provided) {embed.setDescription(`Hey ${interaction.member}, ${target.user.username} is already being helped!\n\nCheck your channel list for '${target.user.username} discuss here!'`);}
                 else {embed.setDescription(`Hey ${interaction.member}, you're already being helped!\n\nCheck your channel list for '${target.user.username} chat here!'`);}
                 logger.debug(`[${PREFIX}] target ${target} is already being helped!`);
@@ -78,11 +73,9 @@ module.exports = {
                 // Team check
                 targetRoleNames.forEach(role => {
                     if (role === 'Admin' || role === 'Operator' || role === 'Moderator' || role === 'Tripsitter') {
-                        const embed = new MessageEmbed()
-                            .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
+                        const embed = template.embed_template()
                             .setColor('DARK_BLUE')
-                            .setDescription('This user is a member of the team and cannot be helped!')
-                            .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_flame_url });
+                            .setDescription('This user is a member of the team and cannot be helped!');
                         interaction.reply({ embeds: [embed], ephemeral: true });
                         logger.debug(`[${PREFIX}] finished!`);
                         return;
@@ -207,10 +200,8 @@ module.exports = {
                 // Get the needshelp role object and add it to the target
                 logger.debug(`[${PREFIX}] Adding role ${needsHelpRole.name} to ${target.user.username}`);
                 target.roles.add(needsHelpRole);
-                const embed = new MessageEmbed()
-                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-                    .setColor('DARK_BLUE')
-                    .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_flame_url });
+                const embed = template.embed_template()
+                    .setColor('DARK_BLUE');
                 if (user_provided) {embed.setDescription(`Hey ${interaction.member}, Thanks for the heads up, we'll be helping ${target.user.username} shortly!\n\nCheck your channel list for '${target.user.username} discuss here!'`);}
                 else {embed.setDescription(`Hey ${interaction.member}, thanks for reaching out!\n\nCheck your channel list for '${target.user.username} chat here!'`);}
                 logger.debug(`[${PREFIX}] target ${target} is now being helped!`);
@@ -250,10 +241,8 @@ module.exports = {
                 const output = `Removed ${needsHelpRole.name} from ${target.user.username}`;
                 logger.debug(`[${PREFIX}] ${output}`);
 
-                const embed = new MessageEmbed()
-                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-                    .setColor('DARK_BLUE')
-                    .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_flame_url });
+                const embed = template.embed_template()
+                    .setColor('DARK_BLUE');
                 if (user_provided) {embed.setDescription(`Hey ${interaction.member}, we're glad ${target.user.username} is feeling better, we've restored their old roles!`);}
                 else {embed.setDescription(`Hey ${interaction.member}, we're glad you're feeling better, we've restored your old roles, happy chatting!`);}
                 logger.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
@@ -262,10 +251,8 @@ module.exports = {
                 return;
             }
             else {
-                const embed = new MessageEmbed()
-                    .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-                    .setColor('DARK_BLUE')
-                    .setFooter({ text: 'Thanks for using Tripsit.Me!', iconURL: ts_flame_url });
+                const embed = template.embed_template()
+                    .setColor('DARK_BLUE');
                 if (user_provided) {embed.setDescription(`Hey ${interaction.member}, ${target.user.username} isnt currently being taken care of!`);}
                 else {embed.setDescription(`Hey ${interaction.member}, you're not currently being taken care of!`);}
                 logger.debug(`[${PREFIX}] target ${target} does not need help!`);

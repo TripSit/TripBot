@@ -1,11 +1,7 @@
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
-if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const ts_icon_url = process.env.ts_icon_url;
-const disclaimer = process.env.disclaimer;
-const ts_flame_url = process.env.ts_flame_url;
 const PREFIX = require('path').parse(__filename).name;
+const template = require('../utils/embed_template');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -49,16 +45,14 @@ module.exports = {
         const timeString = time(date);
         const relative = time(date, 'R');
 
-        const embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
+        const embed = template.embed_template()
             .setColor('DARK_BLUE')
             .addFields(
                 {
                     name: `You dosed ${volume} ${units} of ${substance}`,
                     value: `${relative} at ${timeString}`,
                 },
-            )
-            .setFooter({ text: disclaimer, iconURL: ts_flame_url });
+            );
         interaction.reply({ embeds: [embed], ephemeral: true });
         logger.debug(`[${PREFIX}] Finsihed!`);
         return;

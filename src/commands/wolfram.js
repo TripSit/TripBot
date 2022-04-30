@@ -1,14 +1,10 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-// const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const axios = require('axios');
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const WR_TOKEN = process.env.rapid_api_key;
 const WR_API_KEY = process.env.wolfram_alpha_key;
-// const ts_icon_url = process.env.ts_icon_url;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -37,9 +33,7 @@ module.exports = {
         axios.request(options).then(function(response) {
             const data = response.data;
             logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
-            // const embed = new MessageEmbed()
-            //     .setAuthor({ name: 'TripSit.Me ', url: 'http://www.tripsit.me', iconURL: ts_icon_url })
-            //     .setColor('RANDOM')
+            // const embed = template.embed_template()
             //     .setTitle(`Definition for: ${word}`)
             //     .addFields(
             //         { name: `Definition A (+${data.list[0].thumbs_up}/-${data.list[0].thumbs_down})`, value: `${data.list[0].definition.length > 1024 ? `${data.list[0].definition.slice(0, 1020)}...` : data.list[0].definition}`, inline: false },

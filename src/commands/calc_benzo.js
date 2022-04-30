@@ -1,15 +1,9 @@
 const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const _ = require('underscore');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
-const ts_icon_url = process.env.ts_icon_url;
-const ts_flame_url = process.env.ts_flame_url;
-const disclaimer = process.env.disclaimer;
+const template = require('../utils/embed_template');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -143,8 +137,7 @@ module.exports = {
         //             .addOptions(final_list),
         //     );
 
-        const embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
+        const embed = template.embed_template()
             .setColor('RANDOM')
             .setTitle(`${dosage} mg of ${drug_a} is ${result} mg of ${drug_b}`)
             .setDescription('This is a simple tool made to help you figure out how much of a given benzodiazepine dose converts into another benzodiazepine dose.\n\n\
@@ -168,8 +161,7 @@ Note: It\'s a good idea to start with a lower dose than the calculator shows, si
                 { name: 'After Effects', value: `${drug_a_result.properties['after-effects']}`, inline: true },
                 { name: 'After Effects', value: `${drug_b_result.properties['after-effects']}`, inline: true },
                 { name: '\u200b', value: '\u200b', inline: true },
-            )
-            .setFooter({ text: disclaimer, iconURL: ts_flame_url });
+            );
 
         interaction.reply({ embeds: [embed], ephemeral: false });
         logger.debug(`[${PREFIX}] finished!`);

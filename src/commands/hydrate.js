@@ -1,9 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const logger = require('../utils/logger.js');
-const ts_icon_url = process.env.ts_icon_url;
-const ts_flame_url = process.env.ts_flame_url;
 const PREFIX = require('path').parse(__filename).name;
+const template = require('../utils/embed_template');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -13,11 +11,11 @@ module.exports = {
         const output = '💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊\n\n' +
         '⚠️ ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ ⚠️\n\n' +
         '💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊';
-        const embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
+        const embed = template.embed_template()
             .setColor('DARK_BLUE')
             .setDescription(output)
-            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+            .setAuthor(null)
+            .setFooter(null);
         interaction.reply({ embeds: [embed] });
         logger.debug(`[${PREFIX}] finished!`);
         return;

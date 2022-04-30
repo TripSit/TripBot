@@ -1,13 +1,9 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
+const template = require('../utils/embed_template');
 const db = global.db;
-if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const users_db_name = process.env.users_db_name;
-const ts_icon_url = process.env.ts_icon_url;
-const ts_flame_url = process.env.ts_flame_url;
-
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -93,12 +89,8 @@ module.exports = {
             }
         });
 
-        const embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
-            .setColor('RANDOM')
-            // .setTitle(`${JSON.stringify(actorData, null, 2)}`)
-            .setDescription(`In ${duration} ${units} I will remind you: ${reminder}`)
-            .setFooter({ text: 'Dose responsibly!', iconURL: ts_flame_url });
+        const embed = template.embed_template()
+            .setDescription(`In ${duration} ${units} I will remind you: ${reminder}`);
         interaction.reply({ embeds: [embed], ephemeral: true });
         logger.debug(`[${PREFIX}] finished!`);
         return;

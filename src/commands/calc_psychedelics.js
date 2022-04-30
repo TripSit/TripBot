@@ -1,15 +1,7 @@
-const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
-const _ = require('underscore');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
-const ts_icon_url = process.env.ts_icon_url;
-const ts_flame_url = process.env.ts_flame_url;
-const disclaimer = process.env.disclaimer;
+const template = require('../utils/embed_template');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -83,17 +75,14 @@ module.exports = {
         else {
             title = `${title} your last dose.`;
         }
-        const embed = new MessageEmbed()
-            .setAuthor({ name: 'TripSit.Me', iconURL: ts_icon_url, url: 'http://www.tripsit.me' })
-            .setColor('RANDOM')
+        const embed = template.embed_template()
             .setTitle(title)
             .setDescription('\
             Please note that this calculator only works for tryptamines like LSD and Magic Mushrooms, do not use this calculator for a chemcial that isn\'t a tryptamine.\n\n\
             This calculator is only able to provide an estimate. Please do not be deceived by the apparent precision of the numbers.\n\n\
             Further, this calculator also assumes that you know exactly how much LSD and Shrooms you have consumed, due to the variable nature of street LSD and Shrooms, \
             this calculator is likely to be less successful when measuring tolerance between doses from different batches/chemists and harvests.\n\n\
-            As all bodies and brains are different, results may vary.')
-            .setFooter({ text: disclaimer, iconURL: ts_flame_url });
+            As all bodies and brains are different, results may vary.');
 
         interaction.reply({ embeds: [embed], ephemeral: false });
         logger.debug(`[${PREFIX}] finished!`);
