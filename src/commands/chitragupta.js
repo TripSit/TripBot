@@ -2,7 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const { getFirestore } = require('firebase-admin/firestore');
-const db = getFirestore();
+const db = global.db;
 const users_db_name = process.env.users_db_name;
 
 module.exports = {
@@ -53,11 +53,21 @@ module.exports = {
 
         if (actorFBID !== '') {
             logger.debug(`[${PREFIX}] Updating actor data in firebase`);
-            await db.collection(users_db_name).doc(actorFBID).set(actorData);
+            try {
+                await db.collection(users_db_name).doc(actorFBID).set(actorData);
+            }
+            catch (err) {
+                logger.error(`[${PREFIX}] Error updating actor data in firebase: ${err}`);
+            }
         }
         else {
             logger.debug(`[${PREFIX}] Creating actor data in firebase`);
-            await db.collection(users_db_name).doc().set(actorData);
+            try {
+                await db.collection(users_db_name).doc().set(actorData);
+            }
+            catch (err) {
+                logger.error(`[${PREFIX}] Error creating actor data in firebase: ${err}`);
+            }
         }
 
         let targetData = {};
@@ -94,11 +104,21 @@ module.exports = {
 
         if (targetFBID !== '') {
             logger.debug(`[${PREFIX}] Updating target data in firebase`);
-            await db.collection(users_db_name).doc(targetFBID).set(targetData);
+            try {
+                await db.collection(users_db_name).doc(targetFBID).set(targetData);
+            }
+            catch (err) {
+                logger.error(`[${PREFIX}] Error updating target data in firebase: ${err}`);
+            }
         }
         else {
             logger.debug(`[${PREFIX}] Creating target data in firebase`);
-            await db.collection(users_db_name).doc().set(targetData);
+            try {
+                await db.collection(users_db_name).doc().set(targetData);
+            }
+            catch (err) {
+                logger.error(`[${PREFIX}] Error creating target data in firebase: ${err}`);
+            }
         }
         logger.debug(`[${PREFIX}] finished!`);
         return;
