@@ -1,0 +1,53 @@
+NODE_ENV = development
+
+app_specific_config = true
+ts_icon_url = https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png
+ts_flame_url = https://imgur.com/b923xK2.png
+disclaimer = Please dose responsibly, this info does not replace talking with a medical professional.
+
+setup_discord_bot_specific = true
+token = <token: discord private token>
+ownerId = <int: discord owner id>
+clientId = <int: discord client id>
+guildId = <int: discord host guild id>
+
+set_channels_used = true
+channel_welcome = <int: channel id>
+channel_sandbox = <int: channel id>
+channel_tripsit = <int: channel id>
+channel_tripsitters = <int: channel id>
+channel_modlog = <int: channel id>
+channel_start = <int: channel id>
+channel_moderators = <int: channel id>
+channel_development = <int: channel id>
+channel_botspam = <int: channel id>
+
+set_roles_used = true
+role_needshelp = <int: role id>
+role_tripsitter = <int: role id>
+role_helper = <int: role id>
+
+for_express_health_check = true
+port = <int: port>
+
+for_irc_connection = true
+IRC_SERVER = <url: irc server>
+IRC_USERNAME = <str: irc username>
+IRC_PASSWORD = <str: irc password>
+
+for_firebase_connection = true
+FIREBASE_PRIVATE_KEY_ID = <str: firebase private key id>
+FIREBASE_PRIVATE_KEY = <str: firebase private key, including newline characters, everything>
+FIREBASE_CLIENT_ID = <url: firebase client id>
+FIREBASE_CLIENT_EMAIL = <int: firebase client email>
+guild_db_name = <str: firebase guild db name>
+users_db_name = <str: firebase users db name>
+
+for_github_issue_report = true
+GITHUB_TOKEN = <str: github token>
+
+for_various_rapid_api_calls = true
+rapid_api_key = <str: rapid api key>
+wolfram_alpha_key = <str: wolfram alpha key>
+imgur_id = <str: imgur id>
+imgur_secret = <str: imgur secret>
