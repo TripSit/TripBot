@@ -54,7 +54,7 @@ module.exports = {
                     The data is sourced from the TripSit and Psychonaut Wiki API combined: https://github.com/NoahSaso/merge-psychonautwiki-tripsit-data\n\
                     The DXM calculator comes from Tripsit: https://github.com/TripSit/DXM-Calculator\n\
                     The Benzo calculator comes from Tripsit: https://github.com/TripSit/Benzo-Calculator\n\
-                    The Ketamine calculator code was inspired by: https://github.com/v0idp/PsyBot\n\
+                    The Ketamine calculator and pill_id code was inspired by: https://github.com/v0idp/PsyBot\n\
                     The LSD calculator info was inspired from: https://codepen.io/cyberoxide/pen/BaNarGd\n\
                     The actual research for the LSD calculator: https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/\n\
                     ',
