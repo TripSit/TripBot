@@ -1,7 +1,6 @@
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../utils/logger.js');
-const { getFirestore } = require('firebase-admin/firestore');
 const db = global.db;
 const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}

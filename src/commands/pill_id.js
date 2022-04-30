@@ -1,7 +1,6 @@
 const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed, MessageButton } = require('discord.js');
-const paginationEmbed = require('discordjs-button-pagination');
+const { MessageEmbed } = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}

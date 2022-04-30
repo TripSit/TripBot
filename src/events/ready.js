@@ -2,7 +2,6 @@ const fs = require('node:fs');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 const { MessageEmbed, Collection } = require('discord.js');
-const { getFirestore } = require('firebase-admin/firestore');
 const db = global.db;
 const express = require('express');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}

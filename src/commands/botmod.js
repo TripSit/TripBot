@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
-const { getFirestore } = require('firebase-admin/firestore');
 const db = global.db;
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
@@ -8,7 +7,7 @@ if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ts_icon_url = process.env.ts_icon_url;
 const ts_flame_url = process.env.ts_flame_url;
 const guild_db_name = process.env.guild_db_name;
-const users_db_name = process.env.users_db_name;
+// const users_db_name = process.env.users_db_name;
 
 const warn_buttons = new MessageActionRow()
     .addComponents(
