@@ -10,12 +10,66 @@ const guildId = process.env.guildId;
 const channel_moderators_id = process.env.channel_moderators;
 const ts_icon_url = process.env.ts_icon_url;
 const ts_flame_url = process.env.ts_flame_url;
-const drug_data_all = JSON.parse(fs.readFileSync('./src/assets/drug_db_combined.json'));
+// const drug_data_all = JSON.parse(fs.readFileSync('./src/assets/drug_db_combined.json'));
 const drug_data_tripsit = JSON.parse(fs.readFileSync('./src/assets/drug_db_tripsit.json'));
 const pill_colors = JSON.parse(fs.readFileSync('./src/assets/pill_colors.json'));
 const pill_shapes = JSON.parse(fs.readFileSync('./src/assets/pill_shapes.json'));
 const timezones = JSON.parse(fs.readFileSync('./src/assets/timezones.json'));
+// Get a list of keys
+const pill_color_names = [];
+for (let i = 0; i < pill_colors.length; i++) {
+    pill_color_names.push(Object.keys(pill_colors[i])[0]);
+}
+// logger.debug(`[${PREFIX}] pill_color_names: ${pill_color_names}`);
+const default_colors = pill_color_names.slice(0, 25);
 
+const pill_shape_names = [];
+for (let i = 0; i < pill_shapes.length; i++) {
+    pill_shape_names.push(Object.keys(pill_shapes[i])[0]);
+}
+// logger.debug(`[${PREFIX}] pill_shape_names: ${pill_shape_names}`);
+const default_shapes = pill_shape_names.slice(0, 25);
+
+// The following code came from the benzo_convert tool in the github
+const drugCache = drug_data_tripsit;
+let benzoCache = {};
+
+benzoCache = {};
+// Filter any drug not containing the dose_to_diazepam property
+benzoCache = _.filter((drugCache), function(dCache) {
+    return _.has(dCache.properties, 'dose_to_diazepam');
+});
+
+_.each(benzoCache, function(benzo) {
+    _.each(benzo.aliases, function(alias) {
+        benzoCache.push({
+            // Add used aliases to new objects
+            name: alias,
+            pretty_name: alias.charAt(0).toUpperCase() + alias.slice(1),
+            properties: benzo.properties,
+            formatted_dose: benzo.formatted_dose,
+        });
+    });
+});
+
+benzoCache = _.sortBy(benzoCache, 'name');
+const regex = /[0-9]+\.?[0-9]?/;
+benzoCache = _.each(benzoCache, function(bCache) {
+    bCache.diazvalue = regex.exec(bCache.properties.dose_to_diazepam);
+});
+// End borrowed code, thanks bjorn!
+const drugNames = benzoCache.map(d => d.name);
+
+const timezone_names = [];
+for (let i = 0; i < timezones.length; i++) {
+    timezone_names.push(timezones[i].label);
+}
+
+// logger.debug(`[${PREFIX}] timezone_names: ${timezone_names}`);
+
+const default_times = timezone_names.slice(0, 25);
+const list_results = default_times.map(choice => ({ name: choice, value: choice }));
+// logger.debug(`[${PREFIX}] list_results: ${JSON.stringify(list_results, null, 2)}`);
 
 module.exports = {
     name: 'interactionCreate',
@@ -47,26 +101,12 @@ module.exports = {
             logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
             if (interaction.commandName == 'pill_id') {
                 const focusedOption = interaction.options.getFocused(true).name;
-
                 const options = {
                     shouldSort: true,
                     keys: [
                         'name',
                     ],
                 };
-                // Get a list of keys
-                const pill_color_names = [];
-                for (let i = 0; i < pill_colors.length; i++) {
-                    pill_color_names.push(Object.keys(pill_colors[i])[0]);
-                }
-                // logger.debug(`[${PREFIX}] pill_color_names: ${pill_color_names}`);
-
-                const pill_shape_names = [];
-                for (let i = 0; i < pill_shapes.length; i++) {
-                    pill_shape_names.push(Object.keys(pill_shapes[i])[0]);
-                }
-                // logger.debug(`[${PREFIX}] pill_shape_names: ${pill_shape_names}`);
-
                 if (focusedOption == 'color') {
                     const fuse = new Fuse(pill_color_names, options);
                     const focusedValue = interaction.options.getFocused();
@@ -75,11 +115,10 @@ module.exports = {
                     // logger.debug(`[${PREFIX}] Autocomplete results: ${JSON.stringify(results, null, 2)}`);
                     if (results.length > 0) {
                         const top_25 = results.slice(0, 25);
-                        const list_results = top_25.map(choice => ({ name: choice.item, value: choice.item }));
-                        interaction.respond(list_results);
+                        const filtered_results = top_25.map(choice => ({ name: choice.item, value: choice.item }));
+                        interaction.respond(filtered_results);
                     }
                     else {
-                        const default_colors = pill_color_names.slice(0, 25);
                         interaction.respond(default_colors.map(choice => ({ name: choice, value: choice })));
                     }
                 }
@@ -91,11 +130,10 @@ module.exports = {
                     // logger.debug(`[${PREFIX}] Autocomplete results: ${JSON.stringify(results, null, 2)}`);
                     if (results.length > 0) {
                         const top_25 = results.slice(0, 25);
-                        const list_results = top_25.map(choice => ({ name: choice.item, value: choice.item }));
-                        interaction.respond(list_results);
+                        const filtered_results = top_25.map(choice => ({ name: choice.item, value: choice.item }));
+                        interaction.respond(filtered_results);
                     }
                     else {
-                        const default_shapes = pill_shape_names.slice(0, 25);
                         interaction.respond(default_shapes.map(choice => ({ name: choice, value: choice })));
                     }
                 }
@@ -109,37 +147,6 @@ module.exports = {
                         'aliasesStr',
                     ],
                 };
-
-                // The following code came from the benzo_convert tool in the github
-                const drugCache = drug_data_tripsit;
-                let benzoCache = {};
-
-                benzoCache = {};
-                // Filter any drug not containing the dose_to_diazepam property
-                benzoCache = _.filter((drugCache), function(dCache) {
-                    return _.has(dCache.properties, 'dose_to_diazepam');
-                });
-
-                _.each(benzoCache, function(benzo) {
-                    _.each(benzo.aliases, function(alias) {
-                        benzoCache.push({
-                            // Add used aliases to new objects
-                            name: alias,
-                            pretty_name: alias.charAt(0).toUpperCase() + alias.slice(1),
-                            properties: benzo.properties,
-                            formatted_dose: benzo.formatted_dose,
-                        });
-                    });
-                });
-
-                benzoCache = _.sortBy(benzoCache, 'name');
-                const regex = /[0-9]+\.?[0-9]?/;
-                benzoCache = _.each(benzoCache, function(bCache) {
-                    bCache.diazvalue = regex.exec(bCache.properties.dose_to_diazepam);
-                });
-                // End borrowed code, thanks bjorn!
-
-                const drugNames = benzoCache.map(d => d.name);
                 // logger.debug(`[${PREFIX}] drugNames: ${JSON.stringify(drugNames, null, 2)}`);
                 const fuse = new Fuse(drugNames, options);
                 const focusedValue = interaction.options.getFocused();
@@ -156,21 +163,12 @@ module.exports = {
                 }
             }
             else if (interaction.commandName == 'time') {
-
-                const timezone_names = [];
-                for (let i = 0; i < timezones.length; i++) {
-                    timezone_names.push(timezones[i].label);
-                }
-
-                logger.debug(`[${PREFIX}] timezone_names: ${timezone_names}`);
-
                 const options = {
                     shouldSort: true,
                     keys: [
                         'label',
                     ],
                 };
-
                 const fuse = new Fuse(timezones, options);
                 const focusedValue = interaction.options.getFocused();
                 // logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
@@ -178,14 +176,11 @@ module.exports = {
                 logger.debug(`[${PREFIX}] Autocomplete results: ${JSON.stringify(results, null, 2)}`);
                 if (results.length > 0) {
                     const top_25 = results.slice(0, 25);
-                    const list_results = top_25.map(choice => ({ name: choice.item.label, value: choice.item.label }));
-                    logger.debug(`[${PREFIX}] list_results: ${JSON.stringify(list_results, null, 2)}`);
-                    interaction.respond(list_results);
+                    const filtered_results = top_25.map(choice => ({ name: choice.item.label, value: choice.item.label }));
+                    logger.debug(`[${PREFIX}] filtered_results: ${JSON.stringify(filtered_results, null, 2)}`);
+                    interaction.respond(filtered_results);
                 }
                 else {
-                    const default_colors = timezone_names.slice(0, 25);
-                    const list_results = default_colors.map(choice => ({ name: choice, value: choice }));
-                    logger.debug(`[${PREFIX}] list_results: ${JSON.stringify(list_results, null, 2)}`);
                     interaction.respond(list_results);
                 }
             }
@@ -200,8 +195,6 @@ module.exports = {
                     ],
                 };
 
-                // For each dictionary in the drug_data_all list, find the "name" key and add it to a list
-                const drugNames = drug_data_all.map(d => d.name);
                 const fuse = new Fuse(drugNames, options);
                 const focusedValue = interaction.options.getFocused();
                 const results = fuse.search(focusedValue);
