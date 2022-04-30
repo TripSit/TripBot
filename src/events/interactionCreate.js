@@ -141,7 +141,7 @@ module.exports = {
                 // End borrowed code, thanks bjorn!
 
                 const drugNames = benzoCache.map(d => d.name);
-                logger.debug(`[${PREFIX}] drugNames: ${JSON.stringify(drugNames, null, 2)}`);
+                // logger.debug(`[${PREFIX}] drugNames: ${JSON.stringify(drugNames, null, 2)}`);
                 const fuse = new Fuse(drugNames, options);
                 const focusedValue = interaction.options.getFocused();
                 logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
