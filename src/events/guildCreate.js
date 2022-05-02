@@ -26,7 +26,6 @@ module.exports = {
             guild_description: `${guild.description ? guild.description : 'No description'}`,
             guild_member_count: guild.memberCount,
             guild_owner_id: guild.ownerId,
-            guild_owner_name: guild.username,
             guild_icon: guild.iconURL(),
             guild_banned: false,
         };
