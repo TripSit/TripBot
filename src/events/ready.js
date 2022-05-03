@@ -160,8 +160,8 @@ module.exports = {
 
             });
         }
-        checkReminders();
-        setInterval(checkReminders, 60000);
+        // checkReminders();
+        // setInterval(checkReminders, 60000);
 
         logger.info(`[${PREFIX}] Ready to take over the world!`);
     },
