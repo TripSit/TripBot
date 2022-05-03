@@ -7,9 +7,9 @@ const users_db_name = process.env.users_db_name;
 
 module.exports = {
     set_user_info: async (fbid, data) => {
-        logger.debug(`[${PREFIX}] Saving ${fbid}!`);
+        logger.debug(`[${PREFIX}] Saving ${data.discord_username}!`);
 
-        if (fbid !== '') {
+        if (fbid !== null) {
             logger.debug(`[${PREFIX}] Updating actor data`);
             try {
                 await db.collection(users_db_name).doc(fbid).set(data);

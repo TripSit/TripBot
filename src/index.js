@@ -63,7 +63,7 @@ const guild_command_names = [
     'clean_db',
     'invite',
     'issue',
-    'karma',
+    // 'karma',
     'mod',
     'report',
     'test',
