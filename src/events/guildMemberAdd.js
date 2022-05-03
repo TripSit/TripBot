@@ -7,6 +7,8 @@ const ts_flame_url = process.env.ts_flame_url;
 const welcome_channel_id = process.env.channel_welcome;
 const channel_start_id = process.env.channel_start;
 const channel_botspam_id = process.env.channel_botspam;
+const channel_tripsit_id = process.env.channel_tripsit;
+const channel_irc_id = process.env.channel_irc;
 
 module.exports = {
     name: 'guildMemberAdd',
@@ -70,10 +72,18 @@ module.exports = {
             const welcome_channel = member.client.channels.cache.get(welcome_channel_id);
             const channel_start = member.client.channels.cache.get(channel_start_id);
             const channel_botspam = member.client.channels.cache.get(channel_botspam_id);
+            const channel_tripsit = member.client.channels.cache.get(channel_tripsit_id);
+            const channel_irc = member.client.channels.cache.get(channel_irc_id);
             logger.debug(`[${PREFIX}] channel_botspam: ${channel_botspam}`);
             const embed = template.embed_template()
                 .setColor(color_value)
-                .setDescription(`Welcome to the TripSit Network ${member}!\n\n We're a positive-enforced, harm-reduction space.\n\nTry checking out ${channel_start} to set your interests and color!\n\nPlease use ${channel_botspam} to access the bot's commands!\n\nStay safe!\n\n`);
+                .setDescription(`Welcome to the TripSit Network ${member}!\n\n\
+                We're a positive-enforced, harm-reduction space.\n\
+                **If you need substance help, go to the ${channel_tripsit} room and click the big red button!**\n\
+                Try checking out ${channel_start} to set your interests and color!\n\
+                Please use ${channel_botspam} to access the bot's commands!\n\
+                If you have an IRC issue please make a new thread in ${channel_irc}!\n\
+                Stay safe!\n`);
             if (footer_text != '') {
                 embed.setFooter({ text: footer_text, iconURL: ts_flame_url });
             }
