@@ -43,7 +43,12 @@ module.exports = {
             //         { name: `Definition C (+${data.list[2].thumbs_up}/-${data.list[2].thumbs_down})`, value: `${data.list[2].definition.length > 1024 ? `${data.list[2].definition.slice(0, 1020)}...` : data.list[2].definition}`, inline: false },
             //         { name: 'Example C', value: data.list[2].example, inline: false },
             //     );
-            // interaction.reply({ embeds: [embed], ephemeral: false });
+            // if (!interaction.replied) {
+            //     interaction.reply({ embeds: [embed], ephemeral: false });
+            // }
+            // else {
+            //     interaction.followUp({ embeds: [embed], ephemeral: false });
+            // }
             // logger.debug(`[${PREFIX}] finished!`);
             // return;
         }).catch(function(error) {

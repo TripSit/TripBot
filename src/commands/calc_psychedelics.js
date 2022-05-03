@@ -46,11 +46,26 @@ module.exports = {
                 ),
         ),
 
-    async execute(interaction) {
-        const last_dose = interaction.options.getInteger('last_dose');
-        const desired_dose = interaction.options.getInteger('desired_dose');
-        const days = interaction.options.getInteger('days');
-        const command = interaction.options.getSubcommand();
+    async execute(interaction, parameters) {
+        let last_dose = interaction.options.getInteger('last_dose');
+        if (!last_dose) {
+            last_dose = parameters[0];
+        }
+        let desired_dose = interaction.options.getInteger('desired_dose');
+        if (!desired_dose) {
+            desired_dose = parameters[1];
+        }
+        let days = interaction.options.getInteger('days');
+        if (!days) {
+            days = parameters[2];
+        }
+        let command = '';
+        try {
+            command = interaction.options.getSubcommand();
+        }
+        catch (err) {
+            command = parameters[3];
+        }
         logger.debug(`[${PREFIX}] last_dose: ${last_dose} | desired_dose: ${desired_dose} | days: ${days}`);
 
         // Code here inspired by https://codepen.io/cyberoxide/pen/BaNarGd
@@ -70,7 +85,7 @@ module.exports = {
         const units = (command === 'lsd') ? 'ug' : 'g';
         let title = `${result} ${units} of ${drug} is needed to feel the same effects as`;
         if (desired_dose) {
-            title = `${title} ${desired_dose} ug of LSD.`;
+            title = `${title} ${desired_dose} ${units} of ${drug}.`;
         }
         else {
             title = `${title} your last dose.`;
@@ -84,7 +99,12 @@ module.exports = {
             this calculator is likely to be less successful when measuring tolerance between doses from different batches/chemists and harvests.\n\n\
             As all bodies and brains are different, results may vary.');
 
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        if (!interaction.replied) {
+            interaction.reply({ embeds: [embed], ephemeral: false });
+        }
+        else {
+            interaction.followUp({ embeds: [embed], ephemeral: false });
+        }
         logger.debug(`[${PREFIX}] finished!`);
         return;
     },

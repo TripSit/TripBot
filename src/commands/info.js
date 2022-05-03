@@ -44,9 +44,15 @@ module.exports = {
                 .addChoice('Dosage', 'Dosage')
                 .addChoice('Combos', 'Combos'),
         ),
-    async execute(interaction) {
-        const substance = interaction.options.getString('substance');
-        const section = interaction.options.getString('section');
+    async execute(interaction, parameters) {
+        let substance = interaction.options.getString('substance');
+        if (!substance) {
+            substance = parameters[0];
+        }
+        let section = interaction.options.getString('section');
+        if (!section) {
+            section = parameters[1];
+        }
         const wiki_url = `https://wiki.tripsit.me/wiki/${substance}`;
 
         logger.info(`[${PREFIX}] starting getDrugInfo with parameter: ${substance}`);
@@ -178,7 +184,8 @@ module.exports = {
                     .setTitle(`${substance} Summary`)
                     .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
                     .setDescription(summary);
-                interaction.reply({ embeds: [embed] });
+                if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
+                else {interaction.followUp({ embeds: [embed], ephemeral: false });}
                 logger.debug(`[${PREFIX}] finished!`);
                 return;
             }
@@ -249,7 +256,7 @@ module.exports = {
             // logger.debug(JSON.stringify(all_combo_data))
             for (let i = 0; i < all_combo_data.length; i++) {
                 const combo_def = all_combo_data[i];
-                logger.debug(`[${PREFIX}] combo_def: ${JSON.stringify(combo_def)}`);
+                // logger.debug(`[${PREFIX}] combo_def: ${JSON.stringify(combo_def)}`);
                 const drug_status = combo_def['status'];
                 logger.debug(`[${PREFIX}] drug_status is ${drug_status}`);
                 const emoji = combo_def['emoji'];
@@ -261,7 +268,7 @@ module.exports = {
                 if (section_results != '') {
                     entire_message = definition + '\n\n' + section_results;
                 }
-                logger.debug(`[${PREFIX}] entire_message is ${entire_message}`);
+                // logger.debug(`[${PREFIX}] entire_message is ${entire_message}`);
                 const title = `${emoji} ${drug_status} ${emoji}`;
 
                 if (entire_message.length > 1024) {

@@ -29,7 +29,7 @@ module.exports = {
         axios.request(options).then(function(response) {
             data = response.data;
             console.log(data);
-            logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
+            // logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
             const embed = template.embed_template();
             if (data.type == 'twopart') {
                 embed.setTitle(data.setup)
@@ -38,13 +38,12 @@ module.exports = {
             else {
                 embed.setTitle(data.joke);
             }
-            interaction.reply({ embeds: [embed], ephemeral: false });
+            if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
+            else {interaction.followUp({ embeds: [embed], ephemeral: false });}
             logger.debug(`[${PREFIX}] finished!`);
         }).catch(function(error) {
             console.error(error);
         });
-
-
         return;
     },
 };

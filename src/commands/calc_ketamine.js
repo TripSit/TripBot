@@ -46,12 +46,18 @@ module.exports = {
                 .addChoice('kg', 'kg')
                 .addChoice('lbs', 'lbs'),
         ),
-    async execute(interaction) {
+    async execute(interaction, parameters) {
         let calc_weight = 0;
-        const given_weight = interaction.options.getInteger('weight');
+        let given_weight = interaction.options.getInteger('weight');
+        if (!given_weight) {
+            given_weight = parameters[0];
+        }
         logger.debug(`[${PREFIX}] weight: ${given_weight}`);
 
-        const weight_units = interaction.options.getString('units');
+        let weight_units = interaction.options.getString('units');
+        if (!weight_units) {
+            weight_units = parameters[1];
+        }
         logger.debug(`[${PREFIX}] weight_units: ${weight_units}`);
         if (weight_units == 'kg') {calc_weight = given_weight * 2.20462;}
         else {calc_weight = given_weight;}
@@ -73,7 +79,9 @@ module.exports = {
             { name: 'Insufflated Dosages', value: insufflatedosearray, inline: true },
             { name: 'Rectal Dosages', value: boofdosearray, inline: true },
         );
-        return interaction.reply({ embeds: [embed] });
-
+        if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
+        else {interaction.followUp({ embeds: [embed], ephemeral: false });}
+        logger.debug(`[${PREFIX}] finished!`);
+        return;
     },
 };

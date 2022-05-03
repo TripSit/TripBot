@@ -7,6 +7,8 @@ if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const template = require('../utils/embed_template');
 const guild_db_name = process.env.guild_db_name;
 // const users_db_name = process.env.users_db_name;
+const { get_guild_info } = require('../utils/get_user_info');
+
 
 const warn_buttons = new MessageActionRow()
     .addComponents(
@@ -129,54 +131,20 @@ module.exports = {
                 interaction.reply('Invalid Guild ID, or i\'m not in that guild!');
                 return;
             }
-            let targetData = {};
-            let targetFBID = '';
-            const snapshot = global.guild_db;
-            snapshot.forEach((doc) => {
-                if (doc.value.guild_id === target_id) {
-                    logger.debug(`[${PREFIX}] Found a target match!`);
-                    // console.log(doc.id, '=>', doc.value);
-                    targetFBID = doc.key;
-                    logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
-                    targetData = doc.value;
-                }
-            });
+
             const target_action = `${command}_received`;
-            if (Object.keys(targetData).length === 0) {
-                logger.debug(`[${PREFIX}] No target data found, creating a blank one`);
-                targetData = {
-                    guild_name: target_guild.name,
-                    guild_nameAcronym: target_guild.nameAcronym,
-                    guild_id: target_guild.id,
-                    guild_createdAt: target_guild.createdAt,
-                    guild_createdTimestamp: target_guild.createdTimestamp,
-                    guild_joinedAt: target_guild.joinedAt,
-                    guild_joinedTimestamp: target_guild.joinedTimestamp,
-                    guild_description: `${target_guild.description ? target_guild.description : 'No description'}`,
-                    guild_member_count: target_guild.memberCount,
-                    guild_owner_id: target_guild.ownerId,
-                    guild_owner_name: target_guild_owner.username,
-                    guild_icon: target_guild.iconURL(),
-                    guild_banned: false,
-                    guild_large: target_guild.large,
-                    guild_nsfw: target_guild.nsfwLevel,
-                    guild_partner: target_guild.partnered,
-                    guild_preferredLocale: `${target_guild.preferredLocale ? target_guild.preferredLocale : 'No Locale'}`,
-                    guild_region: `${target_guild.region ? target_guild.region : 'No region'}`,
-                    mod_actions: { [target_action]: 1 },
-                };
+            const target_rslt = get_guild_info(target_guild);
+            const target_data = target_rslt[0];
+            const target_fbid = target_rslt[1];
+
+            if ('mod_actions' in target_data) {
+                target_data.mod_actions[target_action] = (target_data.mod_actions[target_action] || 0) + 1;
             }
             else {
-                logger.debug(`[${PREFIX}] Found target data, updating it`);
-                if ('mod_actions' in targetData) {
-                    targetData.mod_actions[target_action] = (targetData.mod_actions[target_action] || 0) + 1;
-                }
-                else {
-                    targetData.mod_actions = { [target_action]: 1 };
-                }
+                target_data.mod_actions = { [target_action]: 1 };
             }
 
-            logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData)}`);
+            logger.debug(`[${PREFIX}] target_data: ${JSON.stringify(target_data)}`);
             if (command === 'warn') {
                 color = 'YELLOW';
                 const warn_embed = template.embed_template()
@@ -198,7 +166,7 @@ module.exports = {
             }
             else if (command === 'ban') {
                 if (toggle == 'on') {
-                    if (targetData.isBanned) {
+                    if (target_data.isBanned) {
                         const embed = template.embed_template()
                             .setColor('GREEN')
                             .setTitle('Guild Already Banned')
@@ -208,7 +176,7 @@ module.exports = {
                         return interaction.reply({ embeds: [embed] });
                     }
 
-                    targetData.guild_banned = true;
+                    target_data.guild_banned = true;
                     target_guild.leave();
                     color = 'RED';
                     const warn_embed = template.embed_template()
@@ -219,7 +187,7 @@ module.exports = {
                     logger.debug(`[${PREFIX}] I banned ${target_guild}!`);
                 }
                 else if (toggle == 'off') {
-                    if (!targetData.isBanned) {
+                    if (!target_data.isBanned) {
                         const embed = template.embed_template()
                             .setColor('GREEN')
                             .setTitle('Guild Not Banned')
@@ -229,7 +197,7 @@ module.exports = {
                         return interaction.reply({ embeds: [embed] });
                     }
 
-                    targetData.guild_banned = false;
+                    target_data.guild_banned = false;
                     color = 'GREEN';
                     const warn_embed = template.embed_template()
                         .setColor(color)
@@ -239,12 +207,12 @@ module.exports = {
                     logger.debug(`[${PREFIX}] I unbanned ${target_guild}!`);
                 }
             }
-            logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
+            logger.debug(`[${PREFIX}] target_fbid: ${target_fbid}`);
 
-            if (targetFBID !== '') {
+            if (target_fbid !== '') {
                 logger.debug(`[${PREFIX}] Updating target guild data`);
                 try {
-                    await db.collection(guild_db_name).doc(targetFBID).set(targetData);
+                    await db.collection(guild_db_name).doc(target_fbid).set(target_data);
                 }
                 catch (err) {
                     logger.error(`[${PREFIX}] Error updating guild data, make sure this is expected: ${err}`);
@@ -253,7 +221,7 @@ module.exports = {
             else {
                 logger.debug(`[${PREFIX}] Creating target guild data`);
                 try {
-                    await db.collection(guild_db_name).doc().set(targetData);
+                    await db.collection(guild_db_name).doc().set(target_data);
                 }
                 catch (err) {
                     logger.error(`[${PREFIX}] Error creating guild data, make sure this is expected: ${err}`);
@@ -275,34 +243,34 @@ module.exports = {
                 .setColor('BLUE')
                 .setDescription(title)
                 .addFields(
-                    { name: 'Guild Name', value: `${targetData.guild_name}`, inline: true },
-                    { name: 'Guild Acronym', value: `${targetData.guild_nameAcronym}`, inline: true },
-                    { name: 'Guild ID', value: `${targetData.guild_id}`, inline: true },
+                    { name: 'Guild Name', value: `${target_data.guild_name}`, inline: true },
+                    { name: 'Guild Acronym', value: `${target_data.guild_nameAcronym}`, inline: true },
+                    { name: 'Guild ID', value: `${target_data.guild_id}`, inline: true },
                 )
                 .addFields(
-                    { name: 'Guild Created', value: `${time(targetData.createdAt, 'R')}`, inline: true },
-                    { name: 'Guild Joined', value: `${time(targetData.joinedAt, 'R')}`, inline: true },
-                    { name: 'Guild Description', value: `${targetData.guild_description}`, inline: true },
+                    { name: 'Guild Created', value: `${time(target_data.createdAt, 'R')}`, inline: true },
+                    { name: 'Guild Joined', value: `${time(target_data.joinedAt, 'R')}`, inline: true },
+                    { name: 'Guild Description', value: `${target_data.guild_description}`, inline: true },
                 )
                 .addFields(
-                    { name: 'guild_member_count', value: `${targetData.guild_member_count}`, inline: true },
-                    { name: 'guild_owner_id', value: `${targetData.guild_owner_id}`, inline: true },
-                    { name: 'guild_owner_name', value: `${targetData.guild_owner_name}`, inline: true },
+                    { name: 'guild_member_count', value: `${target_data.guild_member_count}`, inline: true },
+                    { name: 'guild_owner_id', value: `${target_data.guild_owner_id}`, inline: true },
+                    { name: 'guild_owner_name', value: `${target_data.guild_owner_name}`, inline: true },
                 )
                 .addFields(
-                    { name: 'guild_banned', value: `${targetData.guild_banned}`, inline: true },
-                    { name: 'guild_large', value: `${targetData.guild_large}`, inline: true },
-                    { name: 'guild_nsfw', value: `${targetData.guild_nsfw}`, inline: true },
+                    { name: 'guild_banned', value: `${target_data.guild_banned}`, inline: true },
+                    { name: 'guild_large', value: `${target_data.guild_large}`, inline: true },
+                    { name: 'guild_nsfw', value: `${target_data.guild_nsfw}`, inline: true },
                 )
                 .addFields(
-                    { name: 'guild_partner', value: `${targetData.guild_partner}`, inline: true },
-                    { name: 'guild_preferredLocale', value: `${targetData.guild_preferredLocale}`, inline: true },
-                    { name: 'guild_region', value: `${targetData.guild_region}`, inline: true },
+                    { name: 'guild_partner', value: `${target_data.guild_partner}`, inline: true },
+                    { name: 'guild_preferredLocale', value: `${target_data.guild_preferredLocale}`, inline: true },
+                    { name: 'guild_region', value: `${target_data.guild_region}`, inline: true },
                 );
 
             if (command == 'info') {
                 interaction.reply({ embeds: [target_embed], ephemeral: true });
-                logger.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${targetData.guild_name}`);
+                logger.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${target_data.guild_name}`);
                 logger.debug(`[${PREFIX}] finished!`);
                 return;
             }

@@ -25,13 +25,11 @@ module.exports = {
     async execute(client) {
         // This takes a while so do it first
         // Setup the express server, this is necessary for the DO health check
-        function setupExpress() {
-
+        if (process.env.NODE_ENV == 'production') {
             const app = express();
             app.get('/', (req, res) => {res.status(200).send('Ok');});
             app.listen(PORT, () => {logger.debug(`[${PREFIX}] Healthcheck app listening on port ${PORT}`);});
         }
-        setupExpress();
 
         /* Start *INVITE* code */
         // "ready" isn't really ready. We need to wait a spell.
@@ -133,6 +131,7 @@ module.exports = {
         logger.debug(`[${PREFIX}] blacklist_users: ${global.blacklist_users}`);
 
         async function checkReminders() {
+            logger.debug(`[${PREFIX}] Checking reminders...`);
             global.user_db.forEach(async (doc) => {
                 if (doc.reminders) {
                     const all_reminders = doc.reminders;

@@ -14,21 +14,32 @@ module.exports = {
                 .addChoice('3', '3')
                 .addChoice('4', '4'),
         ),
-    async execute(interaction) {
-        const choice = interaction.options.getString('exercise');
-
+    async execute(interaction, parameters) {
+        let choice = interaction.options.getString('exercise');
+        if (!choice) {
+            choice = parameters;
+        }
+        let url = '';
         if (choice == '1' || !choice) {
-            interaction.reply('https://i.imgur.com/n5jBp45.gif');
+            url = 'https://i.imgur.com/n5jBp45.gif';
         }
         if (choice == '2') {
-            interaction.reply('https://i.imgur.com/XbH6gP4.gif');
+            url = 'https://i.imgur.com/XbH6gP4.gif';
         }
         if (choice == '3') {
-            interaction.reply('https://i.imgur.com/g57i96f.gif');
+            url = 'https://i.imgur.com/g57i96f.gif';
         }
         if (choice == '4') {
-            interaction.reply('https://i.imgur.com/MkUcTPl.gif');
+            url = 'https://i.imgur.com/MkUcTPl.gif';
         }
+
+        if (interaction.replied) {
+            interaction.followUp(url);
+        }
+        else {
+            interaction.reply(url);
+        }
+
         logger.debug(`[${PREFIX}] finished!`);
         return;
     },

@@ -26,9 +26,15 @@ module.exports = {
                 .setRequired(true)
                 .setAutocomplete(true),
         ),
-    async execute(interaction) {
-        const drug_a = interaction.options.getString('first_drug');
-        const drug_b = interaction.options.getString('second_drug');
+    async execute(interaction, parameters) {
+        let drug_a = interaction.options.getString('first_drug');
+        if (!drug_a) {
+            drug_a = parameters[0];
+        }
+        let drug_b = interaction.options.getString('second_drug');
+        if (!drug_b) {
+            drug_b = parameters[1];
+        }
         logger.debug(`[${PREFIX}] drug_a: ${drug_a} | drug_b: ${drug_b}`);
 
         for (let i = 0; i < Object.keys(drug_data_all).length; i++) {
@@ -73,7 +79,8 @@ module.exports = {
                         embed.setTitle(`${drug_a} and ${drug_b} have no known interactions!`);
                         embed.setDescription('This does not mean combining them is safe!\nThis means we don\'t have information on it!');
                     }
-                    interaction.reply({ embeds: [embed] });
+                    if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
+                    else {interaction.followUp({ embeds: [embed], ephemeral: false });}
                     logger.debug(`[${PREFIX}] finished!`);
                     return;
                 }

@@ -2,11 +2,12 @@ const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
-const db = global.db;
 const template = require('../utils/embed_template');
+const { get_user_info } = require('../utils/get_user_info');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const users_db_name = process.env.users_db_name;
 const channel_moderators_id = process.env.channel_moderators;
+const db = global.db;
 
 const mod_buttons = new MessageActionRow()
     .addComponents(
@@ -57,54 +58,28 @@ module.exports = {
         const reason = interaction.options.getString('reason');
         const command = 'report';
 
-
-        let actorData = {};
-        let actorFBID = '';
-        let targetData = {};
-        let targetFBID = '';
-        const snapshot = global.user_db;
-        snapshot.forEach((doc) => {
-            if (doc.value.discord_id === actor.id) {
-                logger.debug(`[${PREFIX}] Found a actor match!`);
-                // console.log(doc.id, '=>', doc.value);
-                actorFBID = doc.key;
-                logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
-                actorData = doc.value;
-            }
-            if (doc.value.discord_id === target.id) {
-                logger.debug(`[${PREFIX}] Found a target match!`);
-                // console.log(doc.id, '=>', doc.value);
-                targetFBID = doc.key;
-                logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
-                targetData = doc.value;
-            }
-        });
+        const actor_results = get_user_info(actor);
+        const actor_data = actor_results[0];
+        const actor_fbid = actor_results[1];
         const actor_action = `${command}_sent`;
-        if (Object.keys(actorData).length === 0) {
-            logger.debug(`[${PREFIX}] No actor data found, creating a blank one`);
-            actorData = {
-                discord_username: actor.user.username,
-                discord_discriminator: actor.user.discriminator,
-                discord_id: actor.user.id,
-                isBanned: false,
-                mod_actions: { [actor_action]: 1 },
-            };
+
+        const target_results = get_user_info(target);
+        const target_data = target_results[0];
+        const target_fbid = target_results[1];
+        const target_action = `${command}_received`;
+
+        logger.debug(`[${PREFIX}] Found actor data, updating it`);
+        if ('mod_actions' in actor_data) {
+            actor_data.mod_actions[actor_action] = (actor_data.mod_actions[actor_action] || 0) + 1;
         }
         else {
-            logger.debug(`[${PREFIX}] Found actor data, updating it`);
-            if ('mod_actions' in actorData) {
-                actorData.mod_actions[actor_action] = (actorData.mod_actions[actor_action] || 0) + 1;
-            }
-            else {
-                actorData.mod_actions = { [actor_action]: 1 };
-            }
+            actor_data.mod_actions = { [actor_action]: 1 };
         }
-        logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
 
-        if (actorFBID !== '') {
+        if (actor_fbid !== '') {
             logger.debug(`[${PREFIX}] Updating actor data`);
             try {
-                await db.collection(users_db_name).doc(actorFBID).set(actorData);
+                await db.collection(users_db_name).doc(actor_fbid).set(actor_data);
             }
             catch (err) {
                 logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
@@ -113,39 +88,25 @@ module.exports = {
         else {
             logger.debug(`[${PREFIX}] Creating actor data`);
             try {
-                await db.collection(users_db_name).set(actorData);
+                await db.collection(users_db_name).set(actor_data);
             }
             catch (err) {
                 logger.error(`[${PREFIX}] Error creating actor data: ${err}`);
             }
         }
 
-        const target_action = `${command}_received`;
-        if (Object.keys(targetData).length === 0) {
-            logger.debug(`[${PREFIX}] No target data found, creating a blank one`);
-            targetData = {
-                discord_username: target.user.username,
-                discord_discriminator: target.user.discriminator,
-                discord_id: target.user.id,
-                isBanned: false,
-                mod_actions: { [target_action]: 1 },
-            };
+        logger.debug(`[${PREFIX}] Found target data, updating it`);
+        if ('mod_actions' in target_data) {
+            target_data.mod_actions[target_action] = (target_data.mod_actions[target_action] || 0) + 1;
         }
         else {
-            logger.debug(`[${PREFIX}] Found target data, updating it`);
-            if ('mod_actions' in targetData) {
-                targetData.mod_actions[target_action] = (targetData.mod_actions[target_action] || 0) + 1;
-            }
-            else {
-                targetData.mod_actions = { [target_action]: 1 };
-            }
+            target_data.mod_actions = { [target_action]: 1 };
         }
-        logger.debug(`[${PREFIX}] targetFBID: ${targetFBID}`);
 
-        if (targetFBID !== '') {
+        if (target_fbid !== '') {
             logger.debug(`[${PREFIX}] Updating target data`);
             try {
-                await db.collection(users_db_name).doc(targetFBID).set(targetData);
+                await db.collection(users_db_name).doc(target_fbid).set(target_data);
             }
             catch (err) {
                 logger.error(`[${PREFIX}] Error updating target data: ${err}`);
@@ -154,7 +115,7 @@ module.exports = {
         else {
             logger.debug(`[${PREFIX}] Creating target data`);
             try {
-                await db.collection(users_db_name).doc().set(targetData);
+                await db.collection(users_db_name).doc().set(target_data);
             }
             catch (err) {
                 logger.error(`[${PREFIX}] Error creating target data: ${err}`);
@@ -184,13 +145,13 @@ module.exports = {
                 { name: 'Kickable', value: `${target.kickable}`, inline: true },
             )
             .addFields(
-                { name: '# of Reports', value: `${targetData['reports_recv']}`, inline: true },
-                { name: '# of Timeouts', value: `${targetData['timeouts']}`, inline: true },
-                { name: '# of Warns', value: `${targetData['warns']}`, inline: true },
+                { name: '# of Reports', value: `${target_data['reports_recv']}`, inline: true },
+                { name: '# of Timeouts', value: `${target_data['timeouts']}`, inline: true },
+                { name: '# of Warns', value: `${target_data['warns']}`, inline: true },
             )
             .addFields(
-                { name: '# of Kicks', value: `${targetData['warns']}`, inline: true },
-                { name: '# of Bans', value: `${targetData['bans']}`, inline: true },
+                { name: '# of Kicks', value: `${target_data['warns']}`, inline: true },
+                { name: '# of Bans', value: `${target_data['bans']}`, inline: true },
                 { name: '# of Fucks to give', value: '0', inline: true },
             );
 
