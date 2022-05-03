@@ -4,10 +4,13 @@ const logger = require('../utils/logger.js');
 const Fuse = require('fuse.js');
 const _ = require('underscore');
 const template = require('../utils/embed_template');
+const db = global.db;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ownerId = process.env.ownerId;
 const guildId = process.env.guildId;
 const channel_moderators_id = process.env.channel_moderators;
+const guild_db_name = process.env.guild_db_name;
+const users_db_name = process.env.users_db_name;
 
 const drug_data_all = JSON.parse(fs.readFileSync('./src/assets/drug_db_combined.json'));
 const drugNames = drug_data_all.map(d => d.name);
@@ -86,16 +89,9 @@ module.exports = {
         // check if the user is a bot and if so, ignore it
         if (user_is_bot) {return logger.debug(`[${PREFIX}] Ignoring bot interaction`);}
 
-        const blacklist_users = [];
-        global.guild_db.forEach((doc) => {
-            if (doc.value.isBanned == true) {
-                blacklist_users.push(doc.value.guild_id);
-            }
-        });
-
         // check if the interaction is a request for autocomplete
         if (interaction.isAutocomplete()) {
-            logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
+            // logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
             if (interaction.commandName == 'pill_id') {
                 const focusedOption = interaction.options.getFocused(true).name;
                 const options = {
@@ -166,17 +162,17 @@ module.exports = {
                 const focusedValue = interaction.options.getFocused();
                 // logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
                 const results = fuse.search(focusedValue);
-                logger.debug(`[${PREFIX}] Autocomplete results: ${JSON.stringify(results, null, 2)}`);
+                // logger.debug(`[${PREFIX}] Autocomplete results: ${JSON.stringify(results, null, 2)}`);
                 if (results.length > 0) {
                     const top_25 = results.slice(0, 25);
                     const list_results = top_25.map(choice => ({ name: choice.item.label, value: choice.item.label }));
-                    logger.debug(`[${PREFIX}] list_results: ${JSON.stringify(list_results, null, 2)}`);
+                    // logger.debug(`[${PREFIX}] list_results: ${JSON.stringify(list_results, null, 2)}`);
                     interaction.respond(list_results);
                 }
                 else {
                     const default_timezones = timezone_names.slice(0, 25);
                     const list_results = default_timezones.map(choice => ({ name: choice, value: choice }));
-                    logger.debug(`[${PREFIX}] list_results: ${JSON.stringify(list_results, null, 2)}`);
+                    // logger.debug(`[${PREFIX}] list_results: ${JSON.stringify(list_results, null, 2)}`);
                     interaction.respond(list_results);
                 }
             }
@@ -291,7 +287,13 @@ module.exports = {
 
         // Failsafe to make sure only commands get past this point
         if (!interaction.isCommand()) return;
-
+        const blacklist_users = [];
+        const users = await db.collection(users_db_name).get();
+        users.forEach((doc) => {
+            if (doc.data().isBanned == true) {
+                blacklist_users.push(doc.value.guild_id);
+            }
+        });
         // Check if the user is in blacklist_users and if so, ignore it
         // logger.debug(`[${PREFIX}] blacklist_users: ${blacklist_users}`);
         if (blacklist_users.includes(interaction.user.id)) {

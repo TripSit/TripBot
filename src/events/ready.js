@@ -69,7 +69,7 @@ module.exports = {
             logger.debug(`[${PREFIX}] Guild database backedup.`);
         }
         logger.debug(`[${PREFIX}] Guild database loaded.`);
-        // logger.debug(`[${PREFIX}] guild_db: ${JSON.stringify(global.guild_db, null, 4)}`);
+        logger.debug(`[${PREFIX}] guild_db: ${JSON.stringify(global.guild_db, null, 4)}`);
 
 
         try {
@@ -94,7 +94,7 @@ module.exports = {
             logger.debug(`[${PREFIX}] User database backedup.`);
         }
         logger.debug(`[${PREFIX}] User database loaded.`);
-        // logger.debug(`[${PREFIX}] user_db: ${JSON.stringify(global.user_db, null, 4)}`);
+        logger.debug(`[${PREFIX}] user_db: ${JSON.stringify(global.user_db, null, 4)}`);
 
         // Print each guild I am in
         logger.debug(`[${PREFIX}] I am in:`);
@@ -103,32 +103,34 @@ module.exports = {
         });
 
         // Set the global banned guilds
-        global.blacklist_guilds = [];
-        global.guild_db.forEach((doc) => {
+        const snapshot_guild = await db.collection(users_db_name).get();
+        const blacklist_guilds = [];
+        snapshot_guild.forEach((doc) => {
             // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc}`);
-            if (doc.isBanned == true) {
-                global.blacklist_guilds.push(doc.guild_id);
+            if (doc.data().isBanned == true) {
+                blacklist_guilds.push(doc.data().guild_id);
             }
         });
-        logger.debug(`[${PREFIX}] blacklist_guilds: ${global.blacklist_guilds}`);
+        logger.debug(`[${PREFIX}] blacklist_guilds: ${blacklist_guilds}`);
 
         // Check if the guild is in blacklist_guilds and if so, leave it
+
         client.guilds.cache.forEach(guild => {
-            if (global.blacklist_guilds.includes(guild.id)) {
+            if (blacklist_guilds.includes(guild.id)) {
                 logger.info(`[${PREFIX}] Leaving ${guild.name}`);
                 guild.leave();
             }
         });
 
         // Set the global banned users
-        global.blacklist_users = [];
-        global.user_db.forEach((doc) => {
-            // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc}`);
-            if (doc.isBanned == true) {
-                global.blacklist_users.push(doc.discord_id);
-            }
-        });
-        logger.debug(`[${PREFIX}] blacklist_users: ${global.blacklist_users}`);
+        // global.blacklist_users = [];
+        // global.user_db.forEach((doc) => {
+        //     // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc}`);
+        //     if (doc.isBanned == true) {
+        //         global.blacklist_users.push(doc.discord_id);
+        //     }
+        // });
+        // logger.debug(`[${PREFIX}] blacklist_users: ${global.blacklist_users}`);
 
         async function checkReminders() {
             logger.debug(`[${PREFIX}] Checking reminders...`);
