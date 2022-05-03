@@ -1,4 +1,7 @@
+// TODO: Migrate to env.js (that will use dotenv)
 if (process.env.NODE_ENV !== 'production') require('dotenv').config();
+// TODO: Look into not including this in the main process
+require('../deploy-commands');
 const { Client, Collection, Intents } = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('./utils/logger.js');
@@ -8,18 +11,27 @@ const registerCommands = require('./commands');
 const registerEvents = require('./events');
 const serviceAccount = require('./assets/firebase_creds.json');
 const irc_config = require('./assets/irc_config.json');
+const {
+    DISCORD_TOKEN,
+    IRC_SERVER,
+    IRC_USERNAME,
+    IRC_PASSWORD,
+    FIREBASE_PRIVATE_KEY_ID,
+    FIREBASE_PRIVATE_KEY,
+    FIREBASE_CLIENT_ID,
+    FIREBASE_CLIENT_EMAIL,
+} = require('../env');
 
-serviceAccount.private_key_id = process.env.FIREBASE_PRIVATE_KEY_ID;
-serviceAccount.private_key = process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined;
-serviceAccount.client_email = process.env.FIREBASE_CLIENT_ID;
-serviceAccount.client_id = process.env.FIREBASE_CLIENT_EMAIL;
-const token = process.env.token;
+serviceAccount.private_key_id = FIREBASE_PRIVATE_KEY_ID;
+serviceAccount.private_key = FIREBASE_PRIVATE_KEY ? FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined;
+serviceAccount.client_email = FIREBASE_CLIENT_ID;
+serviceAccount.client_id = FIREBASE_CLIENT_EMAIL;
 
 // IRC Connection, this takes a while so do it first
-irc_config[0].discordToken = process.env.token;
-irc_config[0].server = process.env.IRC_SERVER;
-irc_config[0].ircOptions.username = process.env.IRC_USERNAME;
-irc_config[0].ircOptions.password = process.env.IRC_PASSWORD;
+irc_config[0].discordToken = DISCORD_TOKEN;
+irc_config[0].server = IRC_SERVER;
+irc_config[0].ircOptions.username = IRC_USERNAME;
+irc_config[0].ircOptions.password = IRC_PASSWORD;
 irc_config[0].webhooks['960606558549594162'] = process.env['960606558549594162'];
 // discordIRC(irc_config);
 
@@ -54,5 +66,5 @@ const client = new Client({
 client.invites = new Collection();
 
 Promise.all([registerCommands(client), registerEvents(client)])
-    .then(() => client.login(token))
+    .then(() => client.login(DISCORD_TOKEN))
     .then(() => logger.info(`[${PREFIX}] Discord bot successfully started...`));
