@@ -3,6 +3,7 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 const template = require('../utils/embed_template');
 const db = global.db;
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const users_db_name = process.env.users_db_name;
 
 module.exports = {

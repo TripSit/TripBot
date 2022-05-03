@@ -1,12 +1,12 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../utils/logger.js');
+const PREFIX = require('path').parse(__filename).name;
+const template = require('../utils/embed_template');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const channel_tripsitters = process.env.channel_tripsitters;
 const role_needshelp = process.env.role_needshelp;
 const role_tripsitter = process.env.role_tripsitter;
 const role_helper = process.env.role_helper;
-const PREFIX = require('path').parse(__filename).name;
-const template = require('../utils/embed_template');
 
 module.exports = {
     data: new SlashCommandBuilder()

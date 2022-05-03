@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const db = global.db;
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const users_db_name = process.env.users_db_name;
 
 module.exports = {

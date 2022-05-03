@@ -1,7 +1,9 @@
 const PREFIX = require('path').parse(__filename).name;
 const db = global.db;
 const logger = require('../utils/logger.js');
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const guild_db_name = process.env.guild_db_name;
+
 module.exports = {
     name: 'guildCreate',
     async execute(guild) {

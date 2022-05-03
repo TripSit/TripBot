@@ -4,6 +4,7 @@ const logger = require('../utils/logger.js');
 const db = global.db;
 const PREFIX = require('path').parse(__filename).name;
 const template = require('../utils/embed_template');
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const channel_moderators_id = process.env.channel_moderators;
 const users_db_name = process.env.users_db_name;
 
