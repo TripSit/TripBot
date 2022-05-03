@@ -69,7 +69,7 @@ module.exports = {
             logger.debug(`[${PREFIX}] Guild database backedup.`);
         }
         logger.debug(`[${PREFIX}] Guild database loaded.`);
-        logger.debug(`[${PREFIX}] guild_db: ${JSON.stringify(global.guild_db, null, 4)}`);
+        // logger.debug(`[${PREFIX}] guild_db: ${JSON.stringify(global.guild_db, null, 4)}`);
 
 
         try {
@@ -94,7 +94,7 @@ module.exports = {
             logger.debug(`[${PREFIX}] User database backedup.`);
         }
         logger.debug(`[${PREFIX}] User database loaded.`);
-        logger.debug(`[${PREFIX}] user_db: ${JSON.stringify(global.user_db, null, 4)}`);
+        // logger.debug(`[${PREFIX}] user_db: ${JSON.stringify(global.user_db, null, 4)}`);
 
         // Print each guild I am in
         logger.debug(`[${PREFIX}] I am in:`);
