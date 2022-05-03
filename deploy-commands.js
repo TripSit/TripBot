@@ -2,11 +2,11 @@
 
 'use strict';
 
-require('dotenv').config();
 const path = require('path');
 const fs = require('fs/promises');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
+const { DISCORD_CLIENT_ID, DISCORD_TOKEN, TRIPSIT_GUILD_ID } = require('./env');
 
 async function getCommands(commandType) {
     const files = await fs.readdir(path.resolve('src/commands'));
@@ -16,15 +16,15 @@ async function getCommands(commandType) {
         .map(command => command.data.toJSON());
 }
 
-const rest = new REST({ version: '9' }).setToken(process.env.token);
+const rest = new REST({ version: '9' }).setToken(DISCORD_TOKEN);
 
 Promise.all([
     getCommands('global').then(commands => rest.put(
-        Routes.applicationCommands(process.env.clientid),
+        Routes.applicationCommands(DISCORD_CLIENT_ID),
         { body: commands },
     )),
     getCommands('guild').then(commands => rest.put(
-        Routes.applicationGuildCommands(process.env.clientid, process.env.guildId),
+        Routes.applicationGuildCommands(DISCORD_CLIENT_ID, TRIPSIT_GUILD_ID),
         { body: commands },
     )),
 ])

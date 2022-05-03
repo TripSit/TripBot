@@ -29,8 +29,10 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('karma')
         .setDescription('Keep it positive please!')
-        .addUserOption(option => option.setName('user').setDescription('User to lookup!'),
-        ),
+        .addUserOption(option => option
+            .setName('user')
+            .setDescription('User to lookup!')),
+
     async execute(interaction) {
         let patient = interaction.options.getMember('user');
         if (!patient) {patient = interaction.member;}
