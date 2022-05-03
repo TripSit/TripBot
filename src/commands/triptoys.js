@@ -39,7 +39,7 @@ module.exports = {
     async execute(interaction) {
         let toy_name = interaction.options.getString('toy');
         if (!toy_name) {
-            toy_name = '24';
+            toy_name = '25';
         }
         const toy_id = parseInt(toy_name);
         logger.debug(`[${PREFIX}] toy_name: ${toy_name}`);
@@ -112,7 +112,8 @@ module.exports = {
                 { name: 'Balls demo', value: '[Colorful balls that follow your mouse (Enable fullscreen for best effect)](https://testdrive-archive.azurewebsites.net/Graphics/TouchEffects/Default.html)', inline: true },
             );
         }
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
+        else {interaction.followUp({ embeds: [embed], ephemeral: false });}
         logger.debug(`[${PREFIX}] finished!`);
         return;
     },

@@ -16,7 +16,8 @@ module.exports = {
         logger.debug(`[${PREFIX}] random_topic: ${random_topic}`);
         const embed = template.embed_template()
             .setDescription(random_topic);
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
+        else {interaction.followUp({ embeds: [embed], ephemeral: false });}
         logger.debug(`[${PREFIX}] finished!`);
         return;
     },

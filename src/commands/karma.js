@@ -5,6 +5,7 @@ const paginationEmbed = require('discordjs-button-pagination');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 const template = require('../utils/embed_template');
+const { get_user_info } = require('../utils/get_user_info');
 
 const raw_topics = fs.readFileSync('./src/assets/karma_quotes.json');
 const karma_quotes = JSON.parse(raw_topics);
@@ -18,6 +19,7 @@ const forwardButton = new MessageButton()
     .setCustomId('nextbtn')
     .setLabel('Next')
     .setStyle('SUCCESS');
+
 const buttonList = [
     backButton,
     forwardButton,
@@ -31,39 +33,8 @@ module.exports = {
         ),
     async execute(interaction) {
         let patient = interaction.options.getMember('user');
-        // let user_provided = true;
-        // Default to the user who invoked the command if no user is provided
-        if (!patient) {
-            logger.debug(`[${PREFIX}] No user provided, defaulting to ${interaction.member}`);
-            patient = interaction.member;
-            // user_provided = false;
-        }
-
-        const patientid = patient.id.toString();
-        // logger.debug(`[${PREFIX}] patientid: ${patientid}`);
-
-        const snapshot = global.user_db;
-
-        let patientData = null;
-        snapshot.forEach((doc) => {
-            // logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 2)}`);
-            // logger.debug(`[${PREFIX}] doc.value.discord_id: ${doc.value.discord_id}`);
-            if (doc.value.discord_id === patientid) {
-                patientData = doc.value;
-                // logger.debug(`[${PREFIX}] patientData: ${JSON.stringify(patientData, null, 4)}`);
-            }
-        });
-
-        // Check if the patient data exists, if not create a blank one
-        if (!patientData) {
-            logger.debug(`[${PREFIX}] No target data found, creating a blank one`);
-            patientData = {
-                'name': patient.user.username,
-                'discriminator': patient.user.discriminator,
-                'karma_given': {},
-                'karma_received': {},
-            };
-        }
+        if (!patient) {patient = interaction.member;}
+        const patientData = get_user_info(patient)[0];
 
         const karma_received = patientData['karma_recieved'];
         let karma_received_string = '';
@@ -96,17 +67,8 @@ module.exports = {
             .setDescription(`${karma_given_string}\n\n${random_quoteB}`);
         book.push(karma_given_embed);
 
-        if (book.length > 0) {
-            paginationEmbed(interaction, book, buttonList);
-            logger.debug(`[${PREFIX}] finished!`);
-            return;
-        }
-        else {
-            const embed = template.embed_template()
-                .setDescription('Done!');
-            interaction.reply({ embeds: [embed], ephemeral: false });
-            logger.debug(`[${PREFIX}] finished!`);
-            return;
-        }
+        paginationEmbed(interaction, book, buttonList);
+        logger.debug(`[${PREFIX}] finished!`);
+        return;
     },
 };

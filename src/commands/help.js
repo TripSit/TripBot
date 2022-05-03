@@ -96,8 +96,11 @@ module.exports = {
             utility_embed,
             tripsit_embed,
         ];
+        // interaction.reply({ embeds: [paginationEmbed(interaction, book, buttonList)], ephemeral: false });
+        // interaction.reply(paginationEmbed(interaction, book, buttonList))
+        // if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
+        // else {interaction.followUp({ embeds: [embed], ephemeral: false });}
         paginationEmbed(interaction, book, buttonList);
-        // interaction.reply({ embeds: [embed], ephemeral: false });
         logger.debug(`[${PREFIX}] finished!`);
         return;
     },

@@ -60,11 +60,13 @@ client.invites = new Collection();
 const guild_command_names = [
     'botmod',
     'button',
+    'clean_db',
     'invite',
     'issue',
     'karma',
     'mod',
     'report',
+    'test',
     'tripsit',
 ];
 

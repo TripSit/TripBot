@@ -21,7 +21,8 @@ module.exports = {
                 { name: 'Drug Information Issues Email', value: 'content @ tripsit (dot) me' },
             )
             .setFooter({ text: 'Thanks for asking!' });
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
+        else {interaction.followUp({ embeds: [embed], ephemeral: false });}
         logger.debug(`[${PREFIX}] finished!`);
         return;
     },

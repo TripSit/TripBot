@@ -6,7 +6,8 @@ module.exports = {
     data: new SlashCommandBuilder().setName('reagents').setDescription('Display reagent color chart!'),
     async execute(interaction) {
         const url = 'https://i.imgur.com/wETJsZr.png';
-        interaction.reply(url);
+        if (!interaction.replied) { interaction.reply(url);}
+        else {interaction.followUp(url);}
         logger.debug(`[${PREFIX}] finished!`);
         return;
     },

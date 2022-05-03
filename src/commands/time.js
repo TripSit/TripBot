@@ -2,11 +2,11 @@ const fs = require('node:fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
-const db = global.db;
 const timezones = JSON.parse(fs.readFileSync('./src/assets/timezones.json'));
 const template = require('../utils/embed_template');
-if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
+const { get_user_info } = require('../utils/get_user_info');
 const users_db_name = process.env.users_db_name;
+const db = global.db;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -31,9 +31,20 @@ module.exports = {
         ),
     async execute(interaction) {
         const timezone = interaction.options.getString('timezone');
-        const target = interaction.options.getMember('user');
+        let target = interaction.options.getMember('user');
+        if (!target) {
+            target = interaction.member;
+        }
+
         const actor = interaction.user;
-        const command = interaction.options.getSubcommand();
+
+        let command = '';
+        try {
+            command = interaction.options.getSubcommand();
+        }
+        catch (err) {
+            command = 'get';
+        }
 
         if (command == 'set') {
             logger.debug(`${PREFIX} time: ${timezone}`);
@@ -46,21 +57,13 @@ module.exports = {
                 }
             }
             // logger.debug(`[${PREFIX}] actor.id: ${actor.id}`);
-            let actorData = {};
-            let actorFBID = '';
-            const snapshot = global.user_db;
-            snapshot.forEach((doc) => {
-                if (doc.value.discord_id === actor.id) {
-                    // logger.debug(`[${PREFIX}] Found a actor match!`);
-                    // console.log(doc.id, '=>', doc.value);
-                    actorFBID = doc.key;
-                    logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
-                    actorData = doc.value;
-                }
-            });
 
-            if ('timezone' in actorData) {
-                if (actorData.timezone == tzCode) {
+            const actor_results = get_user_info(actor);
+            const actor_data = actor_results[0];
+            const actor_fbid = actor_results[1];
+
+            if ('timezone' in actor_data) {
+                if (actor_data.timezone == tzCode) {
                     const embed = template.embed_template()
                         .setDescription(`${timezone} already is your timezone, you don't need to update it!`);
                     interaction.reply({ embeds: [embed], ephemeral: true });
@@ -69,24 +72,12 @@ module.exports = {
                 }
             }
 
-            // Check if the actor data exists, if not create a blank one
-            if (Object.keys(actorData).length === 0) {
-                // logger.debug(`[${PREFIX}] No actor data found, creating a blank one`);
-                actorData = {
-                    discord_username: actor.username,
-                    discord_discriminator: actor.discriminator,
-                    discord_id: actor.id,
-                    isBanned: false,
-                    timezone: tzCode,
-                };
-            }
+            actor_data['timezone'] = tzCode;
 
-            actorData['timezone'] = tzCode;
-
-            if (actorFBID !== '') {
+            if (actor_fbid !== '') {
                 logger.debug(`[${PREFIX}] Updating actor data`);
                 try {
-                    await db.collection(users_db_name).doc(actorFBID).set(actorData);
+                    await db.collection(users_db_name).doc(actor_fbid).set(actor_data);
                 }
                 catch (err) {
                     logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
@@ -95,7 +86,7 @@ module.exports = {
             else {
                 logger.debug(`[${PREFIX}] Creating actor data`);
                 try {
-                    await db.collection(users_db_name).doc().set(actorData);
+                    await db.collection(users_db_name).doc().set(actor_data);
                 }
                 catch (err) {
                     logger.error(`[${PREFIX}] Error creating actor data: ${err}`);
@@ -109,14 +100,14 @@ module.exports = {
         }
         if (command == 'get') {
             let tzCode = '';
-            const snapshot = global.user_db;
-            snapshot.forEach((doc) => {
-                if (doc.value.discord_id === target.id) {
-                    tzCode = doc.value.timezone;
-                }
-            });
 
-            // Check if the target data exists, if not create a blank one
+            const target_results = get_user_info(target);
+            const target_data = target_results[0];
+
+            if ('timezone' in target_data) {
+                tzCode = target_data.timezone;
+            }
+
             if (!tzCode) {
                 const embed = template.embed_template()
                     .setDescription(`${target.user.username} is a timeless treasure <3 (and has not set a time zone)`);
@@ -129,7 +120,8 @@ module.exports = {
             const time_string = new Date().toLocaleTimeString('en-US', { timeZone: tzCode });
             const embed = template.embed_template()
                 .setDescription(`It is likely ${time_string} wherever ${target.user.username} is located.`);
-            interaction.reply({ embeds: [embed], ephemeral: false });
+            if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
+            else {interaction.followUp({ embeds: [embed], ephemeral: false });}
             logger.debug(`[${PREFIX}] finished!`);
             return;
         }

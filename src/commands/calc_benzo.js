@@ -27,10 +27,19 @@ module.exports = {
                 .setRequired(true)
                 .setAutocomplete(true),
         ),
-    async execute(interaction) {
-        const dosage = interaction.options.getInteger('i_have');
-        const drug_a = interaction.options.getString('mg_of');
-        const drug_b = interaction.options.getString('and_i_want_the_dose_of');
+    async execute(interaction, parameters) {
+        let dosage = interaction.options.getInteger('i_have');
+        if (!dosage) {
+            dosage = parameters[0];
+        }
+        let drug_a = interaction.options.getString('mg_of');
+        if (!drug_a) {
+            drug_a = parameters[1];
+        }
+        let drug_b = interaction.options.getString('and_i_want_the_dose_of');
+        if (!drug_b) {
+            drug_b = parameters[2];
+        }
         logger.debug(`[${PREFIX}] dosage: ${dosage} | drug_a: ${drug_a} | drug_b: ${drug_b}`);
 
         const drugCache = JSON.parse(fs.readFileSync('./src/assets/drug_db_tripsit.json'));
@@ -162,8 +171,12 @@ Note: It\'s a good idea to start with a lower dose than the calculator shows, si
                 { name: 'After Effects', value: `${drug_b_result.properties['after-effects']}`, inline: true },
                 { name: '\u200b', value: '\u200b', inline: true },
             );
-
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        if (!interaction.replied) {
+            interaction.reply({ embeds: [embed], ephemeral: false });
+        }
+        else {
+            interaction.followUp({ embeds: [embed], ephemeral: false });
+        }
         logger.debug(`[${PREFIX}] finished!`);
         return;
     },

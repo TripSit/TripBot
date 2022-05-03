@@ -56,7 +56,19 @@ module.exports = {
                     ',
                 },
             );
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        try {
+            logger.debug(`[${PREFIX}] replied: ${interaction.replied}`);
+            if (!interaction.replied) {
+                interaction.reply({ embeds: [embed], ephemeral: false });
+            }
+            else {
+                interaction.followUp({ embeds: [embed], ephemeral: false });
+            }
+        }
+        catch (err) {
+            logger.error(`[${PREFIX}] ${err}`);
+
+        }
         logger.debug(`[${PREFIX}] finished!`);
         return;
     },

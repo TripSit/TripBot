@@ -35,10 +35,19 @@ module.exports = {
                 .addChoice('sprays', 'sprays')
                 .addChoice('inhales', 'inhales'),
         ),
-    async execute(interaction) {
-        const substance = interaction.options.getString('substance');
-        const volume = interaction.options.getInteger('volume');
-        const units = interaction.options.getString('units');
+    async execute(interaction, parameters) {
+        let substance = interaction.options.getString('substance');
+        if (!substance) {
+            substance = parameters[0];
+        }
+        let volume = interaction.options.getInteger('volume');
+        if (!volume) {
+            volume = parameters[1];
+        }
+        let units = interaction.options.getString('units');
+        if (!units) {
+            units = parameters[2];
+        }
 
         const date = new Date();
 
@@ -53,7 +62,8 @@ module.exports = {
                     value: `${relative} at ${timeString}`,
                 },
             );
-        interaction.reply({ embeds: [embed], ephemeral: true });
+        if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: true });}
+        else {interaction.followUp({ embeds: [embed], ephemeral: false });}
         logger.debug(`[${PREFIX}] Finsihed!`);
         return;
     },

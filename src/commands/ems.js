@@ -15,7 +15,8 @@ module.exports = {
                 { name: 'Never Use Alone (USA)', value: 'Website: https://neverusealone.com/\nPhone: (800) 484-3731', inline: false },
                 { name: 'NORS (Canada)', value: 'Website: https://www.nors.ca/\nPhone: 1 (888) 688-6677', inline: false },
             );
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
+        else {interaction.followUp({ embeds: [embed], ephemeral: false });}
         logger.debug(`[${PREFIX}] finished!`);
         return;
     },

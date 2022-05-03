@@ -12,7 +12,7 @@ module.exports = {
         const embed = template.embed_template()
             .setTitle('PONG');
         logger.debug(`[${PREFIX}] finished!`);
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        interaction.followup({ embeds: [embed], ephemeral: false });
         return;
     },
 };

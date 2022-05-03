@@ -11,11 +11,14 @@ module.exports = {
         .setDescription('Report a bug to the bot owner')
         .addStringOption(option => option.setName('bug_report').setDescription('What do you want to tell the owner? Please be as detailed as possible!').setRequired(true)),
 
-    async execute(interaction) {
+    async execute(interaction, parameters) {
         const username = `${interaction.user.username}#${interaction.user.discriminator}`;
         const guild_message = `${interaction.guild.name ? ` in ${interaction.guild.name}` : 'DM'}`;
 
-        const bug_report = interaction.options.getString('bug_report');
+        let bug_report = interaction.options.getString('bug_report');
+        if (!bug_report) {
+            bug_report = parameters;
+        }
         logger.debug(`[${PREFIX}] bug_report: ${bug_report}`);
 
         const bot_owner = interaction.client.users.cache.get(process.env.ownerId);
@@ -31,7 +34,12 @@ module.exports = {
             .setColor('RANDOM')
             .setTitle('Thank you!')
             .setDescription('I\'ve submitted this feedback to the bot owner. \n\nYou\'re more than welcome to join the TripSit server and speak to Moonbear directly if you want! Check the /contact command for more info.');
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        if (!interaction.replied) {
+            interaction.reply({ embeds: [embed], ephemeral: false });
+        }
+        else {
+            interaction.followUp({ embeds: [embed], ephemeral: false });
+        }
         logger.debug(`[${PREFIX}] finished!`);
         return;
     },

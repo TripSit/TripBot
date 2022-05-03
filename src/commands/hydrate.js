@@ -16,7 +16,8 @@ module.exports = {
             .setDescription(output)
             .setAuthor(null)
             .setFooter(null);
-        interaction.reply({ embeds: [embed] });
+        if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
+        else {interaction.followUp({ embeds: [embed], ephemeral: false });}
         logger.debug(`[${PREFIX}] finished!`);
         return;
     },

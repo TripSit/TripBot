@@ -6,7 +6,8 @@ module.exports = {
     data: new SlashCommandBuilder().setName('recovery').setDescription('Information that may be helpful in a serious situation.'),
     async execute(interaction) {
         const url = 'https://i.imgur.com/nTEm0QE.png';
-        interaction.reply(url);
+        if (!interaction.replied) { interaction.reply(url);}
+        else {interaction.followUp(url);}
         logger.debug(`[${PREFIX}] finished!`);
         return;
     },

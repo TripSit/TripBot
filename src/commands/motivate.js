@@ -29,7 +29,8 @@ module.exports = {
             logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
             const embed = template.embed_template()
                 .setDescription(`${data}`);
-            interaction.reply({ embeds: [embed], ephemeral: false });
+            if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
+            else {interaction.followUp({ embeds: [embed], ephemeral: false });}
             logger.debug(`[${PREFIX}] finished!`);
         }).catch(function(error) {
             console.error(error);
