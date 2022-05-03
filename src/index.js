@@ -7,7 +7,7 @@ const logger = require('./utils/logger.js');
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 const serviceAccount = require('./assets/firebase_creds.json');
-const discordIRC = require('discord-irc').default;
+// const discordIRC = require('discord-irc').default;
 const irc_config = require('./assets/irc_config.json');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 serviceAccount.private_key_id = process.env.FIREBASE_PRIVATE_KEY_ID;

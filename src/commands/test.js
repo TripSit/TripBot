@@ -21,17 +21,17 @@ module.exports = {
         interaction.editReply({ embeds: [embed], ephemeral: false });
         // await sleep(1000);
 
-        const guild_command_names = [
-            'botmod',
-            'button',
-            'invite',
-            'issue',
-            'karma',
-            'mod',
-            'report',
-            'tripsit',
-            'pill_id',
-        ];
+        // const guild_command_names = [
+        //     'botmod',
+        //     'button',
+        //     'invite',
+        //     'issue',
+        //     'karma',
+        //     'mod',
+        //     'report',
+        //     'tripsit',
+        //     'pill_id',
+        // ];
 
         // Set up global commands
         const globl_command_names = [
