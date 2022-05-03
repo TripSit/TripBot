@@ -1,9 +1,10 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const axios = require('axios');
 const logger = require('../utils/logger.js');
-const API_KEY = process.env.rapid_api_key;
 const PREFIX = require('path').parse(__filename).name;
 const template = require('../utils/embed_template');
+const axios = require('axios');
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
+const API_KEY = process.env.rapid_api_key;
 
 module.exports = {
     data: new SlashCommandBuilder()

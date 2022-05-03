@@ -1,11 +1,12 @@
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
+const template = require('../utils/embed_template');
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const guild_id = process.env.guildId;
 const ts_flame_url = process.env.ts_flame_url;
 const welcome_channel_id = process.env.channel_welcome;
 const channel_start_id = process.env.channel_start;
 const channel_botspam_id = process.env.channel_botspam;
-const template = require('../utils/embed_template');
 
 module.exports = {
     name: 'guildMemberAdd',

@@ -1,8 +1,9 @@
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
+const template = require('../utils/embed_template');
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const guild_id = process.env.guildId;
 const channel_modlog = process.env.channel_modlog;
-const template = require('../utils/embed_template');
 
 module.exports = {
     name: 'guildMemberRemove',

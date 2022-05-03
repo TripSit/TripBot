@@ -3,12 +3,13 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 const template = require('../utils/embed_template');
-const imgur_id = process.env.imgur_id;
-const imgur_secret = process.env.imgur_secret;
 const axios = require('axios');
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 const { ImgurClient } = require('imgur');
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
+const imgur_id = process.env.imgur_id;
+const imgur_secret = process.env.imgur_secret;
 
 const imgur_client = new ImgurClient({
     clientId: imgur_id,

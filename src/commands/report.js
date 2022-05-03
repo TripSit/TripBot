@@ -3,9 +3,10 @@ const { MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const db = global.db;
+const template = require('../utils/embed_template');
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const users_db_name = process.env.users_db_name;
 const channel_moderators_id = process.env.channel_moderators;
-const template = require('../utils/embed_template');
 
 const mod_buttons = new MessageActionRow()
     .addComponents(

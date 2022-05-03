@@ -4,9 +4,11 @@ const logger = require('../utils/logger.js');
 const Fuse = require('fuse.js');
 const _ = require('underscore');
 const template = require('../utils/embed_template');
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ownerId = process.env.ownerId;
 const guildId = process.env.guildId;
 const channel_moderators_id = process.env.channel_moderators;
+
 const drug_data_all = JSON.parse(fs.readFileSync('./src/assets/drug_db_combined.json'));
 const drugNames = drug_data_all.map(d => d.name);
 const drug_data_tripsit = JSON.parse(fs.readFileSync('./src/assets/drug_db_tripsit.json'));

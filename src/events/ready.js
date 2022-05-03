@@ -2,13 +2,14 @@ const fs = require('node:fs');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 const { Collection } = require('discord.js');
-const db = global.db;
 const express = require('express');
+const template = require('../utils/embed_template');
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
+const db = global.db;
 const PORT = process.env.PORT;
 const guild_id = process.env.guildId;
 const guild_db_name = process.env.guild_db_name;
 const users_db_name = process.env.users_db_name;
-const template = require('../utils/embed_template');
 
 // (*INVITE*) https://github.com/AnIdiotsGuide/discordjs-bot-guide/blob/master/coding-guides/tracking-used-invites.md
 /* Start *INVITE* code */

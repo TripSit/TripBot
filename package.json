@@ -1,6 +1,6 @@
 {
   "name": "tripsit-discord",
-  "version": "1.2.14",
+  "version": "1.2.16",
   "description": "A bot for TripSit",
   "main": "index.js",
   "scripts": {
@@ -35,6 +35,7 @@
     "axios": "^0.27.1",
     "chalk": "4.1.2",
     "discord-api-types": "^0.31.1",
+    "discord-irc": "^2.9.0",
     "discord.js": "^13.6.0",
     "discordjs-button-pagination": "^3.0.1",
     "dotenv": "^16.0.0",

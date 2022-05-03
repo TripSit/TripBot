@@ -7,6 +7,8 @@ const logger = require('./utils/logger.js');
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 const serviceAccount = require('./assets/firebase_creds.json');
+const discordIRC = require('discord-irc').default;
+const irc_config = require('./assets/irc_config.json');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 serviceAccount.private_key_id = process.env.FIREBASE_PRIVATE_KEY_ID;
 serviceAccount.private_key = process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined;
@@ -15,6 +17,14 @@ serviceAccount.client_id = process.env.FIREBASE_CLIENT_EMAIL;
 const token = process.env.token;
 const clientId = process.env.clientid;
 const guildId = process.env.guildId;
+
+// IRC Connection, this takes a while so do it first
+irc_config[0].discordToken = process.env.token;
+irc_config[0].server = process.env.IRC_SERVER;
+irc_config[0].ircOptions.username = process.env.IRC_USERNAME;
+irc_config[0].ircOptions.password = process.env.IRC_PASSWORD;
+irc_config[0].webhooks['960606558549594162'] = process.env['960606558549594162'];
+// discordIRC(irc_config);
 
 // Initialize firebase app
 if (serviceAccount.private_key_id) {
