@@ -1,23 +1,34 @@
-const fs = require('fs');
+'use strict';
+
+const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
-const PREFIX = require('path').parse(__filename).name;
 const template = require('../../utils/embed-template');
+const topics = require('../../assets/topics.json');
 
-const raw_topics = fs.readFileSync('./src/assets/topics.json');
-const topics = JSON.parse(raw_topics);
+const PREFIX = path.parse(__filename).name;
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('topic')
     .setDescription('Sends a random topic!'),
+
   async execute(interaction) {
     // Pick a random topic from topics.json
-    const random_topic = topics[Math.floor(Math.random() * Object.keys(topics).length).toString()];
-    logger.debug(`[${PREFIX}] random_topic: ${random_topic}`);
-    const embed = template.embedTemplate()
-      .setDescription(random_topic);
-    if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false }); } else { interaction.followUp({ embeds: [embed], ephemeral: false }); }
+    const randomTopic = topics[Math.floor(Math.random() * Object.keys(topics).length).toString()];
+    logger.debug(`[${PREFIX}] random_topic: ${randomTopic}`);
+    const embed = template.embedTemplate().setDescription(randomTopic);
+    if (!interaction.replied) {
+      interaction.reply({
+        embeds: [embed],
+        ephemeral: false,
+      });
+    } else {
+      interaction.followUp({
+        embeds: [embed],
+        ephemeral: false,
+      });
+    }
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
