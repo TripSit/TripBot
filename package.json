@@ -1,5 +1,6 @@
 {
-  "name": "tripsit-discord",
+  "name": "@tripsit/discord-bot",
+  "private": true,
   "version": "1.2.16",
   "description": "A bot for TripSit",
   "main": "index.js",
@@ -7,9 +8,10 @@
     "start": "node ./src/index.js",
     "dev": "npm version patch -git-tag-version false && nodemon --ignore src/assets/ --ignore src/backups/ --inspect ./src/index.js",
     "debug": "nodemon --ignore src/assets/ --ignore src/backups/ --inspect ./src/index.js",
-    "lint": "eslint --ext .js,.jsx,.ts,.tsx ./",
-    "fix": "eslint --fix --ext .js,.jsx,.ts,.tsx ./",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "register-commands": "./deploy-commands.js",
+    "lint": "eslint .",
+    "fix": "eslint --fix .",
+    "test": "npm run lint",
     "minor": "npm version minor -git-tag-version false",
     "push": "npm version minor -git-tag-version false && git add . && git commit && git push"
   },
@@ -56,6 +58,7 @@
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-prettier": "^3.3.0",
+    "nodemon": "^2.0.16",
     "prettier": "^2.2.1"
   },
   "engines": {
