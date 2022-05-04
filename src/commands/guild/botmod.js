@@ -10,7 +10,7 @@ const template = require('../../utils/embed-template');
 
 const { guild_db_name } = process.env;
 // const users_db_name = process.env.users_db_name;
-const { get_guild_info } = require('../../utils/get_user_info');
+const { get_guild_info } = require('../../utils/get-user-info');
 
 const warn_buttons = new MessageActionRow()
   .addComponents(

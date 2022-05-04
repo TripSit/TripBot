@@ -5,7 +5,7 @@ const PREFIX = require('path').parse(__filename).name;
 
 const timezones = JSON.parse(fs.readFileSync('./src/assets/timezones.json'));
 const template = require('../../utils/embed-template');
-const { get_user_info } = require('../../utils/get_user_info');
+const { get_user_info } = require('../../utils/get-user-info');
 
 const { users_db_name } = process.env;
 const { db } = global;

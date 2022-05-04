@@ -5,7 +5,7 @@ const paginationEmbed = require('discordjs-button-pagination');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
-const { get_user_info } = require('../../utils/get_user_info');
+const { get_user_info } = require('../../utils/get-user-info');
 
 const raw_topics = fs.readFileSync('./src/assets/karma_quotes.json');
 const karma_quotes = JSON.parse(raw_topics);

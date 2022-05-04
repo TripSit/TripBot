@@ -2,7 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
 const PREFIX = require('path').parse(__filename).name;
 const template = require('../../utils/embed-template');
-const { get_user_info } = require('../../utils/get_user_info');
+const { get_user_info } = require('../../utils/get-user-info');
 
 if (process.env.NODE_ENV !== 'production') { require('dotenv').config(); }
 const { users_db_name } = process.env;

@@ -2,7 +2,7 @@ const PREFIX = require('path').parse(__filename).name;
 
 const { db } = global;
 const logger = require('../utils/logger');
-const { get_guild_info } = require('../utils/get_user_info');
+const { get_guild_info } = require('../utils/get-user-info');
 
 if (process.env.NODE_ENV !== 'production') { require('dotenv').config(); }
 const { guild_db_name } = process.env;
