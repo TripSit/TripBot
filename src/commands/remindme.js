@@ -5,6 +5,8 @@ const template = require('../utils/embed_template');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const { get_user_info } = require('../utils/get_user_info');
 const { set_user_info } = require('../utils/set_user_info');
+const db = global.db;
+const users_db_name = process.env.users_db_name;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -54,6 +56,19 @@ module.exports = {
 
         // Load actor data
         await set_user_info(actor_results[1], actor_data);
+
+        // Update global reminder data
+        const user_db = [];
+        const snapshot_user = await db.collection(users_db_name).get();
+        snapshot_user.forEach((doc) => {
+            const key = doc.id;
+            const value = doc.data();
+            user_db.push({
+                key,
+                value,
+            });
+        });
+        global.user_db = user_db;
 
         const embed = template.embed_template()
             .setDescription(`In ${duration} ${units} I will remind you: ${reminder}`);
