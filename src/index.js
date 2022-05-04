@@ -4,8 +4,8 @@
 require('../deploy-commands');
 const { Client, Collection, Intents } = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
-const { initializeApp, cert } = require('firebase-admin/lib/app');
-const { getFirestore } = require('firebase-admin/lib/firestore');
+const { initializeApp, cert } = require('firebase-admin/app'); // eslint-disable-line
+const { getFirestore } = require('firebase-admin/firestore'); // eslint-disable-line
 const logger = require('./utils/logger');
 const registerCommands = require('./commands');
 const registerEvents = require('./events');

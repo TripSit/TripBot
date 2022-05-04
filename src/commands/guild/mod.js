@@ -9,7 +9,7 @@ const template = require('../../utils/embed-template');
 if (process.env.NODE_ENV !== 'production') { require('dotenv').config(); }
 const channel_moderators_id = process.env.channel_moderators;
 const { users_db_name } = process.env;
-const { get_user_info } = require('../../utils/get_user_info');
+const { get_user_info } = require('../../utils/get-user-info');
 
 // const mod_buttons = new MessageActionRow()
 //     .addComponents(

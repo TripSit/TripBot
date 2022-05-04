@@ -5,7 +5,7 @@ const PREFIX = require('path').parse(__filename).name;
 const { db } = global;
 if (process.env.NODE_ENV !== 'production') { require('dotenv').config(); }
 const { users_db_name } = process.env;
-const { get_user_info } = require('../../utils/get_user_info');
+const { get_user_info } = require('../../utils/get-user-info');
 
 module.exports = {
   data: new SlashCommandBuilder()
