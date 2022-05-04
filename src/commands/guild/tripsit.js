@@ -1,42 +1,52 @@
+'use strict';
+
+const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
-const PREFIX = require('path').parse(__filename).name;
 const template = require('../../utils/embed-template');
-const { get_user_info } = require('../../utils/get-user-info');
+const { getUserInfo } = require('../../utils/get-user-info');
 
-if (process.env.NODE_ENV !== 'production') { require('dotenv').config(); }
-const { users_db_name } = process.env;
-const { role_needshelp } = process.env;
+const PREFIX = path.parse(__filename).name;
+
+const {
+  users_db_name: usersDbMame,
+  role_needshelp: roleNeedsHelp,
+} = process.env;
 const { db } = global;
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('tripsit')
-    .setDescription('This command will apply the NeedsHelp role onto a user, and remove other roles!')
-    .addUserOption(option => option.setName('user')
+    .setDescription(
+      'This command will apply the NeedsHelp role onto a user, and remove other roles!',
+    )
+    .addUserOption(option => option
+      .setName('user')
       .setDescription('Member to help'))
-    .addStringOption(option => option.setName('enable')
+    .addStringOption(option => option
+      .setName('enable')
       .setDescription('On or Off?')
       .addChoice('On', 'On')
       .addChoice('Off', 'Off')),
+
   async execute(interaction) {
-    const needsHelpRole = interaction.guild.roles.cache.find(role => role.id === role_needshelp);
+    const needsHelpRole = interaction.guild.roles.cache.find(role => role.id === roleNeedsHelp);
     // Actor information
     const actor = interaction.member;
     const actorid = actor.id.toString();
-    logger.debug(`[${PREFIX}] actorid: ${actorid}`);
+    logger.debug(`[${PREFIX}] actorid:`, actorid);
     const actorRoles = actor.roles.cache;
     const actorRoleNames = actorRoles.map(role => role.name);
-    logger.debug(`[${PREFIX}] actorRoleNames: ${actorRoleNames}`);
+    logger.debug(`[${PREFIX}] actorRoleNames:`, actorRoleNames);
 
     // Target Informatiion
     let target = interaction.options.getMember('user');
-    let user_provided = true;
+    let userProvided = true;
     // Default to the user who invoked the command if no user is provided
     if (!target) {
       logger.debug(`[${PREFIX}] No user provided, defaulting to ${interaction.member}`);
       target = interaction.member;
-      user_provided = false;
+      userProvided = false;
     }
     logger.debug(`[${PREFIX}] target: ${target.user.username}#${target.user.discriminator}`);
     const targetid = target.id.toString();
@@ -48,15 +58,13 @@ module.exports = {
     const targetHasNeedsHelpRole = targetRoleNames.some(role => role === needsHelpRole.name);
     logger.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
 
-    const actor_results = get_user_info(actor);
-    const actor_data = actor_results[0];
-    const actor_fbid = actor_results[1];
-    const actor_action = `${command}_sent`;
+    const [actorData, actorFbid] = getUserInfo(actor);
+    // eslint-disable-next-line
+    const actorAction = `${command}_sent`; // TODO: undefined?
 
-    const target_results = get_user_info(target);
-    const target_data = target_results[0];
-    const target_fbid = target_results[1];
-    const target_action = `${command}_received`;
+    const [targetData, targetFbid] = getUserInfo(target);
+    // eslint-disable-next-line
+    const targetAction = `${command}_received`; // TODO: undefined?
 
     let enable = interaction.options.getString('enable');
     // Default to on if no setting is provided
@@ -64,11 +72,11 @@ module.exports = {
     logger.debug(`[${PREFIX}] enable: ${enable}`);
 
     const command = 'tripsit';
-    if (enable == 'On') {
+    if (enable === 'On') {
       if (targetHasNeedsHelpRole) {
         const embed = template.embedTemplate()
           .setColor('DARK_BLUE');
-        if (user_provided) { embed.setDescription(`Hey ${interaction.member}, ${target.user.username} is already being helped!\n\nCheck your channel list for '${target.user.username} discuss here!'`); } else { embed.setDescription(`Hey ${interaction.member}, you're already being helped!\n\nCheck your channel list for '${target.user.username} chat here!'`); }
+        if (userProvided) { embed.setDescription(`Hey ${interaction.member}, ${target.user.username} is already being helped!\n\nCheck your channel list for '${target.user.username} discuss here!'`); } else { embed.setDescription(`Hey ${interaction.member}, you're already being helped!\n\nCheck your channel list for '${target.user.username} chat here!'`); }
         logger.debug(`[${PREFIX}] target ${target} is already being helped!`);
         interaction.reply({ embeds: [embed], ephemeral: true });
         logger.debug(`[${PREFIX}] finished!`);
@@ -87,48 +95,48 @@ module.exports = {
         });
 
         logger.debug(`[${PREFIX}] Found actor data, updating it`);
-        if ('mod_actions' in actor_data) {
-          actor_data.mod_actions[actor_action] = (actor_data.mod_actions[actor_action] || 0) + 1;
+        if ('mod_actions' in actorData) {
+          actorData.mod_actions[actorAction] = (actorData.mod_actions[actorAction] || 0) + 1;
         } else {
-          actor_data.mod_actions = { [actor_action]: 1 };
+          actorData.mod_actions = { [actorAction]: 1 };
         }
-        actor_data.roles = actorRoleNames;
+        actorData.roles = actorRoleNames;
 
-        if (actor_fbid !== '') {
+        if (actorFbid !== '') {
           logger.debug(`[${PREFIX}] Updating actor data`);
           try {
-            await db.collection(users_db_name).doc(actor_fbid).set(actor_data);
+            await db.collection(usersDbMame).doc(actorFbid).set(actorData);
           } catch (error) {
             logger.error(`[${PREFIX}] Error updating actor data: ${error}`);
           }
         } else {
           logger.debug(`[${PREFIX}] Creating actor data`);
           try {
-            await db.collection(users_db_name).doc().set(actor_data);
+            await db.collection(usersDbMame).doc().set(actorData);
           } catch (error) {
             logger.error(`[${PREFIX}] Error creating actor data: ${error}`);
           }
         }
 
         logger.debug(`[${PREFIX}] Found target data, updating it`);
-        if ('mod_actions' in target_data) {
-          target_data.mod_actions[target_action] = (target_data.mod_actions[target_action] || 0) + 1;
+        if ('mod_actions' in targetData) {
+          targetData.mod_actions[targetAction] = (targetData.mod_actions[targetAction] || 0) + 1;
         } else {
-          target_data.mod_actions = { [target_action]: 1 };
+          targetData.mod_actions = { [targetAction]: 1 };
         }
-        target_data.roles = targetRoleNames;
+        targetData.roles = targetRoleNames;
 
-        if (target_fbid !== '') {
+        if (targetFbid !== '') {
           logger.debug(`[${PREFIX}] Updating target data`);
           try {
-            await db.collection(users_db_name).doc(target_fbid).set(target_data);
+            await db.collection(usersDbMame).doc(targetFbid).set(targetData);
           } catch (error) {
             logger.error(`[${PREFIX}] Error updating target data: ${error}`);
           }
         } else {
           logger.debug(`[${PREFIX}] Creating target data`);
           try {
-            await db.collection(users_db_name).doc().set(target_data);
+            await db.collection(usersDbMame).doc().set(targetData);
           } catch (error) {
             logger.error(`[${PREFIX}] Error creating target data: ${error}`);
           }
@@ -145,22 +153,21 @@ module.exports = {
         // Get the needshelp role object and add it to the target
         logger.debug(`[${PREFIX}] Adding role ${needsHelpRole.name} to ${target.user.username}`);
         target.roles.add(needsHelpRole);
-        const embed = template.embedTemplate()
-          .setColor('DARK_BLUE');
-        if (user_provided) { embed.setDescription(`Hey ${interaction.member}, Thanks for the heads up, we'll be helping ${target.user.username} shortly!\n\nCheck your channel list for '${target.user.username} discuss here!'`); } else { embed.setDescription(`Hey ${interaction.member}, thanks for reaching out!\n\nCheck your channel list for '${target.user.username} chat here!'`); }
+        const embed = template.embedTemplate().setColor('DARK_BLUE');
+        if (userProvided) { embed.setDescription(`Hey ${interaction.member}, Thanks for the heads up, we'll be helping ${target.user.username} shortly!\n\nCheck your channel list for '${target.user.username} discuss here!'`); } else { embed.setDescription(`Hey ${interaction.member}, thanks for reaching out!\n\nCheck your channel list for '${target.user.username} chat here!'`); }
         logger.debug(`[${PREFIX}] target ${target} is now being helped!`);
         interaction.reply({ embeds: [embed], ephemeral: true });
         logger.debug(`[${PREFIX}] finished!`);
         return;
       }
     }
-    if (enable == 'Off') {
+    if (enable === 'Off') {
       if (targetHasNeedsHelpRole) {
         // For each role in targetRoles2, add it to the target
-        if (target_data.roles) {
-          target_data.roles.forEach(role_name => {
-            if (role_name !== '@everyone') {
-              const roleObj = interaction.guild.roles.cache.find(r => r.name === role_name);
+        if (targetData.roles) {
+          targetData.roles.forEach(roleName => {
+            if (roleName !== '@everyone') {
+              const roleObj = interaction.guild.roles.cache.find(r => r.name === roleName);
               logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.user.username}`);
               target.roles.add(roleObj);
             }
@@ -171,16 +178,16 @@ module.exports = {
         const output = `Removed ${needsHelpRole.name} from ${target.user.username}`;
         logger.debug(`[${PREFIX}] ${output}`);
 
-        const embed = template.embedTemplate()
-          .setColor('DARK_BLUE');
-        if (user_provided) { embed.setDescription(`Hey ${interaction.member}, we're glad ${target.user.username} is feeling better, we've restored their old roles!`); } else { embed.setDescription(`Hey ${interaction.member}, we're glad you're feeling better, we've restored your old roles, happy chatting!`); }
+        const embed = template.embedTemplate().setColor('DARK_BLUE');
+        if (userProvided) { embed.setDescription(`Hey ${interaction.member}, we're glad ${target.user.username} is feeling better, we've restored their old roles!`); } else { embed.setDescription(`Hey ${interaction.member}, we're glad you're feeling better, we've restored your old roles, happy chatting!`); }
         logger.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
         interaction.reply({ embeds: [embed], ephemeral: true });
         logger.debug(`[${PREFIX}] finished!`);
       } else {
-        const embed = template.embedTemplate()
-          .setColor('DARK_BLUE');
-        if (user_provided) { embed.setDescription(`Hey ${interaction.member}, ${target.user.username} isnt currently being taken care of!`); } else { embed.setDescription(`Hey ${interaction.member}, you're not currently being taken care of!`); }
+        const embed = template.embedTemplate().setColor('DARK_BLUE');
+        embed.setDescription(userProvided
+          ? `Hey ${interaction.member}, ${target.user.username} isnt currently being taken care of!`
+          : `Hey ${interaction.member}, you're not currently being taken care of!`);
         logger.debug(`[${PREFIX}] target ${target} does not need help!`);
         interaction.reply({ embeds: [embed], ephemeral: true });
         logger.debug(`[${PREFIX}] finished!`);

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-console, import/no-dynamic-require, global-require */
 
 'use strict';
 

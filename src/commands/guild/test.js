@@ -1,7 +1,16 @@
+/* eslint-disable */
+
+// NOTE: I think integration tests might repalce this so I'm wondering if I should bother having it work with the new
+// directory structure?
+
+'use strict';
+
+const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
-const PREFIX = require('path').parse(__filename).name;
 const template = require('../../utils/embed-template');
+
+const PREFIX = path.parse(__filename).name;
 
 function sleep(ms) {
   return new Promise(resolve => {
@@ -13,6 +22,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('test')
     .setDescription('This will test the bot and show all functionality!'),
+
   async execute(interaction) {
     await interaction.deferReply();
     const { channel } = interaction;
@@ -20,47 +30,6 @@ module.exports = {
       .setTitle('Testing in progress...');
     interaction.editReply({ embeds: [embed], ephemeral: false });
     // await sleep(1000);
-
-    const guild_command_names = [
-      'botmod',
-      'button',
-      'invite',
-      'issue',
-      'karma',
-      'mod',
-      'report',
-      'tripsit',
-      'pill_id',
-    ];
-
-    // Set up global commands
-    const globl_command_names = [
-      'about',
-      'breathe',
-      'bug',
-      'calc_benzo',
-      'calc_dxm',
-      'calc_ketamine',
-      'calc_psychedelics',
-      'combo',
-      'combochart',
-      'contact',
-      'ems',
-      'help',
-      'hydrate',
-      'idose',
-      'info',
-      'joke',
-      'kipp',
-      'motivate',
-      'reagents',
-      'recovery',
-      'time',
-      'topic',
-      'triptoys',
-      'wolfram',
-      'urban_define',
-    ];
 
     for (let i = 0; i < globl_command_names.length; i++) {
       await sleep(1000);
