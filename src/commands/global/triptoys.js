@@ -1,7 +1,11 @@
+'use strict';
+
+const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
-const PREFIX = require('path').parse(__filename).name;
 const template = require('../../utils/embed-template');
+
+const PREFIX = path.parse(__filename).name;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -34,15 +38,13 @@ module.exports = {
       .addChoice('MyNoise.net', '21')
       .addChoice('Mr Doob Harmony', '22')
       .addChoice('Balls demo', '23')),
-  async execute(interaction) {
-    let toy_name = interaction.options.getString('toy');
-    if (!toy_name) {
-      toy_name = '25';
-    }
-    const toy_id = parseInt(toy_name);
-    logger.debug(`[${PREFIX}] toy_name: ${toy_name}`);
 
-    const toys_dict = {
+  async execute(interaction) {
+    const toyName = interaction.options.getString('toy') || '25';
+    const toyId = parseInt(toyName, 10);
+    logger.debug(`[${PREFIX}] toy_name:`, toyName);
+
+    const toys = {
       1: { name: 'Weavesilk', value: '[Generate art](http://weavesilk.com/)', inline: true },
       2: { name: 'Arkadia', value: '[Never ending psychedelic forest](https://arkadia.xyz/)', inline: true },
       3: { name: 'Chromoscope', value: '[Explore the night sky](http://www.chromoscope.net/)', inline: true },
@@ -70,19 +72,20 @@ module.exports = {
 
     const embed = template.embedTemplate();
 
-    if (toy_id < 24) {
-      embed.setTitle(`${toys_dict[toy_id].name}`);
-      embed.addFields(toys_dict[toy_id]);
+    if (toyId < 24) {
+      embed.setTitle(`${toys[toyId].name}`);
+      embed.addFields(toys[toyId]);
     }
 
-    if (toy_id == 24) {
+    if (toyId === 24) {
       // Get a random toy from the toy_dict dictionary
-      const random_toy = toys_dict[Object.keys(toys_dict)[Math.floor(Math.random() * Object.keys(toys_dict).length)]];
-      logger.debug(`[${PREFIX}] random_toy: ${JSON.stringify(random_toy, null, 2)}`);
-      embed.addFields(random_toy);
+      const randomIndex = Math.floor(Math.random() * Object.keys(toys).length);
+      const randomToy = toys[Object.keys(toys)[randomIndex]];
+      logger.debug(`[${PREFIX}] random_toy: ${JSON.stringify(randomToy, null, 2)}`);
+      embed.addFields(randomToy);
     }
 
-    if (toy_id == 25) {
+    if (toyId === 25) {
       embed.setTitle('Triptoys!');
       embed.addFields(
         { name: 'Weavesilk', value: '[Generate art](http://weavesilk.com/)', inline: true },
@@ -110,7 +113,19 @@ module.exports = {
         { name: 'Balls demo', value: '[Colorful balls that follow your mouse (Enable fullscreen for best effect)](https://testdrive-archive.azurewebsites.net/Graphics/TouchEffects/Default.html)', inline: true },
       );
     }
-    if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false }); } else { interaction.followUp({ embeds: [embed], ephemeral: false }); }
+
+    if (!interaction.replied) {
+      interaction.reply({
+        embeds: [embed],
+        ephemeral: false,
+      });
+    } else {
+      interaction.followUp({
+        embeds: [embed],
+        ephemeral: false,
+      });
+    }
+
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
