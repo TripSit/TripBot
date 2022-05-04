@@ -1,11 +1,15 @@
+'use strict';
+
+// TODO: Luxon
+const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 
+const PREFIX = path.parse(__filename).name;
+
 const { db } = global;
-if (process.env.NODE_ENV !== 'production') { require('dotenv').config(); }
-const { users_db_name } = process.env;
+const { users_db_name: usersDbName } = process.env;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -32,8 +36,8 @@ module.exports = {
     const reminder = interaction.options.getString('reminder');
     const actor = interaction.user;
 
-    const seconds = duration * (units === 'minute' ? 60 : units === 'hour' ? 3600 : units === 'day' ? 86400 : units === 'week' ? 604800 : units === 'month' ? 2592000 : units === 'year' ? 31536000 : 0);
-    const unix_future_time = Math.floor(Date.now() / 1000) + seconds;
+    const seconds = duration * (units === 'minute' ? 60 : units === 'hour' ? 3600 : units === 'day' ? 86400 : units === 'week' ? 604800 : units === 'month' ? 2592000 : units === 'year' ? 31536000 : 0); // eslint-disable-line
+    const unixFutureTime = Math.floor(Date.now() / 1000) + seconds;
 
     let actorData = {};
     let actorFBID = '';
@@ -56,20 +60,17 @@ module.exports = {
         discord_discriminator: actor.discriminator,
         discord_id: actor.id,
         isBanned: false,
-        reminders: { [unix_future_time]: reminder },
+        reminders: { [unixFutureTime]: reminder },
       };
     } else {
       logger.debug(`[${PREFIX}] Found actor data, updating it`);
-      if ('reminders' in actorData) {
-        actorData.reminders[unix_future_time] = reminder;
-      } else {
-        actorData.reminders = { [unix_future_time]: reminder };
-      }
+      if ('reminders' in actorData) actorData.reminders[unixFutureTime] = reminder;
+      else actorData.reminders = { [unixFutureTime]: reminder };
     }
     logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
     // Update firebase
     logger.debug(`[${PREFIX}] Updating firebase`);
-    await db.collection(users_db_name).doc(actorFBID).update({
+    await db.collection(usersDbName).doc(actorFBID).update({
       reminders: actorData.reminders,
     });
     // Update global db
@@ -78,7 +79,7 @@ module.exports = {
         logger.debug(`[${PREFIX}] Updating global DB!!`);
         logger.debug(`[${PREFIX}] All reminders ${JSON.stringify(doc.value.reminders, null, 2)}`);
         logger.debug(`[${PREFIX}] actorData.reminders ${JSON.stringify(actorData.reminders, null, 2)}`);
-        doc.value.reminders = actorData.reminders;
+        doc.value.reminders = actorData.reminders; // eslint-disable-line
         logger.debug(`[${PREFIX}] New all reminders ${JSON.stringify(doc.value.reminders, null, 2)}`);
       }
     });
