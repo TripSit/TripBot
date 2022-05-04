@@ -69,6 +69,7 @@ module.exports = {
             });
         });
         global.user_db = user_db;
+        logger.debug(`${PREFIX}: Updated global user data.`);
 
         const embed = template.embed_template()
             .setDescription(`In ${duration} ${units} I will remind you: ${reminder}`);
