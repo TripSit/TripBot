@@ -2,7 +2,6 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const db = global.db;
-const guild_id = process.env.guildId;
 const guild_db_name = process.env.guild_db_name;
 const users_db_name = process.env.users_db_name;
 
@@ -38,7 +37,7 @@ module.exports = {
         logger.debug(`[${PREFIX}] Looking up guild ${guild}!`);
         let guild_data = null;
         let guild_fbid = null;
-        const snapshot_guild = await db.collection(users_db_name).get();
+        const snapshot_guild = await db.collection(guild_db_name).get();
         snapshot_guild.forEach((doc) => {
             if (doc.data().discord_id === guild.id.toString()) {
                 guild_data = doc.value;
