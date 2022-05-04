@@ -1,29 +1,24 @@
-const fs = require('node:fs');
+'use strict';
+
+const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
-const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
-const { get_user_info } = require('../../utils/get-user-info');
+const { getUserInfo } = require('../../utils/get-user-info');
+const karmaQuotes = require('../../assets/karma_quotes.json');
 
-const raw_topics = fs.readFileSync('./src/assets/karma_quotes.json');
-const karma_quotes = JSON.parse(raw_topics);
-
-const backButton = new MessageButton()
-  .setCustomId('previousbtn')
-  .setLabel('Previous')
-  .setStyle('DANGER');
-
-const forwardButton = new MessageButton()
-  .setCustomId('nextbtn')
-  .setLabel('Next')
-  .setStyle('SUCCESS');
+const PREFIX = path.parse(__filename).name;
 
 const buttonList = [
-  backButton,
-  forwardButton,
+  new MessageButton().setCustomId('previousbtn').setLabel('Previous').setStyle('DANGER'),
+  new MessageButton().setCustomId('nextbtn').setLabel('Next').setStyle('SUCCESS'),
 ];
+
+function getRandomQuoteIndex() {
+  return (Math.random() * Object.keys(karmaQuotes).length).toString();
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -34,38 +29,33 @@ module.exports = {
       .setDescription('User to lookup!')),
 
   async execute(interaction) {
-    let patient = interaction.options.getMember('user');
-    if (!patient) { patient = interaction.member; }
-    const patientData = get_user_info(patient)[0];
+    const patient = interaction.options.getMember('user') || interaction.member;
+    const patientData = getUserInfo(patient).at(0);
 
-    const karma_received = patientData.karma_recieved;
-    let karma_received_string = '';
-    if (karma_received) {
-      karma_received_string = Object.entries(karma_received).map(([key, value]) => `${value}: ${key}`).join('\n');
-    } else {
-      karma_received_string = 'Nothing, they are a blank canvas to be discovered!';
-    }
+    let karmaReceivedString = '';
+    if (patientData.karma_received) {
+      karmaReceivedString = Object.entries(patientData.karma_received)
+        .map(([key, value]) => `${value}: ${key}`).join('\n');
+    } else karmaReceivedString = 'Nothing, they are a blank canvas to be discovered!';
 
-    const { karma_given } = patientData;
-    let karma_given_string = '';
-    if (karma_given) {
-      karma_given_string = Object.entries(karma_given).map(([key, value]) => `${value}: ${key}`).join('\n');
-    } else {
-      karma_given_string = 'Nothing, they are a wet paintbrush ready to make their mark!';
-    }
+    let karmaGivenString = '';
+    if (patientData.karma_given) {
+      karmaGivenString = Object.entries(patientData.karma_given)
+        .map(([key, value]) => `${value}: ${key}`).join('\n');
+    } else karmaGivenString = 'Nothing, they are a wet paintbrush ready to make their mark!';
 
     const book = [];
-    const random_quoteA = karma_quotes[Math.floor(Math.random() * Object.keys(karma_quotes).length).toString()];
-    const karma_received_embed = template.embedTemplate()
+    const randomQuoteA = karmaQuotes[getRandomQuoteIndex()];
+    const karmaReceivedEmbed = template.embedTemplate()
       .setTitle(`${patient.user.username}'s Karma Received`)
-      .setDescription(`${karma_received_string}\n\n${random_quoteA}`);
-    book.push(karma_received_embed);
+      .setDescription(`${karmaReceivedString}\n\n${randomQuoteA}`);
+    book.push(karmaReceivedEmbed);
 
-    const random_quoteB = karma_quotes[Math.floor(Math.random() * Object.keys(karma_quotes).length).toString()];
-    const karma_given_embed = template.embedTemplate()
+    const randomQuoteB = karmaQuotes[getRandomQuoteIndex()];
+    const karmaGivenEmbed = template.embedTemplate()
       .setTitle(`${patient.user.username}'s Karma Given`)
-      .setDescription(`${karma_given_string}\n\n${random_quoteB}`);
-    book.push(karma_given_embed);
+      .setDescription(`${karmaGivenString}\n\n${randomQuoteB}`);
+    book.push(karmaGivenEmbed);
 
     paginationEmbed(interaction, book, buttonList);
     logger.debug(`[${PREFIX}] finished!`);
