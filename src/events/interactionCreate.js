@@ -9,7 +9,6 @@ if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const ownerId = process.env.ownerId;
 const guildId = process.env.guildId;
 const channel_moderators_id = process.env.channel_moderators;
-const guild_db_name = process.env.guild_db_name;
 const users_db_name = process.env.users_db_name;
 
 const drug_data_all = JSON.parse(fs.readFileSync('./src/assets/drug_db_combined.json'));

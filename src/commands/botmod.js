@@ -1,14 +1,11 @@
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageActionRow, MessageButton } = require('discord.js');
-const db = global.db;
 const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const template = require('../utils/embed_template');
-const guild_db_name = process.env.guild_db_name;
-// const users_db_name = process.env.users_db_name;
 const { get_guild_info } = require('../utils/get_user_info');
-
+const { set_guild_info } = require('../utils/set_user_info');
 
 const warn_buttons = new MessageActionRow()
     .addComponents(
@@ -132,19 +129,20 @@ module.exports = {
                 return;
             }
 
+            // Extract target guild info
             const target_action = `${command}_received`;
-            const target_rslt = get_guild_info(target_guild);
-            const target_data = target_rslt[0];
-            const target_fbid = target_rslt[1];
+            const target_results = await get_guild_info(target_guild);
+            const target_data = target_results[0];
 
+            // Transform target guild info
             if ('mod_actions' in target_data) {
                 target_data.mod_actions[target_action] = (target_data.mod_actions[target_action] || 0) + 1;
             }
             else {
                 target_data.mod_actions = { [target_action]: 1 };
             }
-
             logger.debug(`[${PREFIX}] target_data: ${JSON.stringify(target_data)}`);
+
             if (command === 'warn') {
                 color = 'YELLOW';
                 const warn_embed = template.embed_template()
@@ -207,26 +205,10 @@ module.exports = {
                     logger.debug(`[${PREFIX}] I unbanned ${target_guild}!`);
                 }
             }
-            logger.debug(`[${PREFIX}] target_fbid: ${target_fbid}`);
 
-            if (target_fbid !== '') {
-                logger.debug(`[${PREFIX}] Updating target guild data`);
-                try {
-                    await db.collection(guild_db_name).doc(target_fbid).set(target_data);
-                }
-                catch (err) {
-                    logger.error(`[${PREFIX}] Error updating guild data, make sure this is expected: ${err}`);
-                }
-            }
-            else {
-                logger.debug(`[${PREFIX}] Creating target guild data`);
-                try {
-                    await db.collection(guild_db_name).doc().set(target_data);
-                }
-                catch (err) {
-                    logger.error(`[${PREFIX}] Error creating guild data, make sure this is expected: ${err}`);
-                }
-            }
+            // Load target guild info
+            // Load actor data
+            await set_guild_info(target_results[1], target_data);
 
             if (command !== 'info') {
                 const title = `I have ${command}ed ${target_guild} ${reason ? `because ${reason}` : ''}`;
