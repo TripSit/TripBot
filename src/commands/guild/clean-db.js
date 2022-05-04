@@ -1,7 +1,11 @@
+'use strict';
+
+const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
-const PREFIX = require('path').parse(__filename).name;
 const template = require('../../utils/embed-template');
+
+const PREFIX = path.parse(__filename).name;
 
 const { db } = global;
 
@@ -9,94 +13,93 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('clean_db')
     .setDescription('Clean the DB!'),
+
   async execute(interaction) {
     const users = await db.collection('users').get();
     // This command will check for duplicates within the database and merge them
     // This is a very slow command and should be run sparingly
     users.forEach(async user => {
-      const user_key = user.id;
-      const user_value = user.data();
-      const user_id = user_value.discord_id;
-      if (user_id !== '177537158419054592') {
-        return;
-      }
-      logger.debug(`${PREFIX}: Checking user ${user_id}`);
-      const user_kg = user_value.karma_given;
-      const user_kr = user_value.karma_received;
-      const user_reminders = user_value.reminders;
-      let user_timezone = user_value.timezone;
-      const dupe_user_db = [];
-      users.forEach(sub_user => {
-        const sub_user_key = sub_user.id;
-        const sub_user_value = sub_user.data();
-        if (sub_user_value.discord_id == user_id) {
-          logger.debug(`${PREFIX}: ${sub_user_value.discord_username} has a dupe!`);
-          dupe_user_db.push({
-            sub_user_key,
-            sub_user_value,
+      const userKey = user.id;
+      const userValue = user.data();
+      const userId = userValue.discord_id;
+      if (userId !== '177537158419054592') return;
+      logger.debug(`${PREFIX}: Checking user ${userId}`);
+      const userKg = userValue.karma_given;
+      const userKr = userValue.karma_received;
+      const userReminders = userValue.reminders;
+      let userTimezone = userValue.timezone;
+      const dupeUserDb = [];
+      users.forEach(subUser => {
+        const subUserKey = subUser.id;
+        const subUserValue = subUser.data();
+        if (subUserValue.discord_id === userId) {
+          logger.debug(`${PREFIX}: ${subUserValue.discord_username} has a dupe!`);
+          dupeUserDb.push({
+            sub_user_key: subUserKey,
+            sub_user_value: subUserValue,
           });
         }
       });
-      logger.debug(`${PREFIX}: ${dupe_user_db.length} dupe(s) found for ${user_value.discord_username}`);
-      if (dupe_user_db.length > 1) {
-        dupe_user_db.forEach(dupe_user => {
-          const dupe_user_key = dupe_user.sub_user_key;
-          const dupe_user_value = dupe_user.sub_user_value;
-          const dupe_user_kg = dupe_user_value.karma_given;
-          const dupe_user_kr = dupe_user_value.karma_received;
-          const dupe_user_reminders = dupe_user_value.reminders;
-          const dupe_user_timezone = dupe_user_value.timezone;
-          if (dupe_user_kg != user_kg && dupe_user_kg != undefined) {
+      logger.debug(`${PREFIX}: ${dupeUserDb.length} dupe(s) found for ${userValue.discord_username}`);
+      if (dupeUserDb.length > 1) {
+        dupeUserDb.forEach(dupeUser => {
+          const dupeUserKey = dupeUser.sub_user_key;
+          const dupeUserValue = dupeUser.sub_user_value;
+          const dupeUserKg = dupeUserValue.karma_given;
+          const dupeUserKr = dupeUserValue.karma_received;
+          const dupeUserReminders = dupeUserValue.reminders;
+          const dupeUserTimezone = dupeUserValue.timezone;
+          if (dupeUserKg !== userKg && dupeUserKg !== undefined) {
             logger.debug(`[${PREFIX}] Karma Given is different, updating...`);
             // Loop through the keys in dupe_user_kg and add them to user_kg
-            Object.keys(dupe_user_kg).forEach(key => {
-              if (user_kg[key] == undefined) {
-                user_kg[key] = dupe_user_kg[key];
+            Object.keys(dupeUserKg).forEach(key => {
+              if (userKg[key] === undefined) {
+                userKg[key] = dupeUserKg[key];
               } else {
-                user_kg[key] += dupe_user_kg[key];
+                userKg[key] += dupeUserKg[key];
               }
             });
           }
-          if (dupe_user_kr != user_kr && dupe_user_kr != undefined) {
+          if (dupeUserKr !== userKr && dupeUserKr !== undefined) {
             logger.debug(`[${PREFIX}] Karma Recieved is different, updating...`);
             // Loop through the keys in dupe_user_kr and add them to user_kr
-            Object.keys(dupe_user_kr).forEach(key => {
-              if (user_kr[key] == undefined) {
-                user_kr[key] = dupe_user_kr[key];
+            Object.keys(dupeUserKr).forEach(key => {
+              if (userKr[key] === undefined) {
+                userKr[key] = dupeUserKr[key];
               } else {
-                user_kr[key] += dupe_user_kr[key];
+                userKr[key] += dupeUserKr[key];
               }
             });
           }
-          if (dupe_user_reminders != user_reminders) {
+          if (dupeUserReminders !== userReminders) {
             logger.debug(`[${PREFIX}] Reminders are different, updating...`);
             // Loop through the keys in dupe_user_reminders and add them to user_reminders
-            Object.keys(dupe_user_reminders).forEach(key => {
-              if (user_reminders[key] == undefined) {
-                user_reminders[key] = dupe_user_reminders[key];
+            Object.keys(dupeUserReminders).forEach(key => {
+              if (userReminders[key] === undefined) {
+                userReminders[key] = dupeUserReminders[key];
               } else {
-                user_reminders[key] += dupe_user_reminders[key];
+                userReminders[key] += dupeUserReminders[key];
               }
             });
           }
-          if (dupe_user_timezone != user_timezone) {
+          if (dupeUserTimezone !== userTimezone) {
             logger.debug(`[${PREFIX}] Timezone is different, updating...`);
-            user_timezone = dupe_user_timezone;
+            userTimezone = dupeUserTimezone;
           }
-          if (dupe_user_key !== user_key) {
-            logger.debug(`[${PREFIX}] Removing ${dupe_user_value.discord_username} from the database...`);
+          if (dupeUserKey !== userKey) {
+            logger.debug(`[${PREFIX}] Removing ${dupeUserValue.discord_username} from the database...`);
             // db.collection('users').doc(dupe_user_key).delete();
           }
         });
-        logger.debug(`[${PREFIX}] Updating ${user_value.discord_username} in the database...`);
-        db.collection('users').doc(user_key).set({
-          discord_id: user_id,
-          discord_username: user_value.discord_username,
-          discord_discriminator: user_value.discord_discriminator,
-          karma_given: user_kg || {},
-          karma_received: user_kr || {},
-          reminders: user_reminders || {},
-          timezone: user_timezone || '',
+        logger.debug(`[${PREFIX}] Updating ${userValue.discord_username} in the database...`);
+        db.collection('users').doc(userKey).set({
+          discord_id: userId,
+          discord_username: userValue.discord_username,
+          discord_discriminator: userValue.discord_discriminator,
+          karma_given: userKg || {},
+          karma_received: userKr || {},
+          reminders: userReminders || {},
+          timezone: userTimezone || '',
         });
       }
     });
@@ -113,7 +116,9 @@ module.exports = {
     //                 discord_username: wrong_doc.data().discord_username,
     //                 discord_discriminator: wrong_doc.data().discord_discriminator,
     //                 isBanned: wrong_doc.data().isBanned,
+    // eslint-disable-next-line
     //                 karma_received: wrong_doc.data().karma_received ? wrong_doc.data().karma_received : {},
+    // eslint-disable-next-line
     //                 karma_given: wrong_doc.data().karma_given ? wrong_doc.data().karma_given : {},
     //                 roles: wrong_doc.data().roles ? wrong_doc.data().roles : [],
     //                 timezone: wrong_doc.data().timezone ? wrong_doc.data().timezone : '',
@@ -135,6 +140,7 @@ module.exports = {
     //     const value = doc.data();
     //     const guild_id = value.guild_id;
     //     const guild_db = [];
+    // eslint-disable-next-line
     //     const snapshot_guild = await db.collection('guilds').where('guild_id', '==', guild_id).get();
     //     snapshot_guild.forEach((doc) => {
     //         const key = doc.id;
@@ -145,6 +151,7 @@ module.exports = {
     //         });
     //     });
     //     if (guild_db.length > 1) {
+    // eslint-disable-next-line
     //         logger.debug(`[${PREFIX}] ${guild_db.length} duplicates found for guild_id: ${guild_id}`);
     //         guild_db.forEach((doc) => {
     //             const key = doc.id;
@@ -157,9 +164,11 @@ module.exports = {
     //     }
     // });
 
-    const embed = template.embedTemplate()
-      .setTitle('Done!');
+    const embed = template.embedTemplate().setTitle('Done!');
+    interaction.reply({
+      embeds: [embed],
+      ephemeral: false,
+    });
     logger.debug(`[${PREFIX}] finished!`);
-    interaction.reply({ embeds: [embed], ephemeral: false });
   },
 };

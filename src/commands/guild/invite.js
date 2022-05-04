@@ -1,37 +1,38 @@
+'use strict';
+
+const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
-const PREFIX = require('path').parse(__filename).name;
 const template = require('../../utils/embed-template');
 
-if (process.env.NODE_ENV !== 'production') { require('dotenv').config(); }
-const welcome_channel_id = process.env.channel_welcome;
+const PREFIX = path.parse(__filename).name;
+
+const { channel_welcome: welcomeChannelId } = process.env;
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('invite')
     .setDescription('Creates new invites!')
-    .addChannelOption(option => option.setName('channel').setDescription('To what channel?'))
-    .addBooleanOption(option => option.setName('temporary').setDescription('Temporary?'))
-    .addIntegerOption(option => option.setName('max_age').setDescription('Max age?'))
-    .addIntegerOption(option => option.setName('max_uses').setDescription('Max uses?')),
-  async execute(interaction) {
-    let channel = interaction.options.getChannel('channel');
-    let temporary = interaction.options.getBoolean('temporary');
-    let maxAge = interaction.options.getInteger('maxAge');
-    let maxUses = interaction.options.getInteger('maxUses');
+    .addChannelOption(option => option
+      .setName('channel')
+      .setDescription('To what channel?'))
+    .addBooleanOption(option => option
+      .setName('temporary')
+      .setDescription('Temporary?'))
+    .addIntegerOption(option => option
+      .setName('max_age')
+      .setDescription('Max age?'))
+    .addIntegerOption(option => option
+      .setName('max_uses')
+      .setDescription('Max uses?')),
 
-    if (!channel) {
-      channel = interaction.client.channels.cache.get(welcome_channel_id);
-    }
-    if (!temporary) {
-      temporary = false;
-    }
-    if (!maxAge) {
-      maxAge = 0;
-    }
-    if (!maxUses) {
-      maxUses = 0;
-    }
+  async execute(interaction) {
+    const channel = interaction.options.getChannel('channel')
+      || interaction.client.channels.cache.get(welcomeChannelId);
+    const temporary = interaction.options.getBoolean('temporary') || false;
+    const maxAge = interaction.options.getInteger('maxAge') || 0;
+    const maxUses = interaction.options.getInteger('maxUses') || 0;
+
     const unique = true;
     const reason = `Invite requested by ${interaction.member.user.username}`;
     try {
