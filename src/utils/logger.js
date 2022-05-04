@@ -1,3 +1,5 @@
+'use strict';
+
 // const winston = require('winston');
 const {
   createLogger, format, transports, addColors,
@@ -17,11 +19,11 @@ const logLevels = {
 Object.defineProperty(global, '__stack', {
   get() {
     const orig = Error.prepareStackTrace;
-    Error.prepareStackTrace = function (_, stack) {
+    Error.prepareStackTrace = function prepareStackTrace(_, stack) {
       return stack;
     };
     const err = new Error();
-    Error.captureStackTrace(err, arguments.callee);
+    Error.captureStackTrace(err, arguments.callee); // eslint-disable-line
     const { stack } = err;
     Error.prepareStackTrace = orig;
     return stack;
@@ -30,13 +32,13 @@ Object.defineProperty(global, '__stack', {
 
 Object.defineProperty(global, '__line', {
   get() {
-    return __stack[1].getLineNumber();
+    return __stack[1].getLineNumber(); // eslint-disable-line
   },
 });
 
 Object.defineProperty(global, '__function', {
   get() {
-    return __stack[1].getFunctionName();
+    return __stack[1].getFunctionName(); // eslint-disable-line
   },
 });
 
