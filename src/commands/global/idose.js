@@ -1,7 +1,11 @@
+'use strict';
+
+const path = require('path');
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
-const PREFIX = require('path').parse(__filename).name;
 const template = require('../../utils/embed-template');
+
+const PREFIX = path.parse(__filename).name;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -29,34 +33,35 @@ module.exports = {
       .addChoice('drops', 'drops')
       .addChoice('sprays', 'sprays')
       .addChoice('inhales', 'inhales')),
+
   async execute(interaction, parameters) {
-    let substance = interaction.options.getString('substance');
-    if (!substance) {
-      substance = parameters[0];
-    }
-    let volume = interaction.options.getInteger('volume');
-    if (!volume) {
-      volume = parameters[1];
-    }
-    let units = interaction.options.getString('units');
-    if (!units) {
-      units = parameters[2];
-    }
+    const substance = interaction.options.getString('substance') || parameters.at(0);
+    const volume = interaction.options.getInteger('volume') || parameters.at(1);
+    const units = interaction.options.getString('units') || parameters.at(2);
 
     const date = new Date();
-
     const timeString = time(date);
     const relative = time(date, 'R');
 
     const embed = template.embedTemplate()
       .setColor('DARK_BLUE')
-      .addFields(
-        {
-          name: `You dosed ${volume} ${units} of ${substance}`,
-          value: `${relative} at ${timeString}`,
-        },
-      );
-    if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: true }); } else { interaction.followUp({ embeds: [embed], ephemeral: false }); }
+      .addFields({
+        name: `You dosed ${volume} ${units} of ${substance}`,
+        value: `${relative} at ${timeString}`,
+      });
+
+    if (!interaction.replied) {
+      interaction.reply({
+        embeds: [embed],
+        ephemeral: true,
+      });
+    } else {
+      interaction.followUp({
+        embeds: [embed],
+        ephemeral: false,
+      });
+    }
+
     logger.debug(`[${PREFIX}] Finsihed!`);
   },
 };

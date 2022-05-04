@@ -1,30 +1,26 @@
+'use strict';
+
+const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const logger = require('../../utils/logger');
-const PREFIX = require('path').parse(__filename).name;
 const template = require('../../utils/embed-template');
 
-const button1 = new MessageButton()
-  .setCustomId('previousbtn')
-  .setLabel('Previous')
-  .setStyle('DANGER');
+const PREFIX = path.parse(__filename).name;
 
-const button2 = new MessageButton()
-  .setCustomId('nextbtn')
-  .setLabel('Next')
-  .setStyle('SUCCESS');
 const buttonList = [
-  button1,
-  button2,
+  new MessageButton().setCustomId('previousbtn').setLabel('Previous').setStyle('DANGER'),
+  new MessageButton().setCustomId('nextbtn').setLabel('Next').setStyle('SUCCESS'),
 ];
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('help')
     .setDescription('Information bout TripBot Commands'),
+
   async execute(interaction) {
-    const hr_embed = template.embedTemplate()
+    const hrEmbed = template.embedTemplate()
       .setTitle('Harm Reduction Modules')
       .addFields(
         { name: 'Info', value: 'This command looks up drug information!', inline: true },
@@ -40,7 +36,7 @@ module.exports = {
         { name: '\u200b', value: '\u200b', inline: true },
       );
 
-    const tripsitting_embed = template.embedTemplate()
+    const tripsittingEmbed = template.embedTemplate()
       .setTitle('Tripsitting Modules')
       .addFields(
         { name: 'Recovery', value: 'Image: Recovery position.', inline: true },
@@ -60,7 +56,7 @@ module.exports = {
         { name: 'Remindme', value: 'Sends a reminder in PM.', inline: true },
       );
 
-    const utility_embed = template.embedTemplate()
+    const utilityEmbed = template.embedTemplate()
       .setTitle('Utility Modules')
       .addFields(
         { name: 'About', value: 'Information on Team TripSit and who built this bot.', inline: true },
@@ -72,7 +68,7 @@ module.exports = {
         { name: 'Ping', value: 'Lets you know the bot is alive and working =)', inline: true },
       );
 
-    const tripsit_embed = template.embedTemplate()
+    const tripsitEmbed = template.embedTemplate()
       .setTitle('TripSit Specific Modules')
       .addFields(
         { name: 'Karma', value: 'Displays karma (reactions) given and received.', inline: true },
@@ -89,11 +85,12 @@ module.exports = {
       );
 
     const book = [
-      hr_embed,
-      tripsitting_embed,
-      utility_embed,
-      tripsit_embed,
+      hrEmbed,
+      tripsittingEmbed,
+      utilityEmbed,
+      tripsitEmbed,
     ];
+    // eslint-disable-next-line
     // interaction.reply({ embeds: [paginationEmbed(interaction, book, buttonList)], ephemeral: false });
     // interaction.reply(paginationEmbed(interaction, book, buttonList))
     // if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}

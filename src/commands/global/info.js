@@ -1,29 +1,19 @@
-const fs = require('node:fs');
+'use strict';
+
+const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
-const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
+const drugDataAll = require('../../assets/drug_db_combined.json');
+const allComboData = require('../../assets/combo_definitions.json');
 
-const raw_drug_data = fs.readFileSync('./src/assets/drug_db_combined.json');
-const drug_data_all = JSON.parse(raw_drug_data);
+const PREFIX = path.parse(__filename).name;
 
-const raw_combo_data = fs.readFileSync('./src/assets/combo_definitions.json');
-const all_combo_data = JSON.parse(raw_combo_data);
-
-const button1 = new MessageButton()
-  .setCustomId('previousbtn')
-  .setLabel('Previous')
-  .setStyle('DANGER');
-
-const button2 = new MessageButton()
-  .setCustomId('nextbtn')
-  .setLabel('Next')
-  .setStyle('SUCCESS');
 const buttonList = [
-  button1,
-  button2,
+  new MessageButton().setCustomId('previousbtn').setLabel('Previous').setStyle('DANGER'),
+  new MessageButton().setCustomId('nextbtn').setLabel('Next').setStyle('SUCCESS'),
 ];
 
 module.exports = {
@@ -40,37 +30,35 @@ module.exports = {
       .addChoice('Summary', 'Summary')
       .addChoice('Dosage', 'Dosage')
       .addChoice('Combos', 'Combos')),
+
   async execute(interaction, parameters) {
-    let substance = interaction.options.getString('substance');
-    if (!substance) {
-      substance = parameters[0];
-    }
-    let section = interaction.options.getString('section');
-    if (!section) {
-      section = parameters[1];
-    }
-    const wiki_url = `https://wiki.tripsit.me/wiki/${substance}`;
+    const substance = interaction.options.getString('substance') || parameters.at(0);
+    const section = interaction.options.getString('section') || parameters.at(1);
+    const wikiUrl = `https://wiki.tripsit.me/wiki/${substance}`;
 
     logger.info(`[${PREFIX}] starting getDrugInfo with parameter: ${substance}`);
     // loop through drug_data_all to find the substance
     let drugData = {};
-    logger.debug(`[${PREFIX}] All drug data length is: ${Object.keys(drug_data_all).length}`);
-    for (let i = 0; i < Object.keys(drug_data_all).length; i++) {
+    logger.debug(`[${PREFIX}] All drug data length is: ${Object.keys(drugDataAll).length}`);
+    for (let i = 0; i < Object.keys(drugDataAll).length; i += 1) {
       // logger.debug(`[${PREFIX}] drug_data_all[i]['name'] is: ${drug_data_all[i]['name']}`)
-      if (drug_data_all[i].name == substance) {
+      if (drugDataAll[i].name === substance) {
         logger.debug(`[${PREFIX}] found substance: ${substance}`);
-        drugData = drug_data_all[i];
+        drugData = drugDataAll[i];
         break;
       }
     }
 
     // logger.debug(`[${PREFIX}] ${drugData}`)
 
+    // TODO: Cleanup
     let summary = `${drugData.name}\n\n`;
     if (drugData.aliases) {
       // turn aliases into a string with each alias on a new line
       let aliasString = '';
-      for (let i = 0; i < drugData.aliases.length; i++) { aliasString += `${drugData.aliases[i]}\n`; }
+      for (let i = 0; i < drugData.aliases.length; i += 1) {
+        aliasString += `${drugData.aliases[i]}\n`;
+      }
       summary += `Also known as: \n${aliasString}\n`;
     }
     if (drugData.summary) { summary += `${drugData.summary}\n\n`; }
@@ -84,23 +72,26 @@ module.exports = {
 
     let dosage = '';
     if (drugData.roas) {
-      for (let i = 0; i < drugData.roas.length; i++) {
+      for (let i = 0; i < drugData.roas.length; i += 1) {
         dosage += `${drugData.roas[i].name} Dosage\n`;
-        if (drugData.roas[i].bioavailability) { dosage += `Bioavailability: ${drugData.roas[i].bioavailability}\n`; }
+        if (drugData.roas[i].bioavailability) {
+          dosage += `Bioavailability: ${drugData.roas[i].bioavailability}\n`;
+        }
         if (drugData.roas[i].dosage) {
-          for (let j = 0; j < drugData.roas[i].dosage.length; j++) {
-            if (j == 0) {
-              if (drugData.roas[i].dosage[j].note) { dosage += `Note: ${drugData.roas[i].dosage[j].note}\n`; }
+          for (let j = 0; j < drugData.roas[i].dosage.length; j += 1) {
+            if (j === 0 && drugData.roas[i].dosage[j].note) {
+              dosage += `Note: ${drugData.roas[i].dosage[j].note}\n`;
             }
             dosage += `${drugData.roas[i].dosage[j].name}: ${drugData.roas[i].dosage[j].value}\n`;
           }
         }
         if (drugData.roas[i].duration) {
-          dosage += `\n${drugData.roas[i].name} Duration` + '\n';
-          for (let j = 0; j < drugData.roas[i].duration.length; j++) {
-            if (j == 0) {
-              if (drugData.roas[i].duration[j].note) { dosage += `Note: ${drugData.roas[i].duration[j].note}\n`; }
+          dosage += `\n${drugData.roas[i].name} Duration\n`;
+          for (let j = 0; j < drugData.roas[i].duration.length; j += 1) {
+            if (j === 0 && drugData.roas[i].duration[j].note) {
+              dosage += `Note: ${drugData.roas[i].duration[j].note}\n`;
             }
+            // eslint-disable-next-line
             // logger.debug(`[${PREFIX}] ${drugData["roas"][i].duration[j].name}: ${drugData["roas"][i].duration[j].value}`)
             dosage += `${drugData.roas[i].duration[j].name}: ${drugData.roas[i].duration[j].value}\n`;
           }
@@ -111,110 +102,137 @@ module.exports = {
     logger.debug(`[${PREFIX}] dosage is: ${dosage.length}`);
     let tolerance = '';
     if (drugData.tolerance) {
-      tolerance += '\nTolerance' + '\n';
-      if (drugData.tolerance.full) { tolerance += `Full: ${drugData.tolerance.full}\n`; }
-      if (drugData.tolerance.half) { tolerance += `Half: ${drugData.tolerance.half}\n`; }
-      if (drugData.tolerance.zero) { tolerance += `Zero: ${drugData.tolerance.zero}\n`; }
-      if (drugData.crossTolerances) { tolerance += `Cross Tolerances:\n${drugData.crossTolerances}\n`; }
+      tolerance += '\nTolerance\n';
+      if (drugData.tolerance.full) tolerance += `Full: ${drugData.tolerance.full}\n`;
+      if (drugData.tolerance.half) tolerance += `Half: ${drugData.tolerance.half}\n`;
+      if (drugData.tolerance.zero) tolerance += `Zero: ${drugData.tolerance.zero}\n`;
+      if (drugData.crossTolerances) tolerance += `Cross Tolerances:\n${drugData.crossTolerances}\n`;
     }
-
     dosage += tolerance;
 
-    let danger_section = '';
-    let unsafe_section = '';
-    let caution_section = '';
-    let decrease_section = '';
-    let nosyn_section = '';
-    let synergy_section = '';
-    let unknown_section = '';
+    let dangerSection = '';
+    let unsafeSection = '';
+    let cautionSection = '';
+    let decreaseSection = '';
+    let nosynSection = '';
+    let synergySection = '';
+    let unknownSection = '';
     if (drugData.interactions) {
       // For each interaction status, make a list of those names
       const { interactions } = drugData;
-      for (let i = 0; i < interactions.length; i++) {
-        if (interactions[i].status == 'Dangerous') {
-          danger_section += `${interactions[i].name}\n`;
-          if (interactions[i].note) { danger_section += `Note: ${interactions[i].note}\n`; }
-        } else if (interactions[i].status == 'Unsafe') {
-          unsafe_section += `${interactions[i].name}\n`;
-          if (interactions[i].note) { unsafe_section += `Note: ${interactions[i].note}\n`; }
-        } else if (interactions[i].status == 'Caution') {
-          caution_section += `${interactions[i].name}\n`;
-          if (interactions[i].note) { caution_section += `Note: ${interactions[i].note}\n`; }
-        } else if (interactions[i].status == 'Low Risk & Decrease') {
-          decrease_section += `${interactions[i].name}\n`;
-          if (interactions[i].note) { decrease_section += `Note: ${interactions[i].note}\n`; }
-        } else if (interactions[i].status == 'Low Risk & No Synergy') {
-          nosyn_section += `${interactions[i].name}\n`;
-          if (interactions[i].note) { nosyn_section += `Note: ${interactions[i].note}\n`; }
-        } else if (interactions[i].status == 'Low Risk & Synergy') {
-          synergy_section += `${interactions[i].name}\n`;
-          if (interactions[i].note) { synergy_section += `Note: ${interactions[i].note}\n`; }
-        } else if (interactions[i].status == 'Unknown') {
-          unknown_section += `${interactions[i].name}\n`;
-          if (interactions[i].note) { unknown_section += `Note: ${interactions[i].note}\n`; }
+      for (let i = 0; i < interactions.length; i += 1) {
+        if (interactions[i].status === 'Dangerous') {
+          dangerSection += `${interactions[i].name}\n`;
+          if (interactions[i].note) dangerSection += `Note: ${interactions[i].note}\n`;
+        } else if (interactions[i].status === 'Unsafe') {
+          unsafeSection += `${interactions[i].name}\n`;
+          if (interactions[i].note) unsafeSection += `Note: ${interactions[i].note}\n`;
+        } else if (interactions[i].status === 'Caution') {
+          cautionSection += `${interactions[i].name}\n`;
+          if (interactions[i].note) cautionSection += `Note: ${interactions[i].note}\n`;
+        } else if (interactions[i].status === 'Low Risk & Decrease') {
+          decreaseSection += `${interactions[i].name}\n`;
+          if (interactions[i].note) decreaseSection += `Note: ${interactions[i].note}\n`;
+        } else if (interactions[i].status === 'Low Risk & No Synergy') {
+          nosynSection += `${interactions[i].name}\n`;
+          if (interactions[i].note) nosynSection += `Note: ${interactions[i].note}\n`;
+        } else if (interactions[i].status === 'Low Risk & Synergy') {
+          synergySection += `${interactions[i].name}\n`;
+          if (interactions[i].note) synergySection += `Note: ${interactions[i].note}\n`;
+        } else if (interactions[i].status === 'Unknown') {
+          unknownSection += `${interactions[i].name}\n`;
+          if (interactions[i].note) unknownSection += `Note: ${interactions[i].note}\n`;
         }
       }
 
-      if (danger_section != '') { logger.debug(`[${PREFIX}] danger_section is: ${danger_section.length}`); }
-      if (unsafe_section != '') { logger.debug(`[${PREFIX}] unsafe_section is: ${unsafe_section.length}`); }
-      if (caution_section != '') { logger.debug(`[${PREFIX}] caution_section is: ${caution_section.length}`); }
-      if (decrease_section != '') { logger.debug(`[${PREFIX}] decrease_section is: ${decrease_section.length}`); }
-      if (nosyn_section != '') { logger.debug(`[${PREFIX}] nosyn_section is: ${nosyn_section.length}`); }
-      if (synergy_section != '') { logger.debug(`[${PREFIX}] synergy_section is: ${synergy_section.length}`); }
-      if (unknown_section != '') { logger.debug(`[${PREFIX}] unknown_section is: ${unknown_section.length}`); }
+      if (dangerSection !== '') {
+        logger.debug(`[${PREFIX}] danger_section is: ${dangerSection.length}`);
+      }
+      if (unsafeSection !== '') {
+        logger.debug(`[${PREFIX}] unsafe_section is: ${unsafeSection.length}`);
+      }
+      if (cautionSection !== '') {
+        logger.debug(`[${PREFIX}] caution_section is: ${cautionSection.length}`);
+      }
+      if (decreaseSection !== '') {
+        logger.debug(`[${PREFIX}] decrease_section is: ${decreaseSection.length}`);
+      }
+      if (nosynSection !== '') {
+        logger.debug(`[${PREFIX}] nosyn_section is: ${nosynSection.length}`);
+      }
+      if (synergySection !== '') {
+        logger.debug(`[${PREFIX}] synergy_section is: ${synergySection.length}`);
+      }
+      if (unknownSection !== '') {
+        logger.debug(`[${PREFIX}] unknown_section is: ${unknownSection.length}`);
+      }
     }
 
-    if (section == 'Summary') {
-      if (summary != '') {
+    if (section === 'Summary') {
+      if (summary !== '') {
         logger.debug(`[${PREFIX}] summary.length: ${summary.length}`);
-        logger.debug(`[${PREFIX}] wiki_url: ${wiki_url}`);
+        logger.debug(`[${PREFIX}] wiki_url: ${wikiUrl}`);
         const embed = template.embedTemplate()
           .setColor('DARK_BLUE')
           .setTitle(`${substance} Summary`)
           .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
           .setDescription(summary);
-        if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false }); } else { interaction.followUp({ embeds: [embed], ephemeral: false }); }
+
+        if (!interaction.replied) {
+          interaction.reply({
+            embeds: [embed],
+            ephemeral: false,
+          });
+        } else {
+          interaction.followUp({
+            embeds: [embed],
+            ephemeral: false,
+          });
+        }
+
         logger.debug(`[${PREFIX}] finished!`);
         return;
       }
     }
 
-    if (section == 'Dosage') {
-      if (dosage != '') {
-        const entire_message = dosage;
+    if (section === 'Dosage') {
+      if (dosage !== '') {
+        const entireMessage = dosage;
         const book = [];
-        if (entire_message.length > 1024) {
+        if (entireMessage.length > 1024) {
           // logger.debug(`[${PREFIX}] ${section} is too long at ${entire_message.length}`);
-          const message_length = Math.ceil(entire_message.length / 1000);
+          const messageLength = Math.ceil(entireMessage.length / 1000);
           // logger.debug(`[${PREFIX}] I will make ${message_length} messages`)
-          let messages_built = 0;
-          let message_start = 0;
-          let message_end = 1000;
-          let message_part = '';
-          while (messages_built < message_length) {
+          let messagesBuilt = 0;
+          let messageStart = 0;
+          let messageEnd = 1000;
+          let messagePart = '';
+          while (messagesBuilt < messageLength) {
+            // eslint-disable-next-line
             // logger.debug(`[${PREFIX}] looking for last ) between ${message_start} and ${message_end}`)
-            message_end = entire_message.lastIndexOf('\n', message_end) + 1;
+            messageEnd = entireMessage.lastIndexOf('\n', messageEnd) + 1;
             // logger.debug(`[${PREFIX}] Found the last newline at ${message_end}`)
-            message_part = entire_message.slice(message_start, message_end);
+            messagePart = entireMessage.slice(messageStart, messageEnd);
             // logger.debug(`[${PREFIX}] message_part is ${message_part}`)
             // logger.debug(`[${PREFIX}] setting new start to ${message_end}`)
-            message_start = message_end;
-            message_end += 1000;
-            messages_built += 1;
+            messageStart = messageEnd;
+            messageEnd += 1000;
+            messagesBuilt += 1;
             const embed = template.embedTemplate()
               .setTitle(`${substance} Dosage`)
               .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
-              .setDescription(message_part);
+              .setDescription(messagePart);
             book.push(embed);
           }
         }
-        if (entire_message.length > 0 && entire_message.length <= 1024) {
+        if (entireMessage.length > 0 && entireMessage.length <= 1024) {
           logger.debug(`[{PREFIX}] ${section} is not too long`);
           const embed = template.embedTemplate()
             .setTitle(`${substance} Dosage`)
             .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
-            .setDescription(entire_message);
-          return interaction.reply({ embeds: [embed] });
+            .setDescription(entireMessage);
+          await interaction.reply({ embeds: [embed] });
+          return;
         }
         if (book.length > 0) {
           paginationEmbed(interaction, book, buttonList);
@@ -228,69 +246,70 @@ module.exports = {
         return;
       }
     }
-    if (section == 'Combos') {
-      const combo_results = {
-        Dangerous: danger_section,
-        Unsafe: unsafe_section,
-        Caution: caution_section,
-        'Low Risk & Decrease': decrease_section,
-        'Low Risk & No Synergy': nosyn_section,
-        'Low Risk & Synergy': synergy_section,
-        Unknown: unknown_section,
+    if (section === 'Combos') {
+      const comboResults = {
+        Dangerous: dangerSection,
+        Unsafe: unsafeSection,
+        Caution: cautionSection,
+        'Low Risk & Decrease': decreaseSection,
+        'Low Risk & No Synergy': nosynSection,
+        'Low Risk & Synergy': synergySection,
+        Unknown: unknownSection,
       };
       const book = [];
       // loop through each dictionary in all_combo_data
       // logger.debug(JSON.stringify(all_combo_data))
-      for (let i = 0; i < all_combo_data.length; i++) {
-        const combo_def = all_combo_data[i];
+      for (let i = 0; i < allComboData.length; i += 1) {
+        const comboDef = allComboData[i];
         // logger.debug(`[${PREFIX}] combo_def: ${JSON.stringify(combo_def)}`);
-        const drug_status = combo_def.status;
-        logger.debug(`[${PREFIX}] drug_status is ${drug_status}`);
-        const { emoji } = combo_def;
-        const { color } = combo_def;
-        const { definition } = combo_def;
-        const { thumbnail } = combo_def;
-        const section_results = combo_results[drug_status];
-        let entire_message = section_results;
-        if (section_results != '') {
-          entire_message = `${definition}\n\n${section_results}`;
-        }
+        const drugStatus = comboDef.status;
+        logger.debug(`[${PREFIX}] drug_status is ${drugStatus}`);
+        const {
+          emoji,
+          color,
+          definition,
+          thumbnail,
+        } = comboDef;
+        const sectionResults = comboResults[drugStatus];
+        let entireMessage = sectionResults;
+        if (sectionResults !== '') entireMessage = `${definition}\n\n${sectionResults}`;
         // logger.debug(`[${PREFIX}] entire_message is ${entire_message}`);
-        const title = `${emoji} ${drug_status} ${emoji}`;
+        const title = `${emoji} ${drugStatus} ${emoji}`;
 
-        if (entire_message.length > 1024) {
-          logger.debug(`[${PREFIX}] ${drug_status} is too long at ${entire_message.length}`);
-          const message_length = Math.ceil(entire_message.length / 1000);
+        if (entireMessage.length > 1024) {
+          logger.debug(`[${PREFIX}] ${drugStatus} is too long at ${entireMessage.length}`);
+          const messageLength = Math.ceil(entireMessage.length / 1000);
           // logger.debug(`[${PREFIX}] I will make ${message_length} messages`)
-          let messages_built = 0;
-          let message_start = 0;
-          let message_end = 1000;
-          let message_part = '';
-          while (messages_built < message_length) {
+          let messagesBuilt = 0;
+          let messageStart = 0;
+          let messageEnd = 1000;
+          let messagePart = '';
+          while (messagesBuilt < messageLength) {
+            // eslint-disable-next-line
             // logger.debug(`[${PREFIX}] looking for last ) between ${message_start} and ${message_end}`)
-            message_end = entire_message.lastIndexOf('\n', message_end) + 1;
+            messageEnd = entireMessage.lastIndexOf('\n', messageEnd) + 1;
             // logger.debug(`[${PREFIX}] Found the last newline at ${message_end}`)
-            message_part = entire_message.slice(message_start, message_end);
+            messagePart = entireMessage.slice(messageStart, messageEnd);
             // logger.debug(`[${PREFIX}] message_part is ${message_part}`)
             // logger.debug(`[${PREFIX}] setting new start to ${message_end}`)
-            message_start = message_end;
-            message_end += 1000;
-            messages_built += 1;
+            messageStart = messageEnd;
+            messageEnd += 1000;
+            messagesBuilt += 1;
             const embed = template.embedTemplate()
               .setTitle(`${title}`)
               .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
-              .setDescription(message_part)
+              .setDescription(messagePart)
               .setColor(color)
               .setThumbnail(thumbnail);
             book.push(embed);
           }
         }
-        if (entire_message.length > 0 && entire_message.length <= 1024) {
-          logger.debug(`[{PREFIX}] ${drug_status} is not too long`);
+        if (entireMessage.length > 0 && entireMessage.length <= 1024) {
+          logger.debug(`[{PREFIX}] ${drugStatus} is not too long`);
           const embed = template.embedTemplate()
             .setTitle(`${title}`)
             .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
-            .setDescription(entire_message)
+            .setDescription(entireMessage)
             .setColor(color)
             .setThumbnail(thumbnail);
           book.push(embed);
