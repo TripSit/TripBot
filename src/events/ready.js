@@ -117,7 +117,7 @@ module.exports = {
         });
 
         async function checkReminders() {
-            logger.debug(`[${PREFIX}] Checking reminders...`);
+            // logger.debug(`[${PREFIX}] Checking reminders...`);
             global.user_db.forEach(async (doc) => {
                 if (doc.value.reminders) {
                     const all_reminders = doc.value.reminders;
