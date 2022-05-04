@@ -1,13 +1,12 @@
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../utils/logger.js');
-const db = global.db;
 const PREFIX = require('path').parse(__filename).name;
 const template = require('../utils/embed_template');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const channel_moderators_id = process.env.channel_moderators;
-const users_db_name = process.env.users_db_name;
 const { get_user_info } = require('../utils/get_user_info');
+const { set_user_info } = require('../utils/set_user_info');
 
 // const mod_buttons = new MessageActionRow()
 //     .addComponents(
@@ -178,16 +177,12 @@ module.exports = {
             logger.debug(`[${PREFIX}] I replied to ${interaction.member}!`);
         }
 
-        const actor_results = get_user_info(actor);
+        // Extract actor data
+        const actor_results = await get_user_info(actor);
         const actor_data = actor_results[0];
-        const actor_fbid = actor_results[1];
         const actor_action = `${command}_sent`;
 
-        const target_results = get_user_info(target);
-        const target_data = target_results[0];
-        const target_fbid = target_results[1];
-        const target_action = `${command}_received`;
-
+        // Transfor actor data
         if ('mod_actions' in actor_data) {
             actor_data.mod_actions[actor_action] = (actor_data.mod_actions[actor_action] || 0) + 1;
         }
@@ -195,26 +190,15 @@ module.exports = {
             actor_data.mod_actions = { [actor_action]: 1 };
         }
 
-        if (actor_fbid !== '') {
-            logger.debug(`[${PREFIX}] Updating actor data`);
-            try {
-                await db.collection(users_db_name).doc(actor_fbid).set(actor_data);
-            }
-            catch (err) {
-                logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
-            }
-        }
-        else {
-            logger.debug(`[${PREFIX}] Creating actor data`);
-            try {
-                await db.collection(users_db_name).doc().set(actor_data);
-            }
-            catch (err) {
-                logger.error(`[${PREFIX}] Error creating actor data: ${err}`);
-            }
-        }
+        // Load actor data
+        await set_user_info(actor_results[1], actor_data);
 
+        // Extract target data
+        const target_results = await get_user_info(target);
+        const target_data = target_results[0];
+        const target_action = `${command}_received`;
 
+        // Transform taget data
         if ('mod_actions' in target_data) {
             target_data.mod_actions[target_action] = (target_data.mod_actions[target_action] || 0) + 1;
         }
@@ -222,25 +206,8 @@ module.exports = {
             target_data.mod_actions = { [target_action]: 1 };
         }
 
-        if (target_fbid !== '') {
-            logger.debug(`[${PREFIX}] Updating target data`);
-            try {
-                await db.collection(users_db_name).doc(target_fbid).set(target_data);
-            }
-            catch (err) {
-                logger.error(`[${PREFIX}] Error updating target data: ${err}`);
-            }
-        }
-        else {
-            logger.debug(`[${PREFIX}] Creating target data`);
-            try {
-                await db.collection(users_db_name).doc().set(target_data);
-            }
-            catch (err) {
-                logger.error(`[${PREFIX}] Error creating target data: ${err}`);
-            }
-        }
-
+        // Load target data
+        await set_user_info(target_results[1], target_data);
 
         // const title = `${actor} ${command}ed ${target} ${duration ? `for ${duration}` : ''} ${reason ? `because ${reason}` : ''}`;
         const title = `${actor} ${command}ed ${target} ${reason ? `because ${reason}` : ''}`;

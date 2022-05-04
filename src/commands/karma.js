@@ -32,11 +32,15 @@ module.exports = {
         .addUserOption(option => option.setName('user').setDescription('User to lookup!'),
         ),
     async execute(interaction) {
-        let patient = interaction.options.getMember('user');
-        if (!patient) {patient = interaction.member;}
-        const patientData = get_user_info(patient)[0];
+        let actor = interaction.options.getMember('user');
+        if (!actor) {actor = interaction.member;}
 
-        const karma_received = patientData['karma_recieved'];
+        // Extract actor data
+        const actor_results = await get_user_info(actor);
+        const actor_data = actor_results[0];
+
+        // Transform actor data
+        const karma_received = actor_data['karma_recieved'];
         let karma_received_string = '';
         if (karma_received) {
             karma_received_string = Object.entries(karma_received).map(([key, value]) => `${value}: ${key}`).join('\n');
@@ -44,8 +48,7 @@ module.exports = {
         else {
             karma_received_string = 'Nothing, they are a blank canvas to be discovered!';
         }
-
-        const karma_given = patientData['karma_given'];
+        const karma_given = actor_data['karma_given'];
         let karma_given_string = '';
         if (karma_given) {
             karma_given_string = Object.entries(karma_given).map(([key, value]) => `${value}: ${key}`).join('\n');
@@ -57,13 +60,13 @@ module.exports = {
         const book = [];
         const random_quoteA = karma_quotes[Math.floor(Math.random() * Object.keys(karma_quotes).length).toString()];
         const karma_received_embed = template.embed_template()
-            .setTitle(`${patient.user.username}'s Karma Received`)
+            .setTitle(`${actor.user.username}'s Karma Received`)
             .setDescription(`${karma_received_string}\n\n${random_quoteA}`);
         book.push(karma_received_embed);
 
         const random_quoteB = karma_quotes[Math.floor(Math.random() * Object.keys(karma_quotes).length).toString()];
         const karma_given_embed = template.embed_template()
-            .setTitle(`${patient.user.username}'s Karma Given`)
+            .setTitle(`${actor.user.username}'s Karma Given`)
             .setDescription(`${karma_given_string}\n\n${random_quoteB}`);
         book.push(karma_given_embed);
 

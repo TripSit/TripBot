@@ -3,10 +3,9 @@ const logger = require('../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const template = require('../utils/embed_template');
 const { get_user_info } = require('../utils/get_user_info');
+const { set_user_info } = require('../utils/set_user_info');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const users_db_name = process.env.users_db_name;
 const role_needshelp = process.env.role_needshelp;
-const db = global.db;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -54,14 +53,12 @@ module.exports = {
         logger.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
 
 
-        const actor_results = get_user_info(actor);
+        const actor_results = await get_user_info(actor);
         const actor_data = actor_results[0];
-        const actor_fbid = actor_results[1];
         const actor_action = `${command}_sent`;
 
-        const target_results = get_user_info(target);
+        const target_results = await get_user_info(target);
         const target_data = target_results[0];
-        const target_fbid = target_results[1];
         const target_action = `${command}_received`;
 
         let enable = interaction.options.getString('enable');
@@ -94,6 +91,7 @@ module.exports = {
                     }
                 });
 
+                // Transform actor data
                 logger.debug(`[${PREFIX}] Found actor data, updating it`);
                 if ('mod_actions' in actor_data) {
                     actor_data.mod_actions[actor_action] = (actor_data.mod_actions[actor_action] || 0) + 1;
@@ -103,25 +101,10 @@ module.exports = {
                 }
                 actor_data.roles = actorRoleNames;
 
-                if (actor_fbid !== '') {
-                    logger.debug(`[${PREFIX}] Updating actor data`);
-                    try {
-                        await db.collection(users_db_name).doc(actor_fbid).set(actor_data);
-                    }
-                    catch (error) {
-                        logger.error(`[${PREFIX}] Error updating actor data: ${error}`);
-                    }
-                }
-                else {
-                    logger.debug(`[${PREFIX}] Creating actor data`);
-                    try {
-                        await db.collection(users_db_name).doc().set(actor_data);
-                    }
-                    catch (error) {
-                        logger.error(`[${PREFIX}] Error creating actor data: ${error}`);
-                    }
-                }
+                // Load actor data
+                await set_user_info(actor_results[1], actor_data);
 
+                // Transform target data
                 logger.debug(`[${PREFIX}] Found target data, updating it`);
                 if ('mod_actions' in target_data) {
                     target_data.mod_actions[target_action] = (target_data.mod_actions[target_action] || 0) + 1;
@@ -131,24 +114,8 @@ module.exports = {
                 }
                 target_data.roles = targetRoleNames;
 
-                if (target_fbid !== '') {
-                    logger.debug(`[${PREFIX}] Updating target data`);
-                    try {
-                        await db.collection(users_db_name).doc(target_fbid).set(target_data);
-                    }
-                    catch (error) {
-                        logger.error(`[${PREFIX}] Error updating target data: ${error}`);
-                    }
-                }
-                else {
-                    logger.debug(`[${PREFIX}] Creating target data`);
-                    try {
-                        await db.collection(users_db_name).doc().set(target_data);
-                    }
-                    catch (error) {
-                        logger.error(`[${PREFIX}] Error creating target data: ${error}`);
-                    }
-                }
+                // Load target data
+                await set_user_info(target_results[1], target_data);
 
                 // Remove all roles from the target
                 targetRoles.forEach(role => {

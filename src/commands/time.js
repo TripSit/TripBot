@@ -26,15 +26,12 @@ module.exports = {
             subcommand
                 .setName('get')
                 .setDescription('Get someone\'s time!')
-                .addUserOption(option => option.setName('user').setDescription('User to lookup!')),
+                .addUserOption(option => option.setName('user').setDescription('User to lookup!').setRequired(true)),
         ),
     async execute(interaction) {
         const timezone = interaction.options.getString('timezone');
         let target = interaction.options.getMember('user');
-        if (!target) {
-            target = interaction.member;
-        }
-
+        if (!target) {target = interaction.member;}
         const actor = interaction.member;
 
         let command = '';
@@ -71,7 +68,7 @@ module.exports = {
 
             actor_data['timezone'] = tzCode;
 
-            set_user_info(actor_results[1], actor_data);
+            await set_user_info(actor_results[1], actor_data);
 
             const embed = template.embed_template()
                 .setDescription(`I set your timezone to ${timezone}`);
