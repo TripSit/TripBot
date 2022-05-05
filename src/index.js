@@ -1,7 +1,6 @@
 // TODO: Migrate to env.js (that will use dotenv)
 if (process.env.NODE_ENV !== 'production') require('dotenv').config();
 // TODO: Look into not including this in the main process
-require('../deploy-commands');
 const { Client, Collection, Intents } = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('./utils/logger.js');
