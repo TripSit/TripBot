@@ -3,7 +3,7 @@ const { MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const logger = require('../../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
-const template = require('../utils/embed_template');
+const template = require('../../utils/embed_template');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const guild_id = process.env.guildId;
 

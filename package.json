@@ -1,14 +1,14 @@
 {
   "name": "@tripsit/discord-bot",
   "private": true,
-  "version": "1.2.17",
+  "version": "1.2.18",
   "description": "A bot for TripSit",
   "main": "index.js",
   "scripts": {
-    "start": "node ./src/index.js",
+    "start": "node ./deploy-commands.js && node ./src/index.js",
     "dev": "npm version patch -git-tag-version false && nodemon --ignore src/assets/ --ignore src/backups/ --inspect ./src/index.js",
     "debug": "nodemon --ignore src/assets/ --ignore src/backups/ --inspect ./src/index.js",
-    "register-commands": "./deploy-commands.js",
+    "register-commands": "node ./deploy-commands.js",
     "lint": "eslint .",
     "fix": "eslint --fix .",
     "test": "npm run lint",

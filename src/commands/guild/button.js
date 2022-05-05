@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageButton, MessageActionRow } = require('discord.js');
 const { stripIndents } = require('common-tags');
-const logger = require('../utils/logger.js');
+const logger = require('../../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const channel_drugquestions_id = process.env.channel_drugquestions;

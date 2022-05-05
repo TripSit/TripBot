@@ -1,12 +1,12 @@
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageActionRow, MessageButton } = require('discord.js');
-const logger = require('../utils/logger.js');
+const logger = require('../../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const template = require('../../utils/embed_template');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const channel_moderators_id = process.env.channel_moderators;
-const { get_user_info } = require('../utils/get_user_info');
-const { set_user_info } = require('../utils/set_user_info');
+const { get_user_info } = require('../../utils/get_user_info');
+const { set_user_info } = require('../../utils/set_user_info');
 
 // const mod_buttons = new MessageActionRow()
 //     .addComponents(
