@@ -59,21 +59,29 @@ client.invites = new Collection();
 // Set up guild commands
 const guild_command_names = [
     'botmod',
+    'birthday',
     'button',
     'clean_db',
     'invite',
     'issue',
+    'joke',
     'karma',
+    'kipp',
     'mod',
+    'motivate',
     'report',
+    'remindme',
     'test',
+    'time',
     'tripsit',
+    'urban_define',
+    'topic',
+    'triptoys',
 ];
 
 // Set up global commands
 const globl_command_names = [
     'about',
-    'birthday',
     'breathe',
     'bug',
     'calc_benzo',
@@ -88,17 +96,8 @@ const globl_command_names = [
     'hydrate',
     'idose',
     'info',
-    'joke',
-    'kipp',
-    'motivate',
-    'pill_id',
     'reagents',
     'recovery',
-    'remindme',
-    'time',
-    'topic',
-    'triptoys',
-    'urban_define',
 ];
 
 // Add global commands to guild commands
