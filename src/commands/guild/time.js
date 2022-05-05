@@ -3,9 +3,9 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const timezones = JSON.parse(fs.readFileSync('./src/assets/timezones.json'));
-const template = require('../utils/embed_template');
-const { get_user_info } = require('../utils/get_user_info');
-const { set_user_info } = require('../utils/set_user_info');
+const template = require('../../utils/embed_template');
+const { get_user_info } = require('../../utils/get_user_info');
+const { set_user_info } = require('../../utils/set_user_info');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -89,7 +89,8 @@ module.exports = {
             if (!tzCode) {
                 const embed = template.embed_template()
                     .setDescription(`${target.user.username} is a timeless treasure <3 (and has not set a time zone)`);
-                interaction.reply({ embeds: [embed], ephemeral: false });
+                if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
+                else {interaction.followUp({ embeds: [embed], ephemeral: false });}
                 logger.debug(`[${PREFIX}] Done!!`);
                 return;
             }

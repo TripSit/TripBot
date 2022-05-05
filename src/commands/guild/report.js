@@ -6,7 +6,7 @@ const template = require('../../utils/embed_template');
 const { get_user_info } = require('../../utils/get_user_info');
 if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
 const channel_moderators_id = process.env.channel_moderators;
-const { set_user_info } = require('../utils/set_user_info');
+const { set_user_info } = require('../../utils/set_user_info');
 
 const mod_buttons = new MessageActionRow()
     .addComponents(
