@@ -29,7 +29,8 @@ module.exports = {
         logger.debug(`[${PREFIX}] ${user.username} gave ${reaction_emoji.name} to ${reaction_author.username} in ${reaction.message.guild}!`);
         const command = client.commands.get('chitragupta');
         await command.execute('chitragupta', user, 1, reaction_emoji.toString(), reaction_author);
-        if (count >= 1 && reaction_emoji.name == 'ts_down') {
+        if (count >= 3 && reaction_emoji.name == 'ts_down') {
+            if (reaction.message.member.isCommunicationDisabled()) { return; }
             logger.debug(`[${PREFIX}] ${user.username} has been downvoted three times, muting!`);
             // One week is the maximum time to mute
             const timeout_duration = 604800000;
@@ -37,7 +38,7 @@ module.exports = {
             const moderator_role = reaction.message.guild.roles.cache.find(role => role.id === role_moderator_id);
             reaction.message.reply(`Hey ${moderator_role}s! ${reaction_author.username} was downvoted three times for this, please review!`);
         }
-        if (count >= 1 && reaction_emoji.name == 'ts_up') {
+        if (count >= 3 && reaction_emoji.name == 'ts_up') {
             const moderator_role = reaction.message.guild.roles.cache.find(role => role.id === role_moderator_id);
             reaction.message.channel.send(`Hey ${moderator_role}s! ${reaction_author.username} has been upvoted three times, great work!`);
         }
