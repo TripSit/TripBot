@@ -29,6 +29,7 @@ module.exports = {
                 mod_actions: {},
                 roles: [],
                 timezone: '',
+                birthday: [],
             };
         }
         return [member_data, member_fbid];
