@@ -29,11 +29,13 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('karma')
         .setDescription('Keep it positive please!')
-        .addUserOption(option => option.setName('user').setDescription('User to lookup!'),
-        ),
+        .addUserOption(option => option.setName('user').setDescription('User to lookup!'))
+        .addBooleanOption(option => option.setName('all').setDescription('Return all karma?')),
     async execute(interaction) {
         let actor = interaction.options.getMember('user');
         if (!actor) {actor = interaction.member;}
+        let all = interaction.options.getBoolean('all');
+        if (!all) {all = false;}
 
         // Extract actor data
         const actor_results = await get_user_info(actor);
@@ -43,7 +45,17 @@ module.exports = {
         const karma_received = actor_data['karma_recieved'];
         let karma_received_string = '';
         if (karma_received) {
-            karma_received_string = Object.entries(karma_received).map(([key, value]) => `${value}: ${key}`).join('\n');
+            if (all) {
+                // sort karma_received by value and then turn it into a string
+                const karma_received_sorted = Object.entries(karma_received).sort((a, b) => b[1] - a[1]);
+                karma_received_string = karma_received_sorted.map(([key, value]) => `${value}: ${key}`).join('\n');
+            }
+            else {
+                // Find 'ts_upvote' and 'ts_downvote' in the keys and then turn it into a string
+                const karma_received_sorted = Object.entries(karma_received).sort((a, b) => b[1] - a[1]);
+                const karma_received_filtered = karma_received_sorted.filter(([key, value]) => key === '<:ts_up:958721361587630210>' || key === '<:ts_down:960161563849932892>');
+                karma_received_string = karma_received_filtered.map(([key, value]) => `${value}: ${key}`).join('\n');
+            }
         }
         else {
             karma_received_string = 'Nothing, they are a blank canvas to be discovered!';
@@ -51,7 +63,17 @@ module.exports = {
         const karma_given = actor_data['karma_given'];
         let karma_given_string = '';
         if (karma_given) {
-            karma_given_string = Object.entries(karma_given).map(([key, value]) => `${value}: ${key}`).join('\n');
+            if (all) {
+                // sort karma_given by value and then turn it into a string
+                const karma_given_sorted = Object.entries(karma_given).sort((a, b) => b[1] - a[1]);
+                karma_given_string = karma_given_sorted.map(([key, value]) => `${value}: ${key}`).join('\n');
+            }
+            else {
+                // Find 'ts_upvote' and 'ts_downvote' in the keys and then turn it into a string
+                const karma_given_sorted = Object.entries(karma_given).sort((a, b) => b[1] - a[1]);
+                const karma_given_filtered = karma_given_sorted.filter(([key, value]) => key === '<:ts_up:958721361587630210>' || key === '<:ts_down:960161563849932892>');
+                karma_given_string = karma_given_filtered.map(([key, value]) => `${value}: ${key}`).join('\n');
+            }
         }
         else {
             karma_given_string = 'Nothing, they are a wet paintbrush ready to make their mark!';
