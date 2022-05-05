@@ -1,9 +1,7 @@
 const PREFIX = require('path').parse(__filename).name;
-const db = global.db;
 const logger = require('../utils/logger.js');
 const { get_guild_info } = require('../utils/get_user_info');
-if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const guild_db_name = process.env.guild_db_name;
+const { set_guild_info } = require('../utils/set_user_info');
 
 module.exports = {
     name: 'guildCreate',
@@ -11,10 +9,9 @@ module.exports = {
         logger.info(`[${PREFIX}] Joined guild: ${guild.name} (id: ${guild.id})`);
 
 
-        const target_rslt = get_guild_info(guild);
-        const target_data = target_rslt[0];
-        const target_fbid = target_rslt[1];
-
+        // Extract taget data
+        const target_results = await get_guild_info(guild);
+        const target_data = target_results[0];
 
         if (target_data.guild_banned == true) {
             logger.info(`[${PREFIX}] I'm banned from ${guild.name}, leaving!`);
@@ -22,11 +19,7 @@ module.exports = {
             return;
         }
 
-        try {
-            await db.collection(guild_db_name).doc(target_fbid).set(target_data);
-        }
-        catch (err) {
-            logger.error(`[${PREFIX}] Error adding guild data to firebase: ${err}`);
-        }
+        // Load target data
+        await set_guild_info(target_results[1], target_data);
     },
 };

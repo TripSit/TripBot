@@ -52,9 +52,9 @@ module.exports = {
             last_dose = parameters[0];
         }
         let desired_dose = interaction.options.getInteger('desired_dose');
-        if (!desired_dose) {
-            desired_dose = parameters[1];
-        }
+        // if (!desired_dose) {
+        //     desired_dose = parameters[1];
+        // }
         let days = interaction.options.getInteger('days');
         if (!days) {
             days = parameters[2];
