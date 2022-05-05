@@ -39,9 +39,9 @@ module.exports = {
             const moderator_role = reaction.message.guild.roles.cache.find(role => role.id === role_moderator_id);
             reaction.message.reply(`Hey ${moderator_role}s! ${reaction_author.username} was downvoted three times for this, please review!`);
         }
-        if (count == 3 && reaction_emoji.name == 'ts_up') {
-            reaction.message.channel.send(`${reaction_author.username} has been upvoted three times, great work!`);
-        }
+        // if (count == 3 && reaction_emoji.name == 'ts_up') {
+        //     reaction.message.channel.send(`${reaction_author.username} has been upvoted three times, great work!`);
+        // }
         return;
     },
 };
