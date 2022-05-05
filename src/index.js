@@ -73,6 +73,7 @@ const guild_command_names = [
 // Set up global commands
 const globl_command_names = [
     'about',
+    'birthday',
     'breathe',
     'bug',
     'calc_benzo',
