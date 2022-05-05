@@ -21,8 +21,8 @@ module.exports = {
         if (!member_data) {
             logger.debug(`[${PREFIX}] No member data found, creating a blank one!`);
             member_data = {
-                discord_username: member.user.username,
-                discord_discriminator: member.user.discriminator,
+                discord_username: member.user ? member.user.username : member.username,
+                discord_discriminator: member.user ? member.user.discriminator : member.discriminator,
                 discord_id: member.id.toString(),
                 karma_given: {},
                 karma_received: {},

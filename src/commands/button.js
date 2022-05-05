@@ -22,7 +22,7 @@ module.exports = {
         Don't need immediate help but want a peaceful chat? Come to ${channel_sanctuary}!\n
         **Under the influence of something and need help? Click the buttom below!**
         This will create a new thread and alert the community that you need assistance!
-        🛑Please do not message helpers or tripsitters directly!🛑\n
+        🛑 Please do not message helpers or tripsitters directly! 🛑\n
         All other topics of conversation are welcome in ${channel_general}!\n
         Stay safe!`;
 
