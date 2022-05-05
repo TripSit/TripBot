@@ -3,10 +3,9 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger.js');
 const PREFIX = require('path').parse(__filename).name;
 const timezones = JSON.parse(fs.readFileSync('./src/assets/timezones.json'));
-const template = require('../../utils/embed_template');
-const { get_user_info } = require('../../utils/get_user_info');
-const users_db_name = process.env.users_db_name;
-const db = global.db;
+const template = require('../utils/embed_template');
+const { get_user_info } = require('../utils/get_user_info');
+const { set_user_info } = require('../utils/set_user_info');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -27,16 +26,13 @@ module.exports = {
             subcommand
                 .setName('get')
                 .setDescription('Get someone\'s time!')
-                .addUserOption(option => option.setName('user').setDescription('User to lookup!')),
+                .addUserOption(option => option.setName('user').setDescription('User to lookup!').setRequired(true)),
         ),
     async execute(interaction) {
         const timezone = interaction.options.getString('timezone');
         let target = interaction.options.getMember('user');
-        if (!target) {
-            target = interaction.member;
-        }
-
-        const actor = interaction.user;
+        if (!target) {target = interaction.member;}
+        const actor = interaction.member;
 
         let command = '';
         try {
@@ -58,10 +54,8 @@ module.exports = {
             }
             // logger.debug(`[${PREFIX}] actor.id: ${actor.id}`);
 
-            const actor_results = get_user_info(actor);
+            const actor_results = await get_user_info(actor);
             const actor_data = actor_results[0];
-            const actor_fbid = actor_results[1];
-
             if ('timezone' in actor_data) {
                 if (actor_data.timezone == tzCode) {
                     const embed = template.embed_template()
@@ -74,24 +68,8 @@ module.exports = {
 
             actor_data['timezone'] = tzCode;
 
-            if (actor_fbid !== '') {
-                logger.debug(`[${PREFIX}] Updating actor data`);
-                try {
-                    await db.collection(users_db_name).doc(actor_fbid).set(actor_data);
-                }
-                catch (err) {
-                    logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
-                }
-            }
-            else {
-                logger.debug(`[${PREFIX}] Creating actor data`);
-                try {
-                    await db.collection(users_db_name).doc().set(actor_data);
-                }
-                catch (err) {
-                    logger.error(`[${PREFIX}] Error creating actor data: ${err}`);
-                }
-            }
+            await set_user_info(actor_results[1], actor_data);
+
             const embed = template.embed_template()
                 .setDescription(`I set your timezone to ${timezone}`);
             interaction.reply({ embeds: [embed], ephemeral: true });
@@ -101,7 +79,7 @@ module.exports = {
         if (command == 'get') {
             let tzCode = '';
 
-            const target_results = get_user_info(target);
+            const target_results = await get_user_info(target);
             const target_data = target_results[0];
 
             if ('timezone' in target_data) {

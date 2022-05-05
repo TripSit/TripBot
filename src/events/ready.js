@@ -72,23 +72,18 @@ module.exports = {
         // logger.debug(`[${PREFIX}] guild_db: ${JSON.stringify(global.guild_db, null, 4)}`);
 
 
-        try {
-            const user_db = [];
-            const snapshot_user = await db.collection(users_db_name).get();
-            snapshot_user.forEach((doc) => {
-                const key = doc.id;
-                const value = doc.data();
-                user_db.push({
-                    key,
-                    value,
-                });
+        const user_db = [];
+        const snapshot_user = await db.collection(users_db_name).get();
+        snapshot_user.forEach((doc) => {
+            const key = doc.id;
+            const value = doc.data();
+            user_db.push({
+                key,
+                value,
             });
-            global.user_db = user_db;
-        }
-        catch (err) {
-            logger.debug(`[${PREFIX}] Error getting user firebase, make sure this is expected: ${err}`);
-            global.user_db = JSON.parse(fs.readFileSync('./src/assets/user_db_example.json'));
-        }
+        });
+        global.user_db = user_db;
+
         if (process.env.NODE_ENV !== 'production') {
             fs.writeFileSync(`./src/backups/user_db_(${today}).json`, JSON.stringify(global.user_db, null, 2));
             logger.debug(`[${PREFIX}] User database backedup.`);
@@ -96,51 +91,47 @@ module.exports = {
         logger.debug(`[${PREFIX}] User database loaded.`);
         // logger.debug(`[${PREFIX}] user_db: ${JSON.stringify(global.user_db, null, 4)}`);
 
+        // Set the global banned guilds
+        const blacklist_guilds = [];
+        const snapshot_guild = await db.collection(users_db_name).get();
+        snapshot_guild.forEach((doc) => {
+            // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc}`);
+            if (doc.data().isBanned == true) {
+                blacklist_guilds.push(doc.data().guild_id);
+            }
+        });
+        // logger.debug(`[${PREFIX}] blacklist_guilds: ${blacklist_guilds}`);
+
+        // Check if the guild is in blacklist_guilds and if so, leave it
+        client.guilds.cache.forEach(guild => {
+            if (blacklist_guilds.includes(guild.id)) {
+                logger.info(`[${PREFIX}] Leaving ${guild.name}`);
+                guild.leave();
+            }
+        });
+
         // Print each guild I am in
         logger.debug(`[${PREFIX}] I am in:`);
         client.guilds.cache.forEach(guild => {
             logger.debug(`[${PREFIX}] ${guild.name}`);
         });
 
-        // Set the global banned guilds
-        global.blacklist_guilds = [];
-        global.guild_db.forEach((doc) => {
-            // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc}`);
-            if (doc.isBanned == true) {
-                global.blacklist_guilds.push(doc.guild_id);
-            }
-        });
-        logger.debug(`[${PREFIX}] blacklist_guilds: ${global.blacklist_guilds}`);
-
-        // Check if the guild is in blacklist_guilds and if so, leave it
-        client.guilds.cache.forEach(guild => {
-            if (global.blacklist_guilds.includes(guild.id)) {
-                logger.info(`[${PREFIX}] Leaving ${guild.name}`);
-                guild.leave();
-            }
-        });
-
-        // Set the global banned users
-        global.blacklist_users = [];
-        global.user_db.forEach((doc) => {
-            // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc}`);
-            if (doc.isBanned == true) {
-                global.blacklist_users.push(doc.discord_id);
-            }
-        });
-        logger.debug(`[${PREFIX}] blacklist_users: ${global.blacklist_users}`);
-
         async function checkReminders() {
-            logger.debug(`[${PREFIX}] Checking reminders...`);
+            // logger.debug(`[${PREFIX}] Checking reminders...`);
             global.user_db.forEach(async (doc) => {
-                if (doc.reminders) {
-                    const all_reminders = doc.reminders;
-                    for (const reminder_time in doc.reminders) {
-                        const user_fb_id = doc.id;
-                        const userid = doc.discord_id;
+                if (doc.value.reminders) {
+                    const all_reminders = doc.value.reminders;
+                    // logger.debug(`[${PREFIX}] doc.value.reminders ${JSON.stringify(all_reminders, null, 4)}`);
+                    for (const reminder_time in doc.value.reminders) {
+                        const user_fb_id = doc.key;
+                        // logger.debug(`[${PREFIX}] user_fb_id: ${user_fb_id}`);
+                        const userid = doc.value.discord_id;
+                        // logger.debug(`[${PREFIX}] userid: ${userid}`);
                         const remindertime = parseInt(reminder_time);
+                        // logger.debug(`[${PREFIX}] remindertime: ${remindertime}`);
                         const reminder = all_reminders[remindertime];
-                        logger.debug(`[${PREFIX}] ${userid} has a reminder on ${remindertime}`);
+                        // logger.debug(`[${PREFIX}] reminder: ${reminder}`);
+                        // logger.debug(`[${PREFIX}] ${userid} has a reminder on ${remindertime}`);
                         if (remindertime <= Date.now() / 1000) {
                             logger.debug(`[${PREFIX}] Sending reminder to ${userid}`);
                             const user = await client.users.fetch(userid);
@@ -149,11 +140,15 @@ module.exports = {
                                 .setDescription(`You set a reminder to ${reminder}`);
                             user.send({ embeds: [reminder_embed] });
                             // remove the reminder
-                            // delete doc.reminders[remindertime];
+                            delete doc.value.reminders[remindertime];
+                            // logger.debug(`[${PREFIX}] Removing reminder from doc.value`);
                             delete all_reminders[remindertime];
-                            db.collection(users_db_name).doc(user_fb_id).update({
-                                reminders: all_reminders,
-                            });
+                            // logger.debug(`[${PREFIX}] Removing reminder from all_reminders`);
+                            // logger.debug(`[${PREFIX}] users_db_name: ${users_db_name}`);
+                            // logger.debug(`[${PREFIX}] user_fb_id: ${user_fb_id}`);
+                            // logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 4)}`);
+                            db.collection(users_db_name).doc(user_fb_id).update(doc.value);
+                            // logger.debug(`[${PREFIX}] Removing reminder from db`);
                         }
                     }
                 }

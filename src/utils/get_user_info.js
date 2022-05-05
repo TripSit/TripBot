@@ -1,39 +1,46 @@
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger.js');
+if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
+const db = global.db;
+const guild_db_name = process.env.guild_db_name;
+const users_db_name = process.env.users_db_name;
 
 module.exports = {
-    get_user_info: (member) => {
+    get_user_info: async (member) => {
         logger.debug(`[${PREFIX}] Looking up member ${member}!`);
         let member_data = null;
-        let member_fbid = '';
-        global.user_db.forEach((doc) => {
-            if (doc.value.discord_id === member.id.toString()) {
+        let member_fbid = null;
+        const snapshot_user = await db.collection(users_db_name).get();
+        snapshot_user.forEach((doc) => {
+            if (doc.data().discord_id === member.id.toString()) {
                 logger.debug(`[${PREFIX}] Member data found!`);
-                member_data = doc.value;
-                member_fbid = doc.key;
+                member_data = doc.data();
+                member_fbid = doc.id;
             }
         });
         if (!member_data) {
             logger.debug(`[${PREFIX}] No member data found, creating a blank one!`);
             member_data = {
-                discord_username: member.user.username,
-                discord_discriminator: member.user.discriminator,
+                discord_username: member.user ? member.user.username : member.username,
+                discord_discriminator: member.user ? member.user.discriminator : member.discriminator,
                 discord_id: member.id.toString(),
                 karma_given: {},
                 karma_received: {},
                 mod_actions: {},
                 roles: [],
                 timezone: '',
+                birthday: [],
             };
         }
         return [member_data, member_fbid];
     },
-    get_guild_info: (guild) => {
+    get_guild_info: async (guild) => {
         logger.debug(`[${PREFIX}] Looking up guild ${guild}!`);
         let guild_data = null;
-        let guild_fbid = '';
-        global.user_db.forEach((doc) => {
-            if (doc.value.discord_id === guild.id.toString()) {
+        let guild_fbid = null;
+        const snapshot_guild = await db.collection(guild_db_name).get();
+        snapshot_guild.forEach((doc) => {
+            if (doc.data().discord_id === guild.id.toString()) {
                 guild_data = doc.value;
                 guild_fbid = doc.key;
             }
