@@ -6,12 +6,9 @@ const { MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 const { getGuildInfo } = require('../../utils/get-user-info');
+const { setGuildInfo } = require('../../utils/set-user-info');
 
-const { db } = global;
 const PREFIX = path.parse(__filename).name;
-
-const { guild_db_name: guildDbName } = process.env;
-// const users_db_name = process.env.users_db_name;
 
 const warnButtons = new MessageActionRow()
   .addComponents(new MessageButton()
@@ -170,14 +167,19 @@ module.exports = {
         return;
       }
 
+      // Extract target guild info
       const targetAction = `${command}_received`;
-      const [targetData, targetFbid] = getGuildInfo(targetGuild);
+      const targetResults = await getGuildInfo(targetGuild);
+      const targetData = targetResults[0];
 
+      // Transform target guild info
       if ('mod_actions' in targetData) {
         targetData.mod_actions[targetAction] = (targetData.mod_actions[targetAction] || 0) + 1;
-      } else targetData.mod_actions = { [targetAction]: 1 };
+      } else {
+        targetData.mod_actions = { [targetAction]: 1 };
+      }
+      logger.debug(`[${PREFIX}] target_data: ${JSON.stringify(targetData)}`);
 
-      logger.debug(`[${PREFIX}] target_data:`, targetData);
       if (command === 'warn') {
         color = 'YELLOW';
         const warnEmbed = template.embedTemplate()
@@ -237,27 +239,10 @@ module.exports = {
           logger.debug(`[${PREFIX}] I unbanned ${targetGuild}!`);
         }
       }
-      logger.debug(`[${PREFIX}] target_fbid: ${targetFbid}`);
 
-      if (targetFbid !== '') {
-        logger.debug(`[${PREFIX}] Updating target guild data`);
-        await db.collection(guildDbName)
-          .doc(targetFbid)
-          .set(targetData)
-          .catch(ex => {
-            logger.error(`[${PREFIX}] Error updating guild data, make sure this is expected:`, ex);
-            return Promise.reject(ex);
-          });
-      } else {
-        logger.debug(`[${PREFIX}] Creating target guild data`);
-        await db.collection(guildDbName)
-          .doc()
-          .set(targetData)
-          .catch(ex => {
-            logger.error(`[${PREFIX}] Error creating guild data, make sure this is expected:`, ex);
-            return Promise.reject(ex);
-          });
-      }
+      // Load target guild info
+      // Load actor data
+      await setGuildInfo(targetResults[1], targetData);
 
       if (command !== 'info') {
         const title = `I have ${command}ed ${targetGuild} ${reason ? `because ${reason}` : ''}`;

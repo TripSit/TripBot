@@ -6,33 +6,18 @@ const { MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo } = require('../../utils/get-user-info');
+const { setUserInfo } = require('../../utils/set-user-info');
 
 const PREFIX = path.parse(__filename).name;
 
-const {
-  users_db_name: usersDbName,
-  channel_moderators: channelModeratorsId,
-} = process.env;
-const { db } = global;
+const { channel_moderators: channelModeratorsId } = process.env;
 
 const modButtons = new MessageActionRow()
   .addComponents(
-    new MessageButton()
-      .setCustomId('warnbtn')
-      .setLabel('Warn')
-      .setStyle('PRIMARY'),
-    new MessageButton()
-      .setCustomId('timeoutbtn')
-      .setLabel('Timeout')
-      .setStyle('SECONDARY'),
-    new MessageButton()
-      .setCustomId('kickbtn')
-      .setLabel('Kick')
-      .setStyle('SECONDARY'),
-    new MessageButton()
-      .setCustomId('banbtn')
-      .setLabel('Ban')
-      .setStyle('DANGER'),
+    new MessageButton().setCustomId('warnbtn').setLabel('Warn').setStyle('PRIMARY'),
+    new MessageButton().setCustomId('timeoutbtn').setLabel('Timeout').setStyle('SECONDARY'),
+    new MessageButton().setCustomId('kickbtn').setLabel('Kick').setStyle('SECONDARY'),
+    new MessageButton().setCustomId('banbtn').setLabel('Ban').setStyle('DANGER'),
   );
 
 module.exports = {
@@ -59,33 +44,28 @@ module.exports = {
     const reason = interaction.options.getString('reason');
     const command = 'report';
 
-    const [actorData, actorFbid] = getUserInfo(actor);
+    // Extract actor data
+    const actorResults = await getUserInfo(actor);
+    const actorData = actorResults[0];
     const actorAction = `${command}_sent`;
 
-    const [targetData, targetFbid] = getUserInfo(target);
-    const targetAction = `${command}_received`;
-
+    // Transform actor data
     logger.debug(`[${PREFIX}] Found actor data, updating it`);
     if ('mod_actions' in actorData) {
       actorData.mod_actions[actorAction] = (actorData.mod_actions[actorAction] || 0) + 1;
-    } else actorData.mod_actions = { [actorAction]: 1 };
-
-    if (actorFbid !== '') {
-      logger.debug(`[${PREFIX}] Updating actor data`);
-      try {
-        await db.collection(usersDbName).doc(actorFbid).set(actorData);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
-      }
     } else {
-      logger.debug(`[${PREFIX}] Creating actor data`);
-      try {
-        await db.collection(usersDbName).set(actorData);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error creating actor data: ${err}`);
-      }
+      actorData.mod_actions = { [actorAction]: 1 };
     }
 
+    // Load actor data
+    await setUserInfo(actorResults[1], actorData);
+
+    // Extract target data
+    const targetResults = await getUserInfo(target);
+    const targetData = targetResults[0];
+    const targetAction = `${command}_received`;
+
+    // Transform target data
     logger.debug(`[${PREFIX}] Found target data, updating it`);
     if ('mod_actions' in targetData) {
       targetData.mod_actions[targetAction] = (targetData.mod_actions[targetAction] || 0) + 1;
@@ -93,21 +73,8 @@ module.exports = {
       targetData.mod_actions = { [targetAction]: 1 };
     }
 
-    if (targetFbid !== '') {
-      logger.debug(`[${PREFIX}] Updating target data`);
-      try {
-        await db.collection(usersDbName).doc(targetFbid).set(targetData);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error updating target data: ${err}`);
-      }
-    } else {
-      logger.debug(`[${PREFIX}] Creating target data`);
-      try {
-        await db.collection(usersDbName).doc().set(targetData);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error creating target data: ${err}`);
-      }
-    }
+    // Load target data
+    await setUserInfo(targetResults[1], targetData);
 
     const embedMod = template.embedTemplate()
       .setDescription(`${actor} reported ${target} for ${reason} in ${rchannel}`)

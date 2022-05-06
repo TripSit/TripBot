@@ -16,44 +16,62 @@ const buttonList = [
   new MessageButton().setCustomId('nextbtn').setLabel('Next').setStyle('SUCCESS'),
 ];
 
-function getRandomQuoteIndex() {
-  return (Math.random() * Object.keys(karmaQuotes).length).toString();
-}
-
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('karma')
     .setDescription('Keep it positive please!')
-    .addUserOption(option => option
-      .setName('user')
-      .setDescription('User to lookup!')),
-
+    .addUserOption(option => option.setName('user').setDescription('User to lookup!'))
+    .addBooleanOption(option => option.setName('all').setDescription('Return all karma?')),
   async execute(interaction) {
-    const patient = interaction.options.getMember('user') || interaction.member;
-    const patientData = getUserInfo(patient).at(0);
+    let actor = interaction.options.getMember('user');
+    if (!actor) actor = interaction.member;
+    let all = interaction.options.getBoolean('all');
+    if (!all) all = false;
 
+    // Extract actor data
+    const [actorData] = await getUserInfo(actor);
+
+    // Transform actor data
+    const karmaReceived = actorData.karma_recieved;
     let karmaReceivedString = '';
-    if (patientData.karma_received) {
-      karmaReceivedString = Object.entries(patientData.karma_received)
-        .map(([key, value]) => `${value}: ${key}`).join('\n');
-    } else karmaReceivedString = 'Nothing, they are a blank canvas to be discovered!';
-
-    let karmaGivenString = '';
-    if (patientData.karma_given) {
-      karmaGivenString = Object.entries(patientData.karma_given)
-        .map(([key, value]) => `${value}: ${key}`).join('\n');
-    } else karmaGivenString = 'Nothing, they are a wet paintbrush ready to make their mark!';
+    if (karmaReceived) {
+      if (all) {
+        // sort karma_received by value and then turn it into a string
+        const karmaReceivedSorted = Object.entries(karmaReceived).sort((a, b) => b[1] - a[1]);
+        karmaReceivedString = karmaReceivedSorted.map(([key, value]) => `${value}: ${key}`).join('\n');
+      } else {
+        // Find 'ts_upvote' and 'ts_downvote' in the keys and then turn it into a string
+        const karmaReceivedSorted = Object.entries(karmaReceived).sort((a, b) => b[1] - a[1]);
+        const karmaReceivedFiltered = karmaReceivedSorted.filter(([key]) => key === '<:ts_up:958721361587630210>' || key === '<:ts_down:960161563849932892>');
+        karmaReceivedString = karmaReceivedFiltered.map(([key, value]) => `${value}: ${key}`).join('\n');
+      }
+    } else {
+      karmaReceivedString = 'Nothing, they are a blank canvas to be discovered!';
+    }
+    const { karma_given: karmaGiven } = actorData;
+    const karmaGivenString = !karmaGiven
+      ? 'Nothing, they are a wet paintbrush ready to make their mark!'
+      : Object.entries(karmaGiven)
+        .sort((a, b) => b[1] - a[1])
+        .filter(([k]) => all
+          || ['<:ts_up:958721361587630210>', '<:ts_down:960161563849932892>'].includes(k))
+        .map(([k, v]) => `${v}: ${k}`)
+        .join('\n');
 
     const book = [];
-    const randomQuoteA = karmaQuotes[getRandomQuoteIndex()];
+    const randomQuoteA = karmaQuotes[Math.floor(
+      Math.random() * Object.keys(karmaQuotes).length,
+    ).toString()];
     const karmaReceivedEmbed = template.embedTemplate()
-      .setTitle(`${patient.user.username}'s Karma Received`)
+      .setTitle(`${actor.user.username}'s Karma Received`)
       .setDescription(`${karmaReceivedString}\n\n${randomQuoteA}`);
     book.push(karmaReceivedEmbed);
 
-    const randomQuoteB = karmaQuotes[getRandomQuoteIndex()];
+    const randomQuoteB = karmaQuotes[Math.floor(
+      Math.random() * Object.keys(karmaQuotes).length,
+    ).toString()];
     const karmaGivenEmbed = template.embedTemplate()
-      .setTitle(`${patient.user.username}'s Karma Given`)
+      .setTitle(`${actor.user.username}'s Karma Given`)
       .setDescription(`${karmaGivenString}\n\n${randomQuoteB}`);
     book.push(karmaGivenEmbed);
 

@@ -5,10 +5,10 @@
   "description": "A bot for TripSit",
   "main": "index.js",
   "scripts": {
-    "start": "node ./src/index.js",
+    "start": "node ./deploy-commands.js && node ./src/index.js",
     "dev": "npm version patch -git-tag-version false && nodemon --ignore src/assets/ --ignore src/backups/ --inspect ./src/index.js",
     "debug": "nodemon --ignore src/assets/ --ignore src/backups/ --inspect ./src/index.js",
-    "register-commands": "./deploy-commands.js",
+    "register-commands": "node ./deploy-commands.js",
     "lint": "eslint .",
     "fix": "eslint --fix .",
     "test": "npm run lint",
@@ -39,6 +39,7 @@
     "@octokit/rest": "^18.12.0",
     "axios": "^0.27.1",
     "chalk": "4.1.2",
+    "common-tags": "^1.8.2",
     "discord-api-types": "^0.31.1",
     "discord.js": "^13.6.0",
     "discordjs-button-pagination": "^3.0.1",
@@ -50,6 +51,7 @@
     "imgur": "^2.2.0",
     "jsdom": "^19.0.0",
     "octokit": "^1.7.1",
+    "pm2": "^5.2.0",
     "underscore": "^1.13.2",
     "winston": "^3.7.2"
   },
@@ -57,9 +59,8 @@
     "@babel/core": "^7.17.10",
     "@babel/eslint-parser": "^7.17.0",
     "@babel/plugin-proposal-optional-chaining": "^7.16.7",
-    "eslint": "^8.14.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.26.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.14.0",
     "nodemon": "^2.0.16"
   },
   "engines": {

@@ -11,5 +11,6 @@ module.exports = {
     strict: [2, 'global'],
     'arrow-parens': [2, 'as-needed'],
     'consistent-return': 0,
+    'prefer-destructuring': 0,
   },
 };
