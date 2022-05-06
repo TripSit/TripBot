@@ -99,142 +99,11 @@ module.exports = {
         }
         actorData.roles = actorRoleNames;
 
-        if (actorFbid !== '') {
-          logger.debug(`[${PREFIX}] Updating actor data`);
-          try {
-            await db.collection(usersDbMame).doc(actorFbid).set(actorData);
-          } catch (error) {
-            logger.error(`[${PREFIX}] Error updating actor data: ${error}`);
-          }
-        } else {
-          logger.debug(`[${PREFIX}] Creating actor data`);
-          try {
-            await db.collection(usersDbMame).doc().set(actorData);
-          } catch (error) {
-            logger.error(`[${PREFIX}] Error creating actor data: ${error}`);
-          }
-        }
-<<<<<<< HEAD
-=======
-        logger.debug(`[${PREFIX}] target: ${target.user.username}#${target.user.discriminator}`);
-        const targetid = target.id.toString();
-        logger.debug(`[${PREFIX}] targetid: ${targetid}`);
-        const targetRoles = target.roles.cache;
-        const targetRoleNames = targetRoles.map(role => role.name);
-        logger.debug(`[${PREFIX}] targetRoleNames: ${targetRoleNames}`);
-        // Loop through userRoles and check if the target has the needsHelp role
-        const targetHasNeedsHelpRole = targetRoleNames.some(role => role === needsHelpRole.name);
-        logger.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
-
-
-        const actor_results = await get_user_info(actor);
-        const actor_data = actor_results[0];
-        const actor_action = `${command}_sent`;
-
-        const target_results = await get_user_info(target);
-        const target_data = target_results[0];
-        const target_action = `${command}_received`;
-
-        let enable = interaction.options.getString('enable');
-        // Default to on if no setting is provided
-        if (!enable) {enable = 'On';}
-        logger.debug(`[${PREFIX}] enable: ${enable}`);
-
-        const command = 'tripsit';
-        if (enable == 'On') {
-            if (targetHasNeedsHelpRole) {
-                const embed = template.embedTemplate()
-                    .setColor('DARK_BLUE');
-                if (user_provided) {embed.setDescription(`Hey ${interaction.member}, ${target.user.username} is already being helped!\n\nCheck your channel list for '${target.user.username} discuss here!'`);}
-                else {embed.setDescription(`Hey ${interaction.member}, you're already being helped!\n\nCheck your channel list for '${target.user.username} chat here!'`);}
-                logger.debug(`[${PREFIX}] target ${target} is already being helped!`);
-                interaction.reply({ embeds: [embed], ephemeral: true });
-                logger.debug(`[${PREFIX}] finished!`);
-                return;
-            }
-            if (!targetHasNeedsHelpRole) {
-                // Team check
-                targetRoleNames.forEach(role => {
-                    if (role === 'Admin' || role === 'Operator' || role === 'Moderator' || role === 'Tripsitter') {
-                        const embed = template.embedTemplate()
-                            .setColor('DARK_BLUE')
-                            .setDescription('This user is a member of the team and cannot be helped!');
-                        interaction.reply({ embeds: [embed], ephemeral: true });
-                        logger.debug(`[${PREFIX}] finished!`);
-                        return;
-                    }
-                });
-
-                // Transform actor data
-                logger.debug(`[${PREFIX}] Found actor data, updating it`);
-                if ('mod_actions' in actor_data) {
-                    actor_data.mod_actions[actor_action] = (actor_data.mod_actions[actor_action] || 0) + 1;
-                }
-                else {
-                    actor_data.mod_actions = { [actor_action]: 1 };
-                }
-                actor_data.roles = actorRoleNames;
-
-                // Load actor data
-                await set_user_info(actor_results[1], actor_data);
-
-                // Transform target data
-                logger.debug(`[${PREFIX}] Found target data, updating it`);
-                if ('mod_actions' in target_data) {
-                    target_data.mod_actions[target_action] = (target_data.mod_actions[target_action] || 0) + 1;
-                }
-                else {
-                    target_data.mod_actions = { [target_action]: 1 };
-                }
-                target_data.roles = targetRoleNames;
-
-                // Load target data
-                await set_user_info(target_results[1], target_data);
-
-                // Remove all roles from the target
-                targetRoles.forEach(role => {
-                    if (role.name !== '@everyone') {
-                        logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.user.username}`);
-                        target.roles.remove(role);
-                    }
-                });
-
-                // Get the needshelp role object and add it to the target
-                logger.debug(`[${PREFIX}] Adding role ${needsHelpRole.name} to ${target.user.username}`);
-                target.roles.add(needsHelpRole);
-                const embed = template.embedTemplate()
-                    .setColor('DARK_BLUE');
-                if (user_provided) {embed.setDescription(`Hey ${interaction.member}, Thanks for the heads up, we'll be helping ${target.user.username} shortly!\n\nCheck your channel list for '${target.user.username} discuss here!'`);}
-                else {embed.setDescription(`Hey ${interaction.member}, thanks for reaching out!\n\nCheck your channel list for '${target.user.username} chat here!'`);}
-                logger.debug(`[${PREFIX}] target ${target} is now being helped!`);
-                interaction.reply({ embeds: [embed], ephemeral: true });
-                logger.debug(`[${PREFIX}] finished!`);
-                return;
-            }
->>>>>>> development
-
         logger.debug(`[${PREFIX}] Found target data, updating it`);
         if ('mod_actions' in targetData) {
           targetData.mod_actions[targetAction] = (targetData.mod_actions[targetAction] || 0) + 1;
         } else {
           targetData.mod_actions = { [targetAction]: 1 };
-        }
-        targetData.roles = targetRoleNames;
-
-        if (targetFbid !== '') {
-          logger.debug(`[${PREFIX}] Updating target data`);
-          try {
-            await db.collection(usersDbMame).doc(targetFbid).set(targetData);
-          } catch (error) {
-            logger.error(`[${PREFIX}] Error updating target data: ${error}`);
-          }
-        } else {
-          logger.debug(`[${PREFIX}] Creating target data`);
-          try {
-            await db.collection(usersDbMame).doc().set(targetData);
-          } catch (error) {
-            logger.error(`[${PREFIX}] Error creating target data: ${error}`);
-          }
         }
 
         // Remove all roles from the target
@@ -244,6 +113,11 @@ module.exports = {
             target.roles.remove(role);
           }
         });
+
+        targetData.roles = targetRoleNames;
+
+        // TODO: Use transactions
+        await Promise.all([setUserInfo(actorFbid, actorData), setUserInfo(targetFbid, targetData)]);
 
         // Get the needshelp role object and add it to the target
         logger.debug(`[${PREFIX}] Adding role ${needsHelpRole.name} to ${target.user.username}`);
