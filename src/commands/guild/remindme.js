@@ -2,7 +2,7 @@
 
 // TODO: Luxon
 const path = require('path');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo } = require('../../utils/get-user-info');
@@ -41,6 +41,8 @@ module.exports = {
 
     const seconds = duration * (units === 'minute' ? 60 : units === 'hour' ? 3600 : units === 'day' ? 86400 : units === 'week' ? 604800 : units === 'month' ? 2592000 : units === 'year' ? 31536000 : 0); // eslint-disable-line
     const unix_future_time = Math.floor(Date.now() / 1000) + seconds;
+
+    const relative = time(unix_future_time, 'R');
 
     // Extract actor data
     const actor_results = await getUserInfo(actor);
