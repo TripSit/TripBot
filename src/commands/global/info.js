@@ -36,7 +36,7 @@ module.exports = {
     const section = interaction.options.getString('section') || parameters.at(1);
     const wikiUrl = `https://wiki.tripsit.me/wiki/${substance}`;
 
-    logger.info(`[${PREFIX}] starting getDrugInfo with parameter: ${substance}`);
+    logger.debug(`[${PREFIX}] starting getDrugInfo with parameter: ${substance}`);
     // loop through drug_data_all to find the substance
     let drugData = {};
     logger.debug(`[${PREFIX}] All drug data length is: ${Object.keys(drugDataAll).length}`);
@@ -99,7 +99,7 @@ module.exports = {
         }
       }
     }
-    logger.debug(`[${PREFIX}] dosage is: ${dosage.length}`);
+    // logger.debug(`[${PREFIX}] dosage is: ${dosage.length}`);
     let tolerance = '';
     if (drugData.tolerance) {
       tolerance += '\nTolerance\n';
@@ -145,33 +145,33 @@ module.exports = {
         }
       }
 
-      if (dangerSection !== '') {
-        logger.debug(`[${PREFIX}] danger_section is: ${dangerSection.length}`);
-      }
-      if (unsafeSection !== '') {
-        logger.debug(`[${PREFIX}] unsafe_section is: ${unsafeSection.length}`);
-      }
-      if (cautionSection !== '') {
-        logger.debug(`[${PREFIX}] caution_section is: ${cautionSection.length}`);
-      }
-      if (decreaseSection !== '') {
-        logger.debug(`[${PREFIX}] decrease_section is: ${decreaseSection.length}`);
-      }
-      if (nosynSection !== '') {
-        logger.debug(`[${PREFIX}] nosyn_section is: ${nosynSection.length}`);
-      }
-      if (synergySection !== '') {
-        logger.debug(`[${PREFIX}] synergy_section is: ${synergySection.length}`);
-      }
-      if (unknownSection !== '') {
-        logger.debug(`[${PREFIX}] unknown_section is: ${unknownSection.length}`);
-      }
+      // if (dangerSection !== '') {
+      //   logger.debug(`[${PREFIX}] danger_section is: ${dangerSection.length}`);
+      // }
+      // if (unsafeSection !== '') {
+      //   logger.debug(`[${PREFIX}] unsafe_section is: ${unsafeSection.length}`);
+      // }
+      // if (cautionSection !== '') {
+      //   logger.debug(`[${PREFIX}] caution_section is: ${cautionSection.length}`);
+      // }
+      // if (decreaseSection !== '') {
+      //   logger.debug(`[${PREFIX}] decrease_section is: ${decreaseSection.length}`);
+      // }
+      // if (nosynSection !== '') {
+      //   logger.debug(`[${PREFIX}] nosyn_section is: ${nosynSection.length}`);
+      // }
+      // if (synergySection !== '') {
+      //   logger.debug(`[${PREFIX}] synergy_section is: ${synergySection.length}`);
+      // }
+      // if (unknownSection !== '') {
+      //   logger.debug(`[${PREFIX}] unknown_section is: ${unknownSection.length}`);
+      // }
     }
 
     if (section === 'Summary') {
       if (summary !== '') {
-        logger.debug(`[${PREFIX}] summary.length: ${summary.length}`);
-        logger.debug(`[${PREFIX}] wiki_url: ${wikiUrl}`);
+        // logger.debug(`[${PREFIX}] summary.length: ${summary.length}`);
+        // logger.debug(`[${PREFIX}] wiki_url: ${wikiUrl}`);
         const embed = template.embedTemplate()
           .setColor('DARK_BLUE')
           .setTitle(`${substance} Summary`)
@@ -226,7 +226,7 @@ module.exports = {
           }
         }
         if (entireMessage.length > 0 && entireMessage.length <= 1024) {
-          logger.debug(`[{PREFIX}] ${section} is not too long`);
+          // logger.debug(`[${PREFIX}] ${section} is not too long`);
           const embed = template.embedTemplate()
             .setTitle(`${substance} Dosage`)
             .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
@@ -263,7 +263,7 @@ module.exports = {
         const comboDef = allComboData[i];
         // logger.debug(`[${PREFIX}] combo_def: ${JSON.stringify(combo_def)}`);
         const drugStatus = comboDef.status;
-        logger.debug(`[${PREFIX}] drug_status is ${drugStatus}`);
+        // logger.debug(`[${PREFIX}] drug_status is ${drugStatus}`);
         const {
           emoji,
           color,

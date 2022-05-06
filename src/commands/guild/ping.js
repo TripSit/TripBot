@@ -14,10 +14,17 @@ module.exports = {
 
   async execute(interaction) {
     const embed = template.embedTemplate().setTitle('PONG');
+    if (!interaction.replied) {
+      interaction.reply({
+        embeds: [embed],
+        ephemeral: false,
+      });
+    } else {
+      interaction.followUp({
+        embeds: [embed],
+        ephemeral: false,
+      });
+    }
     logger.debug(`[${PREFIX}] finished!`);
-    interaction.followup({
-      embeds: [embed],
-      ephemeral: false,
-    });
   },
 };

@@ -156,7 +156,7 @@ module.exports = {
               const user = await client.users.fetch(userid);
               const reminderEmbed = template.embedTemplate()
                 .setTitle('Reminder!')
-                .setDescription(`You set a reminder to ${reminder}`);
+                .setDescription(`${reminder}`);
               user.send({ embeds: [reminderEmbed] });
               // remove the reminder
               delete doc.value.reminders[remindertime];
@@ -210,7 +210,7 @@ module.exports = {
     checkReminders();
     // eslint-disable-next-line
     // TODO: setInterval can cause unwanted side-effects, use recursive function w/ setTimeout
-    setInterval(checkReminders, 60000);
+    setInterval(checkReminders, 1000);
 
     logger.info(`[${PREFIX}] Ready to take over the world!`);
   },
