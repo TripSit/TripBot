@@ -3,11 +3,10 @@
 const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
-
 const { getUserInfo } = require('../../utils/get-user-info');
 const { setUserInfo } = require('../../utils/set-user-info');
 
-const PREFIX = path.parse(__filename).name;
+const PREFIX = require('path').parse(__filename).name; // eslint-disable-line
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -19,8 +18,7 @@ module.exports = {
 
     if (actor === target) { return; }
     // Extract actor data
-    const actorResults = await getUserInfo(actor);
-    const actorData = actorResults[0];
+    const [actorData, actorFbid] = await getUserInfo(actor);
 
     // Transform actor data
     if ('karma_given' in actorData) {
@@ -32,11 +30,10 @@ module.exports = {
     }
 
     // Load actor data
-    await setUserInfo(actorResults[1], actorData);
+    await setUserInfo(actorFbid, actorData);
 
     // Extract target data
-    const targetResults = await getUserInfo(target);
-    const targetData = targetResults[0];
+    const [targetData, targetFbid] = await getUserInfo(target);
 
     // Transform target data
     if ('karma_recieved' in targetData) {
@@ -48,7 +45,7 @@ module.exports = {
     }
 
     // Load target data
-    await setUserInfo(targetResults[1], targetData);
+    await setUserInfo(targetFbid, targetData);
 
     return logger.debug(`[${PREFIX}] finished!`);
   },

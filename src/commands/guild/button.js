@@ -45,6 +45,8 @@ module.exports = {
         //     .setStyle('PRIMARY'),
       );
 
+    // Create a new button
+    await interaction.reply({ content: buttonText, components: [row] });
     logger.debug(`[${PREFIX}] finished!`);
   },
 };

@@ -253,7 +253,7 @@ module.exports = {
         interaction.reply('Thanks for making this easy!');
       }
 
-      if (command) return;
+      if (!command) return;
 
       try {
         logger.debug(`[${PREFIX}] Executing command: ${command.name}`);
