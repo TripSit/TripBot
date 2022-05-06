@@ -1,17 +1,19 @@
 'use strict';
 
-const fs = require('fs');
-const PREFIX = require('path').parse(__filename).name;
+const path = require('path');
+const fs = require('fs/promises');
 const { Collection } = require('discord.js');
 const express = require('express');
 const logger = require('../utils/logger');
 const template = require('../utils/embed-template');
 const { NODE_ENV, TRIPSIT_GUILD_ID } = require('../../env');
 
+const PREFIX = path.parse(__filename).name;
+
 const { db } = global;
 const {
   PORT,
-  usersDbName,
+  users_db_name: usersDbName,
 } = process.env;
 
 // (*INVITE*) https://github.com/AnIdiotsGuide/discordjs-bot-guide/blob/master/coding-guides/tracking-used-invites.md
@@ -62,14 +64,20 @@ module.exports = {
     /* End *INVITE* code */
 
     const snapshotUser = await db.collection(usersDbName).get();
-    const userDb = snapshotUser.map(doc => ({
-      key: doc.id,
-      value: doc.data(),
-    }));
+    const userDb = [];
+    snapshotUser.forEach(doc => {
+      userDb.push({
+        key: doc.id,
+        value: doc.data(),
+      });
+    });
     global.user_db = userDb;
 
     if (NODE_ENV !== 'production') {
-      fs.writeFileSync(`./src/backups/user_db_(${today}).json`, JSON.stringify(global.user_db, null, 2));
+      await fs.writeFile(
+        path.resolve(`./src/backups/user_db_(${today}).json`),
+        JSON.stringify(global.user_db, null, 2),
+      );
       logger.debug(`[${PREFIX}] User database backedup.`);
     }
     logger.debug(`[${PREFIX}] User database loaded.`);
