@@ -14,6 +14,7 @@ const { db } = global;
 const {
   PORT,
   users_db_name: usersDbName,
+  guild_db_name: guildDbName,
 } = process.env;
 
 // (*INVITE*) https://github.com/AnIdiotsGuide/discordjs-bot-guide/blob/master/coding-guides/tracking-used-invites.md
@@ -62,6 +63,30 @@ module.exports = {
       }
     });
     /* End *INVITE* code */
+
+    try {
+      const guildDb = [];
+      const snapshotGuild = await db.collection(guildDbName).get();
+      snapshotGuild.forEach(doc => {
+        guildDb.push({
+          key: doc.id,
+          value: doc.data(),
+        });
+      });
+      Object.assign(global, { guild_db: guildDb });
+    } catch (ex) {
+      logger.debug(`[${PREFIX}] Error getting guild firebase, make sure this is expected:`, ex);
+      const guildDb = await fs.readFile(path.resolve('./src/assets/guild_db_example.json'));
+      Object.assign(global, { guild_db: guildDb });
+    }
+
+    if (NODE_ENV !== 'production') {
+      await fs.writeFile(
+        path.resolve(`./src/backups/guild_db_(${today}).json`),
+        JSON.stringify(global.guild_db, null, 2),
+      );
+    }
+    logger.debug(`[${PREFIX}] Guild database loaded.`);
 
     const snapshotUser = await db.collection(usersDbName).get();
     const userDb = [];
