@@ -1,99 +1,81 @@
-const fs = require('node:fs');
+'use strict';
+
+const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
-const PREFIX = require('path').parse(__filename).name;
-const logger = require('../../utils/logger.js');
-const template = require('../../utils/embed_template');
-const { get_user_info } = require('../../utils/get_user_info');
+const logger = require('../../utils/logger');
+const template = require('../../utils/embed-template');
+const { getUserInfo } = require('../../utils/get-user-info');
+const karmaQuotes = require('../../assets/karma_quotes.json');
 
-const raw_topics = fs.readFileSync('./src/assets/karma_quotes.json');
-const karma_quotes = JSON.parse(raw_topics);
-
-const backButton = new MessageButton()
-    .setCustomId('previousbtn')
-    .setLabel('Previous')
-    .setStyle('DANGER');
-
-const forwardButton = new MessageButton()
-    .setCustomId('nextbtn')
-    .setLabel('Next')
-    .setStyle('SUCCESS');
+const PREFIX = path.parse(__filename).name;
 
 const buttonList = [
-    backButton,
-    forwardButton,
+  new MessageButton().setCustomId('previousbtn').setLabel('Previous').setStyle('DANGER'),
+  new MessageButton().setCustomId('nextbtn').setLabel('Next').setStyle('SUCCESS'),
 ];
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('karma')
-        .setDescription('Keep it positive please!')
-        .addUserOption(option => option.setName('user').setDescription('User to lookup!'))
-        .addBooleanOption(option => option.setName('all').setDescription('Return all karma?')),
-    async execute(interaction) {
-        let actor = interaction.options.getMember('user');
-        if (!actor) {actor = interaction.member;}
-        let all = interaction.options.getBoolean('all');
-        if (!all) {all = false;}
+  data: new SlashCommandBuilder()
+    .setName('karma')
+    .setDescription('Keep it positive please!')
+    .addUserOption(option => option.setName('user').setDescription('User to lookup!'))
+    .addBooleanOption(option => option.setName('all').setDescription('Return all karma?')),
+  async execute(interaction) {
+    let actor = interaction.options.getMember('user');
+    if (!actor) actor = interaction.member;
+    let all = interaction.options.getBoolean('all');
+    if (!all) all = false;
 
-        // Extract actor data
-        const actor_results = await get_user_info(actor);
-        const actor_data = actor_results[0];
+    // Extract actor data
+    const [actorData] = await getUserInfo(actor);
 
-        // Transform actor data
-        const karma_received = actor_data['karma_recieved'];
-        let karma_received_string = '';
-        if (karma_received) {
-            if (all) {
-                // sort karma_received by value and then turn it into a string
-                const karma_received_sorted = Object.entries(karma_received).sort((a, b) => b[1] - a[1]);
-                karma_received_string = karma_received_sorted.map(([key, value]) => `${value}: ${key}`).join('\n');
-            }
-            else {
-                // Find 'ts_upvote' and 'ts_downvote' in the keys and then turn it into a string
-                const karma_received_sorted = Object.entries(karma_received).sort((a, b) => b[1] - a[1]);
-                const karma_received_filtered = karma_received_sorted.filter(([key, value]) => key === '<:ts_up:958721361587630210>' || key === '<:ts_down:960161563849932892>');
-                karma_received_string = karma_received_filtered.map(([key, value]) => `${value}: ${key}`).join('\n');
-            }
-        }
-        else {
-            karma_received_string = 'Nothing, they are a blank canvas to be discovered!';
-        }
-        const karma_given = actor_data['karma_given'];
-        let karma_given_string = '';
-        if (karma_given) {
-            if (all) {
-                // sort karma_given by value and then turn it into a string
-                const karma_given_sorted = Object.entries(karma_given).sort((a, b) => b[1] - a[1]);
-                karma_given_string = karma_given_sorted.map(([key, value]) => `${value}: ${key}`).join('\n');
-            }
-            else {
-                // Find 'ts_upvote' and 'ts_downvote' in the keys and then turn it into a string
-                const karma_given_sorted = Object.entries(karma_given).sort((a, b) => b[1] - a[1]);
-                const karma_given_filtered = karma_given_sorted.filter(([key, value]) => key === '<:ts_up:958721361587630210>' || key === '<:ts_down:960161563849932892>');
-                karma_given_string = karma_given_filtered.map(([key, value]) => `${value}: ${key}`).join('\n');
-            }
-        }
-        else {
-            karma_given_string = 'Nothing, they are a wet paintbrush ready to make their mark!';
-        }
+    // Transform actor data
+    const karmaReceived = actorData.karma_recieved;
+    let karmaReceivedString = '';
+    if (karmaReceived) {
+      if (all) {
+        // sort karma_received by value and then turn it into a string
+        const karmaReceivedSorted = Object.entries(karmaReceived).sort((a, b) => b[1] - a[1]);
+        karmaReceivedString = karmaReceivedSorted.map(([key, value]) => `${value}: ${key}`).join('\n');
+      } else {
+        // Find 'ts_upvote' and 'ts_downvote' in the keys and then turn it into a string
+        const karmaReceivedSorted = Object.entries(karmaReceived).sort((a, b) => b[1] - a[1]);
+        const karmaReceivedFiltered = karmaReceivedSorted.filter(([key]) => key === '<:ts_up:958721361587630210>' || key === '<:ts_down:960161563849932892>');
+        karmaReceivedString = karmaReceivedFiltered.map(([key, value]) => `${value}: ${key}`).join('\n');
+      }
+    } else {
+      karmaReceivedString = 'Nothing, they are a blank canvas to be discovered!';
+    }
+    const { karma_given: karmaGiven } = actorData;
+    const karmaGivenString = !karmaGiven
+      ? 'Nothing, they are a wet paintbrush ready to make their mark!'
+      : Object.entries(karmaGiven)
+        .sort((a, b) => b[1] - a[1])
+        .filter(([k]) => all
+          || ['<:ts_up:958721361587630210>', '<:ts_down:960161563849932892>'].includes(k))
+        .map(([k, v]) => `${v}: ${k}`)
+        .join('\n');
 
-        const book = [];
-        const random_quoteA = karma_quotes[Math.floor(Math.random() * Object.keys(karma_quotes).length).toString()];
-        const karma_received_embed = template.embed_template()
-            .setTitle(`${actor.user.username}'s Karma Received`)
-            .setDescription(`${karma_received_string}\n\n${random_quoteA}`);
-        book.push(karma_received_embed);
+    const book = [];
+    const randomQuoteA = karmaQuotes[Math.floor(
+      Math.random() * Object.keys(karmaQuotes).length,
+    ).toString()];
+    const karmaReceivedEmbed = template.embedTemplate()
+      .setTitle(`${actor.user.username}'s Karma Received`)
+      .setDescription(`${karmaReceivedString}\n\n${randomQuoteA}`);
+    book.push(karmaReceivedEmbed);
 
-        const random_quoteB = karma_quotes[Math.floor(Math.random() * Object.keys(karma_quotes).length).toString()];
-        const karma_given_embed = template.embed_template()
-            .setTitle(`${actor.user.username}'s Karma Given`)
-            .setDescription(`${karma_given_string}\n\n${random_quoteB}`);
-        book.push(karma_given_embed);
+    const randomQuoteB = karmaQuotes[Math.floor(
+      Math.random() * Object.keys(karmaQuotes).length,
+    ).toString()];
+    const karmaGivenEmbed = template.embedTemplate()
+      .setTitle(`${actor.user.username}'s Karma Given`)
+      .setDescription(`${karmaGivenString}\n\n${randomQuoteB}`);
+    book.push(karmaGivenEmbed);
 
-        paginationEmbed(interaction, book, buttonList);
-        logger.debug(`[${PREFIX}] finished!`);
-        return;
-    },
+    paginationEmbed(interaction, book, buttonList);
+    logger.debug(`[${PREFIX}] finished!`);
+  },
 };
