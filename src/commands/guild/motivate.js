@@ -15,20 +15,26 @@ module.exports = {
     .setDescription('Random motivational quotes'),
 
   async execute(interaction) {
-    const { data } = await axios.post('https://motivational-quotes1.p.rapidapi.com/motivation', {
-      headers: {
-        'content-type': 'application/json',
-        'X-RapidAPI-Host': 'motivational-quotes1.p.rapidapi.com',
-        'X-RapidAPI-Key': API_KEY,
-      },
-      data: JSON.stringify({
-        key1: 'value',
-        key2: 'value',
-      }),
-    });
-
-    logger.debug(`[${PREFIX}] data:`, data);
-    const embed = template.embedTemplate().setDescription(data);
+    const embed = template.embedTemplate();
+    try {
+      const { data } = await axios.post('https://motivational-quotes1.p.rapidapi.com/motivation', {
+        headers: {
+          'content-type': 'application/json',
+          'X-RapidAPI-Host': 'motivational-quotes1.p.rapidapi.com',
+          'X-RapidAPI-Key': API_KEY,
+        },
+        data: JSON.stringify({
+          key1: 'value',
+          key2: 'value',
+        }),
+      });
+      logger.debug(`[${PREFIX}] data:`, data);
+      embed.setDescription(data);
+    }
+    catch (error) {
+      logger.error(`[${PREFIX}] ${error}`);
+      embed.setDescription("Error with this API! This is not an error with the bot!\n\n" + error);
+    }
 
     if (!interaction.replied) {
       interaction.reply({

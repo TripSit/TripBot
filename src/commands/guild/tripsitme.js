@@ -66,11 +66,10 @@ module.exports = {
     interaction.reply({ embeds: [embed], ephemeral: true });
 
     const privMsg = stripIndents`
-      Hey ${patient}, thank you for asking for assistance!\n
-      **Start off by telling us what's going on: what did you take, how much, what time?**\n
-      A ${test ? 'tripsitter' : tripsitterRole}s or ${test ? 'helper' : helperRole}s will be with
-      you as soon as they're available!\nIf this is a medical emergency please contact your local
-      /EMS: we do not call EMS on behalf of anyone.\n
+      Hey ${patient}, thank you for asking for assistance!
+      **Start off by telling us what's going on: what did you take, how much, what time?**
+      A ${test ? 'tripsitter' : tripsitterRole}s or ${test ? 'helper' : helperRole}s will be with you as soon as they're available!
+      If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
     `;
 
     // Create a new thread in the interaction.channel with the
@@ -98,10 +97,7 @@ module.exports = {
       reason: `${patient.user.username} requested help`,
     });
 
-    const helperMsg = `
-      Hey ${test ? 'tripsitter' : tripsitterRole}s and ${test ? 'helper' : helperRole}s,
-      ${patient.user.username} can use some help, use this thread to talk about it!
-    `;
+    const helperMsg = stripIndents`Hey ${test ? 'tripsitter' : tripsitterRole}s and ${test ? 'helper' : helperRole}s, ${patient.user.username} can use some help, use this thread to talk about it!`;
 
     // send a message to the thread
     await helperThread.send(helperMsg);
