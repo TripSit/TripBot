@@ -1,80 +1,107 @@
+'use strict';
+
+// TODO: Luxon
+const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const PREFIX = require('path').parse(__filename).name;
-const logger = require('../../utils/logger.js');
-const template = require('../../utils/embed_template');
-if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
-const { get_user_info } = require('../../utils/get_user_info');
-const { set_user_info } = require('../../utils/set_user_info');
-const db = global.db;
-const users_db_name = process.env.users_db_name;
+const logger = require('../../utils/logger');
+const template = require('../../utils/embed-template');
+const { getUserInfo } = require('../../utils/get-user-info');
+const { setUserInfo } = require('../../utils/set-user-info');
+
+const PREFIX = path.parse(__filename).name;
+
+const { db } = global;
+const { users_db_name: usersDbName } = process.env;
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('remindme')
-        .setDescription('Set a reminder!')
-        .addIntegerOption(option =>
-            option.setName('duration')
-                .setDescription('How long?')
-                .setRequired(true),
-        )
-        .addStringOption(option =>
-            option.setName('units')
-                .setDescription('What units?')
-                .setRequired(true)
-                .addChoice('Minutes', 'minute')
-                .addChoice('Hours', 'hour')
-                .addChoice('Days', 'day')
-                .addChoice('Weeks', 'week')
-                .addChoice('Months', 'month')
-                .addChoice('Years', 'year'),
-        )
-        .addStringOption(option =>
-            option.setName('reminder')
-                .setDescription('What do you want to be reminded?')
-                .setRequired(true),
-        ),
-    async execute(interaction) {
-        const duration = interaction.options.getInteger('duration');
-        const units = interaction.options.getString('units');
-        const reminder = interaction.options.getString('reminder');
-        const actor = interaction.user;
+  data: new SlashCommandBuilder()
+    .setName('remindme')
+    .setDescription('Set a reminder!')
+    .addIntegerOption(option => option.setName('duration')
+      .setDescription('How long?')
+      .setRequired(true))
+    .addStringOption(option => option.setName('units')
+      .setDescription('What units?')
+      .setRequired(true)
+      .addChoice('Minutes', 'minute')
+      .addChoice('Hours', 'hour')
+      .addChoice('Days', 'day')
+      .addChoice('Weeks', 'week')
+      .addChoice('Months', 'month')
+      .addChoice('Years', 'year'))
+    .addStringOption(option => option.setName('reminder')
+      .setDescription('What do you want to be reminded?')
+      .setRequired(true)),
 
-        const seconds = duration * (units === 'minute' ? 60 : units === 'hour' ? 3600 : units === 'day' ? 86400 : units === 'week' ? 604800 : units === 'month' ? 2592000 : units === 'year' ? 31536000 : 0);
-        const unix_future_time = Math.floor(Date.now() / 1000) + seconds;
+  async execute(interaction) {
+    const duration = interaction.options.getInteger('duration');
+    const units = interaction.options.getString('units');
+    const reminder = interaction.options.getString('reminder');
+    const actor = interaction.user;
 
-        // Extract actor data
-        const actor_results = await get_user_info(actor);
-        const actor_data = actor_results[0];
+    const seconds = duration * (units === 'minute' ? 60 : units === 'hour' ? 3600 : units === 'day' ? 86400 : units === 'week' ? 604800 : units === 'month' ? 2592000 : units === 'year' ? 31536000 : 0); // eslint-disable-line
+    const unixFutureTime = Math.floor(Date.now() / 1000) + seconds;
 
-        // Transform actor data
-        if ('reminders' in actor_data) {
-            actor_data.reminders[unix_future_time] = reminder;
-        }
-        else {
-            actor_data.reminders = { [unix_future_time]: reminder };
-        }
+    const actorResults = await getUserInfo(actor);
+    let [actorData] = actorResults;
+    let actorFBID = '';
+    global.user_db.forEach(doc => {
+      if (doc.value.discord_id === actor.id) {
+        logger.debug(`[${PREFIX}] Found a actor match!`);
+        // console.log(doc.id, '=>', doc.value);
+        actorFBID = doc.key;
+        logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
+        actorData = doc.value;
+      }
+    });
 
-        // Load actor data
-        await set_user_info(actor_results[1], actor_data);
+    // Check if the actor data exists, if not create a blank one
+    if (Object.keys(actorData).length === 0) {
+      logger.debug(`[${PREFIX}] No actor data found, creating a blank one`);
+      actorFBID = actor.id;
+      actorData = {
+        discord_username: actor.username,
+        discord_discriminator: actor.discriminator,
+        discord_id: actor.id,
+        isBanned: false,
+        reminders: { [unixFutureTime]: reminder },
+      };
+    } else {
+      logger.debug(`[${PREFIX}] Found actor data, updating it`);
+      Object.assign(actorData.reminders, { [unixFutureTime]: reminder });
+    }
+    logger.debug(`[${PREFIX}] actorFBID: ${actorFBID}`);
+    // Update firebase
+    logger.debug(`[${PREFIX}] Updating firebase`);
+    await db.collection(usersDbName).doc(actorFBID).update({
+      reminders: actorData.reminders,
+    });
+    // Update global db
+    global.user_db.forEach(doc => {
+      if (doc.key === actorFBID) {
+        logger.debug(`[${PREFIX}] Updating global DB!!`);
+        logger.debug(`[${PREFIX}] All reminders:`, doc.value.reminders);
+        logger.debug(`[${PREFIX}] actorData.reminders:`, actorData.reminders);
+        doc.value.reminders = actorData.reminders; // eslint-disable-line
+        logger.debug(`[${PREFIX}] New all reminders:`, doc.value.reminders);
+      }
+    });
 
-        // Update global reminder data
-        const user_db = [];
-        const snapshot_user = await db.collection(users_db_name).get();
-        snapshot_user.forEach((doc) => {
-            const key = doc.id;
-            const value = doc.data();
-            user_db.push({
-                key,
-                value,
-            });
-        });
-        global.user_db = user_db;
-        logger.debug(`${PREFIX}: Updated global user data.`);
+    // Load actor data
+    await setUserInfo(actorResults[1], actorData);
 
-        const embed = template.embed_template()
-            .setDescription(`In ${duration} ${units} I will remind you: ${reminder}`);
-        interaction.reply({ embeds: [embed], ephemeral: true });
-        logger.debug(`[${PREFIX}] finished!`);
-        return;
-    },
+    // Update global reminder data
+    const snapshotUser = await db.collection(usersDbName).get();
+    const userDb = snapshotUser.map(doc => ({
+      key: doc.id,
+      value: doc.data(),
+    }));
+    global.user_db = userDb;
+    logger.debug(`${PREFIX}: Updated global user data.`);
+
+    const embed = template.embedTemplate()
+      .setDescription(`In ${duration} ${units} I will remind you: ${reminder}`);
+    interaction.reply({ embeds: [embed], ephemeral: true });
+    logger.debug(`[${PREFIX}] finished!`);
+  },
 };

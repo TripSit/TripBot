@@ -1,42 +1,45 @@
+'use strict';
+
+const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const logger = require('../../utils/logger.js');
-const PREFIX = require('path').parse(__filename).name;
-const template = require('../../utils/embed_template');
 const axios = require('axios');
-if (process.env.NODE_ENV !== 'production') {require('dotenv').config();}
+const logger = require('../../utils/logger');
+const template = require('../../utils/embed-template');
+
+const PREFIX = path.parse(__filename).name;
 const API_KEY = process.env.rapid_api_key;
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('motivate')
-        .setDescription('Random motivational quotes'),
-    async execute(interaction) {
-        const options = {
-            method: 'POST',
-            url: 'https://motivational-quotes1.p.rapidapi.com/motivation',
-            headers: {
-                'content-type': 'application/json',
-                'X-RapidAPI-Host': 'motivational-quotes1.p.rapidapi.com',
-                'X-RapidAPI-Key': API_KEY,
-            },
-            data: '{"key1":"value","key2":"value"}',
-        };
+  data: new SlashCommandBuilder()
+    .setName('motivate')
+    .setDescription('Random motivational quotes'),
 
-        let data = {};
-        axios.request(options).then(function(response) {
-            data = response.data;
-            console.log(response.data);
-            logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
-            const embed = template.embed_template()
-                .setDescription(`${data}`);
-            if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
-            else {interaction.followUp({ embeds: [embed], ephemeral: false });}
-            logger.debug(`[${PREFIX}] finished!`);
-        }).catch(function(error) {
-            console.error(error);
-        });
+  async execute(interaction) {
+    const { data } = await axios.post('https://motivational-quotes1.p.rapidapi.com/motivation', {
+      headers: {
+        'content-type': 'application/json',
+        'X-RapidAPI-Host': 'motivational-quotes1.p.rapidapi.com',
+        'X-RapidAPI-Key': API_KEY,
+      },
+      data: JSON.stringify({
+        key1: 'value',
+        key2: 'value',
+      }),
+    });
 
+    logger.debug(`[${PREFIX}] data:`, data);
+    const embed = template.embedTemplate().setDescription(data);
 
-        return;
-    },
+    if (!interaction.replied) {
+      interaction.reply({
+        embeds: [embed],
+        ephemeral: false,
+      });
+    } else {
+      interaction.followUp({
+        embeds: [embed],
+        ephemeral: false,
+      });
+    }
+  },
 };
