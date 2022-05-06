@@ -17,7 +17,7 @@ module.exports = {
 
     if (actor === target) { return; }
     // logger.debug(`[${PREFIX}] actor.id: ${actor.id}`);
-    const [actorData, actorFbid] = getUserInfo(actor);
+    const [actorData, actorFbid] = await getUserInfo(actor);
 
     if ('karma_given' in actorData) {
       logger.debug(`[${PREFIX}] Updating karma_given info!`);
@@ -47,7 +47,7 @@ module.exports = {
         });
     }
 
-    const [targetData, targetFbid] = getUserInfo(target);
+    const [targetData, targetFbid] = await getUserInfo(target);
     if ('karma_recieved' in targetData) {
       logger.debug(`[${PREFIX}] Updating karma_recieved info!`);
       targetData.karma_recieved[emoji] = (targetData.karma_recieved[emoji] || 0) + action;

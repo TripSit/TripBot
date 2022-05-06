@@ -55,11 +55,11 @@ module.exports = {
     const targetHasNeedsHelpRole = targetRoleNames.some(role => role === needsHelpRole.name);
     logger.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
 
-    const [actorData, actorFbid] = getUserInfo(actor);
+    const [actorData, actorFbid] = await getUserInfo(actor);
     // eslint-disable-next-line
     const actorAction = `${command}_sent`; // TODO: undefined?
 
-    const [targetData, targetFbid] = getUserInfo(target);
+    const [targetData, targetFbid] = await getUserInfo(target);
     // eslint-disable-next-line
     const targetAction = `${command}_received`; // TODO: undefined?
 

@@ -53,7 +53,7 @@ module.exports = {
       }
       // logger.debug(`[${PREFIX}] actor.id: ${actor.id}`);
 
-      const [actorData, actorFbid] = getUserInfo(actor);
+      const [actorData, actorFbid] = await getUserInfo(actor);
 
       if ('timezone' in actorData && actorData.timezone === tzCode) {
         const embed = template
@@ -77,7 +77,7 @@ module.exports = {
     }
     if (command === 'get') {
       let tzCode = '';
-      const [targetData] = getUserInfo(target);
+      const [targetData] = await getUserInfo(target);
       if ('timezone' in targetData) tzCode = targetData.timezone;
       if (!tzCode) {
         const embed = template
