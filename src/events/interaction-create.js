@@ -2,28 +2,30 @@
 
 // TODO: Syncronous fs operations
 
-const fs = require('fs');
 const PREFIX = require('path').parse(__filename).name;
 const Fuse = require('fuse.js');
 const _ = require('underscore'); // TODO: underscore.js
 const logger = require('../utils/logger');
 const template = require('../utils/embed-template');
+const drugDataAll = require('../assets/drug_db_combined.json');
+const drugDataTripsit = require('../assets/drug_db_tripsit.json');
+const timezones = require('../assets/timezones.json');
+const pillColors = require('../assets/pill_colors.json');
+const pillShapes = require('../assets/pill_shapes.json');
 
-const { ownerId } = process.env;
-const { guildId } = process.env;
-const channelModeratorsId = process.env.channel_moderators;
+const {
+  ownerId,
+  guildId,
+  channel_moderators: channelModeratorsId,
+} = process.env;
 
-const drugDataAll = JSON.parse(fs.readFileSync('./src/assets/drug_db_combined.json'));
 const drugNames = drugDataAll.map(d => d.name);
-const drugDataTripsit = JSON.parse(fs.readFileSync('./src/assets/drug_db_tripsit.json'));
 
-const timezones = JSON.parse(fs.readFileSync('./src/assets/timezones.json'));
 const timezoneNames = [];
 for (let i = 0; i < timezones.length; i += 1) {
   timezoneNames.push(timezones[i].label);
 }
 
-const pillColors = JSON.parse(fs.readFileSync('./src/assets/pill_colors.json'));
 const pillColorNames = [];
 for (let i = 0; i < pillColors.length; i += 1) {
   pillColorNames.push(Object.keys(pillColors[i])[0]);
@@ -31,7 +33,6 @@ for (let i = 0; i < pillColors.length; i += 1) {
 const defaultColors = pillColorNames.slice(0, 25);
 // logger.debug(`[${PREFIX}] pill_color_names: ${pill_color_names}`);
 
-const pillShapes = JSON.parse(fs.readFileSync('./src/assets/pill_shapes.json'));
 const pillShapeNames = [];
 for (let i = 0; i < pillShapes.length; i += 1) {
   pillShapeNames.push(Object.keys(pillShapes[i])[0]);
@@ -41,11 +42,8 @@ const defaultShapes = pillShapeNames.slice(0, 25);
 
 // The following code came from the benzo_convert tool in the github
 const drugCache = drugDataTripsit;
-let benzoCache = {};
-
-benzoCache = {};
 // Filter any drug not containing the dose_to_diazepam property
-benzoCache = _.filter((drugCache), dCache => _.has(dCache.properties, 'dose_to_diazepam'));
+let benzoCache = _.filter((drugCache), dCache => _.has(dCache.properties, 'dose_to_diazepam'));
 
 _.each(benzoCache, benzo => {
   _.each(benzo.aliases, alias => {
@@ -60,7 +58,7 @@ _.each(benzoCache, benzo => {
 });
 
 benzoCache = _.sortBy(benzoCache, 'name');
-const regex = /[0-9]+\.?[0-9]?/;
+const regex = /\d+\.?\d?/;
 benzoCache = _.each(benzoCache, bCache => {
   bCache.diazvalue = regex.exec(bCache.properties.dose_to_diazepam); // eslint-disable-line
 });
@@ -72,7 +70,7 @@ const defaultBenzoNames = benzoDrugNames.slice(0, 25);
 module.exports = {
   name: 'interactionCreate',
 
-  async execute(interaction, client) { // eslint-disable-line
+  async execute(interaction, client) {
     // print what the user typed in the interaction
     // const username = `${interaction.user.username}#${interaction.user.discriminator}`;
     // const command_name = `${interaction.commandName ? ` used ${interaction.commandName}` : ''}`;
@@ -255,7 +253,7 @@ module.exports = {
         interaction.reply('Thanks for making this easy!');
       }
 
-      if (command) return; // eslint-disable-line
+      if (command) return;
 
       try {
         logger.debug(`[${PREFIX}] Executing command: ${command.name}`);
@@ -264,7 +262,7 @@ module.exports = {
         logger.error(error);
         interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
       }
-      return; // eslint-disable-line
+      return;
     }
 
     // // Cooldown logic

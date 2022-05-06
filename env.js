@@ -1,11 +1,13 @@
+/* eslint-disable global-require */
+
 'use strict';
 
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'production') require('dotenv').config();
 
 exports.NODE_ENV = process.env.NODE_ENV;
 
-exports.DISCORD_CLIENT_ID = process.env.clientId;
 exports.DISCORD_TOKEN = process.env.token;
+exports.DISCORD_CLIENT_ID = process.env.clientId;
 exports.TRIPSIT_GUILD_ID = process.env.guildId;
 
 exports.IRC_SERVER = process.env.IRC_SERVER;

@@ -1,15 +1,6 @@
 'use strict';
 
-// TODO: Look into not including this in the main process
-require('../deploy-commands');
-const { Client, Collection, Intents } = require('discord.js');
-const PREFIX = require('path').parse(__filename).name;
-const { initializeApp, cert } = require('firebase-admin/app'); // eslint-disable-line
-const { getFirestore } = require('firebase-admin/firestore'); // eslint-disable-line
-const logger = require('./utils/logger');
-const registerCommands = require('./commands');
-const registerEvents = require('./events');
-const serviceAccount = require('./assets/firebase_creds.json');
+if (process.env.NODE_ENV !== 'production') require('dotenv').config(); // eslint-disable-line
 const {
   DISCORD_TOKEN,
   // IRC_SERVER,
@@ -19,7 +10,17 @@ const {
   FIREBASE_PRIVATE_KEY,
   FIREBASE_CLIENT_ID,
   FIREBASE_CLIENT_EMAIL,
-} = require('../env');
+} = require('../env'); // eslint-disable-line
+const path = require('path');
+const { Client, Collection, Intents } = require('discord.js');
+const { initializeApp, cert } = require('firebase-admin/app'); // eslint-disable-line
+const { getFirestore } = require('firebase-admin/firestore'); // eslint-disable-line
+const logger = require('./utils/logger');
+const registerCommands = require('./commands');
+const registerEvents = require('./events');
+const serviceAccount = require('./assets/firebase_creds.json');
+
+const PREFIX = path.parse(__filename).name;
 
 serviceAccount.private_key_id = FIREBASE_PRIVATE_KEY_ID;
 serviceAccount.private_key = FIREBASE_PRIVATE_KEY ? FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined;

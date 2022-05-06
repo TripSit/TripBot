@@ -2,18 +2,14 @@
 
 const path = require('path');
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
-const { MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo } = require('../../utils/get-user-info');
+const { setUserInfo } = require('../../utils/set-user-info');
 
-const { db } = global;
 const PREFIX = path.parse(__filename).name;
 
-const {
-  users_db_name: usersDbName,
-  channel_moderators_id: channelModeratorsId,
-} = process.env;
+const { channel_moderators_id: channelModeratorsId } = process.env;
 
 // const mod_buttons = new MessageActionRow()
 //     .addComponents(
@@ -35,16 +31,16 @@ const {
 //             .setStyle('DANGER'),
 //     );
 
-const warnButtons = new MessageActionRow().addComponents(
-  new MessageButton()
-    .setCustomId('acknowledgebtn')
-    .setLabel('I understand, it wont happen again!')
-    .setStyle('PRIMARY'),
-  new MessageButton()
-    .setCustomId('refusalbtn')
-    .setLabel('Nah, I do what I want!')
-    .setStyle('DANGER'),
-);
+// const warnButtons = new MessageActionRow().addComponents(
+//   new MessageButton()
+//     .setCustomId('acknowledgebtn')
+//     .setLabel('I understand, it wont happen again!')
+//     .setStyle('PRIMARY'),
+//   new MessageButton()
+//     .setCustomId('refusalbtn')
+//     .setLabel('Nah, I do what I want!')
+//     .setStyle('DANGER'),
+// );
 
 // const backButton = new MessageButton()
 //     .setCustomId('previousbtn')
@@ -176,95 +172,35 @@ module.exports = {
       return;
     }
 
-    if (command === 'warn') {
-      // Send a message to the target
-      const warnEmbed = template.embedTemplate()
-        .setColor('YELLOW')
-        .setTitle('Warned!')
-        .setDescription(`You have been warned by Team TripSit for ${reason}.\n\nPlease read the rules and be respectful of them.`);
-      target.send({ embeds: [warnEmbed], components: [warnButtons] });
-      color = 'BLUE';
-      logger.debug(`[${PREFIX}] I warned ${target}!`);
-    } else if (command === 'timeout') {
-      // target.timeout(duration * 60 * 1000, reason);
-      target.timeout(10, reason);
-      color = 'YELLOW';
-      logger.debug(`[${PREFIX}] I timed out ${target}!`);
-    } else if (command === 'kick') {
-      target.kick();
-      color = 'ORANGE';
-      logger.debug(`[${PREFIX}] I kicked ${target}!`);
-    } else if (command === 'ban') {
-      interaction.guild.members.ban(target, { days: 7, reason });
-      color = 'RED';
-      logger.debug(`[${PREFIX}] I banned ${target}!`);
-    }
-
-    if (command !== 'info') {
-      // eslint-disable-next-line
-      // const title = `I have ${command}ed ${target} ${duration ? `for ${duration}` : ''} ${reason ? `because ${reason}` : ''}`;
-      const title = `I have ${command}ed ${target} ${reason ? `because ${reason}` : ''}`;
-      const embed = template.embedTemplate()
-        .setColor(color)
-        .setDescription(title);
-      interaction.reply({ embeds: [embed], ephemeral: true });
-      logger.debug(`[${PREFIX}] I replied to ${interaction.member}!`);
-    }
-
-    const actorResults = getUserInfo(actor);
+    // Extract actor data
+    const actorResults = await getUserInfo(actor);
     const actorData = actorResults[0];
-    const actorFbid = actorResults[1];
     const actorAction = `${command}_sent`;
 
-    const [targetData, targetFbid] = getUserInfo(target);
-    const targetAction = `${command}_received`;
-
+    // Transfor actor data
     if ('mod_actions' in actorData) {
       actorData.mod_actions[actorAction] = (actorData.mod_actions[actorAction] || 0) + 1;
-    } else actorData.mod_actions = { [actorAction]: 1 };
-
-    if (actorFbid !== '') {
-      logger.debug(`[${PREFIX}] Updating actor data`);
-      await db.collection(usersDbName)
-        .doc(actorFbid)
-        .set(actorData)
-        .catch(ex => {
-          logger.error(`[${PREFIX}] Error updating actor data:`, ex);
-          return Promise.reject(ex);
-        });
     } else {
-      logger.debug(`[${PREFIX}] Creating actor data`);
-      await db.collection(usersDbName)
-        .doc()
-        .set(actorData)
-        .catch(ex => {
-          logger.error(`[${PREFIX}] Error creating actor data:`, ex);
-          return Promise.reject(ex);
-        });
+      actorData.mod_actions = { [actorAction]: 1 };
     }
 
+    // Load actor data
+    await setUserInfo(actorResults[1], actorData);
+
+    // Extract target data
+    const targetResults = await getUserInfo(target);
+    const targetData = targetResults[0];
+    const targetAction = `${command}_received`;
+
+    // Transform taget data
     if ('mod_actions' in targetData) {
       targetData.mod_actions[targetAction] = (targetData.mod_actions[targetAction] || 0) + 1;
-    } else targetData.mod_actions = { [targetAction]: 1 };
-
-    if (targetFbid !== '') {
-      await db.collection(usersDbName)
-        .doc(targetFbid)
-        .set(targetData)
-        .catch(ex => {
-          logger.error(`[${PREFIX}] Error updating target data:`, ex);
-          return Promise.reject(ex);
-        });
     } else {
-      logger.debug(`[${PREFIX}] Creating target data`);
-      await db.collection(usersDbName)
-        .doc()
-        .set(targetData)
-        .catch(ex => {
-          logger.error(`[${PREFIX}] Error creating target data:`, ex);
-          return Promise.reject(ex);
-        });
+      targetData.mod_actions = { [targetAction]: 1 };
     }
+
+    // Load target data
+    await setUserInfo(targetResults[1], targetData);
 
     // eslint-disable-next-line
     // const title = `${actor} ${command}ed ${target} ${duration ? `for ${duration}` : ''} ${reason ? `because ${reason}` : ''}`;

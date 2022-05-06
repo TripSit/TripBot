@@ -3,11 +3,9 @@
 const path = require('path');
 const logger = require('../utils/logger');
 const { getGuildInfo } = require('../utils/get-user-info');
+const { setGuildInfo } = require('../utils/set-user-info');
 
 const PREFIX = path.parse(__filename).name;
-
-const { db } = global;
-const { guild_db_name: guildDbName } = process.env;
 
 module.exports = {
   name: 'guildCreate',
@@ -22,11 +20,6 @@ module.exports = {
       return;
     }
 
-    await db.collection(guildDbName)
-      .doc(targetFbid)
-      .set(targetData)
-      .catch(ex => {
-        logger.error(`[${PREFIX}] Error adding guild data to firebase:`, ex);
-      });
+    await setGuildInfo(targetFbid, targetData);
   },
 };
