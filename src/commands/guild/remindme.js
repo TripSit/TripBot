@@ -11,7 +11,7 @@ const { setUserInfo } = require('../../utils/set-user-info');
 const PREFIX = path.parse(__filename).name;
 
 const { db } = global;
-const { users_db_name: users_db_name } = process.env;
+const { users_db_name } = process.env;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -51,8 +51,7 @@ module.exports = {
     // Transform actor data
     if ('reminders' in actor_data) {
       actor_data.reminders[unix_future_time] = reminder;
-    }
-    else {
+    } else {
       actor_data.reminders = { [unix_future_time]: reminder };
     }
 
@@ -72,11 +71,11 @@ module.exports = {
     // Reverting to previous forEach()
     const user_db = [];
     const snapshot_user = await db.collection(users_db_name).get();
-    snapshot_user.forEach((doc) => {
-        user_db.push({
-            key: doc.id,
-            value: doc.data(),
-        });
+    snapshot_user.forEach(doc => {
+      user_db.push({
+        key: doc.id,
+        value: doc.data(),
+      });
     });
     global.user_db = user_db;
     logger.debug(`${PREFIX}: Updated global user data.`);

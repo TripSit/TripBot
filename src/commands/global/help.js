@@ -9,7 +9,7 @@ const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
 
-const { guildId: guildId } = process.env;
+const { guildId } = process.env;
 
 const buttonList = [
   new MessageButton().setCustomId('previousbtn').setLabel('Previous').setStyle('DANGER'),

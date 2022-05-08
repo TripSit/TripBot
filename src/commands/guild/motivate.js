@@ -30,10 +30,9 @@ module.exports = {
       });
       logger.debug(`[${PREFIX}] data:`, data);
       embed.setDescription(data);
-    }
-    catch (error) {
+    } catch (error) {
       logger.error(`[${PREFIX}] ${error}`);
-      embed.setDescription("Error with this API! This is not an error with the bot!\n\n" + error);
+      embed.setDescription(`Error with this API! This is not an error with the bot!\n\n${error}`);
     }
 
     if (!interaction.replied) {
