@@ -1,13 +1,12 @@
 'use strict';
 
-const path = require('path');
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo } = require('../../utils/get-user-info');
 const { setUserInfo } = require('../../utils/set-user-info');
 
-const PREFIX = path.parse(__filename).name;
+const PREFIX = require('path').parse(__filename).name; // eslint-disable-line
 
 const { channel_moderators_id: channelModeratorsId } = process.env;
 
@@ -142,7 +141,7 @@ module.exports = {
     // const duration = interaction.options.getString('duration');
     // logger.debug(`[${PREFIX}] duration: ${duration}`);
 
-    let color = '';
+    // let color = '';
     let isMember = true;
     if (toggle === 'off') {
       if (command === 'ban') {
@@ -152,13 +151,13 @@ module.exports = {
         const bans = await interaction.guild.bans.fetch();
         logger.debug(`[${PREFIX}] interaction.guild.bans.fetch():`, bans);
         command = 'unban';
-        color = 'GREEN';
+        // color = 'GREEN';
         await interaction.guild.bans.remove(target, reason);
         logger.debug(`[${PREFIX}] I unbanned ${target}!`);
       } else if (command === 'timeout') {
         target.timeout(0, reason);
         command = 'untimeout';
-        color = 'GREEN';
+        // color = 'GREEN';
         logger.debug(`[${PREFIX}] I untimed out ${target}!`);
       }
     }

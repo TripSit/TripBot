@@ -86,8 +86,12 @@ module.exports = {
             await command.execute(interaction, ['DXM', 'MDMA']);
             continue;
           }
-          if (name == 'idose') {
+          if (name == 'dose') {
             await command.execute(interaction, ['DXM', '10', 'g (grams)']);
+            continue;
+          }
+          if (name == 'idose') {
+            await command.execute(interaction, ['DXM', '10', 'g (grams)', '1w 2d 3h 4m 5s']);
             continue;
           }
           if (name == 'info') {

@@ -1,6 +1,5 @@
 'use strict';
 
-const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
 const { getUserInfo } = require('../../utils/get-user-info');
