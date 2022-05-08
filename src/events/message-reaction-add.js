@@ -27,7 +27,7 @@ module.exports = {
         logger.error(`[${PREFIX}] reaction3:`, ex);
       });
     }
-    logger.debug(`[${PREFIX}] Reaction: ${JSON.stringify(reaction, null, 4)}`);
+    // logger.debug(`[${PREFIX}] Reaction: ${JSON.stringify(reaction, null, 4)}`);
     const reactionAuthor = reaction.message.author;
     const reactionEmoji = reaction.emoji;
     const { count } = reaction;
