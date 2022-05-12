@@ -34,7 +34,6 @@ module.exports = {
   async execute(interaction, parameters) {
     const substance = interaction.options.getString('substance') || parameters.at(0);
     const section = interaction.options.getString('section') || parameters.at(1);
-    const wikiUrl = `https://wiki.tripsit.me/wiki/${substance}`;
 
     logger.debug(`[${PREFIX}] starting getDrugInfo with parameter: ${substance}`);
     // loop through drug_data_all to find the substance
