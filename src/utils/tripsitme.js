@@ -54,15 +54,6 @@ module.exports = {
       patient.roles.remove(helperRole);
     }
 
-    const msg = `Hey ${patient}, thank you for asking for assistance!\n\n\
-            Check your channel list for '${patient.user.username} chat here!'`;
-    const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
-      .setDescription(msg);
-    logger.debug(`[${PREFIX}] Done!`);
-
-    interaction.reply({ embeds: [embed], ephemeral: true });
-
     const privMsg = stripIndents`
       Hey ${patient}, thank you for asking for assistance!
       **Start off by telling us what's going on: what did you take, how much, what time?**
@@ -81,6 +72,15 @@ module.exports = {
 
     // send a message to the thread
     await thread.send(privMsg);
+
+    const msg = `Hey ${patient}, thank you for asking for assistance!\n\n\
+    Click here to be taken to your private room: ${thread.toString()}\n
+    You can also click in your channel list to see your private room!`;
+    const embed = template.embedTemplate()
+      .setColor('DARK_BLUE')
+      .setDescription(msg);
+    logger.debug(`[${PREFIX}] Done!`);
+    interaction.reply({ embeds: [embed], ephemeral: true });
 
     // Get the tripsitters channel from the guild
     const tripsittersChannel = interaction.guild.channels.cache
