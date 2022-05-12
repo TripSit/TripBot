@@ -6,14 +6,11 @@
   "main": "index.js",
   "scripts": {
     "start": "node ./deploy-commands.js && node ./src/index.js",
-    "dev": "nodemon --ignore src/assets/ --ignore src/backups/ --inspect ./src/index.js",
-    "debug": "nodemon --ignore src/assets/ --ignore src/backups/ --inspect ./src/index.js",
-    "register-commands": "node ./deploy-commands.js",
+    "dev":   "nodemon --ignore src/assets/ --ignore src/backups/ --inspect ./src/index.js",
+    "register-commands": "node ./src/utils/deploy-commands.js",
     "lint": "eslint .",
     "fix": "eslint --fix .",
-    "test": "npm run lint",
-    "minor": "npm version minor -git-tag-version false",
-    "push": "npm version minor -git-tag-version false && git add . && git commit && git push"
+    "minor": "npm version minor -git-tag-version false"
   },
   "repository": {
     "type": "git",
