@@ -39,7 +39,7 @@ module.exports = {
       .setColor('#0099ff')
       .setTitle('Issue created!')
       .setDescription(`Your issue has been created on ${owner}/${repo}`);
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed], ephemeral: true });
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
