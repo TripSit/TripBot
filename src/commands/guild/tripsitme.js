@@ -52,6 +52,8 @@ module.exports = {
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
+    patient.roles.add(needsHelpRole);
+
     if (hasHelperRole) {
       patient.roles.remove(helperRole);
     }
