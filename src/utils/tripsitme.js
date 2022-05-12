@@ -1,10 +1,9 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder } = require('@discordjs/builders');
 const { stripIndents } = require('common-tags');
-const logger = require('../../utils/logger');
-const template = require('../../utils/embed-template');
+const logger = require('./logger');
+const template = require('./embed-template');
 
 const {
   NODE_ENV,
@@ -17,9 +16,6 @@ const {
 const PREFIX = path.parse(__filename).name;
 
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('tripsitme')
-    .setDescription('Check substance information'),
   async execute(interaction) {
     const patient = interaction.member;
     const test = patient.id === process.env.ownerId || patient.id.toString() === '332687787172167680';
