@@ -11,10 +11,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('idose')
     .setDescription('Log your dosages!')
-    .addStringOption(option => option.setName('substance')
-      .setDescription('What Substance?')
-      .setRequired(true)
-      .setAutocomplete(true))
+
     .addIntegerOption(option => option.setName('volume')
       .setDescription('How much?')
       .setRequired(true))
@@ -32,7 +29,11 @@ module.exports = {
       .addChoice('pills', 'pills')
       .addChoice('drops', 'drops')
       .addChoice('sprays', 'sprays')
-      .addChoice('inhales', 'inhales')),
+      .addChoice('inhales', 'inhales'))
+    .addStringOption(option => option.setName('substance')
+      .setDescription('What Substance?')
+      .setRequired(true)
+      .setAutocomplete(true)),
 
   async execute(interaction, parameters) {
     const substance = interaction.options.getString('substance') || parameters.at(0);
@@ -61,7 +62,7 @@ module.exports = {
         ephemeral: false,
       });
     }
-
+    interaction.member.send({ embeds: [embed], ephemeral: false });
     logger.debug(`[${PREFIX}] Finsihed!`);
   },
 };

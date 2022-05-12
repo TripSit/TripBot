@@ -2,6 +2,7 @@
 
 const path = require('path');
 const logger = require('../utils/logger');
+const chitragupta = require('../utils/chitragupta');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -12,7 +13,7 @@ const {
 
 module.exports = {
   name: 'messageReactionAdd',
-  async execute(reaction, user, client) {
+  async execute(reaction, user) {
     // logger.debug(`[${PREFIX}] Reaction added`);
     // logger.debug(`[${PREFIX}] Reaction: ${JSON.stringify(reaction, null, 2)}`);
     // logger.debug(`[${PREFIX}] User: ${JSON.stringify(user, null, 2)}`);
@@ -36,8 +37,7 @@ module.exports = {
     // If we're not in the TripSit guild, don't do this.
     if (reaction.message.guild.id !== guildId) { return; }
     logger.debug(`[${PREFIX}] ${user.username} gave ${reactionEmoji.name} to ${reactionAuthor.username} in ${reaction.message.guild}!`);
-    const command = client.commands.get('chitragupta');
-    await command.execute('chitragupta', user, 1, reactionEmoji.toString(), reactionAuthor);
+    await chitragupta.update(user, 1, reactionEmoji.toString(), reactionAuthor);
     if (count === 3 && reactionEmoji.name === 'ts_down') {
       if (reaction.message.member.isCommunicationDisabled()) { return; }
       logger.debug(`[${PREFIX}] ${user.username} has been downvoted three times, muting!`);
