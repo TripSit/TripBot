@@ -91,11 +91,19 @@ module.exports = {
         return;
       }
 
+      let gmtValue = '';
+      for (let i = 0; i < timezones.length; i += 1) {
+        if (timezones[i].tzCode === tzCode) {
+          gmtValue = timezones[i].offset;
+          logger.debug(`${PREFIX} gmtValue: ${gmtValue}`);
+        }
+      }
+
       // get the user's timezone from the database
       const timestring = new Date().toLocaleTimeString('en-US', { timeZone: tzCode });
       const embed = template
         .embedTemplate()
-        .setDescription(`It is likely ${timestring} wherever ${target.user.username} is located.`);
+        .setDescription(`It is likely ${timestring} (GMT${gmtValue}) wherever ${target.user.username} is located.`);
       if (!interaction.replied) {
         interaction.reply({
           embeds: [embed],

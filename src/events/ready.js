@@ -140,7 +140,8 @@ module.exports = {
           const allReminders = doc.value.reminders;
           // eslint-disable-next-line
           // logger.debug(`[${PREFIX}] doc.value.reminders ${JSON.stringify(all_reminders, null, 4)}`);
-          for (const reminderTime in doc.value.reminders) {
+          // Loop through Object.keys of allReminders
+          Object.keys(allReminders).forEach(async reminderTime => {
             const userFbId = doc.key;
             // logger.debug(`[${PREFIX}] user_fb_id: ${user_fb_id}`);
             const userid = doc.value.discord_id;
@@ -159,17 +160,13 @@ module.exports = {
                 .setDescription(`${reminder}`);
               user.send({ embeds: [reminderEmbed] });
               // remove the reminder
-              delete doc.value.reminders[remindertime];
-              // logger.debug(`[${PREFIX}] Removing reminder from doc.value`);
               delete allReminders[remindertime];
               // logger.debug(`[${PREFIX}] Removing reminder from all_reminders`);
-              // logger.debug(`[${PREFIX}] usersDbName: ${usersDbName}`);
-              // logger.debug(`[${PREFIX}] user_fb_id: ${user_fb_id}`);
               // logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 4)}`);
               db.collection(usersDbName).doc(userFbId).update(doc.value);
               // logger.debug(`[${PREFIX}] Removing reminder from db`);
             }
-          }
+          });
         }
       });
     }
