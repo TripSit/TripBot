@@ -17,6 +17,8 @@ const buttonList = [
 ];
 
 async function parseDuration(duration) {
+  // Those code inspired by https://gist.github.com/substanc3-dev/306bb4d04b2aad3a5d019052b1a0dec0
+  // This is super cool, thanks a lot!
   const supported = 'smhdwmoy';
   const numbers = '0123456789';
   let stage = 1;
