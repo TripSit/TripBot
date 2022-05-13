@@ -1,6 +1,7 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
+const { stripIndents } = require('common-tags');
 const logger = require('../utils/logger');
 const template = require('../utils/embed-template');
 const { TS_FLAME_URL } = require('../../env');
@@ -88,12 +89,13 @@ module.exports = {
       logger.debug(`[${PREFIX}] channelBotspam:`, channelBotspam);
       const embed = template.embedTemplate()
         .setColor(colorValue)
-        .setDescription(`Welcome to the TripSit Network ${member}!\n\n\
-                We're a positive-enforced, harm-reduction space.\n\
-                **If you need substance help, go to the ${channelTripsit} room and click the big red button!**\n\
-                Try checking out ${channelStart} to set your interests and color!\n\
+        .setThumbnail(member.user.displayAvatarURL())
+        .setTitle(`Welcome to TripSit ${member.user.username}!`)
+        .setDescription(stripIndents`TripSit a positivity-enforced, drug-neutral, harm-reduction space.\n\
+                **If you need a tripsitter, click the button in ${channelTripsit}!**\n\n\
+                Try checking out ${channelStart} to set your color and emblem!\n\
                 Please use ${channelBotspam} to access the bot's commands!\n\
-                If you have an IRC issue please make a new thread in ${channelIrc}!\n\
+                If you have an IRC issue please make a new thread in ${channelIrc}!\n\n\
                 Stay safe!\n`);
       if (footerText !== '') {
         embed.setFooter({

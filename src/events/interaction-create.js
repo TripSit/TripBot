@@ -12,6 +12,7 @@ const drugDataTripsit = require('../assets/drug_db_tripsit.json');
 const timezones = require('../assets/timezones.json');
 const pillColors = require('../assets/pill_colors.json');
 const pillShapes = require('../assets/pill_shapes.json');
+const tripsitme = require('../utils/tripsitme');
 
 const {
   ownerId,
@@ -220,6 +221,7 @@ module.exports = {
           .setDescription(`${interaction.user.username} has acknowledged their warning.`);
         modChan.send({ embeds: [embed] });
         interaction.reply('Thanks for understanding!');
+        return;
       }
 
       if (buttonID === 'refusalbtn') {
@@ -231,6 +233,7 @@ module.exports = {
           .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
         modChan.send({ embeds: [embed] });
         interaction.reply('Thanks for making this easy!');
+        return;
       }
 
       if (buttonID === 'guildacknowledgebtn') {
@@ -243,6 +246,7 @@ module.exports = {
           .setDescription(`${interaction.user.username} has acknowledged their warning.`);
         botOwner.send({ embeds: [embed] });
         interaction.reply('Thanks for understanding!');
+        return;
       }
 
       if (buttonID === 'warnbtn') {
@@ -251,6 +255,12 @@ module.exports = {
           .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
         modChan.send({ embeds: [embed] });
         interaction.reply('Thanks for making this easy!');
+        return;
+      }
+
+      if (buttonID === 'tripsitme') {
+        tripsitme.execute(interaction);
+        return;
       }
 
       if (!command) return;

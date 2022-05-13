@@ -1,18 +1,13 @@
 'use strict';
 
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const logger = require('../../utils/logger');
-const { getUserInfo } = require('../../utils/get-user-info');
-const { setUserInfo } = require('../../utils/set-user-info');
+const logger = require('./logger');
+const { getUserInfo } = require('./get-user-info');
+const { setUserInfo } = require('./set-user-info');
 
 const PREFIX = require('path').parse(__filename).name; // eslint-disable-line
 
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('chitragupta')
-    .setDescription('Keep it positive please!'),
-
-  async execute(interaction, actor, action, emoji, target) {
+  async update(actor, action, emoji, target) {
     logger.debug(`[${PREFIX}] ${actor} ${action} ${emoji} ${target}!`);
 
     if (actor === target) { return; }
@@ -45,7 +40,6 @@ module.exports = {
 
     // Load target data
     await setUserInfo(targetFbid, targetData);
-
     return logger.debug(`[${PREFIX}] finished!`);
   },
 };

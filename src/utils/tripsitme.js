@@ -1,10 +1,9 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder } = require('@discordjs/builders');
 const { stripIndents } = require('common-tags');
-const logger = require('../../utils/logger');
-const template = require('../../utils/embed-template');
+const logger = require('./logger');
+const template = require('./embed-template');
 
 const {
   NODE_ENV,
@@ -17,9 +16,6 @@ const {
 const PREFIX = path.parse(__filename).name;
 
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('tripsitme')
-    .setDescription('Check substance information'),
   async execute(interaction) {
     const patient = interaction.member;
     const test = patient.id === process.env.ownerId || patient.id.toString() === '332687787172167680';
@@ -52,18 +48,11 @@ module.exports = {
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
+    patient.roles.add(needsHelpRole);
+
     if (hasHelperRole) {
       patient.roles.remove(helperRole);
     }
-
-    const msg = `Hey ${patient}, thank you for asking for assistance!\n\n\
-            Check your channel list for '${patient.user.username} chat here!'`;
-    const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
-      .setDescription(msg);
-    logger.debug(`[${PREFIX}] Done!`);
-
-    interaction.reply({ embeds: [embed], ephemeral: true });
 
     const privMsg = stripIndents`
       Hey ${patient}, thank you for asking for assistance!
@@ -83,6 +72,15 @@ module.exports = {
 
     // send a message to the thread
     await thread.send(privMsg);
+
+    const msg = `Hey ${patient}, thank you for asking for assistance!\n\n\
+    Click here to be taken to your private room: ${thread.toString()}\n
+    You can also click in your channel list to see your private room!`;
+    const embed = template.embedTemplate()
+      .setColor('DARK_BLUE')
+      .setDescription(msg);
+    logger.debug(`[${PREFIX}] Done!`);
+    interaction.reply({ embeds: [embed], ephemeral: true });
 
     // Get the tripsitters channel from the guild
     const tripsittersChannel = interaction.guild.channels.cache
