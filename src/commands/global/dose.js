@@ -9,22 +9,18 @@ const PREFIX = path.parse(__filename).name;
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('idose')
-    .setDescription('Log your dosages!')
-    .addStringOption(option => option.setName('substance')
-      .setDescription('What Substance?')
-      .setRequired(true)
-      .setAutocomplete(true))
+    .setName('dose')
+    .setDescription('Log your dosages (offline, only you can see this)!')
     .addIntegerOption(option => option.setName('volume')
       .setDescription('How much?')
       .setRequired(true))
     .addStringOption(option => option.setName('units')
       .setDescription('What units?')
       .setRequired(true)
-      .addChoice('g (grams)', 'g (grams)')
       .addChoice('mg (milligrams)', 'mg (milligrams)')
       .addChoice('ml (milliliters)', 'ml (milliliters)')
       .addChoice('µg (micrograms)', 'µg (micrograms)')
+      .addChoice('g (grams)', 'g (grams)')
       .addChoice('oz (ounces)', 'oz (ounces)')
       .addChoice('fl oz (fluid ounces)', 'fl oz (fluid ounces)')
       .addChoice('tabs', 'tabs')
@@ -32,7 +28,11 @@ module.exports = {
       .addChoice('pills', 'pills')
       .addChoice('drops', 'drops')
       .addChoice('sprays', 'sprays')
-      .addChoice('inhales', 'inhales')),
+      .addChoice('inhales', 'inhales'))
+    .addStringOption(option => option.setName('substance')
+      .setDescription('What Substance?')
+      .setRequired(true)
+      .setAutocomplete(true)),
 
   async execute(interaction, parameters) {
     const substance = interaction.options.getString('substance') || parameters.at(0);
@@ -61,7 +61,7 @@ module.exports = {
         ephemeral: false,
       });
     }
-
+    interaction.member.send({ embeds: [embed], ephemeral: false });
     logger.debug(`[${PREFIX}] Finsihed!`);
   },
 };

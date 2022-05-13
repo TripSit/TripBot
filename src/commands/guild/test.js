@@ -12,6 +12,8 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 const COMMANDS_PATH = path.resolve('src/commands');
+const drugDataAll = require('../../assets/drug_db_combined.json');
+const drugNames = drugDataAll.map(d => d.name);
 
 const PREFIX = path.parse(__filename).name;
 
@@ -31,10 +33,15 @@ async function getCommands(commandType) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('test')
-    .setDescription('This will test the bot and show all functionality!'),
-
+    .setDescription('This will test the bot and show all functionality!')
+    .addStringOption(option => option.setName('scope')
+      .setDescription('Global, guild, or all?')
+      .addChoice('All', 'All')
+      .addChoice('Guild', 'Guild')
+      .addChoice('Global', 'Global')),
   async execute(interaction) {
     await interaction.deferReply();
+    const scope = interaction.options.getString('scope') || 'All';
 
     const { channel } = interaction;
     const embed = template.embedTemplate()
@@ -42,95 +49,226 @@ module.exports = {
     interaction.editReply({ embeds: [embed], ephemeral: false });
     // await sleep(1000);
 
-    getCommands('global').then(async (globl_command_names) => {
-      for (let i = 0; i < globl_command_names.length; i++) {
-        await sleep(1000);
-        const name = globl_command_names[i];
-        const test_embed = template.embedTemplate()
-          .setTitle(`Testing ${name}...`);
-        await channel.send({ embeds: [test_embed], ephemeral: false });
-        await sleep(100);
+    if (scope === 'All' || scope === 'Global') {
+      getCommands('global').then(async (globl_command_names) => {
+        for (let i = 0; i < globl_command_names.length; i++) {
+          const name = globl_command_names[i];
+          // For quick testing, disable this in production
+          // if (name !== 'idose') {
+          //   continue;
+          // }
 
-        const skip_embed = template.embedTemplate()
-          .setTitle(`Skipping ${name}...`);
+          await sleep(1000);
+          const test_embed = template.embedTemplate()
+            .setTitle(`Testing ${name}...`);
+          await channel.send({ embeds: [test_embed], ephemeral: false });
+          await sleep(100);
 
-        const command = await interaction.client.commands.get(name);
-        if (command) {
-          if (name == 'bug') {
-            await command.execute(interaction, 'This is a bug report!');
+          const skip_embed = template.embedTemplate()
+            .setTitle(`Skipping ${name}...`);
+
+          const command = await interaction.client.commands.get(name);
+          if (command) {
+            if (name == 'breathe') {
+              await command.execute(interaction, '1');
+              await sleep(1000);
+              await command.execute(interaction, '2');
+              await sleep(1000);
+              await command.execute(interaction, '3');
+              await sleep(1000);
+              await command.execute(interaction, '4');
+              continue;
+            }
+            if (name == 'bug') {
+              await command.execute(interaction, 'This is a bug report!');
+              continue;
+            }
+            if (name == 'calc_benzo') {
+              await command.execute(interaction, ['10', 'alprazolam', 'ativan']);
+              continue;
+            }
+            if (name == 'calc_dxm') {
+              await command.execute(interaction, ['200', 'lbs', 'RoboTablets (30 mg tablets)']);
+              continue;
+            }
+            if (name == 'calc_ketamine') {
+              await command.execute(interaction, ['200', 'lbs']);
+              continue;
+            }
+            if (name == 'calc_psychedelics') {
+              await command.execute(interaction, ['2', '4', '4', 'mushrooms']);
+              await sleep(1000);
+              await command.execute(interaction, ['2', '', '4', 'mushrooms']);
+              await sleep(1000);
+              await command.execute(interaction, ['200', '400', '4', 'lsd']);
+              await sleep(1000);
+              await command.execute(interaction, ['200', '', '4', 'lsd']);
+              continue;
+            }
+            if (name == 'combo') {
+              await command.execute(interaction, ['DXM', 'MDMA']);
+              continue;
+            }
+            if (name == 'dose') {
+              await command.execute(interaction, ['DXM', '10', 'g (grams)']);
+              continue;
+            }
+            if (name == 'info') {
+              await command.execute(interaction, ['DMT', 'Summary']);
+              await sleep(1000);
+              await command.execute(interaction, ['DMT', 'Dosage']);
+              await sleep(1000);
+              await command.execute(interaction, ['DMT', 'Combos']);
+              continue;
+            }
+            // No-parameter commands fall down here, including:
+            // - about, combochart, contact, ems, help, hydrate, reagents, recovery
+            await command.execute(interaction);
             continue;
+          } else {
+            const error_embed = template.embedTemplate()
+              .setTitle('Error!')
+              .setDescription(`Command ${name} not found!`);
+            channel.send({ embeds: [error_embed], ephemeral: false });
           }
-          if (name == 'calc_benzo') {
-            await command.execute(interaction, ['10', 'alprazolam', 'ativan']);
-            continue;
-          }
-          if (name == 'calc_dxm') {
-            await command.execute(interaction, ['200', 'lbs', 'RoboTablets (30 mg tablets)']);
-            continue;
-          }
-          if (name == 'calc_ketamine') {
-            await command.execute(interaction, ['200', 'lbs']);
-            continue;
-          }
-          if (name == 'calc_psychedelics') {
-            await command.execute(interaction, ['2', '4', '4', 'mushrooms']);
-            await sleep(1000);
-            await command.execute(interaction, ['2', '', '4', 'mushrooms']);
-            await sleep(1000);
-            await command.execute(interaction, ['200', '400', '4', 'lsd']);
-            await sleep(1000);
-            await command.execute(interaction, ['200', '', '4', 'lsd']);
-            continue;
-          }
-          if (name == 'combo') {
-            await command.execute(interaction, ['DXM', 'MDMA']);
-            continue;
-          }
-          if (name == 'dose') {
-            await command.execute(interaction, ['DXM', '10', 'g (grams)']);
-            continue;
-          }
-          if (name == 'idose') {
-            await command.execute(interaction, ['DXM', '10', 'g (grams)', '1w 2d 3h 4m 5s']);
-            continue;
-          }
-          if (name == 'info') {
-            await command.execute(interaction, ['DMT', 'Summary']);
-            await sleep(1000);
-            await command.execute(interaction, ['DMT', 'Dosage']);
-            await sleep(1000);
-            await command.execute(interaction, ['DMT', 'Combos']);
-            continue;
-          }
-          if (name == 'urban_define') {
-            await command.execute(interaction, 'tripsit');
-            continue;
-          }
-          if (name == 'breathe') {
-            await command.execute(interaction, '1');
-            await sleep(1000);
-            await command.execute(interaction, '2');
-            await sleep(1000);
-            await command.execute(interaction, '3');
-            await sleep(1000);
-            await command.execute(interaction, '4');
-            continue;
-          }
-          if (name == 'wolfram') {
-            logger.debug(`[${PREFIX}] wolfram not build, ignoring}`);
-            await interaction.followUp({ embeds: [skip_embed], ephemeral: false });
-            continue;
-          }
-          await command.execute(interaction);
-          continue;
-        } else {
-          const error_embed = template.embedTemplate()
-            .setTitle('Error!')
-            .setDescription(`Command ${name} not found!`);
-          channel.send({ embeds: [error_embed], ephemeral: false });
         }
-      }
-    });
-    logger.debug(`[${PREFIX}] finished!`);
+      });
+      logger.debug(`[${PREFIX}] Global commands finished!`);
+    }
+    if (scope === 'All' || scope === 'Guild') {
+      getCommands('guild').then(async (guild_command_names) => {
+        for (let i = 0; i < guild_command_names.length; i++) {
+          const name = guild_command_names[i];
+
+          // For quick testing, disable this in production
+          // if (name !== 'idose') {
+          //   continue;
+          // }
+
+          // await sleep(1000);
+          const test_embed = template.embedTemplate()
+            .setTitle(`Testing ${name}...`);
+          await channel.send({ embeds: [test_embed], ephemeral: false });
+          await sleep(100);
+
+          const skip_embed = template.embedTemplate()
+            .setTitle(`Skipping ${name}...`);
+
+          const command = await interaction.client.commands.get(name);
+          if (command) {
+            if (name == 'birthday') {
+
+              continue;
+            }
+            if (name == 'botmod') {
+
+              continue;
+            }
+            if (name == 'chitragupta') {
+              logger.debug(`[${PREFIX}] This command does not need to be tested!`);
+              continue;
+            }
+            if (name == 'clean-db') {
+              logger.debug(`[${PREFIX}] This command does not need to be tested!`);
+              continue;
+            }
+            if (name == 'idose') {
+              const drugUnits = [
+              'mg (milligrams)',
+              'ml (milliliters)',
+              'µg (micrograms)',
+              'g (grams)',
+              'oz (ounces)',
+              'fl oz (fluid ounces)',
+              'tabs',
+              'caps',
+              'pills',
+              'drops',
+              'sprays',
+              'inhales',
+              ]
+
+              // get a random drug from drugNames
+              const drug = drugNames[Math.floor(Math.random() * drugNames.length)];
+              // Get a random value between 1 and 100
+              const doseValue = Math.floor(Math.random() * 100) + 1;
+              // Get a random unit from drugUnits
+              const doseUnit = drugUnits[Math.floor(Math.random() * drugUnits.length)];
+              // Get a random value between 1 and 10
+              const timeValue = Math.floor(Math.random() * 10) + 1;
+              // Make the offset string
+              const offset = `${timeValue} week, ${timeValue} days, ${timeValue} hrs ${timeValue} mins`;
+              logger.debug(`[${PREFIX}] Testing ${name} with ${drug} ${doseValue} ${doseUnit} in ${offset}`);
+              await command.execute(interaction, ['set', drug, doseValue, doseUnit, offset]);
+              // await sleep(1000);
+              // await command.execute(interaction, ['get']);
+              continue;
+            }
+            if (name == 'invite') {
+
+              continue;
+            }
+            if (name == 'issue') {
+              logger.debug(`[${PREFIX}] This command does not need to be tested!`);
+              continue;
+            }
+            if (name == 'karma') {
+
+              continue;
+            }
+            if (name == 'mod') {
+
+              continue;
+            }
+            if (name == 'pill-id') {
+              logger.debug(`[${PREFIX}] This command does not need to be tested!`);
+              continue;
+            }
+            if (name == 'ping') {
+
+              continue;
+            }
+            if (name == 'remindme') {
+
+              continue;
+            }
+            if (name == 'report') {
+
+              continue;
+            }
+            if (name == 'time') {
+
+              continue;
+            }
+            if (name == 'tripsit') {
+
+              continue;
+            }
+            if (name == 'tripsitme') {
+
+              continue;
+            }
+            if (name == 'triptoys') {
+
+              continue;
+            }
+            if (name == 'urban_define') {
+              await command.execute(interaction, 'tripsit');
+              continue;
+            }
+            // No-parameter commands fall down here, including:
+            // - button, joke, kipp, motivate, ping, topic
+            await command.execute(interaction);
+            continue;
+          } else {
+            const error_embed = template.embedTemplate()
+              .setTitle('Error!')
+              .setDescription(`Command ${name} not found!`);
+            channel.send({ embeds: [error_embed], ephemeral: false });
+          }
+        }
+      });
+      logger.debug(`[${PREFIX}] Global commands finished!`);
+    }
   },
 };
