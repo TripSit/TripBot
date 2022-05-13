@@ -137,18 +137,18 @@ module.exports = {
       // logger.debug(`[${PREFIX}] Checking reminders...`);
       global.user_db.forEach(async doc => {
         if (doc.value.reminders) {
-          const allReminders = doc.value.reminders;
+          const userReminders = doc.value.reminders;
           // eslint-disable-next-line
           // logger.debug(`[${PREFIX}] doc.value.reminders ${JSON.stringify(all_reminders, null, 4)}`);
-          // Loop through Object.keys of allReminders
-          Object.keys(allReminders).forEach(async reminderTime => {
+          // Loop over doc.value.reminders keys
+          Object.keys(userReminders).forEach(async reminderTime => {
             const userFbId = doc.key;
             // logger.debug(`[${PREFIX}] user_fb_id: ${user_fb_id}`);
             const userid = doc.value.discord_id;
             // logger.debug(`[${PREFIX}] userid: ${userid}`);
             const remindertime = parseInt(reminderTime, 10);
             // logger.debug(`[${PREFIX}] remindertime: ${remindertime}`);
-            const reminder = allReminders[remindertime];
+            const reminder = userReminders[remindertime];
             // logger.debug(`[${PREFIX}] reminder: ${reminder}`);
             // logger.debug(`[${PREFIX}] ${userid} has a reminder on ${remindertime}`);
             if (remindertime <= Date.now() / 1000) {
@@ -160,7 +160,7 @@ module.exports = {
                 .setDescription(`${reminder}`);
               user.send({ embeds: [reminderEmbed] });
               // remove the reminder
-              delete allReminders[remindertime];
+              delete userReminders[remindertime];
               // logger.debug(`[${PREFIX}] Removing reminder from all_reminders`);
               // logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 4)}`);
               db.collection(usersDbName).doc(userFbId).update(doc.value);
@@ -175,12 +175,12 @@ module.exports = {
     //   logger.debug(`[${PREFIX}] Checking reminders...`);
     //   return global.user_db.map(async doc => {
     //     if (doc.reminders) {
-    //       const allReminders = doc.reminders;
-    //       return Promise.all(allReminders.map(reminderTime => {
+    //       const userReminders = doc.reminders;
+    //       return Promise.all(userReminders.map(reminderTime => {
     //         const userFbId = doc.id;
     //         const userid = doc.discord_id;
     //         const remindertime = parseInt(reminderTime, 10);
-    //         const reminder = allReminders[remindertime];
+    //         const reminder = userReminders[remindertime];
     //         logger.debug(`[${PREFIX}] ${userid} has a reminder on ${remindertime}`);
     //         if (remindertime <= Date.now() / 1000) {
     //           logger.debug(`[${PREFIX}] Sending reminder to ${userid}`);
@@ -192,9 +192,9 @@ module.exports = {
     //             user.send({ embeds: [reminderEmbed] });
     //             // remove the reminder
     //             // delete doc.reminders[remindertime];
-    //             delete allReminders[remindertime];
+    //             delete userReminders[remindertime];
     //             return db.collection(usersDbName).doc(userFbId).update({
-    //               reminders: allReminders,
+    //               reminders: userReminders,
     //             });
     //           });
     //         }

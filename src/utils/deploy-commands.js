@@ -7,15 +7,15 @@ const path = require('path');
 const fs = require('fs/promises');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
-const { DISCORD_CLIENT_ID, DISCORD_TOKEN, TRIPSIT_GUILD_ID } = require('./env');
+const { DISCORD_CLIENT_ID, DISCORD_TOKEN, TRIPSIT_GUILD_ID } = require('../../env');
 
-const COMMANDS_PATH = path.resolve('src/commands');
+const COMMANDS_PATH = path.resolve('./src/commands');
 
 async function getCommands(commandType) {
   const files = await fs.readdir(path.join(COMMANDS_PATH, commandType));
   return files
     .filter(file => file.endsWith('.js') && !file.endsWith('index.js'))
-    .map(file => require(`./src/commands/${commandType}/${file}`))
+    .map(file => require(`../commands/${commandType}/${file}`))
     .map(command => command.data.toJSON());
 }
 
