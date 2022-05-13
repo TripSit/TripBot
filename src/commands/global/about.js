@@ -2,9 +2,9 @@
 
 const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { stripIndents } = require('common-tags');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
-const { stripIndents } = require('common-tags');
 
 const PREFIX = path.parse(__filename).name;
 
