@@ -9,19 +9,18 @@ const PREFIX = path.parse(__filename).name;
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('idose')
-    .setDescription('Log your dosages!')
-
+    .setName('dose')
+    .setDescription('Log your dosages (offline, only you can see this)!')
     .addIntegerOption(option => option.setName('volume')
       .setDescription('How much?')
       .setRequired(true))
     .addStringOption(option => option.setName('units')
       .setDescription('What units?')
       .setRequired(true)
-      .addChoice('g (grams)', 'g (grams)')
       .addChoice('mg (milligrams)', 'mg (milligrams)')
       .addChoice('ml (milliliters)', 'ml (milliliters)')
       .addChoice('µg (micrograms)', 'µg (micrograms)')
+      .addChoice('g (grams)', 'g (grams)')
       .addChoice('oz (ounces)', 'oz (ounces)')
       .addChoice('fl oz (fluid ounces)', 'fl oz (fluid ounces)')
       .addChoice('tabs', 'tabs')

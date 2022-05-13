@@ -170,7 +170,6 @@ module.exports = {
     if (section === 'Summary') {
       if (summary !== '') {
         // logger.debug(`[${PREFIX}] summary.length: ${summary.length}`);
-        // logger.debug(`[${PREFIX}] wiki_url: ${wikiUrl}`);
         const embed = template.embedTemplate()
           .setColor('DARK_BLUE')
           .setTitle(`${substance} Summary`)
