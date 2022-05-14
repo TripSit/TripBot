@@ -16,7 +16,7 @@ const dxmData = {
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('calc_dxm')
+    .setName('calc-dxm')
     .setDescription('Get DXM dosage information')
     .addIntegerOption(option => option.setName('calc_weight')
       .setDescription('How much do you weigh?')

@@ -30,6 +30,24 @@ async function getCommands(commandType) {
     .map(file => file.slice(0, -3))
 }
 
+async function testReply(interaction, functionName, message) {
+  const embed = template.embedTemplate()
+    .setColor('RANDOM')
+    .setTitle(`Skipping ${functionName} because ${message}`)
+  if (!interaction.replied) {
+    interaction.reply({
+      embeds: [embed],
+      ephemeral: false,
+    });
+  } else {
+    interaction.followUp({
+      embeds: [embed],
+      ephemeral: false,
+    });
+  }
+}
+
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('test')
@@ -53,6 +71,7 @@ module.exports = {
       getCommands('global').then(async (globl_command_names) => {
         for (let i = 0; i < globl_command_names.length; i++) {
           const name = globl_command_names[i];
+
           // For quick testing, disable this in production
           // if (name !== 'idose') {
           //   continue;
@@ -83,19 +102,19 @@ module.exports = {
               await command.execute(interaction, 'This is a bug report!');
               continue;
             }
-            if (name == 'calc_benzo') {
+            if (name == 'calc-benzo') {
               await command.execute(interaction, ['10', 'alprazolam', 'ativan']);
               continue;
             }
-            if (name == 'calc_dxm') {
+            if (name == 'calc-dxm') {
               await command.execute(interaction, ['200', 'lbs', 'RoboTablets (30 mg tablets)']);
               continue;
             }
-            if (name == 'calc_ketamine') {
+            if (name == 'calc-ketamine') {
               await command.execute(interaction, ['200', 'lbs']);
               continue;
             }
-            if (name == 'calc_psychedelics') {
+            if (name == 'calc-psychedelics') {
               await command.execute(interaction, ['2', '4', '4', 'mushrooms']);
               await sleep(1000);
               await command.execute(interaction, ['2', '', '4', 'mushrooms']);
@@ -145,7 +164,7 @@ module.exports = {
           //   continue;
           // }
 
-          // await sleep(1000);
+          await sleep(1000);
           const test_embed = template.embedTemplate()
             .setTitle(`Testing ${name}...`);
           await channel.send({ embeds: [test_embed], ephemeral: false });
@@ -157,19 +176,24 @@ module.exports = {
           const command = await interaction.client.commands.get(name);
           if (command) {
             if (name == 'birthday') {
-
+              await testReply(interaction, name, 'i havnt set up the test code yet!')
               continue;
+              await command.execute(interaction, '1');
             }
             if (name == 'botmod') {
-
+              await testReply(interaction, name, 'this should be tested manually!')
+              continue;
+            }
+            if (name == 'button') {
+              await testReply(interaction, name, 'this should be tested manually!')
               continue;
             }
             if (name == 'chitragupta') {
-              logger.debug(`[${PREFIX}] This command does not need to be tested!`);
+              await testReply(interaction, name, 'this does not need to be tested!')
               continue;
             }
             if (name == 'clean-db') {
-              logger.debug(`[${PREFIX}] This command does not need to be tested!`);
+              await testReply(interaction, name, 'this does not need to be tested!')
               continue;
             }
             if (name == 'idose') {
@@ -205,55 +229,70 @@ module.exports = {
               continue;
             }
             if (name == 'invite') {
-
+              await testReply(interaction, name, 'this should be tested manually!')
               continue;
             }
             if (name == 'issue') {
-              logger.debug(`[${PREFIX}] This command does not need to be tested!`);
+              await testReply(interaction, name, 'this should be tested manually!')
               continue;
             }
             if (name == 'karma') {
-
+              await testReply(interaction, name, 'i havnt set up the test code yet!')
               continue;
+              await command.execute(interaction, '1');
             }
             if (name == 'mod') {
-
+              await testReply(interaction, name, 'i havnt set up the test code yet!')
               continue;
+              await command.execute(interaction, '1');
             }
             if (name == 'pill-id') {
-              logger.debug(`[${PREFIX}] This command does not need to be tested!`);
+              await testReply(interaction, name, 'this is in development!')
               continue;
             }
             if (name == 'ping') {
-
+              await testReply(interaction, name, 'i havnt set up the test code yet!')
               continue;
+              await command.execute(interaction, '1');
             }
             if (name == 'remindme') {
-
+              await testReply(interaction, name, 'i havnt set up the test code yet!')
               continue;
+              await command.execute(interaction, '1');
             }
             if (name == 'report') {
-
+              await testReply(interaction, name, 'i havnt set up the test code yet!')
+              continue;
+              await command.execute(interaction, '1');
+            }
+            if (name == 'test') {
+              await testReply(interaction, name, 'this would create a black hole!')
               continue;
             }
             if (name == 'time') {
-
+              await testReply(interaction, name, 'i havnt set up the test code yet!')
               continue;
+              await command.execute(interaction, '1');
             }
             if (name == 'tripsit') {
-
+              await testReply(interaction, name, 'this should be tested manually!')
               continue;
             }
             if (name == 'tripsitme') {
-
+              await testReply(interaction, name, 'this does not need to be tested (use button)!')
               continue;
             }
             if (name == 'triptoys') {
-
+              await testReply(interaction, name, 'i havnt set up the test code yet!')
               continue;
+              await command.execute(interaction, '1');
             }
             if (name == 'urban_define') {
               await command.execute(interaction, 'tripsit');
+              continue;
+            }
+            if (name == 'update-guilds') {
+              await testReply(interaction, name, 'this does not need to be tested!')
               continue;
             }
             // No-parameter commands fall down here, including:
@@ -268,7 +307,7 @@ module.exports = {
           }
         }
       });
-      logger.debug(`[${PREFIX}] Global commands finished!`);
+      logger.debug(`[${PREFIX}] Guild commands finished!`);
     }
   },
 };

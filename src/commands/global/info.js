@@ -238,7 +238,7 @@ module.exports = {
           return;
         }
 
-        // logger.debug(f"[{PREFIX}] No messages to send")
+        // logger.debug(f"[${PREFIX}] No messages to send")
         await interaction.reply(`No dosage information found for ${substance}`);
         logger.debug(`[${PREFIX}] finished!`);
         return;
@@ -303,7 +303,7 @@ module.exports = {
           }
         }
         if (entireMessage.length > 0 && entireMessage.length <= 1024) {
-          logger.debug(`[{PREFIX}] ${drugStatus} is not too long`);
+          logger.debug(`[${PREFIX}] ${drugStatus} is not too long`);
           const embed = template.embedTemplate()
             .setTitle(`${title}`)
             .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
@@ -317,7 +317,7 @@ module.exports = {
         paginationEmbed(interaction, book, buttonList);
         logger.debug(`[${PREFIX}] finished!`);
       } else {
-        // logger.debug(f"[{PREFIX}] No messages to send")
+        // logger.debug(f"[${PREFIX}] No messages to send")
         await interaction.reply(`No combo information found for ${substance}`);
         logger.debug(`[${PREFIX}] finished!`);
       }

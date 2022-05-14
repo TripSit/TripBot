@@ -130,7 +130,7 @@ module.exports = {
             interaction.respond(defaultShapes.map(choice => ({ name: choice, value: choice })));
           }
         }
-      } else if (interaction.commandName === 'calc_benzo') {
+      } else if (interaction.commandName === 'calc-benzo') {
         const options = {
           shouldSort: true,
           keys: [

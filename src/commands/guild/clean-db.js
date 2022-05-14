@@ -11,7 +11,7 @@ const { db } = global;
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('clean_db')
+    .setName('clean-db')
     .setDescription('Clean the DB!'),
 
   async execute(interaction) {
