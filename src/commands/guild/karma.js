@@ -38,12 +38,12 @@ module.exports = {
       if (all) {
         // sort karma_received by value and then turn it into a string
         const karmaReceivedSorted = Object.entries(karmaReceived).sort((a, b) => b[1] - a[1]);
-        karmaReceivedString = karmaReceivedSorted.map(([key, value]) => `${key}: ${value}`).join('\n');
+        karmaReceivedString = karmaReceivedSorted.map(([key, value]) => `${key} — ${value}`).join('\n');
       } else {
         // Find 'ts_upvote' and 'ts_downvote' in the keys and then turn it into a string
         const karmaReceivedSorted = Object.entries(karmaReceived).sort((a, b) => b[1] - a[1]);
         const karmaReceivedFiltered = karmaReceivedSorted.filter(([key]) => key === '<:ts_up:958721361587630210>' || key === '<:ts_down:960161563849932892>');
-        karmaReceivedString = karmaReceivedFiltered.map(([key, value]) => `${key}: ${value}`).join('\n');
+        karmaReceivedString = karmaReceivedFiltered.map(([key, value]) => `${key} — ${value}`).join('\n');
       }
     } else {
       karmaReceivedString = 'Nothing, they are a blank canvas to be discovered!';
@@ -55,7 +55,7 @@ module.exports = {
         .sort((a, b) => b[1] - a[1])
         .filter(([k]) => all
           || ['<:ts_up:958721361587630210>', '<:ts_down:960161563849932892>'].includes(k))
-        .map(([k, v]) => `${v}: ${k}`)
+        .map(([k, v]) => `${k} — ${v}`)
         .join('\n');
 
     const book = [];
