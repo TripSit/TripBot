@@ -11,7 +11,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('dose')
     .setDescription('Log your dosages (offline, only you can see this)!')
-    .addIntegerOption(option => option.setName('volume')
+    .addNumberOption(option => option.setName('volume')
       .setDescription('How much?')
       .setRequired(true))
     .addStringOption(option => option.setName('units')
@@ -36,7 +36,7 @@ module.exports = {
 
   async execute(interaction, parameters) {
     const substance = interaction.options.getString('substance') || parameters.at(0);
-    const volume = interaction.options.getInteger('volume') || parameters.at(1);
+    const volume = interaction.options.getNumber('volume') || parameters.at(1);
     const units = interaction.options.getString('units') || parameters.at(2);
 
     const date = new Date();
