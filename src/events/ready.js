@@ -53,9 +53,14 @@ module.exports = {
     client.guilds.cache.forEach(async guild => {
       if (guild.id === TRIPSIT_GUILD_ID) {
         // Fetch all Guild tripsit Invites
-        const firstInvites = await guild.invites.fetch(); // TODO: Promisify
-        // Set the key as Guild ID, and create a map which has the invite code
-        // and the number of uses
+        let firstInvites = [];
+        try {
+          firstInvites = await guild.invites.fetch(); // TODO: Promisify
+          // Set the key as Guild ID, and create a map which has the invite code
+          // and the number of uses
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error fetching invites: ${err}`);
+        }
         client.invites.set(
           guild.id,
           new Collection(firstInvites.map(invite => [invite.code, invite.uses])),
