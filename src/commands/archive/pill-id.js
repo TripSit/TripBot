@@ -25,7 +25,7 @@ const imgurClient = new ImgurClient({
 /* Idea for this code inspired by PsyBot! https://github.com/v0idp/PsyBot */
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('pill_id')
+    .setName('pill-id')
     .setDescription('Search by pill qualities!')
     .addStringOption(option => option.setName('imprint')
       .setDescription('What are the markings on the pill?')

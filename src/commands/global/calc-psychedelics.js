@@ -9,7 +9,7 @@ const PREFIX = path.parse(__filename).name;
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('calc_psychedelics')
+    .setName('calc-psychedelics')
     .setDescription('Check psychedelic tolerance information')
     .addSubcommand(subcommand => subcommand
       .setName('lsd')

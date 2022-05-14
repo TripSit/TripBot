@@ -11,7 +11,7 @@ const PREFIX = path.parse(__filename).name;
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('calc_benzo')
+    .setName('calc-benzo')
     .setDescription('Check combo information')
     .addIntegerOption(option => option.setName('i_have')
       .setDescription('mg')

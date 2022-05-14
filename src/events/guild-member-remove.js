@@ -35,7 +35,7 @@ module.exports = {
       // logger.debug(`[${PREFIX}] seconds: ${seconds}`);
       const embed = template.embedTemplate()
         .setColor('BLUE')
-        .setDescription(`${member} has left the network after\
+        .setDescription(`${member} has left the guild after\
                 ${years > 0 ? `${years} years` : ''}\
                 ${years === 0 && months > 0 ? `${months} months` : ''}\
                 ${months === 0 && weeks > 0 ? `${weeks} weeks` : ''}\
@@ -43,10 +43,16 @@ module.exports = {
                 ${days === 0 && hours > 0 ? `${hours} hours` : ''}\
                 ${hours === 0 && minutes > 0 ? `${minutes} minutes` : ''}\
                 ${minutes === 0 && seconds > 0 ? `${seconds} seconds` : ''}`);
-      const modlogChannel = member.client.channels.cache.get(channelModlog);
-      // logger.debug(`[${PREFIX}] channel_modlog_id: ${channel_modlog}`);
-      // logger.debug(`[${PREFIX}] modlog_channel: ${modlog_channel}`);
-      modlogChannel.send({ embeds: [embed] });
+      try {
+        const modlogChannel = await member.client.channels.cache.get(channelModlog);
+        // logger.debug(`[${PREFIX}] channel_modlog_id: ${channel_modlog}`);
+        // logger.debug(`[${PREFIX}] modlog_channel: ${modlog_channel}`);
+        if (modlogChannel) {
+          modlogChannel.send({ embeds: [embed] });
+        }
+      } catch (err) {
+        logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
+      }
     }
   },
 };
