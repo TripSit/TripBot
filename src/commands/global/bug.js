@@ -7,7 +7,11 @@ const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
 
-const channelDevId = process.env.channel_development;
+const {
+  ownerId,
+  role_developer: roleDeveloperId,
+  channel_development: channelDevId,
+} = process.env;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -22,13 +26,17 @@ module.exports = {
     const bugReport = interaction.options.getString('bug_report') || parameters;
     logger.debug(`[${PREFIX}] bugReport:`, bugReport);
 
-    const botOwner = interaction.client.users.cache.get(process.env.ownerId);
+    const botOwner = interaction.client.users.cache.get(ownerId);
+    const botOwnerEmbed = template.embedTemplate()
+      .setColor('RANDOM')
+      .setDescription(`Hey ${botOwner.toString()},\n${username}${guildMessage} reports:\n${bugReport}`);
+    botOwner.send({ embeds: [botOwnerEmbed] });
 
-    logger.debug(`[${PREFIX}] channel_dev_id:`, channelDevId);
+    const developerRole = interaction.guild.roles.cache.find(role => role.id === roleDeveloperId);
     const devChan = interaction.client.channels.cache.get(channelDevId);
     const devEmbed = template.embedTemplate()
       .setColor('RANDOM')
-      .setDescription(`Hey ${botOwner.toString()},\n${username}${guildMessage} reports:\n${bugReport}`);
+      .setDescription(`Hey ${developerRole.toString()}s, a user submitted a bug report:\n${bugReport}`);
     devChan.send({ embeds: [devEmbed] });
 
     const embed = template.embedTemplate()
