@@ -99,14 +99,14 @@ module.exports = {
     .addSubcommand(subcommand => subcommand
       .setName('set')
       .setDescription('Record when you dosed something')
-      .addIntegerOption(option => option.setName('volume')
+      .addNumberOption(option => option.setName('volume')
         .setDescription('How much?')
         .setRequired(true))
       .addStringOption(option => option.setName('units')
         .setDescription('What units?')
         .setRequired(true)
         .addChoice('mg (milligrams)', 'mg (milligrams)')
-        .addChoice('ml (milliliters)', 'ml (milliliters)')
+        .addChoice('mL (milliliters)', 'mL (milliliters)')
         .addChoice('µg (micrograms)', 'µg (micrograms)')
         .addChoice('g (grams)', 'g (grams)')
         .addChoice('oz (ounces)', 'oz (ounces)')
@@ -222,7 +222,7 @@ module.exports = {
     if (command === 'set') {
       // logger.debug(`[${PREFIX}] Command: ${command}`);
       const substance = interaction.options.getString('substance') || parameters.at(1);
-      const volume = interaction.options.getInteger('volume') || parameters.at(2);
+      const volume = interaction.options.getNumber('volume') || parameters.at(2);
       const units = interaction.options.getString('units') || parameters.at(3);
       let offset = '';
       // logger.debug(`[${PREFIX}] option: ${interaction.options.getString('offset')}`);
