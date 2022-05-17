@@ -31,7 +31,7 @@ module.exports = {
 
   async execute(client) {
     // This takes a while so do it first
-    // Setup the express server, this is necessary for the DO health check
+    // Setup the express server, this is necessary for the Digital Ocean health check
     if (NODE_ENV === 'production') {
       const app = express();
       app.get('/', (req, res) => {
@@ -69,73 +69,65 @@ module.exports = {
     });
     /* End *INVITE* code */
 
-    try {
-      const guildDb = [];
+    const userDb = [];
+    if (db !== undefined) {
+      // Get user information
+      const snapshotUser = await db.collection(usersDbName).get();
+      snapshotUser.forEach(doc => {
+        userDb.push({
+          key: doc.id,
+          value: doc.data(),
+        });
+      });
+    }
+    Object.assign(global, { user_db: userDb });
+    logger.debug(`[${PREFIX}] User database loaded.`);
+    // logger.debug(`[${PREFIX}] user_db: ${JSON.stringify(global.user_db, null, 4)}`);
+
+    if (NODE_ENV !== 'production') {
+      await fs.writeFile(
+        path.resolve(`./src/backups/user_db_(${today}).json`),
+        JSON.stringify(userDb, null, 2),
+      );
+      logger.debug(`[${PREFIX}] User database backedup.`);
+    }
+
+    const guildDb = [];
+    const blacklistGuilds = [];
+    if (db !== undefined) {
+      // Get guild information
       const snapshotGuild = await db.collection(guildDbName).get();
       snapshotGuild.forEach(doc => {
         guildDb.push({
           key: doc.id,
           value: doc.data(),
         });
+        if (doc.data().isBanned) {
+          blacklistGuilds.push(doc.data().guild_id);
+        }
       });
-      Object.assign(global, { guild_db: guildDb });
-    } catch (ex) {
-      logger.debug(`[${PREFIX}] Error getting guild firebase, make sure this is expected:`, ex);
-      const guildDb = await fs.readFile(path.resolve('./src/assets/guild_db_example.json'));
-      Object.assign(global, { guild_db: guildDb });
     }
+
+    Object.assign(global, { guild_db: guildDb });
+    logger.debug(`[${PREFIX}] Guild database loaded.`);
 
     if (NODE_ENV !== 'production') {
       await fs.writeFile(
         path.resolve(`./src/backups/guild_db_(${today}).json`),
         JSON.stringify(global.guild_db, null, 2),
       );
+      logger.debug(`[${PREFIX}] Guild database backedup.`);
     }
-    logger.debug(`[${PREFIX}] Guild database loaded.`);
 
-    const snapshotUser = await db.collection(usersDbName).get();
-    const userDb = [];
-    snapshotUser.forEach(doc => {
-      userDb.push({
-        key: doc.id,
-        value: doc.data(),
-      });
-    });
-    global.user_db = userDb;
-
-    if (NODE_ENV !== 'production') {
-      await fs.writeFile(
-        path.resolve(`./src/backups/user_db_(${today}).json`),
-        JSON.stringify(global.user_db, null, 2),
-      );
-      logger.debug(`[${PREFIX}] User database backedup.`);
-    }
-    logger.debug(`[${PREFIX}] User database loaded.`);
-    // logger.debug(`[${PREFIX}] user_db: ${JSON.stringify(global.user_db, null, 4)}`);
-
-    // Set the global banned guilds
-    const blacklistGuilds = [];
-    const snapshotGuild = await db.collection(usersDbName).get();
-    snapshotGuild.forEach(doc => {
-      // logger.debug(`[${PREFIX}] ${doc.id}, '=>', ${doc}`);
-      if (doc.data().isBanned) {
-        blacklistGuilds.push(doc.data().guild_id);
-      }
-    });
     // logger.debug(`[${PREFIX}] blacklist_guilds: ${blacklist_guilds}`);
-
     // Check if the guild is in blacklist_guilds and if so, leave it
-    client.guilds.cache.forEach(guild => {
-      if (blacklistGuilds.includes(guild.id)) {
-        logger.info(`[${PREFIX}] Leaving ${guild.name}`);
-        guild.leave();
-      }
-    });
-
-    // Print each guild I am in
     logger.debug(`[${PREFIX}] I am in:`);
     client.guilds.cache.forEach(guild => {
       logger.debug(`[${PREFIX}] ${guild.name}`);
+      if (blacklistGuilds.includes(guild.id)) {
+        logger.info(`[${PREFIX}] ${guild.name} is banned, leaving!`);
+        guild.leave();
+      }
     });
 
     async function checkReminders() {

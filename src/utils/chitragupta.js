@@ -1,8 +1,7 @@
 'use strict';
 
 const logger = require('./logger');
-const { getUserInfo } = require('./get-user-info');
-const { setUserInfo } = require('./set-user-info');
+const { getUserInfo, setUserInfo } = require('./firebase');
 
 const PREFIX = require('path').parse(__filename).name; // eslint-disable-line
 
