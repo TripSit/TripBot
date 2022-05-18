@@ -13,6 +13,7 @@ const timezones = require('../assets/timezones.json');
 const pillColors = require('../assets/pill_colors.json');
 const pillShapes = require('../assets/pill_shapes.json');
 const tripsitme = require('../utils/tripsitme');
+const modalSubmit = require('../utils/modal-submit');
 
 const {
   ownerId,
@@ -93,6 +94,10 @@ module.exports = {
         blacklistUsers.push(doc.value.guild_id);
       }
     });
+
+    if (interaction.isModalSubmit()) {
+      modalSubmit.execute(interaction, client);
+    }
 
     // check if the interaction is a request for autocomplete
     if (interaction.isAutocomplete()) {
