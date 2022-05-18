@@ -17,8 +17,6 @@ const channelSanctuaryId = process.env.channel_sanctuary;
 const channelIrcId = process.env.channel_irc;
 const channelDrugQuestionsId = process.env.channel_drugquestions;
 
-// ignore the next line in eslint
-
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('rules')
