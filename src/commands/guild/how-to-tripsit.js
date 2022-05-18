@@ -111,8 +111,10 @@ module.exports = {
     // ᲼᲼
     // > **Are you interested in helping out in the Harm Reduction Centre?**
     // > By reacting to this message you will be given the **Helper** role.
-    // > This will give you access to the ${channelTripsitters.toString()} room, and you will be notified when people need assistance in the ${channelTripsit.toString()} room.
-    // > You are not required to respond to notices, **this role is completely optional**, but we appreciate the help!
+    // > This will give you access to the ${channelTripsitters.toString()} room, and \
+    // you will be notified when people need assistance in the ${channelTripsit.toString()} room.
+    // > You are not required to respond to notices, **this role is completely optional**, //
+    // but we appreciate the help!
     // ᲼᲼
     // Thanks for reading, stay safe!
     // `);

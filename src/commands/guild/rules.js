@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const { MessageAttachment, MessageEmbed } = require('discord.js');
+const { MessageAttachment } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { stripIndents } = require('common-tags');
 const logger = require('../../utils/logger');
@@ -13,8 +13,8 @@ const file = new MessageAttachment('./src/assets/img/RULES.png');
 
 const channelRulesId = process.env.channel_rules;
 const channelTripsitId = process.env.channel_tripsit;
-const channelSanctuaryId = process.env.channel_sanctuary;
-const channelIrcId = process.env.channel_irc;
+// const channelSanctuaryId = process.env.channel_sanctuary;
+// const channelIrcId = process.env.channel_irc;
 const channelDrugQuestionsId = process.env.channel_drugquestions;
 
 module.exports = {

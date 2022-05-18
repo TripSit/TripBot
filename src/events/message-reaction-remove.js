@@ -13,7 +13,7 @@ const {
 
 module.exports = {
   name: 'messageReactionRemove',
-  async execute(reaction, user, client) {
+  async execute(reaction, user) {
     // logger.debug(`[${PREFIX}] Reaction added`);
     // logger.debug(`[${PREFIX}] Reaction: ${JSON.stringify(reaction, null, 2)}`);
     // logger.debug(`[${PREFIX}] User: ${JSON.stringify(user, null, 2)}`);
