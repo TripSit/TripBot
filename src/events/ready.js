@@ -86,7 +86,7 @@ module.exports = {
 
     if (NODE_ENV !== 'production') {
       await fs.writeFile(
-        path.resolve(`./src/backups/user_db_(${today}).json`),
+        path.resolve(`./backups/user_db_(${today}).json`),
         JSON.stringify(userDb, null, 2),
       );
       logger.debug(`[${PREFIX}] User database backedup.`);
@@ -113,7 +113,7 @@ module.exports = {
 
     if (NODE_ENV !== 'production') {
       await fs.writeFile(
-        path.resolve(`./src/backups/guild_db_(${today}).json`),
+        path.resolve(`./backups/guild_db_(${today}).json`),
         JSON.stringify(global.guild_db, null, 2),
       );
       logger.debug(`[${PREFIX}] Guild database backedup.`);
