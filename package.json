@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node ./src/utils/deploy-commands.js && node ./src/index.js",
-    "dev": "nodemon --ignore src/assets/ --ignore src/backups/ --inspect ./src/index.js",
+    "dev": "nodemon --ignore src/assets/ --ignore /backups/ --inspect ./src/index.js",
     "register-commands": "node ./src/utils/deploy-commands.js",
     "lint": "eslint .",
     "fix": "eslint --fix .",

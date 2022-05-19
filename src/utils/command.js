@@ -11,6 +11,7 @@ const {
 
 module.exports = {
   async execute(interaction, client) {
+    logger.debug(`[${PREFIX}] interaction: ${interaction}`);
     const blacklistUsers = [];
     global.guild_db.forEach(doc => {
       if (doc.value.isBanned) {
@@ -23,6 +24,7 @@ module.exports = {
       logger.debug(`[${PREFIX}] ${interaction.user.username}#${interaction.user.discriminator} (${interaction.user.id}) is banned from using commands.`);
       return interaction.reply('You are banned from using commands.');
     }
+    // logger.debug(`[${PREFIX}] ${interaction.user.username} is not banned!`);
 
     // // Cooldown logic
     // if (interaction.user.id !== ownerId) {
@@ -44,6 +46,7 @@ module.exports = {
     const { commandName } = interaction;
 
     const command = client.commands.get(commandName);
+
     if (!command) return;
 
     const commandsAdmin = ['rules', 'how-to-tripsit', 'invite', 'button', 'gban', 'gunban', 'uban', 'uunban', 'test', 'ping'];
