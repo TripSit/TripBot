@@ -46,7 +46,7 @@ module.exports = {
     > **-** If you need to clarify anything you can review the full unabridged network rules: https://wiki.tripsit.me/wiki/Rules
     > **-** The moderators reserve the right to remove those who break the 'spirit' of the rules, even if they don't break any specific rule.
     > **-** If you see something against the rules or something that makes you feel unsafe, let the team know. We want this server to be a welcoming space!
-    ᲼᲼
+    <:invisible:976824380564852768>
     `);
 
     await channelRules.send(stripIndents`
@@ -55,7 +55,7 @@ module.exports = {
     > **-** ${channelTripsit.toString()} allows minors to get help from a tripsitter.
     > **-** ${channelQuestions.toString()} allows minors to ask questions on substances.
     > **-** We appreciate the support, but beyond this it is our belief that minors have more productive activitives than contributing to a harm reduction network <3
-    ᲼᲼
+    <:invisible:976824380564852768>
     `);
 
     await channelRules.send(stripIndents`
@@ -64,16 +64,16 @@ module.exports = {
     > **-** Assume anyone attempting to buy or sell something is a scammer. Report scammers to the team to get a (virtual) cookie.
     > **-** You may source harm reduction supplies and paraphernalia, providing that the source doesn't distribute any substances.
     > **-** No self-promotion (server invites, advertisements, etc) without permission from a staff member.
-    ᲼᲼
+    <:invisible:976824380564852768>
     `);
 
     await channelRules.send(stripIndents`
-    > **💰 3. Do not encourage unsafe usage!**
+    > **💀 3. Do not encourage unsafe usage!**
     > **-** Don't encourage or enable dangerous drug use; don't spread false, dangerous, or misleading information about drugs.
     > **-** Keep your dosage information and stash private unless it's relevant to a question. Posting absurd dosages to get a reaction will receive a reaction (a ban).
     > **-** Hard drug use (beyond nicotine or THC) or driving on camera is not allowed in the voice rooms.
     > **-** No substance identification - no one can tell you which drugs, or how much of them, you have just by looking at them. #harm-reduction
-    ᲼᲼
+    <:invisible:976824380564852768>
     `);
 
     await channelRules.send(stripIndents`
@@ -82,7 +82,7 @@ module.exports = {
     > **-** Don't submit anything that drastically disturbs the flow of chat without providing any added value.
     > **-** That includes: Mic spam, reaction spam, taking six messages to formulate one sentence, etc.
     > **-** Don't post content that is unnecessarily inflammatory, provocative, or controversial. Read the atmosphere, and recognize when you've gone too far.
-    ᲼᲼
+    <:invisible:976824380564852768>
     `);
 
     logger.debug(`[${PREFIX}] finished!`);
