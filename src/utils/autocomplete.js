@@ -63,7 +63,9 @@ module.exports = {
   async execute(interaction) {
     logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
     // if (interaction.commandName === 'ems') {
-    //   const emsData = Object.keys(emergency).map(key => ({ country: key, data: emergency[key] }));
+    //   const emsData = Object.keys(emergency).map(key => ({
+    //   country: key, data: emergency[key]
+    // }));
     //   // logger.debug(`[${PREFIX}] emsData: ${JSON.stringify(emsData, null, 2)}`);
     //   const options = {
     //     shouldSort: true,
