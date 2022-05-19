@@ -2,11 +2,10 @@
 
 const path = require('path');
 const fs = require('fs/promises');
-const { Collection } = require('discord.js');
 const express = require('express');
 const logger = require('../utils/logger');
 const template = require('../utils/embed-template');
-const { NODE_ENV, TRIPSIT_GUILD_ID } = require('../../env');
+const { NODE_ENV } = require('../../env');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -16,14 +15,6 @@ const {
   users_db_name: usersDbName,
   guild_db_name: guildDbName,
 } = process.env;
-
-// (*INVITE*) https://github.com/AnIdiotsGuide/discordjs-bot-guide/blob/master/coding-guides/tracking-used-invites.md
-/* Start *INVITE* code */
-// Initialize the invite cache
-// const invites = new Collection();
-// A pretty useful method to create a delay without blocking the whole script.
-// const wait = require('timers/promises').setTimeout;
-/* End *INVITE* code */
 
 module.exports = {
   name: 'ready',
@@ -44,28 +35,19 @@ module.exports = {
     }
 
     /* Start *INVITE* code */
-    // "ready" isn't really ready. We need to wait a spell.
-    // await wait(1000);
-    // TODO: luxon
-    const today = Math.floor(Date.now() / 1000);
-
-    // Loop over all the guilds
-    client.guilds.cache.forEach(async guild => {
-      if (guild.id === TRIPSIT_GUILD_ID) {
-        // Fetch all Guild tripsit Invites
-        let firstInvites = [];
-        try {
-          firstInvites = await guild.invites.fetch(); // TODO: Promisify
-          // Set the key as Guild ID, and create a map which has the invite code
-          // and the number of uses
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error fetching invites: ${err}`);
-        }
-        client.invites.set(
-          guild.id,
-          new Collection(firstInvites.map(invite => [invite.code, invite.uses])),
-        );
-      }
+    // https://stackoverflow.com/questions/69521374/discord-js-v13-invite-tracker
+    global.guildInvites = new Map();
+    client.guilds.cache.forEach(guild => {
+      guild.invites.fetch()
+        .then(invites => {
+          logger.debug(`[${PREFIX}] INVITES CACHED`);
+          const codeUses = new Map();
+          invites.each(inv => codeUses.set(inv.code, inv.uses));
+          global.guildInvites.set(guild.id, codeUses);
+        })
+        .catch(err => {
+          logger.debug(`[${PREFIX}] OnReady Error: ${err}`);
+        });
     });
     /* End *INVITE* code */
 
@@ -84,6 +66,7 @@ module.exports = {
     logger.debug(`[${PREFIX}] User database loaded.`);
     // logger.debug(`[${PREFIX}] user_db: ${JSON.stringify(global.user_db, null, 4)}`);
 
+    const today = Math.floor(Date.now() / 1000);
     if (NODE_ENV !== 'production') {
       await fs.writeFile(
         path.resolve(`./backups/user_db_(${today}).json`),
