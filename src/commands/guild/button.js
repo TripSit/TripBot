@@ -11,6 +11,7 @@ const PREFIX = path.parse(__filename).name;
 const channelDrugQuestionsId = process.env.channel_drugquestions;
 const channelSanctuaryId = process.env.channel_sanctuary;
 const channelGeneralId = process.env.channel_general;
+const channelTripsitId = process.env.channel_tripsit;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -20,16 +21,24 @@ module.exports = {
     const channelQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
     const channelSanctuary = interaction.client.channels.cache.get(channelSanctuaryId);
     const channelGeneral = interaction.client.channels.cache.get(channelGeneralId);
+    const channelTripsit = interaction.client.channels.cache.get(channelTripsitId);
 
     const buttonText = stripIndents`
-      Welcome to the TripSit room!\n
-      Questions on drugs? Make a thread in ${channelQuestions}!\n
-      Don't need immediate help but want a peaceful chat? Come to ${channelSanctuary}!\n
-      **Under the influence of something and need help? Click the buttom below!**
+      Welcome to the TripSit room!
+
+      Non-urgent questions on drugs? Make a thread in ${channelQuestions}!
+
+      Don't need immediate help but want a peaceful chat? Come to ${channelSanctuary}!
+
+      **Need to talk with a tripsitter? Click the buttom below!**
+      Share what substance you're asking about, time and size of dose, and any other relevant info.
       This will create a new thread and alert the community that you need assistance!
-      🛑 Please do not message helpers or tripsitters directly! 🛑\n
-      All other topics of conversation are welcome in ${channelGeneral}!\n
+      🛑 Please do not message helpers or tripsitters directly! 🛑
+
+      All other topics of conversation are welcome in ${channelGeneral}!
+
       Stay safe!
+
     `;
 
     // Create a new button embed
@@ -46,7 +55,8 @@ module.exports = {
       );
 
     // Create a new button
-    await interaction.reply({ content: buttonText, components: [row] });
+    await channelTripsit.send({ content: buttonText, components: [row] });
+    await interaction.reply('done!');
     logger.debug(`[${PREFIX}] finished!`);
   },
 };

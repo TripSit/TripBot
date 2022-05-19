@@ -2,8 +2,7 @@
 
 const path = require('path');
 const logger = require('../utils/logger');
-const { getGuildInfo } = require('../utils/get-guild-info');
-const { setGuildInfo } = require('../utils/set-guild-info');
+const { getGuildInfo, setGuildInfo } = require('../utils/firebase');
 
 const PREFIX = path.parse(__filename).name;
 

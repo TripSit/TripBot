@@ -4,8 +4,7 @@ const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
-const { getGuildInfo } = require('../../utils/get-guild-info');
-const { setGuildInfo } = require('../../utils/set-guild-info');
+const { getGuildInfo, setGuildInfo } = require('../../utils/firebase');
 
 const PREFIX = path.parse(__filename).name;
 
