@@ -8,6 +8,5 @@ module.exports = {
 
   async execute(invite, client) {
     logger.info(`[${PREFIX}] Invite deleted:`, invite);
-    client.invites.get(invite.guild.id).delete(invite.code);
   },
 };

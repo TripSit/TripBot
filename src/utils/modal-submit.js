@@ -11,7 +11,7 @@ const {
   ownerId,
   NODE_ENV,
   role_developer: roleDeveloperId,
-  channel_development: channelDevId,
+  channel_tripbot: channelDevId,
   channel_tripsitters: channelTripsitters,
   role_needshelp: roleNeedsHelp,
   role_tripsitter: roleTripsitter,
@@ -131,9 +131,9 @@ module.exports = {
       const helperMsg = stripIndents`
       Hey ${test ? 'tripsitter' : tripsitterRole}s and ${test ? 'helper' : helperRole}s, ${patient.user.username} can use some help in ${thread.toString()}!
 
-      ${triageInput ? `They've taken: \n${triageInput}` : ''}
+      They've taken: ${triageInput ? `\n${triageInput}` : '*No info given*'}
 
-      ${introInput ? `Their issue: \n${introInput}` : ''}
+      Their issue: ${introInput ? `\n${introInput}` : '*No info given*'}
 
       Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!
 
