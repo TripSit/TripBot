@@ -3,14 +3,17 @@
 const path = require('path');
 const fs = require('fs/promises');
 const express = require('express');
+const { ReactionRole } = require('discordjs-reaction-role');
 const logger = require('../utils/logger');
 const template = require('../utils/embed-template');
 const { NODE_ENV } = require('../../env');
+const { getGuildInfo } = require('../utils/firebase');
 
 const PREFIX = path.parse(__filename).name;
 
 const { db } = global;
 const {
+  guildId,
   PORT,
   users_db_name: usersDbName,
   guild_db_name: guildDbName,
@@ -34,10 +37,20 @@ module.exports = {
       });
     }
 
+    const tripsitGuild = client.guilds.resolve(guildId);
+    async function getReactionRoles() {
+      const targetResults = await getGuildInfo(tripsitGuild);
+      const targetData = targetResults[0];
+      global.manager = new ReactionRole(client, targetData.reactionRoles);
+    }
+
+    getReactionRoles();
+
     /* Start *INVITE* code */
     // https://stackoverflow.com/questions/69521374/discord-js-v13-invite-tracker
     global.guildInvites = new Map();
     client.guilds.cache.forEach(guild => {
+      if (guild.id !== guildId) return;
       guild.invites.fetch()
         .then(invites => {
           logger.debug(`[${PREFIX}] INVITES CACHED`);

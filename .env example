@@ -5,7 +5,7 @@ ts_icon_url = https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png
 ts_flame_url = https://imgur.com/b923xK2.png
 disclaimer = Please dose responsibly, this info does not replace talking with a medical professional.
 
-setup_discord_bot_specific = true
+discord_bot_specific = true
 token = <token: discord private token>
 ownerId = <int: discord owner id>
 clientId = <int: discord client id>
@@ -25,6 +25,7 @@ channel_irc = 974329684751970334
 channel_drugquestions = 960606558373441558
 channel_sanctuary = 960606558373441560
 channel_general = 960606558373441556
+channel_rules = 960606558134362220
 
 set_roles_used = true
 role_needshelp = 960606558071435314

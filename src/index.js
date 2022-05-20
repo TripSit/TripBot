@@ -2,7 +2,7 @@
 
 if (process.env.NODE_ENV !== 'production') require('dotenv').config(); // eslint-disable-line
 const path = require('path');
-const { Client, Collection, Intents } = require('discord.js');
+const { Client, Intents } = require('discord.js');
 const { initializeApp, cert } = require('firebase-admin/app'); // eslint-disable-line
 const { getFirestore } = require('firebase-admin/firestore'); // eslint-disable-line
 const logger = require('./utils/logger');
@@ -63,9 +63,14 @@ const client = new Client({
   ],
 });
 
-// Initialize this for later
-client.invites = new Collection();
-
 Promise.all([registerCommands(client), registerEvents(client)])
   .then(() => client.login(DISCORD_TOKEN))
   .then(() => logger.info(`[${PREFIX}] Discord bot successfully started...`));
+
+// Stop the bot when the process is closed (via Ctrl-C).
+const destroy = () => {
+  global.manager.teardown();
+  client.destroy();
+};
+process.on('SIGINT', destroy);
+process.on('SIGTERM', destroy);

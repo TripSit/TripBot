@@ -4,14 +4,11 @@ const PREFIX = require('path').parse(__filename).name;
 const { stripIndents } = require('common-tags');
 const logger = require('../utils/logger');
 const template = require('../utils/embed-template');
-const { TS_FLAME_URL, TS_ICON_URL } = require('../../env');
 
 const { guildId } = process.env;
-const welcomeChannelId = process.env.channel_welcome;
+const welcomeChannelId = process.env.channel_general;
 const channelStartId = process.env.channel_start;
-const channelBotspamId = process.env.channel_botspam;
 const channelTripsitId = process.env.channel_tripsit;
-const channelIrcId = process.env.channel_irc;
 
 module.exports = {
   name: 'guildMemberAdd',
@@ -83,10 +80,7 @@ module.exports = {
       logger.debug(`[${PREFIX}] coloValue:`, colorValue);
       const welcomeChannel = member.client.channels.cache.get(welcomeChannelId);
       const channelStart = member.client.channels.cache.get(channelStartId);
-      const channelBotspam = member.client.channels.cache.get(channelBotspamId);
       const channelTripsit = member.client.channels.cache.get(channelTripsitId);
-      const channelIrc = member.client.channels.cache.get(channelIrcId);
-      logger.debug(`[${PREFIX}] channelBotspam:`, channelBotspam);
       const embed = template.embedTemplate()
         .setAuthor({ name: '', iconURL: '', url: '' })
         .setColor(colorValue)
@@ -102,36 +96,9 @@ module.exports = {
       if (footerText !== '') {
         embed.setFooter({
           text: footerText,
-          iconURL: TS_FLAME_URL,
         });
       }
       welcomeChannel.send({ embeds: [embed] });
-
-      const dmEmbed = template.embedTemplate();
-      dmEmbed.setColor(colorValue);
-      dmEmbed.setThumbnail(TS_ICON_URL);
-      // .setTitle(`Welcome to TripSit ${member.user.username}!`)
-      // .setTitle(`Welcome ${member.toString()} to TripSit ${member}!`)
-      dmEmbed.setDescription(stripIndents`
-        **Welcome to TripSit ${member}!**
-
-        Our discord is a bit different from others, this message is meant to help you get started.
-
-        **Be sure to read the rules**
-        If somone is disturbing chat, react with <:ts_down:960161563849932892>.
-        If three people use <:ts_down:960161563849932892> on a message the user will be put in timeout!
-
-        **If you need a tripsitter, click the button in ${channelTripsit}!**
-        🛑 Please do not message helpers or tripsitters directly! 🛑
-
-        Check out ${channelStart} to set your color and emblem!
-
-        Use ${channelBotspam} to access the bot's commands!
-
-        **If you have questions/issues with the IRC make a new thread in ${channelIrc}!**
-
-        Stay safe!`);
-      // member.send({ embeds: [dmEmbed] });
     }
   },
 };

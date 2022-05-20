@@ -14,6 +14,7 @@ const {
 module.exports = {
   name: 'messageReactionRemove',
   async execute(reaction, user) {
+    if (user.bot) { return logger.debug(`[${PREFIX}] Ignoring bot interaction`); }
     // logger.debug(`[${PREFIX}] Reaction added`);
     // logger.debug(`[${PREFIX}] Reaction: ${JSON.stringify(reaction, null, 2)}`);
     // logger.debug(`[${PREFIX}] User: ${JSON.stringify(user, null, 2)}`);
@@ -29,6 +30,7 @@ module.exports = {
       });
     }
     // logger.debug(`[${PREFIX}] Reaction: ${JSON.stringify(reaction, null, 4)}`);
+    if (reaction.message.author.bot) { return logger.debug(`[${PREFIX}] Ignoring bot interaction`); }
     const reactionAuthor = reaction.message.author;
     const reactionEmoji = reaction.emoji;
     const { count } = reaction;
