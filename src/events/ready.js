@@ -6,18 +6,18 @@ const express = require('express');
 const { ReactionRole } = require('discordjs-reaction-role');
 const logger = require('../utils/logger');
 const template = require('../utils/embed-template');
-const { NODE_ENV } = require('../../env');
 const { getGuildInfo } = require('../utils/firebase');
 
 const PREFIX = path.parse(__filename).name;
 
 const { db } = global;
 const {
-  guildId,
+  NODE_ENV,
+  discordGuildId,
   PORT,
-  users_db_name: usersDbName,
-  guild_db_name: guildDbName,
-} = process.env;
+  firebaseUserDbName,
+  firebaseGuildDbName,
+} = require('../../env');
 
 module.exports = {
   name: 'ready',
@@ -37,7 +37,7 @@ module.exports = {
       });
     }
 
-    const tripsitGuild = client.guilds.resolve(guildId);
+    const tripsitGuild = client.guilds.resolve(discordGuildId);
     async function getReactionRoles() {
       const targetResults = await getGuildInfo(tripsitGuild);
       const targetData = targetResults[0];
@@ -50,7 +50,7 @@ module.exports = {
     // https://stackoverflow.com/questions/69521374/discord-js-v13-invite-tracker
     global.guildInvites = new Map();
     client.guilds.cache.forEach(guild => {
-      if (guild.id !== guildId) return;
+      if (guild.id !== discordGuildId) return;
       guild.invites.fetch()
         .then(invites => {
           logger.debug(`[${PREFIX}] INVITES CACHED`);
@@ -67,7 +67,7 @@ module.exports = {
     const userDb = [];
     if (db !== undefined) {
       // Get user information
-      const snapshotUser = await db.collection(usersDbName).get();
+      const snapshotUser = await db.collection(firebaseUserDbName).get();
       snapshotUser.forEach(doc => {
         userDb.push({
           key: doc.id,
@@ -92,7 +92,7 @@ module.exports = {
     const blacklistGuilds = [];
     if (db !== undefined) {
       // Get guild information
-      const snapshotGuild = await db.collection(guildDbName).get();
+      const snapshotGuild = await db.collection(firebaseGuildDbName).get();
       snapshotGuild.forEach(doc => {
         guildDb.push({
           key: doc.id,
@@ -156,7 +156,7 @@ module.exports = {
               delete userReminders[remindertime];
               // logger.debug(`[${PREFIX}] Removing reminder from all_reminders`);
               // logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 4)}`);
-              db.collection(usersDbName).doc(userFbId).update(doc.value);
+              db.collection(firebaseUserDbName).doc(userFbId).update(doc.value);
               // logger.debug(`[${PREFIX}] Removing reminder from db`);
             }
           });
@@ -186,7 +186,7 @@ module.exports = {
     //             // remove the reminder
     //             // delete doc.reminders[remindertime];
     //             delete userReminders[remindertime];
-    //             return db.collection(usersDbName).doc(userFbId).update({
+    //             return db.collection(firebaseUserDbName).doc(userFbId).update({
     //               reminders: userReminders,
     //             });
     //           });

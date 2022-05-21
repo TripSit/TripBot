@@ -8,10 +8,12 @@ const logger = require('../../utils/logger');
 
 const PREFIX = path.parse(__filename).name;
 
-const channelDrugQuestionsId = process.env.channel_drugquestions;
-const channelSanctuaryId = process.env.channel_sanctuary;
-const channelGeneralId = process.env.channel_general;
-const channelTripsitId = process.env.channel_tripsit;
+const {
+  channelDrugQuestionsId,
+  channelSanctuaryId,
+  channelGeneralId,
+  channelTripsitId,
+} = require('../../../env');
 
 module.exports = {
   data: new SlashCommandBuilder()

@@ -7,10 +7,10 @@ const chitragupta = require('../utils/chitragupta');
 const PREFIX = path.parse(__filename).name;
 
 const {
-  guildId,
-  role_moderator: roleModeratorId,
-  channel_start: channelStartId,
-} = process.env;
+  discordGuildId,
+  roleModeratorId,
+  channelStartId,
+} = require('../../env');
 
 module.exports = {
   name: 'messageReactionAdd',
@@ -43,7 +43,6 @@ module.exports = {
           if (reactUsers.has(user.id)) {
             // If the user who reacted to the message is in the list of users
             // who reacted to the message, remove that reaction
-            // logger.debug(`[${PREFIX}] Removing ${x.emoji.name} from ${reaction.message.author.username}`);
             await reaction.users.remove(user.id);
           }
         }
@@ -54,10 +53,10 @@ module.exports = {
     const reactionAuthor = reaction.message.author;
     const reactionEmoji = reaction.emoji;
     const { count } = reaction;
-    // logger.debug(`[${PREFIX}] guildId: ${guildId}`);
+    // logger.debug(`[${PREFIX}] discordGuildId: ${discordGuildId}`);
     // logger.debug(`[${PREFIX}] reaction.message.guild.id: ${reaction.message.guild.id}`);
     // If we're not in the TripSit guild, don't do this.
-    if (reaction.message.guild.id !== guildId) { return; }
+    if (reaction.message.guild.id !== discordGuildId) { return; }
     logger.debug(`[${PREFIX}] ${user.username} gave ${reactionEmoji.name} to ${reactionAuthor.username} in ${reaction.message.guild}!`);
     await chitragupta.update(user, 1, reactionEmoji.toString(), reactionAuthor);
     if (count === 3 && reactionEmoji.name === 'ts_down') {

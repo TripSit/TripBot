@@ -9,7 +9,7 @@ const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
 
-const { guildId } = process.env;
+const { discordGuildId } = require('../../../env');
 
 const buttonList = [
   new MessageButton().setCustomId('previousbtn').setLabel('Previous').setStyle('DANGER'),
@@ -46,8 +46,8 @@ module.exports = {
       );
 
     // logger.debug(`[${PREFIX}] interaction.guild.id: ${interaction.guild.id}`);
-    // logger.debug(`[${PREFIX}]] guildId: ${guildId}`);
-    if (interaction.guild.id !== guildId) {
+    // logger.debug(`[${PREFIX}]] discordGuildId: ${discordGuildId}`);
+    if (interaction.guild.id !== discordGuildId) {
       return interaction.reply({ embeds: [globalEmbed], ephemeral: false });
     }
 

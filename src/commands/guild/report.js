@@ -9,7 +9,7 @@ const { getUserInfo, setUserInfo } = require('../../utils/firebase');
 
 const PREFIX = path.parse(__filename).name;
 
-const { channel_moderators: channelModeratorsId } = process.env;
+const { channelModeratorsId } = require('../../../env');
 
 const modButtons = new MessageActionRow()
   .addComponents(

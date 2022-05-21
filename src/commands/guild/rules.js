@@ -11,11 +11,13 @@ const PREFIX = path.parse(__filename).name;
 
 const file = new MessageAttachment('./src/assets/img/RULES.png');
 
-const channelRulesId = process.env.channel_rules;
-const channelTripsitId = process.env.channel_tripsit;
-// const channelSanctuaryId = process.env.channel_sanctuary;
-// const channelIrcId = process.env.channel_irc;
-const channelDrugQuestionsId = process.env.channel_drugquestions;
+const {
+  channelRulesId,
+  channelDrugQuestionsId,
+  // channelSanctuaryId,
+  channelTripsitId,
+  // channelIrcId,
+} = require('../../../env');
 
 module.exports = {
   data: new SlashCommandBuilder()

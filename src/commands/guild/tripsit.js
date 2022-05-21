@@ -8,7 +8,7 @@ const { getUserInfo, setUserInfo } = require('../../utils/firebase');
 
 const PREFIX = path.parse(__filename).name;
 
-const { role_needshelp: roleNeedsHelp } = process.env;
+const { roleNeedshelpId } = require('../../../env');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -26,7 +26,7 @@ module.exports = {
       .addChoice('Off', 'Off')),
 
   async execute(interaction) {
-    const needsHelpRole = interaction.guild.roles.cache.find(role => role.id === roleNeedsHelp);
+    const needsHelpRole = interaction.guild.roles.cache.find(role => role.id === roleNeedshelpId);
     // Actor information
     const actor = interaction.member;
     const actorid = actor.id.toString();

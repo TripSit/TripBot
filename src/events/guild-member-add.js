@@ -5,10 +5,12 @@ const { stripIndents } = require('common-tags');
 const logger = require('../utils/logger');
 const template = require('../utils/embed-template');
 
-const { guildId } = process.env;
-const welcomeChannelId = process.env.channel_general;
-const channelStartId = process.env.channel_start;
-const channelTripsitId = process.env.channel_tripsit;
+const {
+  discordGuildId,
+  welcomeChannelId,
+  channelStartId,
+  channelTripsitId,
+} = require('../../env');
 
 module.exports = {
   name: 'guildMemberAdd',
@@ -16,7 +18,7 @@ module.exports = {
   async execute(member, client) {
     // logger.debug('guildMemberAdd');
     // logger.debug(member);
-    if (member.guild.id === guildId) {
+    if (member.guild.id === discordGuildId) {
       logger.info(`[${PREFIX}] ${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
 
       // (*INVITE*) https://github.com/AnIdiotsGuide/discordjs-bot-guide/blob/master/coding-guides/tracking-used-invites.md

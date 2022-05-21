@@ -8,7 +8,35 @@ const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 const { getGuildInfo, setGuildInfo } = require('../../utils/firebase');
 
-const { NODE_ENV } = require('../../../env');
+const {
+  NODE_ENV,
+  channelStartId,
+  channelBotspamId,
+  channelRulesId,
+  channelIrcId,
+  channelTripsitId,
+  channelSanctuaryId,
+  channelDrugQuestionsId,
+  channelGeneralId,
+  roleRedId,
+  roleOrangeId,
+  roleYellowId,
+  roleGreenId,
+  roleBlueId,
+  rolePurpleId,
+  rolePinkId,
+  roleBrownId,
+  roleBlackId,
+  roleWhiteId,
+  roleDrunkId,
+  roleHighId,
+  roleRollingId,
+  roleTrippingId,
+  roleDissociatingId,
+  roleStimmingId,
+  roleNoddingId,
+  roleSoberId,
+} = require('../../../env');
 
 let pinkHeart = '';
 let weedEmoji = '';
@@ -20,39 +48,7 @@ if (NODE_ENV === 'production') {
   weedEmoji = '🌿';
 }
 
-const channelRulesId = process.env.channel_rules;
-const channelIrcId = process.env.channel_irc;
-const channelStartId = process.env.channel_start;
-const channelBotspamId = process.env.channel_botspam;
-const channelTripsitId = process.env.channel_tripsit;
-const channelDrugQuestionsId = process.env.channel_drugquestions;
-const channelSanctuaryId = process.env.channel_sanctuary;
-const channelGeneralId = process.env.channel_general;
-
-const roleRed = process.env.roleRed;
-const roleOrange = process.env.roleOrange;
-const roleYellow = process.env.roleYellow;
-const roleGreen = process.env.roleGreen;
-const roleBlue = process.env.roleBlue;
-const rolePurple = process.env.rolePurple;
-const rolePink = process.env.rolePink;
-const roleBrown = process.env.roleBrown;
-const roleBlack = process.env.roleBlack;
-const roleWhite = process.env.roleWhite;
-
-const roleDrunk = process.env.roleDrunk;
-const roleHigh = process.env.roleHigh;
-const roleRolling = process.env.roleRolling;
-const roleTripping = process.env.roleTripping;
-const roleDissociating = process.env.roleDissociating;
-const roleStimming = process.env.roleStimming;
-const roleNodding = process.env.roleNodding;
-const roleSober = process.env.roleSober;
-
 const PREFIX = path.parse(__filename).name;
-
-// const {
-// } = process.env;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -144,42 +140,42 @@ module.exports = {
       {
         messageId: mindsetMessage.id,
         reaction: '🍺',
-        roleId: roleDrunk,
+        roleId: roleDrunkId,
       },
       {
         messageId: mindsetMessage.id,
         reaction: weedEmoji,
-        roleId: roleHigh,
+        roleId: roleHighId,
       },
       {
         messageId: mindsetMessage.id,
         reaction: '🤩',
-        roleId: roleRolling,
+        roleId: roleRollingId,
       },
       {
         messageId: mindsetMessage.id,
         reaction: '😍',
-        roleId: roleTripping,
+        roleId: roleTrippingId,
       },
       {
         messageId: mindsetMessage.id,
         reaction: '👾',
-        roleId: roleDissociating,
+        roleId: roleDissociatingId,
       },
       {
         messageId: mindsetMessage.id,
         reaction: '😬',
-        roleId: roleStimming,
+        roleId: roleStimmingId,
       },
       {
         messageId: mindsetMessage.id,
         reaction: '😴',
-        roleId: roleNodding,
+        roleId: roleNoddingId,
       },
       {
         messageId: mindsetMessage.id,
         reaction: '❤️',
-        roleId: roleSober,
+        roleId: roleSoberId,
       },
     );
 
@@ -210,52 +206,52 @@ module.exports = {
       {
         messageId: colorMessage.id,
         reaction: '❤',
-        roleId: roleRed,
+        roleId: roleRedId,
       },
       {
         messageId: colorMessage.id,
         reaction: '🧡',
-        roleId: roleOrange,
+        roleId: roleOrangeId,
       },
       {
         messageId: colorMessage.id,
         reaction: '💛',
-        roleId: roleYellow,
+        roleId: roleYellowId,
       },
       {
         messageId: colorMessage.id,
         reaction: '💚',
-        roleId: roleGreen,
+        roleId: roleGreenId,
       },
       {
         messageId: colorMessage.id,
         reaction: '💙',
-        roleId: roleBlue,
+        roleId: roleBlueId,
       },
       {
         messageId: colorMessage.id,
         reaction: '💜',
-        roleId: rolePurple,
+        roleId: rolePurpleId,
       },
       {
         messageId: colorMessage.id,
         reaction: pinkHeart,
-        roleId: rolePink,
+        roleId: rolePinkId,
       },
       {
         messageId: colorMessage.id,
         reaction: '🤎',
-        roleId: roleBrown,
+        roleId: roleBrownId,
       },
       {
         messageId: colorMessage.id,
         reaction: '🖤',
-        roleId: roleBlack,
+        roleId: roleBlackId,
       },
       {
         messageId: colorMessage.id,
         reaction: '🤍',
-        roleId: roleWhite,
+        roleId: roleWhiteId,
       },
     );
 

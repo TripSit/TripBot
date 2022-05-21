@@ -1,60 +1,60 @@
 NODE_ENV = development
 
 app_specific_config = true
-ts_icon_url = https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png
-ts_flame_url = https://imgur.com/b923xK2.png
+tsIconUrl = https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png
+tsFlameUrl = https://imgur.com/b923xK2.png
 disclaimer = Please dose responsibly, this info does not replace talking with a medical professional.
 
 discord_bot_specific = true
 token = <token: discord private token>
-ownerId = <int: discord owner id>
-clientId = <int: discord client id>
-guildId = 960606557622657026
+discordOwnerId = <int: discord owner id>
+discordClientId = <int: discord client id>
+discordGuildId = 960606557622657026
 
 set_channels_used = true
 channel_welcome = 960606558373441556
 channel_sandbox = 960606558549594162
-channel_tripsit = 960606558373441559
-channel_tripsitters = 960606558373441561
-channel_modlog = 960606558801264709
-channel_start = 960606558134362221
-channel_moderators = 960606559140974654
+channelTripsitId = 960606558373441559
+channelTripsittersId = 960606558373441561
+channelModlogId = 960606558801264709
+channelStartId = 960606558134362221
+channelModeratorsId = 960606559140974654
 channel_development = 960606558373441564
-channel_botspam = 960606558549594162
-channel_irc = 974329684751970334
-channel_drugquestions = 960606558373441558
-channel_sanctuary = 960606558373441560
-channel_general = 960606558373441556
-channel_rules = 960606558134362220
+channelBotspamId = 960606558549594162
+channelIrcId = 974329684751970334
+channelDrugQuestionsId = 960606558373441558
+channelSanctuaryId = 960606558373441560
+channelGeneralId = 960606558373441556
+channelRulesId = 960606558134362220
 
 set_roles_used = true
-role_needshelp = 960606558071435314
-role_tripsitter = 960606558134362214
-role_helper = 960606558050480154
-role_moderator = 960606558134362215
-role_developer = 960606558050480151
+roleNeedshelpId = 960606558071435314
+roleTripsitterId = 960606558134362214
+roleHelperId = 960606558050480154
+roleModeratorId = 960606558134362215
+roleDeveloperId = 960606558050480151
 
 for_express_health_check = true
 port = <int: port>
 
 for_irc_connection = true
-IRC_SERVER = <url: irc server>
-IRC_USERNAME = <str: irc username>
-IRC_PASSWORD = <str: irc password>
+ircServer = <url: irc server>
+ircUsername = <str: irc username>
+ircPassword = <str: irc password>
 
 for_firebase_connection = true
-FIREBASE_PRIVATE_KEY_ID = <str: firebase private key id>
-FIREBASE_PRIVATE_KEY = <str: firebase private key, including newline characters, everything>
-FIREBASE_CLIENT_ID = <url: firebase client id>
-FIREBASE_CLIENT_EMAIL = <int: firebase client email>
-guild_db_name = <str: firebase guild db name>
-users_db_name = <str: firebase users db name>
+firebasePrivateKeyId = <str: firebase private key id>
+firebasePrivateKey = <str: firebase private key, including newline characters, everything>
+firebaseClientId = <url: firebase client id>
+firebaseClientEmail = <int: firebase client email>
+firebaseGuildDbName = <str: firebase guild db name>
+firebaseUserDbName = <str: firebase users db name>
 
 for_github_issue_report = true
-GITHUB_TOKEN = <str: github token>
+githubToken = <str: github token>
 
 for_various_rapid_api_calls = true
-rapid_api_key = <str: rapid api key>
-wolfram_alpha_key = <str: wolfram alpha key>
-imgur_id = <str: imgur id>
-imgur_secret = <str: imgur secret>
+rapidApiKey = <str: rapid api key>
+wolframApiKey = <str: wolfram alpha key>
+imgurId = <str: imgur id>
+imgurSecret = <str: imgur secret>

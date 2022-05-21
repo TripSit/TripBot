@@ -99,7 +99,8 @@ module.exports = {
               continue;
             }
             if (name == 'bug') {
-              await command.execute(interaction, 'This is a bug report!');
+              // await command.execute(interaction, 'This is a bug report!');
+              await testReply(interaction, name, 'i havnt set up the test code yet!')
               continue;
             }
             if (name == 'calc-benzo') {
@@ -196,6 +197,14 @@ module.exports = {
               await testReply(interaction, name, 'this does not need to be tested!')
               continue;
             }
+            if (name == 'clear-chat') {
+              await testReply(interaction, name, 'this does not need to be tested!')
+              continue;
+            }
+            if (name == 'how-to-tripsit') {
+              await testReply(interaction, name, 'this should be tested manually!')
+              continue;
+            }
             if (name == 'idose') {
               const drugUnits = [
               'mg (milligrams)',
@@ -264,6 +273,14 @@ module.exports = {
               await testReply(interaction, name, 'i havnt set up the test code yet!')
               continue;
               await command.execute(interaction, '1');
+            }
+            if (name == 'rules') {
+              await testReply(interaction, name, 'this should be tested manually!')
+              continue;
+            }
+            if (name == 'start-here') {
+              await testReply(interaction, name, 'this should be tested manually!')
+              continue;
             }
             if (name == 'test') {
               await testReply(interaction, name, 'this would create a black hole!')

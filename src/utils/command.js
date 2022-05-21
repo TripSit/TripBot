@@ -6,8 +6,8 @@ const logger = require('./logger');
 const PREFIX = path.parse(__filename).name;
 
 const {
-  ownerId,
-} = process.env;
+  discordOwnerId,
+} = require('../../env');
 
 module.exports = {
   async execute(interaction, client) {
@@ -27,7 +27,7 @@ module.exports = {
     // logger.debug(`[${PREFIX}] ${interaction.user.username} is not banned!`);
 
     // // Cooldown logic
-    // if (interaction.user.id !== ownerId) {
+    // if (interaction.user.id !== discordOwnerId) {
     //     if (cooldown.has(interaction.user.id)) {
     //     // / If the cooldown did not end
     //         interaction.reply({ content: 'Don\'t be a coconut ( ͡° ͜ʖ ͡°)', ephemeral: true });
@@ -52,7 +52,7 @@ module.exports = {
     const commandsAdmin = ['clear-chat', 'start-here', 'clean-db', 'rules', 'how-to-tripsit', 'invite', 'button', 'gban', 'gunban', 'uban', 'uunban', 'test', 'ping'];
 
     // Check if the command is in commands_admin list and then check to see if the user is moonbear
-    if (commandsAdmin.includes(commandName) && interaction.user.id !== ownerId) {
+    if (commandsAdmin.includes(commandName) && interaction.user.id !== discordOwnerId) {
       interaction.reply({
         content: 'You do not have permission to use this command.',
         ephemeral: true,
@@ -62,7 +62,7 @@ module.exports = {
 
     // // Check if the command is in the commands_pm list and check if the command came in from a DM
     // if (commands_pm.includes(commandName)) {
-    //     if (interaction.inGuild() && interaction.user.id !== ownerId) {
+    //     if (interaction.inGuild() && interaction.user.id !== discordOwnerId) {
     // eslint-disable-next-line
     //         interaction.reply({ content: 'This command is only available in DMs.', ephemeral: true });
     //         return;

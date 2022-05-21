@@ -10,7 +10,7 @@ const { getUserInfo, setUserInfo } = require('../../utils/firebase');
 const PREFIX = path.parse(__filename).name;
 
 const { db } = global;
-const { usersDbName } = process.env;
+const { usersDbName } = require('../../../env');
 
 module.exports = {
   data: new SlashCommandBuilder()

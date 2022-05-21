@@ -20,15 +20,15 @@ const discussThread = new MessageAttachment('./src/assets/img/6_discussionThread
 const discussMessage = new MessageAttachment('./src/assets/img/7_discussionMessage.png');
 
 const {
-  // ownerId,
+  // discordOwnerId,
   // NODE_ENV,
-  channel_tripsit: channelTripsitId,
-  channel_tripsitters: channelTripsittersId,
-  // channel_sanctuary: channelSanctuaryId,
-  // channel_drugquestions: channelDrugQuestionsId,
-  channel_tripsitinfo: channelTripsitInfoId,
-  role_helper: roleHelper,
-} = process.env;
+  channelTripsitId,
+  channelTripsittersId,
+  // channelSanctuaryId,
+  // channelDrugQuestionsId,
+  channelTripsitInfoId,
+  roleHelperId,
+} = require('../../../env');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -182,7 +182,7 @@ module.exports = {
       {
         messageId: helperMessage.id,
         reaction: '🐕‍🦺',
-        roleId: roleHelper,
+        roleId: roleHelperId,
       },
     );
 

@@ -8,9 +8,9 @@ const template = require('./embed-template');
 const PREFIX = path.parse(__filename).name;
 
 const {
-  guildId,
-  channel_moderators: channelModeratorsId,
-} = process.env;
+  discordGuildId,
+  channelModeratorsId,
+} = require('../../env');
 
 module.exports = {
   async execute(interaction, client) {
@@ -30,7 +30,7 @@ module.exports = {
     }
 
     if (buttonID === 'refusalbtn') {
-      const guild = interaction.client.guilds.resolve(guildId);
+      const guild = interaction.client.guilds.resolve(discordGuildId);
       logger.debug(guild);
       guild.members.ban(interaction.user, { days: 7, reason: 'Refused warning' });
       const embed = template.embedTemplate()

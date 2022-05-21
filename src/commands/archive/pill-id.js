@@ -13,9 +13,9 @@ const pillShapes = require('../../assets/pill_shapes.json');
 const PREFIX = path.parse(__filename).name;
 
 const {
-  imgur_id: imgurId,
-  imgur_secret: imgurSecret,
-} = process.env;
+  imgurId,
+  imgurSecret,
+} = require('../../../env');
 
 const imgurClient = new ImgurClient({
   clientId: imgurId,

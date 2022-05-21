@@ -7,7 +7,7 @@ const { getUserInfo, setUserInfo } = require('../../utils/firebase');
 
 const PREFIX = require('path').parse(__filename).name; // eslint-disable-line
 
-const { channel_moderators_id: channelModeratorsId } = process.env;
+const { channelModeratorsId } = require('../../../env');
 
 // const mod_buttons = new MessageActionRow()
 //     .addComponents(
@@ -282,7 +282,7 @@ module.exports = {
     //         interaction.reply({ embeds: [target_embed], ephemeral: true });
     //         return;
     //     }
-    //     const mod_chan = interaction.client.channels.cache.get(channel_moderators_id);
+    //     const mod_chan = interaction.client.channels.cache.get(channelModeratorsId);
     //     // mod_chan.send(paginationEmbed(interaction, book, page_buttons));
     //     // mod_chan.send({ embeds: [target_embed] });
     //     // mod_chan.send(paginationEmbed(interaction, book, buttonList));
@@ -302,7 +302,7 @@ module.exports = {
       logger.debug(`[${PREFIX}] finished!`);
       return;
     }
-    logger.debug(`${PREFIX} channel_moderators_id: ${channelModeratorsId}`);
+    logger.debug(`${PREFIX} channelModeratorsId: ${channelModeratorsId}`);
     const modChan = interaction.client.channels.cache.get(channelModeratorsId);
     // mod_chan.send({ embeds: [target_embed], components: [mod_buttons] });
     modChan.send({ embeds: [targetEmbed] });

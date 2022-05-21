@@ -7,9 +7,9 @@ const PREFIX = path.parse(__filename).name;
 
 const { db } = global;
 const {
-  guild_db_name: guildDbName,
-  users_db_name: usersDbName,
-} = process.env;
+  firebaseGuildDbName,
+  firebaseUserDbName,
+} = require('../../env');
 
 module.exports = {
   getUserInfo: async member => {
@@ -26,10 +26,10 @@ module.exports = {
       birthday: [],
     };
     let memberFbid = null;
-    logger.debug(`[${PREFIX}] usersDbName: ${usersDbName}`);
+    logger.debug(`[${PREFIX}] firebaseUserDbName: ${firebaseUserDbName}`);
     logger.debug(`[${PREFIX}] member.id: ${member.id}`);
     if (db !== undefined) {
-      const snapshotUser = await db.collection(usersDbName).get();
+      const snapshotUser = await db.collection(firebaseUserDbName).get();
       await snapshotUser.forEach(doc => {
         if (doc.data().discord_id === member.id.toString()) {
           logger.debug(`[${PREFIX}] Member data found!`);
@@ -51,7 +51,7 @@ module.exports = {
       guild_joinedAt: guild.joinedAt,
       guild_description: `${guild.description ? guild.description : 'No description'}`,
       guild_member_count: guild.memberCount,
-      guild_owner_id: guild.ownerId,
+      guild_owner_id: guild.discordOwnerId,
       guild_icon: guild.iconURL(),
       guild_banned: false,
       guild_large: guild.large,
@@ -62,10 +62,10 @@ module.exports = {
       mod_actions: {},
     };
     let guildFbid = null;
-    // logger.debug(`[${PREFIX}] guildDbName: ${guildDbName}`);
+    // logger.debug(`[${PREFIX}] firebaseGuildDbName: ${firebaseGuildDbName}`);
     // logger.debug(`[${PREFIX}] guild.id: ${guild.id}`);
     if (db !== undefined) {
-      const snapshotGuild = await db.collection(guildDbName).get();
+      const snapshotGuild = await db.collection(firebaseGuildDbName).get();
       await snapshotGuild.forEach(doc => {
         if (doc.data().guild_id === guild.id.toString()) {
           logger.debug(`[${PREFIX}] Guild data found!`);
@@ -85,14 +85,14 @@ module.exports = {
     if (fbid !== null && fbid !== undefined) {
       logger.debug(`[${PREFIX}] Updating actor data`);
       try {
-        await db.collection(usersDbName).doc(fbid).set(data);
+        await db.collection(firebaseUserDbName).doc(fbid).set(data);
       } catch (err) {
         logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
       }
     } else {
       logger.debug(`[${PREFIX}] Creating actor data`);
       try {
-        await db.collection(usersDbName).doc().set(data);
+        await db.collection(firebaseUserDbName).doc().set(data);
       } catch (err) {
         logger.error(`[${PREFIX}] Error creating actor data: ${err}`);
       }
@@ -105,14 +105,14 @@ module.exports = {
     if (fbid !== null && fbid !== undefined) {
       logger.debug(`[${PREFIX}] Updating guild data`);
       try {
-        await db.collection(guildDbName).doc(fbid).set(data);
+        await db.collection(firebaseGuildDbName).doc(fbid).set(data);
       } catch (err) {
         logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
       }
     } else {
       logger.debug(`[${PREFIX}] Creating guild data`);
       try {
-        await db.collection(guildDbName).doc().set(data);
+        await db.collection(firebaseGuildDbName).doc().set(data);
       } catch (err) {
         logger.error(`[${PREFIX}] Error creating guild data: ${err}`);
       }
