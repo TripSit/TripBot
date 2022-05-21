@@ -14,7 +14,7 @@ const { db } = global;
 const {
   NODE_ENV,
   discordGuildId,
-  PORT,
+  port,
   firebaseUserDbName,
   firebaseGuildDbName,
 } = require('../../env');
@@ -30,10 +30,11 @@ module.exports = {
       const app = express();
       app.get('/', (req, res) => {
         res.status(200).send('Ok');
+        res.send('Hello world!');
       });
       // TODO: Promisify this
-      app.listen(PORT, () => {
-        logger.debug(`[${PREFIX}] Healthcheck app listening on port ${PORT}`);
+      app.listen(port, () => {
+        logger.debug(`[${PREFIX}] Healthcheck app listening on port ${port}`);
       });
     }
 
