@@ -42,7 +42,10 @@ module.exports = {
     async function getReactionRoles() {
       const targetResults = await getGuildInfo(tripsitGuild);
       const targetData = targetResults[0];
-      global.manager = new ReactionRole(client, targetData.reactionRoles);
+      const reactionRoles = targetData.reactionRoles;
+      if (reactionRoles !== undefined) {
+        global.manager = new ReactionRole(client, targetData.reactionRoles);
+      }
     }
 
     getReactionRoles();
