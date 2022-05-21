@@ -28,6 +28,7 @@ serviceAccount.client_email = firebaseClientEmail;
 serviceAccount.client_id = firebaseClientId;
 
 logger.debug(`[${PREFIX}] private_key_id:  ${serviceAccount.private_key_id}`);
+logger.debug(`[${PREFIX}] private_key:     ${serviceAccount.private_key}`);
 logger.debug(`[${PREFIX}] client_email:    ${serviceAccount.client_email}`);
 logger.debug(`[${PREFIX}] client_id:       ${serviceAccount.client_id}`);
 
