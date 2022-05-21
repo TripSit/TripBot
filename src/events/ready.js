@@ -26,17 +26,17 @@ module.exports = {
   async execute(client) {
     // This takes a while so do it first
     // Setup the express server, this is necessary for the Digital Ocean health check
-    if (NODE_ENV === 'production') {
-      const app = express();
-      app.get('/', (req, res) => {
-        res.status(200).send('Ok');
-        res.send('Hello world!');
-      });
-      // TODO: Promisify this
-      app.listen(port, () => {
-        logger.debug(`[${PREFIX}] Healthcheck app listening on port ${port}`);
-      });
-    }
+    // if (NODE_ENV === 'production') {
+    const app = express();
+    app.get('/', (req, res) => {
+      res.status(200).send('Ok');
+      res.send('Hello world!');
+    });
+    // TODO: Promisify this
+    app.listen(port, () => {
+      logger.debug(`[${PREFIX}] Healthcheck app listening on port ${port}`);
+    });
+    // }
 
     const tripsitGuild = client.guilds.resolve(discordGuildId);
     async function getReactionRoles() {
