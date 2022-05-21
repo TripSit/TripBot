@@ -6,8 +6,7 @@ const logger = require('../utils/logger');
 module.exports = {
   name: 'inviteDelete',
 
-  async execute(invite, client) {
+  async execute(invite) {
     logger.info(`[${PREFIX}] Invite deleted:`, invite);
-    client.invites.get(invite.guild.id).delete(invite.code);
   },
 };

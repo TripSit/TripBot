@@ -4,46 +4,47 @@ const PREFIX = require('path').parse(__filename).name;
 const { stripIndents } = require('common-tags');
 const logger = require('../utils/logger');
 const template = require('../utils/embed-template');
-const { TS_FLAME_URL } = require('../../env');
 
-const { guildId } = process.env;
-const welcomeChannelId = process.env.channel_welcome;
-const channelStartId = process.env.channel_start;
-const channelBotspamId = process.env.channel_botspam;
-const channelTripsitId = process.env.channel_tripsit;
-const channelIrcId = process.env.channel_irc;
+const {
+  discordGuildId,
+  welcomeChannelId,
+  channelStartId,
+  channelTripsitId,
+} = require('../../env');
 
 module.exports = {
   name: 'guildMemberAdd',
 
   async execute(member, client) {
-    // console.log('guildMemberAdd');
-    // console.log(member);
-    if (member.guild.id === guildId) {
+    // logger.debug('guildMemberAdd');
+    // logger.debug(member);
+    if (member.guild.id === discordGuildId) {
       logger.info(`[${PREFIX}] ${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
 
       // (*INVITE*) https://github.com/AnIdiotsGuide/discordjs-bot-guide/blob/master/coding-guides/tracking-used-invites.md
       /* Start *INVITE* code */
-      // To compare, we need to load the current invite list.
+      const cachedInvites = global.guildInvites.get(member.guild.id);
       const newInvites = await member.guild.invites.fetch();
-      // const mappedArray = newInvites.map((invite) => [invite.code, invite.uses]);
-      // const newInvitesString = newInvites.map((value, key) => `${key} => ${value}`);
-      // logger.debug(`[${PREFIX}] newInvites: ${newInvitesString}`);
-      // This is the *existing* invites for the guild.
-      const oldInvites = client.invites.get(member.guild.id);
-      // const oldInvitesString = oldInvites.map((value, key) => `${key} => ${value}`);
-      // logger.debug(`[${PREFIX}] oldInvites: ${oldInvitesString}`);
-      // Look through the invites, find the one for which the uses went up.
-      const invite = newInvites.find(i => i.uses > oldInvites.get(i.code));
-      // logger.debug(`[${PREFIX}] invite: ${invite}`);
-      // This is just to simplify the message being sent below (inviter doesn't have a tag property)
       let footerText = '';
-      if (invite?.inviter) {
-        const inviter = await client.users.fetch(invite.inviter.id);
-        if (inviter) {
-          footerText = `Joined via the link in ${invite.channel.name} (${invite.code}-${invite.uses}).`;
+      try {
+        const usedInvite = newInvites.find(inv => cachedInvites.get(inv.code) < inv.uses);
+        logger.debug(`Cached ${[...cachedInvites.keys()]}`);
+        logger.debug(`New ${[...newInvites.values()].map(inv => inv.code)}`);
+        logger.debug(`Used ${usedInvite}`);
+        logger.debug(`The code ${usedInvite.code} was just used by ${member.user.username}.`);
+        if (usedInvite?.inviter) {
+          const inviter = await client.users.fetch(usedInvite.inviter.id);
+          if (inviter) {
+            footerText = `Joined via the link in ${usedInvite.channel.name} (${usedInvite.code}-${usedInvite.uses}).`;
+          }
         }
+      } catch (err) {
+        logger.debug(`OnGuildMemberAdd Error: ${err}`);
       }
+
+      newInvites.each(inv => cachedInvites.set(inv.code, inv.uses));
+      global.guildInvites.set(member.guild.id, cachedInvites);
+      /* Start *INVITE* code */
 
       // NOTE: Can be simplified with luxon
       const diff = Math.abs(Date.now() - member.user.createdAt);
@@ -79,28 +80,24 @@ module.exports = {
         colorValue = 'RED';
       }
       logger.debug(`[${PREFIX}] coloValue:`, colorValue);
-      // eslint-disable-next-line
-      // const random_topic = topicsr[Math.floor(Math.random() * Object.keys(topics).length).toString()];
       const welcomeChannel = member.client.channels.cache.get(welcomeChannelId);
       const channelStart = member.client.channels.cache.get(channelStartId);
-      const channelBotspam = member.client.channels.cache.get(channelBotspamId);
       const channelTripsit = member.client.channels.cache.get(channelTripsitId);
-      const channelIrc = member.client.channels.cache.get(channelIrcId);
-      logger.debug(`[${PREFIX}] channelBotspam:`, channelBotspam);
       const embed = template.embedTemplate()
+        .setAuthor({ name: '', iconURL: '', url: '' })
         .setColor(colorValue)
         .setThumbnail(member.user.displayAvatarURL())
-        .setTitle(`Welcome to TripSit ${member.user.username}!`)
-        .setDescription(stripIndents`TripSit a positivity-enforced, drug-neutral, harm-reduction space.\n\
-                **If you need a tripsitter, click the button in ${channelTripsit}!**\n\n\
-                Try checking out ${channelStart} to set your color and emblem!\n\
-                Please use ${channelBotspam} to access the bot's commands!\n\
-                If you have an IRC issue please make a new thread in ${channelIrc}!\n\n\
-                Stay safe!\n`);
+        // .setTitle(`Welcome to TripSit ${member.user.username}!`)
+        // .setTitle(`Welcome ${member.toString()} to TripSit ${member}!`)
+        .setDescription(stripIndents`
+                **Welcome to TripSit ${member}!**
+                This is a positivity-enforced, drug-neutral, harm-reduction space.
+                **If you need a tripsitter, click the button in ${channelTripsit}!**
+                Check out ${channelStart} for more information, stay safe!`);
+
       if (footerText !== '') {
         embed.setFooter({
           text: footerText,
-          iconURL: TS_FLAME_URL,
         });
       }
       welcomeChannel.send({ embeds: [embed] });

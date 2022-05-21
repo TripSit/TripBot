@@ -7,13 +7,14 @@ const chitragupta = require('../utils/chitragupta');
 const PREFIX = path.parse(__filename).name;
 
 const {
-  guildId,
-  role_moderator: roleModeratorId,
-} = process.env;
+  discordGuildId,
+  roleModeratorId,
+} = require('../../env');
 
 module.exports = {
   name: 'messageReactionRemove',
   async execute(reaction, user) {
+    if (user.bot) { return logger.debug(`[${PREFIX}] Ignoring bot interaction`); }
     // logger.debug(`[${PREFIX}] Reaction added`);
     // logger.debug(`[${PREFIX}] Reaction: ${JSON.stringify(reaction, null, 2)}`);
     // logger.debug(`[${PREFIX}] User: ${JSON.stringify(user, null, 2)}`);
@@ -29,13 +30,14 @@ module.exports = {
       });
     }
     // logger.debug(`[${PREFIX}] Reaction: ${JSON.stringify(reaction, null, 4)}`);
+    if (reaction.message.author.bot) { return logger.debug(`[${PREFIX}] Ignoring bot interaction`); }
     const reactionAuthor = reaction.message.author;
     const reactionEmoji = reaction.emoji;
     const { count } = reaction;
-    // logger.debug(`[${PREFIX}] guildId: ${guildId}`);
+    // logger.debug(`[${PREFIX}] discordGuildId: ${discordGuildId}`);
     // logger.debug(`[${PREFIX}] reaction.message.guild.id: ${reaction.message.guild.id}`);
     // If we're not in the TripSit guild, don't do this.
-    if (reaction.message.guild.id !== guildId) { return; }
+    if (reaction.message.guild.id !== discordGuildId) { return; }
     logger.debug(`[${PREFIX}] ${user.username} gave ${reactionEmoji.name} to ${reactionAuthor.username} in ${reaction.message.guild}!`);
     await chitragupta.update(user, -1, reactionEmoji.toString(), reactionAuthor);
     if (count === 3 && reactionEmoji.name === 'ts_down') {

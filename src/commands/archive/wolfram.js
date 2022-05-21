@@ -8,9 +8,9 @@ const logger = require('../../utils/logger');
 const PREFIX = path.parse(__filename).name;
 
 const {
-  rapid_api_key: WR_TOKEN,
-  wolfram_alpha_key: WR_API_KEY,
-} = process.env;
+  rapidApiKey,
+  wolframApiKey,
+} = require('../../../env');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -27,7 +27,7 @@ module.exports = {
 
     const requestPayload = new URLSearchParams();
     requestPayload.append('input', question);
-    requestPayload.append('apiKey', WR_API_KEY);
+    requestPayload.append('apiKey', wolframApiKey);
 
     const { data } = await axios.post(
       'https://wolframalphavolodimir-kudriachenkov1.p.rapidapi.com/createQuery',
@@ -35,7 +35,7 @@ module.exports = {
         headers: {
           'content-type': 'application/x-www-form-urlencoded',
           'X-RapidAPI-Host': 'WolframAlphavolodimir-kudriachenkoV1.p.rapidapi.com',
-          'X-RapidAPI-Key': WR_TOKEN,
+          'X-RapidAPI-Key': rapidApiKey,
         },
         data: requestPayload,
       },

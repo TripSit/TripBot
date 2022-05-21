@@ -5,18 +5,17 @@ const { stripIndents } = require('common-tags');
 const logger = require('./logger');
 const template = require('./embed-template');
 
-const channelTripsitInfoId = process.env.channel_tripsitinfo;
-
 const {
-  ownerId,
+  discordOwnerId,
   NODE_ENV,
-  role_developer: roleDeveloperId,
-  channel_development: channelDevId,
-  channel_tripsitters: channelTripsitters,
-  role_needshelp: roleNeedsHelp,
-  role_tripsitter: roleTripsitter,
-  role_helper: roleHelper,
-} = process.env;
+  roleDeveloperId,
+  channelTripsitInfoId,
+  channelTripbotId,
+  channelTripsittersId,
+  roleNeedshelpId,
+  roleTripsitterId,
+  roleHelperId,
+} = require('../../env');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -28,7 +27,7 @@ module.exports = {
       const patient = interaction.member;
       logger.debug(`[${PREFIX}] patient: ${patient}`);
 
-      const test = patient.id === process.env.ownerId || patient.id.toString() === '332687787172167680';
+      const test = patient.id === discordOwnerId || patient.id.toString() === '332687787172167680';
       logger.debug(`[${PREFIX}] test: ${test}`);
 
       const triageInput = interaction.fields.getTextInputValue('triageInput');
@@ -42,9 +41,13 @@ module.exports = {
       const patientRoleNames = patientRoles.map(role => role.name);
       logger.debug(`[${PREFIX}] patientRoleNames: ${patientRoleNames}`);
 
-      const needsHelpRole = interaction.guild.roles.cache.find(role => role.id === roleNeedsHelp);
-      const tripsitterRole = interaction.guild.roles.cache.find(role => role.id === roleTripsitter);
-      const helperRole = interaction.guild.roles.cache.find(role => role.id === roleHelper);
+      const needsHelpRole = interaction.guild.roles.cache.find(
+        role => role.id === roleNeedshelpId,
+      );
+      const tripsitterRole = interaction.guild.roles.cache.find(
+        role => role.id === roleTripsitterId,
+      );
+      const helperRole = interaction.guild.roles.cache.find(role => role.id === roleHelperId);
 
       // Loop through userRoles and check if the patient has the needsHelp role
       const hasNeedsHelpRole = patientRoleNames.some(role => role === needsHelpRole.name);
@@ -115,7 +118,7 @@ module.exports = {
 
       // Get the tripsitters channel from the guild
       const tripsittersChannel = interaction.guild.channels.cache
-        .find(chan => chan.id === channelTripsitters);
+        .find(chan => chan.id === channelTripsittersId);
 
       // Create a new thread in the interaction.channel with the
       // patient's name and the priv_message as the startMessage
@@ -131,9 +134,9 @@ module.exports = {
       const helperMsg = stripIndents`
       Hey ${test ? 'tripsitter' : tripsitterRole}s and ${test ? 'helper' : helperRole}s, ${patient.user.username} can use some help in ${thread.toString()}!
 
-      ${triageInput ? `They've taken: \n${triageInput}` : ''}
+      They've taken: ${triageInput ? `\n${triageInput}` : '*No info given*'}
 
-      ${introInput ? `Their issue: \n${introInput}` : ''}
+      Their issue: ${introInput ? `\n${introInput}` : '*No info given*'}
 
       Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!
 
@@ -152,14 +155,14 @@ module.exports = {
       const bugReport = interaction.fields.getTextInputValue('bugReport');
       logger.debug(`[${PREFIX}] bugReport:`, bugReport);
 
-      const botOwner = interaction.client.users.cache.get(ownerId);
+      const botOwner = interaction.client.users.cache.get(discordOwnerId);
       const botOwnerEmbed = template.embedTemplate()
         .setColor('RANDOM')
         .setDescription(`Hey ${botOwner.toString()},\n${username}${guildMessage} reports:\n${bugReport}`);
       botOwner.send({ embeds: [botOwnerEmbed] });
 
       const developerRole = interaction.guild.roles.cache.find(role => role.id === roleDeveloperId);
-      const devChan = interaction.client.channels.cache.get(channelDevId);
+      const devChan = interaction.client.channels.cache.get(channelTripbotId);
       const devEmbed = template.embedTemplate()
         .setColor('RANDOM')
         .setDescription(`Hey ${developerRole.toString()}s, a user submitted a bug report:\n${bugReport}`);

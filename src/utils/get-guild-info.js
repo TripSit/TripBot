@@ -7,17 +7,17 @@ const PREFIX = path.parse(__filename).name;
 
 const { db } = global;
 const {
-  guild_db_name: guildDbName,
-} = process.env;
+  firebaseGuildDbName,
+} = require('../../env');
 
 module.exports = {
   getGuildInfo: async guild => {
     logger.debug(`[${PREFIX}] Looking up guild ${guild}!`);
     let guildData = null;
     let guildFbid = null;
-    // logger.debug(`[${PREFIX}] guildDbName: ${guildDbName}`);
+    // logger.debug(`[${PREFIX}] firebaseGuildDbName: ${firebaseGuildDbName}`);
     // logger.debug(`[${PREFIX}] guild.id: ${guild.id}`);
-    const snapshotGuild = await db.collection(guildDbName).get();
+    const snapshotGuild = await db.collection(firebaseGuildDbName).get();
     await snapshotGuild.forEach(doc => {
       if (doc.data().guild_id === guild.id.toString()) {
         logger.debug(`[${PREFIX}] Guild data found!`);
@@ -39,7 +39,7 @@ module.exports = {
         guild_joinedAt: guild.joinedAt,
         guild_description: `${guild.description ? guild.description : 'No description'}`,
         guild_member_count: guild.memberCount,
-        guild_owner_id: guild.ownerId,
+        guild_owner_id: guild.discordOwnerId,
         guild_icon: guild.iconURL(),
         guild_banned: false,
         guild_large: guild.large,

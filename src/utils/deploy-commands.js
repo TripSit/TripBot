@@ -7,7 +7,11 @@ const path = require('path');
 const fs = require('fs/promises');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
-const { DISCORD_CLIENT_ID, DISCORD_TOKEN, TRIPSIT_GUILD_ID } = require('../../env');
+const {
+  discordClientId,
+  discordToken,
+  discordGuildId,
+} = require('../../env');
 
 const COMMANDS_PATH = path.resolve('./src/commands');
 
@@ -19,15 +23,15 @@ async function getCommands(commandType) {
     .map(command => command.data.toJSON());
 }
 
-const rest = new REST({ version: '9' }).setToken(DISCORD_TOKEN);
+const rest = new REST({ version: '9' }).setToken(discordToken);
 
 Promise.all([
   getCommands('global').then(commands => rest.put(
-    Routes.applicationCommands(DISCORD_CLIENT_ID),
+    Routes.applicationCommands(discordClientId),
     { body: commands },
   )),
   getCommands('guild').then(commands => rest.put(
-    Routes.applicationGuildCommands(DISCORD_CLIENT_ID, TRIPSIT_GUILD_ID),
+    Routes.applicationGuildCommands(discordClientId, discordGuildId),
     { body: commands },
   )),
 ])

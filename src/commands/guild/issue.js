@@ -7,7 +7,7 @@ const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
-const { GITHUB_TOKEN } = process.env;
+const { githubToken } = require('../../../env');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -22,7 +22,7 @@ module.exports = {
     const title = interaction.options.getString('bug_report');
     const owner = 'TripSit';
     const repo = 'tripsit-discord-bot';
-    const octokit = new Octokit({ auth: GITHUB_TOKEN });
+    const octokit = new Octokit({ auth: githubToken });
 
     // Use octokit to create an issue
     await octokit.rest.issues.create({ owner, repo, title }).catch(ex => {

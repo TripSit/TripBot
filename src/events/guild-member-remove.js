@@ -4,7 +4,10 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger');
 const template = require('../utils/embed-template');
 
-const { guildId, channel_modlog: channelModlog } = process.env;
+const {
+  discordGuildId,
+  channelModlogId,
+} = require('../../env');
 
 module.exports = {
   name: 'guildMemberRemove',
@@ -12,7 +15,7 @@ module.exports = {
   async execute(member) {
     logger.debug(`[${PREFIX}] guildMemberRemove`);
     // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
-    if (member.guild.id === guildId) {
+    if (member.guild.id === discordGuildId) {
       // console.log(member.joinedTimestamp);
       // console.log(Date.now());
       // display the difference between the two dates
@@ -44,8 +47,8 @@ module.exports = {
                 ${hours === 0 && minutes > 0 ? `${minutes} minutes` : ''}\
                 ${minutes === 0 && seconds > 0 ? `${seconds} seconds` : ''}`);
       try {
-        const modlogChannel = await member.client.channels.cache.get(channelModlog);
-        // logger.debug(`[${PREFIX}] channel_modlog_id: ${channel_modlog}`);
+        const modlogChannel = await member.client.channels.cache.get(channelModlogId);
+        // logger.debug(`[${PREFIX}] channel_modlog_id: ${channelModlogId}`);
         // logger.debug(`[${PREFIX}] modlog_channel: ${modlog_channel}`);
         if (modlogChannel) {
           modlogChannel.send({ embeds: [embed] });

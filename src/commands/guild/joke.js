@@ -7,7 +7,10 @@ const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
-const API_KEY = process.env.rapid_api_key;
+
+const {
+  rapidApiKey,
+} = require('../../../env');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -23,7 +26,7 @@ module.exports = {
       },
       headers: {
         'X-RapidAPI-Host': 'jokeapi-v2.p.rapidapi.com',
-        'X-RapidAPI-Key': API_KEY,
+        'X-RapidAPI-Key': rapidApiKey,
       },
     });
 

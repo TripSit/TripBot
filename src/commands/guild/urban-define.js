@@ -7,7 +7,10 @@ const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
-const UD_TOKEN = process.env.rapid_api_key;
+
+const {
+  rapidApiKey,
+} = require('../../../env');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -26,7 +29,7 @@ module.exports = {
         params: { term },
         headers: {
           'X-RapidAPI-Host': 'mashape-community-urban-dictionary.p.rapidapi.com',
-          'X-RapidAPI-Key': UD_TOKEN,
+          'X-RapidAPI-Key': rapidApiKey,
           useQueryString: true,
         },
       },

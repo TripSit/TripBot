@@ -2,28 +2,22 @@
 
 const path = require('path');
 const fs = require('fs/promises');
-const { Collection } = require('discord.js');
 const express = require('express');
+const { ReactionRole } = require('discordjs-reaction-role');
 const logger = require('../utils/logger');
 const template = require('../utils/embed-template');
-const { NODE_ENV, TRIPSIT_GUILD_ID } = require('../../env');
+const { getGuildInfo } = require('../utils/firebase');
 
 const PREFIX = path.parse(__filename).name;
 
 const { db } = global;
 const {
+  NODE_ENV,
+  discordGuildId,
   PORT,
-  users_db_name: usersDbName,
-  guild_db_name: guildDbName,
-} = process.env;
-
-// (*INVITE*) https://github.com/AnIdiotsGuide/discordjs-bot-guide/blob/master/coding-guides/tracking-used-invites.md
-/* Start *INVITE* code */
-// Initialize the invite cache
-// const invites = new Collection();
-// A pretty useful method to create a delay without blocking the whole script.
-// const wait = require('timers/promises').setTimeout;
-/* End *INVITE* code */
+  firebaseUserDbName,
+  firebaseGuildDbName,
+} = require('../../env');
 
 module.exports = {
   name: 'ready',
@@ -43,36 +37,37 @@ module.exports = {
       });
     }
 
-    /* Start *INVITE* code */
-    // "ready" isn't really ready. We need to wait a spell.
-    // await wait(1000);
-    // TODO: luxon
-    const today = Math.floor(Date.now() / 1000);
+    const tripsitGuild = client.guilds.resolve(discordGuildId);
+    async function getReactionRoles() {
+      const targetResults = await getGuildInfo(tripsitGuild);
+      const targetData = targetResults[0];
+      global.manager = new ReactionRole(client, targetData.reactionRoles);
+    }
 
-    // Loop over all the guilds
-    client.guilds.cache.forEach(async guild => {
-      if (guild.id === TRIPSIT_GUILD_ID) {
-        // Fetch all Guild tripsit Invites
-        let firstInvites = [];
-        try {
-          firstInvites = await guild.invites.fetch(); // TODO: Promisify
-          // Set the key as Guild ID, and create a map which has the invite code
-          // and the number of uses
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error fetching invites: ${err}`);
-        }
-        client.invites.set(
-          guild.id,
-          new Collection(firstInvites.map(invite => [invite.code, invite.uses])),
-        );
-      }
+    getReactionRoles();
+
+    /* Start *INVITE* code */
+    // https://stackoverflow.com/questions/69521374/discord-js-v13-invite-tracker
+    global.guildInvites = new Map();
+    client.guilds.cache.forEach(guild => {
+      if (guild.id !== discordGuildId) return;
+      guild.invites.fetch()
+        .then(invites => {
+          logger.debug(`[${PREFIX}] INVITES CACHED`);
+          const codeUses = new Map();
+          invites.each(inv => codeUses.set(inv.code, inv.uses));
+          global.guildInvites.set(guild.id, codeUses);
+        })
+        .catch(err => {
+          logger.debug(`[${PREFIX}] OnReady Error: ${err}`);
+        });
     });
     /* End *INVITE* code */
 
     const userDb = [];
     if (db !== undefined) {
       // Get user information
-      const snapshotUser = await db.collection(usersDbName).get();
+      const snapshotUser = await db.collection(firebaseUserDbName).get();
       snapshotUser.forEach(doc => {
         userDb.push({
           key: doc.id,
@@ -84,6 +79,7 @@ module.exports = {
     logger.debug(`[${PREFIX}] User database loaded.`);
     // logger.debug(`[${PREFIX}] user_db: ${JSON.stringify(global.user_db, null, 4)}`);
 
+    const today = Math.floor(Date.now() / 1000);
     if (NODE_ENV !== 'production') {
       await fs.writeFile(
         path.resolve(`./backups/user_db_(${today}).json`),
@@ -96,7 +92,7 @@ module.exports = {
     const blacklistGuilds = [];
     if (db !== undefined) {
       // Get guild information
-      const snapshotGuild = await db.collection(guildDbName).get();
+      const snapshotGuild = await db.collection(firebaseGuildDbName).get();
       snapshotGuild.forEach(doc => {
         guildDb.push({
           key: doc.id,
@@ -160,7 +156,7 @@ module.exports = {
               delete userReminders[remindertime];
               // logger.debug(`[${PREFIX}] Removing reminder from all_reminders`);
               // logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 4)}`);
-              db.collection(usersDbName).doc(userFbId).update(doc.value);
+              db.collection(firebaseUserDbName).doc(userFbId).update(doc.value);
               // logger.debug(`[${PREFIX}] Removing reminder from db`);
             }
           });
@@ -190,7 +186,7 @@ module.exports = {
     //             // remove the reminder
     //             // delete doc.reminders[remindertime];
     //             delete userReminders[remindertime];
-    //             return db.collection(usersDbName).doc(userFbId).update({
+    //             return db.collection(firebaseUserDbName).doc(userFbId).update({
     //               reminders: userReminders,
     //             });
     //           });

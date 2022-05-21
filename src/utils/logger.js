@@ -5,7 +5,10 @@ const {
   createLogger, format, transports, addColors,
 } = require('winston');
 
-const production = process.env.NODE_ENV === 'true';
+const {
+  NODE_ENV,
+} = require('../../env');
+
 const logLevels = {
   error: 0,
   warn: 1,
@@ -51,7 +54,7 @@ module.exports = createLogger({
     format.padLevels({ levels: logLevels }),
     format.timestamp({ format: 'MMM-DD-YYYY HH:mm:ss' }),
     format.printf(info => `${info.timestamp} ${info.level}:${info.message} ${info.stack ? `\n${info.stack}` : ''}`),
-    format.printf(info => `${!production ? `${info.timestamp}` : ''} ${info.level}:${info.message} ${info.stack ? `\n${info.stack}` : ''}`),
+    format.printf(info => `${NODE_ENV !== 'production' ? `${info.timestamp}` : ''} ${info.level}:${info.message} ${info.stack ? `\n${info.stack}` : ''}`),
   ),
   level: 'debug',
 
