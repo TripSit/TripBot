@@ -4,14 +4,20 @@
 'use strict';
 
 const path = require('path');
+const PREFIX = require('path').parse(__filename).name;
 const fs = require('fs/promises');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
+const logger = require('./logger');
 const {
   discordClientId,
   discordToken,
   discordGuildId,
 } = require('../../env');
+
+logger.debug(`[${PREFIX}] discordClientId: ${discordClientId}`);
+logger.debug(`[${PREFIX}] discordToken: ${discordToken}`);
+logger.debug(`[${PREFIX}] discordGuildId: ${discordGuildId}`);
 
 const COMMANDS_PATH = path.resolve('./src/commands');
 
@@ -24,6 +30,8 @@ async function getCommands(commandType) {
 }
 
 const rest = new REST({ version: '9' }).setToken(discordToken);
+
+
 
 Promise.all([
   getCommands('global').then(commands => rest.put(
