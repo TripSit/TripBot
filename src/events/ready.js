@@ -199,7 +199,7 @@ module.exports = {
     const app = express();
     app.get('/', (req, res) => {
       res.status(200).send('Ok');
-      res.send('Hello world!');
+      // res.send('Hello world!');
     });
     // TODO: Promisify this
     app.listen(port, () => {
