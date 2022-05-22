@@ -24,8 +24,12 @@ const PREFIX = path.parse(__filename).name;
 
 serviceAccount.private_key_id = firebasePrivateKeyId;
 serviceAccount.private_key = firebasePrivateKey ? firebasePrivateKey.replace(/\\n/g, '\n') : undefined;
-serviceAccount.client_email = firebaseClientId;
-serviceAccount.client_id = firebaseClientEmail;
+serviceAccount.client_email = firebaseClientEmail;
+serviceAccount.client_id = firebaseClientId;
+
+// logger.debug(`[${PREFIX}] private_key_id:  ${serviceAccount.private_key_id}`);
+// logger.debug(`[${PREFIX}] client_email:    ${serviceAccount.client_email}`);
+// logger.debug(`[${PREFIX}] client_id:       ${serviceAccount.client_id}`);
 
 // IRC Connection, this takes a while so do it first
 // irc_config[0].discordToken = discordToken;

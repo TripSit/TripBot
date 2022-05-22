@@ -48,10 +48,18 @@ module.exports = {
         }
       });
     }
-    if (user.bot) { return logger.debug(`[${PREFIX}] Ignoring bot interaction`); }
-    if (reaction.message.author.bot) { return logger.debug(`[${PREFIX}] Ignoring bot interaction`); }
+
     const reactionAuthor = reaction.message.author;
     const reactionEmoji = reaction.emoji;
+
+    // logger.debug(`[${PREFIX}] ${user.username} gave ${reactionEmoji.name} to\
+    // ${reactionAuthor.username} in ${reaction.message.guild}!`);
+
+    if (reaction.message.author.bot || user.bot) {
+      // logger.debug(`[${PREFIX}] Ignoring bot interaction`);
+      return;
+    }
+
     const { count } = reaction;
     // logger.debug(`[${PREFIX}] discordGuildId: ${discordGuildId}`);
     // logger.debug(`[${PREFIX}] reaction.message.guild.id: ${reaction.message.guild.id}`);
