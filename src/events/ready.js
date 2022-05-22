@@ -198,7 +198,7 @@ module.exports = {
     // if (NODE_ENV === 'production') {
     const app = express();
     app.get('/', (req, res) => {
-      res.send('Hello world!');
+      // res.send('Hello world!');
       res.status(200).send('Ok');
     });
     // TODO: Promisify this
