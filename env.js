@@ -48,8 +48,18 @@ exports.channelTripsitInfoId = process.env.channelTripsitInfoId;
 exports.channelDrugQuestionsId = process.env.channelDrugQuestionsId;
 
 exports.channelGeneralId = process.env.channelGeneralId;
+
+exports.channelVipWelcomeId = process.env.channelVipWelcomeId;
 exports.channelLoungeId = process.env.channelLoungeId;
+exports.channelGoldLoungeId = process.env.channelGoldLoungeId;
+exports.channelTalkToTSId = process.env.channelTalkToTSId;
+exports.channelClearmindId = process.env.channelClearmindId;
+exports.channelPsychonautId = process.env.channelPsychonautId;
+exports.channelDissonautId = process.env.channelDissonautId;
+exports.channelHubId = process.env.channelHubId;
+
 exports.channelTripbotId = process.env.channelTripbotId;
+
 exports.channelModlogId = process.env.channelModlogId;
 exports.channelModeratorsId = process.env.channelModeratorsId;
 
@@ -58,6 +68,10 @@ exports.roleTripsitterId = process.env.roleTripsitterId;
 exports.roleHelperId = process.env.roleHelperId;
 exports.roleModeratorId = process.env.roleModeratorId;
 exports.roleDeveloperId = process.env.roleDeveloperId;
+exports.roleVipId = process.env.roleVipId;
+exports.roleCoderId = process.env.roleCoderId;
+exports.roleClearmindId = process.env.roleClearmindId;
+exports.roleResearcherId = process.env.roleResearcherId;
 
 exports.roleRedId = process.env.roleRedId;
 exports.roleOrangeId = process.env.roleOrangeId;

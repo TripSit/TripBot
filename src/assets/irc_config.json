@@ -4,26 +4,8 @@
       "server": "",
       "discordToken": "",
       "channelMapping": {
-        "960606558549594162": "#sandbox"
-      },
-      "futurechannelMapping": {
-        "946833118269145109": "#content",
-        "851117188815126568": "#staff-meeting",
-        "946466454142877747": "#modhaven",
-        "332618867970932737": "#moderators",
-        "334014182678593536": "#operations",
-        "332618560675512320": "#tripsit.me",
-        "848826318308507658": "#lounge",
-        "954887822786048001": "#music",
-        "873385311613382677": "#gaming",
-        "848827486711185439": "#psychonaut",
-        "955834628881653791": "#tripsit",
-        "851141955080421396": "#sanctuary",
-        "955831869549719573": "#tripsitters",
-        "834965529239355424": "#tripsit-dev"
       },
       "autoSendCommands": [
-          ["PRIVMSG", "Moonbear", "Hello World!"]
         ],
       "ircOptions": {
         "floodProtection": true,
@@ -42,11 +24,11 @@
         "renickDelay": 60000
       },
       "format": {
-        "commandPrelude": "Command sent by {$nickname}",
+        "commandPrelude": "Command sent by {$nickname}:",
         "ircText": "<{$displayUsername}> {$text}",
         "urlAttachment": "<{$displayUsername}> {$attachmentURL}",
         "discord": "**<{$author}>** {$withMentions}",
-        "webhookAvatarURL": "https://robohash.org/{$nickname}"
+        "webhookAvatarURL": "https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png"
       },
       "ircNickColor": true,
       "ircNickColors": [
@@ -64,10 +46,10 @@
         "light_cyan"
       ],
       "parallelPingFix": true,
-      "commandCharacters": ["!", "."],
+      "commandCharacters": ["~"],
       "ircStatusNotices": true,
       "ignoreUsers": {
-        "irc": ["tripbot"],
+        "irc": [],
         "discord": [],
         "discordIds": []
       },

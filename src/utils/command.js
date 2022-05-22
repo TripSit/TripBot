@@ -49,7 +49,7 @@ module.exports = {
 
     if (!command) return;
 
-    const commandsAdmin = ['clear-chat', 'start-here', 'clean-db', 'rules', 'how-to-tripsit', 'invite', 'button', 'gban', 'gunban', 'uban', 'uunban', 'test', 'ping'];
+    const commandsAdmin = ['vip-welcome', 'clear-chat', 'start-here', 'clean-db', 'rules', 'how-to-tripsit', 'invite', 'button', 'gban', 'gunban', 'uban', 'uunban', 'test', 'ping'];
 
     // Check if the command is in commands_admin list and then check to see if the user is moonbear
     if (commandsAdmin.includes(commandName) && interaction.user.id !== discordOwnerId) {
