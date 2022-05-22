@@ -15,7 +15,7 @@ exports.discordOwnerId = process.env.discordOwnerId;
 exports.discordClientId = process.env.discordClientId;
 exports.discordGuildId = process.env.discordGuildId;
 
-exports.port = process.env.port;
+exports.PORT = process.env.PORT;
 
 exports.ircServer = process.env.ircServer;
 exports.ircUsername = process.env.ircUsername;
