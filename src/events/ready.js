@@ -25,29 +25,17 @@ module.exports = {
 
   async execute(client) {
     // This takes a while so do it first
-    // Setup the express server, this is necessary for the Digital Ocean health check
-    // if (NODE_ENV === 'production') {
-    const app = express();
-    app.get('/', (req, res) => {
-      res.status(200).send('Ok');
-      res.send('Hello world!');
-    });
-    // TODO: Promisify this
-    app.listen(port, () => {
-      logger.debug(`[${PREFIX}] Healthcheck app listening on port ${port}`);
-    });
-    // }
 
     const tripsitGuild = client.guilds.resolve(discordGuildId);
     async function getReactionRoles() {
       const targetResults = await getGuildInfo(tripsitGuild);
       const targetData = targetResults[0];
       const reactionRoles = targetData.reactionRoles;
-      if (reactionRoles !== undefined) {
+      logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles)}`);
+      if (reactionRoles !== undefined && reactionRoles.length > 0) {
         global.manager = new ReactionRole(client, targetData.reactionRoles);
       }
     }
-
     getReactionRoles();
 
     /* Start *INVITE* code */
@@ -205,6 +193,19 @@ module.exports = {
     // eslint-disable-next-line
     // TODO: setInterval can cause unwanted side-effects, use recursive function w/ setTimeout
     setInterval(checkReminders, 1000);
+
+    // Setup the express server, this is necessary for the Digital Ocean health check
+    // if (NODE_ENV === 'production') {
+    const app = express();
+    app.get('/', (req, res) => {
+      res.status(200).send('Ok');
+      res.send('Hello world!');
+    });
+    // TODO: Promisify this
+    app.listen(port, () => {
+      logger.debug(`[${PREFIX}] Healthcheck app listening on port ${port}`);
+    });
+    // }
 
     logger.info(`[${PREFIX}] Ready to take over the world!`);
   },

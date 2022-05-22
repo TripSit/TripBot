@@ -24,6 +24,7 @@ module.exports = {
       roles: [],
       timezone: '',
       birthday: [],
+      reactionRoles: [],
     };
     let memberFbid = null;
     logger.debug(`[${PREFIX}] firebaseUserDbName: ${firebaseUserDbName}`);
