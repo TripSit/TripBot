@@ -1,12 +1,12 @@
 {
   "name": "@tripsit/discord-bot",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A bot for TripSit",
   "main": "index.js",
   "scripts": {
-    "start": "node ./src/utils/deploy-commands.js && node ./src/index.js",
-    "dev": "nodemon --ignore src/assets/ --ignore /backups/ --inspect ./src/index.js",
+    "start": "node register-commands && pm2-runtime start ecosystem.config.js --env production",
+    "dev": "pm2-runtime start ecosystem.config.js --env development",
     "register-commands": "node ./src/utils/deploy-commands.js",
     "lint": "eslint .",
     "fix": "eslint --fix .",
@@ -21,8 +21,8 @@
     "Reduction",
     "Bot"
   ],
-  "authors": [
-    "Moonbear <moonbear@tripsit.me>",
+  "author": "Eric / Moonbear / Teknos <eric@tripsit.me>",
+  "contributors": [
     "SevenCats <sevencats@tripsit.me>"
   ],
   "license": "ISC",
@@ -58,8 +58,7 @@
     "@babel/eslint-parser": "^7.17.0",
     "@babel/plugin-proposal-optional-chaining": "^7.16.7",
     "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.14.0",
-    "nodemon": "^2.0.16"
+    "eslint-plugin-import": "^2.14.0"
   },
   "engines": {
     "node": "17.9.0",

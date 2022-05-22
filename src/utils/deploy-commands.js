@@ -31,8 +31,6 @@ async function getCommands(commandType) {
 
 const rest = new REST({ version: '9' }).setToken(discordToken);
 
-
-
 Promise.all([
   getCommands('global').then(commands => rest.put(
     Routes.applicationCommands(discordClientId),
