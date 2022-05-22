@@ -31,7 +31,7 @@ module.exports = {
       const targetResults = await getGuildInfo(tripsitGuild);
       const targetData = targetResults[0];
       const reactionRoles = targetData.reactionRoles;
-      logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles)}`);
+      // logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles)}`);
       if (reactionRoles !== undefined && reactionRoles.length > 0) {
         global.manager = new ReactionRole(client, targetData.reactionRoles);
       }
@@ -198,8 +198,8 @@ module.exports = {
     // if (NODE_ENV === 'production') {
     const app = express();
     app.get('/', (req, res) => {
+      res.send('Hello world!');
       res.status(200).send('Ok');
-      // res.send('Hello world!');
     });
     // TODO: Promisify this
     app.listen(PORT, () => {

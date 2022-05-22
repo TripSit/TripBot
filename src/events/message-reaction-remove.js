@@ -29,8 +29,10 @@ module.exports = {
         logger.error(`[${PREFIX}] reaction3:`, ex);
       });
     }
-    // logger.debug(`[${PREFIX}] Reaction: ${JSON.stringify(reaction, null, 4)}`);
-    if (reaction.message.author.bot) { return logger.debug(`[${PREFIX}] Ignoring bot interaction`); }
+    if (reaction.message.author.bot || user.bot) {
+      // logger.debug(`[${PREFIX}] Ignoring bot interaction`);
+      return;
+    }
     const reactionAuthor = reaction.message.author;
     const reactionEmoji = reaction.emoji;
     const { count } = reaction;

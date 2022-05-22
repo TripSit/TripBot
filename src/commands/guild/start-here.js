@@ -44,8 +44,8 @@ if (NODE_ENV === 'production') {
   pinkHeart = '<:pink_heart:958072815884582922>';
   weedEmoji = '<:weed:960163220268671006>';
 } else {
-  pinkHeart = '😀';
-  weedEmoji = '🌿';
+  pinkHeart = '<:pink_heart:977926946656763904>';
+  weedEmoji = '<:weed:977926946740662272>';
 }
 
 const PREFIX = path.parse(__filename).name;
@@ -144,7 +144,7 @@ module.exports = {
       },
       {
         messageId: mindsetMessage.id,
-        reaction: weedEmoji,
+        reaction: 'weed',
         roleId: roleHighId,
       },
       {
@@ -235,7 +235,7 @@ module.exports = {
       },
       {
         messageId: colorMessage.id,
-        reaction: pinkHeart,
+        reaction: 'pink_heart',
         roleId: rolePinkId,
       },
       {
