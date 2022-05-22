@@ -5,7 +5,7 @@
   "description": "A bot for TripSit",
   "main": "index.js",
   "scripts": {
-    "start": "node register-commands && pm2-runtime start ecosystem.config.js --env production",
+    "start": "node ./src/utils/deploy-commands.js && pm2-runtime start ecosystem.config.js --env production",
     "dev": "pm2-runtime start ecosystem.config.js --env development",
     "register-commands": "node ./src/utils/deploy-commands.js",
     "lint": "eslint .",
