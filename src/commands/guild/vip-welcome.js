@@ -55,7 +55,7 @@ module.exports = {
       > You can talk to the TripSit team in ${channelTalkToTS}: give us feedback or suggest a new idea!
       > Join ${channelHub} to spin up your own voice channel!
       > You've gained access to some higher-level channels like ${channelLounge}, ${channelPsychonaut} and ${channelDissonaut}
-      > Access to the notorious ${channelGoldLounge} can be yours by subscribing to our patreon! (https://www.patreon.com/tripitsit)
+      > Access to the notorious ${channelGoldLounge} can be yours by subscribing to our patreon! (https://www.patreon.com/tripsit)
       > Finally, react to the messages below to opt-in to other channels!
       `);
 
