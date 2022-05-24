@@ -14,6 +14,7 @@ const {
   channelTripmobileId,
   channelWikicontentId,
   channelTrippitId,
+  channelVipWelcomeId,
 } = require('../../../env');
 
 module.exports = {
@@ -35,6 +36,7 @@ module.exports = {
     const channelTripmobile = interaction.client.channels.cache.get(channelTripmobileId);
     const channelWikicontent = interaction.client.channels.cache.get(channelWikicontentId);
     const channelTrippit = interaction.client.channels.cache.get(channelTrippitId);
+    const channelVipWelcome = interaction.client.channels.cache.get(channelVipWelcomeId);
 
     await channelDevonboarding.send(stripIndents`
       **Welcome Developers and Testers**
@@ -76,7 +78,7 @@ module.exports = {
       > We have a ton of drug information available online: (https://drugs.tripsit.me)
       > New drugs are coming out all the time, EG, Delta 8 THC has become a new thing.
       > We're always looking to improve our substance information, and we need researchers to help us!
-      > Researchers (see #vip-welcome) use this room to discuss the content of the wiki.
+      > Researchers (see ${channelVipWelcome}) use this room to discuss the content of the wiki.
       > If you want to make a change to the wiki, please make a new thread in this category.
       > *Changes to the wiki will only be made after given a credible source!*
 
