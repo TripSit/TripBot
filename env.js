@@ -49,6 +49,7 @@ exports.channelDrugQuestionsId = process.env.channelDrugQuestionsId;
 
 exports.channelGeneralId = process.env.channelGeneralId;
 
+exports.channelDevonboardingId = process.env.channelDevonboardingId;
 exports.channelVipWelcomeId = process.env.channelVipWelcomeId;
 exports.channelLoungeId = process.env.channelLoungeId;
 exports.channelGoldLoungeId = process.env.channelGoldLoungeId;
@@ -58,7 +59,14 @@ exports.channelPsychonautId = process.env.channelPsychonautId;
 exports.channelDissonautId = process.env.channelDissonautId;
 exports.channelHubId = process.env.channelHubId;
 
+exports.channelDevofftopicId = process.env.channelDevofftopicId;
+exports.channelDevelopmentId = process.env.channelDevelopmentId;
+exports.channelWikicontentId = process.env.channelWikicontentId;
+exports.channelTripmobileId = process.env.channelTripmobileId;
+exports.channelTripcordId = process.env.channelTripcordId;
 exports.channelTripbotId = process.env.channelTripbotId;
+exports.channelTrippitId = process.env.channelTrippitId;
+exports.channelSandboxId = process.env.channelSandboxId;
 
 exports.channelModlogId = process.env.channelModlogId;
 exports.channelModeratorsId = process.env.channelModeratorsId;
