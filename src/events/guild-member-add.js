@@ -7,7 +7,7 @@ const template = require('../utils/embed-template');
 
 const {
   discordGuildId,
-  welcomeChannelId,
+  channelGeneralId,
   channelStartId,
   channelTripsitId,
 } = require('../../env');
@@ -80,7 +80,7 @@ module.exports = {
         colorValue = 'RED';
       }
       logger.debug(`[${PREFIX}] coloValue:`, colorValue);
-      const welcomeChannel = member.client.channels.cache.get(welcomeChannelId);
+      const welcomeChannel = member.client.channels.cache.get(channelGeneralId);
       const channelStart = member.client.channels.cache.get(channelStartId);
       const channelTripsit = member.client.channels.cache.get(channelTripsitId);
       const embed = template.embedTemplate()
