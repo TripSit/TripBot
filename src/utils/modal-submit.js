@@ -4,6 +4,7 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('./logger');
 const template = require('./embed-template');
 const tripsitme = require('./tripsitme');
+// const tripsat = require('./tripsat');
 
 const {
   discordOwnerId,
@@ -13,11 +14,16 @@ const {
 
 module.exports = {
   async execute(interaction) {
-    logger.debug(`[${PREFIX}] interaction: ${interaction}`);
-    logger.debug(`[${PREFIX}] interaction.customId: ${interaction.customId}`);
+    // logger.debug(`[${PREFIX}] interaction: ${interaction}`);
+    logger.debug(`[${PREFIX}] interaction: ${interaction.customId}`);
     if (interaction.customId === 'tripsitModal') {
       tripsitme.submit(interaction);
+      return;
     }
+    // if (interaction.customId === 'feedbackModal') {
+    //   tripsat.submit(interaction);
+    //   return;
+    // }
     if (interaction.customId === 'bugReportModal') {
       const username = `${interaction.user.username}#${interaction.user.discriminator}`;
       const guildMessage = `${interaction.guild.name ? ` in ${interaction.guild.name}` : 'DM'}`;
@@ -54,6 +60,6 @@ module.exports = {
         });
       }
     }
-    logger.debug(`[${PREFIX}] finished!`);
+    // logger.debug(`[${PREFIX}] finished!`);
   },
 };

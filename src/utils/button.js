@@ -18,7 +18,9 @@ module.exports = {
     const buttonID = interaction.customId;
     logger.debug(`[${PREFIX}] buttonID: ${buttonID}`);
     const command = client.commands.get(interaction.customId);
-    logger.debug(`[${PREFIX}] command: ${command}`);
+    if (command) {
+      logger.debug(`[${PREFIX}] command: ${command}`);
+    }
     const modChan = interaction.client.channels.cache.get(channelModeratorsId);
 
     if (buttonID === 'acknowledgebtn') {
