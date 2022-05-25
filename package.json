@@ -8,7 +8,7 @@
     "start": "node ./src/utils/deploy-commands.js && node ./src/index.js",
     "gstart": "node ./src/utils/deploy-commands.js && pm2-runtime start ecosystem.config.js --env production",
     "dev": "pm2-runtime start ecosystem.config.js --env development",
-    "register-commands": "node ./src/utils/deploy-commands.js",
+    "deploy-commands": "node ./src/utils/deploy-commands.js",
     "lint": "eslint .",
     "fix": "eslint --fix .",
     "minor": "npm version minor -git-tag-version false"

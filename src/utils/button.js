@@ -3,6 +3,7 @@
 const path = require('path');
 const logger = require('./logger');
 const tripsitme = require('./tripsitme');
+const tripsat = require('./tripsat');
 const template = require('./embed-template');
 
 const PREFIX = path.parse(__filename).name;
@@ -65,6 +66,11 @@ module.exports = {
 
     if (buttonID === 'tripsitme') {
       tripsitme.execute(interaction);
+      return;
+    }
+
+    if (buttonID === 'tripsat') {
+      tripsat.execute(interaction);
       return;
     }
 
