@@ -1,9 +1,11 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
+const { time } = require('@discordjs/builders');
 const { stripIndents } = require('common-tags');
 const logger = require('../utils/logger');
 const template = require('../utils/embed-template');
+const { getUserInfo, setUserInfo } = require('../utils/firebase');
 
 const {
   discordGuildId,
@@ -16,10 +18,34 @@ module.exports = {
   name: 'guildMemberAdd',
 
   async execute(member, client) {
-    // logger.debug('guildMemberAdd');
-    // logger.debug(member);
+    // logger.debug(JSON.stringify(member, null, 2));
+    // {
+    //   "guildId": "960606557622657026",
+    //   "joinedTimestamp": 1653515791290,
+    //   "premiumSinceTimestamp": null,
+    //   "nickname": null,
+    //   "pending": false,
+    //   "communicationDisabledUntilTimestamp": null,
+    //   "userId": "332687787172167680",
+    //   "avatar": null,
+    //   "displayName": "cosmicowl",
+    //   "roles": [
+    //     "960606557622657026"
+    //   ],
+    //   "avatarURL": null,
+    //   "displayAvatarURL": "https://cdn.discordapp.com/avatars/332687787172167680/6c38689c6390e2a2e9fe5e368db7b9e6.webp"
+    // }
     if (member.guild.id === discordGuildId) {
       logger.info(`[${PREFIX}] ${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
+
+      // Extract member data
+      const [actorData, actorFbid] = await getUserInfo(member);
+
+      // Transform member data
+      actorData.joinedTimestamp = member.joinedTimestamp;
+
+      // Load member data
+      await setUserInfo(actorFbid, actorData);
 
       // (*INVITE*) https://github.com/AnIdiotsGuide/discordjs-bot-guide/blob/master/coding-guides/tracking-used-invites.md
       /* Start *INVITE* code */
@@ -30,12 +56,13 @@ module.exports = {
         const usedInvite = newInvites.find(inv => cachedInvites.get(inv.code) < inv.uses);
         logger.debug(`Cached ${[...cachedInvites.keys()]}`);
         logger.debug(`New ${[...newInvites.values()].map(inv => inv.code)}`);
-        logger.debug(`Used ${usedInvite}`);
+        // logger.debug(`Used ${JSON.stringify(usedInvite, null, 2)}`);
         logger.debug(`The code ${usedInvite.code} was just used by ${member.user.username}.`);
+        logger.debug(`The code was created by ${usedInvite.inviterId}.`);
         if (usedInvite?.inviter) {
           const inviter = await client.users.fetch(usedInvite.inviter.id);
           if (inviter) {
-            footerText = `Joined via the link in ${usedInvite.channel.name} (${usedInvite.code}-${usedInvite.uses}).`;
+            footerText = `Joined via ${inviter.username}'s invite to ${usedInvite.channel.name} (${usedInvite.code}-${usedInvite.uses}).`;
           }
         }
       } catch (err) {
@@ -80,7 +107,7 @@ module.exports = {
         colorValue = 'RED';
       }
       logger.debug(`[${PREFIX}] coloValue:`, colorValue);
-      const welcomeChannel = member.client.channels.cache.get(channelGeneralId);
+      const channelGeneral = member.client.channels.cache.get(channelGeneralId);
       const channelStart = member.client.channels.cache.get(channelStartId);
       const channelTripsit = member.client.channels.cache.get(channelTripsitId);
       const embed = template.embedTemplate()
@@ -95,12 +122,10 @@ module.exports = {
                 **If you need a tripsitter, click the button in ${channelTripsit}!**
                 Check out ${channelStart} for more information, stay safe!`);
 
-      if (footerText !== '') {
-        embed.setFooter({
-          text: footerText,
-        });
-      }
-      welcomeChannel.send({ embeds: [embed] });
+      embed.setFooter({
+        text: footerText,
+      });
+      channelGeneral.send({ embeds: [embed] });
     }
   },
 };

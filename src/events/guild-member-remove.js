@@ -3,6 +3,7 @@
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger');
 const template = require('../utils/embed-template');
+const { getUserInfo } = require('../utils/firebase');
 
 const {
   discordGuildId,
@@ -13,11 +14,20 @@ module.exports = {
   name: 'guildMemberRemove',
 
   async execute(member) {
-    logger.debug(`[${PREFIX}] guildMemberRemove`);
-    // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
     if (member.guild.id === discordGuildId) {
-      // console.log(member.joinedTimestamp);
-      // console.log(Date.now());
+      logger.debug(`[${PREFIX}] guildMemberRemove`);
+      // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
+
+      // Extract member data
+      const [actorData, actorFbid] = await getUserInfo(member);
+
+      // Transform member data
+      const joinedTimestamp = member.joinedTimestamp
+        ? member.joinedTimestamp
+        : actorData.joinedTimestamp;
+
+      logger.debug(`[${PREFIX}] joinedTimestamp: ${joinedTimestamp}`);
+      logger.debug(`[${PREFIX}] Date.now(): ${Date.now()}`);
       // display the difference between the two dates
       // NOTE: Can simplify with luxon
       const diff = Math.abs(Date.now() - member.joinedTimestamp);
