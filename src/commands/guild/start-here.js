@@ -150,12 +150,12 @@ module.exports = {
       {
         messageId: mindsetMessage.id,
         reaction: '🤩',
-        roleId: roleRollingId,
+        roleId: roleTrippingId,
       },
       {
         messageId: mindsetMessage.id,
         reaction: '😍',
-        roleId: roleTrippingId,
+        roleId: roleRollingId,
       },
       {
         messageId: mindsetMessage.id,
