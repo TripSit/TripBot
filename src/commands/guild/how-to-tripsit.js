@@ -1,15 +1,13 @@
 'use strict';
 
-const path = require('path');
 const { MessageAttachment } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ReactionRole } = require('discordjs-reaction-role');
 const { stripIndents } = require('common-tags');
+const PREFIX = require('path').parse(__filename).name;
 const { getGuildInfo, setGuildInfo } = require('../../utils/firebase');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
-
-const PREFIX = path.parse(__filename).name;
 
 const tripsitButton = new MessageAttachment('./src/assets/img/1_button.png');
 const userInput = new MessageAttachment('./src/assets/img/2_input.png');
@@ -19,6 +17,7 @@ const privateMessage = new MessageAttachment('./src/assets/img/5_privateMessage.
 const discussThread = new MessageAttachment('./src/assets/img/6_discussionThread.png');
 const discussMessage = new MessageAttachment('./src/assets/img/7_discussionMessage.png');
 const endMessage = new MessageAttachment('./src/assets/img/8_endMessage.png');
+const surveyRequest = new MessageAttachment('./src/assets/img/9_surveyRequest.png');
 
 const {
   // discordOwnerId,
@@ -162,6 +161,17 @@ module.exports = {
     embed.setImage('attachment://8_endMessage.png');
     await channelTripsitInfo.send(
       { embeds: [embed], files: [endMessage], ephemeral: false },
+    );
+
+    await channelTripsitInfo.send(stripIndents`
+    <:invisible:976824380564852768>
+    > The user will be shown a message asking them to rate their experience:
+    <:invisible:976824380564852768>
+    `);
+
+    embed.setImage('attachment://9_surveyRequest.png');
+    await channelTripsitInfo.send(
+      { embeds: [embed], files: [surveyRequest], ephemeral: false },
     );
 
     await channelTripsitInfo.send(stripIndents`

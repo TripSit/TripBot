@@ -103,11 +103,12 @@ module.exports = {
         `)
       .then(async msg => {
         message = msg;
-        await msg.react('😁');
-        await msg.react('🙂');
-        await msg.react('😐');
-        await msg.react('😕');
         await msg.react('🙁');
+        await msg.react('😕');
+        await msg.react('😐');
+        await msg.react('🙂');
+        await msg.react('😁');
+
         // Setup the reaction collector
         const filter = (reaction, user) => user.id === target.id;
         const collector = message.createReactionCollector({ filter, time: 1000 * 60 * 60 * 24 });

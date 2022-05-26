@@ -52,7 +52,7 @@ module.exports = {
         new MessageButton()
           .setCustomId('tripsat')
           .setLabel('I\'m good now!')
-          .setStyle('SECONDARY'),
+          .setStyle('SUCCESS'),
       );
 
     // Create a new button
