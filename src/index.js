@@ -41,17 +41,15 @@ serviceAccount.client_id = firebaseClientId;
 // IRC Connection, this takes a while so do it first
 ircConfig[0].discordToken = discordToken;
 ircConfig[0].server = ircServer;
-
+ircConfig[0].nickname = 'TS';
 ircConfig[0].ircOptions.username = ircUsername;
 ircConfig[0].ircOptions.password = ircPassword;
 if (NODE_ENV === 'production') {
-  ircConfig[0].nickname = 'TS';
   ircConfig[0].channelMapping = {
     [channelModeratorsId]: '#moderators',
     [channelSandboxId]: '#sandbox',
   };
 } else {
-  ircConfig[0].nickname = 'TSDev';
   ircConfig[0].channelMapping = {
     [channelSandboxId]: '#sandbox-dev',
   };

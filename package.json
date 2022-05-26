@@ -46,7 +46,7 @@
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
     "firebase": "^8.10.1",
-    "firebase-admin": "^10.0.2",
+    "firebase-admin": "^10.2.0",
     "fuse.js": "^6.5.3",
     "imgur": "^2.2.0",
     "jsdom": "^19.0.0",
