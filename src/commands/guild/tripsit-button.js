@@ -17,7 +17,7 @@ const {
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('button')
+    .setName('tripsit-button')
     .setDescription('Creates a TripSitMe button!'),
   async execute(interaction) {
     const channelQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
@@ -40,7 +40,6 @@ module.exports = {
       All other topics of conversation are welcome in ${channelGeneral}!
 
       Stay safe!
-
     `;
 
     // Create a new button embed
@@ -50,10 +49,10 @@ module.exports = {
           .setCustomId('tripsitme')
           .setLabel('I need assistance!')
           .setStyle('PRIMARY'),
-        // new MessageButton()
-        //     .setCustomId('imgood')
-        //     .setLabel('I no longer need assistance!')
-        //     .setStyle('PRIMARY'),
+        new MessageButton()
+          .setCustomId('tripsat')
+          .setLabel('I\'m good now!')
+          .setStyle('SUCCESS'),
       );
 
     // Create a new button

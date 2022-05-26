@@ -61,7 +61,16 @@ module.exports = {
         ephemeral: false,
       });
     }
-    interaction.member.send({ embeds: [embed], ephemeral: false });
+    try {
+      interaction.member.send({ embeds: [embed], ephemeral: false });
+    } catch (err1) {
+      logger.error(`[${PREFIX}] error1: ${err1}`);
+      try {
+        interaction.member.send({ embeds: [embed], ephemeral: false });
+      } catch (err2) {
+        logger.error(`[${PREFIX}] error2: ${err2}`);
+      }
+    }
     logger.debug(`[${PREFIX}] Finsihed!`);
   },
 };

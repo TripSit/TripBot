@@ -1,15 +1,13 @@
 'use strict';
 
-const path = require('path');
 const { MessageAttachment } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ReactionRole } = require('discordjs-reaction-role');
 const { stripIndents } = require('common-tags');
+const PREFIX = require('path').parse(__filename).name;
 const { getGuildInfo, setGuildInfo } = require('../../utils/firebase');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
-
-const PREFIX = path.parse(__filename).name;
 
 const tripsitButton = new MessageAttachment('./src/assets/img/1_button.png');
 const userInput = new MessageAttachment('./src/assets/img/2_input.png');
@@ -18,6 +16,8 @@ const privateThread = new MessageAttachment('./src/assets/img/4_privateThread.pn
 const privateMessage = new MessageAttachment('./src/assets/img/5_privateMessage.png');
 const discussThread = new MessageAttachment('./src/assets/img/6_discussionThread.png');
 const discussMessage = new MessageAttachment('./src/assets/img/7_discussionMessage.png');
+const endMessage = new MessageAttachment('./src/assets/img/8_endMessage.png');
+const surveyRequest = new MessageAttachment('./src/assets/img/9_surveyRequest.png');
 
 const {
   // discordOwnerId,
@@ -85,7 +85,12 @@ module.exports = {
       <:invisible:976824380564852768>
       > All of these questions are optional but are super helpful to have handy before alerting the team.
       > This can also potentially limit people from “testing” the button if they know this will actually submit something.
-      > When ready, the user submits the modal, and an embed message appears thanking you for asking for help:
+      > When ready, the user submits the modal, and the fun begins:
+
+      1) All of the user’s roles (and access to social channels) are removed (and saved to the database)
+      2) The user is given the NeedsHelp role, which removes access to rooms that “everyone” can access.
+      3) The bot starts a new private thread called “<user> chat here!” that mentions the user, tripsitters and helpers.
+      4) The bot responds to the user in #tripsit with a thank you message and directs them to click on the new thread:
       <:invisible:976824380564852768>
       `);
 
@@ -96,7 +101,7 @@ module.exports = {
 
     await channelTripsitInfo.send(stripIndents`
       <:invisible:976824380564852768>
-      > It will then create a new thread in the ${channelTripsit.toString()} room asking the user to chat in that thread:
+      > The end result is that a user who NeedsHelp will be able to see the following after submitting the button::
       <:invisible:976824380564852768>
       `);
 
@@ -147,13 +152,37 @@ module.exports = {
     );
 
     await channelTripsitInfo.send(stripIndents`
+    <:invisible:976824380564852768>
+    > Finally, when the user is finished, they can click the “I’m good now” button in the #tripsit room.
+    > This will restore their old roles and bring them back to “normal”.
+    <:invisible:976824380564852768>
+    `);
+
+    embed.setImage('attachment://8_endMessage.png');
+    await channelTripsitInfo.send(
+      { embeds: [embed], files: [endMessage], ephemeral: false },
+    );
+
+    await channelTripsitInfo.send(stripIndents`
+    <:invisible:976824380564852768>
+    > The user will be shown a message asking them to rate their experience:
+    <:invisible:976824380564852768>
+    `);
+
+    embed.setImage('attachment://9_surveyRequest.png');
+    await channelTripsitInfo.send(
+      { embeds: [embed], files: [surveyRequest], ephemeral: false },
+    );
+
+    await channelTripsitInfo.send(stripIndents`
       <:invisible:976824380564852768>
       > In conclusion: People who need help can click the "I need assistance" button in the ${channelTripsit.toString()} room.
       > They enter their question and a private thread is created in ${channelTripsit.toString()}.
       > This is a self-contained channel so that trolls/randoms cannot access what they're saying.
       > The thread created in ${channelTripsitters.toString()} is also private from non-helpers.
       > This thread lets us coordinate tactics on the encounter without disturbing the user.
-      > When it's over the tread is archived, then deleted, but the user still has a chance to follow up!
+      > When the user no longer needs help they can click a button and return to normal.
+      > The user has 24 hours to follow-up on the thread before it's archived, and we can re-use the thread for a week before it's deleted.
       > This is basically the ideal way to TripSit someone!
       <:invisible:976824380564852768>
       `);

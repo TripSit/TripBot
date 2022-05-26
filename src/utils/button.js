@@ -3,6 +3,7 @@
 const path = require('path');
 const logger = require('./logger');
 const tripsitme = require('./tripsitme');
+const tripsat = require('./tripsat');
 const template = require('./embed-template');
 
 const PREFIX = path.parse(__filename).name;
@@ -17,7 +18,9 @@ module.exports = {
     const buttonID = interaction.customId;
     logger.debug(`[${PREFIX}] buttonID: ${buttonID}`);
     const command = client.commands.get(interaction.customId);
-    logger.debug(`[${PREFIX}] command: ${command}`);
+    if (command) {
+      logger.debug(`[${PREFIX}] command: ${command}`);
+    }
     const modChan = interaction.client.channels.cache.get(channelModeratorsId);
 
     if (buttonID === 'acknowledgebtn') {
@@ -65,6 +68,11 @@ module.exports = {
 
     if (buttonID === 'tripsitme') {
       tripsitme.execute(interaction);
+      return;
+    }
+
+    if (buttonID === 'tripsat') {
+      tripsat.execute(interaction);
       return;
     }
 
