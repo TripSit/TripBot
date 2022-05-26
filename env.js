@@ -71,12 +71,23 @@ exports.channelSandboxId = process.env.channelSandboxId;
 exports.channelModlogId = process.env.channelModlogId;
 exports.channelModeratorsId = process.env.channelModeratorsId;
 
-exports.roleNeedshelpId = process.env.roleNeedshelpId;
-exports.roleTripsitterId = process.env.roleTripsitterId;
-exports.roleHelperId = process.env.roleHelperId;
+exports.roleAdminId = process.env.roleAdminId;
+exports.roleDiscordopId = process.env.roleDiscordopId;
+exports.roleIrcopId = process.env.roleIrcopId;
 exports.roleModeratorId = process.env.roleModeratorId;
+exports.roleTripsitterId = process.env.roleTripsitterId;
+exports.roleTeamtripsitId = process.env.roleTeamtripsitId;
+exports.roleTripbot2Id = process.env.roleTripbot2Id;
+exports.roleTripbotId = process.env.roleTripbotId;
+exports.roleBotId = process.env.roleBotId;
 exports.roleDeveloperId = process.env.roleDeveloperId;
+
 exports.roleVipId = process.env.roleVipId;
+exports.roleDjId = process.env.roleDjId;
+
+exports.roleHelperId = process.env.roleHelperId;
+exports.roleNeedshelpId = process.env.roleNeedshelpId;
+
 exports.roleCoderId = process.env.roleCoderId;
 exports.roleClearmindId = process.env.roleClearmindId;
 exports.roleResearcherId = process.env.roleResearcherId;

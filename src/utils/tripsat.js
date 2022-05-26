@@ -10,7 +10,17 @@ const template = require('./embed-template');
 
 const {
   roleNeedshelpId,
+  roleDeveloperId,
   channelModlogId,
+  roleAdminId,
+  roleDiscordopId,
+  roleIrcopId,
+  roleModeratorId,
+  roleTripsitterId,
+  roleTeamtripsitId,
+  roleTripbot2Id,
+  roleTripbotId,
+  roleBotId,
 } = require('../../env');
 
 module.exports = {
@@ -20,21 +30,32 @@ module.exports = {
     if (memberInput) {
       target = memberInput;
     }
+    // Determine if this is a test run, eg, run by a developer
+    // If so, don't ping the tripsitters and helpers down below
+    const roleDeveloper = actor.roles.cache.find(role => role.id === roleDeveloperId);
+    const testRun = roleDeveloper !== undefined && roleDeveloper !== null;
+    logger.debug(`[${PREFIX}] testRun: ${testRun}`);
 
     // Get a list of the target's roles
     const targetRoleNames = target.roles.cache.map(role => role.name);
     // logger.debug(`[${PREFIX}] targetRoleNames: ${targetRoleNames}`);
 
-    const needsHelpRole = interaction.guild.roles.cache.find(role => role.id === roleNeedshelpId);
+    const roleNeedshelp = interaction.guild.roles.cache.find(role => role.id === roleNeedshelpId);
 
     // Loop through userRoles and check if the target has roles
-    const targetHasNeedsHelpRole = targetRoleNames.some(role => role === needsHelpRole.name);
+    const targetHasNeedsHelpRole = targetRoleNames.some(role => role === roleNeedshelp.name);
     // logger.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
 
+    const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
+
     if (!targetHasNeedsHelpRole) {
-      const rejectMessage = memberInput
+      let rejectMessage = memberInput
         ? `Hey ${interaction.member}, ${target.user.username} isnt currently being taken care of!`
         : `Hey ${interaction.member}, you're not currently being taken care of!`;
+
+      if (testRun) {
+        rejectMessage = testNotice + rejectMessage;
+      }
       const embed = template.embedTemplate().setColor('DARK_BLUE');
       embed.setDescription(rejectMessage);
       logger.debug(`[${PREFIX}] target ${target} does not need help!`);
@@ -43,8 +64,6 @@ module.exports = {
       return;
     }
 
-    await target.roles.remove(needsHelpRole);
-    logger.debug(`[${PREFIX}] Removed ${needsHelpRole.name} from ${target.user.username}`);
 
     const targetResults = await getUserInfo(target);
     const targetData = targetResults[0];
@@ -59,18 +78,34 @@ module.exports = {
     const metaHelpThread = interaction.guild.channels.cache
       .find(chan => chan.id === targetLastHelpedMetaThreadId);
 
+    const teamRoles = [
+      roleAdminId,
+      roleDiscordopId,
+      roleIrcopId,
+      roleModeratorId,
+      roleTripsitterId,
+      roleTeamtripsitId,
+      roleTripbot2Id,
+      roleTripbotId,
+      roleBotId,
+      roleDeveloperId,
+    ];
+
     // For each role in targetRoles2, add it to the target
     if (targetData.roles) {
       targetData.roles.forEach(roleName => {
-        if (roleName !== '@everyone') {
-          const roleObj = interaction.guild.roles.cache.find(r => r.name === roleName);
+        const roleObj = interaction.guild.roles.cache.find(r => r.name === roleName);
+        if (!teamRoles.includes(roleObj.id) && roleName !== '@everyone') {
           logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.user.username}`);
           target.roles.add(roleObj);
         }
       });
     }
 
-    const responseMessage = memberInput
+    await target.roles.remove(roleNeedshelp);
+    logger.debug(`[${PREFIX}] Removed ${roleNeedshelp.name} from ${target.user.username}`);
+
+    let responseMessage = memberInput
       ? stripIndents`
       Hey ${interaction.member}, we're glad ${target.user.username} is feeling better!
       We've restored their roles back to normal.
@@ -79,17 +114,27 @@ module.exports = {
       Hey ${interaction.member}, we're glad you're feeling better =)
       We've restored your old roles back to normal.
       You can keep talking in ${helpThread} if you want to follow up tomorrow!`;
+
+    if (testRun) {
+      responseMessage = testNotice + responseMessage;
+    }
+
     const embed = template.embedTemplate().setColor('DARK_BLUE');
     embed.setDescription(responseMessage);
     interaction.reply({ embeds: [embed], ephemeral: true });
 
-    const endHelpMessage = memberInput
+    let endHelpMessage = memberInput
       ? stripIndents`Hey ${target.user.username}, it looks like you're doing better =)
       This thread will remain here for a day if you want to follow up tomorrow.
       After 7 days, or on request, it will be deleted to preserve your privacy =)`
       : stripIndents`Hey ${target}, we're glad you're doing better!
       This thread will remain here for a day if you want to follow up tomorrow.
       After 7 days, or on request, it will be deleted to preserve your privacy =)`;
+
+    if (testRun) {
+      endHelpMessage = testNotice + endHelpMessage;
+    }
+
     helpThread.send(endHelpMessage);
 
     let message = '';
@@ -152,7 +197,7 @@ module.exports = {
         // });
       });
 
-    const endMetaHelpMessage = memberInput
+    let endMetaHelpMessage = memberInput
       ? stripIndents`${actor.user.username} has indicated that ${target.user.username} no longer needs help!
       *This thread, and ${helpThread}, will remain un-archived for 24 hours to allow the user to follow-up.
       If the user requests help again within 7 days these threads will be un-archived.
@@ -161,6 +206,11 @@ module.exports = {
       *This thread, and the #tripsit thread, will remain un-archived for 24 hours to allow the user to follow-up.
       If the user requests help again within 7 days these threads will be un-archived.
       After 7 days the threads will be deleted to preserve privacy.*`;
+
+    if (testRun) {
+      endMetaHelpMessage = testNotice + endMetaHelpMessage;
+    }
+
     metaHelpThread.send(endMetaHelpMessage);
 
     logger.debug(`[${PREFIX}] target ${target} is no longer being helped!`);

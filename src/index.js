@@ -61,8 +61,9 @@ const webhooks = {
 // logger.debug(JSON.stringify(webhooks, null, 2));
 ircConfig[0].webhooks = webhooks;
 // logger.debug(JSON.stringify(ircConfig, null, 2));
-discordIRC(ircConfig);
-
+if (NODE_ENV === 'production') {
+  discordIRC(ircConfig);
+}
 // Initialize firebase app
 if (serviceAccount.private_key_id) {
   initializeApp({
