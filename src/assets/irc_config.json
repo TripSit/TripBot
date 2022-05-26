@@ -49,7 +49,7 @@
       "commandCharacters": ["~"],
       "ircStatusNotices": true,
       "ignoreUsers": {
-        "irc": [],
+        "irc": ["TSDiscord", "TSTelegram"],
         "discord": [],
         "discordIds": []
       },

@@ -45,7 +45,8 @@ ircConfig[0].ircOptions.username = ircUsername;
 ircConfig[0].ircOptions.password = ircPassword;
 if (NODE_ENV === 'production') {
   ircConfig[0].channelMapping = {
-    [channelModeratorsId]: '#moderators',
+    // [channelModeratorsId]: '#moderators',
+    [channelSandboxId]: '#sandbox',
   };
 } else {
   ircConfig[0].channelMapping = {
