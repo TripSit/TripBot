@@ -4,7 +4,7 @@ const path = require('path');
 const { Client, Intents } = require('discord.js');
 const { initializeApp, cert } = require('firebase-admin/app'); // eslint-disable-line
 const { getFirestore } = require('firebase-admin/firestore'); // eslint-disable-line
-// const discordIRC = require('discord-irc').default;
+const discordIRC = require('discord-irc').default;
 const logger = require('./utils/logger');
 const registerCommands = require('./commands');
 const registerEvents = require('./events');
@@ -45,7 +45,7 @@ ircConfig[0].channelMapping = {
   [channelGeneralId]: '#sandbox',
 };
 ircConfig[0].webhooks['960606558549594162'] = process.env['960606558549594162'];
-// discordIRC(ircConfig);
+discordIRC(ircConfig);
 
 // Initialize firebase app
 if (serviceAccount.private_key_id) {
