@@ -100,3 +100,6 @@ exports.roleDissociatingId = process.env.roleDissociatingId;
 exports.roleStimmingId = process.env.roleStimmingId;
 exports.roleNoddingId = process.env.roleNoddingId;
 exports.roleSoberId = process.env.roleSoberId;
+
+exports.channelModeratorsWebhook = process.env.channelModeratorsWebhook;
+exports.channelSandboxWebhook = process.env.channelSandboxWebhook;

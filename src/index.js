@@ -4,7 +4,7 @@ const path = require('path');
 const { Client, Intents } = require('discord.js');
 const { initializeApp, cert } = require('firebase-admin/app'); // eslint-disable-line
 const { getFirestore } = require('firebase-admin/firestore'); // eslint-disable-line
-// const discordIRC = require('discord-irc').default;
+const discordIRC = require('discord-irc').default;
 const logger = require('./utils/logger');
 const registerCommands = require('./commands');
 const registerEvents = require('./events');
@@ -12,9 +12,12 @@ const serviceAccount = require('./assets/firebase_creds.json');
 const ircConfig = require('./assets/irc_config.json');
 
 const {
+  NODE_ENV,
   discordToken,
   channelModeratorsId,
-  channelGeneralId,
+  channelModeratorsWebhook,
+  channelSandboxId,
+  channelSandboxWebhook,
   ircServer,
   ircUsername,
   ircPassword,
@@ -38,14 +41,29 @@ serviceAccount.client_id = firebaseClientId;
 // IRC Connection, this takes a while so do it first
 ircConfig[0].discordToken = discordToken;
 ircConfig[0].server = ircServer;
+
 ircConfig[0].ircOptions.username = ircUsername;
 ircConfig[0].ircOptions.password = ircPassword;
-ircConfig[0].channelMapping = {
-  [channelModeratorsId]: '#moderators',
-  [channelGeneralId]: '#sandbox',
+if (NODE_ENV === 'production') {
+  ircConfig[0].nickname = 'TS';
+  ircConfig[0].channelMapping = {
+    [channelModeratorsId]: '#moderators',
+    [channelSandboxId]: '#sandbox',
+  };
+} else {
+  ircConfig[0].nickname = 'TSDev';
+  ircConfig[0].channelMapping = {
+    [channelSandboxId]: '#sandbox-dev',
+  };
+}
+const webhooks = {
+  [channelModeratorsId]: channelModeratorsWebhook,
+  [channelSandboxId]: channelSandboxWebhook,
 };
-ircConfig[0].webhooks['960606558549594162'] = process.env['960606558549594162'];
-// discordIRC(ircConfig);
+// logger.debug(JSON.stringify(webhooks, null, 2));
+ircConfig[0].webhooks = webhooks;
+// logger.debug(JSON.stringify(ircConfig, null, 2));
+discordIRC(ircConfig);
 
 // Initialize firebase app
 if (serviceAccount.private_key_id) {

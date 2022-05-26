@@ -49,12 +49,10 @@
       "commandCharacters": ["~"],
       "ircStatusNotices": true,
       "ignoreUsers": {
-        "irc": [],
+        "irc": ["TSDiscord", "TSTelegram"],
         "discord": [],
         "discordIds": []
       },
-      "webhooks": {
-        "960606558549594162": ""
-      }
+      "webhooks": {}
     }
   ]

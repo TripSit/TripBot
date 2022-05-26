@@ -14,11 +14,9 @@ module.exports = {
   name: 'guildMemberRemove',
 
   async execute(member) {
-    logger.debug(`[${PREFIX}] guildMemberRemove`);
-    // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
     if (member.guild.id === discordGuildId) {
       logger.debug(`[${PREFIX}] guildMemberRemove`);
-      logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
+      // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
 
       // Extract member data
       const [actorData, actorFbid] = await getUserInfo(member);
