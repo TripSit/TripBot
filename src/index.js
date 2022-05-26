@@ -41,25 +41,28 @@ serviceAccount.client_id = firebaseClientId;
 // IRC Connection, this takes a while so do it first
 ircConfig[0].discordToken = discordToken;
 ircConfig[0].server = ircServer;
+
 ircConfig[0].ircOptions.username = ircUsername;
 ircConfig[0].ircOptions.password = ircPassword;
 if (NODE_ENV === 'production') {
+  ircConfig[0].nickname = 'TS';
   ircConfig[0].channelMapping = {
-    // [channelModeratorsId]: '#moderators',
+    [channelModeratorsId]: '#moderators',
     [channelSandboxId]: '#sandbox',
   };
 } else {
+  ircConfig[0].nickname = 'TSDev';
   ircConfig[0].channelMapping = {
-    [channelSandboxId]: '#sandbox',
+    [channelSandboxId]: '#sandbox-dev',
   };
 }
 const webhooks = {
   [channelModeratorsId]: channelModeratorsWebhook,
   [channelSandboxId]: channelSandboxWebhook,
 };
-logger.debug(JSON.stringify(webhooks, null, 2));
+// logger.debug(JSON.stringify(webhooks, null, 2));
 ircConfig[0].webhooks = webhooks;
-logger.debug(JSON.stringify(ircConfig, null, 2));
+// logger.debug(JSON.stringify(ircConfig, null, 2));
 discordIRC(ircConfig);
 
 // Initialize firebase app
