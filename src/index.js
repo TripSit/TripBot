@@ -12,9 +12,12 @@ const serviceAccount = require('./assets/firebase_creds.json');
 const ircConfig = require('./assets/irc_config.json');
 
 const {
+  NODE_ENV,
   discordToken,
   channelModeratorsId,
-  channelGeneralId,
+  channelModeratorsWebhook,
+  channelSandboxId,
+  channelSandboxWebhook,
   ircServer,
   ircUsername,
   ircPassword,
@@ -40,11 +43,22 @@ ircConfig[0].discordToken = discordToken;
 ircConfig[0].server = ircServer;
 ircConfig[0].ircOptions.username = ircUsername;
 ircConfig[0].ircOptions.password = ircPassword;
-ircConfig[0].channelMapping = {
-  [channelModeratorsId]: '#moderators',
-  [channelGeneralId]: '#sandbox',
+if (NODE_ENV === 'production') {
+  ircConfig[0].channelMapping = {
+    [channelModeratorsId]: '#moderators',
+  };
+} else {
+  ircConfig[0].channelMapping = {
+    [channelSandboxId]: '#sandbox',
+  };
+}
+const webhooks = {
+  [channelModeratorsId]: channelModeratorsWebhook,
+  [channelSandboxId]: channelSandboxWebhook,
 };
-ircConfig[0].webhooks['960606558549594162'] = process.env['960606558549594162'];
+logger.debug(JSON.stringify(webhooks, null, 2));
+ircConfig[0].webhooks = webhooks;
+logger.debug(JSON.stringify(ircConfig, null, 2));
 discordIRC(ircConfig);
 
 // Initialize firebase app
