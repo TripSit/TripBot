@@ -30,6 +30,20 @@ module.exports = {
     if (memberInput) {
       target = memberInput;
     }
+
+    const teamRoles = [
+      roleAdminId,
+      roleDiscordopId,
+      roleIrcopId,
+      roleModeratorId,
+      roleTripsitterId,
+      roleTeamtripsitId,
+      roleTripbot2Id,
+      roleTripbotId,
+      roleBotId,
+      roleDeveloperId,
+    ];
+
     // Determine if this is a test run, eg, run by a developer
     // If so, don't ping the tripsitters and helpers down below
     const roleDeveloper = actor.roles.cache.find(role => role.id === roleDeveloperId);
@@ -64,7 +78,6 @@ module.exports = {
       return;
     }
 
-
     const targetResults = await getUserInfo(target);
     const targetData = targetResults[0];
     const targetLastHelpedThreadId = targetData.lastHelpedThreadId;
@@ -77,33 +90,6 @@ module.exports = {
       .find(chan => chan.id === targetLastHelpedThreadId);
     const metaHelpThread = interaction.guild.channels.cache
       .find(chan => chan.id === targetLastHelpedMetaThreadId);
-
-    const teamRoles = [
-      roleAdminId,
-      roleDiscordopId,
-      roleIrcopId,
-      roleModeratorId,
-      roleTripsitterId,
-      roleTeamtripsitId,
-      roleTripbot2Id,
-      roleTripbotId,
-      roleBotId,
-      roleDeveloperId,
-    ];
-
-    // For each role in targetRoles2, add it to the target
-    if (targetData.roles) {
-      targetData.roles.forEach(roleName => {
-        const roleObj = interaction.guild.roles.cache.find(r => r.name === roleName);
-        if (!teamRoles.includes(roleObj.id) && roleName !== '@everyone') {
-          logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.user.username}`);
-          target.roles.add(roleObj);
-        }
-      });
-    }
-
-    await target.roles.remove(roleNeedshelp);
-    logger.debug(`[${PREFIX}] Removed ${roleNeedshelp.name} from ${target.user.username}`);
 
     let responseMessage = memberInput
       ? stripIndents`
@@ -122,6 +108,20 @@ module.exports = {
     const embed = template.embedTemplate().setColor('DARK_BLUE');
     embed.setDescription(responseMessage);
     interaction.reply({ embeds: [embed], ephemeral: true });
+
+    // For each role in targetRoles2, add it to the target
+    if (targetData.roles) {
+      targetData.roles.forEach(roleName => {
+        const roleObj = interaction.guild.roles.cache.find(r => r.name === roleName);
+        if (!teamRoles.includes(roleObj.id) && roleName !== '@everyone') {
+          logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.user.username}`);
+          target.roles.add(roleObj);
+        }
+      });
+    }
+
+    target.roles.remove(roleNeedshelp);
+    logger.debug(`[${PREFIX}] Removed ${roleNeedshelp.name} from ${target.user.username}`);
 
     let endHelpMessage = memberInput
       ? stripIndents`Hey ${target.user.username}, it looks like you're doing better =)
