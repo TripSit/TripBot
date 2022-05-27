@@ -11,13 +11,39 @@ const { getUserInfo, setUserInfo } = require('./firebase');
 const template = require('./embed-template');
 
 const {
-  discordOwnerId,
   NODE_ENV,
   channelTripsitInfoId,
   channelTripsittersId,
   roleNeedshelpId,
-  roleTripsitterId,
   roleHelperId,
+  roleAdminId,
+  roleDiscordopId,
+  roleIrcopId,
+  roleModeratorId,
+  roleTripsitterId,
+  roleTeamtripsitId,
+  roleTripbot2Id,
+  roleTripbotId,
+  roleBotId,
+  roleDeveloperId,
+  roleRedId,
+  roleOrangeId,
+  roleYellowId,
+  roleGreenId,
+  roleBlueId,
+  rolePurpleId,
+  rolePinkId,
+  roleBrownId,
+  roleBlackId,
+  roleWhiteId,
+  roleDrunkId,
+  roleHighId,
+  roleRollingId,
+  roleTrippingId,
+  roleDissociatingId,
+  roleStimmingId,
+  roleNoddingId,
+  roleSoberId,
 } = require('../../env');
 
 module.exports = {
@@ -40,6 +66,8 @@ module.exports = {
     // Get the input from the modal, if it was submitted
     let triageInput = '';
     let introInput = '';
+
+    const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
 
     if (!memberInput) {
       triageInput = interaction.fields.getTextInputValue('triageInput');
@@ -64,25 +92,26 @@ module.exports = {
     logger.debug(`[${PREFIX}] memberInput: ${memberInput}`);
     if (memberInput !== undefined && memberInput !== null) {
       target = memberInput;
-      const actorRoleNames = actor.roles.cache.map(role => role.name);
-      logger.debug(`[${PREFIX}] actor: ${actor.user.username}#${actor.user.discriminator}`);
-      const [actorData, actorFbid] = await getUserInfo(actor);
-      const actorAction = `${PREFIX}_sent`;
-      logger.debug(`[${PREFIX}] Updating actor data it`);
-      if ('mod_actions' in actorData) {
-        actorData.mod_actions[actorAction] = (actorData.mod_actions[actorAction] || 0) + 1;
-      } else {
-        actorData.mod_actions = { [actorAction]: 1 };
-      }
-      actorData.roles = actorRoleNames;
-
-      await setUserInfo(actorFbid, actorData);
     }
     logger.debug(`[${PREFIX}] target: ${target}`);
 
-    // Determine if this is a test run, eg, run by the bot owner
+    const actorRoleNames = actor.roles.cache.map(role => role.name);
+    logger.debug(`[${PREFIX}] actor: ${actor.user.username}#${actor.user.discriminator}`);
+    const [actorData, actorFbid] = await getUserInfo(actor);
+    const actorAction = `${PREFIX}_sent`;
+    logger.debug(`[${PREFIX}] Updating actor data it`);
+    if ('mod_actions' in actorData) {
+      actorData.mod_actions[actorAction] = (actorData.mod_actions[actorAction] || 0) + 1;
+    } else {
+      actorData.mod_actions = { [actorAction]: 1 };
+    }
+    actorData.roles = actorRoleNames;
+    setUserInfo(actorFbid, actorData);
+
+    // Determine if this is a test run, eg, run by a developer
     // If so, don't ping the tripsitters and helpers down below
-    const testRun = target.id === discordOwnerId || target.id.toString() === '332687787172167680';
+    const roleDeveloper = actor.roles.cache.find(role => role.id === roleDeveloperId);
+    const testRun = roleDeveloper !== undefined && roleDeveloper !== null;
     logger.debug(`[${PREFIX}] testRun: ${testRun}`);
 
     // Get a list of the target's roles
@@ -117,13 +146,17 @@ module.exports = {
 
       // Remind the user that they have a channel open
       try {
-        const rejectMessage = memberInput
+        let rejectMessage = memberInput
           ? stripIndents`Hey ${interaction.member}, ${target.user.username} is already being helped!
 
           Check your channel list for '${helpThread.toString()} to help them!'`
           : stripIndents`Hey ${interaction.member}, you are already being helped!
 
           Check your channel list for '${helpThread.toString()} to get help!`;
+
+        if (testRun) {
+          rejectMessage = testNotice + rejectMessage;
+        }
         const embed = template.embedTemplate()
           .setColor('DARK_BLUE')
           .setDescription(rejectMessage);
@@ -131,24 +164,34 @@ module.exports = {
         logger.debug(`[${PREFIX}] Rejected need for help`);
 
         // Ping the user in the help thread
+        let helpMessage = stripIndents`
+          Hey ${target}, use this thread to keep in touch with the Team!
+        `;
+
+        if (testRun) {
+          helpMessage = testNotice + helpMessage;
+        }
+
         if (helpThread && !memberInput) {
-          helpThread.send(stripIndents`
-            Hey ${target}, use this thread to keep in touch with the Team!
-          `);
+          helpThread.send(helpMessage);
         }
         logger.debug(`[${PREFIX}] Pinged user in help thread`);
 
         // Update the meta thread
         if (helperThread) {
-          const metaUpdate = memberInput
+          let metaUpdate = memberInput
             ? stripIndents`Hey ${interaction.member}, ${target.user.username} is already being helped!
             Use this ${helpThread} to discuss it!'`
             : stripIndents`${target.user.username} has submitted a new request for assistance:
             They've taken: ${triageInput ? `\n${triageInput}` : '*No info given*'}
             Their issue: ${introInput ? `\n${introInput}` : '*No info given*'}
             Use this ${helpThread} to discuss it!`;
+          if (testRun) {
+            metaUpdate = testNotice + metaUpdate;
+          }
           helperThread.send(metaUpdate);
         }
+
         logger.debug(`[${PREFIX}] Updated meta help thread`);
 
         return;
@@ -156,20 +199,69 @@ module.exports = {
         logger.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted:\n ${err}`);
       }
     }
-    // Team check - Cannot be run on team members
-    target.roles.cache.forEach(role => {
-      if (role === 'Admin' || role === 'Operator' || role === 'Moderator' || role === 'Tripsitter') {
-        const embed = template.embedTemplate()
-          .setColor('DARK_BLUE')
-          .setDescription('You are a member of the team and cannot be publicly helped! Try asking in #teamtripsit');
-        return interaction.reply({ embeds: [embed], ephemeral: true });
-      }
-    });
-    logger.debug(`[${PREFIX}] Target is not a team member!`);
 
-    // Remove all roles from the target
+    // Team check - Cannot be run on team members
+    // This this user is a developer then this is a test run and ignore this check,
+    // but we'll change the output down below to make it clear this is a test.
+    const teamRoles = [
+      roleAdminId,
+      roleDiscordopId,
+      roleIrcopId,
+      roleModeratorId,
+      roleTripsitterId,
+      roleTeamtripsitId,
+      roleTripbot2Id,
+      roleTripbotId,
+      roleBotId,
+      roleDeveloperId];
+    let isTeamMember = false;
+    if (!testRun) {
+      target.roles.cache.forEach(async role => {
+        if (teamRoles.includes(role.id)) {
+          isTeamMember = true;
+        }
+      });
+    }
+    if (isTeamMember) {
+      logger.debug(`[${PREFIX}] Target is a team member!`);
+      const teamMessage = memberInput
+        ? stripIndents`Hey ${actor}, ${target.user.username} is a team member!
+        Did you mean to do that?`
+        : stripIndents`You are a member of the team and cannot be publicly helped!
+        Try asking in #teamtripsit =)`;
+      const embed = template.embedTemplate()
+        .setColor('DARK_BLUE')
+        .setDescription(teamMessage);
+      if (!interaction.replied) {
+        await interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+      return;
+    }
+    logger.debug(`[${PREFIX}] Target is not a team member!`);
+    // Remove all roles, except team and vanity, from the target
+    const vanityRoles = [
+      roleRedId,
+      roleOrangeId,
+      roleYellowId,
+      roleGreenId,
+      roleBlueId,
+      rolePurpleId,
+      rolePinkId,
+      roleBrownId,
+      roleBlackId,
+      roleWhiteId,
+      roleDrunkId,
+      roleHighId,
+      roleRollingId,
+      roleTrippingId,
+      roleDissociatingId,
+      roleStimmingId,
+      roleNoddingId,
+      roleSoberId,
+    ];
+    const ignoredRoles = `${teamRoles},${vanityRoles}`;
     target.roles.cache.forEach(role => {
-      if (role.name !== '@everyone') {
+      if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone')) {
         logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.user.username}`);
         target.roles.remove(role);
       }
@@ -195,38 +287,42 @@ module.exports = {
         // Ping them in the open thread
         try {
           // Send the intro message to the thread
-          const firstMessage = memberInput
+          let firstMessage = memberInput
             ? stripIndents`
             Hey ${target}, the team thinks you could use assistance!
-            A ${testRun ? 'tripsitter' : tripsitterRole}s or ${testRun ? 'helper' : helperRole}s will be with you as soon as they're available!
+            The team will be with you as soon as they're available!
             If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.`
             : stripIndents`
             Hey ${target}, thank you for asking for assistance!
             The team will be with you as soon as they're available!
             If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.`;
 
+          if (testRun) {
+            firstMessage = testNotice + firstMessage;
+          }
           helpThread.send(firstMessage);
 
           // Update the meta thread too
-          const helperMsg = memberInput
+          let helperMsg = memberInput
             ? stripIndents`
-            Hey ${testRun ? 'tripsitter' : tripsitterRole}s and ${testRun ? 'helper' : helperRole}s, ${actor} thinks ${target.user.username} can use some help in ${helpThread.toString()}!
+            Hey team, ${actor} sent a new request for help on behalf of ${target.user.username} in ${helpThread.toString()}!
 
-            Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!
-
-            *You're receiving this alert because you're a Helper/Tripsitter!*
-            *Only Tripsitters, Helpers and Moderators can see this thread*!
-            *You can remove the helper role in ${channelTripsitInfo.toString()}*!`
+            Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!`
             : stripIndents`
             Hey team, ${target.user.username} sent a new request for help in ${helpThread.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '*No info given*'}
 
-            Their issue: ${introInput ? `\n${introInput}` : '*No info given*'}`;
+            Their issue: ${introInput ? `\n${introInput}` : '*No info given*'}
+
+            Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!`;
+          if (testRun) {
+            helperMsg = testNotice + helperMsg;
+          }
           helperThread.send(helperMsg);
 
           // Respond to the user and remind them they have an open thread
-          const reminderMessage = memberInput
+          let message = memberInput
             ? stripIndents`
             Hey ${actor}, thank you for requestiong assistance on the behalf of ${target.user.username}!
 
@@ -240,9 +336,13 @@ module.exports = {
 
             You can also click in your channel list to see your private room!`;
 
+          if (testRun) {
+            message = testNotice + message;
+          }
+
           const embed = template.embedTemplate()
             .setColor('DARK_BLUE')
-            .setDescription(reminderMessage);
+            .setDescription(message);
 
           interaction.reply({ embeds: [embed], ephemeral: true });
 
@@ -272,15 +372,20 @@ module.exports = {
     logger.debug(`[${PREFIX}] Created helpThread ${helpThread.id}`);
 
     // Send the intro message to the helpThread
-    const firstMessage = memberInput
+    let firstMessage = memberInput
       ? stripIndents`
       Hey ${target}, the team thinks you could use assistance!
-      A ${testRun ? 'tripsitter' : tripsitterRole}s or ${testRun ? 'helper' : helperRole}s will be with you as soon as they're available!
+      A ${testRun ? 'tripsitter' : tripsitterRole} or ${testRun ? 'helper' : helperRole} will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.`
       : stripIndents`
       Hey ${target}, thank you for asking for assistance!
-      A ${testRun ? 'tripsitter' : tripsitterRole}s or ${testRun ? 'helper' : helperRole}s will be with you as soon as they're available!
+      A ${testRun ? 'tripsitter' : tripsitterRole} or ${testRun ? 'helper' : helperRole} will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.`;
+
+    if (testRun) {
+      firstMessage = testNotice + firstMessage;
+    }
+
     await helpThread.send(firstMessage);
     logger.debug(`[${PREFIX}] Sent intro message to helpThread ${helpThread.id}`);
 
@@ -298,9 +403,9 @@ module.exports = {
     logger.debug(`[${PREFIX}] Created meta-thread ${helperThread.id}`);
 
     // Send the intro message to the thread
-    const helperMsg = memberInput
+    let helperMsg = memberInput
       ? stripIndents`
-      Hey ${testRun ? 'tripsitter' : tripsitterRole}s and ${testRun ? 'helper' : helperRole}s, ${actor} thinks ${target.user.username} can use some help in ${helpThread.toString()}!
+      Hey ${testRun ? 'tripsitter' : tripsitterRole} and ${testRun ? 'helper' : helperRole}, ${actor} thinks ${target.user.username} can use some help in ${helpThread.toString()}!
 
       Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!
 
@@ -308,7 +413,7 @@ module.exports = {
       *Only Tripsitters, Helpers and Moderators can see this thread*!
       *You can remove the helper role in ${channelTripsitInfo.toString()}*!`
       : stripIndents`
-      Hey ${testRun ? 'tripsitter' : tripsitterRole}s and ${testRun ? 'helper' : helperRole}s, ${target.user.username} can use some help in ${helpThread.toString()}!
+      Hey ${testRun ? 'tripsitter' : tripsitterRole} and ${testRun ? 'helper' : helperRole}, ${target.user.username} can use some help in ${helpThread.toString()}!
 
       They've taken: ${triageInput ? `\n${triageInput}` : '*No info given*'}
 
@@ -320,11 +425,15 @@ module.exports = {
       *Only Tripsitters, Helpers and Moderators can see this thread*!
       *You can remove the helper role in ${channelTripsitInfo.toString()}*!`;
     // send a message to the thread
+
+    if (testRun) {
+      helperMsg = testNotice + helperMsg;
+    }
     await helperThread.send(helperMsg);
     logger.debug(`[${PREFIX}] Sent intro message to meta-thread ${helperThread.id}`);
 
     // Send the triage info to the thread
-    const replyMessage = memberInput
+    let replyMessage = memberInput
       ? stripIndents`
       Hey ${interaction.member}, we've activated tripsit mode on ${target.user.username}!
 
@@ -340,6 +449,9 @@ module.exports = {
 
       You can also click in your channel list to see your private room!`;
 
+    if (testRun) {
+      replyMessage = testNotice + replyMessage;
+    }
     const embed = template.embedTemplate()
       .setColor('DARK_BLUE')
       .setDescription(replyMessage);

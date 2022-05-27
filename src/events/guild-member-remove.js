@@ -19,7 +19,8 @@ module.exports = {
       // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
 
       // Extract member data
-      const [actorData, actorFbid] = await getUserInfo(member);
+      const actorResponse = await getUserInfo(member);
+      const actorData = actorResponse[0];
 
       // Transform member data
       const joinedTimestamp = member.joinedTimestamp
