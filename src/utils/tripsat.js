@@ -21,6 +21,10 @@ const {
   roleTripbot2Id,
   roleTripbotId,
   roleBotId,
+  roleTreeId,
+  roleSproutId,
+  roleSeedlingId,
+  roleBoosterId,
 } = require('../../env');
 
 module.exports = {
@@ -42,6 +46,10 @@ module.exports = {
       roleTripbotId,
       roleBotId,
       roleDeveloperId,
+      roleTreeId,
+      roleSproutId,
+      roleSeedlingId,
+      roleBoosterId,
     ];
 
     // Determine if this is a test run, eg, run by a developer
