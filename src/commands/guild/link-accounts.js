@@ -5,6 +5,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('../../utils/logger');
 const { getUserInfo, setUserInfo } = require('../../utils/firebase');
+const template = require('../../utils/embed-template');
 
 const {
   discordGuildId,
@@ -65,10 +66,13 @@ module.exports = {
     const token = `${Math.random().toString(36).substring(2, 8)}-${Math.random().toString(36).substring(2, 8)}-${Math.random().toString(36).substring(2, 8)}`;
 
     if (service === 'irc') {
+      const embed = template.embedTemplate();
+      embed.setTitle('Link your account to IRC');
       await global.ircClient.whois(nickname, async data => {
         // Check if the user is authorized in IRC
         if (!data.account) {
-          interaction.reply(`${nickname} is not registered on IRC, please go ~register on IRC!`);
+          embed.setDescription(stripIndents`${nickname} is not registered on IRC, please go ~register on IRC!`);
+          interaction.reply({ embeds: [embed], ephemeral: true });
           return;
         }
         logger.debug(`[${PREFIX}] ${actor} ${data.accountinfo} ${data.account}`);
@@ -76,7 +80,8 @@ module.exports = {
         if (actorData.irc && actorData.irc.verified) {
           logger.debug(`[${PREFIX}] actorData.irc: ${actorData.irc}`);
           logger.debug(`[${PREFIX}] actorData.irc.nickname: ${actorData.irc.nickname}`);
-          interaction.reply(`Your account is already linked to '${actorData.irc.nickname}'`);
+          embed.setDescription(stripIndents`Your account is already linked to '${actorData.irc.nickname}'`);
+          interaction.reply({ embeds: [embed], ephemeral: true });
           return;
         }
 
@@ -84,7 +89,7 @@ module.exports = {
           return;
         }
 
-        interaction.reply(stripIndents`
+        embed.setDescription(stripIndents`
         Your auth token is:
 
         ${token}
@@ -92,6 +97,7 @@ module.exports = {
         Please copy this token and send it to the "TS" bot on IRC next time you're online!
 
         If you forget or otherwise lose this token you can rerun this command to generate a new one.`);
+        interaction.reply({ embeds: [embed], ephemeral: true });
 
         // logger.debug(`[${PREFIX}] user whois: ${JSON.stringify(data, null, 2)}`);
         actorData.irc = {
@@ -131,6 +137,8 @@ module.exports = {
 
     if (actorData.authToken.toString() === token.toString()) {
       logger.debug(`[${PREFIX}] actorData.authToken matches!`);
+      const embed = template.embedTemplate();
+      embed.setTitle('Link your account to IRC - Success!');
       if (service === 'irc') {
         actorData.irc.verified = true;
         await setUserInfo(actorFbid, actorData);
@@ -143,6 +151,9 @@ module.exports = {
         const target = await tripsitGuild.members.fetch(actorData.discord.id);
         logger.debug(`[${PREFIX}] target: ${target}`);
         await target.roles.add(roleIrcVerified);
+        embed.setDescription(stripIndents`You have successfully linked your Discord account to the ${accountInfo.nick} IRC account!
+        If this is not expected please contact Moonbear#1024 on discord, but don't worry: your account is safe!`);
+        target.send({ embeds: [embed] });
       }
     } else {
       global.ircClient.say(accountInfo.nick, 'Invalid auth token!');

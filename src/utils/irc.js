@@ -18,7 +18,7 @@ const {
 module.exports = {
   async connectIRC(client) {
     // IRC Connection, this takes a while so do it first
-    ircConfig.username = ircUsername;
+    ircConfig.userName = ircUsername;
     ircConfig.password = ircPassword;
 
     // logger.debug(`[${PREFIX}] ircConfig: ${JSON.stringify(ircConfig, null, 2)}`);
@@ -36,7 +36,7 @@ module.exports = {
 
       if (token !== null) {
         logger.debug(`[${PREFIX}] PM token: ${token}`);
-        global.ircClient.say(from, `Your token is ${token}`);
+        // global.ircClient.say(from, `Your token is ${token}`);
         await global.ircClient.whois(from, info => {
           if (!info.account) {
             global.ircClient.say(from, `${from} is not registered on IRC, please go ~register on IRC!`);

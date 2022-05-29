@@ -131,6 +131,7 @@ module.exports = {
           Object.keys(userReminders).forEach(async reminderTime => {
             const userFbId = doc.key;
             // logger.debug(`[${PREFIX}] user_fb_id: ${user_fb_id}`);
+            logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 4)}`);
             const userid = doc.value.discord.id;
             // logger.debug(`[${PREFIX}] userid: ${userid}`);
             const remindertime = parseInt(reminderTime, 10);
@@ -191,7 +192,7 @@ module.exports = {
     //     return null;
     //   });
     // }
-    // checkReminders();
+    checkReminders();
     // eslint-disable-next-line
     // TODO: setInterval can cause unwanted side-effects, use recursive function w/ setTimeout
     // setInterval(checkReminders, 1000);
