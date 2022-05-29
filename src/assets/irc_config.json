@@ -1,58 +1,21 @@
-[
-    {
-      "nickname": "TS",
-      "server": "",
-      "discordToken": "",
-      "channelMapping": {
-      },
-      "autoSendCommands": [
-        ],
-      "ircOptions": {
-        "floodProtection": true,
-        "floodProtectionDelay": 500,
-        "port": "6667",
-        "secure": false,
-        "sasl": true,
-        "username": "TS",
-        "password": "",
-        "debug": false,
-        "showErrors": false,
-        "autoConnect": true,
-        "autoRejoin": true,
-        "autoRenick": true,
-        "renickCount": null,
-        "renickDelay": 60000
-      },
-      "format": {
-        "commandPrelude": "Command sent by {$nickname}:",
-        "ircText": "<{$displayUsername}> {$text}",
-        "urlAttachment": "<{$displayUsername}> {$attachmentURL}",
-        "discord": "**<{$author}>** {$withMentions}",
-        "webhookAvatarURL": "https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png"
-      },
-      "ircNickColor": true,
-      "ircNickColors": [
-        "light_blue",
-        "dark_blue",
-        "light_red",
-        "dark_red",
-        "light_green",
-        "dark_green",
-        "magenta",
-        "light_magenta",
-        "orange",
-        "yellow",
-        "cyan",
-        "light_cyan"
-      ],
-      "parallelPingFix": true,
-      "commandCharacters": ["~"],
-      "ircStatusNotices": true,
-      "ignoreUsers": {
-        "irc": ["TSDiscord", "TSTelegram"],
-        "discord": [],
-        "discordIds": []
-      },
-      "webhooks": {}
-    }
-  ]
+{
+  "userName": "TS",
+  "realName": "TripSit Mod Relay",
+  "password": null,
+  "port": 6667,
+  "channels": ["#sandbox"],
+  "autoConnect": true,
+  "autoRejoin": true,
+  "autoRenick": true,
+  "renickDelay": 60000,
+  "retryDelay": 2000,
+  "secure": false,
+  "selfSigned": true,
+  "certExpired": true,
+  "floodProtection": false,
+  "sasl": true,
+  "stripColors": false,
+  "channelPrefixes": "#",
+  "messageSplit": 512,
+  "encoding": "UTF-8"
+}

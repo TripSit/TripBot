@@ -7,6 +7,7 @@ const paginationEmbed = require('discordjs-button-pagination');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../../utils/firebase');
+const parseDuration = require('../../utils/parseDuration');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -14,82 +15,6 @@ const buttonList = [
   new MessageButton().setCustomId('previousbtn').setLabel('Previous').setStyle('DANGER'),
   new MessageButton().setCustomId('nextbtn').setLabel('Next').setStyle('SUCCESS'),
 ];
-
-async function parseDuration(duration) {
-  // Those code inspired by https://gist.github.com/substanc3-dev/306bb4d04b2aad3a5d019052b1a0dec0
-  // This is super cool, thanks a lot!
-  const supported = 'smhdwmoy';
-  const numbers = '0123456789';
-  let stage = 1;
-  let idx = 0;
-  let tempNumber = 0;
-  let tempString = '';
-  let timeValue = 0;
-  while (idx < duration.length) {
-    const c = duration[idx];
-    switch (stage) {
-      default:
-        break;
-      case 1: // waiting for number
-      {
-        idx += 1;
-        if (numbers.includes(c)) {
-          tempString = c.toString();
-          stage = 2;
-        }
-        break;
-      }
-      case 2: // parsing the number
-      {
-        if (numbers.includes(c)) {
-          tempString += c;
-          idx += 1;
-        } else {
-          logger.debug(`[${PREFIX}] TValue: ${tempString}`);
-          tempNumber = Number.parseInt(tempString, 10);
-          stage = 3;
-        }
-        break;
-      }
-      case 3: // parsing the qualifier
-      {
-        idx += 1;
-        if (c === ' ') { break; } else if (supported.includes(c)) {
-          // logger.debug(`[${PREFIX}] Qualifier ${c}`);
-          switch (c) {
-            default:
-              logger.debug(`[${PREFIX}] Unknown qualifier ${c}`);
-              break;
-            case 'h':
-              timeValue += tempNumber * 60 * 60 * 1000;
-              break;
-            case 'mo':
-              timeValue += tempNumber * 30 * 24 * 60 * 60 * 1000;
-              break;
-            case 'm':
-              timeValue += tempNumber * 60 * 1000;
-              break;
-            case 's':
-              timeValue += tempNumber * 1000;
-              break;
-            case 'd':
-              timeValue += tempNumber * 24 * 60 * 60 * 1000;
-              break;
-            case 'w':
-              timeValue += tempNumber * 7 * 24 * 60 * 60 * 1000;
-              break;
-            case 'y':
-              timeValue += tempNumber * 365 * 24 * 60 * 60 * 1000;
-              break;
-          }
-          stage = 1;
-          break;
-        } else return timeValue;
-      }
-    }
-  }
-  return timeValue;
-}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -239,7 +164,7 @@ module.exports = {
       // Make a new variable that is the current time minus the out variable
       const date = new Date();
       if (offset) {
-        const out = await parseDuration(offset);
+        const out = await parseDuration.execute(offset);
         // logger.debug(`[${PREFIX}] out: ${out}`);
         date.setTime(date.getTime() - out);
       }

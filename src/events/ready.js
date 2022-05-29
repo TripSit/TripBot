@@ -4,9 +4,11 @@ const path = require('path');
 const fs = require('fs/promises');
 const express = require('express');
 const { ReactionRole } = require('discordjs-reaction-role');
+const irc = require('irc-upd');
 const logger = require('../utils/logger');
 const template = require('../utils/embed-template');
 const { getGuildInfo } = require('../utils/firebase');
+const ircConfig = require('../assets/irc_config.json');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -15,6 +17,8 @@ const {
   NODE_ENV,
   discordGuildId,
   PORT,
+  ircServer,
+  ircPassword,
   firebaseUserDbName,
   firebaseGuildDbName,
 } = require('../../env');
@@ -25,7 +29,6 @@ module.exports = {
 
   async execute(client) {
     // This takes a while so do it first
-
     const tripsitGuild = client.guilds.resolve(discordGuildId);
     async function getReactionRoles() {
       const targetResults = await getGuildInfo(tripsitGuild);
@@ -37,6 +40,20 @@ module.exports = {
       }
     }
     getReactionRoles();
+
+    // IRC Connection, this takes a while so do it first
+    ircConfig.password = ircPassword;
+
+    // logger.debug(`[${PREFIX}] ircConfig: ${JSON.stringify(ircConfig, null, 2)}`);
+    global.ircClient = new irc.Client(ircServer, 'TS', ircConfig);
+    global.ircClient.addListener('registered', () => {
+      logger.debug(`[${PREFIX}.IRC] Registered!`);
+      // global.ircClient.say('Moonbear', 'Hello world!');
+    });
+    global.ircClient.addListener('error', message => {
+      logger.error(`[${PREFIX}.IRC] Error: ${message}`);
+      // global.ircClient.say('Moonbear', 'Hello world!');
+    });
 
     /* Start *INVITE* code */
     // https://stackoverflow.com/questions/69521374/discord-js-v13-invite-tracker
@@ -198,8 +215,7 @@ module.exports = {
     // if (NODE_ENV === 'production') {
     const app = express();
     app.get('/', (req, res) => {
-      // res.send('Hello world!');
-      res.status(200).send('Ok');
+      res.status(200).send('Hello world!');
     });
     // TODO: Promisify this
     app.listen(PORT, () => {
