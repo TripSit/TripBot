@@ -1,5 +1,5 @@
 {
-  "userName": "TS",
+  "userName": null,
   "realName": "TripSit Mod Relay",
   "password": null,
   "port": 6667,
@@ -17,5 +17,7 @@
   "stripColors": false,
   "channelPrefixes": "#",
   "messageSplit": 512,
-  "encoding": "UTF-8"
+  "encoding": "UTF-8",
+  "debug": false,
+  "log": false
 }
