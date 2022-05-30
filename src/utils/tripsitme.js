@@ -26,6 +26,10 @@ const {
   roleTripbotId,
   roleBotId,
   roleDeveloperId,
+  roleTreeId,
+  roleSproutId,
+  roleSeedlingId,
+  roleBoosterId,
   roleRedId,
   roleOrangeId,
   roleYellowId,
@@ -241,6 +245,10 @@ module.exports = {
     logger.debug(`[${PREFIX}] Target is not a team member!`);
     // Remove all roles, except team and vanity, from the target
     const vanityRoles = [
+      roleTreeId,
+      roleSproutId,
+      roleSeedlingId,
+      roleBoosterId,
       roleRedId,
       roleOrangeId,
       roleYellowId,
