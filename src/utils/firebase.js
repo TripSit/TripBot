@@ -13,31 +13,61 @@ const {
 
 module.exports = {
   getUserInfo: async member => {
-    logger.debug(`[${PREFIX}] Looking up member ${member}!`);
-    let memberData = {
-      discord_username: member.user ? member.user.username : member.username,
-      discord_discriminator: member.user ? member.user.discriminator : member.discriminator,
-      discord_id: member.id.toString(),
-      karma_given: {},
-      karma_received: {},
-      mod_actions: {},
-      roles: [],
-      timezone: '',
-      birthday: [],
-      reactionRoles: [],
-    };
+    // logger.debug(`[${PREFIX}] Looking up member ${JSON.stringify(member, null, 2)}!`);
     let memberFbid = null;
-    logger.debug(`[${PREFIX}] firebaseUserDbName: ${firebaseUserDbName}`);
+    let memberData = {};
+    let memberType = '';
     logger.debug(`[${PREFIX}] member.id: ${member.id}`);
+    if (member.id) {
+      logger.debug(`[${PREFIX}] Member is from Discord!`);
+      memberType = 'discord';
+      memberData = {
+        name: member.user ? member.user.username : member.username,
+        discord: {
+          id: member.id.toString(),
+          tag: member.user ? member.user.tag : member.tag,
+          avatar: member.user ? member.user.avatarURL : member.avatarURL,
+          username: member.user ? member.user.username : member.username,
+          discriminator: member.user ? member.user.discriminator : member.discriminator,
+        },
+      };
+    }
+    logger.debug(`[${PREFIX}] member.host: ${member.host}`);
+    if (member.host) {
+      logger.debug(`[${PREFIX}] Member is from IRC!`);
+      memberType = 'irc';
+      memberData = {
+        name: member.account,
+        irc: {
+          accountName: member.account,
+          vhost: member.host,
+          nickname: member.nickname,
+        },
+      };
+    }
+
     if (db !== undefined) {
+      logger.debug(`[${PREFIX}] firebaseUserDbName: ${firebaseUserDbName}`);
       const snapshotUser = await db.collection(firebaseUserDbName).get();
       await snapshotUser.forEach(doc => {
-        if (doc.data().discord_id === member.id.toString()) {
-          logger.debug(`[${PREFIX}] Member data found!`);
-          // logger.debug(`[${PREFIX}] doc.data(): ${JSON.stringify(doc.data())}`);
-          // logger.debug(`[${PREFIX}] doc.data().discord_id: ${doc.data().discord_id}`);
-          memberData = doc.data();
-          memberFbid = doc.id;
+        if (memberType === 'discord') {
+          if (doc.data().discord) {
+            if (doc.data().discord.id === member.id.toString()) {
+              logger.debug(`[${PREFIX}] Discord member data found!`);
+              memberData = doc.data();
+              memberFbid = doc.id;
+              return;
+            }
+          }
+        }
+        if (memberType === 'irc') {
+          if (doc.data().irc) {
+            if (doc.data().irc.accountName === member.account) {
+              logger.debug(`[${PREFIX}] Irc member data found!`);
+              memberData = doc.data();
+              memberFbid = doc.id;
+            }
+          }
         }
       });
     }
@@ -60,7 +90,7 @@ module.exports = {
       guild_partner: guild.partnered,
       guild_preferredLocale: `${guild.preferredLocale ? guild.preferredLocale : 'No Locale'}`,
       guild_region: `${guild.region ? guild.region : 'No region'}`,
-      mod_actions: {},
+      modActions: {},
     };
     let guildFbid = null;
     // logger.debug(`[${PREFIX}] firebaseGuildDbName: ${firebaseGuildDbName}`);
@@ -81,7 +111,7 @@ module.exports = {
     return [guildData, guildFbid];
   },
   setUserInfo: async (fbid, data) => {
-    logger.debug(`[${PREFIX}] Saving ${data.discord_username}!`);
+    logger.debug(`[${PREFIX}] Saving ${data.discord.username}!`);
 
     if (fbid !== null && fbid !== undefined) {
       logger.debug(`[${PREFIX}] Updating actor data`);

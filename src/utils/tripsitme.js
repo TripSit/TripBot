@@ -104,12 +104,13 @@ module.exports = {
     const [actorData, actorFbid] = await getUserInfo(actor);
     const actorAction = `${PREFIX}_sent`;
     logger.debug(`[${PREFIX}] Updating actor data it`);
-    if ('mod_actions' in actorData) {
-      actorData.mod_actions[actorAction] = (actorData.mod_actions[actorAction] || 0) + 1;
+    if ('modActions' in actorData) {
+      actorData.discord.modActions[actorAction] = (
+        actorData.discord.modActions[actorAction] || 0) + 1;
     } else {
-      actorData.mod_actions = { [actorAction]: 1 };
+      actorData.discord.modActions = { [actorAction]: 1 };
     }
-    actorData.roles = actorRoleNames;
+    actorData.discord.roles = actorRoleNames;
     setUserInfo(actorFbid, actorData);
 
     // Determine if this is a test run, eg, run by a developer
@@ -129,10 +130,10 @@ module.exports = {
     // Get the target lastHelped information from the db
     const [targetData, targetFbid] = await getUserInfo(target);
     const targetAction = `${PREFIX}_received`;
-    const targetLastHelpedDate = targetData.lastHelpedDate;
-    const targetLastHelpedThreadId = targetData.lastHelpedThreadId;
+    const targetLastHelpedDate = targetData.discord.lastHelpedDate;
+    const targetLastHelpedThreadId = targetData.discord.lastHelpedThreadId;
     logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
-    const targetLastHelpedMetaThreadId = targetData.lastHelpedMetaThreadId;
+    const targetLastHelpedMetaThreadId = targetData.discord.lastHelpedMetaThreadId;
     logger.debug(`[${PREFIX}] targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);
 
     // Get the channel objects for the help and meta threads
@@ -354,8 +355,8 @@ module.exports = {
 
           interaction.reply({ embeds: [embed], ephemeral: true });
 
-          targetData.roles = targetRoleNames;
-          targetData.lastHelpedDate = new Date();
+          targetData.discord.roles = targetRoleNames;
+          targetData.discord.lastHelpedDate = new Date();
 
           // TODO: Use transactions
           await setUserInfo(targetFbid, targetData);
@@ -468,17 +469,18 @@ module.exports = {
 
     // Update targetData with how many times they've been helped
     logger.debug(`[${PREFIX}] Updating target data`);
-    if ('mod_actions' in targetData) {
-      targetData.mod_actions[targetAction] = (targetData.mod_actions[targetAction] || 0) + 1;
+    if ('modActions' in targetData) {
+      targetData.discord.modActions[targetAction] = (
+        targetData.discord.modActions[targetAction] || 0) + 1;
     } else {
-      targetData.mod_actions = { [targetAction]: 1 };
+      targetData.discord.modActions = { [targetAction]: 1 };
     }
 
     // Update database information
-    targetData.lastHelpedThreadId = helpThread.id;
-    targetData.lastHelpedMetaThreadId = helperThread.id;
-    targetData.roles = targetRoleNames;
-    targetData.lastHelpedDate = new Date();
+    targetData.discord.lastHelpedThreadId = helpThread.id;
+    targetData.discord.lastHelpedMetaThreadId = helperThread.id;
+    targetData.discord.roles = targetRoleNames;
+    targetData.discord.lastHelpedDate = new Date();
     // TODO: Use transactions
     await setUserInfo(targetFbid, targetData);
     logger.debug(`[${PREFIX}] finished!`);

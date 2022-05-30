@@ -47,7 +47,7 @@ module.exports = {
         guild_partner: guild.partnered,
         guild_preferredLocale: `${guild.preferredLocale ? guild.preferredLocale : 'No Locale'}`,
         guild_region: `${guild.region ? guild.region : 'No region'}`,
-        mod_actions: {},
+        modActions: {},
       };
     }
     return [guildData, guildFbid];

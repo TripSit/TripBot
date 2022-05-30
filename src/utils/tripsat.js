@@ -86,11 +86,10 @@ module.exports = {
       return;
     }
 
-    const targetResults = await getUserInfo(target);
-    const targetData = targetResults[0];
-    const targetLastHelpedThreadId = targetData.lastHelpedThreadId;
+    const [targetData] = await getUserInfo(target);
+    const targetLastHelpedThreadId = targetData.discord.lastHelpedThreadId;
     logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
-    const targetLastHelpedMetaThreadId = targetData.lastHelpedMetaThreadId;
+    const targetLastHelpedMetaThreadId = targetData.discord.lastHelpedMetaThreadId;
     logger.debug(`[${PREFIX}] targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);
 
     // Get the channel objects for the help and meta threads
@@ -118,8 +117,8 @@ module.exports = {
     interaction.reply({ embeds: [embed], ephemeral: true });
 
     // For each role in targetRoles2, add it to the target
-    if (targetData.roles) {
-      targetData.roles.forEach(roleName => {
+    if (targetData.discord.roles) {
+      targetData.discord.roles.forEach(roleName => {
         const roleObj = interaction.guild.roles.cache.find(r => r.name === roleName);
         if (!teamRoles.includes(roleObj.id) && roleName !== '@everyone') {
           logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.user.username}`);

@@ -42,8 +42,7 @@ module.exports = {
     const unixFutureTime = Math.floor(Date.now() / 1000) + seconds;
 
     // Extract actor data
-    const actorResults = await getUserInfo(actor);
-    const actorData = actorResults[0];
+    const [actorData, actorFbid] = await getUserInfo(actor);
 
     // Transform actor data
     if ('reminders' in actorData) {
@@ -53,7 +52,7 @@ module.exports = {
     }
 
     // Load actor data
-    await setUserInfo(actorResults[1], actorData);
+    await setUserInfo(actorFbid, actorData);
 
     // Update global reminder data
     // logger.debug(`[${PREFIX}] updating global reminder data`);

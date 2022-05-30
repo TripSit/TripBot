@@ -4,11 +4,10 @@ const path = require('path');
 const fs = require('fs/promises');
 const express = require('express');
 const { ReactionRole } = require('discordjs-reaction-role');
-const irc = require('irc-upd');
 const logger = require('../utils/logger');
 const template = require('../utils/embed-template');
 const { getGuildInfo } = require('../utils/firebase');
-const ircConfig = require('../assets/irc_config.json');
+const { connectIRC } = require('../utils/irc');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -17,8 +16,6 @@ const {
   NODE_ENV,
   discordGuildId,
   PORT,
-  ircServer,
-  ircPassword,
   firebaseUserDbName,
   firebaseGuildDbName,
 } = require('../../env');
@@ -41,19 +38,7 @@ module.exports = {
     }
     getReactionRoles();
 
-    // IRC Connection, this takes a while so do it first
-    ircConfig.password = ircPassword;
-
-    // logger.debug(`[${PREFIX}] ircConfig: ${JSON.stringify(ircConfig, null, 2)}`);
-    global.ircClient = new irc.Client(ircServer, 'TS', ircConfig);
-    global.ircClient.addListener('registered', () => {
-      logger.debug(`[${PREFIX}.IRC] Registered!`);
-      // global.ircClient.say('Moonbear', 'Hello world!');
-    });
-    global.ircClient.addListener('error', message => {
-      logger.error(`[${PREFIX}.IRC] Error: ${message}`);
-      // global.ircClient.say('Moonbear', 'Hello world!');
-    });
+    connectIRC(client);
 
     /* Start *INVITE* code */
     // https://stackoverflow.com/questions/69521374/discord-js-v13-invite-tracker
@@ -146,7 +131,8 @@ module.exports = {
           Object.keys(userReminders).forEach(async reminderTime => {
             const userFbId = doc.key;
             // logger.debug(`[${PREFIX}] user_fb_id: ${user_fb_id}`);
-            const userid = doc.value.discord_id;
+            logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 4)}`);
+            const userid = doc.value.discord.id;
             // logger.debug(`[${PREFIX}] userid: ${userid}`);
             const remindertime = parseInt(reminderTime, 10);
             // logger.debug(`[${PREFIX}] remindertime: ${remindertime}`);
@@ -180,7 +166,7 @@ module.exports = {
     //       const userReminders = doc.reminders;
     //       return Promise.all(userReminders.map(reminderTime => {
     //         const userFbId = doc.id;
-    //         const userid = doc.discord_id;
+    //         const userid = doc.discord.id;
     //         const remindertime = parseInt(reminderTime, 10);
     //         const reminder = userReminders[remindertime];
     //         logger.debug(`[${PREFIX}] ${userid} has a reminder on ${remindertime}`);
@@ -209,7 +195,7 @@ module.exports = {
     checkReminders();
     // eslint-disable-next-line
     // TODO: setInterval can cause unwanted side-effects, use recursive function w/ setTimeout
-    setInterval(checkReminders, 1000);
+    // setInterval(checkReminders, 1000);
 
     // Setup the express server, this is necessary for the Digital Ocean health check
     // if (NODE_ENV === 'production') {
