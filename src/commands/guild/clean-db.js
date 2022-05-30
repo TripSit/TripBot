@@ -17,20 +17,72 @@ module.exports = {
     .setName('clean-db')
     .setDescription('Clean the DB!'),
   async execute(interaction) {
-    // async function backup() {
-    //   logger.debug(`[${PREFIX}] Backup up from 'users' to 'users_dev'`);
-    //   const users = await db.collection('users').get();
-    //   users.forEach(async doc => {
-    //     const data = doc.data();
-    //     await db.collection('users_dev').doc().set(data);
-    //   });
-    //   logger.debug(`[${PREFIX}] Done backing up!`);
-    // }
-    // await backup();
+  //   async function backup() {
+  //     logger.debug(`[${PREFIX}] Backup up from 'users' to 'users_dev'`);
+  //     const users = await db.collection('users').get();
+  //     users.forEach(async doc => {
+  //       const data = doc.data();
+  //       await db.collection('users_dev').doc().set(data);
+  //     });
+  //     logger.debug(`[${PREFIX}] Done backing up!`);
+  //   }
+  //   await backup();
 
+    // async function emojinameFix() {
+    //   logger.debug(`[${PREFIX}] emojinameFix`);
+    //   const users = await db.collection('users').get();
+    //   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
+    //   users.forEach(async user => {
+    //     const userKey = user.id;
+    //     const userValue = user.data();
+    //     const userData = userValue;
+    //     // logger.debug(`[${PREFIX}] Cleaning user ${userValue.accountName}!`);
+    //     // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(doc, null, 2)}`);
+    //     if (userValue.discord) {
+    //       if (userValue.discord.karma_given) {
+    //         if (userValue.discord.karma_given['<:ts_up:958721361587630210>']) {
+    //           const oldKarma = userValue.discord.karma_given['<:ts_up:958721361587630210>'];
+    //           const newKarma = userValue.discord.karma_given['<:ts_voteup:958721361587630210>'];
+    //           const finalKarma = newKarma ? oldKarma + newKarma : oldKarma;
+    //           userData.discord.karma_given['<:ts_voteup:958721361587630210>'] = finalKarma;
+    //           delete userData.discord.karma_given['<:ts_up:958721361587630210>'];
+    //         }
+    //         if (userValue.discord.karma_given['<:ts_down:960161563849932892>']) {
+    //           const oldKarma = userValue.discord.karma_given['<:ts_down:960161563849932892>'];
+    //           const newKarma = userValue.discord.karma_given[
+    // '<:ts_votedown:960161563849932892>'];
+    //           const finalKarma = newKarma ? oldKarma + newKarma : oldKarma;
+    //           userData.discord.karma_given['<:ts_votedown:960161563849932892>'] = finalKarma;
+    //           delete userData.discord.karma_given['<:ts_down:960161563849932892>'];
+    //         }
+    //       }
+    //       if (userValue.discord.karma_received) {
+    //         if (userValue.discord.karma_received['<:ts_up:958721361587630210>']) {
+    //           const oldKarma = userValue.discord.karma_received['<:ts_up:958721361587630210>'];
+    //           const newKarma = userValue.discord.karma_received[
+    // '<:ts_voteup:958721361587630210>'];
+    //           const finalKarma = newKarma ? oldKarma + newKarma : oldKarma;
+    //           userData.discord.karma_received['<:ts_voteup:958721361587630210>'] = finalKarma;
+    //           delete userData.discord.karma_received['<:ts_up:958721361587630210>'];
+    //         }
+    //         if (userValue.discord.karma_received['<:ts_down:960161563849932892>']) {
+    //           const oldKarma = userValue.discord.karma_received['<:ts_down:960161563849932892>'];
+    //           const newKarma = userValue.discord.karma_received[
+    // '<:ts_votedown:960161563849932892>'];
+    //           const finalKarma = newKarma ? oldKarma + newKarma : oldKarma;
+    //           userData.discord.karma_received['<:ts_votedown:960161563849932892>'] = finalKarma;
+    //           delete userData.discord.karma_received['<:ts_down:960161563849932892>'];
+    //         }
+    //       }
+    //       db.collection('users').doc(userKey).set(userData);
+    //     }
+    //     logger.debug(`[${PREFIX}] Done cleaning karma!`);
+    //   });
+    // }
+    // await emojinameFix();
     // async function karmaFix() {
     //   logger.debug(`[${PREFIX}] Cleaning karma`);
-    //   const users = await db.collection(firebaseUserDbName).get();
+    //   const users = await db.collection('users').get();
     //   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
     //   // users.forEach(async doc => {
     //   for (let i = 0; i < users.size; i += 1) {
@@ -38,14 +90,16 @@ module.exports = {
     //     const doc = users.docs[i];
     //     // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(doc, null, 2)}`);
     //     if (!doc.data().discord) {
-    //       const userData = doc.data();
-    //       // logger.debug(`[${PREFIX}] Updating user ${userData.discord_username}!`);
-    //       // logger.debug(`[${PREFIX}] userData1 ${JSON.stringify(userData, null, 2)}!`);
-    //       if (userData.karma_recieved) {
-    //         userData.karma_received = userData.karma_recieved;
-    //         delete userData.karma_recieved;
-    //         // logger.debug(`[${PREFIX}] userData2 ${JSON.stringify(userData, null, 2)}!`);
-    //         db.collection(firebaseUserDbName).doc(doc.id).set(userData);
+    //       if (doc.data().karma_recieved) {
+    //         const userData = doc.data();
+    //         logger.debug(`[${PREFIX}] Updating user ${userData.discord_username}!`);
+    //         // logger.debug(`[${PREFIX}] userData1 ${JSON.stringify(userData, null, 2)}!`);
+    //         if (userData.karma_recieved) {
+    //           userData.karma_received = userData.karma_recieved;
+    //           delete userData.karma_recieved;
+    //           // logger.debug(`[${PREFIX}] userData2 ${JSON.stringify(userData, null, 2)}!`);
+    //           db.collection('users').doc(doc.id).set(userData);
+    //         }
     //       }
     //     }
     //   }
@@ -55,7 +109,7 @@ module.exports = {
 
     // async function discordTransition() {
     //   logger.debug(`[${PREFIX}] Cleaning Discord DB...`);
-    //   const users = await db.collection(firebaseUserDbName).get();
+    //   const users = await db.collection('users').get();
     //   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
     //   // users.forEach(async doc => {
     //   for (let i = 0; i < users.size; i += 1) {
@@ -72,14 +126,14 @@ module.exports = {
     //           id: userData.discord_id ? userData.discord_id : '',
     //           username: userData.discord_username ? userData.discord_username : '',
     //           discriminator: userData.discord_discriminator
-    //              ? userData.discord_discriminator
-    //              : '',
+    //             ? userData.discord_discriminator
+    //             : '',
     //           karma_given: userData.karma_given ? userData.karma_given : {},
     //           karma_received: userData.karma_received ? userData.karma_received : {},
     //           lastHelpedDate: userData.lasHelpedDate ? userData.lasHelpedDate : '',
     //           lastHelpedMetaThreadId: userData.lastHelpedMetaThreadId
-    //              ? userData.lastHelpedMetaThreadId
-    //              : '',
+    //             ? userData.lastHelpedMetaThreadId
+    //             : '',
     //           lastHelpedThreadId: userData.lastHelpedThreadId ? userData.lastHelpedThreadId : '',
     //           modActions: userData.mod_actions ? userData.mod_actions : {},
     //           roles: userData.roles ? userData.roles : [],
@@ -99,13 +153,33 @@ module.exports = {
     //         delete userData.reactionRoles;
     //         delete userData.joinedTimestamp;
     //         // logger.debug(`[${PREFIX}] userData2 ${JSON.stringify(userData, null, 2)}!`);
-    //         db.collection(firebaseUserDbName).doc(doc.id).set(userData);
+    //         db.collection('users').doc(doc.id).set(userData);
     //       }
     //     }
     //   }
     //   logger.debug(`[${PREFIX}] Done moving discord info!`);
     // }
     // await discordTransition();
+
+    // async function nameFix() {
+    //   logger.debug(`[${PREFIX}] Cleaning karma`);
+    //   const users = await db.collection('users').get();
+    //   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
+    //   // users.forEach(async doc => {
+    //   for (let i = 0; i < users.size; i += 1) {
+    //     // logger.debug(`[${PREFIX}] Cleaning user ${i}!`);
+    //     const doc = users.docs[i];
+    //     // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(doc, null, 2)}`);
+    //     if (doc.data().name) {
+    //       const userData = doc.data();
+    //       userData.accountName = userData.name;
+    //       delete userData.name;
+    //       db.collection('users').doc(doc.id).set(userData);
+    //     }
+    //   }
+    //   logger.debug(`[${PREFIX}] Done cleaning karma!`);
+    // }
+    // await nameFix();
 
     // This command will check for duplicates within the database and merge them
     // This is a very slow command and should be run sparingly
