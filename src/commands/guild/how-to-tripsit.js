@@ -50,9 +50,12 @@ module.exports = {
     const channelTripsitInfo = interaction.client.channels.cache.get(channelTripsitInfoId);
     const channelTripsitters = interaction.client.channels.cache.get(channelTripsittersId);
 
-    // const command = await interaction.client.commands.get('clear-chat');
-    // await command.execute(interaction, channelTripsitInfo)
-    //   .then(async () => {
+    // Extract guild data
+    const [targetGuildData, targetGuildFbid] = await getGuildInfo(interaction.guild);
+
+    // Transform guild data
+    const reactionRoles = targetGuildData.reactionRoles ? targetGuildData.reactionRoles : {};
+
     await channelTripsitInfo.send(stripIndents`
       > **About TripSit Discord**
       > TripSit has always been a bit...different.
@@ -187,7 +190,6 @@ module.exports = {
       <:invisible:976824380564852768>
       `);
 
-    let helperMessage = '';
     await channelTripsitInfo.send(stripIndents`
         <:invisible:976824380564852768>
         > **Are you interested in helping out in the Harm Reduction Centre?**
@@ -197,34 +199,31 @@ module.exports = {
         <:invisible:976824380564852768>
         `)
       .then(async msg => {
-        helperMessage = msg;
+        reactionRoles.howToTripsit = [{
+          messageId: msg.id,
+          reaction: '🐕‍🦺',
+          roleId: roleHelperId,
+        }];
         await msg.react('🐕‍🦺');
       });
 
-    // Extract data
-    const targetResults = await getGuildInfo(interaction.guild);
-    const targetData = targetResults[0];
+    logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles)}`);
 
-    // Transform data
-    const reactionConfig = targetData.reactionRoles;
-    reactionConfig.push(
-      {
-        messageId: helperMessage.id,
-        reaction: '🐕‍🦺',
-        roleId: roleHelperId,
-      },
-    );
-
-    const manager = new ReactionRole(interaction.client, reactionConfig);
-    global.manager = manager;
-
-    targetData.reactionRoles = reactionConfig;
-    // logger.debug(`[${PREFIX}] target_data: ${JSON.stringify(targetData)}`);
+    targetGuildData.reactionRoles = reactionRoles;
 
     // Load data
-    await setGuildInfo(targetResults[1], targetData);
-    // });
+    await setGuildInfo(targetGuildFbid, targetGuildData);
 
+    let reactionConfig = [];
+    Object.keys(reactionRoles).forEach(key => {
+      logger.debug(`[${PREFIX}] key: ${key}`);
+      logger.debug(`[${PREFIX}] reactionRoles[${key}] = ${JSON.stringify(reactionRoles[key], null, 2)}`);
+      // reactionConfig = reactionRoles[key]; this works
+      reactionConfig = reactionConfig.concat(reactionRoles[key]);
+    });
+
+    logger.debug(`[${PREFIX}] reactionConfig: ${JSON.stringify(reactionConfig, null, 2)}`);
+    global.manager = new ReactionRole(interaction.client, reactionConfig);
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
