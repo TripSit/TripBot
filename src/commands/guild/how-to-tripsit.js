@@ -21,7 +21,7 @@ const surveyRequest = new MessageAttachment('./src/assets/img/9_surveyRequest.pn
 
 const {
   // discordOwnerId,
-  // NODE_ENV,
+  NODE_ENV,
   channelTripsitId,
   channelTripsittersId,
   // channelSanctuaryId,
@@ -29,6 +29,10 @@ const {
   channelTripsitInfoId,
   roleHelperId,
 } = require('../../../env');
+
+const helperEmoji = NODE_ENV === 'production'
+  ? '<:ts_helper:979362238789992538>'
+  : '<:ts_helper:980934790956077076>';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -201,10 +205,10 @@ module.exports = {
       .then(async msg => {
         reactionRoles.howToTripsit = [{
           messageId: msg.id,
-          reaction: '🐕‍🦺',
+          reaction: `${helperEmoji.slice(2, -20)}`,
           roleId: roleHelperId,
         }];
-        await msg.react('🐕‍🦺');
+        await msg.react(`${helperEmoji}`);
       });
 
     logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles)}`);

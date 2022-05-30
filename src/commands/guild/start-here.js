@@ -63,16 +63,16 @@ const soberEmoji = NODE_ENV === 'production'
   ? '<:ts_sober:979362237695295508>'
   : '<:ts_sober:980917339728007188>';
 const upvoteEmoji = NODE_ENV === 'production'
-  ? '<:ts_voteup:960161563849932892>'
+  ? '<:ts_voteup:958721361587630210>'
   : '<:ts_voteup:980917845472985189>';
 const downvoteEmoji = NODE_ENV === 'production'
   ? '<:ts_votedown:960161563849932892>'
   : '<:ts_votedown:980917845015818251>';
 // const thumbupEmoji = NODE_ENV === 'production'
-//   ? '<:ts_thumbup:>'
+//   ? '<:ts_thumbup:979721167332052992>'
 //   : '<:ts_thumbup:980917845640773653>';
 // const thumbdownEmoji = NODE_ENV === 'production'
-//   ? '<:ts_thumbdown:>'
+//   ? '<:ts_thumbdown:979721915390369822>'
 //   : '<:ts_thumbdown:980917845527519312>';
 const pinkHeart = NODE_ENV === 'production'
   ? '<:pink_heart:958072815884582922>'
