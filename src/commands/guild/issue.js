@@ -1,12 +1,12 @@
 'use strict';
 
-const path = require('path');
+const PREFIX = require('path').parse(__filename).name;
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Octokit } = require('@octokit/rest');
+const { stripIndents } = require('common-tags/lib');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 
-const PREFIX = path.parse(__filename).name;
 const { githubToken } = require('../../../env');
 
 module.exports = {
@@ -14,10 +14,31 @@ module.exports = {
     .setName('issue')
     .setDescription('Create issue on github')
     .addStringOption(option => option
-      .setName('bug_report')
-      .setDescription('What do you want to tell the owner? Please be as detailed as possible!')
-      .setRequired(true)),
-
+      .setDescription('What is the title of the issue? Please be as detailed as possible!')
+      .setRequired(true)
+      .setName('bug_report'))
+    .addStringOption(option => option
+      .setDescription('How much effort will this take?')
+      .addChoice('High', 'High')
+      .addChoice('Medium', 'Medium')
+      .addChoice('Low', 'Low')
+      .addChoice('Trivial', 'Trivial')
+      .setName('effort'))
+    .addStringOption(option => option
+      .setDescription('How important is this?')
+      .addChoice('High', 'High')
+      .addChoice('Medium', 'Medium')
+      .addChoice('Low', 'Low')
+      .setName('priority'))
+    .addStringOption(option => option
+      .setDescription('What type of issue is this?')
+      .addChoice('Bug', 'Bug')
+      .addChoice('Feature', 'Feature')
+      .addChoice('Enhancement', 'Enhancement')
+      .addChoice('Help Needed', 'Help Needed')
+      .addChoice('Idea', 'Idea')
+      .addChoice('Question', 'Question')
+      .setName('type')),
   async execute(interaction) {
     const title = interaction.options.getString('bug_report');
     const owner = 'TripSit';
@@ -25,21 +46,37 @@ module.exports = {
     const octokit = new Octokit({ auth: githubToken });
 
     // Use octokit to create an issue
-    await octokit.rest.issues.create({ owner, repo, title }).catch(ex => {
-      logger.error(`[${PREFIX}] Failed to create issue on ${owner}/${repo}`, ex);
-      const embed = template.embedTemplate()
-        .setColor('#ff0000')
-        .setTitle('Issue creation failed!')
-        .setDescription(`Your issue could not be created on ${owner}/${repo}\n\n${ex}`);
-      interaction.reply({ embeds: [embed], ephemeral: false });
-      return Promise.reject(ex);
-    });
-
-    const embed = template.embedTemplate()
-      .setColor('#0099ff')
-      .setTitle('Issue created!')
-      .setDescription(`Your issue has been created on ${owner}/${repo}`);
-    interaction.reply({ embeds: [embed], ephemeral: true });
+    await octokit.rest.issues.create({ owner, repo, title })
+      .then(async response => {
+        const issueNumber = response.data.number;
+        octokit.rest.issues.addLabels({
+          owner,
+          repo,
+          issue_number: issueNumber,
+          labels: [
+            `Effort: ${interaction.options.getString('effort')}`,
+            `Priority: ${interaction.options.getString('priority')}`,
+            `Type: ${interaction.options.getString('type')}`,
+          ],
+        });
+        const issueUrl = response.data.html_url;
+        const embed = template.embedTemplate()
+          .setColor('#0099ff')
+          .setTitle('Issue created!')
+          .setDescription(stripIndents`\
+          Issue #${issueNumber} created on ${owner}/${repo}
+          Click here to view: ${issueUrl}`);
+        interaction.reply({ embeds: [embed], ephemeral: true });
+      })
+      .catch(ex => {
+        logger.error(`[${PREFIX}] Failed to create issue on ${owner}/${repo}`, ex);
+        const embed = template.embedTemplate()
+          .setColor('#ff0000')
+          .setTitle('Issue creation failed!')
+          .setDescription(`Your issue could not be created on ${owner}/${repo}\n\n${ex}`);
+        interaction.reply({ embeds: [embed], ephemeral: false });
+        return Promise.reject(ex);
+      });
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
