@@ -90,7 +90,7 @@ module.exports = {
       guild_partner: guild.partnered,
       guild_preferredLocale: `${guild.preferredLocale ? guild.preferredLocale : 'No Locale'}`,
       guild_region: `${guild.region ? guild.region : 'No region'}`,
-      mod_actions: {},
+      modActions: {},
     };
     let guildFbid = null;
     // logger.debug(`[${PREFIX}] firebaseGuildDbName: ${firebaseGuildDbName}`);
@@ -111,7 +111,7 @@ module.exports = {
     return [guildData, guildFbid];
   },
   setUserInfo: async (fbid, data) => {
-    logger.debug(`[${PREFIX}] Saving ${data.discord_username}!`);
+    logger.debug(`[${PREFIX}] Saving ${data.discord.username}!`);
 
     if (fbid !== null && fbid !== undefined) {
       logger.debug(`[${PREFIX}] Updating actor data`);

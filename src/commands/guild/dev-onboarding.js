@@ -107,8 +107,6 @@ module.exports = {
     // const manager = new ReactionRole(interaction.client, reactionConfig);
     // global.manager = manager;
 
-    // targetData.reactionRoles = reactionConfig;
-
     // await setGuildInfo(targetResults[1], targetData);
 
     logger.debug(`[${PREFIX}] finished!`);

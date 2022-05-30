@@ -7,100 +7,105 @@ const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
 
-const { db } = global;
-const {
-  firebaseUserDbName,
-} = require('../../../env');
+// const { db } = global;
+// const {
+//   firebaseUserDbName,
+// } = require('../../../env');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('clean-db')
     .setDescription('Clean the DB!'),
   async execute(interaction) {
-    async function backup() {
-      logger.debug(`[${PREFIX}] Backup up from 'users' to 'users_dev'`);
-      const users = await db.collection('users').get();
-      users.forEach(async doc => {
-        const data = doc.data();
-        await db.collection('users_dev').doc().set(data);
-      });
-      logger.debug(`[${PREFIX}] Done backing up!`);
-    }
+    // async function backup() {
+    //   logger.debug(`[${PREFIX}] Backup up from 'users' to 'users_dev'`);
+    //   const users = await db.collection('users').get();
+    //   users.forEach(async doc => {
+    //     const data = doc.data();
+    //     await db.collection('users_dev').doc().set(data);
+    //   });
+    //   logger.debug(`[${PREFIX}] Done backing up!`);
+    // }
     // await backup();
 
-    async function karmaFix() {
-      logger.debug(`[${PREFIX}] Cleaning karma`);
-      const users = await db.collection(firebaseUserDbName).get();
-      logger.debug(`[${PREFIX}] Found ${users.size} users!`);
-      // users.forEach(async doc => {
-      for (let i = 0; i < users.size; i += 1) {
-        // logger.debug(`[${PREFIX}] Cleaning user ${i}!`);
-        const doc = users.docs[i];
-        // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(doc, null, 2)}`);
-        if (!doc.data().discord) {
-          const userData = doc.data();
-          // logger.debug(`[${PREFIX}] Updating user ${userData.discord_username}!`);
-          // logger.debug(`[${PREFIX}] userData1 ${JSON.stringify(userData, null, 2)}!`);
-          if (userData.karma_recieved) {
-            userData.karma_received = userData.karma_recieved;
-            delete userData.karma_recieved;
-            // logger.debug(`[${PREFIX}] userData2 ${JSON.stringify(userData, null, 2)}!`);
-            db.collection(firebaseUserDbName).doc(doc.id).set(userData);
-          }
-        }
-      }
-      logger.debug(`[${PREFIX}] Done cleaning karma!`);
-    }
+    // async function karmaFix() {
+    //   logger.debug(`[${PREFIX}] Cleaning karma`);
+    //   const users = await db.collection(firebaseUserDbName).get();
+    //   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
+    //   // users.forEach(async doc => {
+    //   for (let i = 0; i < users.size; i += 1) {
+    //     // logger.debug(`[${PREFIX}] Cleaning user ${i}!`);
+    //     const doc = users.docs[i];
+    //     // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(doc, null, 2)}`);
+    //     if (!doc.data().discord) {
+    //       const userData = doc.data();
+    //       // logger.debug(`[${PREFIX}] Updating user ${userData.discord_username}!`);
+    //       // logger.debug(`[${PREFIX}] userData1 ${JSON.stringify(userData, null, 2)}!`);
+    //       if (userData.karma_recieved) {
+    //         userData.karma_received = userData.karma_recieved;
+    //         delete userData.karma_recieved;
+    //         // logger.debug(`[${PREFIX}] userData2 ${JSON.stringify(userData, null, 2)}!`);
+    //         db.collection(firebaseUserDbName).doc(doc.id).set(userData);
+    //       }
+    //     }
+    //   }
+    //   logger.debug(`[${PREFIX}] Done cleaning karma!`);
+    // }
     // await karmaFix();
 
-    async function discordTransition() {
-      logger.debug(`[${PREFIX}] Cleaning Discord DB...`);
-      const users = await db.collection(firebaseUserDbName).get();
-      logger.debug(`[${PREFIX}] Found ${users.size} users!`);
-      // users.forEach(async doc => {
-      for (let i = 0; i < users.size; i += 1) {
-        logger.debug(`[${PREFIX}] Cleaning user ${i}!`);
-        const doc = users.docs[i];
-        // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(doc, null, 2)}`);
-        if (!doc.data().discord) {
-          const userData = doc.data();
-          // logger.debug(`[${PREFIX}] Updating user ${userData.discord_username}!`);
-          // logger.debug(`[${PREFIX}] userData1 ${JSON.stringify(userData, null, 2)}!`);
-          userData.name = userData.discord_username;
-          if (userData.discord_discriminator) {
-            userData.discord = {
-              id: userData.discord_id ? userData.discord_id : '',
-              username: userData.discord_username ? userData.discord_username : '',
-              discriminator: userData.discord_discriminator ? userData.discord_discriminator : '',
-              karma_given: userData.karma_given ? userData.karma_given : {},
-              karma_received: userData.karma_received ? userData.karma_received : {},
-              lastHelpedDate: userData.lasHelpedDate ? userData.lasHelpedDate : '',
-              lastHelpedMetaThreadId: userData.lastHelpedMetaThreadId ? userData.lastHelpedMetaThreadId : '',
-              lastHelpedThreadId: userData.lastHelpedThreadId ? userData.lastHelpedThreadId : '',
-              modActions: userData.modActions ? userData.modActions : [],
-              roles: userData.roles ? userData.roles : [],
-              joinedTimestamp: userData.joinedTimestamp ? userData.joinedTimestamp : '',
-            };
-            delete userData.discord_id;
-            delete userData.discord_username;
-            delete userData.discord_discriminator;
-            delete userData.karma_given;
-            delete userData.karma_received;
-            delete userData.lastHelpedDate;
-            delete userData.lastHelpedMetaThreadId;
-            delete userData.lastHelpedThreadId;
-            delete userData.modActions;
-            delete userData.roles;
-            delete userData.reactionRoles;
-            delete userData.joinedTimestamp;
-            // logger.debug(`[${PREFIX}] userData2 ${JSON.stringify(userData, null, 2)}!`);
-            db.collection(firebaseUserDbName).doc(doc.id).set(userData);
-          }
-        }
-      }
-      logger.debug(`[${PREFIX}] Done moving discord info!`);
-    }
-    await discordTransition();
+    // async function discordTransition() {
+    //   logger.debug(`[${PREFIX}] Cleaning Discord DB...`);
+    //   const users = await db.collection(firebaseUserDbName).get();
+    //   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
+    //   // users.forEach(async doc => {
+    //   for (let i = 0; i < users.size; i += 1) {
+    //     logger.debug(`[${PREFIX}] Cleaning user ${i}!`);
+    //     const doc = users.docs[i];
+    //     // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(doc, null, 2)}`);
+    //     if (!doc.data().discord) {
+    //       const userData = doc.data();
+    //       // logger.debug(`[${PREFIX}] Updating user ${userData.discord_username}!`);
+    //       // logger.debug(`[${PREFIX}] userData1 ${JSON.stringify(userData, null, 2)}!`);
+    //       userData.name = userData.discord_username;
+    //       if (userData.discord_discriminator) {
+    //         userData.discord = {
+    //           id: userData.discord_id ? userData.discord_id : '',
+    //           username: userData.discord_username ? userData.discord_username : '',
+    //           discriminator: userData.discord_discriminator
+    //              ? userData.discord_discriminator
+    //              : '',
+    //           karma_given: userData.karma_given ? userData.karma_given : {},
+    //           karma_received: userData.karma_received ? userData.karma_received : {},
+    //           lastHelpedDate: userData.lasHelpedDate ? userData.lasHelpedDate : '',
+    //           lastHelpedMetaThreadId: userData.lastHelpedMetaThreadId
+    //              ? userData.lastHelpedMetaThreadId
+    //              : '',
+    //           lastHelpedThreadId: userData.lastHelpedThreadId ? userData.lastHelpedThreadId : '',
+    //           modActions: userData.mod_actions ? userData.mod_actions : {},
+    //           roles: userData.roles ? userData.roles : [],
+    //           joinedTimestamp: userData.joinedTimestamp ? userData.joinedTimestamp : '',
+    //         };
+    //         delete userData.discord_id;
+    //         delete userData.discord_username;
+    //         delete userData.discord_discriminator;
+    //         delete userData.karma_given;
+    //         delete userData.karma_received;
+    //         delete userData.lastHelpedDate;
+    //         delete userData.lastHelpedMetaThreadId;
+    //         delete userData.lastHelpedThreadId;
+    //         delete userData.modActions;
+    //         delete userData.mod_actions;
+    //         delete userData.roles;
+    //         delete userData.reactionRoles;
+    //         delete userData.joinedTimestamp;
+    //         // logger.debug(`[${PREFIX}] userData2 ${JSON.stringify(userData, null, 2)}!`);
+    //         db.collection(firebaseUserDbName).doc(doc.id).set(userData);
+    //       }
+    //     }
+    //   }
+    //   logger.debug(`[${PREFIX}] Done moving discord info!`);
+    // }
+    // await discordTransition();
 
     // This command will check for duplicates within the database and merge them
     // This is a very slow command and should be run sparingly

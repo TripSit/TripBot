@@ -81,8 +81,8 @@ module.exports = {
       Now is the time to help shape the future of TripSit =)
 
       > **Be sure to read the ${channelRules}**
-      > If somone is disturbing chat, react with <:ts_down:960161563849932892>.
-      > Three <:ts_down:960161563849932892> on a message activates a timeout!
+      > If somone is disturbing chat, react with <:ts_votedown:960161563849932892>.
+      > Three <:ts_votedown:960161563849932892> on a message activates a timeout!
       > If there is anything disrupting your stay here, please /report, or mention a @moderator
 
       **Try to keep channels on-topic**

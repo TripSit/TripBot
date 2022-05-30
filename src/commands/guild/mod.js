@@ -171,34 +171,42 @@ module.exports = {
     }
 
     // Extract actor data
-    const actorResults = await getUserInfo(actor);
-    const actorData = actorResults[0];
-    const actorAction = `${command}_sent`;
+    const [actorData, actorFbid] = await getUserInfo(actor);
+    const actorAction = `${command}_received`;
 
     // Transfor actor data
-    if ('mod_actions' in actorData) {
-      actorData.mod_actions[actorAction] = (actorData.mod_actions[actorAction] || 0) + 1;
+    if ('discord' in actorData) {
+      if ('modActions' in actorData) {
+        actorData.discord.modActions[actorAction] = (
+          actorData.discord.modActions[actorAction] || 0) + 1;
+      } else {
+        actorData.discord.modActions = { [actorAction]: 1 };
+      }
     } else {
-      actorData.mod_actions = { [actorAction]: 1 };
+      actorData.discord = { modActions: { [actorAction]: 1 } };
     }
 
     // Load actor data
-    await setUserInfo(actorResults[1], actorData);
+    await setUserInfo(actorFbid, actorData);
 
     // Extract target data
-    const targetResults = await getUserInfo(target);
-    const targetData = targetResults[0];
+    const [targetData, targetFbid] = await getUserInfo(target);
     const targetAction = `${command}_received`;
 
     // Transform taget data
-    if ('mod_actions' in targetData) {
-      targetData.mod_actions[targetAction] = (targetData.mod_actions[targetAction] || 0) + 1;
+    if ('discord' in actorData) {
+      if ('modActions' in targetData) {
+        targetData.discord.modActions[targetAction] = (
+          targetData.discord.modActions[targetAction] || 0) + 1;
+      } else {
+        targetData.discord.modActions = { [targetAction]: 1 };
+      }
     } else {
-      targetData.mod_actions = { [targetAction]: 1 };
+      targetData.discord = { modActions: { [targetAction]: 1 } };
     }
 
     // Load target data
-    await setUserInfo(targetResults[1], targetData);
+    await setUserInfo(targetFbid, targetData);
 
     // eslint-disable-next-line
     // const title = `${actor} ${command}ed ${target} ${duration ? `for ${duration}` : ''} ${reason ? `because ${reason}` : ''}`;

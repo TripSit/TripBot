@@ -41,7 +41,21 @@ module.exports = {
       const [actorData, actorFbid] = await getUserInfo(member);
 
       // Transform member data
-      actorData.joinedTimestamp = member.joinedTimestamp;
+      if ('discord' in actorData) {
+        logger.debug(`[${PREFIX}] Actor data has a discord property`);
+        if ('joinedTimestamp' in actorData.discord) {
+          logger.debug(`[${PREFIX}] Updating joinedTimestamp info!`);
+          actorData.discord.joinedTimestamp = member.joinedTimestamp;
+        } else {
+          logger.debug(`[${PREFIX}] Creating joinedTimestamp info!`);
+          actorData.discord.joinedTimestamp = member.joinedTimestamp;
+        }
+      } else {
+        logger.debug(`[${PREFIX}] Actor data does not have a discord property`);
+        actorData.discord = {
+          joinedTimestamp: member.joinedTimestamp,
+        };
+      }
 
       // Load member data
       await setUserInfo(actorFbid, actorData);

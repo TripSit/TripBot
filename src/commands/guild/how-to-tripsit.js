@@ -59,7 +59,7 @@ module.exports = {
       > Our discord is no exception: Even if you've been using discord for years please take a moment to read the info here.
       > The information on this page can help you understand some of the intricaces of this guild, for example:
       > This channel is only visible to VIP users, which means you have talked enough to reach level 2 with the Mee6 bot.
-      > **If a user has three <:ts_down:960161563849932892> put on a message they are put in "timeout" where they cannot speak until a moderator reviews!**
+      > **If a user has three <:ts_votedown:960161563849932892> put on a message they are put in "timeout" where they cannot speak until a moderator reviews!**
       <:invisible:976824380564852768>
       > **How to use TripSit**
       > ${channelTripsit.toString()} is our main help channel, this is where people who need assistance will be gently pushed.
