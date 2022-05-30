@@ -40,6 +40,7 @@ module.exports = {
       .addChoice('Question', 'Question')
       .setName('type')),
   async execute(interaction) {
+    const sentByOwner = interaction.user === interaction.client.owner;
     const title = interaction.options.getString('bug_report');
     const owner = 'TripSit';
     const repo = 'tripsit-discord-bot';
@@ -57,6 +58,7 @@ module.exports = {
             `Effort: ${interaction.options.getString('effort')}`,
             `Priority: ${interaction.options.getString('priority')}`,
             `Type: ${interaction.options.getString('type')}`,
+            `Status: ${sentByOwner ? 'Status: Confirmed' : 'Status: Review Needed'}`,
           ],
         });
         const issueUrl = response.data.html_url;

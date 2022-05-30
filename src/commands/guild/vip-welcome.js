@@ -43,10 +43,11 @@ module.exports = {
     const channelDissonaut = interaction.client.channels.cache.get(channelDissonautId);
     const channelGoldLounge = interaction.client.channels.cache.get(channelGoldLoungeId);
 
-    // Extract data
-    const targetResults = await getGuildInfo(interaction.guild);
-    const targetData = targetResults[0];
-    const reactionConfig = targetData.reactionRoles;
+    // Extract guild data
+    const [targetGuildData, targetGuildFbid] = await getGuildInfo(interaction.guild);
+
+    // Transform guild data
+    const reactionRoles = targetGuildData.reactionRoles ? targetGuildData.reactionRoles : {};
 
     await channelVipWelcome.send(stripIndents`
       > **Welcome to the VIP section**
@@ -69,13 +70,13 @@ module.exports = {
       .then(async msg => {
         const emoji = '💻';
         await msg.react(emoji);
-        reactionConfig.push(
+        reactionRoles.vipWelcome = [
           {
             messageId: msg.id,
             reaction: emoji,
             roleId: roleCoderId,
           },
-        );
+        ];
       });
 
     await channelVipWelcome.send(stripIndents`
@@ -88,13 +89,13 @@ module.exports = {
       .then(async msg => {
         const emoji = '💠';
         await msg.react(emoji);
-        reactionConfig.push(
+        reactionRoles.vipWelcome = reactionRoles.vipWelcome.concat([
           {
             messageId: msg.id,
             reaction: emoji,
             roleId: roleClearmindId,
           },
-        );
+        ]);
       });
 
     await channelVipWelcome.send(stripIndents`
@@ -105,25 +106,32 @@ module.exports = {
       .then(async msg => {
         const emoji = '🥼';
         await msg.react(emoji);
-        reactionConfig.push(
+        reactionRoles.vipWelcome = reactionRoles.vipWelcome.concat([
           {
             messageId: msg.id,
             reaction: emoji,
             roleId: roleResearcherId,
           },
-        );
+        ]);
       });
 
-    const manager = new ReactionRole(interaction.client, reactionConfig);
-    global.manager = manager;
+    logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles)}`);
 
-    targetData.reactionRoles = reactionConfig;
-    // logger.debug(`[${PREFIX}] target_data: ${JSON.stringify(targetData)}`);
+    targetGuildData.reactionRoles = reactionRoles;
 
     // Load data
-    await setGuildInfo(targetResults[1], targetData);
-    // });
+    await setGuildInfo(targetGuildFbid, targetGuildData);
 
+    let reactionConfig = [];
+    Object.keys(reactionRoles).forEach(key => {
+      logger.debug(`[${PREFIX}] key: ${key}`);
+      logger.debug(`[${PREFIX}] reactionRoles[${key}] = ${JSON.stringify(reactionRoles[key], null, 2)}`);
+      // reactionConfig = reactionRoles[key]; this works
+      reactionConfig = reactionConfig.concat(reactionRoles[key]);
+    });
+
+    logger.debug(`[${PREFIX}] reactionConfig: ${JSON.stringify(reactionConfig, null, 2)}`);
+    global.manager = new ReactionRole(interaction.client, reactionConfig);
     logger.debug(`[${PREFIX}] finished!`);
   },
 };

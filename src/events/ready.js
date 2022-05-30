@@ -28,12 +28,19 @@ module.exports = {
     // This takes a while so do it first
     const tripsitGuild = client.guilds.resolve(discordGuildId);
     async function getReactionRoles() {
-      const targetResults = await getGuildInfo(tripsitGuild);
-      const targetData = targetResults[0];
-      const reactionRoles = targetData.reactionRoles;
-      // logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles)}`);
-      if (reactionRoles !== undefined && reactionRoles.length > 0) {
-        global.manager = new ReactionRole(client, targetData.reactionRoles);
+      const [targetGuildData] = await getGuildInfo(tripsitGuild);
+      const reactionRoles = targetGuildData.reactionRoles;
+      logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles, null, 2)}`);
+      if (reactionRoles) {
+        let reactionConfig = [];
+        Object.keys(reactionRoles).forEach(key => {
+          logger.debug(`[${PREFIX}] key: ${key}`);
+          logger.debug(`[${PREFIX}] reactionRoles[${key}] = ${JSON.stringify(reactionRoles[key], null, 2)}`);
+          // reactionConfig = reactionRoles[key]; this works
+          reactionConfig = reactionConfig.concat(reactionRoles[key]);
+        });
+        logger.debug(`[${PREFIX}] reactionConfig: ${JSON.stringify(reactionConfig, null, 2)}`);
+        global.manager = new ReactionRole(client, reactionConfig);
       }
     }
     getReactionRoles();
