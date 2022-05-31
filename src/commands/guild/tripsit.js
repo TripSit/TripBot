@@ -15,6 +15,12 @@ module.exports = {
       .setDescription('Member to help')
       .setRequired(true))
     .addStringOption(option => option
+      .setName('their_dosage')
+      .setDescription('What have they taken?'))
+    .addStringOption(option => option
+      .setName('their_issue')
+      .setDescription('What\'s going on with them?'))
+    .addStringOption(option => option
       .setName('enable')
       .setDescription('On or Off?')
       .addChoice('On', 'On')
@@ -26,9 +32,11 @@ module.exports = {
     if (!enable) { enable = 'On'; }
 
     const target = interaction.options.getMember('user');
+    const triage = interaction.options.getString('their_dosage');
+    const input = interaction.options.getString('their_issue');
 
     if (enable === 'On') {
-      tripsitme.submit(interaction, target);
+      tripsitme.submit(interaction, target, triage, input);
     }
     if (enable === 'Off') {
       tripsat.execute(interaction, target);
