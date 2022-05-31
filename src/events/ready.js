@@ -5,7 +5,6 @@ const fs = require('fs/promises');
 const express = require('express');
 const { ReactionRole } = require('discordjs-reaction-role');
 const logger = require('../utils/logger');
-const template = require('../utils/embed-template');
 const { getGuildInfo } = require('../utils/firebase');
 const { connectIRC } = require('../utils/irc');
 
@@ -30,16 +29,15 @@ module.exports = {
     async function getReactionRoles() {
       const [targetGuildData] = await getGuildInfo(tripsitGuild);
       const reactionRoles = targetGuildData.reactionRoles;
-      logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles, null, 2)}`);
+      // logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles, null, 2)}`);
       if (reactionRoles) {
         let reactionConfig = [];
         Object.keys(reactionRoles).forEach(key => {
-          logger.debug(`[${PREFIX}] key: ${key}`);
-          logger.debug(`[${PREFIX}] reactionRoles[${key}] = ${JSON.stringify(reactionRoles[key], null, 2)}`);
+          // logger.debug(`[${PREFIX}] key: ${key}`);
           // reactionConfig = reactionRoles[key]; this works
           reactionConfig = reactionConfig.concat(reactionRoles[key]);
         });
-        logger.debug(`[${PREFIX}] reactionConfig: ${JSON.stringify(reactionConfig, null, 2)}`);
+        // logger.debug(`[${PREFIX}] reactionConfig: ${JSON.stringify(reactionConfig, null, 2)}`);
         global.manager = new ReactionRole(client, reactionConfig);
       }
     }
@@ -54,7 +52,7 @@ module.exports = {
       if (guild.id !== discordGuildId) return;
       guild.invites.fetch()
         .then(invites => {
-          logger.debug(`[${PREFIX}] INVITES CACHED`);
+          logger.debug(`[${PREFIX}] Invites cached!`);
           const codeUses = new Map();
           invites.each(inv => codeUses.set(inv.code, inv.uses));
           global.guildInvites.set(guild.id, codeUses);
@@ -118,88 +116,8 @@ module.exports = {
 
     // logger.debug(`[${PREFIX}] blacklist_guilds: ${blacklist_guilds}`);
     // Check if the guild is in blacklist_guilds and if so, leave it
-    logger.debug(`[${PREFIX}] I am in:`);
-    client.guilds.cache.forEach(guild => {
-      logger.debug(`[${PREFIX}] ${guild.name}`);
-      if (blacklistGuilds.includes(guild.id)) {
-        logger.info(`[${PREFIX}] ${guild.name} is banned, leaving!`);
-        guild.leave();
-      }
-    });
+    logger.debug(`[${PREFIX}] I am in ${client.guilds.cache.size} guilds.`);
 
-    async function checkReminders() {
-      // logger.debug(`[${PREFIX}] Checking reminders...`);
-      global.user_db.forEach(async doc => {
-        if (doc.value.reminders) {
-          const userReminders = doc.value.reminders;
-          // eslint-disable-next-line
-          // logger.debug(`[${PREFIX}] doc.value.reminders ${JSON.stringify(all_reminders, null, 4)}`);
-          // Loop over doc.value.reminders keys
-          Object.keys(userReminders).forEach(async reminderTime => {
-            const userFbId = doc.key;
-            // logger.debug(`[${PREFIX}] user_fb_id: ${user_fb_id}`);
-            logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 4)}`);
-            const userid = doc.value.discord.id;
-            // logger.debug(`[${PREFIX}] userid: ${userid}`);
-            const remindertime = parseInt(reminderTime, 10);
-            // logger.debug(`[${PREFIX}] remindertime: ${remindertime}`);
-            const reminder = userReminders[remindertime];
-            // logger.debug(`[${PREFIX}] reminder: ${reminder}`);
-            // logger.debug(`[${PREFIX}] ${userid} has a reminder on ${remindertime}`);
-            if (remindertime <= Date.now() / 1000) {
-              logger.debug(`[${PREFIX}] Sending reminder to ${userid}`);
-              // TODO: Use Promise.all with [].map for concurrency
-              const user = await client.users.fetch(userid);
-              const reminderEmbed = template.embedTemplate()
-                .setTitle('Reminder!')
-                .setDescription(`${reminder}`);
-              user.send({ embeds: [reminderEmbed] });
-              // remove the reminder
-              delete userReminders[remindertime];
-              // logger.debug(`[${PREFIX}] Removing reminder from all_reminders`);
-              // logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 4)}`);
-              db.collection(firebaseUserDbName).doc(userFbId).update(doc.value);
-              // logger.debug(`[${PREFIX}] Removing reminder from db`);
-            }
-          });
-        }
-      });
-    }
-
-    // async function checkReminders() {
-    //   logger.debug(`[${PREFIX}] Checking reminders...`);
-    //   return global.user_db.map(async doc => {
-    //     if (doc.reminders) {
-    //       const userReminders = doc.reminders;
-    //       return Promise.all(userReminders.map(reminderTime => {
-    //         const userFbId = doc.id;
-    //         const userid = doc.discord.id;
-    //         const remindertime = parseInt(reminderTime, 10);
-    //         const reminder = userReminders[remindertime];
-    //         logger.debug(`[${PREFIX}] ${userid} has a reminder on ${remindertime}`);
-    //         if (remindertime <= Date.now() / 1000) {
-    //           logger.debug(`[${PREFIX}] Sending reminder to ${userid}`);
-    //           // TODO: Unknown reference
-    //           return client.users.fetch(userid).then(user => {
-    //             const reminderEmbed = template.embedTemplate()
-    //               .setTitle('Reminder!')
-    //               .setDescription(`You set a reminder to ${reminder}`);
-    //             user.send({ embeds: [reminderEmbed] });
-    //             // remove the reminder
-    //             // delete doc.reminders[remindertime];
-    //             delete userReminders[remindertime];
-    //             return db.collection(firebaseUserDbName).doc(userFbId).update({
-    //               reminders: userReminders,
-    //             });
-    //           });
-    //         }
-    //         return null;
-    //       }));
-    //     }
-    //     return null;
-    //   });
-    // }
-    checkReminders();
     // eslint-disable-next-line
     // TODO: setInterval can cause unwanted side-effects, use recursive function w/ setTimeout
     // setInterval(checkReminders, 1000);

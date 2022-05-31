@@ -226,7 +226,7 @@ module.exports = {
       reactionConfig = reactionConfig.concat(reactionRoles[key]);
     });
 
-    logger.debug(`[${PREFIX}] reactionConfig: ${JSON.stringify(reactionConfig, null, 2)}`);
+    // logger.debug(`[${PREFIX}] reactionConfig: ${JSON.stringify(reactionConfig, null, 2)}`);
     global.manager = new ReactionRole(interaction.client, reactionConfig);
     logger.debug(`[${PREFIX}] finished!`);
   },

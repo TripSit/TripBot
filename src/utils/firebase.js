@@ -17,7 +17,7 @@ module.exports = {
     let memberFbid = null;
     let memberData = {};
     let memberType = '';
-    logger.debug(`[${PREFIX}] member.id: ${member.id}`);
+    // logger.debug(`[${PREFIX}] member.id: ${member.id}`);
     if (member.id) {
       logger.debug(`[${PREFIX}] Member is from Discord!`);
       memberType = 'discord';
@@ -32,7 +32,7 @@ module.exports = {
         },
       };
     }
-    logger.debug(`[${PREFIX}] member.host: ${member.host}`);
+    // logger.debug(`[${PREFIX}] member.host: ${member.host}`);
     if (member.host) {
       logger.debug(`[${PREFIX}] Member is from IRC!`);
       memberType = 'irc';
@@ -47,7 +47,6 @@ module.exports = {
     }
 
     if (db !== undefined) {
-      logger.debug(`[${PREFIX}] firebaseUserDbName: ${firebaseUserDbName}`);
       const snapshotUser = await db.collection(firebaseUserDbName).get();
       await snapshotUser.forEach(doc => {
         if (memberType === 'discord') {
