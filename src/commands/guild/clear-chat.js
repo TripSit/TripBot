@@ -19,11 +19,25 @@ module.exports = {
         await msg.delete();
       });
     if (channel !== undefined && channel !== null) {
-      const fetched = await channel.messages.fetch({ limit: 99 });
-      await channel.bulkDelete(fetched);
+      const fetchedMessages = await channel.messages.fetch({ limit: 99 });
+      await channel.bulkDelete(fetchedMessages);
     } else {
-      const fetched = await interaction.channel.messages.fetch({ limit: 99 });
-      await interaction.channel.bulkDelete(fetched);
+      const fetchedMessages = await interaction.channel.messages.fetch({ limit: 99 });
+      try {
+        await interaction.channel.bulkDelete(fetchedMessages);
+      } catch (err) {
+        logger.error(`[${PREFIX}] ${err}`);
+      }
+      // Delete every thread in the channel
+      const fetchedThreads = await interaction.channel.threads.fetch();
+      logger.debug(`[${PREFIX}] fetchedThreads: ${JSON.stringify(fetchedThreads, null, 2)}`);
+      fetchedThreads.threads.forEach(async thread => {
+        try {
+          thread.delete();
+        } catch (err) {
+          logger.error(`[${PREFIX}] ${err}`);
+        }
+      });
     }
     logger.debug(`[${PREFIX}] finished!`);
   },
