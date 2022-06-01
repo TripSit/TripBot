@@ -79,7 +79,7 @@ module.exports = {
           }
         }
       } catch (err) {
-        logger.debug(`OnGuildMemberAdd Error: ${err}`);
+        logger.debug(`OnGuildMemberAdd issue: ${err}`);
       }
 
       newInvites.each(inv => cachedInvites.set(inv.code, inv.uses));
@@ -119,7 +119,7 @@ module.exports = {
       } else if (minutes === 0 && seconds > 0) {
         colorValue = 'RED';
       }
-      logger.debug(`[${PREFIX}] coloValue:`, colorValue);
+      logger.debug(`[${PREFIX}] coloValue: ${colorValue}`);
       const channelGeneral = member.client.channels.cache.get(channelGeneralId);
       const channelStart = member.client.channels.cache.get(channelStartId);
       const channelTripsit = member.client.channels.cache.get(channelTripsitId);
