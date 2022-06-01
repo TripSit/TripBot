@@ -35,9 +35,9 @@ module.exports = {
         .setDescription('g of mushrooms'))),
 
   async execute(interaction, parameters) {
-    const lastDose = interaction.options.getInteger('last_dose') || parameters.at(0);
-    const desiredDose = interaction.options.getInteger('desired_dose') || parameters.at(1);
-    const days = interaction.options.getInteger('days') || parameters.at(2);
+    const lastDose = interaction.options.getInteger('last_dose');
+    const desiredDose = interaction.options.getInteger('desired_dose');
+    const days = interaction.options.getInteger('days');
 
     let command = '';
     try {
