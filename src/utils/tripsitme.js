@@ -326,7 +326,11 @@ module.exports = {
     target.roles.cache.forEach(role => {
       if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone') && !role.name.includes('NeedsHelp')) {
         logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.user.username}`);
-        target.roles.remove(role);
+        try {
+          target.roles.remove(role);
+        } catch (err) {
+          logger.debug(`[${PREFIX}] There was an error removing the role ${role.name} from ${target.user.username}\n${err}`);
+        }
       }
     });
 
