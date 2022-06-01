@@ -26,7 +26,6 @@ module.exports = {
         discord: {
           id: member.id.toString(),
           tag: member.user ? member.user.tag : member.tag,
-          avatar: member.user ? member.user.avatarURL : member.avatarURL,
           username: member.user ? member.user.username : member.username,
           discriminator: member.user ? member.user.discriminator : member.discriminator,
         },
