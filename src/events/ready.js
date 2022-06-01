@@ -7,6 +7,7 @@ const { ReactionRole } = require('discordjs-reaction-role');
 const logger = require('../utils/logger');
 const { getGuildInfo } = require('../utils/firebase');
 const { connectIRC } = require('../utils/irc');
+const { runTimer } = require('../utils/timer');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -25,6 +26,8 @@ module.exports = {
 
   async execute(client) {
     // This takes a while so do it first
+    connectIRC(client);
+
     const tripsitGuild = client.guilds.resolve(discordGuildId);
     async function getReactionRoles() {
       const [targetGuildData] = await getGuildInfo(tripsitGuild);
@@ -41,9 +44,8 @@ module.exports = {
         global.manager = new ReactionRole(client, reactionConfig);
       }
     }
-    getReactionRoles();
 
-    connectIRC(client);
+    getReactionRoles();
 
     /* Start *INVITE* code */
     // https://stackoverflow.com/questions/69521374/discord-js-v13-invite-tracker
@@ -74,17 +76,19 @@ module.exports = {
         });
       });
     }
-    Object.assign(global, { user_db: userDb });
-    logger.debug(`[${PREFIX}] User database loaded.`);
-    // logger.debug(`[${PREFIX}] user_db: ${JSON.stringify(global.user_db, null, 4)}`);
+    Object.assign(global, { userDb });
+    // logger.debug(`[${PREFIX}] User database loaded.`);
+    // logger.debug(`[${PREFIX}] userDb: ${JSON.stringify(global.userDb, null, 4)}`);
+
+    runTimer(client);
 
     const today = Math.floor(Date.now() / 1000);
     if (NODE_ENV !== 'production') {
       await fs.writeFile(
-        path.resolve(`./backups/user_db_(${today}).json`),
+        path.resolve(`./backups/userDb_(${today}).json`),
         JSON.stringify(userDb, null, 2),
       );
-      logger.debug(`[${PREFIX}] User database backedup.`);
+      // logger.debug(`[${PREFIX}] User database backedup.`);
     }
 
     const guildDb = [];
@@ -104,23 +108,19 @@ module.exports = {
     }
 
     Object.assign(global, { guild_db: guildDb });
-    logger.debug(`[${PREFIX}] Guild database loaded.`);
+    // logger.debug(`[${PREFIX}] Guild database loaded.`);
 
     if (NODE_ENV !== 'production') {
       await fs.writeFile(
         path.resolve(`./backups/guild_db_(${today}).json`),
         JSON.stringify(global.guild_db, null, 2),
       );
-      logger.debug(`[${PREFIX}] Guild database backedup.`);
+      // logger.debug(`[${PREFIX}] Guild database backedup.`);
     }
 
     // logger.debug(`[${PREFIX}] blacklist_guilds: ${blacklist_guilds}`);
     // Check if the guild is in blacklist_guilds and if so, leave it
     logger.debug(`[${PREFIX}] I am in ${client.guilds.cache.size} guilds.`);
-
-    // eslint-disable-next-line
-    // TODO: setInterval can cause unwanted side-effects, use recursive function w/ setTimeout
-    // setInterval(checkReminders, 1000);
 
     // Setup the express server, this is necessary for the Digital Ocean health check
     // if (NODE_ENV === 'production') {
@@ -131,9 +131,8 @@ module.exports = {
     // TODO: Promisify this
     app.listen(PORT, () => {
       logger.debug(`[${PREFIX}] Healthcheck app listening on PORT ${PORT}`);
+      logger.info(`[${PREFIX}] Ready to take over the world!`);
     });
     // }
-
-    logger.info(`[${PREFIX}] Ready to take over the world!`);
   },
 };

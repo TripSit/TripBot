@@ -210,19 +210,20 @@ module.exports = {
     // Get the channel objects for the help and meta threads
     // const threadHelpUser = interaction.client.channels.cache.get(targetLastHelpedThreadId);
 
-    let threadHelpUser = interaction.guild.channels.cache
-      .find(chan => {
-        // logger.debug(`[${PREFIX}] chan.id: ${chan.id}`);
-        if (chan.id.toString() === targetLastHelpedThreadId.toString()) {
-          logger.debug(`[${PREFIX}] chan.id === targetLastHelpedThreadId`);
-          return true;
-        }
-        return false;
-      });
+    let threadHelpUser = interaction.client.channels.cache.get(targetLastHelpedThreadId);
+    // let threadHelpUser = interaction.guild.channels.cache
+    //   .find(chan => {
+    //     // logger.debug(`[${PREFIX}] chan.id: ${chan.id}`);
+    //     if (chan.id.toString() === targetLastHelpedThreadId.toString()) {
+    //       return true;
+    //     }
+    //     return false;
+    //   });
     logger.debug(`[${PREFIX}] threadHelpUser: ${threadHelpUser}`);
 
-    let threadDiscussUser = interaction.guild.channels.cache
-      .find(chan => chan.id === targetLastHelpedMetaThreadId);
+    let threadDiscussUser = interaction.client.channels.cache.get(targetLastHelpedMetaThreadId);
+    // let threadDiscussUser = interaction.guild.channels.cache
+    //   .find(chan => chan.id === targetLastHelpedMetaThreadId);
     logger.debug(`[${PREFIX}] threadDiscussUser: ${threadDiscussUser}`);
 
     if (targetHasRoleNeedshelp) {
@@ -418,6 +419,24 @@ module.exports = {
           // TODO: Use transactions
           await setUserInfo(targetFbid, targetData);
 
+          const userDb = [];
+          global.userDb.forEach(doc => {
+            if (doc.key === targetFbid) {
+              userDb.push({
+                key: doc.key,
+                value: targetData,
+              });
+              logger.debug(`[${PREFIX}] Updated actor in userDb`);
+            } else {
+              userDb.push({
+                key: doc.key,
+                value: doc.value,
+              });
+            }
+          });
+          Object.assign(global, { userDb });
+          logger.debug(`[${PREFIX}] Updated global user data.`);
+
           logger.debug(`[${PREFIX}] finished!`);
 
           // Return here so that we don't create the new thread below
@@ -531,11 +550,15 @@ module.exports = {
 
     // Update targetData with how many times they've been helped
     logger.debug(`[${PREFIX}] Updating target data`);
-    if ('modActions' in targetData) {
-      targetData.discord.modActions[targetAction] = (
-        targetData.discord.modActions[targetAction] || 0) + 1;
+    if ('discord' in targetData) {
+      if ('modActions' in targetData.discord) {
+        targetData.discord.modActions[targetAction] = (
+          targetData.discord.modActions[targetAction] || 0) + 1;
+      } else {
+        targetData.discord.modActions = { [targetAction]: 1 };
+      }
     } else {
-      targetData.discord.modActions = { [targetAction]: 1 };
+      targetData.discord = { modActions: { [targetAction]: 1 } };
     }
 
     // Update database information
@@ -545,6 +568,25 @@ module.exports = {
     targetData.discord.lastHelpedDate = new Date();
     // TODO: Use transactions
     await setUserInfo(targetFbid, targetData);
+
+    const userDb = [];
+    global.userDb.forEach(doc => {
+      if (doc.key === targetFbid) {
+        userDb.push({
+          key: doc.key,
+          value: targetData,
+        });
+        logger.debug(`[${PREFIX}] Updated target in userDb`);
+      } else {
+        userDb.push({
+          key: doc.key,
+          value: doc.value,
+        });
+      }
+    });
+    Object.assign(global, { userDb });
+    logger.debug(`[${PREFIX}] Updated global user data.`);
+
     logger.debug(`[${PREFIX}] finished!`);
   },
 };

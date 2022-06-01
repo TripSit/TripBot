@@ -64,7 +64,7 @@ const teamRoles = [
   roleBoosterId,
 ];
 
-const vanityRoles = [
+const colorRoles = [
   roleTreeId,
   roleSproutId,
   roleSeedlingId,
@@ -79,6 +79,10 @@ const vanityRoles = [
   roleBrownId,
   roleBlackId,
   roleWhiteId,
+
+];
+
+const mindsetRoles = [
   roleDrunkId,
   roleHighId,
   roleRollingId,
@@ -89,7 +93,7 @@ const vanityRoles = [
   roleSoberId,
 ];
 
-const ignoredRoles = `${teamRoles},${vanityRoles}`;
+const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
 
 const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
 
