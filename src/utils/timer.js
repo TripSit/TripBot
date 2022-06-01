@@ -113,10 +113,9 @@ module.exports = {
                   // logger.debug(`[${PREFIX}] userid: ${userid}`);
                   const reminderTime = reminderDate.seconds * 1000
                     || new Date(reminderDate);
-                  logger.debug(`[${PREFIX}] rmt: ${reminderTime}`);
+                  const timeBetween = reminderTime - now;
+                  logger.debug(`[${PREFIX}] ${doc.value.accountName} has a reminder in ${ms(timeBetween, { long: true })}`);
                   const reminder = doc.value.reminders[reminderDate];
-                  // logger.debug(`[${PREFIX}] reminder: ${reminder}`);
-                  // logger.debug(`[${PREFIX}] ${userid} has a reminder on ${remindertime}`);
                   if (reminderTime <= now) {
                     logger.debug(`[${PREFIX}] Sending reminder to ${userid}`);
 
@@ -168,17 +167,17 @@ module.exports = {
             if (doc.value.discord) {
               const discordData = doc.value.discord;
               if (discordData.lastHelpedThreadId) {
-                logger.debug(`[${PREFIX}] Processing lastHelped on ${discordData.username}`);
+                // logger.debug(`[${PREFIX}] Processing lastHelped on ${discordData.username}`);
 
                 // Get the guild
                 const guildTripsit = client.guilds.cache.get(discordGuildId);
                 // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                 // Get the memeber from the guild
-                logger.debug(`[${PREFIX}] discordData.id: ${discordData.id}`);
+                // logger.debug(`[${PREFIX}] discordData.id: ${discordData.id}`);
                 // logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
                 const member = await guildTripsit.members.fetch(discordData.id);
-                logger.debug(`[${PREFIX}] member: ${member}`);
+                // logger.debug(`[${PREFIX}] member: ${member}`);
 
                 // Get the role from the guild
                 const roleNeedshelp = guildTripsit.roles.cache.get(roleNeedshelpId);
@@ -188,12 +187,12 @@ module.exports = {
                 const channelHelp = await guildTripsit.channels.fetch(
                   discordData.lastHelpedThreadId,
                 );
-                logger.debug(`[${PREFIX}] channelHelp: ${channelHelp}`);
+                // logger.debug(`[${PREFIX}] channelHelp: ${channelHelp}`);
 
                 const channelMeta = await guildTripsit.channels.fetch(
                   discordData.lastHelpedMetaThreadId,
                 );
-                logger.debug(`[${PREFIX}] channelMeta: ${channelMeta}`);
+                // logger.debug(`[${PREFIX}] channelMeta: ${channelMeta}`);
 
                 const lastHelped = discordData.lastHelpedDate.seconds * 1000
                   || new Date(discordData.lastHelpedDate);
@@ -204,7 +203,7 @@ module.exports = {
                 // logger.debug(`[${PREFIX}] week: ${yesterday}`);
 
                 const timeBetween = now - lastHelped;
-                logger.debug(`[${PREFIX}] I last helped ${discordData.username} ${ms(timeBetween, { long: true })} ago`);
+                logger.debug(`[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago`);
 
                 if (yesterday > lastHelped && !channelHelp.archived) {
                   try {
@@ -300,7 +299,7 @@ module.exports = {
                 }
               }
               if (discordData.lastSetMindsetDate) {
-                logger.debug(`[${PREFIX}] Processing mindset on ${discordData.username}`);
+                // logger.debug(`[${PREFIX}] Processing mindset on ${discordData.username}`);
                 // logger.debug(`[${PREFIX}] now: ${now}`);
 
                 const lastSetMindsetDate = discordData.lastSetMindsetDate.seconds * 1000
@@ -352,7 +351,9 @@ f
         c,
       );
     }
-    checkTimers(5000);
+    const seconds = 60;
+    const repeat = seconds * 1000;
+    checkTimers(repeat);
 
     logger.debug(`[${PREFIX}] finished!`);
   },
