@@ -122,11 +122,11 @@ module.exports = {
 
                     // Get the guild
                     const guildTripsit = client.guilds.cache.get(discordGuildId);
-                    logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
+                    // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                     // Get the memeber from the guild
                     logger.debug(`[${PREFIX}] userid: ${userid}`);
-                    logger.debug(`[${PREFIX}] typeof userid: ${typeof userid}`);
+                    // logger.debug(`[${PREFIX}] typeof userid: ${typeof userid}`);
                     const member = await guildTripsit.members.fetch(userid);
                     logger.debug(`[${PREFIX}] member: ${member}`);
 
@@ -172,23 +172,24 @@ module.exports = {
 
                 // Get the guild
                 const guildTripsit = client.guilds.cache.get(discordGuildId);
-                logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
+                // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                 // Get the memeber from the guild
                 logger.debug(`[${PREFIX}] discordData.id: ${discordData.id}`);
-                logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
+                // logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
                 const member = await guildTripsit.members.fetch(discordData.id);
                 logger.debug(`[${PREFIX}] member: ${member}`);
 
                 // Get the role from the guild
                 const roleNeedshelp = guildTripsit.roles.cache.get(roleNeedshelpId);
-                logger.debug(`[${PREFIX}] roleNeedshelp: ${roleNeedshelp.name}`);
+                // logger.debug(`[${PREFIX}] roleNeedshelp: ${roleNeedshelp.name}`);
 
                 // Get the channels from the guild
                 const channelHelp = await guildTripsit.channels.fetch(
                   discordData.lastHelpedThreadId,
                 );
                 logger.debug(`[${PREFIX}] channelHelp: ${channelHelp}`);
+
                 const channelMeta = await guildTripsit.channels.fetch(
                   discordData.lastHelpedMetaThreadId,
                 );
@@ -196,11 +197,11 @@ module.exports = {
 
                 const lastHelped = discordData.lastHelpedDate.seconds * 1000
                   || new Date(discordData.lastHelpedDate);
-                logger.debug(`[${PREFIX}] last: ${lastHelped}`);
+                // logger.debug(`[${PREFIX}] last: ${lastHelped}`);
                 const yesterday = now - 86400000;
-                logger.debug(`[${PREFIX}] yest: ${yesterday}`);
+                // logger.debug(`[${PREFIX}] yest: ${yesterday}`);
                 const lastWeek = now - 604800000;
-                logger.debug(`[${PREFIX}] week: ${yesterday}`);
+                // logger.debug(`[${PREFIX}] week: ${yesterday}`);
 
                 const timeBetween = now - lastHelped;
                 logger.debug(`[${PREFIX}] I last helped ${discordData.username} ${ms(timeBetween, { long: true })} ago`);
@@ -258,9 +259,8 @@ module.exports = {
 
                   try {
                     /* eslint-disable */
-                    logger.debug(`[${PREFIX}] Removing meta channel ${discordData.lastHelpedMetaThreadId}`);
                     if (channelMeta) {
-                      logger.debug(`[${PREFIX}] Deleting meta thread!`);
+                      logger.debug(`[${PREFIX}] Removing meta channel ${discordData.lastHelpedMetaThreadId}`);
                       channelMeta.delete();
                     }
                   } catch (err) {
@@ -268,9 +268,8 @@ module.exports = {
                     logger.error(err);
                   }
                   try {
-                    logger.debug(`[${PREFIX}] Removing thread ${discordData.lastHelpedThreadId}`);
                     if (channelHelp) {
-                      logger.debug(`[${PREFIX}] Deleting thread!`);
+                      logger.debug(`[${PREFIX}] Removing thread ${discordData.lastHelpedThreadId}`);
                       channelHelp.delete();
                     }
                   } catch (err) {
@@ -319,14 +318,14 @@ module.exports = {
 
                 if (eightHoursAgo > lastSetMindsetDate) {
                   logger.debug(`[${PREFIX}] ${discordData.username} added ${lastSetMindset} more than 8 hours ago`);
-
+f
                   // Get the guild
                   const guildTripsit = client.guilds.cache.get(discordGuildId);
-                  logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
+                  // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                   // Get the memeber from the guild
-                  logger.debug(`[${PREFIX}] discordData.id: ${discordData.id}`);
-                  logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
+                  logger.debug(`[${PREFIX}] mem.id: ${discordData.id}`);
+                  // logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
                   const member = await guildTripsit.members.fetch(discordData.id);
                   logger.debug(`[${PREFIX}] member: ${member}`);
 

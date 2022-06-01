@@ -7,26 +7,26 @@ const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
 
-// const { db } = global;
-// const {
-//   firebaseUserDbName,
-// } = require('../../../env');
+const { db } = global;
+const {
+  firebaseUserDbName,
+} = require('../../../env');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('clean-db')
     .setDescription('Clean the DB!'),
   async execute(interaction) {
-  //   async function backup() {
-  //     logger.debug(`[${PREFIX}] Backup up from 'users' to 'users_dev'`);
-  //     const users = await db.collection('users').get();
-  //     users.forEach(async doc => {
-  //       const data = doc.data();
-  //       await db.collection('users_dev').doc().set(data);
-  //     });
-  //     logger.debug(`[${PREFIX}] Done backing up!`);
-  //   }
-  //   await backup();
+    // async function backup() {
+    //   logger.debug(`[${PREFIX}] Backup up from 'users' to 'users_dev'`);
+    //   const users = await db.collection('users').get();
+    //   users.forEach(async doc => {
+    //     const data = doc.data();
+    //     await db.collection('users_dev').doc().set(data);
+    //   });
+    //   logger.debug(`[${PREFIX}] Done backing up!`);
+    // }
+    // await backup();
 
     // async function emojinameFix() {
     //   logger.debug(`[${PREFIX}] emojinameFix`);
