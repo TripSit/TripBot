@@ -17,16 +17,30 @@ module.exports = {
     .setName('clean-db')
     .setDescription('Clean the DB!'),
   async execute(interaction) {
-  //   async function backup() {
-  //     logger.debug(`[${PREFIX}] Backup up from 'users' to 'users_dev'`);
-  //     const users = await db.collection('users').get();
-  //     users.forEach(async doc => {
-  //       const data = doc.data();
-  //       await db.collection('users_dev').doc().set(data);
-  //     });
-  //     logger.debug(`[${PREFIX}] Done backing up!`);
-  //   }
-  //   await backup();
+    const userDb = [];
+    if (db !== undefined) {
+      // Get user information
+      const snapshotUser = await db.collection(firebaseUserDbName).get();
+      snapshotUser.forEach(doc => {
+        userDb.push({
+          key: doc.id,
+          value: doc.data(),
+        });
+      });
+    }
+    Object.assign(global, { userDb });
+    logger.debug(`[${PREFIX}] User database loaded.`);
+
+    // async function backup() {
+    //   logger.debug(`[${PREFIX}] Backup up from 'users' to 'users_dev'`);
+    //   const users = await db.collection('users').get();
+    //   users.forEach(async doc => {
+    //     const data = doc.data();
+    //     await db.collection('users_dev').doc().set(data);
+    //   });
+    //   logger.debug(`[${PREFIX}] Done backing up!`);
+    // }
+    // await backup();
 
     // async function emojinameFix() {
     //   logger.debug(`[${PREFIX}] emojinameFix`);

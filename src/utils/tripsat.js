@@ -9,9 +9,10 @@ const { getUserInfo } = require('./firebase');
 const template = require('./embed-template');
 
 const {
-  roleNeedshelpId,
-  roleDeveloperId,
   channelModlogId,
+  channelOpentripsitId,
+  channelSanctuaryId,
+  roleNeedshelpId,
   roleAdminId,
   roleDiscordopId,
   roleIrcopId,
@@ -21,11 +22,80 @@ const {
   roleTripbot2Id,
   roleTripbotId,
   roleBotId,
+  roleDeveloperId,
   roleTreeId,
   roleSproutId,
   roleSeedlingId,
   roleBoosterId,
+  roleRedId,
+  roleOrangeId,
+  roleYellowId,
+  roleGreenId,
+  roleBlueId,
+  rolePurpleId,
+  rolePinkId,
+  roleBrownId,
+  roleBlackId,
+  roleWhiteId,
+  roleDrunkId,
+  roleHighId,
+  roleRollingId,
+  roleTrippingId,
+  roleDissociatingId,
+  roleStimmingId,
+  roleNoddingId,
+  roleSoberId,
 } = require('../../env');
+
+const teamRoles = [
+  roleAdminId,
+  roleDiscordopId,
+  roleIrcopId,
+  roleModeratorId,
+  roleTripsitterId,
+  roleTeamtripsitId,
+  roleTripbot2Id,
+  roleTripbotId,
+  roleBotId,
+  roleDeveloperId,
+  roleTreeId,
+  roleSproutId,
+  roleSeedlingId,
+  roleBoosterId,
+];
+
+const colorRoles = [
+  roleTreeId,
+  roleSproutId,
+  roleSeedlingId,
+  roleBoosterId,
+  roleRedId,
+  roleOrangeId,
+  roleYellowId,
+  roleGreenId,
+  roleBlueId,
+  rolePurpleId,
+  rolePinkId,
+  roleBrownId,
+  roleBlackId,
+  roleWhiteId,
+
+];
+
+const mindsetRoles = [
+  roleDrunkId,
+  roleHighId,
+  roleRollingId,
+  roleTrippingId,
+  roleDissociatingId,
+  roleStimmingId,
+  roleNoddingId,
+  roleSoberId,
+];
+
+const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
+
+const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
 
 module.exports = {
   async execute(interaction, memberInput) {
@@ -35,47 +105,47 @@ module.exports = {
       target = memberInput;
     }
 
-    const teamRoles = [
-      roleAdminId,
-      roleDiscordopId,
-      roleIrcopId,
-      roleModeratorId,
-      roleTripsitterId,
-      roleTeamtripsitId,
-      roleTripbot2Id,
-      roleTripbotId,
-      roleBotId,
-      roleDeveloperId,
-      roleTreeId,
-      roleSproutId,
-      roleSeedlingId,
-      roleBoosterId,
-    ];
+    const [targetData] = await getUserInfo(target);
+    const targetLastHelpedDate = targetData.discord.lastHelpedDate;
+    logger.debug(`[${PREFIX}] targetLastHelpedDate: ${targetLastHelpedDate}`);
+    const targetLastHelpedThreadId = targetData.discord.lastHelpedThreadId;
+    logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
+    const targetLastHelpedMetaThreadId = targetData.discord.lastHelpedMetaThreadId;
+    logger.debug(`[${PREFIX}] targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);
 
-    // Determine if this is a test run, eg, run by a developer
-    // If so, don't ping the tripsitters and helpers down below
+    const channelModlog = await interaction.client.channels.cache.get(channelModlogId);
+    const channelOpentripsit = await interaction.client.channels.cache.get(channelOpentripsitId);
+    const channelSanctuary = await interaction.client.channels.cache.get(channelSanctuaryId);
+    // Get the channel objects for the help and meta threads
+    const threadHelpUser = interaction.guild.channels.cache
+      .find(chan => chan.id === targetLastHelpedThreadId);
+    const threadDiscussUser = interaction.guild.channels.cache
+      .find(chan => chan.id === targetLastHelpedMetaThreadId);
+
     const roleDeveloper = actor.roles.cache.find(role => role.id === roleDeveloperId);
-    const testRun = roleDeveloper !== undefined && roleDeveloper !== null;
-    logger.debug(`[${PREFIX}] testRun: ${testRun}`);
-
-    // Get a list of the target's roles
-    const targetRoleNames = target.roles.cache.map(role => role.name);
-    // logger.debug(`[${PREFIX}] targetRoleNames: ${targetRoleNames}`);
-
     const roleNeedshelp = interaction.guild.roles.cache.find(role => role.id === roleNeedshelpId);
 
-    // Loop through userRoles and check if the target has roles
-    const targetHasNeedsHelpRole = targetRoleNames.some(role => role === roleNeedshelp.name);
-    // logger.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
+    const actorHasRoleDeveloper = actor.roles.cache.find(
+      role => role === roleDeveloper,
+    ) !== undefined;
+    logger.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
 
-    const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
+    const targetHasRoleDeveloper = target.roles.cache.find(
+      role => role === roleDeveloper,
+    ) !== undefined;
+    logger.debug(`[${PREFIX}] targetHasRoleDeveloper: ${targetHasRoleDeveloper}`);
+
+    const targetHasNeedsHelpRole = target.roles.cache.find(
+      role => role === roleNeedshelp,
+    ) !== undefined;
+    logger.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
 
     if (!targetHasNeedsHelpRole) {
       let rejectMessage = memberInput
         ? `Hey ${interaction.member}, ${target.user.username} isnt currently being taken care of!`
         : `Hey ${interaction.member}, you're not currently being taken care of!`;
 
-      if (testRun) {
+      if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
         rejectMessage = testNotice + rejectMessage;
       }
       const embed = template.embedTemplate().setColor('DARK_BLUE');
@@ -86,29 +156,54 @@ module.exports = {
       return;
     }
 
-    const [targetData] = await getUserInfo(target);
-    const targetLastHelpedThreadId = targetData.discord.lastHelpedThreadId;
-    logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
-    const targetLastHelpedMetaThreadId = targetData.discord.lastHelpedMetaThreadId;
-    logger.debug(`[${PREFIX}] targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);
+    if (targetLastHelpedDate && !memberInput) {
+      const lastHour = Date.now() - (1000 * 60 * 60);
+      logger.debug(`[${PREFIX}] lastHelp: ${targetLastHelpedDate.seconds * 1000}`);
+      logger.debug(`[${PREFIX}] lastHour: ${lastHour}`);
+      if (targetLastHelpedDate.seconds * 1000 > lastHour) {
+        let message = stripIndents`Hey ${interaction.member} you just asked for help recently!
+        Take a moment to breathe and wait for someone to respond =)
+        Maybe try listening to some lofi music while you wait?
+        You can also talk **calmly** in ${channelSanctuary} or ${channelOpentripsit}`;
 
-    // Get the channel objects for the help and meta threads
-    const helpThread = interaction.guild.channels.cache
-      .find(chan => chan.id === targetLastHelpedThreadId);
-    const metaHelpThread = interaction.guild.channels.cache
-      .find(chan => chan.id === targetLastHelpedMetaThreadId);
+        if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
+          message = testNotice + message;
+        }
+
+        const embed = template.embedTemplate()
+          .setColor('DARK_BLUE')
+          .setDescription(message);
+        interaction.reply({ embeds: [embed], ephemeral: true });
+
+        if (threadDiscussUser) {
+          let metaUpdate = stripIndents`Hey team, ${target.user.username} said they're good but it's been less than an hour since they asked for help.
+
+            If they still need help it's okay to leave them with that role.
+            If you're sure they don't need help you can use /tripsit to turn off TripSit-Mode`;
+          if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
+            metaUpdate = testNotice + metaUpdate;
+          }
+          threadDiscussUser.send(metaUpdate);
+        }
+
+        logger.debug(`[${PREFIX}] finished!`);
+
+        logger.debug(`[${PREFIX}] Rejected the "im good" button`);
+        return;
+      }
+    }
 
     let responseMessage = memberInput
       ? stripIndents`
       Hey ${interaction.member}, we're glad ${target.user.username} is feeling better!
       We've restored their roles back to normal.
-      You can keep talking with them in ${helpThread} if needed!`
+      You can keep talking with them in ${threadHelpUser} if needed!`
       : stripIndents`
       Hey ${interaction.member}, we're glad you're feeling better =)
       We've restored your old roles back to normal.
-      You can keep talking in ${helpThread} if you want to follow up tomorrow!`;
+      You can keep talking in ${threadHelpUser} if you want to follow up tomorrow!`;
 
-    if (testRun) {
+    if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
       responseMessage = testNotice + responseMessage;
     }
 
@@ -120,7 +215,7 @@ module.exports = {
     if (targetData.discord.roles) {
       targetData.discord.roles.forEach(roleName => {
         const roleObj = interaction.guild.roles.cache.find(r => r.name === roleName);
-        if (!teamRoles.includes(roleObj.id) && roleName !== '@everyone') {
+        if (!ignoredRoles.includes(roleObj.id) && roleName !== '@everyone') {
           logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.user.username}`);
           target.roles.add(roleObj);
         }
@@ -138,18 +233,17 @@ module.exports = {
       This thread will remain here for a day if you want to follow up tomorrow.
       After 7 days, or on request, it will be deleted to preserve your privacy =)`;
 
-    if (testRun) {
+    if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
       endHelpMessage = testNotice + endHelpMessage;
     }
 
-    helpThread.send(endHelpMessage);
+    threadHelpUser.send(endHelpMessage);
 
     let message = '';
-    await helpThread.send(stripIndents`
+    await threadHelpUser.send(stripIndents`
         <:invisible:976824380564852768>
         > **If you have a minute, your feedback is important to us!**
         > Please rate your experience with the TripSit service by reacting below.
-        > You'll have the option to give confidential feedback, or just click submit.
         > Thank you!
         <:invisible:976824380564852768>
         `)
@@ -165,7 +259,7 @@ module.exports = {
         const filter = (reaction, user) => user.id === target.id;
         const collector = message.createReactionCollector({ filter, time: 1000 * 60 * 60 * 24 });
         collector.on('collect', async (reaction, user) => {
-          helpThread.send(stripIndents`
+          threadHelpUser.send(stripIndents`
             <:invisible:976824380564852768>
             > Thank you for your feedback, here's a cookie! 🍪
             <:invisible:976824380564852768>
@@ -189,9 +283,8 @@ module.exports = {
             .setColor('BLUE')
             .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
           try {
-            const modlogChannel = await interaction.client.channels.cache.get(channelModlogId);
-            if (modlogChannel) {
-              await modlogChannel.send({ embeds: [finalEmbed] });
+            if (channelModlog) {
+              await channelModlog.send({ embeds: [finalEmbed] });
             }
           } catch (err) {
             logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
@@ -206,7 +299,7 @@ module.exports = {
 
     let endMetaHelpMessage = memberInput
       ? stripIndents`${actor.user.username} has indicated that ${target.user.username} no longer needs help!
-      *This thread, and ${helpThread}, will remain un-archived for 24 hours to allow the user to follow-up.
+      *This thread, and ${threadHelpUser}, will remain un-archived for 24 hours to allow the user to follow-up.
       If the user requests help again within 7 days these threads will be un-archived.
       After 7 days the threads will be deleted to preserve privacy.*`
       : stripIndents`${target.user.username} has indicated that they no longer need help!
@@ -214,11 +307,11 @@ module.exports = {
       If the user requests help again within 7 days these threads will be un-archived.
       After 7 days the threads will be deleted to preserve privacy.*`;
 
-    if (testRun) {
+    if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
       endMetaHelpMessage = testNotice + endMetaHelpMessage;
     }
 
-    metaHelpThread.send(endMetaHelpMessage);
+    threadDiscussUser.send(endMetaHelpMessage);
 
     logger.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
 

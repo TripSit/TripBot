@@ -15,6 +15,7 @@ const {
 module.exports = {
   name: 'messageReactionAdd',
   async execute(reaction, user) {
+    if (reaction.message.guild.id !== discordGuildId) { return; }
     // logger.debug(`[${PREFIX}] Reaction added`);
 
     // When a reaction is received, check if the structure is partial
@@ -64,7 +65,6 @@ module.exports = {
     // logger.debug(`[${PREFIX}] discordGuildId: ${discordGuildId}`);
     // logger.debug(`[${PREFIX}] reaction.message.guild.id: ${reaction.message.guild.id}`);
     // If we're not in the TripSit guild, don't do this.
-    if (reaction.message.guild.id !== discordGuildId) { return; }
     logger.debug(`[${PREFIX}] ${user.username} gave ${reactionEmoji.name} to ${reactionAuthor.username} in ${reaction.message.guild}!`);
     await chitragupta.update(user, 1, reactionEmoji.toString(), reactionAuthor);
     if (count === 3 && reactionEmoji.name === 'ts_down') {

@@ -44,8 +44,9 @@ exports.channelIrcId = process.env.channelIrcId;
 exports.channelTripsitId = process.env.channelTripsitId;
 exports.channelSanctuaryId = process.env.channelSanctuaryId;
 exports.channelTripsittersId = process.env.channelTripsittersId;
-exports.channelTripsitInfoId = process.env.channelTripsitInfoId;
+exports.channelHowToTripsitId = process.env.channelHowToTripsitId;
 exports.channelDrugQuestionsId = process.env.channelDrugQuestionsId;
+exports.channelOpentripsitId = process.env.channelOpentripsitId;
 
 exports.channelGeneralId = process.env.channelGeneralId;
 

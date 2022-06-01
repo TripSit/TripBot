@@ -11,13 +11,13 @@ const { getGuildInfo, setGuildInfo } = require('../../utils/firebase');
 const {
   NODE_ENV,
   channelStartId,
-  channelBotspamId,
   channelRulesId,
-  channelIrcId,
-  channelTripsitId,
-  channelSanctuaryId,
-  channelDrugQuestionsId,
-  channelGeneralId,
+  // channelBotspamId,
+  // channelIrcId,
+  // channelTripsitId,
+  // channelSanctuaryId,
+  // channelDrugQuestionsId,
+  // channelGeneralId,
   roleRedId,
   roleOrangeId,
   roleYellowId,
@@ -39,35 +39,44 @@ const {
 } = require('../../../env');
 
 const drunkEmoji = NODE_ENV === 'production'
-  ? '<:Drunk:979362236613160990>'
-  : '🍺';
+  ? '<:ts_drunk:979362236613160990>'
+  : '<:ts_drunk:980917123322896395>';
 const highEmoji = NODE_ENV === 'production'
-  ? '<:High:979362238349578250>'
-  : '☘️';
+  ? '<:ts_high:979362238349578250>'
+  : '<:ts_high:980917339698634853>';
 const rollingEmoji = NODE_ENV === 'production'
-  ? '<:Rolling:979362238936797194>'
-  : '😍';
+  ? '<:ts_rolling:979362238936797194>'
+  : '<:ts_rolling:980917339837038672>';
 const trippingEmoji = NODE_ENV === 'production'
-  ? '<:Tripping:979362238437670922>'
-  : '🤩';
+  ? '<:ts_tripping:979362238437670922>'
+  : '<:ts_tripping:980917339778326638>';
 const dissociatingEmoji = NODE_ENV === 'production'
-  ? '<:Disassociatives:979362236575387698>'
-  : '👾';
+  ? '<:ts_dissociating:979362236575387698>'
+  : '<:ts_dissociating:980917339761569812>';
 const stimmingEmoji = NODE_ENV === 'production'
-  ? '<:Stimulants:979362237452025936>'
-  : '😬';
+  ? '<:ts_stimming:979362237452025936>'
+  : '<:ts_stimming:980917339895787580>';
 const noddingEmoji = NODE_ENV === 'production'
-  ? '<:Depressants:979362238534123520>'
-  : '😴';
+  ? '<:ts_nodding:979362238534123520>'
+  : '<:ts_nodding:980917339803512902>';
 const soberEmoji = NODE_ENV === 'production'
-  ? '<:Happy:979362237695295508>'
-  : '❤️';
+  ? '<:ts_sober:979362237695295508>'
+  : '<:ts_sober:980917339728007188>';
+const upvoteEmoji = NODE_ENV === 'production'
+  ? '<:ts_voteup:958721361587630210>'
+  : '<:ts_voteup:980917845472985189>';
 const downvoteEmoji = NODE_ENV === 'production'
   ? '<:ts_votedown:960161563849932892>'
-  : ':thumbsdown:';
+  : '<:ts_votedown:980917845015818251>';
+// const thumbupEmoji = NODE_ENV === 'production'
+//   ? '<:ts_thumbup:979721167332052992>'
+//   : '<:ts_thumbup:980917845640773653>';
+// const thumbdownEmoji = NODE_ENV === 'production'
+//   ? '<:ts_thumbdown:979721915390369822>'
+//   : '<:ts_thumbdown:980917845527519312>';
 const pinkHeart = NODE_ENV === 'production'
   ? '<:pink_heart:958072815884582922>'
-  : '💜';
+  : '<:pink_heart:977926946656763904>';
 
 const PREFIX = path.parse(__filename).name;
 
@@ -77,17 +86,21 @@ module.exports = {
     .setDescription('Re-creates the start-here information!'),
   async execute(interaction) {
     logger.debug(`[${PREFIX}] Starting!`);
+
+    logger.debug(pinkHeart.slice(2, -20));
+    logger.debug(drunkEmoji.slice(2, -20));
+
     const finalEmbed = template.embedTemplate()
       .setTitle('Start here started!');
     interaction.reply({ embeds: [finalEmbed], ephemeral: true });
 
     const channelStart = interaction.client.channels.cache.get(channelStartId);
-    const channelIrc = interaction.member.client.channels.cache.get(channelIrcId);
-    const channelQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
-    const channelBotspam = interaction.client.channels.cache.get(channelBotspamId);
-    const channelSanctuary = interaction.client.channels.cache.get(channelSanctuaryId);
-    const channelGeneral = interaction.client.channels.cache.get(channelGeneralId);
-    const channelTripsit = interaction.client.channels.cache.get(channelTripsitId);
+    // const channelIrc = interaction.member.client.channels.cache.get(channelIrcId);
+    // const channelQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
+    // const channelBotspam = interaction.client.channels.cache.get(channelBotspamId);
+    // const channelSanctuary = interaction.client.channels.cache.get(channelSanctuaryId);
+    // const channelGeneral = interaction.client.channels.cache.get(channelGeneralId);
+    // const channelTripsit = interaction.client.channels.cache.get(channelTripsitId);
     const channelRules = interaction.client.channels.cache.get(channelRulesId);
 
     // Extract guild data
@@ -103,34 +116,32 @@ module.exports = {
 
       As of Summer 2022, this discord is undergoing active development and promotion.
       If you join during this period expect things to be slower and change frequenty!
-      Now is the time to help shape the future of TripSit =)
+      *Now is the time to help shape the future of TripSit =)*
 
       > **Be sure to read the ${channelRules}**
       > If there is anything disrupting your stay here, please /report, or mention a @moderator
       > Three ${downvoteEmoji} on a message activates a timeout!
 
-      **Try to keep channels on-topic**
-      ${channelTripsit} is for when you need a tripsitter
-      🛑 Please do not message helpers or tripsitters directly! 🛑
-
-      ${channelSanctuary} is for when you need a slow, positive chat
-      This room is rate limited to 1-message-per-5-seconds.
-
-      ${channelQuestions} is for questions on substances
-      This is 'thread-only' mode so your question wont get lost!
-
-      ${channelBotspam} is for spamming bot commands
-      Our bot is entirely slash command based so use the prefix /
-
-      ${channelIrc} can be used to ask questions/issues on the IRC
-      This includes ban appeals and other issues
-
-      ${channelGeneral} is for all other topics!
-
       **Fill in your profile!**
       Use /birthday SET to set your birthday!
       Use /time SET to set your timezone!
       Use the below messages to set your color and emblem!
+
+      **We have a karma system!**
+      Use /karma to see your karma!
+      React with ${upvoteEmoji} or ${downvoteEmoji} to give or take karma!
+      *Three ${downvoteEmoji} on a message activates a timeout!*
+
+      **We have an experience system!**
+      As you chat with other users, you will gain experience and level up!
+      At level 5 you'll unlock the VIP role gain access to other channels.
+
+      **Certain channels are bridged with IRC!**
+      The 🔗 icon in the channel name means the channel is linked with IRC.
+
+      **You can link your account to IRC!**
+      Use /link-account IRC to link your account to IRC!
+      This is completely optional and provides no benefits currently, but it's nice to have!
       `;
 
     await channelStart.send(message);
@@ -147,11 +158,11 @@ module.exports = {
         ${soberEmoji} - Sober and happy to be here!
       `)
       .setAuthor({
-        name: 'React to this message to set an icon next to your name!',
+        name: 'React to this to show your mindset!',
         iconURL: '',
         url: '',
       })
-      .setFooter(null)
+      .setFooter('These roles reset after 8 hours to accurately show your mindset!')
       .setColor('PURPLE');
     let mindsetMessage = '';
     await channelStart.send({ embeds: [mindsetEmbed], ephemeral: false })
@@ -168,42 +179,42 @@ module.exports = {
         reactionRoles.startHere = [
           {
             messageId: mindsetMessage.id,
-            reaction: `${drunkEmoji}`,
+            reaction: `${drunkEmoji.slice(2, -20)}`,
             roleId: roleDrunkId,
           },
           {
             messageId: mindsetMessage.id,
-            reaction: `${highEmoji}`,
+            reaction: `${highEmoji.slice(2, -20)}`,
             roleId: roleHighId,
           },
           {
             messageId: mindsetMessage.id,
-            reaction: `${rollingEmoji}`,
+            reaction: `${rollingEmoji.slice(2, -20)}`,
             roleId: roleRollingId,
           },
           {
             messageId: mindsetMessage.id,
-            reaction: `${trippingEmoji}`,
+            reaction: `${trippingEmoji.slice(2, -20)}`,
             roleId: roleTrippingId,
           },
           {
             messageId: mindsetMessage.id,
-            reaction: `${dissociatingEmoji}`,
+            reaction: `${dissociatingEmoji.slice(2, -20)}`,
             roleId: roleDissociatingId,
           },
           {
             messageId: mindsetMessage.id,
-            reaction: `${stimmingEmoji}`,
+            reaction: `${stimmingEmoji.slice(2, -20)}`,
             roleId: roleStimmingId,
           },
           {
             messageId: mindsetMessage.id,
-            reaction: `${noddingEmoji}`,
+            reaction: `${noddingEmoji.slice(2, -20)}`,
             roleId: roleNoddingId,
           },
           {
             messageId: mindsetMessage.id,
-            reaction: `${soberEmoji}`,
+            reaction: `${soberEmoji.slice(2, -20)}`,
             roleId: roleSoberId,
           },
         ];
@@ -225,7 +236,6 @@ module.exports = {
         await msg.react('💙');
         await msg.react('💜');
         await msg.react(pinkHeart);
-        await msg.react('🤎');
         await msg.react('🖤');
         await msg.react('🤍');
         reactionRoles.startHere = reactionRoles.startHere.concat([
@@ -295,7 +305,7 @@ module.exports = {
       // reactionConfig = reactionRoles[key]; this works
       reactionConfig = reactionConfig.concat(reactionRoles[key]);
     });
-    logger.debug(`[${PREFIX}] reactionConfig: ${JSON.stringify(reactionConfig, null, 2)}`);
+    // logger.debug(`[${PREFIX}] reactionConfig: ${JSON.stringify(reactionConfig, null, 2)}`);
     global.manager = new ReactionRole(interaction.client, reactionConfig);
     logger.debug(`[${PREFIX}] finished!`);
   },

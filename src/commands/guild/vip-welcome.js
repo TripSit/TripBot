@@ -10,6 +10,7 @@ const logger = require('../../utils/logger');
 const PREFIX = path.parse(__filename).name;
 
 const {
+  NODE_ENV,
   channelVipWelcomeId,
   channelLoungeId,
   channelTalkToTSId,
@@ -22,6 +23,16 @@ const {
   roleClearmindId,
   roleCoderId,
 } = require('../../../env');
+
+const researcherEmoji = NODE_ENV === 'production'
+  ? '<:ts_researcher:979557718648057916>'
+  : '<:ts_researcher:980934790867984415>';
+const coderEmoji = NODE_ENV === 'production'
+  ? '<:ts_coder:979557703972163644>'
+  : '<:ts_coder:980934790893142106>';
+const clearmindEmoji = NODE_ENV === 'production'
+  ? '<:ts_clearmind:979557762621136997>'
+  : '<:ts_clearmind:980934790834442240>';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -68,12 +79,11 @@ module.exports = {
         > You can follow along and see the progress being made, and feel free to give your input!
         `)
       .then(async msg => {
-        const emoji = '💻';
-        await msg.react(emoji);
+        await msg.react(`${coderEmoji}`);
         reactionRoles.vipWelcome = [
           {
             messageId: msg.id,
-            reaction: emoji,
+            reaction: `${coderEmoji.slice(2, -20)}`,
             roleId: roleCoderId,
           },
         ];
@@ -87,12 +97,11 @@ module.exports = {
           > This is very much WIP, we appreciate your patience!
           `)
       .then(async msg => {
-        const emoji = '💠';
-        await msg.react(emoji);
+        await msg.react(`${clearmindEmoji}`);
         reactionRoles.vipWelcome = reactionRoles.vipWelcome.concat([
           {
             messageId: msg.id,
-            reaction: emoji,
+            reaction: `${clearmindEmoji.slice(2, -20)}`,
             roleId: roleClearmindId,
           },
         ]);
@@ -104,12 +113,11 @@ module.exports = {
           > Click below to be open up #content where we talk about and discuss wiki updates.
           `)
       .then(async msg => {
-        const emoji = '🥼';
-        await msg.react(emoji);
+        await msg.react(`${researcherEmoji}`);
         reactionRoles.vipWelcome = reactionRoles.vipWelcome.concat([
           {
             messageId: msg.id,
-            reaction: emoji,
+            reaction: `${researcherEmoji.slice(2, -20)}`,
             roleId: roleResearcherId,
           },
         ]);
@@ -130,7 +138,7 @@ module.exports = {
       reactionConfig = reactionConfig.concat(reactionRoles[key]);
     });
 
-    logger.debug(`[${PREFIX}] reactionConfig: ${JSON.stringify(reactionConfig, null, 2)}`);
+    // logger.debug(`[${PREFIX}] reactionConfig: ${JSON.stringify(reactionConfig, null, 2)}`);
     global.manager = new ReactionRole(interaction.client, reactionConfig);
     logger.debug(`[${PREFIX}] finished!`);
   },
