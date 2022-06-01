@@ -38,6 +38,17 @@ module.exports = {
           logger.error(`[${PREFIX}] ${err}`);
         }
       });
+
+      // Delete every thread in the channel
+      const archivedThreads = await interaction.channel.threads.fetchArchived();
+      logger.debug(`[${PREFIX}] fetchedThreads: ${JSON.stringify(archivedThreads, null, 2)}`);
+      archivedThreads.threads.forEach(async thread => {
+        try {
+          thread.delete();
+        } catch (err) {
+          logger.error(`[${PREFIX}] ${err}`);
+        }
+      });
     }
     logger.debug(`[${PREFIX}] finished!`);
   },
