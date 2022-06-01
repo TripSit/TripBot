@@ -236,7 +236,7 @@ module.exports = {
         await msg.react('💙');
         await msg.react('💜');
         await msg.react(pinkHeart);
-        await msg.react('🖤');
+        // await msg.react('🖤');
         await msg.react('🤍');
         reactionRoles.startHere = reactionRoles.startHere.concat([
           {
@@ -274,16 +274,11 @@ module.exports = {
             reaction: 'pink_heart',
             roleId: rolePinkId,
           },
-          {
-            messageId: colorMessage.id,
-            reaction: '🤎',
-            roleId: roleBrownId,
-          },
-          {
-            messageId: colorMessage.id,
-            reaction: '🖤',
-            roleId: roleBlackId,
-          },
+          // {
+          //   messageId: colorMessage.id,
+          //   reaction: '🖤',
+          //   roleId: roleBlackId,
+          // },
           {
             messageId: colorMessage.id,
             reaction: '🤍',
