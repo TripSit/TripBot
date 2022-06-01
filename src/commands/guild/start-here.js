@@ -137,7 +137,7 @@ module.exports = {
       At level 5 you'll unlock the VIP role gain access to other channels.
 
       **Certain channels are bridged with IRC!**
-      The 🌉 icon in the channel name means the channel is bridged with IRC.
+      The 🔗 icon in the channel name means the channel is linked with IRC.
 
       **You can link your account to IRC!**
       Use /link-account IRC to link your account to IRC!
@@ -158,11 +158,11 @@ module.exports = {
         ${soberEmoji} - Sober and happy to be here!
       `)
       .setAuthor({
-        name: 'React to this message to set an icon next to your name!',
+        name: 'React to this to show your mindset!',
         iconURL: '',
         url: '',
       })
-      .setFooter(null)
+      .setFooter('These roles reset after 8 hours to accurately show your mindset!')
       .setColor('PURPLE');
     let mindsetMessage = '';
     await channelStart.send({ embeds: [mindsetEmbed], ephemeral: false })

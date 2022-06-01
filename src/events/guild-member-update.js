@@ -56,7 +56,7 @@ module.exports = {
   name: 'guildMemberUpdate',
 
   async execute(oldMember, newMember) {
-    logger.debug(`[${PREFIX}] guildMemberUpdate`);
+    // logger.debug(`[${PREFIX}] guildMemberUpdate`);
     // logger.debug(`${PREFIX} Member.guildId: ${newMember.guild.id}`);
     // logger.debug(`${PREFIX} discordGuildId: ${discordGuildId}`);
     // Only run this on TripSit
@@ -150,6 +150,6 @@ module.exports = {
         }
       }
     }
-    logger.debug(`[${PREFIX}] Done!`);
+    // logger.debug(`[${PREFIX}] Done!`);
   },
 };
