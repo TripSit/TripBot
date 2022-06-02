@@ -72,26 +72,57 @@ exports.channelSandboxId = process.env.channelSandboxId;
 exports.channelModlogId = process.env.channelModlogId;
 exports.channelModeratorsId = process.env.channelModeratorsId;
 
-exports.roleAdminId = process.env.roleAdminId;
-exports.roleDiscordopId = process.env.roleDiscordopId;
+exports.roleDirectorId = process.env.roleDirectorId;
+exports.roleSuccessorId = process.env.roleSuccessorId;
+exports.roleSysadminId = process.env.roleSysadminId;
+exports.roleLeaddevId = process.env.roleLeaddevId;
+exports.roleIrcadminId = process.env.roleIrcadminId;
+exports.roleDiscordadminId = process.env.roleDiscordadminId;
 exports.roleIrcopId = process.env.roleIrcopId;
 exports.roleModeratorId = process.env.roleModeratorId;
 exports.roleTripsitterId = process.env.roleTripsitterId;
 exports.roleTeamtripsitId = process.env.roleTeamtripsitId;
-exports.roleTripbot2Id = process.env.roleTripbot2Id;
 exports.roleTripbotId = process.env.roleTripbotId;
+exports.roleTripbot2Id = process.env.roleTripbot2Id;
 exports.roleBotId = process.env.roleBotId;
 exports.roleDeveloperId = process.env.roleDeveloperId;
 
+exports.roleDrunkId = process.env.roleDrunkId;
+exports.roleHighId = process.env.roleHighId;
+exports.roleRollingId = process.env.roleRollingId;
+exports.roleTrippingId = process.env.roleTrippingId;
+exports.roleDissociatingId = process.env.roleDissociatingId;
+exports.roleStimmingId = process.env.roleStimmingId;
+exports.roleNoddingId = process.env.roleNoddingId;
+exports.roleSoberId = process.env.roleSoberId;
+exports.roleWorkingId = process.env.roleWorkingId;
+exports.roleTalkativeId = process.env.roleTalkativeId;
+
+exports.roleNeedshelpId = process.env.roleNeedshelpId;
+exports.roleHelperId = process.env.roleHelperId;
+
+exports.rolePatronId = process.env.rolePatronId;
+
 exports.roleVipId = process.env.roleVipId;
 exports.roleDjId = process.env.roleDjId;
+exports.roleIrcVerifiedId = process.env.roleIrcVerifiedId;
 
-exports.roleHelperId = process.env.roleHelperId;
-exports.roleNeedshelpId = process.env.roleNeedshelpId;
-
-exports.roleCoderId = process.env.roleCoderId;
-exports.roleClearmindId = process.env.roleClearmindId;
 exports.roleResearcherId = process.env.roleResearcherId;
+exports.roleClearmindId = process.env.roleClearmindId;
+exports.roleCoderId = process.env.roleCoderId;
+
+exports.roleTempvoiceId = process.env.roleTempvoiceId;
+exports.roleMutedId = process.env.roleMutedId;
+
+exports.roleSproutId = process.env.roleSproutId;
+exports.roleSeedlingId = process.env.roleSeedlingId;
+exports.roleBoosterId = process.env.roleBoosterId;
+
+exports.roleHrpresenterId = process.env.roleHrpresenterId;
+exports.roleHrlistenerId = process.env.roleHrlistenerId;
+exports.roleHrModeratoreId = process.env.roleHrModeratoreId;
+
+exports.roleNewbie = process.env.roleNewbie;
 
 exports.roleRedId = process.env.roleRedId;
 exports.roleOrangeId = process.env.roleOrangeId;
@@ -103,18 +134,3 @@ exports.rolePinkId = process.env.rolePinkId;
 exports.roleBrownId = process.env.roleBrownId;
 exports.roleBlackId = process.env.roleBlackId;
 exports.roleWhiteId = process.env.roleWhiteId;
-
-exports.roleDrunkId = process.env.roleDrunkId;
-exports.roleHighId = process.env.roleHighId;
-exports.roleRollingId = process.env.roleRollingId;
-exports.roleTrippingId = process.env.roleTrippingId;
-exports.roleDissociatingId = process.env.roleDissociatingId;
-exports.roleStimmingId = process.env.roleStimmingId;
-exports.roleNoddingId = process.env.roleNoddingId;
-exports.roleSoberId = process.env.roleSoberId;
-
-exports.roleTreeId = process.env.roleTreeId;
-exports.roleSproutId = process.env.roleSproutId;
-exports.roleSeedlingId = process.env.roleSeedlingId;
-exports.roleBoosterId = process.env.roleBoosterId;
-exports.roleIrcVerifiedId = process.env.roleIrcVerifiedId;

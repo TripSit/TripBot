@@ -317,6 +317,7 @@ module.exports = {
 
                 if (eightHoursAgo > lastSetMindsetDate) {
                   logger.debug(`[${PREFIX}] ${discordData.username} added ${lastSetMindset} more than 8 hours ago`);
+
                   // Get the guild
                   const guildTripsit = client.guilds.cache.get(discordGuildId);
                   // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
@@ -331,6 +332,13 @@ module.exports = {
                   const roleMindset = guildTripsit.roles.cache.find(r => r.name === lastSetMindset);
                   logger.debug(`[${PREFIX}] roleMindset: ${roleMindset.name}`);
 
+                  // Extract actor data
+                  const [actorData, actorFbid] = await getUserInfo(member);
+
+                  // Transform actor data
+                  actorData.discord.lastSetMindset = null;
+                  actorData.discord.lastSetMindsetDate = null;
+
                   try {
                     // Remove the role from the member
                     if (roleMindset) {
@@ -341,6 +349,28 @@ module.exports = {
                     logger.error(`[${PREFIX}] Error removing role ${lastSetMindset} from ${discordData.username}`);
                     logger.error(err);
                   }
+
+                  // Load actor data
+                  await setUserInfo(actorFbid, actorData);
+
+                  const userDb = [];
+                  global.userDb.forEach(doc => {
+                    if (doc.key === actorFbid) {
+                      userDb.push({
+                        key: doc.key,
+                        value: actorData,
+                      });
+                      logger.debug(`[${PREFIX}] Updated actor in userDb`);
+                    } else {
+                      userDb.push({
+                        key: doc.key,
+                        value: doc.value,
+                      });
+                    }
+                  });
+                  Object.assign(global, { userDb });
+                  logger.debug(`[${PREFIX}] Updated global user data.`);
+
                 }
               }
             }
