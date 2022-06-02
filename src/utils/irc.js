@@ -47,7 +47,7 @@ module.exports = {
       }
     });
     global.ircClient.addListener('error', message => {
-      logger.error(`[${PREFIX}] Error: ${JSON.stringify(message, null, 2)}`);
+      logger.error(`[${PREFIX}] Error - ${JSON.stringify(message, null, 2)}`);
       // global.ircClient.say('Moonbear', 'Hello world!');
     });
   },
