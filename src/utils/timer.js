@@ -317,7 +317,6 @@ module.exports = {
 
                 if (eightHoursAgo > lastSetMindsetDate) {
                   logger.debug(`[${PREFIX}] ${discordData.username} added ${lastSetMindset} more than 8 hours ago`);
-f
                   // Get the guild
                   const guildTripsit = client.guilds.cache.get(discordGuildId);
                   // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
