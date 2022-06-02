@@ -113,11 +113,8 @@ exports.roleStimmingId = process.env.roleStimmingId;
 exports.roleNoddingId = process.env.roleNoddingId;
 exports.roleSoberId = process.env.roleSoberId;
 
-exports.roleIrcVerifiedId = process.env.roleIrcVerifiedId;
 exports.roleTreeId = process.env.roleTreeId;
 exports.roleSproutId = process.env.roleSproutId;
 exports.roleSeedlingId = process.env.roleSeedlingId;
 exports.roleBoosterId = process.env.roleBoosterId;
-
-exports.channelModeratorsWebhook = process.env.channelModeratorsWebhook;
-exports.channelSandboxWebhook = process.env.channelSandboxWebhook;
+exports.roleIrcVerifiedId = process.env.roleIrcVerifiedId;
