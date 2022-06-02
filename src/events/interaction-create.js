@@ -38,7 +38,7 @@ module.exports = {
     }
 
     logger.debug(`[${PREFIX}] isCommand(): ${interaction.isCommand()}`);
-    if (interaction.isCommand()) {
+    if (interaction.isCommand() || interaction.isContextMenu()) {
       command.execute(interaction, client);
     }
   },

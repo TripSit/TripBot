@@ -25,7 +25,7 @@ const {
   roleBlueId,
   rolePurpleId,
   rolePinkId,
-  // roleBlackId,
+  roleBlackId,
   roleWhiteId,
   roleDrunkId,
   roleHighId,
@@ -34,7 +34,9 @@ const {
   roleDissociatingId,
   roleStimmingId,
   roleNoddingId,
-  roleSoberId,
+  // roleSoberId,
+  roleTalkativeId,
+  roleWorkingId,
 } = require('../../../env');
 
 const drunkEmoji = NODE_ENV === 'production'
@@ -58,9 +60,15 @@ const stimmingEmoji = NODE_ENV === 'production'
 const noddingEmoji = NODE_ENV === 'production'
   ? '<:ts_nodding:979362238534123520>'
   : '<:ts_nodding:980917339803512902>';
-const soberEmoji = NODE_ENV === 'production'
-  ? '<:ts_sober:979362237695295508>'
-  : '<:ts_sober:980917339728007188>';
+// const soberEmoji = NODE_ENV === 'production'
+//   ? '<:ts_sober:979362237695295508>'
+//   : '<:ts_sober:980917339728007188>';
+const talkativeEmoji = NODE_ENV === 'production'
+  ? '<:ts_talkative:981799227141259304>'
+  : '<:ts_talkative:981910870567309312>';
+const workingEmoji = NODE_ENV === 'production'
+  ? '<:ts_working:979362237691093022>'
+  : '<:ts_working:981925646953504869>';
 const upvoteEmoji = NODE_ENV === 'production'
   ? '<:ts_voteup:958721361587630210>'
   : '<:ts_voteup:980917845472985189>';
@@ -154,7 +162,8 @@ module.exports = {
         ${dissociatingEmoji} - Dissociating
         ${stimmingEmoji} - Stimming
         ${noddingEmoji} - Nodding
-        ${soberEmoji} - Sober and happy to be here!
+        ${talkativeEmoji} - I'm just happy to chat!
+        ${workingEmoji} - I'm busy and may be slow to respond!
       `)
       .setAuthor({
         name: 'React to this to show your mindset!',
@@ -174,7 +183,9 @@ module.exports = {
         await msg.react(`${dissociatingEmoji}`);
         await msg.react(`${stimmingEmoji}`);
         await msg.react(`${noddingEmoji}`);
-        await msg.react(`${soberEmoji}`);
+        // await msg.react(`${soberEmoji}`);
+        await msg.react(`${talkativeEmoji}`);
+        await msg.react(`${workingEmoji}`);
         reactionRoles.startHere = [
           {
             messageId: mindsetMessage.id,
@@ -211,10 +222,20 @@ module.exports = {
             reaction: `${noddingEmoji.slice(2, -20)}`,
             roleId: roleNoddingId,
           },
+          // {
+          //   messageId: mindsetMessage.id,
+          //   reaction: `${soberEmoji.slice(2, -20)}`,
+          //   roleId: roleSoberId,
+          // },
           {
             messageId: mindsetMessage.id,
-            reaction: `${soberEmoji.slice(2, -20)}`,
-            roleId: roleSoberId,
+            reaction: `${talkativeEmoji.slice(2, -20)}`,
+            roleId: roleTalkativeId,
+          },
+          {
+            messageId: mindsetMessage.id,
+            reaction: `${workingEmoji.slice(2, -20)}`,
+            roleId: roleWorkingId,
           },
         ];
       });
@@ -235,7 +256,7 @@ module.exports = {
         await msg.react('💙');
         await msg.react('💜');
         await msg.react(pinkHeart);
-        // await msg.react('🖤');
+        await msg.react('🖤');
         await msg.react('🤍');
         reactionRoles.startHere = reactionRoles.startHere.concat([
           {
@@ -273,11 +294,11 @@ module.exports = {
             reaction: 'pink_heart',
             roleId: rolePinkId,
           },
-          // {
-          //   messageId: colorMessage.id,
-          //   reaction: '🖤',
-          //   roleId: roleBlackId,
-          // },
+          {
+            messageId: colorMessage.id,
+            reaction: '🖤',
+            roleId: roleBlackId,
+          },
           {
             messageId: colorMessage.id,
             reaction: '🤍',

@@ -7,10 +7,10 @@ const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
 
-const { db } = global;
-const {
-  firebaseUserDbName,
-} = require('../../../env');
+// const { db } = global;
+// const {
+//   firebaseUserDbName,
+// } = require('../../../env');
 
 module.exports = {
   data: new SlashCommandBuilder()

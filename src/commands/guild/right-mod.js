@@ -56,7 +56,7 @@ const { channelModeratorsId } = require('../../../env');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('mod')
+    .setName('right-mod')
     .setDescription('Moderation actions!')
     .addSubcommand(subcommand => subcommand
       .setDescription('Info on a user')

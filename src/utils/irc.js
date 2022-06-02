@@ -17,7 +17,9 @@ const {
 
 module.exports = {
   async connectIRC(client) {
-    // IRC Connection, this takes a while so do it first
+    // If there is no password provided, dont even try to connect
+    if (!ircPassword) { return; }
+
     ircConfig.userName = ircUsername;
     ircConfig.password = ircPassword;
 
