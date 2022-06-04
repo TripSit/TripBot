@@ -13,14 +13,18 @@ const {
   channelOpentripsitId,
   channelSanctuaryId,
   roleNeedshelpId,
-  roleAdminId,
-  roleDiscordopId,
+  roleDirectorId,
+  roleSuccessorId,
+  roleSysadminId,
+  roleLeaddevId,
+  roleIrcadminId,
+  roleDiscordadminId,
   roleIrcopId,
   roleModeratorId,
   roleTripsitterId,
   roleTeamtripsitId,
-  roleTripbot2Id,
   roleTripbotId,
+  roleTripbot2Id,
   roleBotId,
   roleDeveloperId,
   roleTreeId,
@@ -48,8 +52,12 @@ const {
 } = require('../../env');
 
 const teamRoles = [
-  roleAdminId,
-  roleDiscordopId,
+  roleDirectorId,
+  roleSuccessorId,
+  roleSysadminId,
+  roleLeaddevId,
+  roleIrcadminId,
+  roleDiscordadminId,
   roleIrcopId,
   roleModeratorId,
   roleTripsitterId,
@@ -58,10 +66,6 @@ const teamRoles = [
   roleTripbotId,
   roleBotId,
   roleDeveloperId,
-  roleTreeId,
-  roleSproutId,
-  roleSeedlingId,
-  roleBoosterId,
 ];
 
 const colorRoles = [

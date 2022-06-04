@@ -16,14 +16,18 @@ const {
   channelTripsittersId,
   roleNeedshelpId,
   roleHelperId,
-  roleAdminId,
-  roleDiscordopId,
+  roleDirectorId,
+  roleSuccessorId,
+  roleSysadminId,
+  roleLeaddevId,
+  roleIrcadminId,
+  roleDiscordadminId,
   roleIrcopId,
   roleModeratorId,
   roleTripsitterId,
   roleTeamtripsitId,
-  roleTripbot2Id,
   roleTripbotId,
+  roleTripbot2Id,
   roleBotId,
   roleDeveloperId,
   roleTreeId,
@@ -51,8 +55,12 @@ const {
 } = require('../../env');
 
 const teamRoles = [
-  roleAdminId,
-  roleDiscordopId,
+  roleDirectorId,
+  roleSuccessorId,
+  roleSysadminId,
+  roleLeaddevId,
+  roleIrcadminId,
+  roleDiscordadminId,
   roleIrcopId,
   roleModeratorId,
   roleTripsitterId,
@@ -60,9 +68,10 @@ const teamRoles = [
   roleTripbot2Id,
   roleTripbotId,
   roleBotId,
-  roleDeveloperId];
+  roleDeveloperId,
+];
 
-const vanityRoles = [
+const colorRoles = [
   roleTreeId,
   roleSproutId,
   roleSeedlingId,
@@ -77,6 +86,10 @@ const vanityRoles = [
   roleBrownId,
   roleBlackId,
   roleWhiteId,
+
+];
+
+const mindsetRoles = [
   roleDrunkId,
   roleHighId,
   roleRollingId,
@@ -87,10 +100,14 @@ const vanityRoles = [
   roleSoberId,
 ];
 
-const ignoredRoles = `${teamRoles},${vanityRoles}`;
+const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
 
 // Declare the static test nitice
 const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
+
+const invisibleEmoji = NODE_ENV === 'production'
+  ? '<:invisible:976853930489298984>'
+  : '<:invisible:976824380564852768>';
 
 module.exports = {
   async execute(interaction) {
@@ -324,6 +341,7 @@ module.exports = {
 
     // Remove all roles, except team and vanity, from the target
     target.roles.cache.forEach(role => {
+      logger.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
       if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone') && !role.name.includes('NeedsHelp')) {
         logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.user.username}`);
         try {
@@ -470,7 +488,8 @@ module.exports = {
       : stripIndents`
       Hey ${target}, thank you for asking for assistance!
       A ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter} or ${actorHasRoleDeveloper ? 'helper' : roleHelper} will be with you as soon as they're available!
-      If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.`;
+      If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
+      When you're feeling better you can use the "I'm Good" button in ${interaction.channel}`;
 
     if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
       firstMessage = testNotice + firstMessage;
