@@ -183,9 +183,10 @@ module.exports = {
                 const roleNeedshelp = guildTripsit.roles.cache.get(roleNeedshelpId);
                 // logger.debug(`[${PREFIX}] roleNeedshelp: ${roleNeedshelp.name}`);
 
+                let channelHelp = '';
                 // Get the channels from the guild
                 try {
-                  const channelHelp = await guildTripsit.channels.fetch(
+                  channelHelp = await guildTripsit.channels.fetch(
                     discordData.lastHelpedThreadId,
                   );
                   // logger.debug(`[${PREFIX}] channelHelp: ${channelHelp}`);
