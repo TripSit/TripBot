@@ -177,24 +177,18 @@ module.exports = {
                 // logger.debug(`[${PREFIX}] discordData.id: ${discordData.id}`);
                 // logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
                 const member = await guildTripsit.members.fetch(discordData.id);
-                // logger.debug(`[${PREFIX}] member: ${member}`);
+                logger.debug(`[${PREFIX}] member: ${member}`);
 
                 // Get the role from the guild
                 const roleNeedshelp = guildTripsit.roles.cache.get(roleNeedshelpId);
                 // logger.debug(`[${PREFIX}] roleNeedshelp: ${roleNeedshelp.name}`);
 
-                let channelHelp = '';
-                // Get the channels from the guild
-                try {
-                  channelHelp = await guildTripsit.channels.fetch(
-                    discordData.lastHelpedThreadId,
-                  );
-                  // logger.debug(`[${PREFIX}] channelHelp: ${channelHelp}`);
-                } catch (err) {
-                  logger.debug(`[${PREFIX}] Error fetching channelHelp: ${err}`);
-                  return;
-                }
+                logger.debug(`[${PREFIX}] lastHelpedThreadId: ${discordData.lastHelpedThreadId}`);
+                const channelHelp = await guildTripsit.channels.fetch(
+                  discordData.lastHelpedThreadId,
+                );
 
+                logger.debug(`[${PREFIX}] lastHelpedThreadId: ${discordData.lastHelpedMetaThreadId}`);
                 const channelMeta = await guildTripsit.channels.fetch(
                   discordData.lastHelpedMetaThreadId,
                 );
