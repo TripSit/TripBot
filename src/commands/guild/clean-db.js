@@ -17,19 +17,19 @@ module.exports = {
     .setName('clean-db')
     .setDescription('Clean the DB!'),
   async execute(interaction) {
-    const userDb = [];
-    if (db !== undefined) {
-      // Get user information
-      const snapshotUser = await db.collection(firebaseUserDbName).get();
-      snapshotUser.forEach(doc => {
-        userDb.push({
-          key: doc.id,
-          value: doc.data(),
-        });
-      });
-    }
-    Object.assign(global, { userDb });
-    logger.debug(`[${PREFIX}] User database loaded.`);
+    // const userDb = [];
+    // if (db !== undefined) {
+    //   // Get user information
+    //   const snapshotUser = await db.collection(firebaseUserDbName).get();
+    //   snapshotUser.forEach(doc => {
+    //     userDb.push({
+    //       key: doc.id,
+    //       value: doc.data(),
+    //     });
+    //   });
+    // }
+    // Object.assign(global, { userDb });
+    // logger.debug(`[${PREFIX}] User database loaded.`);
 
     // async function backup() {
     //   logger.debug(`[${PREFIX}] Backup up from 'users' to 'users_dev'`);

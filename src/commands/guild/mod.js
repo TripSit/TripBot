@@ -2,6 +2,7 @@
 
 const PREFIX = require('path').parse(__filename).name;
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
+const { MessageActionRow, MessageButton } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
@@ -15,50 +16,89 @@ const {
 
 const botPrefix = NODE_ENV === 'production' ? '~' : '-';
 
-// const mod_buttons = new MessageActionRow()
-//     .addComponents(
-//         new MessageButton()
-//             .setCustomId('warnbtn')
-//             .setLabel('Warn')
-//             .setStyle('PRIMARY'),
-//         new MessageButton()
-//             .setCustomId('timeoutbtn')
-//             .setLabel('Timeout')
-//             .setStyle('SECONDARY'),
-//         new MessageButton()
-//             .setCustomId('kickbtn')
-//             .setLabel('Kick')
-//             .setStyle('SECONDARY'),
-//         new MessageButton()
-//             .setCustomId('banbtn')
-//             .setLabel('Ban')
-//             .setStyle('DANGER'),
-//     );
+const {
+  discordGuildId,
+  roleNeedshelpId,
+  roleAdminId,
+  roleDiscordopId,
+  roleIrcopId,
+  roleModeratorId,
+  roleTripsitterId,
+  roleTeamtripsitId,
+  roleTripbot2Id,
+  roleTripbotId,
+  roleBotId,
+  roleDeveloperId,
+  roleTreeId,
+  roleSproutId,
+  roleSeedlingId,
+  roleBoosterId,
+  roleRedId,
+  roleOrangeId,
+  roleYellowId,
+  roleGreenId,
+  roleBlueId,
+  rolePurpleId,
+  rolePinkId,
+  roleBrownId,
+  roleBlackId,
+  roleWhiteId,
+  roleDrunkId,
+  roleHighId,
+  roleRollingId,
+  roleTrippingId,
+  roleDissociatingId,
+  roleStimmingId,
+  roleNoddingId,
+  roleSoberId,
+} = require('../../env');
 
-// const warnButtons = new MessageActionRow().addComponents(
-//   new MessageButton()
-//     .setCustomId('acknowledgebtn')
-//     .setLabel('I understand, it wont happen again!')
-//     .setStyle('PRIMARY'),
-//   new MessageButton()
-//     .setCustomId('refusalbtn')
-//     .setLabel('Nah, I do what I want!')
-//     .setStyle('DANGER'),
-// );
+const teamRoles = [
+  roleAdminId,
+  roleDiscordopId,
+  roleIrcopId,
+  roleModeratorId,
+  roleTripsitterId,
+  roleTeamtripsitId,
+  roleTripbot2Id,
+  roleTripbotId,
+  roleBotId,
+  roleDeveloperId,
 
-// const backButton = new MessageButton()
-//     .setCustomId('previousbtn')
-//     .setLabel('Previous')
-//     .setStyle('DANGER');
+];
 
-// const forwardButton = new MessageButton()
-//     .setCustomId('nextbtn')
-//     .setLabel('Next')
-//     .setStyle('SUCCESS');
-// const buttonList = [
-//     backButton,
-//     forwardButton,
-// ];
+const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
+
+const modButtons = new MessageActionRow()
+  .addComponents(
+    new MessageButton()
+      .setCustomId('warnbtn')
+      .setLabel('Warn')
+      .setStyle('PRIMARY'),
+    new MessageButton()
+      .setCustomId('timeoutbtn')
+      .setLabel('Timeout')
+      .setStyle('SECONDARY'),
+    new MessageButton()
+      .setCustomId('kickbtn')
+      .setLabel('Kick')
+      .setStyle('SECONDARY'),
+    new MessageButton()
+      .setCustomId('banbtn')
+      .setLabel('Ban')
+      .setStyle('DANGER'),
+  );
+
+const warnButtons = new MessageActionRow().addComponents(
+  new MessageButton()
+    .setCustomId('acknowledgebtn')
+    .setLabel('I understand, it wont happen again!')
+    .setStyle('PRIMARY'),
+  new MessageButton()
+    .setCustomId('refusalbtn')
+    .setLabel('Nah, I do what I want!')
+    .setStyle('DANGER'),
+);
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -189,7 +229,7 @@ module.exports = {
       targetIsMember = false;
       target = data;
     }
-    // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+    logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
 
     // Get the channel information
     let channel = interaction.options.getString('channel');
@@ -205,7 +245,7 @@ module.exports = {
     }
     logger.debug(`[${PREFIX}] channel: ${JSON.stringify(channel, null, 2)}`);
 
-    const username = target.nick ? target.nick : target.username;
+    const username = target.nick ? target.nick : target.displayname;
     logger.debug(`[${PREFIX}] username: ${username}`);
 
     if (!target) {
@@ -228,7 +268,18 @@ module.exports = {
       }
       if (targetFromDiscord) {
         try {
-          await target.send(`You have been warned for ${reason}`);
+          const warnEmbed = template.embedTemplate()
+            .setColor('YELLOW')
+            .setTitle('Warned!')
+            .setDescription(stripIndents`
+            You have warned by Team TripSit:
+
+            > ${reason}
+
+            Please read the rules and be respectful of them.
+
+            Contact a TripSit Team Member if you have any questions!`);
+          await target.send({ embeds: [warnEmbed], components: [warnButtons] });
         } catch (err) {
           logger.error(`[${PREFIX}] Error: ${err}`);
         }
@@ -258,7 +309,8 @@ module.exports = {
       if (targetFromDiscord) {
         if (toggle === 'on') {
           try {
-            await target.send(`You have been quieted for ${reason}`);
+            await target.send(`You have been quieted for ${duration} because ${reason}`);
+            target.timeout(duration, reason);
           } catch (err) {
             logger.error(`[${PREFIX}] Error: ${err}`);
           }
@@ -267,7 +319,7 @@ module.exports = {
             await target.send(`You have been unquieted for ${reason}`);
             target.timeout(0, reason);
             command = 'untimeout';
-            logger.debug(`[${PREFIX}] I untimed out ${username}!`);
+            logger.debug(`[${PREFIX}] I un${command}ed ${username} because '${reason}'!`);
             interaction.reply(`I un${command}ed ${username} because '${reason}'`);
             return;
           } catch (err) {
@@ -288,6 +340,7 @@ module.exports = {
       if (targetFromDiscord) {
         try {
           await target.send(`You have been kicked for ${reason}`);
+          target.kick();
         } catch (err) {
           logger.error(`[${PREFIX}] Error: ${err}`);
         }
@@ -306,7 +359,7 @@ module.exports = {
         } else {
           try {
             command = 'nunban';
-            const tripbotCommand = `${botPrefix}nunban ${username} ${reason}`
+            const tripbotCommand = `${botPrefix}nunban ${username} ${reason}`;
             global.ircClient.say('tripbot', tripbotCommand);
             global.ircClient.say('#sandbox', `Sent: ${tripbotCommand}`);
             interaction.reply(`I un${command}ed ${username} because '${reason}'`);
@@ -320,6 +373,7 @@ module.exports = {
         if (toggle === 'on') {
           try {
             await target.send(`You have been banned for ${reason}`);
+            interaction.guild.members.ban(target, { days: duration, reason });
           } catch (err) {
             logger.error(`[${PREFIX}] Error: ${err}`);
           }
@@ -332,24 +386,10 @@ module.exports = {
             logger.debug(`[${PREFIX}] interaction.guild.bans.fetch(): ${bans}`);
             await interaction.guild.bans.remove(target, reason);
             logger.debug(`[${PREFIX}] I unbanned ${username}!`);
+            target.send(`You have been unbanned for ${reason}`);
           } catch (err) {
             logger.error(`[${PREFIX}] Error: ${err}`);
           }
-        }
-      }
-    } else if (command === 'info') {
-      if (targetFromIrc) {
-        try {
-          global.ircClient.say('tripbot', `${botPrefix}${command} ${username}`);
-          global.ircClient.say('#sandbox', `Sent: ${botPrefix}${command} ${username}`);
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error: ${err}`);
-        }
-      } else {
-        try {
-          await target.send(`You have been infoed for ${reason}`);
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error: ${err}`);
         }
       }
     }
@@ -378,31 +418,17 @@ module.exports = {
     // Extract target data
     const [targetData, targetFbid] = await getUserInfo(target);
     const targetAction = `${command}_received`;
-
-    // Transform taget data
-    if ('discord' in actorData) {
-      if ('modActions' in targetData) {
-        targetData.discord.modActions[targetAction] = (
-          targetData.discord.modActions[targetAction] || 0) + 1;
-      } else {
-        targetData.discord.modActions = { [targetAction]: 1 };
-      }
-    } else {
-      targetData.discord = { modActions: { [targetAction]: 1 } };
-    }
-
-    // Load target data
-    await setUserInfo(targetFbid, targetData);
+    const targetUsername = `${targetIsMember ? target.user.username : target.username}#${targetIsMember ? target.user.discriminator : target.discriminator}`;
 
     // eslint-disable-next-line
-    // const title = `${actor} ${command}ed ${username} ${duration ? `for ${duration}` : ''} ${reason ? `because ${reason}` : ''}`;
-    const title = `${actor} ${command}ed ${username} ${reason ? `because ${reason}` : ''}`;
+        // const title = `${actor} ${command}ed ${username} ${duration ? `for ${duration}` : ''} ${reason ? `because ${reason}` : ''}`;
+    const title = `${actor} ${command}ed ${targetData} ${reason ? `because ${reason}` : ''}`;
     // const book = [];
     const targetEmbed = template.embedTemplate()
       .setColor('BLUE')
       .setDescription(title)
       .addFields(
-        { name: 'Username', value: `${targetIsMember ? target.user.username : target.username}#${targetIsMember ? target.user.discriminator : target.discriminator}`, inline: true },
+        { name: 'Username', value: targetUsername, inline: true },
         { name: 'Nickname', value: `${target.nickname}`, inline: true },
         { name: 'ID', value: `${targetIsMember ? target.user.id : target.id}`, inline: true },
       )
@@ -432,17 +458,46 @@ module.exports = {
         { name: '# of Fucks to give', value: '0', inline: true },
       );
 
-    if (command === 'info') {
-      // interaction.reply({ embeds: [target_embed], ephemeral: true, components: [mod_buttons] });
-      interaction.reply({ embeds: [targetEmbed], ephemeral: true });
-      logger.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${target.user.name}`);
-      logger.debug(`[${PREFIX}] finished!`);
-      return;
+    // Transform taget data
+    if ('discord' in actorData) {
+      if ('modActions' in targetData) {
+        targetData.discord.modActions[targetAction] = (
+          targetData.discord.modActions[targetAction] || 0) + 1;
+      } else {
+        targetData.discord.modActions = { [targetAction]: 1 };
+      }
+    } else {
+      targetData.discord = { modActions: { [targetAction]: 1 } };
     }
+
+    // Load target data
+    await setUserInfo(targetFbid, targetData);
+
+    if (command === 'info') {
+      if (targetFromIrc) {
+        try {
+          global.ircClient.say('tripbot', `${botPrefix}${command} ${username}`);
+          global.ircClient.say('#sandbox', `Sent: ${botPrefix}${command} ${username}`);
+          return;
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error: ${err}`);
+        }
+      } else {
+        try {
+          interaction.reply({ embeds: [targetEmbed], ephemeral: true, components: [modButtons] });
+          logger.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${target.user.name}`);
+          logger.debug(`[${PREFIX}] finished!`);
+          return;
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error: ${err}`);
+        }
+      }
+    }
+
     logger.debug(`${PREFIX} channelModeratorsId: ${channelModeratorsId}`);
     const modChan = interaction.client.channels.cache.get(channelModeratorsId);
-    // mod_chan.send({ embeds: [target_embed], components: [mod_buttons] });
-    modChan.send({ embeds: [targetEmbed] });
+    modChan.send({ embeds: [targetEmbed], components: [modButtons] });
+    // modChan.send({ embeds: [targetEmbed] });
     logger.debug(`${PREFIX} send a message to the moderators room`);
     logger.debug(`[${PREFIX}] finished!`);
   },
