@@ -373,10 +373,15 @@ module.exports = {
         }
       }
       if (targetFromDiscord) {
-        if (toggle === 'on') {
+        if (toggle === 'on' || toggle === null) {
           try {
-            await target.send(`You have been banned for ${reason}`);
-            interaction.guild.members.ban(target, { days: duration, reason });
+            // The length of the timout defaults to forever if no time is given
+            minutes = duration
+              ? await parseDuration.execute(duration)
+              : 'forever';
+            logger.debug(`[${PREFIX}] minutes: ${minutes}`);
+            await target.send(`You have been banned for ${ms(minutes, { long: true })}${reason ? ` because ${reason}` : ''} `);
+            interaction.guild.members.ban(target, { days: 7, reason });
           } catch (err) {
             logger.error(`[${PREFIX}] Error: ${err}`);
           }
