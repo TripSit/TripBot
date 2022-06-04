@@ -79,12 +79,12 @@ module.exports = {
           }
         }
       } catch (err) {
-        logger.debug(`OnGuildMemberAdd issue: ${err}`);
+        logger.debug('OnGuildMember added via the standard link');
       }
 
       newInvites.each(inv => cachedInvites.set(inv.code, inv.uses));
       global.guildInvites.set(member.guild.id, cachedInvites);
-      /* Start *INVITE* code */
+      /* End *INVITE* code */
 
       // NOTE: Can be simplified with luxon
       const diff = Math.abs(Date.now() - member.user.createdAt);
