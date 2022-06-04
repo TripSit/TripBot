@@ -20,21 +20,10 @@ module.exports = {
     .setName('mod-irc')
     .setDescription('IRC Mod Actions!')
     .addSubcommand(subcommand => subcommand
-      .setDescription('Have tripbot say something in a channel')
-      .addStringOption(option => option
-        .setName('quote')
-        .setDescription('What to say!')
-        .setRequired(true))
-      .addStringOption(option => option
-        .setName('channel')
-        .setDescription('Channel to say in!')
-        .setRequired(true))
-      .setName('say'))
-    .addSubcommand(subcommand => subcommand
       .setDescription('Info on a user')
       .addStringOption(option => option
         .setName('target')
-        .setDescription('User to warn!')
+        .setDescription('User to get info on!')
         .setRequired(true))
       .setName('info'))
     .addSubcommand(subcommand => subcommand
@@ -98,8 +87,6 @@ module.exports = {
         .setName('reason')
         .setDescription('Reason for ban!')
         .setRequired(true))
-      // eslint-disable-next-line
-      // .addStringOption(option => option.setName('duration').setDescription('Duration of ban!').setRequired(true))
       .addStringOption(option => option
         .setName('toggle')
         .setDescription('On off?')
@@ -120,8 +107,6 @@ module.exports = {
     logger.debug(`[${PREFIX}] reason: ${reason}`);
     const channel = interaction.options.getString('channel');
     logger.debug(`[${PREFIX}] channel: ${channel}`);
-    const quote = interaction.options.getString('quote');
-    logger.debug(`[${PREFIX}] quote: ${quote}`);
     const duration = interaction.options.getString('duration');
     logger.debug(`[${PREFIX}] duration: ${duration}`);
 
@@ -140,12 +125,6 @@ module.exports = {
       return;
     }
     try {
-      if (command === 'say') {
-        global.ircClient.say('tripbot', `${botPrefix}${command} ${channel} ${quote}`);
-        global.ircClient.say('#sandbox', `Sent: ${botPrefix}${command} ${channel} ${quote}`);
-        interaction.reply(`I ${command} ${quote} in ${channel}`);
-        return;
-      }
       if (command === 'warn') {
         global.ircClient.say('tripbot', `${botPrefix}${command} ${target} ${reason}`);
         global.ircClient.say('#sandbox', `Sent: ${botPrefix}${command} ${target} ${reason}`);

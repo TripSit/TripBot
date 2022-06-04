@@ -1,13 +1,19 @@
 'use strict';
 
+const PREFIX = require('path').parse(__filename).name;
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
+const { stripIndents } = require('common-tags/lib');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../../utils/firebase');
+const parseDuration = require('../../utils/parseDuration');
 
-const PREFIX = require('path').parse(__filename).name; // eslint-disable-line
+const {
+  NODE_ENV,
+  channelModeratorsId,
+} = require('../../../env');
 
-const { channelModeratorsId } = require('../../../env');
+const botPrefix = NODE_ENV === 'production' ? '~' : '-';
 
 // const mod_buttons = new MessageActionRow()
 //     .addComponents(
@@ -60,14 +66,14 @@ module.exports = {
     .setDescription('Moderation actions!')
     .addSubcommand(subcommand => subcommand
       .setDescription('Info on a user')
-      .addUserOption(option => option
+      .addStringOption(option => option
         .setName('target')
-        .setDescription('User to warn!')
+        .setDescription('User to get info on!')
         .setRequired(true))
       .setName('info'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Warn a user')
-      .addUserOption(option => option
+      .addStringOption(option => option
         .setName('target')
         .setDescription('User to warn!')
         .setRequired(true))
@@ -78,7 +84,7 @@ module.exports = {
       .setName('warn'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Timeout a user')
-      .addUserOption(option => option
+      .addStringOption(option => option
         .setName('target')
         .setDescription('User to timeout!')
         .setRequired(true))
@@ -97,7 +103,7 @@ module.exports = {
       .setName('timeout'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Kick a user')
-      .addUserOption(option => option
+      .addStringOption(option => option
         .setName('target')
         .setDescription('User to kick!')
         .setRequired(true))
@@ -105,10 +111,14 @@ module.exports = {
         .setName('reason')
         .setDescription('Reason for kick!')
         .setRequired(true))
+      .addStringOption(option => option
+        .setName('channel')
+        .setDescription('Channel to kick from!')
+        .setRequired(true))
       .setName('kick'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Ban a user')
-      .addUserOption(option => option
+      .addStringOption(option => option
         .setName('target')
         .setDescription('User to ban!')
         .setRequired(true))
@@ -117,58 +127,234 @@ module.exports = {
         .setDescription('Reason for ban!')
         .setRequired(true))
       .addStringOption(option => option
+        .setName('duration')
+        .setDescription('How long to ban!'))
+      .addStringOption(option => option
         .setName('toggle')
         .setDescription('On off?')
         .addChoice('On', 'on')
         .addChoice('Off', 'off'))
-      .addStringOption(option => option
-        .setName('duration')
-        .setDescription('Duration of ban!'))
       .setName('ban')),
-
   async execute(interaction) {
     const actor = interaction.member;
-    logger.debug(`[${PREFIX}] Actor:`, actor);
+    logger.debug(`[${PREFIX}] Actor: ${actor}`);
     let command = interaction.options.getSubcommand();
-    logger.debug(`[${PREFIX}] Command:`, command);
-    let target = interaction.options.getMember('target');
-    logger.debug(`[${PREFIX}] target:`, target);
+    logger.debug(`[${PREFIX}] Command: ${command}`);
     const toggle = interaction.options.getString('toggle');
-    logger.debug(`[${PREFIX}] toggle:`, toggle);
+    logger.debug(`[${PREFIX}] toggle: ${toggle}`);
     const reason = interaction.options.getString('reason');
-    logger.debug(`[${PREFIX}] reason:`, reason);
-    // const duration = interaction.options.getString('duration');
-    // logger.debug(`[${PREFIX}] duration: ${duration}`);
+    logger.debug(`[${PREFIX}] reason: ${reason}`);
+    const duration = interaction.options.getString('duration');
+    logger.debug(`[${PREFIX}] duration: ${duration}`);
+    const minutes = duration ? (await parseDuration.execute(duration) / 1000) / 60 : 0;
+    logger.debug(`[${PREFIX}] minutes: ${minutes}`);
 
-    // let color = '';
-    let isMember = true;
-    if (toggle === 'off') {
-      if (command === 'ban') {
-        target = interaction.options.getUser('target');
-        isMember = false;
-        logger.debug(`[${PREFIX}] target_user.id:`, target.id);
-        const bans = await interaction.guild.bans.fetch();
-        logger.debug(`[${PREFIX}] interaction.guild.bans.fetch():`, bans);
-        command = 'unban';
-        // color = 'GREEN';
-        await interaction.guild.bans.remove(target, reason);
-        logger.debug(`[${PREFIX}] I unbanned ${target}!`);
-      } else if (command === 'timeout') {
-        target.timeout(0, reason);
-        command = 'untimeout';
-        // color = 'GREEN';
-        logger.debug(`[${PREFIX}] I untimed out ${target}!`);
+    let targetFromIrc = null;
+    let targetFromDiscord = null;
+    let targetIsMember = null;
+
+    // Determine target information
+    let target = interaction.options.getString('target');
+    if (target.startsWith('<@') && target.endsWith('>')) {
+      // If the target string starts with a < then it's likely a discord user
+      targetFromIrc = false;
+      targetFromDiscord = true;
+      targetIsMember = true;
+      const targetId = target.slice(3, -1);
+      logger.debug(`[${PREFIX}] targetId: ${targetId}`);
+      target = await interaction.guild.members.fetch(targetId);
+    } else {
+      // Do a whois lookup to the user
+      let data = null;
+      await global.ircClient.whois(target, async resp => {
+        data = resp;
+      });
+
+      // This is a hack substanc3 helped create to get around the fact that the whois command
+      // is asyncronous by default, so we need to make this syncronous
+      while (data === null) {
+        await new Promise(resolve => setTimeout(resolve, 100)); // eslint-disable-line
+      }
+      // logger.debug(`[${PREFIX}] data ${JSON.stringify(data, null, 2)}`);
+      if (!data.host) {
+        const embed = template.embedTemplate();
+        logger.debug(`[${PREFIX}] ${target} not found on IRC`);
+        embed.setDescription(stripIndents`${target} is not found on IRC, did you spell that right?`);
+        interaction.reply({ embeds: [embed], ephemeral: true });
+        return;
+      }
+
+      targetFromIrc = true;
+      targetFromDiscord = false;
+      targetIsMember = false;
+      target = data;
+    }
+    // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+
+    // Get the channel information
+    let channel = interaction.options.getString('channel');
+    if (channel) {
+      if (channel.startsWith('<#') && channel.endsWith('>')) {
+        // Discord channels start with <#
+        const channelId = channel.slice(2, -1);
+        channel = await interaction.guild.channels.fetch(channelId);
+      } else if (channel.startsWith('#')) {
+        // IRC channels start with #
+        channel = channel.slice(1);
       }
     }
+    logger.debug(`[${PREFIX}] channel: ${JSON.stringify(channel, null, 2)}`);
+
+    const username = target.nick ? target.nick : target.username;
+    logger.debug(`[${PREFIX}] username: ${username}`);
 
     if (!target) {
       const embed = template.embedTemplate()
         .setColor('RED')
-        .setDescription('target not found, are you sure they are in the server?');
+        .setDescription('Target not found?');
       interaction.reply({ embeds: [embed], ephemeral: true });
       logger.debug(`[${PREFIX}] Target not found!`);
       return;
     }
+
+    if (command === 'warn') {
+      if (targetFromIrc) {
+        try {
+          global.ircClient.say('tripbot', `${botPrefix}${command} ${username} ${reason}`);
+          global.ircClient.say('#sandbox', `Sent: ${botPrefix}${command} ${username} ${reason}`);
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error: ${err}`);
+        }
+      }
+      if (targetFromDiscord) {
+        try {
+          await target.send(`You have been warned for ${reason}`);
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error: ${err}`);
+        }
+      }
+    } else if (command === 'timeout') {
+      if (targetFromIrc) {
+        command = 'quiet';
+        if (toggle === 'on' || toggle === null) {
+          try {
+            const tripbotCommand = `${botPrefix}${command} ${username}${duration ? ` ${minutes}m` : ''} ${reason}`;
+            global.ircClient.say('tripbot', tripbotCommand);
+            global.ircClient.say('#sandbox', `Sent: ${tripbotCommand}`);
+          } catch (err) {
+            logger.error(`[${PREFIX}] Error: ${err}`);
+          }
+        } else {
+          command = 'unquiet';
+          try {
+            const tripbotCommand = `${botPrefix}${command} ${username} ${reason}`;
+            global.ircClient.say('tripbot', tripbotCommand);
+            global.ircClient.say('#sandbox', `Sent: ${tripbotCommand}`);
+          } catch (err) {
+            logger.error(`[${PREFIX}] Error: ${err}`);
+          }
+        }
+      }
+      if (targetFromDiscord) {
+        if (toggle === 'on') {
+          try {
+            await target.send(`You have been quieted for ${reason}`);
+          } catch (err) {
+            logger.error(`[${PREFIX}] Error: ${err}`);
+          }
+        } else {
+          try {
+            await target.send(`You have been unquieted for ${reason}`);
+            target.timeout(0, reason);
+            command = 'untimeout';
+            logger.debug(`[${PREFIX}] I untimed out ${username}!`);
+            interaction.reply(`I un${command}ed ${username} because '${reason}'`);
+            return;
+          } catch (err) {
+            logger.error(`[${PREFIX}] Error: ${err}`);
+          }
+        }
+      }
+    } else if (command === 'kick') {
+      if (targetFromIrc) {
+        try {
+          const tripbotCommand = `${botPrefix}${command} ${username} ${channel} ${reason}`;
+          global.ircClient.say('tripbot', tripbotCommand);
+          global.ircClient.say('#sandbox', `Sent: ${tripbotCommand}`);
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error: ${err}`);
+        }
+      }
+      if (targetFromDiscord) {
+        try {
+          await target.send(`You have been kicked for ${reason}`);
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error: ${err}`);
+        }
+      }
+    } else if (command === 'ban') {
+      if (targetFromIrc) {
+        if (toggle === 'on' || toggle === null) {
+          try {
+            command = 'nban';
+            const tripbotCommand = `${botPrefix}${command} ${username}${duration ? ` ${minutes}m` : ''} ${reason}`;
+            global.ircClient.say('tripbot', tripbotCommand);
+            global.ircClient.say('#sandbox', `Sent: ${tripbotCommand}`);
+          } catch (err) {
+            logger.error(`[${PREFIX}] Error: ${err}`);
+          }
+        } else {
+          try {
+            command = 'nunban';
+            const tripbotCommand = `${botPrefix}nunban ${username} ${reason}`
+            global.ircClient.say('tripbot', tripbotCommand);
+            global.ircClient.say('#sandbox', `Sent: ${tripbotCommand}`);
+            interaction.reply(`I un${command}ed ${username} because '${reason}'`);
+            return;
+          } catch (err) {
+            logger.error(`[${PREFIX}] Error: ${err}`);
+          }
+        }
+      }
+      if (targetFromDiscord) {
+        if (toggle === 'on') {
+          try {
+            await target.send(`You have been banned for ${reason}`);
+          } catch (err) {
+            logger.error(`[${PREFIX}] Error: ${err}`);
+          }
+        } else {
+          try {
+            command = 'unban';
+            target = interaction.client.users.fetch(target);
+            logger.debug(`[${PREFIX}] target_user.id: ${target.id}`);
+            const bans = await interaction.guild.bans.fetch();
+            logger.debug(`[${PREFIX}] interaction.guild.bans.fetch(): ${bans}`);
+            await interaction.guild.bans.remove(target, reason);
+            logger.debug(`[${PREFIX}] I unbanned ${username}!`);
+          } catch (err) {
+            logger.error(`[${PREFIX}] Error: ${err}`);
+          }
+        }
+      }
+    } else if (command === 'info') {
+      if (targetFromIrc) {
+        try {
+          global.ircClient.say('tripbot', `${botPrefix}${command} ${username}`);
+          global.ircClient.say('#sandbox', `Sent: ${botPrefix}${command} ${username}`);
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error: ${err}`);
+        }
+      } else {
+        try {
+          await target.send(`You have been infoed for ${reason}`);
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error: ${err}`);
+        }
+      }
+    }
+
+    interaction.reply(`I ${command}ed ${username} ${channel ? `in ${channel}` : ''}${minutes ? ` for ${minutes} minutes` : ''} because '${reason}'`);
 
     // Extract actor data
     const [actorData, actorFbid] = await getUserInfo(actor);
@@ -209,26 +395,26 @@ module.exports = {
     await setUserInfo(targetFbid, targetData);
 
     // eslint-disable-next-line
-    // const title = `${actor} ${command}ed ${target} ${duration ? `for ${duration}` : ''} ${reason ? `because ${reason}` : ''}`;
-    const title = `${actor} ${command}ed ${target} ${reason ? `because ${reason}` : ''}`;
+    // const title = `${actor} ${command}ed ${username} ${duration ? `for ${duration}` : ''} ${reason ? `because ${reason}` : ''}`;
+    const title = `${actor} ${command}ed ${username} ${reason ? `because ${reason}` : ''}`;
     // const book = [];
     const targetEmbed = template.embedTemplate()
       .setColor('BLUE')
       .setDescription(title)
       .addFields(
-        { name: 'Username', value: `${isMember ? target.user.username : target.username}#${isMember ? target.user.discriminator : target.discriminator}`, inline: true },
+        { name: 'Username', value: `${targetIsMember ? target.user.username : target.username}#${targetIsMember ? target.user.discriminator : target.discriminator}`, inline: true },
         { name: 'Nickname', value: `${target.nickname}`, inline: true },
-        { name: 'ID', value: `${isMember ? target.user.id : target.id}`, inline: true },
+        { name: 'ID', value: `${targetIsMember ? target.user.id : target.id}`, inline: true },
       )
       .addFields(
-        { name: 'Account created', value: `${isMember ? time(target.user.createdAt, 'R') : time(target.createdAt, 'R')}`, inline: true },
+        { name: 'Account created', value: `${targetIsMember ? time(target.user.createdAt, 'R') : time(target.createdAt, 'R')}`, inline: true },
         { name: 'Joined', value: `${time(target.joinedAt, 'R')}`, inline: true },
         { name: 'Timeout until', value: `${time(target.communicationDisabledUntil, 'R')}`, inline: true },
       )
       .addFields(
         { name: 'Pending', value: `${target.pending}`, inline: true },
         { name: 'Moderatable', value: `${target.moderatable}`, inline: true },
-        { name: 'Muted', value: `${isMember ? target.isCommunicationDisabled() : 'banned'}`, inline: true },
+        { name: 'Muted', value: `${targetIsMember ? target.isCommunicationDisabled() : 'banned'}`, inline: true },
       )
       .addFields(
         { name: 'Manageable', value: `${target.manageable}`, inline: true },

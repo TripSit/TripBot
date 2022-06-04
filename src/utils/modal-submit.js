@@ -13,7 +13,7 @@ const {
 } = require('../../env');
 
 module.exports = {
-  async execute(interaction) {
+  async execute(interaction, options) {
     // logger.debug(`[${PREFIX}] interaction: ${interaction}`);
     logger.debug(`[${PREFIX}] interaction: ${interaction.customId}`);
     if (interaction.customId === 'tripsitModal') {
