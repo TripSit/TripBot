@@ -1,6 +1,7 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
+const ms = require('ms');
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageActionRow, MessageButton } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
@@ -17,45 +18,29 @@ const {
 const botPrefix = NODE_ENV === 'production' ? '~' : '-';
 
 const {
-  discordGuildId,
-  roleNeedshelpId,
-  roleAdminId,
-  roleDiscordopId,
+  roleDirectorId,
+  roleSuccessorId,
+  roleSysadminId,
+  roleLeaddevId,
+  roleIrcadminId,
+  roleDiscordadminId,
   roleIrcopId,
   roleModeratorId,
   roleTripsitterId,
   roleTeamtripsitId,
-  roleTripbot2Id,
   roleTripbotId,
+  roleTripbot2Id,
   roleBotId,
   roleDeveloperId,
-  roleTreeId,
-  roleSproutId,
-  roleSeedlingId,
-  roleBoosterId,
-  roleRedId,
-  roleOrangeId,
-  roleYellowId,
-  roleGreenId,
-  roleBlueId,
-  rolePurpleId,
-  rolePinkId,
-  roleBrownId,
-  roleBlackId,
-  roleWhiteId,
-  roleDrunkId,
-  roleHighId,
-  roleRollingId,
-  roleTrippingId,
-  roleDissociatingId,
-  roleStimmingId,
-  roleNoddingId,
-  roleSoberId,
-} = require('../../env');
+} = require('../../../env');
 
 const teamRoles = [
-  roleAdminId,
-  roleDiscordopId,
+  roleDirectorId,
+  roleSuccessorId,
+  roleSysadminId,
+  roleLeaddevId,
+  roleIrcadminId,
+  roleDiscordadminId,
   roleIrcopId,
   roleModeratorId,
   roleTripsitterId,
@@ -64,10 +49,7 @@ const teamRoles = [
   roleTripbotId,
   roleBotId,
   roleDeveloperId,
-
 ];
-
-const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
 
 const modButtons = new MessageActionRow()
   .addComponents(
@@ -153,8 +135,7 @@ module.exports = {
         .setRequired(true))
       .addStringOption(option => option
         .setName('channel')
-        .setDescription('Channel to kick from!')
-        .setRequired(true))
+        .setDescription('Channel to kick from!'))
       .setName('kick'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Ban a user')
@@ -186,9 +167,8 @@ module.exports = {
     logger.debug(`[${PREFIX}] reason: ${reason}`);
     const duration = interaction.options.getString('duration');
     logger.debug(`[${PREFIX}] duration: ${duration}`);
-    const minutes = duration ? (await parseDuration.execute(duration) / 1000) / 60 : 0;
-    logger.debug(`[${PREFIX}] minutes: ${minutes}`);
 
+    let minutes = null;
     let targetFromIrc = null;
     let targetFromDiscord = null;
     let targetIsMember = null;
@@ -203,6 +183,27 @@ module.exports = {
       const targetId = target.slice(3, -1);
       logger.debug(`[${PREFIX}] targetId: ${targetId}`);
       target = await interaction.guild.members.fetch(targetId);
+
+      // Team check - Cannot be run on team members
+      let targetIsTeamMember = false;
+      target.roles.cache.forEach(async role => {
+        if (teamRoles.includes(role.id)) {
+          targetIsTeamMember = true;
+        }
+      });
+      if (targetIsTeamMember) {
+        logger.debug(`[${PREFIX}] Target is a team member!`);
+        const teamMessage = stripIndents`
+          Hey ${actor}, ${target.user.username} is a team member!
+          Did you mean to do that?`;
+        const embed = template.embedTemplate()
+          .setColor('DARK_BLUE')
+          .setDescription(teamMessage);
+        if (!interaction.replied) {
+          await interaction.reply({ embeds: [embed], ephemeral: true });
+        }
+        return;
+      }
     } else {
       // Do a whois lookup to the user
       let data = null;
@@ -229,7 +230,20 @@ module.exports = {
       targetIsMember = false;
       target = data;
     }
+
     logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+
+    if (!target) {
+      const embed = template.embedTemplate()
+        .setColor('RED')
+        .setDescription('Target not found?');
+      interaction.reply({ embeds: [embed], ephemeral: true });
+      logger.debug(`[${PREFIX}] Target not found!`);
+      return;
+    }
+
+    const username = target.displayName ? target.displayName : target.nick;
+    logger.debug(`[${PREFIX}] target username: ${username}`);
 
     // Get the channel information
     let channel = interaction.options.getString('channel');
@@ -245,18 +259,6 @@ module.exports = {
     }
     logger.debug(`[${PREFIX}] channel: ${JSON.stringify(channel, null, 2)}`);
 
-    const username = target.nick ? target.nick : target.displayname;
-    logger.debug(`[${PREFIX}] username: ${username}`);
-
-    if (!target) {
-      const embed = template.embedTemplate()
-        .setColor('RED')
-        .setDescription('Target not found?');
-      interaction.reply({ embeds: [embed], ephemeral: true });
-      logger.debug(`[${PREFIX}] Target not found!`);
-      return;
-    }
-
     if (command === 'warn') {
       if (targetFromIrc) {
         try {
@@ -270,7 +272,7 @@ module.exports = {
         try {
           const warnEmbed = template.embedTemplate()
             .setColor('YELLOW')
-            .setTitle('Warned!')
+            .setTitle('Warning!')
             .setDescription(stripIndents`
             You have warned by Team TripSit:
 
@@ -307,10 +309,15 @@ module.exports = {
         }
       }
       if (targetFromDiscord) {
-        if (toggle === 'on') {
+        if (toggle === 'on' || toggle === null) {
           try {
-            await target.send(`You have been quieted for ${duration} because ${reason}`);
-            target.timeout(duration, reason);
+            // The length of the timout defaults to 1 week if no time is given
+            minutes = duration
+              ? await parseDuration.execute(duration)
+              : 604800000;
+            logger.debug(`[${PREFIX}] minutes: ${minutes}`);
+            target.timeout(minutes, reason);
+            await target.send(`You have been quieted for ${ms(minutes, { long: true })}${reason ? ` because ${reason}` : ''} `);
           } catch (err) {
             logger.error(`[${PREFIX}] Error: ${err}`);
           }
@@ -319,9 +326,7 @@ module.exports = {
             await target.send(`You have been unquieted for ${reason}`);
             target.timeout(0, reason);
             command = 'untimeout';
-            logger.debug(`[${PREFIX}] I un${command}ed ${username} because '${reason}'!`);
-            interaction.reply(`I un${command}ed ${username} because '${reason}'`);
-            return;
+            logger.debug(`[${PREFIX}] I ${command}ed ${username} because '${reason}'!`);
           } catch (err) {
             logger.error(`[${PREFIX}] Error: ${err}`);
           }
@@ -339,7 +344,7 @@ module.exports = {
       }
       if (targetFromDiscord) {
         try {
-          await target.send(`You have been kicked for ${reason}`);
+          await target.send(`You have been kicked because ${reason}`);
           target.kick();
         } catch (err) {
           logger.error(`[${PREFIX}] Error: ${err}`);
@@ -362,8 +367,6 @@ module.exports = {
             const tripbotCommand = `${botPrefix}nunban ${username} ${reason}`;
             global.ircClient.say('tripbot', tripbotCommand);
             global.ircClient.say('#sandbox', `Sent: ${tripbotCommand}`);
-            interaction.reply(`I un${command}ed ${username} because '${reason}'`);
-            return;
           } catch (err) {
             logger.error(`[${PREFIX}] Error: ${err}`);
           }
@@ -394,7 +397,7 @@ module.exports = {
       }
     }
 
-    interaction.reply(`I ${command}ed ${username} ${channel ? `in ${channel}` : ''}${minutes ? ` for ${minutes} minutes` : ''} because '${reason}'`);
+    interaction.reply({ content: `I ${command}ed ${username} ${channel ? `in ${channel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''} because '${reason}'`, ephemeral: true });
 
     // Extract actor data
     const [actorData, actorFbid] = await getUserInfo(actor);
@@ -421,8 +424,10 @@ module.exports = {
     const targetUsername = `${targetIsMember ? target.user.username : target.username}#${targetIsMember ? target.user.discriminator : target.discriminator}`;
 
     // eslint-disable-next-line
-        // const title = `${actor} ${command}ed ${username} ${duration ? `for ${duration}` : ''} ${reason ? `because ${reason}` : ''}`;
-    const title = `${actor} ${command}ed ${targetData} ${reason ? `because ${reason}` : ''}`;
+    logger.debug(`[${PREFIX}] minutes: ${minutes}`);
+    const title = `${actor} ${command}ed ${username}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because ${reason}` : ''}`;
+    logger.debug(`[${PREFIX}] title: ${title}`);
+    // const title = `${actor} ${command}ed ${targetData} ${reason ? `because ${reason}` : ''}`;
     // const book = [];
     const targetEmbed = template.embedTemplate()
       .setColor('BLUE')
