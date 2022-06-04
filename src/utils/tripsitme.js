@@ -105,6 +105,10 @@ const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
 // Declare the static test nitice
 const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
 
+const invisibleEmoji = NODE_ENV === 'production'
+  ? '<:invisible:976853930489298984>'
+  : '<:invisible:976824380564852768>';
+
 module.exports = {
   async execute(interaction) {
     // Create the modal
@@ -337,6 +341,7 @@ module.exports = {
 
     // Remove all roles, except team and vanity, from the target
     target.roles.cache.forEach(role => {
+      logger.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
       if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone') && !role.name.includes('NeedsHelp')) {
         logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.user.username}`);
         try {
