@@ -156,79 +156,81 @@ module.exports = {
         .addChoice('On', 'on')
         .addChoice('Off', 'off'))
       .setName('ban')),
-  async execute(interaction) {
-    const actor = interaction.member;
+  async execute(interaction, options) {
+    const actor = options ? options.actor : interaction.member;
     logger.debug(`[${PREFIX}] Actor: ${actor}`);
-    let command = interaction.options.getSubcommand();
+    let command = options ? options.command : interaction.options.getSubcommand();
     logger.debug(`[${PREFIX}] Command: ${command}`);
-    const toggle = interaction.options.getString('toggle');
+    const toggle = options ? options.toggle : interaction.options.getString('toggle');
     logger.debug(`[${PREFIX}] toggle: ${toggle}`);
-    const reason = interaction.options.getString('reason');
+    const reason = options ? options.reason : interaction.options.getString('reason');
     logger.debug(`[${PREFIX}] reason: ${reason}`);
-    const duration = interaction.options.getString('duration');
+    const duration = options ? options.duration : interaction.options.getString('duration');
     logger.debug(`[${PREFIX}] duration: ${duration}`);
 
     let minutes = null;
-    let targetFromIrc = null;
-    let targetFromDiscord = null;
-    let targetIsMember = null;
+    let targetFromIrc = options ? false : null;
+    let targetFromDiscord = options ? true : null;
+    let targetIsMember = options ? true : null;
 
     // Determine target information
-    let target = interaction.options.getString('target');
-    if (target.startsWith('<@') && target.endsWith('>')) {
-      // If the target string starts with a < then it's likely a discord user
-      targetFromIrc = false;
-      targetFromDiscord = true;
-      targetIsMember = true;
-      const targetId = target.slice(3, -1);
-      logger.debug(`[${PREFIX}] targetId: ${targetId}`);
-      target = await interaction.guild.members.fetch(targetId);
+    let target = options ? options.target : interaction.options.getString('target');
+    if (!options) {
+      if (target.startsWith('<@') && target.endsWith('>')) {
+        // If the target string starts with a < then it's likely a discord user
+        targetFromIrc = false;
+        targetFromDiscord = true;
+        targetIsMember = true;
+        const targetId = target.slice(3, -1);
+        logger.debug(`[${PREFIX}] targetId: ${targetId}`);
+        target = await interaction.guild.members.fetch(targetId);
 
-      // Team check - Cannot be run on team members
-      let targetIsTeamMember = false;
-      target.roles.cache.forEach(async role => {
-        if (teamRoles.includes(role.id)) {
-          targetIsTeamMember = true;
+        // Team check - Cannot be run on team members
+        let targetIsTeamMember = false;
+        target.roles.cache.forEach(async role => {
+          if (teamRoles.includes(role.id)) {
+            targetIsTeamMember = true;
+          }
+        });
+        if (targetIsTeamMember) {
+          logger.debug(`[${PREFIX}] Target is a team member!`);
+          const teamMessage = stripIndents`
+            Hey ${actor}, ${target.user.username} is a team member!
+            Did you mean to do that?`;
+          const embed = template.embedTemplate()
+            .setColor('DARK_BLUE')
+            .setDescription(teamMessage);
+          if (!interaction.replied) {
+            await interaction.reply({ embeds: [embed], ephemeral: true });
+          }
+          return;
         }
-      });
-      if (targetIsTeamMember) {
-        logger.debug(`[${PREFIX}] Target is a team member!`);
-        const teamMessage = stripIndents`
-          Hey ${actor}, ${target.user.username} is a team member!
-          Did you mean to do that?`;
-        const embed = template.embedTemplate()
-          .setColor('DARK_BLUE')
-          .setDescription(teamMessage);
-        if (!interaction.replied) {
-          await interaction.reply({ embeds: [embed], ephemeral: true });
+      } else {
+        // Do a whois lookup to the user
+        let data = null;
+        await global.ircClient.whois(target, async resp => {
+          data = resp;
+        });
+
+        // This is a hack substanc3 helped create to get around the fact that the whois command
+        // is asyncronous by default, so we need to make this syncronous
+        while (data === null) {
+          await new Promise(resolve => setTimeout(resolve, 100)); // eslint-disable-line
         }
-        return;
-      }
-    } else {
-      // Do a whois lookup to the user
-      let data = null;
-      await global.ircClient.whois(target, async resp => {
-        data = resp;
-      });
+        // logger.debug(`[${PREFIX}] data ${JSON.stringify(data, null, 2)}`);
+        if (!data.host) {
+          const embed = template.embedTemplate();
+          logger.debug(`[${PREFIX}] ${target} not found on IRC`);
+          embed.setDescription(stripIndents`${target} is not found on IRC, did you spell that right?`);
+          interaction.reply({ embeds: [embed], ephemeral: true });
+          return;
+        }
 
-      // This is a hack substanc3 helped create to get around the fact that the whois command
-      // is asyncronous by default, so we need to make this syncronous
-      while (data === null) {
-        await new Promise(resolve => setTimeout(resolve, 100)); // eslint-disable-line
+        targetFromIrc = true;
+        targetFromDiscord = false;
+        targetIsMember = false;
+        target = data;
       }
-      // logger.debug(`[${PREFIX}] data ${JSON.stringify(data, null, 2)}`);
-      if (!data.host) {
-        const embed = template.embedTemplate();
-        logger.debug(`[${PREFIX}] ${target} not found on IRC`);
-        embed.setDescription(stripIndents`${target} is not found on IRC, did you spell that right?`);
-        interaction.reply({ embeds: [embed], ephemeral: true });
-        return;
-      }
-
-      targetFromIrc = true;
-      targetFromDiscord = false;
-      targetIsMember = false;
-      target = data;
     }
 
     logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
@@ -243,10 +245,9 @@ module.exports = {
     }
 
     const username = target.displayName ? target.displayName : target.nick;
-    logger.debug(`[${PREFIX}] target username: ${username}`);
 
     // Get the channel information
-    let channel = interaction.options.getString('channel');
+    let channel = options ? null : interaction.options.getString('channel');
     if (channel) {
       if (channel.startsWith('<#') && channel.endsWith('>')) {
         // Discord channels start with <#
@@ -378,9 +379,9 @@ module.exports = {
             // The length of the timout defaults to forever if no time is given
             minutes = duration
               ? await parseDuration.execute(duration)
-              : 'forever';
+              : null;
             logger.debug(`[${PREFIX}] minutes: ${minutes}`);
-            await target.send(`You have been banned for ${ms(minutes, { long: true })}${reason ? ` because ${reason}` : ''} `);
+            await target.send(`You have been banned ${minutes ? `for ${ms(minutes, { long: true })}` : ''}${reason ? ` because ${reason}` : ''} `);
             interaction.guild.members.ban(target, { days: 7, reason });
           } catch (err) {
             logger.error(`[${PREFIX}] Error: ${err}`);
@@ -402,7 +403,81 @@ module.exports = {
       }
     }
 
-    interaction.reply({ content: `I ${command}ed ${username} ${channel ? `in ${channel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''} because '${reason}'`, ephemeral: true });
+    if (command !== 'info') {
+      interaction.reply({ content: `I ${command}ed ${username}${channel ? ` in ${channel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because ${reason}` : ''}`, ephemeral: true });
+    }
+
+    // Extract target data
+    const [targetData, targetFbid] = await getUserInfo(target);
+    const targetAction = `received_${command}`;
+    const targetUsername = `${targetIsMember ? target.user.username : target.username}#${targetIsMember ? target.user.discriminator : target.discriminator}`;
+    const targetModActions = targetData.modActions ? targetData.modActions : {};
+    const targetEmbed = template.embedTemplate()
+      .setColor('BLUE')
+      .setDescription(`${actor} ${command}ed ${username}${channel ? ` in ${channel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because ${reason}` : ''}`)
+      .addFields(
+        { name: 'Username', value: targetUsername, inline: true },
+        { name: 'Nickname', value: `${target.nickname ? target.nickname : target.user.username}`, inline: true },
+        { name: 'ID', value: `${targetIsMember ? target.user.id : target.id}`, inline: true },
+      )
+      .addFields(
+        { name: 'Account created', value: `${targetIsMember ? time(target.user.createdAt, 'R') : time(target.createdAt, 'R')}`, inline: true },
+        { name: 'Joined', value: `${time(target.joinedAt, 'R')}`, inline: true },
+        { name: 'Timeout until', value: `${target.communicationDisabledUntil ? time(target.communicationDisabledUntil, 'R') : 'Not Timeouted'}`, inline: true },
+      )
+      // .addFields(
+      //   { name: 'Pending', value: `${target.pending}`, inline: true },
+      //   { name: 'Moderatable', value: `${target.moderatable}`, inline: true },
+      //   { name: 'Muted', value: `
+      // ${targetIsMember ? target.isCommunicationDisabled() : 'banned'}`, inline: true },
+      // )
+      // .addFields(
+      //   { name: 'Manageable', value: `${target.manageable}`, inline: true },
+      //   { name: 'Bannable', value: `${target.bannable}`, inline: true },
+      //   { name: 'Kickable', value: `${target.kickable}`, inline: true },
+      // )
+      .addFields(
+        { name: '# of Reports', value: `${targetModActions.received_report ? targetModActions.received_report : 0}`, inline: true },
+        { name: '# of Timeouts', value: `${targetModActions.received_timeout ? targetModActions.received_timeout : 0}`, inline: true },
+        { name: '# of Warns', value: `${targetModActions.received_warn ? targetModActions.received_warn : 0}`, inline: true },
+      )
+      .addFields(
+        { name: '# of Kicks', value: `${targetModActions.received_kick ? targetModActions.received_kick : 0}`, inline: true },
+        { name: '# of Bans', value: `${targetModActions.received_ban ? targetModActions.received_ban : 0}`, inline: true },
+        { name: '# of Notes', value: `${targetModActions.received_note ? targetModActions.received_note : 0}`, inline: true },
+      )
+      .addFields(
+        { name: '# of Tripsitmes', value: `${targetModActions.received_tripsitme ? targetModActions.received_tripsitme : 0}`, inline: true },
+        { name: '# of I\'m Good', value: `${targetModActions.received_imgood ? targetModActions.received_imgood : 0}`, inline: true },
+        { name: '# of Fucks to Give', value: '0', inline: true },
+      );
+
+    if (command === 'info') {
+      if (targetFromIrc) {
+        try {
+          global.ircClient.say('tripbot', `${botPrefix}${command} ${username}`);
+          global.ircClient.say('#sandbox', `Sent: ${botPrefix}${command} ${username}`);
+          return;
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error: ${err}`);
+        }
+      } else {
+        try {
+          interaction.reply({ embeds: [targetEmbed], ephemeral: true, components: [modButtons] });
+          logger.debug(`[${PREFIX}] replied to user ${actor} with info about ${target}`);
+          logger.debug(`[${PREFIX}] finished!`);
+          return;
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error: ${err}`);
+        }
+      }
+    }
+
+    logger.debug(`${PREFIX} channelModeratorsId: ${channelModeratorsId}`);
+    const modChan = interaction.client.channels.cache.get(channelModeratorsId);
+    modChan.send({ embeds: [targetEmbed], components: [modButtons] });
+    // modChan.send({ embeds: [targetEmbed] });
+    logger.debug(`${PREFIX} send a message to the moderators room`);
 
     // Extract actor data
     const [actorData, actorFbid] = await getUserInfo(actor);
@@ -423,51 +498,6 @@ module.exports = {
     // Load actor data
     await setUserInfo(actorFbid, actorData);
 
-    // Extract target data
-    const [targetData, targetFbid] = await getUserInfo(target);
-    const targetAction = `${command}_received`;
-    const targetUsername = `${targetIsMember ? target.user.username : target.username}#${targetIsMember ? target.user.discriminator : target.discriminator}`;
-
-    // eslint-disable-next-line
-    logger.debug(`[${PREFIX}] minutes: ${minutes}`);
-    const title = `${actor} ${command}ed ${username}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because ${reason}` : ''}`;
-    logger.debug(`[${PREFIX}] title: ${title}`);
-    // const title = `${actor} ${command}ed ${targetData} ${reason ? `because ${reason}` : ''}`;
-    // const book = [];
-    const targetEmbed = template.embedTemplate()
-      .setColor('BLUE')
-      .setDescription(title)
-      .addFields(
-        { name: 'Username', value: targetUsername, inline: true },
-        { name: 'Nickname', value: `${target.nickname}`, inline: true },
-        { name: 'ID', value: `${targetIsMember ? target.user.id : target.id}`, inline: true },
-      )
-      .addFields(
-        { name: 'Account created', value: `${targetIsMember ? time(target.user.createdAt, 'R') : time(target.createdAt, 'R')}`, inline: true },
-        { name: 'Joined', value: `${time(target.joinedAt, 'R')}`, inline: true },
-        { name: 'Timeout until', value: `${time(target.communicationDisabledUntil, 'R')}`, inline: true },
-      )
-      .addFields(
-        { name: 'Pending', value: `${target.pending}`, inline: true },
-        { name: 'Moderatable', value: `${target.moderatable}`, inline: true },
-        { name: 'Muted', value: `${targetIsMember ? target.isCommunicationDisabled() : 'banned'}`, inline: true },
-      )
-      .addFields(
-        { name: 'Manageable', value: `${target.manageable}`, inline: true },
-        { name: 'Bannable', value: `${target.bannable}`, inline: true },
-        { name: 'Kickable', value: `${target.kickable}`, inline: true },
-      )
-      .addFields(
-        { name: '# of Reports', value: `${targetData.reports_recv ? targetData.reports_recv : 0}`, inline: true },
-        { name: '# of Timeouts', value: `${targetData.timeout_recv ? targetData.timeout_recv : 0}`, inline: true },
-        { name: '# of Warns', value: `${targetData.warn_recv ? targetData.warn_recv : 0}`, inline: true },
-      )
-      .addFields(
-        { name: '# of Kicks', value: `${targetData.kick_recv ? targetData.kick_recv : 0}`, inline: true },
-        { name: '# of Bans', value: `${targetData.ban_recv ? targetData.ban_recv : 0}`, inline: true },
-        { name: '# of Fucks to give', value: '0', inline: true },
-      );
-
     // Transform taget data
     if ('discord' in actorData) {
       if ('modActions' in targetData) {
@@ -483,32 +513,6 @@ module.exports = {
     // Load target data
     await setUserInfo(targetFbid, targetData);
 
-    if (command === 'info') {
-      if (targetFromIrc) {
-        try {
-          global.ircClient.say('tripbot', `${botPrefix}${command} ${username}`);
-          global.ircClient.say('#sandbox', `Sent: ${botPrefix}${command} ${username}`);
-          return;
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error: ${err}`);
-        }
-      } else {
-        try {
-          interaction.reply({ embeds: [targetEmbed], ephemeral: true, components: [modButtons] });
-          logger.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${target.user.name}`);
-          logger.debug(`[${PREFIX}] finished!`);
-          return;
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error: ${err}`);
-        }
-      }
-    }
-
-    logger.debug(`${PREFIX} channelModeratorsId: ${channelModeratorsId}`);
-    const modChan = interaction.client.channels.cache.get(channelModeratorsId);
-    modChan.send({ embeds: [targetEmbed], components: [modButtons] });
-    // modChan.send({ embeds: [targetEmbed] });
-    logger.debug(`${PREFIX} send a message to the moderators room`);
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
