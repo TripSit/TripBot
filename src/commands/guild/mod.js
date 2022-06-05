@@ -105,6 +105,17 @@ module.exports = {
         .setRequired(true))
       .setName('warn'))
     .addSubcommand(subcommand => subcommand
+      .setDescription('Create a note about a user')
+      .addStringOption(option => option
+        .setName('target')
+        .setDescription('User to note about!')
+        .setRequired(true))
+      .addStringOption(option => option
+        .setName('reason')
+        .setDescription('Reason for note!')
+        .setRequired(true))
+      .setName('note'))
+    .addSubcommand(subcommand => subcommand
       .setDescription('Timeout a user')
       .addStringOption(option => option
         .setName('target')
@@ -233,7 +244,7 @@ module.exports = {
       }
     }
 
-    logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+    // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
 
     if (!target) {
       const embed = template.embedTemplate()
@@ -243,8 +254,6 @@ module.exports = {
       logger.debug(`[${PREFIX}] Target not found!`);
       return;
     }
-
-    const username = target.displayName ? target.displayName : target.nick;
 
     // Get the channel information
     let channel = options ? null : interaction.options.getString('channel');
@@ -260,6 +269,7 @@ module.exports = {
     }
     logger.debug(`[${PREFIX}] channel: ${JSON.stringify(channel, null, 2)}`);
 
+    const username = target.displayName ? target.displayName : target.nick;
     if (command === 'warn') {
       if (targetFromIrc) {
         try {
@@ -277,7 +287,7 @@ module.exports = {
             .setDescription(stripIndents`
             You have warned by Team TripSit:
 
-            > ${reason}
+            ${reason}
 
             Please read the rules and be respectful of them.
 
@@ -318,7 +328,7 @@ module.exports = {
               : 604800000;
             logger.debug(`[${PREFIX}] minutes: ${minutes}`);
             target.timeout(minutes, reason);
-            await target.send(`You have been quieted for ${ms(minutes, { long: true })}${reason ? ` because ${reason}` : ''} `);
+            await target.send(`You have been quieted for ${ms(minutes, { long: true })}${reason ? ` because\n ${reason}` : ''} `);
           } catch (err) {
             logger.error(`[${PREFIX}] Error: ${err}`);
           }
@@ -327,7 +337,7 @@ module.exports = {
             await target.send(`You have been unquieted for ${reason}`);
             target.timeout(0, reason);
             command = 'untimeout';
-            logger.debug(`[${PREFIX}] I ${command}ed ${username} because '${reason}'!`);
+            logger.debug(`[${PREFIX}] I ${command}ed ${username} because\n '${reason}'!`);
           } catch (err) {
             logger.error(`[${PREFIX}] Error: ${err}`);
           }
@@ -345,7 +355,7 @@ module.exports = {
       }
       if (targetFromDiscord) {
         try {
-          await target.send(`You have been kicked because ${reason}`);
+          await target.send(`You have been kicked because\n ${reason}`);
           target.kick();
         } catch (err) {
           logger.error(`[${PREFIX}] Error: ${err}`);
@@ -381,7 +391,7 @@ module.exports = {
               ? await parseDuration.execute(duration)
               : null;
             logger.debug(`[${PREFIX}] minutes: ${minutes}`);
-            await target.send(`You have been banned ${minutes ? `for ${ms(minutes, { long: true })}` : ''}${reason ? ` because ${reason}` : ''} `);
+            await target.send(`You have been banned ${minutes ? `for ${ms(minutes, { long: true })}` : ''}${reason ? ` because\n ${reason}` : ''} `);
             interaction.guild.members.ban(target, { days: 7, reason });
           } catch (err) {
             logger.error(`[${PREFIX}] Error: ${err}`);
@@ -404,7 +414,10 @@ module.exports = {
     }
 
     if (command !== 'info') {
-      interaction.reply({ content: `I ${command}ed ${username}${channel ? ` in ${channel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because ${reason}` : ''}`, ephemeral: true });
+      interaction.reply({ content: stripIndents`
+      I ${command}ed ${username}${channel ? ` in ${channel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because\n ${reason}` : ''}`,
+      ephemeral: true,
+      });
     }
 
     // Extract target data
@@ -412,9 +425,10 @@ module.exports = {
     const targetAction = `received_${command}`;
     const targetUsername = `${targetIsMember ? target.user.username : target.username}#${targetIsMember ? target.user.discriminator : target.discriminator}`;
     const targetModActions = targetData.modActions ? targetData.modActions : {};
+    logger.debug(`[${PREFIX}] targetModActions: ${targetModActions}`);
     const targetEmbed = template.embedTemplate()
       .setColor('BLUE')
-      .setDescription(`${actor} ${command}ed ${username}${channel ? ` in ${channel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because ${reason}` : ''}`)
+      .setDescription(`${actor} ${command}ed ${username}${channel ? ` in ${channel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because\n ${reason}` : ''}`)
       .addFields(
         { name: 'Username', value: targetUsername, inline: true },
         { name: 'Nickname', value: `${target.nickname ? target.nickname : target.user.username}`, inline: true },
@@ -437,21 +451,20 @@ module.exports = {
       //   { name: 'Kickable', value: `${target.kickable}`, inline: true },
       // )
       .addFields(
-        { name: '# of Reports', value: `${targetModActions.received_report ? targetModActions.received_report : 0}`, inline: true },
-        { name: '# of Timeouts', value: `${targetModActions.received_timeout ? targetModActions.received_timeout : 0}`, inline: true },
-        { name: '# of Warns', value: `${targetModActions.received_warn ? targetModActions.received_warn : 0}`, inline: true },
+        { name: '# of Reports', value: `${targetModActions.received_report ? targetModActions.received_report.length : 0}`, inline: true },
+        { name: '# of Timeouts', value: `${targetModActions.received_timeout ? targetModActions.received_timeout.length : 0}`, inline: true },
+        { name: '# of Warns', value: `${targetModActions.received_warn ? targetModActions.received_warn.length : 0}`, inline: true },
       )
       .addFields(
-        { name: '# of Kicks', value: `${targetModActions.received_kick ? targetModActions.received_kick : 0}`, inline: true },
-        { name: '# of Bans', value: `${targetModActions.received_ban ? targetModActions.received_ban : 0}`, inline: true },
-        { name: '# of Notes', value: `${targetModActions.received_note ? targetModActions.received_note : 0}`, inline: true },
+        { name: '# of Kicks', value: `${targetModActions.received_kick ? targetModActions.received_kick.length : 0}`, inline: true },
+        { name: '# of Bans', value: `${targetModActions.received_ban ? targetModActions.received_ban.length : 0}`, inline: true },
+        { name: '# of Notes', value: `${targetModActions.received_note ? targetModActions.received_note.length : 0}`, inline: true },
       )
       .addFields(
         { name: '# of Tripsitmes', value: `${targetModActions.received_tripsitme ? targetModActions.received_tripsitme : 0}`, inline: true },
         { name: '# of I\'m Good', value: `${targetModActions.received_imgood ? targetModActions.received_imgood : 0}`, inline: true },
         { name: '# of Fucks to Give', value: '0', inline: true },
       );
-
     if (command === 'info') {
       if (targetFromIrc) {
         try {
@@ -473,45 +486,86 @@ module.exports = {
       }
     }
 
-    logger.debug(`${PREFIX} channelModeratorsId: ${channelModeratorsId}`);
+    logger.debug(`[${PREFIX}] channelModeratorsId: ${channelModeratorsId}`);
     const modChan = interaction.client.channels.cache.get(channelModeratorsId);
     modChan.send({ embeds: [targetEmbed], components: [modButtons] });
     // modChan.send({ embeds: [targetEmbed] });
-    logger.debug(`${PREFIX} send a message to the moderators room`);
+    logger.debug(`[${PREFIX}] send a message to the moderators room`);
 
-    // Extract actor data
-    const [actorData, actorFbid] = await getUserInfo(actor);
-    const actorAction = `${command}_received`;
-
-    // Transfor actor data
-    if ('discord' in actorData) {
-      if ('modActions' in actorData) {
-        actorData.discord.modActions[actorAction] = (
-          actorData.discord.modActions[actorAction] || 0) + 1;
-      } else {
-        actorData.discord.modActions = { [actorAction]: 1 };
-      }
-    } else {
-      actorData.discord = { modActions: { [actorAction]: 1 } };
+    const now = new Date();
+    const targetModAction = {
+      [now]: {
+        actor: actor.id,
+        target: actor.id,
+      },
+    };
+    if (reason) {
+      targetModAction[now].reason = reason;
+    }
+    if (duration) {
+      targetModAction[now].duration = duration;
+    }
+    if (channel) {
+      targetModAction[now].channel = channel;
     }
 
-    // Load actor data
-    await setUserInfo(actorFbid, actorData);
+    logger.debug(`[${PREFIX}] targetModAction: ${JSON.stringify(targetModAction, null, 2)}`);
 
-    // Transform taget data
-    if ('discord' in actorData) {
-      if ('modActions' in targetData) {
-        targetData.discord.modActions[targetAction] = (
-          targetData.discord.modActions[targetAction] || 0) + 1;
+    if ('modActions' in targetData) {
+      if (targetAction in targetData.modActions) {
+        logger.debug(`[${PREFIX}] targetAction in targetData.modActions`);
+        targetData.modActions[targetAction].push(targetModAction);
       } else {
-        targetData.discord.modActions = { [targetAction]: 1 };
+        logger.debug(`[${PREFIX}] targetAction not in targetData.modActions`);
+        targetData.modActions[targetAction] = [targetModAction];
       }
     } else {
-      targetData.discord = { modActions: { [targetAction]: 1 } };
+      logger.debug(`[${PREFIX}] modActions not in targetData`);
+      targetData.modActions = {
+        [targetAction]: [targetModAction],
+      };
     }
 
     // Load target data
     await setUserInfo(targetFbid, targetData);
+
+    // // Extract actor data
+    const [actorData, actorFbid] = await getUserInfo(actor);
+    const actorAction = `${command}_received`;
+
+    const actorModAction = {
+      [now]: {
+        actor: actor.id,
+        target: target.id,
+      },
+    };
+    if (reason) {
+      actorModAction[now].reason = reason;
+    }
+    if (duration) {
+      actorModAction[now].duration = duration;
+    }
+    if (channel) {
+      actorModAction[now].channel = channel;
+    }
+
+    if ('modActions' in actorData) {
+      if (actorAction in actorData.modActions) {
+        logger.debug(`[${PREFIX}] actorAction in actorData.modActions`);
+        actorData.modActions[actorAction].push(actorModAction);
+      } else {
+        logger.debug(`[${PREFIX}] actorAction not in actorData.modActions`);
+        actorData.modActions[actorAction] = [actorModAction];
+      }
+    } else {
+      logger.debug(`[${PREFIX}] modActions not in actorData`);
+      actorData.modActions = {
+        [actorAction]: [actorModAction],
+      };
+    }
+
+    // // Load actor data
+    await setUserInfo(actorFbid, actorData);
 
     logger.debug(`[${PREFIX}] finished!`);
   },

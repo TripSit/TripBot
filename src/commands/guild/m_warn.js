@@ -16,6 +16,7 @@ const embed = template.embedTemplate();
 let actor = {};
 let target = {};
 let message = {};
+let messageUrl = '';
 const command = 'warn';
 
 let reason = 'Why are you warning this person?';
@@ -32,6 +33,8 @@ module.exports = {
 
     message = interaction.options.data[0].message.cleanContent;
     // logger.debug(`[${PREFIX}] message: ${message}`);
+
+    messageUrl = interaction.options.data[0].message.url;
 
     const targetId = interaction.options.data[0].message.author.id;
     // logger.debug(`[${PREFIX}] targetId: ${targetId}`);
@@ -62,10 +65,9 @@ module.exports = {
     // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
     reason = interaction.fields.getTextInputValue('warnReason');
     reason = stripIndents`
-    ${reason}
+    > ${reason}
 
-    The offending message:
-
+    [The offending message:](${messageUrl})
     > ${message}
 
     `;

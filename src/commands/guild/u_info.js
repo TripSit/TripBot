@@ -4,17 +4,28 @@ const path = require('path');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
-const template = require('../../utils/embed-template');
+const mod = require('./mod');
 
 const PREFIX = path.parse(__filename).name;
+
+let actor = {};
+let target = {};
+const command = 'info';
 
 module.exports = {
   data: new ContextMenuCommandBuilder()
     .setName('Info')
     .setType(ApplicationCommandType.User),
   async execute(interaction) {
-    const embed = template.embedTemplate().setTitle('I would show the mod info of this user!');
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction
+    actor = interaction.member;
+    // logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
+    target = interaction.options.data[0].member;
+    // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+
+    mod.execute(interaction, {
+      actor, command, toggle: 'on', target, reason: null, duration: null,
+    });
     logger.debug(`[${PREFIX}] finished!`);
   },
 };

@@ -16,6 +16,7 @@ const embed = template.embedTemplate();
 let actor = {};
 let target = {};
 let message = {};
+let messageUrl = '';
 const command = 'timeout';
 
 let reason = 'Why are you timeouting this person?';
@@ -33,6 +34,8 @@ module.exports = {
 
     message = interaction.options.data[0].message.cleanContent;
     // logger.debug(`[${PREFIX}] message: ${message}`);
+
+    messageUrl = interaction.options.data[0].message.url;
 
     const targetId = interaction.options.data[0].message.author.id;
     // logger.debug(`[${PREFIX}] targetId: ${targetId}`);
@@ -71,11 +74,10 @@ module.exports = {
     logger.debug(`[${PREFIX}] duration: ${duration}`);
     reason = interaction.fields.getTextInputValue('timeoutReason');
     reason = stripIndents`
-    ${reason}
+    > ${reason}
 
-    The offending message:
-
-    ${message}`;
+    [The offending message:](${messageUrl})
+    > ${message}`;
     logger.debug(`[${PREFIX}] reason: ${reason}`);
     embed.setTitle('Tripbot Timeout');
     embed.setDescription(`${actor.user.username} has timeout ${target.user.username}`);
