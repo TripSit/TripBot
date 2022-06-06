@@ -9,6 +9,7 @@ const uKick = require('../commands/guild/u_kick');
 const uNote = require('../commands/guild/u_note');
 const mTimeout = require('../commands/guild/m_timeout');
 const mWarn = require('../commands/guild/m_warn');
+const mReport = require('../commands/guild/m_report');
 
 // const tripsat = require('./tripsat');
 
@@ -44,6 +45,10 @@ module.exports = {
     }
     if (interaction.customId === 'warnModal') {
       mWarn.submit(interaction);
+      return;
+    }
+    if (interaction.customId === 'reportModal') {
+      mReport.submit(interaction);
       return;
     }
     if (interaction.customId === 'bugReportModal') {
