@@ -193,7 +193,8 @@ module.exports = {
       let top25 = [];
       if (results.length > 0) {
         top25 = results.slice(0, 25);
-        interaction.respond(top25.map(choice => ({ name: choice.item.name, value: choice.item.name })));
+        interaction.respond(top25.map(choice => (
+          { name: choice.item.name, value: choice.item.name })));
       } else {
         const TOP_PSYCHS = ['Cannabis', 'MDMA', 'LSD', 'DMT', 'Mushrooms'];
         const TOP_DISSOS = ['Zolpidem', 'Ketamine', 'DXM', 'PCP', 'Salvia'];
