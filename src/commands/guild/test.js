@@ -209,7 +209,7 @@ module.exports = {
               const drugUnits = [
               'mg (milligrams)',
               'ml (milliliters)',
-              'µg (micrograms)',
+              'µg (micrograms/ug/mcg)',
               'g (grams)',
               'oz (ounces)',
               'fl oz (fluid ounces)',
