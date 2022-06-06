@@ -208,7 +208,7 @@ module.exports = {
             if (name == 'idose') {
               const drugUnits = [
               'mg (milligrams)',
-              'ml (milliliters)',
+              'mL (milliliters)',
               'µg (micrograms/ug/mcg)',
               'g (grams)',
               'oz (ounces)',
