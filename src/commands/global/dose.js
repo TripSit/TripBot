@@ -19,7 +19,7 @@ module.exports = {
       .setRequired(true)
       .addChoice('mg (milligrams)', 'mg (milligrams)')
       .addChoice('ml (milliliters)', 'ml (milliliters)')
-      .addChoice('µg (micrograms)', 'µg (micrograms)')
+      .addChoice('µg (micrograms/ug/mcg)', 'µg (micrograms/ug/mcg)')
       .addChoice('g (grams)', 'g (grams)')
       .addChoice('oz (ounces)', 'oz (ounces)')
       .addChoice('fl oz (fluid ounces)', 'fl oz (fluid ounces)')
