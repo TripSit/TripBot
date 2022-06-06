@@ -356,4 +356,5 @@ src/assets/ts_data.json
 src/assets/reminders.json
 
 # Project specific
-/backups/*.json
+!backups/
+backups/*.json

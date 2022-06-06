@@ -4,6 +4,13 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('./logger');
 const template = require('./embed-template');
 const tripsitme = require('./tripsitme');
+const uBan = require('../commands/guild/u_ban');
+const uKick = require('../commands/guild/u_kick');
+const uNote = require('../commands/guild/u_note');
+const mTimeout = require('../commands/guild/m_timeout');
+const mWarn = require('../commands/guild/m_warn');
+const mReport = require('../commands/guild/m_report');
+
 // const tripsat = require('./tripsat');
 
 const {
@@ -20,10 +27,30 @@ module.exports = {
       tripsitme.submit(interaction);
       return;
     }
-    // if (interaction.customId === 'feedbackModal') {
-    //   tripsat.submit(interaction);
-    //   return;
-    // }
+    if (interaction.customId === 'banModal') {
+      uBan.submit(interaction);
+      return;
+    }
+    if (interaction.customId === 'kickModal') {
+      uKick.submit(interaction);
+      return;
+    }
+    if (interaction.customId === 'noteModal') {
+      uNote.submit(interaction);
+      return;
+    }
+    if (interaction.customId === 'timeoutModal') {
+      mTimeout.submit(interaction);
+      return;
+    }
+    if (interaction.customId === 'warnModal') {
+      mWarn.submit(interaction);
+      return;
+    }
+    if (interaction.customId === 'reportModal') {
+      mReport.submit(interaction);
+      return;
+    }
     if (interaction.customId === 'bugReportModal') {
       const username = `${interaction.user.username}#${interaction.user.discriminator}`;
       const guildMessage = `${interaction.guild.name ? ` in ${interaction.guild.name}` : 'DM'}`;

@@ -16,7 +16,6 @@ const timezoneNames = [];
 for (let i = 0; i < timezones.length; i += 1) {
   timezoneNames.push(timezones[i].label);
 }
-const drugNames = drugDataAll.map(d => d.name);
 
 const pillColorNames = [];
 for (let i = 0; i < pillColors.length; i += 1) {
@@ -178,20 +177,24 @@ module.exports = {
     } else { // If you don't need a specific autocomplete, return a list of drug names
       const options = {
         shouldSort: true,
+        threshold: 0.2,
+        location: 0,
+        distance: 100,
+        maxPatternLength: 32,
+        minMatchCharLength: 1,
         keys: [
           'name',
-          'aliasesStr',
+          'aliases',
         ],
       };
-
-      // For each dictionary in the drug_data_all list, find the "name" key and add it to a list
-      const fuse = new Fuse(drugNames, options);
+      const fuse = new Fuse(drugDataAll, options);
       const focusedValue = interaction.options.getFocused();
       const results = fuse.search(focusedValue);
       let top25 = [];
       if (results.length > 0) {
         top25 = results.slice(0, 25);
-        interaction.respond(top25.map(choice => ({ name: choice.item, value: choice.item })));
+        interaction.respond(top25.map(choice => (
+          { name: choice.item.name, value: choice.item.name })));
       } else {
         const TOP_PSYCHS = ['Cannabis', 'MDMA', 'LSD', 'DMT', 'Mushrooms'];
         const TOP_DISSOS = ['Zolpidem', 'Ketamine', 'DXM', 'PCP', 'Salvia'];
