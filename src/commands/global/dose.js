@@ -18,7 +18,7 @@ module.exports = {
       .setDescription('What units?')
       .setRequired(true)
       .addChoice('mg (milligrams)', 'mg (milligrams)')
-      .addChoice('ml (milliliters)', 'ml (milliliters)')
+      .addChoice('mL (milliliters)', 'mL (milliliters)')
       .addChoice('µg (micrograms/ug/mcg)', 'µg (micrograms/ug/mcg)')
       .addChoice('g (grams)', 'g (grams)')
       .addChoice('oz (ounces)', 'oz (ounces)')
