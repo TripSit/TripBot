@@ -325,9 +325,14 @@ module.exports = {
                   // Get the memeber from the guild
                   logger.debug(`[${PREFIX}] mem.id: ${discordData.id}`);
                   // logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
-                  const member = await guildTripsit.members.fetch(discordData.id);
-                  logger.debug(`[${PREFIX}] member: ${member}`);
-
+                  try {
+                    const member = await guildTripsit.members.fetch(discordData.id);
+                    logger.debug(`[${PREFIX}] member: ${member}`);
+                  } catch (err) {
+                    logger.error(`[${PREFIX}] Error fetching member ${discordData.id}`);
+                    logger.error(err);
+                    return;
+                  }
                   // Get the role from the guild
                   const roleMindset = guildTripsit.roles.cache.find(r => r.name === lastSetMindset);
                   logger.debug(`[${PREFIX}] roleMindset: ${roleMindset.name}`);
