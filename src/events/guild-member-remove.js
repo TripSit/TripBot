@@ -14,6 +14,7 @@ module.exports = {
   name: 'guildMemberRemove',
 
   async execute(member) {
+    // Only run on Tripsit
     if (member.guild.id === discordGuildId) {
       logger.debug(`[${PREFIX}] guildMemberRemove`);
       // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);

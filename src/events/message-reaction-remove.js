@@ -14,7 +14,9 @@ const {
 module.exports = {
   name: 'messageReactionRemove',
   async execute(reaction, user) {
-    if (user.bot) { return logger.debug(`[${PREFIX}] Ignoring bot interaction`); }
+    // Only run on Tripsit
+    if (reaction.message.guild.id !== discordGuildId) { return; }
+    if (user.bot) { return; }
     // logger.debug(`[${PREFIX}] Reaction added`);
     // logger.debug(`[${PREFIX}] Reaction: ${JSON.stringify(reaction, null, 2)}`);
     // logger.debug(`[${PREFIX}] User: ${JSON.stringify(user, null, 2)}`);

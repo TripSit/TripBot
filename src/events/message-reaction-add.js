@@ -15,6 +15,7 @@ const {
 module.exports = {
   name: 'messageReactionAdd',
   async execute(reaction, user) {
+    // Only run on Tripsit
     if (reaction.message.guild.id !== discordGuildId) { return; }
     // logger.debug(`[${PREFIX}] Reaction added`);
 
