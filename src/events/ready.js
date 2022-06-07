@@ -7,7 +7,7 @@ const { ReactionRole } = require('discordjs-reaction-role');
 const logger = require('../utils/logger');
 const { getGuildInfo } = require('../utils/firebase');
 const { connectIRC } = require('../utils/irc');
-const { runTimer } = require('../utils/timer');
+// const { runTimer } = require('../utils/timer');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -80,7 +80,7 @@ module.exports = {
     // logger.debug(`[${PREFIX}] User database loaded.`);
     // logger.debug(`[${PREFIX}] userDb: ${JSON.stringify(global.userDb, null, 4)}`);
 
-    runTimer(client);
+    // runTimer(client);
 
     const today = Math.floor(Date.now() / 1000);
     if (NODE_ENV !== 'production') {
