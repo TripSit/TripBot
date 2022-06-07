@@ -174,9 +174,16 @@ module.exports = {
                 // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                 // Get the memeber from the guild
-                // logger.debug(`[${PREFIX}] discordData.id: ${discordData.id}`);
-                // logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
-                const member = await guildTripsit.members.fetch(discordData.id);
+                let member = {};
+                try {
+                  logger.debug(`[${PREFIX}] Fetching discord member`);
+                  logger.debug(`[${PREFIX}] discordData.id: ${discordData.id}`);
+                  logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
+                  member = await guildTripsit.members.fetch(discordData.id);
+                } catch (err) {
+                  logger.debug(`[${PREFIX}] Error fetching member: ${err}`);
+                  return;
+                }
                 logger.debug(`[${PREFIX}] member: ${member}`);
 
                 // Get the role from the guild
@@ -325,8 +332,10 @@ module.exports = {
                   // Get the memeber from the guild
                   logger.debug(`[${PREFIX}] mem.id: ${discordData.id}`);
                   // logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
+                  let member = {};
                   try {
-                    const member = await guildTripsit.members.fetch(discordData.id);
+                    logger.debug(`[${PREFIX}] Getting member from guild`);
+                    member = await guildTripsit.members.fetch(discordData.id);
                     logger.debug(`[${PREFIX}] member: ${member}`);
                   } catch (err) {
                     logger.error(`[${PREFIX}] Error fetching member ${discordData.id}`);
@@ -337,6 +346,7 @@ module.exports = {
                   const roleMindset = guildTripsit.roles.cache.find(r => r.name === lastSetMindset);
                   logger.debug(`[${PREFIX}] roleMindset: ${roleMindset.name}`);
 
+                  if (member) {}
                   // Extract actor data
                   const [actorData, actorFbid] = await getUserInfo(member);
 
@@ -385,7 +395,7 @@ module.exports = {
         c,
       );
     }
-    const seconds = 60;
+    const seconds = 6;
     const repeat = seconds * 1000;
     checkTimers(repeat);
 
