@@ -4,14 +4,17 @@ const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
+const { getUserInfo, setUserInfo } = require('../../utils/firebase');
 
 const PREFIX = path.parse(__filename).name;
 
 const { db } = global;
 const {
+  discordGuildId,
   firebaseUserDbName,
 } = require('../../../env');
 
+// eslint-disable-next-line no-unused-vars
 async function updateLocal() {
   const userDb = [];
   if (db !== undefined) {
@@ -39,12 +42,122 @@ async function backup() {
   logger.debug(`[${PREFIX}] Done backing up!`);
 }
 
+// eslint-disable-next-line no-unused-vars
+async function removeEvents(interaction) {
+  // Get the guild
+  const guildTripsit = interaction.client.guilds.cache.get(discordGuildId);
+  // eslint-disable-next-line
+  for (const doc of global.userDb) {
+    const discordData = doc.value.discord;
+    // logger.debug(`[${PREFIX}] member: ${member.username}`);
+    // if (doc.value.reminders) {
+    //   if (Object.keys(doc.value.reminders).length > 0) {
+    //     // eslint-disable-next-line
+    //     for (const reminderDate of Object.keys(doc.value.reminders)) {
+    //       // Extract actor data
+    //       // eslint-disable-next-line
+    //       const [actorData, actorFbid] = await getUserInfo(member);
+    //       // Transform actor data
+    //       delete actorData.reminders[reminderDate];
+    //       // // Load actor data
+    //       setUserInfo(actorFbid, actorData);
+    //     }
+    //   }
+    // }
+    if (discordData) {
+      if (discordData.lastHelpedThreadId) {
+        logger.debug(`[${PREFIX}] Deleting ${discordData.username}'s lastHelpedThreadId ${discordData.lastHelpedThreadId}`);
+        let member = {};
+        try {
+          // eslint-disable-next-line
+          // logger.debug(`[${PREFIX}] Getting member ${discordData.id} from guild ${guildTripsit.name}`);
+          // eslint-disable-next-line
+          member = await guildTripsit.members.fetch(discordData.id);
+        } catch (err) {
+          // eslint-disable-next-line
+          // logger.info(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit?`);
+          // logger.debug(err);
+          try {
+            // logger.debug(`[${PREFIX}] Getting user ${discordData.id} object`);
+            // eslint-disable-next-line
+            member = await interaction.client.users.fetch(discordData.id);
+          } catch (err2) {
+            // logger.debug(`[${PREFIX}] Error getting user ${discordData.id} object`);
+            logger.debug(err2);
+            return;
+          }
+        }
+        logger.debug(`[${PREFIX}] member: ${member.username}`);
+
+        // Extract actor data
+        // eslint-disable-next-line
+        const [actorData, actorFbid] = await getUserInfo(member);
+
+        // Transform actor data
+        actorData.discord.lastHelpedMetaThreadId = null;
+        actorData.discord.lastHelpedThreadId = null;
+
+        // Load actor data
+        setUserInfo(actorFbid, actorData);
+      }
+      if (discordData.lastSetMindsetDate) {
+        logger.debug(`[${PREFIX}] Deleting ${discordData.username}'s lastHelpedThreadId ${discordData.lastHelpedThreadId}`);
+        let member = {};
+        try {
+          // eslint-disable-next-line
+          // logger.debug(`[${PREFIX}] Getting member ${discordData.id} from guild ${guildTripsit.name}`);
+          // eslint-disable-next-line
+          member = await guildTripsit.members.fetch(discordData.id);
+        } catch (err) {
+          // eslint-disable-next-line
+          // logger.info(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit?`);
+          // logger.debug(err);
+          try {
+            // logger.debug(`[${PREFIX}] Getting user ${discordData.id} object`);
+            // eslint-disable-next-line
+            member = await interaction.client.users.fetch(discordData.id);
+          } catch (err2) {
+            // logger.debug(`[${PREFIX}] Error getting user ${discordData.id} object`);
+            logger.debug(err2);
+            return;
+          }
+        }
+        logger.debug(`[${PREFIX}] member: ${member.username}`);
+        // Extract actor data
+        // eslint-disable-next-line
+        const [actorData, actorFbid] = await getUserInfo(member);
+
+        // Transform actor data
+        actorData.discord.lastSetMindset = null;
+        actorData.discord.lastSetMindsetDate = null;
+
+        // Load actor data
+        setUserInfo(actorFbid, actorData);
+      }
+    }
+  }
+
+  const userDb = [];
+  if (db !== undefined) {
+    // Get user information
+    const snapshotUser = await db.collection(firebaseUserDbName).get();
+    snapshotUser.forEach(doc => {
+      userDb.push({
+        key: doc.id,
+        value: doc.data(),
+      });
+    });
+  }
+  Object.assign(global, { userDb });
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('clean-db')
     .setDescription('Clean the DB!'),
   async execute(interaction) {
-    updateLocal();
+    // updateLocal();
+    removeEvents(interaction);
     // await backup();
 
     // async function emojinameFix() {
