@@ -12,34 +12,39 @@ const {
   firebaseUserDbName,
 } = require('../../../env');
 
+async function updateLocal() {
+  const userDb = [];
+  if (db !== undefined) {
+    // Get user information
+    const snapshotUser = await db.collection(firebaseUserDbName).get();
+    snapshotUser.forEach(doc => {
+      userDb.push({
+        key: doc.id,
+        value: doc.data(),
+      });
+    });
+  }
+  Object.assign(global, { userDb });
+  logger.debug(`[${PREFIX}] User database loaded.`);
+}
+
+// eslint-disable-next-line no-unused-vars
+async function backup() {
+  logger.debug(`[${PREFIX}] Backup up from 'users' to 'users_dev'`);
+  const users = await db.collection('users').get();
+  users.forEach(async doc => {
+    const data = doc.data();
+    await db.collection('users_dev').doc().set(data);
+  });
+  logger.debug(`[${PREFIX}] Done backing up!`);
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('clean-db')
     .setDescription('Clean the DB!'),
   async execute(interaction) {
-    const userDb = [];
-    if (db !== undefined) {
-      // Get user information
-      const snapshotUser = await db.collection(firebaseUserDbName).get();
-      snapshotUser.forEach(doc => {
-        userDb.push({
-          key: doc.id,
-          value: doc.data(),
-        });
-      });
-    }
-    Object.assign(global, { userDb });
-    logger.debug(`[${PREFIX}] User database loaded.`);
-
-    // async function backup() {
-    //   logger.debug(`[${PREFIX}] Backup up from 'users' to 'users_dev'`);
-    //   const users = await db.collection('users').get();
-    //   users.forEach(async doc => {
-    //     const data = doc.data();
-    //     await db.collection('users_dev').doc().set(data);
-    //   });
-    //   logger.debug(`[${PREFIX}] Done backing up!`);
-    // }
+    updateLocal();
     // await backup();
 
     // async function emojinameFix() {
