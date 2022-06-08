@@ -13,19 +13,19 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('profile')
     .setDescription('Return the user\'s profile!')
-    .addStringOption(option => option
+    .addUserOption(option => option
       .setName('target')
       .setDescription('User to get info on!')
       .setRequired(true)),
   async execute(interaction, options) {
-    let target = options || interaction.options.getString('target');
+    let target = options || interaction.options.getMember('target');
 
     // let targetFromIrc = options ? false : null;
     // let targetFromDiscord = options ? true : null;
     // let targetIsMember = options ? true : null;
 
     // Determine target information
-    if (!options) {
+    if (typeof target !== 'object') {
       if (target.startsWith('<@') && target.endsWith('>')) {
         // If the target string starts with a < then it's likely a discord user
         // targetFromIrc = false;
@@ -33,7 +33,12 @@ module.exports = {
         // targetIsMember = true;
         const targetId = target.slice(3, -1);
         logger.debug(`[${PREFIX}] targetId: ${targetId}`);
-        target = await interaction.guild.members.fetch(targetId);
+        try {
+          target = await interaction.guild.members.fetch(target.id);
+        } catch (err) {
+          logger.error(err);
+          return interaction.reply('Could not find that user!');
+        }
       } else {
         // Do a whois lookup to the user
         let data = null;
@@ -105,8 +110,8 @@ module.exports = {
       )
       .addFields(
         { name: 'Karma Given', value: `${givenKarma}`, inline: true },
-        { name: 'Karma Taken', value: `${takenKarma}`, inline: true },
-        { name: '\u200B', value: '\u200B' },
+        { name: 'Karma Received', value: `${takenKarma}`, inline: true },
+        { name: '\u200B', value: '\u200B', inline: true },
       );
 
     interaction.reply({ embeds: [targetEmbed], ephemeral: false });
