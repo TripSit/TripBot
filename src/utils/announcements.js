@@ -26,7 +26,7 @@ const {
   channelDissonautId,
 } = require('../../env');
 
-const frequency = 2;
+const frequency = 50;
 const messageCounter = {};
 
 module.exports = {
