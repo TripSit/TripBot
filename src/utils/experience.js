@@ -90,7 +90,7 @@ module.exports = {
             const timeDiff = currMessageDate - lastMessageDate;
             logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
 
-            const bufferSeconds = 6;
+            const bufferSeconds = 60;
             const bufferTime = bufferSeconds * 1000;
 
             // Make a list of experience points necessary to level up

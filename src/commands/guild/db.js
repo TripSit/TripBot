@@ -36,8 +36,7 @@ async function backup() {
   logger.debug(`[${PREFIX}] Backup up from 'users' to 'users_dev'`);
   const users = await db.collection('users').get();
   users.forEach(async doc => {
-    const data = doc.data();
-    await db.collection('users_dev').doc().set(data);
+    await db.collection('users_dev').doc(doc.id).set(doc.data());
   });
   logger.debug(`[${PREFIX}] Done backing up!`);
 }
@@ -153,12 +152,28 @@ async function removeEvents(interaction) {
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('clean-db')
-    .setDescription('Clean the DB!'),
+    .setName('db')
+    .setDescription('Clean the DB!')
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Refresh the local db from the remote firebase db')
+      .setName('refresh'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Removes all timed events from the db')
+      .setName('remove_events'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Takes a copy of production firebase')
+      .setName('backup')),
   async execute(interaction) {
-    // updateLocal();
-    removeEvents(interaction);
-    // await backup();
+    const command = interaction.options.getSubcommand();
+    logger.debug(`[${PREFIX}] Command: ${command}`);
+
+    if (command === 'refresh') {
+      updateLocal();
+    } else if (command === 'remove_events') {
+      removeEvents(interaction);
+    } else if (command === 'backup') {
+      backup();
+    }
 
     // async function emojinameFix() {
     //   logger.debug(`[${PREFIX}] emojinameFix`);
