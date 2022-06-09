@@ -20,6 +20,15 @@ module.exports = {
       const wordBeforePlus = message.cleanContent.split('++')[0];
       logger.debug(`[${PREFIX}] Word before ++: ${wordBeforePlus}`);
 
+      // If the word is blank, ignore it
+      if (wordBeforePlus === null
+        || wordBeforePlus === undefined
+        || wordBeforePlus.length === 0
+      ) { return; }
+
+      // If the user is typing "C++", ignore it
+      if (wordBeforePlus === 'C') { return; }
+
       // Extract guild data
       const tripsitGuild = message.client.guilds.resolve(discordGuildId);
       const [targetData, targetFbid] = await getGuildInfo(tripsitGuild);
