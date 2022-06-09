@@ -146,7 +146,7 @@ module.exports = {
 
     if (!targetHasNeedsHelpRole) {
       let rejectMessage = memberInput
-        ? `Hey ${interaction.member}, ${target.user.username} isnt currently being taken care of!`
+        ? `Hey ${interaction.member}, ${target.nickname || target.user.username} isnt currently being taken care of!`
         : `Hey ${interaction.member}, you're not currently being taken care of!`;
 
       if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
@@ -180,7 +180,7 @@ module.exports = {
         interaction.reply({ embeds: [embed], ephemeral: true });
 
         if (threadDiscussUser) {
-          let metaUpdate = stripIndents`Hey team, ${target.user.username} said they're good but it's been less than an hour since they asked for help.
+          let metaUpdate = stripIndents`Hey team, ${target.nickname || target.user.username} said they're good but it's been less than an hour since they asked for help.
 
             If they still need help it's okay to leave them with that role.
             If you're sure they don't need help you can use /tripsit to turn off TripSit-Mode`;
@@ -199,7 +199,7 @@ module.exports = {
 
     let responseMessage = memberInput
       ? stripIndents`
-      Hey ${interaction.member}, we're glad ${target.user.username} is feeling better!
+      Hey ${interaction.member}, we're glad ${target.nickname || target.user.username} is feeling better!
       We've restored their roles back to normal.
       You can keep talking with them in ${threadHelpUser} if needed!`
       : stripIndents`
@@ -220,17 +220,17 @@ module.exports = {
       targetData.discord.roles.forEach(roleName => {
         const roleObj = interaction.guild.roles.cache.find(r => r.name === roleName);
         if (!ignoredRoles.includes(roleObj.id) && roleName !== '@everyone') {
-          logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.user.username}`);
+          logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.nickname || target.user.username}`);
           target.roles.add(roleObj);
         }
       });
     }
 
     target.roles.remove(roleNeedshelp);
-    logger.debug(`[${PREFIX}] Removed ${roleNeedshelp.name} from ${target.user.username}`);
+    logger.debug(`[${PREFIX}] Removed ${roleNeedshelp.name} from ${target.nickname || target.user.username}`);
 
     let endHelpMessage = memberInput
-      ? stripIndents`Hey ${target.user.username}, it looks like you're doing better =)
+      ? stripIndents`Hey ${target.nickname || target.user.username}, it looks like you're doing better =)
       This thread will remain here for a day if you want to follow up tomorrow.
       After 7 days, or on request, it will be deleted to preserve your privacy =)`
       : stripIndents`Hey ${target}, we're glad you're doing better!
@@ -302,11 +302,11 @@ module.exports = {
       });
 
     let endMetaHelpMessage = memberInput
-      ? stripIndents`${actor.user.username} has indicated that ${target.user.username} no longer needs help!
+      ? stripIndents`${actor.user.username} has indicated that ${target.nickname || target.user.username} no longer needs help!
       *This thread, and ${threadHelpUser}, will remain un-archived for 24 hours to allow the user to follow-up.
       If the user requests help again within 7 days these threads will be un-archived.
       After 7 days the threads will be deleted to preserve privacy.*`
-      : stripIndents`${target.user.username} has indicated that they no longer need help!
+      : stripIndents`${target.nickname || target.user.username} has indicated that they no longer need help!
       *This thread, and the #tripsit thread, will remain un-archived for 24 hours to allow the user to follow-up.
       If the user requests help again within 7 days these threads will be un-archived.
       After 7 days the threads will be deleted to preserve privacy.*`;

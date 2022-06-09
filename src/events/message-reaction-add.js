@@ -3,6 +3,7 @@
 const path = require('path');
 const logger = require('../utils/logger');
 const chitragupta = require('../utils/chitragupta');
+const { getUserInfo, setUserInfo } = require('../utils/firebase');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -17,8 +18,8 @@ module.exports = {
   async execute(reaction, user) {
     // Only run on Tripsit
     if (reaction.message.guild.id !== discordGuildId) { return; }
-    // logger.debug(`[${PREFIX}] Reaction added`);
 
+    // logger.debug(`[${PREFIX}] Reaction added`);
     // When a reaction is received, check if the structure is partial
     if (reaction.partial) {
       // If the message this reaction belongs to was removed,
@@ -28,7 +29,7 @@ module.exports = {
       });
     }
 
-    // logger.debug(`[${PREFIX}] Reaction: ${JSON.stringify(reaction, null, 4)}`);
+    // Remove duplicate emojis
     if (reaction.message.channelId === channelStartId && !user.bot) {
       // This is slow as fuck, but it works
       // If we're in the start-here channel, and the user who reacted is not a bot
@@ -53,10 +54,24 @@ module.exports = {
 
     const reactionAuthor = reaction.message.author;
     const reactionEmoji = reaction.emoji;
+    logger.debug(`[${PREFIX}] ${user.username} gave ${reactionEmoji.name} to ${reactionAuthor.username} in ${reaction.message.guild}!`);
 
-    // logger.debug(`[${PREFIX}] ${user.username} gave ${reactionEmoji.name} to\
-    // ${reactionAuthor.username} in ${reaction.message.guild}!`);
+    if ((reaction.message.author.bot && reactionEmoji.name === '💧') && !user.bot) {
+      const [actorData, actorFbid] = await getUserInfo(user);
+      if ('discord' in actorData) {
+        if ('sparkle_points' in actorData.discord) {
+          actorData.discord.sparkle_points += 1;
+        } else {
+          actorData.discord.sparkle_points = 1;
+        }
+      } else {
+        actorData.discord = { sparkle_points: 1 };
+      }
 
+      await setUserInfo(actorFbid, actorData);
+    }
+
+    // Dont run on bots
     if (reaction.message.author.bot || user.bot) {
       // logger.debug(`[${PREFIX}] Ignoring bot interaction`);
       return;

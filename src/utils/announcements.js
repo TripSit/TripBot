@@ -1,6 +1,7 @@
 'use strict';
 
 const path = require('path');
+const { stripIndents } = require('common-tags/lib');
 const template = require('./embed-template');
 const logger = require('./logger');
 
@@ -52,7 +53,70 @@ module.exports = {
     const channelPsychonaut = message.client.channels.cache.get(channelPsychonautId);
     const channelDissonaut = message.client.channels.cache.get(channelDissonautId);
 
+    const happyEmojis = [
+      '😀', '😃', '😄', '😊', '😁', '🥰', '😇', '😍', '😂', '🤣',
+      '🙂', '😆', '😋', '😛', '🙃', '😜', '🤪', '😝', '🤗', '🤭',
+      '😎', '😺', '😸', '😹', '😻', '🐵', '👍', '✌',
+    ];
+
+    const heartEmojis = [
+      '❤', '🧡', '💛', '💚', '💙', '💜',
+      '💝', '💖', '💗', '💘', '💕', '💞', '💓', '💟', '❣',
+    ];
+
+    const kipp = stripIndents`
+    ${happyEmojis.sort(() => 0.5 - Math.random()).slice(0, 9).join(' ')}
+    ${heartEmojis[Math.floor(Math.random() * heartEmojis.length)]}\
+    Keep It Positive Please!\
+    ${heartEmojis[Math.floor(Math.random() * heartEmojis.length)]}
+    ${happyEmojis.sort(() => 0.5 - Math.random()).slice(0, 9).join(' ')}`;
+
+    const movingEmojis = [
+      '🏃', '🏃‍♂️', '🏃‍♀️', '🏃🏽', '🏃🏾', '🏃🏿',
+      '🚴', '🚴🏻', '🚴🏼', '🚴🏽', '🚴🏾', '🚴🏿',
+      '🚵', '🚵🏻', '🚵🏼', '🚵🏽', '🚵🏾', '🚵🏿',
+      '⛹', '⛹🏻', '⛹🏼', '⛹🏽', '⛹🏾', '⛹🏿',
+      '🤸', '🤸🏻', '🤸🏼', '🤸🏽', '🤸🏾', '🤸🏿',
+      '🤼', '🤼🏻', '🤼🏼', '🤼🏽', '🤼🏾', '🤼🏿',
+      '🤾', '🤾🏻', '🤾🏼', '🤾🏽', '🤾🏾', '🤾🏿',
+      '🤹', '🤹🏻', '🤹🏼', '🤹🏽', '🤹🏾', '🤹🏿',
+      '🧘', '🧘🏻', '🧘🏼', '🧘🏽', '🧘🏾', '🧘🏿',
+      '🏌', '🏌️‍♂️', '🏌️‍♀️', '🏌🏽', '🏌🏾', '🏌🏿',
+      '🤾', '🤾🏻', '🤾🏼', '🤾🏽', '🤾🏾', '🤾🏿',
+      '🚶‍♂️', '🚶‍♀️', '🚶🏽', '🚶🏾', '🚶🏿',
+      '🏇', '⛷', '🏂', '🤺',
+      '🏋', '🏋‍♂️', '🏋‍♀️',
+      '🧎', '🧎‍♂️', '🧎‍♀️',
+      '💃', '🕺', '🕴',
+    ];
+
+    const move = stripIndents`
+      ${movingEmojis.sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}
+      **It's good to get up and move every hour!**
+      ${movingEmojis.sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}`;
+
+    const waterAndTeaEmojis = [
+      '🏊', '🏊🏻', '🏊🏼', '🏊🏽', '🏊🏾', '🏊🏿',
+      '🏄', '🏄🏻', '🏄🏼', '🏄🏽', '🏄🏾', '🏄🏿',
+      '🚣', '🚣🏻', '🚣🏼', '🚣🏽', '🚣🏾', '🚣🏿',
+      '🤽', '🤽🏻', '🤽🏼', '🤽🏽', '🤽🏾', '🤽🏿',
+      '🛀', '🛀🏻', '🛀🏼', '🛀🏽', '🛀🏾', '🛀🏿',
+      '💧', '🌊', '💦', '🐃', '🧊', '⛲',
+      // '🧖‍♂️', '🧖🏻‍♂️', '🧖🏼‍♂️', '🧖🏽‍♂️', '🧖🏾‍♂️', '🧖🏿‍♂️',
+      // '🧖‍♀️', '🧖🏻‍♀️', '🧖🏼‍♀️', '🧖🏽‍♀️', '🧖🏾‍♀️', '🧖🏿‍♀️',
+      '🍼', '🥛', '☕', '🍵', '🥤', '🧃', '🧉',
+      '🚤', '🛳', '⛴', '🚢',
+    ];
+
+    const hydrate = stripIndents`
+      ${waterAndTeaEmojis.sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}
+      ⚠️ ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ ⚠️
+      ${waterAndTeaEmojis.sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}`;
+
     const generalAnnouncements = [
+      hydrate,
+      move,
+      kipp,
       'Reminder: For the safety of everyone involved, sourcing (buying or selling anything) is against our network rules. If you are contacted by someone asking to find, buy, trade, or give you drugs, you can report it by using /report. This rule also applies to private messages. Be safe and don\'t trust random internet folk.',
       'We do our best to keep the environment here as safe as possible but please remember to always be vigilant when using the internet. Do not post anything here that might divulge any of your personal information.',
       'Donate to keep TripSit running and fund our future Harm Reduction projects!\nDonate page: https://tripsit.me/donate/\nBTC: 1EDqf32gw73tc1WtgdT2FymfmDN4RyC9RN\nPayPal: teknos@tripsit.me\nPatreon: https://patreon.com/tripsit\nMerchandise: https://tripsit.myspreadshop.com/',
@@ -88,35 +152,38 @@ module.exports = {
       `Want to help out tripsit 'behind the scenes'? Review the #vip-welcome ${channelVipWelcome.toString()} room and pick up the Coder role to access the Development category where we discuss projects and ideas! You don't need to be a coder to be Headers, all input is welcome`,
     ];
 
-    // const sanctuaryAnnouncements = [
-    //   '#sanctuary is a slower, positive, chat channel for people currently tripping.
-    //  If there are too many people talking, or for general chat please consider moving
-    //   to #lounge or #drugs, or check out the ~channels list for more options.',
-    // ];
-
     const embed = template.embedTemplate();
 
     // Check if this the messageCounter is a multiple of ${frequency}
     if (messageCounter[message.channel.id] % frequency === 0) {
+      let randomAnnouncement = '';
+      let hydration = false;
       if (channelGeneralId === message.channel.id) {
         // General channel
-        const randomAnnouncement = generalAnnouncements[
-          Math.floor(Math.random() * generalAnnouncements.length)];
-        embed.setDescription(randomAnnouncement);
-        message.channel.send({ embeds: [embed], ephemeral: false });
+        const randomNumber = Math.floor(Math.random() * generalAnnouncements.length);
+        randomAnnouncement = generalAnnouncements[randomNumber];
+        if (randomNumber === 0) {
+          hydration = true;
+        }
       } else if (channelLoungeId === message.channel.id) {
         // VIP channel
-        const randomAnnouncement = vipAnnouncements[
+        randomAnnouncement = vipAnnouncements[
           Math.floor(Math.random() * vipAnnouncements.length)];
-        embed.setDescription(randomAnnouncement);
-        message.channel.send({ embeds: [embed], ephemeral: false });
       }
-      // else if (channelSanctuaryId === channel.id) {
-      //   // Sanctuary channel
-      //   const randomAnnouncement = sanctuaryAnnouncements[
-      //     Math.floor(Math.random() * sanctuaryAnnouncements.length)];
-      //   channel.send(randomAnnouncement);
-      // }
+
+      embed.setDescription(randomAnnouncement);
+
+      if (hydration) {
+        embed.setAuthor(null);
+        embed.setFooter('React to get your sparkle points for the /h2flow club!');
+        await message.channel.send({ embeds: [embed], ephemeral: false })
+          .then(async msg => {
+            await msg.react('💧');
+          });
+        return;
+      }
+
+      message.channel.send({ embeds: [embed], ephemeral: false });
     }
     messageCounter[message.channel.id] = messageCounter[message.channel.id]
       ? messageCounter[message.channel.id] + 1
