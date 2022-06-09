@@ -153,45 +153,12 @@ module.exports = {
     // Get info on actor
     const actor = interaction.member;
     logger.debug(`[${PREFIX}] actor: ${actor.user.username}#${actor.user.discriminator}`);
-    const [actorData, actorFbid] = await getUserInfo(actor);
 
     // Determine if this command was started by a Developer
-    // logger.debug(`[${PREFIX}] roleDeveloper.id: ${roleDeveloper.id}`);
-    // {
-    //   "guild": "960606557622657026",
-    //   "icon": null,
-    //   "unicodeEmoji": null,
-    //   "id": "960606558050480151",
-    //   "name": "Developer",
-    //   "color": 0,
-    //   "hoist": false,
-    //   "rawPosition": 16,
-    //   "permissions": "0",
-    //   "managed": false,
-    //   "mentionable": false,
-    //   "createdTimestamp": 1649096850646
-    // }
     const actorHasRoleDeveloper = actor.roles.cache.find(
       role => role.id === roleDeveloper.id,
     ) !== undefined;
     logger.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
-
-    // Transform actor data
-    const actorAction = `${PREFIX}_sent`;
-    logger.debug(`[${PREFIX}] Updating actor data`);
-    if ('discord' in actorData) {
-      if ('modActions' in actorData.discord) {
-        actorData.discord.modActions[actorAction] = (
-          actorData.discord.modActions[actorAction] || 0) + 1;
-      } else {
-        actorData.discord.modActions = { [actorAction]: 1 };
-      }
-    } else {
-      actorData.discord = { modActions: { [actorAction]: 1 } };
-    }
-
-    // save the actor's data
-    setUserInfo(actorFbid, actorData);
 
     // Determine the target.
     // If the user clicked the button, the target is whoever started the interaction.
@@ -203,7 +170,7 @@ module.exports = {
     const targetRoleNames = target.roles.cache.map(role => role.name);
     // logger.debug(`[${PREFIX}] targetRoleNames: ${targetRoleNames}`);
 
-    // Loop throught targets userRoles and check if the target has roles
+    // Check if the target already needs help
     const targetHasRoleNeedshelp = target.roles.cache.find(
       role => role === roleNeedshelp,
     ) !== undefined;
@@ -226,21 +193,10 @@ module.exports = {
 
     // Get the channel objects for the help and meta threads
     // const threadHelpUser = interaction.client.channels.cache.get(targetLastHelpedThreadId);
-
     let threadHelpUser = interaction.client.channels.cache.get(targetLastHelpedThreadId);
-    // let threadHelpUser = interaction.guild.channels.cache
-    //   .find(chan => {
-    //     // logger.debug(`[${PREFIX}] chan.id: ${chan.id}`);
-    //     if (chan.id.toString() === targetLastHelpedThreadId.toString()) {
-    //       return true;
-    //     }
-    //     return false;
-    //   });
     logger.debug(`[${PREFIX}] threadHelpUser: ${threadHelpUser}`);
 
     let threadDiscussUser = interaction.client.channels.cache.get(targetLastHelpedMetaThreadId);
-    // let threadDiscussUser = interaction.guild.channels.cache
-    //   .find(chan => chan.id === targetLastHelpedMetaThreadId);
     logger.debug(`[${PREFIX}] threadDiscussUser: ${threadDiscussUser}`);
 
     if (targetHasRoleNeedshelp) {
@@ -371,6 +327,31 @@ module.exports = {
         logger.debug(`[${PREFIX}] Target was last helped within the last week!`);
         // Ping them in the open thread
         try {
+          // Respond to the user and remind them they have an open thread
+          let message = memberInput
+            ? stripIndents`
+              Hey ${actor}, thank you for requestiong assistance on the behalf of ${target.user.username}!
+
+              Click here to be taken to their private room: ${threadHelpUser.toString()}
+
+              You can also click in your channel list to see their private room!`
+            : stripIndents`
+              Hey ${target}, thank you for asking for assistance!
+
+              Click here to be taken to your private room: ${threadHelpUser.toString()}
+
+              You can also click in your channel list to see your private room!`;
+
+          if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
+            message = testNotice + message;
+          }
+
+          const embed = template.embedTemplate()
+            .setColor('DARK_BLUE')
+            .setDescription(message);
+
+          interaction.reply({ embeds: [embed], ephemeral: true });
+
           // Send the intro message to the thread
           let firstMessage = memberInput
             ? stripIndents`
@@ -410,31 +391,6 @@ module.exports = {
           }
           threadDiscussUser.send(helperMsg);
 
-          // Respond to the user and remind them they have an open thread
-          let message = memberInput
-            ? stripIndents`
-            Hey ${actor}, thank you for requestiong assistance on the behalf of ${target.nickname || target.user.username}!
-
-            Click here to be taken to their private room: ${threadHelpUser.toString()}
-
-            You can also click in your channel list to see their private room!`
-            : stripIndents`
-            Hey ${target}, thank you for asking for assistance!
-
-            Click here to be taken to your private room: ${threadHelpUser.toString()}
-
-            You can also click in your channel list to see your private room!`;
-
-          if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
-            message = testNotice + message;
-          }
-
-          const embed = template.embedTemplate()
-            .setColor('DARK_BLUE')
-            .setDescription(message);
-
-          interaction.reply({ embeds: [embed], ephemeral: true });
-
           targetData.discord.roles = targetRoleNames;
           targetData.discord.lastHelpedDate = new Date();
 
@@ -469,6 +425,19 @@ module.exports = {
       }
     }
 
+    // Get the tripsitters channel from the guild
+    const tripsittersChannel = interaction.guild.channels.cache
+      .find(chan => chan.id === channelTripsittersId);
+
+    // Create a new threadDiscussUser in the tripsitters channel
+    threadDiscussUser = await tripsittersChannel.threads.create({
+      name: `${target.user.username} discuss here!`,
+      autoArchiveDuration: 1440,
+      type: NODE_ENV === 'production' ? 'GUILD_PRIVATE_THREAD' : 'GUILD_PUBLIC_THREAD',
+      reason: `${target.user.username} requested help`,
+    });
+    logger.debug(`[${PREFIX}] Created meta-thread ${threadDiscussUser.id}`);
+
     // Create a new private thread in the channel
     // If we're not in production we need to create a public thread
     threadHelpUser = await interaction.channel.threads.create({
@@ -478,6 +447,33 @@ module.exports = {
       reason: `${target.nickname || target.user.username} requested help`,
     });
     logger.debug(`[${PREFIX}] Created threadHelpUser ${threadHelpUser.id}`);
+
+    // Send the triage info to the thread
+    let replyMessage = memberInput
+      ? stripIndents`
+        Hey ${interaction.member}, we've activated tripsit mode on ${target.user.username}!
+
+        Check your channel list for ${threadHelpUser.toString()} to talk to the user
+
+        Check your channel list for ${threadDiscussUser.toString()} to meta-talk about the user
+
+        **Be sure add some information about the user to the thread!**`
+      : stripIndents`
+        Hey ${target}, thank you for asking for assistance!
+
+        Click here to be taken to your private room: ${threadHelpUser.toString()}
+
+        You can also click in your channel list to see your private room!`;
+
+    if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
+      replyMessage = testNotice + replyMessage;
+    }
+
+    const embed = template.embedTemplate()
+      .setColor('DARK_BLUE')
+      .setDescription(replyMessage);
+    interaction.reply({ embeds: [embed], ephemeral: true });
+    logger.debug(`[${PREFIX}] Sent response to user`);
 
     // Send the intro message to the threadHelpUser
     let firstMessage = memberInput
@@ -497,19 +493,6 @@ module.exports = {
 
     await threadHelpUser.send(firstMessage);
     logger.debug(`[${PREFIX}] Sent intro message to threadHelpUser ${threadHelpUser.id}`);
-
-    // Get the tripsitters channel from the guild
-    const tripsittersChannel = interaction.guild.channels.cache
-      .find(chan => chan.id === channelTripsittersId);
-
-    // Create a new threadDiscussUser in the tripsitters channel
-    threadDiscussUser = await tripsittersChannel.threads.create({
-      name: `${target.nickname || target.user.username} discuss here!`,
-      autoArchiveDuration: 1440,
-      type: NODE_ENV === 'production' ? 'GUILD_PRIVATE_THREAD' : 'GUILD_PUBLIC_THREAD',
-      reason: `${target.nickname || target.user.username} requested help`,
-    });
-    logger.debug(`[${PREFIX}] Created meta-thread ${threadDiscussUser.id}`);
 
     // Send the intro message to the thread
     let helperMsg = memberInput
@@ -544,32 +527,6 @@ module.exports = {
     }
     await threadDiscussUser.send(helperMsg);
     logger.debug(`[${PREFIX}] Sent intro message to meta-thread ${threadDiscussUser.id}`);
-
-    // Send the triage info to the thread
-    let replyMessage = memberInput
-      ? stripIndents`
-      Hey ${interaction.member}, we've activated tripsit mode on ${target.nickname || target.user.username}!
-
-      Check your channel list for ${threadHelpUser.toString()} to talk to the user
-
-      Check your channel list for ${threadDiscussUser.toString()} to meta-talk about the user
-
-      **Be sure add some information about the user to the thread!**`
-      : stripIndents`
-      Hey ${target}, thank you for asking for assistance!
-
-      Click here to be taken to your private room: ${threadHelpUser.toString()}
-
-      You can also click in your channel list to see your private room!`;
-
-    if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
-      replyMessage = testNotice + replyMessage;
-    }
-    const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
-      .setDescription(replyMessage);
-    interaction.reply({ embeds: [embed], ephemeral: true });
-    logger.debug(`[${PREFIX}] Sent response to user`);
 
     // Update targetData with how many times they've been helped
     logger.debug(`[${PREFIX}] Updating target data`);
@@ -609,6 +566,26 @@ module.exports = {
     });
     Object.assign(global, { userDb });
     logger.debug(`[${PREFIX}] Updated global user data.`);
+
+    // Extract actor data
+    const [actorData, actorFbid] = await getUserInfo(actor);
+
+    // Transform actor data
+    const actorAction = `${PREFIX}_sent`;
+    logger.debug(`[${PREFIX}] Updating actor data`);
+    if ('discord' in actorData) {
+      if ('modActions' in actorData.discord) {
+        actorData.discord.modActions[actorAction] = (
+          actorData.discord.modActions[actorAction] || 0) + 1;
+      } else {
+        actorData.discord.modActions = { [actorAction]: 1 };
+      }
+    } else {
+      actorData.discord = { modActions: { [actorAction]: 1 } };
+    }
+
+    // save the actor's data
+    setUserInfo(actorFbid, actorData);
 
     logger.debug(`[${PREFIX}] finished!`);
   },
