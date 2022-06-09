@@ -254,7 +254,7 @@ module.exports = {
       // Remind the user that they have a channel open
       try {
         let message = memberInput
-          ? stripIndents`Hey ${interaction.member}, ${target.user.username} is already being helped!
+          ? stripIndents`Hey ${interaction.member}, ${target.nickname || target.user.username} is already being helped!
 
           Check your channel list for '${threadHelpUser.toString()} to help them!'`
           : stripIndents`Hey ${interaction.member}, you are already being helped!
@@ -288,9 +288,9 @@ module.exports = {
         // Update the meta thread
         if (threadDiscussUser) {
           let metaUpdate = memberInput
-            ? stripIndents`Hey ${interaction.member}, ${target.user.username} is already being helped!
+            ? stripIndents`Hey ${interaction.member}, ${target.nickname || target.user.username} is already being helped!
             Use this ${threadHelpUser} to discuss it!'`
-            : stripIndents`Hey team, ${target.user.username} sent a new request for help in ${threadHelpUser.toString()}!
+            : stripIndents`Hey team, ${target.nickname || target.user.username} sent a new request for help in ${threadHelpUser.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -324,7 +324,7 @@ module.exports = {
       if (targetIsTeamMember) {
         logger.debug(`[${PREFIX}] Target is a team member!`);
         const teamMessage = memberInput
-          ? stripIndents`Hey ${actor}, ${target.user.username} is a team member!
+          ? stripIndents`Hey ${actor}, ${target.nickname || target.user.username} is a team member!
           Did you mean to do that?`
           : stripIndents`You are a member of the team and cannot be publicly helped!
           Try asking in #teamtripsit =)`;
@@ -343,18 +343,18 @@ module.exports = {
     target.roles.cache.forEach(role => {
       logger.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
       if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone') && !role.name.includes('NeedsHelp')) {
-        logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.user.username}`);
+        logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.nickname || target.user.username}`);
         try {
           target.roles.remove(role);
         } catch (err) {
-          logger.debug(`[${PREFIX}] There was an error removing the role ${role.name} from ${target.user.username}\n${err}`);
+          logger.debug(`[${PREFIX}] There was an error removing the role ${role.name} from ${target.nickname || target.user.username}\n${err}`);
         }
       }
     });
 
     // Add the needsHelp role to the target
     try {
-      logger.debug(`[${PREFIX}] Adding role ${roleNeedshelp.name} to ${target.user.username}`);
+      logger.debug(`[${PREFIX}] Adding role ${roleNeedshelp.name} to ${target.nickname || target.user.username}`);
       await target.roles.add(roleNeedshelp);
     } catch (err) {
       logger.error(`[${PREFIX}] Error adding role to target: ${err}`);
@@ -390,7 +390,7 @@ module.exports = {
           // Update the meta thread too
           let helperMsg = memberInput
             ? stripIndents`
-            Hey team, ${actor} sent a new request for help on behalf of ${target.user.username} in ${threadHelpUser.toString()}!
+            Hey team, ${actor} sent a new request for help on behalf of ${target.nickname || target.user.username} in ${threadHelpUser.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -398,7 +398,7 @@ module.exports = {
 
             Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!`
             : stripIndents`
-            Hey team, ${target.user.username} sent a new request for help in ${threadHelpUser.toString()}!
+            Hey team, ${target.nickname || target.user.username} sent a new request for help in ${threadHelpUser.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -413,7 +413,7 @@ module.exports = {
           // Respond to the user and remind them they have an open thread
           let message = memberInput
             ? stripIndents`
-            Hey ${actor}, thank you for requestiong assistance on the behalf of ${target.user.username}!
+            Hey ${actor}, thank you for requestiong assistance on the behalf of ${target.nickname || target.user.username}!
 
             Click here to be taken to their private room: ${threadHelpUser.toString()}
 
@@ -472,10 +472,10 @@ module.exports = {
     // Create a new private thread in the channel
     // If we're not in production we need to create a public thread
     threadHelpUser = await interaction.channel.threads.create({
-      name: `${target.user.username} chat here!`,
+      name: `${target.nickname || target.user.username} chat here!`,
       autoArchiveDuration: 1440,
       type: NODE_ENV === 'production' ? 'GUILD_PRIVATE_THREAD' : 'GUILD_PUBLIC_THREAD',
-      reason: `${target.user.username} requested help`,
+      reason: `${target.nickname || target.user.username} requested help`,
     });
     logger.debug(`[${PREFIX}] Created threadHelpUser ${threadHelpUser.id}`);
 
@@ -504,17 +504,17 @@ module.exports = {
 
     // Create a new threadDiscussUser in the tripsitters channel
     threadDiscussUser = await tripsittersChannel.threads.create({
-      name: `${target.user.username} discuss here!`,
+      name: `${target.nickname || target.user.username} discuss here!`,
       autoArchiveDuration: 1440,
       type: NODE_ENV === 'production' ? 'GUILD_PRIVATE_THREAD' : 'GUILD_PUBLIC_THREAD',
-      reason: `${target.user.username} requested help`,
+      reason: `${target.nickname || target.user.username} requested help`,
     });
     logger.debug(`[${PREFIX}] Created meta-thread ${threadDiscussUser.id}`);
 
     // Send the intro message to the thread
     let helperMsg = memberInput
       ? stripIndents`
-      Hey ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helper' : roleHelper}, ${actor} thinks ${target.user.username} can use some help in ${threadHelpUser.toString()}!
+      Hey ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helper' : roleHelper}, ${actor} thinks ${target.nickname || target.user.username} can use some help in ${threadHelpUser.toString()}!
 
       They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -526,7 +526,7 @@ module.exports = {
       *Only Tripsitters, Helpers and Moderators can see this thread*!
       *You can remove the helper role in ${channelHowToTripsit.toString()}*!`
       : stripIndents`
-      Hey ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helper' : roleHelper}, ${target.user.username} can use some help in ${threadHelpUser.toString()}!
+      Hey ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helper' : roleHelper}, ${target.nickname || target.user.username} can use some help in ${threadHelpUser.toString()}!
 
       They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -548,7 +548,7 @@ module.exports = {
     // Send the triage info to the thread
     let replyMessage = memberInput
       ? stripIndents`
-      Hey ${interaction.member}, we've activated tripsit mode on ${target.user.username}!
+      Hey ${interaction.member}, we've activated tripsit mode on ${target.nickname || target.user.username}!
 
       Check your channel list for ${threadHelpUser.toString()} to talk to the user
 
