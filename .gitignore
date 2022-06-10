@@ -358,3 +358,4 @@ src/assets/reminders.json
 # Project specific
 !backups/
 backups/*.json
+cert/
