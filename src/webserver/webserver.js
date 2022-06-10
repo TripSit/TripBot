@@ -18,6 +18,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 
 /* Client Variables */
 const {
+  NODE_ENV,
   PORT,
   discordClientId,
   discordClientSecret,
@@ -26,27 +27,45 @@ const logger = require('../utils/logger');
 
 const url = `https://localhost:${PORT}/`;
 
+/* Make a function to give us configuration for the Discord API */
+function makeConfig(authorizationToken) { // Define the function
+  const data = { // Define "data"
+    headers: { // Define "headers" of "data"
+      authorization: `Bearer ${authorizationToken}`, // Define the authorization
+    },
+  };
+  return data; // Return the created object
+}
+
 module.exports = {
   async webserver() {
     /* Define app variables */
     const app = Express(); // Create a web app
 
-    const httpServer = http.createServer(app);
-
-    const options = {
-      key: fs.readFileSync('./cert/CA/localhost/client-1.local.key', 'utf8'),
-      cert: fs.readFileSync('./cert/CA/localhost/client-1.local.crt', 'utf8'),
-    };
-    const httpsServer = https.createServer(options, app);
-
-    /* Make a function to give us configuration for the Discord API */
-    function makeConfig(authorizationToken) { // Define the function
-      const data = { // Define "data"
-        headers: { // Define "headers" of "data"
-          authorization: `Bearer ${authorizationToken}`, // Define the authorization
-        },
+    if (NODE_ENV === 'development') {
+      const options = {
+        key: fs.readFileSync('./cert/CA/localhost/client-1.local.key', 'utf8'),
+        cert: fs.readFileSync('./cert/CA/localhost/client-1.local.crt', 'utf8'),
       };
-      return data; // Return the created object
+      const httpsServer = https.createServer(options, app);
+
+      httpsServer.listen(PORT, () => {
+        logger.debug(`[${PREFIX}] HTTPS Server running at: https://localhost:${PORT}`);
+      });
+
+      const httpServer = http.createServer(app);
+
+      httpServer.listen(80, () => {
+        logger.debug(`[${PREFIX}] HTTP Server running at: https://localhost:80`);
+      });
+    } else {
+      app.listen(PORT, () => {
+        logger.debug(`[${PREFIX}] HTTPS Server running at: https://tripsit-discord-bot-kf4yk.ondigitalocean.app:${PORT}`);
+      });
+
+      app.listen(80, () => {
+        logger.debug(`[${PREFIX}] HTTP Server running at: http://tripsit-discord-bot-kf4yk.ondigitalocean.app:80`);
+      });
     }
 
     /* Configure the app */
@@ -91,14 +110,6 @@ module.exports = {
           res.sendStatus(500); // Send a 500 error.
         });
       });
-    });
-
-    httpsServer.listen(PORT, () => {
-      logger.debug(`[${PREFIX}] HTTPS Server running at: https://localhost:${PORT}`);
-    });
-
-    httpServer.listen(80, () => {
-      logger.debug(`[${PREFIX}] HTTP Server running at: https://localhost:80`);
     });
   },
 };
