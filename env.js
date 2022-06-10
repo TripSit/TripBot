@@ -14,6 +14,7 @@ exports.discordToken = process.env.discordToken;
 exports.discordOwnerId = process.env.discordOwnerId;
 exports.discordClientId = process.env.discordClientId;
 exports.discordGuildId = process.env.discordGuildId;
+exports.discordClientSecret = process.env.discordClientSecret;
 
 exports.PORT = process.env.PORT;
 

@@ -2,12 +2,12 @@
 
 const path = require('path');
 const fs = require('fs/promises');
-const express = require('express');
 const { ReactionRole } = require('discordjs-reaction-role');
 const logger = require('../utils/logger');
 const { getGuildInfo } = require('../utils/firebase');
 const { connectIRC } = require('../utils/irc');
 const { runTimer } = require('../utils/timer');
+const { webserver } = require('../webserver/index');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -15,7 +15,6 @@ const { db } = global;
 const {
   NODE_ENV,
   discordGuildId,
-  PORT,
   firebaseUserDbName,
   firebaseGuildDbName,
 } = require('../../env');
@@ -122,17 +121,7 @@ module.exports = {
     // Check if the guild is in blacklist_guilds and if so, leave it
     logger.debug(`[${PREFIX}] I am in ${client.guilds.cache.size} guilds.`);
 
-    // Setup the express server, this is necessary for the Digital Ocean health check
-    // if (NODE_ENV === 'production') {
-    const app = express();
-    app.get('/', (req, res) => {
-      res.status(200).send('Hello world!');
-    });
-    // TODO: Promisify this
-    app.listen(PORT, () => {
-      logger.debug(`[${PREFIX}] Healthcheck app listening on PORT ${PORT}`);
-      logger.info(`[${PREFIX}] Ready to take over the world!`);
-    });
-    // }
+    await webserver();
+    logger.info(`[${PREFIX}] Ready to take over the world!`);
   },
 };
