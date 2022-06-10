@@ -7,7 +7,7 @@ const logger = require('../utils/logger');
 const { getGuildInfo } = require('../utils/firebase');
 const { connectIRC } = require('../utils/irc');
 const { runTimer } = require('../utils/timer');
-const { webserver } = require('../webserver/index');
+const { webserver } = require('../webserver/webserver');
 
 const PREFIX = path.parse(__filename).name;
 

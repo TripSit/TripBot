@@ -27,7 +27,7 @@ const logger = require('../utils/logger');
 const url = `https://localhost:${PORT}/`;
 
 module.exports = {
-  async express() {
+  async webserver() {
     /* Define app variables */
     const app = Express(); // Create a web app
 
