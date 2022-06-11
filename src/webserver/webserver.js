@@ -74,8 +74,9 @@ module.exports = {
     })); // configure the app to parse requests with urlencoded payloads
     app.use(Express.json()); // configure the app to parse requests with JSON payloads
     app.use(bodyParser.text()); // configure the app to be able to read text
-    logger.debug(`${__dirname}\\`);
+    logger.debug(`${__dirname}`);
     app.use(Express.static(`${__dirname}\\`));
+    app.use(Express.static(`${__dirname}/`));
 
     /* Handle GET Requests */
     app.get('/', (req, res) => { // Handle incoming GET requests to https://localhost:(port)/
