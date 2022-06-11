@@ -6,7 +6,7 @@ const { URLSearchParams } = require('url'); // import URLSearchParams from url. 
 const axios = require('axios'); // Import Axios
 const path = require('path'); // Import path
 const https = require('https');
-const http = require('http');
+// const http = require('http');
 const fs = require('fs');
 const bodyParser = require('body-parser');
 const PREFIX = require('path').parse(__filename).name;
@@ -25,8 +25,6 @@ const {
 } = require('../../env');
 const logger = require('../utils/logger');
 
-const url = `https://localhost:${PORT}/`;
-
 /* Make a function to give us configuration for the Discord API */
 function makeConfig(authorizationToken) { // Define the function
   const data = { // Define "data"
@@ -42,7 +40,11 @@ module.exports = {
     /* Define app variables */
     const app = Express(); // Create a web app
 
+    let url = `https://discord.tripsit.me:${PORT}/`;
+
+    // If we're in development we need to create our own SSL certificate
     if (NODE_ENV === 'development') {
+      url = `https://localhost:${PORT}/`;
       const options = {
         key: fs.readFileSync('./cert/CA/localhost/client-1.local.key', 'utf8'),
         cert: fs.readFileSync('./cert/CA/localhost/client-1.local.crt', 'utf8'),
@@ -50,22 +52,22 @@ module.exports = {
       const httpsServer = https.createServer(options, app);
 
       httpsServer.listen(PORT, () => {
-        logger.debug(`[${PREFIX}] HTTPS Server running at: https://localhost:${PORT}`);
+        logger.debug(`[${PREFIX}] HTTPS Server running at: ${url}`);
       });
 
-      const httpServer = http.createServer(app);
+      // const httpServer = http.createServer(app);
 
-      httpServer.listen(80, () => {
-        logger.debug(`[${PREFIX}] HTTP Server running at: https://localhost:80`);
-      });
+      // httpServer.listen(80, () => {
+      //   logger.debug(`[${PREFIX}] HTTP Server running at: https://localhost:80`);
+      // });
     } else {
       app.listen(PORT, () => {
-        logger.debug(`[${PREFIX}] HTTPS Server running at: https://tripsit-discord-bot-kf4yk.ondigitalocean.app:${PORT}`);
+        logger.debug(`[${PREFIX}] HTTPS Server running at: ${url}`);
       });
 
-      app.listen(80, () => {
-        logger.debug(`[${PREFIX}] HTTP Server running at: http://tripsit-discord-bot-kf4yk.ondigitalocean.app:80`);
-      });
+      // app.listen(80, () => {
+      //   logger.debug(`[${PREFIX}] HTTP Server running at: http://tripsit-discord-bot-kf4yk.ondigitalocean.app:80`);
+      // });
     }
 
     /* Configure the app */
@@ -74,8 +76,8 @@ module.exports = {
     })); // configure the app to parse requests with urlencoded payloads
     app.use(Express.json()); // configure the app to parse requests with JSON payloads
     app.use(bodyParser.text()); // configure the app to be able to read text
-    logger.debug(`${__dirname}`);
     app.use(Express.static(`${__dirname}\\`));
+    // Production is linux so we need to use the forward slash
     app.use(Express.static(`${__dirname}/`));
 
     /* Handle GET Requests */
@@ -100,9 +102,9 @@ module.exports = {
       data1.append('scope', 'identify'); // This tells the Discord API what info you would like to retrieve. You can change this to include guilds, connections, email, etc.
       data1.append('code', codeValue); // This is a key parameter in our upcoming request. It is the code the user got from logging in. This will help us retrieve a token which we can use to get the user's info.
 
-      fetch('https://discord.com/api/v10/oauth2/token', { method: 'POST', body: data1 }).then(response => response.json()).then(data => { // Make a request to the Discord API with the form data, convert the response to JSON, then take it and run the following code.
+      fetch('https://discord.com/api/oauth2/token', { method: 'POST', body: data1 }).then(response => response.json()).then(data => { // Make a request to the Discord API with the form data, convert the response to JSON, then take it and run the following code.
         logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
-        axios.get('https://discord.com/api/v10/users/@me', makeConfig(data.access_token)).then(response => { // Make a request yet again to the Discord API with the token from previously.
+        axios.get('https://discord.com/api/users/@me', makeConfig(data.access_token)).then(response => { // Make a request yet again to the Discord API with the token from previously.
           // logger.debug(`[${PREFIX}] response: ${JSON.stringify(response)}`);
           res.status(200).send(response.data.username); // Send the username with a status code 200.
         }).catch(err => { // Handle any errors in the request (such as 401 errors).

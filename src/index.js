@@ -64,5 +64,10 @@ const destroy = () => {
   global.manager.teardown();
   client.destroy();
 };
+
+process.on('unhandledRejection', error => {
+  logger.error(`[${PREFIX}] Unhandled promise rejection: ${error}`);
+});
+
 process.on('SIGINT', destroy);
 process.on('SIGTERM', destroy);
