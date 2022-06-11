@@ -221,7 +221,12 @@ module.exports = {
         const roleObj = interaction.guild.roles.cache.find(r => r.name === roleName);
         if (!ignoredRoles.includes(roleObj.id) && roleName !== '@everyone') {
           logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.nickname || target.user.username}`);
-          target.roles.add(roleObj);
+          try {
+            target.roles.add(roleObj);
+          } catch (err) {
+            logger.error(`[${PREFIX}] Error adding role ${roleObj.name} to ${target.nickname || target.user.username}`);
+            logger.error(err);
+          }
         }
       });
     }

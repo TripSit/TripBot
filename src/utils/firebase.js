@@ -13,13 +13,22 @@ const {
 
 module.exports = {
   getUserInfo: async member => {
-    // logger.debug(`[${PREFIX}] Looking up member ${JSON.stringify(member, null, 2)}!`);
+    let name = '';
+    if (member.user) {
+      name = member.user.username;
+    } else if (member.username) {
+      name = member.username;
+    } else if (member.account) {
+      name = member.account.name;
+    }
+
+    logger.debug(`[${PREFIX}] Looking up ${name}!`);
     let memberFbid = null;
     let memberData = {};
     let memberType = '';
     // logger.debug(`[${PREFIX}] member.id: ${member.id}`);
     if (member.id) {
-      logger.debug(`[${PREFIX}] Member is from Discord!`);
+      // logger.debug(`[${PREFIX}] Member is from Discord!`);
       memberType = 'discord';
       memberData = {
         name: member.user ? member.user.username : member.username,
@@ -33,7 +42,7 @@ module.exports = {
     }
     // logger.debug(`[${PREFIX}] member.host: ${member.host}`);
     if (member.host) {
-      logger.debug(`[${PREFIX}] Member is from IRC!`);
+      // logger.debug(`[${PREFIX}] Member is from IRC!`);
       memberType = 'irc';
       memberData = {
         name: member.account,
@@ -51,7 +60,7 @@ module.exports = {
         if (memberType === 'discord') {
           if (doc.data().discord) {
             if (doc.data().discord.id === member.id.toString()) {
-              logger.debug(`[${PREFIX}] Discord member data found!`);
+              // logger.debug(`[${PREFIX}] Discord member data found!`);
               memberData = doc.data();
               memberFbid = doc.id;
               return;
@@ -61,7 +70,7 @@ module.exports = {
         if (memberType === 'irc') {
           if (doc.data().irc) {
             if (doc.data().irc.accountName === member.account) {
-              logger.debug(`[${PREFIX}] Irc member data found!`);
+              // logger.debug(`[${PREFIX}] Irc member data found!`);
               memberData = doc.data();
               memberFbid = doc.id;
             }
@@ -112,14 +121,14 @@ module.exports = {
     logger.debug(`[${PREFIX}] Saving ${data.discord.username}!`);
 
     if (fbid !== null && fbid !== undefined) {
-      logger.debug(`[${PREFIX}] Updating actor data`);
+      // logger.debug(`[${PREFIX}] Updating actor data`);
       try {
         await db.collection(firebaseUserDbName).doc(fbid).set(data);
       } catch (err) {
         logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
       }
     } else {
-      logger.debug(`[${PREFIX}] Creating actor data`);
+      // logger.debug(`[${PREFIX}] Creating actor data`);
       try {
         await db.collection(firebaseUserDbName).doc().set(data);
       } catch (err) {

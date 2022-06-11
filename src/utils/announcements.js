@@ -1,13 +1,12 @@
 'use strict';
 
-const path = require('path');
+// const path = require('path').parse(__filename).name;
 const { stripIndents } = require('common-tags/lib');
 const template = require('./embed-template');
-const logger = require('./logger');
-
-const PREFIX = path.parse(__filename).name;
+// const logger = require('./logger');
 
 const {
+  NODE_ENV,
   channelGeneralId,
   channelHowToTripsitId,
   channelTripsitId,
@@ -27,12 +26,16 @@ const {
   channelDissonautId,
 } = require('../../env');
 
-const frequency = 50;
+let frequency = 50;
+if (NODE_ENV === 'development') {
+  frequency = 2;
+}
 const messageCounter = {};
 
 module.exports = {
   async announcements(message) {
-    logger.debug(`[${PREFIX}] (${messageCounter[message.channel.id] || 0}) Message sent by ${message.author.username} in ${message.channel.name} on ${message.guild}`);
+    // logger.debug(`[${PREFIX}] (${messageCounter[message.channel.id] || 0})
+    // Message sent by ${message.author.username} in ${message.channel.name} on ${message.guild}`);
     const channelGeneral = message.guild.channels.cache.get(channelGeneralId);
     const channelPets = message.client.channels.cache.get(channelPetsId);
     const channelFood = message.client.channels.cache.get(channelFoodId);
@@ -175,7 +178,7 @@ module.exports = {
 
       if (hydration) {
         embed.setAuthor(null);
-        embed.setFooter('React to get your sparkle points for the /h2flow club!');
+        embed.setFooter({ text: 'React to get your sparkle points for the /h2flow club!' });
         await message.channel.send({ embeds: [embed], ephemeral: false })
           .then(async msg => {
             await msg.react('💧');
@@ -183,7 +186,9 @@ module.exports = {
         return;
       }
 
-      message.channel.send({ embeds: [embed], ephemeral: false });
+      if (randomAnnouncement) {
+        message.channel.send({ embeds: [embed], ephemeral: false });
+      }
     }
     messageCounter[message.channel.id] = messageCounter[message.channel.id]
       ? messageCounter[message.channel.id] + 1
