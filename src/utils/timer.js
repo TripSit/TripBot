@@ -385,13 +385,13 @@ module.exports = {
                   // logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
                   let member = {};
                   try {
-                    logger.debug(`[${PREFIX}] Getting member ${discordData.id} from guild ${guildTripsit.name}`);
+                    // logger.debug(`[${PREFIX}] Getting member ${discordData.id} from guild ${guildTripsit.name}`);
                     member = await guildTripsit.members.fetch(discordData.id);
                   } catch (err) {
                     logger.info(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit?`);
                     // logger.debug(err);
                     try {
-                      logger.debug(`[${PREFIX}] Getting user ${discordData.id} object`);
+                      // logger.debug(`[${PREFIX}] Getting user ${discordData.id} object`);
                       member = await client.users.fetch(discordData.id);
                     } catch (err2) {
                       logger.debug(`[${PREFIX}] Error getting user ${discordData.id} object`);
@@ -399,7 +399,7 @@ module.exports = {
                       return;
                     }
                   }
-                  logger.debug(`[${PREFIX}] member: ${member}`);
+                  // logger.debug(`[${PREFIX}] member: ${member}`);
 
                   // Extract actor data
                   const [actorData, actorFbid] = await getUserInfo(member);
