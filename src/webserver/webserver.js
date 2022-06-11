@@ -45,6 +45,7 @@ module.exports = {
     let host = 'tripsit-discord-bot-kf4yk.ondigitalocean.app';
     let httpUrl = `http://${host}:${httpPort}/`;
     let httpsUrl = `https://${host}:${httpsPort}/`;
+    let redirectUrl = `https://${host}/`;
 
     // If we're in development we need to create our own SSL certificate
     if (NODE_ENV === 'development') {
@@ -97,13 +98,13 @@ module.exports = {
       logger.debug(`[${PREFIX}] discordClientId: ${discordClientId}`);
       logger.debug(`[${PREFIX}] discordClientSecret: ${discordClientSecret}`);
       logger.debug(`[${PREFIX}] codeValue: ${codeValue}`);
-      logger.debug(`[${PREFIX}] url: ${httpsUrl}`);
+      logger.debug(`[${PREFIX}] url: ${redirectUrl}`);
       /* Create our Form Data */
       const data1 = new URLSearchParams(); // Create a new formData object with the constructor
       data1.append('client_id', discordClientId); // Append the client_id variable to the data
       data1.append('client_secret', discordClientSecret); // Append the client_secret variable to the data
       data1.append('grant_type', 'authorization_code'); // This field will tell the Discord API what you are wanting in your initial request.
-      data1.append('redirect_uri', httpsUrl); // This is the redirect URL where the user will be redirected when they finish the Discord login
+      data1.append('redirect_uri', redirectUrl); // This is the redirect URL where the user will be redirected when they finish the Discord login
       data1.append('scope', 'identify'); // This tells the Discord API what info you would like to retrieve. You can change this to include guilds, connections, email, etc.
       data1.append('code', codeValue); // This is a key parameter in our upcoming request. It is the code the user got from logging in. This will help us retrieve a token which we can use to get the user's info.
 
