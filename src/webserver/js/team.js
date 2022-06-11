@@ -12,11 +12,11 @@ const API = 'https://discord-web-api.glitch.me/discord/user/';
 
 const owners = [
   {
-    id: '442793591501357056',
-    post: 'Bot Owner',
-    GHURL: 'https://github.com/Hadi-Koubeissi',
+    id: '177537158419054592',
+    post: 'Tripsit Director / Bot Dev',
+    GHURL: 'https://github.com/TripSit/tripsit-discord-bot',
     InstaURL: '',
-    YTURL: 'https://www.youtube.com/channel/UCmO0xdpxQr7fX2Csth_2JOQ',
+    YTURL: '',
   },
 ];
 
