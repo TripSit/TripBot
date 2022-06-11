@@ -41,11 +41,11 @@ module.exports = {
 
     const httpPort = 80;
     const httpsPort = 8080;
-    // let host = 'discord.tripsit.me';
-    let host = 'tripsit-discord-bot-kf4yk.ondigitalocean.app';
+    let host = 'discord.tripsit.me';
+    // let host = 'tripsit-discord-bot-kf4yk.ondigitalocean.app';
     let httpUrl = `http://${host}:${httpPort}/`;
     let httpsUrl = `https://${host}:${httpsPort}/`;
-    let redirectUrl = `https://${host}/`;
+    const redirectUrl = `https://${host}/`;
 
     // If we're in development we need to create our own SSL certificate
     if (NODE_ENV === 'development') {
