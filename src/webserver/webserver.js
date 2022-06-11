@@ -41,7 +41,8 @@ module.exports = {
 
     const httpPort = 80;
     const httpsPort = 8080;
-    let host = 'discord.tripsit.me';
+    // let host = 'discord.tripsit.me';
+    let host = 'tripsit-discord-bot-kf4yk.ondigitalocean.app';
     let httpUrl = `http://${host}:${httpPort}/`;
     let httpsUrl = `https://${host}:${httpsPort}/`;
 

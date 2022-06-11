@@ -15,7 +15,8 @@ function generateRandomString() {
 const PREFIX = 'main';
 
 window.onload = function main() {
-  let url = 'https://discord.tripsit.me:8080/';
+  // let url = 'https://discord.tripsit.me/';
+  let url = 'https://tripsit-discord-bot-kf4yk.ondigitalocean.app/';
   let discordOauthUrl = 'https://discord.com/api/oauth2/authorize?client_id=957780726806380545&redirect_uri=https%3A%2F%2Fdiscord.tripsit.me%2F&response_type=code&scope=identify';
   if (location.href.includes('localhost')) {
     url = 'https://localhost:8080/';
