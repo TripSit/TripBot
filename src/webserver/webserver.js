@@ -6,7 +6,7 @@ const { URLSearchParams } = require('url'); // import URLSearchParams from url. 
 const axios = require('axios'); // Import Axios
 const path = require('path'); // Import path
 const https = require('https');
-// const http = require('http');
+const http = require('http');
 const fs = require('fs');
 const bodyParser = require('body-parser');
 const PREFIX = require('path').parse(__filename).name;
@@ -19,7 +19,6 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 /* Client Variables */
 const {
   NODE_ENV,
-  PORT,
   discordClientId,
   discordClientSecret,
 } = require('../../env');
@@ -40,34 +39,40 @@ module.exports = {
     /* Define app variables */
     const app = Express(); // Create a web app
 
-    let url = `https://discord.tripsit.me:${PORT}/`;
+    const httpPort = 80;
+    const httpsPort = 8080;
+    let host = 'discord.tripsit.me';
+    let httpUrl = `http://${host}:${httpPort}/`;
+    let httpsUrl = `https://${host}:${httpsPort}/`;
 
     // If we're in development we need to create our own SSL certificate
     if (NODE_ENV === 'development') {
-      url = `https://localhost:${PORT}/`;
+      host = 'localhost';
+      httpUrl = `http://${host}:${httpPort}/`;
+      httpsUrl = `https://${host}:${httpsPort}/`;
+
       const options = {
         key: fs.readFileSync('./cert/CA/localhost/client-1.local.key', 'utf8'),
         cert: fs.readFileSync('./cert/CA/localhost/client-1.local.crt', 'utf8'),
       };
       const httpsServer = https.createServer(options, app);
+      const httpServer = http.createServer(app);
 
-      httpsServer.listen(PORT, () => {
-        logger.debug(`[${PREFIX}] HTTPS Server running at: ${url}`);
+      httpsServer.listen(httpsPort, () => {
+        logger.debug(`[${PREFIX}] HTTPS Server running at: ${httpsUrl}`);
       });
 
-      // const httpServer = http.createServer(app);
-
-      // httpServer.listen(80, () => {
-      //   logger.debug(`[${PREFIX}] HTTP Server running at: https://localhost:80`);
-      // });
+      httpServer.listen(httpPort, () => {
+        logger.debug(`[${PREFIX}] HTTP Server running at: ${httpUrl}`);
+      });
     } else {
-      app.listen(PORT, () => {
-        logger.debug(`[${PREFIX}] HTTPS Server running at: ${url}`);
+      app.listen(httpsPort, () => {
+        logger.debug(`[${PREFIX}] HTTPS Server running at: ${httpsUrl}`);
       });
 
-      // app.listen(80, () => {
-      //   logger.debug(`[${PREFIX}] HTTP Server running at: http://tripsit-discord-bot-kf4yk.ondigitalocean.app:80`);
-      // });
+      app.listen(httpPort, () => {
+        logger.debug(`[${PREFIX}] HTTP Server running at: ${httpUrl}`);
+      });
     }
 
     /* Configure the app */
@@ -88,17 +93,16 @@ module.exports = {
     /* Handle POST Requests */
     app.post('/user', (req, res) => { // Will run when there are any incoming POST requests to https://localhost:(port)/user. Note that a POST request is different from a GET request, so this won't exactly work when you actually visit https://localhost:(port)/user
       const codeValue = req.body;
-      logger.debug(`[${PREFIX}] PORT: ${PORT}`);
       logger.debug(`[${PREFIX}] discordClientId: ${discordClientId}`);
       logger.debug(`[${PREFIX}] discordClientSecret: ${discordClientSecret}`);
       logger.debug(`[${PREFIX}] codeValue: ${codeValue}`);
-      logger.debug(`[${PREFIX}] url: ${url}`);
+      logger.debug(`[${PREFIX}] url: ${httpsUrl}`);
       /* Create our Form Data */
       const data1 = new URLSearchParams(); // Create a new formData object with the constructor
       data1.append('client_id', discordClientId); // Append the client_id variable to the data
       data1.append('client_secret', discordClientSecret); // Append the client_secret variable to the data
       data1.append('grant_type', 'authorization_code'); // This field will tell the Discord API what you are wanting in your initial request.
-      data1.append('redirect_uri', url); // This is the redirect URL where the user will be redirected when they finish the Discord login
+      data1.append('redirect_uri', httpsUrl); // This is the redirect URL where the user will be redirected when they finish the Discord login
       data1.append('scope', 'identify'); // This tells the Discord API what info you would like to retrieve. You can change this to include guilds, connections, email, etc.
       data1.append('code', codeValue); // This is a key parameter in our upcoming request. It is the code the user got from logging in. This will help us retrieve a token which we can use to get the user's info.
 

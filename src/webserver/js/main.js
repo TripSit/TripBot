@@ -2,6 +2,7 @@
 
 /* eslint-disable no-undef */
 /* eslint-disable no-restricted-globals */
+/* eslint-disable no-console */
 function generateRandomString() {
   let randomString = '';
   const randomNumber = Math.floor(Math.random() * 10);
@@ -14,9 +15,8 @@ function generateRandomString() {
 const PREFIX = 'main';
 
 window.onload = function main() {
-  let url = 'https://discord.tripsit.me:8080/';
+  let url = 'http://discord.tripsit.me:8080/';
   let discordOauthUrl = 'https://discord.com/api/oauth2/authorize?client_id=957780726806380545&redirect_uri=https%3A%2F%2Fdiscord.tripsit.me%2F&response_type=code&scope=identify';
-  console.log(location.href);
   if (location.href.includes('localhost')) {
     url = 'https://localhost:8080/';
     discordOauthUrl = 'https://discord.com/api/oauth2/authorize?client_id=977945272359452713&redirect_uri=https%3A%2F%2Flocalhost%3A8080%2F&response_type=code&scope=identify';
@@ -65,7 +65,7 @@ const coll = document.getElementsByClassName('collapsible');
 let i;
 
 for (i = 0; i < coll.length; i += 1) {
-  coll[i].addEventListener('click', function () {
+  coll[i].addEventListener('click', function click() {
     this.classList.toggle('active');
     const content = this.nextElementSibling;
     if (content.style.display === 'block') {

@@ -132,14 +132,15 @@ module.exports = {
                     // logger.debug(`[${PREFIX}] typeof userid: ${typeof userid}`);
                     let member = {};
                     try {
-                      logger.debug(`[${PREFIX}] Getting member ${userid} from guild ${guildTripsit.name}`);
+                      // logger.debug(`
+                      // [${PREFIX}] Getting member ${userid} from guild ${guildTripsit.name}`);
                       // eslint-disable-next-line
                       member = await guildTripsit.members.fetch(userid);
                     } catch (err) {
                       logger.info(`[${PREFIX}] Error getting member ${userid} from guild ${guildTripsit.name}, did they quit?`);
                       // logger.debug(err);
                       try {
-                        logger.debug(`[${PREFIX}] Getting user ${userid} object`);
+                        // logger.debug(`[${PREFIX}] Getting user ${userid} object`);
                         // eslint-disable-next-line
                         member = await client.users.fetch(userid);
                       } catch (err2) {
@@ -148,7 +149,7 @@ module.exports = {
                         return;
                       }
                     }
-                    logger.debug(`[${PREFIX}] member: ${member}`);
+                    // logger.debug(`[${PREFIX}] member: ${member}`);
 
                     // Extract actor data
                     // eslint-disable-next-line
@@ -220,7 +221,8 @@ module.exports = {
                 const roleNeedshelp = guildTripsit.roles.cache.get(roleNeedshelpId);
                 // logger.debug(`[${PREFIX}] roleNeedshelp: ${roleNeedshelp.name}`);
 
-                logger.debug(`[${PREFIX}] lastHelpedThreadId: ${discordData.lastHelpedThreadId}`);
+                // logger.debug(`[${PREFIX}] lastHelpedThreadId:
+                // ${discordData.lastHelpedThreadId}`);
                 let channelHelp = {};
                 try {
                   // eslint-disable-next-line
@@ -233,7 +235,8 @@ module.exports = {
                 }
                 // logger.debug(`[${PREFIX}] channelHelp: ${channelHelp}`);
 
-                logger.debug(`[${PREFIX}] lastHelpedThreadId: ${discordData.lastHelpedMetaThreadId}`);
+                // logger.debug(`[${PREFIX}] lastHelpedThreadId:
+                // ${discordData.lastHelpedMetaThreadId}`);
                 let channelMeta = {};
                 try {
                   // eslint-disable-next-line
