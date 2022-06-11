@@ -17,7 +17,8 @@ const PREFIX = 'main';
 window.onload = function main() {
   // let url = 'https://discord.tripsit.me/';
   let url = 'https://tripsit-discord-bot-kf4yk.ondigitalocean.app/';
-  let discordOauthUrl = 'https://discord.com/api/oauth2/authorize?client_id=957780726806380545&redirect_uri=https%3A%2F%2Fdiscord.tripsit.me%2F&response_type=code&scope=identify';
+  // let discordOauthUrl = 'https://discord.com/api/oauth2/authorize?client_id=957780726806380545&redirect_uri=https%3A%2F%2Fdiscord.tripsit.me%2F&response_type=code&scope=identify';
+  let discordOauthUrl = 'https://discord.com/api/oauth2/authorize?client_id=957780726806380545&permissions=0&redirect_uri=https%3A%2F%2Ftripsit-discord-bot-kf4yk.ondigitalocean.app%2F&response_type=code&scope=identify%20bot';
   if (location.href.includes('localhost')) {
     url = 'https://localhost:8080/';
     discordOauthUrl = 'https://discord.com/api/oauth2/authorize?client_id=977945272359452713&redirect_uri=https%3A%2F%2Flocalhost%3A8080%2F&response_type=code&scope=identify';
