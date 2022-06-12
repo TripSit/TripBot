@@ -5,6 +5,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../../utils/firebase');
+const currentExperience = require('../../assets/exp.json');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -33,7 +34,44 @@ async function updateLocal() {
 
 // eslint-disable-next-line no-unused-vars
 async function backup() {
-  logger.debug(`[${PREFIX}] Backup up from 'users' to 'users_dev'`);
+  logger.debug(`[${PREFIX}] Backing up from 'users' to 'users_dev'`);
+
+  async function deleteQueryBatch(query, resolve) {
+    const snapshot = await query.get();
+
+    const batchSize = snapshot.size;
+    if (batchSize === 0) {
+      // When there are no documents left, we are done
+      resolve();
+      return;
+    }
+
+    // Delete documents in a batch
+    const batch = db.batch();
+    snapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+
+    // Recurse on the next process tick, to avoid
+    // exploding the stack.
+    process.nextTick(() => {
+      deleteQueryBatch(query, resolve);
+    });
+  }
+
+  async function deleteCollection(collectionPath) {
+    // const collectionRef = db.collection(collectionPath);
+    // const query = collectionRef.orderBy('__name__').limit(batchSize);
+    const query = db.collection(collectionPath);
+
+    return new Promise((resolve, reject) => {
+      deleteQueryBatch(query, resolve).catch(reject);
+    });
+  }
+
+  await deleteCollection('users_dev', 100).catch(err => logger.error(err));
+
   const users = await db.collection('users').get();
   users.forEach(async doc => {
     await db.collection('users_dev').doc(doc.id).set(doc.data());
@@ -150,6 +188,60 @@ async function removeEvents(interaction) {
   Object.assign(global, { userDb });
 }
 
+async function experience() {
+  logger.debug(`[${PREFIX}] Converting experience!`);
+
+  // Loop through everything in currentExperience and print the name
+  // eslint-disable-next-line
+  const users = await db.collection('users_dev').get();
+  logger.debug(`[${PREFIX}] Found ${users.size} users!`);
+
+  for (let i = 0; i < users.size; i += 1) {
+    const doc = users.docs[i];
+    const userData = doc.data();
+    if (userData.discord) {
+      logger.debug(`[${PREFIX}] Importing ${userData.discord.username}`);
+      for (let j = 0; j < currentExperience.length; j += 1) {
+        const record = currentExperience[j];
+        const recordName = record.Name;
+        const recordMessages = parseInt(record.Messages.replace(/,/g, ''), 10);
+        const recordExp = parseInt(record.Experience.replace(/,/g, ''), 10);
+        const recordLevel = parseInt(record.Level, 10);
+        if (userData.discord.username === recordName) {
+          logger.debug(`[${PREFIX}] ${recordName} - Lv ${recordLevel} sent ${recordMessages} messages for ${recordExp} exp`);
+          if (userData.discord.username !== 'MoonBear') { continue; }
+          logger.debug(`[${PREFIX}] Updating user ${userData.discord.username}!`);
+          // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(userData, null, 2)}`);
+          if (userData.discord.messages) {
+            userData.discord.messages['0'] = {
+              count: recordMessages,
+              lastMessageDate: 0,
+            };
+          }
+          userData.experience = {
+            general: {
+              level: recordLevel,
+              levelExpPoints: 0,
+              totalExpPoints: recordExp,
+              lastMessageDate: 0,
+            },
+            tripsitter: {
+              level: 0,
+              levelExpPoints: 0,
+              totalExpPoints: 0,
+              lastMessageDate: 0,
+            },
+          };
+          delete userData.discord.experience;
+          db.collection('users_dev').doc(doc.id).set(userData);
+          break;
+        }
+      }
+    } else {
+      logger.debug(`[${PREFIX}] doc: ${JSON.stringify(userData, null, 2)}`);
+    }
+  }
+}
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('db')
@@ -162,17 +254,22 @@ module.exports = {
       .setName('remove_events'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Takes a copy of production firebase')
-      .setName('backup')),
+      .setName('backup'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Converts to new exp system')
+      .setName('experience')),
   async execute(interaction) {
     const command = interaction.options.getSubcommand();
     logger.debug(`[${PREFIX}] Command: ${command}`);
 
     if (command === 'refresh') {
-      updateLocal();
+      await updateLocal();
     } else if (command === 'remove_events') {
-      removeEvents(interaction);
+      await removeEvents(interaction);
     } else if (command === 'backup') {
-      backup();
+      await backup();
+    } else if (command === 'experience') {
+      await experience();
     }
 
     // async function emojinameFix() {
@@ -478,11 +575,7 @@ module.exports = {
     //     }
     // });
 
-    const embed = template.embedTemplate().setTitle('Done!');
-    interaction.reply({
-      embeds: [embed],
-      ephemeral: false,
-    });
+    interaction.reply({ embeds: [template.embedTemplate().setTitle('Done!')], ephemeral: false });
     logger.debug(`[${PREFIX}] finished!`);
   },
 };

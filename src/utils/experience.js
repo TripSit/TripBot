@@ -69,82 +69,82 @@ module.exports = {
     const actor = message.author;
     const [actorData, actorFbid] = await getUserInfo(actor);
 
-    // Transform guild data
+    // Get random value between 15 and 25
+    const expPoints = Math.floor(Math.random() * (25 - 15 + 1)) + 15;
+    const currMessageDate = message.createdTimestamp;
+    logger.debug(`[${PREFIX}] currMessageDate: ${currMessageDate}`);
+
+    if ('experience' in actorData) {
+      if (expType in actorData.experience) {
+        const lastMessageDate = actorData.experience[expType].lastMessageDate;
+        // logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
+        const timeDiff = currMessageDate - lastMessageDate;
+        // logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
+
+        // Define the time in between messages where exp will count
+        let bufferSeconds = 60;
+        if (NODE_ENV === 'development') {
+          bufferSeconds = 1;
+        }
+        const bufferTime = bufferSeconds * 1000;
+
+        // If the time diff is over one bufferTime, increase the experience points
+        if (timeDiff > bufferTime) {
+          const experienceData = actorData.experience[expType];
+          let levelExpPoints = experienceData.levelExpPoints + expPoints;
+          const totalExpPoints = experienceData.totalExpPoints + expPoints;
+
+          let level = experienceData.level;
+          const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
+
+          logger.debug(`[${PREFIX}] ${actor.username} (lv${level}) +${expPoints} ${expType} exp | TotalExp: ${totalExpPoints}, LevelExp: ${levelExpPoints}, ExpToLevel ${level + 1}: ${expToLevel}`);
+          if (expToLevel < levelExpPoints) {
+            logger.debug(`[${PREFIX}] ${actor.username} has leveled up to ${expType} level ${level + 1}!`);
+
+            const embed = template.embedTemplate();
+            embed.setDescription(`${actor.username} has leveled up to ${expType} level ${level + 1}!`);
+            const channelTripbotlogs = message.client.channels.cache.get(channelBotspamId);
+            channelTripbotlogs.send({ embeds: [embed], ephemeral: false });
+            level += 1;
+            levelExpPoints -= expToLevel;
+          }
+          actorData.experience[expType] = {
+            level,
+            levelExpPoints,
+            totalExpPoints,
+            lastMessageDate: currMessageDate,
+          };
+        }
+      } else {
+        actorData.experience[expType] = {
+          level: 0,
+          levelExpPoints: expPoints,
+          totalExpPoints: expPoints,
+          lastMessageDate: currMessageDate,
+        };
+        logger.debug(`[${PREFIX}] ${expPoints} experience points added to ${expType}`);
+      }
+    } else {
+      actorData.experience = {
+        [expType]: {
+          level: 0,
+          levelExpPoints: expPoints,
+          totalExpPoints: expPoints,
+          lastMessageDate: currMessageDate,
+        },
+      };
+    }
+
     if ('discord' in actorData) {
       if ('messages' in actorData.discord) {
+        // Get channel info
         const channelInfo = actorData.discord.messages[messageChannelId];
 
+        // Increment the message sent count and the last message date
         actorData.discord.messages[messageChannelId] = {
           count: (channelInfo ? channelInfo.count : 0) + 1,
           lastMessageDate: message.createdTimestamp,
         };
-
-        const minExp = 15;
-        const maxExp = 25;
-        // Get random value between minExp and maxExp
-        const expPoints = Math.floor(Math.random() * (maxExp - minExp + 1)) + minExp;
-        const currMessageDate = message.createdTimestamp;
-        // logger.debug(`[${PREFIX}] currMessageDate: ${currMessageDate}`);
-        if ('experience' in actorData.discord) {
-          if (expType in actorData.discord.experience) {
-            const lastMessageDate = actorData.discord.experience[expType].lastMessageDate;
-            // logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
-            const timeDiff = currMessageDate - lastMessageDate;
-            // logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
-
-            let bufferSeconds = 60;
-            if (NODE_ENV === 'development') {
-              bufferSeconds = 1;
-            }
-            const bufferTime = bufferSeconds * 1000;
-
-            // Make a list of experience points necessary to level up
-            // If the time diff is over one bufferTime, increase the experience points
-            if (timeDiff > bufferTime) {
-              const experienceData = actorData.discord.experience[expType];
-              let levelExpPoints = experienceData.levelExpPoints + expPoints;
-              const totalExpPoints = experienceData.totalExpPoints + expPoints;
-
-              let level = experienceData.level;
-              const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
-
-              logger.debug(`[${PREFIX}] ${actor.username} (lv${level}) +${expPoints} ${expType} exp | TotalExp: ${totalExpPoints}, LevelExp: ${levelExpPoints}, ExpToLevel ${level + 1}: ${expToLevel}`);
-              if (expToLevel < levelExpPoints) {
-                logger.debug(`[${PREFIX}] ${actor.username} has leveled up to ${expType} level ${level + 1}!`);
-
-                const embed = template.embedTemplate();
-                embed.setDescription(`${actor.username} has leveled up to ${expType} level ${level + 1}!`);
-                const channelTripbotlogs = message.client.channels.cache.get(channelBotspamId);
-                channelTripbotlogs.send({ embeds: [embed], ephemeral: false });
-                level += 1;
-                levelExpPoints -= expToLevel;
-              }
-              actorData.discord.experience[expType] = {
-                level,
-                levelExpPoints,
-                totalExpPoints,
-                lastMessageDate,
-              };
-            }
-          } else {
-            actorData.discord.experience[expType] = {
-              level: 0,
-              levelExpPoints: expPoints,
-              totalExpPoints: expPoints,
-              lastMessageDate: currMessageDate,
-            };
-            logger.debug(`[${PREFIX}] ${expPoints} experience points added to ${expType}`);
-          }
-        } else {
-          actorData.discord.experience = {
-            [expType]: {
-              level: 0,
-              levelExpPoints: expPoints,
-              totalExpPoints: expPoints,
-              lastMessageDate: currMessageDate,
-            },
-          };
-        }
       } else {
         logger.debug(`[${PREFIX}] Initializing messages data`);
         actorData.discord.messages = {
