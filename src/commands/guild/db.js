@@ -34,7 +34,44 @@ async function updateLocal() {
 
 // eslint-disable-next-line no-unused-vars
 async function backup() {
-  logger.debug(`[${PREFIX}] Backup up from 'users' to 'users_dev'`);
+  logger.debug(`[${PREFIX}] Backing up from 'users' to 'users_dev'`);
+
+  async function deleteQueryBatch(query, resolve) {
+    const snapshot = await query.get();
+
+    const batchSize = snapshot.size;
+    if (batchSize === 0) {
+      // When there are no documents left, we are done
+      resolve();
+      return;
+    }
+
+    // Delete documents in a batch
+    const batch = db.batch();
+    snapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+
+    // Recurse on the next process tick, to avoid
+    // exploding the stack.
+    process.nextTick(() => {
+      deleteQueryBatch(query, resolve);
+    });
+  }
+
+  async function deleteCollection(collectionPath) {
+    // const collectionRef = db.collection(collectionPath);
+    // const query = collectionRef.orderBy('__name__').limit(batchSize);
+    const query = db.collection(collectionPath);
+
+    return new Promise((resolve, reject) => {
+      deleteQueryBatch(query, resolve).catch(reject);
+    });
+  }
+
+  await deleteCollection('users_dev', 100).catch(err => logger.error(err));
+
   const users = await db.collection('users').get();
   users.forEach(async doc => {
     await db.collection('users_dev').doc(doc.id).set(doc.data());
@@ -218,15 +255,18 @@ module.exports = {
       .setName('remove_events'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Takes a copy of production firebase')
-      .setName('backup')),
+      .setName('backup'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Converts to new exp system')
+      .setName('experience')),
   async execute(interaction) {
     const command = interaction.options.getSubcommand();
     logger.debug(`[${PREFIX}] Command: ${command}`);
 
     if (command === 'refresh') {
-      updateLocal();
+      await updateLocal();
     } else if (command === 'remove_events') {
-      removeEvents(interaction);
+      await removeEvents(interaction);
     } else if (command === 'backup') {
       await backup();
     }
@@ -537,11 +577,7 @@ module.exports = {
     //     }
     // });
 
-    const embed = template.embedTemplate().setTitle('Done!');
-    interaction.reply({
-      embeds: [embed],
-      ephemeral: false,
-    });
+    interaction.reply({ embeds: [template.embedTemplate().setTitle('Done!')], ephemeral: false });
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
