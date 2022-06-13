@@ -5,7 +5,6 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../../utils/firebase');
-const currentExperience = require('../../assets/exp.json');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -14,6 +13,14 @@ const {
   discordGuildId,
   firebaseUserDbName,
 } = require('../../../env');
+
+let currentExperience = [];
+try {
+  // eslint-disable-next-line
+  currentExperience = require('../../../backups/exp.json');
+} catch (e) {
+  logger.error(`[${PREFIX}] Error loading exp.json: ${e}`);
+}
 
 // eslint-disable-next-line no-unused-vars
 async function updateLocal() {
@@ -209,6 +216,7 @@ async function experience() {
         const recordLevel = parseInt(record.Level, 10);
         if (userData.discord.username === recordName) {
           logger.debug(`[${PREFIX}] ${recordName} - Lv ${recordLevel} sent ${recordMessages} messages for ${recordExp} exp`);
+          // eslint-disable-next-line
           if (userData.discord.username !== 'MoonBear') { continue; }
           logger.debug(`[${PREFIX}] Updating user ${userData.discord.username}!`);
           // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(userData, null, 2)}`);
