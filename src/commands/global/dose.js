@@ -66,7 +66,7 @@ module.exports = {
     } catch (err1) {
       logger.error(`[${PREFIX}] error1: ${err1}`);
       try {
-        interaction.member.send({ embeds: [embed], ephemeral: false });
+        interaction.user.send({ embeds: [embed], ephemeral: false });
       } catch (err2) {
         logger.error(`[${PREFIX}] error2: ${err2}`);
       }
