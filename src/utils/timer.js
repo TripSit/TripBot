@@ -6,6 +6,7 @@ const { getUserInfo, setUserInfo } = require('./firebase');
 const template = require('./embed-template');
 
 const {
+  NODE_ENV,
   discordGuildId,
   roleNeedshelpId,
   roleAdminId,
@@ -91,6 +92,11 @@ const mindsetRoles = [
 const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
 
 const PREFIX = require('path').parse(__filename).name; // eslint-disable-line
+
+let seconds = 60;
+if (NODE_ENV === 'development') {
+  seconds = 6000;
+}
 
 module.exports = {
   runTimer(client) {
@@ -457,7 +463,6 @@ module.exports = {
         c,
       );
     }
-    const seconds = 60;
     const repeat = seconds * 1000;
     checkTimers(repeat);
 
