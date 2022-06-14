@@ -5,6 +5,7 @@ const logger = require('./logger');
 const tripsitme = require('./tripsitme');
 const tripsat = require('./tripsat');
 const template = require('./embed-template');
+const modmail = require('../commands/guild/modmail');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -66,15 +67,13 @@ module.exports = {
       return;
     }
 
-    if (buttonID === 'tripsitme') {
-      tripsitme.execute(interaction);
-      return;
-    }
-
-    if (buttonID === 'tripsat') {
-      tripsat.execute(interaction);
-      return;
-    }
+    if (buttonID === 'tripsitme') { return tripsitme.execute(interaction); }
+    if (buttonID === 'tripsat') { return tripsat.execute(interaction); }
+    if (buttonID === 'modmailTripsitter') { return modmail.modmailTripsitter(interaction); }
+    // if (buttonID === 'modmailCommands') { return modmail.modmailCommands(interaction); }
+    if (buttonID === 'modmailFeedback') { return modmail.modmailFeedback(interaction); }
+    if (buttonID === 'modmailIrcissue') { return modmail.modmailIrcissue(interaction); }
+    if (buttonID === 'modmailDiscordissue') { return modmail.modmailDiscordissue(interaction); }
 
     if (!command) return;
 
