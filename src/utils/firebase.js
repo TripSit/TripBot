@@ -156,4 +156,27 @@ module.exports = {
       }
     }
   },
+  getTicketInfo: async channelId => {
+    logger.debug(`[${PREFIX}] Looking up ticket from thread ${channelId}!`);
+    let ticketFbid = null;
+    let ticketData = {};
+
+    if (db !== undefined) {
+      const snapshotUser = await db.collection(firebaseUserDbName).get();
+      await snapshotUser.forEach(doc => {
+        if (doc.data().discord) {
+          if (doc.data().discord.tickets) {
+            doc.data().discord.tickets.forEach(ticket => {
+              if (ticket.issueThread === channelId) {
+                logger.debug(`[${PREFIX}] Ticket data found!`);
+                ticketData = ticket;
+                ticketFbid = doc.id;
+              }
+            });
+          }
+        }
+      });
+    }
+    return [ticketData, ticketFbid];
+  },
 };
