@@ -72,8 +72,8 @@ module.exports = {
     if (buttonID === 'modmailTripsitter') { return modmail.modmailTripsitter(interaction); }
     // if (buttonID === 'modmailCommands') { return modmail.modmailCommands(interaction); }
     if (buttonID === 'modmailFeedback') { return modmail.modmailFeedback(interaction); }
-    if (buttonID === 'modmailIrcissue') { return modmail.modmailIrcissue(interaction); }
-    if (buttonID === 'modmailDiscordissue') { return modmail.modmailDiscordissue(interaction); }
+    if (buttonID === 'modmailIrcissue') { return modmail.modmailIssue(interaction, 'irc'); }
+    if (buttonID === 'modmailDiscordissue') { return modmail.modmailIssue(interaction, 'discord'); }
 
     if (!command) return;
 

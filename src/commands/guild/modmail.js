@@ -12,7 +12,7 @@ const { stripIndents } = require('common-tags/lib');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const template = require('../../utils/embed-template');
 const logger = require('../../utils/logger');
-const { getUserInfo, setUserInfo, getTicketInfo } = require('../../utils/firebase');
+const { getUserInfo, setUserInfo } = require('../../utils/firebase');
 
 // const { db } = global;
 
@@ -71,7 +71,7 @@ module.exports = {
     logger.debug(`[${PREFIX}] Started!`);
   },
   async modmailInitialResponse(message) {
-    logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
+    // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
 
     const embed = template.embedTemplate()
       .setColor('BLUE');
@@ -121,19 +121,46 @@ module.exports = {
     logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
     const modalInput = interaction.fields.getTextInputValue('feedbackInput');
     logger.debug(`[${PREFIX}] modalInput: ${modalInput}!`);
-    interaction.reply('Thank you for the feedback, we will get back to you ASAP!');
+
+    // Get the actor
+    const actor = interaction.user;
+    logger.debug(`[${PREFIX}] actor: ${actor}!`);
+
+    // Get the moderator role
+    const tripsitGuild = await interaction.client.guilds.cache.get(discordGuildId);
+    const moderatorRole = tripsitGuild.roles.cache.find(role => role.id === roleModeratorId);
+
+    // Get the moderation channel
+    const modChan = interaction.client.channels.cache.get(channelModeratorsId);
+    const ircAdminEmbed = template.embedTemplate()
+      .setColor('RANDOM')
+      .setDescription(stripIndents`
+      Hey ${moderatorRole.toString()}!
+
+      Someone has subitted feedback:
+
+      > ${modalInput}`);
+    modChan.send({ embeds: [ircAdminEmbed] });
+    interaction.reply('Thank you for the feedback!');
   },
-  async modmailIrcissue(interaction) {
+  async modmailIssue(interaction, issueType) {
     // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
+
+    let placeholder = '';
+    if (issueType === 'irc') {
+      placeholder = 'I\'ve been banned on IRC and I dont know why.\nMy nickname is Strongbad and my IP is 192.168.100.200';
+    } else if (issueType === 'discord') {
+      placeholder = 'I\'ve been banned on Discord and I dont know why, can you please help?';
+    }
     // Create the modal
     const modal = new Modal()
-      .setCustomId('modmailIrcissueModal')
+      .setCustomId(`${issueType}ModmailIssueModal`)
       .setTitle('TripSit Feedback');
     const timeoutReason = new TextInputComponent()
       .setLabel('What is your issue? Be super detailed!')
       .setStyle('PARAGRAPH')
-      .setPlaceholder('I\'ve been banned on IRC and I dont know why.\nMy nickname is Strongbad and my IP is 192.168.100.200')
-      .setCustomId('ircissueInput')
+      .setPlaceholder(placeholder)
+      .setCustomId(`${issueType}IssueInput`)
       .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
     const firstActionRow = new MessageActionRow().addComponents(timeoutReason);
@@ -142,7 +169,7 @@ module.exports = {
     // Show the modal to the user
     await interaction.showModal(modal);
   },
-  async modmailIrcissueSubmit(interaction) {
+  async modmailIssueSubmit(interaction, issueType) {
     // logger.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}!`);
 
     // Respond right away cuz the rest of this doesn't matter
@@ -155,14 +182,8 @@ module.exports = {
     // Get the moderation channel
     const modChan = interaction.client.channels.cache.get(channelModeratorsId);
 
-    // Get the IRC admin
-    const ircAdmin = interaction.client.users.cache.get(discordOwnerId);
-
-    // Trying to make this code dynamic so set the type
-    const issueType = 'IRC';
-
     // Get whatever they sent in the modal
-    const modalInput = interaction.fields.getTextInputValue('ircissueInput');
+    const modalInput = interaction.fields.getTextInputValue(`${issueType}IssueInput`);
     logger.debug(`[${PREFIX}] modalInput: ${modalInput}!`);
 
     // Get the actor
@@ -257,36 +278,13 @@ module.exports = {
     }
     setUserInfo(actorFbid, actorData);
 
+    // Get the IRC admin
+    const ircAdmin = interaction.client.users.cache.get(discordOwnerId);
     // Alert the admin that the new thread is created
     const ircAdminEmbed = template.embedTemplate()
       .setColor('RANDOM')
       .setDescription(stripIndents`
       Hey ${ircAdmin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`);
     ircAdmin.send({ embeds: [ircAdminEmbed] });
-  },
-  async modmailDiscordissue(interaction) {
-    // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
-    // Create the modal
-    const modal = new Modal()
-      .setCustomId('modmailDiscordissueModal')
-      .setTitle('TripSit Feedback');
-    const timeoutReason = new TextInputComponent()
-      .setLabel('What is your issue? Be super detailed!')
-      .setStyle('PARAGRAPH')
-      .setPlaceholder('I\'ve been banned on Discord and I dont know why, can you please help?')
-      .setCustomId('discordissueInput')
-      .setRequired(true);
-    // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(timeoutReason);
-    // Add inputs to the modal
-    modal.addComponents(firstActionRow);
-    // Show the modal to the user
-    await interaction.showModal(modal);
-  },
-  async modmailDiscordissueSubmit(interaction) {
-    logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
-    const modalInput = interaction.fields.getTextInputValue('discordissueInput');
-    logger.debug(`[${PREFIX}] modalInput: ${modalInput}!`);
-    interaction.reply('Thank you for the feedback, we will get back to you ASAP!');
   },
 };

@@ -17,8 +17,8 @@ module.exports = {
     // logger.debug(`[${PREFIX}] interaction: ${interaction}`);
     logger.debug(`[${PREFIX}] interaction: ${interaction.customId}`);
     if (interaction.customId === 'modmailFeedbackModal') { return modmail.modmailFeedbackSubmit(interaction); }
-    if (interaction.customId === 'modmailIrcissueModal') { return modmail.modmailIrcissueSubmit(interaction); }
-    if (interaction.customId === 'modmailDiscordissueModal') { return modmail.modmailDiscordissueSubmit(interaction); }
+    if (interaction.customId === 'ircModmailIssueModal') { return modmail.modmailIssueSubmit(interaction, 'irc'); }
+    if (interaction.customId === 'discordModmailIssueModal') { return modmail.modmailIssueSubmit(interaction, 'discord'); }
     if (interaction.customId === 'tripsitModal') { return tripsitme.submit(interaction); }
     if (interaction.customId === 'banModal') { return uBan.submit(interaction); }
     if (interaction.customId === 'kickModal') { return uKick.submit(interaction); }

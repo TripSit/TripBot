@@ -6,7 +6,7 @@ const { karma } = require('../utils/karma');
 const { experience } = require('../utils/experience');
 const { modmailInitialResponse } = require('../commands/guild/modmail');
 const logger = require('../utils/logger');
-const { getUserInfo, setUserInfo, getTicketInfo } = require('../utils/firebase');
+const { getUserInfo, getTicketInfo } = require('../utils/firebase');
 
 const {
   discordGuildId,
