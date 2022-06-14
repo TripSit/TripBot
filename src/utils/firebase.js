@@ -80,6 +80,25 @@ module.exports = {
     }
     return [memberData, memberFbid];
   },
+  setUserInfo: async (fbid, data) => {
+    logger.debug(`[${PREFIX}] Saving ${data.discord.username}!`);
+
+    if (fbid !== null && fbid !== undefined) {
+      // logger.debug(`[${PREFIX}] Updating actor data`);
+      try {
+        await db.collection(firebaseUserDbName).doc(fbid).set(data);
+      } catch (err) {
+        logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
+      }
+    } else {
+      // logger.debug(`[${PREFIX}] Creating actor data`);
+      try {
+        await db.collection(firebaseUserDbName).doc().set(data);
+      } catch (err) {
+        logger.error(`[${PREFIX}] Error creating actor data: ${err}`);
+      }
+    }
+  },
   getGuildInfo: async guild => {
     logger.debug(`[${PREFIX}] Looking up guild ${guild}!`);
     let guildData = {
@@ -116,25 +135,6 @@ module.exports = {
     }
     // logger.debug(`[${PREFIX}] guildData: ${JSON.stringify(guildData)}`);
     return [guildData, guildFbid];
-  },
-  setUserInfo: async (fbid, data) => {
-    logger.debug(`[${PREFIX}] Saving ${data.discord.username}!`);
-
-    if (fbid !== null && fbid !== undefined) {
-      // logger.debug(`[${PREFIX}] Updating actor data`);
-      try {
-        await db.collection(firebaseUserDbName).doc(fbid).set(data);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
-      }
-    } else {
-      // logger.debug(`[${PREFIX}] Creating actor data`);
-      try {
-        await db.collection(firebaseUserDbName).doc().set(data);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error creating actor data: ${err}`);
-      }
-    }
   },
   setGuildInfo: async (fbid, data) => {
     logger.debug(`[${PREFIX}] Saving ${data.guild_name}!`);
