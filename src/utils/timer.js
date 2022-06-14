@@ -99,7 +99,7 @@ if (NODE_ENV === 'development') {
 }
 
 module.exports = {
-  runTimer(client) {
+  async runTimer(client) {
     logger.debug(`[${PREFIX}] started!`);
     let i = 0;
     function checkTimers(c) {
@@ -465,7 +465,5 @@ module.exports = {
     }
     const repeat = seconds * 1000;
     checkTimers(repeat);
-
-    logger.debug(`[${PREFIX}] finished!`);
   },
 };
