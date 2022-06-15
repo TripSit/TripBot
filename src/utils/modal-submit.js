@@ -16,6 +16,7 @@ module.exports = {
   async execute(interaction) {
     // logger.debug(`[${PREFIX}] interaction: ${interaction}`);
     logger.debug(`[${PREFIX}] interaction: ${interaction.customId}`);
+    if (interaction.customId === 'tripsitModmailModal') { return modmail.modmailTripsitterSubmit(interaction); }
     if (interaction.customId === 'modmailFeedbackModal') { return modmail.modmailFeedbackSubmit(interaction); }
     if (interaction.customId === 'ircModmailIssueModal') { return modmail.modmailIssueSubmit(interaction, 'irc'); }
     if (interaction.customId === 'discordModmailIssueModal') { return modmail.modmailIssueSubmit(interaction, 'discord'); }

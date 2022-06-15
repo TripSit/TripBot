@@ -12,17 +12,24 @@ const { stripIndents } = require('common-tags/lib');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const template = require('../../utils/embed-template');
 const logger = require('../../utils/logger');
-const { getUserInfo, setUserInfo } = require('../../utils/firebase');
-
-// const { db } = global;
+const {
+  // getUserInfo,
+  // setUserInfo,
+  getTicketInfo,
+  setTicketInfo,
+} = require('../../utils/firebase');
 
 const {
   NODE_ENV,
+  channelTripsitId,
   discordOwnerId,
   discordGuildId,
   channelModeratorsId,
+  channelIrcId,
   roleModeratorId,
 } = require('../../../env');
+
+const discordIrcAdminId = discordOwnerId;
 
 const modmailButtons = new MessageActionRow()
   .addComponents(
@@ -54,21 +61,78 @@ module.exports = {
     .setDescription('Modmail actions!')
     .addSubcommand(subcommand => subcommand
       .setDescription('Close this ticket as resolved')
-      .setName('close'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Get the ID of this ticket')
-      .setName('id'))
+      .setName('closed'))
+    // .addSubcommand(subcommand => subcommand
+    //   .setDescription('Get the ID of this ticket')
+    //   .setName('id'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Block this user from future messages/tickets')
-      .setName('block'))
+      .setName('blocked'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Take the ticket off hold')
-      .setName('unpause'))
+      .setName('open'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Put the ticket on hold')
-      .setName('pause')),
-  async execute(/* interaction, client */) {
+      .setName('paused')),
+  async execute(interaction) {
     logger.debug(`[${PREFIX}] Started!`);
+    const command = interaction.options.getSubcommand();
+    logger.debug(`[${PREFIX}] Command: ${command}`);
+
+    // Get the actor
+    // const actor = interaction.user;
+
+    // Get the ticket info
+    const [ticketData, ticketFbid] = await getTicketInfo(interaction.channel.id, 'channel');
+
+    // Transform actor data
+    if (command === 'close') {
+      logger.debug(`[${PREFIX}] Closing ticket!`);
+      ticketData.issueStatus = 'closed';
+      const ticketChannel = interaction.client.channels.cache.get(ticketData.issueThread);
+
+      // Reply before you archive, or else you'll just unarchive
+      await interaction.reply('It looks like we\'re done here, this ticket has been archived by a moderator!');
+
+      // Archive the channel
+      ticketChannel.setArchived(true, 'Archiving after close');
+      setTicketInfo(ticketFbid, ticketData);
+    } else if (command === 'block') {
+      logger.debug(`[${PREFIX}] Blocking user!`);
+      // Reply before you archive, or else you'll just unarchive
+      await interaction.reply('This user has been blocked from creating future tickets!');
+
+      ticketData.issueStatus = 'blocked';
+
+      // Archive the channel
+      const ticketChannel = interaction.client.channels.cache.get(ticketData.issueThread);
+      ticketChannel.setArchived(true, 'Archiving after close');
+      setTicketInfo(ticketFbid, ticketData);
+    } else if (command === 'unblock') {
+      logger.debug(`[${PREFIX}] Unblocking user!`);
+      // Reply before you archive, or else you'll just unarchive
+      await interaction.reply('This user has been un-blocked from creating future tickets!');
+
+      ticketData.issueStatus = 'closed';
+
+      // Archive the channel
+      setTicketInfo(ticketFbid, ticketData);
+    } else if (command === 'unpause') {
+      logger.debug(`[${PREFIX}] Unpausing ticket!`);
+      await interaction.reply('This ticket has been unpaused and can communication can resume!');
+
+      ticketData.issueStatus = 'open';
+
+      setTicketInfo(ticketFbid, ticketData);
+    } else if (command === 'pause') {
+      logger.debug(`[${PREFIX}] Pausing ticket!`);
+      await interaction.reply('This ticket has been paused, please wait to communicate further!');
+
+      ticketData.issueStatus = 'paused';
+
+      // Archive the channel
+      setTicketInfo(ticketFbid, ticketData);
+    }
   },
   async modmailInitialResponse(message) {
     // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
@@ -88,12 +152,36 @@ module.exports = {
   },
   async modmailTripsitter(interaction) {
     const guild = await interaction.client.guilds.fetch(discordGuildId);
-    logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
-    interaction.reply(stripIndents`
-    For now you must join ${guild} to get tripsitting help!
-
-    http://discord.gg/tripsit`);
+    const member = await guild.members.fetch(interaction.user.id);
+    logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
+    if (member) {
+      const channelTripsit = await guild.channels.fetch(channelTripsitId);
+      interaction.reply(stripIndents`
+      Click the button in ${channelTripsit.toString()}!`);
+    } else {
+      interaction.reply(stripIndents`
+      You must join ${guild} to get tripsitting help!
+      http://discord.gg/tripsit`);
+    }
+    // Create the modal
+    // const modal = new Modal()
+    //   .setCustomId('tripsitModmailModal')
+    //   .setTitle('TripSit Help Request');
+    // modal.addComponents(new MessageActionRow().addComponents(new TextInputComponent()
+    //   .setCustomId('triageInput')
+    //   .setLabel('What substance? How much taken? What time?')
+    //   .setStyle('SHORT')));
+    // modal.addComponents(new MessageActionRow().addComponents(new TextInputComponent()
+    //   .setCustomId('introInput')
+    //   .setLabel('What\'s going on? Give us the details!')
+    //   .setStyle('PARAGRAPH')));
+    // await interaction.showModal(modal);
   },
+  // async modmailTripsitterSubmit(interaction) {
+  //   const guild = await interaction.client.guilds.fetch(discordGuildId);
+  //   const member = await guild.members.fetch(interaction.user.id);
+  //   logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
+  // },
   // async modmailCommands(interaction) {
   //   logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
   //   interaction.reply(`[${PREFIX}] modmailCommands!`);
@@ -141,7 +229,7 @@ module.exports = {
 
       > ${modalInput}`);
     modChan.send({ embeds: [ircAdminEmbed] });
-    interaction.reply('Thank you for the feedback!');
+    interaction.reply('Thank you for the feedback! Here\'s a cookie: 🍪');
   },
   async modmailIssue(interaction, issueType) {
     // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
@@ -150,7 +238,7 @@ module.exports = {
     if (issueType === 'irc') {
       placeholder = 'I\'ve been banned on IRC and I dont know why.\nMy nickname is Strongbad and my IP is 192.168.100.200';
     } else if (issueType === 'discord') {
-      placeholder = 'I\'ve been banned on Discord and I dont know why, can you please help?';
+      placeholder = 'I have an issue with discord, can you please help?';
     }
     // Create the modal
     const modal = new Modal()
@@ -173,62 +261,65 @@ module.exports = {
     // logger.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}!`);
 
     // Respond right away cuz the rest of this doesn't matter
-    interaction.reply('Thank you, we will respond to right here when we can!');
+    const guild = await interaction.client.guilds.fetch(discordGuildId);
+    const member = await guild.members.fetch(interaction.user.id);
+    // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
+    if (member) {
+      // Dont run if the user is on timeout
+      if (member.communicationDisabledUntilTimestamp !== null) {
+        return member.send(stripIndents`
+        Hey!
 
+        Looks like you're on timeout =/
+
+        You can't use the modmail while on timeout.`);
+      }
+    } else {
+      interaction.reply('Thank you, we will respond to right here when we can!');
+    }
     // Get the moderator role
     const tripsitGuild = await interaction.client.guilds.cache.get(discordGuildId);
     const moderatorRole = tripsitGuild.roles.cache.find(role => role.id === roleModeratorId);
 
-    // Get the moderation channel
-    const modChan = interaction.client.channels.cache.get(channelModeratorsId);
+    const channel = interaction.client.channels.cache.get(channelIrcId);
+    // Debating if there should be a sparate channel for discord issues or if just use irc?
+    // if (issueType === 'discord') {
+    //   // Get the moderation channel
+    //   channel = interaction.client.channels.cache.get(channelIrcId);
+    // } else if (issueType === 'irc') {
+    //   // Get the irc channel
+    //   channel = interaction.client.channels.cache.get(channelIrcId);
+    // }
 
     // Get whatever they sent in the modal
     const modalInput = interaction.fields.getTextInputValue(`${issueType}IssueInput`);
     logger.debug(`[${PREFIX}] modalInput: ${modalInput}!`);
 
-    // Get the actor
+    // // Get the actor
     const actor = interaction.user;
-    logger.debug(`[${PREFIX}] actor: ${actor}!`);
+    const [ticketData] = await getTicketInfo(actor.id, 'user');
+    logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
-    // Dont run if the user is on timeout
-    // if (actor.communicationDisabledUntilTimestamp !== null) {
-    //   return actor.send(stripIndents`
-    //   Hey!
-
-    //   Looks like you're on timeout =/
-
-    //   You can't use the modmail while on timeout.`);
-    // }
-
-    const [actorData, actorFbid] = await getUserInfo(actor);
-
-    // Get ticket information
-    let ticketInfo = {};
-    if ('discord' in actorData) {
-      if ('tickets' in actorData.discord) {
-        // Check if the 'status' of each ticket is 'open' and if so make a list
-        actorData.discord.tickets.forEach(ticket => {
-          if (ticket.issueStatus === 'open') {
-            ticketInfo = ticket;
-          }
-        });
-      }
-    }
-
-    // Get the ticket ID
-    logger.debug(`[${PREFIX}] ticketInfo: ${JSON.stringify(ticketInfo, null, 2)}!`);
-    if (Object.keys(ticketInfo).length !== 0) {
+    // Check if an open thread already exists, and if so, update that thread, return
+    if (Object.keys(ticketData).length !== 0) {
       // const issueType = ticketInfo.issueType;
-      const issueThread = await modChan.threads.fetch(ticketInfo.issueThread);
+      const issueThread = await channel.threads.fetch(ticketData.issueThread);
       // logger.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
       if (issueThread) {
-        issueThread.send(modalInput);
+        // Ping the user in the help thread
+        const helpMessage = stripIndents`
+          Hey team, ${actor} submitted a new request for help:
+
+          > ${modalInput}
+        `;
+        issueThread.send(helpMessage);
+        interaction.reply(`You already have an open issue here ${issueThread.toString()}!`);
         return;
       }
     }
 
-    // Create a new thread in mod channel
-    const ticketThread = await modChan.threads.create({
+    // Create a new thread in channel
+    const ticketThread = await channel.threads.create({
       name: `${actor.username}'s ${issueType} issue!`,
       autoArchiveDuration: 1440,
       type: NODE_ENV === 'production' ? 'GUILD_PRIVATE_THREAD' : 'GUILD_PUBLIC_THREAD',
@@ -236,55 +327,57 @@ module.exports = {
     });
     logger.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);
 
+    interaction.reply(`Thank you, check out ${ticketThread} to talk with a team member about your issue!`);
+
     const embed = template.embedTemplate()
       .setColor('DARK_BLUE')
-      .setDescription(stripIndents`Hey ${moderatorRole}s! ${actor} has submitted a new issue:
+      .setDescription(stripIndents`
+      Hey ${moderatorRole}s! ${actor} has submitted a new issue:
 
-    > ${modalInput}
+      > ${modalInput}
 
-    Please look into it and respond to them in this thread!
+      Please look into it and respond to them in this thread!
 
-    When you're done remember to '/modmail close' this ticket!`);
+      When you're done remember to '/modmail close' this ticket!`);
 
     await ticketThread.send({ embeds: [embed], ephemeral: true });
     logger.debug(`[${PREFIX}] Sent intro message to meta-thread ${ticketThread.id}`);
 
-    // Set ticket information
-    if ('discord' in actorData) {
-      if ('tickets' in actorData.discord) {
-        actorData.discord.tickets.push({
-          issueThread: ticketThread.id,
-          issueUser: actor.id,
-          issueType,
-          issueStatus: 'open',
-        });
-      } else {
-        actorData.discord.tickets = [{
-          threadId: ticketThread.id,
-          issueUser: actor.id,
-          type: issueType,
-          status: 'open',
-        }];
-      }
-    } else {
-      actorData.discord = {
-        tickets: [{
-          threadId: ticketThread.id,
-          issueUser: actor.id,
-          type: issueType,
-          status: 'open',
-        }],
-      };
-    }
-    setUserInfo(actorFbid, actorData);
+    // Webhooks dont work in threads, but leaving this code here for later
+    // const webhook = await ticketThread.createWebhook(
+    // actor.username, { avatar: actor.avatarURL()
+    //   }});
+    // logger.debug(`[${PREFIX}] Created webhook ${JSON.stringify(webhook, null, 2)}!`);
 
-    // Get the IRC admin
-    const ircAdmin = interaction.client.users.cache.get(discordOwnerId);
-    // Alert the admin that the new thread is created
-    const ircAdminEmbed = template.embedTemplate()
-      .setColor('RANDOM')
-      .setDescription(stripIndents`
-      Hey ${ircAdmin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`);
-    ircAdmin.send({ embeds: [ircAdminEmbed] });
+    // Set ticket information
+    const newTicketData = {
+      issueThread: ticketThread.id,
+      issueUser: actor.id,
+      issueUsername: actor.username,
+      issueUserIsbanned: false,
+      issueType,
+      issueStatus: 'open',
+      issueDesc: modalInput,
+    };
+    setTicketInfo(null, newTicketData);
+
+    if (issueType === 'irc') {
+      const ircAdmin = interaction.client.users.cache.get(discordIrcAdminId);
+      // Alert the admin that the new thread is created
+      const ircAdminEmbed = template.embedTemplate()
+        .setColor('RANDOM')
+        .setDescription(stripIndents`
+        Hey ${ircAdmin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`);
+      ircAdmin.send({ embeds: [ircAdminEmbed] });
+    }
+    if (issueType === 'discord') {
+      const discordAdmin = interaction.client.users.cache.get(discordOwnerId);
+      // Alert the admin that the new thread is created
+      const discordAdminEmbed = template.embedTemplate()
+        .setColor('RANDOM')
+        .setDescription(stripIndents`
+      Hey ${discordAdmin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`);
+      discordAdmin.send({ embeds: [discordAdminEmbed] });
+    }
   },
 };
