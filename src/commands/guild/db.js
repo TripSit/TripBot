@@ -5,6 +5,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../../utils/firebase');
+// const currentExperience = require('../../assets/exp.json');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -195,61 +196,61 @@ async function removeEvents(interaction) {
   Object.assign(global, { userDb });
 }
 
-async function experience() {
-  logger.debug(`[${PREFIX}] Converting experience!`);
+// async function experience() {
+//   logger.debug(`[${PREFIX}] Converting experience!`);
 
-  // Loop through everything in currentExperience and print the name
-  // eslint-disable-next-line
-  const users = await db.collection('users_dev').get();
-  logger.debug(`[${PREFIX}] Found ${users.size} users!`);
+//   // Loop through everything in currentExperience and print the name
+//   // eslint-disable-next-line
+//   const users = await db.collection('users').get();
+//   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
 
-  for (let i = 0; i < users.size; i += 1) {
-    const doc = users.docs[i];
-    const userData = doc.data();
-    if (userData.discord) {
-      logger.debug(`[${PREFIX}] Importing ${userData.discord.username}`);
-      for (let j = 0; j < currentExperience.length; j += 1) {
-        const record = currentExperience[j];
-        const recordName = record.Name;
-        const recordMessages = parseInt(record.Messages.replace(/,/g, ''), 10);
-        const recordExp = parseInt(record.Experience.replace(/,/g, ''), 10);
-        const recordLevel = parseInt(record.Level, 10);
-        if (userData.discord.username === recordName) {
-          logger.debug(`[${PREFIX}] ${recordName} - Lv ${recordLevel} sent ${recordMessages} messages for ${recordExp} exp`);
-          // eslint-disable-next-line
-          if (userData.discord.username !== 'MoonBear') { continue; }
-          logger.debug(`[${PREFIX}] Updating user ${userData.discord.username}!`);
-          // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(userData, null, 2)}`);
-          if (userData.discord.messages) {
-            userData.discord.messages['0'] = {
-              count: recordMessages,
-              lastMessageDate: 0,
-            };
-          }
-          userData.experience = {
-            general: {
-              level: recordLevel,
-              levelExpPoints: 0,
-              totalExpPoints: recordExp,
-              lastMessageDate: 0,
-            },
-            tripsitter: {
-              level: 0,
-              levelExpPoints: 0,
-              totalExpPoints: 0,
-              lastMessageDate: 0,
-            },
-          };
-          delete userData.discord.experience;
-          db.collection('users_dev').doc(doc.id).set(userData);
-          break;
-        }
-      }
-    } else {
-      logger.debug(`[${PREFIX}] doc: ${JSON.stringify(userData, null, 2)}`);
-    }
-  }
-}
+//   for (let i = 0; i < users.size; i += 1) {
+//     const doc = users.docs[i];
+//     const userData = doc.data();
+//     if (userData.discord) {
+//       logger.debug(`[${PREFIX}] Importing ${userData.discord.username}`);
+//       for (let j = 0; j < currentExperience.length; j += 1) {
+//         const record = currentExperience[j];
+//         const recordName = record.Name;
+//         const recordMessages = parseInt(record.Messages.replace(/,/g, ''), 10);
+//         const recordExp = parseInt(record.Experience.replace(/,/g, ''), 10);
+//         const recordLevel = parseInt(record.Level, 10);
+//         if (userData.discord.username === recordName) {
+//           logger.debug(`[${PREFIX}] ${recordName} - Lv
+// ${recordLevel} sent ${recordMessages} messages for ${recordExp} exp`);
+//           if (userData.discord.username !== 'MoonBear') { continue; }
+//           logger.debug(`[${PREFIX}] Updating user ${userData.discord.username}!`);
+//           // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(userData, null, 2)}`);
+//           if (userData.discord.messages) {
+//             userData.discord.messages['0'] = {
+//               count: recordMessages,
+//               lastMessageDate: 0,
+//             };
+//           }
+//           userData.experience = {
+//             general: {
+//               level: recordLevel,
+//               levelExpPoints: 0,
+//               totalExpPoints: recordExp,
+//               lastMessageDate: 0,
+//             },
+//             tripsitter: {
+//               level: 0,
+//               levelExpPoints: 0,
+//               totalExpPoints: 0,
+//               lastMessageDate: 0,
+//             },
+//           };
+//           delete userData.discord.experience;
+//           db.collection('users').doc(doc.id).set(userData);
+//           break;
+//         }
+//       }
+//     } else {
+//       logger.debug(`[${PREFIX}] doc: ${JSON.stringify(userData, null, 2)}`);
+//     }
+//   }
+// }
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('db')
@@ -276,9 +277,10 @@ module.exports = {
       await removeEvents(interaction);
     } else if (command === 'backup') {
       await backup();
-    } else if (command === 'experience') {
-      await experience();
     }
+    // else if (command === 'experience') {
+    //   await experience();
+    // }
 
     // async function emojinameFix() {
     //   logger.debug(`[${PREFIX}] emojinameFix`);
