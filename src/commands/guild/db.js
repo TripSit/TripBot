@@ -15,6 +15,14 @@ const {
   firebaseUserDbName,
 } = require('../../../env');
 
+let currentExperience = [];
+try {
+  // eslint-disable-next-line
+  currentExperience = require('../../../backups/exp.json');
+} catch (e) {
+  logger.error(`[${PREFIX}] Error loading exp.json: ${e}`);
+}
+
 // eslint-disable-next-line no-unused-vars
 async function updateLocal() {
   const userDb = [];

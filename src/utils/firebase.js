@@ -7,6 +7,7 @@ const PREFIX = path.parse(__filename).name;
 
 const { db } = global;
 const {
+  firebaseTicketDbName,
   firebaseGuildDbName,
   firebaseUserDbName,
 } = require('../../env');
@@ -80,6 +81,25 @@ module.exports = {
     }
     return [memberData, memberFbid];
   },
+  setUserInfo: async (fbid, data) => {
+    logger.debug(`[${PREFIX}] Saving ${data.discord.username}!`);
+
+    if (fbid !== null && fbid !== undefined) {
+      // logger.debug(`[${PREFIX}] Updating actor data`);
+      try {
+        await db.collection(firebaseUserDbName).doc(fbid).set(data);
+      } catch (err) {
+        logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
+      }
+    } else {
+      // logger.debug(`[${PREFIX}] Creating actor data`);
+      try {
+        await db.collection(firebaseUserDbName).doc().set(data);
+      } catch (err) {
+        logger.error(`[${PREFIX}] Error creating actor data: ${err}`);
+      }
+    }
+  },
   getGuildInfo: async guild => {
     logger.debug(`[${PREFIX}] Looking up guild ${guild}!`);
     let guildData = {
@@ -117,25 +137,6 @@ module.exports = {
     // logger.debug(`[${PREFIX}] guildData: ${JSON.stringify(guildData)}`);
     return [guildData, guildFbid];
   },
-  setUserInfo: async (fbid, data) => {
-    logger.debug(`[${PREFIX}] Saving ${data.discord.username}!`);
-
-    if (fbid !== null && fbid !== undefined) {
-      // logger.debug(`[${PREFIX}] Updating actor data`);
-      try {
-        await db.collection(firebaseUserDbName).doc(fbid).set(data);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
-      }
-    } else {
-      // logger.debug(`[${PREFIX}] Creating actor data`);
-      try {
-        await db.collection(firebaseUserDbName).doc().set(data);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error creating actor data: ${err}`);
-      }
-    }
-  },
   setGuildInfo: async (fbid, data) => {
     logger.debug(`[${PREFIX}] Saving ${data.guild_name}!`);
     // logger.debug(`[${PREFIX}] fbid ${fbid}!`);
@@ -153,6 +154,66 @@ module.exports = {
         await db.collection(firebaseGuildDbName).doc().set(data);
       } catch (err) {
         logger.error(`[${PREFIX}] Error creating guild data: ${err}`);
+      }
+    }
+  },
+  getTicketInfo: async (id, type) => {
+    logger.debug(`[${PREFIX}] Looking up ticket from ${type} ${id}!`);
+    let ticketFbid = null;
+    let ticketData = {};
+    let ticketBlocked = false;
+
+    if (db !== undefined) {
+      const snapshotTicket = await db.collection(firebaseTicketDbName).get();
+      await snapshotTicket.forEach(doc => {
+        if (type === 'user') {
+          if (doc.data().issueUser === id) {
+            if (doc.data().issueStatus !== 'closed') {
+              logger.debug(`[${PREFIX}] Ticket data found!`);
+              ticketData = doc.data();
+              ticketFbid = doc.id;
+            }
+            if (doc.data().issueStatus === 'blocked') {
+              logger.debug(`[${PREFIX}] User is blocked!`);
+              ticketBlocked = true;
+            }
+          }
+        }
+        if (type === 'channel') {
+          if (doc.data().issueThread === id) {
+            if (doc.data().issueStatus !== 'closed') {
+              logger.debug(`[${PREFIX}] Ticket data found!`);
+              ticketData = doc.data();
+              ticketFbid = doc.id;
+            }
+            if (doc.data().issueStatus === 'blocked') {
+              logger.debug(`[${PREFIX}] User is blocked!`);
+              ticketBlocked = true;
+            }
+          }
+        }
+      });
+    }
+    if (ticketBlocked) { ticketData = 'blocked'; }
+    return [ticketData, ticketFbid];
+  },
+  setTicketInfo: async (fbid, data) => {
+    logger.debug(`[${PREFIX}] Saving ${data.issueUsername}!`);
+    // logger.debug(`[${PREFIX}] fbid ${fbid}!`);
+
+    if (fbid !== null && fbid !== undefined) {
+      logger.debug(`[${PREFIX}] Updating ticket data`);
+      try {
+        await db.collection(firebaseTicketDbName).doc(fbid).set(data);
+      } catch (err) {
+        logger.error(`[${PREFIX}] Error updating ticket data: ${err}`);
+      }
+    } else {
+      logger.debug(`[${PREFIX}] Creating ticket data`);
+      try {
+        await db.collection(firebaseTicketDbName).doc().set(data);
+      } catch (err) {
+        logger.error(`[${PREFIX}] Error creating ticket data: ${err}`);
       }
     }
   },

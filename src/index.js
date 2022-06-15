@@ -45,6 +45,9 @@ const client = new Client({
     // Intents.FLAGS.GUILD_PRESENCES,
     Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
     Intents.FLAGS.GUILD_INVITES,
+    Intents.FLAGS.DIRECT_MESSAGES,
+    Intents.FLAGS.DIRECT_MESSAGE_TYPING,
+    Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
   ],
   partials: [
     'MESSAGE',
@@ -66,7 +69,9 @@ const destroy = () => {
 };
 
 process.on('unhandledRejection', error => {
-  logger.error(`[${PREFIX}] Unhandled promise rejection: ${error}`);
+  logger.error(`[${PREFIX}] error.name: ${error.name}`);
+  logger.error(`[${PREFIX}] error.message: ${error.message}`);
+  logger.error(`[${PREFIX}] error.stack: ${error.stack}`);
 });
 
 process.on('SIGINT', destroy);

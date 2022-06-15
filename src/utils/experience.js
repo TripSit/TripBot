@@ -1,7 +1,6 @@
 'use strict';
 
 const path = require('path');
-const ms = require('ms');
 
 const template = require('./embed-template');
 const logger = require('./logger');
@@ -18,7 +17,7 @@ const {
   channelDrugQuestionsId,
   channelOpentripsitId,
   roleNeedshelpId,
-  roleHelperId,
+  // roleHelperId,
   roleNewbie,
   roleMutedId,
   roleTempvoiceId,
@@ -27,7 +26,6 @@ const {
 
 const ignoredRoles = [
   roleNeedshelpId,
-  roleHelperId,
   roleNewbie,
   roleMutedId,
   roleTempvoiceId,
@@ -45,6 +43,11 @@ const tripsitterChannels = [
 module.exports = {
   async experience(message) {
     logger.debug(`[${PREFIX}] Message sent by ${message.author.username} in ${message.channel.name} on ${message.guild}`);
+
+    if (ignoredRoles.some(role => message.member.roles.cache.has(role))) {
+      logger.debug(`[${PREFIX}] Message sent by a user with an ignored role`);
+      return;
+    }
 
     if (ignoredRoles.some(role => message.member.roles.cache.has(role))) {
       logger.debug(`[${PREFIX}] Message sent by a user with an ignored role`);
