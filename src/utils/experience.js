@@ -1,7 +1,6 @@
 'use strict';
 
 const path = require('path');
-const ms = require('ms');
 
 const template = require('./embed-template');
 const logger = require('./logger');
@@ -30,10 +29,6 @@ const ignoredRoles = [
   roleNewbie,
   roleMutedId,
   roleTempvoiceId,
-];
-
-const ignoredChannels = [
-  channelBotspamId,
 ];
 
 const tripsitterChannels = [

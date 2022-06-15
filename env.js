@@ -29,6 +29,7 @@ exports.firebaseClientId = process.env.firebaseClientId;
 exports.firebaseClientEmail = process.env.firebaseClientEmail;
 exports.firebaseGuildDbName = process.env.firebaseGuildDbName;
 exports.firebaseUserDbName = process.env.firebaseUserDbName;
+exports.firebaseTicketDbName = process.env.firebaseTicketDbName;
 
 exports.githubToken = process.env.githubToken;
 
