@@ -33,6 +33,9 @@ const coderEmoji = NODE_ENV === 'production'
 const clearmindEmoji = NODE_ENV === 'production'
   ? '<:ts_clearmind:979557762621136997>'
   : '<:ts_clearmind:980934790834442240>';
+const invisibleEmoji = NODE_ENV === 'production'
+  ? '<:invisible:976853930489298984>'
+  : '<:invisible:976824380564852768>';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -72,7 +75,7 @@ module.exports = {
       `);
 
     await channelVipWelcome.send(stripIndents`
-        <:invisible:976824380564852768>
+        ${invisibleEmoji}
         > **Are you interested in TripSit projects?**
         > By reacting to this message you will be given the **Coder** role, and you'll be able to access the Development channels.
         > You don't need to know how to code to pick up this role: all sorts of input is valuable:
@@ -90,7 +93,7 @@ module.exports = {
       });
 
     await channelVipWelcome.send(stripIndents`
-          <:invisible:976824380564852768>
+          ${invisibleEmoji}
           > **Are you not interested in drug-talk and/or in recovery?**
           > Opt-in to ${channelClearmind} with this role.
           > Any drug talk in this room is strictly forbidden.
@@ -108,7 +111,7 @@ module.exports = {
       });
 
     await channelVipWelcome.send(stripIndents`
-          <:invisible:976824380564852768>
+          ${invisibleEmoji}
           > **Are you a researcher and/or want to help with wiki information?**
           > Click below to be open up #content where we talk about and discuss wiki updates.
           `)

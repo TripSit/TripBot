@@ -9,6 +9,7 @@ const { getUserInfo } = require('./firebase');
 const template = require('./embed-template');
 
 const {
+  NODE_ENV,
   channelModlogId,
   channelOpentripsitId,
   channelSanctuaryId,
@@ -100,6 +101,10 @@ const mindsetRoles = [
 const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
 
 const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
+
+const invisibleEmoji = NODE_ENV === 'production'
+  ? '<:invisible:976853930489298984>'
+  : '<:invisible:976824380564852768>';
 
 module.exports = {
   async execute(interaction, memberInput) {
@@ -250,11 +255,11 @@ module.exports = {
 
     let message = '';
     await threadHelpUser.send(stripIndents`
-        <:invisible:976824380564852768>
+        ${invisibleEmoji}
         > **If you have a minute, your feedback is important to us!**
         > Please rate your experience with the TripSit service by reacting below.
         > Thank you!
-        <:invisible:976824380564852768>
+        ${invisibleEmoji}
         `)
       .then(async msg => {
         message = msg;
@@ -269,9 +274,9 @@ module.exports = {
         const collector = message.createReactionCollector({ filter, time: 1000 * 60 * 60 * 24 });
         collector.on('collect', async (reaction, user) => {
           threadHelpUser.send(stripIndents`
-            <:invisible:976824380564852768>
+            ${invisibleEmoji}
             > Thank you for your feedback, here's a cookie! 🍪
-            <:invisible:976824380564852768>
+            ${invisibleEmoji}
             `);
           // // Create the modal
           // const modal = new Modal()

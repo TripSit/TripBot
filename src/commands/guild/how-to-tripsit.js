@@ -26,13 +26,17 @@ const {
   channelTripsittersId,
   // channelSanctuaryId,
   // channelDrugQuestionsId,
-  channelTripsitInfoId,
+  channelHowToTripsitId,
   roleHelperId,
 } = require('../../../env');
 
 const helperEmoji = NODE_ENV === 'production'
   ? '<:ts_helper:979362238789992538>'
   : '<:ts_helper:980934790956077076>';
+
+const invisibleEmoji = NODE_ENV === 'production'
+  ? '<:invisible:976853930489298984>'
+  : '<:invisible:976824380564852768>';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -51,7 +55,7 @@ module.exports = {
       .setColor('BLUE');
 
     const channelTripsit = interaction.client.channels.cache.get(channelTripsitId);
-    const channelTripsitInfo = interaction.client.channels.cache.get(channelTripsitInfoId);
+    const channelTripsitInfo = interaction.client.channels.cache.get(channelHowToTripsitId);
     const channelTripsitters = interaction.client.channels.cache.get(channelTripsittersId);
 
     // Extract guild data
@@ -67,11 +71,11 @@ module.exports = {
       > The information on this page can help you understand some of the intricaces of this guild, for example:
       > This channel is only visible to VIP users, which means you have talked enough to reach level 2 with the Mee6 bot.
       > **If a user has three <:ts_votedown:960161563849932892> put on a message they are put in "timeout" where they cannot speak until a moderator reviews!**
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       > **How to use TripSit**
       > ${channelTripsit.toString()} is our main help channel, this is where people who need assistance will be gently pushed.
       > This room is in "thread-only" or "forum" mode so that people will see the notice posted:
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       `);
 
     embed.setImage('attachment://1_button.png');
@@ -80,16 +84,16 @@ module.exports = {
     );
 
     await channelTripsitInfo.send(stripIndents`
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       > Clicking this button will display a modal popup asking for information:
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       `);
 
     embed.setImage('attachment://2_input.png');
     await channelTripsitInfo.send({ embeds: [embed], files: [userInput], ephemeral: false });
 
     await channelTripsitInfo.send(stripIndents`
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       > All of these questions are optional but are super helpful to have handy before alerting the team.
       > This can also potentially limit people from “testing” the button if they know this will actually submit something.
       > When ready, the user submits the modal, and the fun begins:
@@ -98,7 +102,7 @@ module.exports = {
       2) The user is given the NeedsHelp role, which removes access to rooms that “everyone” can access.
       3) The bot starts a new private thread called “<user> chat here!” that mentions the user, tripsitters and helpers.
       4) The bot responds to the user in #tripsit with a thank you message and directs them to click on the new thread:
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       `);
 
     embed.setImage('attachment://3_firstResponse.png');
@@ -107,9 +111,9 @@ module.exports = {
     );
 
     await channelTripsitInfo.send(stripIndents`
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       > The end result is that a user who NeedsHelp will be able to see the following after submitting the button::
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       `);
 
     embed.setImage('attachment://4_privateThread.png');
@@ -118,9 +122,9 @@ module.exports = {
     );
 
     await channelTripsitInfo.send(stripIndents`
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       > When they click into this thread they will see:
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       `);
 
     embed.setImage('attachment://5_privateMessage.png');
@@ -129,16 +133,16 @@ module.exports = {
     );
 
     await channelTripsitInfo.send(stripIndents`
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       > This is a private thread: only people who are mentioned can see and participate.
       > By default these are the **Tripsitter** and **Helper** roles
       > This thread will also auto-archive after 24 hours. This allows the user to follow-up the next day.
       > After 7 days we manually delete the thread to preserve privacy and clean up space.
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       > Meanwhile, ${channelTripsitters.toString()} is the "meta-tripsit" room to talk about encounters in ${channelTripsit.toString()}
       > When someone clicks the “I need assistance” button in the ${channelTripsit.toString()} room, a new private thread is started in ${channelTripsitters.toString()}.
       > The bot pings **Tripsitters** and **Helpers** so that these are the only people who can see this thread!
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       `);
 
     embed.setImage('attachment://6_discussionThread.png');
@@ -147,10 +151,10 @@ module.exports = {
     );
 
     await channelTripsitInfo.send(stripIndents`
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       > When they click into this thread they will see the following.
       > Notice how since "moonbear" isnt @ mentioned, they wont see this thread!
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       `);
 
     embed.setImage('attachment://7_discussionMessage.png');
@@ -159,10 +163,10 @@ module.exports = {
     );
 
     await channelTripsitInfo.send(stripIndents`
-    <:invisible:976824380564852768>
+    ${invisibleEmoji}
     > Finally, when the user is finished, they can click the “I’m good now” button in the #tripsit room.
     > This will restore their old roles and bring them back to “normal”.
-    <:invisible:976824380564852768>
+    ${invisibleEmoji}
     `);
 
     embed.setImage('attachment://8_endMessage.png');
@@ -171,9 +175,9 @@ module.exports = {
     );
 
     await channelTripsitInfo.send(stripIndents`
-    <:invisible:976824380564852768>
+    ${invisibleEmoji}
     > The user will be shown a message asking them to rate their experience:
-    <:invisible:976824380564852768>
+    ${invisibleEmoji}
     `);
 
     embed.setImage('attachment://9_surveyRequest.png');
@@ -182,7 +186,7 @@ module.exports = {
     );
 
     await channelTripsitInfo.send(stripIndents`
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       > In conclusion: People who need help can click the "I need assistance" button in the ${channelTripsit.toString()} room.
       > They enter their question and a private thread is created in ${channelTripsit.toString()}.
       > This is a self-contained channel so that trolls/randoms cannot access what they're saying.
@@ -191,16 +195,16 @@ module.exports = {
       > When the user no longer needs help they can click a button and return to normal.
       > The user has 24 hours to follow-up on the thread before it's archived, and we can re-use the thread for a week before it's deleted.
       > This is basically the ideal way to TripSit someone!
-      <:invisible:976824380564852768>
+      ${invisibleEmoji}
       `);
 
     await channelTripsitInfo.send(stripIndents`
-        <:invisible:976824380564852768>
+        ${invisibleEmoji}
         > **Are you interested in helping out in the Harm Reduction Centre?**
         > By reacting to this message you will be given the **Helper** role.
         > This will give you access to the ${channelTripsitters.toString()} room, and you will be notified when people need assistance in the ${channelTripsit.toString()} room.
         > You are not required to respond to notices, **this role is completely optional**, but we appreciate the help!
-        <:invisible:976824380564852768>
+        ${invisibleEmoji}
         `)
       .then(async msg => {
         reactionRoles.howToTripsit = [{

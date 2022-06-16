@@ -6,6 +6,7 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../utils/logger');
 
 const {
+  NODE_ENV,
   channelDevonboardingId,
   channelDevofftopicId,
   channelDevelopmentId,
@@ -16,6 +17,10 @@ const {
   channelTrippitId,
   channelVipWelcomeId,
 } = require('../../../env');
+
+// const invisibleEmoji = NODE_ENV === 'production'
+//   ? '<:invisible:976853930489298984>'
+//   : '<:invisible:976824380564852768>';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -94,7 +99,7 @@ module.exports = {
     `);
 
     // await channelDevonboarding.send(stripIndents`
-    //   <:invisible:976824380564852768>
+    //   ${invisibleEmoji}
     //   > **What kind of skills do you have?**
     //   > Click below to show how you can contribute to the tripsit community!
     //   > This doesn't give you a role/access, just helps keep track of who knows what.
