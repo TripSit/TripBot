@@ -27,9 +27,13 @@ const {
   roleModeratorId,
   roleIrcadminId,
   roleDiscordadminId,
+  roleDeveloperId,
   channelTripsitId,
   channelDrugQuestionsId,
 } = require('../../../env');
+
+// Declare the static test nitice
+const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -126,6 +130,14 @@ module.exports = {
   async ircSubmit(interaction, issueType) {
     // logger.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}!`);
 
+    const roleDeveloper = interaction.guild.roles.cache.find(role => role.id === roleDeveloperId);
+    logger.debug(`[${PREFIX}] roleDeveloper: ${roleDeveloper}`);
+
+    // Determine if this command was started by a Developer
+    const isDev = interaction.member.roles.cache.find(
+      role => role.id === roleDeveloper.id,
+    ) !== undefined;
+
     // Respond right away cuz the rest of this doesn't matter
     const guild = await interaction.client.guilds.fetch(discordGuildId);
     const member = await guild.members.fetch(interaction.user.id);
@@ -145,7 +157,7 @@ module.exports = {
     }
     // Get the moderator role
     const tripsitGuild = await interaction.client.guilds.cache.get(discordGuildId);
-    const moderatorRole = tripsitGuild.roles.cache.find(role => role.id === roleModeratorId);
+    const roleModerator = tripsitGuild.roles.cache.find(role => role.id === roleModeratorId);
 
     const channel = await interaction.client.channels.fetch(channelIrcId);
     // Debating if there should be a sparate channel for discord issues or if just use irc?
@@ -203,14 +215,18 @@ module.exports = {
     embed.setDescription(stripIndents`Thank you, check out ${ticketThread} to talk with a team member about your issue!`);
     interaction.reply({ embeds: [embed], ephemeral: true });
 
-    const message = stripIndents`
-      Hey ${moderatorRole}! ${actor} has submitted a new issue:
+    let message = stripIndents`
+      Hey ${isDev ? 'moderators' : roleModerator}! ${actor} has submitted a new issue:
 
       > ${modalInput}
 
       Please look into it and respond to them in this thread!
 
       When you're done remember to '/modmail close' this ticket!`;
+
+    if (isDev) {
+      message = testNotice + message;
+    }
 
     await ticketThread.send(message);
     logger.debug(`[${PREFIX}] Sent intro message to meta-thread ${ticketThread.id}`);
@@ -244,12 +260,15 @@ module.exports = {
       // Get the moderator role
       role = await tripsitGuild.roles.fetch(roleDiscordadminId);
     }
-    const admins = await role.members/* .map(m => m.user.id) */;
+    const admins = await role.members;
     logger.debug(`[${PREFIX}] admins: ${JSON.stringify(admins, null, 2)}!`);
     admins.forEach(async admin => {
       // Alert the admin that the new thread is created
-      const response = stripIndents`
+      let response = stripIndents`
       Hey ${admin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`;
+      if (isDev) {
+        response = testNotice + response;
+      }
       admin.send(response);
     });
   },
