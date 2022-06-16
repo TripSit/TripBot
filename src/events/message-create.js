@@ -2,11 +2,14 @@
 
 const PREFIX = require('path').parse(__filename).name;
 // const { WebhookClient } = require('discord.js');
+const { stripIndents } = require('common-tags');
 const { announcements } = require('../utils/announcements');
 const { karma } = require('../utils/karma');
 const { experience } = require('../utils/experience');
 const { modmailInitialResponse } = require('../commands/guild/modmail');
 const logger = require('../utils/logger');
+const template = require('../utils/embed-template');
+
 const { getTicketInfo } = require('../utils/firebase');
 
 const {
@@ -65,6 +68,10 @@ module.exports = {
         return message.author.send('You are blocked!');
       }
 
+      const guild = await message.client.guilds.fetch(discordGuildId);
+      const member = await guild.members.fetch(message.author.id);
+      // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
+
       if (Object.keys(ticketData).length !== 0) {
         // const webhookClient = new WebhookClient({
         //   id: ticketInfo.issueWebhook.webhookId,
@@ -76,6 +83,15 @@ module.exports = {
         //   username: message.author.username,
         //   avatarURL: message.author.avatarURL(),
         // });
+
+        if (member) {
+          const channel = await message.client.channels.fetch(channelIrcId);
+          const issueThread = await channel.threads.fetch(ticketData.issueThread);
+          const embed = template.embedTemplate();
+          embed.setDescription(stripIndents`You already have an open issue here ${issueThread.toString()}!`);
+          message.reply({ embeds: [embed], ephemeral: true });
+          return;
+        }
 
         const channel = message.client.channels.cache.get(channelIrcId);
         const thread = await channel.threads.fetch(ticketData.issueThread);

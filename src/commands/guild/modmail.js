@@ -22,14 +22,13 @@ const {
 const {
   NODE_ENV,
   channelTripsitId,
-  discordOwnerId,
   discordGuildId,
   channelModeratorsId,
   channelIrcId,
   roleModeratorId,
+  roleIrcadminId,
+  roleDiscordadminId,
 } = require('../../../env');
-
-const discordIrcAdminId = discordOwnerId;
 
 const modmailButtons = new MessageActionRow()
   .addComponents(
@@ -86,7 +85,7 @@ module.exports = {
     const [ticketData, ticketFbid] = await getTicketInfo(interaction.channel.id, 'channel');
 
     // Transform actor data
-    if (command === 'close') {
+    if (command === 'closed') {
       logger.debug(`[${PREFIX}] Closing ticket!`);
       ticketData.issueStatus = 'closed';
       const ticketChannel = interaction.client.channels.cache.get(ticketData.issueThread);
@@ -313,7 +312,9 @@ module.exports = {
           > ${modalInput}
         `;
         issueThread.send(helpMessage);
-        interaction.reply(`You already have an open issue here ${issueThread.toString()}!`);
+        const embed = template.embedTemplate();
+        embed.setDescription(stripIndents`You already have an open issue here ${issueThread.toString()}!`);
+        interaction.reply({ embeds: [embed], ephemeral: true });
         return;
       }
     }
@@ -327,20 +328,20 @@ module.exports = {
     });
     logger.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);
 
-    interaction.reply(`Thank you, check out ${ticketThread} to talk with a team member about your issue!`);
+    const embed = template.embedTemplate();
+    embed.setDescription(stripIndents`Thank you, check out ${ticketThread} to talk with a team member about your issue!`);
+    interaction.reply({ embeds: [embed], ephemeral: true });
 
-    const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
-      .setDescription(stripIndents`
-      Hey ${moderatorRole}s! ${actor} has submitted a new issue:
+    const message = stripIndents`
+      Hey ${moderatorRole}! ${actor} has submitted a new issue:
 
       > ${modalInput}
 
       Please look into it and respond to them in this thread!
 
-      When you're done remember to '/modmail close' this ticket!`);
+      When you're done remember to '/modmail close' this ticket!`;
 
-    await ticketThread.send({ embeds: [embed], ephemeral: true });
+    await ticketThread.send(message);
     logger.debug(`[${PREFIX}] Sent intro message to meta-thread ${ticketThread.id}`);
 
     // Webhooks dont work in threads, but leaving this code here for later
@@ -361,23 +362,26 @@ module.exports = {
     };
     setTicketInfo(null, newTicketData);
 
-    if (issueType === 'irc') {
-      const ircAdmin = interaction.client.users.cache.get(discordIrcAdminId);
-      // Alert the admin that the new thread is created
-      const ircAdminEmbed = template.embedTemplate()
-        .setColor('RANDOM')
-        .setDescription(stripIndents`
-        Hey ${ircAdmin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`);
-      ircAdmin.send({ embeds: [ircAdminEmbed] });
+    logger.debug(`[${PREFIX}] issueType: ${issueType}!`);
+    if (issueType.includes('irc')) {
+      const ircAdminIds = message.guild.roles.get(roleIrcadminId).members.map(m => m.id);
+      ircAdminIds.forEach(async adminId => {
+        const ircAdmin = interaction.client.users.cache.get(adminId);
+        // Alert the admin that the new thread is created
+        const response = stripIndents`
+          Hey ${ircAdmin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`;
+        ircAdmin.send(response);
+      });
     }
-    if (issueType === 'discord') {
-      const discordAdmin = interaction.client.users.cache.get(discordOwnerId);
-      // Alert the admin that the new thread is created
-      const discordAdminEmbed = template.embedTemplate()
-        .setColor('RANDOM')
-        .setDescription(stripIndents`
-      Hey ${discordAdmin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`);
-      discordAdmin.send({ embeds: [discordAdminEmbed] });
+    if (issueType.includes('discord')) {
+      const discordAdminIds = message.guild.roles.get(roleDiscordadminId).members.map(m => m.id);
+      discordAdminIds.forEach(async adminId => {
+        const discordAdmin = interaction.client.users.cache.get(adminId);
+        // Alert the admin that the new thread is created
+        const response = stripIndents`
+        Hey ${discordAdmin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`;
+        discordAdmin.send(response);
+      });
     }
   },
 };

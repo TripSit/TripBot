@@ -11,13 +11,14 @@ const mTimeout = require('../commands/guild/m_timeout');
 const mWarn = require('../commands/guild/m_warn');
 const mReport = require('../commands/guild/m_report');
 const modmail = require('../commands/guild/modmail');
-const ircButton = require('../commands/guild/irc-button');
+const ircButton = require('../commands/guild/help-button');
 
 module.exports = {
   async execute(interaction) {
     // logger.debug(`[${PREFIX}] interaction: ${interaction}`);
     logger.debug(`[${PREFIX}] interaction: ${interaction.customId}`);
     if (interaction.customId === 'ircConnectModmailIssueModal') { return ircButton.ircSubmit(interaction, 'ircConnect'); }
+    if (interaction.customId === 'discordIssueModmailIssueModal') { return ircButton.ircSubmit(interaction, 'discordIssue'); }
     if (interaction.customId === 'ircAppealModmailIssueModal') { return ircButton.ircSubmit(interaction, 'ircAppeal'); }
     if (interaction.customId === 'ircOtherModmailIssueModal') { return ircButton.ircSubmit(interaction, 'ircOther'); }
     if (interaction.customId === 'tripsitModmailModal') { return modmail.modmailTripsitterSubmit(interaction); }

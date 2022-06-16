@@ -22,60 +22,69 @@ const PREFIX = path.parse(__filename).name;
 
 const {
   NODE_ENV,
-  discordOwnerId,
   channelIrcId,
   discordGuildId,
   roleModeratorId,
+  roleIrcadminId,
+  roleDiscordadminId,
+  channelTripsitId,
+  channelDrugQuestionsId,
 } = require('../../../env');
-
-let {
-  discordIrcAdminId,
-} = require('../../../env');
-
-if (NODE_ENV !== 'production') {
-  // If we're in development then don't bother the irc admin
-  discordIrcAdminId = discordOwnerId;
-}
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('irc-button')
-    .setDescription('Creates the IRC room info!'),
+    .setName('help-button')
+    .setDescription('Creates the tech help room info!'),
   async execute(interaction) {
     const channelIrc = interaction.client.channels.cache.get(channelIrcId);
+    const channelTripsit = interaction.client.channels.cache.get(channelTripsitId);
+    const channelDrugQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
 
     const buttonText = stripIndents`
-      Welcome to TripSit's IRC help channel!
+      Welcome to TripSit's technical help channel!
 
-      This channel can be used to get in contact with the Team Tripsit!
+      This channel can be used to get in contact with the Team Tripsit for **technical** assistance/feedback!
 
-      If you can't connect to the IRC and don't know why, click the red button and give us your details.
+      **If you need psychological help try ${channelTripsit.toString()}!**
+
+      **If you have questions on drugs try ${channelDrugQuestions.toString()}!**
+
+      If you **can't connect** to the IRC and don't know why, click the **green🟩button** and give us your details.
       This will make a **private** thread with moderators, so please be detailed and include your IP address.
+      Don't know your IP address? Go to https://whatismyip.com and copy the IP address!
 
-      If you've been banned and know why, click the blue button and give us your details.
+      If you've been **banned** and know why, click the **red🟥button** and give us your details.
       This will also make a **private** thread with moderators.
       Please do not interact with the rest of the discord while your appeal is being processed.
-      It may be considered ban evasion if you get banned on IRC and immediately on discord outside of this channel!
+      It may be considered ban evasion if you get banned on IRC and immediately chat on discord outside of this channel!
 
-      Other issues, questions, feedback can be privately discussed with the team with the grey button.
+      **Discord issues, feedback or questions**can be discussesed with the team via the **blue🟦button**.
+
+      **Other issues, questions, feedback** can be privately discussed with the team with the **grey button**.
+
+      We value your input, no matter how small. Please let us know if you have any questions or feedback!
 
       Thanks for reading, stay safe!
     `;
 
-    // Create a new button embed
+    // Create buttons
     const row = new MessageActionRow()
       .addComponents(
         new MessageButton()
           .setCustomId('ircConnect')
-          .setLabel('I can\'t connect!')
-          .setStyle('DANGER'),
+          .setLabel('I can\'t connect to IRC!')
+          .setStyle('SUCCESS'),
         new MessageButton()
           .setCustomId('ircAppeal')
-          .setLabel('I want to appeal!')
+          .setLabel('I want to appeal my ban!')
+          .setStyle('DANGER'),
+        new MessageButton()
+          .setCustomId('discordIssue')
+          .setLabel('Discord issue/feedback!')
           .setStyle('PRIMARY'),
         new MessageButton()
           .setCustomId('ircOther')
-          .setLabel('I have other issues!')
+          .setLabel('I have something else!')
           .setStyle('SECONDARY'),
       );
 
@@ -94,6 +103,8 @@ module.exports = {
       placeholder = 'I was a jerk it, wont happen again. My nickname is Strongbad';
     } else if (issueType === 'ircOther') {
       placeholder = 'I just wanted to say that Tripsit is super cool and I love it!';
+    } else if (issueType === 'discordIssue') {
+      placeholder = 'I have an issue with discord, can you please help?';
     }
     // Create the modal
     const modal = new Modal()
@@ -136,7 +147,7 @@ module.exports = {
     const tripsitGuild = await interaction.client.guilds.cache.get(discordGuildId);
     const moderatorRole = tripsitGuild.roles.cache.find(role => role.id === roleModeratorId);
 
-    const channel = interaction.client.channels.cache.get(channelIrcId);
+    const channel = await interaction.client.channels.fetch(channelIrcId);
     // Debating if there should be a sparate channel for discord issues or if just use irc?
     // if (issueType === 'discord') {
     //   // Get the moderation channel
@@ -153,23 +164,29 @@ module.exports = {
     // // Get the actor
     const actor = interaction.user;
     const [ticketData] = await getTicketInfo(actor.id, 'user');
-    logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+    // logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
     // Check if an open thread already exists, and if so, update that thread, return
     if (Object.keys(ticketData).length !== 0) {
       // const issueType = ticketInfo.issueType;
-      const issueThread = await channel.threads.fetch(ticketData.issueThread);
-      // logger.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
-      if (issueThread) {
-        // Ping the user in the help thread
-        const helpMessage = stripIndents`
-          Hey team, ${actor} submitted a new request for help:
+      // logger.debug(`[${PREFIX}] channel: ${JSON.stringify(channel, null, 2)}!`);
+      if (channel) {
+        const issueThread = await channel.threads.fetch(ticketData.issueThread);
+        // logger.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
+        if (issueThread) {
+          // Ping the user in the help thread
+          const helpMessage = stripIndents`
+            Hey team, ${actor} submitted a new request for help:
 
-          > ${modalInput}
-        `;
-        issueThread.send(helpMessage);
-        interaction.reply(`You already have an open issue here ${issueThread.toString()}!`);
-        return;
+            > ${modalInput}
+          `;
+          issueThread.send(helpMessage);
+
+          const embed = template.embedTemplate();
+          embed.setDescription(stripIndents`You already have an open issue here ${issueThread.toString()}!`);
+          interaction.reply({ embeds: [embed], ephemeral: true });
+          return;
+        }
       }
     }
 
@@ -182,20 +199,20 @@ module.exports = {
     });
     logger.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);
 
-    interaction.reply(`Thank you, check out ${ticketThread} to talk with a team member about your issue!`);
+    const embed = template.embedTemplate();
+    embed.setDescription(stripIndents`Thank you, check out ${ticketThread} to talk with a team member about your issue!`);
+    interaction.reply({ embeds: [embed], ephemeral: true });
 
-    const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
-      .setDescription(stripIndents`
-      Hey ${moderatorRole}s! ${actor} has submitted a new issue:
+    const message = stripIndents`
+      Hey ${moderatorRole}! ${actor} has submitted a new issue:
 
       > ${modalInput}
 
       Please look into it and respond to them in this thread!
 
-      When you're done remember to '/modmail close' this ticket!`);
+      When you're done remember to '/modmail close' this ticket!`;
 
-    await ticketThread.send({ embeds: [embed], ephemeral: true });
+    await ticketThread.send(message);
     logger.debug(`[${PREFIX}] Sent intro message to meta-thread ${ticketThread.id}`);
 
     // Webhooks dont work in threads, but leaving this code here for later
@@ -216,23 +233,24 @@ module.exports = {
     };
     setTicketInfo(null, newTicketData);
 
-    if (issueType === 'irc') {
-      const ircAdmin = interaction.client.users.cache.get(discordIrcAdminId);
-      // Alert the admin that the new thread is created
-      const ircAdminEmbed = template.embedTemplate()
-        .setColor('RANDOM')
-        .setDescription(stripIndents`
-        Hey ${ircAdmin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`);
-      ircAdmin.send({ embeds: [ircAdminEmbed] });
+    logger.debug(`[${PREFIX}] issueType: ${issueType}!`);
+    await tripsitGuild.members.fetch();
+    let role = {};
+    if (issueType.includes('irc')) {
+      // Get the moderator role
+      role = await tripsitGuild.roles.fetch(roleIrcadminId);
     }
-    if (issueType === 'discord') {
-      const discordAdmin = interaction.client.users.cache.get(discordOwnerId);
-      // Alert the admin that the new thread is created
-      const discordAdminEmbed = template.embedTemplate()
-        .setColor('RANDOM')
-        .setDescription(stripIndents`
-      Hey ${discordAdmin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`);
-      discordAdmin.send({ embeds: [discordAdminEmbed] });
+    if (issueType.includes('discord')) {
+      // Get the moderator role
+      role = await tripsitGuild.roles.fetch(roleDiscordadminId);
     }
+    const admins = await role.members/* .map(m => m.user.id) */;
+    logger.debug(`[${PREFIX}] admins: ${JSON.stringify(admins, null, 2)}!`);
+    admins.forEach(async admin => {
+      // Alert the admin that the new thread is created
+      const response = stripIndents`
+      Hey ${admin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`;
+      admin.send(response);
+    });
   },
 };
