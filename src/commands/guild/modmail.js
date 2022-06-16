@@ -313,26 +313,32 @@ module.exports = {
 
     // // Get the actor
     const actor = interaction.user;
-    const [ticketData] = await getTicketInfo(actor.id, 'user');
+    const [ticketData, ticketFbid] = await getTicketInfo(actor.id, 'user');
     logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
     // Check if an open thread already exists, and if so, update that thread, return
     if (Object.keys(ticketData).length !== 0) {
       // const issueType = ticketInfo.issueType;
-      const issueThread = await channel.threads.fetch(ticketData.issueThread);
-      // logger.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
-      if (issueThread) {
-        // Ping the user in the help thread
-        const helpMessage = stripIndents`
-          Hey team, ${actor} submitted a new request for help:
+      try {
+        const issueThread = await channel.threads.fetch(ticketData.issueThread);
+        // logger.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
+        if (issueThread) {
+          // Ping the user in the help thread
+          const helpMessage = stripIndents`
+            Hey team, ${actor} submitted a new request for help:
 
-          > ${modalInput}
-        `;
-        issueThread.send(helpMessage);
-        const embed = template.embedTemplate();
-        embed.setDescription(stripIndents`You already have an open issue here ${issueThread.toString()}!`);
-        interaction.reply({ embeds: [embed], ephemeral: true });
-        return;
+            > ${modalInput}
+          `;
+          issueThread.send(helpMessage);
+          const embed = template.embedTemplate();
+          embed.setDescription(stripIndents`You already have an open issue here ${issueThread.toString()}!`);
+          interaction.reply({ embeds: [embed], ephemeral: true });
+          return;
+        }
+      } catch (err) {
+        logger.debug(`[${PREFIX}] The thread has likely been deleted!`);
+        ticketData.issueStatus = 'closed';
+        setTicketInfo(ticketFbid, ticketData);
       }
     }
 
