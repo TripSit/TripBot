@@ -6,6 +6,7 @@ const tripsitme = require('./tripsitme');
 const tripsat = require('./tripsat');
 const template = require('./embed-template');
 const modmail = require('../commands/guild/modmail');
+const ircButton = require('../commands/guild/irc-button');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -74,6 +75,9 @@ module.exports = {
     if (buttonID === 'modmailFeedback') { return modmail.modmailFeedback(interaction); }
     if (buttonID === 'modmailIrcissue') { return modmail.modmailIssue(interaction, 'irc'); }
     if (buttonID === 'modmailDiscordissue') { return modmail.modmailIssue(interaction, 'discord'); }
+    if (buttonID === 'ircAppeal') { return ircButton.ircClick(interaction, 'ircAppeal'); }
+    if (buttonID === 'ircConnect') { return ircButton.ircClick(interaction, 'ircConnect'); }
+    if (buttonID === 'ircOther') { return ircButton.ircClick(interaction, 'ircOther'); }
 
     if (!command) return;
 

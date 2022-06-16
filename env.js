@@ -16,6 +16,7 @@ exports.discordClientId = process.env.discordClientId;
 exports.discordGuildId = process.env.discordGuildId;
 exports.discordClientSecret = process.env.discordClientSecret;
 exports.discordOauthUrl = process.env.discordOauthUrl;
+exports.discordIrcAdminId = process.env.discordIrcAdminId;
 
 exports.PORT = process.env.PORT;
 
