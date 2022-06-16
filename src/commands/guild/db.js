@@ -20,7 +20,7 @@ try {
   // eslint-disable-next-line
   currentExperience = require('../../../backups/exp.json');
 } catch (e) {
-  logger.error(`[${PREFIX}] Error loading exp.json: ${e}`);
+  logger.info(`[${PREFIX}] We are likely in production and cant load this file!`);
 }
 
 // eslint-disable-next-line no-unused-vars
