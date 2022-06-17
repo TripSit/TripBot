@@ -5,7 +5,7 @@ const fs = require('fs/promises');
 const { ReactionRole } = require('discordjs-reaction-role');
 const logger = require('../utils/logger');
 const { getGuildInfo } = require('../utils/firebase');
-const { connectIRC } = require('../utils/irc');
+const { connectIRC, connectIRCBridge } = require('../utils/irc');
 const { runTimer } = require('../utils/timer');
 const { webserver } = require('../webserver/webserver');
 
@@ -123,6 +123,7 @@ module.exports = {
     if (NODE_ENV === 'production') {
       await connectIRC(client);
     }
+    connectIRCBridge(client);
     await getReactionRoles(client);
     await getInvites(client);
     const userDb = await updateGlobalDb(client);
