@@ -58,18 +58,20 @@ module.exports = {
       [channelTripsitmeId]: '#tripsit.me',
       [channelSandboxId]: '#sandbox',
     };
-    // const webhooks = {
-    //   [channelMeetingroomId]: channelMeetingroomWebhook,
-    //   [channelModeratorsId]: channelModeratorsWebhook,
-    //   [channelTeamtripsitId]: channelTeamtripsitWebhook,
-    //   [channelOperatorsId]: channelOperatorsWebhook,
-    //   [channelModhavenId]: channelModhavenWebhook,
-    //   [channelDevelopmentId]: channelDevelopmentWebhook,
-    //   [channelTripsitmeId]: channelTripsitmeWebhook,
-    //   [channelSandboxId]: channelSandboxWebhook,
-    // };
+    logger.debug(`[${PREFIX}] channelModhavenId: ${channelModhavenId}`);
+    logger.debug(`[${PREFIX}] channelSandboxWebhook: ${channelSandboxWebhook}`);
+    const webhooks = {
+      [channelMeetingroomId]: channelMeetingroomWebhook,
+      [channelModeratorsId]: channelModeratorsWebhook,
+      [channelTeamtripsitId]: channelTeamtripsitWebhook,
+      [channelOperatorsId]: channelOperatorsWebhook,
+      [channelModhavenId]: channelModhavenWebhook,
+      [channelDevelopmentId]: channelDevelopmentWebhook,
+      [channelTripsitmeId]: channelTripsitmeWebhook,
+      [channelSandboxId]: channelSandboxWebhook,
+    };
     // logger.debug(JSON.stringify(webhooks, null, 2));
-    // ircBridgeConfig[0].webhooks = webhooks;
+    ircBridgeConfig[0].webhooks = webhooks;
 
     // logger.debug(`[${PREFIX}] ircBridgeConfig: ${JSON.stringify(ircBridgeConfig, null, 2)}`);
     discordIRC(ircBridgeConfig);
