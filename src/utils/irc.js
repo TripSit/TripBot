@@ -52,7 +52,7 @@ module.exports = {
       [channelMeetingroomId]: '#meeting-room',
       [channelModeratorsId]: '#moderators',
       [channelTeamtripsitId]: '#teamtripsit',
-      [channelOperatorsId]: '#operators',
+      [channelOperatorsId]: '#operations',
       [channelModhavenId]: '#modhaven',
       [channelDevelopmentId]: '#tripsit-dev',
       [channelTripsitmeId]: '#tripsit.me',
