@@ -12,7 +12,6 @@ const { verifyLink } = require('../commands/guild/link-accounts');
 const PREFIX = path.parse(__filename).name;
 
 const {
-  NODE_ENV,
   discordToken,
   channelModeratorsId,
   channelModeratorsWebhook,
@@ -62,13 +61,13 @@ module.exports = {
     logger.debug(`[${PREFIX}] channelModhavenId: ${channelModhavenId}`);
     logger.debug(`[${PREFIX}] channelSandboxWebhook: ${channelSandboxWebhook}`);
     const webhooks = {
-      // [channelMeetingroomId]: channelMeetingroomWebhook,
-      // [channelModeratorsId]: channelModeratorsWebhook,
-      // [channelTeamtripsitId]: channelTeamtripsitWebhook,
-      // [channelOperatorsId]: channelOperatorsWebhook,
-      // [channelModhavenId]: channelModhavenWebhook,
-      // [channelDevelopmentId]: channelDevelopmentWebhook,
-      // [channelTripsitmeId]: channelTripsitmeWebhook,
+      [channelMeetingroomId]: channelMeetingroomWebhook,
+      [channelModeratorsId]: channelModeratorsWebhook,
+      [channelTeamtripsitId]: channelTeamtripsitWebhook,
+      [channelOperatorsId]: channelOperatorsWebhook,
+      [channelModhavenId]: channelModhavenWebhook,
+      [channelDevelopmentId]: channelDevelopmentWebhook,
+      [channelTripsitmeId]: channelTripsitmeWebhook,
       [channelSandboxId]: channelSandboxWebhook,
     };
     // logger.debug(JSON.stringify(webhooks, null, 2));

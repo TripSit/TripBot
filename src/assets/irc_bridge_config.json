@@ -49,8 +49,8 @@
     "commandCharacters": ["~"],
     "ircStatusNotices": true,
     "ignoreUsers": {
-      "irc": ["TSDiscord", "TSTelegram"],
-      "discord": [],
+      "irc": ["TSDiscord", "TSTelegram", "TS1"],
+      "discord": ["Bridge", "TS1"],
       "discordIds": []
     },
     "webhooks": {}
