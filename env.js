@@ -23,6 +23,8 @@ exports.PORT = process.env.PORT;
 exports.ircServer = process.env.ircServer;
 exports.ircUsername = process.env.ircUsername;
 exports.ircPassword = process.env.ircPassword;
+exports.ircBridgeUsername = process.env.ircBridgeUsername;
+exports.ircBridgePassword = process.env.ircBridgePassword;
 
 exports.firebasePrivateKeyId = process.env.firebasePrivateKeyId;
 exports.firebasePrivateKey = process.env.firebasePrivateKey;
@@ -83,6 +85,14 @@ exports.channelTripbotlogsId = process.env.channelTripbotlogsId;
 
 exports.channelModlogId = process.env.channelModlogId;
 exports.channelModeratorsId = process.env.channelModeratorsId;
+
+exports.channelMeetingroomId = process.env.channelMeetingroomId;
+exports.channelModlogId = process.env.channelModlogId;
+exports.channelModeratorsId = process.env.channelModeratorsId;
+exports.channelTeamtripsitId = process.env.channelTeamtripsitId;
+exports.channelOperatorsId = process.env.channelOperatorsId;
+exports.channelModhavenId = process.env.channelModhavenId;
+exports.channelTripsitmeId = process.env.channelTripsitmeId;
 
 exports.roleDirectorId = process.env.roleDirectorId;
 exports.roleSuccessorId = process.env.roleSuccessorId;
@@ -146,3 +156,12 @@ exports.rolePinkId = process.env.rolePinkId;
 exports.roleBrownId = process.env.roleBrownId;
 exports.roleBlackId = process.env.roleBlackId;
 exports.roleWhiteId = process.env.roleWhiteId;
+
+exports.channelModeratorsWebhook = process.env.channelModeratorsWebhook;
+exports.channelSandboxWebhook = process.env.channelSandboxWebhook;
+exports.channelMeetingroomWebhook = process.env.channelMeetingroomWebhook;
+exports.channelTeamtripsitWebhook = process.env.channelTeamtripsitWebhook;
+exports.channelOperatorsWebhook = process.env.channelOperatorsWebhook;
+exports.channelModhavenWebhook = process.env.channelModhavenWebhook;
+exports.channelDevelopmentWebhook = process.env.channelDevelopmentWebhook;
+exports.channelTripsitmeWebhook = process.env.channelTripsitmeWebhook;
