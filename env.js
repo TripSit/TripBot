@@ -53,6 +53,9 @@ exports.channelTripsittersId = process.env.channelTripsittersId;
 exports.channelHowToTripsitId = process.env.channelHowToTripsitId;
 exports.channelDrugQuestionsId = process.env.channelDrugQuestionsId;
 exports.channelOpentripsitId = process.env.channelOpentripsitId;
+exports.channelOpentripsit1Id = process.env.channelOpentripsit1Id;
+exports.channelOpentripsit2Id = process.env.channelOpentripsit2Id;
+exports.channelClosedtripsitId = process.env.channelClosedtripsitI;
 
 exports.channelGeneralId = process.env.channelGeneralId;
 exports.channelPetsId = process.env.channelPetsId;
@@ -64,13 +67,17 @@ exports.channelCreativeId = process.env.channelCreativeId;
 exports.channelPsychedelicId = process.env.channelPsychedelicId;
 
 exports.channelVipWelcomeId = process.env.channelVipWelcomeId;
-exports.channelLoungeId = process.env.channelLoungeId;
+exports.channelViploungeId = process.env.channelLoungeId;
 exports.channelGoldLoungeId = process.env.channelGoldLoungeId;
 exports.channelTalkToTSId = process.env.channelTalkToTSId;
 exports.channelClearmindId = process.env.channelClearmindId;
 exports.channelPsychonautId = process.env.channelPsychonautId;
 exports.channelDissonautId = process.env.channelDissonautId;
 exports.channelHubId = process.env.channelHubId;
+exports.channelTripradioId = process.env.channelTripradioId;
+exports.channelMinecraftId = process.env.channelMinecraftId;
+exports.channelFastchatId = process.env.channelFastchatId;
+exports.channelSlowchatId = process.env.channelSlowchatId;
 
 exports.channelDevonboardingId = process.env.channelDevonboardingId;
 exports.channelDevofftopicId = process.env.channelDevofftopicId;
@@ -85,10 +92,7 @@ exports.channelTripbotlogsId = process.env.channelTripbotlogsId;
 
 exports.channelModlogId = process.env.channelModlogId;
 exports.channelModeratorsId = process.env.channelModeratorsId;
-
 exports.channelMeetingroomId = process.env.channelMeetingroomId;
-exports.channelModlogId = process.env.channelModlogId;
-exports.channelModeratorsId = process.env.channelModeratorsId;
 exports.channelTeamtripsitId = process.env.channelTeamtripsitId;
 exports.channelOperatorsId = process.env.channelOperatorsId;
 exports.channelModhavenId = process.env.channelModhavenId;
@@ -157,11 +161,59 @@ exports.roleBrownId = process.env.roleBrownId;
 exports.roleBlackId = process.env.roleBlackId;
 exports.roleWhiteId = process.env.roleWhiteId;
 
-exports.channelModeratorsWebhook = process.env.channelModeratorsWebhook;
-exports.channelSandboxWebhook = process.env.channelSandboxWebhook;
-exports.channelMeetingroomWebhook = process.env.channelMeetingroomWebhook;
-exports.channelTeamtripsitWebhook = process.env.channelTeamtripsitWebhook;
-exports.channelOperatorsWebhook = process.env.channelOperatorsWebhook;
-exports.channelModhavenWebhook = process.env.channelModhavenWebhook;
-exports.channelDevelopmentWebhook = process.env.channelDevelopmentWebhook;
-exports.channelTripsitmeWebhook = process.env.channelTripsitmeWebhook;
+exports.channelAnnouncementsWebook = process.env.channelAnnouncementsWebook;
+exports.channelStartWebook = process.env.channelStartWebook;
+exports.channelBotspamWebook = process.env.channelBotspamWebook;
+exports.channelRulesWebook = process.env.channelRulesWebook;
+exports.channelIrcWebook = process.env.channelIrcWebook;
+
+exports.channelTripsitWebook = process.env.channelTripsitWebook;
+exports.channelSanctuaryWebook = process.env.channelSanctuaryWebook;
+exports.channelTripsittersWebook = process.env.channelTripsittersWebook;
+exports.channelHowToTripsitWebook = process.env.channelHowToTripsitWebook;
+exports.channelDrugQuestionsWebook = process.env.channelDrugQuestionsWebook;
+exports.channelOpentripsitWebook = process.env.channelOpentripsitWebook;
+exports.channelOpentripsit1Webook = process.env.channelOpentripsit1Webook;
+exports.channelOpentripsit2Webook = process.env.channelOpentripsit2Webook;
+exports.channelClosedtripsitWebook = process.env.channelClosedtripsitWebook;
+
+exports.channelGeneralWebook = process.env.channelGeneralWebook;
+exports.channelPetsWebook = process.env.channelPetsWebook;
+exports.channelFoodWebook = process.env.channelFoodWebook;
+exports.channelMusicWebook = process.env.channelMusicWebook;
+exports.channelScienceWebook = process.env.channelScienceWebook;
+exports.channelGamingWebook = process.env.channelGamingWebook;
+exports.channelCreativeWebook = process.env.channelCreativeWebook;
+exports.channelPsychedelicWebook = process.env.channelPsychedelicWebook;
+
+exports.channelVipWelcomeWebook = process.env.channelVipWelcomeWebook;
+exports.channelViploungeWebook = process.env.channelViploungeWebook;
+exports.channelGoldLoungeWebook = process.env.channelGoldLoungeWebook;
+exports.channelTalkToTSWebook = process.env.channelTalkToTSWebook;
+exports.channelClearmindWebook = process.env.channelClearmindWebook;
+exports.channelPsychonautWebook = process.env.channelPsychonautWebook;
+exports.channelDissonautWebook = process.env.channelDissonautWebook;
+exports.channelHubWebook = process.env.channelHubWebook;
+exports.channelTripradioWebook = process.env.channelTripradioWebook;
+exports.channelMinecraftWebook = process.env.channelMinecraftWebook;
+exports.channelFastchatWebook = process.env.channelFastchatWebook;
+exports.channelSlowchatWebook = process.env.channelSlowchatWebook;
+
+exports.channelDevonboardingWebook = process.env.channelDevonboardingWebook;
+exports.channelDevofftopicWebook = process.env.channelDevofftopicWebook;
+exports.channelDevelopmentWebook = process.env.channelDevelopmentWebook;
+exports.channelWikicontentWebook = process.env.channelWikicontentWebook;
+exports.channelTripmobileWebook = process.env.channelTripmobileWebook;
+exports.channelTripcordWebook = process.env.channelTripcordWebook;
+exports.channelTripbotWebook = process.env.channelTripbotWebook;
+exports.channelTrippitWebook = process.env.channelTrippitWebook;
+exports.channelSandboxWebook = process.env.channelSandboxWebook;
+exports.channelTripbotlogsWebook = process.env.channelTripbotlogsWebook;
+
+exports.channelModlogWebook = process.env.channelModlogWebook;
+exports.channelModeratorsWebook = process.env.channelModeratorsWebook;
+exports.channelMeetingroomWebook = process.env.channelMeetingroomWebook;
+exports.channelTeamtripsitWebook = process.env.channelTeamtripsitWebook;
+exports.channelOperatorsWebook = process.env.channelOperatorsWebook;
+exports.channelModhavenWebook = process.env.channelModhavenWebook;
+exports.channelTripsitmWebook = process.env.channelTripsitmWebook;

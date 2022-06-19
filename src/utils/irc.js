@@ -12,28 +12,114 @@ const { verifyLink } = require('../commands/guild/link-accounts');
 const PREFIX = path.parse(__filename).name;
 
 const {
-  discordToken,
-  channelModeratorsId,
-  channelModeratorsWebhook,
-  channelSandboxId,
-  channelSandboxWebhook,
-  channelMeetingroomId,
-  channelMeetingroomWebhook,
-  channelTeamtripsitId,
-  channelTeamtripsitWebhook,
-  channelOperatorsId,
-  channelOperatorsWebhook,
-  channelModhavenId,
-  channelModhavenWebhook,
-  channelDevelopmentId,
-  channelDevelopmentWebhook,
-  channelTripsitmeId,
-  channelTripsitmeWebhook,
   ircServer,
   ircUsername,
   ircPassword,
   ircBridgeUsername,
   ircBridgePassword,
+  discordToken,
+  channelAnnouncementsWebook,
+  channelStartWebook,
+  channelBotspamWebook,
+  channelRulesWebook,
+  channelIrcWebook,
+  channelTripsitWebook,
+  channelSanctuaryWebook,
+  channelTripsittersWebook,
+  channelHowToTripsitWebook,
+  channelDrugQuestionsWebook,
+  channelOpentripsitWebook,
+  channelOpentripsit1Webook,
+  channelOpentripsit2Webook,
+  channelClosedtripsitWebook,
+  channelGeneralWebook,
+  channelPetsWebook,
+  channelFoodWebook,
+  channelMusicWebook,
+  channelScienceWebook,
+  channelGamingWebook,
+  channelCreativeWebook,
+  channelPsychedelicWebook,
+  channelVipWelcomeWebook,
+  channelViploungeWebook,
+  channelGoldLoungeWebook,
+  channelTalkToTSWebook,
+  channelClearmindWebook,
+  channelPsychonautWebook,
+  channelDissonautWebook,
+  channelHubWebook,
+  channelTripradioWebook,
+  channelMinecraftWebook,
+  channelFastchatWebook,
+  channelSlowchatWebook,
+  channelDevonboardingWebook,
+  channelDevofftopicWebook,
+  channelDevelopmentWebook,
+  channelWikicontentWebook,
+  channelTripmobileWebook,
+  channelTripcordWebook,
+  channelTripbotWebook,
+  channelTrippitWebook,
+  channelSandboxWebook,
+  channelTripbotlogsWebook,
+  channelModlogWebook,
+  channelModeratorsWebook,
+  channelMeetingroomWebook,
+  channelTeamtripsitWebook,
+  channelOperatorsWebook,
+  channelModhavenWebook,
+  channelTripsitmWebook,
+  // channelAnnouncementsId,
+  // channelStartId,
+  // channelBotspamId,
+  // channelRulesId,
+  // channelIrcId,
+  // channelTripsitId,
+  // channelSanctuaryId,
+  channelTripsittersId,
+  // channelHowToTripsitId,
+  // channelDrugQuestionsId,
+  channelOpentripsitId,
+  // channelOpentripsit1Id,
+  channelOpentripsit2Id,
+  channelClosedtripsitId,
+  // channelGeneralId,
+  // channelPetsId,
+  // channelFoodId,
+  // channelMusicId,
+  // channelScienceId,
+  // channelGamingId,
+  // channelCreativeId,
+  // channelPsychedelicId,
+  // channelVipWelcomeId,
+  // channelViploungeId,
+  // channelGoldLoungeId,
+  // channelTalkToTSId,
+  // channelClearmindId,
+  // channelPsychonautId,
+  // channelDissonautId,
+  // channelHubId,
+  // channelTripradioId,
+  channelMinecraftId,
+  // channelFastchatId,
+  // channelSlowchatId,
+  // channelDevonboardingId,
+  // channelDevofftopicId,
+  channelDevelopmentId,
+  channelWikicontentId,
+  // channelTripmobileId,
+  // channelTripcordId,
+  // channelTripbotId,
+  // channelTrippitId,
+  channelSandboxId,
+  // channelTripbotlogsId,
+  // channelModlogId,
+  channelModeratorsId,
+  channelMeetingroomId,
+  channelTeamtripsitId,
+  channelOperatorsId,
+  channelModhavenId,
+  channelTripsitmId,
 } = require('../../env');
 
 module.exports = {
@@ -49,26 +135,115 @@ module.exports = {
     ircBridgeConfig[0].ircOptions.password = ircBridgePassword;
     ircBridgeConfig[0].nickname = ircBridgeUsername;
     ircBridgeConfig[0].channelMapping = {
-      [channelMeetingroomId]: '#meeting-room',
+      // [channelAnnouncementsId]: '#', // Static channel
+      // [channelStartId]: '#', // Static channel
+      // [channelBotspamId]: '#', // No need to bridge
+      // [channelRulesId]: '#', // Static channel
+      // [channelIrcId]: '#', // Static channel
+
+      // [channelTripsitId]: '#', // Static channel
+      // [channelSanctuaryId]: '#sanctuary', // Potato currently bridges
+      [channelTripsittersId]: '#tripsitters',
+      // [channelHowToTripsitId]: '#', // Static channel
+      // [channelDrugQuestionsId]: '#', // Static channel
+      [channelOpentripsitId]: '#tripsit',
+      // [channelOpentripsit1Id]: '#tripsit1', // Potato currently bridges
+      [channelOpentripsit2Id]: '#tripsit2',
+      [channelClosedtripsitId]: '#tripsit3',
+
+      // [channelGeneralId]: '#lounge', // Phase2
+      // [channelPetsId]: '#pets', // Phase2
+      // [channelFoodId]: '#cooking', // Phase2
+      // [channelMusicId]: '#music', // Phase2
+      // [channelScienceId]: '#science', // Phase2
+      // [channelGamingId]: '#gaming', // Phase2
+      // [channelCreativeId]: '#creative', // Phase2
+      // [channelPsychedelicId]: '#psychedelic', // Phase2
+
+      // [channelVipWelcomeId]: '#', // Static channel
+      // [channelViploungeId]: '#tripsitvip', // Phase2
+      // [channelGoldLoungeId]: '#gold-lounge', // Phase2
+      // [channelTalkToTSId]: '#', // Static channel
+      // [channelClearmindId]: '#recovery', // Phase2
+      // [channelPsychonautId]: '#psychonaut', // Phase2
+      // [channelDissonautId]: '#dissonaut', // Phase2
+      // [channelHubId]: '#', // Voice channel
+      // [channelTripradioId]: '#', // Voice channel
+      // [channelMinecraftId]: '#minecraft',
+      // [channelFastchatId]: '#stims', // Phase2
+      // [channelSlowchatId]: '#opiates', // Talk with phusion
+
+      // [channelDevonboardingId]: '#', // Static channel
+      // [channelDevofftopicId]: '#', // No plans to bridge
+      [channelDevelopmentId]: '#tripsit-dev',
+      [channelWikicontentId]: '#content',
+      // [channelTripmobileId]: '#', // No plans to bridge
+      // [channelTripcordId]: '#', // No plans to bridge
+      // [channelTripbotId]: '#', // No plans to bridge
+      // [channelTrippitId]: '#', // No plans to bridge
+      [channelSandboxId]: '#sandbox',
+      // [channelTripbotlogsId]: '#', // No plans to bridge
+
+      // [channelModlogId]: '#', // No plans to bridge
       [channelModeratorsId]: '#moderators',
+      [channelMeetingroomId]: '#meeting-room',
       [channelTeamtripsitId]: '#teamtripsit',
       [channelOperatorsId]: '#operations',
       [channelModhavenId]: '#modhaven',
-      [channelDevelopmentId]: '#tripsit-dev',
-      [channelTripsitmeId]: '#tripsit.me',
-      [channelSandboxId]: '#sandbox',
+      [channelTripsitmId]: '#tripsit.me',
     };
-    logger.debug(`[${PREFIX}] channelModhavenId: ${channelModhavenId}`);
-    logger.debug(`[${PREFIX}] channelSandboxWebhook: ${channelSandboxWebhook}`);
     const webhooks = {
-      [channelMeetingroomId]: channelMeetingroomWebhook,
-      [channelModeratorsId]: channelModeratorsWebhook,
-      [channelTeamtripsitId]: channelTeamtripsitWebhook,
-      [channelOperatorsId]: channelOperatorsWebhook,
-      [channelModhavenId]: channelModhavenWebhook,
-      [channelDevelopmentId]: channelDevelopmentWebhook,
-      [channelTripsitmeId]: channelTripsitmeWebhook,
-      [channelSandboxId]: channelSandboxWebhook,
+      [channelAnnouncementsWebook]: channelAnnouncementsWebook,
+      [channelStartWebook]: channelStartWebook,
+      [channelBotspamWebook]: channelBotspamWebook,
+      [channelRulesWebook]: channelRulesWebook,
+      [channelIrcWebook]: channelIrcWebook,
+      [channelTripsitWebook]: channelTripsitWebook,
+      [channelSanctuaryWebook]: channelSanctuaryWebook,
+      [channelTripsittersWebook]: channelTripsittersWebook,
+      [channelHowToTripsitWebook]: channelHowToTripsitWebook,
+      [channelDrugQuestionsWebook]: channelDrugQuestionsWebook,
+      [channelOpentripsitWebook]: channelOpentripsitWebook,
+      [channelOpentripsit1Webook]: channelOpentripsit1Webook,
+      [channelOpentripsit2Webook]: channelOpentripsit2Webook,
+      [channelClosedtripsitWebook]: channelClosedtripsitWebook,
+      [channelGeneralWebook]: channelGeneralWebook,
+      [channelPetsWebook]: channelPetsWebook,
+      [channelFoodWebook]: channelFoodWebook,
+      [channelMusicWebook]: channelMusicWebook,
+      [channelScienceWebook]: channelScienceWebook,
+      [channelGamingWebook]: channelGamingWebook,
+      [channelCreativeWebook]: channelCreativeWebook,
+      [channelPsychedelicWebook]: channelPsychedelicWebook,
+      [channelVipWelcomeWebook]: channelVipWelcomeWebook,
+      [channelViploungeWebook]: channelViploungeWebook,
+      [channelGoldLoungeWebook]: channelGoldLoungeWebook,
+      [channelTalkToTSWebook]: channelTalkToTSWebook,
+      [channelClearmindWebook]: channelClearmindWebook,
+      [channelPsychonautWebook]: channelPsychonautWebook,
+      [channelDissonautWebook]: channelDissonautWebook,
+      [channelHubWebook]: channelHubWebook,
+      [channelTripradioWebook]: channelTripradioWebook,
+      [channelMinecraftWebook]: channelMinecraftWebook,
+      [channelFastchatWebook]: channelFastchatWebook,
+      [channelSlowchatWebook]: channelSlowchatWebook,
+      [channelDevonboardingWebook]: channelDevonboardingWebook,
+      [channelDevofftopicWebook]: channelDevofftopicWebook,
+      [channelDevelopmentWebook]: channelDevelopmentWebook,
+      [channelWikicontentWebook]: channelWikicontentWebook,
+      [channelTripmobileWebook]: channelTripmobileWebook,
+      [channelTripcordWebook]: channelTripcordWebook,
+      [channelTripbotWebook]: channelTripbotWebook,
+      [channelTrippitWebook]: channelTrippitWebook,
+      [channelSandboxWebook]: channelSandboxWebook,
+      [channelTripbotlogsWebook]: channelTripbotlogsWebook,
+      [channelModlogWebook]: channelModlogWebook,
+      [channelModeratorsWebook]: channelModeratorsWebook,
+      [channelMeetingroomWebook]: channelMeetingroomWebook,
+      [channelTeamtripsitWebook]: channelTeamtripsitWebook,
+      [channelOperatorsWebook]: channelOperatorsWebook,
+      [channelModhavenWebook]: channelModhavenWebook,
+      [channelTripsitmWebook]: channelTripsitmWebook,
     };
     // logger.debug(JSON.stringify(webhooks, null, 2));
     ircBridgeConfig[0].webhooks = webhooks;

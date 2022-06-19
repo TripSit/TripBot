@@ -46,10 +46,10 @@
       "light_cyan"
     ],
     "parallelPingFix": true,
-    "commandCharacters": ["~"],
-    "ircStatusNotices": true,
+    "commandCharacters": [],
+    "ircStatusNotices": false,
     "ignoreUsers": {
-      "irc": ["TSDiscord", "TSTelegram", "TS1"],
+      "irc": ["TSDiscord", "TS1"],
       "discord": ["Bridge", "TS1"],
       "discordIds": []
     },
