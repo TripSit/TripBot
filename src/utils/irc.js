@@ -200,13 +200,13 @@ module.exports = {
       // [channelIrcWebhook]: channelIrcWebhook,
       // [channelTripsitWebhook]: channelTripsitWebhook,
       // [channelSanctuaryWebhook]: channelSanctuaryWebhook,
-      [channelTripsittersId]: channelTripsittersWebhook,
+      // !!![channelTripsittersId]: channelTripsittersWebhook,
       // [channelHowToTripsitWebhook]: channelHowToTripsitWebhook,
       // [channelDrugQuestionsWebhook]: channelDrugQuestionsWebhook,
-      [channelOpentripsitId]: channelOpentripsitWebhook,
+      // !!![channelOpentripsitId]: channelOpentripsitWebhook,
       // [channelOpentripsit1Webhook]: channelOpentripsit1Webhook,
-      [channelOpentripsit2Id]: channelOpentripsit2Webhook,
-      [channelClosedtripsitId]: channelClosedtripsitWebhook,
+      // !!![channelOpentripsit2Id]: channelOpentripsit2Webhook,
+      // !!![channelClosedtripsitId]: channelClosedtripsitWebhook,
       // [channelGeneralWebhook]: channelGeneralWebhook,
       // [channelPetsWebhook]: channelPetsWebhook,
       // [channelFoodWebhook]: channelFoodWebhook,
@@ -230,7 +230,7 @@ module.exports = {
       // [channelDevonboardingWebhook]: channelDevonboardingWebhook,
       // [channelDevofftopicWebhook]: channelDevofftopicWebhook,
       [channelDevelopmentId]: channelDevelopmentWebhook,
-      [channelWikicontentId]: channelWikicontentWebhook,
+      // !!![channelWikicontentId]: channelWikicontentWebhook,
       // [channelTripmobileWebhook]: channelTripmobileWebhook,
       // [channelTripcordWebhook]: channelTripcordWebhook,
       // [channelTripbotWebhook]: channelTripbotWebhook,
@@ -246,7 +246,7 @@ module.exports = {
       [channelTripsitmeId]: channelTripsitmWebhook,
     };
     // logger.debug(JSON.stringify(webhooks, null, 2));
-    // ircBridgeConfig[0].webhooks = webhooks;
+    ircBridgeConfig[0].webhooks = webhooks;
 
     logger.debug(`[${PREFIX}] ircBridgeConfig: ${JSON.stringify(ircBridgeConfig, null, 2)}`);
     discordIRC(ircBridgeConfig);

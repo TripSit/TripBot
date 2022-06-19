@@ -12,7 +12,7 @@ const PREFIX = path.parse(__filename).name;
 const {
   NODE_ENV,
   channelVipWelcomeId,
-  channelLoungeId,
+  channelViploungeId,
   channelTalkToTSId,
   channelClearmindId,
   channelPsychonautId,
@@ -52,7 +52,7 @@ module.exports = {
     const channelTalkToTS = interaction.client.channels.cache.get(channelTalkToTSId);
     const channelHub = interaction.client.channels.cache.get(channelHubId);
     const channelClearmind = interaction.client.channels.cache.get(channelClearmindId);
-    const channelLounge = interaction.client.channels.cache.get(channelLoungeId);
+    const channelViplounge = interaction.client.channels.cache.get(channelViploungeId);
     const channelPsychonaut = interaction.client.channels.cache.get(channelPsychonautId);
     const channelDissonaut = interaction.client.channels.cache.get(channelDissonautId);
     const channelGoldLounge = interaction.client.channels.cache.get(channelGoldLoungeId);
@@ -69,7 +69,7 @@ module.exports = {
       > This gives you some access that is only available to VIPs:
       > You can talk to the TripSit team in ${channelTalkToTS}: give us feedback or suggest a new idea!
       > Join ${channelHub} to spin up your own voice channel!
-      > You've gained access to some higher-level channels like ${channelLounge}, ${channelPsychonaut} and ${channelDissonaut}
+      > You've gained access to some higher-level channels like ${channelViplounge}, ${channelPsychonaut} and ${channelDissonaut}
       > Access to the notorious ${channelGoldLounge} can be yours by subscribing to our patreon! (https://www.patreon.com/tripsit)
       > Finally, react to the messages below to opt-in to other channels!
       `);
