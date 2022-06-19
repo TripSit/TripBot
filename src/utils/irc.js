@@ -246,7 +246,7 @@ module.exports = {
       [channelTripsitmeId]: channelTripsitmWebhook,
     };
     // logger.debug(JSON.stringify(webhooks, null, 2));
-    ircBridgeConfig[0].webhooks = webhooks;
+    // ircBridgeConfig[0].webhooks = webhooks;
 
     logger.debug(`[${PREFIX}] ircBridgeConfig: ${JSON.stringify(ircBridgeConfig, null, 2)}`);
     discordIRC(ircBridgeConfig);
