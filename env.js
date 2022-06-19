@@ -55,7 +55,7 @@ exports.channelDrugQuestionsId = process.env.channelDrugQuestionsId;
 exports.channelOpentripsitId = process.env.channelOpentripsitId;
 exports.channelOpentripsit1Id = process.env.channelOpentripsit1Id;
 exports.channelOpentripsit2Id = process.env.channelOpentripsit2Id;
-exports.channelClosedtripsitId = process.env.channelClosedtripsitI;
+exports.channelClosedtripsitId = process.env.channelClosedtripsitId;
 
 exports.channelGeneralId = process.env.channelGeneralId;
 exports.channelPetsId = process.env.channelPetsId;

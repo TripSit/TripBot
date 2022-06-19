@@ -131,7 +131,7 @@ module.exports = {
     ircBridgeConfig[0].discordToken = discordToken;
     ircBridgeConfig[0].server = ircServer;
 
-    ircBridgeConfig[0].ircOptions.userName = ircBridgeUsername;
+    ircBridgeConfig[0].ircOptions.username = ircBridgeUsername;
     ircBridgeConfig[0].ircOptions.password = ircBridgePassword;
     ircBridgeConfig[0].nickname = ircBridgeUsername;
     ircBridgeConfig[0].channelMapping = {
@@ -200,13 +200,13 @@ module.exports = {
       // [channelIrcWebhook]: channelIrcWebhook,
       // [channelTripsitWebhook]: channelTripsitWebhook,
       // [channelSanctuaryWebhook]: channelSanctuaryWebhook,
-      [channelTripsittersWebhook]: channelTripsittersWebhook,
+      [channelTripsittersId]: channelTripsittersWebhook,
       // [channelHowToTripsitWebhook]: channelHowToTripsitWebhook,
       // [channelDrugQuestionsWebhook]: channelDrugQuestionsWebhook,
-      [channelOpentripsitWebhook]: channelOpentripsitWebhook,
+      [channelOpentripsitId]: channelOpentripsitWebhook,
       // [channelOpentripsit1Webhook]: channelOpentripsit1Webhook,
-      [channelOpentripsit2Webhook]: channelOpentripsit2Webhook,
-      [channelClosedtripsitWebhook]: channelClosedtripsitWebhook,
+      [channelOpentripsit2Id]: channelOpentripsit2Webhook,
+      [channelClosedtripsitId]: channelClosedtripsitWebhook,
       // [channelGeneralWebhook]: channelGeneralWebhook,
       // [channelPetsWebhook]: channelPetsWebhook,
       // [channelFoodWebhook]: channelFoodWebhook,
@@ -229,21 +229,21 @@ module.exports = {
       // [channelSlowchatWebhook]: channelSlowchatWebhook,
       // [channelDevonboardingWebhook]: channelDevonboardingWebhook,
       // [channelDevofftopicWebhook]: channelDevofftopicWebhook,
-      [channelDevelopmentWebhook]: channelDevelopmentWebhook,
-      [channelWikicontentWebhook]: channelWikicontentWebhook,
+      [channelDevelopmentId]: channelDevelopmentWebhook,
+      [channelWikicontentId]: channelWikicontentWebhook,
       // [channelTripmobileWebhook]: channelTripmobileWebhook,
       // [channelTripcordWebhook]: channelTripcordWebhook,
       // [channelTripbotWebhook]: channelTripbotWebhook,
       // [channelTrippitWebhook]: channelTrippitWebhook,
-      [channelSandboxWebhook]: channelSandboxWebhook,
+      [channelSandboxId]: channelSandboxWebhook,
       // [channelTripbotlogsWebhook]: channelTripbotlogsWebhook,
       // [channelModlogWebhook]: channelModlogWebhook,
-      [channelModeratorsWebhook]: channelModeratorsWebhook,
-      [channelMeetingroomWebhook]: channelMeetingroomWebhook,
-      [channelTeamtripsitWebhook]: channelTeamtripsitWebhook,
-      [channelOperatorsWebhook]: channelOperatorsWebhook,
-      [channelModhavenWebhook]: channelModhavenWebhook,
-      [channelTripsitmWebhook]: channelTripsitmWebhook,
+      [channelModeratorsId]: channelModeratorsWebhook,
+      [channelMeetingroomId]: channelMeetingroomWebhook,
+      [channelTeamtripsitId]: channelTeamtripsitWebhook,
+      [channelOperatorsId]: channelOperatorsWebhook,
+      [channelModhavenId]: channelModhavenWebhook,
+      [channelTripsitmeId]: channelTripsitmWebhook,
     };
     // logger.debug(JSON.stringify(webhooks, null, 2));
     ircBridgeConfig[0].webhooks = webhooks;
