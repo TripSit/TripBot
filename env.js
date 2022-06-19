@@ -67,7 +67,7 @@ exports.channelCreativeId = process.env.channelCreativeId;
 exports.channelPsychedelicId = process.env.channelPsychedelicId;
 
 exports.channelVipWelcomeId = process.env.channelVipWelcomeId;
-exports.channelViploungeId = process.env.channelLoungeId;
+exports.channelViploungeId = process.env.channelViploungeId;
 exports.channelGoldLoungeId = process.env.channelGoldLoungeId;
 exports.channelTalkToTSId = process.env.channelTalkToTSId;
 exports.channelClearmindId = process.env.channelClearmindId;
