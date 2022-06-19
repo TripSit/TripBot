@@ -68,7 +68,7 @@ const {
   channelTeamtripsitWebhook,
   channelOperatorsWebhook,
   channelModhavenWebhook,
-  channelTripsitmWebhook,
+  channelTripsitmeWebhook,
   // channelAnnouncementsId,
   // channelStartId,
   // channelBotspamId,
@@ -243,7 +243,7 @@ module.exports = {
       [channelTeamtripsitId]: channelTeamtripsitWebhook,
       [channelOperatorsId]: channelOperatorsWebhook,
       [channelModhavenId]: channelModhavenWebhook,
-      [channelTripsitmeId]: channelTripsitmWebhook,
+      [channelTripsitmeId]: channelTripsitmeWebhook,
     };
     // logger.debug(JSON.stringify(webhooks, null, 2));
     ircBridgeConfig[0].webhooks = webhooks;

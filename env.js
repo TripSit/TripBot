@@ -216,4 +216,4 @@ exports.channelMeetingroomWebhook = process.env.channelMeetingroomWebhook;
 exports.channelTeamtripsitWebhook = process.env.channelTeamtripsitWebhook;
 exports.channelOperatorsWebhook = process.env.channelOperatorsWebhook;
 exports.channelModhavenWebhook = process.env.channelModhavenWebhook;
-exports.channelTripsitmWebhook = process.env.channelTripsitmWebhook;
+exports.channelTripsitmeWebhook = process.env.channelTripsitmeWebhook;
