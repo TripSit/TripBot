@@ -5,8 +5,6 @@
     "discordToken": "",
     "channelMapping": {
       },
-    "autoSendCommands": [
-      ],
     "ircOptions": {
       "floodProtection": true,
       "floodProtectionDelay": 500,
@@ -46,12 +44,10 @@
       "light_cyan"
     ],
     "parallelPingFix": true,
-    "commandCharacters": [],
     "ircStatusNotices": false,
     "ignoreUsers": {
-      "irc": ["TSDiscord", "TS1"],
-      "discord": ["Bridge", "TS1"],
-      "discordIds": []
+      "irc": ["TSDiscord", "TS1", "TSDev"],
+      "discord": ["Bridge", "TS1", "TSDev", "Tripbot 2"]
     },
     "webhooks": {}
   }
