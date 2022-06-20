@@ -122,8 +122,8 @@ module.exports = {
     // run this async so that it runs while everything else starts too
     if (NODE_ENV === 'production') {
       await connectIRC(client);
+      await connectIRCBridge(client);
     }
-    connectIRCBridge(client);
     await getReactionRoles(client);
     await getInvites(client);
     const userDb = await updateGlobalDb(client);
