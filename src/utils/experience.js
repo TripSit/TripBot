@@ -44,14 +44,15 @@ module.exports = {
   async experience(message) {
     logger.debug(`[${PREFIX}] Message sent by ${message.author.username} in ${message.channel.name} on ${message.guild}`);
 
-    if (ignoredRoles.some(role => message.member.roles.cache.has(role))) {
-      logger.debug(`[${PREFIX}] Message sent by a user with an ignored role`);
-      return;
-    }
+    // If the user is not a member of the guild, ignore it
+    if (!message.member) { return; }
 
-    if (ignoredRoles.some(role => message.member.roles.cache.has(role))) {
-      logger.debug(`[${PREFIX}] Message sent by a user with an ignored role`);
-      return;
+    // Check if the user who sent this message is a guild user
+    if (message.member) {
+      if (ignoredRoles.some(role => message.member.roles.cache.has(role))) {
+        logger.debug(`[${PREFIX}] Message sent by a user with an ignored role`);
+        return;
+      }
     }
 
     let messageChannelId = message.channel.id;
