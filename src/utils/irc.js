@@ -200,7 +200,7 @@ module.exports = {
       // [channelIrcWebhook]: channelIrcWebhook,
       // [channelTripsitWebhook]: channelTripsitWebhook,
       // [channelSanctuaryWebhook]: channelSanctuaryWebhook,
-      [channelTripsittersId]: channelTripsittersWebhook,
+      // [channelTripsittersId]: channelTripsittersWebhook, Disabled until reality fixes autonotify and RSS
       // [channelHowToTripsitWebhook]: channelHowToTripsitWebhook,
       // [channelDrugQuestionsWebhook]: channelDrugQuestionsWebhook,
       [channelOpentripsitId]: channelOpentripsitWebhook,
