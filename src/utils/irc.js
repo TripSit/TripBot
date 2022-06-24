@@ -143,7 +143,7 @@ module.exports = {
 
       // [channelTripsitId]: '#', // Static channel
       // [channelSanctuaryId]: '#sanctuary', // Potato currently bridges
-      [channelTripsittersId]: '#tripsitters',
+      // [channelTripsittersId]: '#tripsitters',
       // [channelHowToTripsitId]: '#', // Static channel
       // [channelDrugQuestionsId]: '#', // Static channel
       [channelOpentripsitId]: '#tripsit',
