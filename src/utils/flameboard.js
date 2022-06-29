@@ -17,15 +17,15 @@ module.exports = {
   async flameboard(reaction, user) {
     logger.debug(`[${PREFIX}] starting!`);
 
-    if (reaction.count === votePinThreshold && reaction.emoji.name.includes('ts_flame')) {
+    if (reaction.count === votePinThreshold && reaction.emoji.name.includes('upvote')) {
       const channel = reaction.message.channel.guild.channels.cache.get(channelFlameboardId);
 
-      reaction.message.reply(stripIndents`This got ${votePinThreshold} flames and has been pinned to ${channel.toString()}!`);
+      reaction.message.reply(stripIndents`This got ${votePinThreshold} upvotes and has been pinned to ${channel.toString()}!`);
 
       const embed = new MessageEmbed()
         .setAuthor({
-          name: user.username,
-          iconURL: user.displayAvatarURL(),
+          name: reaction.message.author.username,
+          iconURL: reaction.message.author.displayAvatarURL(),
           url: reaction.message.url,
         })
         .setColor('RANDOM')
