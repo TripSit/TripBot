@@ -56,23 +56,26 @@ module.exports = {
   name: 'guildMemberUpdate',
 
   async execute(oldMember, newMember) {
+    logger.debug(`[${PREFIX}] starting!`);
     // logger.debug(`[${PREFIX}] guildMemberUpdate`);
     // logger.debug(`${PREFIX} Member.guildId: ${newMember.guild.id}`);
     // logger.debug(`${PREFIX} discordGuildId: ${discordGuildId}`);
     // Only run this on TripSit
     if (newMember.guild.id.toString() === discordGuildId.toString()) {
-      logger.debug(`[${PREFIX}] Running on TripSit`);
+      // logger.debug(`[${PREFIX}] Running on TripSit`);
       // logger.debug(`[${PREFIX}] oldMember: ${JSON.stringify(oldMember, null, 2)}`);
       // logger.debug(`[${PREFIX}] newMember: ${JSON.stringify(newMember, null, 2)}`);
+
       const oldRoles = oldMember.roles.cache.map(role => role.id);
-      // logger.debug(`[${PREFIX}] oldRoles: ${oldRoles}`);
 
       const newRoles = newMember.roles.cache.map(role => role.id);
-      // logger.debug(`[${PREFIX}] newRoles: ${newRoles}`);
 
       // If the oldRoles don't match the new roles
-      if (oldRoles !== newRoles) {
+      if (oldRoles.toString() !== newRoles.toString()) {
         logger.debug(`[${PREFIX}] roles changed on ${newMember.displayName}!`);
+        // logger.debug(`[${PREFIX}] oldRoles: ${oldRoles}`);
+        // logger.debug(`[${PREFIX}] newRoles: ${newRoles}`);
+
         // Find the difference between the two arrays
         const rolesAdded = newRoles.filter(x => !oldRoles.includes(x));
         // logger.debug(`[${PREFIX}] roleAdded: ${rolesAdded}`);
@@ -82,23 +85,29 @@ module.exports = {
         // If you added/removed more than one role then it wasnt a mindset change, so ignore it
         if (rolesAdded.length > 1 || rolesRemoved.length > 1) { return; }
 
-        let difference = '';
+        let differenceId = '';
         let action = '';
         if (rolesAdded.length > 0) {
-          difference = rolesAdded[0];
+          differenceId = rolesAdded[0];
           action = 'added';
         } else if (rolesRemoved.length > 0) {
-          difference = rolesRemoved[0];
+          differenceId = rolesRemoved[0];
           action = 'removed';
         }
-        logger.debug(`[${PREFIX}] difference: ${difference}`);
-        logger.debug(`[${PREFIX}] action: ${action}`);
+
+        // logger.debug(`[${PREFIX}] differenceId: ${differenceId}`);
+        // logger.debug(`[${PREFIX}] action: ${action}`);
+
+        const differentRole = newMember.guild.roles.cache
+          .find(role => role.id === differenceId);
+
+        logger.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${differentRole.name} (${differentRole.id})`);
 
         // The following code only cares if you add a mindset role
-        if (mindsetRoles.includes(difference)) {
+        if (mindsetRoles.includes(differenceId)) {
           // Look up the role name
-          const roleName = await newMember.guild.roles.fetch(difference).then(role => role.name);
-          logger.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${roleName}`);
+          const roleName = await newMember.guild.roles.fetch(differenceId).then(role => role.name);
+          // logger.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${roleName}`);
 
           // const userInfo = await getUserInfo(newMember.id);
           const channel = newMember.guild.channels.cache.get(channelModlogId);

@@ -1,23 +1,33 @@
 'use strict';
 
+const PREFIX = require('path').parse(__filename).name;
 const logger = require('./logger');
 const { getUserInfo, setUserInfo } = require('./firebase');
 
-const PREFIX = require('path').parse(__filename).name; // eslint-disable-line
-
 module.exports = {
-  async update(actor, action, emoji, target) {
-    logger.debug(`[${PREFIX}] ${actor} ${action} ${emoji} ${target}!`);
+  async karma(reaction, user, action) {
+    logger.debug(`[${PREFIX}] start!`);
+    const actor = user;
+    const emoji = reaction.emoji.toString();
+    const target = reaction.message.author;
+
+    // logger.debug(`[${PREFIX}] ${actor} ${action} ${emoji} ${target}!`);
+
+    // logger.debug(`[${PREFIX}] emoji: ${JSON.stringify(reaction.emoji, null, 2)}`);
 
     if (actor === target) { return; }
+
+    if (!reaction.emoji.name.includes('upvote') && !reaction.emoji.name.includes('downvote')) {
+      logger.debug(`[${PREFIX}] Invalid emoji: ${emoji.toString()}`);
+      logger.debug(`[${PREFIX}] finished!`);
+      return;
+    }
+
+    logger.debug(`[${PREFIX}] ${user.username} gave ${reaction.emoji.name} to ${target.username} in ${reaction.message.guild}!`);
+
     // Extract actor data
     const [actorData, actorFbid] = await getUserInfo(actor);
     // logger.debug(`[${PREFIX}] Actor data: ${JSON.stringify(actorData, null, 2)}`);
-
-    if (emoji !== '<:ts_voteup:958721361587630210>' && emoji !== '<:ts_votedown:960161563849932892>') {
-      logger.debug(`[${PREFIX}] Invalid emoji: ${emoji.toString()}`);
-      return;
-    }
 
     // Transform actor data
     if ('discord' in actorData) {

@@ -6,7 +6,7 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../utils/logger');
 
 const {
-  NODE_ENV,
+  // NODE_ENV,
   channelDevonboardingId,
   channelDevofftopicId,
   channelDevelopmentId,

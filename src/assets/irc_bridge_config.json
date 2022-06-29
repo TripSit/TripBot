@@ -44,6 +44,7 @@
       "light_cyan"
     ],
     "parallelPingFix": true,
+    "commandCharacters": ["~"],
     "ircStatusNotices": false,
     "ignoreUsers": {
       "irc": ["TSDiscord", "TS1", "TSDev"],

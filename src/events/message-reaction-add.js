@@ -1,16 +1,15 @@
 'use strict';
 
-const path = require('path');
+const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger');
-const chitragupta = require('../utils/chitragupta');
-const { getUserInfo, setUserInfo } = require('../utils/firebase');
-
-const PREFIX = path.parse(__filename).name;
+const { karma } = require('../utils/chitragupta');
+const { communityMod } = require('../utils/community-mod');
+const { sparklePoints } = require('../utils/sparkle-points');
+const { removeDuplicates } = require('../utils/remove-duplicate-roles');
+const { flameboard } = require('../utils/flameboard');
 
 const {
   discordGuildId,
-  roleModeratorId,
-  channelStartId,
 } = require('../../env');
 
 module.exports = {
@@ -29,47 +28,10 @@ module.exports = {
       });
     }
 
-    // Remove duplicate emojis
-    if (reaction.message.channelId === channelStartId && !user.bot) {
-      // This is slow as fuck, but it works
-      // If we're in the start-here channel, and the user who reacted is not a bot
-      await reaction.message.reactions.cache.forEach(async x => {
-        // Loop through each reaction in the message
-        // logger.debug(`[${PREFIX}] x.emoji.name: ${x.emoji.name}`);
-        // logger.debug(`[${PREFIX}] r.emoji.name: ${reaction.emoji.name}`);
-        if (x.emoji.name !== reaction.emoji.name) {
-          // Look for reactions that are not the one we just added
-          // logger.debug(`[${PREFIX}] Found other emoji, checking if IDS are the same`);
-          // logger.debug(`[${PREFIX}] user.id: ${user.id}`);
-          const reactUsers = await x.users.fetch();
-          // Fetch the users who reacted to the message
-          if (reactUsers.has(user.id)) {
-            // If the user who reacted to the message is in the list of users
-            // who reacted to the message, remove that reaction
-            await reaction.users.remove(user.id);
-          }
-        }
-      });
-    }
+    removeDuplicates(reaction, user);
 
-    const reactionAuthor = reaction.message.author;
-    const reactionEmoji = reaction.emoji;
-    logger.debug(`[${PREFIX}] ${user.username} gave ${reactionEmoji.name} to ${reactionAuthor.username} in ${reaction.message.guild}!`);
-
-    if ((reaction.message.author.bot && reactionEmoji.name === '💧') && !user.bot) {
-      const [actorData, actorFbid] = await getUserInfo(user);
-      if ('discord' in actorData) {
-        if ('sparkle_points' in actorData.discord) {
-          actorData.discord.sparkle_points += 1;
-        } else {
-          actorData.discord.sparkle_points = 1;
-        }
-      } else {
-        actorData.discord = { sparkle_points: 1 };
-      }
-
-      await setUserInfo(actorFbid, actorData);
-    }
+    // This can run on bots
+    await sparklePoints(reaction, user);
 
     // Dont run on bots
     if (reaction.message.author.bot || user.bot) {
@@ -77,25 +39,8 @@ module.exports = {
       return;
     }
 
-    const { count } = reaction;
-    // logger.debug(`[${PREFIX}] discordGuildId: ${discordGuildId}`);
-    // logger.debug(`[${PREFIX}] reaction.message.guild.id: ${reaction.message.guild.id}`);
-    // If we're not in the TripSit guild, don't do this.
-    logger.debug(`[${PREFIX}] ${user.username} gave ${reactionEmoji.name} to ${reactionAuthor.username} in ${reaction.message.guild}!`);
-    await chitragupta.update(user, 1, reactionEmoji.toString(), reactionAuthor);
-    if (count === 3 && reactionEmoji.name === 'ts_down') {
-      if (reaction.message.member.isCommunicationDisabled()) { return; }
-      logger.debug(`[${PREFIX}] ${user.username} has been downvoted three times, muting!`);
-      // One week is the maximum time to mute
-      const timeoutDuration = 604800000;
-      reaction.message.member.timeout(timeoutDuration, `Was community quieted for saying "${reaction.message}"`);
-      const moderatorRole = reaction.message.guild.roles.cache
-        .find(role => role.id === roleModeratorId);
-      reaction.message.reply(`Hey ${moderatorRole}s! ${reactionAuthor.username} was downvoted three times for this, please review!`);
-    }
-    // if (count == 3 && reaction_emoji.name == 'ts_up') {
-    // eslint-disable-next-line
-    //     reaction.message.channel.send(`${reaction_author.username} has been upvoted three times, great work!`);
-    // }
+    await karma(reaction, user, 1);
+    await flameboard(reaction, user);
+    await communityMod(reaction, user);
   },
 };
