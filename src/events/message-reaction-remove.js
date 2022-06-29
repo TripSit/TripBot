@@ -1,14 +1,11 @@
 'use strict';
 
-const path = require('path');
+const PREFIX = require('path').parse(__filename).name;
 const logger = require('../utils/logger');
-const chitragupta = require('../utils/chitragupta');
-
-const PREFIX = path.parse(__filename).name;
+const { karma } = require('../utils/chitragupta');
 
 const {
   discordGuildId,
-  roleModeratorId,
 } = require('../../env');
 
 module.exports = {
@@ -35,28 +32,6 @@ module.exports = {
       // logger.debug(`[${PREFIX}] Ignoring bot interaction`);
       return;
     }
-    const reactionAuthor = reaction.message.author;
-    const reactionEmoji = reaction.emoji;
-    const { count } = reaction;
-    // logger.debug(`[${PREFIX}] discordGuildId: ${discordGuildId}`);
-    // logger.debug(`[${PREFIX}] reaction.message.guild.id: ${reaction.message.guild.id}`);
-    // If we're not in the TripSit guild, don't do this.
-    if (reaction.message.guild.id !== discordGuildId) { return; }
-    logger.debug(`[${PREFIX}] ${user.username} gave ${reactionEmoji.name} to ${reactionAuthor.username} in ${reaction.message.guild}!`);
-    await chitragupta.update(user, -1, reactionEmoji.toString(), reactionAuthor);
-    if (count === 3 && reactionEmoji.name === 'ts_down') {
-      if (reaction.message.member.isCommunicationDisabled()) { return; }
-      logger.debug(`[${PREFIX}] ${user.username} has been downvoted three times, muting!`);
-      // One week is the maximum time to mute
-      const timeoutDuration = 604800000;
-      reaction.message.member.timeout(timeoutDuration, `Was community quieted for saying "${reaction.message}"`);
-      const moderatorRole = reaction.message.guild.roles.cache
-        .find(role => role.id === roleModeratorId);
-      reaction.message.reply(`Hey ${moderatorRole}s! ${reactionAuthor.username} was downvoted three times for this, please review!`);
-    }
-    // if (count == 3 && reaction_emoji.name == 'ts_up') {
-    // eslint-disable-next-line
-    //     reaction.message.channel.send(`${reaction_author.username} has been upvoted three times, great work!`);
-    // }
+    karma(reaction, user, -1);
   },
 };

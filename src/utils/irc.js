@@ -249,12 +249,15 @@ module.exports = {
         [channelTripsitmeId]: channelTripsitmeWebhook,
       };
     }
+    // const channelTripsitId = '960606558373441559';
     if (NODE_ENV === 'development') {
       ircBridgeConfig[0].channelMapping = {
         [channelSandboxId]: '#sandbox-dev',
+        // [channelTripsitId]: '#sandbox-dev',
       };
       webhooks = {
         [channelSandboxId]: channelSandboxWebhook,
+        // [channelTripsitId]: 'https://discord.com/api/webhooks/989633751778746378/4FafdaYJG9TmC-FuIiKZaA-v9cOEhGbKEO5iOL81iYE6Q5n9rfPOCPMN-MCrynIi0raf',
       };
     }
 

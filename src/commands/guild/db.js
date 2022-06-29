@@ -15,6 +15,8 @@ const {
   firebaseUserDbName,
 } = require('../../../env');
 
+const firebaseProdUserDbName = 'users';
+
 let currentExperience = [];
 try {
   // eslint-disable-next-line
@@ -42,7 +44,7 @@ async function updateLocal() {
 
 // eslint-disable-next-line no-unused-vars
 async function backup() {
-  logger.debug(`[${PREFIX}] Backing up from 'users' to 'users_dev'`);
+  logger.debug(`[${PREFIX}] Backing up from firebaseProdUserDbName to firebaseUserDbName`);
 
   async function deleteQueryBatch(query, resolve) {
     const snapshot = await query.get();
@@ -78,11 +80,11 @@ async function backup() {
     });
   }
 
-  await deleteCollection('users_dev', 100).catch(err => logger.error(err));
+  await deleteCollection(firebaseUserDbName, 100).catch(err => logger.error(err));
 
-  const users = await db.collection('users').get();
+  const users = await db.collection(firebaseProdUserDbName).get();
   users.forEach(async doc => {
-    await db.collection('users_dev').doc(doc.id).set(doc.data());
+    await db.collection(firebaseUserDbName).doc(doc.id).set(doc.data());
   });
   logger.debug(`[${PREFIX}] Done backing up!`);
 }
@@ -196,61 +198,217 @@ async function removeEvents(interaction) {
   Object.assign(global, { userDb });
 }
 
-// async function experience() {
-//   logger.debug(`[${PREFIX}] Converting experience!`);
+async function removeDupliates(/* interaction */) {
+  // This command will check for duplicates within the database and merge them
+  // This is a very slow command and should be run sparingly
 
-//   // Loop through everything in currentExperience and print the name
-//   // eslint-disable-next-line
-//   const users = await db.collection('users').get();
-//   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
+  const snapshotUser = await db.collection(firebaseUserDbName).get();
 
-//   for (let i = 0; i < users.size; i += 1) {
-//     const doc = users.docs[i];
-//     const userData = doc.data();
-//     if (userData.discord) {
-//       logger.debug(`[${PREFIX}] Importing ${userData.discord.username}`);
-//       for (let j = 0; j < currentExperience.length; j += 1) {
-//         const record = currentExperience[j];
-//         const recordName = record.Name;
-//         const recordMessages = parseInt(record.Messages.replace(/,/g, ''), 10);
-//         const recordExp = parseInt(record.Experience.replace(/,/g, ''), 10);
-//         const recordLevel = parseInt(record.Level, 10);
-//         if (userData.discord.username === recordName) {
-//           logger.debug(`[${PREFIX}] ${recordName} - Lv
-// ${recordLevel} sent ${recordMessages} messages for ${recordExp} exp`);
-//           if (userData.discord.username !== 'MoonBear') { continue; }
-//           logger.debug(`[${PREFIX}] Updating user ${userData.discord.username}!`);
-//           // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(userData, null, 2)}`);
-//           if (userData.discord.messages) {
-//             userData.discord.messages['0'] = {
-//               count: recordMessages,
-//               lastMessageDate: 0,
-//             };
-//           }
-//           userData.experience = {
-//             general: {
-//               level: recordLevel,
-//               levelExpPoints: 0,
-//               totalExpPoints: recordExp,
-//               lastMessageDate: 0,
-//             },
-//             tripsitter: {
-//               level: 0,
-//               levelExpPoints: 0,
-//               totalExpPoints: 0,
-//               lastMessageDate: 0,
-//             },
-//           };
-//           delete userData.discord.experience;
-//           db.collection('users').doc(doc.id).set(userData);
-//           break;
-//         }
-//       }
-//     } else {
-//       logger.debug(`[${PREFIX}] doc: ${JSON.stringify(userData, null, 2)}`);
-//     }
-//   }
-// }
+  // Get a list of users who don't have a .discord property
+  const deleteDb = [];
+  await snapshotUser.forEach(async user => {
+    if (!user.data().discord) {
+      deleteDb.push({
+        key: user.id,
+        value: user.data(),
+      });
+    }
+  });
+
+  // Delete those users
+  // eslint-disable-next-line
+  for (const user of deleteDb) {
+    logger.debug(`[${PREFIX}] ${user.key} has no discord data, deleting`);
+    logger.debug(`[${PREFIX}] ${JSON.stringify(user.value, null, 2)}`);
+    // eslint-disable-next-line
+    await db.collection(firebaseUserDbName).doc(user.key).delete();
+    logger.debug(`[${PREFIX}] deleted ${user.key}`);
+  }
+
+  logger.debug(`[${PREFIX}] Deleted non-discord accounts`);
+
+  // Get all users that have discord information
+  const userDb = [];
+  if (db !== undefined) {
+    // Get user information
+    await snapshotUser.forEach(async user => {
+      if (user.data().discord) {
+        userDb.push({
+          key: user.id,
+          value: user.data(),
+        });
+      }
+    });
+  }
+  logger.debug(`[${PREFIX}] Found ${userDb.length} users`);
+
+  // Do a nested loop to see if there are duplicates on the discord id
+  const processedIds = [];
+  await userDb.forEach(async user => {
+    const userKey = user.key;
+    const userValue = user.value;
+
+    // Only run on moonbear right now
+    // if (userValue.discord.id !== '702682008253628457') return;
+
+    // Check if we have already processed this user
+    if (processedIds.includes(userValue.discord.id)) return;
+
+    // logger.debug(`[${PREFIX}] Checking user ${userValue.accountName}`);
+    processedIds.push(userValue.discord.id);
+
+    const dupeUserDb = [];
+    // eslint-disable-next-line
+    for (const subUser of userDb) {
+    // await userDb.forEach(subUser => {
+      const subUserKey = subUser.key;
+      const subUserValue = subUser.value;
+      if (subUserValue.discord.id === userValue.discord.id) {
+        // logger.debug(`${PREFIX} subUserKey: ${subUserKey}`);
+        // logger.debug(`${PREFIX} subUserValue: ${JSON.stringify(subUserValue, null, 2)}`);
+        // logger.debug(`[${PREFIX}] ${subUserKey} is a dupe of ${userKey}, adding to dupeDict!`);
+        dupeUserDb.push({
+          subUserKey,
+          subUserValue,
+        });
+      }
+    // });
+    }
+
+    if (dupeUserDb.length > 1) {
+      logger.debug(
+        `[${PREFIX}] ${dupeUserDb.length} dupe(s) found for ${userValue.accountName}`,
+      );
+      // eslint-disable-next-line
+      for (const dupeUser of dupeUserDb) {
+        const dupeUserKey = dupeUser.subUserKey;
+        const dupeUserValue = dupeUser.subUserValue;
+
+        //   Object.keys(dupeUserValue).forEach(key => {
+        //     if (key !== null && key !== undefined && key !== {} && key !== '') {
+        //       if (userValue[key] !== dupeUserValue[key]) {
+        //         logger.debug(`[${PREFIX}] Diference in key: ${key} `);
+        //         logger.debug(`[${PREFIX}] value: ${dupeUserValue[key]} `);
+        //       }
+        //     }
+        //   });
+        // }
+
+        //   if (dupeUserValue.karma_given !== userValue.karma_given
+        //     && dupeUserValue.karma_given !== undefined) {
+        //     logger.debug(`[${PREFIX}] Karma Given is different, updating...`);
+        //     Object.keys(dupeUserValue.karma_given).forEach(key => {
+        //       if (userValue.karma_given[key] === undefined) {
+        //         userValue.karma_given[key] = dupeUserValue.karma_given[key];
+        //       } else {
+        //         userValue.karma_given[key] += dupeUserValue.karma_given[key];
+        //       }
+        //     });
+        //   }
+
+        //   if (dupeUserValue.karma_received !== userValue.karma_received
+        //     && dupeUserValue.karma_received !== undefined) {
+        //     logger.debug(`[${PREFIX}] Karma Recieved is different, updating...`);
+        //     // Loop through the keys in dupe_user_kr and add them to user_kr
+        //     Object.keys(dupeUserValue.karma_received).forEach(key => {
+        //       if (userValue.karma_received[key] === undefined) {
+        //         userValue.karma_received[key] = dupeUserValue.karma_received[key];
+        //       } else {
+        //         userValue.karma_received[key] += dupeUserValue.karma_received[key];
+        //       }
+        //     });
+        //   }
+
+        //   if (dupeUserValue.reminders !== userValue.reminders) {
+        //     logger.debug(`[${PREFIX}] Reminders are different, updating...`);
+        //     // Loop through the keys in dupe_user_reminders and add them to user_reminders
+        //     Object.keys(dupeUserValue.reminders).forEach(key => {
+        //       if (userValue.reminders[key] === undefined) {
+        //         userValue.reminders[key] = dupeUserValue.reminders[key];
+        //       } else {
+        //         userValue.reminders[key] += dupeUserValue.reminders[key];
+        //       }
+        //     });
+        //   }
+
+        //   if (dupeUserValue.timezone !== userValue.timezone) {
+        //     logger.debug(`[${PREFIX}] Timezone is different, updating...`);
+        //     userValue.timezone = dupeUserValue.timezone;
+        //   }
+
+        if (dupeUserKey !== userKey) {
+          logger.debug(
+            `[${PREFIX}] Removing ${dupeUserValue.accountName} (${dupeUserKey})from the database...`,
+          );
+          // eslint-disable-next-line
+          await db.collection(firebaseUserDbName).doc(dupeUserKey).delete();
+        }
+      }
+
+      // logger.debug(`[${PREFIX}] Updating ${userValue.accountName} in the database...`);
+      // db.collection(firebaseUserDbName).doc(userKey).set(userValue);
+    }
+  });
+}
+
+// eslint-disable-next-line
+async function experience() {
+  logger.debug(`[${PREFIX}] Converting experience!`);
+
+  // Loop through everything in currentExperience and print the name
+  // eslint-disable-next-line
+  const users = await db.collection(firebaseUserDbName).get();
+  logger.debug(`[${PREFIX}] Found ${users.size} users!`);
+
+  for (let i = 0; i < users.size; i += 1) {
+    const doc = users.docs[i];
+    const userData = doc.data();
+    if (userData.discord) {
+      logger.debug(`[${PREFIX}] Importing ${userData.discord.username}`);
+      for (let j = 0; j < currentExperience.length; j += 1) {
+        const record = currentExperience[j];
+        const recordName = record.Name;
+        const recordMessages = parseInt(record.Messages.replace(/,/g, ''), 10);
+        const recordExp = parseInt(record.Experience.replace(/,/g, ''), 10);
+        const recordLevel = parseInt(record.Level, 10);
+        if (userData.discord.username === recordName) {
+          logger.debug(`[${PREFIX}] ${recordName} - Lv
+${recordLevel} sent ${recordMessages} messages for ${recordExp} exp`);
+          // eslint-disable-next-line
+          if (userData.discord.username !== 'MoonBear') { continue; }
+          logger.debug(`[${PREFIX}] Updating user ${userData.discord.username}!`);
+          // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(userData, null, 2)}`);
+          if (userData.discord.messages) {
+            userData.discord.messages['0'] = {
+              count: recordMessages,
+              lastMessageDate: 0,
+            };
+          }
+          userData.experience = {
+            general: {
+              level: recordLevel,
+              levelExpPoints: 0,
+              totalExpPoints: recordExp,
+              lastMessageDate: 0,
+            },
+            tripsitter: {
+              level: 0,
+              levelExpPoints: 0,
+              totalExpPoints: 0,
+              lastMessageDate: 0,
+            },
+          };
+          delete userData.discord.experience;
+          db.collection(firebaseUserDbName).doc(doc.id).set(userData);
+          break;
+        }
+      }
+    } else {
+      logger.debug(`[${PREFIX}] doc: ${JSON.stringify(userData, null, 2)}`);
+    }
+  }
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('db')
@@ -266,17 +424,22 @@ module.exports = {
       .setName('backup'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Converts to new exp system')
-      .setName('experience')),
+      .setName('experience'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Converts to new exp system')
+      .setName('remove_dupes')),
   async execute(interaction) {
     const command = interaction.options.getSubcommand();
     logger.debug(`[${PREFIX}] Command: ${command}`);
 
     if (command === 'refresh') {
-      await updateLocal();
+      await updateLocal(interaction);
     } else if (command === 'remove_events') {
       await removeEvents(interaction);
     } else if (command === 'backup') {
-      await backup();
+      await backup(interaction);
+    } else if (command === 'remove_dupes') {
+      await removeDupliates(interaction);
     }
     // else if (command === 'experience') {
     //   await experience();
@@ -284,7 +447,7 @@ module.exports = {
 
     // async function emojinameFix() {
     //   logger.debug(`[${PREFIX}] emojinameFix`);
-    //   const users = await db.collection('users').get();
+    //   const users = await db.collection(firebaseUserDbName).get();
     //   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
     //   users.forEach(async user => {
     //     const userKey = user.id;
@@ -328,7 +491,7 @@ module.exports = {
     //           delete userData.discord.karma_received['<:ts_down:960161563849932892>'];
     //         }
     //       }
-    //       db.collection('users').doc(userKey).set(userData);
+    //       db.collection(firebaseUserDbName).doc(userKey).set(userData);
     //     }
     //     logger.debug(`[${PREFIX}] Done cleaning karma!`);
     //   });
@@ -336,7 +499,7 @@ module.exports = {
     // await emojinameFix();
     // async function karmaFix() {
     //   logger.debug(`[${PREFIX}] Cleaning karma`);
-    //   const users = await db.collection('users').get();
+    //   const users = await db.collection(firebaseUserDbName).get();
     //   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
     //   // users.forEach(async doc => {
     //   for (let i = 0; i < users.size; i += 1) {
@@ -352,7 +515,7 @@ module.exports = {
     //           userData.karma_received = userData.karma_recieved;
     //           delete userData.karma_recieved;
     //           // logger.debug(`[${PREFIX}] userData2 ${JSON.stringify(userData, null, 2)}!`);
-    //           db.collection('users').doc(doc.id).set(userData);
+    //           db.collection(firebaseUserDbName).doc(doc.id).set(userData);
     //         }
     //       }
     //     }
@@ -363,7 +526,7 @@ module.exports = {
 
     // async function discordTransition() {
     //   logger.debug(`[${PREFIX}] Cleaning Discord DB...`);
-    //   const users = await db.collection('users').get();
+    //   const users = await db.collection(firebaseUserDbName).get();
     //   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
     //   // users.forEach(async doc => {
     //   for (let i = 0; i < users.size; i += 1) {
@@ -407,7 +570,7 @@ module.exports = {
     //         delete userData.reactionRoles;
     //         delete userData.joinedTimestamp;
     //         // logger.debug(`[${PREFIX}] userData2 ${JSON.stringify(userData, null, 2)}!`);
-    //         db.collection('users').doc(doc.id).set(userData);
+    //         db.collection(firebaseUserDbName).doc(doc.id).set(userData);
     //       }
     //     }
     //   }
@@ -417,7 +580,7 @@ module.exports = {
 
     // async function nameFix() {
     //   logger.debug(`[${PREFIX}] Cleaning karma`);
-    //   const users = await db.collection('users').get();
+    //   const users = await db.collection(firebaseUserDbName).get();
     //   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
     //   // users.forEach(async doc => {
     //   for (let i = 0; i < users.size; i += 1) {
@@ -428,102 +591,12 @@ module.exports = {
     //       const userData = doc.data();
     //       userData.accountName = userData.name;
     //       delete userData.name;
-    //       db.collection('users').doc(doc.id).set(userData);
+    //       db.collection(firebaseUserDbName).doc(doc.id).set(userData);
     //     }
     //   }
     //   logger.debug(`[${PREFIX}] Done cleaning karma!`);
     // }
     // await nameFix();
-
-    // This command will check for duplicates within the database and merge them
-    // This is a very slow command and should be run sparingly
-    // users.forEach(async user => {
-    //   const userKey = user.id;
-    //   const userValue = user.data();
-    //   const userId = userValue.discord.id;
-    //   if (userId !== '177537158419054592') return;
-    //   logger.debug(`${PREFIX}: Checking user ${userId}`);
-    //   const userKg = userValue.karma_given;
-    //   const userKr = userValue.karma_received;
-    //   const userReminders = userValue.reminders;
-    //   let userTimezone = userValue.timezone;
-    //   const dupeUserDb = [];
-    //   users.forEach(subUser => {
-    //     const subUserKey = subUser.id;
-    //     const subUserValue = subUser.data();
-    //     if (subUserValue.discord.id === userId) {
-    //       logger.debug(`${PREFIX}: ${subUserValue.discord_username} has a dupe!`);
-    //       dupeUserDb.push({
-    //         sub_user_key: subUserKey,
-    //         sub_user_value: subUserValue,
-    //       });
-    //     }
-    //   });
-    //   logger.debug(
-    // `${PREFIX}: ${dupeUserDb.length} dupe(s) found for ${userValue.discord_username}`);
-    //   if (dupeUserDb.length > 1) {
-    //     dupeUserDb.forEach(dupeUser => {
-    //       const dupeUserKey = dupeUser.sub_user_key;
-    //       const dupeUserValue = dupeUser.sub_user_value;
-    //       const dupeUserKg = dupeUserValue.karma_given;
-    //       const dupeUserKr = dupeUserValue.karma_received;
-    //       const dupeUserReminders = dupeUserValue.reminders;
-    //       const dupeUserTimezone = dupeUserValue.timezone;
-    //       if (dupeUserKg !== userKg && dupeUserKg !== undefined) {
-    //         logger.debug(`[${PREFIX}] Karma Given is different, updating...`);
-    //         // Loop through the keys in dupe_user_kg and add them to user_kg
-    //         Object.keys(dupeUserKg).forEach(key => {
-    //           if (userKg[key] === undefined) {
-    //             userKg[key] = dupeUserKg[key];
-    //           } else {
-    //             userKg[key] += dupeUserKg[key];
-    //           }
-    //         });
-    //       }
-    //       if (dupeUserKr !== userKr && dupeUserKr !== undefined) {
-    //         logger.debug(`[${PREFIX}] Karma Recieved is different, updating...`);
-    //         // Loop through the keys in dupe_user_kr and add them to user_kr
-    //         Object.keys(dupeUserKr).forEach(key => {
-    //           if (userKr[key] === undefined) {
-    //             userKr[key] = dupeUserKr[key];
-    //           } else {
-    //             userKr[key] += dupeUserKr[key];
-    //           }
-    //         });
-    //       }
-    //       if (dupeUserReminders !== userReminders) {
-    //         logger.debug(`[${PREFIX}] Reminders are different, updating...`);
-    //         // Loop through the keys in dupe_user_reminders and add them to user_reminders
-    //         Object.keys(dupeUserReminders).forEach(key => {
-    //           if (userReminders[key] === undefined) {
-    //             userReminders[key] = dupeUserReminders[key];
-    //           } else {
-    //             userReminders[key] += dupeUserReminders[key];
-    //           }
-    //         });
-    //       }
-    //       if (dupeUserTimezone !== userTimezone) {
-    //         logger.debug(`[${PREFIX}] Timezone is different, updating...`);
-    //         userTimezone = dupeUserTimezone;
-    //       }
-    //       if (dupeUserKey !== userKey) {
-    //         logger.debug(
-    // `[${PREFIX}] Removing ${dupeUserValue.discord_username} from the database...`);
-    //         // db.collection('users').doc(dupe_user_key).delete();
-    //       }
-    //     });
-    //     logger.debug(`[${PREFIX}] Updating ${userValue.discord_username} in the database...`);
-    //     db.collection('users').doc(userKey).set({
-    //       // discord.id: userId,
-    //       discord_username: userValue.discord_username,
-    //       discord_discriminator: userValue.discord_discriminator,
-    //       karma_given: userKg || {},
-    //       karma_received: userKr || {},
-    //       reminders: userReminders || {},
-    //       timezone: userTimezone || '',
-    //     });
-    //   }
-    // });
 
     // // If the discord_username in users is contained in wrong_users, merge the two entries
     // users.forEach((doc) => {
@@ -545,7 +618,7 @@ module.exports = {
     //                 timezone: wrong_doc.data().timezone ? wrong_doc.data().timezone : '',
     //                 reminders: wrong_doc.data().reminders ? wrong_doc.data().reminders : {},
     //             };
-    //             db.collection('users').doc(doc.id).update(info);
+    //             db.collection(firebaseUserDbName).doc(doc.id).update(info);
     //             logger.debug(`[${PREFIX}] Updated ${doc.data().discord_username}`);
     //             return;
     //         }

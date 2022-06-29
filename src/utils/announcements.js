@@ -1,9 +1,9 @@
 'use strict';
 
-// const path = require('path').parse(__filename).name;
+const PREFIX = require('path').parse(__filename).name;
 const { stripIndents } = require('common-tags/lib');
 const template = require('./embed-template');
-// const logger = require('./logger');
+const logger = require('./logger');
 
 const {
   NODE_ENV,
@@ -34,6 +34,7 @@ const messageCounter = {};
 
 module.exports = {
   async announcements(message) {
+    logger.debug(`[${PREFIX}] starting!`);
     // logger.debug(`[${PREFIX}] (${messageCounter[message.channel.id] || 0})
     // Message sent by ${message.author.username} in ${message.channel.name} on ${message.guild}`);
     const channelGeneral = message.guild.channels.cache.get(channelGeneralId);
