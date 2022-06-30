@@ -272,8 +272,32 @@ module.exports = {
     // If there is no password provided, dont even try to connect
     if (!ircPassword) { return; }
 
+    let ircChannels = [];
+    if (NODE_ENV === 'production') {
+      ircChannels = [
+        '#tripsit',
+        '#tripsit1',
+        '#tripsit2',
+        '#tripsit3',
+        '#tripsit-dev',
+        '#content',
+        '#sandbox',
+        '#moderators',
+        '#meeting-room',
+        '#teamtripsit',
+        '#operations',
+        '#modhaven',
+        '#tripsit.me',
+      ];
+    } else {
+      ircChannels = [
+        '#sandbox-dev',
+      ];
+    }
+
     ircConfig.userName = ircUsername;
     ircConfig.password = ircPassword;
+    ircConfig.channels = ircChannels;
 
     // logger.debug(`[${PREFIX}] ircConfig: ${JSON.stringify(ircConfig, null, 2)}`);
     global.ircClient = new irc.Client(ircServer, ircUsername, ircConfig);
