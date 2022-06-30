@@ -32,6 +32,19 @@ if (NODE_ENV === 'development') {
 }
 const messageCounter = {};
 
+const voteBanEmoji = NODE_ENV === 'production'
+  ? '<:vote_ban:988998870837100565>'
+  : '<:vote_ban:989268075851427910>';
+const voteKickEmoji = NODE_ENV === 'production'
+  ? '<:vote_kick:989531430164004934>'
+  : '<:vote_kick:989268074945466388>';
+const voteTimeoutEmoji = NODE_ENV === 'production'
+  ? '<:vote_timeout:988998872875556904>'
+  : '<:vote_timeout:989268073792012299>';
+const voteUnderbanEmoji = NODE_ENV === 'production'
+  ? '<:vote_underban:989000993201082379>'
+  : '<:vote_underban:989268073192255529>';
+
 module.exports = {
   async announcements(message) {
     logger.debug(`[${PREFIX}] starting!`);
@@ -117,7 +130,24 @@ module.exports = {
       ⚠️ ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ ⚠️
       ${waterAndTeaEmojis.sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}`;
 
+    const moderate = stripIndents`
+      Help the community by using the community moderation tools!
+      When enough of these emojis are used on a message they trigger events:
+
+      ${voteBanEmoji} - Three of these will timeout the user and ask the mods to review.
+      If 24 hours go by without a review, the user will be banned.
+
+      ${voteKickEmoji} - Three of these will timeout the user and ask the mods to review.
+      If 24 hours go by without a review, the user will be kicked.
+
+      ${voteTimeoutEmoji} - Three of these will timeout the user for one hour.
+
+      ${voteUnderbanEmoji} - Three of these will apply the Newbie role on the user.
+      This forces them to only be able to look at the Harm Reduction Center!
+      `;
+
     const generalAnnouncements = [
+      moderate,
       hydrate,
       move,
       kipp,
