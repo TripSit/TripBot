@@ -134,14 +134,13 @@ module.exports = {
     }
     logger.debug(`[${PREFIX}] Experience type: ${expType}`);
 
-    // Get user data
-    const [actorData, actorFbid] = await getUserInfo(actor);
-
     // Get random value between 15 and 25
     const expPoints = Math.floor(Math.random() * (25 - 15 + 1)) + 15;
     const currMessageDate = message.createdTimestamp;
     logger.debug(`[${PREFIX}] currMessageDate: ${currMessageDate}`);
 
+    // Get user data
+    const [actorData, actorFbid] = await getUserInfo(actor);
     if ('experience' in actorData) {
       if (expType in actorData.experience) {
         const lastMessageDate = actorData.experience[expType].lastMessageDate;
@@ -181,6 +180,7 @@ module.exports = {
             levelExpPoints,
             totalExpPoints,
             lastMessageDate: currMessageDate,
+            lastMessageChannel: messageChannelId,
           };
         }
       } else {
@@ -189,6 +189,7 @@ module.exports = {
           levelExpPoints: expPoints,
           totalExpPoints: expPoints,
           lastMessageDate: currMessageDate,
+          lastMessageChannel: messageChannelId,
         };
         logger.debug(`[${PREFIX}] ${expPoints} experience points added to ${expType}`);
       }
@@ -199,6 +200,7 @@ module.exports = {
           levelExpPoints: expPoints,
           totalExpPoints: expPoints,
           lastMessageDate: currMessageDate,
+          lastMessageChannel: messageChannelId,
         },
       };
     }
