@@ -14,12 +14,46 @@ const {
 
 module.exports = {
   getUserInfo: async member => {
+    // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
+    // {
+    //   "nick": "Teknos",
+    //   "user": "~teknos",
+    //   "host": "tripsit/founder/Teknos",
+    //   "realname": "Eric",
+    //   "channels": [
+    //   ],
+    //   "server": "innsbruck.tripsit.me",
+    //   "serverinfo": "TripSit IRC Private Jet Receipt Server",
+    //   "operator": "Cantillating grace and they can't keep my pace",
+    //   "idle": "0",
+    //   "account": "Teknos",
+    //   "accountinfo": "is logged in as"
+    // }
+
+    // {
+    //   "nick": "Test",
+    //   "user": "~Test",
+    //   "host": "98.46.kp.sup",
+    //   "realname": "Test @ Webchat",
+    //   "channels": [
+    //     "#sandbox"
+    //   ],
+    //   "server": "innsbruck.tripsit.me",
+    //   "serverinfo": "TripSit IRC Private Jet Receipt Server",
+    //   "idle": "0"
+    // }
     let name = '';
-    if (member.user) {
+    if (member.host) {
+      logger.debug(`[${PREFIX}] member.host: ${JSON.stringify(member.host, null, 2)}`);
+      name = member.nick;
+    } else if (member.user) {
+      logger.debug(`[${PREFIX}] member.user: ${JSON.stringify(member.user, null, 2)}`);
       name = member.user.username;
     } else if (member.username) {
+      logger.debug(`[${PREFIX}] member.username: ${JSON.stringify(member.username, null, 2)}`);
       name = member.username;
     } else if (member.account) {
+      logger.debug(`[${PREFIX}] member.account: ${JSON.stringify(member.account, null, 2)}`);
       name = member.account.name;
     }
 
@@ -27,9 +61,10 @@ module.exports = {
     let memberFbid = null;
     let memberData = {};
     let memberType = '';
-    // logger.debug(`[${PREFIX}] member.id: ${member.id}`);
+    // If the member object has an ID value, then this is a message from discord
     if (member.id) {
-      // logger.debug(`[${PREFIX}] Member is from Discord!`);
+      logger.debug(`[${PREFIX}] Member is from Discord!`);
+      logger.debug(`[${PREFIX}] member.id: ${member.id}`);
       memberType = 'discord';
       memberData = {
         name: member.user ? member.user.username : member.username,
@@ -41,16 +76,19 @@ module.exports = {
         },
       };
     }
-    // logger.debug(`[${PREFIX}] member.host: ${member.host}`);
+    // If the member object has a host value, then this is a message from IRC
     if (member.host) {
-      // logger.debug(`[${PREFIX}] Member is from IRC!`);
+      logger.debug(`[${PREFIX}] Member is from IRC!`);
+      logger.debug(`[${PREFIX}] member.host: ${member.host}`);
+
       memberType = 'irc';
+      // If the user is registered on IRC:
       memberData = {
-        name: member.account,
+        accountName: member.account ? member.account : member.host,
         irc: {
-          accountName: member.account,
+          accountName: member.account ? member.account : null,
           vhost: member.host,
-          nickname: member.nickname,
+          nickname: member.nick,
         },
       };
     }
@@ -61,7 +99,7 @@ module.exports = {
         if (memberType === 'discord') {
           if (doc.data().discord) {
             if (doc.data().discord.id === member.id.toString()) {
-              // logger.debug(`[${PREFIX}] Discord member data found!`);
+              logger.debug(`[${PREFIX}] Discord member data found!`);
               memberData = doc.data();
               memberFbid = doc.id;
               return;
@@ -70,10 +108,18 @@ module.exports = {
         }
         if (memberType === 'irc') {
           if (doc.data().irc) {
-            if (doc.data().irc.accountName === member.account) {
-              // logger.debug(`[${PREFIX}] Irc member data found!`);
-              memberData = doc.data();
-              memberFbid = doc.id;
+            if (doc.data().irc.accountName) {
+              if (doc.data().irc.accountName === member.account) {
+                logger.debug(`[${PREFIX}] IRC member data found!`);
+                memberData = doc.data();
+                memberFbid = doc.id;
+              }
+            } else if (doc.data().irc.vhost) {
+              if (doc.data().irc.vhost === member.host) {
+                logger.debug(`[${PREFIX}] Irc member data found!`);
+                memberData = doc.data();
+                memberFbid = doc.id;
+              }
             }
           }
         }
@@ -82,7 +128,7 @@ module.exports = {
     return [memberData, memberFbid];
   },
   setUserInfo: async (fbid, data) => {
-    logger.debug(`[${PREFIX}] Saving ${data.discord.username}!`);
+    logger.debug(`[${PREFIX}] Saving ${data.accountName}!`);
 
     if (fbid !== null && fbid !== undefined) {
       // logger.debug(`[${PREFIX}] Updating actor data`);

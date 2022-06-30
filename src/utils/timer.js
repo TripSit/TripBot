@@ -106,7 +106,7 @@ module.exports = {
       i += 1;
       setTimeout(
         async () => {
-          logger.debug(`[${PREFIX}] iteration ${i}`);
+          // logger.debug(`[${PREFIX}] iteration ${i}`);
           const now = Date.now();
           // logger.debug(`[${PREFIX}] now: ${now}`);
           // global.userDb.forEach(async doc => {

@@ -22,6 +22,8 @@ const {
 module.exports = {
   name: 'messageCreate',
   async execute(message) {
+    // Only run on Tripsit
+    if (message.guild.id !== discordGuildId) { return; }
     // {
     //   "channelId": "960606558549594162",
     //   "guildId": "960606557622657026",
@@ -48,11 +50,17 @@ module.exports = {
     //   "interaction": null,
     //   "cleanContent": "test"
     // }
-
-    // Don't run on bot messages
-    if (message.author.bot) { return; }
-
     // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
+
+    // Messages sent by the relay will have an author.tag value of "username#0000"
+    // This is unique because users must have a tag > 0 on discord, so any tag with 0000 is a bot
+    // However, even bots have tags, so if a bot has a tag of 0000, it's spoofing a user
+
+    // Get the tag
+    const discriminator = message.author.tag.substring(message.author.tag.length - 4);
+
+    // Don't run on bots, unless they're spoofing a user
+    if (message.author.bot && discriminator !== '0000') { return; }
 
     // If this is a DM, run the modmail function.
     if (message.channel.type === 'DM') {
@@ -103,9 +111,6 @@ module.exports = {
 
       return modmailInitialResponse(message);
     }
-
-    // Only run on Tripsit
-    if (message.guild.id !== discordGuildId) { return; }
 
     // if (message.channel.parentId === channelIrcId) {
     //   // If this is a moderator channel, run the modmail function.

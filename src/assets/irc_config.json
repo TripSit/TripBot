@@ -3,7 +3,7 @@
   "realName": "TripSit Mod Relay",
   "password": null,
   "port": 6667,
-  "channels": ["#sandbox"],
+  "channels": null,
   "autoConnect": true,
   "autoRejoin": true,
   "autoRenick": true,
