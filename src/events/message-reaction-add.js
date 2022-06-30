@@ -6,7 +6,7 @@ const { karma } = require('../utils/chitragupta');
 const { communityMod } = require('../utils/community-mod');
 const { sparklePoints } = require('../utils/sparkle-points');
 const { removeDuplicates } = require('../utils/remove-duplicate-roles');
-const { flameboard } = require('../utils/flameboard');
+const { bestOf } = require('../utils/best-of-tripsit');
 
 const {
   discordGuildId,
@@ -40,7 +40,7 @@ module.exports = {
     }
 
     await karma(reaction, user, 1);
-    await flameboard(reaction, user);
+    await bestOf(reaction, user);
     await communityMod(reaction, user);
   },
 };
