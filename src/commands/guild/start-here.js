@@ -141,7 +141,7 @@ module.exports = {
 
       **We have an experience system!**
       As you chat with other users, you will gain experience and level up!
-      At level 5 you'll unlock the VIP role gain access to other channels.
+      At a certain point you'll unlock the VIP role gain access to other channels.
 
       **Certain channels are bridged with IRC!**
       The 🔗 icon in the channel name means the channel is linked with IRC.

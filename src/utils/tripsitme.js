@@ -353,11 +353,13 @@ module.exports = {
             ? stripIndents`
             Hey ${target}, the team thinks you could use assistance!
             The team will be with you as soon as they're available!
-            If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.`
+            If this is a medical emergency please contact your local /EMS
+            We do not call EMS or ambulance on behalf of anyone.`
             : stripIndents`
             Hey ${target}, thank you for asking for assistance!
             The team will be with you as soon as they're available!
-            If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.`;
+            If this is a medical emergency please contact your local /EMS
+            We do not call EMS or ambulance on behalf of anyone.`;
 
           if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
             firstMessage = testNotice + firstMessage;

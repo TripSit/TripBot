@@ -146,7 +146,7 @@ module.exports = {
 
         // [channelTripsitId]: '#', // Static channel
         // [channelSanctuaryId]: '#sanctuary', // Potato currently bridges
-        [channelTripsittersId]: '#tripsitters',
+        // [channelTripsittersId]: '#tripsitters',
         // [channelHowToTripsitId]: '#', // Static channel
         // [channelDrugQuestionsId]: '#', // Static channel
         [channelOpentripsitId]: '#tripsit',
@@ -248,14 +248,19 @@ module.exports = {
         [channelModhavenId]: channelModhavenWebhook,
         [channelTripsitmeId]: channelTripsitmeWebhook,
       };
-    } else {
+    }
+    // const channelTripsitId = '960606558373441559';
+    if (NODE_ENV === 'development') {
       ircBridgeConfig[0].channelMapping = {
         [channelSandboxId]: '#sandbox-dev',
+        // [channelTripsitId]: '#sandbox-dev',
       };
       webhooks = {
         [channelSandboxId]: channelSandboxWebhook,
+        // [channelTripsitId]: 'https://discord.com/api/webhooks/989633751778746378/4FafdaYJG9TmC-FuIiKZaA-v9cOEhGbKEO5iOL81iYE6Q5n9rfPOCPMN-MCrynIi0raf',
       };
     }
+
     // logger.debug(JSON.stringify(webhooks, null, 2));
     ircBridgeConfig[0].webhooks = webhooks;
 

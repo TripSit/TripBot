@@ -1,9 +1,9 @@
 'use strict';
 
-// const path = require('path').parse(__filename).name;
+const PREFIX = require('path').parse(__filename).name;
 const { stripIndents } = require('common-tags/lib');
 const template = require('./embed-template');
-// const logger = require('./logger');
+const logger = require('./logger');
 
 const {
   NODE_ENV,
@@ -32,8 +32,22 @@ if (NODE_ENV === 'development') {
 }
 const messageCounter = {};
 
+const voteBanEmoji = NODE_ENV === 'production'
+  ? '<:vote_ban:988998870837100565>'
+  : '<:vote_ban:989268075851427910>';
+const voteKickEmoji = NODE_ENV === 'production'
+  ? '<:vote_kick:989531430164004934>'
+  : '<:vote_kick:989268074945466388>';
+const voteTimeoutEmoji = NODE_ENV === 'production'
+  ? '<:vote_timeout:988998872875556904>'
+  : '<:vote_timeout:989268073792012299>';
+const voteUnderbanEmoji = NODE_ENV === 'production'
+  ? '<:vote_underban:989000993201082379>'
+  : '<:vote_underban:989268073192255529>';
+
 module.exports = {
   async announcements(message) {
+    logger.debug(`[${PREFIX}] starting!`);
     // logger.debug(`[${PREFIX}] (${messageCounter[message.channel.id] || 0})
     // Message sent by ${message.author.username} in ${message.channel.name} on ${message.guild}`);
     const channelGeneral = message.guild.channels.cache.get(channelGeneralId);
@@ -116,7 +130,24 @@ module.exports = {
       ⚠️ ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ ⚠️
       ${waterAndTeaEmojis.sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}`;
 
+    const moderate = stripIndents`
+      Help the community by using the community moderation tools!
+      When enough of these emojis are used on a message they trigger events:
+
+      ${voteBanEmoji} - Three of these will timeout the user and ask the mods to review.
+      If 24 hours go by without a review, the user will be banned.
+
+      ${voteKickEmoji} - Three of these will timeout the user and ask the mods to review.
+      If 24 hours go by without a review, the user will be kicked.
+
+      ${voteTimeoutEmoji} - Three of these will timeout the user for one hour.
+
+      ${voteUnderbanEmoji} - Three of these will apply the Newbie role on the user.
+      This forces them to only be able to look at the Harm Reduction Center!
+      `;
+
     const generalAnnouncements = [
+      moderate,
       hydrate,
       move,
       kipp,
@@ -126,8 +157,8 @@ module.exports = {
       'Try to dose with a friend. Share with your friend any substances you have taken and how much. Communicate if you are not feeling well or if you need a break.',
       'Sleep is important! A sleep deficit can impair you more than drinking alcohol.',
       'Do not drive after dosing, even if you don\'t feel the effects',
-      'Redosing is not usually a good idea: Sometimes both doses will kick in, sometimes your tollerance will waste both doses',
-      'LSD and Mushrooms share a tollerance! Check out /calc-psychedelics for more info',
+      'Redosing is not usually a good idea: Sometimes both doses will kick in, sometimes your tolerance will waste both doses',
+      'LSD and Mushrooms share a tolerance! Check out /calc-psychedelics for more info',
       'When snorting, crush your powder as fine as possible and make sure everyone has their own straw. Alternate nostrils between hits.',
       `Share pictures of your doggos, kittos and other creaturos in ${channelPets.toString()}!`,
       `Compare recipes and drool over someone's latest creation in ${channelFood.toString()}!`,
@@ -147,7 +178,7 @@ module.exports = {
       'If Tripbot starts speaking to you in a language other than English, you may need medical attention, please seek help!',
       `Help out your fellow humans by reading ${channelHowToTripsit.toString()} and pick up the helper role to help in ${channelTripsit.toString()}!`,
       `Check out ${channelVipWelcome.toString()} for some more information about TripSit VIPs!`,
-      `You must be level 5 to enter the ${channelViplounge.toString()}, it's meant to be more calm and a step away from ${channelGeneral.toString()}chat.`,
+      `You must be VIP to enter the ${channelViplounge.toString()}, it's meant to be more calm and a step away from ${channelGeneral.toString()}chat.`,
       `Team Tripsit is always happy to hear your feedback, join #talk-to-tripsit ${channelTalkToTS.toString()}and say hi!`,
       `Donate via the patreon or give our discord a boost to access the #gold-lounge ${channelGoldLounge.toString()}room, where everything is better because you paid for it!`,
       `Philosophy and spirituality talk is encouraged in the #psychonaut ${channelPsychonaut.toString()}room!`,

@@ -95,7 +95,7 @@ const PREFIX = require('path').parse(__filename).name; // eslint-disable-line
 
 let seconds = 60;
 if (NODE_ENV === 'development') {
-  seconds = 6000;
+  seconds = 5;
 }
 
 module.exports = {
@@ -134,7 +134,7 @@ module.exports = {
                     // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                     // Get the memeber from the guild
-                    logger.debug(`[${PREFIX}] userid: ${userid}`);
+                    // logger.debug(`[${PREFIX}] userid: ${userid}`);
                     // logger.debug(`[${PREFIX}] typeof userid: ${typeof userid}`);
                     let member = {};
                     try {
@@ -143,17 +143,36 @@ module.exports = {
                       // eslint-disable-next-line
                       member = await guildTripsit.members.fetch(userid);
                     } catch (err) {
-                      logger.info(`[${PREFIX}] Error getting member ${userid} from guild ${guildTripsit.name}, did they quit?`);
-                      // logger.debug(err);
-                      try {
-                        // logger.debug(`[${PREFIX}] Getting user ${userid} object`);
-                        // eslint-disable-next-line
-                        member = await client.users.fetch(userid);
-                      } catch (err2) {
-                        logger.debug(`[${PREFIX}] Error getting user ${userid} object`);
-                        // logger.debug(err2);
-                        return;
-                      }
+                      logger.debug(`[${PREFIX}] Error getting member ${userid} from guild ${guildTripsit.name}, did they quit? (A)`);
+                      // Extract actor data
+                      // eslint-disable-next-line
+                      const [actorData, actorFbid] = await getUserInfo(member);
+
+                      // Transform actor data
+                      delete actorData.reminders[reminderDate];
+
+                      // // Load actor data
+                      setUserInfo(actorFbid, actorData);
+
+                      const userDb = [];
+                      global.userDb.forEach(doc2 => {
+                        if (doc2.key === actorFbid) {
+                          userDb.push({
+                            key: doc2.key,
+                            value: actorData,
+                          });
+                          logger.debug(`[${PREFIX}] Updated actor in userDb`);
+                        } else {
+                          userDb.push({
+                            key: doc2.key,
+                            value: doc2.value,
+                          });
+                        }
+                      });
+                      Object.assign(global, { userDb });
+                      logger.debug(`[${PREFIX}] Updated global user data.`);
+                      // eslint-disable-next-line
+                      continue;
                     }
                     // logger.debug(`[${PREFIX}] member: ${member}`);
 
@@ -195,170 +214,124 @@ module.exports = {
             }
             if (doc.value.discord) {
               const discordData = doc.value.discord;
-              if (discordData.lastHelpedThreadId) {
-                logger.debug(`[${PREFIX}] ${discordData.username} processing!`);
+              if (discordData.communityMod) {
+                logger.debug(`[${PREFIX}] processing communityMod on ${discordData.username}!`);
+                // logger.debug(`[${PREFIX}] Processing communityMod on ${discordData.username}`);
 
-                // Get the guild
-                const guildTripsit = client.guilds.cache.get(discordGuildId);
-                // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
+                const autoActionTime = discordData.communityMod.date.seconds * 1000
+                  || new Date(discordData.communityMod.date);
+                // logger.debug(`[${PREFIX}] autoActionTime: ${autoActionTime}`);
 
-                // Get the memeber from the guild
-                let member = {};
-                try {
-                  // logger.debug(`[${PREFIX}] Getting member ${discordData.id}
-                  // from guild ${guildTripsit.name}`);
-                  // eslint-disable-next-line
-                  member = await guildTripsit.members.fetch(discordData.id);
-                } catch (err) {
-                  logger.info(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit?`);
-                  // logger.debug(err);
+                const autoActionName = discordData.communityMod.action;
+                // logger.debug(`[${PREFIX}] autoActionName: ${autoActionName}`);
+
+                const oneDayAgo = now - (1000 * 60 * 60 * 24);
+                // logger.debug(`[${PREFIX}] 24hr: ${oneDayAgo}`);
+
+                // const eightHoursAgo = now - 28800000 * 4;
+                // logger.debug(`[${PREFIX}] 8hr: ${eightHoursAgo}`);
+
+                const timeBetween = now - autoActionTime;
+                logger.debug(`[${PREFIX}] ${discordData.username} was ${autoActionName} ${ms(timeBetween, { long: true })} ago on ${autoActionTime}`);
+
+                if (oneDayAgo > autoActionTime) {
+                  logger.debug(`[${PREFIX}] Added ${autoActionTime} more than 24 hours ago`);
+
+                  // Get the guild
+                  const guildTripsit = client.guilds.cache.get(discordGuildId);
+                  // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
+
+                  // Get the memeber from the guild
+                  // logger.debug(`[${PREFIX}] mem.id: ${discordData.id}`);
+                  // logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
+                  let member = {};
                   try {
-                    // logger.debug(`[${PREFIX}] Getting user ${discordData.id} object`);
                     // eslint-disable-next-line
-                    member = await client.users.fetch(discordData.id);
-                  } catch (err2) {
-                    logger.debug(`[${PREFIX}] Error getting user ${discordData.id} object`);
-                    logger.debug(err2);
-                    return;
-                  }
-                }
-                // logger.debug(`[${PREFIX}] member: ${member}`);
-
-                // Get the role from the guild
-                const roleNeedshelp = guildTripsit.roles.cache.get(roleNeedshelpId);
-                // logger.debug(`[${PREFIX}] roleNeedshelp: ${roleNeedshelp.name}`);
-
-                // logger.debug(`[${PREFIX}] lastHelpedThreadId:
-                // ${discordData.lastHelpedThreadId}`);
-                let channelHelp = {};
-                try {
-                  // eslint-disable-next-line
-                  channelHelp = await guildTripsit.channels.fetch(
-                    discordData.lastHelpedThreadId,
-                  );
-                } catch (err) {
-                  logger.info(`[${PREFIX}] Error getting help channel ${discordData.lastHelpedThreadId}, was the channnel deleted?`);
-                  // logger.debug(err);
-                }
-                // logger.debug(`[${PREFIX}] channelHelp: ${channelHelp}`);
-
-                // logger.debug(`[${PREFIX}] lastHelpedThreadId:
-                // ${discordData.lastHelpedMetaThreadId}`);
-                let channelMeta = {};
-                try {
-                  // eslint-disable-next-line
-                  channelMeta = await guildTripsit.channels.fetch(
-                    discordData.lastHelpedMetaThreadId,
-                  );
-                } catch (err) {
-                  logger.info(`[${PREFIX}] Error getting meta channel ${discordData.lastHelpedMetaThreadId}, was the channnel deleted?`);
-                  // logger.debug(err);
-                }
-                // logger.debug(`[${PREFIX}] channelMeta: ${channelMeta}`);
-
-                const lastHelped = discordData.lastHelpedDate.seconds * 1000
-                  || new Date(discordData.lastHelpedDate);
-                // logger.debug(`[${PREFIX}] last: ${lastHelped}`);
-                const yesterday = now - 86400000;
-                // logger.debug(`[${PREFIX}] yest: ${yesterday}`);
-                const lastWeek = now - 604800000;
-                // logger.debug(`[${PREFIX}] week: ${yesterday}`);
-
-                const timeBetween = now - lastHelped;
-                const output = channelHelp.archived
-                  ? `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago in an archived channel`
-                  : `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago`;
-                logger.debug(output);
-
-                if (yesterday > lastHelped && !channelHelp.archived) {
-                  try {
+                    // logger.debug(`[${PREFIX}] Getting member ${discordData.id} from guild ${guildTripsit.name}`);
+                    // eslint-disable-next-line
+                    member = await guildTripsit.members.fetch(discordData.id);
+                  } catch (err) {
+                    logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (B)`);
                     // Extract actor data
                     // eslint-disable-next-line
-                    const [actorData] = await getUserInfo(member);
+                    const [actorData, actorFbid] = await getUserInfo(member);
 
-                    // For each role in targetRoles2, add it to the target
-                    if (actorData.discord.roles) {
-                      // actorData.discord.roles.forEach(roleName => {
-                      // eslint-disable-next-line
-                      for (const roleName of actorData.discord.roles) {
-                        const roleObj = guildTripsit.roles.cache.find(r => r.name === roleName);
-                        if (!ignoredRoles.includes(roleObj.id) && roleName !== '@everyone') {
-                          logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${member.user.username}`);
-                          member.roles.add(roleObj);
-                        }
+                    // Transform actor data
+                    if (autoActionName === 'vote_ban') {
+                      actorData.isBanned = true;
+                    }
+
+                    // Transform actor data
+                    actorData.discord.communityMod = null;
+
+                    // // Load actor data
+                    setUserInfo(actorFbid, actorData);
+
+                    const userDb = [];
+                    global.userDb.forEach(doc2 => {
+                      if (doc2.key === actorFbid) {
+                        userDb.push({
+                          key: doc2.key,
+                          value: actorData,
+                        });
+                        logger.debug(`[${PREFIX}] Updated actor in userDb`);
+                      } else {
+                        userDb.push({
+                          key: doc2.key,
+                          value: doc2.value,
+                        });
                       }
-                    }
-                    member.roles.remove(roleNeedshelp);
-                    logger.debug(`[${PREFIX}] Removed ${roleNeedshelp.name} from ${member.user.username}`);
-                  } catch (err) {
-                    logger.debug(`[${PREFIX}] Error removing role ${roleNeedshelp.name} from ${discordData.username}`);
-                    // logger.debug(err);
+                    });
+                    Object.assign(global, { userDb });
+                    logger.debug(`[${PREFIX}] Updated global user data.`);
+                    // eslint-disable-next-line
+                    continue;
                   }
+                  // logger.debug(`[${PREFIX}] member: ${member}`);
+
                   try {
-                    /* eslint-disable */
-                    if (channelMeta && !channelMeta.archived) {
-                      logger.debug(`[${PREFIX}] Archiving meta thread!`);
-                      channelMeta.setArchived(true, 'Auto-archiving after 24 hours');
+                    if (autoActionName === 'vote_kick') {
+                      logger.debug(`[${PREFIX}] Kicking ${discordData.username}`);
+                      guildTripsit.members.kick(member, 'Auto-action: communityMod vote_kick');
+                    } else if (autoActionName === 'vote_ban') {
+                      logger.debug(`[${PREFIX}] Banning ${discordData.username}`);
+                      guildTripsit.members.ban(member, {
+                        days: 7,
+                        reason: 'Auto-action: communityMod vote_ban',
+                      });
                     }
                   } catch (err) {
-                    logger.debug(`[${PREFIX}] Error archiving meta channel ${discordData.lastHelpedMetaThreadId}`);
-                    // logger.debug(err);
+                    logger.debug(`[${PREFIX}] Error ${autoActionName}`);
+                    logger.debug(err);
+                    return;
                   }
-                  try {
-                    if (channelHelp && !channelHelp.archived) {
-                      logger.debug(`[${PREFIX}] Archiving thread!`);
-                      channelHelp.setArchived(true, 'Auto-archiving after 24 hours');
-                    }
-                  } catch (err) {
-                    logger.debug(`[${PREFIX}] Error archiving channel ${discordData.lastHelpedThreadId}`);
-                    // logger.debug(err);
-                  }
-                }
-                if (lastWeek > lastHelped) {
-                  logger.debug(`[${PREFIX}] ${discordData.username} was last helped more than 7 days ago`);
 
                   // Extract actor data
+                  // eslint-disable-next-line
                   const [actorData, actorFbid] = await getUserInfo(member);
 
-                  // Transform actor data
-                  actorData.discord.lastHelpedMetaThreadId = null;
-                  actorData.discord.lastHelpedThreadId = null;
+                  if (autoActionName === 'vote_ban') {
+                    actorData.isBanned = true;
+                  }
 
-                  try {
-                    /* eslint-disable */
-                    if (channelMeta) {
-                      logger.debug(`[${PREFIX}] Removing meta channel ${discordData.lastHelpedMetaThreadId}`);
-                      channelMeta.delete();
-                    }
-                  } catch (err) {
-                    logger.debug(`[${PREFIX}] Error deleting meta channel ${discordData.lastHelpedMetaThreadId}`);
-                    // logger.debug(err);
-                  }
-                  try {
-                    if (channelHelp) {
-                      logger.debug(`[${PREFIX}] Removing thread ${discordData.lastHelpedThreadId}`);
-                      channelHelp.delete();
-                    }
-                  } catch (err) {
-                    logger.debug(`[${PREFIX}] Error deleting channel ${discordData.lastHelpedThreadId}`);
-                    // logger.debug(err);
-                  }
+                  // Transform actor data
+                  actorData.discord.communityMod = null;
 
                   // Load actor data
                   setUserInfo(actorFbid, actorData);
 
                   const userDb = [];
-                  global.userDb.forEach(doc => {
-                    if (doc.key === actorFbid) {
+                  global.userDb.forEach(doc2 => {
+                    if (doc2.key === actorFbid) {
                       userDb.push({
-                        key: doc.key,
+                        key: doc2.key,
                         value: actorData,
                       });
                       logger.debug(`[${PREFIX}] Updated actor in userDb`);
                     } else {
                       userDb.push({
-                        key: doc.key,
-                        value: doc.value,
+                        key: doc2.key,
+                        value: doc2.value,
                       });
                     }
                   });
@@ -367,7 +340,7 @@ module.exports = {
                 }
               }
               if (discordData.lastSetMindsetDate) {
-                // logger.debug(`[${PREFIX}] Processing mindset on ${discordData.username}`);
+                logger.debug(`[${PREFIX}] Processing lastSetMindsetDate on ${discordData.username}`);
                 // logger.debug(`[${PREFIX}] now: ${now}`);
 
                 const lastSetMindsetDate = discordData.lastSetMindsetDate.seconds * 1000
@@ -395,32 +368,51 @@ module.exports = {
                   // logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
                   let member = {};
                   try {
+                    // eslint-disable-next-line
                     // logger.debug(`[${PREFIX}] Getting member ${discordData.id} from guild ${guildTripsit.name}`);
+                    // eslint-disable-next-line
                     member = await guildTripsit.members.fetch(discordData.id);
                   } catch (err) {
-                    logger.info(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit?`);
-                    // logger.debug(err);
-                    try {
-                      // logger.debug(`[${PREFIX}] Getting user ${discordData.id} object`);
-                      member = await client.users.fetch(discordData.id);
-                    } catch (err2) {
-                      logger.debug(`[${PREFIX}] Error getting user ${discordData.id} object`);
-                      // logger.debug(err2);
-                      return;
-                    }
+                    logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (C)`);
+                    // eslint-disable-next-line
+                    member = await client.users.fetch(discordData.id);
+                    // Extract actor data
+                    // eslint-disable-next-line
+                    const [actorData, actorFbid] = await getUserInfo(member);
+
+                    // Transform actor data
+                    actorData.discord.lastSetMindset = null;
+                    actorData.discord.lastSetMindsetDate = null;
+
+                    // Load actor data
+                    setUserInfo(actorFbid, actorData);
+
+                    const userDb = [];
+                    global.userDb.forEach(doc2 => {
+                      if (doc2.key === actorFbid) {
+                        userDb.push({
+                          key: doc2.key,
+                          value: actorData,
+                        });
+                        logger.debug(`[${PREFIX}] Updated actor in userDb`);
+                      } else {
+                        userDb.push({
+                          key: doc2.key,
+                          value: doc2.value,
+                        });
+                      }
+                    });
+                    Object.assign(global, { userDb });
+                    logger.debug(`[${PREFIX}] Updated global user data.`);
+                    // eslint-disable-next-line
+                    continue;
                   }
                   // logger.debug(`[${PREFIX}] member: ${member}`);
-
-                  // Extract actor data
-                  const [actorData, actorFbid] = await getUserInfo(member);
-
-                  // Transform actor data
-                  actorData.discord.lastSetMindset = null;
-                  actorData.discord.lastSetMindsetDate = null;
 
                   try {
                     // Get the role from the guild
                     logger.debug(`[${PREFIX}] Getting role ${lastSetMindset} from guild ${guildTripsit.name}`);
+                    // eslint-disable-next-line
                     const roleMindset = guildTripsit.roles.cache.find(r => r.name === lastSetMindset);
                     logger.debug(`[${PREFIX}] roleMindset: ${roleMindset.name}`);
                     // Remove the role from the member
@@ -430,8 +422,212 @@ module.exports = {
                     }
                   } catch (err) {
                     logger.debug(`[${PREFIX}] Error removing role ${lastSetMindset} from ${discordData.username}`);
+                    return;
                     // logger.debug(err);
                   }
+
+                  // Extract actor data
+                  // eslint-disable-next-line
+                  const [actorData, actorFbid] = await getUserInfo(member);
+
+                  // Transform actor data
+                  actorData.discord.lastSetMindset = null;
+                  actorData.discord.lastSetMindsetDate = null;
+
+                  // Load actor data
+                  setUserInfo(actorFbid, actorData);
+
+                  const userDb = [];
+                  global.userDb.forEach(doc2 => {
+                    if (doc2.key === actorFbid) {
+                      userDb.push({
+                        key: doc2.key,
+                        value: actorData,
+                      });
+                      logger.debug(`[${PREFIX}] Updated actor in userDb`);
+                    } else {
+                      userDb.push({
+                        key: doc2.key,
+                        value: doc2.value,
+                      });
+                    }
+                  });
+                  Object.assign(global, { userDb });
+                  logger.debug(`[${PREFIX}] Updated global user data.`);
+                }
+              }
+              if (discordData.lastHelpedThreadId) {
+                logger.debug(`[${PREFIX}] processing lastHelpedThreadId on ${discordData.username}!`);
+                // Get the guild
+                const guildTripsit = client.guilds.cache.get(discordGuildId);
+                // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
+
+                // Get the memeber from the guild
+                let member = {};
+                try {
+                  // logger.debug(`[${PREFIX}] Getting member ${discordData.id}
+                  // from guild ${guildTripsit.name}`);
+                  // eslint-disable-next-line
+                  member = await guildTripsit.members.fetch(discordData.id);
+                } catch (err) {
+                  logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (D)`);
+                  // eslint-disable-next-line
+                  member = await client.users.fetch(discordData.id);
+
+                  // Extract actor data
+                  // eslint-disable-next-line
+                  const [actorData, actorFbid] = await getUserInfo(member);
+
+                  // Transform actor data
+                  delete actorData.discord.lastHelpedMetaThreadId;
+                  delete actorData.discord.lastHelpedThreadId;
+
+                  // Load actor data
+                  setUserInfo(actorFbid, actorData);
+
+                  const userDb = [];
+                  global.userDb.forEach(doc2 => {
+                    if (doc2.key === actorFbid) {
+                      userDb.push({
+                        key: doc2.key,
+                        value: actorData,
+                      });
+                      logger.debug(`[${PREFIX}] Updated actor in userDb`);
+                    } else {
+                      userDb.push({
+                        key: doc2.key,
+                        value: doc2.value,
+                      });
+                    }
+                  });
+                  Object.assign(global, { userDb });
+                  logger.debug(`[${PREFIX}] Updated global user data.`);
+                  // eslint-disable-next-line
+                  continue;
+                }
+                // logger.debug(`[${PREFIX}] member: ${member}`);
+
+                // Get the role from the guild
+                const roleNeedshelp = guildTripsit.roles.cache.get(roleNeedshelpId);
+                // logger.debug(`[${PREFIX}] roleNeedshelp: ${roleNeedshelp.name}`);
+
+                // logger.debug(`[${PREFIX}] lastHelpedThreadId:
+                // ${discordData.lastHelpedThreadId}`);
+                let channelHelp = {};
+                try {
+                  // eslint-disable-next-line
+                  channelHelp = await guildTripsit.channels.fetch(
+                    discordData.lastHelpedThreadId,
+                  );
+                } catch (err) {
+                  logger.debug(`[${PREFIX}] Error getting help channel ${discordData.lastHelpedThreadId}, was the channnel deleted?`);
+                  // logger.debug(err);
+                }
+                // logger.debug(`[${PREFIX}] channelHelp: ${JSON.stringify(channelHelp, null, 2)}`);
+
+                // logger.debug(`[${PREFIX}] lastHelpedThreadId:
+                // ${discordData.lastHelpedMetaThreadId}`);
+                let channelMeta = {};
+                try {
+                  // eslint-disable-next-line
+                  channelMeta = await guildTripsit.channels.fetch(
+                    discordData.lastHelpedMetaThreadId,
+                  );
+                } catch (err) {
+                  logger.debug(`[${PREFIX}] Error getting meta channel ${discordData.lastHelpedMetaThreadId}, was the channnel deleted?`);
+                  // logger.debug(err);
+                }
+                // logger.debug(`[${PREFIX}] channelMeta: ${channelMeta}`);
+
+                const lastHelped = discordData.lastHelpedDate.seconds * 1000
+                  || new Date(discordData.lastHelpedDate);
+                // logger.debug(`[${PREFIX}] last: ${lastHelped}`);
+                const yesterday = now - 86400000;
+                // logger.debug(`[${PREFIX}] yest: ${yesterday}`);
+                const lastWeek = now - 604800000;
+                // logger.debug(`[${PREFIX}] week: ${yesterday}`);
+
+                const timeBetween = now - lastHelped;
+                const output = channelHelp.archived
+                  ? `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago in an archived channel`
+                  : `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago`;
+                logger.debug(output);
+
+                // eslint-disable-next-line
+                if (yesterday > lastHelped && (Object.keys(channelHelp).length > 0 && !channelHelp.archived)) {
+                  logger.debug(`[${PREFIX}] ${discordData.username} was last helped more than 24 hours ago`);
+                  try {
+                    // Extract actor data
+                    // eslint-disable-next-line
+                    const [actorData] = await getUserInfo(member);
+
+                    // For each role in targetRoles2, add it to the target
+                    if (actorData.discord.roles) {
+                      // actorData.discord.roles.forEach(roleName => {
+                      // eslint-disable-next-line
+                      for (const roleName of actorData.discord.roles) {
+                        const roleObj = guildTripsit.roles.cache.find(r => r.name === roleName);
+                        if (!ignoredRoles.includes(roleObj.id) && roleName !== '@everyone') {
+                          logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${member.user.username}`);
+                          member.roles.add(roleObj);
+                        }
+                      }
+                    }
+                    member.roles.remove(roleNeedshelp);
+                    logger.debug(`[${PREFIX}] Removed ${roleNeedshelp.name} from ${member.user.username}`);
+                  } catch (err) {
+                    logger.debug(`[${PREFIX}] Error removing role ${roleNeedshelp.name} from ${discordData.username}`);
+                    // logger.debug(err);
+                  }
+                  try {
+                    /* eslint-disable */
+                    if (channelMeta && !channelMeta.archived) {
+                      channelMeta.setArchived(true, 'Auto-archiving after 24 hours');
+                      logger.debug(`[${PREFIX}] Archived meta thread!`);
+                    }
+                  } catch (err) {
+                    logger.debug(`[${PREFIX}] Error archiving meta channel ${discordData.lastHelpedMetaThreadId}`);
+                    // logger.debug(err);
+                  }
+                  try {
+                    if (channelHelp && !channelHelp.archived) {
+                      channelHelp.setArchived(true, 'Auto-archiving after 24 hours');
+                      logger.debug(`[${PREFIX}] Archived thread!`);
+                    }
+                  } catch (err) {
+                    logger.debug(`[${PREFIX}] Error archiving channel ${discordData.lastHelpedThreadId}`);
+                    // logger.debug(err);
+                  }
+                }
+                if (lastWeek > lastHelped) {
+                  logger.debug(`[${PREFIX}] ${discordData.username} was last helped more than 7 days ago`);
+
+                  try {
+                    /* eslint-disable */
+                    if (channelMeta) {
+                      channelMeta.delete();
+                      logger.debug(`[${PREFIX}] Removed meta channel ${discordData.lastHelpedMetaThreadId}`);
+                    }
+                  } catch (err) {
+                    logger.debug(`[${PREFIX}] Error deleting meta channel ${discordData.lastHelpedMetaThreadId}`);
+                    // logger.debug(err);
+                  }
+                  try {
+                    if (channelHelp) {
+                      channelHelp.delete();
+                      logger.debug(`[${PREFIX}] Removed thread ${discordData.lastHelpedThreadId}`);
+                    }
+                  } catch (err) {
+                    logger.debug(`[${PREFIX}] Error deleting channel ${discordData.lastHelpedThreadId}`);
+                    // logger.debug(err);
+                  }
+
+                  // Extract actor data
+                  const [actorData, actorFbid] = await getUserInfo(member);
+
+                  // Transform actor data
+                  delete actorData.discord.lastHelpedMetaThreadId;
+                  delete actorData.discord.lastHelpedThreadId;
 
                   // Load actor data
                   setUserInfo(actorFbid, actorData);
@@ -453,7 +649,6 @@ module.exports = {
                   });
                   Object.assign(global, { userDb });
                   logger.debug(`[${PREFIX}] Updated global user data.`);
-
                 }
               }
             }

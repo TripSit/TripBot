@@ -67,6 +67,7 @@ exports.channelCreativeId = process.env.channelCreativeId;
 exports.channelPsychedelicId = process.env.channelPsychedelicId;
 
 exports.channelVipWelcomeId = process.env.channelVipWelcomeId;
+exports.channelBestOfTripsitId = process.env.channelBestOfTripsitId;
 exports.channelViploungeId = process.env.channelViploungeId;
 exports.channelGoldLoungeId = process.env.channelGoldLoungeId;
 exports.channelTalkToTSId = process.env.channelTalkToTSId;
@@ -160,6 +161,11 @@ exports.rolePinkId = process.env.rolePinkId;
 exports.roleBrownId = process.env.roleBrownId;
 exports.roleBlackId = process.env.roleBlackId;
 exports.roleWhiteId = process.env.roleWhiteId;
+
+exports.roleVotebannedId = process.env.roleVotebannedId;
+exports.roleVotekickedId = process.env.roleVotekickedId;
+exports.roleVotetimeoutId = process.env.roleVotetimeoutId;
+exports.roleVoteunderbanId = process.env.roleVoteunderbanId;
 
 exports.channelAnnouncementsWebhook = process.env.channelAnnouncementsWebhook;
 exports.channelStartWebhook = process.env.channelStartWebhook;
