@@ -10,7 +10,7 @@ module.exports = {
 
     // Do a whois on the user to get their account name
     let data = null;
-    await global.ircClient.whois(nick, async resp => {
+    await global.ircClient.whois(newNick || nick, async resp => {
       data = resp;
     });
 
@@ -22,7 +22,7 @@ module.exports = {
 
     // Check if the user is FOUND on IRC, if not, ignore it
     if (!data.host) {
-      logger.debug(`[${PREFIX}] ${nick} not found on IRC, ignoring!`);
+      logger.debug(`[${PREFIX}] ${newNick || nick} not found on IRC, ignoring!`);
       return;
     }
 
