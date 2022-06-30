@@ -1,7 +1,6 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { time } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('./logger');
