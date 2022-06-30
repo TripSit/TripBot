@@ -57,7 +57,7 @@ module.exports = {
     const channelScience = message.client.channels.cache.get(channelScienceId);
     const channelGaming = message.client.channels.cache.get(channelGamingId);
     const channelCreative = message.client.channels.cache.get(channelCreativeId);
-    const channelPsychedelic = message.client.channels.cache.get(channelPsychedelicId);
+    // const channelPsychedelic = message.client.channels.cache.get(channelPsychedelicId);
 
     const channelHowToTripsit = message.client.channels.cache.get(channelHowToTripsitId);
     const channelTripsit = message.client.channels.cache.get(channelTripsitId);
@@ -166,7 +166,7 @@ module.exports = {
       `Do you enjoy playing games? Join ${channelGaming.toString()} for gaming talk and join the TripSit Steam group!`,
       `Science enthusiasts of all types are welcome in ${channelScience.toString()}!`,
       `Show off your latest hobby, painting, or even song of your own making in ${channelCreative.toString()}!`,
-      `Discuss psychedelics and other fun stuff while tripping in ${channelPsychedelic.toString()}!`,
+      // `Discuss psychedelics and other fun stuff while tripping in ${channelPsychedelic.toString()}!`,
       'Track your dosages with the /idose command!',
       'Set your birthday with the /birthday command!',
       'Set your timeszone with the /time command!',
