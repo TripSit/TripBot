@@ -178,7 +178,7 @@ module.exports = {
       'If Tripbot starts speaking to you in a language other than English, you may need medical attention, please seek help!',
       `Help out your fellow humans by reading ${channelHowToTripsit.toString()} and pick up the helper role to help in ${channelTripsit.toString()}!`,
       `Check out ${channelVipWelcome.toString()} for some more information about TripSit VIPs!`,
-      `You must be level 5 to enter the ${channelViplounge.toString()}, it's meant to be more calm and a step away from ${channelGeneral.toString()}chat.`,
+      `You must be VIP to enter the ${channelViplounge.toString()}, it's meant to be more calm and a step away from ${channelGeneral.toString()}chat.`,
       `Team Tripsit is always happy to hear your feedback, join #talk-to-tripsit ${channelTalkToTS.toString()}and say hi!`,
       `Donate via the patreon or give our discord a boost to access the #gold-lounge ${channelGoldLounge.toString()}room, where everything is better because you paid for it!`,
       `Philosophy and spirituality talk is encouraged in the #psychonaut ${channelPsychonaut.toString()}room!`,
