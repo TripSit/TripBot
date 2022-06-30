@@ -225,5 +225,6 @@ module.exports = {
       ? messageCounter[message.channel.id] + 1
       : 1;
     // logger.debug(`[${PREFIX}] messageCounter: ${messageCounter}`);
+    logger.debug(`[${PREFIX}] finished!`);
   },
 };

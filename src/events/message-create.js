@@ -50,7 +50,7 @@ module.exports = {
     //   "interaction": null,
     //   "cleanContent": "test"
     // }
-    logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
+    // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
 
     // Messages sent by the relay will have an author.tag value of "username#0000"
     // This is unique because users must have a tag > 0 on discord, so any tag with 0000 is a bot
