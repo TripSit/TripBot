@@ -264,7 +264,7 @@ module.exports = {
     // logger.debug(JSON.stringify(webhooks, null, 2));
     ircBridgeConfig[0].webhooks = webhooks;
 
-    logger.debug(`[${PREFIX}] ircBridgeConfig: ${JSON.stringify(ircBridgeConfig, null, 2)}`);
+    // logger.debug(`[${PREFIX}] ircBridgeConfig: ${JSON.stringify(ircBridgeConfig, null, 2)}`);
     discordIRC(ircBridgeConfig);
   },
   async connectIRC(client) {

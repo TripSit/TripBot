@@ -134,7 +134,7 @@ module.exports = {
                     // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                     // Get the memeber from the guild
-                    logger.debug(`[${PREFIX}] userid: ${userid}`);
+                    // logger.debug(`[${PREFIX}] userid: ${userid}`);
                     // logger.debug(`[${PREFIX}] typeof userid: ${typeof userid}`);
                     let member = {};
                     try {
@@ -242,7 +242,7 @@ module.exports = {
                   // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                   // Get the memeber from the guild
-                  logger.debug(`[${PREFIX}] mem.id: ${discordData.id}`);
+                  // logger.debug(`[${PREFIX}] mem.id: ${discordData.id}`);
                   // logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
                   let member = {};
                   try {
@@ -523,7 +523,7 @@ module.exports = {
                   logger.debug(`[${PREFIX}] Error getting help channel ${discordData.lastHelpedThreadId}, was the channnel deleted?`);
                   // logger.debug(err);
                 }
-                logger.debug(`[${PREFIX}] channelHelp: ${JSON.stringify(channelHelp, null, 2)}`);
+                // logger.debug(`[${PREFIX}] channelHelp: ${JSON.stringify(channelHelp, null, 2)}`);
 
                 // logger.debug(`[${PREFIX}] lastHelpedThreadId:
                 // ${discordData.lastHelpedMetaThreadId}`);
