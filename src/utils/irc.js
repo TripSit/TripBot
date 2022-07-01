@@ -37,14 +37,16 @@ const {
   channelOpentripsit2Webhook,
   channelClosedtripsitWebhook,
 
-  channelGeneralWebhook,
-  channelPetsWebhook,
-  channelFoodWebhook,
-  channelMusicWebhook,
-  channelMoviesWebhook,
-  channelGamingWebhook,
-  channelScienceWebhook,
-  channelCreativeWebhook,
+  // channelGeneralWebhook,
+  // channelPetsWebhook,
+  // channelFoodWebhook,
+  // channelMusicWebhook,
+  // channelMoviesWebhook,
+  // channelGamingWebhook,
+  // channelScienceWebhook,
+  // channelCreativeWebhook,
+
+  channelLoungeWebhook,
   channelOpiatesWebhook,
   channelDeleriantsWebhook,
   channelStimulantsWebhook,
@@ -100,14 +102,16 @@ const {
   channelOpentripsit2Id,
   channelClosedtripsitId,
 
-  channelGeneralId,
-  channelPetsId,
-  channelFoodId,
-  channelMusicId,
-  channelMoviesId,
-  channelGamingId,
-  channelScienceId,
-  channelCreativeId,
+  // channelGeneralId,
+  // channelPetsId,
+  // channelFoodId,
+  // channelMusicId,
+  // channelMoviesId,
+  // channelGamingId,
+  // channelScienceId,
+  // channelCreativeId,
+
+  channelLoungeId,
   channelOpiatesId,
   channelDeleriantsId,
   channelStimulantsId,
@@ -180,16 +184,17 @@ module.exports = {
         [channelOpentripsit2Id]: '#tripsit2',
         [channelClosedtripsitId]: '#tripsit3',
 
-        [channelGeneralId]: '#lounge', // Phase2
-        [channelPetsId]: '#pets', // Phase2
-        [channelFoodId]: '#cooking', // Phase2
-        [channelMusicId]: '#music', // Phase2
-        [channelMoviesId]: '#movies', // Phase2
-        [channelGamingId]: '#gaming', // Phase2
-        [channelScienceId]: '#science', // Phase2
-        [channelCreativeId]: '#creative', // Phase2
+        // [channelGeneralId]: '#lounge', // Phase2
+        // [channelPetsId]: '#pets', // Phase2
+        // [channelFoodId]: '#cooking', // Phase2
+        // [channelMusicId]: '#music', // Phase2
+        // [channelMoviesId]: '#movies', // Phase2
+        // [channelGamingId]: '#gaming', // Phase2
+        // [channelScienceId]: '#science', // Phase2
+        // [channelCreativeId]: '#creative', // Phase2
+
+        [channelLoungeId]: '#lounge', // Phusion agreed
         [channelOpiatesId]: '#opiates', // Phusion agreed
-        [channelDeleriantsId]: '#deleriants', // Phase2
         [channelStimulantsId]: '#stims', // Phase2
         [channelDepressantsId]: '#depressants', // Phase2
         [channelDissociativesId]: '#dissociatives', // Phase2
@@ -246,14 +251,16 @@ module.exports = {
         [channelOpentripsit2Id]: channelOpentripsit2Webhook,
         [channelClosedtripsitId]: channelClosedtripsitWebhook,
 
-        [channelGeneralId]: channelGeneralWebhook,
-        [channelPetsId]: channelPetsWebhook,
-        [channelFoodId]: channelFoodWebhook,
-        [channelMusicId]: channelMusicWebhook,
-        [channelMoviesId]: channelMoviesWebhook,
-        [channelGamingId]: channelGamingWebhook,
-        [channelScienceId]: channelScienceWebhook,
-        [channelCreativeId]: channelCreativeWebhook,
+        // [channelGeneralId]: channelGeneralWebhook,
+        // [channelPetsId]: channelPetsWebhook,
+        // [channelFoodId]: channelFoodWebhook,
+        // [channelMusicId]: channelMusicWebhook,
+        // [channelMoviesId]: channelMoviesWebhook,
+        // [channelGamingId]: channelGamingWebhook,
+        // [channelScienceId]: channelScienceWebhook,
+        // [channelCreativeId]: channelCreativeWebhook,
+
+        [channelLoungeId]: channelLoungeWebhook,
         [channelOpiatesId]: channelOpiatesWebhook,
         [channelDeleriantsId]: channelDeleriantsWebhook,
         [channelStimulantsId]: channelStimulantsWebhook,

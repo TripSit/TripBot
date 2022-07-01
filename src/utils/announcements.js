@@ -132,18 +132,12 @@ module.exports = {
 
     const moderate = stripIndents`
       Help the community by using the community moderation tools!
-      When enough of these emojis are used on a message they trigger events:
+      If one of these reactions are applied to a message 3 times, various things will happen:
 
-      ${voteBanEmoji} - Three of these will timeout the user and ask the mods to review.
-      If 24 hours go by without a review, the user will be banned.
-
-      ${voteKickEmoji} - Three of these will timeout the user and ask the mods to review.
-      If 24 hours go by without a review, the user will be kicked.
-
-      ${voteTimeoutEmoji} - Three of these will timeout the user for one hour.
-
-      ${voteUnderbanEmoji} - Three of these will apply the Newbie role on the user.
-      This forces them to only be able to look at the Harm Reduction Center!
+      ${voteTimeoutEmoji} - One-hour timeout. Mods will review context and take further action as appropriate.
+      ${voteKickEmoji} - One-day timeout & KICK request. Kicked after a day if mods don't say otherwise.
+      ${voteBanEmoji} - One-day timeout & BAN request. Kicked after a day if mods don't say otherwise.
+      ${voteUnderbanEmoji} - Request age verification. Quarantines the user from 18+ content pending review.
       `;
 
     const generalAnnouncements = [
