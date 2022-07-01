@@ -223,7 +223,7 @@ module.exports = {
 
         // [channelModlogId]: '#', // No plans to bridge
         [channelModeratorsId]: '#moderators',
-        [channelMeetingroomId]: '#teamtripsit',
+        [channelMeetingroomId]: '#meeting-room',
         [channelTeamtripsitId]: '#teamtripsit',
         [channelOperatorsId]: '#operations',
         [channelModhavenId]: '#modhaven',
