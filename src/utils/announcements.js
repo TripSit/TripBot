@@ -147,8 +147,8 @@ module.exports = {
       `;
 
     const generalAnnouncements = [
-      moderate,
       hydrate,
+      moderate,
       move,
       kipp,
       'Reminder: For the safety of everyone involved, sourcing (buying or selling anything) is against our network rules. If you are contacted by someone asking to find, buy, trade, or give you drugs, you can report it by using /report. This rule also applies to private messages. Be safe and don\'t trust random internet folk.',
