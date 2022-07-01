@@ -65,6 +65,8 @@ exports.channelMoviesId = process.env.channelMoviesId;
 exports.channelGamingId = process.env.channelGamingId;
 exports.channelScienceId = process.env.channelScienceId;
 exports.channelCreativeId = process.env.channelCreativeId;
+
+exports.channelLoungeId = process.env.channelLoungeId;
 exports.channelOpiatesId = process.env.channelOpiatesId;
 exports.channelDeleriantsId = process.env.channelDeleriantsId;
 exports.channelStimulantsId = process.env.channelStimulantsId;
@@ -199,6 +201,8 @@ exports.channelMoviesWebhook = process.env.channelMoviesWebhook;
 exports.channelGamingWebhook = process.env.channelGamingWebhook;
 exports.channelScienceWebhook = process.env.channelScienceWebhook;
 exports.channelCreativeWebhook = process.env.channelCreativeWebhook;
+
+exports.channelLoungeWebhook = process.env.channelLoungeWebhook;
 exports.channelOpiatesWebhook = process.env.channelOpiatesWebhook;
 exports.channelDeleriantsWebhook = process.env.channelDeleriantsWebhook;
 exports.channelStimulantsWebhook = process.env.channelStimulantsWebhook;
