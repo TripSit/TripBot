@@ -10,7 +10,7 @@ const PREFIX = path.parse(__filename).name;
 
 const {
   discordGuildId,
-  channelBotspamId,
+  channelTripbotlogsId,
   channelTripsitId,
   channelSanctuaryId,
   channelTripsittersId,
@@ -170,7 +170,7 @@ module.exports = {
 
             const embed = template.embedTemplate();
             embed.setDescription(`${actor.username} has leveled up to ${expType} level ${level + 1}!`);
-            const channelTripbotlogs = message.client.channels.cache.get(channelBotspamId);
+            const channelTripbotlogs = message.client.channels.cache.get(channelTripbotlogsId);
             channelTripbotlogs.send({ embeds: [embed], ephemeral: false });
             level += 1;
             levelExpPoints -= expToLevel;
