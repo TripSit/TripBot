@@ -7,7 +7,7 @@ const logger = require('./logger');
 const ircConfig = require('../assets/irc_config.json');
 const ircBridgeConfig = require('../assets/irc_bridge_config.json');
 const { watcher } = require('./uatu');
-
+const { experience } = require('./experience');
 const { verifyLink } = require('../commands/guild/link-accounts');
 
 const PREFIX = path.parse(__filename).name;
@@ -83,7 +83,7 @@ const {
   channelMeetingroomWebhook,
   channelTeamtripsitWebhook,
   channelOperatorsWebhook,
-  channelModhavenWebhook,
+  // channelModhavenWebhook,
   channelTripsitmeWebhook,
 
   // channelAnnouncementsId,
@@ -149,7 +149,7 @@ const {
   channelMeetingroomId,
   channelTeamtripsitId,
   channelOperatorsId,
-  channelModhavenId,
+  // channelModhavenId,
   channelTripsitmeId,
 } = require('../../env');
 
@@ -231,7 +231,7 @@ module.exports = {
         [channelMeetingroomId]: '#meeting-room',
         [channelTeamtripsitId]: '#teamtripsit',
         [channelOperatorsId]: '#operations',
-        [channelModhavenId]: '#modhaven',
+        // [channelModhavenId]: '#modhaven',
         [channelTripsitmeId]: '#tripsit.me',
       };
       webhooks = {
@@ -296,7 +296,7 @@ module.exports = {
         [channelMeetingroomId]: channelMeetingroomWebhook,
         [channelTeamtripsitId]: channelTeamtripsitWebhook,
         [channelOperatorsId]: channelOperatorsWebhook,
-        [channelModhavenId]: channelModhavenWebhook,
+        // [channelModhavenId]: channelModhavenWebhook,
         [channelTripsitmeId]: channelTripsitmeWebhook,
       };
     }
@@ -355,6 +355,9 @@ module.exports = {
       logger.debug(`[${PREFIX}] Registered!`);
       // global.ircClient.say('Moonbear', 'Hello world!');
     });
+    global.ircClient.addListener('error', message => {
+      logger.error(`[${PREFIX}] Error - ${JSON.stringify(message, null, 2)}`);
+    });
     global.ircClient.addListener('pm', async (from, message) => {
       logger.debug(`[${PREFIX}] PM from ${from}: ${message}`);
 
@@ -374,48 +377,41 @@ module.exports = {
         });
       }
     });
-    global.ircClient.addListener('error', message => {
-      logger.error(`[${PREFIX}] Error - ${JSON.stringify(message, null, 2)}`);
+    global.ircClient.addListener('message#', (nick, to, text, message) => {
+      // logger.debug(`[${PREFIX}] ${nick} said ${text} in ${to} :
+      // ${JSON.stringify(message, null, 2)}`);
+      // {
+      //   "prefix": "Moonbear!~teknos@tripsit/founder/Teknos",
+      //   "nick": "Moonbear",
+      //   "user": "~teknos",
+      //   "host": "tripsit/founder/Teknos",
+      //   "command": "PRIVMSG",
+      //   "rawCommand": "PRIVMSG",
+      //   "commandType": "normal",
+      //   "args": [
+      //     "#sandbox-dev",
+      //     "test"
+      //   ]
+      // }
+      experience(message);
     });
-    global.ircClient.addListener('join', (channel, nick) => {
-      // logger.debug(`[${PREFIX}] ${nick} joined ${channel}`);
-      watcher(client, 'join', nick, channel);
+    global.ircClient.addListener('join', (channel, nick, message) => {
+      watcher(client, message);
     });
-    global.ircClient.addListener('part', (channel, nick) => {
-      // logger.debug(`[${PREFIX}] ${nick} parted ${channel}.`);
-      watcher(client, 'part', nick, channel);
+    global.ircClient.addListener('part', (channel, nick, reason, message) => {
+      watcher(client, message);
     });
-    global.ircClient.addListener('kick', (channel, nick) => {
-      // logger.debug(`[${PREFIX}] ${nick} parted ${channel}.`);
-      watcher(client, 'kick', nick, channel);
+    global.ircClient.addListener('kick', (channel, nick, by, reason, message) => {
+      watcher(client, message);
     });
-    global.ircClient.addListener('quit', nick => {
-      // logger.debug(`[${PREFIX}] ${nick} quit.`);
-      watcher(client, 'quit', nick);
+    global.ircClient.addListener('quit', (nick, reason, channels, message) => {
+      watcher(client, message);
     });
-    global.ircClient.addListener('kill', nick => {
-      // logger.debug(`[${PREFIX}] ${nick} was killed.`);
-      watcher(client, 'kill', nick);
+    global.ircClient.addListener('kill', (nick, reason, channels, message) => {
+      watcher(client, message);
     });
-    global.ircClient.addListener('nick', (oldnick, newnick) => {
-      // logger.debug(`[${PREFIX}] ${oldnick} changed to ${newnick}`);
-      watcher(client, 'nick', oldnick, '', newnick);
+    global.ircClient.addListener('nick', (oldnick, newnick, channels, message) => {
+      watcher(client, message, newnick);
     });
-
-    // global.ircClient.addListener('error', message => {
-    //   logger.error(`[${PREFIX}] Error - ${JSON.stringify(message, null, 2)}`);
-    // });
-    // global.ircClient.addListener('part', (/* channel, */nick/* , reason, message */) => {
-    //   logger.debug(`[${PREFIX}] ${nick} parted`);
-    // });
-    // global.ircClient.addListener('quit', (nick/* , reason, channels, message */) => {
-    //   logger.debug(`[${PREFIX}] ${nick} quit`);
-    // });
-    // global.ircClient.addListener('kill', (nick/* , reason, channels, message */) => {
-    //   logger.debug(`[${PREFIX}] ${nick} was quitted.`);
-    // });
-    // global.ircClient.addListener('kill', (nick/* , reason, channels, message */) => {
-    //   logger.debug(`[${PREFIX}] ${nick} was quitted.`);
-    // });
   },
 };
