@@ -9,7 +9,7 @@ const { getUserInfo, setUserInfo } = require('./firebase');
 const PREFIX = path.parse(__filename).name;
 
 const {
-  discordGuildId,
+  // discordGuildId,
   channelTripbotlogsId,
   channelTripsitId,
   channelSanctuaryId,
@@ -17,6 +17,9 @@ const {
   channelHowToTripsitId,
   channelDrugQuestionsId,
   channelOpentripsitId,
+  channelOpentripsit1Id,
+  channelOpentripsit2Id,
+  channelClosedtripsitId,
   roleNeedshelpId,
   // roleHelperId,
   roleNewbie,
@@ -39,122 +42,107 @@ const tripsitterChannels = [
   channelHowToTripsitId,
   channelDrugQuestionsId,
   channelOpentripsitId,
+  channelOpentripsit1Id,
+  channelOpentripsit2Id,
+  channelClosedtripsitId,
 ];
+
+const tripsitterIrcChannels = [
+  '#sanctuary',
+  '#tripsitters',
+  '#howtotripsit',
+  '#drugquestions',
+  '#opentripsit',
+  '#tripsit',
+  '#tripsit1',
+  '#tripsit2',
+  '#tripsit3',
+];
+
+// Define the time in between messages where exp will count
+let bufferSeconds = 60;
+if (NODE_ENV === 'development') {
+  bufferSeconds = 10;
+}
 
 module.exports = {
   async experience(message) {
-    // If not in tripsit, ignore it
-    if (message.guildId !== discordGuildId) { return; }
+    // if (message.guildId) {
+    //   // If not in tripsit, ignore it
+    //   if (message.guildId !== discordGuildId) { return; }
+    // }
 
+    let actorDataUpdated = false;
+    let actorPlatform = '';
+    let actor = {};
+    let messageChannelId = '';
+    let expType = '';
     // Check if the user who sent this message is a guild user
     if (message.member) {
+      actorPlatform = 'discord';
+      // Check if the user has an ignored role
       if (ignoredRoles.some(role => message.member.roles.cache.has(role))) {
         logger.debug(`[${PREFIX}] Message sent by a user with an ignored role`);
         return;
       }
+
+      logger.debug(`[${PREFIX}] Message sent by ${message.author.username} in ${message.channel.name} on ${message.guild}`);
+      actor = message.author;
+
+      // Determine what kind of experience to give
+      // Check if the message.channe.id is in the list of tripsitter channels
+      if (tripsitterChannels.includes(message.channel.id)
+        || tripsitterChannels.includes(message.channel.parentId)) {
+        // logger.debug(`[${PREFIX}] Message sent in a tripsitter channel on discord`);
+        expType = 'tripsitter';
+      } else {
+        // logger.debug(`[${PREFIX}] Message sent in a non-tripsitter channel`);
+        expType = 'general';
+      }
+      messageChannelId = message.channel.id;
     }
-
-    logger.debug(`[${PREFIX}] Message sent by ${message.author.username} in ${message.channel.name} on ${message.guild}`);
-
-    let actor = message.author;
-
-    // let targetFromIrc = null;
-    // let targetFromDiscord = null;
-    // let targetIsMember = null;
 
     // logger.debug(`[${PREFIX}] message.member: ${JSON.stringify(message.member, null, 2)}`);
     // If the user is not a member of the guild, then this probably came from IRC
     if (!message.member) {
-      // Check if this message came from a tripsitting channel
-      // If so, ignore it, cuz they're likely asking for help
-      if (tripsitterChannels.includes(message.channel.id)
-      || tripsitterChannels.includes(message.channel.parentId)) {
+      actorPlatform = 'irc';
+      // If the user isnt registered then don't give them experience
+      if (!message.host.startsWith('tripsit')) { return; }
+
+      logger.debug(`[${PREFIX}] ${message.nick} (${message.host.split('/')[1]}) said ${message.args[1]} in ${message.args[0]}`);
+      actor = message;
+
+      // Determine what kind of experience to give
+      if (tripsitterIrcChannels.includes(message.args[0])) {
         logger.debug(`[${PREFIX}] Message sent in a tripsitter channel from IRC`);
-        return;
+        expType = 'tripsitter';
+      } else {
+        logger.debug(`[${PREFIX}] Message sent in a non-tripsitter channel from IRC`);
+        expType = 'general';
       }
-
-      // Do a whois on the user to get their account name
-      let data = null;
-      await global.ircClient.whois(message.author.username, async resp => {
-        data = resp;
-      });
-
-      // This is a hack substanc3 helped create to get around the fact that the whois command
-      // is asyncronous by default, so we need to make this syncronous
-      while (data === null) {
-          await new Promise(resolve => setTimeout(resolve, 100)); // eslint-disable-line
-      }
-
-      // logger.debug(`[${PREFIX}] data ${JSON.stringify(data, null, 2)}`);
-      // {
-      //   "nick": "Teknos",
-      //   "user": "~teknos",
-      //   "host": "tripsit/founder/Teknos",
-      //   "realname": "Eric",
-      //   "channels": [
-      //   ],
-      //   "server": "innsbruck.tripsit.me",
-      //   "serverinfo": "TripSit IRC Private Jet Receipt Server",
-      //   "operator": "Cantillating grace and they can't keep my pace",
-      //   "idle": "0",
-      //   "account": "Teknos",
-      //   "accountinfo": "is logged in as"
-      // }
-
-      // Check if the user is FOUND on IRC, if not, ignore it
-      if (!data.host) {
-        logger.debug(`[${PREFIX}] ${message.author.username} not found on IRC, ignoring!`);
-        return;
-      }
-
-      // Check if the user is REGISTERED on IRC, if not, ignore it
-      // Disabling this because we need to know when the people last asking for help last talked
-      // if (!data.account) {
-      //   logger.debug(`[${PREFIX}] ${message.author.username} is not registered on IRC!`);
-      //   return;
-      // }
-
-      // targetFromIrc = true;
-      // targetFromDiscord = false;
-      // targetIsMember = false;
-      actor = data;
+      messageChannelId = message.args[0];
     }
 
-    let messageChannelId = message.channel.id;
-    let expType = '';
-    // Check if the message.channe.id is in the list of tripsitter channels
-    if (tripsitterChannels.includes(messageChannelId)
-      || tripsitterChannels.includes(message.channel.parentId)) {
-      // logger.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
-      expType = 'tripsitter';
-      messageChannelId = channelTripsitId;
-    } else {
-      // logger.debug(`[${PREFIX}] Message sent in a non-tripsitter channel`);
-      expType = 'general';
-    }
-    logger.debug(`[${PREFIX}] Experience type: ${expType}`);
+    logger.debug(`[${PREFIX}] expType: ${expType}`);
+    logger.debug(`[${PREFIX}] messageChannelId: ${messageChannelId}`);
 
     // Get random value between 15 and 25
     const expPoints = Math.floor(Math.random() * (25 - 15 + 1)) + 15;
-    const currMessageDate = message.createdTimestamp;
+    const currMessageDate = message.createdTimestamp || Date.now();
     logger.debug(`[${PREFIX}] currMessageDate: ${currMessageDate}`);
 
     // Get user data
     const [actorData, actorFbid] = await getUserInfo(actor);
+
+    const lastMessageDate = actorData.experience[expType].lastMessageDate;
+    logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
+    const timeDiff = currMessageDate - lastMessageDate;
+    logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
+
+    const bufferTime = bufferSeconds * 1000;
+
     if ('experience' in actorData) {
       if (expType in actorData.experience) {
-        const lastMessageDate = actorData.experience[expType].lastMessageDate;
-        // logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
-        const timeDiff = currMessageDate - lastMessageDate;
-        // logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
-
-        // Define the time in between messages where exp will count
-        let bufferSeconds = 60;
-        if (NODE_ENV === 'development') {
-          bufferSeconds = 1;
-        }
-        const bufferTime = bufferSeconds * 1000;
-
         // If the time diff is over one bufferTime, increase the experience points
         if (timeDiff > bufferTime) {
           const experienceData = actorData.experience[expType];
@@ -182,6 +170,8 @@ module.exports = {
             lastMessageDate: currMessageDate,
             lastMessageChannel: messageChannelId,
           };
+          actorDataUpdated = true;
+          logger.debug(`[${PREFIX}] Exp update A`);
         }
       } else {
         actorData.experience[expType] = {
@@ -191,6 +181,8 @@ module.exports = {
           lastMessageDate: currMessageDate,
           lastMessageChannel: messageChannelId,
         };
+        actorDataUpdated = true;
+        logger.debug(`[${PREFIX}] Exp update B`);
         logger.debug(`[${PREFIX}] ${expPoints} experience points added to ${expType}`);
       }
     } else {
@@ -203,39 +195,94 @@ module.exports = {
           lastMessageChannel: messageChannelId,
         },
       };
+      actorDataUpdated = true;
+      logger.debug(`[${PREFIX}] Exp update C`);
     }
 
-    if ('discord' in actorData) {
-      if ('messages' in actorData.discord) {
-        // Get channel info
-        const channelInfo = actorData.discord.messages[messageChannelId];
+    if (actorPlatform === 'discord') {
+      if ('discord' in actorData) {
+        if ('messages' in actorData.discord) {
+          if (timeDiff > bufferTime) {
+            // Get channel info
+            const channelInfo = actorData.discord.messages[messageChannelId];
 
-        // Increment the message sent count and the last message date
-        actorData.discord.messages[messageChannelId] = {
-          count: (channelInfo ? channelInfo.count : 0) + 1,
-          lastMessageDate: message.createdTimestamp,
-        };
+            // Increment the message sent count and the last message date
+            actorData.discord.messages[messageChannelId] = {
+              count: (channelInfo ? channelInfo.count : 0) + 1,
+              lastMessageDate: currMessageDate,
+            };
+            actorDataUpdated = true;
+            logger.debug(`[${PREFIX}] Discord update A`);
+          }
+        } else {
+          logger.debug(`[${PREFIX}] Initializing messages data`);
+          actorData.discord.messages = {
+            [messageChannelId]: {
+              count: 1,
+              lastMessage: currMessageDate,
+            },
+          };
+          actorDataUpdated = true;
+          logger.debug(`[${PREFIX}] Discord update B`);
+        }
       } else {
-        logger.debug(`[${PREFIX}] Initializing messages data`);
-        actorData.discord.messages = {
-          [messageChannelId]: {
-            count: 1,
-            lastMessage: message.createdTimestamp,
+        logger.debug(`[${PREFIX}] Initializing discord data`);
+        actorData.discord = {
+          messages: {
+            [messageChannelId]: {
+              count: 1,
+              lastMessage: currMessageDate,
+            },
           },
         };
+        actorDataUpdated = true;
+        logger.debug(`[${PREFIX}] Discord update C`);
       }
-    } else {
-      logger.debug(`[${PREFIX}] Initializing discord data`);
-      actorData.discord = {
-        messages: {
-          [messageChannelId]: {
-            count: 1,
-            lastMessage: message.createdTimestamp,
+    }
+    if (actorPlatform === 'irc') {
+      if ('irc' in actorData) {
+        if ('messages' in actorData.irc) {
+          if (timeDiff > bufferTime) {
+            // Get channel info
+            const channelInfo = actorData.irc.messages[messageChannelId];
+
+            // Increment the message sent count and the last message date
+            actorData.irc.messages[messageChannelId] = {
+              count: (channelInfo ? channelInfo.count : 0) + 1,
+              lastMessageDate: currMessageDate,
+            };
+            actorDataUpdated = true;
+            logger.debug(`[${PREFIX}] IRC update A`);
+          }
+        } else {
+          logger.debug(`[${PREFIX}] Initializing messages data`);
+          actorData.irc.messages = {
+            [messageChannelId]: {
+              count: 1,
+              lastMessage: currMessageDate,
+            },
+          };
+          actorDataUpdated = true;
+          logger.debug(`[${PREFIX}] Exp8`);
+        }
+      } else {
+        logger.debug(`[${PREFIX}] IRC update B`);
+        actorData.irc = {
+          messages: {
+            [messageChannelId]: {
+              count: 1,
+              lastMessage: currMessageDate,
+            },
           },
-        },
-      };
+        };
+        actorDataUpdated = true;
+        logger.debug(`[${PREFIX}] IRC update C`);
+      }
     }
 
-    setUserInfo(actorFbid, actorData);
+    // logger.debug(`[${PREFIX}] actorData: ${JSON.stringify(actorData, null, 2)}`);
+    if (actorDataUpdated) {
+      setUserInfo(actorFbid, actorData);
+    }
   },
 };

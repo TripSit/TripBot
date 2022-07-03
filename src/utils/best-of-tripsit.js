@@ -51,7 +51,12 @@ module.exports = {
       };
       const date = new Date(reaction.message.createdTimestamp);
       const formattedDate = date.toLocaleDateString('en-US', options);
-      const attachmentUrl = reaction.message.attachments.at(0).url;
+      let attachmentUrl = '';
+      try {
+        attachmentUrl = reaction.message.attachments.at(0).url;
+      } catch (e) {
+        logger.debug(`[${PREFIX}] No attachment found`);
+      }
 
       logger.debug(`[${PREFIX}] attachmentUrl: ${attachmentUrl}`);
 

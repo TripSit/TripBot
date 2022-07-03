@@ -61,6 +61,8 @@ module.exports = {
     let memberFbid = null;
     let memberData = {};
     let memberType = '';
+    let memberAccount = '';
+    let memberRole = '';
     // If the member object has an ID value, then this is a message from discord
     if (member.id) {
       logger.debug(`[${PREFIX}] Member is from Discord!`);
@@ -80,50 +82,87 @@ module.exports = {
     if (member.host) {
       logger.debug(`[${PREFIX}] Member is from IRC!`);
       logger.debug(`[${PREFIX}] member.host: ${member.host}`);
+      if (member.host.startsWith('tripsit')) {
+        memberRole = member.host.split('/')[1];
+        memberAccount = member.host.split('/')[2];
+      }
 
       memberType = 'irc';
       // If the user is registered on IRC:
       memberData = {
-        accountName: member.account ? member.account : member.host,
+        accountName: memberAccount || member.host,
         irc: {
-          accountName: member.account ? member.account : null,
+          accountName: memberAccount || null,
           vhost: member.host,
           nickname: member.nick,
+          role: memberRole,
         },
       };
     }
 
-    if (db !== undefined) {
-      const snapshotUser = await db.collection(firebaseUserDbName).get();
-      await snapshotUser.forEach(doc => {
-        if (memberType === 'discord') {
-          if (doc.data().discord) {
-            if (doc.data().discord.id === member.id.toString()) {
-              logger.debug(`[${PREFIX}] Discord member data found!`);
-              memberData = doc.data();
-              memberFbid = doc.id;
-              return;
+    // Find the user in the local DB
+    // We use for..of here because it's syncronus and we want to wait for it to finish
+    let dataFound = false;
+    // eslint-disable-next-line
+    for (const doc of global.userDb) {
+      if (memberType === 'discord') {
+        if (doc.value.discord.id === member.id.toString()) {
+          logger.debug(`[${PREFIX}] Discord member data found!`);
+          dataFound = true;
+          memberData = doc.value;
+          memberFbid = doc.key;
+        }
+      }
+      if (memberType === 'irc') {
+        if (doc.value.irc) {
+          if (doc.value.irc.accountName) {
+            if (doc.value.irc.vhost === member.host) {
+              logger.debug(`[${PREFIX}] irc.vhost data found for ${member.host}!`);
+              // logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 2)}`);
+              dataFound = true;
+              memberData = doc.value;
+              memberFbid = doc.key;
             }
           }
         }
-        if (memberType === 'irc') {
-          if (doc.data().irc) {
-            if (doc.data().irc.accountName) {
-              if (doc.data().irc.accountName === member.account) {
-                logger.debug(`[${PREFIX}] IRC member data found!`);
+      }
+    }
+
+    // If the user isnt found above, query firebase
+    if (!dataFound) {
+      logger.warn(`[${PREFIX}] Local data not found, querying firebase!`);
+      if (db !== undefined) {
+        const snapshotUser = await db.collection(firebaseUserDbName).get();
+        await snapshotUser.forEach(doc => {
+          if (memberType === 'discord') {
+            if (doc.data().discord) {
+              if (doc.data().discord.id === member.id.toString()) {
+                logger.debug(`[${PREFIX}] Discord member data found!`);
                 memberData = doc.data();
                 memberFbid = doc.id;
-              }
-            } else if (doc.data().irc.vhost) {
-              if (doc.data().irc.vhost === member.host) {
-                logger.debug(`[${PREFIX}] Irc member data found!`);
-                memberData = doc.data();
-                memberFbid = doc.id;
+                return;
               }
             }
           }
-        }
-      });
+          if (memberType === 'irc') {
+            if (doc.data().irc) {
+              if (doc.data().irc.accountName) {
+                if (doc.data().irc.accountName === member.account) {
+                  logger.debug(`[${PREFIX}] IRC member data found!`);
+                  memberData = doc.data();
+                  memberFbid = doc.id;
+                }
+              } else if (doc.data().irc.vhost) {
+                if (doc.data().irc.vhost === member.host) {
+                  logger.debug(`[${PREFIX}] Irc member data found!`);
+                  memberData = doc.data();
+                  memberFbid = doc.id;
+                }
+              }
+            }
+          }
+        });
+      }
     }
     return [memberData, memberFbid];
   },
@@ -137,6 +176,23 @@ module.exports = {
       } catch (err) {
         logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
       }
+      const userDb = [];
+      global.userDb.forEach(subDoc => {
+        if (subDoc.key === fbid) {
+          userDb.push({
+            key: subDoc.key,
+            value: data,
+          });
+          logger.debug(`[${PREFIX}] Updated actor in userDb`);
+        } else {
+          userDb.push({
+            key: subDoc.key,
+            value: subDoc.value,
+          });
+        }
+      });
+      Object.assign(global, { userDb });
+      logger.debug(`[${PREFIX}] Updated global user data.`);
     } else {
       // logger.debug(`[${PREFIX}] Creating actor data`);
       try {

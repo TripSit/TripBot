@@ -103,6 +103,7 @@ const voteBanThreshold = NODE_ENV === 'production' ? 3 : 1;
 const voteKickThreshold = NODE_ENV === 'production' ? 3 : 1;
 const voteTimeoutThreshold = NODE_ENV === 'production' ? 3 : 1;
 const voteUnderbanThreshold = NODE_ENV === 'production' ? 3 : 1;
+const voteDownvoteThreshold = NODE_ENV === 'production' ? 3 : 1;
 
 module.exports = {
   async communityMod(reaction/* , user */) {
@@ -123,6 +124,14 @@ module.exports = {
 
     // logger.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction, null, 2)}`);
     // logger.debug(`[${PREFIX}] reaction.message: ${JSON.stringify(reaction.message, null, 2)}`);
+    if (reaction.count === voteDownvoteThreshold && reaction.emoji.name === 'karma_downvote') {
+      logger.debug(`[${PREFIX}] ${target} has been downvoted three times, muting!`);
+      reaction.message.member.timeout(604800000, `Was community quieted for saying "${reaction.message}"`);
+      return reaction.message.reply(stripIndents`
+      Hey ${moderatorRole}! ${target.user.username} was downvoted three times for this, please review!
+
+      **They will be quieted for 1 week unless a moderator takes action!**`);
+    }
 
     // Process vote ban
     if (reaction.count === voteBanThreshold && reaction.emoji.name === 'vote_ban') {
