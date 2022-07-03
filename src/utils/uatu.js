@@ -15,6 +15,7 @@ const {
   channelWikicontentId,
   channelSandboxId,
 
+  channelMeetingroomId,
   channelModeratorsId,
   channelTeamtripsitId,
   channelOperatorsId,
@@ -41,11 +42,13 @@ const botNicknames = [
   'TS1',
   'TSTelegram',
   'TSDiscord',
+  'TSModRelay',
   'tripbot1',
   'TSDev1',
   'TS11',
   'TSTelegram1',
   'TSDiscord1',
+  'TSModRelay1',
   'Github',
 ];
 
@@ -60,6 +63,7 @@ const channels = {
   '#tripsit2': channelOpentripsit2Id,
   '#tripsit3': channelClosedtripsitId,
   '#tripsit-dev': channelDevelopmentId,
+  '#meeting-room': channelMeetingroomId,
   '#content': channelWikicontentId,
   '#moderators': channelModeratorsId,
   '#teamtripsit': channelTeamtripsitId,

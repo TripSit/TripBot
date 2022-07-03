@@ -325,6 +325,7 @@ module.exports = {
     let ircChannels = [];
     if (NODE_ENV === 'production') {
       ircChannels = [
+        '#sanctuary',
         '#tripsit',
         '#tripsit1',
         '#tripsit2',
@@ -378,8 +379,7 @@ module.exports = {
       }
     });
     global.ircClient.addListener('message#', (nick, to, text, message) => {
-      // logger.debug(`[${PREFIX}] ${nick} said ${text} in ${to} :
-      // ${JSON.stringify(message, null, 2)}`);
+      logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
       // {
       //   "prefix": "Moonbear!~teknos@tripsit/founder/Teknos",
       //   "nick": "Moonbear",

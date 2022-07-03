@@ -153,7 +153,7 @@ module.exports = {
     // Get user data
     const [actorData, actorFbid] = await getUserInfo(actor);
 
-    const lastMessageDate = actorData.experience[expType].lastMessageDate;
+    const lastMessageDate = actorData.experience[expType].lastMessageDate || 0;
     logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
     const timeDiff = currMessageDate - lastMessageDate;
     logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
