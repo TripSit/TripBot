@@ -65,6 +65,20 @@ if (NODE_ENV === 'development') {
   bufferSeconds = 10;
 }
 
+const botNicknames = [
+  'tripbot',
+  'TSDev',
+  'TS1',
+  'TSTelegram',
+  'TSDiscord',
+  'tripbot1',
+  'TSDev1',
+  'TS11',
+  'TSTelegram1',
+  'TSDiscord1',
+  'Github',
+];
+
 module.exports = {
   async experience(message) {
     // if (message.guildId) {
@@ -108,6 +122,11 @@ module.exports = {
       actorPlatform = 'irc';
       // If the user isnt registered then don't give them experience
       if (!message.host.startsWith('tripsit')) { return; }
+
+      if (botNicknames.includes(message.nick)) {
+        // logger.debug(`[${PREFIX}] ${message.nick} is a bot!`);
+        return;
+      }
 
       logger.debug(`[${PREFIX}] ${message.nick} (${message.host.split('/')[1]}) said ${message.args[1]} in ${message.args[0]}`);
       actor = message;

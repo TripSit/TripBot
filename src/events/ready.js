@@ -121,14 +121,14 @@ module.exports = {
     logger.debug(`[${PREFIX}] I am in ${client.guilds.cache.size} guilds.`);
     // run this async so that it runs while everything else starts too
     if (NODE_ENV === 'production') {
-      await connectIRC(client);
       await connectIRCBridge(client);
     }
+    await connectIRC(client);
     await getReactionRoles(client);
     await getInvites(client);
     const userDb = await updateGlobalDb(client);
     await backupDb(client, userDb);
-    await runTimer(client);
+    // await runTimer(client);
     await webserver();
     logger.info(`[${PREFIX}] Ready to take over the world!`);
   },
