@@ -128,7 +128,7 @@ module.exports = {
     await getInvites(client);
     const userDb = await updateGlobalDb(client);
     await backupDb(client, userDb);
-    // await runTimer(client);
+    await runTimer(client);
     await webserver();
     logger.info(`[${PREFIX}] Ready to take over the world!`);
   },
