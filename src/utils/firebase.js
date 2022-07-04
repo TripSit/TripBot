@@ -115,7 +115,7 @@ module.exports = {
       if (memberType === 'irc') {
         if (doc.value.irc) {
           if (doc.value.irc.vhost) {
-            logger.debug(`[${PREFIX}] doc.value.irc.vhost: ${doc.value.irc.vhost}`);
+            // logger.debug(`[${PREFIX}] doc.value.irc.vhost: ${doc.value.irc.vhost}`);
             if (doc.value.irc.vhost === member.host) {
               logger.debug(`[${PREFIX}] irc.vhost data found for ${member.host}!`);
               // logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 2)}`);
