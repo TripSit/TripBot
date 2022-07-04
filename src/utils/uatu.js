@@ -97,7 +97,12 @@ module.exports = {
     const [actorData] = await getUserInfo(message);
 
     if ('experience' in actorData) {
-      const lastMessageDate = actorData.experience.general.lastMessageDate;
+      let lastMessageDate = 0;
+      try {
+        lastMessageDate = actorData.experience.general.lastMessageDate;
+      } catch (e) {
+        logger.debug(`[${PREFIX}] No lastMessageDate found for ${message.author.username || message.nick}`);
+      }
       const now = new Date();
       const diff = now - lastMessageDate;
       // If the user has sent a message in the last 10 minutes
