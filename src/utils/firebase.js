@@ -148,13 +148,13 @@ module.exports = {
             if (doc.data().irc) {
               if (doc.data().irc.accountName) {
                 if (doc.data().irc.accountName === member.account) {
-                  logger.debug(`[${PREFIX}] IRC member data found!`);
+                  logger.debug(`[${PREFIX}] IRC member data found (accountName)!`);
                   memberData = doc.data();
                   memberFbid = doc.id;
                 }
               } else if (doc.data().irc.vhost) {
                 if (doc.data().irc.vhost === member.host) {
-                  logger.debug(`[${PREFIX}] Irc member data found!`);
+                  logger.debug(`[${PREFIX}] Irc member data found (vhost)!`);
                   memberData = doc.data();
                   memberFbid = doc.id;
                 }

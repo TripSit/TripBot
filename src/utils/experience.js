@@ -154,7 +154,13 @@ module.exports = {
     // Get user data
     const [actorData, actorFbid] = await getUserInfo(actor);
 
-    const lastMessageDate = actorData.experience[expType].lastMessageDate || 0;
+    let lastMessageDate = 0;
+    try {
+      logger.debug(`[${PREFIX}] actorData: ${JSON.stringify(actorData, null, 2)}`);
+      lastMessageDate = actorData.experience[expType].lastMessageDate;
+    } catch (e) {
+      logger.debug(`[${PREFIX}] No lastMessageDate found for ${actor.username}`);
+    }
     logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
     const timeDiff = currMessageDate - lastMessageDate;
     logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);

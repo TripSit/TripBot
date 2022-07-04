@@ -94,11 +94,11 @@ module.exports = {
 
         let verbage = '';
         if (message.command === 'JOIN') {
-          verbage = `${message.nick} has rejoined!`;
+          verbage = `${message.nick} has rejoined ${message.args[0]}!`;
         } else if (message.command === 'PART') {
-          verbage = `${message.nick} has left the channel!`;
+          verbage = `${message.nick} has left ${message.args[0]}!`;
         } else if (message.command === 'KICK') {
-          verbage = `${message.nick} has been kicked from the channel!`;
+          verbage = `${message.nick} has been kicked from ${message.args[0]}!`;
         } else if (message.command === 'QUIT') {
           verbage = `${message.nick} has quit the server!`;
         } else if (message.command === 'KILL') {
