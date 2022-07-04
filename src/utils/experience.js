@@ -156,10 +156,9 @@ module.exports = {
 
     let lastMessageDate = 0;
     try {
-      logger.debug(`[${PREFIX}] actorData: ${JSON.stringify(actorData, null, 2)}`);
       lastMessageDate = actorData.experience[expType].lastMessageDate;
     } catch (e) {
-      logger.debug(`[${PREFIX}] No lastMessageDate found for ${actor.username}`);
+      logger.debug(`[${PREFIX}] No lastMessageDate found for ${actor.username || actor.nick}`);
     }
     logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
     const timeDiff = currMessageDate - lastMessageDate;
@@ -197,7 +196,7 @@ module.exports = {
             lastMessageChannel: messageChannelId,
           };
           actorDataUpdated = true;
-          logger.debug(`[${PREFIX}] Exp update A`);
+          logger.debug(`[${PREFIX}] Exp update A (Add to existing)`);
         }
       } else {
         actorData.experience[expType] = {
@@ -208,7 +207,7 @@ module.exports = {
           lastMessageChannel: messageChannelId,
         };
         actorDataUpdated = true;
-        logger.debug(`[${PREFIX}] Exp update B`);
+        logger.debug(`[${PREFIX}] Exp update B (Create new category)`);
         logger.debug(`[${PREFIX}] ${expPoints} experience points added to ${expType}`);
       }
     } else {
@@ -222,7 +221,7 @@ module.exports = {
         },
       };
       actorDataUpdated = true;
-      logger.debug(`[${PREFIX}] Exp update C`);
+      logger.debug(`[${PREFIX}] Exp update C (Create Experience)`);
     }
 
     if (actorPlatform === 'discord') {
@@ -278,7 +277,7 @@ module.exports = {
               lastMessageDate: currMessageDate,
             };
             actorDataUpdated = true;
-            logger.debug(`[${PREFIX}] IRC update A`);
+            logger.debug(`[${PREFIX}] IRC update A (Increment)`);
           }
         } else {
           logger.debug(`[${PREFIX}] Initializing messages data`);
@@ -289,10 +288,9 @@ module.exports = {
             },
           };
           actorDataUpdated = true;
-          logger.debug(`[${PREFIX}] Exp8`);
+          logger.debug(`[${PREFIX}] IRC update B (Initialize)`);
         }
       } else {
-        logger.debug(`[${PREFIX}] IRC update B`);
         actorData.irc = {
           messages: {
             [messageChannelId]: {
@@ -302,7 +300,7 @@ module.exports = {
           },
         };
         actorDataUpdated = true;
-        logger.debug(`[${PREFIX}] IRC update C`);
+        logger.debug(`[${PREFIX}] IRC update C (Create)`);
       }
     }
 

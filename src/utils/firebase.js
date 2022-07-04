@@ -44,17 +44,14 @@ module.exports = {
     // }
     let name = '';
     if (member.host) {
-      logger.debug(`[${PREFIX}] member.host: ${JSON.stringify(member.host, null, 2)}`);
+      logger.debug(`[${PREFIX}] member.host: ${member.host}`);
       name = member.nick;
     } else if (member.user) {
       logger.debug(`[${PREFIX}] member.user: ${JSON.stringify(member.user, null, 2)}`);
       name = member.user.username;
     } else if (member.username) {
-      logger.debug(`[${PREFIX}] member.username: ${JSON.stringify(member.username, null, 2)}`);
+      logger.debug(`[${PREFIX}] member.username: ${member.username}`);
       name = member.username;
-    } else if (member.account) {
-      logger.debug(`[${PREFIX}] member.account: ${JSON.stringify(member.account, null, 2)}`);
-      name = member.account.name;
     }
 
     logger.debug(`[${PREFIX}] Looking up ${name}!`);
@@ -82,6 +79,8 @@ module.exports = {
     if (member.host) {
       logger.debug(`[${PREFIX}] Member is from IRC!`);
       logger.debug(`[${PREFIX}] member.host: ${member.host}`);
+      logger.debug(`[${PREFIX}] member.host: ${typeof member.host}`);
+
       if (member.host.startsWith('tripsit')) {
         memberRole = member.host.split('/')[1];
         memberAccount = member.host.split('/')[2];
@@ -92,7 +91,7 @@ module.exports = {
       memberData = {
         accountName: memberAccount || member.host,
         irc: {
-          accountName: memberAccount || null,
+          accountName: memberAccount || member.host,
           vhost: member.host,
           nickname: member.nick,
           role: memberRole,
@@ -115,7 +114,8 @@ module.exports = {
       }
       if (memberType === 'irc') {
         if (doc.value.irc) {
-          if (doc.value.irc.accountName) {
+          if (doc.value.irc.vhost) {
+            logger.debug(`[${PREFIX}] doc.value.irc.vhost: ${doc.value.irc.vhost}`);
             if (doc.value.irc.vhost === member.host) {
               logger.debug(`[${PREFIX}] irc.vhost data found for ${member.host}!`);
               // logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 2)}`);
@@ -145,8 +145,10 @@ module.exports = {
             }
           }
           if (memberType === 'irc') {
+            // logger.debug(`[${PREFIX}] Looking for where `);
             if (doc.data().irc) {
-              if (doc.data().irc.accountName) {
+              if (doc.data().irc.vhost) {
+                logger.debug(`[${PREFIX}] doc.data().irc.vhost: ${doc.data().irc.vhost}`);
                 if (doc.data().irc.vhost === member.host) {
                   logger.debug(`[${PREFIX}] Irc member data found (vhost)!`);
                   memberData = doc.data();
@@ -158,6 +160,9 @@ module.exports = {
         });
       }
     }
+    if (memberFbid === null) {
+      logger.warn(`[${PREFIX}] Member not found, returning blank record!`);
+    }
     return [memberData, memberFbid];
   },
   setUserInfo: async (fbid, data) => {
@@ -167,30 +172,47 @@ module.exports = {
       // logger.debug(`[${PREFIX}] Updating actor data`);
       try {
         await db.collection(firebaseUserDbName).doc(fbid).set(data);
+        logger.debug(`[${PREFIX}] Updated FB data`);
+        const userDb = [];
+        global.userDb.forEach(doc => {
+          if (doc.key === fbid) {
+            userDb.push({
+              key: doc.key,
+              value: data,
+            });
+            logger.debug(`[${PREFIX}] Updated actor in userDb`);
+          } else {
+            userDb.push({
+              key: doc.key,
+              value: doc.value,
+            });
+          }
+        });
+        Object.assign(global, { userDb });
+        logger.debug(`[${PREFIX}] Updated global user data.`);
       } catch (err) {
         logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
       }
-      const userDb = [];
-      global.userDb.forEach(subDoc => {
-        if (subDoc.key === fbid) {
-          userDb.push({
-            key: subDoc.key,
-            value: data,
-          });
-          logger.debug(`[${PREFIX}] Updated actor in userDb`);
-        } else {
-          userDb.push({
-            key: subDoc.key,
-            value: subDoc.value,
-          });
-        }
-      });
-      Object.assign(global, { userDb });
-      logger.debug(`[${PREFIX}] Updated global user data.`);
     } else {
       // logger.debug(`[${PREFIX}] Creating actor data`);
       try {
         await db.collection(firebaseUserDbName).doc().set(data);
+        logger.debug(`[${PREFIX}] Created FB data`);
+        const userDb = [];
+        if (db !== undefined) {
+          // Get user information
+          const snapshotUser = await db.collection(firebaseUserDbName).get();
+          snapshotUser.forEach(doc => {
+            userDb.push({
+              key: doc.id,
+              value: doc.data(),
+            });
+          });
+        }
+        Object.assign(global, { userDb });
+        // logger.debug(`[${PREFIX}] User database loaded.`);
+        // logger.debug(`[${PREFIX}] userDb: ${JSON.stringify(global.userDb, null, 4)}`);
+        logger.debug(`[${PREFIX}] Global User DB loaded!`);
       } catch (err) {
         logger.error(`[${PREFIX}] Error creating actor data: ${err}`);
       }
