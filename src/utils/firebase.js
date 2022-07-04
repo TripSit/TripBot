@@ -105,23 +105,27 @@ module.exports = {
     // eslint-disable-next-line
     for (const doc of global.userDb) {
       if (memberType === 'discord') {
-        if (doc.value.discord.id === member.id.toString()) {
-          logger.debug(`[${PREFIX}] Discord member data found!`);
-          dataFound = true;
-          memberData = doc.value;
-          memberFbid = doc.key;
+        if ('discord' in doc.value) {
+          if (doc.value.discord.id === member.id.toString()) {
+            logger.debug(`[${PREFIX}] Discord member data found!`);
+            dataFound = true;
+            memberData = doc.value;
+            memberFbid = doc.key;
+          }
         }
       }
       if (memberType === 'irc') {
-        if (doc.value.irc) {
-          if (doc.value.irc.vhost) {
-            // logger.debug(`[${PREFIX}] doc.value.irc.vhost: ${doc.value.irc.vhost}`);
-            if (doc.value.irc.vhost === member.host) {
-              logger.debug(`[${PREFIX}] irc.vhost data found for ${member.host}!`);
-              // logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 2)}`);
-              dataFound = true;
-              memberData = doc.value;
-              memberFbid = doc.key;
+        if ('irc' in doc.value) {
+          if (doc.value.irc) {
+            if (doc.value.irc.vhost) {
+              // logger.debug(`[${PREFIX}] doc.value.irc.vhost: ${doc.value.irc.vhost}`);
+              if (doc.value.irc.vhost === member.host) {
+                logger.debug(`[${PREFIX}] irc.vhost data found for ${member.host}!`);
+                // logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 2)}`);
+                dataFound = true;
+                memberData = doc.value;
+                memberFbid = doc.key;
+              }
             }
           }
         }
