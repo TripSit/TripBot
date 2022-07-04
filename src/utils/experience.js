@@ -196,7 +196,7 @@ module.exports = {
             lastMessageChannel: messageChannelId,
           };
           actorDataUpdated = true;
-          logger.debug(`[${PREFIX}] Exp update A (Add to existing)`);
+          logger.debug(`[${PREFIX}] Exp update A (Increment)`);
         }
       } else {
         actorData.experience[expType] = {
@@ -207,7 +207,7 @@ module.exports = {
           lastMessageChannel: messageChannelId,
         };
         actorDataUpdated = true;
-        logger.debug(`[${PREFIX}] Exp update B (Create new category)`);
+        logger.debug(`[${PREFIX}] Exp update B (Update)`);
         logger.debug(`[${PREFIX}] ${expPoints} experience points added to ${expType}`);
       }
     } else {
@@ -221,7 +221,7 @@ module.exports = {
         },
       };
       actorDataUpdated = true;
-      logger.debug(`[${PREFIX}] Exp update C (Create Experience)`);
+      logger.debug(`[${PREFIX}] Exp update C (Create)`);
     }
 
     if (actorPlatform === 'discord') {
@@ -237,7 +237,7 @@ module.exports = {
               lastMessageDate: currMessageDate,
             };
             actorDataUpdated = true;
-            logger.debug(`[${PREFIX}] Discord update A`);
+            logger.debug(`[${PREFIX}] Discord update A (Increment)`);
           }
         } else {
           logger.debug(`[${PREFIX}] Initializing messages data`);
@@ -248,7 +248,7 @@ module.exports = {
             },
           };
           actorDataUpdated = true;
-          logger.debug(`[${PREFIX}] Discord update B`);
+          logger.debug(`[${PREFIX}] Discord update B (Update)`);
         }
       } else {
         logger.debug(`[${PREFIX}] Initializing discord data`);
@@ -261,7 +261,7 @@ module.exports = {
           },
         };
         actorDataUpdated = true;
-        logger.debug(`[${PREFIX}] Discord update C`);
+        logger.debug(`[${PREFIX}] Discord update C (Create)`);
       }
     }
     if (actorPlatform === 'irc') {
@@ -288,7 +288,7 @@ module.exports = {
             },
           };
           actorDataUpdated = true;
-          logger.debug(`[${PREFIX}] IRC update B (Initialize)`);
+          logger.debug(`[${PREFIX}] IRC update B (Update)`);
         }
       } else {
         actorData.irc = {

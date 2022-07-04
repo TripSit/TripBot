@@ -180,7 +180,7 @@ module.exports = {
               key: doc.key,
               value: data,
             });
-            logger.debug(`[${PREFIX}] Updated actor in userDb`);
+            // logger.debug(`[${PREFIX}] Updated actor in userDb`);
           } else {
             userDb.push({
               key: doc.key,
@@ -189,7 +189,7 @@ module.exports = {
           }
         });
         Object.assign(global, { userDb });
-        logger.debug(`[${PREFIX}] Updated global user data.`);
+        logger.debug(`[${PREFIX}] Updated global userDB.`);
       } catch (err) {
         logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
       }
