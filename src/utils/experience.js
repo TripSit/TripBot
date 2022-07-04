@@ -121,7 +121,7 @@ module.exports = {
     if (!message.member) {
       actorPlatform = 'irc';
       // If the user isnt registered then don't give them experience
-      if (!message.host.startsWith('tripsit')) { return; }
+      // if (!message.host.startsWith('tripsit')) { return; }
 
       if (botNicknames.includes(message.nick)) {
         // logger.debug(`[${PREFIX}] ${message.nick} is a bot!`);
