@@ -106,7 +106,7 @@ module.exports = {
 
         let verbage = '';
         if (message.command === 'JOIN') {
-          verbage = `${message.nick} has rejoined ${message.args[0]}!`;
+          verbage = `${message.nick} has joined ${message.args[0]}!`;
         } else if (message.command === 'PART') {
           verbage = `${message.nick} has left ${message.args[0]}!`;
         } else if (message.command === 'KICK') {
