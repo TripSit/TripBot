@@ -21,6 +21,12 @@ const {
   channelOperatorsId,
   channelModhavenId,
   channelTripsitmeId,
+  channelLoungeId,
+  channelOpiatesId,
+  channelStimulantsId,
+  channelDepressantsId,
+  channelDissociativesId,
+  channelPsychedelicsId,
 } = require('../../env');
 
 // {
@@ -70,6 +76,12 @@ const channels = {
   '#operations': channelOperatorsId,
   '#modhaven': channelModhavenId,
   '#tripsit.me': channelTripsitmeId,
+  '#lounge': channelLoungeId,
+  '#opiates': channelOpiatesId,
+  '#stims': channelStimulantsId,
+  '#depressants': channelDepressantsId,
+  '#dissociatives': channelDissociativesId,
+  '#psychedelics': channelPsychedelicsId,
 };
 
 module.exports = {
