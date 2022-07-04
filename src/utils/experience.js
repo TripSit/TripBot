@@ -128,7 +128,8 @@ module.exports = {
         return;
       }
 
-      logger.debug(`[${PREFIX}] ${message.nick} (${message.host.split('/')[1]}) said ${message.args[1]} in ${message.args[0]}`);
+      const memberHost = message.host.split('/')[1];
+      logger.debug(`[${PREFIX}] ${message.nick}${memberHost ? ` (${memberHost}) ` : ' '}said ${message.args[1]} in ${message.args[0]}`);
       actor = message;
 
       // Determine what kind of experience to give
