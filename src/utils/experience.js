@@ -80,7 +80,7 @@ const botNicknames = [
 ];
 
 module.exports = {
-  async experience(message) {
+  async experience(client, message) {
     // if (message.guildId) {
     //   // If not in tripsit, ignore it
     //   if (message.guildId !== discordGuildId) { return; }
@@ -179,11 +179,11 @@ module.exports = {
 
           logger.debug(`[${PREFIX}] ${actor.username ? actor.username : actor.nick} (lv${level}) +${expPoints} ${expType} exp | TotalExp: ${totalExpPoints}, LevelExp: ${levelExpPoints}, ExpToLevel ${level + 1}: ${expToLevel}`);
           if (expToLevel < levelExpPoints) {
-            logger.debug(`[${PREFIX}] ${actor.username} has leveled up to ${expType} level ${level + 1}!`);
+            logger.debug(`[${PREFIX}] ${actor.username ? actor.username : actor.nick} has leveled up to ${expType} level ${level + 1}!`);
 
             const embed = template.embedTemplate();
-            embed.setDescription(`${actor.username} has leveled up to ${expType} level ${level + 1}!`);
-            const channelTripbotlogs = message.client.channels.cache.get(channelTripbotlogsId);
+            embed.setDescription(`${actor.username ? actor.username : actor.nick} has leveled up to ${expType} level ${level + 1}!`);
+            const channelTripbotlogs = client.channels.cache.get(channelTripbotlogsId);
             channelTripbotlogs.send({ embeds: [embed], ephemeral: false });
             level += 1;
             levelExpPoints -= expToLevel;
