@@ -399,7 +399,7 @@ module.exports = {
       //     "test"
       //   ]
       // }
-      experience(client, message);
+      experience(message, client);
     });
     global.ircClient.addListener('join', (channel, nick, message) => {
       logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);

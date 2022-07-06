@@ -80,7 +80,7 @@ const botNicknames = [
 ];
 
 module.exports = {
-  async experience(client, message) {
+  async experience(message, client) {
     // if (message.guildId) {
     //   // If not in tripsit, ignore it
     //   if (message.guildId !== discordGuildId) { return; }
@@ -91,6 +91,12 @@ module.exports = {
     let actor = {};
     let messageChannelId = '';
     let expType = '';
+    let discordClient = client;
+
+    if (!discordClient) {
+      discordClient = message.client;
+    }
+
     // Check if the user who sent this message is a guild user
     if (message.member) {
       actorPlatform = 'discord';
@@ -183,7 +189,7 @@ module.exports = {
 
             const embed = template.embedTemplate();
             embed.setDescription(`${actor.username ? actor.username : actor.nick} has leveled up to ${expType} level ${level + 1}!`);
-            const channelTripbotlogs = client.channels.cache.get(channelTripbotlogsId);
+            const channelTripbotlogs = discordClient.channels.cache.get(channelTripbotlogsId);
             channelTripbotlogs.send({ embeds: [embed], ephemeral: false });
             level += 1;
             levelExpPoints -= expToLevel;
