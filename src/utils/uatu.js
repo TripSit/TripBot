@@ -101,7 +101,7 @@ module.exports = {
       try {
         lastMessageDate = actorData.experience.general.lastMessageDate;
       } catch (e) {
-        logger.debug(`[${PREFIX}] No lastMessageDate found for ${message.author.username || message.nick}`);
+        logger.debug(`[${PREFIX}] No lastMessageDate found for ${message.author ? message.author.username : message.nick}`);
       }
       const now = new Date();
       const diff = now - lastMessageDate;
