@@ -102,29 +102,31 @@ module.exports = {
     // Find the user in the local DB
     // We use for..of here because it's syncronus and we want to wait for it to finish
     let dataFound = false;
-    // eslint-disable-next-line
-    for (const doc of global.userDb) {
-      if (memberType === 'discord') {
-        if ('discord' in doc.value) {
-          if (doc.value.discord.id === member.id.toString()) {
-            logger.debug(`[${PREFIX}] Discord member data found!`);
-            dataFound = true;
-            memberData = doc.value;
-            memberFbid = doc.key;
+    if (global.userDb) {
+      // eslint-disable-next-line
+      for (const doc of global.userDb) {
+        if (memberType === 'discord') {
+          if ('discord' in doc.value) {
+            if (doc.value.discord.id === member.id.toString()) {
+              logger.debug(`[${PREFIX}] Discord member data found!`);
+              dataFound = true;
+              memberData = doc.value;
+              memberFbid = doc.key;
+            }
           }
         }
-      }
-      if (memberType === 'irc') {
-        if ('irc' in doc.value) {
-          if (doc.value.irc) {
-            if (doc.value.irc.vhost) {
-              // logger.debug(`[${PREFIX}] doc.value.irc.vhost: ${doc.value.irc.vhost}`);
-              if (doc.value.irc.vhost === member.host) {
-                logger.debug(`[${PREFIX}] irc.vhost data found for ${member.host}!`);
-                // logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 2)}`);
-                dataFound = true;
-                memberData = doc.value;
-                memberFbid = doc.key;
+        if (memberType === 'irc') {
+          if ('irc' in doc.value) {
+            if (doc.value.irc) {
+              if (doc.value.irc.vhost) {
+                // logger.debug(`[${PREFIX}] doc.value.irc.vhost: ${doc.value.irc.vhost}`);
+                if (doc.value.irc.vhost === member.host) {
+                  logger.debug(`[${PREFIX}] irc.vhost data found for ${member.host}!`);
+                  // logger.debug(`[${PREFIX}] doc.value: ${JSON.stringify(doc.value, null, 2)}`);
+                  dataFound = true;
+                  memberData = doc.value;
+                  memberFbid = doc.key;
+                }
               }
             }
           }
