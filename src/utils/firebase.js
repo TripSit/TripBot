@@ -154,7 +154,7 @@ module.exports = {
             // logger.debug(`[${PREFIX}] Looking for where `);
             if (doc.data().irc) {
               if (doc.data().irc.vhost) {
-                logger.debug(`[${PREFIX}] doc.data().irc.vhost: ${doc.data().irc.vhost}`);
+                // logger.debug(`[${PREFIX}] doc.data().irc.vhost: ${doc.data().irc.vhost}`);
                 if (doc.data().irc.vhost === member.host) {
                   logger.debug(`[${PREFIX}] Irc member data found (vhost)!`);
                   memberData = doc.data();
