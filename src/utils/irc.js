@@ -402,27 +402,27 @@ module.exports = {
       experience(message, client);
     });
     global.ircClient.addListener('join', (channel, nick, message) => {
-      logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
+      // logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
       watcher(client, message);
     });
     global.ircClient.addListener('part', (channel, nick, reason, message) => {
-      logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
+      // logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
       watcher(client, message);
     });
     global.ircClient.addListener('kick', (channel, nick, by, reason, message) => {
-      logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
+      // logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
       watcher(client, message);
     });
     global.ircClient.addListener('quit', (nick, reason, channels, message) => {
-      logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
+      // logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
       watcher(client, message);
     });
     global.ircClient.addListener('kill', (nick, reason, channels, message) => {
-      logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
+      // logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
       watcher(client, message);
     });
     global.ircClient.addListener('nick', (oldnick, newnick, channels, message) => {
-      logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
+      // logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
       watcher(client, message, newnick);
     });
   },
