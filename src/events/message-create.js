@@ -23,7 +23,9 @@ module.exports = {
   name: 'messageCreate',
   async execute(message) {
     // Only run on Tripsit
-    if (message.guild.id !== discordGuildId) { return; }
+    if (message.guild) {
+      if (message.guild.id !== discordGuildId) { return; }
+    }
     // {
     //   "channelId": "960606558549594162",
     //   "guildId": "960606557622657026",
