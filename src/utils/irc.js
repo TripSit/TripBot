@@ -198,7 +198,7 @@ module.exports = {
         [channelStimulantsId]: '#stims', // Phase2
         [channelDepressantsId]: '#depressants', // Phase2
         [channelDissociativesId]: '#dissociatives', // Phase2
-        [channelPsychedelicsId]: '#psychedelics', // Phase2
+        // [channelPsychedelicsId]: '#psychedelics', // Phase2
 
         // [channelVipWelcomeId]: '#', // Static channel
         // [channelBestoftripsitId]: '#', // Not bridged
@@ -266,7 +266,7 @@ module.exports = {
         [channelStimulantsId]: channelStimulantsWebhook,
         [channelDepressantsId]: channelDepressantsWebhook,
         [channelDissociativesId]: channelDissociativesWebhook,
-        [channelPsychedelicsId]: channelPsychedelicsWebhook,
+        // [channelPsychedelicsId]: channelPsychedelicsWebhook,
 
         // [channelVipWelcomeId]: channelVipWelcomeWebhook,
         // [channelTalkToTSId]: channelTalkToTSWebhook,
