@@ -91,7 +91,7 @@ module.exports = {
       return;
     }
 
-    logger.debug(`[${PREFIX}] (${message.nick}!${message.user}@${message.host}) ${message.command}ed : ${message.args.join(' ')}`);
+    logger.debug(`[${PREFIX}] (${message.nick}!${message.user}@${message.host}) ${message.command}ed}`);
 
     // Get user data
     const [actorData] = await getUserInfo(message);
