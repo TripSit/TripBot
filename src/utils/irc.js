@@ -385,7 +385,7 @@ module.exports = {
       }
     });
     global.ircClient.addListener('message#', (nick, to, text, message) => {
-      logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
+      // logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
       // {
       //   "prefix": "Moonbear!~teknos@tripsit/founder/Teknos",
       //   "nick": "Moonbear",
