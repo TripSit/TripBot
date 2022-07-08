@@ -363,7 +363,12 @@ module.exports = {
       // global.ircClient.say('Moonbear', 'Hello world!');
     });
     global.ircClient.addListener('error', message => {
-      logger.error(`[${PREFIX}] Error - ${JSON.stringify(message, null, 2)}`);
+      const errorObj = message;
+      errorObj.stackTraceLimit = Infinity;
+      logger.error(`[${PREFIX}] error.name: ${errorObj.name} on line ${errorObj.stack.split('\n')[4]}`);
+      logger.error(`[${PREFIX}] error.message: ${errorObj.message}`);
+      logger.error(`[${PREFIX}] error.stack: ${errorObj.stack}`);
+      logger.error(`[${PREFIX}] error.code: ${errorObj.code}`);
     });
     global.ircClient.addListener('pm', async (from, message) => {
       logger.debug(`[${PREFIX}] PM from ${from}: ${message}`);

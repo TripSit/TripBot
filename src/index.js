@@ -69,9 +69,12 @@ const destroy = () => {
 };
 
 process.on('unhandledRejection', error => {
-  logger.error(`[${PREFIX}] error.name: ${error.name}`);
-  logger.error(`[${PREFIX}] error.message: ${error.message}`);
-  logger.error(`[${PREFIX}] error.stack: ${error.stack}`);
+  const errorObj = error;
+  errorObj.stackTraceLimit = Infinity;
+  logger.error(`[${PREFIX}] error.name: ${errorObj.name} on line ${errorObj.stack.split('\n')[4]}`);
+  logger.error(`[${PREFIX}] error.message: ${errorObj.message}`);
+  logger.error(`[${PREFIX}] error.stack: ${errorObj.stack}`);
+  logger.error(`[${PREFIX}] error.code: ${errorObj.code}`);
 });
 
 process.on('SIGINT', destroy);

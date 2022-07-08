@@ -17,7 +17,7 @@ const {
   channelScienceId,
   channelGamingId,
   channelCreativeId,
-  channelPsychedelicId,
+  // channelPsychedelicId,
   channelVipWelcomeId,
   channelGoldLoungeId,
   channelTalkToTSId,
@@ -48,27 +48,54 @@ const voteUnderbanEmoji = NODE_ENV === 'production'
 module.exports = {
   async announcements(message) {
     logger.debug(`[${PREFIX}] starting!`);
+
     // logger.debug(`[${PREFIX}] (${messageCounter[message.channel.id] || 0})
     // Message sent by ${message.author.username} in ${message.channel.name} on ${message.guild}`);
-    const channelGeneral = message.guild.channels.cache.get(channelGeneralId);
-    const channelPets = message.client.channels.cache.get(channelPetsId);
-    const channelFood = message.client.channels.cache.get(channelFoodId);
-    const channelMusic = message.client.channels.cache.get(channelMusicId);
-    const channelScience = message.client.channels.cache.get(channelScienceId);
-    const channelGaming = message.client.channels.cache.get(channelGamingId);
-    const channelCreative = message.client.channels.cache.get(channelCreativeId);
-    // const channelPsychedelic = message.client.channels.cache.get(channelPsychedelicId);
 
-    const channelHowToTripsit = message.client.channels.cache.get(channelHowToTripsitId);
-    const channelTripsit = message.client.channels.cache.get(channelTripsitId);
+    let channelGeneral;
+    let channelPets;
+    let channelFood;
+    let channelMusic;
+    let channelScience;
+    let channelGaming;
+    let channelCreative;
+    let channelHowToTripsit;
+    let channelTripsit;
+    let channelVipWelcome;
+    let channelViplounge;
+    let channelGoldLounge;
+    let channelTalkToTS;
+    // let channelPsychedelic
+    // let channelClearmind;
+    let channelPsychonaut;
+    let channelDissonaut;
 
-    const channelVipWelcome = message.client.channels.cache.get(channelVipWelcomeId);
-    const channelViplounge = message.client.channels.cache.get(channelViploungeId);
-    const channelGoldLounge = message.client.channels.cache.get(channelGoldLoungeId);
-    const channelTalkToTS = message.client.channels.cache.get(channelTalkToTSId);
-    // const channelClearmind = message.client.channels.cache.get(channelClearmindId);
-    const channelPsychonaut = message.client.channels.cache.get(channelPsychonautId);
-    const channelDissonaut = message.client.channels.cache.get(channelDissonautId);
+    try {
+      channelGeneral = message.guild.channels.cache.get(channelGeneralId);
+      channelPets = message.client.channels.cache.get(channelPetsId);
+      channelFood = message.client.channels.cache.get(channelFoodId);
+      channelMusic = message.client.channels.cache.get(channelMusicId);
+      channelScience = message.client.channels.cache.get(channelScienceId);
+      channelGaming = message.client.channels.cache.get(channelGamingId);
+      channelCreative = message.client.channels.cache.get(channelCreativeId);
+      // channelPsychedelic = message.client.channels.cache.get(channelPsychedelicId);
+      channelHowToTripsit = message.client.channels.cache.get(channelHowToTripsitId);
+      channelTripsit = message.client.channels.cache.get(channelTripsitId);
+      channelVipWelcome = message.client.channels.cache.get(channelVipWelcomeId);
+      channelViplounge = message.client.channels.cache.get(channelViploungeId);
+      channelGoldLounge = message.client.channels.cache.get(channelGoldLoungeId);
+      channelTalkToTS = message.client.channels.cache.get(channelTalkToTSId);
+      // channelClearmind = message.client.channels.cache.get(channelClearmindId);
+      channelPsychonaut = message.client.channels.cache.get(channelPsychonautId);
+      channelDissonaut = message.client.channels.cache.get(channelDissonautId);
+    } catch (error) {
+      const errorObj = error;
+      errorObj.stackTraceLimit = Infinity;
+      logger.error(`[${PREFIX}] error.name: ${errorObj.name} on line ${errorObj.stack.split('\n')[4]}`);
+      logger.error(`[${PREFIX}] error.message: ${errorObj.message}`);
+      logger.error(`[${PREFIX}] error.stack: ${errorObj.stack}`);
+      logger.error(`[${PREFIX}] error.code: ${errorObj.code}`);
+    }
 
     const happyEmojis = [
       '😀', '😃', '😄', '😊', '😁', '🥰', '😇', '😍', '😂', '🤣',
@@ -160,7 +187,6 @@ module.exports = {
       `Do you enjoy playing games? Join ${channelGaming.toString()} for gaming talk and join the TripSit Steam group!`,
       `Science enthusiasts of all types are welcome in ${channelScience.toString()}!`,
       `Show off your latest hobby, painting, or even song of your own making in ${channelCreative.toString()}!`,
-      // `Discuss psychedelics and other fun stuff while tripping in ${channelPsychedelic.toString()}!`,
       'Track your dosages with the /idose command!',
       'Set your birthday with the /birthday command!',
       'Set your timeszone with the /time command!',
