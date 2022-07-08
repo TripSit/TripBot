@@ -123,7 +123,7 @@ module.exports = {
     if (NODE_ENV === 'production') {
       // await connectIRCBridge(client);
     }
-    await connectIRC(client);
+    // await connectIRC(client);
     await getReactionRoles(client);
     await getInvites(client);
     const userDb = await updateGlobalDb(client);
