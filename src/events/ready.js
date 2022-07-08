@@ -121,7 +121,7 @@ module.exports = {
     logger.debug(`[${PREFIX}] I am in ${client.guilds.cache.size} guilds.`);
     // run this async so that it runs while everything else starts too
     if (NODE_ENV === 'production') {
-      await connectIRCBridge(client);
+      // await connectIRCBridge(client);
     }
     await connectIRC(client);
     await getReactionRoles(client);
