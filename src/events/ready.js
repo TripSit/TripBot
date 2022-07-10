@@ -5,7 +5,7 @@ const fs = require('fs/promises');
 const { ReactionRole } = require('discordjs-reaction-role');
 const logger = require('../utils/logger');
 const { getGuildInfo } = require('../utils/firebase');
-const { connectIRC, connectIRCBridge } = require('../utils/irc');
+const { connectIRC } = require('../utils/irc');
 const { runTimer } = require('../utils/timer');
 const { webserver } = require('../webserver/webserver');
 
@@ -120,9 +120,6 @@ module.exports = {
   async execute(client) {
     logger.debug(`[${PREFIX}] I am in ${client.guilds.cache.size} guilds.`);
     // run this async so that it runs while everything else starts too
-    if (NODE_ENV === 'production') {
-      // await connectIRCBridge(client);
-    }
     await connectIRC(client);
     await getReactionRoles(client);
     await getInvites(client);
