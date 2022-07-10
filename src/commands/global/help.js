@@ -47,7 +47,11 @@ module.exports = {
 
     // logger.debug(`[${PREFIX}] interaction.guild.id: ${interaction.guild.id}`);
     // logger.debug(`[${PREFIX}]] discordGuildId: ${discordGuildId}`);
-    if (interaction.guild.id !== discordGuildId) {
+    if (interaction.guild) {
+      if (interaction.guild.id !== discordGuildId) {
+        return interaction.reply({ embeds: [globalEmbed], ephemeral: false });
+      }
+    } else {
       return interaction.reply({ embeds: [globalEmbed], ephemeral: false });
     }
 

@@ -17,9 +17,9 @@ const {
   ircServer,
   ircUsername,
   ircPassword,
-  ircBridgeUsername,
-  ircBridgePassword,
-  discordToken,
+  // ircBridgeUsername,
+  // ircBridgePassword,
+  // discordToken,
 
   // channelAnnouncementsWebhook,
   // channelStartWebhook,
@@ -32,10 +32,10 @@ const {
   // channelTripsittersWebhook,
   // channelHowToTripsitWebhook,
   // channelDrugQuestionsWebhook,
-  channelOpentripsitWebhook,
+  // channelOpentripsitWebhook,
   // channelOpentripsit1Webhook,
-  channelOpentripsit2Webhook,
-  channelClosedtripsitWebhook,
+  // channelOpentripsit2Webhook,
+  // channelClosedtripsitWebhook,
 
   // channelGeneralWebhook,
   // channelPetsWebhook,
@@ -46,13 +46,13 @@ const {
   // channelScienceWebhook,
   // channelCreativeWebhook,
 
-  channelLoungeWebhook,
-  channelOpiatesWebhook,
-  channelDeleriantsWebhook,
-  channelStimulantsWebhook,
-  channelDepressantsWebhook,
-  channelDissociativesWebhook,
-  channelPsychedelicsWebhook,
+  // channelLoungeWebhook,
+  // channelOpiatesWebhook,
+  // channelDeleriantsWebhook,
+  // channelStimulantsWebhook,
+  // channelDepressantsWebhook,
+  // channelDissociativesWebhook,
+  // channelPsychedelicsWebhook,
 
   // channelVipWelcomeWebhook,
   // channelTalkToTSWebhook,
@@ -68,23 +68,23 @@ const {
   // channelTripradioWebhook,
 
   // channelDevonboardingWebhook,
-  channelDevofftopicWebhook,
-  channelDevelopmentWebhook,
-  channelWikicontentWebhook,
+  // channelDevofftopicWebhook,
+  // channelDevelopmentWebhook,
+  // channelWikicontentWebhook,
   // channelTripmobileWebhook,
   // channelTripcordWebhook,
   // channelTripbotWebhook,
   // channelTrippitWebhook,
-  channelSandboxWebhook,
+  // channelSandboxWebhook,
   // channelTripbotlogsWebhook,
 
   // channelModlogWebhook,
-  channelModeratorsWebhook,
-  channelMeetingroomWebhook,
-  channelTeamtripsitWebhook,
-  channelOperatorsWebhook,
+  // channelModeratorsWebhook,
+  // channelMeetingroomWebhook,
+  // channelTeamtripsitWebhook,
+  // channelOperatorsWebhook,
   // channelModhavenWebhook,
-  channelTripsitmeWebhook,
+  // channelTripsitmeWebhook,
 
   // channelAnnouncementsId,
   // channelStartId,
@@ -97,10 +97,10 @@ const {
   // channelTripsittersId,
   // channelHowToTripsitId,
   // channelDrugQuestionsId,
-  channelOpentripsitId,
+  // channelOpentripsitId,
   // channelOpentripsit1Id,
-  channelOpentripsit2Id,
-  channelClosedtripsitId,
+  // channelOpentripsit2Id,
+  // channelClosedtripsitId,
 
   // channelGeneralId,
   // channelPetsId,
@@ -111,13 +111,13 @@ const {
   // channelScienceId,
   // channelCreativeId,
 
-  channelLoungeId,
-  channelOpiatesId,
-  channelDeleriantsId,
-  channelStimulantsId,
-  channelDepressantsId,
-  channelDissociativesId,
-  channelPsychedelicsId,
+  // channelLoungeId,
+  // channelOpiatesId,
+  // channelDeleriantsId,
+  // channelStimulantsId,
+  // channelDepressantsId,
+  // channelDissociativesId,
+  // channelPsychedelicsId,
 
   // channelVipWelcomeId,
   // channelBestOfTripsitId
@@ -134,190 +134,26 @@ const {
   // channelTripradioId,
 
   // channelDevonboardingId,
-  channelDevofftopicId,
-  channelDevelopmentId,
-  channelWikicontentId,
+  // channelDevofftopicId,
+  // channelDevelopmentId,
+  // channelWikicontentId,
   // channelTripmobileId,
   // channelTripcordId,
   // channelTripbotId,
   // channelTrippitId,
-  channelSandboxId,
+  // channelSandboxId,
   // channelTripbotlogsId,
 
   // channelModlogId,
-  channelModeratorsId,
-  channelMeetingroomId,
-  channelTeamtripsitId,
-  channelOperatorsId,
+  // channelModeratorsId,
+  // channelMeetingroomId,
+  // channelTeamtripsitId,
+  // channelOperatorsId,
   // channelModhavenId,
-  channelTripsitmeId,
+  // channelTripsitmeId,
 } = require('../../env');
 
 module.exports = {
-  async connectIRCBridge() {
-    // If there is no password provided, dont even try to connect
-    if (!ircPassword) { return; }
-
-    // IRC Connection, this takes a while so do it first
-    ircBridgeConfig[0].discordToken = discordToken;
-    ircBridgeConfig[0].server = ircServer;
-
-    ircBridgeConfig[0].ircOptions.username = ircBridgeUsername;
-    ircBridgeConfig[0].ircOptions.password = ircBridgePassword;
-    ircBridgeConfig[0].nickname = ircBridgeUsername;
-    let webhooks = [];
-    if (NODE_ENV === 'production') {
-      ircBridgeConfig[0].channelMapping = {
-        // [channelAnnouncementsId]: '#', // Static channel
-        // [channelStartId]: '#', // Static channel
-        // [channelBotspamId]: '#', // No need to bridge
-        // [channelRulesId]: '#', // Static channel
-        // [channelIrcId]: '#', // Static channel
-
-        // [channelTripsitId]: '#', // Static channel
-        // [channelSanctuaryId]: '#sanctuary', // Potato currently bridges
-        // [channelTripsittersId]: '#tripsitters',
-        // [channelHowToTripsitId]: '#', // Static channel
-        // [channelDrugQuestionsId]: '#', // Static channel
-        [channelOpentripsitId]: '#tripsit',
-        // [channelOpentripsit1Id]: '#tripsit1', // Potato currently bridges
-        [channelOpentripsit2Id]: '#tripsit2',
-        [channelClosedtripsitId]: '#tripsit3',
-
-        // [channelGeneralId]: '#lounge', // Phase2
-        // [channelPetsId]: '#pets', // Phase2
-        // [channelFoodId]: '#cooking', // Phase2
-        // [channelMusicId]: '#music', // Phase2
-        // [channelMoviesId]: '#movies', // Phase2
-        // [channelGamingId]: '#gaming', // Phase2
-        // [channelScienceId]: '#science', // Phase2
-        // [channelCreativeId]: '#creative', // Phase2
-
-        [channelLoungeId]: '#lounge', // Phusion agreed
-        [channelOpiatesId]: '#opiates', // Phusion agreed
-        [channelStimulantsId]: '#stims', // Phase2
-        [channelDepressantsId]: '#depressants', // Phase2
-        [channelDissociativesId]: '#dissociatives', // Phase2
-        [channelPsychedelicsId]: '#psychedelics', // Phase2
-
-        // [channelVipWelcomeId]: '#', // Static channel
-        // [channelBestoftripsitId]: '#', // Not bridged
-        // [channelTalkToTSId]: '#', // Static channel
-        // [channelViploungeId]: '#tripsitvip', // Phase2
-        // [channelDissonautId]: '#dissonaut', // Phase2
-        // [channelPsychonautId]: '#psychonaut', // Phase2
-        // [channelAdultswimId]: '#psychonaut', // Phase2
-        // [channelGoldLoungeId]: '#gold-lounge', // Phase2
-        // [channelClearmindId]: '#recovery', // Phase2
-        // [channelMinecraftId]: '#minecraft',
-        // [channelHubId]: '#', // Voice channel
-
-        // [channelTripradioId]: '#', // Voice channel
-
-        // [channelDevannounceId]: '#', // Static channel
-        // [channelDevonboardingId]: '#', // Static channel
-        [channelDevofftopicId]: '#compsci',
-        [channelDevelopmentId]: '#tripsit-dev',
-        [channelWikicontentId]: '#content',
-        // [channelTripmobileId]: '#', // No plans to bridge
-        // [channelTripcordId]: '#', // No plans to bridge
-        // [channelTripbotId]: '#', // No plans to bridge
-        // [channelTrippitId]: '#', // No plans to bridge
-        [channelSandboxId]: '#sandbox',
-        // [channelTripbotlogsId]: '#', // No plans to bridge
-
-        // [channelModlogId]: '#', // No plans to bridge
-        [channelModeratorsId]: '#moderators',
-        [channelMeetingroomId]: '#meeting-room',
-        [channelTeamtripsitId]: '#teamtripsit',
-        [channelOperatorsId]: '#operations',
-        // [channelModhavenId]: '#modhaven',
-        [channelTripsitmeId]: '#tripsit.me',
-      };
-      webhooks = {
-        // [channelAnnouncementsId]: channelAnnouncementsWebhook,
-        // [channelStartId]: channelStartWebhook,
-        // [channelBotspamId]: channelBotspamWebhook,
-        // [channelRulesId]: channelRulesWebhook,
-        // [channelIrcId]: channelIrcWebhook,
-
-        // [channelTripsitId]: channelTripsitWebhook,
-        // [channelSanctuaryId]: channelSanctuaryWebhook,
-        // [channelTripsittersId]: channelTripsittersWebhook,
-        // [channelHowToTripsitId]: channelHowToTripsitWebhook,
-        // [channelDrugQuestionsId]: channelDrugQuestionsWebhook,
-        [channelOpentripsitId]: channelOpentripsitWebhook,
-        // [channelOpentripsit1Id]: channelOpentripsit1Webhook,
-        [channelOpentripsit2Id]: channelOpentripsit2Webhook,
-        [channelClosedtripsitId]: channelClosedtripsitWebhook,
-
-        // [channelGeneralId]: channelGeneralWebhook,
-        // [channelPetsId]: channelPetsWebhook,
-        // [channelFoodId]: channelFoodWebhook,
-        // [channelMusicId]: channelMusicWebhook,
-        // [channelMoviesId]: channelMoviesWebhook,
-        // [channelGamingId]: channelGamingWebhook,
-        // [channelScienceId]: channelScienceWebhook,
-        // [channelCreativeId]: channelCreativeWebhook,
-
-        [channelLoungeId]: channelLoungeWebhook,
-        [channelOpiatesId]: channelOpiatesWebhook,
-        [channelDeleriantsId]: channelDeleriantsWebhook,
-        [channelStimulantsId]: channelStimulantsWebhook,
-        [channelDepressantsId]: channelDepressantsWebhook,
-        [channelDissociativesId]: channelDissociativesWebhook,
-        [channelPsychedelicsId]: channelPsychedelicsWebhook,
-
-        // [channelVipWelcomeId]: channelVipWelcomeWebhook,
-        // [channelTalkToTSId]: channelTalkToTSWebhook,
-        // [channelViploungeId]: channelViploungeWebhook,
-        // [channelDissonautId]: channelDissonautWebhook,
-        // [channelPsychonautId]: channelPsychonautWebhook,
-        // [channelAdultswimId]: channelAdultswimWebhook,
-        // [channelGoldLoungeId]: channelGoldLoungeWebhook,
-        // [channelClearmindId]: channelClearmindWebhook,
-        // [channelMinecraftId]: channelMinecraftWebhook,
-        // [channelHubId]: channelHubWebhook,
-
-        // [channelTripradioId]: channelTripradioWebhook,
-
-        // [channelDevonboardingId]: channelDevonboardingWebhook,
-        [channelDevofftopicId]: channelDevofftopicWebhook,
-        [channelDevelopmentId]: channelDevelopmentWebhook,
-        [channelWikicontentId]: channelWikicontentWebhook,
-        // [channelTripmobileId]: channelTripmobileWebhook,
-        // [channelTripcordId]: channelTripcordWebhook,
-        // [channelTripbotId]: channelTripbotWebhook,
-        // [channelTrippitId]: channelTrippitWebhook,
-        [channelSandboxId]: channelSandboxWebhook,
-        // [channelTripbotlogsId]: channelTripbotlogsWebhook,
-        // [channelModlogId]: channelModlogWebhook,
-        [channelModeratorsId]: channelModeratorsWebhook,
-        [channelMeetingroomId]: channelMeetingroomWebhook,
-        [channelTeamtripsitId]: channelTeamtripsitWebhook,
-        [channelOperatorsId]: channelOperatorsWebhook,
-        // [channelModhavenId]: channelModhavenWebhook,
-        [channelTripsitmeId]: channelTripsitmeWebhook,
-      };
-    }
-    // const channelTripsitId = '960606558373441559';
-    if (NODE_ENV === 'development') {
-      ircBridgeConfig[0].channelMapping = {
-        [channelSandboxId]: '#sandbox-dev',
-        // [channelTripsitId]: '#sandbox-dev',
-      };
-      webhooks = {
-        [channelSandboxId]: channelSandboxWebhook,
-        // [channelTripsitId]: '',
-      };
-    }
-
-    // logger.debug(JSON.stringify(webhooks, null, 2));
-    ircBridgeConfig[0].webhooks = webhooks;
-
-    // logger.debug(`[${PREFIX}] ircBridgeConfig: ${JSON.stringify(ircBridgeConfig, null, 2)}`);
-    discordIRC(ircBridgeConfig);
-  },
   async connectIRC(client) {
     // If there is no password provided, dont even try to connect
     if (!ircPassword) { return; }
@@ -431,4 +267,168 @@ module.exports = {
       watcher(client, message, newnick);
     });
   },
+  // async connectIRCBridge() {
+  //   // If there is no password provided, dont even try to connect
+  //   if (!ircPassword) { return; }
+
+  //   // IRC Connection, this takes a while so do it first
+  //   ircBridgeConfig[0].discordToken = discordToken;
+  //   ircBridgeConfig[0].server = ircServer;
+
+  //   ircBridgeConfig[0].ircOptions.username = ircBridgeUsername;
+  //   ircBridgeConfig[0].ircOptions.password = ircBridgePassword;
+  //   ircBridgeConfig[0].nickname = ircBridgeUsername;
+  //   let webhooks = [];
+  //   if (NODE_ENV === 'production') {
+  //     ircBridgeConfig[0].channelMapping = {
+  //       // [channelAnnouncementsId]: '#', // Static channel
+  //       // [channelStartId]: '#', // Static channel
+  //       // [channelBotspamId]: '#', // No need to bridge
+  //       // [channelRulesId]: '#', // Static channel
+  //       // [channelIrcId]: '#', // Static channel
+
+  //       // [channelTripsitId]: '#', // Static channel
+  //       // [channelSanctuaryId]: '#sanctuary', // Potato currently bridges
+  //       // [channelTripsittersId]: '#tripsitters',
+  //       // [channelHowToTripsitId]: '#', // Static channel
+  //       // [channelDrugQuestionsId]: '#', // Static channel
+  //       [channelOpentripsitId]: '#tripsit',
+  //       // [channelOpentripsit1Id]: '#tripsit1', // Potato currently bridges
+  //       [channelOpentripsit2Id]: '#tripsit2',
+  //       [channelClosedtripsitId]: '#tripsit3',
+
+  //       // [channelGeneralId]: '#lounge', // Phase2
+  //       // [channelPetsId]: '#pets', // Phase2
+  //       // [channelFoodId]: '#cooking', // Phase2
+  //       // [channelMusicId]: '#music', // Phase2
+  //       // [channelMoviesId]: '#movies', // Phase2
+  //       // [channelGamingId]: '#gaming', // Phase2
+  //       // [channelScienceId]: '#science', // Phase2
+  //       // [channelCreativeId]: '#creative', // Phase2
+
+  //       [channelLoungeId]: '#lounge', // Phusion agreed
+  //       [channelOpiatesId]: '#opiates', // Phusion agreed
+  //       [channelStimulantsId]: '#stims', // Phase2
+  //       [channelDepressantsId]: '#depressants', // Phase2
+  //       [channelDissociativesId]: '#dissociatives', // Phase2
+  //       [channelPsychedelicsId]: '#psychedelics', // Phase2
+
+  //       // [channelVipWelcomeId]: '#', // Static channel
+  //       // [channelBestoftripsitId]: '#', // Not bridged
+  //       // [channelTalkToTSId]: '#', // Static channel
+  //       // [channelViploungeId]: '#tripsitvip', // Phase2
+  //       // [channelDissonautId]: '#dissonaut', // Phase2
+  //       // [channelPsychonautId]: '#psychonaut', // Phase2
+  //       // [channelAdultswimId]: '#psychonaut', // Phase2
+  //       // [channelGoldLoungeId]: '#gold-lounge', // Phase2
+  //       // [channelClearmindId]: '#recovery', // Phase2
+  //       // [channelMinecraftId]: '#minecraft',
+  //       // [channelHubId]: '#', // Voice channel
+
+  //       // [channelTripradioId]: '#', // Voice channel
+
+  //       // [channelDevannounceId]: '#', // Static channel
+  //       // [channelDevonboardingId]: '#', // Static channel
+  //       [channelDevofftopicId]: '#compsci',
+  //       [channelDevelopmentId]: '#tripsit-dev',
+  //       [channelWikicontentId]: '#content',
+  //       // [channelTripmobileId]: '#', // No plans to bridge
+  //       // [channelTripcordId]: '#', // No plans to bridge
+  //       // [channelTripbotId]: '#', // No plans to bridge
+  //       // [channelTrippitId]: '#', // No plans to bridge
+  //       [channelSandboxId]: '#sandbox',
+  //       // [channelTripbotlogsId]: '#', // No plans to bridge
+
+  //       // [channelModlogId]: '#', // No plans to bridge
+  //       [channelModeratorsId]: '#moderators',
+  //       [channelMeetingroomId]: '#meeting-room',
+  //       [channelTeamtripsitId]: '#teamtripsit',
+  //       [channelOperatorsId]: '#operations',
+  //       // [channelModhavenId]: '#modhaven',
+  //       [channelTripsitmeId]: '#tripsit.me',
+  //     };
+  //     webhooks = {
+  //       // [channelAnnouncementsId]: channelAnnouncementsWebhook,
+  //       // [channelStartId]: channelStartWebhook,
+  //       // [channelBotspamId]: channelBotspamWebhook,
+  //       // [channelRulesId]: channelRulesWebhook,
+  //       // [channelIrcId]: channelIrcWebhook,
+
+  //       // [channelTripsitId]: channelTripsitWebhook,
+  //       // [channelSanctuaryId]: channelSanctuaryWebhook,
+  //       // [channelTripsittersId]: channelTripsittersWebhook,
+  //       // [channelHowToTripsitId]: channelHowToTripsitWebhook,
+  //       // [channelDrugQuestionsId]: channelDrugQuestionsWebhook,
+  //       [channelOpentripsitId]: channelOpentripsitWebhook,
+  //       // [channelOpentripsit1Id]: channelOpentripsit1Webhook,
+  //       [channelOpentripsit2Id]: channelOpentripsit2Webhook,
+  //       [channelClosedtripsitId]: channelClosedtripsitWebhook,
+
+  //       // [channelGeneralId]: channelGeneralWebhook,
+  //       // [channelPetsId]: channelPetsWebhook,
+  //       // [channelFoodId]: channelFoodWebhook,
+  //       // [channelMusicId]: channelMusicWebhook,
+  //       // [channelMoviesId]: channelMoviesWebhook,
+  //       // [channelGamingId]: channelGamingWebhook,
+  //       // [channelScienceId]: channelScienceWebhook,
+  //       // [channelCreativeId]: channelCreativeWebhook,
+
+  //       [channelLoungeId]: channelLoungeWebhook,
+  //       [channelOpiatesId]: channelOpiatesWebhook,
+  //       [channelDeleriantsId]: channelDeleriantsWebhook,
+  //       [channelStimulantsId]: channelStimulantsWebhook,
+  //       [channelDepressantsId]: channelDepressantsWebhook,
+  //       [channelDissociativesId]: channelDissociativesWebhook,
+  //       [channelPsychedelicsId]: channelPsychedelicsWebhook,
+
+  //       // [channelVipWelcomeId]: channelVipWelcomeWebhook,
+  //       // [channelTalkToTSId]: channelTalkToTSWebhook,
+  //       // [channelViploungeId]: channelViploungeWebhook,
+  //       // [channelDissonautId]: channelDissonautWebhook,
+  //       // [channelPsychonautId]: channelPsychonautWebhook,
+  //       // [channelAdultswimId]: channelAdultswimWebhook,
+  //       // [channelGoldLoungeId]: channelGoldLoungeWebhook,
+  //       // [channelClearmindId]: channelClearmindWebhook,
+  //       // [channelMinecraftId]: channelMinecraftWebhook,
+  //       // [channelHubId]: channelHubWebhook,
+
+  //       // [channelTripradioId]: channelTripradioWebhook,
+
+  //       // [channelDevonboardingId]: channelDevonboardingWebhook,
+  //       [channelDevofftopicId]: channelDevofftopicWebhook,
+  //       [channelDevelopmentId]: channelDevelopmentWebhook,
+  //       [channelWikicontentId]: channelWikicontentWebhook,
+  //       // [channelTripmobileId]: channelTripmobileWebhook,
+  //       // [channelTripcordId]: channelTripcordWebhook,
+  //       // [channelTripbotId]: channelTripbotWebhook,
+  //       // [channelTrippitId]: channelTrippitWebhook,
+  //       [channelSandboxId]: channelSandboxWebhook,
+  //       // [channelTripbotlogsId]: channelTripbotlogsWebhook,
+  //       // [channelModlogId]: channelModlogWebhook,
+  //       [channelModeratorsId]: channelModeratorsWebhook,
+  //       [channelMeetingroomId]: channelMeetingroomWebhook,
+  //       [channelTeamtripsitId]: channelTeamtripsitWebhook,
+  //       [channelOperatorsId]: channelOperatorsWebhook,
+  //       // [channelModhavenId]: channelModhavenWebhook,
+  //       [channelTripsitmeId]: channelTripsitmeWebhook,
+  //     };
+  //   }
+  //   // const channelTripsitId = '960606558373441559';
+  //   if (NODE_ENV === 'development') {
+  //     ircBridgeConfig[0].channelMapping = {
+  //       [channelSandboxId]: '#sandbox-dev',
+  //       // [channelTripsitId]: '#sandbox-dev',
+  //     };
+  //     webhooks = {
+  //       [channelSandboxId]: channelSandboxWebhook,
+  //       // [channelTripsitId]: '',
+  //     };
+  //   }
+
+  //   // logger.debug(JSON.stringify(webhooks, null, 2));
+  //   ircBridgeConfig[0].webhooks = webhooks;
+
+  //   // logger.debug(`[${PREFIX}] ircBridgeConfig: ${JSON.stringify(ircBridgeConfig, null, 2)}`);
+  //   discordIRC(ircBridgeConfig);
+  // },
 };
