@@ -58,6 +58,7 @@ const botNicknames = [
   'Github',
   'tripbot_',
   'TSDev_',
+  'TS',
   'TS_',
   'TS1_',
   'TSTelegram_',
