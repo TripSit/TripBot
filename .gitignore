@@ -359,3 +359,4 @@ src/assets/reminders.json
 !backups/
 backups/*.json
 cert/
+built/

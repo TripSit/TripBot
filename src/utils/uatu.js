@@ -56,6 +56,19 @@ const botNicknames = [
   'TSDiscord1',
   'TSModRelay1',
   'Github',
+  'tripbot_',
+  'TSDev_',
+  'TS_',
+  'TS1_',
+  'TSTelegram_',
+  'TSDiscord_',
+  'TSModRelay_',
+  'tripbot1_',
+  'TSDev1_',
+  'TS11_',
+  'TSTelegram1_',
+  'TSDiscord1_',
+  'TSModRelay1_',
 ];
 
 logger.debug(`${PREFIX} - channelSandboxId: ${channelSandboxId}`);
