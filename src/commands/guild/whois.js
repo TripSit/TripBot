@@ -22,7 +22,7 @@ module.exports = {
 
     // Do a whois on the user to get their account name
     let data = null;
-    await global.ircClient.whowas(target, async resp => {
+    await global.ircClient.whois(target, async resp => {
       data = resp;
     });
 
