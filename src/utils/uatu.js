@@ -72,7 +72,6 @@ const botNicknames = [
   'TSModRelay1_',
 ];
 
-logger.debug(`${PREFIX} - channelSandboxId: ${channelSandboxId}`);
 const channels = {
   '#sandbox': channelSandboxId,
   '#sandbox-dev': channelSandboxId,

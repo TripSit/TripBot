@@ -1,0 +1,6 @@
+{
+  "watch": ["src"],
+  "ext": ".js",
+  "ignore": ["src/assets/*", "backups/*"],
+  "exec": "node --inspect ./src/index.js"
+}
