@@ -125,10 +125,13 @@ module.exports = {
     logger.debug(`[${PREFIX}] memberInput: ${memberInput}`);
 
     // Get the input from the modal, if it was submitted
-    const triageInput = triageGiven || interaction.fields.getTextInputValue('triageInput');
+    let triageInput = triageGiven;
+    let introInput = introGiven;
+    if (interaction.fields) {
+      triageInput = interaction.fields.getTextInputValue('triageInput');
+      introInput = interaction.fields.getTextInputValue('introInput');
+    }
     logger.debug(`[${PREFIX}] triageInput: ${triageInput}`);
-
-    const introInput = introGiven || interaction.fields.getTextInputValue('introInput');
     logger.debug(`[${PREFIX}] introInput: ${introInput}`);
 
     // Get the roles we'll be referencing
