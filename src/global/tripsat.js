@@ -4,7 +4,7 @@ const PREFIX = require('path').parse(__filename).name;
 // const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('./logger');
-const { getUserInfo } = require('./firebase');
+const { getUserInfo } = require('./firebaseAPI');
 
 const template = require('./embed-template');
 

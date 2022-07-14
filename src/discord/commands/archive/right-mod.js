@@ -3,7 +3,7 @@
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const logger = require('../../../global/logger');
 const template = require('../../../global/embed-template');
-const { getUserInfo, setUserInfo } = require('../../../global/firebase');
+const { getUserInfo, setUserInfo } = require('../../../global/firebaseAPI');
 
 const PREFIX = require('path').parse(__filename).name; // eslint-disable-line
 

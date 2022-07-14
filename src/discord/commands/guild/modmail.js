@@ -17,7 +17,7 @@ const {
   // setUserInfo,
   getTicketInfo,
   setTicketInfo,
-} = require('../../../global/firebase');
+} = require('../../../global/firebaseAPI');
 
 const {
   NODE_ENV,

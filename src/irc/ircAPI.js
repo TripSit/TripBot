@@ -18,7 +18,7 @@ const {
 } = require('../../env');
 
 module.exports = {
-  async connectIRC(client) {
+  async ircConnect(client) {
     // If there is no password provided, dont even try to connect
     if (!ircPassword) { return; }
 

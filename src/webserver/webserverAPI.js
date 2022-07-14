@@ -35,7 +35,7 @@ function makeConfig(authorizationToken) { // Define the function
 }
 
 module.exports = {
-  async webserver() {
+  async webserverConnect() {
     /* Define app variables */
     const app = Express(); // Create a web app
 

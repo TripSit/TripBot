@@ -6,7 +6,7 @@ const { MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const logger = require('../../../global/logger');
 const template = require('../../../global/embed-template');
-const { getUserInfo } = require('../../../global/firebase');
+const { getUserInfo } = require('../../../global/firebaseAPI');
 const karmaQuotes = require('../../../assets/data/karma_quotes.json');
 
 const PREFIX = path.parse(__filename).name;

@@ -10,7 +10,7 @@ const { modmailInitialResponse } = require('../commands/guild/modmail');
 const logger = require('../../global/logger');
 const template = require('../../global/embed-template');
 
-const { getTicketInfo } = require('../../global/firebase');
+const { getTicketInfo } = require('../../global/firebaseAPI');
 
 const {
   discordGuildId,

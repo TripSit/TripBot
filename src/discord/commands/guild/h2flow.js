@@ -5,7 +5,7 @@ const { stripIndents } = require('common-tags/lib');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../../global/logger');
 const template = require('../../../global/embed-template');
-const { getUserInfo } = require('../../../global/firebase');
+const { getUserInfo } = require('../../../global/firebaseAPI');
 
 const PREFIX = path.parse(__filename).name;
 

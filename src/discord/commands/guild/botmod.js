@@ -5,7 +5,7 @@ const { SlashCommandBuilder, time } = require('@discordjs/builders');
 const { MessageActionRow, MessageButton } = require('discord.js');
 const logger = require('../../../global/logger');
 const template = require('../../../global/embed-template');
-const { getGuildInfo, setGuildInfo } = require('../../../global/firebase');
+const { getGuildInfo, setGuildInfo } = require('../../../global/firebaseAPI');
 
 const PREFIX = path.parse(__filename).name;
 

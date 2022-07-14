@@ -5,7 +5,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ReactionRole } = require('discordjs-reaction-role');
 const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
-const { getGuildInfo, setGuildInfo } = require('../../../global/firebase');
+const { getGuildInfo, setGuildInfo } = require('../../../global/firebaseAPI');
 const logger = require('../../../global/logger');
 const template = require('../../../global/embed-template');
 

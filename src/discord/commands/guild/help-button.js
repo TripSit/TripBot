@@ -16,7 +16,7 @@ const {
   // setUserInfo,
   getTicketInfo,
   setTicketInfo,
-} = require('../../../global/firebase');
+} = require('../../../global/firebaseAPI');
 
 const PREFIX = path.parse(__filename).name;
 

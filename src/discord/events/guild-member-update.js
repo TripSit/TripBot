@@ -2,7 +2,7 @@
 
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../global/logger');
-const { getUserInfo, setUserInfo } = require('../../global/firebase');
+const { getUserInfo, setUserInfo } = require('../../global/firebaseAPI');
 
 const {
   discordGuildId,

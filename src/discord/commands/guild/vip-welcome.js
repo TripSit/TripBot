@@ -4,7 +4,7 @@ const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ReactionRole } = require('discordjs-reaction-role');
 const { stripIndents } = require('common-tags');
-const { getGuildInfo, setGuildInfo } = require('../../../global/firebase');
+const { getGuildInfo, setGuildInfo } = require('../../../global/firebaseAPI');
 const logger = require('../../../global/logger');
 
 const PREFIX = path.parse(__filename).name;

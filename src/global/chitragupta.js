@@ -2,7 +2,7 @@
 
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('./logger');
-const { getUserInfo, setUserInfo } = require('./firebase');
+const { getUserInfo, setUserInfo } = require('./firebaseAPI');
 
 module.exports = {
   async karma(reaction, user, action) {

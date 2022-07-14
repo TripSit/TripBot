@@ -2,7 +2,7 @@
 
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('./logger');
-const { getUserInfo } = require('./firebase');
+const { getUserInfo } = require('./firebaseAPI');
 const {
   channelSanctuaryId,
   channelTripsittersId,

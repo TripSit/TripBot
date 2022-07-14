@@ -3,7 +3,7 @@
 const PREFIX = require('path').parse(__filename).name;
 const { stripIndents } = require('common-tags');
 const logger = require('./logger');
-const { getUserInfo, setUserInfo } = require('./firebase');
+const { getUserInfo, setUserInfo } = require('./firebaseAPI');
 
 const {
   NODE_ENV,

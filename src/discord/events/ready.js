@@ -1,22 +1,14 @@
 'use strict';
 
 const path = require('path');
-const fs = require('fs/promises');
 const { ReactionRole } = require('discordjs-reaction-role');
 const logger = require('../../global/logger');
-const { getGuildInfo } = require('../../global/firebase');
-const { connectIRC } = require('../../irc/ircAPI');
-const { runTimer } = require('../../global/timer');
-const { webserver } = require('../../webserver/webserverAPI');
+const { getGuildInfo } = require('../../global/firebaseAPI');
 
 const PREFIX = path.parse(__filename).name;
 
-const { db } = global;
 const {
-  NODE_ENV,
   discordGuildId,
-  firebaseUserDbName,
-  firebaseGuildDbName,
 } = require('../../../env');
 
 async function getReactionRoles(client) {
@@ -56,79 +48,13 @@ async function getInvites(client) {
   });
   /* End *INVITE* code */
 }
-
-async function updateGlobalDb() {
-  const userDb = [];
-  if (db !== undefined) {
-    // Get user information
-    const snapshotUser = await db.collection(firebaseUserDbName).get();
-    snapshotUser.forEach(doc => {
-      userDb.push({
-        key: doc.id,
-        value: doc.data(),
-      });
-    });
-  }
-  Object.assign(global, { userDb });
-  // logger.debug(`[${PREFIX}] User database loaded.`);
-  // logger.debug(`[${PREFIX}] userDb: ${JSON.stringify(global.userDb, null, 4)}`);
-  logger.debug(`[${PREFIX}] Global User DB loaded!`);
-
-  const guildDb = [];
-  const blacklistGuilds = [];
-  if (db !== undefined) {
-    // Get guild information
-    const snapshotGuild = await db.collection(firebaseGuildDbName).get();
-    snapshotGuild.forEach(doc => {
-      guildDb.push({
-        key: doc.id,
-        value: doc.data(),
-      });
-      if (doc.data().isBanned) {
-        blacklistGuilds.push(doc.data().guild_id);
-      }
-    });
-  }
-  Object.assign(global, { guild_db: guildDb });
-  logger.debug(`[${PREFIX}] Global Guild DB loaded!`);
-  return userDb;
-}
-
-async function backupDb(userDb) {
-  const today = Math.floor(Date.now() / 1000);
-  if (NODE_ENV !== 'production') {
-    await fs.writeFile(
-      path.resolve(`./backups/userDb_(${today}).json`),
-      JSON.stringify(userDb, null, 2),
-    );
-    logger.debug(`[${PREFIX}] User database backedup!`);
-  }
-
-  if (NODE_ENV !== 'production') {
-    await fs.writeFile(
-      path.resolve(`./backups/guild_db_(${today}).json`),
-      JSON.stringify(global.guild_db, null, 2),
-    );
-    logger.debug(`[${PREFIX}] Guild database backedup!`);
-  }
-}
-
 module.exports = {
   name: 'ready',
   once: true,
-
   async execute(client) {
     logger.debug(`[${PREFIX}] I am in ${client.guilds.cache.size} guilds.`);
     // run this async so that it runs while everything else starts too
-    if (NODE_ENV === 'production') {
-      await connectIRC(client);
-    }
     await getReactionRoles(client);
     await getInvites(client);
-    const userDb = await updateGlobalDb(client);
-    await backupDb(client, userDb);
-    await runTimer(client);
-    await webserver();
-    logger.info(`[${PREFIX}] Ready to take over the world!`);
   },
 };

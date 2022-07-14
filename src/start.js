@@ -1,35 +1,43 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { initializeApp, cert } = require('firebase-admin/app'); // eslint-disable-line
-const { getFirestore } = require('firebase-admin/firestore'); // eslint-disable-line
 const logger = require('./global/logger');
-const serviceAccount = require('./assets/config/firebase_creds.json');
 const { discordConnect } = require('./discord/discordAPI');
+const { ircConnect } = require('./irc/ircAPI');
+const { firebaseConnect } = require('./global/firebaseAPI');
+const { webserverConnect } = require('./webserver/webserverAPI');
+const { runTimer } = require('./global/timerAPI');
 
-const {
-  firebasePrivateKeyId,
-  firebasePrivateKey,
-  firebaseClientId,
-  firebaseClientEmail,
-} = require('../env');
+async function start() {
+  // Initialize Firebase
+  logger.debug(`[${PREFIX}] Firebase starting`);
+  await firebaseConnect();
+  logger.debug(`[${PREFIX}] Firebase started!`);
 
-serviceAccount.private_key_id = firebasePrivateKeyId;
-serviceAccount.private_key = firebasePrivateKey ? firebasePrivateKey.replace(/\\n/g, '\n') : undefined;
-serviceAccount.client_email = firebaseClientEmail;
-serviceAccount.client_id = firebaseClientId;
+  // Initialize discord bot
+  logger.debug(`[${PREFIX}] Discord starting`);
+  await discordConnect();
+  logger.debug(`[${PREFIX}] Discord started!`);
 
-// Initialize firebase app
-if (serviceAccount.private_key_id) {
-  initializeApp({
-    credential: cert(serviceAccount),
-    databaseURL: 'https://tripsit-me-default-rtdb.firebaseio.com',
-  });
-  global.db = getFirestore();
+  // // Initialize IRC bot
+  // logger.debug(`[${PREFIX}] IRC starting`);
+  // await ircConnect();
+  // logger.debug(`[${PREFIX}] IRC started!`);
+
+  // // Initialize timer globally
+  // logger.debug(`[${PREFIX}] Timer starting`);
+  // await runTimer();
+  // logger.debug(`[${PREFIX}] Timer started!`);
+
+  // // Initialize webclient
+  // logger.debug(`[${PREFIX}] Webclient starting`);
+  // await webserverConnect();
+  // logger.debug(`[${PREFIX}] Webclient started!`);
+
+  logger.info(`[${PREFIX}] Ready to take over the world!`);
 }
 
-// Initialize discord bot
-discordConnect();
+start();
 
 // Stop the bot when the process is closed (via Ctrl-C).
 const destroy = () => {

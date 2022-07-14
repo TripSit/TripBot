@@ -3,7 +3,7 @@
 const PREFIX = require('path').parse(__filename).name;
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../../global/logger');
-const { getUserInfo, setUserInfo } = require('../../../global/firebase');
+const { getUserInfo, setUserInfo } = require('../../../global/firebaseAPI');
 const parseDuration = require('../../../global/parseDuration');
 
 const {

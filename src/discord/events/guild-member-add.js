@@ -4,7 +4,7 @@ const PREFIX = require('path').parse(__filename).name;
 const { stripIndents } = require('common-tags');
 const logger = require('../../global/logger');
 const template = require('../../global/embed-template');
-const { getUserInfo, setUserInfo } = require('../../global/firebase');
+const { getUserInfo, setUserInfo } = require('../../global/firebaseAPI');
 
 const {
   discordGuildId,

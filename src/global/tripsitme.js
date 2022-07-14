@@ -6,7 +6,7 @@ const {
 const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('./logger');
-const { getUserInfo, setUserInfo } = require('./firebase');
+const { getUserInfo, setUserInfo } = require('./firebaseAPI');
 
 const template = require('./embed-template');
 
