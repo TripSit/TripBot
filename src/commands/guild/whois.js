@@ -35,7 +35,17 @@ module.exports = {
     // Check if the user is FOUND on IRC, if not, ignore it
     if (!data.host) {
       logger.debug(`[${PREFIX}] ${target} not found on IRC, ignoring!`);
-      interaction.reply(`${target} not found on IRC, ignoring!`);
+      
+      let embed = template.embedTemplate()
+      .setDescription(`${target} not found on IRC, ignoring!`)
+      .setTitle(`Whois for ${target}`)
+      .setColor(0xFF0000);
+    
+      interaction.reply({
+      embeds: [embed],
+      ephemeral: true,
+      });
+     
       return;
     }
 
@@ -50,6 +60,7 @@ module.exports = {
       .setDescription(body)
       .setTitle(`Whois for ${target}`)
       .setColor(0x00FF00);
+    
     interaction.reply({
       embeds: [embed],
       ephemeral: true,
