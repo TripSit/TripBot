@@ -3,7 +3,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
-const logger = require('../../../global/logger');
+const logger = require('../../../global/utils/logger');
 
 const {
   // NODE_ENV,

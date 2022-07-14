@@ -1,17 +1,17 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const logger = require('./logger');
+const logger = require('../../global/utils/logger');
 const tripsitme = require('./tripsitme');
-const bug = require('../discord/commands/global/bug');
-const uBan = require('../discord/commands/guild/u_ban');
-const uKick = require('../discord/commands/guild/u_kick');
-const uNote = require('../discord/commands/guild/u_note');
-const mTimeout = require('../discord/commands/guild/m_timeout');
-const mWarn = require('../discord/commands/guild/m_warn');
-const mReport = require('../discord/commands/guild/m_report');
-const modmail = require('../discord/commands/guild/modmail');
-const ircButton = require('../discord/commands/guild/help-button');
+const bug = require('../commands/global/bug');
+const uBan = require('../commands/guild/u_ban');
+const uKick = require('../commands/guild/u_kick');
+const uNote = require('../commands/guild/u_note');
+const mTimeout = require('../commands/guild/m_timeout');
+const mWarn = require('../commands/guild/m_warn');
+const mReport = require('../commands/guild/m_report');
+const modmail = require('../commands/guild/modmail');
+const ircButton = require('../commands/guild/help-button');
 
 module.exports = {
   async execute(interaction) {

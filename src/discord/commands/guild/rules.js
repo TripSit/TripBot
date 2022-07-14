@@ -4,8 +4,8 @@ const path = require('path');
 const { MessageAttachment } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { stripIndents } = require('common-tags');
-const logger = require('../../../global/logger');
-const template = require('../../../global/embed-template');
+const logger = require('../../../global/utils/logger');
+const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
 

@@ -2,9 +2,9 @@
 
 const path = require('path');
 
-const template = require('./embed-template');
+const template = require('../../discord/utils/embed-template');
 const logger = require('./logger');
-const { getUserInfo, setUserInfo } = require('./firebaseAPI');
+const { getUserInfo, setUserInfo } = require('../services/firebaseAPI');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -26,7 +26,7 @@ const {
   roleMutedId,
   roleTempvoiceId,
   NODE_ENV,
-} = require('../../env');
+} = require('../../../env');
 
 const ignoredRoles = [
   roleNeedshelpId,

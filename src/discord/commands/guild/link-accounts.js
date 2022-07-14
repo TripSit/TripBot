@@ -3,9 +3,9 @@
 const PREFIX = require('path').parse(__filename).name;
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { stripIndents } = require('common-tags/lib');
-const logger = require('../../../global/logger');
-const { getUserInfo, setUserInfo } = require('../../../global/firebaseAPI');
-const template = require('../../../global/embed-template');
+const logger = require('../../../global/utils/logger');
+const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
+const template = require('../../utils/embed-template');
 
 const {
   discordGuildId,

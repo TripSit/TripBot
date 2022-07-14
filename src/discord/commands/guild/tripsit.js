@@ -1,8 +1,8 @@
 'use strict';
 
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const tripsitme = require('../../../global/tripsitme');
-const tripsat = require('../../../global/tripsat');
+const tripsitme = require('../../utils/tripsitme');
+const tripsat = require('../../utils/tripsat');
 
 module.exports = {
   data: new SlashCommandBuilder()

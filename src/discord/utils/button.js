@@ -1,19 +1,19 @@
 'use strict';
 
 const path = require('path');
-const logger = require('./logger');
+const logger = require('../../global/utils/logger');
 const tripsitme = require('./tripsitme');
 const tripsat = require('./tripsat');
 const template = require('./embed-template');
-const modmail = require('../discord/commands/guild/modmail');
-const ircButton = require('../discord/commands/guild/help-button');
+const modmail = require('../commands/guild/modmail');
+const ircButton = require('../commands/guild/help-button');
 
 const PREFIX = path.parse(__filename).name;
 
 const {
   discordGuildId,
   channelModeratorsId,
-} = require('../../env');
+} = require('../../../env');
 
 module.exports = {
   async execute(interaction, client) {

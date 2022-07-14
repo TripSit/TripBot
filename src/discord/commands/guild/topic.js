@@ -2,9 +2,9 @@
 
 const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const logger = require('../../../global/logger');
-const template = require('../../../global/embed-template');
-const topics = require('../../../assets/data/topics.json');
+const logger = require('../../../global/utils/logger');
+const template = require('../../utils/embed-template');
+const topics = require('../../../global/assets/data/topics.json');
 
 const PREFIX = path.parse(__filename).name;
 

@@ -5,8 +5,8 @@ const {
 } = require('discord.js');
 const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
-const logger = require('./logger');
-const { getUserInfo, setUserInfo } = require('./firebaseAPI');
+const logger = require('../../global/utils/logger');
+const { getUserInfo, setUserInfo } = require('../../global/services/firebaseAPI');
 
 const template = require('./embed-template');
 
@@ -52,7 +52,7 @@ const {
   roleStimmingId,
   roleNoddingId,
   roleSoberId,
-} = require('../../env');
+} = require('../../../env');
 
 const teamRoles = [
   roleDirectorId,

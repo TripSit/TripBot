@@ -1,7 +1,7 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const logger = require('../../global/logger');
+const logger = require('../../global/utils/logger');
 
 const {
   discordGuildId,

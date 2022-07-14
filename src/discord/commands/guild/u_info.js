@@ -3,7 +3,7 @@
 const path = require('path');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('@discordjs/builders');
-const logger = require('../../../global/logger');
+const logger = require('../../../global/utils/logger');
 const mod = require('./mod');
 
 const PREFIX = path.parse(__filename).name;

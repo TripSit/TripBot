@@ -10,14 +10,14 @@ const {
 } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const template = require('../../../global/embed-template');
-const logger = require('../../../global/logger');
+const template = require('../../utils/embed-template');
+const logger = require('../../../global/utils/logger');
 const {
   // getUserInfo,
   // setUserInfo,
   getTicketInfo,
   setTicketInfo,
-} = require('../../../global/firebaseAPI');
+} = require('../../../global/services/firebaseAPI');
 
 const {
   NODE_ENV,

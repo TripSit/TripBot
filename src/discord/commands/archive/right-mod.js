@@ -1,9 +1,9 @@
 'use strict';
 
 const { SlashCommandBuilder, time } = require('@discordjs/builders');
-const logger = require('../../../global/logger');
-const template = require('../../../global/embed-template');
-const { getUserInfo, setUserInfo } = require('../../../global/firebaseAPI');
+const logger = require('../../../global/utils/logger');
+const template = require('../../utils/embed-template');
+const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
 
 const PREFIX = require('path').parse(__filename).name; // eslint-disable-line
 

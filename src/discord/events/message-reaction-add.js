@@ -1,12 +1,12 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const logger = require('../../global/logger');
-const { karma } = require('../../global/chitragupta');
-const { communityMod } = require('../../global/community-mod');
-const { sparklePoints } = require('../../global/sparkle-points');
-const { removeDuplicates } = require('../../global/remove-duplicate-roles');
-const { bestOf } = require('../../global/best-of-tripsit');
+const logger = require('../../global/utils/logger');
+const { karma } = require('../../global/utils/chitragupta');
+const { communityMod } = require('../utils/community-mod');
+const { sparklePoints } = require('../utils/sparkle-points');
+const { removeDuplicates } = require('../utils/remove-duplicate-roles');
+const { bestOf } = require('../utils/best-of-tripsit');
 
 const {
   discordGuildId,

@@ -3,8 +3,8 @@
 const PREFIX = require('path').parse(__filename).name;
 // const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
-const logger = require('./logger');
-const { getUserInfo } = require('./firebaseAPI');
+const logger = require('../../global/utils/logger');
+const { getUserInfo } = require('../../global/services/firebaseAPI');
 
 const template = require('./embed-template');
 
@@ -50,7 +50,7 @@ const {
   roleStimmingId,
   roleNoddingId,
   roleSoberId,
-} = require('../../env');
+} = require('../../../env');
 
 const teamRoles = [
   roleDirectorId,

@@ -2,10 +2,10 @@
 
 const path = require('path');
 const irc = require('irc-upd');
-const logger = require('../global/logger');
-const ircConfig = require('../assets/config/irc_config.json');
-const { watcher } = require('../global/uatu');
-const { experience } = require('../global/experience');
+const logger = require('../global/utils/logger');
+const ircConfig = require('./assets/config/irc_config.json');
+const { watcher } = require('./utils/uatu');
+const { experience } = require('../global/utils/experience');
 const { verifyLink } = require('../discord/commands/guild/link-accounts');
 
 const PREFIX = path.parse(__filename).name;

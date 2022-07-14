@@ -6,7 +6,7 @@ const { initializeApp, cert } = require('firebase-admin/app'); // eslint-disable
 const { getFirestore } = require('firebase-admin/firestore'); // eslint-disable-line
 const serviceAccount = require('../assets/config/firebase_creds.json');
 
-const logger = require('./logger');
+const logger = require('../utils/logger');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -19,7 +19,7 @@ const {
   firebasePrivateKey,
   firebaseClientId,
   firebaseClientEmail,
-} = require('../../env');
+} = require('../../../env');
 
 serviceAccount.private_key_id = firebasePrivateKeyId;
 serviceAccount.private_key = firebasePrivateKey ? firebasePrivateKey.replace(/\\n/g, '\n') : undefined;

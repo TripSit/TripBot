@@ -1,9 +1,9 @@
 'use strict';
 
 const ms = require('ms');
-const logger = require('./logger');
-const { getUserInfo, setUserInfo } = require('./firebaseAPI');
-const template = require('./embed-template');
+const logger = require('../utils/logger');
+const { getUserInfo, setUserInfo } = require('../../global/services/firebaseAPI');
+const template = require('../../discord/utils/embed-template');
 
 const {
   NODE_ENV,
@@ -41,7 +41,7 @@ const {
   roleStimmingId,
   roleNoddingId,
   roleSoberId,
-} = require('../../env');
+} = require('../../../env');
 
 const teamRoles = [
   roleAdminId,

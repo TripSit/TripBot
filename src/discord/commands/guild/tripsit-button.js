@@ -4,7 +4,7 @@ const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageButton, MessageActionRow } = require('discord.js');
 const { stripIndents } = require('common-tags');
-const logger = require('../../../global/logger');
+const logger = require('../../../global/utils/logger');
 
 const PREFIX = path.parse(__filename).name;
 

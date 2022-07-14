@@ -3,11 +3,11 @@
 // TODO: Syncronous fs operations
 
 const PREFIX = require('path').parse(__filename).name;
-const logger = require('../../global/logger');
-const modalSubmit = require('../../global/modal-submit');
-const autocomplete = require('../../global/autocomplete');
-const button = require('../../global/button');
-const command = require('../../global/command');
+const logger = require('../../global/utils/logger');
+const modalSubmit = require('../utils/modal-submit');
+const autocomplete = require('../../global/utils/autocomplete');
+const button = require('../utils/button');
+const command = require('../utils/command');
 
 module.exports = {
   name: 'interactionCreate',

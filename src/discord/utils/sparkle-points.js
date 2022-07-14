@@ -1,8 +1,8 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const logger = require('./logger');
-const { getUserInfo, setUserInfo } = require('./firebaseAPI');
+const logger = require('../../global/utils/logger');
+const { getUserInfo, setUserInfo } = require('../../global/services/firebaseAPI');
 
 module.exports = {
   async sparklePoints(reaction, user) {

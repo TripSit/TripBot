@@ -8,12 +8,12 @@ const PREFIX = require('path').parse(__filename).name;
 const fs = require('fs/promises');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
-const logger = require('./logger');
+const logger = require('../../global/utils/logger');
 const {
   discordClientId,
   discordToken,
   discordGuildId,
-} = require('../../env');
+} = require('../../../env');
 
 logger.debug(`[${PREFIX}] discordClientId: ${discordClientId}`);
 logger.debug(`[${PREFIX}] discordToken: ${discordToken}`);

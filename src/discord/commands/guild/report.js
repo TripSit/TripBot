@@ -2,7 +2,7 @@
 
 const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const logger = require('../../../global/logger');
+const logger = require('../../../global/utils/logger');
 const mod = require('./mod');
 
 const PREFIX = path.parse(__filename).name;

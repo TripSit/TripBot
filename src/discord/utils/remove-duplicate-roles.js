@@ -1,11 +1,11 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const logger = require('./logger');
+const logger = require('../../global/utils/logger');
 
 const {
   channelStartId,
-} = require('../../env');
+} = require('../../../env');
 
 module.exports = {
   async removeDuplicates(reaction, user) {

@@ -1,13 +1,13 @@
 'use strict';
 
 const path = require('path');
-const logger = require('./logger');
+const logger = require('../../global/utils/logger');
 
 const PREFIX = path.parse(__filename).name;
 
 const {
   discordOwnerId,
-} = require('../../env');
+} = require('../../../env');
 
 module.exports = {
   async execute(interaction, client) {

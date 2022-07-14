@@ -1,8 +1,8 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const logger = require('../../global/logger');
-const { getUserInfo, setUserInfo } = require('../../global/firebaseAPI');
+const logger = require('../../global/utils/logger');
+const { getUserInfo, setUserInfo } = require('../../global/services/firebaseAPI');
 
 const {
   discordGuildId,

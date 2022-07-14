@@ -2,7 +2,7 @@
 
 const PREFIX = require('path').parse(__filename).name;
 const { stripIndents } = require('common-tags/lib');
-const template = require('./embed-template');
+const template = require('../../discord/utils/embed-template');
 const logger = require('./logger');
 
 const {
@@ -24,7 +24,7 @@ const {
   // channelClearmindId,
   channelPsychonautId,
   channelDissonautId,
-} = require('../../env');
+} = require('../../../env');
 
 let frequency = 50;
 if (NODE_ENV === 'development') {

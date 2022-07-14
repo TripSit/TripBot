@@ -3,7 +3,7 @@
 const PREFIX = require('path').parse(__filename).name;
 const { MessageEmbed } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
-const logger = require('./logger');
+const logger = require('../../global/utils/logger');
 
 const {
   NODE_ENV,
@@ -14,7 +14,7 @@ const {
   channelHowToTripsitId,
   channelDrugQuestionsId,
   channelOpentripsitId,
-} = require('../../env');
+} = require('../../../env');
 
 const tripsitterChannels = [
   channelTripsitId,

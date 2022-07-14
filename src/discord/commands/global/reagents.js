@@ -2,7 +2,7 @@
 
 const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const logger = require('../../../global/logger');
+const logger = require('../../../global/utils/logger');
 
 const PREFIX = path.parse(__filename).name;
 const URL = 'https://i.imgur.com/wETJsZr.png';

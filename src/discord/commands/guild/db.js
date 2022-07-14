@@ -2,9 +2,9 @@
 
 const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const logger = require('../../../global/logger');
-const template = require('../../../global/embed-template');
-const { getUserInfo, setUserInfo } = require('../../../global/firebaseAPI');
+const logger = require('../../../global/utils/logger');
+const template = require('../../utils/embed-template');
+const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
 // const currentExperience = require('../../../assets/exp.json');
 
 const PREFIX = path.parse(__filename).name;
@@ -22,7 +22,7 @@ try {
   // eslint-disable-next-line
   currentExperience = require('../../../backups/exp.json');
 } catch (e) {
-  logger.info(`[${PREFIX}] We are likely in production and cant load this file!`);
+  // logger.info(`[${PREFIX}] We are likely in production and cant load this file!`);
 }
 
 // eslint-disable-next-line no-unused-vars

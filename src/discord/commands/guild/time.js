@@ -2,10 +2,10 @@
 
 const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const logger = require('../../../global/logger');
-const template = require('../../../global/embed-template');
-const { getUserInfo, setUserInfo } = require('../../../global/firebaseAPI');
-const timezones = require('../../../assets/data/timezones.json');
+const logger = require('../../../global/utils/logger');
+const template = require('../../utils/embed-template');
+const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
+const timezones = require('../../../global/assets/data/timezones.json');
 
 const PREFIX = path.parse(__filename).name;
 

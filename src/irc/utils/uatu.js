@@ -1,8 +1,8 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const logger = require('./logger');
-const { getUserInfo } = require('./firebaseAPI');
+const logger = require('../../global/utils/logger');
+const { getUserInfo } = require('../../global/services/firebaseAPI');
 const {
   channelSanctuaryId,
   channelTripsittersId,
@@ -27,7 +27,7 @@ const {
   channelDepressantsId,
   channelDissociativesId,
   channelPsychedelicsId,
-} = require('../../env');
+} = require('../../../env');
 
 // {
 //   "prefix": "TSDev!~TSDev@tripsit/bridge/TS1",

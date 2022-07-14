@@ -2,7 +2,7 @@
 
 const PREFIX = require('path').parse(__filename).name;
 const { Client, Intents } = require('discord.js');
-const logger = require('../global/logger');
+const logger = require('../global/utils/logger');
 const registerCommands = require('./commands');
 const registerEvents = require('./events');
 

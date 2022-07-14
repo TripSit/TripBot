@@ -5,9 +5,9 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ReactionRole } = require('discordjs-reaction-role');
 const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
-const { getGuildInfo, setGuildInfo } = require('../../../global/firebaseAPI');
-const logger = require('../../../global/logger');
-const template = require('../../../global/embed-template');
+const { getGuildInfo, setGuildInfo } = require('../../../global/services/firebaseAPI');
+const logger = require('../../../global/utils/logger');
+const template = require('../../utils/embed-template');
 
 const tripsitButton = new MessageAttachment('./src/assets/img/1_button.png');
 const userInput = new MessageAttachment('./src/assets/img/2_input.png');

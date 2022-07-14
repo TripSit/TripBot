@@ -4,8 +4,8 @@ const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
-const logger = require('../../../global/logger');
-const template = require('../../../global/embed-template');
+const logger = require('../../../global/utils/logger');
+const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
 

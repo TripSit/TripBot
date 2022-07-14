@@ -1,8 +1,8 @@
 'use strict';
 
 const path = require('path');
-const logger = require('../../global/logger');
-const { getGuildInfo, setGuildInfo } = require('../../global/firebaseAPI');
+const logger = require('../../global/utils/logger');
+const { getGuildInfo, setGuildInfo } = require('../../global/services/firebaseAPI');
 
 const PREFIX = path.parse(__filename).name;
 

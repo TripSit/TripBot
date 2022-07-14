@@ -4,10 +4,10 @@ const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageButton } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
-const logger = require('../../../global/logger');
-const template = require('../../../global/embed-template');
-const drugDataAll = require('../../../assets/data/drug_db_combined.json');
-const allComboData = require('../../../assets/data/combo_definitions.json');
+const logger = require('../../../global/utils/logger');
+const template = require('../../utils/embed-template');
+const drugDataAll = require('../../../global/assets/data/drug_db_combined.json');
+const allComboData = require('../../../global/assets/data/combo_definitions.json');
 
 const PREFIX = path.parse(__filename).name;
 

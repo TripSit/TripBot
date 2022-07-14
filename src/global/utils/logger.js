@@ -7,7 +7,7 @@ const {
 
 const {
   NODE_ENV,
-} = require('../../env');
+} = require('../../../env');
 
 const logLevels = {
   error: 0,

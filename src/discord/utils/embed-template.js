@@ -5,7 +5,7 @@ const {
   tsIconUrl,
   tsFlameUrl,
   disclaimer,
-} = require('../../env');
+} = require('../../../env');
 
 exports.embedTemplate = function embedTemplate() {
   return new MessageEmbed()

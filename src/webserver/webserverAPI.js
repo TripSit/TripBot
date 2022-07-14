@@ -22,7 +22,7 @@ const {
   discordClientId,
   discordClientSecret,
 } = require('../../env');
-const logger = require('../global/logger');
+const logger = require('../global/utils/logger');
 
 /* Make a function to give us configuration for the Discord API */
 function makeConfig(authorizationToken) { // Define the function

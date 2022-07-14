@@ -2,14 +2,14 @@
 
 const path = require('path');
 const logger = require('./logger');
-const template = require('./embed-template');
-const { getGuildInfo, setGuildInfo } = require('./firebaseAPI');
+const template = require('../../discord/utils/embed-template');
+const { getGuildInfo, setGuildInfo } = require('../services/firebaseAPI');
 
 const PREFIX = path.parse(__filename).name;
 
 const {
   discordGuildId,
-} = require('../../env');
+} = require('../../../env');
 
 module.exports = {
   async karma(message) {
