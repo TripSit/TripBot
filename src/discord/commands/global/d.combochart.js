@@ -1,17 +1,13 @@
 'use strict';
 
-const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const logger = require('../../../global/utils/logger');
-
-const PREFIX = path.parse(__filename).name;
+const { combochart } = require('../../../global/utils/combochart');
 
 module.exports = {
   data: new SlashCommandBuilder().setName('combochart').setDescription('Display TripSit\'s Combo Chart'),
   async execute(interaction) {
-    const url = 'https://i.imgur.com/juzYjDl.png';
+    const url = await combochart();
     if (!interaction.replied) interaction.reply(url);
     else interaction.followUp(url);
-    logger.debug(`[${PREFIX}] finished!`);
   },
 };

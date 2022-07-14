@@ -10,35 +10,17 @@ const { webserverConnect } = require('./webserver/webserverAPI');
 const { runTimer } = require('./global/services/timerAPI');
 
 async function start() {
-  // // Initialize Firebase
-  // logger.debug(`[${PREFIX}] Firebase starting`);
   // await firebaseConnect();
-  // logger.debug(`[${PREFIX}] Firebase started!`);
 
-  // // Initialize discord bot
-  // logger.debug(`[${PREFIX}] Discord starting`);
   // await discordConnect();
-  // logger.debug(`[${PREFIX}] Discord started!`);
 
-  // // Initialize IRC bot
-  // logger.debug(`[${PREFIX}] IRC starting`);
   // await ircConnect();
-  // logger.debug(`[${PREFIX}] IRC started!`);
 
-  // Initialize Telegram bot
-  logger.debug(`[${PREFIX}] Telegram starting`);
   await telegramConnect();
-  logger.debug(`[${PREFIX}] Telegram started!`);
 
-  // // Initialize timer globally
-  // logger.debug(`[${PREFIX}] Timer starting`);
   // await runTimer();
-  // logger.debug(`[${PREFIX}] Timer started!`);
 
-  // // Initialize webclient
-  // logger.debug(`[${PREFIX}] Webclient starting`);
   // await webserverConnect();
-  // logger.debug(`[${PREFIX}] Webclient started!`);
 
   logger.info(`[${PREFIX}] Ready to take over the world!`);
 }

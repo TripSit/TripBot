@@ -1,12 +1,9 @@
 'use strict';
 
-const path = require('path');
-
-const template = require('../../discord/utils/embed-template');
+const PREFIX = require('path').parse(__filename).name;
 const logger = require('./logger');
+const template = require('../../discord/utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../services/firebaseAPI');
-
-const PREFIX = path.parse(__filename).name;
 
 const {
   // discordGuildId,

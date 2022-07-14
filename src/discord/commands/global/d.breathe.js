@@ -3,6 +3,7 @@
 const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../../global/utils/logger');
+const { breathe } = require('../../../global/utils/breathe');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -19,20 +20,13 @@ module.exports = {
 
   async execute(interaction, parameters) {
     const choice = interaction.options.getString('exercise') || parameters;
-    let url;
-    if (choice === '1' || !choice) {
-      url = 'https://i.imgur.com/n5jBp45.gif';
-    } else if (choice === '2') {
-      url = 'https://i.imgur.com/XbH6gP4.gif';
-    } else if (choice === '3') {
-      url = 'https://i.imgur.com/g57i96f.gif';
-    } else if (choice === '4') {
-      url = 'https://i.imgur.com/MkUcTPl.gif';
-    }
+    logger.debug(`[${PREFIX}] choice: ${choice}`);
 
-    if (interaction.replied) interaction.followUp(url);
-    else interaction.reply(url);
+    const data = await breathe(choice);
 
-    logger.debug(`[${PREFIX}] finished!`);
+    logger.debug(`[${PREFIX}] data: ${data}`);
+
+    if (interaction.replied) interaction.followUp(data);
+    else interaction.reply(data);
   },
 };

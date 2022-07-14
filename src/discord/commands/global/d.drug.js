@@ -18,7 +18,7 @@ const buttonList = [
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('info')
+    .setName('drug')
     .setDescription('Check substance information')
     .addStringOption(option => option.setName('substance')
       .setDescription('Pick a substance!')
