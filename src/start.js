@@ -4,35 +4,41 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('./global/utils/logger');
 const { discordConnect } = require('./discord/discordAPI');
 const { ircConnect } = require('./irc/ircAPI');
+const { telegramConnect } = require('./telegram/telegramAPI');
 const { firebaseConnect } = require('./global/services/firebaseAPI');
 const { webserverConnect } = require('./webserver/webserverAPI');
 const { runTimer } = require('./global/services/timerAPI');
 
 async function start() {
-  // Initialize Firebase
-  logger.debug(`[${PREFIX}] Firebase starting`);
-  await firebaseConnect();
-  logger.debug(`[${PREFIX}] Firebase started!`);
+  // // Initialize Firebase
+  // logger.debug(`[${PREFIX}] Firebase starting`);
+  // await firebaseConnect();
+  // logger.debug(`[${PREFIX}] Firebase started!`);
 
-  // Initialize discord bot
-  logger.debug(`[${PREFIX}] Discord starting`);
-  await discordConnect();
-  logger.debug(`[${PREFIX}] Discord started!`);
+  // // Initialize discord bot
+  // logger.debug(`[${PREFIX}] Discord starting`);
+  // await discordConnect();
+  // logger.debug(`[${PREFIX}] Discord started!`);
 
-  // Initialize IRC bot
-  logger.debug(`[${PREFIX}] IRC starting`);
-  await ircConnect();
-  logger.debug(`[${PREFIX}] IRC started!`);
+  // // Initialize IRC bot
+  // logger.debug(`[${PREFIX}] IRC starting`);
+  // await ircConnect();
+  // logger.debug(`[${PREFIX}] IRC started!`);
 
-  // Initialize timer globally
-  logger.debug(`[${PREFIX}] Timer starting`);
-  await runTimer();
-  logger.debug(`[${PREFIX}] Timer started!`);
+  // Initialize Telegram bot
+  logger.debug(`[${PREFIX}] Telegram starting`);
+  await telegramConnect();
+  logger.debug(`[${PREFIX}] Telegram started!`);
 
-  // Initialize webclient
-  logger.debug(`[${PREFIX}] Webclient starting`);
-  await webserverConnect();
-  logger.debug(`[${PREFIX}] Webclient started!`);
+  // // Initialize timer globally
+  // logger.debug(`[${PREFIX}] Timer starting`);
+  // await runTimer();
+  // logger.debug(`[${PREFIX}] Timer started!`);
+
+  // // Initialize webclient
+  // logger.debug(`[${PREFIX}] Webclient starting`);
+  // await webserverConnect();
+  // logger.debug(`[${PREFIX}] Webclient started!`);
 
   logger.info(`[${PREFIX}] Ready to take over the world!`);
 }
