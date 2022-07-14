@@ -1,12 +1,10 @@
 'use strict';
 
-const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
-
-const PREFIX = path.parse(__filename).name;
 
 module.exports = {
   data: new SlashCommandBuilder()

@@ -4,8 +4,6 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-console */
 
-const PREFIX = 'main';
-
 function generateRandomString() {
   let randomString = '';
   const randomNumber = Math.floor(Math.random() * 10);
@@ -87,4 +85,3 @@ $(document).ready(() => {
     });
   });
 });
-

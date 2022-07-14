@@ -2,7 +2,7 @@
 
 const ms = require('ms');
 const logger = require('../utils/logger');
-const { getUserInfo, setUserInfo } = require('../../global/services/firebaseAPI');
+const { getUserInfo, setUserInfo } = require('./firebaseAPI');
 const template = require('../../discord/utils/embed-template');
 
 const {
@@ -132,7 +132,7 @@ module.exports = {
                       logger.debug(`[${PREFIX}] Sending reminder to ${userid}`);
 
                       // Get the guild
-                      const guildTripsit = client.guilds.cache.get(discordGuildId);
+                      const guildTripsit = global.discordClient.guilds.cache.get(discordGuildId);
                       // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                       // Get the memeber from the guild
@@ -240,7 +240,7 @@ module.exports = {
                     logger.debug(`[${PREFIX}] Added ${autoActionTime} more than 24 hours ago`);
 
                     // Get the guild
-                    const guildTripsit = client.guilds.cache.get(discordGuildId);
+                    const guildTripsit = global.discordClient.guilds.cache.get(discordGuildId);
                     // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                     // Get the memeber from the guild
@@ -362,7 +362,7 @@ module.exports = {
                     logger.debug(`[${PREFIX}] ${discordData.username} added ${lastSetMindset} more than 8 hours ago`);
 
                     // Get the guild
-                    const guildTripsit = client.guilds.cache.get(discordGuildId);
+                    const guildTripsit = global.discordClient.guilds.cache.get(discordGuildId);
                     // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                     // Get the memeber from the guild
@@ -377,7 +377,7 @@ module.exports = {
                     } catch (err) {
                       logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (C)`);
                       // eslint-disable-next-line
-                      member = await client.users.fetch(discordData.id);
+                      member = await global.discordClient.users.fetch(discordData.id);
                       // Extract actor data
                       // eslint-disable-next-line
                       const [actorData, actorFbid] = await getUserInfo(member);
@@ -461,7 +461,7 @@ module.exports = {
                 if (discordData.lastHelpedThreadId) {
                   logger.debug(`[${PREFIX}] processing lastHelpedThreadId on ${discordData.username}!`);
                   // Get the guild
-                  const guildTripsit = client.guilds.cache.get(discordGuildId);
+                  const guildTripsit = global.discordClient.guilds.cache.get(discordGuildId);
                   // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                   // Get the memeber from the guild
@@ -474,7 +474,7 @@ module.exports = {
                   } catch (err) {
                     logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (D)`);
                     // eslint-disable-next-line
-                    member = await client.users.fetch(discordData.id);
+                    member = await global.discordClient.users.fetch(discordData.id);
 
                     // Extract actor data
                     // eslint-disable-next-line
@@ -525,7 +525,8 @@ module.exports = {
                     logger.debug(`[${PREFIX}] Error getting help channel ${discordData.lastHelpedThreadId}, was the channnel deleted?`);
                     // logger.debug(err);
                   }
-                  // logger.debug(`[${PREFIX}] channelHelp: ${JSON.stringify(channelHelp, null, 2)}`);
+                  // logger.debug(`[${PREFIX}] channelHelp:
+                  // ${JSON.stringify(channelHelp, null, 2)}`);
 
                   // logger.debug(`[${PREFIX}] lastHelpedThreadId:
                   // ${discordData.lastHelpedMetaThreadId}`);
