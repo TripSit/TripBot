@@ -1,9 +1,15 @@
+html, body {
+  height: 100%;
+}
+
 body {
     font-family: 'Poppins', sans-serif !important;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     background-color: #131b21;
+    display: flex;
+    flex-direction: column;
 }
 .bgn {
     background-color: black;
@@ -61,6 +67,9 @@ span {
     display: block;
     margin: 0 auto;
     align-items: center;
+}
+.footer {
+  flex-shrink: 0;
 }
 .social-icon {
     color: #fff;
@@ -194,6 +203,7 @@ ul.social-icons {
     color: #6a707a;
     text-align: left;
     display: none;
+    flex: 1 0 auto;
   }
   .content h4 {
     margin-top: 12px;

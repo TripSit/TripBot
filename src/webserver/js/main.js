@@ -3,6 +3,9 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-console */
+
+const PREFIX = 'main';
+
 function generateRandomString() {
   let randomString = '';
   const randomNumber = Math.floor(Math.random() * 10);
@@ -11,8 +14,6 @@ function generateRandomString() {
   }
   return randomString;
 }
-
-const PREFIX = 'main';
 
 window.onload = function main() {
   let url = 'https://discord.tripsit.me/';
@@ -23,7 +24,7 @@ window.onload = function main() {
     url = 'https://localhost:8080/';
     discordOauthUrl = 'https://discord.com/api/oauth2/authorize?client_id=977945272359452713&redirect_uri=https%3A%2F%2Flocalhost%3A8080%2F&response_type=code&scope=identify';
   }
-  console.log(`[${PREFIX}] discordOauthUrl: ${discordOauthUrl}`);
+  // console.log(`[${PREFIX}] discordOauthUrl: ${discordOauthUrl}`);
   document.getElementById('login-link').href = discordOauthUrl;
   if (location.href.indexOf('code') > -1) { // Detect if you logged in or not
     const code = location.href.substring(location.href.indexOf('code') + 5, location.href.indexOf('state') - 1); // Get the code OAUTH gives you
@@ -31,7 +32,7 @@ window.onload = function main() {
 
     if (localStorage.getItem('oauth-state') !== atob(decodeURIComponent(state))) {
       document.getElementById('title').innerText = 'State check failed, you may have been clickjacked!<br>Please report this to Moonbear!';
-      console.log(`[${PREFIX}] 'You may have been clickjacked!`);
+      // console.log(`[${PREFIX}] 'You may have been clickjacked!`);
       return;
     }
 
@@ -58,8 +59,8 @@ window.onload = function main() {
     localStorage.setItem('oauth-state', randomString);
     document.getElementById('login-link').href += `&state=${stateValue}`;
   }
-  console.log(`[${PREFIX}] oauth-state: ${localStorage.getItem('oauth-state')}`);
-  console.log(`[${PREFIX}] btoa(randomString): ${btoa(randomString)}`);
+  // console.log(`[${PREFIX}] oauth-state: ${localStorage.getItem('oauth-state')}`);
+  // console.log(`[${PREFIX}] btoa(randomString): ${btoa(randomString)}`);
 };
 
 // collapsible text script
@@ -86,3 +87,4 @@ $(document).ready(() => {
     });
   });
 });
+
