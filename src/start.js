@@ -11,17 +11,17 @@ const { runTimer } = require('./global/services/timerAPI');
 
 async function start() {
   global.userDb = {};
-  // await firebaseConnect();
+  await firebaseConnect();
 
   await discordConnect();
 
-  // await ircConnect();
+  await ircConnect();
 
-  // await telegramConnect();
+  await telegramConnect();
 
   await runTimer();
 
-  // await webserverConnect();
+  await webserverConnect();
 }
 
 start();
