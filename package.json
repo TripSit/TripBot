@@ -5,10 +5,10 @@
   "description": "A bot for TripSit",
   "main": "src/start.js",
   "scripts": {
-    "start": "node ./src/utils/deploy-commands.js && node ./src/index.js",
-    "gstart": "node ./src/utils/deploy-commands.js && pm2-runtime start ecosystem.config.js --env production",
+    "start": "node ./src/discord/utils/deploy-commands.js && node ./src/index.js",
+    "gstart": "node ./src/discord/utils/deploy-commands.js && pm2-runtime start ecosystem.config.js --env production",
     "dev": "nodemon --config ./nodemon.json",
-    "deploy-commands": "node ./src/utils/deploy-commands.js",
+    "deploy-commands": "node ./src/discord/utils/deploy-commands.js",
     "lint": "eslint .",
     "fix": "eslint --fix .",
     "minor": "npm version minor -git-tag-version false"
