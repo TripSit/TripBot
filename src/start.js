@@ -12,7 +12,7 @@ const { runTimer } = require('./global/services/timerAPI');
 async function start() {
   // await firebaseConnect();
 
-  // await discordConnect();
+ // await discordConnect();
 
   // await ircConnect();
 

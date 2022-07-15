@@ -12,4 +12,5 @@ module.exports = Composer.compose([
   require('./t.breathe'),
   require('./t.combochart'),
   require('./t.irc'),
+  require('./t.ban')
 ]);
