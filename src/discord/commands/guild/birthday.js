@@ -93,15 +93,11 @@ module.exports = {
 
       actorData.birthday = birthday;
 
-      const set = await setUserInfo(actorResults[1], actorData);
+      await setUserInfo(actorResults[1], actorData);
 
-      if (set) {
-        embed.setDescription(`I set your birthday to ${birthday[0]} ${birthday[1]}`);
-        interaction.reply({ embeds: [embed], ephemeral: true });
-      } else {
-        embed.setDescription('I could not set your birthday =/');
-        interaction.reply({ embeds: [embed], ephemeral: true });
-      }
+      embed.setDescription(`I set your birthday to ${birthday[0]} ${birthday[1]}`);
+      interaction.reply({ embeds: [embed], ephemeral: true });
+
       return;
     }
     if (command === 'get') {

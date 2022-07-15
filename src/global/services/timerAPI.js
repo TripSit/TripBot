@@ -107,7 +107,7 @@ module.exports = {
       i += 1;
       setTimeout(
         async () => {
-          logger.debug(`[${PREFIX}] iteration ${i}`);
+          // logger.debug(`[${PREFIX}] iteration ${i}`);
           const now = Date.now();
           // logger.debug(`[${PREFIX}] now: ${now}`);
           // global.userDb.forEach(async doc => {
@@ -155,24 +155,6 @@ module.exports = {
 
                         // // Load actor data
                         setUserInfo(actorFbid, actorData);
-
-                        const userDb = [];
-                        global.userDb.forEach(doc2 => {
-                          if (doc2.key === actorFbid) {
-                            userDb.push({
-                              key: doc2.key,
-                              value: actorData,
-                            });
-                            logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                          } else {
-                            userDb.push({
-                              key: doc2.key,
-                              value: doc2.value,
-                            });
-                          }
-                        });
-                        Object.assign(global, { userDb });
-                        logger.debug(`[${PREFIX}] Updated global user data.`);
                         // eslint-disable-next-line
                         continue;
                       }
@@ -192,24 +174,6 @@ module.exports = {
 
                       // // Load actor data
                       setUserInfo(actorFbid, actorData);
-
-                      const userDb = [];
-                      global.userDb.forEach(subDoc => {
-                        if (subDoc.key === actorFbid) {
-                          userDb.push({
-                            key: subDoc.key,
-                            value: actorData,
-                          });
-                          logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                        } else {
-                          userDb.push({
-                            key: subDoc.key,
-                            value: subDoc.value,
-                          });
-                        }
-                      });
-                      Object.assign(global, { userDb });
-                      logger.debug(`[${PREFIX}] Updated global user data.`);
                     }
                   }
                 }
@@ -268,24 +232,6 @@ module.exports = {
 
                       // // Load actor data
                       setUserInfo(actorFbid, actorData);
-
-                      const userDb = [];
-                      global.userDb.forEach(doc2 => {
-                        if (doc2.key === actorFbid) {
-                          userDb.push({
-                            key: doc2.key,
-                            value: actorData,
-                          });
-                          logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                        } else {
-                          userDb.push({
-                            key: doc2.key,
-                            value: doc2.value,
-                          });
-                        }
-                      });
-                      Object.assign(global, { userDb });
-                      logger.debug(`[${PREFIX}] Updated global user data.`);
                       // eslint-disable-next-line
                       continue;
                     }
@@ -321,24 +267,6 @@ module.exports = {
 
                     // Load actor data
                     setUserInfo(actorFbid, actorData);
-
-                    const userDb = [];
-                    global.userDb.forEach(doc2 => {
-                      if (doc2.key === actorFbid) {
-                        userDb.push({
-                          key: doc2.key,
-                          value: actorData,
-                        });
-                        logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                      } else {
-                        userDb.push({
-                          key: doc2.key,
-                          value: doc2.value,
-                        });
-                      }
-                    });
-                    Object.assign(global, { userDb });
-                    logger.debug(`[${PREFIX}] Updated global user data.`);
                   }
                 }
                 if (discordData.lastSetMindsetDate) {
@@ -388,24 +316,6 @@ module.exports = {
 
                       // Load actor data
                       setUserInfo(actorFbid, actorData);
-
-                      const userDb = [];
-                      global.userDb.forEach(doc2 => {
-                        if (doc2.key === actorFbid) {
-                          userDb.push({
-                            key: doc2.key,
-                            value: actorData,
-                          });
-                          logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                        } else {
-                          userDb.push({
-                            key: doc2.key,
-                            value: doc2.value,
-                          });
-                        }
-                      });
-                      Object.assign(global, { userDb });
-                      logger.debug(`[${PREFIX}] Updated global user data.`);
                       // eslint-disable-next-line
                       continue;
                     }
@@ -438,24 +348,6 @@ module.exports = {
 
                     // Load actor data
                     setUserInfo(actorFbid, actorData);
-
-                    const userDb = [];
-                    global.userDb.forEach(doc2 => {
-                      if (doc2.key === actorFbid) {
-                        userDb.push({
-                          key: doc2.key,
-                          value: actorData,
-                        });
-                        logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                      } else {
-                        userDb.push({
-                          key: doc2.key,
-                          value: doc2.value,
-                        });
-                      }
-                    });
-                    Object.assign(global, { userDb });
-                    logger.debug(`[${PREFIX}] Updated global user data.`);
                   }
                 }
                 if (discordData.lastHelpedThreadId) {
@@ -486,24 +378,6 @@ module.exports = {
 
                     // Load actor data
                     setUserInfo(actorFbid, actorData);
-
-                    const userDb = [];
-                    global.userDb.forEach(doc2 => {
-                      if (doc2.key === actorFbid) {
-                        userDb.push({
-                          key: doc2.key,
-                          value: actorData,
-                        });
-                        logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                      } else {
-                        userDb.push({
-                          key: doc2.key,
-                          value: doc2.value,
-                        });
-                      }
-                    });
-                    Object.assign(global, { userDb });
-                    logger.debug(`[${PREFIX}] Updated global user data.`);
                     // eslint-disable-next-line
                     continue;
                   }
@@ -634,24 +508,6 @@ module.exports = {
 
                     // Load actor data
                     setUserInfo(actorFbid, actorData);
-
-                    const userDb = [];
-                    global.userDb.forEach(doc => {
-                      if (doc.key === actorFbid) {
-                        userDb.push({
-                          key: doc.key,
-                          value: actorData,
-                        });
-                        logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                      } else {
-                        userDb.push({
-                          key: doc.key,
-                          value: doc.value,
-                        });
-                      }
-                    });
-                    Object.assign(global, { userDb });
-                    logger.debug(`[${PREFIX}] Updated global user data.`);
                   }
                 }
               }

@@ -87,7 +87,7 @@ module.exports = {
     let takenDownvote = 0;
     let takenUpvote = 0;
     let takenKarma = 0;
-    let targetBirthday = 'Use /birthday to set a birthday!'
+    let targetBirthday = 'Use /birthday to set a birthday!';
 
     if (targetData.discord) {
       if (targetData.discord.karma_given) {

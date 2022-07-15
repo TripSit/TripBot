@@ -204,13 +204,7 @@ module.exports = {
       }
 
       // Load actor data
-      const uploaded = await setUserInfo(actorFbid, actorData);
-      if (!uploaded) {
-        embed.addFields({
-          name: 'Warning: Did not update database!',
-          value: 'This is likely because you\'re not running the firebase module',
-        });
-      }
+      await setUserInfo(actorFbid, actorData);
     }
 
     // logger.debug(`[${PREFIX}] book.length: ${book.length}`);

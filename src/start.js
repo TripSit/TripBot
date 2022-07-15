@@ -1,5 +1,7 @@
 'use strict';
 
+/* eslint-disable no-unused-vars */
+
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('./global/utils/logger');
 const { discordConnect } = require('./discord/discordAPI');

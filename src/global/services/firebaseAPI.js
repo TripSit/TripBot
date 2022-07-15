@@ -96,6 +96,7 @@ module.exports = {
     await backupDb(userDb);
   },
   getUserInfo: async member => {
+    logger.debug(`[${PREFIX}] getUserInfo()`);
     // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
     // {
     //   "nick": "Teknos",
@@ -312,9 +313,34 @@ module.exports = {
           return false;
         }
       }
-    } else {
-      return false;
     }
+    // logger.debug(`[${PREFIX}] global.userDb: ${JSON.stringify(global.userDb)}`);
+    const userDb = [];
+    if (Object.keys(global.userDb).length > 0) {
+      global.userDb.forEach(doc => {
+        if (doc.key === fbid) {
+          userDb.push({
+            key: doc.key,
+            value: data,
+          });
+          logger.debug(`[${PREFIX}] Updated actor in userDb`);
+        } else {
+          userDb.push({
+            key: doc.key,
+            value: doc.value,
+          });
+        }
+      });
+    } else {
+      const keyString = Math.random().toString(36).substring(2, 10);
+      userDb.push({
+        // Get random string of 8 characters
+        key: keyString,
+        value: data,
+      });
+    }
+    Object.assign(global, { userDb });
+    logger.debug(`[${PREFIX}] Updated global user data.`);
   },
   getGuildInfo: async guild => {
     const { db } = global;
