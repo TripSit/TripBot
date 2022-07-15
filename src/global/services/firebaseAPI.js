@@ -148,7 +148,7 @@ module.exports = {
       // logger.debug(`[${PREFIX}] member.id: ${member.id}`);
       memberType = 'discord';
       memberData = {
-        name: member.user ? member.user.username : member.username,
+        accountName: member.user ? member.user.username : member.username,
         discord: {
           id: member.id.toString(),
           tag: member.user ? member.user.tag : member.tag,
@@ -184,7 +184,7 @@ module.exports = {
     // Find the user in the local DB
     // We use for..of here because it's syncronus and we want to wait for it to finish
     let dataFound = false;
-    if (global.userDb) {
+    if (Object.keys(global.userDb).length > 0) {
       // eslint-disable-next-line
       for (const doc of global.userDb) {
         if (memberType === 'discord') {

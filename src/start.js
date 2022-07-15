@@ -10,6 +10,7 @@ const { webserverConnect } = require('./webserver/webserverAPI');
 const { runTimer } = require('./global/services/timerAPI');
 
 async function start() {
+  global.userDb = {};
   // await firebaseConnect();
 
   await discordConnect();

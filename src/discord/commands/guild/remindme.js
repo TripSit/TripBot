@@ -47,37 +47,49 @@ module.exports = {
     // Load actor data
     const set = await setUserInfo(actorFbid, actorData);
 
-    if (set) {
-      const userDb = [];
-      if (global.userDb) {
-        global.userDb.forEach(doc => {
-          if (doc.key === actorFbid) {
-            userDb.push({
-              key: doc.key,
-              value: actorData,
-            });
-            logger.debug(`[${PREFIX}] Updated actor in userDb`);
-          } else {
-            userDb.push({
-              key: doc.key,
-              value: doc.value,
-            });
-          }
-        });
-        Object.assign(global, { userDb });
-        logger.debug(`[${PREFIX}] Updated global user data.`);
-      }
-
-      const timeBetween = reminderDatetime - new Date();
-
-      const embed = template.embedTemplate()
-        .setDescription(`In ${ms(timeBetween, { long: true })} I will remind you: ${reminder}`);
-      interaction.reply({ embeds: [embed], ephemeral: true });
+    logger.debug(`[${PREFIX}] global.userDb: ${JSON.stringify(global.userDb)}`);
+    const userDb = [];
+    if (Object.keys(global.userDb).length > 0) {
+      global.userDb.forEach(doc => {
+        if (doc.key === actorFbid) {
+          userDb.push({
+            key: doc.key,
+            value: actorData,
+          });
+          logger.debug(`[${PREFIX}] Updated actor in userDb`);
+        } else {
+          userDb.push({
+            key: doc.key,
+            value: doc.value,
+          });
+        }
+      });
     } else {
-      const embed = template.embedTemplate()
-        .setDescription('Could not set reminder, firebase is down!');
-      interaction.reply({ embeds: [embed], ephemeral: true });
+      const keyString = Math.random().toString(36).substring(2, 10);
+      userDb.push({
+        // Get random string of 8 characters
+        key: keyString,
+        value: actorData,
+      });
     }
+    Object.assign(global, { userDb });
+    logger.debug(`[${PREFIX}] Updated global user data.`);
+
+    logger.debug(`[${PREFIX}] userDb: ${JSON.stringify(global.userDb)}`);
+
+    const timeBetween = reminderDatetime - new Date();
+
+    const embed = template.embedTemplate()
+      .setDescription(`In ${ms(timeBetween, { long: true })} I will remind you: ${reminder}`)
+
+    if (!set) {
+      embed.addFields(
+        { name: 'Warning', value: 'Could not connec to firebase', inline: true },
+      );
+    }
+
+    interaction.reply({ embeds: [embed], ephemeral: true });
+
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
