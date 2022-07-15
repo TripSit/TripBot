@@ -68,60 +68,67 @@ module.exports = {
     if (service === 'irc') {
       const embed = template.embedTemplate();
       embed.setTitle('Link your account to IRC');
-      await global.ircClient.whois(nickname, async data => {
-        // Check if the user is authorized in IRC
-        if (!data.account) {
-          embed.setDescription(stripIndents`${nickname} is not registered on IRC, please go ~register on IRC!`);
-          interaction.reply({ embeds: [embed], ephemeral: true });
-          return;
-        }
-        logger.debug(`[${PREFIX}] ${actor} ${data.accountinfo} ${data.account}`);
-        const [actorData, actorFbid] = await getUserInfo(actor);
-        if (actorData.irc && actorData.irc.verified) {
-          logger.debug(`[${PREFIX}] actorData.irc: ${actorData.irc}`);
-          logger.debug(`[${PREFIX}] actorData.irc.nickname: ${actorData.irc.nickname}`);
-          embed.setDescription(stripIndents`Your account is already linked to '${actorData.irc.nickname}'`);
-          interaction.reply({ embeds: [embed], ephemeral: true });
-          return;
-        }
 
-        if (interaction.replied) {
-          return;
-        }
+      if (global.ircClient) {
+        await global.ircClient.whois(nickname, async data => {
+          // Check if the user is authorized in IRC
+          if (!data.account) {
+            embed.setDescription(stripIndents`${nickname} is not registered on IRC, please go ~register on IRC!`);
+            interaction.reply({ embeds: [embed], ephemeral: true });
+            return;
+          }
+          logger.debug(`[${PREFIX}] ${actor} ${data.accountinfo} ${data.account}`);
+          const [actorData, actorFbid] = await getUserInfo(actor);
+          if (actorData.irc && actorData.irc.verified) {
+            logger.debug(`[${PREFIX}] actorData.irc: ${actorData.irc}`);
+            logger.debug(`[${PREFIX}] actorData.irc.nickname: ${actorData.irc.nickname}`);
+            embed.setDescription(stripIndents`Your account is already linked to '${actorData.irc.nickname}'`);
+            interaction.reply({ embeds: [embed], ephemeral: true });
+            return;
+          }
 
+          if (interaction.replied) {
+            return;
+          }
+
+          embed.setDescription(stripIndents`
+          Your auth token is:
+
+          ${token}
+
+          Please copy this token and send it to the "TS" bot on IRC next time you're online!
+
+          If you forget or otherwise lose this token you can rerun this command to generate a new one.`);
+          interaction.reply({ embeds: [embed], ephemeral: true });
+
+          // logger.debug(`[${PREFIX}] user whois: ${JSON.stringify(data, null, 2)}`);
+          actorData.irc = {
+            accountName: data.account,
+            vhost: data.host,
+            nickname: data.nick,
+            verified: false,
+          };
+          actorData.authToken = token;
+
+          // logger.debug(`[${PREFIX}] actorData: ${JSON.stringify(actorData, null, 2)}`);
+          logger.debug(`[${PREFIX}] actorFbid: ${actorFbid}`);
+
+          await setUserInfo(actorFbid, actorData);
+
+          global.ircClient.say(nickname, stripIndents`
+          ${actor.displayName} has requested to link accounts.
+
+          If this is expected, please respond with the auth token given in discord.
+
+          If this is not expected, please contact Moonbear#1024 on discord, but don't worry: your account is safe!`);
+
+          return logger.debug(`[${PREFIX}] finished!`);
+        });
+      } else {
         embed.setDescription(stripIndents`
-        Your auth token is:
-
-        ${token}
-
-        Please copy this token and send it to the "TS" bot on IRC next time you're online!
-
-        If you forget or otherwise lose this token you can rerun this command to generate a new one.`);
+        The IRC client is not connected, please try again later.`);
         interaction.reply({ embeds: [embed], ephemeral: true });
-
-        // logger.debug(`[${PREFIX}] user whois: ${JSON.stringify(data, null, 2)}`);
-        actorData.irc = {
-          accountName: data.account,
-          vhost: data.host,
-          nickname: data.nick,
-          verified: false,
-        };
-        actorData.authToken = token;
-
-        // logger.debug(`[${PREFIX}] actorData: ${JSON.stringify(actorData, null, 2)}`);
-        logger.debug(`[${PREFIX}] actorFbid: ${actorFbid}`);
-
-        await setUserInfo(actorFbid, actorData);
-
-        global.ircClient.say(nickname, stripIndents`
-        ${actor.displayName} has requested to link accounts.
-
-        If this is expected, please respond with the auth token given in discord.
-
-        If this is not expected, please contact Moonbear#1024 on discord, but don't worry: your account is safe!`);
-
-        return logger.debug(`[${PREFIX}] finished!`);
-      });
+      }
     }
   },
   async verifyLink(client, service, accountInfo, token) {

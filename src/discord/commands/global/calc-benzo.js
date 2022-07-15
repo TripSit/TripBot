@@ -31,7 +31,7 @@ module.exports = {
     const drugB = interaction.options.getString('and_i_want_the_dose_of') || parameters.at(2);
     logger.debug(`[${PREFIX}] dosage: ${dosage} | drug_a: ${drugA} | drug_b: ${drugB}`);
 
-    const drugCache = JSON.parse(fs.readFileSync('./src/assets/data/drug_db_tripsit.json'));
+    const drugCache = JSON.parse(fs.readFileSync('./src/global/assets/data/drug_db_tripsit.json'));
     logger.debug(`[${PREFIX}] drugCache: ${drugCache.length}`);
 
     // Filter any drug not containing the dose_to_diazepam property

@@ -95,8 +95,6 @@ module.exports = {
     /* Handle POST Requests */
     app.post('/user', (req, res) => { // Will run when there are any incoming POST requests to https://localhost:(port)/user. Note that a POST request is different from a GET request, so this won't exactly work when you actually visit https://localhost:(port)/user
       const codeValue = req.body;
-      logger.debug(`[${PREFIX}] discordClientId: ${discordClientId}`);
-      logger.debug(`[${PREFIX}] discordClientSecret: ${discordClientSecret}`);
       logger.debug(`[${PREFIX}] codeValue: ${codeValue}`);
       logger.debug(`[${PREFIX}] url: ${redirectUrl}`);
       /* Create our Form Data */

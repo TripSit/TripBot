@@ -11,7 +11,7 @@ module.exports = {
     logger.debug(`[${PREFIX}] drug_a: ${drugA} | drug_b: ${drugB}`);
     for (let i = 0; i < Object.keys(drugDataAll).length; i += 1) {
       if (drugDataAll[i]) {
-        logger.debug(`[${PREFIX}] drugDataAll[i].name: ${drugDataAll[i].name}`);
+        // logger.debug(`[${PREFIX}] drugDataAll[i].name: ${drugDataAll[i].name}`);
         if (
           drugDataAll[i].name.toLowerCase() === drugA.toLowerCase()
           || drugDataAll[i].aliases.map(element => element.toLowerCase())

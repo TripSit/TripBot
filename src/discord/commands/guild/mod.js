@@ -269,7 +269,7 @@ module.exports = {
 
     // Get the channel information
     let channel = options ? options.channel : interaction.options.getString('channel');
-    logger.debug(`[${PREFIX}] Channel: ${channel}`);
+    // logger.debug(`[${PREFIX}] Channel: ${channel}`);
     if (channel) {
       if (channel.startsWith('<#') && channel.endsWith('>')) {
         // Discord channels start with <#

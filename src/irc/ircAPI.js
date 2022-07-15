@@ -19,6 +19,7 @@ const {
 
 module.exports = {
   async ircConnect(client) {
+    logger.info(`[${PREFIX}] started!`);
     // If there is no password provided, dont even try to connect
     if (!ircPassword) { return; }
 
@@ -59,16 +60,15 @@ module.exports = {
     // logger.debug(`[${PREFIX}] ircConfig: ${JSON.stringify(ircConfig, null, 2)}`);
     global.ircClient = new irc.Client(ircServer, ircUsername, ircConfig);
     global.ircClient.addListener('registered', () => {
-      logger.debug(`[${PREFIX}] Registered!`);
+      logger.info(`[${PREFIX}] Registered!`);
       // global.ircClient.say('Moonbear', 'Hello world!');
     });
     global.ircClient.addListener('error', message => {
-      const errorObj = message;
-      errorObj.stackTraceLimit = Infinity;
-      logger.error(`[${PREFIX}] error.name: ${errorObj.name}`);
-      logger.error(`[${PREFIX}] error.message: ${errorObj.message}`);
-      logger.error(`[${PREFIX}] error.stack: ${errorObj.stack}`);
-      logger.error(`[${PREFIX}] error.code: ${errorObj.code}`);
+      // It always seems to show this error first before actually working
+      // The second error happens doing whois on a user
+      if (message.args[1] !== 'You have not registered' && message.args[2] !== 'No such nick/channel') {
+        logger.error(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
+      }
     });
     global.ircClient.addListener('pm', async (from, message) => {
       logger.debug(`[${PREFIX}] PM from ${from}: ${message}`);

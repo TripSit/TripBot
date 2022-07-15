@@ -64,13 +64,20 @@ module.exports = {
       }
 
       actorData.timezone = tzCode;
-      await setUserInfo(actorFbid, actorData);
-
-      const embed = template.embedTemplate().setDescription(`I set your timezone to ${timezone}`);
-      interaction.reply({
-        embeds: [embed],
-        ephemeral: true,
-      });
+      const success = await setUserInfo(actorFbid, actorData);
+      if (success) {
+        const embed = template.embedTemplate().setDescription(`I set your timezone to ${timezone}`);
+        interaction.reply({
+          embeds: [embed],
+          ephemeral: true,
+        });
+      } else {
+        const embed = template.embedTemplate().setDescription('Could not set timezone, firebase is down!');
+        interaction.reply({
+          embeds: [embed],
+          ephemeral: true,
+        });
+      }
       logger.debug(`[${PREFIX}] Done!!`);
       return;
     }

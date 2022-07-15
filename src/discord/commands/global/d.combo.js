@@ -25,11 +25,9 @@ module.exports = {
   async execute(interaction, parameters) {
     const drugA = interaction.options.getString('first_drug') || parameters.at(0);
     const drugB = interaction.options.getString('second_drug') || parameters.at(1);
-    logger.debug(`[${PREFIX}] drug_a: ${drugA} | drug_b: ${drugB}`);
+    logger.debug(`[${PREFIX}] drugA: ${drugA} | drugA: ${drugB}`);
 
     const data = await combo(drugA, drugB);
-
-    logger.debug(`[${PREFIX}] data: ${data}`);
 
     if (data === null) {
       const embed = template.createEmbed();
@@ -40,7 +38,10 @@ module.exports = {
     }
 
     const [output, definition, color, thumbnail] = data;
-    logger.debug(`[${PREFIX}] data: ${[output, definition, color, thumbnail]}`);
+    logger.debug(`[${PREFIX}] output: ${output}`);
+    logger.debug(`[${PREFIX}] definition: ${definition}`);
+    logger.debug(`[${PREFIX}] color: ${color}`);
+    logger.debug(`[${PREFIX}] thumbnail: ${thumbnail}`);
 
     const embed = template.embedTemplate()
       .setTitle(`${drugA} and ${drugB} combined:`);
@@ -52,7 +53,7 @@ module.exports = {
     embed.setThumbnail(thumbnail);
     embed.setColor(color);
 
-    if (interaction.replied) interaction.followUp(data);
-    else interaction.reply(data);
+    if (interaction.replied) interaction.followUp({ embeds: [embed] });
+    else interaction.reply({ embeds: [embed] });
   },
 };
