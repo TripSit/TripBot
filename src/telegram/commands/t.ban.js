@@ -8,42 +8,51 @@ const PREFIX = require('path').parse(__filename).name;
 
 module.exports = Composer.command('ban', async ctx => {
 
-    let originalMessage = ctx.update.message.reply_to_message
-    let userId;
-
-    const splitCommand = ctx.update.message.text.split(' ');
-    const username = splitCommand[1];
-
+    // Get a list of all userids from group admins
     const chatAdmins = await ctx.getChatAdministrators(ctx.chat.id);
     let chatAdminIds = [];
-
-    // Make an array with all the userIds of all admins
-    for(const i of chatAdmins) {
-        if(!i.user.is_bot) {
+    for (const i of chatAdmins) {
+        if (!i.user.is_bot) {
             chatAdminIds.push(i.user.id);
         }
     }
 
-    // Check if user executing the command is a group administrator
-    if(chatAdminIds.includes(ctx.from.id)) {
+    // check if the user executing the command is a group administrator
+    if (chatAdminIds.includes(ctx.update.message.from.id)) {
 
-    // check if the command was executed as a response to a message. if so, ban the user who sent the original message.
-    if(originalMessage) {
-        userId = originalMessage.from.id;
-        ctx.banChatMember(ctx.chat.id, userId);
-        ctx.replyWithHTML("<b>✅ Success!</b>\nI banned this user for you.");
-        logger.debug(`[${PREFIX}] finished!`);
-        return;
+        let originalMessage;
+        // check if command was executed in response to a message
+        if (originalMessage = ctx.update.reply_to_message || ctx.update.message.reply_to_message) {
+
+
+            if (!chatAdminIds.includes(ctx.update.reply_to_message.from.id)) {
+
+                ctx.banChatMember(originalMessage.from.id);
+
+            } else {
+
+                ctx.replyWithHTML(`❌ <b>Task failed successfully!</b> ❌\nSorry, i can't ban an administrator`);
+                logger.debug(`[${PREFIX}] failed! Can't ban administrator`);
+                return;
+
+            }
+
+        } else {
+            // this seems to don't be a response. 
+            ctx.replyWithHTML(`❌ <b>Task failed successfully! </b>❌\nYou have to execute /ban as a response to a message. If you did and you still see this error, please contact @whyamiinthisroom`);
+            logger.debug(`[${PREFIX}] failed! update.reply_to_message not set.`);
+            console.log(ctx.update.message.reply_to_message);
+            return;
+
+        }
+
     } else {
-        ctx.replyWithHTML(`❌ <b>Task failed successfully! ❌\nPlease use this command as response to a message of the user you would like to ban”`);
-        logger.debug(`[${PREFIX}] finished! Wrong usage of command, aborted.`);
+        ctx.replyWithHTML(`❌ <b>Task failed successfully!</b> ❌\nYou don't have the required permission to use this command.`);
+        logger.debug(`[${PREFIX}] finished! Access to the command was denied.`)
     }
 
-    } else {
-        ctx.replyWithHTML(`❌ <b>Task failed successfully!</b> ❌\nSorry, only chat admins are allowed to execute this command! Your id is ${ctx.from.id}`);
-        logger.debug(`[${PREFIX}] finished! Access to command denied.`);
-        return;
-    }
+
+
 
 
 });
