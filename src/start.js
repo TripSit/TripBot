@@ -1,5 +1,7 @@
 'use strict';
 
+/* eslint-disable no-unused-vars */
+
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('./global/utils/logger');
 const { discordConnect } = require('./discord/discordAPI');
@@ -10,19 +12,18 @@ const { webserverConnect } = require('./webserver/webserverAPI');
 const { runTimer } = require('./global/services/timerAPI');
 
 async function start() {
-  // await firebaseConnect();
+  global.userDb = {};
+  await firebaseConnect();
 
- // await discordConnect();
+  await discordConnect();
 
-  // await ircConnect();
+  await ircConnect();
 
   await telegramConnect();
 
-  // await runTimer();
+  await runTimer();
 
-  // await webserverConnect();
-
-  logger.info(`[${PREFIX}] Ready to take over the world!`);
+  await webserverConnect();
 }
 
 start();
