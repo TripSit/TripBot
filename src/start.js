@@ -10,17 +10,18 @@ const { webserverConnect } = require('./webserver/webserverAPI');
 const { runTimer } = require('./global/services/timerAPI');
 
 async function start() {
-  // await firebaseConnect();
+  await firebaseConnect();
 
- // await discordConnect();
+  await discordConnect();
 
-  // await ircConnect();
+  await ircConnect();
 
   await telegramConnect();
 
-  // await runTimer();
+  await runTimer();
 
-  // await webserverConnect();
+  await webserverConnect();
+}
 
   logger.info(`[${PREFIX}] Ready to take over the world!`);
 }
