@@ -14,5 +14,5 @@ module.exports = Composer.compose([
   require('./t.irc'),
   require('./t.ban'),
   require('./t.moderateChat'),
-  require('./t.gban')
+  require('./t.gban'),
 ]);
