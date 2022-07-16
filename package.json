@@ -1,16 +1,17 @@
 {
   "name": "@tripsit/discord-bot",
   "private": true,
-  "version": "2.3.0",
+  "version": "3.0.1",
   "description": "A bot for TripSit",
-  "main": "index.js",
+  "main": "src/start.js",
   "scripts": {
-    "start": "node ./src/utils/deploy-commands.js && node ./src/index.js",
-    "gstart": "node ./src/utils/deploy-commands.js && pm2-runtime start ecosystem.config.js --env production",
-    "dev": "nodemon --config ./nodemon.json",
-    "deploy-commands": "node ./src/utils/deploy-commands.js",
-    "lint": "eslint .",
-    "fix": "eslint --fix .",
+    "start": "npm run deploy-commands && npm run go",
+    "dev": "npm run lint && npm run patch && npm run nodemon",
+    "deploy-commands": "node ./src/discord/utils/deploy-commands.js",
+    "nodemon": "nodemon --config ./nodemon.json",
+    "go": "node ./src/index.js",
+    "lint": "eslint --fix .",
+    "patch": "npm version patch -git-tag-version false",
     "minor": "npm version minor -git-tag-version false"
   },
   "repository": {
@@ -49,6 +50,7 @@
     "firebase": "^8.10.1",
     "firebase-admin": "^10.2.0",
     "fuse.js": "^6.5.3",
+    "glob": "^8.0.3",
     "got": "^11.8.5",
     "iconv": "^3.0.1",
     "imgur": "^2.2.0",
@@ -60,6 +62,7 @@
     "octokit": "^1.7.1",
     "path": "^0.12.7",
     "pm2": "^5.2.0",
+    "telegraf": "^4.8.5",
     "underscore": "^1.13.2",
     "url": "^0.11.0",
     "winston": "^3.7.2"
