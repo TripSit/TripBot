@@ -174,7 +174,7 @@ module.exports = {
             }
           }
           if (entireMessage.length > 0 && entireMessage.length <= 4000) {
-            // ctx.replyWithHTML(stripIndents`<b>Dosage information for ${substance}</b>\n<a href="https://wiki.tripsit.me/wiki/${drugData.name}”>Read more on the wiki</a>\n\n${entireMessage}`);
+            // ctx.replyWithHTML(`<b>Dosage information for ${substance}</b>\n<a href="https://wiki.tripsit.me/wiki/${drugData.name}”>Read more on the wiki</a>\n\n${entireMessage}`);
             return `<b>Dosage information for ${drugData.name}</b>\n <a href="https://wiki.tripsit.me/wiki/${drugData.name}">Read more on the wiki</a>\n\n${entireMessage}`;
           }
         } else {
