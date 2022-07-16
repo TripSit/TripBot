@@ -1,6 +1,7 @@
 'use strict';
 
 const { Composer } = require('telegraf');
+const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../global/utils/logger');
 const { combo } = require('../../global/utils/combo');
@@ -16,14 +17,18 @@ module.exports = Composer.command('combo', async ctx => {
   logger.debug(`[${PREFIX}] data: ${data}`);
 
   if (data === null) {
-    ctx.reply(`${drugA} and ${drugB} have no known interactions!\nThis does not mean combining them is safe!\nThis means we don't have information on it!`);
+    ctx.reply(stripIndents`${drugA} and ${drugB} have no known interactions!
+
+    This does not mean combining them is safe: this means we don't have information on it!`);
     return;
   }
 
   const [output, definition, color, thumbnail] = data;
   logger.debug(`[${PREFIX}] data: ${[output, definition, color, thumbnail]}`);
 
-  ctx.replyWithHTML(`<b>${output}</b>\n\n${definition}`);
+  ctx.replyWithHTML(stripIndents`<b>${output}</b>
+
+  ${definition}`);
 
   logger.debug(`[${PREFIX}] finished!`);
 });

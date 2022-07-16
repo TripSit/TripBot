@@ -2,13 +2,17 @@
 
 const { Composer } = require('telegraf');
 const fs = require('fs');
+const { stripIndents } = require('common-tags');
+
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../global/utils/logger');
 
 module.exports = Composer.command('gban', async ctx => {
   // check if the chat the command was executed in is a group or channel
   if (ctx.update.message.chat.type === 'private') {
-    ctx.replyWithHTML('❌ <b>Task failed successfully!</b> ❌\nThis command can\'t be executed in private chats');
+    ctx.replyWithHTML(stripIndents`❌ <b>Task failed successfully!</b> ❌
+
+    This command can't be executed in private chats`);
     logger.debug(`[${PREFIX}] failed! Tried to execute in private chat.`);
     return;
   }
@@ -38,21 +42,27 @@ module.exports = Composer.command('gban', async ctx => {
           ctx.telegram.banChatMember(i, originalMessage.from.id);
           logger.debug(`[${PREFIX}] banned user #${originalMessage.from.id} from chat #${i}`);
         }
-        ctx.replyWithHTML('✅ <b>Check!</b> ✅\nI banned the user from all the groups i moderate.');
+        ctx.replyWithHTML(stripIndents`✅ <b>Check!</b> ✅
+
+        I banned the user from all the groups i moderate.`);
         logger.debug(`[${PREFIX}] finished!`);
       } else {
         // this seems to don't be a response.
-        ctx.replyWithHTML(`❌ <b>Task failed successfully! </b>❌\n
+        ctx.replyWithHTML(stripIndents`❌ <b>Task failed successfully! </b>❌
+
         You have to execute /ban as a response to a message. If you did and you still see this error, please contact @whyamiinthisroom`);
         logger.debug(`[${PREFIX}] failed! update.reply_to_message not set.`);
         logger.logger(`[${PREFIX}] reply_to_message: ${ctx.update.message.reply_to_message}`);
       }
     } else {
-      ctx.replyWithHTML(`❌ <b>Task failed successfully!</b> ❌\n
+      ctx.replyWithHTML(stripIndents`❌ <b>Task failed successfully!</b> ❌
+
       You don't have the required permission to use this command.`);
       logger.debug(`[${PREFIX}] failed! Required permission missing.`);
     }
   } else {
-    ctx.replyWithHTML('❌ <b>Task failed successfully!</b> ❌\nThis group is not moderated by tripbot!');
+    ctx.replyWithHTML(stripIndents`❌ <b>Task failed successfully!</b> ❌
+
+    This group is not moderated by tripbot!`);
   }
 });
