@@ -65,7 +65,6 @@ module.exports = {
 
       actorData.timezone = tzCode;
       await setUserInfo(actorFbid, actorData);
-
       const embed = template.embedTemplate().setDescription(`I set your timezone to ${timezone}`);
       interaction.reply({
         embeds: [embed],

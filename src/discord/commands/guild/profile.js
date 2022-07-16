@@ -81,19 +81,33 @@ module.exports = {
     const [targetData] = await getUserInfo(target);
     const targetUsername = `${target.user.username}#${target.user.discriminator}`;
 
-    const givenUpvote = targetData.discord.karma_given['<:ts_voteup:958721361587630210>'] || 0;
-    const givenDownvote = targetData.discord.karma_given['<:ts_votedown:960161563849932892>'] || 0;
-    const givenKarma = givenUpvote - givenDownvote;
+    let givenUpvote = 0;
+    let givenDownvote = 0;
+    let givenKarma = 0;
+    let takenDownvote = 0;
+    let takenUpvote = 0;
+    let takenKarma = 0;
+    let targetBirthday = 'Use /birthday to set a birthday!';
 
-    const takenDownvote = targetData.discord.karma_received['<:ts_votedown:960161563849932892>'] || 0;
-    const takenUpvote = targetData.discord.karma_received['<:ts_voteup:958721361587630210>'] || 0;
-    const takenKarma = takenUpvote - takenDownvote;
-
-    const targetBirthday = targetData.birthday
-      ? new Date(`${targetData.birthday[0]} ${targetData.birthday[1]}, 2022`)
-      : 'Use /birthday to set a birthday!';
-    logger.debug(`[${PREFIX}] targetBirthday: ${targetBirthday}`);
-    logger.debug(`[${PREFIX}] typeof targetBirthday: ${typeof targetBirthday}`);
+    if (targetData.discord) {
+      if (targetData.discord.karma_given) {
+        givenUpvote = targetData.discord.karma_given['<:ts_voteup:958721361587630210>'] || 0;
+        givenDownvote = targetData.discord.karma_given['<:ts_votedown:960161563849932892>'] || 0;
+        givenKarma = givenUpvote - givenDownvote;
+      }
+      if (targetData.discord.karma_taken) {
+        takenDownvote = targetData.discord.karma_received['<:ts_votedown:960161563849932892>'] || 0;
+        takenUpvote = targetData.discord.karma_received['<:ts_voteup:958721361587630210>'] || 0;
+        takenKarma = takenUpvote - takenDownvote;
+      }
+      if (targetData.birthday) {
+        targetBirthday = targetData.birthday
+          ? new Date(`${targetData.birthday[0]} ${targetData.birthday[1]}, 2022`)
+          : 'Use /birthday to set a birthday!';
+        logger.debug(`[${PREFIX}] targetBirthday: ${targetBirthday}`);
+        logger.debug(`[${PREFIX}] typeof targetBirthday: ${typeof targetBirthday}`);
+      }
+    }
 
     const targetEmbed = template.embedTemplate()
       .setColor('BLUE')

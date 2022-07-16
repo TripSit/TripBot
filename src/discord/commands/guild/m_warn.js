@@ -29,7 +29,7 @@ module.exports = {
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction
     actor = interaction.member;
     // logger.debug(`[${PREFIX}] actor.username: ${actor.user.username}`);
-    logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
+    // logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
 
     message = interaction.options.data[0].message.cleanContent;
     // logger.debug(`[${PREFIX}] message: ${message}`);
@@ -40,7 +40,7 @@ module.exports = {
     // logger.debug(`[${PREFIX}] targetId: ${targetId}`);
 
     target = await interaction.guild.members.fetch(targetId);
-    logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+    // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
 
     // Create the modal
     const modal = new Modal()

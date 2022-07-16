@@ -6,12 +6,9 @@ const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('@discordjs/builders');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('../../../global/utils/logger');
-const template = require('../../utils/embed-template');
 const mod = require('./mod');
 
 const PREFIX = path.parse(__filename).name;
-
-const embed = template.embedTemplate();
 
 let actor = {};
 let target = {};
@@ -40,7 +37,8 @@ module.exports = {
     // logger.debug(`[${PREFIX}] targetId: ${targetId}`);
 
     target = await interaction.guild.members.fetch(targetId);
-    logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+    // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+    logger.debug(`[${PREFIX}] target.user.username: ${target.user.username}`);
 
     // Create the modal
     const modal = new Modal()
@@ -71,12 +69,6 @@ module.exports = {
     > ${message}
 
     `;
-    logger.debug(`[${PREFIX}] reason: ${reason}`);
-    embed.setTitle('Tripbot Report');
-    embed.setDescription(`${actor.user.username} has reported ${target.user.username}`);
-    // embed.addField('Reason', reason);
-    // embed.addField('Duration', duration);
-    // embed.addField('Toggle', toggle);
     mod.execute(interaction, {
       actor, command, toggle: 'on', target, reason, duration: null,
     });

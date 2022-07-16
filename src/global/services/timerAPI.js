@@ -111,7 +111,7 @@ module.exports = {
           const now = Date.now();
           // logger.debug(`[${PREFIX}] now: ${now}`);
           // global.userDb.forEach(async doc => {
-          if (global.userDb) {
+          if (Object.keys(global.userDb).length > 0) {
             // eslint-disable-next-line
             for (const doc of global.userDb) {
               if (doc.value.reminders) {
@@ -132,7 +132,7 @@ module.exports = {
                       logger.debug(`[${PREFIX}] Sending reminder to ${userid}`);
 
                       // Get the guild
-                      const guildTripsit = global.discordClient.guilds.cache.get(discordGuildId);
+                      const guildTripsit = global.client.guilds.cache.get(discordGuildId);
                       // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                       // Get the memeber from the guild
@@ -155,24 +155,6 @@ module.exports = {
 
                         // // Load actor data
                         setUserInfo(actorFbid, actorData);
-
-                        const userDb = [];
-                        global.userDb.forEach(doc2 => {
-                          if (doc2.key === actorFbid) {
-                            userDb.push({
-                              key: doc2.key,
-                              value: actorData,
-                            });
-                            logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                          } else {
-                            userDb.push({
-                              key: doc2.key,
-                              value: doc2.value,
-                            });
-                          }
-                        });
-                        Object.assign(global, { userDb });
-                        logger.debug(`[${PREFIX}] Updated global user data.`);
                         // eslint-disable-next-line
                         continue;
                       }
@@ -192,24 +174,6 @@ module.exports = {
 
                       // // Load actor data
                       setUserInfo(actorFbid, actorData);
-
-                      const userDb = [];
-                      global.userDb.forEach(subDoc => {
-                        if (subDoc.key === actorFbid) {
-                          userDb.push({
-                            key: subDoc.key,
-                            value: actorData,
-                          });
-                          logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                        } else {
-                          userDb.push({
-                            key: subDoc.key,
-                            value: subDoc.value,
-                          });
-                        }
-                      });
-                      Object.assign(global, { userDb });
-                      logger.debug(`[${PREFIX}] Updated global user data.`);
                     }
                   }
                 }
@@ -240,7 +204,7 @@ module.exports = {
                     logger.debug(`[${PREFIX}] Added ${autoActionTime} more than 24 hours ago`);
 
                     // Get the guild
-                    const guildTripsit = global.discordClient.guilds.cache.get(discordGuildId);
+                    const guildTripsit = global.client.guilds.cache.get(discordGuildId);
                     // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                     // Get the memeber from the guild
@@ -268,24 +232,6 @@ module.exports = {
 
                       // // Load actor data
                       setUserInfo(actorFbid, actorData);
-
-                      const userDb = [];
-                      global.userDb.forEach(doc2 => {
-                        if (doc2.key === actorFbid) {
-                          userDb.push({
-                            key: doc2.key,
-                            value: actorData,
-                          });
-                          logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                        } else {
-                          userDb.push({
-                            key: doc2.key,
-                            value: doc2.value,
-                          });
-                        }
-                      });
-                      Object.assign(global, { userDb });
-                      logger.debug(`[${PREFIX}] Updated global user data.`);
                       // eslint-disable-next-line
                       continue;
                     }
@@ -321,24 +267,6 @@ module.exports = {
 
                     // Load actor data
                     setUserInfo(actorFbid, actorData);
-
-                    const userDb = [];
-                    global.userDb.forEach(doc2 => {
-                      if (doc2.key === actorFbid) {
-                        userDb.push({
-                          key: doc2.key,
-                          value: actorData,
-                        });
-                        logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                      } else {
-                        userDb.push({
-                          key: doc2.key,
-                          value: doc2.value,
-                        });
-                      }
-                    });
-                    Object.assign(global, { userDb });
-                    logger.debug(`[${PREFIX}] Updated global user data.`);
                   }
                 }
                 if (discordData.lastSetMindsetDate) {
@@ -362,7 +290,7 @@ module.exports = {
                     logger.debug(`[${PREFIX}] ${discordData.username} added ${lastSetMindset} more than 8 hours ago`);
 
                     // Get the guild
-                    const guildTripsit = global.discordClient.guilds.cache.get(discordGuildId);
+                    const guildTripsit = global.client.guilds.cache.get(discordGuildId);
                     // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                     // Get the memeber from the guild
@@ -377,7 +305,7 @@ module.exports = {
                     } catch (err) {
                       logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (C)`);
                       // eslint-disable-next-line
-                      member = await global.discordClient.users.fetch(discordData.id);
+                      member = await global.client.users.fetch(discordData.id);
                       // Extract actor data
                       // eslint-disable-next-line
                       const [actorData, actorFbid] = await getUserInfo(member);
@@ -388,24 +316,6 @@ module.exports = {
 
                       // Load actor data
                       setUserInfo(actorFbid, actorData);
-
-                      const userDb = [];
-                      global.userDb.forEach(doc2 => {
-                        if (doc2.key === actorFbid) {
-                          userDb.push({
-                            key: doc2.key,
-                            value: actorData,
-                          });
-                          logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                        } else {
-                          userDb.push({
-                            key: doc2.key,
-                            value: doc2.value,
-                          });
-                        }
-                      });
-                      Object.assign(global, { userDb });
-                      logger.debug(`[${PREFIX}] Updated global user data.`);
                       // eslint-disable-next-line
                       continue;
                     }
@@ -438,30 +348,12 @@ module.exports = {
 
                     // Load actor data
                     setUserInfo(actorFbid, actorData);
-
-                    const userDb = [];
-                    global.userDb.forEach(doc2 => {
-                      if (doc2.key === actorFbid) {
-                        userDb.push({
-                          key: doc2.key,
-                          value: actorData,
-                        });
-                        logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                      } else {
-                        userDb.push({
-                          key: doc2.key,
-                          value: doc2.value,
-                        });
-                      }
-                    });
-                    Object.assign(global, { userDb });
-                    logger.debug(`[${PREFIX}] Updated global user data.`);
                   }
                 }
                 if (discordData.lastHelpedThreadId) {
                   logger.debug(`[${PREFIX}] processing lastHelpedThreadId on ${discordData.username}!`);
                   // Get the guild
-                  const guildTripsit = global.discordClient.guilds.cache.get(discordGuildId);
+                  const guildTripsit = global.client.guilds.cache.get(discordGuildId);
                   // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                   // Get the memeber from the guild
@@ -474,7 +366,7 @@ module.exports = {
                   } catch (err) {
                     logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (D)`);
                     // eslint-disable-next-line
-                    member = await global.discordClient.users.fetch(discordData.id);
+                    member = await global.client.users.fetch(discordData.id);
 
                     // Extract actor data
                     // eslint-disable-next-line
@@ -486,24 +378,6 @@ module.exports = {
 
                     // Load actor data
                     setUserInfo(actorFbid, actorData);
-
-                    const userDb = [];
-                    global.userDb.forEach(doc2 => {
-                      if (doc2.key === actorFbid) {
-                        userDb.push({
-                          key: doc2.key,
-                          value: actorData,
-                        });
-                        logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                      } else {
-                        userDb.push({
-                          key: doc2.key,
-                          value: doc2.value,
-                        });
-                      }
-                    });
-                    Object.assign(global, { userDb });
-                    logger.debug(`[${PREFIX}] Updated global user data.`);
                     // eslint-disable-next-line
                     continue;
                   }
@@ -634,24 +508,6 @@ module.exports = {
 
                     // Load actor data
                     setUserInfo(actorFbid, actorData);
-
-                    const userDb = [];
-                    global.userDb.forEach(doc => {
-                      if (doc.key === actorFbid) {
-                        userDb.push({
-                          key: doc.key,
-                          value: actorData,
-                        });
-                        logger.debug(`[${PREFIX}] Updated actor in userDb`);
-                      } else {
-                        userDb.push({
-                          key: doc.key,
-                          value: doc.value,
-                        });
-                      }
-                    });
-                    Object.assign(global, { userDb });
-                    logger.debug(`[${PREFIX}] Updated global user data.`);
                   }
                 }
               }
