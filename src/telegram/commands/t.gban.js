@@ -3,10 +3,11 @@
 const { info } = require('console');
 const { Composer } = require('telegraf');
 const logger = require('../../global/utils/logger');
-
 const PREFIX = require('path').parse(__filename).name;
+const fs = require('fs');
 
-module.exports = Composer.command('ban', async ctx => {
+
+module.exports = Composer.command('gban', async ctx => {
 
     // check if the chat the command was executed in is a group or channel
     if (ctx.update.message.chat.type === 'private') { 
@@ -29,22 +30,22 @@ module.exports = Composer.command('ban', async ctx => {
         // check if the user executing the command is a group administrator
         if (chatAdminIds.includes(ctx.update.message.from.id)) {
 
+
+            const moderatedChats = JSON.parse(fs.readFileSync(__dirname + '/../cache/moderatedChats.json'));
+
+            if(moderatedChats.includes(ctx.update.message.chat.id)) {
+
+
             let originalMessage;
             // check if command was executed in response to a message
             if (originalMessage = ctx.update.reply_to_message || ctx.update.message.reply_to_message) {
 
-
-                if (!chatAdminIds.includes(ctx.update.reply_to_message.from.id)) {
-
-                    ctx.banChatMember(originalMessage.from.id);
-
-                } else {
-
-                    ctx.replyWithHTML(`❌ <b>Task failed successfully!</b> ❌\nSorry, i can't ban an administrator`);
-                    logger.debug(`[${PREFIX}] failed! Can't ban administrator`);
-                    return;
-
+                for(let i of moderatedChats) {
+                    ctx.telegram.banChatMember(i, originalMessage.from.id);
+                    logger.debug(`[${PREFIX}] banned user #${originalMessage.from.id} from chat #${i}`);
                 }
+                ctx.replyWithHTML(`✅ <b>Check!</b> ✅\nI banned the user from all the groups i moderate.`);
+                logger.debug(`[${PREFIX}] finished!`);
 
             } else {
                 // this seems to don't be a response. 
@@ -60,7 +61,9 @@ module.exports = Composer.command('ban', async ctx => {
             logger.debug(`[${PREFIX}] failed! Required permission missing.`)
         }
 
-
+    } else {
+        ctx.replyWithHTML(`❌ <b>Task failed successfully!</b> ❌\nThis group is not moderated by tripbot!`);
+    }
 
 
 });
