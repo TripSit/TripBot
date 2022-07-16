@@ -9,7 +9,7 @@
     "dev": "npm run lint && npm run patch && npm run nodemon",
     "deploy-commands": "node ./src/discord/utils/deploy-commands.js",
     "nodemon": "nodemon --config ./nodemon.json",
-    "go": "node ./src/index.js",
+    "go": "node ./src/start.js",
     "lint": "eslint --fix .",
     "patch": "npm version patch -git-tag-version false",
     "minor": "npm version minor -git-tag-version false"
