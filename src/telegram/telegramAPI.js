@@ -30,9 +30,6 @@ module.exports = {
       bot.reply(errorMessages[Math.floor(Math.random() * errorMessages.length())]);
     })**/
 
-    bot.on("message", async (ctx) => {
-      console.log(ctx.update);
-    })
 
     process.once('SIGINT', () => bot.stop('SIGINT'));
     process.once('SIGTERM', () => bot.stop('SIGTERM'));

@@ -17,6 +17,7 @@ module.exports = Composer.command('ban', async ctx => {
 
 
 
+
         // Get a list of all userids from group admins
         const chatAdmins = await ctx.getChatAdministrators(ctx.chat.id);
         let chatAdminIds = [];
@@ -34,9 +35,19 @@ module.exports = Composer.command('ban', async ctx => {
             if (originalMessage = ctx.update.reply_to_message || ctx.update.message.reply_to_message) {
 
 
-                if (!chatAdminIds.includes(ctx.update.reply_to_message.from.id)) {
+                if(originalMessage.from.id == await ctx.telegram.getMe().id) {
+                    ctx.replyWithHTML(`❌ <b>Task failed successfully!</b> ❌\nI can't ban myself.`);
+                    logger.debug(`[${PREFIX}] failed! Will not ban myself.`);
+                    return;
+                }
+
+                if (!chatAdminIds.includes(originalMessage.from.id) && originalMessage.from.id ) {
 
                     ctx.banChatMember(originalMessage.from.id);
+                    ctx.replyWithHTML(`✅ <b>Check!</b> ✅\nI banned this user for you`);
+                    logger.debug(`[${PREFIX}] finished!`);
+
+                    return;
 
                 } else {
 
@@ -58,6 +69,7 @@ module.exports = Composer.command('ban', async ctx => {
         } else {
             ctx.replyWithHTML(`❌ <b>Task failed successfully!</b> ❌\nYou don't have the required permission to use this command.`);
             logger.debug(`[${PREFIX}] failed! Required permission missing.`)
+            return;
         }
 
 
