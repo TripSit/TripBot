@@ -11,13 +11,14 @@ const {
 
 module.exports = {
   async execute(interaction, client) {
-    logger.debug(`[${PREFIX}] interaction: ${interaction}`);
     const blacklistUsers = [];
-    global.guild_db.forEach(doc => {
-      if (doc.value.isBanned) {
-        blacklistUsers.push(doc.value.guild_id);
-      }
-    });
+    if (global.guild_db) {
+      global.guild_db.forEach(doc => {
+        if (doc.value.isBanned) {
+          blacklistUsers.push(doc.value.guild_id);
+        }
+      });
+    }
 
     // Check if the user is in blacklist_users and if so, ignore it
     if (blacklistUsers.includes(interaction.user.id)) {

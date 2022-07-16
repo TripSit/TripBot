@@ -37,7 +37,7 @@ module.exports = {
 
     // Sort data by the thumbs_up value
     data.list.sort((a, b) => b.thumbs_up - a.thumbs_up);
-    logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
+    // logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
     const embed = template.embedTemplate()
       .setTitle(`Definition for: ${term}`)
       .addFields(

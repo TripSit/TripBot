@@ -21,24 +21,22 @@ const {
   firebaseClientEmail,
 } = require('../../../env');
 
-serviceAccount.private_key_id = firebasePrivateKeyId;
-serviceAccount.private_key = firebasePrivateKey ? firebasePrivateKey.replace(/\\n/g, '\n') : undefined;
-serviceAccount.client_email = firebaseClientEmail;
-serviceAccount.client_id = firebaseClientId;
-
-// Initialize firebase app
-if (serviceAccount.private_key_id) {
-  initializeApp({
-    credential: cert(serviceAccount),
-    databaseURL: 'https://tripsit-me-default-rtdb.firebaseio.com',
-  });
-  global.db = getFirestore();
-}
-
-const { db } = global;
-
 module.exports = {
   firebaseConnect: async () => {
+    // Initialize firebase app
+    if (firebasePrivateKeyId) {
+      serviceAccount.private_key_id = firebasePrivateKeyId;
+      serviceAccount.private_key = firebasePrivateKey ? firebasePrivateKey.replace(/\\n/g, '\n') : undefined;
+      serviceAccount.client_email = firebaseClientEmail;
+      serviceAccount.client_id = firebaseClientId;
+      initializeApp({
+        credential: cert(serviceAccount),
+        databaseURL: 'https://tripsit-me-default-rtdb.firebaseio.com',
+      });
+      global.db = getFirestore();
+    }
+
+    const { db } = global;
     async function updateGlobalDb() {
       const userDb = [];
       if (db !== undefined) {
@@ -98,6 +96,7 @@ module.exports = {
     await backupDb(userDb);
   },
   getUserInfo: async member => {
+    logger.debug(`[${PREFIX}] getUserInfo()`);
     // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
     // {
     //   "nick": "Teknos",
@@ -131,7 +130,7 @@ module.exports = {
       logger.debug(`[${PREFIX}] member.host: ${member.host}`);
       name = member.nick;
     } else if (member.user) {
-      logger.debug(`[${PREFIX}] member.user: ${JSON.stringify(member.user, null, 2)}`);
+      // logger.debug(`[${PREFIX}] member.user: ${JSON.stringify(member.user, null, 2)}`);
       name = member.user.username;
     } else if (member.username) {
       logger.debug(`[${PREFIX}] member.username: ${member.username}`);
@@ -147,10 +146,10 @@ module.exports = {
     // If the member object has an ID value, then this is a message from discord
     if (member.id) {
       logger.debug(`[${PREFIX}] Member is from Discord!`);
-      logger.debug(`[${PREFIX}] member.id: ${member.id}`);
+      // logger.debug(`[${PREFIX}] member.id: ${member.id}`);
       memberType = 'discord';
       memberData = {
-        name: member.user ? member.user.username : member.username,
+        accountName: member.user ? member.user.username : member.username,
         discord: {
           id: member.id.toString(),
           tag: member.user ? member.user.tag : member.tag,
@@ -186,7 +185,7 @@ module.exports = {
     // Find the user in the local DB
     // We use for..of here because it's syncronus and we want to wait for it to finish
     let dataFound = false;
-    if (global.userDb) {
+    if (Object.keys(global.userDb).length > 0) {
       // eslint-disable-next-line
       for (const doc of global.userDb) {
         if (memberType === 'discord') {
@@ -219,9 +218,11 @@ module.exports = {
     }
 
     // If the user isnt found above, query firebase
+    const { db } = global;
     if (!dataFound) {
-      logger.warn(`[${PREFIX}] Local data not found, querying firebase!`);
+      logger.debug(`[${PREFIX}] Local data not found!`);
       if (db !== undefined) {
+        logger.warn(`[${PREFIX}] Querying firebase!!`);
         const snapshotUser = await db.collection(firebaseUserDbName).get();
         await snapshotUser.forEach(doc => {
           if (memberType === 'discord') {
@@ -251,65 +252,99 @@ module.exports = {
       }
     }
     if (memberFbid === null) {
-      logger.warn(`[${PREFIX}] Member not found, returning blank record!`);
+      logger.warn(`[${PREFIX}] Returning blank record!`);
     }
     return [memberData, memberFbid];
   },
   setUserInfo: async (fbid, data) => {
-    logger.debug(`[${PREFIX}] Saving ${data.accountName}!`);
-
-    if (fbid !== null && fbid !== undefined) {
-      // logger.debug(`[${PREFIX}] Updating actor data`);
-      try {
-        await db.collection(firebaseUserDbName).doc(fbid).set(data);
-        logger.debug(`[${PREFIX}] Updated FB data`);
-        const userDb = [];
-        global.userDb.forEach(doc => {
-          if (doc.key === fbid) {
-            userDb.push({
-              key: doc.key,
-              value: data,
-            });
-            // logger.debug(`[${PREFIX}] Updated actor in userDb`);
-          } else {
-            userDb.push({
-              key: doc.key,
-              value: doc.value,
+    const { db } = global;
+    if (db !== undefined) {
+      // logger.debug(`[${PREFIX}] Saving ${JSON.stringify(data, null, 2)}!`);
+      if (fbid !== null && fbid !== undefined) {
+        // logger.debug(`[${PREFIX}] Updating actor data`);
+        try {
+          await db.collection(firebaseUserDbName).doc(fbid).set(data);
+          logger.debug(`[${PREFIX}] Updated FB data`);
+          const userDb = [];
+          global.userDb.forEach(doc => {
+            if (doc.key === fbid) {
+              userDb.push({
+                key: doc.key,
+                value: data,
+              });
+              // logger.debug(`[${PREFIX}] Updated actor in userDb`);
+            } else {
+              userDb.push({
+                key: doc.key,
+                value: doc.value,
+              });
+            }
+          });
+          Object.assign(global, { userDb });
+          logger.debug(`[${PREFIX}] Updated global userDB.`);
+          return true;
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
+          return false;
+        }
+      } else {
+        // logger.debug(`[${PREFIX}] Creating actor data`);
+        try {
+          await db.collection(firebaseUserDbName).doc().set(data);
+          logger.debug(`[${PREFIX}] Created FB data`);
+          const userDb = [];
+          if (db !== undefined) {
+            // Get user information
+            const snapshotUser = await db.collection(firebaseUserDbName).get();
+            snapshotUser.forEach(doc => {
+              userDb.push({
+                key: doc.id,
+                value: doc.data(),
+              });
             });
           }
-        });
-        Object.assign(global, { userDb });
-        logger.debug(`[${PREFIX}] Updated global userDB.`);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
-      }
-    } else {
-      // logger.debug(`[${PREFIX}] Creating actor data`);
-      try {
-        await db.collection(firebaseUserDbName).doc().set(data);
-        logger.debug(`[${PREFIX}] Created FB data`);
-        const userDb = [];
-        if (db !== undefined) {
-          // Get user information
-          const snapshotUser = await db.collection(firebaseUserDbName).get();
-          snapshotUser.forEach(doc => {
-            userDb.push({
-              key: doc.id,
-              value: doc.data(),
-            });
-          });
+          Object.assign(global, { userDb });
+          // logger.debug(`[${PREFIX}] User database loaded.`);
+          // logger.debug(`[${PREFIX}] userDb: ${JSON.stringify(global.userDb, null, 4)}`);
+          logger.debug(`[${PREFIX}] Global User DB loaded!`);
+          return true;
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error creating actor data: ${err}`);
+          return false;
         }
-        Object.assign(global, { userDb });
-        // logger.debug(`[${PREFIX}] User database loaded.`);
-        // logger.debug(`[${PREFIX}] userDb: ${JSON.stringify(global.userDb, null, 4)}`);
-        logger.debug(`[${PREFIX}] Global User DB loaded!`);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error creating actor data: ${err}`);
       }
     }
+    // logger.debug(`[${PREFIX}] global.userDb: ${JSON.stringify(global.userDb)}`);
+    const userDb = [];
+    if (Object.keys(global.userDb).length > 0) {
+      global.userDb.forEach(doc => {
+        if (doc.key === fbid) {
+          userDb.push({
+            key: doc.key,
+            value: data,
+          });
+          logger.debug(`[${PREFIX}] Updated actor in userDb`);
+        } else {
+          userDb.push({
+            key: doc.key,
+            value: doc.value,
+          });
+        }
+      });
+    } else {
+      const keyString = Math.random().toString(36).substring(2, 10);
+      userDb.push({
+        // Get random string of 8 characters
+        key: keyString,
+        value: data,
+      });
+    }
+    Object.assign(global, { userDb });
+    logger.debug(`[${PREFIX}] Updated global user data.`);
   },
   getGuildInfo: async guild => {
-    logger.debug(`[${PREFIX}] Looking up guild ${guild}!`);
+    const { db } = global;
+
     let guildData = {
       guild_name: guild.name,
       guild_id: guild.id,
@@ -328,9 +363,9 @@ module.exports = {
       modActions: {},
     };
     let guildFbid = null;
-    // logger.debug(`[${PREFIX}] firebaseGuildDbName: ${firebaseGuildDbName}`);
-    // logger.debug(`[${PREFIX}] guild.id: ${guild.id}`);
+
     if (db !== undefined) {
+      logger.debug(`[${PREFIX}] Looking up guild ${guild}!`);
       const snapshotGuild = await db.collection(firebaseGuildDbName).get();
       await snapshotGuild.forEach(doc => {
         if (doc.data().guild_id === guild.id.toString()) {
@@ -347,8 +382,8 @@ module.exports = {
   },
   setGuildInfo: async (fbid, data) => {
     logger.debug(`[${PREFIX}] Saving ${data.guild_name}!`);
+    const { db } = global;
     // logger.debug(`[${PREFIX}] fbid ${fbid}!`);
-
     if (fbid !== null && fbid !== undefined) {
       logger.debug(`[${PREFIX}] Updating guild data`);
       try {
@@ -370,6 +405,8 @@ module.exports = {
     let ticketFbid = null;
     let ticketData = {};
     let ticketBlocked = false;
+
+    const { db } = global;
 
     if (db !== undefined) {
       const snapshotTicket = await db.collection(firebaseTicketDbName).get();
@@ -407,6 +444,8 @@ module.exports = {
   },
   setTicketInfo: async (fbid, data) => {
     logger.debug(`[${PREFIX}] Saving ${data.issueUsername}!`);
+
+    const { db } = global;
     // logger.debug(`[${PREFIX}] fbid ${fbid}!`);
 
     if (fbid !== null && fbid !== undefined) {

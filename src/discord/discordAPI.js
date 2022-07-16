@@ -12,7 +12,7 @@ const {
 
 module.exports = {
   discordConnect: async () => {
-    const discordClient = new Client({
+    const client = new Client({
       intents: [
         Intents.FLAGS.GUILDS,
         Intents.FLAGS.GUILD_MESSAGES,
@@ -33,10 +33,10 @@ module.exports = {
       ],
     });
 
-    Object.assign(global, { discordClient });
+    Object.assign(global, { client });
 
-    Promise.all([registerCommands(discordClient), registerEvents(discordClient)])
-      .then(() => discordClient.login(discordToken))
+    Promise.all([registerCommands(client), registerEvents(client)])
+      .then(() => client.login(discordToken))
       .then(() => logger.info(`[${PREFIX}] Discord bot successfully started...`));
   },
 };

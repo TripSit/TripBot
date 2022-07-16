@@ -398,24 +398,6 @@ module.exports = {
           // TODO: Use transactions
           await setUserInfo(targetFbid, targetData);
 
-          const userDb = [];
-          global.userDb.forEach(doc => {
-            if (doc.key === targetFbid) {
-              userDb.push({
-                key: doc.key,
-                value: targetData,
-              });
-              logger.debug(`[${PREFIX}] Updated actor in userDb`);
-            } else {
-              userDb.push({
-                key: doc.key,
-                value: doc.value,
-              });
-            }
-          });
-          Object.assign(global, { userDb });
-          logger.debug(`[${PREFIX}] Updated global user data.`);
-
           logger.debug(`[${PREFIX}] finished!`);
 
           // Return here so that we don't create the new thread below
@@ -549,24 +531,6 @@ module.exports = {
     targetData.discord.lastHelpedDate = new Date();
     // TODO: Use transactions
     await setUserInfo(targetFbid, targetData);
-
-    const userDb = [];
-    global.userDb.forEach(doc => {
-      if (doc.key === targetFbid) {
-        userDb.push({
-          key: doc.key,
-          value: targetData,
-        });
-        logger.debug(`[${PREFIX}] Updated target in userDb`);
-      } else {
-        userDb.push({
-          key: doc.key,
-          value: doc.value,
-        });
-      }
-    });
-    Object.assign(global, { userDb });
-    logger.debug(`[${PREFIX}] Updated global user data.`);
 
     // Extract actor data
     const [actorData, actorFbid] = await getUserInfo(actor);

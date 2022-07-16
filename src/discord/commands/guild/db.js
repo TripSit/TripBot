@@ -28,7 +28,7 @@ try {
 // eslint-disable-next-line no-unused-vars
 async function updateLocal() {
   const userDb = [];
-  if (db !== undefined) {
+  if (db !== {}) {
     // Get user information
     const snapshotUser = await db.collection(firebaseUserDbName).get();
     snapshotUser.forEach(doc => {
@@ -185,7 +185,7 @@ async function removeEvents(interaction) {
   }
 
   const userDb = [];
-  if (db !== undefined) {
+  if (db !== {}) {
     // Get user information
     const snapshotUser = await db.collection(firebaseUserDbName).get();
     snapshotUser.forEach(doc => {
@@ -229,7 +229,7 @@ async function removeDupliates(/* interaction */) {
 
   // Get all users that have discord information
   const userDb = [];
-  if (db !== undefined) {
+  if (db !== {}) {
     // Get user information
     await snapshotUser.forEach(async user => {
       if (user.data().discord) {

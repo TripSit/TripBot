@@ -22,9 +22,21 @@ module.exports = {
 
     // Do a whois on the user to get their account name
     let data = null;
-    await global.ircClient.whois(target, async resp => {
-      data = resp;
-    });
+    if (global.ircClient) {
+      await global.ircClient.whois(target, async resp => {
+        data = resp;
+      });
+    } else {
+      const embed = template.embedTemplate()
+        .setDescription('Irc client is not connected!')
+        .setTitle(`Whois for ${target}`)
+        .setColor(0x00FF00);
+      interaction.reply({
+        embeds: [embed],
+        ephemeral: true,
+      });
+      return;
+    }
 
     // This is a hack substanc3 helped create to get around the fact that the whois command
     // is asyncronous by default, so we need to make this syncronous
@@ -34,12 +46,19 @@ module.exports = {
 
     // Check if the user is FOUND on IRC, if not, ignore it
     if (!data.host) {
-      logger.debug(`[${PREFIX}] ${target} not found on IRC, ignoring!`);
-      interaction.reply(`${target} not found on IRC, ignoring!`);
+      logger.debug(`[${PREFIX}] ${target} not found on IRC!`);
+      const embed = template.embedTemplate()
+        .setDescription(`${target} not found on IRC!`)
+        .setTitle(`Whois for ${target}`)
+        .setColor(0x00FF00);
+      interaction.reply({
+        embeds: [embed],
+        ephemeral: true,
+      });
       return;
     }
 
-    logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
+    // logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
 
     const body = stripIndents`
       **${data.nick}** (${data.user}@${data.host}) ${data.account ? `${data.accountinfo} ${data.account}` : ''}

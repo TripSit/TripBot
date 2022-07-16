@@ -97,7 +97,7 @@ module.exports = {
 
       embed.setDescription(`I set your birthday to ${birthday[0]} ${birthday[1]}`);
       interaction.reply({ embeds: [embed], ephemeral: true });
-      logger.debug(`[${PREFIX}] Done!!`);
+
       return;
     }
     if (command === 'get') {

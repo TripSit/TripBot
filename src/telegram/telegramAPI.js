@@ -12,7 +12,7 @@ const { info } = require('console');
 
 module.exports = {
   telegramConnect: async () => {
-    logger.debug(`[${PREFIX}] TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}`);
+    logger.debug(`[${PREFIX}] Connecting to Telegram...`);
 
     const bot = new Telegraf(TELEGRAM_TOKEN);
 

@@ -19,7 +19,7 @@ logger.debug(`[${PREFIX}] discordClientId: ${discordClientId}`);
 logger.debug(`[${PREFIX}] discordToken: ${discordToken}`);
 logger.debug(`[${PREFIX}] discordGuildId: ${discordGuildId}`);
 
-const COMMANDS_PATH = path.resolve('./src/commands');
+const COMMANDS_PATH = path.resolve('./src/discord/commands');
 
 async function getCommands(commandType) {
   const files = await fs.readdir(path.join(COMMANDS_PATH, commandType));

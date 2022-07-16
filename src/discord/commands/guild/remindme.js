@@ -47,29 +47,15 @@ module.exports = {
     // Load actor data
     await setUserInfo(actorFbid, actorData);
 
-    const userDb = [];
-    global.userDb.forEach(doc => {
-      if (doc.key === actorFbid) {
-        userDb.push({
-          key: doc.key,
-          value: actorData,
-        });
-        logger.debug(`[${PREFIX}] Updated actor in userDb`);
-      } else {
-        userDb.push({
-          key: doc.key,
-          value: doc.value,
-        });
-      }
-    });
-    Object.assign(global, { userDb });
-    logger.debug(`[${PREFIX}] Updated global user data.`);
+    logger.debug(`[${PREFIX}] userDb: ${JSON.stringify(global.userDb)}`);
 
     const timeBetween = reminderDatetime - new Date();
 
     const embed = template.embedTemplate()
       .setDescription(`In ${ms(timeBetween, { long: true })} I will remind you: ${reminder}`);
+
     interaction.reply({ embeds: [embed], ephemeral: true });
+
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
