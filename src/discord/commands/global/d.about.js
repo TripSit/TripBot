@@ -1,12 +1,10 @@
 'use strict';
 
-const path = require('path');
+const PREFIX = require('path').parse(__filename).name;
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { about } = require('../../../global/utils/about');
-
-const PREFIX = path.parse(__filename).name;
 
 module.exports = {
   data: new SlashCommandBuilder()
