@@ -2,7 +2,7 @@ const _ = require('underscore');
 const logger = require('./logger');
 const fs = require('fs');
 const path = require('path');
-const calcBenzo = require('../../discord/commands/global/calc-benzo');
+const calcBenzo = require('../../discord/commands/global/d.calc-benzo');
 
 const PREFIX = path.parse(__filename).name;
 
