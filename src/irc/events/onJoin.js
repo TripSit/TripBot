@@ -1,14 +1,22 @@
 'use strict';
 
-const PREFIX = require('path').parse(__filename).name;
-const logger = require('../../global/utils/logger');
 const { watcher } = require('../utils/uatu');
 
 module.exports = {
-  name: 'onReady',
   async execute() {
     global.ircClient.addListener('join', (channel, nick, message) => {
-      // logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
+      // {
+      //   "prefix": "TSDev!~TSDev@tripsit/bridge/TS1",
+      //   "nick": "TSDev",
+      //   "user": "~TSDev",
+      //   "host": "tripsit/bridge/TS1",
+      //   "command": "JOIN",
+      //   "rawCommand": "JOIN",
+      //   "commandType": "normal",
+      //   "args": [
+      //     "#sandbox-dev"
+      //   ]
+      // }
       watcher(message);
     });
   },

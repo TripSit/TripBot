@@ -25,6 +25,8 @@ exports.ircUsername = process.env.ircUsername;
 exports.ircPassword = process.env.ircPassword;
 exports.ircBridgeUsername = process.env.ircBridgeUsername;
 exports.ircBridgePassword = process.env.ircBridgePassword;
+exports.IRC_BOT_PREFIX = process.env.IRC_BOT_PREFIX;
+
 
 exports.firebasePrivateKeyId = process.env.firebasePrivateKeyId;
 exports.firebasePrivateKey = process.env.firebasePrivateKey;

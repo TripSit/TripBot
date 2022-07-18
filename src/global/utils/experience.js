@@ -142,13 +142,13 @@ module.exports = {
       messageChannelId = message.args[0];
     }
 
-    logger.debug(`[${PREFIX}] expType: ${expType}`);
-    logger.debug(`[${PREFIX}] messageChannelId: ${messageChannelId}`);
+    // logger.debug(`[${PREFIX}] expType: ${expType}`);
+    // logger.debug(`[${PREFIX}] messageChannelId: ${messageChannelId}`);
 
     // Get random value between 15 and 25
     const expPoints = Math.floor(Math.random() * (25 - 15 + 1)) + 15;
     const currMessageDate = message.createdTimestamp || Date.now();
-    logger.debug(`[${PREFIX}] currMessageDate: ${currMessageDate}`);
+    // logger.debug(`[${PREFIX}] currMessageDate: ${currMessageDate}`);
 
     // Get user data
     const [actorData, actorFbid] = await getUserInfo(actor);
