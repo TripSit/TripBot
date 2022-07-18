@@ -77,7 +77,7 @@ const botNicknames = [
 ];
 
 module.exports = {
-  async experience(message, client) {
+  async experience(message) {
     // if (message.guildId) {
     //   // If not in tripsit, ignore it
     //   if (message.guildId !== discordGuildId) { return; }
@@ -88,14 +88,7 @@ module.exports = {
     let actor = {};
     let messageChannelId = '';
     let expType = '';
-    let discordClient = client;
-
-    if (!discordClient) {
-      discordClient = message.client;
-    }
-    if (!discordClient) {
-      discordClient = global.client;
-    }
+    const discordClient = global.client;
 
     // Check if the user who sent this message is a guild user
     if (message.member) {

@@ -98,7 +98,7 @@ const channels = {
 };
 
 module.exports = {
-  async watcher(client, message, newNick) {
+  async watcher(message, newNick) {
     if (botNicknames.includes(message.nick)) {
       // logger.debug(`[${PREFIX}] ${message.nick} is a bot!`);
       return;

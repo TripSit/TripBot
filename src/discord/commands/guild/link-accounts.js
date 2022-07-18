@@ -131,7 +131,7 @@ module.exports = {
       }
     }
   },
-  async verifyLink(client, service, accountInfo, token) {
+  async verifyLink(service, accountInfo, token) {
     logger.debug(`[${PREFIX}] Actor: ${accountInfo.account}`);
     logger.debug(`[${PREFIX}] givnToken: ${token}`);
 
@@ -150,7 +150,7 @@ module.exports = {
         actorData.irc.verified = true;
         await setUserInfo(actorFbid, actorData);
         global.ircClient.say(accountInfo.nick, 'Your account has been linked!');
-        const tripsitGuild = await client.guilds.cache.get(discordGuildId);
+        const tripsitGuild = await global.client.guilds.cache.get(discordGuildId);
         const roleIrcVerified = tripsitGuild.roles.cache.find(
           role => role.id === roleIrcVerifiedId,
         );
