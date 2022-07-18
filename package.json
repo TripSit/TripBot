@@ -1,7 +1,7 @@
 {
   "name": "@tripsit/discord-bot",
   "private": true,
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "A bot for TripSit",
   "main": "src/start.js",
   "scripts": {

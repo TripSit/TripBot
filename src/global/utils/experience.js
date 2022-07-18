@@ -166,9 +166,9 @@ module.exports = {
     } catch (e) {
       logger.debug(`[${PREFIX}] No lastMessageDate found for ${actor.username || actor.nick}`);
     }
-    logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
+    // logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
     const timeDiff = currMessageDate - lastMessageDate;
-    logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
+    // logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
 
     const bufferTime = bufferSeconds * 1000;
 
@@ -246,7 +246,6 @@ module.exports = {
             logger.debug(`[${PREFIX}] Discord update A (Increment)`);
           }
         } else {
-          logger.debug(`[${PREFIX}] Initializing messages data`);
           actorData.discord.messages = {
             [messageChannelId]: {
               count: 1,
@@ -257,7 +256,7 @@ module.exports = {
           logger.debug(`[${PREFIX}] Discord update B (Update)`);
         }
       } else {
-        logger.debug(`[${PREFIX}] Initializing discord data`);
+        // logger.debug(`[${PREFIX}] Initializing discord data`);
         actorData.discord = {
           messages: {
             [messageChannelId]: {
@@ -286,7 +285,7 @@ module.exports = {
             logger.debug(`[${PREFIX}] IRC update A (Increment)`);
           }
         } else {
-          logger.debug(`[${PREFIX}] Initializing messages data`);
+          // logger.debug(`[${PREFIX}] Initializing messages data`);
           actorData.irc.messages = {
             [messageChannelId]: {
               count: 1,
