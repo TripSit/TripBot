@@ -18,4 +18,6 @@ module.exports = Composer.compose([
   require('./t.eightball'),
   require('./t.about'),
   require('./t.recovery'),
+  require('./t.calc-mushrooms'),
+  reequire('./t.calc-lsd')
 ]);

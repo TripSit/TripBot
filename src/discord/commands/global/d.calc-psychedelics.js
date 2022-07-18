@@ -4,6 +4,7 @@ const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
+const calcPsychedelics = require('../../../global/utils/calc-psychedelics');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -49,15 +50,7 @@ module.exports = {
 
     // Code here inspired by https://codepen.io/cyberoxide/pen/BaNarGd
     // Seems like the original source is offline (https://psychedeliccalc.herokuapp.com)
-    let estimatedDosage = (lastDose / 100) * 280.059565 * (days ** -0.412565956);
-    let newAmount = 0;
-    if (desiredDose) {
-      estimatedDosage += (desiredDose - lastDose);
-      newAmount = ((estimatedDosage < desiredDose) ? desiredDose : estimatedDosage);
-    } else {
-      newAmount = ((estimatedDosage < lastDose) ? lastDose : estimatedDosage);
-    }
-    const result = Math.round(newAmount * 10) / 10;
+    const result = await calcPsychedelics.calc(lastDose, desiredDose, days);
 
     const drug = (command === 'lsd') ? 'LSD' : 'Mushrooms';
     const units = (command === 'lsd') ? 'ug' : 'g';
