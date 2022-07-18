@@ -16,5 +16,6 @@ module.exports = Composer.compose([
   require('./t.moderateChat'),
   require('./t.gban'),
   require('./t.eightball'),
-  require('./t.about')
+  require('./t.about'),
+  require('./t.recovery'),
 ]);
