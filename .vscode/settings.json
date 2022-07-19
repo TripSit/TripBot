@@ -1,0 +1,14 @@
+{
+  "eslint.validate": ["javascript"],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "search.exclude": {
+    "env.js": true,
+    "bootstrap.min.css": true,
+    "babel.config.js": true,
+    "package-lock.json": true,
+    "config.json": true,
+    "**/*.json": true
+  },
+}
