@@ -13,24 +13,28 @@ const { runTimer } = require('./global/services/timerAPI');
 
 async function start() {
   global.userDb = {};
-  await firebaseConnect();
+  // await firebaseConnect();
 
-  await discordConnect();
+  // await discordConnect();
 
   await ircConnect();
 
-  await telegramConnect();
+  // await telegramConnect();
 
-  await runTimer();
+  // await runTimer();
 
-  await webserverConnect();
+  // await webserverConnect();
 }
 
 start();
 
 // Stop the bot when the process is closed (via Ctrl-C).
 const destroy = () => {
-  global.manager.teardown();
+  try {
+    global.manager.teardown();
+  } catch (err) {
+    logger.error(`[${PREFIX}] ${err}`);
+  }
 };
 
 process.on('unhandledRejection', error => {

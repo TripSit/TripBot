@@ -98,7 +98,7 @@ const channels = {
 };
 
 module.exports = {
-  async watcher(client, message, newNick) {
+  async watcher(message, newNick) {
     if (botNicknames.includes(message.nick)) {
       // logger.debug(`[${PREFIX}] ${message.nick} is a bot!`);
       return;
@@ -142,9 +142,13 @@ module.exports = {
         logger.debug(`[${PREFIX}] channelId: ${channelId} (${typeof channelId})`);
         logger.debug(`[${PREFIX}] channelId: ${JSON.stringify(channelId, null, 2)}`);
 
-        const lastMessageChannel = global.client.channels.cache.get(channelId);
-        logger.debug(`[${PREFIX}] lastMessageChannel: ${lastMessageChannel}`);
-        lastMessageChannel.send(verbage);
+        if (global.client) {
+          const lastMessageChannel = global.client.channels.cache.get(channelId);
+          logger.debug(`[${PREFIX}] lastMessageChannel: ${lastMessageChannel}`);
+          lastMessageChannel.send(verbage);
+        } else {
+          logger.debug(`[${PREFIX}] No discord client found!`);
+        }
       }
     }
     logger.debug(`[${PREFIX}] finished!`);
