@@ -2,7 +2,7 @@
 
 const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { stripIndents } = require('common-tags/lib');
+const { stripIndents } = require('common-tags');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 
