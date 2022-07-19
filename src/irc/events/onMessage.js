@@ -1,9 +1,90 @@
 'use strict';
 
-// const PREFIX = require('path').parse(__filename).name;
-// const logger = require('../../global/utils/logger');
-const { experience } = require('../../global/utils/experience');
+const PREFIX = require('path').parse(__filename).name;
+const logger = require('../../global/utils/logger');
+// const { experience } = require('../../global/utils/experience');
 const { echo } = require('../commands/echo');
+const { moderate } = require('../commands/moderate');
+
+const modCommands = [
+  'k',
+  'kill',
+  'kline',
+  'b',
+  'ban',
+  'nban',
+  'rb',
+  'ub',
+  'db',
+  'rmb',
+  'unb',
+  'deb',
+  'rmban',
+  'unban',
+  'deban',
+  'rk',
+  'uk',
+  'dk',
+  'rmk',
+  'unk',
+  'dek',
+  'rmkill',
+  'unkill',
+  'dekill',
+  'q',
+  'quiet',
+  't',
+  'timeout',
+  'rq',
+  'uq',
+  'dq',
+  'rmq',
+  'unq',
+  'deq',
+  'rmquiet',
+  'unquiet',
+  'dequiet',
+  'rt',
+  'ut',
+  'dt',
+  'rmt',
+  'unt',
+  'det',
+  'rmtimeout',
+  'untimeout',
+  'detimeout',
+  'v',
+  'voice',
+  'rv',
+  'uv',
+  'dv',
+  'rmv',
+  'unv',
+  'dev',
+  'rmvoice',
+  'unvoice',
+  'devoice',
+  'o',
+  'op',
+  'rop',
+  'uop',
+  'dop',
+  'rmop',
+  'unop',
+  'deop',
+  'kick',
+  'i',
+  'invite',
+  'rename',
+  'svsnick',
+  'sq',
+  'squiet',
+  'shadowquiet',
+  'uban',
+  'underban',
+  'underage',
+  'say',
+];
 
 module.exports = {
   name: 'onReady',
@@ -32,12 +113,19 @@ module.exports = {
           const command = message.args[1].split(' ')[0].slice(1);
           if (command === 'echo') {
             echo(message);
+          } else if (modCommands.includes(command)) {
+            moderate(command, message);
+          } else {
+            logger.debug(`[${PREFIX}] Unknown command: ${command}`);
+            global.ircClient.say(message.args[0], `Unknown command: ${command}`);
           }
         }
+      } else {
+        logger.debug(`[${PREFIX}] Unknown command: ${message}`);
       }
 
       // This always runs
-      experience(message);
+      // experience(message);
     });
   },
 };
