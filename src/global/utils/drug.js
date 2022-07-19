@@ -161,7 +161,7 @@ module.exports = {
             let messageStart = 0;
             let messageEnd = 1000;
             let messagePart = '';
-
+            // eslint-disable-next-line
             while (messagesBuilt < messageLength) {
               messageEnd = entireMessage.lastIndexOf('\n', messageEnd) + 1;
 
@@ -215,6 +215,7 @@ module.exports = {
             let messageStart = 0;
             let messageEnd = 1000;
             let messagePart = '';
+            // eslint-disable-next-line
             while (messagesBuilt < messageLength) {
               // eslint-disable-next-line
                     // logger.debug(`[${PREFIX}] looking for last ) between ${message_start} and ${message_end}`)

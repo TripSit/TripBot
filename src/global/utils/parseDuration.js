@@ -17,8 +17,6 @@ module.exports = {
     while (idx < duration.length) {
       const c = duration[idx];
       switch (stage) {
-        default:
-          break;
         case 1: // waiting for number
         {
           idx += 1;
@@ -46,9 +44,6 @@ module.exports = {
           if (c === ' ') { break; } else if (supported.includes(c)) {
           // logger.debug(`[${PREFIX}] Qualifier ${c}`);
             switch (c) {
-              default:
-                logger.debug(`[${PREFIX}] Unknown qualifier ${c}`);
-                break;
               case 'h':
                 timeValue += tempNumber * 60 * 60 * 1000;
                 break;
@@ -70,11 +65,16 @@ module.exports = {
               case 'y':
                 timeValue += tempNumber * 365 * 24 * 60 * 60 * 1000;
                 break;
+              default:
+                logger.debug(`[${PREFIX}] Unknown qualifier ${c}`);
+                break;
             }
             stage = 1;
             break;
           } else return timeValue;
         }
+        default:
+          break;
       }
     }
     return timeValue;

@@ -304,9 +304,6 @@ module.exports = {
     let actionVerb = '';
     logger.debug(`[${PREFIX}] target: ${JSON.stringify(data, null, 2)}`);
     switch (command) {
-      default:
-        logger.debug(`[${PREFIX}] default`);
-        break;
       case 'b':
       case 'ban':
       case 'nban':
@@ -463,6 +460,9 @@ module.exports = {
         }
         announce(announcement);
         actionVerb = 'announced';
+        break;
+      default:
+        logger.debug(`[${PREFIX}] default`);
         break;
     }
     global.ircClient.say(message.args[0], `${actor} has ${actionVerb} ${data.nick}${duration !== null ? ` for ${duration}` : ''}${reason !== '' ? ` because ${reason}` : ''}!`);
