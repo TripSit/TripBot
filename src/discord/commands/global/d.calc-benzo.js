@@ -51,23 +51,14 @@ module.exports = {
         { name: 'Effects', value: `${data.drugAResult.properties.effects}`, inline: true },
         { name: 'Effects', value: `${data.drugBResult.properties.effects}`, inline: true },
         { name: '\u200b', value: '\u200b', inline: true },
+        { name: '\u200b', value: '\u200b', inline: true },
+        { name: 'Duration', value: `${data.drugAResult.properties.duration}`, inline: true },
+        { name: 'Duration', value: `${data.drugBResult.properties.duration}`, inline: true },
+        { name: '\u200b', value: '\u200b', inline: true },
+        { name: 'After Effects', value: `${data.drugAResult.properties['after-effects']}`, inline: true },
+        { name: 'After Effects', value: `${data.drugBResult.properties['after-effects']}`, inline: true },
+        { name: '\u200b', value: '\u200b', inline: true },
       );
-
-
-      Object.keys(dosageA = data.drugAResult.formatted_dose).forEach(key => {
-        embed.addField("Dosage: " + key, dosageA[key], true);
-      });
-
-
-    embed.addFields(
-      { name: '\u200b', value: '\u200b', inline: true },
-      { name: 'Duration', value: `${data.drugAResult.properties.duration}`, inline: true },
-      { name: 'Duration', value: `${data.drugBResult.properties.duration}`, inline: true },
-      { name: '\u200b', value: '\u200b', inline: true },
-      { name: 'After Effects', value: `${data.drugAResult.properties['after-effects']}`, inline: true },
-      { name: 'After Effects', value: `${data.drugBResult.properties['after-effects']}`, inline: true },
-      { name: '\u200b', value: '\u200b', inline: true },
-    );
     if (!interaction.replied) {
       interaction.reply({ embeds: [embed], ephemeral: false });
     } else {
