@@ -1,29 +1,7 @@
 'use strict';
 
 const { SlashCommandBuilder } = require('@discordjs/builders');
-
-const answers = [
-  'It is certain',
-  'It is decidedly so',
-  'Without a doubt',
-  'Yes definitely',
-  'You may rely on it',
-  'As I see it, yes',
-  'Most likely',
-  'Outlook good',
-  'Yes',
-  'Signs point to yes',
-  'Reply hazy, try again',
-  'Ask again later',
-  'Better not tell you now',
-  'Cannot predict now',
-  'Concentrate and ask again',
-  'Don\'t count on it',
-  'My reply is no',
-  'My sources say no',
-  'Outlook not so good',
-  'Very doubtfull',
-];
+const eightball = require('../../../global/utils/eightball');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -34,8 +12,7 @@ module.exports = {
   async execute(interaction) {
     const question = interaction.options.getString('question');
     // Get a random answer from the list
-    let response = `Magick 8-Ball Says: ${answers[Math.floor(Math.random() * answers.length)]}!`;
-
+    let response = await eightball.eightball();
     if (question) {
       response = `${interaction.member} asks: ${question} \n\n ${response}`;
     }

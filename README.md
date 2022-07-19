@@ -35,4 +35,4 @@ Tripsit specific:
 
 Denied Features:
 * Rainbow Role  - Changing the role color every few seconds: Discord would want to murder me for abusing the API.
-* Karma++ - This would require the Messages privilege, and discord doesn't give out this permission lightly. Instead, the idea is to react with an emoji to show your support! We can try to use the :ts_up: as good karma and the :reddit_downvote:  as bad 
+* Karma++ - This would require the Messages privilege, and discord doesn't give out this permission lightly. Instead, the idea is to react with an emoji to show your support! We can try to use the :karma_upvote: as good karma and the :karma_downvote:  as bad 
