@@ -8,9 +8,6 @@ const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
 
-
-
-
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('calc-benzo')

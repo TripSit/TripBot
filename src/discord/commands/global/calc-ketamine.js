@@ -10,7 +10,6 @@ const PREFIX = path.parse(__filename).name;
 
 // Calculate insufflated dosages
 
-
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('calc-ketamine')
@@ -49,7 +48,7 @@ module.exports = {
         ephemeral: true,
       });
     }
-   
+
     const data = await calcKetamine.calc(givenWeight, weightUnits);
 
     embed.addFields(

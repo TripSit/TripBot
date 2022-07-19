@@ -1,10 +1,10 @@
 'use strict';
-const whois = require('../../../global/utils/whois');
+
 const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const whois = require('../../../global/utils/whois');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
-
 
 const PREFIX = path.parse(__filename).name;
 
@@ -21,7 +21,6 @@ module.exports = {
     logger.debug(`[${PREFIX}] started!`);
     const target = interaction.options.getString('target');
 
-
     let body;
 
     try {
@@ -37,7 +36,6 @@ module.exports = {
       });
       return;
     }
-
 
     const embed = template.embedTemplate()
       .setDescription(body)
