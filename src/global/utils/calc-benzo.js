@@ -2,19 +2,20 @@ const _ = require('underscore');
 const logger = require('./logger');
 const fs = require('fs');
 const path = require('path');
-const calcBenzo = require('../../discord/commands/global/d.calc-benzo');
 
 const PREFIX = path.parse(__filename).name;
 
 module.exports = {
 
+    
 
     async calcBenzo(dosage, drugA, drugB) {
 
         logger.debug(`[${PREFIX}] dosage: ${dosage} | drug_a: ${drugA} | drug_b: ${drugB}`);
 
-        const drugCache = JSON.parse(fs.readFileSync(__dirname + '../assets/data/drug_db_tripsit.json'));
-        logger.debug(`[${PREFIX}] drugCache: ${drugCache.length}`);
+        const drugCache = await JSON.parse(fs.readFileSync(__dirname + '/../assets/data/drug_db_tripsit.json'));
+        //logger.debug(`[${PREFIX}] drugCache: ${drugCache.length}`);
+        //console.log(drugCache);
 
         let benzoCache = {};
         benzoCache = _.filter((drugCache), bCache => _.has(bCache.properties, 'dose_to_diazepam'));
@@ -103,7 +104,8 @@ module.exports = {
             ${drugBResult.formatted_dose.Light.Strong ? `Strong: ${drugBResult.formatted_dose.Light.Strong}\n` : ''}`;
         }
 
-        return Array(result, drugA => drugAResult, drugB => drugBResult);
+       // console.log(drugAResult);
+        return {result, drugAResult: drugAResult, drugBResult: drugBResult};
 
 
     }

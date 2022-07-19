@@ -1,13 +1,15 @@
 'use strict';
-const calcBenzo = require('../../../global/utils/calc-benzo');
+
 const path = require('path');
-const fs = require('fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const _ = require('underscore');
+const calcBenzo = require('../../../global/utils/calc-benzo');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
+
+
+
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -32,7 +34,6 @@ module.exports = {
 
     const data = await calcBenzo.calcBenzo(dosage, drugA, drugB);
 
-
     const embed = template.embedTemplate()
       .setColor('RANDOM')
       .setTitle(`${dosage} mg of ${drugA} is ${data.result} mg of ${drugB}`)
@@ -50,16 +51,23 @@ module.exports = {
         { name: 'Effects', value: `${data.drugAResult.properties.effects}`, inline: true },
         { name: 'Effects', value: `${data.drugBResult.properties.effects}`, inline: true },
         { name: '\u200b', value: '\u200b', inline: true },
-        { name: 'Dose', value: `${data.drugADosageText}`, inline: true },
-        { name: 'Dose', value: `${data.drugBDosageText}`, inline: true },
-        { name: '\u200b', value: '\u200b', inline: true },
-        { name: 'Duration', value: `${data.drugAResult.properties.duration}`, inline: true },
-        { name: 'Duration', value: `${data.drugBResult.properties.duration}`, inline: true },
-        { name: '\u200b', value: '\u200b', inline: true },
-        { name: 'After Effects', value: `${data.drugAResult.properties['after-effects']}`, inline: true },
-        { name: 'After Effects', value: `${data.drugBResult.properties['after-effects']}`, inline: true },
-        { name: '\u200b', value: '\u200b', inline: true },
       );
+
+
+      Object.keys(dosageA = data.drugAResult.formatted_dose).forEach(key => {
+        embed.addField("Dosage: " + key, dosageA[key], true);
+      });
+
+
+    embed.addFields(
+      { name: '\u200b', value: '\u200b', inline: true },
+      { name: 'Duration', value: `${data.drugAResult.properties.duration}`, inline: true },
+      { name: 'Duration', value: `${data.drugBResult.properties.duration}`, inline: true },
+      { name: '\u200b', value: '\u200b', inline: true },
+      { name: 'After Effects', value: `${data.drugAResult.properties['after-effects']}`, inline: true },
+      { name: 'After Effects', value: `${data.drugBResult.properties['after-effects']}`, inline: true },
+      { name: '\u200b', value: '\u200b', inline: true },
+    );
     if (!interaction.replied) {
       interaction.reply({ embeds: [embed], ephemeral: false });
     } else {
