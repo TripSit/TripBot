@@ -36,7 +36,6 @@ const {
 //   "account": "AccountName",
 //   "accountinfo": "is logged in as"
 // }
-
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('link-account')
@@ -56,6 +55,8 @@ module.exports = {
   //     .setRequired(true))
   //   .setName('telegram')),
   async execute(interaction) {
+    module.exports.interaction = interaction;
+
     const actor = interaction.member;
     logger.debug(`[${PREFIX}] Actor: ${actor}`);
     const service = interaction.options.getSubcommand();
@@ -151,10 +152,8 @@ module.exports = {
           actorData.irc.verified = true;
           await setUserInfo(actorFbid, actorData);
           global.ircClient.say(accountInfo.nick, 'Your account has been linked!');
-          const tripsitGuild = await global.client.guilds.cache.get(discordGuildId);
-          const roleIrcVerified = tripsitGuild.roles.cache.find(
-            role => role.id === roleIrcVerifiedId,
-          );
+          const tripsitGuild = module.exports.interaction.client.guilds.cache.get(discordGuildId);
+          const roleIrcVerified = tripsitGuild.roles.cache.get(roleIrcVerifiedId);
           logger.debug(`[${PREFIX}] discord ID: ${actorData.discord.id}`);
           const target = await tripsitGuild.members.fetch(actorData.discord.id);
           logger.debug(`[${PREFIX}] target: ${target}`);
@@ -164,10 +163,10 @@ module.exports = {
           target.send({ embeds: [embed] });
         }
       } else {
-        global.ircClient.say(accountInfo.nick, 'Invalid auth token!');
+        global.ircClient.say(accountInfo.nick, 'No auth token found!');
       }
     } else {
-      global.ircClient.say(accountInfo.nick, 'No auth token found!');
+      global.ircClient.say(accountInfo.nick, 'Actor does not have auth token!');
     }
   },
 };
