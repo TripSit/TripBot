@@ -132,7 +132,7 @@ module.exports = {
       }
     }
   },
-  async verifyLink(client, service, accountInfo, token) {
+  async verifyLink(service, accountInfo, token) {
     logger.debug(`[${PREFIX}] Actor: ${accountInfo.account}`);
     logger.debug(`[${PREFIX}] givnToken: ${token}`);
 
@@ -143,26 +143,30 @@ module.exports = {
     logger.debug(`[${PREFIX}] typeof authToken: ${typeof actorData.authToken}`);
     logger.debug(`[${PREFIX}] typeof givnToken: ${typeof token}`);
 
-    if (actorData.authToken.toString() === token.toString()) {
-      logger.debug(`[${PREFIX}] actorData.authToken matches!`);
-      const embed = template.embedTemplate();
-      embed.setTitle('Link your account to IRC - Success!');
-      if (service === 'irc') {
-        actorData.irc.verified = true;
-        await setUserInfo(actorFbid, actorData);
-        global.ircClient.say(accountInfo.nick, 'Your account has been linked!');
-        const tripsitGuild = module.exports.interaction.client.guilds.cache.get(discordGuildId);
-        const roleIrcVerified = tripsitGuild.roles.cache.get(roleIrcVerifiedId);
-        logger.debug(`[${PREFIX}] discord ID: ${actorData.discord.id}`);
-        const target = await tripsitGuild.members.fetch(actorData.discord.id);
-        logger.debug(`[${PREFIX}] target: ${target}`);
-        await target.roles.add(roleIrcVerified);
-        embed.setDescription(stripIndents`You have successfully linked your Discord account to the ${accountInfo.nick} IRC account!
-        If this is not expected please contact Moonbear#1024 on discord, but don't worry: your account is safe!`);
-        target.send({ embeds: [embed] });
+    if (actorData.authToken) {
+      if (actorData.authToken.toString() === token.toString()) {
+        logger.debug(`[${PREFIX}] actorData.authToken matches!`);
+        const embed = template.embedTemplate();
+        embed.setTitle('Link your account to IRC - Success!');
+        if (service === 'irc') {
+          actorData.irc.verified = true;
+          await setUserInfo(actorFbid, actorData);
+          global.ircClient.say(accountInfo.nick, 'Your account has been linked!');
+          const tripsitGuild = module.exports.interaction.client.guilds.cache.get(discordGuildId);
+          const roleIrcVerified = tripsitGuild.roles.cache.get(roleIrcVerifiedId);
+          logger.debug(`[${PREFIX}] discord ID: ${actorData.discord.id}`);
+          const target = await tripsitGuild.members.fetch(actorData.discord.id);
+          logger.debug(`[${PREFIX}] target: ${target}`);
+          await target.roles.add(roleIrcVerified);
+          embed.setDescription(stripIndents`You have successfully linked your Discord account to the ${accountInfo.nick} IRC account!
+          If this is not expected please contact Moonbear#1024 on discord, but don't worry: your account is safe!`);
+          target.send({ embeds: [embed] });
+        }
+      } else {
+        global.ircClient.say(accountInfo.nick, 'No auth token found!');
       }
     } else {
-      global.ircClient.say(accountInfo.nick, 'Invalid auth token!');
+      global.ircClient.say(accountInfo.nick, 'Actor does not have auth token!');
     }
   },
 };

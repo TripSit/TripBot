@@ -5,7 +5,7 @@ const logger = require('./logger');
 const { getUserInfo, setUserInfo } = require('../services/firebaseAPI');
 
 module.exports = {
-  async karma(reaction, user, action) {
+  async chitragupta(reaction, user, action) {
     logger.debug(`[${PREFIX}] start!`);
     const actor = user;
     const emoji = reaction.emoji.toString();
