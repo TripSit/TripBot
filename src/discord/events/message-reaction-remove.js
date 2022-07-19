@@ -2,7 +2,7 @@
 
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../global/utils/logger');
-const { karma } = require('../../global/utils/chitragupta');
+const { chitragupta } = require('../../global/utils/chitragupta');
 
 const {
   discordGuildId,
@@ -32,6 +32,6 @@ module.exports = {
       // logger.debug(`[${PREFIX}] Ignoring bot interaction`);
       return;
     }
-    karma(reaction, user, -1);
+    chitragupta(reaction, user, -1);
   },
 };
