@@ -93,6 +93,9 @@ module.exports = {
     if (!discordClient) {
       discordClient = message.client;
     }
+    if (!discordClient) {
+      discordClient = global.client;
+    }
 
     // Check if the user who sent this message is a guild user
     if (message.member) {

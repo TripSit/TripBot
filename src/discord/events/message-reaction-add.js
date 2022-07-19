@@ -2,7 +2,7 @@
 
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../global/utils/logger');
-const { karma } = require('../../global/utils/chitragupta');
+const { chitragupta } = require('../../global/utils/chitragupta');
 const { communityMod } = require('../utils/community-mod');
 const { sparklePoints } = require('../utils/sparkle-points');
 const { removeDuplicates } = require('../utils/remove-duplicate-roles');
@@ -39,7 +39,7 @@ module.exports = {
       return;
     }
 
-    await karma(reaction, user, 1);
+    await chitragupta(reaction, user, 1);
     await bestOf(reaction, user);
     await communityMod(reaction, user);
   },

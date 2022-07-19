@@ -24,7 +24,7 @@ module.exports = {
     const globalEmbed = template.embedTemplate()
       .setTitle('TripBot Commands')
       .addFields(
-        { name: 'Info', value: 'This command looks up drug information!', inline: true },
+        { name: 'Drug', value: 'This command looks up drug information!', inline: true },
         { name: 'iDose', value: 'Remind yourself when you last dosed.', inline: true },
         { name: 'Calc Psychedelics', value: 'Calculate psychedelic dosages', inline: true },
 
@@ -58,7 +58,7 @@ module.exports = {
     const hrEmbed = template.embedTemplate()
       .setTitle('Harm Reduction Modules')
       .addFields(
-        { name: 'Info', value: 'This command looks up drug information!', inline: true },
+        { name: 'Drug', value: 'This command looks up drug information!', inline: true },
         { name: 'iDose', value: 'Remind yourself when you last dosed.', inline: true },
         { name: 'Calc Psychedelics', value: 'Calculate psychedelic dosages', inline: true },
 
