@@ -6,6 +6,7 @@ const { stripIndents } = require('common-tags/lib');
 const logger = require('../../../global/utils/logger');
 const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
 const template = require('../../utils/embed-template');
+ 
 
 const {
   discordGuildId,
@@ -36,7 +37,7 @@ const {
 //   "account": "AccountName",
 //   "accountinfo": "is logged in as"
 // }
-
+let interaction;
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('link-account')
@@ -56,6 +57,10 @@ module.exports = {
   //     .setRequired(true))
   //   .setName('telegram')),
   async execute(interaction) {
+
+    module.exports.interaction = interaction;
+
+
     const actor = interaction.member;
     logger.debug(`[${PREFIX}] Actor: ${actor}`);
     const service = interaction.options.getSubcommand();
@@ -132,6 +137,7 @@ module.exports = {
     }
   },
   async verifyLink(client, service, accountInfo, token) {
+
     logger.debug(`[${PREFIX}] Actor: ${accountInfo.account}`);
     logger.debug(`[${PREFIX}] givnToken: ${token}`);
 
@@ -150,10 +156,8 @@ module.exports = {
         actorData.irc.verified = true;
         await setUserInfo(actorFbid, actorData);
         global.ircClient.say(accountInfo.nick, 'Your account has been linked!');
-        const tripsitGuild = await client.guilds.cache.get(discordGuildId);
-        const roleIrcVerified = tripsitGuild.roles.cache.find(
-          role => role.id === roleIrcVerifiedId,
-        );
+        const tripsitGuild =  module.exports.interaction.client.guilds.cache.get(discordGuildId);
+        const roleIrcVerified = tripsitGuild.roles.cache.get(roleIrcVerifiedId);
         logger.debug(`[${PREFIX}] discord ID: ${actorData.discord.id}`);
         const target = await tripsitGuild.members.fetch(actorData.discord.id);
         logger.debug(`[${PREFIX}] target: ${target}`);

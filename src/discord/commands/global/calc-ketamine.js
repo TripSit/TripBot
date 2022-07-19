@@ -4,32 +4,12 @@ const path = require('path');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
+const calcKetamine = require('../../../global/utils/calc-ketamine');
 
 const PREFIX = path.parse(__filename).name;
 
 // Calculate insufflated dosages
-function generateInsufflatedDosages(weightInLbs) {
-  return [
-    `**Threshold**: ${Math.round(weightInLbs * 0.1)}mg`,
-    `**Light**: ${Math.round(weightInLbs * 0.15)}mg`,
-    `**Common**: ${Math.round(weightInLbs * 0.3)}mg`,
-    `**Strong**: ${Math.round(weightInLbs * 0.5)}-${Math.round(weightInLbs * 0.75)}mg`,
-    `**K-hole**: ${weightInLbs}mg`,
-  ]
-    .join('\n');
-}
 
-// Calculate rectal dosages
-function generateRectalDosages(weightInLbs) {
-  return [
-    `**Threshold**: ${Math.round(weightInLbs * 0.3)}mg`,
-    `**Light**: ${Math.round(weightInLbs * 0.6)}mg`,
-    `**Common**: ${Math.round(weightInLbs * 0.75)}-${Math.round(weightInLbs * 2)}mg`,
-    `**Strong**: ${Math.round(weightInLbs * 2)}-${Math.round(weightInLbs * 2.5)}mg`,
-    `**K-hole**: ${Math.round(weightInLbs * 3)}-${Math.round(weightInLbs * 4)}mg`,
-  ]
-    .join('\n');
-}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -69,18 +49,18 @@ module.exports = {
         ephemeral: true,
       });
     }
-    const insufflatedosearray = generateInsufflatedDosages(calcWeight);
-    const boofdosearray = generateRectalDosages(calcWeight);
+   
+    const data = await calcKetamine.calc(givenWeight, weightUnits);
 
     embed.addFields(
       {
         name: 'Insufflated Dosages',
-        value: insufflatedosearray,
+        value: data.insufflated,
         inline: true,
       },
       {
         name: 'Rectal Dosages',
-        value: boofdosearray,
+        value: data.rectal,
         inline: true,
       },
     );

@@ -19,5 +19,5 @@ module.exports = Composer.compose([
   require('./t.about'),
   require('./t.recovery'),
   require('./t.calc-mushrooms'),
-  reequire('./t.calc-lsd')
+  require('./t.calc-lsd')
 ]);
