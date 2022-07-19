@@ -82,6 +82,7 @@ module.exports = {
             ${drugAResult.formatted_dose.Light.Heavy ? `Heavy: ${drugAResult.formatted_dose.Light.Heavy}\n` : ''}\
             ${drugAResult.formatted_dose.Light.Strong ? `Strong: ${drugAResult.formatted_dose.Light.Strong}\n` : ''}`;
     }
+    drugAResult.drugADosageText = drugADosageText;
 
     let drugBDosageText = '';
     if (drugBResult.formatted_dose.Oral) {
@@ -101,6 +102,7 @@ module.exports = {
             ${drugBResult.formatted_dose.Light.Heavy ? `Heavy: ${drugBResult.formatted_dose.Light.Heavy}\n` : ''}\
             ${drugBResult.formatted_dose.Light.Strong ? `Strong: ${drugBResult.formatted_dose.Light.Strong}\n` : ''}`;
     }
+    drugBResult.drugBDosageText = drugBDosageText;
 
     // console.log(drugAResult);
     return { result, drugAResult, drugBResult };

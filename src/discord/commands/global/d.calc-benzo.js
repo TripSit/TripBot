@@ -48,6 +48,8 @@ module.exports = {
         { name: 'Effects', value: `${data.drugAResult.properties.effects}`, inline: true },
         { name: 'Effects', value: `${data.drugBResult.properties.effects}`, inline: true },
         { name: '\u200b', value: '\u200b', inline: true },
+        { name: 'Dose', value: `${data.drugAResult.drugADosageText}`, inline: true },
+        { name: 'Dose', value: `${data.drugBResult.drugBDosageText}`, inline: true },
         { name: '\u200b', value: '\u200b', inline: true },
         { name: 'Duration', value: `${data.drugAResult.properties.duration}`, inline: true },
         { name: 'Duration', value: `${data.drugBResult.properties.duration}`, inline: true },
