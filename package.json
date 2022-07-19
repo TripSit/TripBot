@@ -1,12 +1,12 @@
 {
   "name": "@tripsit/discord-bot",
   "private": true,
-  "version": "3.0.6",
+  "version": "3.0.7",
   "description": "A bot for TripSit",
   "main": "src/start.js",
   "scripts": {
     "start": "npm run deploy-commands && npm run go",
-    "dev": "npm run lint && npm run patch && npm run nodemon",
+    "dev": "npm run deploy-commands && npm run lint && npm run patch && npm run nodemon",
     "deploy-commands": "node ./src/discord/utils/deploy-commands.js",
     "nodemon": "nodemon --config ./nodemon.json",
     "go": "node ./src/start.js",

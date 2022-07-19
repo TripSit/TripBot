@@ -61,38 +61,55 @@ if (NODE_ENV === 'production') {
   allChannels = generalChannels.concat(hrChannels);
 }
 
-async function ban(target, reason) {
-  global.ircClient.say('operserv', `akill add ${target.host} !P 1 ${reason}`);
-  global.ircClient.say('#sandbox-dev', `akill add ${target.host} !P 1 ${reason}`);
-  // eslint-disable-next-line no-restricted-syntax
-  // for (const channel of allChannels) {
-  //   try {
-  //     global.ircClient.send('KICK', channel, target);
-  //     global.ircClient.send('MODE', channel, '+b', target.host);
-  //     // global.ircClient.say('#sandbox-dev', `AKILL ADD ${target.host}}`);
-  //     // global.ircClient.say('operserv', `AKILL ADD ${target.host}}`);
-  //   } catch (err) {
-  //     logger.error(`[${PREFIX}] ${err}`);
-  //   }
-  // }
-}
+const teamRoles = [
+  'operator',
+  'moderator',
+  'tripsitter',
+  'founder',
+  'guardian',
+  'helper',
+];
 
-async function unban(target) {
+async function ban(target) {
   // eslint-disable-next-line no-restricted-syntax
   for (const channel of allChannels) {
     try {
-      global.ircClient.send('MODE', channel, '-b', target.host);
+      global.ircClient.send('KICK', channel, target.nick);
+      global.ircClient.send('MODE', channel, '+b', `*@${target.host}`);
     } catch (err) {
       logger.error(`[${PREFIX}] ${err}`);
     }
   }
 }
 
+async function unban(target) {
+  // eslint-disable-next-line no-restricted-syntax
+  for (const channel of allChannels) {
+    try {
+      global.ircClient.send('MODE', channel, '-b', `*@${target.host}`);
+    } catch (err) {
+      logger.error(`[${PREFIX}] ${err}`);
+    }
+  }
+}
+
+async function kill(target, reason) {
+  const command = `akill add ${target.host} !P ${reason}`;
+  global.ircClient.say('operserv', command);
+  global.ircClient.say('#sandbox-dev', command);
+}
+
+async function unkill(target) {
+  const command = `akill del ${target}`;
+  global.ircClient.say('operserv', command);
+  global.ircClient.say('#sandbox-dev', command);
+}
+
 async function timeout(target) {
   // eslint-disable-next-line no-restricted-syntax
   for (const channel of allChannels) {
     try {
-      global.ircClient.send('MODE', channel, '+q', target.host);
+      global.ircClient.send('MODE', channel, '+q', `*@${target.host}`);
     } catch (err) {
       logger.error(`[${PREFIX}] ${err}`);
     }
@@ -103,7 +120,7 @@ async function untimeout(target) {
   // eslint-disable-next-line no-restricted-syntax
   for (const channel of allChannels) {
     try {
-      global.ircClient.send('MODE', channel, '-q', target.host);
+      global.ircClient.send('MODE', channel, '-q', `*@${target.host}`);
     } catch (err) {
       logger.error(`[${PREFIX}] ${err}`);
     }
@@ -114,7 +131,7 @@ async function voice(target) {
   // eslint-disable-next-line no-restricted-syntax
   for (const channel of allChannels) {
     try {
-      global.ircClient.send('MODE', channel, '+v', target.host);
+      global.ircClient.send('MODE', channel, '+v', `${target.nick}`);
     } catch (err) {
       logger.error(`[${PREFIX}] ${err}`);
     }
@@ -125,7 +142,7 @@ async function unvoice(target) {
   // eslint-disable-next-line no-restricted-syntax
   for (const channel of allChannels) {
     try {
-      global.ircClient.send('MODE', channel, '-v', target.host);
+      global.ircClient.send('MODE', channel, '-v', `${target.nick}`);
     } catch (err) {
       logger.error(`[${PREFIX}] ${err}`);
     }
@@ -136,7 +153,7 @@ async function operator(target) {
   // eslint-disable-next-line no-restricted-syntax
   for (const channel of allChannels) {
     try {
-      global.ircClient.send('MODE', channel, '+o', target.nick);
+      global.ircClient.send('MODE', channel, '+o', `${target.nick}`);
     } catch (err) {
       logger.error(`[${PREFIX}] ${err}`);
     }
@@ -147,7 +164,7 @@ async function unoperator(target) {
   // eslint-disable-next-line no-restricted-syntax
   for (const channel of allChannels) {
     try {
-      global.ircClient.send('MODE', channel, '-o', target.nick);
+      global.ircClient.send('MODE', channel, '-o', `${target.nick}`);
     } catch (err) {
       logger.error(`[${PREFIX}] ${err}`);
     }
@@ -155,43 +172,48 @@ async function unoperator(target) {
 }
 
 async function kick(target, channel) {
-  // eslint-disable-next-line no-restricted-syntax
-  global.ircClient.send('KICK', channel, target);
+  global.ircClient.send('KICK', channel, target.nick);
 }
 
 async function invite(target, channel) {
-  global.ircClient.send('INVITE', channel, target);
-  // global.ircClient.say('#sandbox-dev', `'INVITE', ${channel}, ${target}`);
+  global.ircClient.send('INVITE', target.nick, channel);
+  // global.ircClient.say('#sandbox-dev', `'INVITE', ${channel}, ${target.host}`);
 }
 
-async function rename(target, newNick) {
-  global.ircClient.say('operserv', `SVSNICK ${target} ${newNick}`);
-  global.ircClient.say('#sandbox-dev', `SVSNICK ${target} ${newNick}`);
-}
+// Needs operator privileges
+// async function rename(target, newNick) {
+//   const command = `SVSNICK ${target.nick} ${newNick}`;
+//   global.ircClient.say('operserv', command);
+//   global.ircClient.say('#sandbox-dev', command);
+// }
 
 async function shadowquiet(target) {
   // eslint-disable-next-line no-restricted-syntax
   for (const channel of allChannels) {
-    // global.ircClient.send('MODE', channel, '+b', target);
-    global.ircClient.say('#sandbox-dev', `'MODE', ${channel}, '+q', ${target}`);
-    // global.ircClient.send('MODE', channel, '+z', target);
-    global.ircClient.say('#sandbox-dev', `'MODE', ${channel}, '+z'`);
+    global.ircClient.send('MODE', channel, '+q', `*@${target.host}`);
+    global.ircClient.send('MODE', channel, '+z', `*@${target.host}`);
   }
 }
 
 async function underban(target) {
   // eslint-disable-next-line no-restricted-syntax
   for (const channel of hrChannels) {
-    // global.ircClient.send('MODE', channel, '+b', target);
-    global.ircClient.say('#sandbox-dev', `'MODE', ${channel}, '+q', ${target}`);
-    // global.ircClient.send('MODE', channel, '+z', target);
-    global.ircClient.say('#sandbox-dev', `'MODE', ${channel}, '+z'`);
+    global.ircClient.send('KICK', channel, target);
+    global.ircClient.send('MODE', channel, '+b', `*@${target.host}`);
   }
 }
 
-async function say(actor, target, quote) {
+async function say(target, quote) {
+  logger.debug(`[${PREFIX}] Saying ${quote} to ${target}`);
   global.ircClient.say(target, quote);
-  global.ircClient.say('#sandbox-dev', `${actor} said ${quote} in ${target}!`);
+}
+
+async function announce(quote) {
+  // eslint-disable-next-line no-restricted-syntax
+  for (const channel of allChannels) {
+    global.ircClient.say(channel, '<><><> Global message from Team TripSit! <><><>');
+    global.ircClient.say(channel, quote);
+  }
 }
 
 module.exports = {
@@ -200,35 +222,47 @@ module.exports = {
     const actor = message.nick;
     logger.debug(`[${PREFIX}] actor: ${actor}`);
 
-    let reason = message.args[1].trim();
+    const actorRole = message.host.split('/')[1];
+    logger.debug(`[${PREFIX}] actorRole: ${actorRole}`);
 
-    const duration = reason.match(/\d+[ywdhms]/);
+    if (!teamRoles.includes(actorRole)) {
+      global.ircClient.say(message.args[0], 'Only team members may perform this action!');
+      return;
+    }
+
+    let commandText = message.args[1].trim();
+
+    const duration = commandText.match(/\d+[ywdhms]/);
     logger.debug(`[${PREFIX}] duration: ${duration}`);
-    logger.debug(`[${PREFIX}] reason: ${typeof duration}`);
 
-    reason = reason.replace(`${duration}`, '');
-    reason = reason.replace('  ', ' ').trim();
+    commandText = commandText.replace(`${duration}`, '');
+    commandText = commandText.replace('  ', ' ').trim();
+    logger.debug(`[${PREFIX}] commandText: ${commandText}`);
 
-    let action = reason.slice(0, reason.indexOf(' '));
+    const action = commandText.slice(0, commandText.indexOf(' ') > -1 ? commandText.indexOf(' ') : commandText.length);
     logger.debug(`[${PREFIX}] action: ${action}`);
 
-    reason = reason.replace(`${action} `, '').trim();
+    commandText = commandText.replace(`${action}`, '').trim();
+    commandText = commandText.replace('  ', ' ').trim();
+    logger.debug(`[${PREFIX}] commandText: ${commandText}`);
 
-    let target = reason;
-    if (reason.indexOf(' ') > 0) {
-      target = reason.slice(0, reason.indexOf(' '));
+    const target = commandText.indexOf(' ') > 0 ? commandText.slice(0, commandText.indexOf(' ')) : commandText;
+    logger.debug(`[${PREFIX}] target: ${target}`);
+    if (target.length === 0) {
+      global.ircClient.say(message.args[0], 'You must supply a target!');
+      return;
     }
 
-    reason = reason.replace(`${target} `, '').trim();
-    if (reason === target) {
-      reason = '';
-    }
+    commandText = commandText.replace(`${target}`, '').trim();
+    commandText = commandText.replace('  ', ' ').trim();
+    logger.debug(`[${PREFIX}] commandText: ${commandText}`);
+
+    const reason = commandText === target ? 'No reason given.' : commandText;
     logger.debug(`[${PREFIX}] reason: ${reason}`);
-    logger.debug(`[${PREFIX}] reason: ${typeof reason}`);
 
-    const channel = 'testChannel';
-    const newNick = 'newNick';
-    const quote = 'quote';
+    const channel = reason;
+    // const newNick = reason;
+    const quote = reason;
 
     // Do a whois on the user to get their host name
     let data = null;
@@ -243,26 +277,49 @@ module.exports = {
       await new Promise(resolve => setTimeout(resolve, 100)); // eslint-disable-line
     }
 
-    if (!data.host) {
-      global.ircClient.say(message.args[0], `${target} not found on IRC! Did you spell that right?`);
-      logger.debug(`[${PREFIX}] ${target} not found on IRC! Did you spell that right? (Capitalization Counts!)`);
+    if (!data.host
+      && command !== 'say'
+      && command !== 'echo'
+      && command !== 'announce'
+      && command !== 'global'
+    ) {
+      const errorMsg = `${target} not found on IRC! Did you spell that right? (Capitalization Counts!)`;
+      global.ircClient.say(message.args[0], errorMsg);
+      logger.debug(`[${PREFIX}] ${errorMsg}`);
       return;
     }
 
-    target = data;
-    // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+    if (data.host) {
+      const targetRole = data.host.split('/')[1];
+      logger.debug(`[${PREFIX}] targetRole: ${targetRole}`);
+      if (teamRoles.includes(targetRole)) {
+        global.ircClient.say(message.args[0], 'You cannot moderate a team member!');
+        return;
+      }
+    }
+
+    const announcement = message.args[1].slice(message.args[1].indexOf(' ')).trim();
+    logger.debug(`[${PREFIX}] announcement: ${announcement}`);
+
+    let actionVerb = '';
+    logger.debug(`[${PREFIX}] target: ${JSON.stringify(data, null, 2)}`);
     switch (command) {
       default:
         logger.debug(`[${PREFIX}] default`);
         break;
-      case 'k':
-      case 'kill':
-      case 'kline':
       case 'b':
       case 'ban':
       case 'nban':
-        ban(target);
-        action = 'banned';
+        ban(data);
+        actionVerb = 'banned';
+        break;
+      case 'k':
+      case 'kill':
+      case 'kline':
+      case 'specialkline':
+      case 'specialkill':
+        kill(data);
+        actionVerb = 'killed';
         break;
       case 'rb':
       case 'ub':
@@ -273,6 +330,9 @@ module.exports = {
       case 'rmban':
       case 'unban':
       case 'deban':
+        unban(data);
+        actionVerb = 'unbanned';
+        break;
       case 'rk':
       case 'uk':
       case 'dk':
@@ -282,15 +342,15 @@ module.exports = {
       case 'rmkill':
       case 'unkill':
       case 'dekill':
-        unban(target);
-        action = 'unbanned';
+        unkill(data);
+        actionVerb = 'unbanned';
         break;
       case 'q':
       case 'quiet':
       case 't':
       case 'timeout':
-        timeout(target);
-        action = 'quieted';
+        timeout(data);
+        actionVerb = 'quieted';
         break;
       case 'rq':
       case 'uq':
@@ -310,13 +370,13 @@ module.exports = {
       case 'rmtimeout':
       case 'untimeout':
       case 'detimeout':
-        untimeout(target);
-        action = 'unqieted';
+        untimeout(data);
+        actionVerb = 'unqieted';
         break;
       case 'v':
       case 'voice':
-        voice(target);
-        action = 'voiced';
+        voice(data);
+        actionVerb = 'voiced';
         break;
       case 'rv':
       case 'uv':
@@ -327,13 +387,13 @@ module.exports = {
       case 'rmvoice':
       case 'unvoice':
       case 'devoice':
-        unvoice(target);
-        action = 'devoiced';
+        unvoice(data);
+        actionVerb = 'devoiced';
         break;
       case 'o':
       case 'op':
-        operator(target);
-        action = 'opped';
+        operator(data);
+        actionVerb = 'opped';
         break;
       case 'rop':
       case 'uop':
@@ -341,41 +401,71 @@ module.exports = {
       case 'rmop':
       case 'unop':
       case 'deop':
-        unoperator(target);
-        action = 'deopped';
+        unoperator(data);
+        actionVerb = 'deopped';
         break;
       case 'kick':
-        kick(target, channel);
-        action = 'kicked';
+        if (channel === '' || channel.includes('#') === false) {
+          global.ircClient.say(message.args[0], 'You must supply a channel! (Remember the #)');
+          actionVerb = 'kicked';
+          return;
+        }
+        kick(data, channel);
+        actionVerb = 'kicked';
         break;
       case 'invite':
-        invite(target, channel);
-        action = 'invited';
+        if (channel === null) {
+          global.ircClient.say(message.args[0], 'You must supply a channel! (Remember the #)');
+          return;
+        }
+        invite(data, channel);
+        actionVerb = 'invited';
         break;
-      case 'rename':
-      case 'svsnick':
-        rename(target, newNick);
-        action = 'renamed';
-        break;
+      // case 'rename':
+      // case 'svsnick':
+      //   if (channel === null) {
+      //     global.ircClient.say(message.args[0], 'You must supply a new nickname!');
+      //     return;
+      //   }
+      //   rename(data, newNick);
+      //   actionVerb = 'renamed';
+      //   break;
       case 'sq':
       case 'squiet':
       case 'shadowquiet':
-        shadowquiet(target);
-        action = 'shadowquieted';
+        shadowquiet(data);
+        actionVerb = 'shadowquieted';
         break;
       case 'uban':
       case 'underban':
       case 'underage':
-        underban(target);
-        action = 'underbanned';
+        underban(data);
+        actionVerb = 'underbanned';
         break;
       case 'echo':
       case 'say':
-        say(channel, quote);
-        action = 'said';
+        if (target === null) {
+          global.ircClient.say(message.args[0], 'You must supply a channel! (Remember the #)');
+          return;
+        }
+        if (quote === null) {
+          global.ircClient.say(message.args[0], 'You must supply a what you want to say!');
+          return;
+        }
+        say(target, quote);
+        actionVerb = 'said';
+        break;
+      case 'announce':
+      case 'global':
+        if (target === null) {
+          global.ircClient.say(message.args[0], 'You must supply what you want to say!');
+          return;
+        }
+        announce(announcement);
+        actionVerb = 'announced';
         break;
     }
-    global.ircClient.say(message.args[0], `${actor} has ${action} ${data.nick}${duration !== null ? ` for ${duration}` : ''}${reason !== '' ? ` because ${reason}` : ''}!`);
+    global.ircClient.say(message.args[0], `${actor} has ${actionVerb} ${data.nick}${duration !== null ? ` for ${duration}` : ''}${reason !== '' ? ` because ${reason}` : ''}!`);
 
     // Send the message back to the channel
   },

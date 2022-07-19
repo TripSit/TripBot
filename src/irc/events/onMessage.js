@@ -83,7 +83,10 @@ const modCommands = [
   'uban',
   'underban',
   'underage',
+  'echo',
   'say',
+  'announce',
+  'global',
 ];
 
 module.exports = {
