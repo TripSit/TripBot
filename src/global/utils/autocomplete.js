@@ -174,6 +174,33 @@ module.exports = {
         // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
         interaction.respond(listResults);
       }
+    } else if (interaction.commandName === 'convert') {
+      const options = {
+        shouldSort: true,
+        keys: [
+          'label',
+        ],
+      };
+
+      const fuse = new Fuse(timezones, options);
+      const focusedValue = interaction.options.getFocused();
+      // logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
+      const results = fuse.search(focusedValue);
+      // logger.debug(`[${PREFIX}] Autocomplete results: ${results}`);
+      if (results.length > 0) {
+        const top25 = results.slice(0, 25);
+        const listResults = top25.map(choice => ({
+          name: choice.item.label,
+          value: choice.item.label,
+        }));
+        // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
+        interaction.respond(listResults);
+      } else {
+        const defaultTimezones = timezoneNames.slice(0, 25);
+        const listResults = defaultTimezones.map(choice => ({ name: choice, value: choice }));
+        // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
+        interaction.respond(listResults);
+      }
     } else { // If you don't need a specific autocomplete, return a list of drug names
       const options = {
         shouldSort: true,
