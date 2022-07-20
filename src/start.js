@@ -11,9 +11,15 @@ const { firebaseConnect } = require('./global/services/firebaseAPI');
 const { webserverConnect } = require('./webserver/webserverAPI');
 const { runTimer } = require('./global/services/timerAPI');
 
+const {
+  NODE_ENV,
+} = require('../env');
+
 async function start() {
   global.userDb = {};
-  await firebaseConnect();
+  if (NODE_ENV === 'production') {
+    await firebaseConnect();
+  }
 
   await discordConnect();
 
