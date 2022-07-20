@@ -30,7 +30,7 @@ module.exports = {
     const data = await combo(drugA, drugB);
 
     if (data === null) {
-      const embed = template.createEmbed();
+      const embed = template.embedTemplate();
       embed.setTitle(`${drugA} and ${drugB} have no known interactions!`);
       embed.setDescription('This does not mean combining them is safe!\nThis means we don\'t have information on it!');
       interaction.reply(embed);
