@@ -77,7 +77,7 @@ const botNicknames = [
 ];
 
 module.exports = {
-  async experience(message, client) {
+  async experience(message) {
     // if (message.guildId) {
     //   // If not in tripsit, ignore it
     //   if (message.guildId !== discordGuildId) { return; }
@@ -88,14 +88,7 @@ module.exports = {
     let actor = {};
     let messageChannelId = '';
     let expType = '';
-    let discordClient = client;
-
-    if (!discordClient) {
-      discordClient = message.client;
-    }
-    if (!discordClient) {
-      discordClient = global.client;
-    }
+    const discordClient = global.client;
 
     // Check if the user who sent this message is a guild user
     if (message.member) {
@@ -149,13 +142,13 @@ module.exports = {
       messageChannelId = message.args[0];
     }
 
-    logger.debug(`[${PREFIX}] expType: ${expType}`);
-    logger.debug(`[${PREFIX}] messageChannelId: ${messageChannelId}`);
+    // logger.debug(`[${PREFIX}] expType: ${expType}`);
+    // logger.debug(`[${PREFIX}] messageChannelId: ${messageChannelId}`);
 
     // Get random value between 15 and 25
     const expPoints = Math.floor(Math.random() * (25 - 15 + 1)) + 15;
     const currMessageDate = message.createdTimestamp || Date.now();
-    logger.debug(`[${PREFIX}] currMessageDate: ${currMessageDate}`);
+    // logger.debug(`[${PREFIX}] currMessageDate: ${currMessageDate}`);
 
     // Get user data
     const [actorData, actorFbid] = await getUserInfo(actor);
@@ -166,9 +159,9 @@ module.exports = {
     } catch (e) {
       logger.debug(`[${PREFIX}] No lastMessageDate found for ${actor.username || actor.nick}`);
     }
-    logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
+    // logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
     const timeDiff = currMessageDate - lastMessageDate;
-    logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
+    // logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
 
     const bufferTime = bufferSeconds * 1000;
 
@@ -246,7 +239,6 @@ module.exports = {
             logger.debug(`[${PREFIX}] Discord update A (Increment)`);
           }
         } else {
-          logger.debug(`[${PREFIX}] Initializing messages data`);
           actorData.discord.messages = {
             [messageChannelId]: {
               count: 1,
@@ -257,7 +249,7 @@ module.exports = {
           logger.debug(`[${PREFIX}] Discord update B (Update)`);
         }
       } else {
-        logger.debug(`[${PREFIX}] Initializing discord data`);
+        // logger.debug(`[${PREFIX}] Initializing discord data`);
         actorData.discord = {
           messages: {
             [messageChannelId]: {
@@ -286,7 +278,7 @@ module.exports = {
             logger.debug(`[${PREFIX}] IRC update A (Increment)`);
           }
         } else {
-          logger.debug(`[${PREFIX}] Initializing messages data`);
+          // logger.debug(`[${PREFIX}] Initializing messages data`);
           actorData.irc.messages = {
             [messageChannelId]: {
               count: 1,

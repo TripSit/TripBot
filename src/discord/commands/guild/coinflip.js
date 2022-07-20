@@ -11,13 +11,18 @@ module.exports = {
     .setDescription('Flip a coin'),
 
   async execute(interaction) {
-    const x = Math.floor(Math.random() * 2);
+    // Get a random number between 0 and 1000
+    const random = Math.floor(Math.random() * 1000);
     let side;
 
-    if (x === 0) {
-      side = 'Tails';
+    if (random === 0) {
+      side = 'The coin slipped into subspace and disappeared!';
+    } else if (random === 1000) {
+      side = 'The coin landed on its side!';
+    } else if (random < 500) {
+      side = 'Heads!';
     } else {
-      side = 'Heads';
+      side = 'Tails!';
     }
 
     if (!interaction.replied) interaction.reply(side);

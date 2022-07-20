@@ -23,6 +23,7 @@ const {
 
 module.exports = {
   firebaseConnect: async () => {
+    logger.info(`[${PREFIX}] firebaseConnect()`);
     // Initialize firebase app
     if (firebasePrivateKeyId) {
       serviceAccount.private_key_id = firebasePrivateKeyId;
@@ -96,7 +97,7 @@ module.exports = {
     await backupDb(userDb);
   },
   getUserInfo: async member => {
-    logger.debug(`[${PREFIX}] getUserInfo()`);
+    logger.info(`[${PREFIX}] getUserInfo()`);
     // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
     // {
     //   "nick": "Teknos",
@@ -127,13 +128,13 @@ module.exports = {
     // }
     let name = '';
     if (member.host) {
-      logger.debug(`[${PREFIX}] member.host: ${member.host}`);
+      // logger.debug(`[${PREFIX}] member.host: ${member.host}`);
       name = member.nick;
     } else if (member.user) {
       // logger.debug(`[${PREFIX}] member.user: ${JSON.stringify(member.user, null, 2)}`);
       name = member.user.username;
     } else if (member.username) {
-      logger.debug(`[${PREFIX}] member.username: ${member.username}`);
+      // logger.debug(`[${PREFIX}] member.username: ${member.username}`);
       name = member.username;
     }
 
@@ -161,8 +162,8 @@ module.exports = {
     // If the member object has a host value, then this is a message from IRC
     if (member.host) {
       logger.debug(`[${PREFIX}] Member is from IRC!`);
-      logger.debug(`[${PREFIX}] member.host: ${member.host}`);
-      logger.debug(`[${PREFIX}] member.host: ${typeof member.host}`);
+      // logger.debug(`[${PREFIX}] member.host: ${member.host}`);
+      // logger.debug(`[${PREFIX}] member.host: ${typeof member.host}`);
 
       if (member.host.startsWith('tripsit')) {
         memberRole = member.host.split('/')[1];
@@ -257,6 +258,7 @@ module.exports = {
     return [memberData, memberFbid];
   },
   setUserInfo: async (fbid, data) => {
+    logger.info(`[${PREFIX}] setUserInfo()`);
     const { db } = global;
     if (db !== undefined) {
       // logger.debug(`[${PREFIX}] Saving ${JSON.stringify(data, null, 2)}!`);
@@ -323,7 +325,7 @@ module.exports = {
             key: doc.key,
             value: data,
           });
-          logger.debug(`[${PREFIX}] Updated actor in userDb`);
+          // logger.debug(`[${PREFIX}] Updated actor in userDb`);
         } else {
           userDb.push({
             key: doc.key,

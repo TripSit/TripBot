@@ -1,12 +1,12 @@
 {
   "name": "@tripsit/discord-bot",
   "private": true,
-  "version": "3.0.2",
+  "version": "3.0.10",
   "description": "A bot for TripSit",
   "main": "src/start.js",
   "scripts": {
     "start": "npm run deploy-commands && npm run go",
-    "dev": "npm run lint && npm run patch && npm run nodemon",
+    "dev": "npm run deploy-commands && npm run lint && npm run patch && npm run nodemon",
     "deploy-commands": "node ./src/discord/utils/deploy-commands.js",
     "nodemon": "nodemon --config ./nodemon.json",
     "go": "node ./src/start.js",
@@ -75,8 +75,9 @@
     "@babel/eslint-parser": "^7.17.0",
     "@babel/plugin-proposal-optional-chaining": "^7.16.7",
     "eslint": "^8.20.0",
-    "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.14.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.26.0",
     "got": ">=11.8.5"
   },
   "engines": {

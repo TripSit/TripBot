@@ -30,7 +30,11 @@ start();
 
 // Stop the bot when the process is closed (via Ctrl-C).
 const destroy = () => {
-  global.manager.teardown();
+  try {
+    global.manager.teardown();
+  } catch (err) {
+    logger.error(`[${PREFIX}] ${err}`);
+  }
 };
 
 process.on('unhandledRejection', error => {
