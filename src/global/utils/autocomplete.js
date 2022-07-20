@@ -9,12 +9,18 @@ const pillShapes = require('../assets/data/pill_shapes.json');
 const drugDataAll = require('../assets/data/drug_db_combined.json');
 const drugDataTripsit = require('../assets/data/drug_db_tripsit.json');
 const timezones = require('../assets/data/timezones.json');
+const unitsOfMeasurement = require('../assets/data/units_of_measurement.json');
 
 const PREFIX = path.parse(__filename).name;
 
 const timezoneNames = [];
 for (let i = 0; i < timezones.length; i += 1) {
   timezoneNames.push(timezones[i].label);
+}
+
+const measurementNames = [];
+for (let i = 0; i < unitsOfMeasurement.length; i += 1) {
+  measurementNames.push(unitsOfMeasurement[i].abbr);
 }
 
 const pillColorNames = [];
@@ -171,6 +177,70 @@ module.exports = {
       } else {
         const defaultTimezones = timezoneNames.slice(0, 25);
         const listResults = defaultTimezones.map(choice => ({ name: choice, value: choice }));
+        // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
+        interaction.respond(listResults);
+      }
+    } else if (interaction.commandName === 'convert') {
+      const firstUnit = interaction.options.data[1].value;
+      const focusedOption = interaction.options.data[1].focused;
+
+      let displayUnits = [];
+      let measure = '';
+      if (firstUnit !== '' && !focusedOption) {
+        logger.debug(`[${PREFIX}] firstUnit: ${firstUnit}`);
+        // eslint-disable-next-line
+        for (const i in unitsOfMeasurement) {
+          if (unitsOfMeasurement[i].abbr.toLowerCase() === firstUnit.toLowerCase()) {
+            measure = unitsOfMeasurement[i].measure;
+            logger.debug(`[${PREFIX}] First unit measure: ${measure}`);
+          }
+        }
+        // eslint-disable-next-line
+        for (const i in unitsOfMeasurement) {
+          if (unitsOfMeasurement[i].measure.toLowerCase() === measure.toLowerCase()) {
+            displayUnits.push(unitsOfMeasurement[i]);
+            logger.debug(`[${PREFIX}] Added: ${unitsOfMeasurement[i].plural}`);
+          }
+        }
+      } else {
+        displayUnits = unitsOfMeasurement;
+      }
+
+      const options = {
+        shouldSort: true,
+        keys: [
+          'plural',
+          'singular',
+          'abbr',
+        ],
+      };
+
+      const fuse = new Fuse(displayUnits, options);
+      const focusedValue = interaction.options.getFocused();
+      // logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
+      const results = fuse.search(focusedValue);
+      // logger.debug(`[${PREFIX}] Autocomplete results: ${results}`);
+      if (results.length > 0) {
+        const top25 = results.slice(0, 25);
+        const listResults = top25.map(choice => ({
+          name: choice.item.abbr,
+          value: choice.item.abbr,
+        }));
+        // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
+        interaction.respond(listResults);
+      } else {
+        if (measure !== '') {
+          const top25 = displayUnits.slice(0, 25);
+          const listResults = top25.map(choice => ({
+            name: choice.abbr,
+            value: choice.abbr,
+          }));
+          // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
+          interaction.respond(listResults);
+          return;
+        }
+        const defaultMeasurements = measurementNames.slice(0, 25);
+        const listResults = defaultMeasurements.map(choice => ({ name: choice, value: choice }));
         // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
         interaction.respond(listResults);
       }
