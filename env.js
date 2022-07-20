@@ -43,6 +43,7 @@ exports.rapidApiKey = process.env.rapidApiKey;
 exports.wolframApiKey = process.env.wolframApiKey;
 exports.imgurId = process.env.imgurId;
 exports.imgurSecret = process.env.imgurSecret;
+exports.YouTubeApiToken = process.env.YouTubeApiToken;
 
 exports.channelAnnouncementsId = process.env.channelAnnouncementsId;
 exports.channelStartId = process.env.channelStartId;
