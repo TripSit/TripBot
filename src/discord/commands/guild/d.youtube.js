@@ -1,7 +1,7 @@
 'use strict';
 
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const youtube = require('../../../global/utils/youtube-search');
+const youtube = require('../../../global/utils/youtube');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 
@@ -10,12 +10,12 @@ const PREFIX = require('path').parse(__filename).name;
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('yt-search')
+    .setName('youtube')
     .setDescription('Search YouTube')
     .addStringOption(option => option
-      .setDescription('Your search query')
+      .setDescription('What video do you want?')
       .setRequired(true)
-      .setName('query')),
+      .setName('search')),
 
   async execute(interaction) {
     const query = interaction.options.getString('query');
@@ -32,13 +32,12 @@ module.exports = {
           .setDescription(result[0].description)
           .addField('Channel', result[0].channelTitle)
           .setColor(0xFF0000);
-
         interaction.reply({ embeds: [embed], ephemeral: false });
       })
 
       .catch(err => {
         interaction.reply(
-          'Sorry, an error occured while trying to execute this command',
+          `Sorry, there was an ${err}`,
         );
         logger.debug(`[${PREFIX} failed! ${err} `);
       });
