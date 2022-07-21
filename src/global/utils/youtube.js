@@ -1,14 +1,12 @@
 'use strict';
 
 const ytSearch = require('youtube-search');
-const path = require('path');
+const PREFIX = require('path').parse(__filename).name;
 const logger = require('./logger');
 
 const {
   YouTubeApiToken,
 } = require('../../../env');
-
-const PREFIX = path.parse(__filename).name;
 
 module.exports = {
 

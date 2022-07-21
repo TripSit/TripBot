@@ -1,8 +1,10 @@
 'use strict';
 
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const PREFIX = require('path').parse(__filename).name;
 const imgur = require('../../../global/utils/imgur');
-const template = require('../../utils/embed-template');
+const logger = require('../../../global/utils/logger');
+// const template = require('../../utils/embed-template');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -18,12 +20,17 @@ module.exports = {
 
     const url = await imgur.search(query);
 
-    const embed = template.embedTemplate()
-      .setTitle(`Imgur search: ${query}`)
-      .setImage(await url)
-      .setURL(await url)
-      .setColor(0x89c623);
+    logger.debug(`[${PREFIX}] url: ${url}`);
 
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    if (!interaction.replied) interaction.reply(url);
+    else interaction.followUp(url);
+
+    // const embed = template.embedTemplate()
+    //   .setTitle(`Imgur search: ${query}`)
+    //   .setImage(await url)
+    //   .setURL(await url)
+    //   .setColor(0x89c623);
+
+    // interaction.reply({ embeds: [embed], ephemeral: false });
   },
 };
