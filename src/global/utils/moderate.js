@@ -89,6 +89,8 @@ async function determineUserInfo(query) {
   let userInfo = null;
   let userPlatform = null;
   let userNickname = null;
+  let userUsername = null;
+  let userId = null;
   logger.debug(`[${PREFIX}] Query: ${typeof query}`);
   // logger.debug(`[${PREFIX}] Query: ${JSON.stringify(query.guild, null, 2)}`);
 
@@ -100,6 +102,8 @@ async function determineUserInfo(query) {
     userInfo = query;
     userPlatform = 'discord';
     userNickname = userInfo.nickname || userInfo.displayName;
+    userUsername = userInfo.user.username;
+    userId = userInfo.id;
   } else if (query.startsWith('<@') && query.endsWith('>')) {
     // If the query string starts with a <@ and ends with > then it's likely a discord user
     logger.debug(`[${PREFIX}] Query is a discord mention`);
@@ -111,53 +115,41 @@ async function determineUserInfo(query) {
       logger.error(`[${PREFIX}] Error fetching discord member: ${err}`);
       userInfo = await global.client.users.fetch(query.slice(3, -1));
       userPlatform = 'discord';
-      userNickname = userInfo.displayName;
+      userNickname = userInfo.nickname;
+      userUsername = userInfo.user.username;
+      userId = userInfo.id;
     }
+  } else {
+    // Do a whois lookup to the user
+    let data = null;
+    await global.ircClient.whois(query, async resp => {
+      data = resp;
+    });
+
+    // This is a hack substanc3 helped create to get around the fact that the whois command
+    // is asyncronous by default, so we need to make this syncronous
+    while (data === null) {
+        await new Promise(resolve => setTimeout(resolve, 100)); // eslint-disable-line
+    }
+    // logger.debug(`[${PREFIX}] data ${JSON.stringify(data, null, 2)}`);
+    if (!data.host) {
+      const embed = template.embedTemplate();
+      logger.debug(`[${PREFIX}] ${query} not found on IRC`);
+      embed.setDescription(stripIndents`
+  ${query} is not found on IRC, did you spell that right?`);
+      const reply = { embeds: [embed], ephemeral: true };
+      return reply;
+    }
+    userInfo = data;
+    userPlatform = 'irc';
+    userNickname = data.nick;
+    userUsername = data.user;
+    userId = data.host;
   }
-  // Will get this working later
-  // else if (query.match(/^\d+$/)) {
-  //   logger.debug(`[${PREFIX}] Query is a discord user id`);
-  //   // If the query string is a series of numbers, it's likely a discord user
-  //   logger.debug(`[${PREFIX}] query: ${query}`);
-  //   userInfo = await tripsitGuild.members.fetch(query);
-  //   if (userInfo === null) {
-  //     logger.error(`[${PREFIX}] Error resolving discord member: ${query}`);
-  //     userInfo = await global.client.users.resolve(parseInt(query, 10));
-  //   }
-  //   userPlatform = 'discord';
-  //   userNickname = userInfo.displayName;
-  // }
-  // IRC stuff, not yet implemented
-  // else {
-  //   // Do a whois lookup to the user
-  //   let data = null;
-  //   await global.ircClient.whois(query, async resp => {
-  //     data = resp;
-  //   });
-
-  //   // This is a hack substanc3 helped create to get around the fact that the whois command
-  //   // is asyncronous by default, so we need to make this syncronous
-  //   while (data === null) {
-  //       await new Promise(resolve => setTimeout(resolve, 100)); // eslint-disable-line
-  //   }
-  //   // logger.debug(`[${PREFIX}] data ${JSON.stringify(data, null, 2)}`);
-  //   if (!data.host) {
-  //     const embed = template.embedTemplate();
-  //     logger.debug(`[${PREFIX}] ${query} not found on IRC`);
-  //     embed.setDescription(stripIndents`
-  // ${query} is not found on IRC, did you spell that right?`);
-  //     const reply = { embeds: [embed], ephemeral: true };
-  //     return reply;
-  //   }
-
-  //   queryFromIrc = true;
-  //   queryFromDiscord = false;
-  //   userInfo = data;
-  // }
   // logger.debug(`[${PREFIX}] userInfo: ${JSON.stringify(userInfo, null, 2)}`);
   // logger.debug(`[${PREFIX}] userPlatform: ${userPlatform}`);
 
-  // User team check - check if the actor is part of the team
+  // Determine if the user is on the team
   let userIsTeamMember = false;
   if (userPlatform === 'discord') {
     // If you're unbanning a user they wont have roles
@@ -169,7 +161,25 @@ async function determineUserInfo(query) {
       });
     }
   }
-  return [userInfo, userNickname, userPlatform, userIsTeamMember];
+  if (userPlatform === 'irc') {
+    if (userInfo.account) {
+      const role = userInfo.account.split('\\')[1];
+      const ircTeamRoles = [
+        'founder',
+        'operator',
+        'admin',
+        'sysop',
+        'moderator',
+        'tripsitter',
+        'helper',
+        'guardian',
+      ];
+      if (ircTeamRoles.includes(role)) {
+        userIsTeamMember = true;
+      }
+    }
+  }
+  return [userInfo, userNickname, userUsername, userId, userPlatform, userIsTeamMember];
 }
 
 module.exports = {
@@ -191,6 +201,8 @@ module.exports = {
       actorUser,
       actorUsername,
       actorPlatform,
+      // actorNickname,
+      // actorId,
       actorIsTeamMember,
     ] = await determineUserInfo(actor);
     // logger.debug(`[${PREFIX}] actorUser: ${JSON.stringify(actorUser, null, 2)}`);
@@ -200,7 +212,7 @@ module.exports = {
     // Extract targetUser data
     const [actorData, actorFbid] = await getUserInfo(actorUser);
 
-    // Team check - Only team members can use mod actions (except report)
+    // Actor Team check - Only team members can use mod actions (except report)
     if (!actorIsTeamMember && command !== 'report') {
       logger.debug(`[${PREFIX}] actor is NOT a team member!`);
       const teamMessage = stripIndents`
@@ -215,6 +227,8 @@ module.exports = {
     const [
       targetUser,
       targetUsername,
+      targetNickname,
+      targetId,
       targetPlatform,
       targetIsTeamMember,
     ] = await determineUserInfo(target);
@@ -235,7 +249,7 @@ module.exports = {
       return reply;
     }
 
-    // Team check - Cannot be run on team members
+    // Target Team check - Cannot be run on team members
     if (targetIsTeamMember) {
       logger.debug(`[${PREFIX}] Target is a team member!`);
       const teamMessage = stripIndents`
@@ -408,38 +422,41 @@ module.exports = {
       .setColor('BLUE')
       .setDescription(`${actor} ${command}ed ${targetUsername}${targetChannel ? ` in ${targetChannel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because\n ${reason}` : ''}`)
       .addFields(
-        { name: 'Username', value: `${targetUser.user.username}`, inline: true },
-        { name: 'Nickname', value: `${targetUser.nickname}`, inline: true },
-        { name: 'ID', value: `${targetUser.id}`, inline: true },
-      )
-      .addFields(
+        { name: 'Username', value: `${targetUsername}`, inline: true },
+        { name: 'Nickname', value: `${targetNickname}`, inline: true },
+        { name: 'ID', value: `${targetId}`, inline: true },
+      );
+    if (targetPlatform === 'discord') {
+      targetEmbed.addFields(
         { name: 'Account created', value: `${targetUser.user ? time(targetUser.user.createdAt, 'R') : time(targetUser.createdAt, 'R')}`, inline: true },
         { name: 'Joined', value: `${time(targetUser.joinedAt, 'R')}`, inline: true },
-        { name: 'Timeout until', value: `${targetUser.communicationDisabledUntil ? time(targetUser.communicationDisabledUntil, 'R') : 'Not Timeouted'}`, inline: true },
+        // { name: 'Timeout until', value: `${targetUser.communicationDisabledUntil
+        // ? time(targetUser.communicationDisabledUntil, 'R') : 'Not Timeouted'}`, inline: true },
       );
-      // .addFields(
-      //   { name: '# of Reports', value: `${targetModActions.received_report
-      // ? targetModActions.received_report.length : 0}`, inline: true },
-      //   { name: '# of Timeouts', value: `${targetModActions.received_timeout
-      // ? targetModActions.received_timeout.length : 0}`, inline: true },
-      //   { name: '# of Warns', value: `${targetModActions.received_warn
-      // ? targetModActions.received_warn.length : 0}`, inline: true },
-      // )
-      // .addFields(
-      //   { name: '# of Kicks', value: `${targetModActions.received_kick
-      // ? targetModActions.received_kick.length : 0}`, inline: true },
-      //   { name: '# of Bans', value: `${targetModActions.received_ban
-      // ? targetModActions.received_ban.length : 0}`, inline: true },
-      //   { name: '# of Notes', value: `${targetModActions.received_note
-      // ? targetModActions.received_note.length : 0}`, inline: true },
-      // )
-      // .addFields(
-      //   { name: '# of Tripsitmes', value: `${targetModActions.received_tripsitme
-      // ? targetModActions.received_tripsitme : 0}`, inline: true },
-      //   { name: '# of I\'m Good', value: `${targetModActions.received_imgood
-      // ? targetModActions.received_imgood : 0}`, inline: true },
-      //   { name: '# of Fucks to Give', value: '0', inline: true },
-      // );
+    }
+    // .addFields(
+    //   { name: '# of Reports', value: `${targetModActions.received_report
+    // ? targetModActions.received_report.length : 0}`, inline: true },
+    //   { name: '# of Timeouts', value: `${targetModActions.received_timeout
+    // ? targetModActions.received_timeout.length : 0}`, inline: true },
+    //   { name: '# of Warns', value: `${targetModActions.received_warn
+    // ? targetModActions.received_warn.length : 0}`, inline: true },
+    // )
+    // .addFields(
+    //   { name: '# of Kicks', value: `${targetModActions.received_kick
+    // ? targetModActions.received_kick.length : 0}`, inline: true },
+    //   { name: '# of Bans', value: `${targetModActions.received_ban
+    // ? targetModActions.received_ban.length : 0}`, inline: true },
+    //   { name: '# of Notes', value: `${targetModActions.received_note
+    // ? targetModActions.received_note.length : 0}`, inline: true },
+    // )
+    // .addFields(
+    //   { name: '# of Tripsitmes', value: `${targetModActions.received_tripsitme
+    // ? targetModActions.received_tripsitme : 0}`, inline: true },
+    //   { name: '# of I\'m Good', value: `${targetModActions.received_imgood
+    // ? targetModActions.received_imgood : 0}`, inline: true },
+    //   { name: '# of Fucks to Give', value: '0', inline: true },
+    // );
 
     if (command === 'info') {
       if (targetPlatform === 'discord') {
