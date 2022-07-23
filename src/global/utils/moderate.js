@@ -18,6 +18,60 @@ const {
 
 const botPrefix = NODE_ENV === 'production' ? '~' : '-';
 
+let generalChannels = [];
+let hrChannels = [];
+let allChannels = [];
+
+if (NODE_ENV === 'production') {
+  generalChannels = [
+    '#tripsitters',
+    '#music',
+    '#science',
+    '#gaming',
+    '#cooking',
+    '#pets',
+    '#creative',
+    '#movies',
+    '#opiates',
+    '#depressants',
+    '#dissociatives',
+    '#psychedelics',
+    '#stimulants',
+    '#lounge',
+    '#tripsitvip',
+    '#gold-lounge',
+    '#psychonaut',
+    '#dissonaut',
+    '#minecraft',
+    '#recovery',
+    '#compsci',
+    '#tripsit-dev',
+    '#content',
+    '#teamtripsit',
+    '#moderators',
+    '#tripsit.me',
+    '#modhaven',
+    '#operations',
+    '#emergency',
+    '#meeting-room',
+    '#drugs',
+  ];
+  hrChannels = [
+    '#sanctuary',
+    '#tripsit',
+    '#tripsit1',
+    '#tripsit2',
+    '#tripsit3',
+  ];
+  allChannels = generalChannels.concat(hrChannels);
+} else {
+  generalChannels = [
+    '#sandbox-dev',
+  ];
+  hrChannels = [];
+  allChannels = generalChannels.concat(hrChannels);
+}
+
 const {
   roleDirectorId,
   roleSuccessorId,
@@ -142,8 +196,8 @@ async function determineUserInfo(query) {
     }
     userInfo = data;
     userPlatform = 'irc';
-    userNickname = data.nick;
-    userUsername = data.user;
+    userNickname = data.user;
+    userUsername = data.nick;
     userId = data.host;
   }
   // logger.debug(`[${PREFIX}] userInfo: ${JSON.stringify(userInfo, null, 2)}`);
@@ -209,7 +263,7 @@ module.exports = {
     logger.debug(`[${PREFIX}] actorPlatform: ${actorPlatform}`);
     logger.debug(`[${PREFIX}] actorUsername: ${actorUsername}`);
 
-    // Extract targetUser data
+    // Extract actorData data
     const [actorData, actorFbid] = await getUserInfo(actorUser);
 
     // Actor Team check - Only team members can use mod actions (except report)
@@ -234,12 +288,6 @@ module.exports = {
     ] = await determineUserInfo(target);
     logger.debug(`[${PREFIX}] targetUser: ${JSON.stringify(targetUser, null, 2)}`);
 
-    logger.debug(`[${PREFIX}] targetPlatform: ${targetPlatform}`);
-    logger.debug(`[${PREFIX}] targetUsername: ${targetUsername}`);
-
-    // Extract targetUser data
-    const [targetData, targetFbid] = await getUserInfo(targetUser);
-
     if (!targetUser) {
       const embed = template.embedTemplate()
         .setColor('RED')
@@ -253,13 +301,19 @@ module.exports = {
     if (targetIsTeamMember) {
       logger.debug(`[${PREFIX}] Target is a team member!`);
       const teamMessage = stripIndents`
-            Hey ${actor}, ${targetUser.user.username} is a team member!
-            Did you mean to do that?`;
+                Hey ${actor}, ${targetUser.user.username} is a team member!
+                Did you mean to do that?`;
       const embed = template.embedTemplate()
         .setColor('DARK_BLUE')
         .setDescription(teamMessage);
       return { embeds: [embed], ephemeral: true };
     }
+
+    logger.debug(`[${PREFIX}] targetPlatform: ${targetPlatform}`);
+    logger.debug(`[${PREFIX}] targetUsername: ${targetUsername}`);
+
+    // Extract targetUser data
+    const [targetData, targetFbid] = await getUserInfo(targetUser);
 
     // Get channel object
     let targetChannel = null;
@@ -293,11 +347,25 @@ module.exports = {
         }
       }
       if (targetPlatform === 'irc') {
+        logger.debug(`[${PREFIX}] Warning on IRC!`);
+        const warnMessage = stripIndents`
+          You have warned by Team TripSit:
+
+          ${reason}
+
+          Please read the rules and be respectful of them.
+
+          Contact a TripSit Team Member if you have any questions!`;
+        logger.debug(`[${PREFIX}] warnMessage: ${warnMessage}`);
+        logger.debug(`[${PREFIX}] targetNickname: ${targetNickname}`);
         try {
-          global.ircClient.say('tripbot', `${botPrefix}${command} ${targetUsername} ${reason}`);
-          global.ircClient.say('#sandbox', `Sent: ${botPrefix}${command} ${targetUsername} ${reason}`);
+          global.ircClient.say(targetNickname, warnMessage);
         } catch (err) {
           logger.error(`[${PREFIX}] Error: ${err}`);
+          logger.error(`[${PREFIX}] error.name: ${err.name}}`);
+          logger.error(`[${PREFIX}] error.code: ${err.code}`);
+          logger.error(`[${PREFIX}] error.message: ${err.message}`);
+          logger.error(`[${PREFIX}] error.stack: ${err.stack}`);
         }
       }
     } else if (command === 'timeout') {
@@ -325,23 +393,23 @@ module.exports = {
         }
       }
       if (targetPlatform === 'irc') {
-        let ircCommand = 'quiet';
         if (toggle === 'on' || toggle === null) {
-          try {
-            const tripbotCommand = `${botPrefix}${ircCommand} ${targetUsername}${duration ? ` ${minutes}m` : ''} ${reason}`;
-            global.ircClient.say('tripbot', tripbotCommand);
-            global.ircClient.say('#sandbox', `Sent: ${tripbotCommand}`);
-          } catch (err) {
-            logger.error(`[${PREFIX}] Error: ${err}`);
+          // eslint-disable-next-line no-restricted-syntax
+          for (const ircChannel of allChannels) {
+            try {
+              global.ircClient.send('MODE', ircChannel, '+q', `*@${target.host}`);
+            } catch (err) {
+              logger.error(`[${PREFIX}] ${err}`);
+            }
           }
         } else {
-          ircCommand = 'unquiet';
-          try {
-            const tripbotCommand = `${botPrefix}${ircCommand} ${targetUsername} ${reason}`;
-            global.ircClient.say('tripbot', tripbotCommand);
-            global.ircClient.say('#sandbox', `Sent: ${tripbotCommand}`);
-          } catch (err) {
-            logger.error(`[${PREFIX}] Error: ${err}`);
+          // eslint-disable-next-line no-restricted-syntax
+          for (const ircChannel of allChannels) {
+            try {
+              global.ircClient.send('MODE', ircChannel, '-q', `*@${target.host}`);
+            } catch (err) {
+              logger.error(`[${PREFIX}] ${err}`);
+            }
           }
         }
       }
@@ -355,12 +423,13 @@ module.exports = {
         }
       }
       if (targetPlatform === 'irc') {
-        try {
-          const tripbotCommand = `${botPrefix}${command} ${targetUsername} ${targetChannel} ${reason}`;
-          global.ircClient.say('tripbot', tripbotCommand);
-          global.ircClient.say('#sandbox', `Sent: ${tripbotCommand}`);
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error: ${err}`);
+        // eslint-disable-next-line no-restricted-syntax
+        for (const ircChannel of allChannels) {
+          try {
+            global.ircClient.send('KICK', ircChannel, target.nick);
+          } catch (err) {
+            logger.error(`[${PREFIX}] ${err}`);
+          }
         }
       }
     } else if (command === 'ban') {
@@ -394,23 +463,31 @@ module.exports = {
       }
       if (targetPlatform === 'irc') {
         if (toggle === 'on' || toggle === null) {
-          try {
-            const ircCommand = 'nban';
-            const tripbotCommand = `${botPrefix}${ircCommand} ${targetUsername}${duration ? ` ${minutes}m` : ''} ${reason}`;
-            global.ircClient.say('tripbot', tripbotCommand);
-            global.ircClient.say('#sandbox', `Sent: ${tripbotCommand}`);
-          } catch (err) {
-            logger.error(`[${PREFIX}] Error: ${err}`);
-          }
+          const ircCommand = `akill add ${target.host} !P ${reason}`;
+          global.ircClient.say('operserv', ircCommand);
+          global.ircClient.say('#sandbox-dev', ircCommand);
+          // Just go straight for the akill
+          // // eslint-disable-next-line no-restricted-syntax
+          // for (const banChannel of allChannels) {
+          //   try {
+          //     global.ircClient.send('KICK', banChannel, target.nick);
+          //     global.ircClient.send('MODE', banChannel, '+b', `*@${target.host}`);
+          //   } catch (err) {
+          //     logger.error(`[${PREFIX}] ${err}`);
+          //   }
+          // }
         } else {
-          try {
-            const ircCommand = 'nunban';
-            const tripbotCommand = `${botPrefix}${ircCommand} ${targetUsername} ${reason}`;
-            global.ircClient.say('tripbot', tripbotCommand);
-            global.ircClient.say('#sandbox', `Sent: ${tripbotCommand}`);
-          } catch (err) {
-            logger.error(`[${PREFIX}] Error: ${err}`);
-          }
+          const ircCommand = `akill del ${target}`;
+          global.ircClient.say('operserv', ircCommand);
+          global.ircClient.say('#sandbox-dev', ircCommand);
+          // // eslint-disable-next-line no-restricted-syntax
+          // for (const unbanChannel of allChannels) {
+          //   try {
+          //     global.ircClient.send('MODE', unbanChannel, '-b', `*@${target.host}`);
+          //   } catch (err) {
+          //     logger.error(`[${PREFIX}] ${err}`);
+          //   }
+          // }
         }
       }
     }
@@ -420,10 +497,10 @@ module.exports = {
     // logger.debug(`[${PREFIX}] targetModActions: ${JSON.stringify(targetModActions, null, 2)}`);
     const targetEmbed = template.embedTemplate()
       .setColor('BLUE')
-      .setDescription(`${actor} ${command}ed ${targetUsername}${targetChannel ? ` in ${targetChannel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because\n ${reason}` : ''}`)
+      .setDescription(`${actor} ${command}ed ${targetNickname}${targetChannel ? ` in ${targetChannel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because\n ${reason}` : ''}`)
       .addFields(
-        { name: 'Username', value: `${targetUsername}`, inline: true },
         { name: 'Nickname', value: `${targetNickname}`, inline: true },
+        { name: 'Username', value: `${targetUsername}`, inline: true },
         { name: 'ID', value: `${targetId}`, inline: true },
       );
     if (targetPlatform === 'discord') {
@@ -482,7 +559,6 @@ module.exports = {
 
     logger.debug(`[${PREFIX}] channelModeratorsId: ${channelModeratorsId}`);
     const modChan = await global.client.channels.fetch(channelModeratorsId);
-    // modChan.send({ embeds: [targetEmbed], components: [modButtons] });
     modChan.send({ embeds: [targetEmbed] });
     logger.debug(`[${PREFIX}] send a message to the moderators room`);
 
