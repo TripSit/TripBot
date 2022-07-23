@@ -137,13 +137,13 @@ module.exports = {
           verbage = `${message.nick} has changed their nick to ${newNick}!`;
         }
 
-        logger.debug(`[${PREFIX}] lastMessageChannel: ${actorData.experience.general.lastMessageChannel}`);
+        logger.debug(`[${PREFIX}] lastMessageChannelName: ${actorData.experience.general.lastMessageChannel}`);
         const channelId = channels[actorData.experience.general.lastMessageChannel];
         logger.debug(`[${PREFIX}] channelId: ${channelId} (${typeof channelId})`);
         logger.debug(`[${PREFIX}] channelId: ${JSON.stringify(channelId, null, 2)}`);
 
         if (global.client) {
-          const lastMessageChannel = global.client.channels.cache.get(channelId);
+          const lastMessageChannel = await global.client.channels.fetch(channelId);
           logger.debug(`[${PREFIX}] lastMessageChannel: ${lastMessageChannel}`);
           lastMessageChannel.send(verbage);
         } else {
