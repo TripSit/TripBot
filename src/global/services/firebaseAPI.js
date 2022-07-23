@@ -348,21 +348,14 @@ module.exports = {
     const { db } = global;
 
     let guildData = {
-      guild_name: guild.name,
-      guild_id: guild.id,
-      guild_createdAt: guild.createdAt,
-      guild_joinedAt: guild.joinedAt,
+      guild_name: guild.name || '',
+      guild_id: guild.id || '',
+      guild_createdAt: guild.createdAt || '',
+      guild_joinedAt: guild.joinedAt || '',
       guild_description: `${guild.description ? guild.description : 'No description'}`,
       guild_member_count: guild.memberCount,
       guild_owner_id: guild.discordOwnerId || 'No Owner',
-      guild_icon: guild.iconURL(),
       guild_banned: false,
-      guild_large: guild.large,
-      guild_nsfw: guild.nsfwLevel,
-      guild_partner: guild.partnered,
-      guild_preferredLocale: `${guild.preferredLocale ? guild.preferredLocale : 'No Locale'}`,
-      guild_region: `${guild.region ? guild.region : 'No region'}`,
-      modActions: {},
     };
     let guildFbid = null;
 
@@ -386,19 +379,23 @@ module.exports = {
     logger.debug(`[${PREFIX}] Saving ${data.guild_name}!`);
     const { db } = global;
     // logger.debug(`[${PREFIX}] fbid ${fbid}!`);
-    if (fbid !== null && fbid !== undefined) {
-      logger.debug(`[${PREFIX}] Updating guild data`);
-      try {
-        await db.collection(firebaseGuildDbName).doc(fbid).set(data);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error updating actor data: ${err}`);
-      }
-    } else {
-      logger.debug(`[${PREFIX}] Creating guild data`);
-      try {
-        await db.collection(firebaseGuildDbName).doc().set(data);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error creating guild data: ${err}`);
+    if (db !== undefined) {
+      if (fbid !== null && fbid !== undefined) {
+        logger.debug(`[${PREFIX}] Updating guild data`);
+        try {
+          await db.collection(firebaseGuildDbName).doc(fbid).set(data);
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error updating guild data: ${err}`);
+        }
+      } else {
+        logger.debug(`[${PREFIX}] Creating guild data`);
+        try {
+          await db.collection(firebaseGuildDbName).doc().set(data);
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error creating guild data: ${err}\n${err.stack}`);
+          logger.error(`[${PREFIX}] firebaseGuildDbName: ${firebaseGuildDbName}`);
+          logger.error(`[${PREFIX}] Data: ${JSON.stringify(data, null, 4)}`);
+        }
       }
     }
   },
