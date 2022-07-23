@@ -327,6 +327,11 @@ module.exports = {
       logger.debug(`[${PREFIX}] targetChannel: ${targetChannel.name}`);
     }
 
+    // Get duration
+    minutes = duration
+      ? await parseDuration.execute(duration)
+      : 604800000;
+
     if (command === 'warn') {
       if (targetPlatform === 'discord') {
         const warnEmbed = template.embedTemplate()
@@ -362,10 +367,6 @@ module.exports = {
           global.ircClient.say(targetNickname, warnMessage);
         } catch (err) {
           logger.error(`[${PREFIX}] Error: ${err}`);
-          logger.error(`[${PREFIX}] error.name: ${err.name}}`);
-          logger.error(`[${PREFIX}] error.code: ${err.code}`);
-          logger.error(`[${PREFIX}] error.message: ${err.message}`);
-          logger.error(`[${PREFIX}] error.stack: ${err.stack}`);
         }
       }
     } else if (command === 'timeout') {
@@ -373,9 +374,7 @@ module.exports = {
         if (toggle === 'on' || toggle === null) {
           try {
             // The length of the timout defaults to 1 week if no time is given
-            minutes = duration
-              ? await parseDuration.execute(duration)
-              : 604800000;
+
             logger.debug(`[${PREFIX}] minutes: ${minutes}`);
             targetUser.timeout(minutes, reason);
             await targetUser.send(`You have been quieted for ${ms(minutes, { long: true })}${reason ? ` because:\n ${reason}` : ''} `);
@@ -397,19 +396,29 @@ module.exports = {
           // eslint-disable-next-line no-restricted-syntax
           for (const ircChannel of allChannels) {
             try {
-              global.ircClient.send('MODE', ircChannel, '+q', `*@${target.host}`);
+              global.ircClient.send('MODE', ircChannel, '+q', `*@${targetId}`);
             } catch (err) {
               logger.error(`[${PREFIX}] ${err}`);
             }
+          }
+          try {
+            global.ircClient.say(targetNickname, `You have been quieted for ${ms(minutes, { long: true })}${reason ? ` because:\n ${reason}` : ''} `);
+          } catch (err) {
+            logger.error(`[${PREFIX}] Error: ${err}`);
           }
         } else {
           // eslint-disable-next-line no-restricted-syntax
           for (const ircChannel of allChannels) {
             try {
-              global.ircClient.send('MODE', ircChannel, '-q', `*@${target.host}`);
+              global.ircClient.send('MODE', ircChannel, '-q', `*@${targetId}`);
             } catch (err) {
               logger.error(`[${PREFIX}] ${err}`);
             }
+          }
+          try {
+            global.ircClient.say(targetNickname, `You have been unquieted because:\n${reason}`);
+          } catch (err) {
+            logger.error(`[${PREFIX}] Error: ${err}`);
           }
         }
       }
@@ -426,10 +435,15 @@ module.exports = {
         // eslint-disable-next-line no-restricted-syntax
         for (const ircChannel of allChannels) {
           try {
-            global.ircClient.send('KICK', ircChannel, target.nick);
+            global.ircClient.send('KICK', ircChannel, targetNickname);
           } catch (err) {
             logger.error(`[${PREFIX}] ${err}`);
           }
+        }
+        try {
+          global.ircClient.say(targetNickname, `You have been kicked because:\n${reason}`);
+        } catch (err) {
+          logger.error(`[${PREFIX}] Error: ${err}`);
         }
       }
     } else if (command === 'ban') {
@@ -463,31 +477,43 @@ module.exports = {
       }
       if (targetPlatform === 'irc') {
         if (toggle === 'on' || toggle === null) {
-          const ircCommand = `akill add ${target.host} !P ${reason}`;
-          global.ircClient.say('operserv', ircCommand);
-          global.ircClient.say('#sandbox-dev', ircCommand);
           // Just go straight for the akill
-          // // eslint-disable-next-line no-restricted-syntax
-          // for (const banChannel of allChannels) {
-          //   try {
-          //     global.ircClient.send('KICK', banChannel, target.nick);
-          //     global.ircClient.send('MODE', banChannel, '+b', `*@${target.host}`);
-          //   } catch (err) {
-          //     logger.error(`[${PREFIX}] ${err}`);
-          //   }
-          // }
-        } else {
-          const ircCommand = `akill del ${target}`;
+          global.ircClient.say(targetNickname, `You have been banned for ${ms(minutes, { long: true })}${reason ? ` because:\n ${reason}` : ''} `);
+
+          const ircCommand = `akill add ${targetId} !P ${reason}`;
           global.ircClient.say('operserv', ircCommand);
           global.ircClient.say('#sandbox-dev', ircCommand);
-          // // eslint-disable-next-line no-restricted-syntax
-          // for (const unbanChannel of allChannels) {
-          //   try {
-          //     global.ircClient.send('MODE', unbanChannel, '-b', `*@${target.host}`);
-          //   } catch (err) {
-          //     logger.error(`[${PREFIX}] ${err}`);
-          //   }
-          // }
+
+          // Kickban just in case
+          // eslint-disable-next-line no-restricted-syntax
+          for (const banChannel of allChannels) {
+            try {
+              global.ircClient.send('KICK', banChannel, targetNickname);
+              global.ircClient.send('MODE', banChannel, '+b', `*@${targetId}`);
+            } catch (err) {
+              logger.error(`[${PREFIX}] ${err}`);
+            }
+          }
+        } else {
+          try {
+            global.ircClient.say(targetNickname, `You have been unbanned ${reason ? ` because:\n ${reason}` : ''} `);
+          } catch (err) {
+            logger.error(`[${PREFIX}] User may not be in the irc`);
+          }
+
+          const ircCommand = `akill del ${targetId}`;
+          global.ircClient.say('operserv', ircCommand);
+          global.ircClient.say('#sandbox-dev', ircCommand);
+
+          // Unban just in case
+          // eslint-disable-next-line no-restricted-syntax
+          for (const unbanChannel of allChannels) {
+            try {
+              global.ircClient.send('MODE', unbanChannel, '-b', `*@${targetId}`);
+            } catch (err) {
+              logger.error(`[${PREFIX}] ${err}`);
+            }
+          }
         }
       }
     }
