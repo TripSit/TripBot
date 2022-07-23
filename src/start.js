@@ -25,7 +25,8 @@ async function start() {
 
   await ircConnect();
 
-  await telegramConnect();
+  // Telegram breaks on connect =/
+  // await telegramConnect();
 
   await runTimer();
 
@@ -46,7 +47,7 @@ const destroy = () => {
 process.on('unhandledRejection', error => {
   const errorObj = error;
   errorObj.stackTraceLimit = Infinity;
-  logger.error(`[${PREFIX}] error.name: ${errorObj.name} on line ${errorObj.stack.split('\n')[4]}`);
+  logger.error(`[${PREFIX}] error.name: ${errorObj.name}}`);
   logger.error(`[${PREFIX}] error.message: ${errorObj.message}`);
   logger.error(`[${PREFIX}] error.stack: ${errorObj.stack}`);
   logger.error(`[${PREFIX}] error.code: ${errorObj.code}`);
