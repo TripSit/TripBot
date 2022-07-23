@@ -253,7 +253,7 @@ module.exports = {
       }
     }
     if (memberFbid === null) {
-      logger.warn(`[${PREFIX}] Returning blank record!`);
+      logger.debug(`[${PREFIX}] Returning blank record!`);
     }
     return [memberData, memberFbid];
   },
