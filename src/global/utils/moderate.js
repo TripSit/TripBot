@@ -216,8 +216,10 @@ async function determineUserInfo(query) {
     }
   }
   if (userPlatform === 'irc') {
-    if (userInfo.account) {
-      const role = userInfo.account.split('\\')[1];
+    logger.debug(`[${PREFIX}] userPlatform: ${userPlatform}`);
+    if (userInfo.host) {
+      const role = userInfo.host.split('/')[1];
+      logger.debug(`[${PREFIX}] role: ${role}`);
       const ircTeamRoles = [
         'founder',
         'operator',
@@ -255,13 +257,14 @@ module.exports = {
       actorUser,
       actorUsername,
       actorPlatform,
-      // actorNickname,
-      // actorId,
+      actorNickname,
+      actorId,
       actorIsTeamMember,
     ] = await determineUserInfo(actor);
     // logger.debug(`[${PREFIX}] actorUser: ${JSON.stringify(actorUser, null, 2)}`);
     logger.debug(`[${PREFIX}] actorPlatform: ${actorPlatform}`);
     logger.debug(`[${PREFIX}] actorUsername: ${actorUsername}`);
+    logger.debug(`[${PREFIX}] actorIsTeamMember: ${actorIsTeamMember}`);
 
     // Extract actorData data
     const [actorData, actorFbid] = await getUserInfo(actorUser);
@@ -269,12 +272,7 @@ module.exports = {
     // Actor Team check - Only team members can use mod actions (except report)
     if (!actorIsTeamMember && command !== 'report') {
       logger.debug(`[${PREFIX}] actor is NOT a team member!`);
-      const teamMessage = stripIndents`
-             Hey ${actor}, you need to be a team member to do that!`;
-      const embed = template.embedTemplate()
-        .setColor('DARK_BLUE')
-        .setDescription(teamMessage);
-      return { embeds: [embed], ephemeral: true };
+      return stripIndents`Hey ${actor}, you need to be a team member to ${command}!`;
     }
 
     // Get target object
@@ -298,19 +296,13 @@ module.exports = {
     }
 
     // Target Team check - Cannot be run on team members
-    if (targetIsTeamMember) {
+    if (targetIsTeamMember && command !== 'report') {
       logger.debug(`[${PREFIX}] Target is a team member!`);
-      const teamMessage = stripIndents`
-                Hey ${actor}, ${targetUser.user.username} is a team member!
-                Did you mean to do that?`;
-      const embed = template.embedTemplate()
-        .setColor('DARK_BLUE')
-        .setDescription(teamMessage);
-      return { embeds: [embed], ephemeral: true };
+      return stripIndents`Hey ${actor}, you cannot ${command} a team member!`;
     }
-
     logger.debug(`[${PREFIX}] targetPlatform: ${targetPlatform}`);
     logger.debug(`[${PREFIX}] targetUsername: ${targetUsername}`);
+    logger.debug(`[${PREFIX}] targetIsTeamMember: ${targetIsTeamMember}`);
 
     // Extract targetUser data
     const [targetData, targetFbid] = await getUserInfo(targetUser);
@@ -318,19 +310,27 @@ module.exports = {
     // Get channel object
     let targetChannel = null;
     if (channel) {
-      if (channel.startsWith('<#') && channel.endsWith('>')) {
-        // Discord channels start with <#
-        const targetGuild = await global.client.guilds.fetch(discordGuildId);
-        targetChannel = await targetGuild.channels.fetch(channel.slice(2, -1));
+      if (channel.guild) {
+        // If the query is an object and has the userId property, it's a discord user
+        logger.debug(`[${PREFIX}] Channel given is already channel object!`);
+        targetChannel = channel;
+      } else if (channel) {
+        if (channel.startsWith('<#') && channel.endsWith('>')) {
+          // Discord channel mentions start with <#
+          const targetGuild = await global.client.guilds.fetch(discordGuildId);
+          targetChannel = await targetGuild.channels.fetch(channel.slice(2, -1));
+        }
+        logger.debug(`[${PREFIX}] targetChannel: ${JSON.stringify(targetChannel, null, 2)}`);
+        logger.debug(`[${PREFIX}] targetChannel: ${targetChannel.name}`);
       }
-      logger.debug(`[${PREFIX}] targetChannel: ${JSON.stringify(targetChannel, null, 2)}`);
-      logger.debug(`[${PREFIX}] targetChannel: ${targetChannel.name}`);
     }
 
     // Get duration
-    minutes = duration
-      ? await parseDuration.execute(duration)
-      : 604800000;
+    if (duration) {
+      minutes = duration
+        ? await parseDuration.execute(duration)
+        : 604800000;
+    }
 
     if (command === 'warn') {
       if (targetPlatform === 'discord') {
@@ -518,12 +518,16 @@ module.exports = {
       }
     }
 
+    // Get the moderator role
+    const tripsitGuild = await global.client.guilds.fetch(discordGuildId);
+    const roleModerator = tripsitGuild.roles.cache.find(role => role.id === roleModeratorId);
+
     const targetAction = `received_${command}`;
     // const targetModActions = targetData.modActions ? targetData.modActions : {};
     // logger.debug(`[${PREFIX}] targetModActions: ${JSON.stringify(targetModActions, null, 2)}`);
     const targetEmbed = template.embedTemplate()
       .setColor('BLUE')
-      .setDescription(`${actor} ${command}ed ${targetNickname}${targetChannel ? ` in ${targetChannel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because\n ${reason}` : ''}`)
+      .setDescription(`Hey ${roleModerator}!\n${actor} ${command}ed ${targetNickname}${targetChannel ? ` in ${targetChannel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because\n ${reason}` : ''}`)
       .addFields(
         { name: 'Nickname', value: `${targetNickname}`, inline: true },
         { name: 'Username', value: `${targetUsername}`, inline: true },
@@ -664,6 +668,6 @@ module.exports = {
     await setUserInfo(actorFbid, actorData);
 
     logger.debug(`[${PREFIX}] finished!`);
-    return `${targetUsername} has been ${command}ed!`;
+    return `${targetNickname} has been ${command}ed!`;
   },
 };

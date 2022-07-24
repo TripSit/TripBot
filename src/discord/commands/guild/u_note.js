@@ -6,7 +6,7 @@ const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
-const mod = require('./mod');
+const { moderate } = require('../../../global/utils/moderate');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -57,7 +57,7 @@ module.exports = {
     // embed.addField('Reason', reason);
     // embed.addField('Duration', duration);
     // embed.addField('Toggle', toggle);
-    mod.execute(interaction, {
+    await moderate(interaction, {
       actor, command, toggle: 'on', target, reason, duration: null,
     });
     logger.debug(`[${PREFIX}] finished!`);

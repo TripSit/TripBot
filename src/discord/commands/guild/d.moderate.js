@@ -106,13 +106,6 @@ module.exports = {
     const reason = interaction.options.getString('reason');
     const duration = interaction.options.getString('duration');
     const channel = interaction.options.getString('channel');
-    // logger.debug(`[${PREFIX}] Actor: ${actor}`);
-    // logger.debug(`[${PREFIX}] Command: ${command}`);
-    // logger.debug(`[${PREFIX}] Target: ${target}`);
-    // logger.debug(`[${PREFIX}] toggle: ${toggle}`);
-    // logger.debug(`[${PREFIX}] reason: ${reason}`);
-    // logger.debug(`[${PREFIX}] duration: ${duration}`);
-    // logger.debug(`[${PREFIX}] Channel: ${channel}`);
 
     const result = await moderate(actor, command, target, channel, toggle, reason, duration);
     logger.debug(`[${PREFIX}] Result: ${result}`);

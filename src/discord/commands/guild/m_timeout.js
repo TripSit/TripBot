@@ -1,26 +1,20 @@
 'use strict';
 
-const path = require('path');
+const PREFIX = require('path').parse(__filename).name;
 const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('@discordjs/builders');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
-const mod = require('./mod');
-
-const PREFIX = path.parse(__filename).name;
-
-const embed = template.embedTemplate();
+const { moderate } = require('../../../global/utils/moderate');
 
 let actor = {};
 let target = {};
 let message = {};
+let channel = '';
 let messageUrl = '';
 const command = 'timeout';
-
-let reason = 'Why are you timeouting this person?';
-let duration = '4 days 3hrs 2 mins 30 seconds';
 
 module.exports = {
   data: new ContextMenuCommandBuilder()
@@ -37,11 +31,18 @@ module.exports = {
 
     messageUrl = interaction.options.data[0].message.url;
 
-    const targetId = interaction.options.data[0].message.author.id;
-    // logger.debug(`[${PREFIX}] targetId: ${targetId}`);
+    if (interaction.options.data[0].message.author.discriminator === '0000') {
+      // This is a bot, so we need to get the username of the user
+      target = interaction.options.data[0].message.author.username;
+      logger.debug(`[${PREFIX}] target: ${target}`);
+    } else {
+      const targetId = interaction.options.data[0].message.author.id;
+      logger.debug(`[${PREFIX}] targetId: ${targetId}`);
 
-    target = await interaction.guild.members.fetch(targetId);
-    // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+      target = await interaction.guild.members.fetch(targetId);
+      // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+      logger.debug(`[${PREFIX}] target.user.username: ${target.user.username}`);
+    }
 
     // Create the modal
     const modal = new Modal()
@@ -50,13 +51,13 @@ module.exports = {
     const timeoutReason = new TextInputComponent()
       .setLabel('Why are you timouting this person?')
       .setStyle('PARAGRAPH')
-      .setPlaceholder(reason)
+      .setPlaceholder('Why are you timeouting this person?')
       .setCustomId('timeoutReason')
       .setRequired(true);
     const timeoutDuration = new TextInputComponent()
       .setLabel('Timeout for how long? (Max/default 7 days)')
       .setStyle('SHORT')
-      .setPlaceholder(duration)
+      .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
       .setCustomId('timeoutDuration');
     // An action row only holds one text input, so you need one action row per text input.
     const firstActionRow = new MessageActionRow().addComponents(timeoutReason);
@@ -68,25 +69,37 @@ module.exports = {
     await interaction.showModal(modal);
   },
   async submit(interaction) {
-    // logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
-    // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
-    duration = interaction.fields.getTextInputValue('timeoutDuration');
-    logger.debug(`[${PREFIX}] duration: ${duration}`);
-    reason = interaction.fields.getTextInputValue('timeoutReason');
-    reason = stripIndents`
-    > ${reason}
+    logger.debug(`[${PREFIX}] started!`);
+    // await interaction.deferReply({ ephemeral: true });
+    const embed = template.embedTemplate()
+      .setColor('DARK_BLUE')
+      .setDescription('Reporting...');
+    // await interaction.editReply({ embeds: [embed], ephemeral: true });
+    logger.debug(`[${PREFIX}] options: ${JSON.stringify(interaction.options, null, 2)}`);
+
+    channel = interaction.channel;
+    actor = interaction.member;
+    logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor.displayName, null, 2)}`);
+    logger.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
+    logger.debug(`[${PREFIX}] target: ${JSON.stringify(target.displayName, null, 2)}`);
+    logger.debug(`[${PREFIX}] channel: ${JSON.stringify(channel.name, null, 2)}`);
+    const reason = stripIndents`
+    > ${interaction.fields.getTextInputValue('timeoutReason') ? interaction.fields.getTextInputValue('timeoutReason') : 'No reason given'}
 
     [The offending message:](${messageUrl})
-    > ${message}`;
-    logger.debug(`[${PREFIX}] reason: ${reason}`);
-    embed.setTitle('Tripbot Timeout');
-    embed.setDescription(`${actor.user.username} has timeout ${target.user.username}`);
-    // embed.addField('Reason', reason);
-    // embed.addField('Duration', duration);
-    // embed.addField('Toggle', toggle);
-    mod.execute(interaction, {
-      actor, command, toggle: 'on', target, reason, duration,
-    });
+    > ${message}
+
+    `;
+
+    const toggle = null;
+    const duration = interaction.fields.getTextInputValue('timeoutDuration');
+    const result = await moderate(actor, command, target, channel, toggle, reason, duration);
+    logger.debug(`[${PREFIX}] Result: ${result}`);
+
+    embed.setDescription(result);
+
+    interaction.reply({ embeds: [embed], ephemeral: true });
+
     logger.debug(`[${PREFIX}] finished!`);
   },
 };

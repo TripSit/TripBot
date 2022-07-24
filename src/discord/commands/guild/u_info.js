@@ -4,7 +4,7 @@ const path = require('path');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../../global/utils/logger');
-const mod = require('./mod');
+const { moderate } = require('../../../global/utils/moderate');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -23,7 +23,7 @@ module.exports = {
     target = interaction.options.data[0].member;
     // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
 
-    mod.execute(interaction, {
+    await moderate(interaction, {
       actor, command, toggle: 'on', target, reason: null, duration: null,
     });
     logger.debug(`[${PREFIX}] finished!`);
