@@ -6,7 +6,7 @@ const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('@discordjs/builders');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
-const mod = require('./mod');
+const { moderate } = require('../../../global/utils/moderate');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -25,8 +25,16 @@ module.exports = {
   async execute(interaction) {
     actor = interaction.member;
     // logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
-    target = interaction.options.data[0].member;
-    // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+
+    if (interaction.options.data[0].message.author.discriminator === '0000') {
+      logger.debug(`[${PREFIX}] message: ${JSON.stringify(interaction.options.data[0].message, null, 2)}`);
+      // This is a bot, so we need to get the username of the user
+      target = interaction.options.data[0].message.author.username;
+      logger.debug(`[${PREFIX}] target: ${target}`);
+    } else {
+      target = interaction.options.data[0].member;
+    }
+    logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
 
     // Create the modal
     const modal = new Modal()
@@ -58,7 +66,7 @@ module.exports = {
     // embed.addField('Reason', reason);
     // embed.addField('Duration', duration);
     // embed.addField('Toggle', toggle);
-    mod.execute(interaction, {
+    await moderate(interaction, {
       actor, command, toggle: 'on', target, reason, duration: null,
     });
     logger.debug(`[${PREFIX}] finished!`);

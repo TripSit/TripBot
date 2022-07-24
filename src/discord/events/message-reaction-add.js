@@ -34,7 +34,7 @@ module.exports = {
     await sparklePoints(reaction, user);
 
     // Dont run on bots
-    if (reaction.message.author.bot || user.bot) {
+    if ((reaction.message.author.bot || user.bot) && reaction.emoji.name !== 'karma_downvote') {
       // logger.debug(`[${PREFIX}] Ignoring bot interaction`);
       return;
     }

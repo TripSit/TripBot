@@ -1,11 +1,10 @@
 'use strict';
 
-const path = require('path');
+const PREFIX = require('path').parse(__filename).name;
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const template = require('../../utils/embed-template');
 const logger = require('../../../global/utils/logger');
-const mod = require('./mod');
-
-const PREFIX = path.parse(__filename).name;
+const { moderate } = require('../../../global/utils/moderate');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -25,21 +24,27 @@ module.exports = {
       .setName('reason')),
 
   async execute(interaction) {
+    logger.debug(`[${PREFIX}] started!`);
+    await interaction.deferReply({ ephemeral: true });
+    const embed = template.embedTemplate()
+      .setColor('DARK_BLUE')
+      .setDescription('Reporting...');
+    await interaction.editReply({ embeds: [embed], ephemeral: true });
+
     const actor = interaction.member;
+    const command = 'report';
     const target = interaction.options.getString('target');
     const channel = interaction.options.getString('channel');
+    const toggle = null;
     const reason = `${interaction.options.getString('reason')}`;
-    const command = 'report';
+    const duration = null;
 
-    await mod.execute(interaction, {
-      actor,
-      command,
-      toggle: null,
-      target,
-      reason,
-      duration: null,
-      channel,
-    });
+    const result = await moderate(actor, command, target, channel, toggle, reason, duration);
+    logger.debug(`[${PREFIX}] Result: ${result}`);
+
+    embed.setDescription(result);
+
+    interaction.editReply({ embeds: [embed], ephemeral: true });
 
     logger.debug(`[${PREFIX}] finished!`);
   },

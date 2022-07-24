@@ -61,15 +61,6 @@ if (NODE_ENV === 'production') {
   allChannels = generalChannels.concat(hrChannels);
 }
 
-const teamRoles = [
-  'operator',
-  'moderator',
-  'tripsitter',
-  'founder',
-  'guardian',
-  'helper',
-];
-
 async function ban(target) {
   // eslint-disable-next-line no-restricted-syntax
   for (const channel of allChannels) {
@@ -225,11 +216,6 @@ module.exports = {
     const actorRole = message.host.split('/')[1];
     logger.debug(`[${PREFIX}] actorRole: ${actorRole}`);
 
-    if (!teamRoles.includes(actorRole)) {
-      global.ircClient.say(message.args[0], 'Only team members may perform this action!');
-      return;
-    }
-
     let commandText = message.args[1].trim();
 
     const duration = commandText.match(/\d+[ywdhms]/);
@@ -287,15 +273,6 @@ module.exports = {
       global.ircClient.say(message.args[0], errorMsg);
       logger.debug(`[${PREFIX}] ${errorMsg}`);
       return;
-    }
-
-    if (data.host) {
-      const targetRole = data.host.split('/')[1];
-      logger.debug(`[${PREFIX}] targetRole: ${targetRole}`);
-      if (teamRoles.includes(targetRole)) {
-        global.ircClient.say(message.args[0], 'You cannot moderate a team member!');
-        return;
-      }
     }
 
     const announcement = message.args[1].slice(message.args[1].indexOf(' ')).trim();

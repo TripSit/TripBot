@@ -5,18 +5,18 @@ const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('@discordjs/builders');
 const { stripIndents } = require('common-tags/lib');
+const template = require('../../utils/embed-template');
 const logger = require('../../../global/utils/logger');
-const mod = require('./mod');
+const { moderate } = require('../../../global/utils/moderate');
 
 const PREFIX = path.parse(__filename).name;
 
 let actor = {};
 let target = {};
 let message = {};
+let channel = '';
 let messageUrl = '';
 const command = 'report';
-
-let reason = 'Why are you reporting this person?';
 
 module.exports = {
   data: new ContextMenuCommandBuilder()
@@ -33,21 +33,30 @@ module.exports = {
 
     messageUrl = interaction.options.data[0].message.url;
 
-    const targetId = interaction.options.data[0].message.author.id;
-    // logger.debug(`[${PREFIX}] targetId: ${targetId}`);
+    const authorObj = interaction.options.data[0].message.author;
+    logger.debug(`[${PREFIX}] authorObj: ${JSON.stringify(authorObj, null, 2)}`);
 
-    target = await interaction.guild.members.fetch(targetId);
-    // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
-    logger.debug(`[${PREFIX}] target.user.username: ${target.user.username}`);
+    if (interaction.options.data[0].message.author.discriminator === '0000') {
+      // This is a bot, so we need to get the username of the user
+      target = interaction.options.data[0].message.author.username;
+      logger.debug(`[${PREFIX}] target: ${target}`);
+    } else {
+      const targetId = interaction.options.data[0].message.author.id;
+      logger.debug(`[${PREFIX}] targetId: ${targetId}`);
+
+      target = await interaction.guild.members.fetch(targetId);
+      // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+      logger.debug(`[${PREFIX}] target.user.username: ${target.user.username}`);
+    }
 
     // Create the modal
     const modal = new Modal()
       .setCustomId('reportModal')
       .setTitle('Tripbot Report');
     const reportReason = new TextInputComponent()
-      .setLabel('Why are you reporting this person?')
+      .setLabel('Why are you reporting this?')
       .setStyle('PARAGRAPH')
-      .setPlaceholder(reason)
+      .setPlaceholder('Please be descriptive!')
       .setCustomId('reportReason')
       .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
@@ -59,19 +68,37 @@ module.exports = {
     await interaction.showModal(modal);
   },
   async submit(interaction) {
-    // logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
-    // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
-    reason = interaction.fields.getTextInputValue('reportReason');
-    reason = stripIndents`
-    > ${reason}
+    logger.debug(`[${PREFIX}] started!`);
+    // await interaction.deferReply({ ephemeral: true });
+    const embed = template.embedTemplate()
+      .setColor('DARK_BLUE')
+      .setDescription('Reporting...');
+    // await interaction.editReply({ embeds: [embed], ephemeral: true });
+    logger.debug(`[${PREFIX}] options: ${JSON.stringify(interaction.options, null, 2)}`);
+
+    channel = interaction.channel;
+    actor = interaction.member;
+    logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor.displayName, null, 2)}`);
+    logger.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
+    logger.debug(`[${PREFIX}] target: ${JSON.stringify(target.displayName, null, 2)}`);
+    logger.debug(`[${PREFIX}] channel: ${JSON.stringify(channel.name, null, 2)}`);
+    const reason = stripIndents`
+    > ${interaction.fields.getTextInputValue('reportReason')}
 
     [The offending message:](${messageUrl})
     > ${message}
 
     `;
-    mod.execute(interaction, {
-      actor, command, toggle: 'on', target, reason, duration: null,
-    });
+
+    const toggle = null;
+    const duration = null;
+    const result = await moderate(actor, command, target, channel, toggle, reason, duration);
+    logger.debug(`[${PREFIX}] Result: ${result}`);
+
+    embed.setDescription(result);
+
+    interaction.reply({ embeds: [embed], ephemeral: true });
+
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
