@@ -145,8 +145,21 @@ async function determineUserInfo(query) {
   let userNickname = null;
   let userUsername = null;
   let userId = null;
+  let userIsTeamMember = false;
   logger.debug(`[${PREFIX}] Query: ${typeof query}`);
-  // logger.debug(`[${PREFIX}] Query: ${JSON.stringify(query.guild, null, 2)}`);
+  logger.debug(`[${PREFIX}] Query: ${query}`);
+  logger.debug(`[${PREFIX}] Query: ${JSON.stringify(query, null, 2)}`);
+
+  if (query === 'The community') {
+    logger.debug(`[${PREFIX}] Community!`);
+    userInfo = 'The community';
+    userUsername = 'The community';
+    userPlatform = 'discord';
+    userNickname = 'The community';
+    userId = 'The community';
+    userIsTeamMember = true;
+    return [userInfo, userNickname, userUsername, userId, userPlatform, userIsTeamMember];
+  }
 
   // logger.debug(`[${PREFIX}] Query.userId: ${query.guildId}`);
 
@@ -161,13 +174,16 @@ async function determineUserInfo(query) {
   } else if (query.startsWith('<@') && query.endsWith('>')) {
     // If the query string starts with a <@ and ends with > then it's likely a discord user
     logger.debug(`[${PREFIX}] Query is a discord mention`);
+    logger.debug(`[${PREFIX}] Query userId: ${query.slice(2, -1)}`);
     try {
-      userInfo = await tripsitGuild.members.fetch(query.slice(3, -1));
+      userInfo = await tripsitGuild.members.fetch(query.slice(2, -1));
       userPlatform = 'discord';
       userNickname = userInfo.displayName;
+      userUsername = userInfo.user.username;
+      userId = userInfo.id;
     } catch (err) {
       logger.error(`[${PREFIX}] Error fetching discord member: ${err}`);
-      userInfo = await global.client.users.fetch(query.slice(3, -1));
+      userInfo = await global.client.users.fetch(query.slice(2, -1));
       userPlatform = 'discord';
       userNickname = userInfo.nickname;
       userUsername = userInfo.user.username;
@@ -204,7 +220,6 @@ async function determineUserInfo(query) {
   // logger.debug(`[${PREFIX}] userPlatform: ${userPlatform}`);
 
   // Determine if the user is on the team
-  let userIsTeamMember = false;
   if (userPlatform === 'discord') {
     // If you're unbanning a user they wont have roles
     if (userInfo.roles) {
@@ -250,7 +265,7 @@ module.exports = {
       Reason: ${reason}
     `);
 
-    let minutes = null;
+    let minutes = 604800000;
 
     // Get actor object
     const [
@@ -330,8 +345,12 @@ module.exports = {
       minutes = duration
         ? await parseDuration.execute(duration)
         : 604800000;
+      logger.debug(`[${PREFIX}] minutes: ${parseInt(minutes, 10)}`);
     }
 
+    logger.debug(`[${PREFIX}] command: ${command}`);
+    logger.debug(`[${PREFIX}] targetPlatform: ${targetPlatform}`);
+    logger.debug(`[${PREFIX}] duration: ${duration}`);
     if (command === 'warn') {
       if (targetPlatform === 'discord') {
         const warnEmbed = template.embedTemplate()
@@ -375,7 +394,7 @@ module.exports = {
           try {
             // The length of the timout defaults to 1 week if no time is given
 
-            logger.debug(`[${PREFIX}] minutes: ${minutes}`);
+            logger.debug(`[${PREFIX}] timeout minutes: ${minutes}`);
             targetUser.timeout(minutes, reason);
             await targetUser.send(`You have been quieted for ${ms(minutes, { long: true })}${reason ? ` because:\n ${reason}` : ''} `);
           } catch (err) {
@@ -527,7 +546,7 @@ module.exports = {
     // logger.debug(`[${PREFIX}] targetModActions: ${JSON.stringify(targetModActions, null, 2)}`);
     const targetEmbed = template.embedTemplate()
       .setColor('BLUE')
-      .setDescription(`Hey ${roleModerator}!\n${actor} ${command}ed ${targetNickname}${targetChannel ? ` in ${targetChannel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because\n ${reason}` : ''}`)
+      .setDescription(`${actor} ${command}ed ${targetNickname}${targetChannel ? ` in ${targetChannel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because\n ${reason}` : ''}`)
       .addFields(
         { name: 'Nickname', value: `${targetNickname}`, inline: true },
         { name: 'Username', value: `${targetUsername}`, inline: true },
@@ -589,6 +608,8 @@ module.exports = {
 
     logger.debug(`[${PREFIX}] channelModeratorsId: ${channelModeratorsId}`);
     const modChan = await global.client.channels.fetch(channelModeratorsId);
+    // We must send the mention outside of the embed, cuz mentions dont work in embeds
+    modChan.send(`Hey <@&${roleModerator.id}>!`);
     modChan.send({ embeds: [targetEmbed] });
     logger.debug(`[${PREFIX}] send a message to the moderators room`);
 
