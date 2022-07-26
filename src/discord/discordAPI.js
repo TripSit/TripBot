@@ -23,6 +23,7 @@ module.exports = {
         Intents.FLAGS.DIRECT_MESSAGES,
         Intents.FLAGS.DIRECT_MESSAGE_TYPING,
         Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
+        Intents.FLAGS.GUILD_VOICE_STATES,
       ],
       partials: [
         'MESSAGE',
