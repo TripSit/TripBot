@@ -1,7 +1,6 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { info } = require('console');
 const logger = require('../../global/utils/logger');
 
 module.exports = {
