@@ -277,6 +277,8 @@ module.exports = {
       actorIsTeamMember,
     ] = await determineUserInfo(actor);
     // logger.debug(`[${PREFIX}] actorUser: ${JSON.stringify(actorUser, null, 2)}`);
+    logger.debug(`[${PREFIX}] actorNickname: ${actorNickname}`);
+    logger.debug(`[${PREFIX}] actorId: ${actorId}`);
     logger.debug(`[${PREFIX}] actorPlatform: ${actorPlatform}`);
     logger.debug(`[${PREFIX}] actorUsername: ${actorUsername}`);
     logger.debug(`[${PREFIX}] actorIsTeamMember: ${actorIsTeamMember}`);
@@ -329,15 +331,13 @@ module.exports = {
         // If the query is an object and has the userId property, it's a discord user
         logger.debug(`[${PREFIX}] Channel given is already channel object!`);
         targetChannel = channel;
-      } else if (channel) {
-        if (channel.startsWith('<#') && channel.endsWith('>')) {
-          // Discord channel mentions start with <#
-          const targetGuild = await global.client.guilds.fetch(discordGuildId);
-          targetChannel = await targetGuild.channels.fetch(channel.slice(2, -1));
-        }
-        logger.debug(`[${PREFIX}] targetChannel: ${JSON.stringify(targetChannel, null, 2)}`);
-        logger.debug(`[${PREFIX}] targetChannel: ${targetChannel.name}`);
+      } else if (channel.startsWith('<#') && channel.endsWith('>')) {
+        // Discord channel mentions start with <#
+        const targetGuild = await global.client.guilds.fetch(discordGuildId);
+        targetChannel = await targetGuild.channels.fetch(channel.slice(2, -1));
       }
+      logger.debug(`[${PREFIX}] targetChannel: ${JSON.stringify(targetChannel, null, 2)}`);
+      logger.debug(`[${PREFIX}] targetChannel: ${targetChannel.name}`);
     }
 
     // Get duration
@@ -357,7 +357,7 @@ module.exports = {
           .setColor('YELLOW')
           .setTitle('Warning!')
           .setDescription(stripIndents`
-        You have warned by Team TripSit:
+        You have been warned by Team TripSit:
 
         ${reason}
 
@@ -466,6 +466,8 @@ module.exports = {
         }
       }
     } else if (command === 'ban') {
+      // IRCCloud
+      // if you do that: its basically only an sqline + a kill
       if (targetPlatform === 'discord') {
         if (toggle === 'on' || toggle === null) {
           try {
@@ -535,6 +537,53 @@ module.exports = {
           }
         }
       }
+    } else if (command === 'underban') {
+      logger.debug(`[${PREFIX}] underban`);
+      async function underban(target) {
+        // eslint-disable-next-line no-restricted-syntax
+        for (const channel of hrChannels) {
+          global.ircClient.send('KICK', channel, target);
+          global.ircClient.send('MODE', channel, '+b', `*@${target.host}`);
+        }
+      }
+    } else if (command === 'say') {
+      logger.debug(`[${PREFIX}] say`);
+      // async function say(target, quote) {
+      //   logger.debug(`[${PREFIX}] Saying ${quote} to ${target}`);
+      //   global.ircClient.say(target, quote);
+      // }
+    } else if (command === 'invite') {
+      logger.debug(`[${PREFIX}] say`);
+      async function invite(target, channel) {
+        global.ircClient.send('INVITE', target.nick, channel);
+        // global.ircClient.say('#sandbox-dev', `'INVITE', ${channel}, ${target.host}`);
+      }
+    } else if (command === 'shadowquiet') {
+      async function shadowquiet(target) {
+        // eslint-disable-next-line no-restricted-syntax
+        for (const channel of allChannels) {
+          global.ircClient.send('MODE', channel, '+q', `*@${target.host}`);
+          global.ircClient.send('MODE', channel, '+z', `*@${target.host}`);
+        }
+      }
+      logger.debug(`[${PREFIX}] say`);
+    } else if (command === 'rename') {
+      logger.debug(`[${PREFIX}] rename`);
+      // Needs operator privileges
+      // async function rename(target, newNick) {
+      //   const command = `SVSNICK ${target.nick} ${newNick}`;
+      //   global.ircClient.say('operserv', command);
+      //   global.ircClient.say('#sandbox-dev', command);
+      // }
+    } else if (command === 'announce') {
+      logger.debug(`[${PREFIX}] announce`);
+      // async function announce(quote) {
+      //   // eslint-disable-next-line no-restricted-syntax
+      //   for (const channel of allChannels) {
+      //     global.ircClient.say(channel, '<><><> Global message from Team TripSit! <><><>');
+      //     global.ircClient.say(channel, quote);
+      //   }
+      // }
     }
 
     // Get the moderator role
@@ -546,7 +595,7 @@ module.exports = {
     // logger.debug(`[${PREFIX}] targetModActions: ${JSON.stringify(targetModActions, null, 2)}`);
     const targetEmbed = template.embedTemplate()
       .setColor('BLUE')
-      .setDescription(`${actor} ${command}ed ${targetNickname}${targetChannel ? ` in ${targetChannel}` : ''}${minutes ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because\n ${reason}` : ''}`)
+      .setDescription(`${actor} ${command}ed ${targetNickname}${targetChannel ? ` in ${targetChannel}` : ''}${duration ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because\n ${reason}` : ''}`)
       .addFields(
         { name: 'Nickname', value: `${targetNickname}`, inline: true },
         { name: 'Username', value: `${targetUsername}`, inline: true },

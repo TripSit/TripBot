@@ -7,6 +7,8 @@ const { echo } = require('../commands/echo');
 const { moderate } = require('../commands/i.moderate');
 
 const modCommands = [
+  'w',
+  'warn',
   'k',
   'kill',
   'kline',

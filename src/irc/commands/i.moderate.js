@@ -2,210 +2,7 @@
 
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../global/utils/logger');
-
-const {
-  NODE_ENV,
-} = require('../../../env');
-
-let generalChannels = [];
-let hrChannels = [];
-let allChannels = [];
-
-if (NODE_ENV === 'production') {
-  generalChannels = [
-    '#tripsitters',
-    '#music',
-    '#science',
-    '#gaming',
-    '#cooking',
-    '#pets',
-    '#creative',
-    '#movies',
-    '#opiates',
-    '#depressants',
-    '#dissociatives',
-    '#psychedelics',
-    '#stimulants',
-    '#lounge',
-    '#tripsitvip',
-    '#gold-lounge',
-    '#psychonaut',
-    '#dissonaut',
-    '#minecraft',
-    '#recovery',
-    '#compsci',
-    '#tripsit-dev',
-    '#content',
-    '#teamtripsit',
-    '#moderators',
-    '#tripsit.me',
-    '#modhaven',
-    '#operations',
-    '#emergency',
-    '#meeting-room',
-    '#drugs',
-  ];
-  hrChannels = [
-    '#sanctuary',
-    '#tripsit',
-    '#tripsit1',
-    '#tripsit2',
-    '#tripsit3',
-  ];
-  allChannels = generalChannels.concat(hrChannels);
-} else {
-  generalChannels = [
-    '#sandbox-dev',
-  ];
-  hrChannels = [];
-  allChannels = generalChannels.concat(hrChannels);
-}
-
-async function ban(target) {
-  // eslint-disable-next-line no-restricted-syntax
-  for (const channel of allChannels) {
-    try {
-      global.ircClient.send('KICK', channel, target.nick);
-      global.ircClient.send('MODE', channel, '+b', `*@${target.host}`);
-    } catch (err) {
-      logger.error(`[${PREFIX}] ${err}`);
-    }
-  }
-}
-
-async function unban(target) {
-  // eslint-disable-next-line no-restricted-syntax
-  for (const channel of allChannels) {
-    try {
-      global.ircClient.send('MODE', channel, '-b', `*@${target.host}`);
-    } catch (err) {
-      logger.error(`[${PREFIX}] ${err}`);
-    }
-  }
-}
-
-async function kill(target, reason) {
-  const command = `akill add ${target.host} !P ${reason}`;
-  global.ircClient.say('operserv', command);
-  global.ircClient.say('#sandbox-dev', command);
-}
-
-async function unkill(target) {
-  const command = `akill del ${target}`;
-  global.ircClient.say('operserv', command);
-  global.ircClient.say('#sandbox-dev', command);
-}
-
-async function timeout(target) {
-  // eslint-disable-next-line no-restricted-syntax
-  for (const channel of allChannels) {
-    try {
-      global.ircClient.send('MODE', channel, '+q', `*@${target.host}`);
-    } catch (err) {
-      logger.error(`[${PREFIX}] ${err}`);
-    }
-  }
-}
-
-async function untimeout(target) {
-  // eslint-disable-next-line no-restricted-syntax
-  for (const channel of allChannels) {
-    try {
-      global.ircClient.send('MODE', channel, '-q', `*@${target.host}`);
-    } catch (err) {
-      logger.error(`[${PREFIX}] ${err}`);
-    }
-  }
-}
-
-async function voice(target) {
-  // eslint-disable-next-line no-restricted-syntax
-  for (const channel of allChannels) {
-    try {
-      global.ircClient.send('MODE', channel, '+v', `${target.nick}`);
-    } catch (err) {
-      logger.error(`[${PREFIX}] ${err}`);
-    }
-  }
-}
-
-async function unvoice(target) {
-  // eslint-disable-next-line no-restricted-syntax
-  for (const channel of allChannels) {
-    try {
-      global.ircClient.send('MODE', channel, '-v', `${target.nick}`);
-    } catch (err) {
-      logger.error(`[${PREFIX}] ${err}`);
-    }
-  }
-}
-
-async function operator(target) {
-  // eslint-disable-next-line no-restricted-syntax
-  for (const channel of allChannels) {
-    try {
-      global.ircClient.send('MODE', channel, '+o', `${target.nick}`);
-    } catch (err) {
-      logger.error(`[${PREFIX}] ${err}`);
-    }
-  }
-}
-
-async function unoperator(target) {
-  // eslint-disable-next-line no-restricted-syntax
-  for (const channel of allChannels) {
-    try {
-      global.ircClient.send('MODE', channel, '-o', `${target.nick}`);
-    } catch (err) {
-      logger.error(`[${PREFIX}] ${err}`);
-    }
-  }
-}
-
-async function kick(target, channel) {
-  global.ircClient.send('KICK', channel, target.nick);
-}
-
-async function invite(target, channel) {
-  global.ircClient.send('INVITE', target.nick, channel);
-  // global.ircClient.say('#sandbox-dev', `'INVITE', ${channel}, ${target.host}`);
-}
-
-// Needs operator privileges
-// async function rename(target, newNick) {
-//   const command = `SVSNICK ${target.nick} ${newNick}`;
-//   global.ircClient.say('operserv', command);
-//   global.ircClient.say('#sandbox-dev', command);
-// }
-
-async function shadowquiet(target) {
-  // eslint-disable-next-line no-restricted-syntax
-  for (const channel of allChannels) {
-    global.ircClient.send('MODE', channel, '+q', `*@${target.host}`);
-    global.ircClient.send('MODE', channel, '+z', `*@${target.host}`);
-  }
-}
-
-async function underban(target) {
-  // eslint-disable-next-line no-restricted-syntax
-  for (const channel of hrChannels) {
-    global.ircClient.send('KICK', channel, target);
-    global.ircClient.send('MODE', channel, '+b', `*@${target.host}`);
-  }
-}
-
-async function say(target, quote) {
-  logger.debug(`[${PREFIX}] Saying ${quote} to ${target}`);
-  global.ircClient.say(target, quote);
-}
-
-async function announce(quote) {
-  // eslint-disable-next-line no-restricted-syntax
-  for (const channel of allChannels) {
-    global.ircClient.say(channel, '<><><> Global message from Team TripSit! <><><>');
-    global.ircClient.say(channel, quote);
-  }
-}
+const { moderate } = require('../../global/utils/moderate');
 
 module.exports = {
   async moderate(command, message) {
@@ -246,9 +43,7 @@ module.exports = {
     const reason = commandText === target ? 'No reason given.' : commandText;
     logger.debug(`[${PREFIX}] reason: ${reason}`);
 
-    const channel = reason;
-    // const newNick = reason;
-    const quote = reason;
+    const channel = reason.includes('#') ? reason : null;
 
     // Do a whois on the user to get their host name
     let data = null;
@@ -278,22 +73,24 @@ module.exports = {
     const announcement = message.args[1].slice(message.args[1].indexOf(' ')).trim();
     logger.debug(`[${PREFIX}] announcement: ${announcement}`);
 
-    let actionVerb = '';
     logger.debug(`[${PREFIX}] target: ${JSON.stringify(data, null, 2)}`);
+    let response = '';
     switch (command) {
+      case 'w':
+      case 'warn':
+        response = await moderate(actor, 'warn', target, channel, null, reason, duration);
+        break;
       case 'b':
       case 'ban':
       case 'nban':
-        ban(data);
-        actionVerb = 'banned';
+        response = await moderate(actor, 'ban', target, channel, 'on', reason, duration);
         break;
       case 'k':
       case 'kill':
       case 'kline':
       case 'specialkline':
       case 'specialkill':
-        kill(data);
-        actionVerb = 'killed';
+        response = await moderate(actor, 'ban', target, channel, 'on', reason, duration);
         break;
       case 'rb':
       case 'ub':
@@ -304,8 +101,7 @@ module.exports = {
       case 'rmban':
       case 'unban':
       case 'deban':
-        unban(data);
-        actionVerb = 'unbanned';
+        response = await moderate(actor, 'ban', target, channel, 'off', reason, duration);
         break;
       case 'rk':
       case 'uk':
@@ -316,15 +112,13 @@ module.exports = {
       case 'rmkill':
       case 'unkill':
       case 'dekill':
-        unkill(data);
-        actionVerb = 'unbanned';
+        response = await moderate(actor, 'ban', target, channel, 'off', reason, duration);
         break;
       case 'q':
       case 'quiet':
       case 't':
       case 'timeout':
-        timeout(data);
-        actionVerb = 'quieted';
+        response = await moderate(actor, 'timeout', target, channel, 'on', reason, duration);
         break;
       case 'rq':
       case 'uq':
@@ -344,77 +138,32 @@ module.exports = {
       case 'rmtimeout':
       case 'untimeout':
       case 'detimeout':
-        untimeout(data);
-        actionVerb = 'unqieted';
-        break;
-      case 'v':
-      case 'voice':
-        voice(data);
-        actionVerb = 'voiced';
-        break;
-      case 'rv':
-      case 'uv':
-      case 'dv':
-      case 'rmv':
-      case 'unv':
-      case 'dev':
-      case 'rmvoice':
-      case 'unvoice':
-      case 'devoice':
-        unvoice(data);
-        actionVerb = 'devoiced';
-        break;
-      case 'o':
-      case 'op':
-        operator(data);
-        actionVerb = 'opped';
-        break;
-      case 'rop':
-      case 'uop':
-      case 'dop':
-      case 'rmop':
-      case 'unop':
-      case 'deop':
-        unoperator(data);
-        actionVerb = 'deopped';
-        break;
-      case 'kick':
-        if (channel === '' || channel.includes('#') === false) {
-          global.ircClient.say(message.args[0], 'You must supply a channel! (Remember the #)');
-          actionVerb = 'kicked';
-          return;
-        }
-        kick(data, channel);
-        actionVerb = 'kicked';
+        response = await moderate(actor, 'timeout', target, channel, 'off', reason, duration);
         break;
       case 'invite':
         if (channel === null) {
           global.ircClient.say(message.args[0], 'You must supply a channel! (Remember the #)');
           return;
         }
-        invite(data, channel);
-        actionVerb = 'invited';
+        response = await moderate(actor, 'invite', target, channel, null, reason, duration);
         break;
-      // case 'rename':
-      // case 'svsnick':
-      //   if (channel === null) {
-      //     global.ircClient.say(message.args[0], 'You must supply a new nickname!');
-      //     return;
-      //   }
-      //   rename(data, newNick);
-      //   actionVerb = 'renamed';
-      //   break;
+      case 'rename':
+      case 'svsnick':
+        if (channel === null) {
+          global.ircClient.say(message.args[0], 'You must supply a new nickname!');
+          return;
+        }
+        response = await moderate(actor, 'rename', target, channel, 'on', reason, duration);
+        break;
       case 'sq':
       case 'squiet':
       case 'shadowquiet':
-        shadowquiet(data);
-        actionVerb = 'shadowquieted';
+        response = await moderate(actor, 'shadowquiet', target, channel, 'on', reason, duration);
         break;
       case 'uban':
       case 'underban':
       case 'underage':
-        underban(data);
-        actionVerb = 'underbanned';
+        response = await moderate(actor, 'underban', target, channel, 'on', reason, duration);
         break;
       case 'echo':
       case 'say':
@@ -422,12 +171,11 @@ module.exports = {
           global.ircClient.say(message.args[0], 'You must supply a channel! (Remember the #)');
           return;
         }
-        if (quote === null) {
+        if (reason === null) {
           global.ircClient.say(message.args[0], 'You must supply a what you want to say!');
           return;
         }
-        say(target, quote);
-        actionVerb = 'said';
+        response = await moderate(actor, 'say', target, channel, null, reason, duration);
         break;
       case 'announce':
       case 'global':
@@ -435,14 +183,12 @@ module.exports = {
           global.ircClient.say(message.args[0], 'You must supply what you want to say!');
           return;
         }
-        announce(announcement);
-        actionVerb = 'announced';
+        response = await moderate(actor, 'say', target, channel, null, announcement, duration);
         break;
       default:
-        logger.debug(`[${PREFIX}] default`);
         break;
     }
-    global.ircClient.say(message.args[0], `${actor} has ${actionVerb} ${data.nick}${duration !== null ? ` for ${duration}` : ''}${reason !== '' ? ` because ${reason}` : ''}!`);
+    global.ircClient.say(message.args[0], response);
 
     // Send the message back to the channel
   },
