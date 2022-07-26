@@ -1,6 +1,7 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
+const { info } = require('console');
 const logger = require('../../global/utils/logger');
 
 module.exports = {
@@ -21,15 +22,16 @@ module.exports = {
       });
     }
 
-    if (Old.channel.type === 'GUILD_VOICE') {
-      const filter = ch => (ch.parentID === process.env.TempVoiceCatId)
-            && (ch.id !== process.env.TempVoiceChanId)
-            && (Old.voiceChannelID === ch.id)
-            && (Old.voiceChannel.members.size === 0);
+    if (Old.channel.parent?.id !== process.env.TempVoiceCatId) return;
 
-      return Old.client.channels.cache
-        .filter(filter)
-        .forEach(ch => ch.delete());
-    }
+    Old.client.channels.cache.get(process.env.TempVoiceCatId).children.forEach(channel => {
+      if (channel.type === 'GUILD_VOICE') {
+        if (channel.id !== process.env.TempVoiceChanId) {
+          if (channel.members.size < 1) {
+            channel.delete('beep boop, i love to clean up');
+          }
+        }
+      }
+    });
   },
 };
