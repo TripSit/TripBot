@@ -10,27 +10,27 @@ module.exports = {
     if (New.member.bot) return;
     if (Old.member.bot) return;
 
-    logger.debug(`[${PREFIX}] VoiceState updated, member wasn't a bot`);
-
     if (New.channelId === process.env.TempVoiceChanId) {
-      logger.debug(`[${PREFIX}] member joined the magic chan`);
-
-      New.member.guild.channels.create(`${New.member.user.username}'s lounge`, {
+      New.member.guild.channels.create(`🛋️ ${New.member.user.username}'s lounge 🛋️`, {
         type: 2,
         parent: process.env.TempVoiceCatId,
       });
+      logger.debug(`[${PREFIX}] created a temporary voice channel`);
     }
 
-    if (Old.channel.parent?.id !== process.env.TempVoiceCatId) return;
-
-    Old.client.channels.cache.get(process.env.TempVoiceCatId).children.forEach(channel => {
-      if (channel.type === 'GUILD_VOICE') {
-        if (channel.id !== process.env.TempVoiceChanId) {
-          if (channel.members.size < 1) {
-            channel.delete('beep boop, i love to clean up');
+    try {
+      Old.client.channels.cache.get(process.env.TempVoiceCatId).children.forEach(channel => {
+        if (channel.type === 'GUILD_VOICE') {
+          if (channel.id !== process.env.TempVoiceChanId) {
+            if (channel.members.size < 1) {
+              channel.delete('beep boop, i love to clean up');
+              logger.debug(`[${PREFIX}] deleted an empty temporary voice channel`);
+            }
           }
         }
-      }
-    });
+      });
+    } catch (err) {
+      logger.debug(`[${PREFIX}] ${err}`);
+    }
   },
 };
