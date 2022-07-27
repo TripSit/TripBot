@@ -12,9 +12,9 @@ const {
   NODE_ENV,
   channelStartId,
   channelRulesId,
-  // channelBotspamId,
+  channelBotspamId,
   // channelIrcId,
-  // channelTripsitId,
+  channelTripsitId,
   // channelSanctuaryId,
   // channelDrugQuestionsId,
   // channelGeneralId,
@@ -104,10 +104,10 @@ module.exports = {
     const channelStart = interaction.client.channels.cache.get(channelStartId);
     // const channelIrc = interaction.member.client.channels.cache.get(channelIrcId);
     // const channelQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
-    // const channelBotspam = interaction.client.channels.cache.get(channelBotspamId);
+    const channelBotspam = interaction.client.channels.cache.get(channelBotspamId);
     // const channelSanctuary = interaction.client.channels.cache.get(channelSanctuaryId);
     // const channelGeneral = interaction.client.channels.cache.get(channelGeneralId);
-    // const channelTripsit = interaction.client.channels.cache.get(channelTripsitId);
+    const channelTripsit = interaction.client.channels.cache.get(channelTripsitId);
     const channelRules = interaction.client.channels.cache.get(channelRulesId);
 
     // Extract guild data
@@ -118,37 +118,30 @@ module.exports = {
 
     const message = stripIndents`
       **Welcome to the TripSit Discord!**
+      > Our discord is a bit different from others, please read this info!
 
-      Our discord is a bit different from others, channel is meant to help you get started.
+      **If you need help, join the ${channelTripsit} room and click the "I need assistance" button**
+      > This will create a new thread for you to talk with people who want to help you =)
 
-      As of Summer 2022, this discord is undergoing active development and promotion.
-      If you join during this period expect things to be slower and change frequenty!
-      *Now is the time to help shape the future of TripSit =)*
+      **By chatting here you agree to abide the ${channelRules}**
+      > Many of our users are currently on a substance and appreciate a more gentle chat.
+      > We want this place to be inclusive and welcoming, if there is anything disrupting your stay here:
+      0️⃣ Use ${downvoteEmoji} on offensive comments, three of them will activate a timeout and mod review!
+      1️⃣ Use the /report interface to report someone to the mod team! Also use Right Click > Apps > Report!
+      2️⃣ Mention the @moderators to get attention from the mod team!
+      3️⃣ Message TripBot and click the "I have a discord issue" button to start a thread with the team!
 
-      > **Be sure to read the ${channelRules}**
-      > If there is anything disrupting your stay here, please /report, or mention a @moderator
-      > Three ${downvoteEmoji} on a message activates a timeout!
-
-      **Fill in your profile!**
-      Use /birthday SET to set your birthday!
-      Use /time SET to set your timezone!
-      Use the below messages to set your color and emblem!
+      **If someone has the "bot" tag they are talking from IRC!**
+      > IRC is an older chat system where TripSit started: chat.tripsit.me
+      > The 🔗 icon in the channel name means the channel is linked with IRC.
 
       **We have a karma system!**
-      Use /karma to see your karma!
-      React with ${upvoteEmoji} or ${downvoteEmoji} to give or take karma!
-      *Three ${downvoteEmoji} on a message activates a timeout!*
+      > Use /profile to see your karma!
+      > React with ${upvoteEmoji} or ${downvoteEmoji} to give or take karma!
+      > *Remember: Three ${downvoteEmoji} on a message activates a timeout!*
 
-      **We have an experience system!**
-      As you chat with other users, you will gain experience and level up!
-      At a certain point you'll unlock the VIP role gain access to other channels.
-
-      **Certain channels are bridged with IRC!**
-      The 🔗 icon in the channel name means the channel is linked with IRC.
-
-      **You can link your account to IRC!**
-      Use /link-account IRC to link your account to IRC!
-      This is completely optional and provides no benefits currently, but it's nice to have!
+      **We have our own custom bot!**
+      > Go crazy in ${channelBotspam} exploring the bot commands!
       `;
 
     await channelStart.send(message);
