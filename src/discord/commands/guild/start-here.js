@@ -1,42 +1,17 @@
 'use strict';
 
-const path = require('path');
+const PREFIX = require('path').parse(__filename).name;
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { stripIndents } = require('common-tags');
-const { ReactionRole } = require('discordjs-reaction-role');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
-const { getGuildInfo, setGuildInfo } = require('../../../global/services/firebaseAPI');
 
 const {
   NODE_ENV,
   channelStartId,
   channelRulesId,
   channelBotspamId,
-  // channelIrcId,
   channelTripsitId,
-  // channelSanctuaryId,
-  // channelDrugQuestionsId,
-  // channelGeneralId,
-  roleRedId,
-  roleOrangeId,
-  roleYellowId,
-  roleGreenId,
-  roleBlueId,
-  rolePurpleId,
-  rolePinkId,
-  roleBlackId,
-  roleWhiteId,
-  roleDrunkId,
-  roleHighId,
-  roleRollingId,
-  roleTrippingId,
-  roleDissociatingId,
-  roleStimmingId,
-  roleNoddingId,
-  // roleSoberId,
-  roleTalkativeId,
-  roleWorkingId,
 } = require('../../../../env');
 
 const drunkEmoji = NODE_ENV === 'production'
@@ -85,17 +60,12 @@ const pinkHeart = NODE_ENV === 'production'
   ? '<:pink_heart:958072815884582922>'
   : '<:pink_heart:977926946656763904>';
 
-const PREFIX = path.parse(__filename).name;
-
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('start-here')
     .setDescription('Re-creates the start-here information!'),
   async execute(interaction) {
     logger.debug(`[${PREFIX}] Starting!`);
-
-    logger.debug(pinkHeart.slice(2, -20));
-    logger.debug(drunkEmoji.slice(2, -20));
 
     const finalEmbed = template.embedTemplate()
       .setTitle('Start here started!');
@@ -110,12 +80,6 @@ module.exports = {
     const channelTripsit = interaction.client.channels.cache.get(channelTripsitId);
     const channelRules = interaction.client.channels.cache.get(channelRulesId);
 
-    // Extract guild data
-    const [targetGuildData, targetGuildFbid] = await getGuildInfo(interaction.guild);
-
-    // Transform guild data
-    const reactionRoles = targetGuildData.reactionRoles ? targetGuildData.reactionRoles : {};
-
     const message = stripIndents`
       **Welcome to the TripSit Discord!**
       > Our discord is a bit different from others, please read this info!
@@ -126,10 +90,10 @@ module.exports = {
       **By chatting here you agree to abide the ${channelRules}**
       > Many of our users are currently on a substance and appreciate a more gentle chat.
       > We want this place to be inclusive and welcoming, if there is anything disrupting your stay here:
-      0️⃣ Use ${downvoteEmoji} on offensive comments, three of them will activate a timeout and mod review!
-      1️⃣ Use the /report interface to report someone to the mod team! Also use Right Click > Apps > Report!
-      2️⃣ Mention the @moderators to get attention from the mod team!
-      3️⃣ Message TripBot and click the "I have a discord issue" button to start a thread with the team!
+      ***1*** Use ${downvoteEmoji} on offensive comments, three of them will activate a timeout and mod review!
+      ***2*** Use the /report interface to report someone to the mod team! Also use Right Click > Apps > Report!
+      ***3*** Mention the @moderators to get attention from the mod team!
+      ***4*** Message TripBot and click the "I have a discord issue" button to start a thread with the team!
 
       **If someone has the "bot" tag they are talking from IRC!**
       > IRC is an older chat system where TripSit started: chat.tripsit.me
@@ -165,10 +129,8 @@ module.exports = {
       })
       .setFooter('These roles reset after 8 hours to accurately show your mindset!')
       .setColor('PURPLE');
-    let mindsetMessage = '';
     await channelStart.send({ embeds: [mindsetEmbed], ephemeral: false })
       .then(async msg => {
-        mindsetMessage = msg;
         await msg.react(`${drunkEmoji}`);
         await msg.react(`${highEmoji}`);
         await msg.react(`${rollingEmoji}`);
@@ -179,58 +141,6 @@ module.exports = {
         // await msg.react(`${soberEmoji}`);
         await msg.react(`${talkativeEmoji}`);
         await msg.react(`${workingEmoji}`);
-        reactionRoles.startHere = [
-          {
-            messageId: mindsetMessage.id,
-            reaction: `${drunkEmoji.slice(2, -20)}`,
-            roleId: roleDrunkId,
-          },
-          {
-            messageId: mindsetMessage.id,
-            reaction: `${highEmoji.slice(2, -20)}`,
-            roleId: roleHighId,
-          },
-          {
-            messageId: mindsetMessage.id,
-            reaction: `${rollingEmoji.slice(2, -20)}`,
-            roleId: roleRollingId,
-          },
-          {
-            messageId: mindsetMessage.id,
-            reaction: `${trippingEmoji.slice(2, -20)}`,
-            roleId: roleTrippingId,
-          },
-          {
-            messageId: mindsetMessage.id,
-            reaction: `${dissociatingEmoji.slice(2, -20)}`,
-            roleId: roleDissociatingId,
-          },
-          {
-            messageId: mindsetMessage.id,
-            reaction: `${stimmingEmoji.slice(2, -20)}`,
-            roleId: roleStimmingId,
-          },
-          {
-            messageId: mindsetMessage.id,
-            reaction: `${noddingEmoji.slice(2, -20)}`,
-            roleId: roleNoddingId,
-          },
-          // {
-          //   messageId: mindsetMessage.id,
-          //   reaction: `${soberEmoji.slice(2, -20)}`,
-          //   roleId: roleSoberId,
-          // },
-          {
-            messageId: mindsetMessage.id,
-            reaction: `${talkativeEmoji.slice(2, -20)}`,
-            roleId: roleTalkativeId,
-          },
-          {
-            messageId: mindsetMessage.id,
-            reaction: `${workingEmoji.slice(2, -20)}`,
-            roleId: roleWorkingId,
-          },
-        ];
       });
 
     const colorEmbed = template.embedTemplate()
@@ -238,10 +148,8 @@ module.exports = {
       .setFooter(null)
       .setColor('BLUE');
 
-    let colorMessage = '';
     await channelStart.send({ embeds: [colorEmbed], ephemeral: false })
       .then(async msg => {
-        colorMessage = msg;
         await msg.react('❤');
         await msg.react('🧡');
         await msg.react('💛');
@@ -251,70 +159,8 @@ module.exports = {
         await msg.react(pinkHeart);
         await msg.react('🖤');
         await msg.react('🤍');
-        reactionRoles.startHere = reactionRoles.startHere.concat([
-          {
-            messageId: colorMessage.id,
-            reaction: '❤',
-            roleId: roleRedId,
-          },
-          {
-            messageId: colorMessage.id,
-            reaction: '🧡',
-            roleId: roleOrangeId,
-          },
-          {
-            messageId: colorMessage.id,
-            reaction: '💛',
-            roleId: roleYellowId,
-          },
-          {
-            messageId: colorMessage.id,
-            reaction: '💚',
-            roleId: roleGreenId,
-          },
-          {
-            messageId: colorMessage.id,
-            reaction: '💙',
-            roleId: roleBlueId,
-          },
-          {
-            messageId: colorMessage.id,
-            reaction: '💜',
-            roleId: rolePurpleId,
-          },
-          {
-            messageId: colorMessage.id,
-            reaction: 'pink_heart',
-            roleId: rolePinkId,
-          },
-          {
-            messageId: colorMessage.id,
-            reaction: '🖤',
-            roleId: roleBlackId,
-          },
-          {
-            messageId: colorMessage.id,
-            reaction: '🤍',
-            roleId: roleWhiteId,
-          },
-        ]);
       });
 
-    logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles)}`);
-    targetGuildData.reactionRoles = reactionRoles;
-
-    // Load data
-    await setGuildInfo(targetGuildFbid, targetGuildData);
-
-    let reactionConfig = [];
-    Object.keys(reactionRoles).forEach(key => {
-      logger.debug(`[${PREFIX}] key: ${key}`);
-      logger.debug(`[${PREFIX}] reactionRoles[${key}] = ${JSON.stringify(reactionRoles[key], null, 2)}`);
-      // reactionConfig = reactionRoles[key]; this works
-      reactionConfig = reactionConfig.concat(reactionRoles[key]);
-    });
-    // logger.debug(`[${PREFIX}] reactionConfig: ${JSON.stringify(reactionConfig, null, 2)}`);
-    global.manager = new ReactionRole(interaction.client, reactionConfig);
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
