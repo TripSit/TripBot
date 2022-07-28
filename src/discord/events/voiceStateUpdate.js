@@ -14,8 +14,11 @@ module.exports = {
       New.member.guild.channels.create(`🛋️ ${New.member.user.username}'s lounge 🛋️`, {
         type: 2,
         parent: process.env.TempVoiceCatId,
+      }).then(result => {
+        logger.debug(`[${PREFIX}] created a temporary voice channel`);
+        New.member.voice.setChannel(result.id);
+        logger.debug(`[${PREFIX}] Moved user to the newly created voice channel`);
       });
-      logger.debug(`[${PREFIX}] created a temporary voice channel`);
     }
 
     try {
