@@ -20,9 +20,10 @@ module.exports = {
     .addStringOption(option => option.setName('units')
       .setDescription('In what unit?')
       .setRequired(true)
-      .addChoice('kg', 'kg')
-      .addChoice('lbs', 'lbs')),
-
+      .addChoices(
+        { name: 'kg', value: 'kg' },
+        { name: 'lbs', value: 'lbs' },
+      )),
   async execute(interaction, parameters) {
     const givenWeight = interaction.options.getInteger('weight') || parameters.at(0);
     logger.debug(`[${PREFIX}] weight:`, givenWeight);

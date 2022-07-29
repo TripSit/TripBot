@@ -19,25 +19,31 @@ module.exports = {
       .setName('bug_report'))
     .addStringOption(option => option
       .setDescription('How much effort will this take?')
-      .addChoice('High', 'High')
-      .addChoice('Medium', 'Medium')
-      .addChoice('Low', 'Low')
-      .addChoice('Trivial', 'Trivial')
+      .addChoices(
+        { name: 'High', value: 'High' },
+        { name: 'Medium', value: 'Medium' },
+        { name: 'Low', value: 'Low' },
+        { name: 'Trivial', value: 'Trivial' },
+      )
       .setName('effort'))
     .addStringOption(option => option
       .setDescription('How important is this?')
-      .addChoice('High', 'High')
-      .addChoice('Medium', 'Medium')
-      .addChoice('Low', 'Low')
+      .addChoices(
+        { name: 'High', value: 'High' },
+        { name: 'Medium', value: 'Medium' },
+        { name: 'Low', value: 'Low' },
+      )
       .setName('priority'))
     .addStringOption(option => option
       .setDescription('What type of issue is this?')
-      .addChoice('Bug', 'Bug')
-      .addChoice('Feature', 'Feature')
-      .addChoice('Enhancement', 'Enhancement')
-      .addChoice('Help Needed', 'Help Needed')
-      .addChoice('Idea', 'Idea')
-      .addChoice('Question', 'Question')
+      .addChoices(
+        { name: 'Bug', value: 'Bug' },
+        { name: 'Feature', value: 'Feature' },
+        { name: 'Enhancement', value: 'Enhancement' },
+        { name: 'Help Needed', value: 'Help Needed' },
+        { name: 'Idea', value: 'Idea' },
+        { name: 'Question', value: 'Question' },
+      )
       .setName('type')),
   async execute(interaction) {
     const sentByOwner = interaction.user === interaction.client.owner;

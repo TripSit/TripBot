@@ -40,17 +40,6 @@ module.exports = {
           .setName('reason')
           .setDescription('Reason for warn!')
           .setRequired(true)))
-      // .addSubcommand(subcommand =>
-      //     subcommand
-      //         .setName('timeout')
-      //         .setDescription('Timeout an ID')
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('target').setDescription('User to timeout!').setRequired(true))
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('reason').setDescription('Reason for timeout!').setRequired(true))
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('toggle').setDescription('On off?').addChoice('On', 'on').addChoice('Off', 'off').setRequired(true)),
-      // )
       .addSubcommand(subcommand => subcommand
         .setName('kick')
         .setDescription('Kick an ID')
@@ -76,8 +65,10 @@ module.exports = {
         .addStringOption(option => option
           .setName('toggle')
           .setDescription('On off?')
-          .addChoice('On', 'on')
-          .addChoice('Off', 'off')
+          .addChoices(
+            { name: 'On', value: 'on' },
+            { name: 'Off', value: 'off' },
+          )
           .setRequired(true))))
     .addSubcommandGroup(subcommandgroup => subcommandgroup
       .setName('user')
@@ -100,26 +91,6 @@ module.exports = {
           .setName('reason')
           .setDescription('Reason for warn!')
           .setRequired(true)))
-      // .addSubcommand(subcommand =>
-      //     subcommand
-      //         .setName('timeout')
-      //         .setDescription('Timeout an ID')
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('target').setDescription('User to timeout!').setRequired(true))
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('reason').setDescription('Reason for timeout!').setRequired(true))
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('toggle').setDescription('On off?').addChoice('On', 'on').addChoice('Off', 'off').setRequired(true)),
-      // )
-      // .addSubcommand(subcommand =>
-      //     subcommand
-      //         .setName('kick')
-      //         .setDescription('Kick an ID')
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('target').setDescription('User to kick!').setRequired(true))
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('reason').setDescription('Reason for kick!').setRequired(true)),
-      // )
       .addSubcommand(subcommand => subcommand
         .setName('ban')
         .setDescription('Ban an ID')
@@ -136,8 +107,10 @@ module.exports = {
         .addStringOption(option => option
           .setName('toggle')
           .setDescription('On off?')
-          .addChoice('On', 'on')
-          .addChoice('Off', 'off')
+          .addChoices(
+            { name: 'On', value: 'on' },
+            { name: 'Off', value: 'off' },
+          )
           .setRequired(true)))),
 
   async execute(interaction) {

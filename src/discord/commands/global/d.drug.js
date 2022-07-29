@@ -27,9 +27,11 @@ module.exports = {
     .addStringOption(option => option.setName('section')
       .setDescription('What section?')
       .setRequired(true)
-      .addChoice('Summary', 'Summary')
-      .addChoice('Dosage', 'Dosage')
-      .addChoice('Combos', 'Combos')),
+      .addChoices(
+        { name: 'Summary', value: 'Summary' },
+        { name: 'Dosage', value: 'Dosage' },
+        { name: 'Combos', value: 'Combos' },
+      )),
 
   async execute(interaction, parameters) {
     const substance = interaction.options.getString('substance') || parameters.at(0);

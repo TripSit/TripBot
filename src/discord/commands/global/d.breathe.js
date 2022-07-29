@@ -13,11 +13,12 @@ module.exports = {
     .setDescription('Remember to breathe')
     .addStringOption(option => option.setName('exercise')
       .setDescription('Which exercise?')
-      .addChoice('1', '1')
-      .addChoice('2', '2')
-      .addChoice('3', '3')
-      .addChoice('4', '4')),
-
+      .addChoices(
+        { name: '1', value: '1' },
+        { name: '2', value: '2' },
+        { name: '3', value: '3' },
+        { name: '4', value: '4' },
+      )),
   async execute(interaction, parameters) {
     const choice = interaction.options.getString('exercise') || parameters;
     logger.debug(`[${PREFIX}] choice: ${choice}`);

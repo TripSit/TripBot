@@ -23,8 +23,10 @@ module.exports = {
     .addStringOption(option => option
       .setName('enable')
       .setDescription('On or Off?')
-      .addChoice('On', 'On')
-      .addChoice('Off', 'Off')),
+      .addChoices(
+        { name: 'On', value: 'on' },
+        { name: 'Off', value: 'off' },
+      )),
 
   async execute(interaction) {
     let enable = interaction.options.getString('enable');

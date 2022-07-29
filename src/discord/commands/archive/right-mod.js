@@ -89,8 +89,10 @@ module.exports = {
       .addStringOption(option => option
         .setName('toggle')
         .setDescription('On off?')
-        .addChoice('On', 'on')
-        .addChoice('Off', 'off'))
+        .addChoices(
+          { name: 'On', value: 'on' },
+          { name: 'Off', value: 'off' },
+        )
       .addStringOption(option => option
         .setName('duration')
         .setDescription('Duration of ban!'))
@@ -119,8 +121,10 @@ module.exports = {
       .addStringOption(option => option
         .setName('toggle')
         .setDescription('On off?')
-        .addChoice('On', 'on')
-        .addChoice('Off', 'off'))
+        .addChoices(
+          { name: 'On', value: 'on' },
+          { name: 'Off', value: 'off' },
+        )
       .addStringOption(option => option
         .setName('duration')
         .setDescription('Duration of ban!'))

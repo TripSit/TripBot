@@ -54,9 +54,11 @@ module.exports = {
     .setDescription('This will test the bot and show all functionality!')
     .addStringOption(option => option.setName('scope')
       .setDescription('Global, guild, or all?')
-      .addChoice('All', 'All')
-      .addChoice('Guild', 'Guild')
-      .addChoice('Global', 'Global')),
+      .addChoices(
+				{ name: 'All', value: 'All' },
+				{ name: 'Guild', value: 'Guild' },
+				{ name: 'Global', value: 'Global' },
+			)),
   async execute(interaction) {
     await interaction.deferReply();
     const scope = interaction.options.getString('scope') || 'All';
