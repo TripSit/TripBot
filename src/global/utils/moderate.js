@@ -2,7 +2,7 @@
 
 const PREFIX = require('path').parse(__filename).name;
 const ms = require('ms');
-const { time } = require('@discordjs/builders');
+const { time } = require('discord.js');
 const { MessageActionRow, MessageButton } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('./logger');

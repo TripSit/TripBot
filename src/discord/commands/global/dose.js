@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder, time } = require('@discordjs/builders');
+const { SlashCommandBuilder, time } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 

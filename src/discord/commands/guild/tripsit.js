@@ -1,6 +1,6 @@
 'use strict';
 
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const tripsitme = require('../../utils/tripsitme');
 const tripsat = require('../../utils/tripsat');
 

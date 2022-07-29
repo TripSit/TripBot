@@ -2,7 +2,7 @@
 
 const path = require('path');
 const { stripIndents } = require('common-tags/lib');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo } = require('../../../global/services/firebaseAPI');

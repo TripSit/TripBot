@@ -1,7 +1,7 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const { Octokit } = require('@octokit/rest');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('../../../global/utils/logger');

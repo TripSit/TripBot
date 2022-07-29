@@ -1,6 +1,6 @@
 'use strict';
 
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const youtube = require('../../../global/utils/youtube');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');

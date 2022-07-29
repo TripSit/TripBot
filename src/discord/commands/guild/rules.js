@@ -2,7 +2,7 @@
 
 const path = require('path');
 const { MessageAttachment } = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const { stripIndents } = require('common-tags');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');

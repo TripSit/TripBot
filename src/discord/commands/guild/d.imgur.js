@@ -1,6 +1,6 @@
 'use strict';
 
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
 const imgur = require('../../../global/utils/imgur');
 const logger = require('../../../global/utils/logger');

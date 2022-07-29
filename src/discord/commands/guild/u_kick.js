@@ -3,7 +3,7 @@
 const path = require('path');
 const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
-const { ContextMenuCommandBuilder } = require('@discordjs/builders');
+const { ContextMenuCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { moderate } = require('../../../global/utils/moderate');

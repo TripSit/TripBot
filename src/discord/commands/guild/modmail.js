@@ -9,7 +9,7 @@ const {
   TextInputComponent,
 } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const template = require('../../utils/embed-template');
 const logger = require('../../../global/utils/logger');
 const {

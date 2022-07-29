@@ -8,7 +8,7 @@
 
 const path = require('path');
 const fs = require('fs/promises');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const COMMANDS_PATH = path.resolve('src/commands');

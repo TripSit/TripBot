@@ -1,6 +1,6 @@
 'use strict';
 
-const { SlashCommandBuilder, time } = require('@discordjs/builders');
+const { SlashCommandBuilder, time } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
