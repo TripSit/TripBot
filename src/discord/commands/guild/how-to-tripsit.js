@@ -1,6 +1,6 @@
 'use strict';
 
-const { MessageAttachment } = require('discord.js');
+const { AttachmentBuilder } = require('discord.js');
 const { SlashCommandBuilder } = require('discord.js');
 const { ReactionRole } = require('discordjs-reaction-role');
 const { stripIndents } = require('common-tags');
@@ -9,15 +9,15 @@ const { getGuildInfo, setGuildInfo } = require('../../../global/services/firebas
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 
-const tripsitButton = new MessageAttachment('./src/assets/img/1_button.png');
-const userInput = new MessageAttachment('./src/assets/img/2_input.png');
-const firstResponse = new MessageAttachment('./src/assets/img/3_firstResponse.png');
-const privateThread = new MessageAttachment('./src/assets/img/4_privateThread.png');
-const privateMessage = new MessageAttachment('./src/assets/img/5_privateMessage.png');
-const discussThread = new MessageAttachment('./src/assets/img/6_discussionThread.png');
-const discussMessage = new MessageAttachment('./src/assets/img/7_discussionMessage.png');
-const endMessage = new MessageAttachment('./src/assets/img/8_endMessage.png');
-const surveyRequest = new MessageAttachment('./src/assets/img/9_surveyRequest.png');
+const tripsitButton = new AttachmentBuilder('./src/assets/img/1_button.png');
+const userInput = new AttachmentBuilder('./src/assets/img/2_input.png');
+const firstResponse = new AttachmentBuilder('./src/assets/img/3_firstResponse.png');
+const privateThread = new AttachmentBuilder('./src/assets/img/4_privateThread.png');
+const privateMessage = new AttachmentBuilder('./src/assets/img/5_privateMessage.png');
+const discussThread = new AttachmentBuilder('./src/assets/img/6_discussionThread.png');
+const discussMessage = new AttachmentBuilder('./src/assets/img/7_discussionMessage.png');
+const endMessage = new AttachmentBuilder('./src/assets/img/8_endMessage.png');
+const surveyRequest = new AttachmentBuilder('./src/assets/img/9_surveyRequest.png');
 
 const {
   // discordOwnerId,

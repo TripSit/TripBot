@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const { MessageAttachment } = require('discord.js');
+const { AttachmentBuilder } = require('discord.js');
 const { SlashCommandBuilder } = require('discord.js');
 const { stripIndents } = require('common-tags');
 const logger = require('../../../global/utils/logger');
@@ -9,7 +9,7 @@ const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
 
-const file = new MessageAttachment('./src/assets/img/RULES.png');
+const file = new AttachmentBuilder('./src/assets/img/RULES.png');
 
 const {
   NODE_ENV,
