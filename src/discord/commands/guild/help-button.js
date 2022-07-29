@@ -89,7 +89,7 @@ module.exports = {
         new ButtonBuilder()
           .setCustomId('ircOther')
           .setLabel('I have something else!')
-          .setStyle(ButtonStyle.Secondary)
+          .setStyle(ButtonStyle.Secondary),
       );
 
     // Create a new button

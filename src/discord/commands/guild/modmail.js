@@ -52,7 +52,7 @@ const modmailButtons = new ActionRowBuilder()
     new ButtonBuilder()
       .setCustomId('modmailDiscordissue')
       .setLabel('Discord issues')
-      .setStyle(ButtonStyle.Secondary)
+      .setStyle(ButtonStyle.Secondary),
   );
 
 // Declare the static test nitice
