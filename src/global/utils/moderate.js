@@ -3,7 +3,7 @@
 const PREFIX = require('path').parse(__filename).name;
 const ms = require('ms');
 const { time } = require('discord.js');
-const { MessageActionRow, MessageButton } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('./logger');
 const template = require('../../discord/utils/embed-template');
@@ -106,35 +106,35 @@ const teamRoles = [
   roleDeveloperId,
 ];
 
-const modButtons = new MessageActionRow()
+const modButtons = new ActionRowBuilder()
   .addComponents(
-    new MessageButton()
+    new ButtonBuilder()
       .setCustomId('warnbtn')
       .setLabel('Warn')
-      .setStyle('PRIMARY'),
-    new MessageButton()
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
       .setCustomId('timeoutbtn')
       .setLabel('Timeout')
-      .setStyle('SECONDARY'),
-    new MessageButton()
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
       .setCustomId('kickbtn')
       .setLabel('Kick')
-      .setStyle('SECONDARY'),
-    new MessageButton()
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
       .setCustomId('banbtn')
       .setLabel('Ban')
-      .setStyle('DANGER'),
+      .setStyle(ButtonStyle.Danger),
   );
 
-const warnButtons = new MessageActionRow().addComponents(
-  new MessageButton()
+const warnButtons = new ActionRowBuilder().addComponents(
+  new ButtonBuilder()
     .setCustomId('acknowledgebtn')
     .setLabel('I understand, it wont happen again!')
-    .setStyle('PRIMARY'),
-  new MessageButton()
+    .setStyle(ButtonStyle.Primary),
+  new ButtonBuilder()
     .setCustomId('refusalbtn')
     .setLabel('Nah, I do what I want!')
-    .setStyle('DANGER'),
+    .setStyle(ButtonStyle.Danger),
 );
 
 async function determineUserInfo(query) {

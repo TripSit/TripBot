@@ -1,8 +1,8 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder } = require('discord.js');
-const { MessageButton } = require('discord.js');
+const { SlashCommandBuilder, ButtonStyle } = require('discord.js');
+const { ButtonBuilder } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
@@ -12,8 +12,8 @@ const allComboData = require('../../../global/assets/data/combo_definitions.json
 const PREFIX = path.parse(__filename).name;
 
 const buttonList = [
-  new MessageButton().setCustomId('previousbtn').setLabel('Previous').setStyle('DANGER'),
-  new MessageButton().setCustomId('nextbtn').setLabel('Next').setStyle('SUCCESS'),
+  new ButtonBuilder().setCustomId('previousbtn').setLabel('Previous').setStyle(ButtonStyle.Danger),
+  new ButtonBuilder().setCustomId('nextbtn').setLabel('Next').setStyle(ButtonStyle.Success),
 ];
 
 module.exports = {

@@ -1,7 +1,7 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
+const { ActionRowBuilder, Modal, TextInputBuilder } = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
@@ -48,20 +48,20 @@ module.exports = {
     const modal = new Modal()
       .setCustomId('timeoutModal')
       .setTitle('Tripbot Timeout');
-    const timeoutReason = new TextInputComponent()
+    const timeoutReason = new TextInputBuilder()
       .setLabel('Why are you timouting this person?')
       .setStyle('PARAGRAPH')
       .setPlaceholder('Why are you timeouting this person?')
       .setCustomId('timeoutReason')
       .setRequired(true);
-    const timeoutDuration = new TextInputComponent()
+    const timeoutDuration = new TextInputBuilder()
       .setLabel('Timeout for how long? (Max/default 7 days)')
       .setStyle('SHORT')
       .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
       .setCustomId('timeoutDuration');
     // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(timeoutReason);
-    const secondActionRow = new MessageActionRow().addComponents(timeoutDuration);
+    const firstActionRow = new ActionRowBuilder().addComponents(timeoutReason);
+    const secondActionRow = new ActionRowBuilder().addComponents(timeoutDuration);
 
     // Add inputs to the modal
     modal.addComponents(firstActionRow, secondActionRow);

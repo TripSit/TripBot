@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
+const { ActionRowBuilder, Modal, TextInputBuilder } = require('discord.js');
 const { SlashCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
@@ -23,12 +23,12 @@ module.exports = {
     const modal = new Modal()
       .setCustomId('bugReportModal')
       .setTitle('Tripbot Bug Report');
-    const bugReport = new TextInputComponent()
+    const bugReport = new TextInputBuilder()
       .setCustomId('bugReport')
       .setLabel('What would you like to tell the bot dev team?')
       .setStyle('PARAGRAPH');
     // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(bugReport);
+    const firstActionRow = new ActionRowBuilder().addComponents(bugReport);
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
     // Show the modal to the user

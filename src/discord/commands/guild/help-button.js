@@ -1,12 +1,12 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, ButtonStyle } = require('discord.js');
 const {
-  MessageActionRow,
-  MessageButton,
+  ActionRowBuilder,
+  ButtonBuilder,
   Modal,
-  TextInputComponent,
+  TextInputBuilder,
 } = require('discord.js');
 const { stripIndents } = require('common-tags');
 const logger = require('../../../global/utils/logger');
@@ -72,24 +72,24 @@ module.exports = {
     `;
 
     // Create buttons
-    const row = new MessageActionRow()
+    const row = new ActionRowBuilder()
       .addComponents(
-        new MessageButton()
+        new ButtonBuilder()
           .setCustomId('ircConnect')
           .setLabel('I can\'t connect to IRC!')
-          .setStyle('SUCCESS'),
-        new MessageButton()
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
           .setCustomId('ircAppeal')
           .setLabel('I want to appeal my ban!')
-          .setStyle('DANGER'),
-        new MessageButton()
+          .setStyle(ButtonStyle.Danger),
+        new ButtonBuilder()
           .setCustomId('discordIssue')
           .setLabel('Discord issue/feedback!')
-          .setStyle('PRIMARY'),
-        new MessageButton()
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
           .setCustomId('ircOther')
           .setLabel('I have something else!')
-          .setStyle('SECONDARY'),
+          .setStyle(ButtonStyle.Secondary)
       );
 
     // Create a new button
@@ -114,14 +114,14 @@ module.exports = {
     const modal = new Modal()
       .setCustomId(`${issueType}ModmailIssueModal`)
       .setTitle('TripSit Feedback');
-    const timeoutReason = new TextInputComponent()
+    const timeoutReason = new TextInputBuilder()
       .setLabel('What is your issue? Be super detailed!')
       .setStyle('PARAGRAPH')
       .setPlaceholder(placeholder)
       .setCustomId(`${issueType}IssueInput`)
       .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(timeoutReason);
+    const firstActionRow = new ActionRowBuilder().addComponents(timeoutReason);
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
     // Show the modal to the user

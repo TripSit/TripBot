@@ -2,7 +2,7 @@
 
 const path = require('path');
 const { SlashCommandBuilder } = require('discord.js');
-const { MessageButton, MessageActionRow } = require('discord.js');
+const { ButtonBuilder, ActionRowBuilder } = require('discord.js');
 const { stripIndents } = require('common-tags');
 const logger = require('../../../global/utils/logger');
 
@@ -43,16 +43,16 @@ module.exports = {
     `;
 
     // Create a new button embed
-    const row = new MessageActionRow()
+    const row = new ActionRowBuilder()
       .addComponents(
-        new MessageButton()
+        new ButtonBuilder()
           .setCustomId('tripsitme')
           .setLabel('I need assistance!')
-          .setStyle('PRIMARY'),
-        new MessageButton()
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
           .setCustomId('tripsat')
           .setLabel('I\'m good now!')
-          .setStyle('SUCCESS'),
+          .setStyle(ButtonStyle.Success),
       );
 
     // Create a new button

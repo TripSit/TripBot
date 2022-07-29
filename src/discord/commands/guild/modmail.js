@@ -3,13 +3,13 @@
 const PREFIX = require('path').parse(__filename).name;
 // const ms = require('ms');
 const {
-  MessageActionRow,
-  MessageButton,
+  ActionRowBuilder,
+  ButtonBuilder,
   Modal,
-  TextInputComponent,
+  TextInputBuilder,
 } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, ButtonStyle } = require('discord.js');
 const template = require('../../utils/embed-template');
 const logger = require('../../../global/utils/logger');
 const {
@@ -31,28 +31,28 @@ const {
   roleDeveloperId,
 } = require('../../../../env');
 
-const modmailButtons = new MessageActionRow()
+const modmailButtons = new ActionRowBuilder()
   .addComponents(
-    new MessageButton()
+    new ButtonBuilder()
       .setCustomId('modmailTripsitter')
       .setLabel('I need a tripsitter')
-      .setStyle('SUCCESS'),
-    // new MessageButton()
+      .setStyle(ButtonStyle.Success),
+    // new ButtonBuilder()
     //   .setCustomId('modmailCommands')
     //   .setLabel('Show me your commands')
-    //   .setStyle('PRIMARY'),
-    new MessageButton()
+    //   .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
       .setCustomId('modmailFeedback')
       .setLabel('Give Feedback')
-      .setStyle('PRIMARY'),
-    new MessageButton()
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
       .setCustomId('modmailIrcissue')
       .setLabel('IRC issues')
-      .setStyle('DANGER'),
-    new MessageButton()
+      .setStyle(ButtonStyle.Danger),
+    new ButtonBuilder()
       .setCustomId('modmailDiscordissue')
       .setLabel('Discord issues')
-      .setStyle('SECONDARY'),
+      .setStyle(ButtonStyle.Secondary)
   );
 
 // Declare the static test nitice
@@ -170,11 +170,11 @@ module.exports = {
     // const modal = new Modal()
     //   .setCustomId('tripsitModmailModal')
     //   .setTitle('TripSit Help Request');
-    // modal.addComponents(new MessageActionRow().addComponents(new TextInputComponent()
+    // modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
     //   .setCustomId('triageInput')
     //   .setLabel('What substance? How much taken? What time?')
     //   .setStyle('SHORT')));
-    // modal.addComponents(new MessageActionRow().addComponents(new TextInputComponent()
+    // modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
     //   .setCustomId('introInput')
     //   .setLabel('What\'s going on? Give us the details!')
     //   .setStyle('PARAGRAPH')));
@@ -195,14 +195,14 @@ module.exports = {
     const modal = new Modal()
       .setCustomId('modmailFeedbackModal')
       .setTitle('TripSit Feedback');
-    const timeoutReason = new TextInputComponent()
+    const timeoutReason = new TextInputBuilder()
       .setLabel('What would you like to let the team know?')
       .setStyle('PARAGRAPH')
       .setPlaceholder('This bot is cool and I have a suggestion...')
       .setCustomId('feedbackInput')
       .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(timeoutReason);
+    const firstActionRow = new ActionRowBuilder().addComponents(timeoutReason);
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
     // Show the modal to the user
@@ -254,14 +254,14 @@ module.exports = {
     const modal = new Modal()
       .setCustomId(`${issueType}ModmailIssueModal`)
       .setTitle('TripSit Feedback');
-    const timeoutReason = new TextInputComponent()
+    const timeoutReason = new TextInputBuilder()
       .setLabel('What is your issue? Be super detailed!')
       .setStyle('PARAGRAPH')
       .setPlaceholder(placeholder)
       .setCustomId(`${issueType}IssueInput`)
       .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(timeoutReason);
+    const firstActionRow = new ActionRowBuilder().addComponents(timeoutReason);
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
     // Show the modal to the user

@@ -1,19 +1,19 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder, time } = require('discord.js');
-const { MessageActionRow, MessageButton } = require('discord.js');
+const { SlashCommandBuilder, time, ButtonStyle } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { getGuildInfo, setGuildInfo } = require('../../../global/services/firebaseAPI');
 
 const PREFIX = path.parse(__filename).name;
 
-const warnButtons = new MessageActionRow()
-  .addComponents(new MessageButton()
+const warnButtons = new ActionRowBuilder()
+  .addComponents(new ButtonBuilder()
     .setCustomId('guildacknowledgebtn')
     .setLabel('I understand, it wont happen again!')
-    .setStyle('PRIMARY'));
+    .setStyle(ButtonStyle.Primary));
 
 module.exports = {
   data: new SlashCommandBuilder()

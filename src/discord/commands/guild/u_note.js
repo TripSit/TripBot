@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
+const { ActionRowBuilder, Modal, TextInputBuilder } = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
@@ -33,14 +33,14 @@ module.exports = {
     const modal = new Modal()
       .setCustomId('noteModal')
       .setTitle('Tripbot Note');
-    const noteReason = new TextInputComponent()
+    const noteReason = new TextInputBuilder()
       .setLabel('What are you noting about this person?')
       .setStyle('PARAGRAPH')
       .setPlaceholder(reason)
       .setCustomId('noteReason')
       .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(noteReason);
+    const firstActionRow = new ActionRowBuilder().addComponents(noteReason);
 
     // Add inputs to the modal
     modal.addComponents(firstActionRow);

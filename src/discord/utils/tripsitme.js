@@ -1,7 +1,7 @@
 'use strict';
 
 const {
-  MessageActionRow, Modal, TextInputComponent,
+  ActionRowBuilder, Modal, TextInputBuilder,
 } = require('discord.js');
 const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
@@ -111,11 +111,11 @@ module.exports = {
     const modal = new Modal()
       .setCustomId('tripsitModal')
       .setTitle('TripSit Help Request');
-    modal.addComponents(new MessageActionRow().addComponents(new TextInputComponent()
+    modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
       .setCustomId('triageInput')
       .setLabel('What substance? How much taken? What time?')
       .setStyle('SHORT')));
-    modal.addComponents(new MessageActionRow().addComponents(new TextInputComponent()
+    modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
       .setCustomId('introInput')
       .setLabel('What\'s going on? Give us the details!')
       .setStyle('PARAGRAPH')));
