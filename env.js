@@ -18,6 +18,9 @@ exports.discordClientSecret = process.env.discordClientSecret;
 exports.discordOauthUrl = process.env.discordOauthUrl;
 exports.discordIrcAdminId = process.env.discordIrcAdminId;
 
+exports.TempVoiceChanId = process.env.TempVoiceChanId;
+exports.TempVoiceCatId = process.env.TempVoiceCatId;
+
 exports.PORT = process.env.PORT;
 
 exports.ircServer = process.env.ircServer;

@@ -3,6 +3,11 @@
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../global/utils/logger');
 
+const {
+  TempVoiceChanId,
+  TempVoiceCatId,
+} = require('../../../env');
+
 module.exports = {
   name: 'voiceStateUpdate',
 
@@ -10,10 +15,10 @@ module.exports = {
     if (New.member.bot) return;
     if (Old.member.bot) return;
 
-    if (New.channelId === process.env.TempVoiceChanId) {
-      New.member.guild.channels.create(`🛋️ ${New.member.user.username}'s lounge 🛋️`, {
+    if (New.channelId === TempVoiceChanId) {
+      New.member.guild.channels.create(`⛺│${New.member.user.username}'s tent`, {
         type: 2,
-        parent: process.env.TempVoiceCatId,
+        parent: TempVoiceCatId,
       }).then(result => {
         logger.debug(`[${PREFIX}] created a temporary voice channel`);
         New.member.voice.setChannel(result.id);
@@ -22,9 +27,9 @@ module.exports = {
     }
 
     try {
-      Old.client.channels.cache.get(process.env.TempVoiceCatId).children.forEach(channel => {
+      Old.client.channels.cache.get(TempVoiceCatId).children.forEach(channel => {
         if (channel.type === 'GUILD_VOICE') {
-          if (channel.id !== process.env.TempVoiceChanId) {
+          if (channel.id !== TempVoiceChanId) {
             if (channel.members.size < 1) {
               channel.delete('beep boop, i love to clean up');
               logger.debug(`[${PREFIX}] deleted an empty temporary voice channel`);
