@@ -277,6 +277,8 @@ module.exports = {
       actorIsTeamMember,
     ] = await determineUserInfo(actor);
     // logger.debug(`[${PREFIX}] actorUser: ${JSON.stringify(actorUser, null, 2)}`);
+    logger.debug(`[${PREFIX}] actorId: ${actorId}`);
+    logger.debug(`[${PREFIX}] actorNickname: ${actorNickname}`);
     logger.debug(`[${PREFIX}] actorPlatform: ${actorPlatform}`);
     logger.debug(`[${PREFIX}] actorUsername: ${actorUsername}`);
     logger.debug(`[${PREFIX}] actorIsTeamMember: ${actorIsTeamMember}`);
