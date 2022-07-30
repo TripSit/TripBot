@@ -543,7 +543,8 @@ module.exports = {
     //     if (toggle === 'on' || toggle === null) {
     //       try {
     //         logger.debug(`[${PREFIX}] I would underban on discord`);
-    //         await targetUser.send(`You have been underbanned for ${ms(minutes, { long: true })}${reason ? ` because:\n ${reason}` : ''} `);
+    //         await targetUser.send(`You have been underbanned for
+    // ${ms(minutes, { long: true })}${reason ? ` because:\n ${reason}` : ''} `);
     //       } catch (err) {
     //         logger.error(`[${PREFIX}] Error: ${err}`);
     //       }
@@ -566,7 +567,8 @@ module.exports = {
     //           logger.error(`[${PREFIX}] ${err}`);
     //         }
     //       }
-    //       global.ircClient.say(targetNickname, `You have been underbanned for ${ms(minutes, { long: true })}${reason ? ` because:\n ${reason}` : ''} `);
+    //       global.ircClient.say(targetNickname, `You have been underbanned
+    // for ${ms(minutes, { long: true })}${reason ? ` because:\n ${reason}` : ''} `);
     //     } else {
     //       // eslint-disable-next-line no-restricted-syntax
     //       for (const ircChannel of allChannels) {
