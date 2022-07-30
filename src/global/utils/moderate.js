@@ -454,7 +454,7 @@ module.exports = {
         // eslint-disable-next-line no-restricted-syntax
         for (const ircChannel of allChannels) {
           try {
-            global.ircClient.send('KICK', ircChannel, targetNickname);
+            global.ircClient.send('KICK', ircChannel, targetNickname, reason);
           } catch (err) {
             logger.error(`[${PREFIX}] ${err}`);
           }
@@ -537,54 +537,97 @@ module.exports = {
           }
         }
       }
-    } else if (command === 'underban') {
-      logger.debug(`[${PREFIX}] underban`);
-      async function underban(target) {
-        // eslint-disable-next-line no-restricted-syntax
-        for (const channel of hrChannels) {
-          global.ircClient.send('KICK', channel, target);
-          global.ircClient.send('MODE', channel, '+b', `*@${target.host}`);
-        }
-      }
-    } else if (command === 'say') {
-      logger.debug(`[${PREFIX}] say`);
-      // async function say(target, quote) {
-      //   logger.debug(`[${PREFIX}] Saying ${quote} to ${target}`);
-      //   global.ircClient.say(target, quote);
-      // }
-    } else if (command === 'invite') {
-      logger.debug(`[${PREFIX}] say`);
-      async function invite(target, channel) {
-        global.ircClient.send('INVITE', target.nick, channel);
-        // global.ircClient.say('#sandbox-dev', `'INVITE', ${channel}, ${target.host}`);
-      }
-    } else if (command === 'shadowquiet') {
-      async function shadowquiet(target) {
-        // eslint-disable-next-line no-restricted-syntax
-        for (const channel of allChannels) {
-          global.ircClient.send('MODE', channel, '+q', `*@${target.host}`);
-          global.ircClient.send('MODE', channel, '+z', `*@${target.host}`);
-        }
-      }
-      logger.debug(`[${PREFIX}] say`);
-    } else if (command === 'rename') {
-      logger.debug(`[${PREFIX}] rename`);
-      // Needs operator privileges
-      // async function rename(target, newNick) {
-      //   const command = `SVSNICK ${target.nick} ${newNick}`;
-      //   global.ircClient.say('operserv', command);
-      //   global.ircClient.say('#sandbox-dev', command);
-      // }
-    } else if (command === 'announce') {
-      logger.debug(`[${PREFIX}] announce`);
-      // async function announce(quote) {
-      //   // eslint-disable-next-line no-restricted-syntax
-      //   for (const channel of allChannels) {
-      //     global.ircClient.say(channel, '<><><> Global message from Team TripSit! <><><>');
-      //     global.ircClient.say(channel, quote);
-      //   }
-      // }
     }
+    // else if (command === 'underban') {
+    //   if (targetPlatform === 'discord') {
+    //     if (toggle === 'on' || toggle === null) {
+    //       try {
+    //         logger.debug(`[${PREFIX}] I would underban on discord`);
+    //         await targetUser.send(`You have been underbanned for ${ms(minutes, { long: true })}${reason ? ` because:\n ${reason}` : ''} `);
+    //       } catch (err) {
+    //         logger.error(`[${PREFIX}] Error: ${err}`);
+    //       }
+    //     } else {
+    //       try {
+    //         logger.debug(`[${PREFIX}] I would remove underban on discord`);
+    //         await targetUser.send(`The underban has been removed because:\n${reason}`);
+    //       } catch (err) {
+    //         logger.error(`[${PREFIX}] Error: ${err}`);
+    //       }
+    //     }
+    //   }
+    //   if (targetPlatform === 'irc') {
+    //     if (toggle === 'on' || toggle === null) {
+    //       // eslint-disable-next-line no-restricted-syntax
+    //       for (const ircChannel of allChannels) {
+    //         try {
+    //           logger.debug(`[${PREFIX}] I would underban on irc`);
+    //         } catch (err) {
+    //           logger.error(`[${PREFIX}] ${err}`);
+    //         }
+    //       }
+    //       global.ircClient.say(targetNickname, `You have been underbanned for ${ms(minutes, { long: true })}${reason ? ` because:\n ${reason}` : ''} `);
+    //     } else {
+    //       // eslint-disable-next-line no-restricted-syntax
+    //       for (const ircChannel of allChannels) {
+    //         try {
+    //           global.ircClient.send('MODE', ircChannel, '-q', `*@${targetId}`);
+    //         } catch (err) {
+    //           logger.error(`[${PREFIX}] ${err}`);
+    //         }
+    //       }
+    //       try {
+    //         global.ircClient.say(targetNickname, `You have been unquieted because:\n${reason}`);
+    //       } catch (err) {
+    //         logger.error(`[${PREFIX}] Error: ${err}`);
+    //       }
+    //     }
+    //   }
+    //   logger.debug(`[${PREFIX}] underban`);
+    //   // eslint-disable-next-line no-restricted-syntax
+    //   for (const channel of hrChannels) {
+    //     global.ircClient.send('KICK', channel, target);
+    //     global.ircClient.send('MODE', channel, '+b', `*@${target.host}`);
+    //   }
+    // } else if (command === 'say') {
+    //   logger.debug(`[${PREFIX}] say`);
+    //   // async function say(target, quote) {
+    //   //   logger.debug(`[${PREFIX}] Saying ${quote} to ${target}`);
+    //   //   global.ircClient.say(target, quote);
+    //   // }
+    // } else if (command === 'invite') {
+    //   logger.debug(`[${PREFIX}] say`);
+    //   async function invite(target, channel) {
+    //     global.ircClient.send('INVITE', target.nick, channel);
+    //     // global.ircClient.say('#sandbox-dev', `'INVITE', ${channel}, ${target.host}`);
+    //   }
+    // } else if (command === 'shadowquiet') {
+    //   async function shadowquiet(target) {
+    //     // eslint-disable-next-line no-restricted-syntax
+    //     for (const channel of allChannels) {
+    //       global.ircClient.send('MODE', channel, '+q', `*@${target.host}`);
+    //       global.ircClient.send('MODE', channel, '+z', `*@${target.host}`);
+    //     }
+    //   }
+    //   logger.debug(`[${PREFIX}] say`);
+    // } else if (command === 'rename') {
+    //   logger.debug(`[${PREFIX}] rename`);
+    //   // Needs operator privileges
+    //   // async function rename(target, newNick) {
+    //   //   const command = `SVSNICK ${target.nick} ${newNick}`;
+    //   //   global.ircClient.say('operserv', command);
+    //   //   global.ircClient.say('#sandbox-dev', command);
+    //   // }
+    // } else if (command === 'announce') {
+    //   logger.debug(`[${PREFIX}] announce`);
+    //   // async function announce(quote) {
+    //   //   // eslint-disable-next-line no-restricted-syntax
+    //   //   for (const channel of allChannels) {
+    //   //     global.ircClient.say(channel, '<><><> Global message from Team TripSit! <><><>');
+    //   //     global.ircClient.say(channel, quote);
+    //   //   }
+    //   // }
+    // }
 
     // Get the moderator role
     const tripsitGuild = await global.client.guilds.fetch(discordGuildId);

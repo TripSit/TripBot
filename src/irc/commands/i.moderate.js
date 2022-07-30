@@ -140,6 +140,9 @@ module.exports = {
       case 'detimeout':
         response = await moderate(actor, 'timeout', target, channel, 'off', reason, duration);
         break;
+      case 'kick':
+        response = await moderate(actor, 'kick', target, channel, 'on', reason, duration);
+        break;
       case 'invite':
         if (channel === null) {
           global.ircClient.say(message.args[0], 'You must supply a channel! (Remember the #)');
@@ -183,7 +186,7 @@ module.exports = {
           global.ircClient.say(message.args[0], 'You must supply what you want to say!');
           return;
         }
-        response = await moderate(actor, 'say', target, channel, null, announcement, duration);
+        response = await moderate(actor, 'announce', target, channel, null, announcement, duration);
         break;
       default:
         break;
