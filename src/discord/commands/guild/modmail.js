@@ -5,7 +5,7 @@ const PREFIX = require('path').parse(__filename).name;
 const {
   ActionRowBuilder,
   ButtonBuilder,
-  Modal,
+  ModalBuilder,
   TextInputBuilder,
 } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
@@ -167,7 +167,7 @@ module.exports = {
       http://discord.gg/tripsit`);
     }
     // Create the modal
-    // const modal = new Modal()
+    // const modal = new ModalBuilder()
     //   .setCustomId('tripsitModmailModal')
     //   .setTitle('TripSit Help Request');
     // modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
@@ -178,7 +178,7 @@ module.exports = {
     //   .setCustomId('introInput')
     //   .setLabel('What\'s going on? Give us the details!')
     //   .setStyle('PARAGRAPH')));
-    // await interaction.showModal(modal);
+    // await interaction.showModalBuilder(modal);
   },
   // async modmailTripsitterSubmit(interaction) {
   //   const guild = await interaction.client.guilds.fetch(discordGuildId);
@@ -192,7 +192,7 @@ module.exports = {
   async modmailFeedback(interaction) {
     logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
     // Create the modal
-    const modal = new Modal()
+    const modal = new ModalBuilder()
       .setCustomId('modmailFeedbackModal')
       .setTitle('TripSit Feedback');
     const timeoutReason = new TextInputBuilder()
@@ -206,7 +206,7 @@ module.exports = {
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
     // Show the modal to the user
-    await interaction.showModal(modal);
+    await interaction.showModalBuilder(modal);
   },
   async modmailFeedbackSubmit(interaction) {
     logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
@@ -251,7 +251,7 @@ module.exports = {
       placeholder = 'I have an issue with discord, can you please help?';
     }
     // Create the modal
-    const modal = new Modal()
+    const modal = new ModalBuilder()
       .setCustomId(`${issueType}ModmailIssueModal`)
       .setTitle('TripSit Feedback');
     const timeoutReason = new TextInputBuilder()
@@ -265,7 +265,7 @@ module.exports = {
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
     // Show the modal to the user
-    await interaction.showModal(modal);
+    await interaction.showModalBuilder(modal);
   },
   async modmailIssueSubmit(interaction, issueType) {
     // logger.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}!`);

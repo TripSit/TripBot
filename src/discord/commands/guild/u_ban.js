@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const { ActionRowBuilder, Modal, TextInputBuilder } = require('discord.js');
+const { ActionRowBuilder, ModalBuilder, TextInputBuilder } = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
@@ -31,7 +31,7 @@ module.exports = {
     // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
 
     // Create the modal
-    const modal = new Modal()
+    const modal = new ModalBuilder()
       .setCustomId('banModal')
       .setTitle('Tripbot Ban');
     const banReason = new TextInputBuilder()
@@ -52,7 +52,7 @@ module.exports = {
     // Add inputs to the modal
     modal.addComponents(firstActionRow, secondActionRow);
     // Show the modal to the user
-    await interaction.showModal(modal);
+    await interaction.showModalBuilder(modal);
   },
   async submit(interaction) {
     // logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);

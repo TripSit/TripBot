@@ -5,7 +5,7 @@ const { SlashCommandBuilder, ButtonStyle } = require('discord.js');
 const {
   ActionRowBuilder,
   ButtonBuilder,
-  Modal,
+  ModalBuilder,
   TextInputBuilder,
 } = require('discord.js');
 const { stripIndents } = require('common-tags');
@@ -111,7 +111,7 @@ module.exports = {
       placeholder = 'I have an issue with discord, can you please help?';
     }
     // Create the modal
-    const modal = new Modal()
+    const modal = new ModalBuilder()
       .setCustomId(`${issueType}ModmailIssueModal`)
       .setTitle('TripSit Feedback');
     const timeoutReason = new TextInputBuilder()
@@ -125,7 +125,7 @@ module.exports = {
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
     // Show the modal to the user
-    await interaction.showModal(modal);
+    await interaction.showModalBuilder(modal);
   },
   async ircSubmit(interaction, issueType) {
     // logger.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}!`);

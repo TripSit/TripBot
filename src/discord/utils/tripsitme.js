@@ -1,7 +1,7 @@
 'use strict';
 
 const {
-  ActionRowBuilder, Modal, TextInputBuilder,
+  ActionRowBuilder, ModalBuilder, TextInputBuilder,
 } = require('discord.js');
 const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
@@ -108,7 +108,7 @@ const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
 module.exports = {
   async execute(interaction) {
     // Create the modal
-    const modal = new Modal()
+    const modal = new ModalBuilder()
       .setCustomId('tripsitModal')
       .setTitle('TripSit Help Request');
     modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
@@ -119,7 +119,7 @@ module.exports = {
       .setCustomId('introInput')
       .setLabel('What\'s going on? Give us the details!')
       .setStyle('PARAGRAPH')));
-    await interaction.showModal(modal);
+    await interaction.showModalBuilder(modal);
   },
   async submit(interaction, memberInput, triageGiven, introGiven) {
     logger.debug(`[${PREFIX}] memberInput: ${memberInput}`);

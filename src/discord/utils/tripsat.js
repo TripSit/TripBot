@@ -1,7 +1,7 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-// const { ActionRowBuilder, Modal, TextInputBuilder } = require('discord.js');
+// const { ActionRowBuilder, ModalBuilder, TextInputBuilder } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('../../global/utils/logger');
 const { getUserInfo } = require('../../global/services/firebaseAPI');
@@ -279,7 +279,7 @@ module.exports = {
             ${invisibleEmoji}
             `);
           // // Create the modal
-          // const modal = new Modal()
+          // const modal = new ModalBuilder()
           //   .setCustomId('feedbackModal')
           //   .setTitle('TripSit Feedback Form');
           // const bugReport = new TextInputBuilder()
@@ -291,7 +291,7 @@ module.exports = {
           // // Add inputs to the modal
           // modal.addComponents(firstActionRow);
           // // Show the modal to the user
-          // // interaction.showModal(modal);
+          // // interaction.showModalBuilder(modal);
           logger.debug(`Collected ${reaction.emoji.name} from ${user.tag}`);
           const finalEmbed = template.embedTemplate()
             .setColor('BLUE')

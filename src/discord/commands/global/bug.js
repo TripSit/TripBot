@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const { ActionRowBuilder, Modal, TextInputBuilder } = require('discord.js');
+const { ActionRowBuilder, ModalBuilder, TextInputBuilder } = require('discord.js');
 const { SlashCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
@@ -20,7 +20,7 @@ module.exports = {
     .setDescription('Report a bug or other feedback to the bot dev team!'),
   async execute(interaction) {
     // Create the modal
-    const modal = new Modal()
+    const modal = new ModalBuilder()
       .setCustomId('bugReportModal')
       .setTitle('Tripbot Bug Report');
     const bugReport = new TextInputBuilder()
@@ -32,7 +32,7 @@ module.exports = {
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
     // Show the modal to the user
-    await interaction.showModal(modal);
+    await interaction.showModalBuilder(modal);
     logger.debug(`[${PREFIX}] finished!`);
   },
   async submit(interaction) {

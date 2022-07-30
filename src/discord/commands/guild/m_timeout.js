@@ -1,7 +1,7 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { ActionRowBuilder, Modal, TextInputBuilder } = require('discord.js');
+const { ActionRowBuilder, ModalBuilder, TextInputBuilder } = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
@@ -45,7 +45,7 @@ module.exports = {
     }
 
     // Create the modal
-    const modal = new Modal()
+    const modal = new ModalBuilder()
       .setCustomId('timeoutModal')
       .setTitle('Tripbot Timeout');
     const timeoutReason = new TextInputBuilder()
@@ -66,7 +66,7 @@ module.exports = {
     // Add inputs to the modal
     modal.addComponents(firstActionRow, secondActionRow);
     // Show the modal to the user
-    await interaction.showModal(modal);
+    await interaction.showModalBuilder(modal);
   },
   async submit(interaction) {
     logger.debug(`[${PREFIX}] started!`);
