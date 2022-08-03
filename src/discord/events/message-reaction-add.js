@@ -24,8 +24,8 @@ module.exports = {
     if (reaction.partial) await reaction.fetch();
     await reaction.users.fetch();
 
-    logger.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction.emoji.name, null, 2)}`);
-    logger.debug(`[${PREFIX}] users: ${JSON.stringify(reaction.users, null, 2)}`);
+    // logger.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction.emoji.name, null, 2)}`);
+    // logger.debug(`[${PREFIX}] users: ${JSON.stringify(reaction.users, null, 2)}`);
     // {
     //   "messageId": "1001828599172702218",
     //   "me": false,

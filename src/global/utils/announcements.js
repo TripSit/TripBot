@@ -32,22 +32,22 @@ if (NODE_ENV === 'development') {
 }
 const messageCounter = {};
 
-const voteBanEmoji = NODE_ENV === 'production'
-  ? '<:vote_ban:988998870837100565>'
-  : '<:vote_ban:989268075851427910>';
-const voteKickEmoji = NODE_ENV === 'production'
-  ? '<:vote_kick:989531430164004934>'
-  : '<:vote_kick:989268074945466388>';
-const voteTimeoutEmoji = NODE_ENV === 'production'
-  ? '<:vote_timeout:988998872875556904>'
-  : '<:vote_timeout:989268073792012299>';
-const voteUnderbanEmoji = NODE_ENV === 'production'
-  ? '<:vote_underban:989000993201082379>'
-  : '<:vote_underban:989268073192255529>';
+// const voteBanEmoji = NODE_ENV === 'production'
+//   ? '<:vote_ban:988998870837100565>'
+//   : '<:vote_ban:989268075851427910>';
+// const voteKickEmoji = NODE_ENV === 'production'
+//   ? '<:vote_kick:989531430164004934>'
+//   : '<:vote_kick:989268074945466388>';
+// const voteTimeoutEmoji = NODE_ENV === 'production'
+//   ? '<:vote_timeout:988998872875556904>'
+//   : '<:vote_timeout:989268073792012299>';
+// const voteUnderbanEmoji = NODE_ENV === 'production'
+//   ? '<:vote_underban:989000993201082379>'
+//   : '<:vote_underban:989268073192255529>';
 
 module.exports = {
   async announcements(message) {
-    logger.debug(`[${PREFIX}] starting!`);
+    // logger.debug(`[${PREFIX}] starting!`);
 
     // logger.debug(`[${PREFIX}] (${messageCounter[message.channel.id] || 0})
     // Message sent by ${message.author.username} in ${message.channel.name} on ${message.guild}`);
@@ -157,15 +157,19 @@ module.exports = {
       ⚠️ ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ ⚠️
       ${waterAndTeaEmojis.sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}`;
 
-    const moderate = stripIndents`
-      Help the community by using the community moderation tools!
-      If one of these reactions are applied to a message 3 times, various things will happen:
+    // const moderate = stripIndents`
+    //   Help the community by using the community moderation tools!
+    //   If one of these reactions are applied to a message 3 times, various things will happen:
 
-      ${voteTimeoutEmoji} - One-hour timeout. Mods will review context and take further action as appropriate.
-      ${voteKickEmoji} - One-day timeout & KICK request. Kicked after a day if mods don't say otherwise.
-      ${voteBanEmoji} - One-day timeout & BAN request. Kicked after a day if mods don't say otherwise.
-      ${voteUnderbanEmoji} - Request age verification. Quarantines the user from 18+ content pending review.
-      `;
+    //   ${voteTimeoutEmoji} -
+    // One-hour timeout. Mods will review context and take further action as appropriate.
+    //   ${voteKickEmoji} -
+    // One-day timeout & KICK request. Kicked after a day if mods don't say otherwise.
+    //   ${voteBanEmoji} -
+    // One-day timeout & BAN request. Kicked after a day if mods don't say otherwise.
+    //   ${voteUnderbanEmoji} -
+    // Request age verification. Quarantines the user from 18+ content pending review.
+    //   `;
 
     const generalAnnouncements = [
       hydrate,
@@ -245,6 +249,6 @@ module.exports = {
       ? messageCounter[message.channel.id] + 1
       : 1;
     // logger.debug(`[${PREFIX}] messageCounter: ${messageCounter}`);
-    logger.debug(`[${PREFIX}] finished!`);
+    // logger.debug(`[${PREFIX}] finished!`);
   },
 };
