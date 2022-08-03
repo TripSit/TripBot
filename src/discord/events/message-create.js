@@ -130,6 +130,6 @@ module.exports = {
 
     announcements(message);
     // karma(message);
-    experience(message);
+    // experience(message);
   },
 };
