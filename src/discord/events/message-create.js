@@ -131,7 +131,7 @@ module.exports = {
 
     announcements(message);
     // karma(message);
-    experience(message);
-    thoughtPolice(message);
+    // experience(message);
+    // thoughtPolice(message);
   },
 };

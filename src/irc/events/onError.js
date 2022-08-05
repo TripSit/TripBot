@@ -16,8 +16,10 @@ module.exports = {
             global.ircClient.say(message.args[1], `Error: I am not an operator in ${message.args[1]}`);
             logger.error(`[${PREFIX}] I am not an operator in ${message.args[1]}`);
           } else {
-            global.ircClient.say(message.args[1], `Error: ${JSON.stringify(message.args, null, 2).replace(/\n|\r/g, '')}`);
+            // global.ircClient.say(message.args[1], `Error: ${JSON.stringify(
+            // message.args, null, 2).replace(/\n|\r/g, '')}`);
             logger.error(`[${PREFIX}] ${JSON.stringify(message, null, 2).replace(/\n|\r/g, '')}`);
+            logger.error(message);
           }
         }
       } else {

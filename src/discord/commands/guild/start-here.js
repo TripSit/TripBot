@@ -90,10 +90,9 @@ module.exports = {
       **By chatting here you agree to abide the ${channelRules}**
       > Many of our users are currently on a substance and appreciate a more gentle chat.
       > We want this place to be inclusive and welcoming, if there is anything disrupting your stay here:
-      ***1*** Use ${downvoteEmoji} on offensive comments, three of them will activate a timeout and mod review!
-      ***2*** Use the /report interface to report someone to the mod team! Also use Right Click > Apps > Report!
-      ***3*** Mention the @moderators to get attention from the mod team!
-      ***4*** Message TripBot and click the "I have a discord issue" button to start a thread with the team!
+      ***1*** Use the /report interface to report someone to the mod team! Also use Right Click > Apps > Report!
+      ***2*** Mention the @moderators to get attention from the mod team!
+      ***3*** Message TripBot and click the "I have a discord issue" button to start a thread with the team!
 
       **If someone has the "bot" tag they are talking from IRC!**
       > IRC is an older chat system where TripSit started: chat.tripsit.me
@@ -102,7 +101,6 @@ module.exports = {
       **We have a karma system!**
       > Use /profile to see your karma!
       > React with ${upvoteEmoji} or ${downvoteEmoji} to give or take karma!
-      > *Remember: Three ${downvoteEmoji} on a message activates a timeout!*
 
       **We have our own custom bot!**
       > Go crazy in ${channelBotspam} exploring the bot commands!
