@@ -12,7 +12,7 @@ const {
 async function getReactionRoles(client) {
   const tripsitGuild = client.guilds.resolve(discordGuildId);
   const [targetGuildData] = await getGuildInfo(tripsitGuild);
-  const reactionRoles = targetGuildData.reactionRoles;
+  const reactionRoles = targetGuildData.reactionRoles || null;
   // logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles, null, 2)}`);
   if (reactionRoles) {
     let reactionConfig = [];
