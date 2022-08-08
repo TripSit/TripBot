@@ -93,8 +93,9 @@ module.exports = {
         logger.debug(`[${PREFIX}] Guild database backedup!`);
       }
     }
-    const userDb = await updateGlobalDb();
-    await backupDb(userDb);
+    await updateGlobalDb();
+    // const userDb = await updateGlobalDb();
+    // await backupDb(userDb);
   },
   getUserInfo: async member => {
     logger.info(`[${PREFIX}] getUserInfo()`);
