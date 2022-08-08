@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const fs = require('fs/promises');
+// const fs = require('fs/promises');
 const { initializeApp, cert } = require('firebase-admin/app'); // eslint-disable-line
 const { getFirestore } = require('firebase-admin/firestore'); // eslint-disable-line
 const serviceAccount = require('../assets/config/firebase_creds.json');
@@ -11,7 +11,7 @@ const logger = require('../utils/logger');
 const PREFIX = path.parse(__filename).name;
 
 const {
-  NODE_ENV,
+  // NODE_ENV,
   firebaseTicketDbName,
   firebaseGuildDbName,
   firebaseUserDbName,
@@ -75,24 +75,24 @@ module.exports = {
       return userDb;
     }
 
-    async function backupDb(userDb) {
-      const today = Math.floor(Date.now() / 1000);
-      if (NODE_ENV !== 'production') {
-        await fs.writeFile(
-          path.resolve(`./backups/userDb_(${today}).json`),
-          JSON.stringify(userDb, null, 2),
-        );
-        logger.debug(`[${PREFIX}] User database backedup!`);
-      }
+    // async function backupDb(userDb) {
+    //   const today = Math.floor(Date.now() / 1000);
+    //   if (NODE_ENV !== 'production') {
+    //     await fs.writeFile(
+    //       path.resolve(`./backups/userDb_(${today}).json`),
+    //       JSON.stringify(userDb, null, 2),
+    //     );
+    //     logger.debug(`[${PREFIX}] User database backedup!`);
+    //   }
 
-      if (NODE_ENV !== 'production') {
-        await fs.writeFile(
-          path.resolve(`./backups/guild_db_(${today}).json`),
-          JSON.stringify(global.guild_db, null, 2),
-        );
-        logger.debug(`[${PREFIX}] Guild database backedup!`);
-      }
-    }
+    //   if (NODE_ENV !== 'production') {
+    //     await fs.writeFile(
+    //       path.resolve(`./backups/guild_db_(${today}).json`),
+    //       JSON.stringify(global.guild_db, null, 2),
+    //     );
+    //     logger.debug(`[${PREFIX}] Guild database backedup!`);
+    //   }
+    // }
     await updateGlobalDb();
     // const userDb = await updateGlobalDb();
     // await backupDb(userDb);
