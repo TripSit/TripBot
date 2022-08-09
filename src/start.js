@@ -13,11 +13,12 @@ const { runTimer } = require('./global/services/timerAPI');
 
 const {
   NODE_ENV,
+  firebaseRealtimeKey,
 } = require('../env');
 
 async function start() {
   global.userDb = {};
-  if (NODE_ENV === 'production') {
+  if (firebaseRealtimeKey) {
     await firebaseConnect();
   }
 

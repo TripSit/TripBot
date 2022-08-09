@@ -29,7 +29,7 @@ const {
 
 module.exports = {
   firebaseConnect: async () => {
-    logger.info(`[${PREFIX}] connecting...`);
+    // logger.info(`[${PREFIX}] connecting...`);
     // Initialize firebase app
     firebaseConfig.private_key_id = firebasePrivateKeyId;
     firebaseConfig.private_key = firebasePrivateKey ? firebasePrivateKey.replace(/\\n/g, '\n') : undefined;
@@ -93,7 +93,7 @@ module.exports = {
       });
 
       userRef.on('child_added', snapshot => {
-        logger.debug(`[${PREFIX}] added: ${JSON.stringify(snapshot.key, null, 4)}`);
+        // logger.debug(`[${PREFIX}] added: ${JSON.stringify(snapshot.key, null, 4)}`);
         global.userDb[snapshot.key] = snapshot.val();
         // logger.debug(`[${PREFIX}] Global USER db updated with ADDITIONS!`);
         // logger.debug(`[${PREFIX}] global.userDb: ${JSON.stringify(global.userDb, null, 4)}`);
@@ -114,7 +114,7 @@ module.exports = {
       });
 
       guildRef.on('child_added', snapshot => {
-        logger.debug(`[${PREFIX}] added: ${JSON.stringify(snapshot.key, null, 4)}`);
+        // logger.debug(`[${PREFIX}] added: ${JSON.stringify(snapshot.key, null, 4)}`);
         global.guildDb[snapshot.key] = snapshot.val();
         logger.debug(`[${PREFIX}] Global GUILD db updated with ADDITIONS!`);
         // logger.debug(`[${PREFIX}] global.guildDb: ${JSON.stringify(global.guildDb, null, 4)}`);
@@ -273,9 +273,9 @@ module.exports = {
     let guildFbid = null;
 
     if (db !== undefined) {
-      logger.debug(`[${PREFIX}] Looking up guild ${guild}!`);
+      // logger.debug(`[${PREFIX}] Looking up guild ${guild}!`);
       const ref = db.ref(`${firebaseGuildDbName}/${guild.name.toString()}`);
-      logger.debug(`[${PREFIX}] ref: ${ref}`);
+      // logger.debug(`[${PREFIX}] ref: ${ref}`);
       await ref.once('value', data => {
         if (data.val() !== null) {
           logger.debug(`[${PREFIX}] data: ${JSON.stringify(data.val(), null, 2)}`);

@@ -100,7 +100,7 @@ if (NODE_ENV === 'development') {
 
 module.exports = {
   runTimer: async () => {
-    logger.debug(`[${PREFIX}] started!`);
+    logger.info(`[${PREFIX}] started!`);
     // eslint-disable-next-line
     let i = 0;
     function checkTimers(c) {
