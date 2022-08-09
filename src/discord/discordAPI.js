@@ -38,6 +38,6 @@ module.exports = {
 
     Promise.all([registerCommands(client), registerEvents(client)])
       .then(() => client.login(discordToken))
-      .then(() => logger.info(`[${PREFIX}] Discord bot successfully started...`));
+      .then(() => logger.info(`[${PREFIX}] Discord bot logged in!`));
   },
 };

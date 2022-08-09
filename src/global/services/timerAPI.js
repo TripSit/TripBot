@@ -100,7 +100,7 @@ if (NODE_ENV === 'development') {
 
 module.exports = {
   runTimer: async () => {
-    logger.debug(`[${PREFIX}] started!`);
+    logger.info(`[${PREFIX}] started!`);
     // eslint-disable-next-line
     let i = 0;
     function checkTimers(c) {
@@ -113,21 +113,21 @@ module.exports = {
           // global.userDb.forEach(async doc => {
           if (Object.keys(global.userDb).length > 0) {
             // eslint-disable-next-line
-            for (const doc of global.userDb) {
-              if (doc.value.reminders) {
-                if (Object.keys(doc.value.reminders).length > 0) {
-                  // Loop over doc.value.reminders keys
-                  // Object.keys(doc.value.reminders).forEach(async reminderDate => {
+            for (const userKey of Object.keys(global.userDb)) {
+              if (global.userDb[userKey].reminders) {
+                if (Object.keys(global.userDb[userKey].reminders).length > 0) {
+                  // Loop over global.userDb[userKey].reminders keys
+                  // Object.keys(global.userDb[userKey].reminders).forEach(async reminderDate => {
                   // eslint-disable-next-line
-                  for (const reminderDate of Object.keys(doc.value.reminders)) {
+                  for (const reminderDate of Object.keys(global.userDb[userKey].reminders)) {
                     // logger.debug(`[${PREFIX}] user_fb_id: ${user_fb_id}`);
-                    const userid = doc.value.discord.id;
+                    const userid = global.userDb[userKey].discord.id;
                     // logger.debug(`[${PREFIX}] userid: ${userid}`);
                     const reminderTime = reminderDate.seconds * 1000
                       || new Date(reminderDate);
                     const timeBetween = reminderTime - now;
-                    logger.debug(`[${PREFIX}] ${doc.value.accountName} has a reminder in ${ms(timeBetween, { long: true })}`);
-                    const reminder = doc.value.reminders[reminderDate];
+                    logger.debug(`[${PREFIX}] ${userKey} has a reminder in ${ms(timeBetween, { long: true })}`);
+                    const reminder = global.userDb[userKey].reminders[reminderDate];
                     if (reminderTime <= now) {
                       logger.debug(`[${PREFIX}] Sending reminder to ${userid}`);
 
@@ -178,8 +178,8 @@ module.exports = {
                   }
                 }
               }
-              if (doc.value.discord) {
-                const discordData = doc.value.discord;
+              if (global.userDb[userKey].discord) {
+                const discordData = global.userDb[userKey].discord;
                 if (discordData.communityMod) {
                   logger.debug(`[${PREFIX}] processing communityMod on ${discordData.username}!`);
                   // logger.debug(`[${PREFIX}] Processing communityMod on ${discordData.username}`);

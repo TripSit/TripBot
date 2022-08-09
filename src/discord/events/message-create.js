@@ -4,8 +4,8 @@ const PREFIX = require('path').parse(__filename).name;
 // const { WebhookClient } = require('discord.js');
 const { stripIndents } = require('common-tags');
 const { announcements } = require('../../global/utils/announcements');
-// const { karma } = require('../../global/utils/karma');
-// const { experience } = require('../../global/utils/experience');
+const { karma } = require('../../global/utils/karma');
+const { experience } = require('../../global/utils/experience');
 const { modmailInitialResponse } = require('../commands/guild/modmail');
 const logger = require('../../global/utils/logger');
 const template = require('../utils/embed-template');
@@ -129,7 +129,7 @@ module.exports = {
     // }
 
     announcements(message);
-    // karma(message);
-    // experience(message);
+    karma(message);
+    experience(message);
   },
 };

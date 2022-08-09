@@ -13,8 +13,6 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const template = require('../../utils/embed-template');
 const logger = require('../../../global/utils/logger');
 const {
-  // getUserInfo,
-  // setUserInfo,
   getTicketInfo,
   setTicketInfo,
 } = require('../../../global/services/firebaseAPI');

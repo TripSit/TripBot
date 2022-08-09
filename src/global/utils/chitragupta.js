@@ -15,8 +15,10 @@ module.exports = {
 
     // logger.debug(`[${PREFIX}] emoji: ${JSON.stringify(reaction.emoji, null, 2)}`);
 
+    // Can't give karma to yourself!
     if (actor === target) { return; }
 
+    // logger.debug(`[${PREFIX}] actor: ${actor}`);
     if (!reaction.emoji.name.includes('upvote') && !reaction.emoji.name.includes('downvote')) {
       logger.debug(`[${PREFIX}] Invalid emoji: ${emoji.toString()}`);
       logger.debug(`[${PREFIX}] finished!`);
@@ -30,20 +32,7 @@ module.exports = {
     // logger.debug(`[${PREFIX}] Actor data: ${JSON.stringify(actorData, null, 2)}`);
 
     // Transform actor data
-    if ('discord' in actorData) {
-      logger.debug(`[${PREFIX}] Actor data has a discord property`);
-      if ('karma_given' in actorData.discord) {
-        logger.debug(`[${PREFIX}] Updating karma_given info!`);
-        actorData.discord.karma_given[emoji] = (actorData.discord.karma_given[emoji] || 0) + action;
-      } else {
-        logger.debug(`[${PREFIX}] Creating karma_given info!`);
-        actorData.discord.karma_given = { [emoji]: action };
-      }
-    } else {
-      logger.debug(`[${PREFIX}] Actor data does not have a discord property`);
-      logger.debug(`[${PREFIX}] Creating discord info!`);
-      actorData.discord = { karma_given: { [emoji]: action } };
-    }
+    actorData.karma_given = actorData.karma_given + action || action;
 
     // Load actor data
     // logger.debug(`[${PREFIX}] Actor data: ${JSON.stringify(actorData, null, 2)}`);
@@ -54,21 +43,7 @@ module.exports = {
     // logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
 
     // Transform target data
-    if ('discord' in targetData) {
-      logger.debug(`[${PREFIX}] targetData has a discord property`);
-      if ('karma_received' in targetData.discord) {
-        logger.debug(`[${PREFIX}] Updating karma_received info!`);
-        targetData.discord.karma_received[emoji] = (
-          targetData.discord.karma_received[emoji] || 0) + action;
-      } else {
-        logger.debug(`[${PREFIX}] Creating karma_given info!`);
-        targetData.discord.karma_received = { [emoji]: action };
-      }
-    } else {
-      logger.debug(`[${PREFIX}] targetData does not have a discord property`);
-      logger.debug(`[${PREFIX}] Creating discord info!`);
-      targetData.discord = { karma_received: { [emoji]: action } };
-    }
+    targetData.karma_received = targetData.karma_received + action || action;
 
     // Load target data
     // logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);

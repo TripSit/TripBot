@@ -2,11 +2,10 @@
 
 // const PREFIX = require('path').parse(__filename).name;
 // const logger = require('../../global/utils/logger');
-// const { chitragupta } = require('../../global/utils/chitragupta');
+const { chitragupta } = require('../../global/utils/chitragupta');
 // const { communityMod } = require('../utils/community-mod');
 const { handleReactionRoles } = require('../utils/handleReactionRoles');
-// const { sparklePoints } = require('../utils/sparkle-points');
-// const { removeDuplicates } = require('../utils/remove-duplicate-roles');
+const { sparklePoints } = require('../utils/sparkle-points');
 const { bestOf } = require('../utils/best-of-tripsit');
 
 const {
@@ -41,7 +40,7 @@ module.exports = {
     }
 
     // This can run on bots
-    // await sparklePoints(reaction, user);
+    await sparklePoints(reaction, user);
 
     // Dont run on bots
     if ((reaction.message.author.bot || user.bot) && reaction.emoji.name !== 'karma_downvote') {
@@ -49,7 +48,7 @@ module.exports = {
       return;
     }
 
-    // await chitragupta(reaction, user, 1);
+    await chitragupta(reaction, user, 1);
     await bestOf(reaction, user);
     // await communityMod(reaction, user);
   },

@@ -73,28 +73,28 @@ const botNicknames = [
 ];
 
 const channels = {
-  '#sandbox': channelSandboxId,
-  '#sandbox-dev': channelSandboxId,
-  '#sanctuary': channelSanctuaryId,
-  '#tripsitters': channelTripsittersId,
-  '#tripsit': channelOpentripsitId,
-  '#tripsit1': channelOpentripsit1Id,
-  '#tripsit2': channelOpentripsit2Id,
-  '#tripsit3': channelClosedtripsitId,
-  '#tripsit-dev': channelDevelopmentId,
-  '#meeting-room': channelMeetingroomId,
-  '#content': channelWikicontentId,
-  '#moderators': channelModeratorsId,
-  '#teamtripsit': channelTeamtripsitId,
-  '#operations': channelOperatorsId,
-  '#modhaven': channelModhavenId,
-  '#tripsit.me': channelTripsitmeId,
-  '#lounge': channelLoungeId,
-  '#opiates': channelOpiatesId,
-  '#stims': channelStimulantsId,
-  '#depressants': channelDepressantsId,
-  '#dissociatives': channelDissociativesId,
-  '#psychedelics': channelPsychedelicsId,
+  sandbox: channelSandboxId,
+  'sandbox-dev': channelSandboxId,
+  sanctuary: channelSanctuaryId,
+  tripsitters: channelTripsittersId,
+  tripsit: channelOpentripsitId,
+  tripsit1: channelOpentripsit1Id,
+  tripsit2: channelOpentripsit2Id,
+  tripsit3: channelClosedtripsitId,
+  'tripsit-dev': channelDevelopmentId,
+  'meeting-room': channelMeetingroomId,
+  content: channelWikicontentId,
+  moderators: channelModeratorsId,
+  teamtripsit: channelTeamtripsitId,
+  operations: channelOperatorsId,
+  modhaven: channelModhavenId,
+  'tripsit.me': channelTripsitmeId,
+  lounge: channelLoungeId,
+  opiates: channelOpiatesId,
+  stims: channelStimulantsId,
+  depressants: channelDepressantsId,
+  dissociatives: channelDissociativesId,
+  psychedelics: channelPsychedelicsId,
 };
 
 module.exports = {
@@ -106,19 +106,38 @@ module.exports = {
 
     logger.debug(`[${PREFIX}] (${message.nick}!${message.user}@${message.host}) ${message.command}ed}`);
 
+    let user = null;
+    if (message.command === 'KICK') {
+      // logger.debug(`[${PREFIX}] Whoising ${message.args[1]}`);
+      await global.ircClient.whois(message.args[1], async resp => {
+        // logger.debug(`[${PREFIX}] Whoised ${JSON.stringify(resp, null, 2)}`);
+        user = resp;
+      });
+      while (user === null) {
+        await new Promise(resolve => setTimeout(resolve, 100)); // eslint-disable-line
+      }
+    } else {
+      user = message;
+    }
+
     // Get user data
-    const [actorData] = await getUserInfo(message);
+    const [actorData] = await getUserInfo(user);
+    logger.debug(`[${PREFIX}] Actor data: ${JSON.stringify(actorData, null, 2)}`);
 
     if ('experience' in actorData) {
+      logger.debug(`[${PREFIX}] Actor has experience!`);
       let lastMessageDate = 0;
       try {
         lastMessageDate = actorData.experience.general.lastMessageDate;
       } catch (e) {
         logger.debug(`[${PREFIX}] No lastMessageDate found for ${message.author ? message.author.username : message.nick}`);
       }
+      logger.debug(`[${PREFIX}] Last message date: ${lastMessageDate}`);
       const now = new Date();
+      logger.debug(`[${PREFIX}] now: ${now}`);
       const diff = now - lastMessageDate;
-      // If the user has sent a message in the last 10 minutes
+      logger.debug(`[${PREFIX}] diff: ${diff} < ${10 * 60 * 1000}`);
+      // If the user has sent a message in the last 10 minutes/nick
       if (diff < 10 * 60 * 1000) {
         logger.debug(`[${PREFIX}] ${message.nick} has sent a message in the last 10 minutes!`);
 
