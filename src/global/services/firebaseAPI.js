@@ -177,7 +177,7 @@ module.exports = {
       if (member.host.startsWith('tripsit')) {
         memberKey = member.host.split('/')[2];
       } else {
-        memberKey = member.host.replace(/\W/g, '_');
+        memberKey = member.host;
       }
 
       // Get the member friendly name of the user we're looking up
@@ -197,6 +197,8 @@ module.exports = {
     }
 
     logger.debug(`[${PREFIX}] Looking up ${name}!`);
+
+    memberKey = memberKey.replace(/\W/g, '_');
 
     const { db } = global;
     if (db !== undefined) {

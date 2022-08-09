@@ -1,10 +1,10 @@
 'use strict';
 
-// const { watcher } = require('../utils/uatu');
+const { watcher } = require('../utils/uatu');
 
 module.exports = {
   async execute() {
-    global.ircClient.addListener('nick', (/* oldnick, newnick, channels, message */) => {
+    global.ircClient.addListener('nick', (oldnick, newnick, channels, message) => {
       // {
       //   "prefix": "Moony!~teknos@tripsit/founder/Teknos",
       //   "nick": "Moony",
@@ -17,7 +17,7 @@ module.exports = {
       //     "Moonpie"
       //   ]
       // }
-      // watcher(message, newnick);
+      watcher(message, newnick);
     });
   },
 };

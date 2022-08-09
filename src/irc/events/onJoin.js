@@ -1,10 +1,10 @@
 'use strict';
 
-// const { watcher } = require('../utils/uatu');
+const { watcher } = require('../utils/uatu');
 
 module.exports = {
   async execute() {
-    global.ircClient.addListener('join', (/* channel, nick, message */) => {
+    global.ircClient.addListener('join', (channel, nick, message) => {
       // {
       //   "prefix": "TSDev!~TSDev@tripsit/bridge/TS1",
       //   "nick": "TSDev",
@@ -17,7 +17,7 @@ module.exports = {
       //     "#sandbox-dev"
       //   ]
       // }
-      // watcher(message);
+      watcher(message);
     });
   },
 };
