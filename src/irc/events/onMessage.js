@@ -96,7 +96,7 @@ module.exports = {
   async execute() {
     global.ircClient.addListener('message#', (nick, to, text, message) => {
       // Example 'message' event
-      logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
+      // logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
       // {
       //   "prefix": "Moonbear!~teknos@tripsit/founder/Teknos",
       //   "nick": "Moonbear",

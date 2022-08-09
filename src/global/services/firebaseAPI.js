@@ -168,62 +168,31 @@ module.exports = {
 
     // Determine what platform the user is from
     // Depending on source of the user we need to use different keys
-    // We also create a scaffolding of user information in case firebase doesn't have it
     let name = '';
     if (member.host) {
       // If the member object has a host value, then this is a message from IRC
       logger.debug(`[${PREFIX}] Member is from IRC!`);
 
       // Only registered users' hosts start with tripsit
-      let memberRole = '';
       if (member.host.startsWith('tripsit')) {
-        memberRole = member.host.split('/')[1];
         memberKey = member.host.split('/')[2];
       } else {
-        memberRole = 'member';
-        memberKey = member.host;
+        memberKey = member.host.replace(/\W/g, '_');
       }
 
-      // If the user is registered on IRC:
-      memberData = {
-        irc: {
-          accountName: memberKey || member.host,
-          vhost: member.host,
-          nickname: member.nick,
-          role: memberRole,
-        },
-      };
+      // Get the member friendly name of the user we're looking up
       name = member.nick;
     } else if (member.user) {
       // Only Users INSIDE the guild will have a .user property
       logger.debug(`[${PREFIX}] Member is from Discord!`);
       memberKey = `${member.user.username}${member.user.discriminator}`;
 
-      // If the member object has an ID value, then this is a message from discord
-      memberData = {
-        discord: {
-          id: member.user.id.toString(),
-          tag: member.user.tag,
-          username: member.user.username,
-          discriminator: member.user.discriminator,
-          nickname: member.nickname,
-        },
-      };
+      // Get the member friendly name of the user we're looking up
       name = member.user.username;
     } else if (member.username) {
       // Only Users OUTSIDE the guild will have a .username property
       logger.debug(`[${PREFIX}] User is from Discord!`);
       memberKey = `${member.username}${member.discriminator}`;
-
-      // If the member object has an ID value, then this is a message from discord
-      memberData = {
-        discord: {
-          id: member.id.toString(),
-          tag: member.tag,
-          username: member.username,
-          discriminator: member.discriminator,
-        },
-      };
       name = member.username;
     }
 
@@ -243,11 +212,50 @@ module.exports = {
     }
     // logger.debug(`[${PREFIX}] memberData: ${JSON.stringify(memberData, null, 2)}`);
     logger.debug(`[${PREFIX}] memberKey: ${JSON.stringify(memberKey, null, 2)}`);
+
+    if (member.host) {
+      // Only registered users' hosts start with tripsit
+      let memberRole = '';
+      if (member.host.startsWith('tripsit')) {
+        memberRole = member.host.split('/')[1];
+      } else {
+        memberRole = 'member';
+      }
+      memberData = {
+        irc: {
+          accountName: memberKey || member.host,
+          vhost: member.host,
+          nickname: member.nick,
+          role: memberRole,
+        },
+      };
+    } else if (member.user) {
+      memberData = {
+        discord: {
+          id: member.user.id.toString(),
+          tag: member.user.tag,
+          username: member.user.username,
+          discriminator: member.user.discriminator,
+          nickname: member.nickname,
+        },
+      };
+    } else if (member.username) {
+      memberData = {
+        discord: {
+          id: member.id.toString(),
+          tag: member.tag,
+          username: member.username,
+          discriminator: member.discriminator,
+        },
+      };
+    }
+
     logger.info(`[${PREFIX}] getUserInfo finish!`);
+
     return [memberData, memberKey];
   },
   setUserInfo: async (id, data) => {
-    logger.info(`[${PREFIX}] setUserInfo()`);
+    logger.debug(`[${PREFIX}] setUserInfo()`);
     const { db } = global;
     if (db !== undefined) {
       // logger.debug(`[${PREFIX}] Saving ${JSON.stringify(data, null, 2)}!`);
