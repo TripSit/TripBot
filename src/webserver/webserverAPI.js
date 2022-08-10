@@ -61,19 +61,19 @@ module.exports = {
       const httpServer = http.createServer(app);
 
       httpsServer.listen(httpsPort, () => {
-        logger.debug(`[${PREFIX}] HTTPS Server running at: ${httpsUrl}`);
+        logger.info(`[${PREFIX}] HTTPS Server running at: ${httpsUrl}`);
       });
 
       httpServer.listen(httpPort, () => {
-        logger.debug(`[${PREFIX}] HTTP Server running at: ${httpUrl}`);
+        logger.info(`[${PREFIX}] HTTP Server running at: ${httpUrl}`);
       });
     } else {
       app.listen(httpsPort, () => {
-        logger.debug(`[${PREFIX}] HTTPS Server running at: ${httpsUrl}`);
+        logger.info(`[${PREFIX}] HTTPS Server running at: ${httpsUrl}`);
       });
 
       app.listen(httpPort, () => {
-        logger.debug(`[${PREFIX}] HTTP Server running at: ${httpUrl}`);
+        logger.info(`[${PREFIX}] HTTP Server running at: ${httpUrl}`);
       });
     }
 

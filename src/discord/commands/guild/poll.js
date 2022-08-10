@@ -38,7 +38,7 @@ module.exports = {
         for (let i = 0; i < optionsArray.length; i += 1) {
           /* eslint-disable no-await-in-loop */
           // This is fine cuz we're reacting in-order
-          await msg.react(`${i + 1}⃣`);
+          await msg.react(`${i + 1}`);
         }
 
         // for (let i = 0; i < optionsArray.length; i += 1) {

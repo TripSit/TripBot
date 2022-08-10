@@ -12,8 +12,6 @@ const { stripIndents } = require('common-tags');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const {
-  // getUserInfo,
-  // setUserInfo,
   getTicketInfo,
   setTicketInfo,
 } = require('../../../global/services/firebaseAPI');

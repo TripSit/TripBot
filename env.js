@@ -37,6 +37,8 @@ exports.firebaseClientEmail = process.env.firebaseClientEmail;
 exports.firebaseGuildDbName = process.env.firebaseGuildDbName;
 exports.firebaseUserDbName = process.env.firebaseUserDbName;
 exports.firebaseTicketDbName = process.env.firebaseTicketDbName;
+exports.firebaseDatabaseURL = process.env.firebaseDatabaseURL;
+exports.firebaseRealtimeKey = process.env.firebaseRealtimeKey;
 
 exports.TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 

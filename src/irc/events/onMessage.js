@@ -2,7 +2,7 @@
 
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../global/utils/logger');
-// const { experience } = require('../../global/utils/experience');
+const { experience } = require('../../global/utils/experience');
 const { echo } = require('../commands/echo');
 const { moderate } = require('../commands/i.moderate');
 
@@ -96,7 +96,7 @@ module.exports = {
   async execute() {
     global.ircClient.addListener('message#', (nick, to, text, message) => {
       // Example 'message' event
-      logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
+      // logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
       // {
       //   "prefix": "Moonbear!~teknos@tripsit/founder/Teknos",
       //   "nick": "Moonbear",
@@ -130,7 +130,7 @@ module.exports = {
       }
 
       // This always runs
-      // experience(message);
+      experience(message);
     });
   },
 };

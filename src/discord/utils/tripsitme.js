@@ -167,7 +167,7 @@ module.exports = {
 
     // Get a list of the target's roles
     const targetRoleNames = target.roles.cache.map(role => role.name);
-    // logger.debug(`[${PREFIX}] targetRoleNames: ${targetRoleNames}`);
+    logger.debug(`[${PREFIX}] targetRoleNames: ${targetRoleNames}`);
 
     // Check if the target already needs help
     const targetHasRoleNeedshelp = target.roles.cache.find(
@@ -183,7 +183,7 @@ module.exports = {
     // Get the target lastHelped information from the db
     const [targetData, targetFbid] = await getUserInfo(target);
     const targetAction = `${PREFIX}_received`;
-    const targetLastHelpedDate = targetData.discord.lastHelpedDate;
+    const targetLastHelpedDate = new Date(targetData.discord.lastHelpedDate);
     logger.debug(`[${PREFIX}] targetLastHelpedDate: ${targetLastHelpedDate}`);
     const targetLastHelpedThreadId = targetData.discord.lastHelpedThreadId;
     logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
@@ -320,9 +320,9 @@ module.exports = {
     // If the user has been helped in the last week, direct them to the existing thread
     if (targetLastHelpedDate) {
       const lastWeek = Date.now() - (1000 * 60 * 60 * 24 * 7);
-      logger.debug(`[${PREFIX}] lastHelp: ${targetLastHelpedDate.seconds * 1000}`);
+      logger.debug(`[${PREFIX}] lastHelp: ${targetLastHelpedDate.valueOf()}`);
       logger.debug(`[${PREFIX}] lastWeek: ${lastWeek}`);
-      if (targetLastHelpedDate.seconds * 1000 > lastWeek) {
+      if (targetLastHelpedDate.valueOf() > lastWeek) {
         logger.debug(`[${PREFIX}] Target was last helped within the last week!`);
         // Ping them in the open thread
         try {
@@ -532,25 +532,25 @@ module.exports = {
     // TODO: Use transactions
     await setUserInfo(targetFbid, targetData);
 
-    // Extract actor data
-    const [actorData, actorFbid] = await getUserInfo(actor);
+    // // Extract actor data
+    // const [actorData, actorFbid] = await getUserInfo(actor);
 
-    // Transform actor data
-    const actorAction = `${PREFIX}_sent`;
-    logger.debug(`[${PREFIX}] Updating actor data`);
-    if ('discord' in actorData) {
-      if ('modActions' in actorData.discord) {
-        actorData.discord.modActions[actorAction] = (
-          actorData.discord.modActions[actorAction] || 0) + 1;
-      } else {
-        actorData.discord.modActions = { [actorAction]: 1 };
-      }
-    } else {
-      actorData.discord = { modActions: { [actorAction]: 1 } };
-    }
+    // // Transform actor data
+    // const actorAction = `${PREFIX}_sent`;
+    // logger.debug(`[${PREFIX}] Updating actor data`);
+    // if ('discord' in actorData) {
+    //   if ('modActions' in actorData.discord) {
+    //     actorData.discord.modActions[actorAction] = (
+    //       actorData.discord.modActions[actorAction] || 0) + 1;
+    //   } else {
+    //     actorData.discord.modActions = { [actorAction]: 1 };
+    //   }
+    // } else {
+    //   actorData.discord = { modActions: { [actorAction]: 1 } };
+    // }
 
-    // save the actor's data
-    setUserInfo(actorFbid, actorData);
+    // // save the actor's data
+    // setUserInfo(actorFbid, actorData);
 
     logger.debug(`[${PREFIX}] finished!`);
   },

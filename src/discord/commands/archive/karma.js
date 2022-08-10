@@ -33,7 +33,7 @@ module.exports = {
 
     // Transform actor data
     let karmaReceivedString = '';
-    const karmaReceived = actorData.discord.karma_received;
+    const karmaReceived = actorData.karma_received;
     if (karmaReceived) {
       logger.debug(`[${PREFIX}] karma_received: ${JSON.stringify(karmaReceived, null, 2)}`);
       if (all) {

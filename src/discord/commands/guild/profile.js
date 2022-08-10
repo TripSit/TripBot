@@ -81,25 +81,11 @@ module.exports = {
     const [targetData] = await getUserInfo(target);
     const targetUsername = `${target.user.username}#${target.user.discriminator}`;
 
-    let givenUpvote = 0;
-    let givenDownvote = 0;
-    let givenKarma = 0;
-    let takenDownvote = 0;
-    let takenUpvote = 0;
-    let takenKarma = 0;
+    const givenKarma = targetData.karma_given || 0;
+    const takenKarma = targetData.karma_received || 0;
     let targetBirthday = 'Use /birthday to set a birthday!';
 
     if (targetData.discord) {
-      if (targetData.discord.karma_given) {
-        givenUpvote = targetData.discord.karma_given['<:ts_voteup:958721361587630210>'] || 0;
-        givenDownvote = targetData.discord.karma_given['<:ts_votedown:960161563849932892>'] || 0;
-        givenKarma = givenUpvote - givenDownvote;
-      }
-      if (targetData.discord.karma_taken) {
-        takenDownvote = targetData.discord.karma_received['<:ts_votedown:960161563849932892>'] || 0;
-        takenUpvote = targetData.discord.karma_received['<:ts_voteup:958721361587630210>'] || 0;
-        takenKarma = takenUpvote - takenDownvote;
-      }
       if (targetData.birthday) {
         targetBirthday = targetData.birthday
           ? new Date(`${targetData.birthday[0]} ${targetData.birthday[1]}, 2022`)
