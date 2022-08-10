@@ -229,7 +229,7 @@ module.exports = {
       } else {
         memberRole = 'member';
       }
-      memberData.irc.accountName = memberKey || member.host;
+      memberData.irc.accountName = memberKey;
       memberData.irc.vhost = member.host;
       memberData.irc.nickname = member.nick;
       memberData.irc.role = memberRole;
