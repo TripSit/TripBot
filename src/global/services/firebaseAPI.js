@@ -2,14 +2,8 @@
 
 const PREFIX = require('path').parse(__filename).name;
 
-// const fs = require('fs/promises');
 const admin = require('firebase-admin');
-// const { initializeApp, cert } = require('firebase-admin/app'); // eslint-disable-line
-// const { getFirestore } = require('firebase-admin/firestore'); // eslint-disable-line
-// const { initializeApp } = require('firebase/app');
-// const { getDatabase } = require('firebase/database');
-// const { initializeAppCheck, ReCaptchaV3Provider } = require('firebase/app-check');
-const firebase = require('firebase');
+const { getFirestore } = require('firebase-admin/firestore'); // eslint-disable-line
 const firebaseConfig = require('../assets/config/firebase_creds.json');
 
 const logger = require('../utils/logger');
@@ -43,9 +37,7 @@ module.exports = {
     });
 
     global.db = admin.database();
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
+    global.firestore = getFirestore();
 
     // Pass your reCAPTCHA v3 site key (public key) to activate(). Make sure this
     // key is the counterpart to the secret key you set in the Firebase console.
@@ -57,82 +49,53 @@ module.exports = {
     //   isTokenAutoRefreshEnabled: true,
     // });
 
-    // Initialize Realtime Database and get a reference to the service
-    global.db = admin.database();
+    const userRef = global.db.ref(`${firebaseUserDbName}`);
+    userRef.on('child_changed', snapshot => {
+      // logger.debug(`[${PREFIX}] changed: ${JSON.stringify(snapshot.key, null, 4)}`);
+      global.userDb[snapshot.key] = snapshot.val();
+      // logger.debug(`[${PREFIX}] Global USER db updated with CHANGES!`);
+    });
 
-    const { db } = global;
-    // async function updateGlobalDb(userRef, guildRef) {
-    //   await userRef.once('value', data => {
-    //     Object.assign(global, { userDb: data.val() });
-    //     logger.debug(`[${PREFIX}] Global USER db updated!`);
-    //   }, errorObject => {
-    //     logger.error(`[${PREFIX}] ${errorObject.name}`);
-    //   });
+    userRef.on('child_added', snapshot => {
+      // logger.debug(`[${PREFIX}] added: ${JSON.stringify(snapshot.key, null, 4)}`);
+      global.userDb[snapshot.key] = snapshot.val();
+      // logger.debug(`[${PREFIX}] Global USER db updated with ADDITIONS!`);
+      // logger.debug(`[${PREFIX}] global.userDb: ${JSON.stringify(global.userDb, null, 4)}`);
+    });
 
-    //   // logger.debug(`[${PREFIX}] userDb: ${JSON.stringify(global.userDb, null, 4)}`);
-    //   logger.debug(`[${PREFIX}] Global User DB loaded!`);
+    userRef.on('child_removed', snapshot => {
+      // logger.debug(`[${PREFIX}] removed: ${JSON.stringify(snapshot.key, null, 4)}`);
+      delete global.userDb[snapshot.key];
+      // logger.debug(`[${PREFIX}] Global USER db updated with DELETIONS!`);
+    });
 
-    //   const blacklistGuilds = [];
-    //   await guildRef.once('value', data => {
-    //     Object.assign(global, { guildDb: data.val() });
-    //     logger.debug(`[${PREFIX}] Global GUILD db updated!`);
-    //     Object.keys(data.val()).forEach(doc => {
-    //       if (data.val()[doc].isBanned) {
-    //         blacklistGuilds.push(data.val()[doc].guild_id);
-    //       }
-    //     });
-    //   });
-    // }
+    // GUILD
+    const guildRef = global.db.ref(`${firebaseGuildDbName}`);
+    guildRef.on('child_changed', snapshot => {
+      logger.debug(`[${PREFIX}] changed: ${JSON.stringify(snapshot.key, null, 4)}`);
+      global.guildDb[snapshot.key] = snapshot.val();
+      logger.debug(`[${PREFIX}] Global GUILD db updated with CHANGES!`);
+    });
 
-    if (db !== undefined) {
-      const userRef = db.ref(`${firebaseUserDbName}`);
-      userRef.on('child_changed', snapshot => {
-        logger.debug(`[${PREFIX}] changed: ${JSON.stringify(snapshot.key, null, 4)}`);
-        global.userDb[snapshot.key] = snapshot.val();
-        logger.debug(`[${PREFIX}] Global USER db updated with CHANGES!`);
-      });
-
-      userRef.on('child_added', snapshot => {
-        // logger.debug(`[${PREFIX}] added: ${JSON.stringify(snapshot.key, null, 4)}`);
-        global.userDb[snapshot.key] = snapshot.val();
-        // logger.debug(`[${PREFIX}] Global USER db updated with ADDITIONS!`);
-        // logger.debug(`[${PREFIX}] global.userDb: ${JSON.stringify(global.userDb, null, 4)}`);
-      });
-
-      userRef.on('child_removed', snapshot => {
-        logger.debug(`[${PREFIX}] removed: ${JSON.stringify(snapshot.key, null, 4)}`);
-        delete global.userDb[snapshot.key];
-        logger.debug(`[${PREFIX}] Global USER db updated with DELETIONS!`);
-      });
-
-      // GUILD
-      const guildRef = db.ref(`${firebaseGuildDbName}`);
-      guildRef.on('child_changed', snapshot => {
-        logger.debug(`[${PREFIX}] changed: ${JSON.stringify(snapshot.key, null, 4)}`);
+    guildRef.on('child_added', snapshot => {
+      // logger.debug(`[${PREFIX}] added: ${JSON.stringify(snapshot.key, null, 4)}`);
+      try {
         global.guildDb[snapshot.key] = snapshot.val();
-        logger.debug(`[${PREFIX}] Global GUILD db updated with CHANGES!`);
-      });
+      } catch (err) {
+        logger.error(`[${PREFIX}] ${err}`);
+        logger.debug(`[${PREFIX}] snapshot.key: ${snapshot.key}`);
+        logger.debug(`[${PREFIX}] snapshot.val(): ${JSON.stringify(snapshot.val(), null, 4)}`);
+      }
+      logger.debug(`[${PREFIX}] Global GUILD db updated with ADDITIONS!`);
+      // logger.debug(`[${PREFIX}] global.guildDb: ${JSON.stringify(global.guildDb, null, 4)}`);
+    });
 
-      guildRef.on('child_added', snapshot => {
-        // logger.debug(`[${PREFIX}] added: ${JSON.stringify(snapshot.key, null, 4)}`);
-        try {
-          global.guildDb[snapshot.key] = snapshot.val();
-        } catch (err) {
-          logger.error(`[${PREFIX}] ${err}`);
-          logger.debug(`[${PREFIX}] snapshot.key: ${snapshot.key}`);
-          logger.debug(`[${PREFIX}] snapshot.val(): ${JSON.stringify(snapshot.val(), null, 4)}`);
-        }
-        logger.debug(`[${PREFIX}] Global GUILD db updated with ADDITIONS!`);
-        // logger.debug(`[${PREFIX}] global.guildDb: ${JSON.stringify(global.guildDb, null, 4)}`);
-      });
-
-      guildRef.on('child_removed', snapshot => {
-        logger.debug(`[${PREFIX}] removed: ${JSON.stringify(snapshot.key, null, 4)}`);
-        delete global.guildDb[snapshot.key];
-        logger.debug(`[${PREFIX}] Global GUILD db updated with DELETIONS!`);
-      });
-      logger.info(`[${PREFIX}] connected!`);
-    }
+    guildRef.on('child_removed', snapshot => {
+      logger.debug(`[${PREFIX}] removed: ${JSON.stringify(snapshot.key, null, 4)}`);
+      delete global.guildDb[snapshot.key];
+      logger.debug(`[${PREFIX}] Global GUILD db updated with DELETIONS!`);
+    });
+    logger.info(`[${PREFIX}] connected!`);
   },
   getUserInfo: async member => {
     logger.info(`[${PREFIX}] getUserInfo start!`);
