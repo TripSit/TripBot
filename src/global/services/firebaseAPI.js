@@ -270,17 +270,8 @@ module.exports = {
   getGuildInfo: async guild => {
     const { db } = global;
 
-    let guildData = {
-      guild_name: guild.name,
-      guild_id: guild.id || '',
-      guild_createdAt: guild.createdAt || '',
-      guild_joinedAt: guild.joinedAt || '',
-      guild_description: `${guild.description ? guild.description : 'No description'}`,
-      guild_member_count: guild.memberCount,
-      guild_owner_id: guild.discordOwnerId || 'No Owner',
-      guild_banned: false,
-    };
-    let guildFbid = guild.name;
+    let guildData = {};
+    let guildKey = '';
 
     if (db !== undefined) {
       // logger.debug(`[${PREFIX}] Looking up guild ${guild}!`);
@@ -293,12 +284,23 @@ module.exports = {
           // logger.debug(`[${PREFIX}] doc.data().guild_id: ${doc.data().guild_id}`);
           // logger.debug(`[${PREFIX}] doc.data(): ${JSON.stringify(doc.data())}`);
           guildData = data.val();
-          guildFbid = guild.name;
+          guildKey = guild.name;
         }
       });
+
+      guildData.guild_name = guild.name;
+      guildData.guild_id = guild.id || '';
+      guildData.guild_createdAt = guild.createdAt || '';
+      guildData.guild_joinedAt = guild.joinedAt || '';
+      guildData.guild_description = `${guild.description ? guild.description : 'No description'}`;
+      guildData.guild_member_count = guild.memberCount;
+      guildData.guild_owner_id = guild.discordOwnerId || 'No Owner';
+      guildData.guild_banned = false;
+
+      guildKey = guildKey.replace(/\W/g, '_');
     }
     // logger.debug(`[${PREFIX}] guildData: ${JSON.stringify(guildData)}`);
-    return [guildData, guildFbid];
+    return [guildData, guildKey];
   },
   setGuildInfo: async (id, data) => {
     logger.debug(`[${PREFIX}] Saving ${data.guild_name}!`);
