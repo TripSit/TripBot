@@ -115,7 +115,13 @@ module.exports = {
 
       guildRef.on('child_added', snapshot => {
         // logger.debug(`[${PREFIX}] added: ${JSON.stringify(snapshot.key, null, 4)}`);
-        global.guildDb[snapshot.key] = snapshot.val();
+        try {
+          global.guildDb[snapshot.key] = snapshot.val();
+        } catch (err) {
+          logger.error(`[${PREFIX}] ${err}`);
+          logger.debug(`[${PREFIX}] snapshot.key: ${snapshot.key}`);
+          logger.debug(`[${PREFIX}] snapshot.val(): ${snapshot.val()}`);
+        }
         logger.debug(`[${PREFIX}] Global GUILD db updated with ADDITIONS!`);
         // logger.debug(`[${PREFIX}] global.guildDb: ${JSON.stringify(global.guildDb, null, 4)}`);
       });
