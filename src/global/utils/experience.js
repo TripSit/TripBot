@@ -17,6 +17,7 @@ const {
   channelOpentripsit1Id,
   channelOpentripsit2Id,
   channelClosedtripsitId,
+  roleVipId,
   roleNeedshelpId,
   // roleHelperId,
   roleNewbie,
@@ -59,7 +60,7 @@ const tripsitterIrcChannels = [
 // Define the time in between messages where exp will count
 let bufferSeconds = 60;
 if (NODE_ENV === 'development') {
-  bufferSeconds = 10;
+  bufferSeconds = 1;
 }
 
 const botNicknames = [
@@ -90,8 +91,11 @@ module.exports = {
     let expType = '';
     const discordClient = global.client;
 
-    // Check if the user who sent this message is a guild user
+    // logger.debug(`[${PREFIX}] message.member: ${JSON.stringify(message.member, null, 2)}`);
+
+    // Determine the channel that was spoken in and type of experience to give
     if (message.member) {
+      // Check if the user who sent this message is a guild user
       actorPlatform = 'discord';
       // Check if the user has an ignored role
       if (ignoredRoles.some(role => message.member.roles.cache.has(role))) {
@@ -115,9 +119,8 @@ module.exports = {
       messageChannelId = message.channel.id;
     }
 
-    // logger.debug(`[${PREFIX}] message.member: ${JSON.stringify(message.member, null, 2)}`);
-    // If the user is not a member of the guild, then this probably came from IRC
     if (!message.member) {
+      // If the user is not a member of the guild, then this probably came from IRC
       actorPlatform = 'irc';
       // If the user isnt registered then don't give them experience
       // if (!message.host.startsWith('tripsit')) { return; }
@@ -146,30 +149,36 @@ module.exports = {
     // logger.debug(`[${PREFIX}] messageChannelId: ${messageChannelId}`);
 
     // Get random value between 15 and 25
-    const expPoints = Math.floor(Math.random() * (25 - 15 + 1)) + 15;
-    const currMessageDate = message.createdTimestamp || Date.now();
-    // logger.debug(`[${PREFIX}] currMessageDate: ${currMessageDate}`);
+    // const expPoints = Math.floor(Math.random() * (25 - 15 + 1)) + 15;
+    const expPoints = 1000;
 
     // Get user data
     const [actorData, actorFbid] = await getUserInfo(actor);
 
     let lastMessageDate = 0;
     try {
-      lastMessageDate = actorData.experience[expType].lastMessageDate;
+      lastMessageDate = new Date(actorData.experience[expType].lastMessageDate);
     } catch (e) {
       logger.debug(`[${PREFIX}] No lastMessageDate found for ${actor.username || actor.nick}`);
     }
-    // logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
+    logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
+
+    const currMessageDate = message.createdTimestamp || Date.now();
+    logger.debug(`[${PREFIX}] currMessageDate: ${currMessageDate}`);
+
     const timeDiff = currMessageDate - lastMessageDate;
-    // logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
+    logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
 
     const bufferTime = bufferSeconds * 1000;
 
     if ('experience' in actorData) {
+      // If the user already has experience
       if (expType in actorData.experience) {
-        // If the time diff is over one bufferTime, increase the experience points
+        // If the user already has this TYPE of experience
         if (timeDiff > bufferTime) {
+          // If the time diff is over one bufferTime, increase the experience points
           const experienceData = actorData.experience[expType];
+
           let levelExpPoints = experienceData.levelExpPoints + expPoints;
           const totalExpPoints = experienceData.totalExpPoints + expPoints;
 
@@ -196,6 +205,22 @@ module.exports = {
           };
           actorDataUpdated = true;
           logger.debug(`[${PREFIX}] Exp update A (Increment)`);
+        }
+        if (actorData.experience.general) {
+          logger.debug(`[${PREFIX}] User has general experience`);
+          if (actorData.experience.general.level >= 5) {
+            logger.debug(`[${PREFIX}] User is over level 5`);
+            if (message.member) {
+              logger.debug(`[${PREFIX}] User is in the guild`);
+              // Give the user the VIP role if they are level 5 or above
+              const vipRole = message.guild.roles.cache.find(role => role.id === roleVipId);
+              if (vipRole) {
+                logger.debug(`[${PREFIX}] VIP role found`);
+                message.member.roles.add(vipRole);
+                logger.debug(`[${PREFIX}] VIP role added`);
+              }
+            }
+          }
         }
       } else {
         actorData.experience[expType] = {
@@ -262,6 +287,7 @@ module.exports = {
         logger.debug(`[${PREFIX}] Discord update C (Create)`);
       }
     }
+
     if (actorPlatform === 'irc') {
       if ('irc' in actorData) {
         if ('messages' in actorData.irc) {
