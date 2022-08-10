@@ -396,7 +396,8 @@ module.exports = {
                       discordData.lastHelpedThreadId,
                     );
                   } catch (err) {
-                    logger.debug(`[${PREFIX}] Error getting help channel ${discordData.lastHelpedThreadId}, was the channnel deleted?`);
+                    // logger.debug(`[${PREFIX}] Error getting help channel
+                    // ${discordData.lastHelpedThreadId}, was the channnel deleted?`);
                     // logger.debug(err);
                   }
                   // logger.debug(`[${PREFIX}] channelHelp:
@@ -411,7 +412,8 @@ module.exports = {
                       discordData.lastHelpedMetaThreadId,
                     );
                   } catch (err) {
-                    logger.debug(`[${PREFIX}] Error getting meta channel ${discordData.lastHelpedMetaThreadId}, was the channnel deleted?`);
+                    // logger.debug(`[${PREFIX}] Error getting meta channel
+                    // ${discordData.lastHelpedMetaThreadId}, was the channnel deleted?`);
                     // logger.debug(err);
                   }
                   // logger.debug(`[${PREFIX}] channelMeta: ${channelMeta}`);

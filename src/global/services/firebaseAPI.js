@@ -229,27 +229,21 @@ module.exports = {
       } else {
         memberRole = 'member';
       }
-      memberData.irc = {
-        accountName: memberKey || member.host,
-        vhost: member.host,
-        nickname: member.nick,
-        role: memberRole,
-      };
+      memberData.irc.accountName = memberKey || member.host;
+      memberData.irc.vhost = member.host;
+      memberData.irc.nickname = member.nick;
+      memberData.irc.role = memberRole;
     } else if (member.user) {
-      memberData.discord = {
-        id: member.user.id.toString(),
-        tag: member.user.tag,
-        username: member.user.username,
-        discriminator: member.user.discriminator,
-        nickname: member.nickname,
-      };
+      memberData.discord.id = member.user.id.toString();
+      memberData.discord.tag = member.user.tag;
+      memberData.discord.username = member.user.username;
+      memberData.discord.discriminator = member.user.discriminator;
+      memberData.discord.nickname = member.nickname;
     } else if (member.username) {
-      memberData.discord = {
-        id: member.id.toString(),
-        tag: member.tag,
-        username: member.username,
-        discriminator: member.discriminator,
-      };
+      memberData.discord.id = member.id.toString();
+      memberData.discord.tag = member.tag;
+      memberData.discord.username = member.username;
+      memberData.discord.discriminator = member.discriminator;
     }
 
     logger.info(`[${PREFIX}] getUserInfo finish!`);
