@@ -120,7 +120,7 @@ module.exports = {
         } catch (err) {
           logger.error(`[${PREFIX}] ${err}`);
           logger.debug(`[${PREFIX}] snapshot.key: ${snapshot.key}`);
-          logger.debug(`[${PREFIX}] snapshot.val(): ${snapshot.val()}`);
+          logger.debug(`[${PREFIX}] snapshot.val(): ${JSON.stringify(snapshot.val(), null, 4)}`);
         }
         logger.debug(`[${PREFIX}] Global GUILD db updated with ADDITIONS!`);
         // logger.debug(`[${PREFIX}] global.guildDb: ${JSON.stringify(global.guildDb, null, 4)}`);
@@ -280,7 +280,7 @@ module.exports = {
       guild_owner_id: guild.discordOwnerId || 'No Owner',
       guild_banned: false,
     };
-    let guildFbid = null;
+    let guildFbid = guild.name;
 
     if (db !== undefined) {
       // logger.debug(`[${PREFIX}] Looking up guild ${guild}!`);
