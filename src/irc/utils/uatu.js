@@ -142,13 +142,14 @@ module.exports = {
         logger.debug(`[${PREFIX}] ${message.nick} has sent a message in the last 10 minutes!`);
 
         let verbage = '';
-        if (message.command === 'JOIN') {
-          verbage = `${message.nick} has joined ${message.args[0]}!`;
-        } else if (message.command === 'PART') {
-          verbage = `${message.nick} has left ${message.args[0]}!`;
-        } else if (message.command === 'KICK') {
-          verbage = `${message.nick} has been kicked from ${message.args[0]}!`;
-        } else if (message.command === 'QUIT') {
+        // if (message.command === 'JOIN') {
+        //   verbage = `${message.nick} has joined ${message.args[0]}!`;
+        // } else if (message.command === 'PART') {
+        //   verbage = `${message.nick} has left ${message.args[0]}!`;
+        // } else if (message.command === 'KICK') {
+        //   verbage = `${message.nick} has been kicked from ${message.args[0]}!`;
+        // } else
+        if (message.command === 'QUIT') {
           verbage = `${message.nick} has quit the server!`;
         } else if (message.command === 'KILL') {
           verbage = `${message.nick} has been removed from the server!`;
