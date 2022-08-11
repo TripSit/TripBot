@@ -9,6 +9,13 @@ const {
   discordGuildId,
 } = require('../../../env');
 
+const activities = [
+  { type: 'PLAYING', message: 'with fire' },
+  { type: 'WATCHING', message: 'out for impure drugs' },
+  { type: 'LISTENING', message: 'your commands' },
+  { type: 'WATCHING', message: 'things you can not believe' },
+];
+
 async function getReactionRoles(client) {
   const tripsitGuild = client.guilds.resolve(discordGuildId);
   const [targetGuildData] = await getGuildInfo(tripsitGuild);
@@ -50,6 +57,12 @@ module.exports = {
   name: 'ready',
   once: true,
   async execute(client) {
+    let state = 0;
+    setInterval(() => {
+      state = (state + 1) % activities.length;
+      const presence = activities[state];
+      client.user.setActivity(presence.message, { type: presence.type });
+    }, 2500);
     logger.info(`[${PREFIX}] I am in ${client.guilds.cache.size} guilds.`);
     // run this async so that it runs while everything else starts too
 
