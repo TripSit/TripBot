@@ -73,6 +73,7 @@ module.exports = {
     const guildRef = global.db.ref(`${firebaseGuildDbName}`);
     guildRef.on('child_changed', snapshot => {
       logger.debug(`[${PREFIX}] changed: ${JSON.stringify(snapshot.key, null, 4)}`);
+      logger.debug(`[${PREFIX}] changed: ${JSON.stringify(snapshot.val(), null, 4)}`);
       global.guildDb[snapshot.key] = snapshot.val();
       logger.debug(`[${PREFIX}] Global GUILD db updated with CHANGES!`);
     });
@@ -86,7 +87,7 @@ module.exports = {
         logger.debug(`[${PREFIX}] snapshot.key: ${snapshot.key}`);
         logger.debug(`[${PREFIX}] snapshot.val(): ${JSON.stringify(snapshot.val(), null, 4)}`);
       }
-      logger.debug(`[${PREFIX}] Global GUILD db updated with ADDITIONS!`);
+      // logger.debug(`[${PREFIX}] Global GUILD db updated with ADDITIONS!`);
       // logger.debug(`[${PREFIX}] global.guildDb: ${JSON.stringify(global.guildDb, null, 4)}`);
     });
 
@@ -259,7 +260,7 @@ module.exports = {
     let guildKey = '';
 
     if (db !== undefined) {
-      // logger.debug(`[${PREFIX}] Looking up guild ${guild}!`);
+      logger.debug(`[${PREFIX}] Looking up guild ${guild}!`);
       const ref = db.ref(`${firebaseGuildDbName}/${guild.name.toString()}`);
       // logger.debug(`[${PREFIX}] ref: ${ref}`);
       await ref.once('value', data => {
@@ -269,7 +270,6 @@ module.exports = {
           // logger.debug(`[${PREFIX}] doc.data().guild_id: ${doc.data().guild_id}`);
           // logger.debug(`[${PREFIX}] doc.data(): ${JSON.stringify(doc.data())}`);
           guildData = data.val();
-          guildKey = guild.name;
         }
       });
 
@@ -282,15 +282,17 @@ module.exports = {
       guildData.guild_owner_id = guild.discordOwnerId || 'No Owner';
       guildData.guild_banned = false;
 
-      guildKey = guildKey.replace(/\W/g, '_');
+      guildKey = guild.name.replace(/\W/g, '_');
     }
-    // logger.debug(`[${PREFIX}] guildData: ${JSON.stringify(guildData)}`);
+    logger.debug(`[${PREFIX}] guildData: ${JSON.stringify(guildData)}`);
+    logger.debug(`[${PREFIX}] guildData: ${JSON.stringify(guildData)}`);
     return [guildData, guildKey];
   },
   setGuildInfo: async (id, data) => {
     logger.debug(`[${PREFIX}] Saving ${data.guild_name}!`);
     const { db } = global;
-    // logger.debug(`[${PREFIX}] fbid ${fbid}!`);
+    logger.debug(`[${PREFIX}] fbid ${id}!`);
+    logger.debug(`[${PREFIX}] data ${JSON.stringify(data, null, 2)}!`);
     if (db !== undefined) {
       db.ref(firebaseGuildDbName).update({
         [id]: data,
