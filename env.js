@@ -146,6 +146,8 @@ exports.roleTalkativeId = process.env.roleTalkativeId;
 
 exports.roleNeedshelpId = process.env.roleNeedshelpId;
 exports.roleHelperId = process.env.roleHelperId;
+exports.roleMemberId = process.env.roleMemberId;
+exports.roleUnderbanId = process.env.roleUnderbanId;
 
 exports.rolePatronId = process.env.rolePatronId;
 
