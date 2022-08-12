@@ -2,7 +2,7 @@
 
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../global/utils/logger');
-const { experience } = require('../../global/utils/experience');
+// const { experience } = require('../../global/utils/experience');
 const { echo } = require('../commands/echo');
 const { moderate } = require('../commands/i.moderate');
 
