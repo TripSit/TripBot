@@ -320,6 +320,7 @@ module.exports = {
     const { db } = global;
 
     if (db !== undefined) {
+      const ref = db.ref(`${firebaseTicketDbName}/${guild.name.toString()}`);
       const snapshotTicket = await db.collection(firebaseTicketDbName).get();
       await snapshotTicket.forEach(doc => {
         if (type === 'user') {
