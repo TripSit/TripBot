@@ -1,6 +1,7 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
+const { stripIndents } = require('common-tags');
 const logger = require('./logger');
 const template = require('../../discord/utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../services/firebaseAPI');
@@ -24,6 +25,7 @@ const {
   roleMutedId,
   roleTempvoiceId,
   NODE_ENV,
+  channelViploungeId,
 } = require('../../../env');
 
 const ignoredRoles = [
@@ -210,15 +212,38 @@ module.exports = {
         if (actorData.experience.general) {
           logger.debug(`[${PREFIX}] User has general experience`);
           if (actorData.experience.general.level >= 5) {
-            logger.debug(`[${PREFIX}] User is over level 5`);
+            // logger.debug(`[${PREFIX}] User is over level 5`);
             if (message.member) {
-              logger.debug(`[${PREFIX}] User is in the guild`);
+              // logger.debug(`[${PREFIX}] User is in the guild`);
               // Give the user the VIP role if they are level 5 or above
               const vipRole = message.guild.roles.cache.find(role => role.id === roleVipId);
               if (vipRole) {
-                logger.debug(`[${PREFIX}] VIP role found`);
                 message.member.roles.add(vipRole);
                 logger.debug(`[${PREFIX}] VIP role added`);
+              }
+              if (actorData.experience.introSent !== true) {
+                logger.debug(`[${PREFIX}] User has not been sent an intro yet`);
+
+                const intro = stripIndents`
+                  Hey there, thanks for chatting on the TripSit discord!
+
+                  We reward people active on our discord with the "VIP" role 😎
+
+                  This gives you some access to channels and features that are not open to everybody:
+                  > If you're interested in voice chat you can open a new room by joining the 🔥│𝘾𝙖𝙢𝙥𝙛𝙞𝙧𝙚 𝙑𝘾!
+                  > Want to help out in 🟢│tripsit? Read the ❗│how-to-tripsit room and become a Helper!
+                  > We always welcome feedback on our development projects: review 🔋│dev-onboarding and become a Consultant!
+
+                  Access to the notorious 🧐│gold-lounge can be yours by subscribing to our patreon! (https://www.patreon.com/tripsit)
+
+                  Thanks again for being active, we couldnt exist without awesome members like you!
+                `;
+                message.member.send(intro);
+
+                const channelViplounge = discordClient.channels.cache.get(channelViploungeId);
+                channelViplounge.send(`Please welcome ${message.member.displayName} to the VIP lounge!`);
+                actorData.experience.introSent = true;
+                logger.debug(`[${PREFIX}] Intro sent`);
               }
             }
           }

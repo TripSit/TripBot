@@ -249,7 +249,7 @@ async function consultants(interaction) {
     **We have a couple ongoing projects that can always use volunteers:**
 
     ${channelTripcord}
-    > While this discord has existed for years, TS as only started focusing on it recently.
+    > While this discord has existed for years, TS has only started focusing on it recently.
     > It is still an ongoing WIP, and this channel is where we coordinate changes to the discord server!
     > Ideas and suggestions are always welcome, and we're always looking to improve the experience!
     > No coding experience is necessary to help make the discord an awesome place to be =)
