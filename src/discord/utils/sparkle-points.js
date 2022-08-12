@@ -1,12 +1,12 @@
 'use strict';
 
-const PREFIX = require('path').parse(__filename).name;
-const logger = require('../../global/utils/logger');
+// const PREFIX = require('path').parse(__filename).name;
+// const logger = require('../../global/utils/logger');
 const { getUserInfo, setUserInfo } = require('../../global/services/firebaseAPI');
 
 module.exports = {
   async sparklePoints(reaction, user) {
-    logger.debug(`[${PREFIX}] starting!`);
+    // logger.debug(`[${PREFIX}] starting!`);
     // const reactionAuthor = reaction.message.author;
     const reactionEmoji = reaction.emoji;
 
@@ -25,6 +25,6 @@ module.exports = {
 
       await setUserInfo(actorFbid, actorData);
     }
-    logger.debug(`[${PREFIX}] finished!`);
+    // logger.debug(`[${PREFIX}] finished!`);
   },
 };

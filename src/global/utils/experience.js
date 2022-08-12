@@ -151,8 +151,7 @@ module.exports = {
     // logger.debug(`[${PREFIX}] messageChannelId: ${messageChannelId}`);
 
     // Get random value between 15 and 25
-    // const expPoints = Math.floor(Math.random() * (25 - 15 + 1)) + 15;
-    const expPoints = 1000;
+    const expPoints = Math.floor(Math.random() * (25 - 15 + 1)) + 15;
 
     // Get user data
     const [actorData, actorFbid] = await getUserInfo(actor);
