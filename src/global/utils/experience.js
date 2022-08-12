@@ -144,7 +144,7 @@ module.exports = {
         logger.debug(`[${PREFIX}] Message sent in a non-tripsitter channel from IRC`);
         expType = 'general';
       }
-      messageChannelId = message.args[0].replace(/\W/g, '_');
+      messageChannelId = message.args[0].replace(/\W/g, '');
     }
 
     // logger.debug(`[${PREFIX}] expType: ${expType}`);
