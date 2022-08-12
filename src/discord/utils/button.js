@@ -6,13 +6,15 @@ const tripsitme = require('./tripsitme');
 const tripsat = require('./tripsat');
 const template = require('./embed-template');
 const modmail = require('../commands/guild/modmail');
-const ircButton = require('../commands/guild/help-button');
+const ircButton = require('../commands/guild/prompt');
 
 const PREFIX = path.parse(__filename).name;
 
 const {
   discordGuildId,
   channelModeratorsId,
+  roleMemberId,
+  roleUnderbanId,
 } = require('../../../env');
 
 module.exports = {
@@ -24,6 +26,19 @@ module.exports = {
       logger.debug(`[${PREFIX}] command: ${command}`);
     }
     const modChan = interaction.client.channels.cache.get(channelModeratorsId);
+
+    if (buttonID === 'memberbutton') {
+      const member = await interaction.guild.members.fetch(interaction.user.id);
+      member.roles.add(
+        interaction.guild.roles.cache.find(role => role.id === roleMemberId),
+      );
+    }
+
+    if (buttonID === 'underban') {
+      interaction.member.roles.add(
+        interaction.guild.roles.cache.find(role => role.id === roleUnderbanId),
+      );
+    }
 
     if (buttonID === 'acknowledgebtn') {
       const embed = template.embedTemplate()
