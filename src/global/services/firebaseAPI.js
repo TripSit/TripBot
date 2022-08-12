@@ -72,10 +72,16 @@ module.exports = {
     // GUILD
     const guildRef = global.db.ref(`${firebaseGuildDbName}`);
     guildRef.on('child_changed', snapshot => {
-      logger.debug(`[${PREFIX}] changed: ${JSON.stringify(snapshot.key, null, 4)}`);
-      logger.debug(`[${PREFIX}] changed: ${JSON.stringify(snapshot.val(), null, 4)}`);
-      global.guildDb[snapshot.key] = snapshot.val();
-      logger.debug(`[${PREFIX}] Global GUILD db updated with CHANGES!`);
+      // logger.debug(`[${PREFIX}] changed: ${JSON.stringify(snapshot.key, null, 4)}`);
+      // logger.debug(`[${PREFIX}] changed: ${JSON.stringify(snapshot.val(), null, 4)}`);
+      try {
+        global.guildDb[snapshot.key] = snapshot.val();
+        logger.debug(`[${PREFIX}] Global GUILD db updated with CHANGES!`);
+      } catch (err) {
+        logger.error(`[${PREFIX}] ${err}`);
+        logger.debug(`[${PREFIX}] snapshot.key: ${snapshot.key}`);
+        logger.debug(`[${PREFIX}] snapshot.val(): ${JSON.stringify(snapshot.val(), null, 4)}`);
+      }
     });
 
     guildRef.on('child_added', snapshot => {
@@ -265,7 +271,7 @@ module.exports = {
       // logger.debug(`[${PREFIX}] ref: ${ref}`);
       await ref.once('value', data => {
         if (data.val() !== null) {
-          logger.debug(`[${PREFIX}] data: ${JSON.stringify(data.val(), null, 2)}`);
+          // logger.debug(`[${PREFIX}] data: ${JSON.stringify(data.val(), null, 2)}`);
           logger.debug(`[${PREFIX}] Guild data found!`);
           // logger.debug(`[${PREFIX}] doc.data().guild_id: ${doc.data().guild_id}`);
           // logger.debug(`[${PREFIX}] doc.data(): ${JSON.stringify(doc.data())}`);
@@ -284,8 +290,8 @@ module.exports = {
 
       guildKey = guild.name.replace(/\W/g, '_');
     }
-    logger.debug(`[${PREFIX}] guildData: ${JSON.stringify(guildData)}`);
-    logger.debug(`[${PREFIX}] guildData: ${JSON.stringify(guildData)}`);
+    // logger.debug(`[${PREFIX}] guildData: ${JSON.stringify(guildData)}`);
+    // logger.debug(`[${PREFIX}] guildKey: ${guildKey}`);
     return [guildData, guildKey];
   },
   setGuildInfo: async (id, data) => {
