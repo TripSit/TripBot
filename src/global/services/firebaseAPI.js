@@ -254,9 +254,15 @@ module.exports = {
     if (db !== undefined) {
       // logger.debug(`[${PREFIX}] Saving ${JSON.stringify(data, null, 2)}!`);
       // Update will update the given key or create a new one if it doesn't exist
-      db.ref(firebaseUserDbName).update({
-        [id]: data,
-      });
+      try {
+        db.ref(firebaseUserDbName).update({
+          [id]: data,
+        });
+      } catch (err) {
+        logger.error(`[${PREFIX}] ${err}`);
+        logger.debug(`[${PREFIX}] id: ${id}`);
+        logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 4)}`);
+      }
     }
   },
   getGuildInfo: async guild => {
