@@ -183,8 +183,7 @@ module.exports = {
                   logger.debug(`[${PREFIX}] processing communityMod on ${discordData.username}!`);
                   // logger.debug(`[${PREFIX}] Processing communityMod on ${discordData.username}`);
 
-                  const autoActionTime = discordData.communityMod.date.seconds * 1000
-                    || new Date(discordData.communityMod.date);
+                  const autoActionTime = new Date(discordData.communityMod.date.valueOf());
                   // logger.debug(`[${PREFIX}] autoActionTime: ${autoActionTime}`);
 
                   const autoActionName = discordData.communityMod.action;
@@ -272,8 +271,7 @@ module.exports = {
                   logger.debug(`[${PREFIX}] Processing lastSetMindsetDate on ${discordData.username}`);
                   // logger.debug(`[${PREFIX}] now: ${now}`);
 
-                  const lastSetMindsetDate = discordData.lastSetMindsetDate.seconds * 1000
-                    || new Date(discordData.lastSetMindsetDate);
+                  const lastSetMindsetDate = new Date(discordData.lastSetMindsetDate.valueOf());
                   // logger.debug(`[${PREFIX}] lm2: ${lastSetMindsetDate}`);
 
                   const lastSetMindset = discordData.lastSetMindset;
@@ -417,8 +415,7 @@ module.exports = {
                   }
                   // logger.debug(`[${PREFIX}] channelMeta: ${channelMeta}`);
 
-                  const lastHelped = discordData.lastHelpedDate.seconds * 1000
-                    || new Date(discordData.lastHelpedDate);
+                  const lastHelped = new Date(discordData.lastHelpedDate.valueOf());
                   // logger.debug(`[${PREFIX}] last: ${lastHelped}`);
                   const yesterday = now - 86400000;
                   // logger.debug(`[${PREFIX}] yest: ${yesterday}`);
