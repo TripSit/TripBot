@@ -1,15 +1,15 @@
 'use strict';
 
 const path = require('path');
-const logger = require('./logger');
-const template = require('../../discord/utils/embed-template');
-const { getGuildInfo, setGuildInfo } = require('../services/firebaseAPI');
+const logger = require('../../../global/utils/logger');
+const template = require('../../utils/embed-template');
+const { getGuildInfo, setGuildInfo } = require('../../../global/services/firebaseAPI');
 
 const PREFIX = path.parse(__filename).name;
 
 const {
   discordGuildId,
-} = require('../../../env');
+} = require('../../../../env');
 
 module.exports = {
   async karma(message) {
@@ -31,7 +31,7 @@ module.exports = {
 
       // Extract guild data
       const tripsitGuild = message.client.guilds.resolve(discordGuildId);
-      const [targetData, targetFbid] = await getGuildInfo(tripsitGuild);
+      const [targetData, targetFbid] = await setUserInfo(tripsitGuild);
 
       let karmaValue = 1;
       // Transform guild data
