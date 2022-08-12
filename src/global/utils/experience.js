@@ -64,6 +64,7 @@ if (NODE_ENV === 'development') {
 }
 
 const botNicknames = [
+  'TS',
   'tripbot',
   'TSDev',
   'TS1',
