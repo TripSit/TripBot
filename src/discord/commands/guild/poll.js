@@ -52,7 +52,7 @@ module.exports = {
       .setAuthor(null)
       .setTitle(`**${question}**`)
       .setDescription(stripIndents`${body}`)
-      .setFooter({ text: `${interaction.member.nickname}'s Poll` });
+      .setFooter({ text: `*A poll by ${interaction.member.nickname}*` });
 
     await interaction.channel.send({ embeds: [pollEmbed], ephemeral: false })
       .then(async msg => {
