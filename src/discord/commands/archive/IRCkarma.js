@@ -29,9 +29,7 @@ module.exports = {
       // If the user is typing "C++", ignore it
       if (wordBeforePlus === 'C') { return; }
 
-      // Extract guild data
-      const tripsitGuild = message.client.guilds.resolve(discordGuildId);
-      const [targetData, targetFbid] = await setUserInfo(tripsitGuild);
+      const [targetData, targetFbid] = message.client.guilds.resolve(discordGuildId);
 
       let karmaValue = 1;
       // Transform guild data
