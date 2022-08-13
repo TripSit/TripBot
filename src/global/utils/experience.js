@@ -221,7 +221,7 @@ module.exports = {
                 message.member.roles.add(vipRole);
                 logger.debug(`[${PREFIX}] VIP role added`);
               }
-              if (actorData.experience.introSent !== true) {
+              if (actorData.experience.introSent === 'impossible') {
                 logger.debug(`[${PREFIX}] User has not been sent an intro yet`);
 
                 const intro = stripIndents`
