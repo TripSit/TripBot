@@ -236,7 +236,7 @@ module.exports = {
 
                   Access to the notorious 🧐│gold-lounge can be yours by subscribing to our patreon! (https://www.patreon.com/tripsit)
 
-                  Thanks again for being active, we couldnt exist without awesome members like you!
+                  Thanks again for being active, we couldn't exist without awesome members like you!
                 `;
                 message.member.send(intro);
 
