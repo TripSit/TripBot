@@ -1,12 +1,14 @@
 'use strict';
 
 const path = require('path');
+const { stripIndents } = require('common-tags');
 const logger = require('../../global/utils/logger');
 const tripsitme = require('./tripsitme');
 const tripsat = require('./tripsat');
 const template = require('./embed-template');
 const modmail = require('../commands/guild/modmail');
 const ircButton = require('../commands/guild/prompt');
+const { getUserInfo } = require('../../global/services/firebaseAPI');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -15,6 +17,9 @@ const {
   channelModeratorsId,
   roleMemberId,
   roleUnderbanId,
+  channelGeneralId,
+  channelStartId,
+  channelTripsitId,
 } = require('../../../env');
 
 module.exports = {
@@ -32,6 +37,60 @@ module.exports = {
       member.roles.add(
         interaction.guild.roles.cache.find(role => role.id === roleMemberId),
       );
+
+      // Extract member data
+      const [actorData] = await getUserInfo(member);
+
+      // NOTE: Can be simplified with luxon
+      const diff = Math.abs(Date.now() - member.user.createdAt);
+      const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
+      const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
+      const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      // logger.debug(`[${PREFIX}] diff: ${diff}`);
+      // logger.debug(`[${PREFIX}] years: ${years}`);
+      // logger.debug(`[${PREFIX}] months: ${months}`);
+      // logger.debug(`[${PREFIX}] weeks: ${weeks}`);
+      // logger.debug(`[${PREFIX}] days: ${days}`);
+      // logger.debug(`[${PREFIX}] hours: ${hours}`);
+      // logger.debug(`[${PREFIX}] minutes: ${minutes}`);
+      // logger.debug(`[${PREFIX}] seconds: ${seconds}`);
+      let colorValue = 'RED';
+      if (years > 0) {
+        colorValue = 'WHITE';
+      } else if (years === 0 && months > 0) {
+        colorValue = 'PURPLE';
+      } else if (months === 0 && weeks > 0) {
+        colorValue = 'BLUE';
+      } else if (weeks === 0 && days > 0) {
+        colorValue = 'GREEN';
+      } else if (days === 0 && hours > 0) {
+        colorValue = 'YELLOW';
+      } else if (hours === 0 && minutes > 0) {
+        colorValue = 'ORANGE';
+      } else if (minutes === 0 && seconds > 0) { colorValue = 'RED'; }
+      logger.debug(`[${PREFIX}] coloValue: ${colorValue}`);
+      const channelGeneral = member.client.channels.cache.get(channelGeneralId);
+      const channelStart = member.client.channels.cache.get(channelStartId);
+      const channelTripsit = member.client.channels.cache.get(channelTripsitId);
+      const embed = template.embedTemplate()
+        .setAuthor({ name: '', iconURL: '', url: '' })
+        .setColor(colorValue)
+        .setThumbnail(member.user.displayAvatarURL())
+      // .setTitle(`Welcome to TripSit ${member.user.username}!`)
+      // .setTitle(`Welcome ${member.toString()} to TripSit ${member}!`)
+        .setDescription(stripIndents`
+                      **Welcome to TripSit ${member}!**
+                      This is a positivity-enforced, drug-neutral, harm-reduction space.
+                      **If you need a tripsitter, click the button in ${channelTripsit}!**
+                      Check out ${channelStart} for more information, stay safe!`);
+      if (actorData.inviteInfo) {
+        embed.setFooter({ text: actorData.inviteInfo });
+      }
+      channelGeneral.send({ embeds: [embed] });
     }
 
     if (buttonID === 'underban') {
