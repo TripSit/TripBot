@@ -384,14 +384,14 @@ async function convert() {
     }
     if (oldData.discord) {
       try {
-        memberKey = `${oldData.discord.username.replace(/\W/g, '_')}${oldData.discord.discriminator}`;
+        memberKey = `${oldData.discord.username.replace(/(\.|\$|#|\[|\]|\/)/g, '_')}${oldData.discord.discriminator}`;
       } catch (err) {
         // logger.error(`[${PREFIX}] Error converting ${JSON.stringify(oldData, null, 2)}`);
         // logger.error(err);
       }
     }
 
-    memberKey = memberKey.replace(/\W/g, '_');
+    memberKey = memberKey.replace(/(\.|\$|#|\[|\]|\/)/g, '_');
 
     const ref = db.ref(`${firebaseUserDbName}/${memberKey}`);
     logger.debug(`[${PREFIX}] ref: ${ref}`);
@@ -406,7 +406,7 @@ async function convert() {
       const ircMessages = {};
       if (oldData.irc.messages) {
         Object.keys(oldData.irc.messages).forEach(channel => {
-          const channelName = channel.replace(/\W/g, '');
+          const channelName = channel.replace(/(\.|\$|#|\[|\]|\/)/g, '');
           ircMessages[channelName] = oldData.irc.messages[channel];
         });
       }

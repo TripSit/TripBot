@@ -119,7 +119,7 @@ module.exports = {
         // logger.debug(`[${PREFIX}] Message sent in a non-tripsitter channel`);
         expType = 'general';
       }
-      messageChannelId = message.channel.id.toString().replace(/\W/g, '_');
+      messageChannelId = message.channel.id.toString().replace(/(\.|\$|#|\[|\]|\/)/g, '_');
     }
 
     if (!message.member) {
@@ -146,7 +146,7 @@ module.exports = {
         logger.debug(`[${PREFIX}] Message sent in a non-tripsitter channel from IRC`);
         expType = 'general';
       }
-      messageChannelId = message.args[0].replace(/\W/g, '');
+      messageChannelId = message.args[0].replace(/(\.|\$|#|\[|\]|\/)/g, '');
     }
 
     // logger.debug(`[${PREFIX}] expType: ${expType}`);
