@@ -423,9 +423,17 @@ module.exports = {
                   // logger.debug(`[${PREFIX}] week: ${yesterday}`);
 
                   const timeBetween = now - lastHelped;
-                  const output = channelHelp.archived
-                    ? `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago in an archived channel`
-                    : `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago`;
+                  let output = '';
+                  try {
+                    output = channelHelp.archived
+                      ? `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago in an archived channel`
+                      : `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago`;
+                  } catch (err) {
+                    logger.debug(`[${PREFIX}] Error getting time between lastHelped and now`);
+                    logger.debug(err);
+                    logger.debug(`[${PREFIX}] discordData: ${JSON.stringify(output, null, 2)}`);
+                  }
+
                   logger.debug(output);
 
                   // eslint-disable-next-line
