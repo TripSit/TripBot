@@ -18,6 +18,7 @@ const {
 
 async function start() {
   global.userDb = {};
+  global.guildDb = {};
   if (firebaseRealtimeKey) {
     await firebaseConnect();
   }
