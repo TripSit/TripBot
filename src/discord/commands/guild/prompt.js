@@ -726,7 +726,10 @@ module.exports = {
 
     // // Get the actor
     const actor = interaction.user;
-    const [ticketData, ticketFbid] = await getTicketInfo(actor.id, 'user');
+
+    const memberKey = `${member.user.username}${member.user.discriminator}`.replace(/(\s|\.|\$|#|\[|\]|\/)/g, '_');
+
+    const [ticketData, ticketFbid] = await getTicketInfo(memberKey, 'user');
     // logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
     // Check if an open thread already exists, and if so, update that thread, return
@@ -804,7 +807,7 @@ module.exports = {
       issueStatus: 'open',
       issueDesc: modalInput,
     };
-    setTicketInfo(null, newTicketData);
+    setTicketInfo(memberKey, newTicketData);
 
     logger.debug(`[${PREFIX}] issueType: ${issueType}!`);
     await tripsitGuild.members.fetch();
