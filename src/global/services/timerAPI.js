@@ -94,7 +94,7 @@ const PREFIX = require('path').parse(__filename).name; // eslint-disable-line
 
 let seconds = 60;
 if (NODE_ENV === 'development') {
-  seconds = 60;
+  seconds = 5;
 }
 
 module.exports = {
@@ -147,13 +147,14 @@ module.exports = {
                         logger.debug(`[${PREFIX}] Error getting member ${userid} from guild ${guildTripsit.name}, did they quit? (A)`);
                         // Extract actor data
                         // eslint-disable-next-line
-                        const [actorData, actorFbid] = await getUserInfo(member);
+                        const [actorData, actorFbid] = await getUserInfo(discordData);
 
                         // Transform actor data
                         delete actorData.reminders[reminderDate];
 
                         // // Load actor data
-                        setUserInfo(actorFbid, actorData);
+                        // eslint-disable-next-line
+                        await setUserInfo(actorFbid, actorData);
                         // eslint-disable-next-line
                         continue;
                       }
@@ -218,7 +219,7 @@ module.exports = {
                       logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (B)`);
                       // Extract actor data
                       // eslint-disable-next-line
-                      const [actorData, actorFbid] = await getUserInfo(member);
+                      const [actorData, actorFbid] = await getUserInfo(discordData);
 
                       // Transform actor data
                       if (autoActionName === 'vote_ban') {
@@ -271,8 +272,13 @@ module.exports = {
                   logger.debug(`[${PREFIX}] Processing lastSetMindsetDate on ${discordData.username}`);
                   // logger.debug(`[${PREFIX}] now: ${now}`);
 
-                  const lastSetMindsetDate = new Date(discordData.lastSetMindsetDate.valueOf());
-                  // logger.debug(`[${PREFIX}] lm2: ${lastSetMindsetDate}`);
+                  let lastSetMindsetDate = new Date(discordData.lastSetMindsetDate.valueOf());
+
+                  if (!Number.isInteger(lastSetMindsetDate)) {
+                    // Set lastSetMindsetDate to 7 days ago
+                    lastSetMindsetDate = new Date(now - (1000 * 60 * 60 * 24 * 7)).valueOf();
+                  }
+                  logger.debug(`[${PREFIX}] lastSetMindsetDate: ${lastSetMindsetDate}`);
 
                   const lastSetMindset = discordData.lastSetMindset;
                   // logger.debug(`[${PREFIX}] lms: ${lastSetMindset}`);
@@ -281,6 +287,8 @@ module.exports = {
                   // logger.debug(`[${PREFIX}] 8hr: ${eightHoursAgo}`);
 
                   const timeBetween = now - lastSetMindsetDate;
+                  logger.debug(`[${PREFIX}] Time between ${timeBetween}`);
+
                   logger.debug(`[${PREFIX}] ${discordData.username} added ${lastSetMindset} ${ms(timeBetween, { long: true })} ago`);
 
                   if (eightHoursAgo > lastSetMindsetDate) {
@@ -291,7 +299,7 @@ module.exports = {
                     // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                     // Get the memeber from the guild
-                    logger.debug(`[${PREFIX}] mem.id: ${discordData.id}`);
+                    // logger.debug(`[${PREFIX}] mem.id: ${discordData.id}`);
                     // logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
                     let member = {};
                     try {
@@ -300,19 +308,20 @@ module.exports = {
                       // eslint-disable-next-line
                       member = await guildTripsit.members.fetch(discordData.id);
                     } catch (err) {
-                      logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (C)`);
+                      logger.debug(`[${PREFIX}] Error getting member ${discordData.tag} from guild ${guildTripsit.name}, did they quit? (C)`);
                       // eslint-disable-next-line
-                      member = await global.client.users.fetch(discordData.id);
+                      // member = await global.client.users.fetch(discordData.id);
                       // Extract actor data
                       // eslint-disable-next-line
-                      const [actorData, actorFbid] = await getUserInfo(member);
+                      const [actorData, actorFbid] = await getUserInfo(discordData);
 
                       // Transform actor data
                       actorData.discord.lastSetMindset = null;
                       actorData.discord.lastSetMindsetDate = null;
 
                       // Load actor data
-                      setUserInfo(actorFbid, actorData);
+                      // eslint-disable-next-line
+                      await setUserInfo(actorFbid, actorData);
                       // eslint-disable-next-line
                       continue;
                     }
@@ -363,18 +372,19 @@ module.exports = {
                   } catch (err) {
                     logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (D)`);
                     // eslint-disable-next-line
-                    member = await global.client.users.fetch(discordData.id);
+                    // member = await global.client.users.fetch(discordData.id);
 
                     // Extract actor data
                     // eslint-disable-next-line
-                    const [actorData, actorFbid] = await getUserInfo(member);
+                    const [actorData, actorFbid] = await getUserInfo(discordData);
 
                     // Transform actor data
                     delete actorData.discord.lastHelpedMetaThreadId;
                     delete actorData.discord.lastHelpedThreadId;
 
                     // Load actor data
-                    setUserInfo(actorFbid, actorData);
+                    // eslint-disable-next-line
+                    await setUserInfo(actorFbid, actorData);
                     // eslint-disable-next-line
                     continue;
                   }

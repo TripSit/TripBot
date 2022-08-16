@@ -174,7 +174,7 @@ module.exports = {
 
     logger.debug(`[${PREFIX}] Looking up ${name}!`);
 
-    memberKey = memberKey.replace(/(\.|\$|#|\[|\]|\/)/g, '_');
+    memberKey = memberKey.replace(/(\s|\.|\$|#|\[|\]|\/)/g, '_');
 
     const { db } = global;
     if (db !== undefined) {
@@ -294,7 +294,7 @@ module.exports = {
       guildData.guild_owner_id = guild.discordOwnerId || 'No Owner';
       guildData.guild_banned = false;
 
-      guildKey = guild.name.replace(/(\.|\$|#|\[|\]|\/)/g, '_');
+      guildKey = guild.name.replace(/(\s|\.|\$|#|\[|\]|\/)/g, '_');
     }
     // logger.debug(`[${PREFIX}] guildData: ${JSON.stringify(guildData)}`);
     // logger.debug(`[${PREFIX}] guildKey: ${guildKey}`);

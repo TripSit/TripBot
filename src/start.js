@@ -25,7 +25,7 @@ async function start() {
 
   await discordConnect();
 
-  await ircConnect();
+  // await ircConnect();
 
   // Telegram breaks on connect =/
   // await telegramConnect();
