@@ -97,7 +97,7 @@ module.exports = {
 
     const targetEmbed = template.embedTemplate()
       .setColor('BLUE')
-      .setDescription(`${targetData.accountName}'s profile!`)
+      .setDescription(`${target.username}'s profile!`)
       .addFields(
         { name: 'Username', value: targetUsername, inline: true },
         { name: 'Nickname', value: `${target.nickname ? target.nickname : 'No nickname'}`, inline: true },
