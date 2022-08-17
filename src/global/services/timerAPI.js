@@ -278,7 +278,7 @@ module.exports = {
                     // Set lastSetMindsetDate to 7 days ago
                     lastSetMindsetDate = new Date(now - (1000 * 60 * 60 * 24 * 7)).valueOf();
                   }
-                  logger.debug(`[${PREFIX}] lastSetMindsetDate: ${lastSetMindsetDate}`);
+                  // logger.debug(`[${PREFIX}] lastSetMindsetDate: ${lastSetMindsetDate}`);
 
                   const lastSetMindset = discordData.lastSetMindset;
                   // logger.debug(`[${PREFIX}] lms: ${lastSetMindset}`);
@@ -329,7 +329,8 @@ module.exports = {
 
                     try {
                       // Get the role from the guild
-                      logger.debug(`[${PREFIX}] Getting role ${lastSetMindset} from guild ${guildTripsit.name}`);
+                      // logger.debug(`[${PREFIX}] Getting role
+                      // ${lastSetMindset} from guild ${guildTripsit.name}`);
                       // eslint-disable-next-line
                       const roleMindset = guildTripsit.roles.cache.find(r => r.name === lastSetMindset);
                       logger.debug(`[${PREFIX}] roleMindset: ${roleMindset.name}`);
@@ -349,8 +350,8 @@ module.exports = {
                     const [actorData, actorFbid] = await getUserInfo(member);
 
                     // Transform actor data
-                    actorData.discord.lastSetMindset = null;
-                    actorData.discord.lastSetMindsetDate = null;
+                    delete actorData.discord.lastSetMindset;
+                    delete actorData.discord.lastSetMindsetDate;
 
                     // Load actor data
                     setUserInfo(actorFbid, actorData);
