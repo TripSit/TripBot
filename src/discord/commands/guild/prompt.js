@@ -1,13 +1,13 @@
 'use strict';
 
 const {
-  MessageAttachment,
+  SlashCommandBuilder,
+  AttachmentBuilder,
   MessageActionRow,
   MessageButton,
   Modal,
   TextInputComponent,
 } = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ReactionRole } = require('discordjs-reaction-role');
 const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
@@ -20,7 +20,7 @@ const {
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 
-const file = new MessageAttachment('./src/discord/assets/img/RULES.png');
+const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
 
 const {
   // discordOwnerId,
