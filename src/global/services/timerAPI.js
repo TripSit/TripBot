@@ -7,6 +7,7 @@ const template = require('../../discord/utils/embed-template');
 
 const {
   NODE_ENV,
+  firebaseUserDbName,
   discordGuildId,
   roleNeedshelpId,
   roleAdminId,
@@ -147,14 +148,27 @@ module.exports = {
                         logger.debug(`[${PREFIX}] Error getting member ${userid} from guild ${guildTripsit.name}, did they quit? (A)`);
                         // Extract actor data
                         // eslint-disable-next-line
-                        const [actorData, actorFbid] = await getUserInfo(discordData);
 
-                        // Transform actor data
-                        delete actorData.reminders[reminderDate];
-
-                        // // Load actor data
+                        const { db } = global;
+                        const ref = db.ref(`${firebaseUserDbName}/${userKey}`);
                         // eslint-disable-next-line
-                        await setUserInfo(actorFbid, actorData);
+                        await ref.once('value', data => {
+                          if (data.val() !== null) {
+                            const actorData = data.val();
+
+                            // Transform actor data
+                            delete actorData.reminders[reminderDate];
+                            try {
+                              db.ref(firebaseUserDbName).update({
+                                [userKey]: actorData,
+                              });
+                            } catch (error) {
+                              logger.error(`[${PREFIX}] ${error}`);
+                              logger.debug(`[${PREFIX}] id: ${userKey}`);
+                              logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 4)}`);
+                            }
+                          }
+                        });
                         // eslint-disable-next-line
                         continue;
                       }
@@ -217,20 +231,32 @@ module.exports = {
                       member = await guildTripsit.members.fetch(discordData.id);
                     } catch (err) {
                       logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (B)`);
-                      // Extract actor data
+
+                      const { db } = global;
+                      const ref = db.ref(`${firebaseUserDbName}/${userKey}`);
                       // eslint-disable-next-line
-                      const [actorData, actorFbid] = await getUserInfo(discordData);
+                      await ref.once('value', data => {
+                        if (data.val() !== null) {
+                          const actorData = data.val();
 
-                      // Transform actor data
-                      if (autoActionName === 'vote_ban') {
-                        actorData.isBanned = true;
-                      }
+                          // Transform actor data
+                          if (autoActionName === 'vote_ban') {
+                            actorData.isBanned = true;
+                          }
+                          actorData.discord.communityMod = null;
 
-                      // Transform actor data
-                      actorData.discord.communityMod = null;
-
-                      // // Load actor data
-                      setUserInfo(actorFbid, actorData);
+                          // Load actor data
+                          try {
+                            db.ref(firebaseUserDbName).update({
+                              [userKey]: actorData,
+                            });
+                          } catch (error) {
+                            logger.error(`[${PREFIX}] ${error}`);
+                            logger.debug(`[${PREFIX}] id: ${userKey}`);
+                            logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 4)}`);
+                          }
+                        }
+                      });
                       // eslint-disable-next-line
                       continue;
                     }
@@ -309,19 +335,30 @@ module.exports = {
                       member = await guildTripsit.members.fetch(discordData.id);
                     } catch (err) {
                       logger.debug(`[${PREFIX}] Error getting member ${discordData.tag} from guild ${guildTripsit.name}, did they quit? (C)`);
-                      // eslint-disable-next-line
-                      // member = await global.client.users.fetch(discordData.id);
-                      // Extract actor data
-                      // eslint-disable-next-line
-                      const [actorData, actorFbid] = await getUserInfo(discordData);
 
-                      // Transform actor data
-                      actorData.discord.lastSetMindset = null;
-                      actorData.discord.lastSetMindsetDate = null;
-
-                      // Load actor data
+                      const { db } = global;
+                      const ref = db.ref(`${firebaseUserDbName}/${userKey}`);
                       // eslint-disable-next-line
-                      await setUserInfo(actorFbid, actorData);
+                      await ref.once('value', data => {
+                        if (data.val() !== null) {
+                          const actorData = data.val();
+
+                          // Transform actor data
+                          actorData.discord.lastSetMindset = null;
+                          actorData.discord.lastSetMindsetDate = null;
+
+                          // Load actor data
+                          try {
+                            db.ref(firebaseUserDbName).update({
+                              [userKey]: actorData,
+                            });
+                          } catch (error) {
+                            logger.error(`[${PREFIX}] ${error}`);
+                            logger.debug(`[${PREFIX}] id: ${userKey}`);
+                            logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 4)}`);
+                          }
+                        }
+                      });
                       // eslint-disable-next-line
                       continue;
                     }
@@ -372,20 +409,28 @@ module.exports = {
                     member = await guildTripsit.members.fetch(discordData.id);
                   } catch (err) {
                     logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (D)`);
-                    // eslint-disable-next-line
-                    // member = await global.client.users.fetch(discordData.id);
 
-                    // Extract actor data
+                    const { db } = global;
+                    const ref = db.ref(`${firebaseUserDbName}/${userKey}`);
                     // eslint-disable-next-line
-                    const [actorData, actorFbid] = await getUserInfo(discordData);
+                    await ref.once('value', data => {
+                      if (data.val() !== null) {
+                        const actorData = data.val();
 
-                    // Transform actor data
-                    delete actorData.discord.lastHelpedMetaThreadId;
-                    delete actorData.discord.lastHelpedThreadId;
-
-                    // Load actor data
-                    // eslint-disable-next-line
-                    await setUserInfo(actorFbid, actorData);
+                        // Transform actor data
+                        delete actorData.discord.lastHelpedMetaThreadId;
+                        delete actorData.discord.lastHelpedThreadId;
+                        try {
+                          db.ref(firebaseUserDbName).update({
+                            [userKey]: actorData,
+                          });
+                        } catch (error) {
+                          logger.error(`[${PREFIX}] ${error}`);
+                          logger.debug(`[${PREFIX}] id: ${userKey}`);
+                          logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 4)}`);
+                        }
+                      }
+                    });
                     // eslint-disable-next-line
                     continue;
                   }
