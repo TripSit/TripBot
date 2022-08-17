@@ -8,6 +8,7 @@ const { getGuildInfo } = require('../../global/services/firebaseAPI');
 const {
   discordGuildId,
 } = require('../../../env');
+const { startStatusLoop } = require('../utils/status-loop');
 
 async function getReactionRoles(client) {
   const tripsitGuild = client.guilds.resolve(discordGuildId);
@@ -52,6 +53,8 @@ module.exports = {
   async execute(client) {
     logger.info(`[${PREFIX}] I am in ${client.guilds.cache.size} guilds.`);
     // run this async so that it runs while everything else starts too
+
+    startStatusLoop(client);
 
     Promise.all([getReactionRoles(client), getInvites(client)])
       .then(() => logger.info(`[${PREFIX}] Discord bot fully inizialized: ready to fuck shit up!`));

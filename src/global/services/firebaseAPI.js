@@ -72,9 +72,16 @@ module.exports = {
     // GUILD
     const guildRef = global.db.ref(`${firebaseGuildDbName}`);
     guildRef.on('child_changed', snapshot => {
-      logger.debug(`[${PREFIX}] changed: ${JSON.stringify(snapshot.key, null, 4)}`);
-      global.guildDb[snapshot.key] = snapshot.val();
-      logger.debug(`[${PREFIX}] Global GUILD db updated with CHANGES!`);
+      // logger.debug(`[${PREFIX}] changed: ${JSON.stringify(snapshot.key, null, 4)}`);
+      // logger.debug(`[${PREFIX}] changed: ${JSON.stringify(snapshot.val(), null, 4)}`);
+      try {
+        global.guildDb[snapshot.key] = snapshot.val();
+        logger.debug(`[${PREFIX}] Global GUILD db updated with CHANGES!`);
+      } catch (err) {
+        logger.error(`[${PREFIX}] ${err}`);
+        logger.debug(`[${PREFIX}] snapshot.key: ${snapshot.key}`);
+        logger.debug(`[${PREFIX}] snapshot.val(): ${JSON.stringify(snapshot.val(), null, 4)}`);
+      }
     });
 
     guildRef.on('child_added', snapshot => {
@@ -86,7 +93,7 @@ module.exports = {
         logger.debug(`[${PREFIX}] snapshot.key: ${snapshot.key}`);
         logger.debug(`[${PREFIX}] snapshot.val(): ${JSON.stringify(snapshot.val(), null, 4)}`);
       }
-      logger.debug(`[${PREFIX}] Global GUILD db updated with ADDITIONS!`);
+      // logger.debug(`[${PREFIX}] Global GUILD db updated with ADDITIONS!`);
       // logger.debug(`[${PREFIX}] global.guildDb: ${JSON.stringify(global.guildDb, null, 4)}`);
     });
 
@@ -167,7 +174,7 @@ module.exports = {
 
     logger.debug(`[${PREFIX}] Looking up ${name}!`);
 
-    memberKey = memberKey.replace(/\W/g, '_');
+    memberKey = memberKey.replace(/(\s|\.|\$|#|\[|\]|\/)/g, '_');
 
     const { db } = global;
     if (db !== undefined) {
@@ -247,9 +254,15 @@ module.exports = {
     if (db !== undefined) {
       // logger.debug(`[${PREFIX}] Saving ${JSON.stringify(data, null, 2)}!`);
       // Update will update the given key or create a new one if it doesn't exist
-      db.ref(firebaseUserDbName).update({
-        [id]: data,
-      });
+      try {
+        db.ref(firebaseUserDbName).update({
+          [id]: data,
+        });
+      } catch (err) {
+        logger.error(`[${PREFIX}] ${err}`);
+        logger.debug(`[${PREFIX}] id: ${id}`);
+        logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 4)}`);
+      }
     }
   },
   getGuildInfo: async guild => {
@@ -259,17 +272,16 @@ module.exports = {
     let guildKey = '';
 
     if (db !== undefined) {
-      // logger.debug(`[${PREFIX}] Looking up guild ${guild}!`);
+      logger.debug(`[${PREFIX}] Looking up guild ${guild}!`);
       const ref = db.ref(`${firebaseGuildDbName}/${guild.name.toString()}`);
       // logger.debug(`[${PREFIX}] ref: ${ref}`);
       await ref.once('value', data => {
         if (data.val() !== null) {
-          logger.debug(`[${PREFIX}] data: ${JSON.stringify(data.val(), null, 2)}`);
+          // logger.debug(`[${PREFIX}] data: ${JSON.stringify(data.val(), null, 2)}`);
           logger.debug(`[${PREFIX}] Guild data found!`);
           // logger.debug(`[${PREFIX}] doc.data().guild_id: ${doc.data().guild_id}`);
           // logger.debug(`[${PREFIX}] doc.data(): ${JSON.stringify(doc.data())}`);
           guildData = data.val();
-          guildKey = guild.name;
         }
       });
 
@@ -282,15 +294,17 @@ module.exports = {
       guildData.guild_owner_id = guild.discordOwnerId || 'No Owner';
       guildData.guild_banned = false;
 
-      guildKey = guildKey.replace(/\W/g, '_');
+      guildKey = guild.name.replace(/(\s|\.|\$|#|\[|\]|\/)/g, '_');
     }
     // logger.debug(`[${PREFIX}] guildData: ${JSON.stringify(guildData)}`);
+    // logger.debug(`[${PREFIX}] guildKey: ${guildKey}`);
     return [guildData, guildKey];
   },
   setGuildInfo: async (id, data) => {
     logger.debug(`[${PREFIX}] Saving ${data.guild_name}!`);
     const { db } = global;
-    // logger.debug(`[${PREFIX}] fbid ${fbid}!`);
+    logger.debug(`[${PREFIX}] fbid ${id}!`);
+    logger.debug(`[${PREFIX}] data ${JSON.stringify(data, null, 2)}!`);
     if (db !== undefined) {
       db.ref(firebaseGuildDbName).update({
         [id]: data,
@@ -298,40 +312,26 @@ module.exports = {
     }
   },
   getTicketInfo: async (id, type) => {
+    logger.info(`[${PREFIX}] getUserInfo start!`);
     logger.debug(`[${PREFIX}] Looking up ticket from ${type} ${id}!`);
-    let ticketFbid = null;
+    const ticketFbid = null;
     let ticketData = {};
     let ticketBlocked = false;
 
     const { db } = global;
 
     if (db !== undefined) {
-      const snapshotTicket = await db.collection(firebaseTicketDbName).get();
-      await snapshotTicket.forEach(doc => {
-        if (type === 'user') {
-          if (doc.data().issueUser === id) {
-            if (doc.data().issueStatus !== 'closed') {
-              logger.debug(`[${PREFIX}] Ticket data found!`);
-              ticketData = doc.data();
-              ticketFbid = doc.id;
-            }
-            if (doc.data().issueStatus === 'blocked') {
-              logger.debug(`[${PREFIX}] User is blocked!`);
-              ticketBlocked = true;
-            }
+      const ref = db.ref(`${firebaseTicketDbName}/${id}`);
+      logger.debug(`[${PREFIX}] ref: ${ref}`);
+      await ref.once('value', data => {
+        if (data.val() !== null) {
+          if (data.val().issueStatus !== 'closed') {
+            logger.debug(`[${PREFIX}] Ticket data found!`);
+            ticketData = data.val();
           }
-        }
-        if (type === 'channel') {
-          if (doc.data().issueThread === id) {
-            if (doc.data().issueStatus !== 'closed') {
-              logger.debug(`[${PREFIX}] Ticket data found!`);
-              ticketData = doc.data();
-              ticketFbid = doc.id;
-            }
-            if (doc.data().issueStatus === 'blocked') {
-              logger.debug(`[${PREFIX}] User is blocked!`);
-              ticketBlocked = true;
-            }
+          if (data.val().issueStatus === 'blocked') {
+            logger.debug(`[${PREFIX}] User is blocked!`);
+            ticketBlocked = true;
           }
         }
       });
@@ -340,24 +340,22 @@ module.exports = {
     return [ticketData, ticketFbid];
   },
   setTicketInfo: async (fbid, data) => {
+    logger.debug(`[${PREFIX}] setTicketInfo()`);
     logger.debug(`[${PREFIX}] Saving ${data.issueUsername}!`);
+    logger.debug(`[${PREFIX}] fbid ${fbid}!`);
+    logger.debug(`[${PREFIX}] data ${JSON.stringify(data, null, 2)}!`);
 
     const { db } = global;
-    // logger.debug(`[${PREFIX}] fbid ${fbid}!`);
-
     if (fbid !== null && fbid !== undefined) {
-      logger.debug(`[${PREFIX}] Updating ticket data`);
       try {
-        await db.collection(firebaseTicketDbName).doc(fbid).set(data);
+        await db.ref(firebaseTicketDbName).update({
+          [fbid]: data,
+        });
+        logger.debug(`[${PREFIX}] Ticket data saved!`);
       } catch (err) {
-        logger.error(`[${PREFIX}] Error updating ticket data: ${err}`);
-      }
-    } else {
-      logger.debug(`[${PREFIX}] Creating ticket data`);
-      try {
-        await db.collection(firebaseTicketDbName).doc().set(data);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error creating ticket data: ${err}`);
+        logger.error(`[${PREFIX}] ${err}`);
+        logger.debug(`[${PREFIX}] id: ${fbid}`);
+        logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 4)}`);
       }
     }
   },

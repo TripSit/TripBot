@@ -18,13 +18,14 @@ const {
 
 async function start() {
   global.userDb = {};
+  global.guildDb = {};
   if (firebaseRealtimeKey) {
     await firebaseConnect();
   }
 
   await discordConnect();
 
-  await ircConnect();
+  // await ircConnect();
 
   // Telegram breaks on connect =/
   // await telegramConnect();
@@ -39,7 +40,9 @@ start();
 // Stop the bot when the process is closed (via Ctrl-C).
 const destroy = () => {
   try {
-    global.manager.teardown();
+    if (global.manager) {
+      global.manager.teardown();
+    }
   } catch (err) {
     logger.error(`[${PREFIX}] ${err}`);
   }
