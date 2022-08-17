@@ -194,7 +194,7 @@ module.exports = {
       'Track your dosages with the /idose command!',
       'Set your birthday with the /birthday command!',
       'Set your timeszone with the /time command!',
-      'Check your karma with the /karma command!',
+      // 'Check your karma with the /karma command!',
     ];
 
     const vipAnnouncements = [

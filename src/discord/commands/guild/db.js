@@ -26,66 +26,21 @@ try {
 }
 
 // eslint-disable-next-line no-unused-vars
-async function updateLocal() {
-  const userDb = [];
-  if (db !== {}) {
-    // Get user information
-    const snapshotUser = await db.collection(firebaseUserDbName).get();
-    snapshotUser.forEach(doc => {
-      userDb.push({
-        key: doc.id,
-        value: doc.data(),
-      });
-    });
-  }
-  Object.assign(global, { userDb });
-  logger.debug(`[${PREFIX}] User database loaded.`);
-}
-
-// eslint-disable-next-line no-unused-vars
 async function backup() {
   logger.debug(`[${PREFIX}] Backing up from firebaseProdUserDbName to firebaseUserDbName`);
 
-  async function deleteQueryBatch(query, resolve) {
-    const snapshot = await query.get();
-
-    const batchSize = snapshot.size;
-    if (batchSize === 0) {
-      // When there are no documents left, we are done
-      resolve();
-      return;
+  await db.ref('users').once('value', data => {
+    if (data.val() !== null) {
+      db.ref('users_dev').update(data.val());
     }
-
-    // Delete documents in a batch
-    const batch = db.batch();
-    snapshot.docs.forEach(doc => {
-      batch.delete(doc.ref);
-    });
-    await batch.commit();
-
-    // Recurse on the next process tick, to avoid
-    // exploding the stack.
-    process.nextTick(() => {
-      deleteQueryBatch(query, resolve);
-    });
-  }
-
-  async function deleteCollection(collectionPath) {
-    // const collectionRef = db.collection(collectionPath);
-    // const query = collectionRef.orderBy('__name__').limit(batchSize);
-    const query = db.collection(collectionPath);
-
-    return new Promise((resolve, reject) => {
-      deleteQueryBatch(query, resolve).catch(reject);
-    });
-  }
-
-  await deleteCollection(firebaseUserDbName, 100).catch(err => logger.error(err));
-
-  const users = await db.collection(firebaseProdUserDbName).get();
-  users.forEach(async doc => {
-    await db.collection(firebaseUserDbName).doc(doc.id).set(doc.data());
   });
+
+  // await db.ref('guilds').once('value', data => {
+  //   if (data.val() !== null) {
+  //     db.ref('guilds_dev').update(data.val());
+  //   }
+  // });
+
   logger.debug(`[${PREFIX}] Done backing up!`);
 }
 
@@ -409,13 +364,119 @@ ${recordLevel} sent ${recordMessages} messages for ${recordExp} exp`);
   }
 }
 
+async function convert() {
+  logger.debug(`[${PREFIX}] Converting firestore to RTDB`);
+  const users = await global.firestore.collection(firebaseProdUserDbName).get();
+  // users.forEach(async doc => {
+  // eslint-disable-next-line
+  for (let i = 0; i < users.size; i += 1) {
+    const doc = users.docs[i];
+    const oldData = doc.data();
+    // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(oldData, null, 2)}`);
+
+    let newData = {};
+    let memberKey = '';
+
+    // if (doc.data().accountName === 'MoonBear') {
+    // Determine the user's Key
+    if (oldData.irc) {
+      memberKey = `${oldData.accountName}`;
+    }
+    if (oldData.discord) {
+      try {
+        memberKey = `${oldData.discord.username.replace(/(\.|\$|#|\[|\]|\/)/g, '_')}${oldData.discord.discriminator}`;
+      } catch (err) {
+        // logger.error(`[${PREFIX}] Error converting ${JSON.stringify(oldData, null, 2)}`);
+        // logger.error(err);
+      }
+    }
+
+    memberKey = memberKey.replace(/(\.|\$|#|\[|\]|\/)/g, '_');
+
+    const ref = db.ref(`${firebaseUserDbName}/${memberKey}`);
+    logger.debug(`[${PREFIX}] ref: ${ref}`);
+    // eslint-disable-next-line
+      await ref.once('value', data => {
+      if (data.val() !== null) {
+        newData = data.val();
+      }
+    });
+
+    if (oldData.irc) {
+      const ircMessages = {};
+      if (oldData.irc.messages) {
+        Object.keys(oldData.irc.messages).forEach(channel => {
+          const channelName = channel.replace(/(\.|\$|#|\[|\]|\/)/g, '');
+          ircMessages[channelName] = oldData.irc.messages[channel];
+        });
+      }
+      newData.irc = oldData.irc;
+      newData.irc.messages = ircMessages;
+    }
+    if (oldData.discord) {
+      try {
+        newData.discord = oldData.discord;
+      } catch (err) {
+        // logger.error(`[${PREFIX}] Error converting ${JSON.stringify(oldData, null, 2)}`);
+        // logger.error(err);
+      }
+    }
+
+    if (oldData.experience) {
+      // logger.debug(`[${PREFIX}] old experience found!`);
+      if (oldData.experience.general) {
+        // logger.debug(`[${PREFIX}] old general experience found!`);
+        if (newData.experience) {
+          // logger.debug(`[${PREFIX}] new experience found!`);
+          if (newData.experience.general) {
+            // logger.debug(`[${PREFIX}] new general experience found!`);
+            newData.experience.general.levelExpPoints
+                += oldData.experience.general.totalExpPoints;
+            newData.experience.general.totalExpPoints
+                += oldData.experience.general.totalExpPoints;
+          } else {
+            // logger.debug(`[${PREFIX}] new general experience NOT found!`);
+            newData.experience.general = oldData.experience.general;
+          }
+        } else {
+          // logger.debug(`[${PREFIX}] new experience NOT found!`);
+          newData.experience = {
+            general: oldData.experience.general,
+          };
+        }
+      }
+      if (oldData.experience.tripsitter) {
+        if (newData.experience) {
+          if (newData.experience.tripsitter) {
+            newData.experience.tripsitter.levelExpPoints
+              += oldData.experience.tripsitter.totalExpPoints;
+            newData.experience.tripsitter.totalExpPoints
+              += oldData.experience.tripsitter.totalExpPoints;
+          } else {
+            newData.experience.tripsitter = oldData.experience.tripsitter;
+          }
+        } else {
+          newData.experience = {
+            tripsitter: oldData.experience.tripsitter,
+          };
+        }
+      }
+    }
+
+    // logger.debug(`[${PREFIX}] newData: ${JSON.stringify(newData, null, 2)}`);
+    db.ref('users').update({ [memberKey]: newData });
+    // }
+  }
+  logger.debug(`[${PREFIX}] Done backing up!`);
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('db')
     .setDescription('Clean the DB!')
     .addSubcommand(subcommand => subcommand
-      .setDescription('Refresh the local db from the remote firebase db')
-      .setName('refresh'))
+      .setDescription('Convert firestore to RTDB')
+      .setName('convert'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Removes all timed events from the db')
       .setName('remove_events'))
@@ -432,8 +493,8 @@ module.exports = {
     const command = interaction.options.getSubcommand();
     logger.debug(`[${PREFIX}] Command: ${command}`);
 
-    if (command === 'refresh') {
-      await updateLocal(interaction);
+    if (command === 'convert') {
+      await convert(interaction);
     } else if (command === 'remove_events') {
       await removeEvents(interaction);
     } else if (command === 'backup') {
@@ -441,223 +502,6 @@ module.exports = {
     } else if (command === 'remove_dupes') {
       await removeDupliates(interaction);
     }
-    // else if (command === 'experience') {
-    //   await experience();
-    // }
-
-    // async function emojinameFix() {
-    //   logger.debug(`[${PREFIX}] emojinameFix`);
-    //   const users = await db.collection(firebaseUserDbName).get();
-    //   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
-    //   users.forEach(async user => {
-    //     const userKey = user.id;
-    //     const userValue = user.data();
-    //     const userData = userValue;
-    //     // logger.debug(`[${PREFIX}] Cleaning user ${userValue.accountName}!`);
-    //     // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(doc, null, 2)}`);
-    //     if (userValue.discord) {
-    //       if (userValue.discord.karma_given) {
-    //         if (userValue.discord.karma_given['<:ts_up:958721361587630210>']) {
-    //           const oldKarma = userValue.discord.karma_given['<:ts_up:958721361587630210>'];
-    //           const newKarma = userValue.discord.karma_given['<:ts_voteup:958721361587630210>'];
-    //           const finalKarma = newKarma ? oldKarma + newKarma : oldKarma;
-    //           userData.discord.karma_given['<:ts_voteup:958721361587630210>'] = finalKarma;
-    //           delete userData.discord.karma_given['<:ts_up:958721361587630210>'];
-    //         }
-    //         if (userValue.discord.karma_given['<:ts_down:960161563849932892>']) {
-    //           const oldKarma = userValue.discord.karma_given['<:ts_down:960161563849932892>'];
-    //           const newKarma = userValue.discord.karma_given[
-    // '<:ts_votedown:960161563849932892>'];
-    //           const finalKarma = newKarma ? oldKarma + newKarma : oldKarma;
-    //           userData.discord.karma_given['<:ts_votedown:960161563849932892>'] = finalKarma;
-    //           delete userData.discord.karma_given['<:ts_down:960161563849932892>'];
-    //         }
-    //       }
-    //       if (userValue.discord.karma_received) {
-    //         if (userValue.discord.karma_received['<:ts_up:958721361587630210>']) {
-    //           const oldKarma = userValue.discord.karma_received['<:ts_up:958721361587630210>'];
-    //           const newKarma = userValue.discord.karma_received[
-    // '<:ts_voteup:958721361587630210>'];
-    //           const finalKarma = newKarma ? oldKarma + newKarma : oldKarma;
-    //           userData.discord.karma_received['<:ts_voteup:958721361587630210>'] = finalKarma;
-    //           delete userData.discord.karma_received['<:ts_up:958721361587630210>'];
-    //         }
-    //         if (userValue.discord.karma_received['<:ts_down:960161563849932892>']) {
-    //           const oldKarma = userValue.discord.karma_received['<:ts_down:960161563849932892>'];
-    //           const newKarma = userValue.discord.karma_received[
-    // '<:ts_votedown:960161563849932892>'];
-    //           const finalKarma = newKarma ? oldKarma + newKarma : oldKarma;
-    //           userData.discord.karma_received['<:ts_votedown:960161563849932892>'] = finalKarma;
-    //           delete userData.discord.karma_received['<:ts_down:960161563849932892>'];
-    //         }
-    //       }
-    //       db.collection(firebaseUserDbName).doc(userKey).set(userData);
-    //     }
-    //     logger.debug(`[${PREFIX}] Done cleaning karma!`);
-    //   });
-    // }
-    // await emojinameFix();
-    // async function karmaFix() {
-    //   logger.debug(`[${PREFIX}] Cleaning karma`);
-    //   const users = await db.collection(firebaseUserDbName).get();
-    //   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
-    //   // users.forEach(async doc => {
-    //   for (let i = 0; i < users.size; i += 1) {
-    //     // logger.debug(`[${PREFIX}] Cleaning user ${i}!`);
-    //     const doc = users.docs[i];
-    //     // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(doc, null, 2)}`);
-    //     if (!doc.data().discord) {
-    //       if (doc.data().karma_recieved) {
-    //         const userData = doc.data();
-    //         logger.debug(`[${PREFIX}] Updating user ${userData.discord_username}!`);
-    //         // logger.debug(`[${PREFIX}] userData1 ${JSON.stringify(userData, null, 2)}!`);
-    //         if (userData.karma_recieved) {
-    //           userData.karma_received = userData.karma_recieved;
-    //           delete userData.karma_recieved;
-    //           // logger.debug(`[${PREFIX}] userData2 ${JSON.stringify(userData, null, 2)}!`);
-    //           db.collection(firebaseUserDbName).doc(doc.id).set(userData);
-    //         }
-    //       }
-    //     }
-    //   }
-    //   logger.debug(`[${PREFIX}] Done cleaning karma!`);
-    // }
-    // await karmaFix();
-
-    // async function discordTransition() {
-    //   logger.debug(`[${PREFIX}] Cleaning Discord DB...`);
-    //   const users = await db.collection(firebaseUserDbName).get();
-    //   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
-    //   // users.forEach(async doc => {
-    //   for (let i = 0; i < users.size; i += 1) {
-    //     logger.debug(`[${PREFIX}] Cleaning user ${i}!`);
-    //     const doc = users.docs[i];
-    //     // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(doc, null, 2)}`);
-    //     if (!doc.data().discord) {
-    //       const userData = doc.data();
-    //       // logger.debug(`[${PREFIX}] Updating user ${userData.discord_username}!`);
-    //       // logger.debug(`[${PREFIX}] userData1 ${JSON.stringify(userData, null, 2)}!`);
-    //       userData.name = userData.discord_username;
-    //       if (userData.discord_discriminator) {
-    //         userData.discord = {
-    //           id: userData.discord_id ? userData.discord_id : '',
-    //           username: userData.discord_username ? userData.discord_username : '',
-    //           discriminator: userData.discord_discriminator
-    //             ? userData.discord_discriminator
-    //             : '',
-    //           karma_given: userData.karma_given ? userData.karma_given : {},
-    //           karma_received: userData.karma_received ? userData.karma_received : {},
-    //           lastHelpedDate: userData.lasHelpedDate ? userData.lasHelpedDate : '',
-    //           lastHelpedMetaThreadId: userData.lastHelpedMetaThreadId
-    //             ? userData.lastHelpedMetaThreadId
-    //             : '',
-    //           lastHelpedThreadId: userData.lastHelpedThreadId ? userData.lastHelpedThreadId : '',
-    //           modActions: userData.mod_actions ? userData.mod_actions : {},
-    //           roles: userData.roles ? userData.roles : [],
-    //           joinedTimestamp: userData.joinedTimestamp ? userData.joinedTimestamp : '',
-    //         };
-    //         delete userData.discord_id;
-    //         delete userData.discord_username;
-    //         delete userData.discord_discriminator;
-    //         delete userData.karma_given;
-    //         delete userData.karma_received;
-    //         delete userData.lastHelpedDate;
-    //         delete userData.lastHelpedMetaThreadId;
-    //         delete userData.lastHelpedThreadId;
-    //         delete userData.modActions;
-    //         delete userData.mod_actions;
-    //         delete userData.roles;
-    //         delete userData.reactionRoles;
-    //         delete userData.joinedTimestamp;
-    //         // logger.debug(`[${PREFIX}] userData2 ${JSON.stringify(userData, null, 2)}!`);
-    //         db.collection(firebaseUserDbName).doc(doc.id).set(userData);
-    //       }
-    //     }
-    //   }
-    //   logger.debug(`[${PREFIX}] Done moving discord info!`);
-    // }
-    // await discordTransition();
-
-    // async function nameFix() {
-    //   logger.debug(`[${PREFIX}] Cleaning karma`);
-    //   const users = await db.collection(firebaseUserDbName).get();
-    //   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
-    //   // users.forEach(async doc => {
-    //   for (let i = 0; i < users.size; i += 1) {
-    //     // logger.debug(`[${PREFIX}] Cleaning user ${i}!`);
-    //     const doc = users.docs[i];
-    //     // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(doc, null, 2)}`);
-    //     if (doc.data().name) {
-    //       const userData = doc.data();
-    //       userData.accountName = userData.name;
-    //       delete userData.name;
-    //       db.collection(firebaseUserDbName).doc(doc.id).set(userData);
-    //     }
-    //   }
-    //   logger.debug(`[${PREFIX}] Done cleaning karma!`);
-    // }
-    // await nameFix();
-
-    // // If the discord_username in users is contained in wrong_users, merge the two entries
-    // users.forEach((doc) => {
-    //     // logger.debug(`[${PREFIX}] Username: ${doc.data().discord_username}`);
-    //     users.forEach((wrong_doc) => {
-    //         // logger.debug(`[${PREFIX}] Wrong Username: ${wrong_doc.data().discord_username}`);
-    //         if (doc.data().discord_username == wrong_doc.data().discord_username) {
-    //             logger.debug(`[${PREFIX}] Merging ${doc.data().discord_username}`);
-    //             const info = {
-    //                 discord.id: wrong_doc.data().discord.id,
-    //                 discord_username: wrong_doc.data().discord_username,
-    //                 discord_discriminator: wrong_doc.data().discord_discriminator,
-    //                 isBanned: wrong_doc.data().isBanned,
-    // eslint-disable-next-line
-    //                 karma_received: wrong_doc.data().karma_received ? wrong_doc.data().karma_received : {},
-    // eslint-disable-next-line
-    //                 karma_given: wrong_doc.data().karma_given ? wrong_doc.data().karma_given : {},
-    //                 roles: wrong_doc.data().roles ? wrong_doc.data().roles : [],
-    //                 timezone: wrong_doc.data().timezone ? wrong_doc.data().timezone : '',
-    //                 reminders: wrong_doc.data().reminders ? wrong_doc.data().reminders : {},
-    //             };
-    //             db.collection(firebaseUserDbName).doc(doc.id).update(info);
-    //             logger.debug(`[${PREFIX}] Updated ${doc.data().discord_username}`);
-    //             return;
-    //         }
-    //         db.collection('"users"').doc(wrong_doc.id).delete();
-    //         logger.debug(`[${PREFIX}] Deleted ${doc.data().discord_username}`);
-    //     });
-    // });
-    // const guilds = await db.collection('guilds').get();
-    // // This command will check for duplicates within the database and merge them
-    // // This is a very slow command and should be run sparingly
-    // guilds.forEach((doc) => {
-    //     const key = doc.id;
-    //     const value = doc.data();
-    //     const guild_id = value.guild_id;
-    //     const guild_db = [];
-    // eslint-disable-next-line
-    //     const snapshot_guild = await db.collection('guilds').where('guild_id', '==', guild_id).get();
-    //     snapshot_guild.forEach((doc) => {
-    //         const key = doc.id;
-    //         const value = doc.data();
-    //         guild_db.push({
-    //             key,
-    //             value,
-    //         });
-    //     });
-    //     if (guild_db.length > 1) {
-    // eslint-disable-next-line
-    //         logger.debug(`[${PREFIX}] ${guild_db.length} duplicates found for guild_id: ${guild_id}`);
-    //         guild_db.forEach((doc) => {
-    //             const key = doc.id;
-    //             const value = doc.data();
-    //             if (key !== value.key) {
-    //                 logger.debug(`[${PREFIX}] ${key} !== ${value.key}`);
-    //                 db.collection('guilds').doc(key).delete();
-    //             }
-    //         });
-    //     }
-    // });
-
     interaction.reply({ embeds: [template.embedTemplate().setTitle('Done!')], ephemeral: false });
     logger.debug(`[${PREFIX}] finished!`);
   },

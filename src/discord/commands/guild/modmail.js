@@ -13,8 +13,6 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const template = require('../../utils/embed-template');
 const logger = require('../../../global/utils/logger');
 const {
-  // getUserInfo,
-  // setUserInfo,
   getTicketInfo,
   setTicketInfo,
 } = require('../../../global/services/firebaseAPI');
@@ -64,29 +62,49 @@ module.exports = {
     .setDescription('Modmail actions!')
     .addSubcommand(subcommand => subcommand
       .setDescription('Close this ticket as resolved')
+      .addUserOption(option => option
+        .setName('target')
+        .setDescription('Modmail target to act on!')
+        .setRequired(true))
       .setName('closed'))
     // .addSubcommand(subcommand => subcommand
     //   .setDescription('Get the ID of this ticket')
     //   .setName('id'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Block this user from future messages/tickets')
+      .addUserOption(option => option
+        .setName('target')
+        .setDescription('Modmail target to act on!')
+        .setRequired(true))
       .setName('blocked'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Take the ticket off hold')
+      .addUserOption(option => option
+        .setName('target')
+        .setDescription('Modmail target to act on!')
+        .setRequired(true))
       .setName('open'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Put the ticket on hold')
+      .addUserOption(option => option
+        .setName('target')
+        .setDescription('Modmail target to act on!')
+        .setRequired(true))
       .setName('paused')),
   async execute(interaction) {
     logger.debug(`[${PREFIX}] Started!`);
     const command = interaction.options.getSubcommand();
     logger.debug(`[${PREFIX}] Command: ${command}`);
+    const member = interaction.options.getMember('target');
+    logger.debug(`[${PREFIX}] member:`, member);
 
     // Get the actor
     // const actor = interaction.user;
 
+    const memberKey = `${member.user.username}${member.user.discriminator}`.replace(/(\s|\.|\$|#|\[|\]|\/)/g, '_');
+
     // Get the ticket info
-    const [ticketData, ticketFbid] = await getTicketInfo(interaction.channel.id, 'channel');
+    const [ticketData] = await getTicketInfo(memberKey);
 
     // Transform actor data
     if (command === 'closed') {
@@ -99,7 +117,7 @@ module.exports = {
 
       // Archive the channel
       ticketChannel.setArchived(true, 'Archiving after close');
-      setTicketInfo(ticketFbid, ticketData);
+      setTicketInfo(memberKey, ticketData);
     } else if (command === 'block') {
       logger.debug(`[${PREFIX}] Blocking user!`);
       // Reply before you archive, or else you'll just unarchive
@@ -110,7 +128,7 @@ module.exports = {
       // Archive the channel
       const ticketChannel = interaction.client.channels.cache.get(ticketData.issueThread);
       ticketChannel.setArchived(true, 'Archiving after close');
-      setTicketInfo(ticketFbid, ticketData);
+      setTicketInfo(memberKey, ticketData);
     } else if (command === 'unblock') {
       logger.debug(`[${PREFIX}] Unblocking user!`);
       // Reply before you archive, or else you'll just unarchive
@@ -119,14 +137,14 @@ module.exports = {
       ticketData.issueStatus = 'closed';
 
       // Archive the channel
-      setTicketInfo(ticketFbid, ticketData);
+      setTicketInfo(memberKey, ticketData);
     } else if (command === 'unpause') {
       logger.debug(`[${PREFIX}] Unpausing ticket!`);
       await interaction.reply('This ticket has been unpaused and can communication can resume!');
 
       ticketData.issueStatus = 'open';
 
-      setTicketInfo(ticketFbid, ticketData);
+      setTicketInfo(memberKey, ticketData);
     } else if (command === 'pause') {
       logger.debug(`[${PREFIX}] Pausing ticket!`);
       await interaction.reply('This ticket has been paused, please wait to communicate further!');
@@ -134,7 +152,7 @@ module.exports = {
       ticketData.issueStatus = 'paused';
 
       // Archive the channel
-      setTicketInfo(ticketFbid, ticketData);
+      setTicketInfo(memberKey, ticketData);
     }
   },
   async modmailInitialResponse(message) {
@@ -313,7 +331,8 @@ module.exports = {
 
     // // Get the actor
     const actor = interaction.user;
-    const [ticketData, ticketFbid] = await getTicketInfo(actor.id, 'user');
+    const memberKey = `${interaction.user.username}${interaction.user.discriminator}`.replace(/(\s|\.|\$|#|\[|\]|\/)/g, '_');
+    const [ticketData] = await getTicketInfo(memberKey);
     logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
     // Check if an open thread already exists, and if so, update that thread, return
@@ -338,7 +357,7 @@ module.exports = {
       } catch (err) {
         logger.debug(`[${PREFIX}] The thread has likely been deleted!`);
         ticketData.issueStatus = 'closed';
-        setTicketInfo(ticketFbid, ticketData);
+        setTicketInfo(memberKey, ticketData);
       }
     }
 

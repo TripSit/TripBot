@@ -4,6 +4,7 @@ const PREFIX = require('path').parse(__filename).name;
 const { stripIndents } = require('common-tags');
 const logger = require('../../global/utils/logger');
 const template = require('../utils/embed-template');
+
 const { getUserInfo, setUserInfo } = require('../../global/services/firebaseAPI');
 
 const {
@@ -34,38 +35,16 @@ module.exports = {
     //   "avatarURL": null,
     //   "displayAvatarURL": "https://cdn.discordapp.com/avatars/332687787172167680/6c38689c6390e2a2e9fe5e368db7b9e6.webp"
     // }
+
     // Only run on Tripsit
     if (member.guild.id === discordGuildId) {
       logger.info(`[${PREFIX}] ${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
-
-      // Extract member data
-      const [actorData, actorFbid] = await getUserInfo(member);
-
-      // Transform member data
-      if ('discord' in actorData) {
-        logger.debug(`[${PREFIX}] Actor data has a discord property`);
-        if ('joinedTimestamp' in actorData.discord) {
-          logger.debug(`[${PREFIX}] Updating joinedTimestamp info!`);
-          actorData.discord.joinedTimestamp = member.joinedTimestamp;
-        } else {
-          logger.debug(`[${PREFIX}] Creating joinedTimestamp info!`);
-          actorData.discord.joinedTimestamp = member.joinedTimestamp;
-        }
-      } else {
-        logger.debug(`[${PREFIX}] Actor data does not have a discord property`);
-        actorData.discord = {
-          joinedTimestamp: member.joinedTimestamp,
-        };
-      }
-
-      // Load member data
-      await setUserInfo(actorFbid, actorData);
 
       // (*INVITE*) https://github.com/AnIdiotsGuide/discordjs-bot-guide/blob/master/coding-guides/tracking-used-invites.md
       /* Start *INVITE* code */
       const cachedInvites = global.guildInvites.get(member.guild.id);
       const newInvites = await member.guild.invites.fetch();
-      let footerText = '';
+      let inviteInfo = '';
       try {
         const usedInvite = newInvites.find(inv => cachedInvites.get(inv.code) < inv.uses);
         logger.debug(`Cached ${[...cachedInvites.keys()]}`);
@@ -76,7 +55,7 @@ module.exports = {
         if (usedInvite?.inviter) {
           const inviter = await client.users.fetch(usedInvite.inviter.id);
           if (inviter) {
-            footerText = `Joined via ${inviter.username}'s invite to ${usedInvite.channel.name} (${usedInvite.code}-${usedInvite.uses}).`;
+            inviteInfo = `Joined via ${inviter.username}'s invite to ${usedInvite.channel.name} (${usedInvite.code}-${usedInvite.uses}).`;
           }
         }
       } catch (err) {
@@ -86,6 +65,29 @@ module.exports = {
       newInvites.each(inv => cachedInvites.set(inv.code, inv.uses));
       global.guildInvites.set(member.guild.id, cachedInvites);
       /* End *INVITE* code */
+
+      // Extract member data
+      const [actorData, actorFbid] = await getUserInfo(member);
+
+      // Transform member data
+      if ('discord' in actorData) {
+        logger.debug(`[${PREFIX}] Actor data has a discord property`);
+        actorData.discord.joinedTimestamp = member.joinedTimestamp;
+        actorData.discord.inviteInfo = inviteInfo;
+      } else {
+        logger.debug(`[${PREFIX}] Actor data does not have a discord property`);
+        actorData.discord = {
+          joinedTimestamp: member.joinedTimestamp,
+          inviteInfo,
+        };
+      }
+
+      // Load member data
+      await setUserInfo(actorFbid, actorData);
+
+      const channelGeneral = member.client.channels.cache.get(channelGeneralId);
+      const channelStart = member.client.channels.cache.get(channelStartId);
+      const channelTripsit = member.client.channels.cache.get(channelTripsitId);
 
       // NOTE: Can be simplified with luxon
       const diff = Math.abs(Date.now() - member.user.createdAt);
@@ -120,10 +122,6 @@ module.exports = {
       } else if (minutes === 0 && seconds > 0) {
         colorValue = 'RED';
       }
-      logger.debug(`[${PREFIX}] coloValue: ${colorValue}`);
-      const channelGeneral = member.client.channels.cache.get(channelGeneralId);
-      const channelStart = member.client.channels.cache.get(channelStartId);
-      const channelTripsit = member.client.channels.cache.get(channelTripsitId);
       const embed = template.embedTemplate()
         .setAuthor({ name: '', iconURL: '', url: '' })
         .setColor(colorValue)
@@ -135,9 +133,8 @@ module.exports = {
                 This is a positivity-enforced, drug-neutral, harm-reduction space.
                 **If you need a tripsitter, click the button in ${channelTripsit}!**
                 Check out ${channelStart} for more information, stay safe!`);
-
       embed.setFooter({
-        text: footerText,
+        text: inviteInfo,
       });
       channelGeneral.send({ embeds: [embed] });
     }

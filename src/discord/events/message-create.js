@@ -6,7 +6,7 @@ const { stripIndents } = require('common-tags');
 const { announcements } = require('../../global/utils/announcements');
 // const { karma } = require('../../global/utils/karma');
 const { experience } = require('../../global/utils/experience');
-const { thoughtPolice } = require('../utils/d.thoughtPolice');
+// const { thoughtPolice } = require('../utils/d.thoughtPolice');
 const { modmailInitialResponse } = require('../commands/guild/modmail');
 const logger = require('../../global/utils/logger');
 const template = require('../utils/embed-template');
@@ -57,14 +57,6 @@ module.exports = {
 
     // Don't run on bots
     if (message.author.bot) { return; }
-
-    // This is disbled becaus irc.js will now watch for messages and handle that
-    // Don't run on bots, unless they're spoofing a user
-    // Messages sent by the relay will have an author.tag value of "username#0000"
-    // This is unique because users must have a tag > 0 on discord, so any tag with 0000 is a bot
-    // However, even bots have tags, so if a bot has a tag of 0000, it's spoofing a user
-    // const discriminator = message.author.tag.substring(message.author.tag.length - 4);
-    // if (message.author.bot && discriminator !== '0000') { return; }
 
     // If this is a DM, run the modmail function.
     if (message.channel.type === 'DM') {
@@ -131,7 +123,7 @@ module.exports = {
 
     announcements(message);
     // karma(message);
-    // experience(message);
     // thoughtPolice(message);
+    experience(message);
   },
 };

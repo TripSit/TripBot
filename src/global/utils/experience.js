@@ -1,6 +1,7 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
+const { stripIndents } = require('common-tags');
 const logger = require('./logger');
 const template = require('../../discord/utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../services/firebaseAPI');
@@ -17,12 +18,14 @@ const {
   channelOpentripsit1Id,
   channelOpentripsit2Id,
   channelClosedtripsitId,
+  roleVipId,
   roleNeedshelpId,
   // roleHelperId,
   roleNewbie,
   roleMutedId,
   roleTempvoiceId,
   NODE_ENV,
+  channelViploungeId,
 } = require('../../../env');
 
 const ignoredRoles = [
@@ -59,10 +62,11 @@ const tripsitterIrcChannels = [
 // Define the time in between messages where exp will count
 let bufferSeconds = 60;
 if (NODE_ENV === 'development') {
-  bufferSeconds = 10;
+  bufferSeconds = 1;
 }
 
 const botNicknames = [
+  'TS',
   'tripbot',
   'TSDev',
   'TS1',
@@ -90,8 +94,11 @@ module.exports = {
     let expType = '';
     const discordClient = global.client;
 
-    // Check if the user who sent this message is a guild user
+    // logger.debug(`[${PREFIX}] message.member: ${JSON.stringify(message.member, null, 2)}`);
+
+    // Determine the channel that was spoken in and type of experience to give
     if (message.member) {
+      // Check if the user who sent this message is a guild user
       actorPlatform = 'discord';
       // Check if the user has an ignored role
       if (ignoredRoles.some(role => message.member.roles.cache.has(role))) {
@@ -112,12 +119,11 @@ module.exports = {
         // logger.debug(`[${PREFIX}] Message sent in a non-tripsitter channel`);
         expType = 'general';
       }
-      messageChannelId = message.channel.id;
+      messageChannelId = message.channel.id.toString().replace(/(\.|\$|#|\[|\]|\/)/g, '_');
     }
 
-    // logger.debug(`[${PREFIX}] message.member: ${JSON.stringify(message.member, null, 2)}`);
-    // If the user is not a member of the guild, then this probably came from IRC
     if (!message.member) {
+      // If the user is not a member of the guild, then this probably came from IRC
       actorPlatform = 'irc';
       // If the user isnt registered then don't give them experience
       // if (!message.host.startsWith('tripsit')) { return; }
@@ -127,8 +133,9 @@ module.exports = {
         return;
       }
 
-      const memberHost = message.host.split('/')[1];
-      logger.debug(`[${PREFIX}] ${message.nick}${memberHost ? ` (${memberHost}) ` : ' '}said ${message.args[1]} in ${message.args[0]}`);
+      // const memberHost = message.host.split('/')[1];
+      // logger.debug(`[${PREFIX}] ${message.nick}${memberHost
+      // ? ` (${memberHost}) ` : ' '}said ${message.args[1]} in ${message.args[0]}`);
       actor = message;
 
       // Determine what kind of experience to give
@@ -139,7 +146,7 @@ module.exports = {
         logger.debug(`[${PREFIX}] Message sent in a non-tripsitter channel from IRC`);
         expType = 'general';
       }
-      messageChannelId = message.args[0];
+      messageChannelId = message.args[0].replace(/(\.|\$|#|\[|\]|\/)/g, '');
     }
 
     // logger.debug(`[${PREFIX}] expType: ${expType}`);
@@ -147,29 +154,34 @@ module.exports = {
 
     // Get random value between 15 and 25
     const expPoints = Math.floor(Math.random() * (25 - 15 + 1)) + 15;
-    const currMessageDate = message.createdTimestamp || Date.now();
-    // logger.debug(`[${PREFIX}] currMessageDate: ${currMessageDate}`);
 
     // Get user data
     const [actorData, actorFbid] = await getUserInfo(actor);
 
     let lastMessageDate = 0;
     try {
-      lastMessageDate = actorData.experience[expType].lastMessageDate;
+      lastMessageDate = new Date(actorData.experience[expType].lastMessageDate);
     } catch (e) {
       logger.debug(`[${PREFIX}] No lastMessageDate found for ${actor.username || actor.nick}`);
     }
-    // logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
+    logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
+
+    const currMessageDate = message.createdTimestamp || Date.now();
+    logger.debug(`[${PREFIX}] currMessageDate: ${currMessageDate}`);
+
     const timeDiff = currMessageDate - lastMessageDate;
-    // logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
+    logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
 
     const bufferTime = bufferSeconds * 1000;
 
     if ('experience' in actorData) {
+      // If the user already has experience
       if (expType in actorData.experience) {
-        // If the time diff is over one bufferTime, increase the experience points
+        // If the user already has this TYPE of experience
         if (timeDiff > bufferTime) {
+          // If the time diff is over one bufferTime, increase the experience points
           const experienceData = actorData.experience[expType];
+
           let levelExpPoints = experienceData.levelExpPoints + expPoints;
           const totalExpPoints = experienceData.totalExpPoints + expPoints;
 
@@ -196,6 +208,45 @@ module.exports = {
           };
           actorDataUpdated = true;
           logger.debug(`[${PREFIX}] Exp update A (Increment)`);
+        }
+        if (actorData.experience.general) {
+          logger.debug(`[${PREFIX}] User has general experience`);
+          if (actorData.experience.general.level >= 5) {
+            // logger.debug(`[${PREFIX}] User is over level 5`);
+            if (message.member) {
+              // logger.debug(`[${PREFIX}] User is in the guild`);
+              // Give the user the VIP role if they are level 5 or above
+              const vipRole = message.guild.roles.cache.find(role => role.id === roleVipId);
+              if (vipRole) {
+                message.member.roles.add(vipRole);
+                logger.debug(`[${PREFIX}] VIP role added`);
+              }
+              if (actorData.experience.introSent === 'impossible') {
+                logger.debug(`[${PREFIX}] User has not been sent an intro yet`);
+
+                const intro = stripIndents`
+                  Hey there, thanks for chatting on the TripSit discord!
+
+                  We reward people active on our discord with the "VIP" role 😎
+
+                  This gives you some access to channels and features that are not open to everybody:
+                  > If you're interested in voice chat you can open a new room by joining the 🔥│𝘾𝙖𝙢𝙥𝙛𝙞𝙧𝙚 𝙑𝘾!
+                  > Want to help out in 🟢│tripsit? Read the ❗│how-to-tripsit room and become a Helper!
+                  > We always welcome feedback on our development projects: review 🔋│dev-onboarding and become a Consultant!
+
+                  Access to the notorious 🧐│gold-lounge can be yours by subscribing to our patreon! (https://www.patreon.com/tripsit)
+
+                  Thanks again for being active, we couldn't exist without awesome members like you!
+                `;
+                message.member.send(intro);
+
+                const channelViplounge = discordClient.channels.cache.get(channelViploungeId);
+                channelViplounge.send(`Please welcome ${message.member.displayName} to the VIP lounge!`);
+                actorData.experience.introSent = true;
+                logger.debug(`[${PREFIX}] Intro sent`);
+              }
+            }
+          }
         }
       } else {
         actorData.experience[expType] = {
@@ -262,6 +313,7 @@ module.exports = {
         logger.debug(`[${PREFIX}] Discord update C (Create)`);
       }
     }
+
     if (actorPlatform === 'irc') {
       if ('irc' in actorData) {
         if ('messages' in actorData.irc) {
