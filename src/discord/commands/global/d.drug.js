@@ -197,13 +197,13 @@ module.exports = {
       if (dosage !== '') {
         const entireMessage = dosage;
         const book = [];
-        if (entireMessage.length > 1024) {
+        if (entireMessage.length > 512) {
           // logger.debug(`[${PREFIX}] ${section} is too long at ${entire_message.length}`);
-          const messageLength = Math.ceil(entireMessage.length / 1000);
+          const messageLength = Math.ceil(entireMessage.length / 512);
           // logger.debug(`[${PREFIX}] I will make ${message_length} messages`)
           let messagesBuilt = 0;
           let messageStart = 0;
-          let messageEnd = 1000;
+          let messageEnd = 512;
           let messagePart = '';
           while (messagesBuilt < messageLength) {
             // eslint-disable-next-line
@@ -214,7 +214,7 @@ module.exports = {
             // logger.debug(`[${PREFIX}] message_part is ${message_part}`)
             // logger.debug(`[${PREFIX}] setting new start to ${message_end}`)
             messageStart = messageEnd;
-            messageEnd += 1000;
+            messageEnd += 512;
             messagesBuilt += 1;
             const embed = template.embedTemplate()
               .setTitle(`${substance} Dosage`)
@@ -223,7 +223,7 @@ module.exports = {
             book.push(embed);
           }
         }
-        if (entireMessage.length > 0 && entireMessage.length <= 1024) {
+        if (entireMessage.length > 0 && entireMessage.length <= 512) {
           // logger.debug(`[${PREFIX}] ${section} is not too long`);
           const embed = template.embedTemplate()
             .setTitle(`${substance} Dosage`)
@@ -274,13 +274,13 @@ module.exports = {
         // logger.debug(`[${PREFIX}] entire_message is ${entire_message}`);
         const title = `${emoji} ${drugStatus} ${emoji}`;
 
-        if (entireMessage.length > 1024) {
+        if (entireMessage.length > 512) {
           logger.debug(`[${PREFIX}] ${drugStatus} is too long at ${entireMessage.length}`);
-          const messageLength = Math.ceil(entireMessage.length / 1000);
+          const messageLength = Math.ceil(entireMessage.length / 512);
           // logger.debug(`[${PREFIX}] I will make ${message_length} messages`)
           let messagesBuilt = 0;
           let messageStart = 0;
-          let messageEnd = 1000;
+          let messageEnd = 512;
           let messagePart = '';
           while (messagesBuilt < messageLength) {
             // eslint-disable-next-line
@@ -291,7 +291,7 @@ module.exports = {
             // logger.debug(`[${PREFIX}] message_part is ${message_part}`)
             // logger.debug(`[${PREFIX}] setting new start to ${message_end}`)
             messageStart = messageEnd;
-            messageEnd += 1000;
+            messageEnd += 512;
             messagesBuilt += 1;
             const embed = template.embedTemplate()
               .setTitle(`${title}`)
@@ -302,7 +302,7 @@ module.exports = {
             book.push(embed);
           }
         }
-        if (entireMessage.length > 0 && entireMessage.length <= 1024) {
+        if (entireMessage.length > 0 && entireMessage.length <= 512) {
           logger.debug(`[${PREFIX}] ${drugStatus} is not too long`);
           const embed = template.embedTemplate()
             .setTitle(`${title}`)
