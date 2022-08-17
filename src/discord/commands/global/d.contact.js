@@ -1,7 +1,10 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder } = require('discord.js');
+const {
+  SlashCommandBuilder,
+  Colors,
+} = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 
@@ -14,7 +17,7 @@ module.exports = {
 
   async execute(interaction) {
     const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
+      .setColor(Colors.DarkBlue)
       .setTitle('Contact TripSit')
       .setURL('https://tripsit.me/contact-us/')
       .setDescription(`

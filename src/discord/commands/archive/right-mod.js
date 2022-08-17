@@ -1,6 +1,10 @@
 'use strict';
 
-const { SlashCommandBuilder, time } = require('discord.js');
+const {
+  SlashCommandBuilder,
+  time,
+  Colors,
+} = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
@@ -167,7 +171,7 @@ module.exports = {
 
     if (!target) {
       const embed = template.embedTemplate()
-        .setColor('RED')
+        .setColor(Colors.Red)
         .setDescription('target not found, are you sure they are in the server?');
       interaction.reply({ embeds: [embed], ephemeral: true });
       logger.debug(`[${PREFIX}] Target not found!`);
@@ -217,7 +221,7 @@ module.exports = {
     const title = `${actor} ${command}ed ${target} ${reason ? `because ${reason}` : ''}`;
     // const book = [];
     const targetEmbed = template.embedTemplate()
-      .setColor('BLUE')
+      .setColor(Colors.Blue)
       .setDescription(title)
       .addFields(
         { name: 'Username', value: `${isMember ? target.user.username : target.username}#${isMember ? target.user.discriminator : target.discriminator}`, inline: true },

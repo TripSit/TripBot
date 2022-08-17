@@ -59,7 +59,7 @@ module.exports = {
     modal.addComponents(firstActionRow);
 
     // Show the modal to the user
-    await interaction.showModalBuilder(modal);
+    await interaction.showModal(modal);
   },
   async submit(interaction) {
     // logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);

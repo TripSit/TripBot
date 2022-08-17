@@ -1,7 +1,11 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder, time } = require('discord.js');
+const {
+  SlashCommandBuilder,
+  time,
+  Colors,
+} = require('discord.js');
 const { ButtonBuilder, ButtonStyle } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const logger = require('../../../global/utils/logger');
@@ -188,7 +192,7 @@ module.exports = {
         name: `You dosed ${volume} ${units} of ${substance}`,
         value: `${relative} on ${timeString}`,
       };
-      embed.setColor('DARK_BLUE');
+      embed.setColor(Colors.DarkBlue);
       embed.setTitle('New iDose entry:');
       embed.addFields(embedField);
 

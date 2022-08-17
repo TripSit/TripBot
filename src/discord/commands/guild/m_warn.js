@@ -6,6 +6,7 @@ const {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
+  Colors,
 } = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('discord.js');
@@ -67,13 +68,13 @@ module.exports = {
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
     // Show the modal to the user
-    await interaction.showModalBuilder(modal);
+    await interaction.showModal(modal);
   },
   async submit(interaction) {
     logger.debug(`[${PREFIX}] started!`);
     // await interaction.deferReply({ ephemeral: true });
     const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
+      .setColor(Colors.DarkBlue)
       .setDescription('Reporting...');
     // await interaction.editReply({ embeds: [embed], ephemeral: true });
     logger.debug(`[${PREFIX}] options: ${JSON.stringify(interaction.options, null, 2)}`);

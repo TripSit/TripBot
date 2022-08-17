@@ -5,6 +5,7 @@ const {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
+  Colors,
 } = require('discord.js');
 const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
@@ -123,7 +124,7 @@ module.exports = {
       .setCustomId('introInput')
       .setLabel('What\'s going on? Give us the details!')
       .setStyle(TextInputStyle.Paragraph)));
-    await interaction.showModalBuilder(modal);
+    await interaction.showModal(modal);
   },
   async submit(interaction, memberInput, triageGiven, introGiven) {
     logger.debug(`[${PREFIX}] memberInput: ${memberInput}`);
@@ -226,7 +227,7 @@ module.exports = {
         }
 
         const embed = template.embedTemplate()
-          .setColor('DARK_BLUE')
+          .setColor(Colors.DarkBlue)
           .setDescription(message);
         interaction.reply({ embeds: [embed], ephemeral: true });
         logger.debug(`[${PREFIX}] Rejected need for help`);
@@ -289,7 +290,7 @@ module.exports = {
           : stripIndents`You are a member of the team and cannot be publicly helped!
           Try asking in #teamtripsit =)`;
         const embed = template.embedTemplate()
-          .setColor('DARK_BLUE')
+          .setColor(Colors.DarkBlue)
           .setDescription(teamMessage);
         if (!interaction.replied) {
           await interaction.reply({ embeds: [embed], ephemeral: true });
@@ -351,7 +352,7 @@ module.exports = {
           }
 
           const embed = template.embedTemplate()
-            .setColor('DARK_BLUE')
+            .setColor(Colors.DarkBlue)
             .setDescription(message);
 
           interaction.reply({ embeds: [embed], ephemeral: true });
@@ -462,7 +463,7 @@ module.exports = {
     }
 
     const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
+      .setColor(Colors.DarkBlue)
       .setDescription(replyMessage);
     interaction.reply({ embeds: [embed], ephemeral: true });
     logger.debug(`[${PREFIX}] Sent response to user`);

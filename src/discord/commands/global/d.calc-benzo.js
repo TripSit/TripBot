@@ -1,7 +1,10 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder } = require('discord.js');
+const {
+  SlashCommandBuilder,
+  Colors,
+} = require('discord.js');
 const calcBenzo = require('../../../global/utils/calc-benzo');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
@@ -32,7 +35,7 @@ module.exports = {
     const data = await calcBenzo.calcBenzo(dosage, drugA, drugB);
 
     const embed = template.embedTemplate()
-      .setColor('RANDOM')
+      .setColor(Colors.Purple)
       .setTitle(`${dosage} mg of ${drugA} is ${data.result} mg of ${drugB}`)
       .setDescription(`
         This is a simple tool made to help you figure out how much of a given benzodiazepine dose converts into another benzodiazepine dose.\n\n\

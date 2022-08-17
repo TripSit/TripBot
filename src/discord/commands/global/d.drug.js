@@ -1,7 +1,11 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder, ButtonStyle } = require('discord.js');
+const {
+  SlashCommandBuilder,
+  ButtonStyle,
+  Colors,
+} = require('discord.js');
 const { ButtonBuilder } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const logger = require('../../../global/utils/logger');
@@ -173,7 +177,7 @@ module.exports = {
       if (summary !== '') {
         // logger.debug(`[${PREFIX}] summary.length: ${summary.length}`);
         const embed = template.embedTemplate()
-          .setColor('DARK_BLUE')
+          .setColor(Colors.DarkBlue)
           .setTitle(`${substance} Summary`)
           .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
           .setDescription(summary);

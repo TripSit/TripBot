@@ -6,7 +6,8 @@
 
 'use strict';
 
-const path = require('path');
+const PREFIX = require('path').parse(__filename).name;
+
 const fs = require('fs/promises');
 const { SlashCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
@@ -14,9 +15,6 @@ const template = require('../../utils/embed-template');
 const COMMANDS_PATH = path.resolve('src/commands');
 const drugDataAll = require('../../../global/assets/data/drug_db_combined.json');
 const drugNames = drugDataAll.map(d => d.name);
-
-const PREFIX = path.parse(__filename).name;
-
 function sleep(ms) {
   return new Promise(resolve => {
     setTimeout(resolve, ms);
@@ -32,7 +30,7 @@ async function getCommands(commandType) {
 
 async function testReply(interaction, functionName, message) {
   const embed = template.embedTemplate()
-    .setColor('RANDOM')
+    .setColor(Colors.Purple)
     .setTitle(`Skipping ${functionName} because ${message}`)
   if (!interaction.replied) {
     interaction.reply({

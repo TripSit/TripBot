@@ -1,7 +1,12 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder, time, ButtonStyle } = require('discord.js');
+const {
+  SlashCommandBuilder,
+  time,
+  ButtonStyle,
+  Colors,
+} = require('discord.js');
 const { ActionRowBuilder, ButtonBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
@@ -174,7 +179,7 @@ module.exports = {
         if (toggle === 'on') {
           if (targetData.isBanned) {
             const embed = template.embedTemplate()
-              .setColor('GREEN')
+              .setColor(Colors.Green)
               .setTitle('Guild Already Banned')
               .addFields(
                 { name: 'Guild ID', value: targetId },
@@ -194,7 +199,7 @@ module.exports = {
         } else if (toggle === 'off') {
           if (!targetData.isBanned) {
             const embed = template.embedTemplate()
-              .setColor('GREEN')
+              .setColor(Colors.Green)
               .setTitle('Guild Not Banned')
               .addFields(
                 { name: 'Guild ID', value: targetId },
@@ -227,7 +232,7 @@ module.exports = {
 
       const title = `${actor} ${command}ed ${targetGuild} ${reason ? `because ${reason}` : ''}`;
       const targetEmbed = template.embedTemplate()
-        .setColor('BLUE')
+        .setColor(Colors.Blue)
         .setDescription(title)
         .addFields(
           { name: 'Guild Name', value: `${targetData.guild_name}`, inline: true },

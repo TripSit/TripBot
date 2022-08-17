@@ -1,6 +1,9 @@
 'use strict';
 
-const { EmbedBuilder, Colors } = require('discord.js');
+const {
+  EmbedBuilder,
+  Colors,
+} = require('discord.js');
 const {
   tsIconUrl,
   tsFlameUrl,

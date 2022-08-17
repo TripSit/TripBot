@@ -1,7 +1,11 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder, time } = require('discord.js');
+const {
+  SlashCommandBuilder,
+  time,
+  Colors,
+} = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 
@@ -46,7 +50,7 @@ module.exports = {
     const relative = time(date, 'R');
 
     const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
+      .setColor(Colors.DarkBlue)
       .addFields({
         name: `You dosed ${volume} ${units} of ${substance}`,
         value: `${relative} at ${timeString}`,

@@ -1,7 +1,10 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder } = require('discord.js');
+const {
+  SlashCommandBuilder,
+  Colors,
+} = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 
@@ -86,7 +89,7 @@ module.exports = {
     logger.debug(`[${PREFIX}] calcWeight:`, calcWeight);
 
     const embed = template.embedTemplate()
-      .setColor('RANDOM')
+      .setColor(Colors.Purple)
       .setTitle('DXM Calculator')
       .setDescription(`
         Please note, these tools were developed and tested to the best possible ability by the TripSit team, and the greatest effort has been made not to produce incorrect or misleading results, though for unforeseen reasons these may occur. Always check your maths, and be careful.\n\n\

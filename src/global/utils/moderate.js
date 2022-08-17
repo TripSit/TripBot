@@ -2,7 +2,10 @@
 
 const PREFIX = require('path').parse(__filename).name;
 const ms = require('ms');
-const { time } = require('discord.js');
+const {
+  time,
+  Colors,
+} = require('discord.js');
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('./logger');
@@ -305,7 +308,7 @@ module.exports = {
 
     if (!targetUser) {
       const embed = template.embedTemplate()
-        .setColor('RED')
+        .setColor(Colors.Red)
         .setDescription('Target not found?');
       logger.debug(`[${PREFIX}] Target not found!`);
       const reply = { embeds: [embed], ephemeral: true };
@@ -354,7 +357,7 @@ module.exports = {
     if (command === 'warn') {
       if (targetPlatform === 'discord') {
         const warnEmbed = template.embedTemplate()
-          .setColor('YELLOW')
+          .setColor(Colors.Yellow)
           .setTitle('Warning!')
           .setDescription(stripIndents`
         You have been warned by Team TripSit:
@@ -639,7 +642,7 @@ module.exports = {
     // const targetModActions = targetData.modActions ? targetData.modActions : {};
     // logger.debug(`[${PREFIX}] targetModActions: ${JSON.stringify(targetModActions, null, 2)}`);
     const targetEmbed = template.embedTemplate()
-      .setColor('BLUE')
+      .setColor(Colors.Blue)
       .setDescription(`${actor} ${command}ed ${targetNickname}${targetChannel ? ` in ${targetChannel}` : ''}${duration ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because\n ${reason}` : ''}`)
       .addFields(
         { name: 'Nickname', value: `${targetNickname}`, inline: true },

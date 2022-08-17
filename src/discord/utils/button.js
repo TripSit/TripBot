@@ -1,6 +1,9 @@
 'use strict';
 
-const path = require('path');
+const {
+  Colors,
+} = require('discord.js');
+const PREFIX = require('path').parse(__filename).name;
 const { stripIndents } = require('common-tags');
 const logger = require('../../global/utils/logger');
 const tripsitme = require('./tripsitme');
@@ -9,8 +12,6 @@ const template = require('./embed-template');
 const modmail = require('../commands/guild/modmail');
 const ircButton = require('../commands/guild/prompt');
 const { getUserInfo } = require('../../global/services/firebaseAPI');
-
-const PREFIX = path.parse(__filename).name;
 
 const {
   discordGuildId,
@@ -101,7 +102,7 @@ module.exports = {
 
     if (buttonID === 'acknowledgebtn') {
       const embed = template.embedTemplate()
-        .setColor('GREEN')
+        .setColor(Colors.Green)
         .setDescription(`${interaction.user.username} has acknowledged their warning.`);
       modChan.send({ embeds: [embed] });
       interaction.reply('Thanks for understanding!');
@@ -113,7 +114,7 @@ module.exports = {
       logger.debug(guild);
       guild.members.ban(interaction.user, { days: 7, reason: 'Refused warning' });
       const embed = template.embedTemplate()
-        .setColor('RED')
+        .setColor(Colors.Red)
         .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
       modChan.send({ embeds: [embed] });
       interaction.reply('Thanks for making this easy!');
@@ -126,7 +127,7 @@ module.exports = {
       const botOwner = interaction.client.application.owner;
       logger.debug(`[${PREFIX}] bot_owner: ${botOwner}`);
       const embed = template.embedTemplate()
-        .setColor('GREEN')
+        .setColor(Colors.Green)
         .setDescription(`${interaction.user.username} has acknowledged their warning.`);
       botOwner.send({ embeds: [embed] });
       interaction.reply('Thanks for understanding!');
@@ -135,7 +136,7 @@ module.exports = {
 
     if (buttonID === 'warnbtn') {
       const embed = template.embedTemplate()
-        .setColor('RED')
+        .setColor(Colors.Red)
         .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
       modChan.send({ embeds: [embed] });
       interaction.reply('Thanks for making this easy!');

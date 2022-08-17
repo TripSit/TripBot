@@ -1,7 +1,9 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { SlashCommandBuilder } = require('discord.js');
+const {
+  SlashCommandBuilder,
+} = require('discord.js');
 const { Octokit } = require('@octokit/rest');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('../../../global/utils/logger');
@@ -69,7 +71,7 @@ module.exports = {
         });
         const issueUrl = response.data.html_url;
         const embed = template.embedTemplate()
-          .setColor('#0099ff')
+          .setColor(0x0099ff)
           .setTitle('Issue created!')
           .setDescription(stripIndents`\
           Issue #${issueNumber} created on ${owner}/${repo}
@@ -79,7 +81,7 @@ module.exports = {
       .catch(ex => {
         logger.error(`[${PREFIX}] Failed to create issue on ${owner}/${repo}`, ex);
         const embed = template.embedTemplate()
-          .setColor('#ff0000')
+          .setColor(0xff0000)
           .setTitle('Issue creation failed!')
           .setDescription(`Your issue could not be created on ${owner}/${repo}\n\n${ex}`);
         interaction.reply({ embeds: [embed], ephemeral: false });

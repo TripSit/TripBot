@@ -8,6 +8,7 @@ const {
   ButtonBuilder,
   TextInputBuilder,
   TextInputStyle,
+  Colors,
 } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const { SlashCommandBuilder, ButtonStyle } = require('discord.js');
@@ -160,7 +161,7 @@ module.exports = {
     // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
 
     const embed = template.embedTemplate()
-      .setColor('BLUE');
+      .setColor(Colors.Blue);
 
     const author = message.author;
     const guild = await message.client.guilds.fetch(discordGuildId);
@@ -197,7 +198,7 @@ module.exports = {
     //   .setCustomId('introInput')
     //   .setLabel('What\'s going on? Give us the details!')
     //   .setStyle(TextInputStyle.Paragraph)));
-    // await interaction.showModalBuilder(modal);
+    // await interaction.showModal(modal);
   },
   // async modmailTripsitterSubmit(interaction) {
   //   const guild = await interaction.client.guilds.fetch(discordGuildId);
@@ -225,7 +226,7 @@ module.exports = {
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
     // Show the modal to the user
-    await interaction.showModalBuilder(modal);
+    await interaction.showModal(modal);
   },
   async modmailFeedbackSubmit(interaction) {
     logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
@@ -250,7 +251,7 @@ module.exports = {
     // Get the moderation channel
     const modChan = interaction.client.channels.cache.get(channelModeratorsId);
     const ircAdminEmbed = template.embedTemplate()
-      .setColor('RANDOM')
+      .setColor(Colors.Purple)
       .setDescription(stripIndents`
       Hey ${isDev ? 'moderators' : roleModerator}!
 
@@ -284,7 +285,7 @@ module.exports = {
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
     // Show the modal to the user
-    await interaction.showModalBuilder(modal);
+    await interaction.showModal(modal);
   },
   async modmailIssueSubmit(interaction, issueType) {
     // logger.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}!`);
