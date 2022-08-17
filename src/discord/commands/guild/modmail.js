@@ -4,9 +4,10 @@ const PREFIX = require('path').parse(__filename).name;
 // const ms = require('ms');
 const {
   ActionRowBuilder,
-  ButtonBuilder,
   ModalBuilder,
+  ButtonBuilder,
   TextInputBuilder,
+  TextInputStyle,
 } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const { SlashCommandBuilder, ButtonStyle } = require('discord.js');
@@ -191,11 +192,11 @@ module.exports = {
     // modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
     //   .setCustomId('triageInput')
     //   .setLabel('What substance? How much taken? What time?')
-    //   .setStyle('SHORT')));
+    //   .setStyle(TextInputStyle.Short')));
     // modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
     //   .setCustomId('introInput')
     //   .setLabel('What\'s going on? Give us the details!')
-    //   .setStyle('PARAGRAPH')));
+    //   .setStyle(TextInputStyle.Paragraph)));
     // await interaction.showModalBuilder(modal);
   },
   // async modmailTripsitterSubmit(interaction) {
@@ -215,7 +216,7 @@ module.exports = {
       .setTitle('TripSit Feedback');
     const timeoutReason = new TextInputBuilder()
       .setLabel('What would you like to let the team know?')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder('This bot is cool and I have a suggestion...')
       .setCustomId('feedbackInput')
       .setRequired(true);
@@ -274,7 +275,7 @@ module.exports = {
       .setTitle('TripSit Feedback');
     const timeoutReason = new TextInputBuilder()
       .setLabel('What is your issue? Be super detailed!')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(placeholder)
       .setCustomId(`${issueType}IssueInput`)
       .setRequired(true);

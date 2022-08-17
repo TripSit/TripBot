@@ -1,7 +1,12 @@
 'use strict';
 
 const path = require('path');
-const { ActionRowBuilder, ModalBuilder, TextInputBuilder } = require('discord.js');
+const {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+} = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
@@ -55,7 +60,7 @@ module.exports = {
       .setTitle('Tripbot Report');
     const reportReason = new TextInputBuilder()
       .setLabel('Why are you reporting this?')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder('Please be descriptive!')
       .setCustomId('reportReason')
       .setRequired(true);

@@ -1,7 +1,12 @@
 'use strict';
 
 const path = require('path');
-const { ActionRowBuilder, ModalBuilder, TextInputBuilder } = require('discord.js');
+const {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+} = require('discord.js');
 const { SlashCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
@@ -26,7 +31,7 @@ module.exports = {
     const bugReport = new TextInputBuilder()
       .setCustomId('bugReport')
       .setLabel('What would you like to tell the bot dev team?')
-      .setStyle('PARAGRAPH');
+      .setStyle(TextInputStyle.Paragraph);
     // An action row only holds one text input, so you need one action row per text input.
     const firstActionRow = new ActionRowBuilder().addComponents(bugReport);
     // Add inputs to the modal

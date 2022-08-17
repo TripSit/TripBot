@@ -1,7 +1,10 @@
 'use strict';
 
 const {
-  ActionRowBuilder, ModalBuilder, TextInputBuilder,
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
 } = require('discord.js');
 const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
@@ -115,11 +118,11 @@ module.exports = {
     modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
       .setCustomId('triageInput')
       .setLabel('What substance? How much taken? What time?')
-      .setStyle('SHORT')));
+      .setStyle(TextInputStyle.Short)));
     modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
       .setCustomId('introInput')
       .setLabel('What\'s going on? Give us the details!')
-      .setStyle('PARAGRAPH')));
+      .setStyle(TextInputStyle.Paragraph)));
     await interaction.showModalBuilder(modal);
   },
   async submit(interaction, memberInput, triageGiven, introGiven) {

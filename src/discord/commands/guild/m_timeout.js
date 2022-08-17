@@ -1,7 +1,12 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { ActionRowBuilder, ModalBuilder, TextInputBuilder } = require('discord.js');
+const {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+} = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
@@ -50,13 +55,13 @@ module.exports = {
       .setTitle('Tripbot Timeout');
     const timeoutReason = new TextInputBuilder()
       .setLabel('Why are you timouting this person?')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder('Why are you timeouting this person?')
       .setCustomId('timeoutReason')
       .setRequired(true);
     const timeoutDuration = new TextInputBuilder()
       .setLabel('Timeout for how long? (Max/default 7 days)')
-      .setStyle('SHORT')
+      .setStyle(TextInputStyle.Short)
       .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
       .setCustomId('timeoutDuration');
     // An action row only holds one text input, so you need one action row per text input.

@@ -290,7 +290,7 @@ module.exports = {
           // const bugReport = new TextInputBuilder()
           //   .setCustomId('feedbackReport')
           //   .setLabel('What feedback do you have for the team?')
-          //   .setStyle('PARAGRAPH');
+          //   .setStyle(TextInputStyle.Paragraph);
           // // An action row only holds one text input, so you need one action row per text input.
           // const firstActionRow = new ActionRowBuilder().addComponents(bugReport);
           // // Add inputs to the modal

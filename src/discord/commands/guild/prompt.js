@@ -7,7 +7,9 @@ const {
   MessageButton,
   Modal,
   TextInputComponent,
+  TextInputStyle,
 } = require('discord.js');
+
 const { ReactionRole } = require('discordjs-reaction-role');
 const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
@@ -340,19 +342,19 @@ async function techhelp(interaction) {
       new MessageButton()
         .setCustomId('ircConnect')
         .setLabel('I can\'t connect to IRC!')
-        .setStyle('SUCCESS'),
+        .setStyle(TextInputStyle.Success),
       new MessageButton()
         .setCustomId('ircAppeal')
         .setLabel('I want to appeal my ban!')
-        .setStyle('DANGER'),
+        .setStyle(TextInputStyle.Danger),
       new MessageButton()
         .setCustomId('discordIssue')
         .setLabel('Discord issue/feedback!')
-        .setStyle('PRIMARY'),
+        .setStyle(TextInputStyle.Primary),
       new MessageButton()
         .setCustomId('ircOther')
         .setLabel('I have something else!')
-        .setStyle('SECONDARY'),
+        .setStyle(TextInputStyle.Secondary),
     );
 
   // Create a new button
@@ -541,11 +543,11 @@ async function tripsitme(interaction) {
       new MessageButton()
         .setCustomId('tripsitme')
         .setLabel('I need assistance!')
-        .setStyle('PRIMARY'),
+        .setStyle(TextInputStyle.Primary),
       new MessageButton()
         .setCustomId('tripsat')
         .setLabel('I\'m good now!')
-        .setStyle('SUCCESS'),
+        .setStyle(TextInputStyle.Success),
     );
 
   // Create a new button
@@ -584,13 +586,13 @@ async function ticketbooth(interaction) {
       new MessageButton()
         .setCustomId('memberbutton')
         .setLabel('I understand where to find help and will follow the rules!')
-        .setStyle('SUCCESS'),
+        .setStyle(TextInputStyle.Success),
     )
     .addComponents(
       new MessageButton()
         .setCustomId('underban')
         .setLabel('I am underage but I need help!')
-        .setStyle('SECONDARY'),
+        .setStyle(TextInputStyle.Secondary),
     );
 
   // Create a new button
@@ -667,7 +669,7 @@ module.exports = {
       .setTitle('TripSit Feedback');
     const timeoutReason = new TextInputComponent()
       .setLabel('What is your issue? Be super detailed!')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(placeholder)
       .setCustomId(`${issueType}IssueInput`)
       .setRequired(true);

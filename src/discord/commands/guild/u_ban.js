@@ -1,7 +1,12 @@
 'use strict';
 
 const path = require('path');
-const { ActionRowBuilder, ModalBuilder, TextInputBuilder } = require('discord.js');
+const {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+} = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
@@ -36,13 +41,13 @@ module.exports = {
       .setTitle('Tripbot Ban');
     const banReason = new TextInputBuilder()
       .setLabel('Why are you banning this person?')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(reason)
       .setCustomId('banReason')
       .setRequired(true);
     const banDuration = new TextInputBuilder()
       .setLabel('How long should this ban last?')
-      .setStyle('SHORT')
+      .setStyle(TextInputStyle.Short)
       .setPlaceholder(duration)
       .setCustomId('banDuration');
     // An action row only holds one text input, so you need one action row per text input.

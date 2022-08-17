@@ -1,7 +1,12 @@
 'use strict';
 
 const path = require('path');
-const { ActionRowBuilder, ModalBuilder, TextInputBuilder } = require('discord.js');
+const {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+} = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
@@ -42,7 +47,7 @@ module.exports = {
       .setTitle('Tripbot Kick');
     const banReason = new TextInputBuilder()
       .setLabel('Why are you kicking this person?')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(reason)
       .setRequired(true)
       .setCustomId('kickReason');

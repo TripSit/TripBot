@@ -1,7 +1,12 @@
 'use strict';
 
 const path = require('path');
-const { ActionRowBuilder, ModalBuilder, TextInputBuilder } = require('discord.js');
+const {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+} = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
@@ -52,7 +57,7 @@ module.exports = {
       .setTitle('Tripbot Warn');
     const warnReason = new TextInputBuilder()
       .setLabel('Why are you warning this person?')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder('Why are you warning this person?')
       .setCustomId('reasonGiven')
       .setRequired(true);

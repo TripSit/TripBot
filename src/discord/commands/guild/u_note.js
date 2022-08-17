@@ -1,7 +1,12 @@
 'use strict';
 
 const path = require('path');
-const { ActionRowBuilder, ModalBuilder, TextInputBuilder } = require('discord.js');
+const {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+} = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
 const { ContextMenuCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
@@ -35,7 +40,7 @@ module.exports = {
       .setTitle('Tripbot Note');
     const noteReason = new TextInputBuilder()
       .setLabel('What are you noting about this person?')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(reason)
       .setCustomId('noteReason')
       .setRequired(true);
