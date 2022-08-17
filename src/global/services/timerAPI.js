@@ -295,7 +295,8 @@ module.exports = {
                   }
                 }
                 if (discordData.lastSetMindsetDate) {
-                  logger.debug(`[${PREFIX}] Processing lastSetMindsetDate on ${discordData.username}`);
+                  // logger.debug(`[${PREFIX}] Processing
+                  // lastSetMindsetDate on ${discordData.username}`);
 
                   const lastSetMindset = discordData.lastSetMindset;
                   // logger.debug(`[${PREFIX}] lms: ${lastSetMindset}`);
@@ -303,10 +304,11 @@ module.exports = {
                   const eightHoursAgo = now - 28800000;
                   // logger.debug(`[${PREFIX}] 8hr: ${eightHoursAgo}`);
 
-                  logger.debug(`[${PREFIX}] discordData.lastSetMindsetDate: ${discordData.lastSetMindsetDate}`);
+                  // logger.debug(`[${PREFIX}] discordData.lastSetMindsetDate:
+                  // ${discordData.lastSetMindsetDate}`);
 
                   const lastSetMindsetDate = new Date(discordData.lastSetMindsetDate);
-                  logger.debug(`[${PREFIX}] lastSetMindsetDate: ${lastSetMindsetDate}`);
+                  // logger.debug(`[${PREFIX}] lastSetMindsetDate: ${lastSetMindsetDate}`);
 
                   // if (!Number.isInteger(lastSetMindsetDate)) {
                   //   // Set lastSetMindsetDate to 7 days ago
@@ -315,7 +317,7 @@ module.exports = {
                   // logger.debug(`[${PREFIX}] lastSetMindsetDate B: ${lastSetMindsetDate}`);
 
                   const timeBetween = now - lastSetMindsetDate;
-                  logger.debug(`[${PREFIX}] Time between ${timeBetween}`);
+                  // logger.debug(`[${PREFIX}] Time between ${timeBetween}`);
 
                   logger.debug(`[${PREFIX}] ${discordData.username} added ${lastSetMindset} ${ms(timeBetween, { long: true })} ago`);
 
