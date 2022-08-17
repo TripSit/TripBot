@@ -7,7 +7,7 @@ module.exports = {
   name: 'onReady',
   async execute() {
     global.ircClient.addListener('registered', () => {
-      logger.info(`[${PREFIX}] ready!`);
+      logger.info(`[${PREFIX}] IRC bot initialized: ready to party like it's 2001!`);
     });
   },
 };

@@ -251,7 +251,12 @@ module.exports = {
       endHelpMessage = testNotice + endHelpMessage;
     }
 
-    threadHelpUser.send(endHelpMessage);
+    try {
+      threadHelpUser.send(endHelpMessage);
+    } catch (err) {
+      // logger.error(`[${PREFIX}] Error sending end help message to ${threadHelpUser}`);
+      // logger.error(err);
+    }
 
     let message = '';
     await threadHelpUser.send(stripIndents`

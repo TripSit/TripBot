@@ -13,11 +13,13 @@ const { runTimer } = require('./global/services/timerAPI');
 
 const {
   NODE_ENV,
+  firebaseRealtimeKey,
 } = require('../env');
 
 async function start() {
   global.userDb = {};
-  if (NODE_ENV === 'production') {
+  global.guildDb = {};
+  if (firebaseRealtimeKey) {
     await firebaseConnect();
   }
 
@@ -38,7 +40,9 @@ start();
 // Stop the bot when the process is closed (via Ctrl-C).
 const destroy = () => {
   try {
-    global.manager.teardown();
+    if (global.manager) {
+      global.manager.teardown();
+    }
   } catch (err) {
     logger.error(`[${PREFIX}] ${err}`);
   }

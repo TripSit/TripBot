@@ -11,7 +11,7 @@ const mTimeout = require('../commands/guild/m_timeout');
 const mWarn = require('../commands/guild/m_warn');
 const mReport = require('../commands/guild/m_report');
 const modmail = require('../commands/guild/modmail');
-const ircButton = require('../commands/guild/help-button');
+const ircButton = require('../commands/guild/prompt');
 
 module.exports = {
   async execute(interaction) {

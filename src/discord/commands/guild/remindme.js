@@ -47,7 +47,7 @@ module.exports = {
     // Load actor data
     await setUserInfo(actorFbid, actorData);
 
-    logger.debug(`[${PREFIX}] userDb: ${JSON.stringify(global.userDb)}`);
+    // logger.debug(`[${PREFIX}] userDb: ${JSON.stringify(global.userDb)}`);
 
     const timeBetween = reminderDatetime - new Date();
 

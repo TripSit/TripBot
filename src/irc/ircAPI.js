@@ -39,7 +39,6 @@ module.exports = {
         '#dissociatives',
         '#psychedelics',
         '#moderators',
-        '#meeting-room',
         '#teamtripsit',
         '#operations',
         '#modhaven',

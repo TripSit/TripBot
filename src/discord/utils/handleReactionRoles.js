@@ -110,12 +110,12 @@ const colorRoleMap = [
 module.exports = {
   async handleReactionRoles(reaction, user) {
     logger.debug(`[${PREFIX}] started!`);
-    logger.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction, null, 2)}`);
-    logger.debug(`[${PREFIX}] user: ${JSON.stringify(user, null, 2)}`);
+    // logger.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction, null, 2)}`);
+    // logger.debug(`[${PREFIX}] user: ${JSON.stringify(user, null, 2)}`);
 
     // Get member data
     const member = await reaction.message.guild.members.fetch(user.id);
-    logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
+    // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
 
     const mindsetEmojis = mindsetRoleMap.map(m => m.reaction);
     const mindsetIds = mindsetRoleMap.map(m => m.roleId);

@@ -2,11 +2,14 @@
 
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../global/utils/logger');
-// const { experience } = require('../../global/utils/experience');
+const { experience } = require('../../global/utils/experience');
 const { echo } = require('../commands/echo');
 const { moderate } = require('../commands/i.moderate');
+// const { thoughtPolice } = require('../utils/i.thoughtPolice');
 
 const modCommands = [
+  'w',
+  'warn',
   'k',
   'kill',
   'kline',
@@ -110,25 +113,22 @@ module.exports = {
       // }
 
       // Honestly idk what other kinds of messages there are but might as well?
-      if (message.command === 'PRIVMSG') {
-        //
-        if (message.args[1].startsWith(process.env.IRC_BOT_PREFIX)) {
-          const command = message.args[1].split(' ')[0].slice(1);
-          if (command === 'echo') {
-            echo(message);
-          } else if (modCommands.includes(command)) {
-            moderate(command, message);
-          } else {
-            logger.debug(`[${PREFIX}] Unknown command: ${command}`);
-            global.ircClient.say(message.args[0], `Unknown command: ${command}`);
-          }
+      if (message.command !== 'PRIVMSG') return;
+
+      if (message.args[1].startsWith(process.env.IRC_BOT_PREFIX)) {
+        const command = message.args[1].split(' ')[0].slice(1);
+        if (command === 'echo') {
+          echo(message);
+        } else if (modCommands.includes(command)) {
+          moderate(command, message);
+        } else {
+          logger.debug(`[${PREFIX}] Unknown command: ${command}`);
+          global.ircClient.say(message.args[0], `Unknown command: ${command}`);
         }
-      } else {
-        logger.debug(`[${PREFIX}] Unknown command: ${message}`);
       }
 
-      // This always runs
-      // experience(message);
+      // thoughtPolice(message);
+      experience(message);
     });
   },
 };

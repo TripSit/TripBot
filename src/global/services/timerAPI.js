@@ -7,6 +7,7 @@ const template = require('../../discord/utils/embed-template');
 
 const {
   NODE_ENV,
+  firebaseUserDbName,
   discordGuildId,
   roleNeedshelpId,
   roleAdminId,
@@ -75,7 +76,6 @@ const colorRoles = [
   roleBrownId,
   roleBlackId,
   roleWhiteId,
-
 ];
 
 const mindsetRoles = [
@@ -100,7 +100,7 @@ if (NODE_ENV === 'development') {
 
 module.exports = {
   runTimer: async () => {
-    logger.debug(`[${PREFIX}] started!`);
+    logger.info(`[${PREFIX}] started!`);
     // eslint-disable-next-line
     let i = 0;
     function checkTimers(c) {
@@ -113,21 +113,21 @@ module.exports = {
           // global.userDb.forEach(async doc => {
           if (Object.keys(global.userDb).length > 0) {
             // eslint-disable-next-line
-            for (const doc of global.userDb) {
-              if (doc.value.reminders) {
-                if (Object.keys(doc.value.reminders).length > 0) {
-                  // Loop over doc.value.reminders keys
-                  // Object.keys(doc.value.reminders).forEach(async reminderDate => {
+            for (const userKey of Object.keys(global.userDb)) {
+              if (global.userDb[userKey].reminders) {
+                if (Object.keys(global.userDb[userKey].reminders).length > 0) {
+                  // Loop over global.userDb[userKey].reminders keys
+                  // Object.keys(global.userDb[userKey].reminders).forEach(async reminderDate => {
                   // eslint-disable-next-line
-                  for (const reminderDate of Object.keys(doc.value.reminders)) {
+                  for (const reminderDate of Object.keys(global.userDb[userKey].reminders)) {
                     // logger.debug(`[${PREFIX}] user_fb_id: ${user_fb_id}`);
-                    const userid = doc.value.discord.id;
+                    const userid = global.userDb[userKey].discord.id;
                     // logger.debug(`[${PREFIX}] userid: ${userid}`);
                     const reminderTime = reminderDate.seconds * 1000
                       || new Date(reminderDate);
                     const timeBetween = reminderTime - now;
-                    logger.debug(`[${PREFIX}] ${doc.value.accountName} has a reminder in ${ms(timeBetween, { long: true })}`);
-                    const reminder = doc.value.reminders[reminderDate];
+                    logger.debug(`[${PREFIX}] ${userKey} has a reminder in ${ms(timeBetween, { long: true })}`);
+                    const reminder = global.userDb[userKey].reminders[reminderDate];
                     if (reminderTime <= now) {
                       logger.debug(`[${PREFIX}] Sending reminder to ${userid}`);
 
@@ -148,13 +148,27 @@ module.exports = {
                         logger.debug(`[${PREFIX}] Error getting member ${userid} from guild ${guildTripsit.name}, did they quit? (A)`);
                         // Extract actor data
                         // eslint-disable-next-line
-                        const [actorData, actorFbid] = await getUserInfo(member);
 
-                        // Transform actor data
-                        delete actorData.reminders[reminderDate];
+                        const { db } = global;
+                        const ref = db.ref(`${firebaseUserDbName}/${userKey}`);
+                        // eslint-disable-next-line
+                        await ref.once('value', data => {
+                          if (data.val() !== null) {
+                            const actorData = data.val();
 
-                        // // Load actor data
-                        setUserInfo(actorFbid, actorData);
+                            // Transform actor data
+                            delete actorData.reminders[reminderDate];
+                            try {
+                              db.ref(firebaseUserDbName).update({
+                                [userKey]: actorData,
+                              });
+                            } catch (error) {
+                              logger.error(`[${PREFIX}] ${error}`);
+                              logger.debug(`[${PREFIX}] id: ${userKey}`);
+                              logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 4)}`);
+                            }
+                          }
+                        });
                         // eslint-disable-next-line
                         continue;
                       }
@@ -178,14 +192,13 @@ module.exports = {
                   }
                 }
               }
-              if (doc.value.discord) {
-                const discordData = doc.value.discord;
+              if (global.userDb[userKey].discord) {
+                const discordData = global.userDb[userKey].discord;
                 if (discordData.communityMod) {
                   logger.debug(`[${PREFIX}] processing communityMod on ${discordData.username}!`);
                   // logger.debug(`[${PREFIX}] Processing communityMod on ${discordData.username}`);
 
-                  const autoActionTime = discordData.communityMod.date.seconds * 1000
-                    || new Date(discordData.communityMod.date);
+                  const autoActionTime = new Date(discordData.communityMod.date.valueOf());
                   // logger.debug(`[${PREFIX}] autoActionTime: ${autoActionTime}`);
 
                   const autoActionName = discordData.communityMod.action;
@@ -218,20 +231,32 @@ module.exports = {
                       member = await guildTripsit.members.fetch(discordData.id);
                     } catch (err) {
                       logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (B)`);
-                      // Extract actor data
+
+                      const { db } = global;
+                      const ref = db.ref(`${firebaseUserDbName}/${userKey}`);
                       // eslint-disable-next-line
-                      const [actorData, actorFbid] = await getUserInfo(member);
+                      await ref.once('value', data => {
+                        if (data.val() !== null) {
+                          const actorData = data.val();
 
-                      // Transform actor data
-                      if (autoActionName === 'vote_ban') {
-                        actorData.isBanned = true;
-                      }
+                          // Transform actor data
+                          if (autoActionName === 'vote_ban') {
+                            actorData.isBanned = true;
+                          }
+                          actorData.discord.communityMod = null;
 
-                      // Transform actor data
-                      actorData.discord.communityMod = null;
-
-                      // // Load actor data
-                      setUserInfo(actorFbid, actorData);
+                          // Load actor data
+                          try {
+                            db.ref(firebaseUserDbName).update({
+                              [userKey]: actorData,
+                            });
+                          } catch (error) {
+                            logger.error(`[${PREFIX}] ${error}`);
+                            logger.debug(`[${PREFIX}] id: ${userKey}`);
+                            logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 4)}`);
+                          }
+                        }
+                      });
                       // eslint-disable-next-line
                       continue;
                     }
@@ -270,12 +295,8 @@ module.exports = {
                   }
                 }
                 if (discordData.lastSetMindsetDate) {
-                  logger.debug(`[${PREFIX}] Processing lastSetMindsetDate on ${discordData.username}`);
-                  // logger.debug(`[${PREFIX}] now: ${now}`);
-
-                  const lastSetMindsetDate = discordData.lastSetMindsetDate.seconds * 1000
-                    || new Date(discordData.lastSetMindsetDate);
-                  // logger.debug(`[${PREFIX}] lm2: ${lastSetMindsetDate}`);
+                  // logger.debug(`[${PREFIX}] Processing
+                  // lastSetMindsetDate on ${discordData.username}`);
 
                   const lastSetMindset = discordData.lastSetMindset;
                   // logger.debug(`[${PREFIX}] lms: ${lastSetMindset}`);
@@ -283,7 +304,21 @@ module.exports = {
                   const eightHoursAgo = now - 28800000;
                   // logger.debug(`[${PREFIX}] 8hr: ${eightHoursAgo}`);
 
+                  // logger.debug(`[${PREFIX}] discordData.lastSetMindsetDate:
+                  // ${discordData.lastSetMindsetDate}`);
+
+                  const lastSetMindsetDate = new Date(discordData.lastSetMindsetDate);
+                  // logger.debug(`[${PREFIX}] lastSetMindsetDate: ${lastSetMindsetDate}`);
+
+                  // if (!Number.isInteger(lastSetMindsetDate)) {
+                  //   // Set lastSetMindsetDate to 7 days ago
+                  //   lastSetMindsetDate = new Date(now - (1000 * 60 * 60 * 24 * 7)).valueOf();
+                  // }
+                  // logger.debug(`[${PREFIX}] lastSetMindsetDate B: ${lastSetMindsetDate}`);
+
                   const timeBetween = now - lastSetMindsetDate;
+                  // logger.debug(`[${PREFIX}] Time between ${timeBetween}`);
+
                   logger.debug(`[${PREFIX}] ${discordData.username} added ${lastSetMindset} ${ms(timeBetween, { long: true })} ago`);
 
                   if (eightHoursAgo > lastSetMindsetDate) {
@@ -294,7 +329,7 @@ module.exports = {
                     // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                     // Get the memeber from the guild
-                    logger.debug(`[${PREFIX}] mem.id: ${discordData.id}`);
+                    // logger.debug(`[${PREFIX}] mem.id: ${discordData.id}`);
                     // logger.debug(`[${PREFIX}] typeof discordData.id: ${typeof discordData.id}`);
                     let member = {};
                     try {
@@ -303,19 +338,31 @@ module.exports = {
                       // eslint-disable-next-line
                       member = await guildTripsit.members.fetch(discordData.id);
                     } catch (err) {
-                      logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (C)`);
-                      // eslint-disable-next-line
-                      member = await global.client.users.fetch(discordData.id);
-                      // Extract actor data
-                      // eslint-disable-next-line
-                      const [actorData, actorFbid] = await getUserInfo(member);
+                      logger.debug(`[${PREFIX}] Error getting member ${discordData.tag} from guild ${guildTripsit.name}, did they quit? (C)`);
 
-                      // Transform actor data
-                      actorData.discord.lastSetMindset = null;
-                      actorData.discord.lastSetMindsetDate = null;
+                      const { db } = global;
+                      const ref = db.ref(`${firebaseUserDbName}/${userKey}`);
+                      // eslint-disable-next-line
+                      await ref.once('value', data => {
+                        if (data.val() !== null) {
+                          const actorData = data.val();
 
-                      // Load actor data
-                      setUserInfo(actorFbid, actorData);
+                          // Transform actor data
+                          actorData.discord.lastSetMindset = null;
+                          actorData.discord.lastSetMindsetDate = null;
+
+                          // Load actor data
+                          try {
+                            db.ref(firebaseUserDbName).update({
+                              [userKey]: actorData,
+                            });
+                          } catch (error) {
+                            logger.error(`[${PREFIX}] ${error}`);
+                            logger.debug(`[${PREFIX}] id: ${userKey}`);
+                            logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 4)}`);
+                          }
+                        }
+                      });
                       // eslint-disable-next-line
                       continue;
                     }
@@ -323,7 +370,8 @@ module.exports = {
 
                     try {
                       // Get the role from the guild
-                      logger.debug(`[${PREFIX}] Getting role ${lastSetMindset} from guild ${guildTripsit.name}`);
+                      // logger.debug(`[${PREFIX}] Getting role
+                      // ${lastSetMindset} from guild ${guildTripsit.name}`);
                       // eslint-disable-next-line
                       const roleMindset = guildTripsit.roles.cache.find(r => r.name === lastSetMindset);
                       logger.debug(`[${PREFIX}] roleMindset: ${roleMindset.name}`);
@@ -343,8 +391,8 @@ module.exports = {
                     const [actorData, actorFbid] = await getUserInfo(member);
 
                     // Transform actor data
-                    actorData.discord.lastSetMindset = null;
-                    actorData.discord.lastSetMindsetDate = null;
+                    delete actorData.discord.lastSetMindset;
+                    delete actorData.discord.lastSetMindsetDate;
 
                     // Load actor data
                     setUserInfo(actorFbid, actorData);
@@ -365,19 +413,28 @@ module.exports = {
                     member = await guildTripsit.members.fetch(discordData.id);
                   } catch (err) {
                     logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (D)`);
+
+                    const { db } = global;
+                    const ref = db.ref(`${firebaseUserDbName}/${userKey}`);
                     // eslint-disable-next-line
-                    member = await global.client.users.fetch(discordData.id);
+                    await ref.once('value', data => {
+                      if (data.val() !== null) {
+                        const actorData = data.val();
 
-                    // Extract actor data
-                    // eslint-disable-next-line
-                    const [actorData, actorFbid] = await getUserInfo(member);
-
-                    // Transform actor data
-                    delete actorData.discord.lastHelpedMetaThreadId;
-                    delete actorData.discord.lastHelpedThreadId;
-
-                    // Load actor data
-                    setUserInfo(actorFbid, actorData);
+                        // Transform actor data
+                        delete actorData.discord.lastHelpedMetaThreadId;
+                        delete actorData.discord.lastHelpedThreadId;
+                        try {
+                          db.ref(firebaseUserDbName).update({
+                            [userKey]: actorData,
+                          });
+                        } catch (error) {
+                          logger.error(`[${PREFIX}] ${error}`);
+                          logger.debug(`[${PREFIX}] id: ${userKey}`);
+                          logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 4)}`);
+                        }
+                      }
+                    });
                     // eslint-disable-next-line
                     continue;
                   }
@@ -396,7 +453,8 @@ module.exports = {
                       discordData.lastHelpedThreadId,
                     );
                   } catch (err) {
-                    logger.debug(`[${PREFIX}] Error getting help channel ${discordData.lastHelpedThreadId}, was the channnel deleted?`);
+                    // logger.debug(`[${PREFIX}] Error getting help channel
+                    // ${discordData.lastHelpedThreadId}, was the channnel deleted?`);
                     // logger.debug(err);
                   }
                   // logger.debug(`[${PREFIX}] channelHelp:
@@ -411,13 +469,13 @@ module.exports = {
                       discordData.lastHelpedMetaThreadId,
                     );
                   } catch (err) {
-                    logger.debug(`[${PREFIX}] Error getting meta channel ${discordData.lastHelpedMetaThreadId}, was the channnel deleted?`);
+                    // logger.debug(`[${PREFIX}] Error getting meta channel
+                    // ${discordData.lastHelpedMetaThreadId}, was the channnel deleted?`);
                     // logger.debug(err);
                   }
                   // logger.debug(`[${PREFIX}] channelMeta: ${channelMeta}`);
 
-                  const lastHelped = discordData.lastHelpedDate.seconds * 1000
-                    || new Date(discordData.lastHelpedDate);
+                  const lastHelped = new Date(discordData.lastHelpedDate.valueOf());
                   // logger.debug(`[${PREFIX}] last: ${lastHelped}`);
                   const yesterday = now - 86400000;
                   // logger.debug(`[${PREFIX}] yest: ${yesterday}`);
@@ -425,9 +483,17 @@ module.exports = {
                   // logger.debug(`[${PREFIX}] week: ${yesterday}`);
 
                   const timeBetween = now - lastHelped;
-                  const output = channelHelp.archived
-                    ? `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago in an archived channel`
-                    : `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago`;
+                  let output = '';
+                  try {
+                    output = channelHelp.archived
+                      ? `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago in an archived channel`
+                      : `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago`;
+                  } catch (err) {
+                    logger.debug(`[${PREFIX}] Error getting time between lastHelped and now`);
+                    logger.debug(err);
+                    logger.debug(`[${PREFIX}] discordData: ${JSON.stringify(output, null, 2)}`);
+                  }
+
                   logger.debug(output);
 
                   // eslint-disable-next-line

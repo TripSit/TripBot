@@ -8,6 +8,18 @@ const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
 
+const emojiDict = {
+  1: '1️⃣',
+  2: '2️⃣',
+  3: '3️⃣',
+  4: '4️⃣',
+  5: '5️⃣',
+  6: '6️⃣',
+  7: '7️⃣',
+  8: '8️⃣',
+  9: '9️⃣',
+};
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('poll')
@@ -22,34 +34,35 @@ module.exports = {
       .setRequired(true)),
   async execute(interaction) {
     logger.debug(`[${PREFIX}] Starting!`);
+    await interaction.deferReply({ ephemeral: true });
     const question = interaction.options.getString('question');
     const optionsArray = interaction.options.getString('options').split(',');
 
-    let body = stripIndents`
-    > **${question}**`;
-    // For each option in optionsArray, append to the body
+    if (optionsArray.length > 9) {
+      await interaction.editReply('You can only have 9 options max!');
+      return;
+    }
+
+    let body = '';
     for (let i = 0; i < optionsArray.length; i += 1) {
       body += `\n${i + 1}. ${optionsArray[i].trim()}`;
     }
 
-    await interaction.channel.send(body)
+    const pollEmbed = template.embedTemplate()
+      .setAuthor(null)
+      .setTitle(`**${question}**`)
+      .setDescription(stripIndents`${body}`)
+      .setFooter({ text: `*A poll by ${interaction.member.nickname}*` });
+
+    await interaction.channel.send({ embeds: [pollEmbed], ephemeral: false })
       .then(async msg => {
-        // For each option in optionsArray, add a reaction
         for (let i = 0; i < optionsArray.length; i += 1) {
           /* eslint-disable no-await-in-loop */
-          // This is fine cuz we're reacting in-order
-          await msg.react(`${i + 1}⃣`);
+          await msg.react(emojiDict[i + 1]);
         }
-
-        // for (let i = 0; i < optionsArray.length; i += 1) {
-        //   await msg.react('1️⃣');
-        // }
       });
-    const embed = template.embedTemplate().setDescription('Poll created!');
-    interaction.reply({
-      embeds: [embed],
-      ephemeral: true,
-    });
+
+    await interaction.editReply('Done!');
     logger.debug(`[${PREFIX}] finished!`);
   },
 };

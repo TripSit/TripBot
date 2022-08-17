@@ -14,6 +14,7 @@ const {
   NODE_ENV,
   channelHowToTripsitId,
   channelTripsittersId,
+  channelTripsitId,
   roleNeedshelpId,
   roleHelperId,
   roleDirectorId,
@@ -127,6 +128,7 @@ module.exports = {
     // Get the input from the modal, if it was submitted
     let triageInput = triageGiven;
     let introInput = introGiven;
+    // Otherwise get the input from the modal, if it was submitted
     if (interaction.fields) {
       triageInput = interaction.fields.getTextInputValue('triageInput');
       introInput = interaction.fields.getTextInputValue('introInput');
@@ -149,7 +151,7 @@ module.exports = {
       .find(channel => channel.id === channelHowToTripsitId);
     logger.debug(`[${PREFIX}] channelHowToTripsit: ${channelHowToTripsit}`);
 
-    // Get info on actor
+    // Determine the actor.
     const actor = interaction.member;
     logger.debug(`[${PREFIX}] actor: ${actor.user.username}#${actor.user.discriminator}`);
 
@@ -167,7 +169,7 @@ module.exports = {
 
     // Get a list of the target's roles
     const targetRoleNames = target.roles.cache.map(role => role.name);
-    // logger.debug(`[${PREFIX}] targetRoleNames: ${targetRoleNames}`);
+    logger.debug(`[${PREFIX}] targetRoleNames: ${targetRoleNames}`);
 
     // Check if the target already needs help
     const targetHasRoleNeedshelp = target.roles.cache.find(
@@ -183,7 +185,7 @@ module.exports = {
     // Get the target lastHelped information from the db
     const [targetData, targetFbid] = await getUserInfo(target);
     const targetAction = `${PREFIX}_received`;
-    const targetLastHelpedDate = targetData.discord.lastHelpedDate;
+    const targetLastHelpedDate = new Date(targetData.discord.lastHelpedDate);
     logger.debug(`[${PREFIX}] targetLastHelpedDate: ${targetLastHelpedDate}`);
     const targetLastHelpedThreadId = targetData.discord.lastHelpedThreadId;
     logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
@@ -198,7 +200,7 @@ module.exports = {
     let threadDiscussUser = interaction.client.channels.cache.get(targetLastHelpedMetaThreadId);
     logger.debug(`[${PREFIX}] threadDiscussUser: ${threadDiscussUser}`);
 
-    if (targetHasRoleNeedshelp) {
+    if (targetHasRoleNeedshelp && threadHelpUser !== undefined && threadDiscussUser !== undefined) {
       logger.debug(`[${PREFIX}] Target already needs help, updating existing threads!`);
       // A user will have the NeedsHelp role when they click the button.
       // After they click the button, their roles are saved and then removed
@@ -320,9 +322,9 @@ module.exports = {
     // If the user has been helped in the last week, direct them to the existing thread
     if (targetLastHelpedDate) {
       const lastWeek = Date.now() - (1000 * 60 * 60 * 24 * 7);
-      logger.debug(`[${PREFIX}] lastHelp: ${targetLastHelpedDate.seconds * 1000}`);
+      logger.debug(`[${PREFIX}] lastHelp: ${targetLastHelpedDate.valueOf()}`);
       logger.debug(`[${PREFIX}] lastWeek: ${lastWeek}`);
-      if (targetLastHelpedDate.seconds * 1000 > lastWeek) {
+      if (targetLastHelpedDate.valueOf() > lastWeek) {
         logger.debug(`[${PREFIX}] Target was last helped within the last week!`);
         // Ping them in the open thread
         try {
@@ -412,6 +414,10 @@ module.exports = {
     const tripsittersChannel = interaction.guild.channels.cache
       .find(chan => chan.id === channelTripsittersId);
 
+    // Get the tripsit channel from the guild
+    const tripsitChannel = interaction.guild.channels.cache
+      .find(chan => chan.id === channelTripsitId);
+
     // Create a new threadDiscussUser in the tripsitters channel
     threadDiscussUser = await tripsittersChannel.threads.create({
       name: `${target.user.username} discuss here!`,
@@ -423,7 +429,7 @@ module.exports = {
 
     // Create a new private thread in the channel
     // If we're not in production we need to create a public thread
-    threadHelpUser = await interaction.channel.threads.create({
+    threadHelpUser = await tripsitChannel.threads.create({
       name: `${target.nickname || target.user.username} chat here!`,
       autoArchiveDuration: 1440,
       type: NODE_ENV === 'production' ? 'GUILD_PRIVATE_THREAD' : 'GUILD_PUBLIC_THREAD',
@@ -468,7 +474,7 @@ module.exports = {
       Hey ${target}, thank you for asking for assistance!
       A ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter} or ${actorHasRoleDeveloper ? 'helper' : roleHelper} will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
-      When you're feeling better you can use the "I'm Good" button in ${interaction.channel}`;
+      When you're feeling better you can use the "I'm Good" button in ${tripsitChannel.toString()} to let the team know you're okay.`;
 
     if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
       firstMessage = testNotice + firstMessage;
@@ -532,25 +538,25 @@ module.exports = {
     // TODO: Use transactions
     await setUserInfo(targetFbid, targetData);
 
-    // Extract actor data
-    const [actorData, actorFbid] = await getUserInfo(actor);
+    // // Extract actor data
+    // const [actorData, actorFbid] = await getUserInfo(actor);
 
-    // Transform actor data
-    const actorAction = `${PREFIX}_sent`;
-    logger.debug(`[${PREFIX}] Updating actor data`);
-    if ('discord' in actorData) {
-      if ('modActions' in actorData.discord) {
-        actorData.discord.modActions[actorAction] = (
-          actorData.discord.modActions[actorAction] || 0) + 1;
-      } else {
-        actorData.discord.modActions = { [actorAction]: 1 };
-      }
-    } else {
-      actorData.discord = { modActions: { [actorAction]: 1 } };
-    }
+    // // Transform actor data
+    // const actorAction = `${PREFIX}_sent`;
+    // logger.debug(`[${PREFIX}] Updating actor data`);
+    // if ('discord' in actorData) {
+    //   if ('modActions' in actorData.discord) {
+    //     actorData.discord.modActions[actorAction] = (
+    //       actorData.discord.modActions[actorAction] || 0) + 1;
+    //   } else {
+    //     actorData.discord.modActions = { [actorAction]: 1 };
+    //   }
+    // } else {
+    //   actorData.discord = { modActions: { [actorAction]: 1 } };
+    // }
 
-    // save the actor's data
-    setUserInfo(actorFbid, actorData);
+    // // save the actor's data
+    // setUserInfo(actorFbid, actorData);
 
     logger.debug(`[${PREFIX}] finished!`);
   },
