@@ -40,7 +40,9 @@ start();
 // Stop the bot when the process is closed (via Ctrl-C).
 const destroy = () => {
   try {
-    global.manager.teardown();
+    if (global.manager) {
+      global.manager.teardown();
+    }
   } catch (err) {
     logger.error(`[${PREFIX}] ${err}`);
   }
