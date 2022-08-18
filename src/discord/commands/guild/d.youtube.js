@@ -30,7 +30,9 @@ module.exports = {
           .setURL(result[0].link)
           .setThumbnail(result[0].thumbnails.high.url)
           .setDescription(result[0].description)
-          .addField('Channel', result[0].channelTitle)
+          .addFields([
+            { name: 'Channel', value: result[0].channelTitle },
+          ])
           .setColor(0xFF0000);
         interaction.reply({ embeds: [embed], ephemeral: false });
       })
@@ -39,7 +41,7 @@ module.exports = {
         interaction.reply(
           `Sorry, there was an ${err}`,
         );
-        logger.debug(`[${PREFIX} failed! ${err} `);
+        logger.debug(`[${PREFIX}] failed! ${err} `);
       });
   },
 };
