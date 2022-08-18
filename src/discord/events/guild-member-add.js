@@ -14,7 +14,7 @@ const { getUserInfo, setUserInfo } = require('../../global/services/firebaseAPI'
 const {
   discordGuildId,
   channelModlogId,
-  roleUnverifiedId,
+  // roleUnverifiedId,
   channelGeneralId,
   channelStartId,
   channelTripsitId,
@@ -47,8 +47,8 @@ module.exports = {
     if (member.guild.id === discordGuildId) {
       logger.info(`[${PREFIX}] ${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
 
-      const roleUnverfied = member.guild.roles.cache.find(role => role.id === roleUnverifiedId);
-      member.roles.add(roleUnverfied);
+      // const roleUnverfied = member.guild.roles.cache.find(role => role.id === roleUnverifiedId);
+      // member.roles.add(roleUnverfied);
 
       // (*INVITE*) https://github.com/AnIdiotsGuide/discordjs-bot-guide/blob/master/coding-guides/tracking-used-invites.md
       /* Start *INVITE* code */
