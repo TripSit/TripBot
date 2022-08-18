@@ -1,7 +1,10 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const {
+  SlashCommandBuilder,
+  Colors,
+} = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { about } = require('../../../global/utils/about');
@@ -13,7 +16,7 @@ module.exports = {
   async execute(interaction) {
     const tripsitInfo = await about();
     const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
+      .setColor(Colors.DarkBlue)
       .setTitle('About TripSit')
       .setURL('https://tripsit.me/about/')
       .setDescription(tripsitInfo.description)

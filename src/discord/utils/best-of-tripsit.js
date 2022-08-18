@@ -1,7 +1,10 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { MessageEmbed } = require('discord.js');
+const {
+  EmbedBuilder,
+  Colors,
+} = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('../../global/utils/logger');
 
@@ -60,13 +63,13 @@ module.exports = {
 
       logger.debug(`[${PREFIX}] attachmentUrl: ${attachmentUrl}`);
 
-      const embed = new MessageEmbed()
+      const embed = new EmbedBuilder()
         .setAuthor({
           name: reaction.message.author.username,
           iconURL: reaction.message.author.displayAvatarURL(),
           url: reaction.message.url,
         })
-        .setColor('RANDOM')
+        .setColor(Colors.Purple)
         .setDescription(reaction.message.content)
         .addFields(
           { name: '\u200B', value: `[Go to post!](${reaction.message.url})`, inline: true },

@@ -1,9 +1,15 @@
 'use strict';
 
 const path = require('path');
-const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
+const {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  Colors,
+} = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
-const { ContextMenuCommandBuilder } = require('@discordjs/builders');
+const { ContextMenuCommandBuilder } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
@@ -47,17 +53,17 @@ module.exports = {
     }
 
     // Create the modal
-    const modal = new Modal()
+    const modal = new ModalBuilder()
       .setCustomId('warnModal')
       .setTitle('Tripbot Warn');
-    const warnReason = new TextInputComponent()
+    const warnReason = new TextInputBuilder()
       .setLabel('Why are you warning this person?')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder('Why are you warning this person?')
       .setCustomId('reasonGiven')
       .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(warnReason);
+    const firstActionRow = new ActionRowBuilder().addComponents(warnReason);
 
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
@@ -68,7 +74,7 @@ module.exports = {
     logger.debug(`[${PREFIX}] started!`);
     // await interaction.deferReply({ ephemeral: true });
     const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
+      .setColor(Colors.DarkBlue)
       .setDescription('Reporting...');
     // await interaction.editReply({ embeds: [embed], ephemeral: true });
     logger.debug(`[${PREFIX}] options: ${JSON.stringify(interaction.options, null, 2)}`);

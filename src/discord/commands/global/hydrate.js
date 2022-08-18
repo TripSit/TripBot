@@ -1,7 +1,10 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const {
+  SlashCommandBuilder,
+  Colors,
+} = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 
@@ -17,7 +20,7 @@ module.exports = {
         + '⚠️ ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ ⚠️\n\n'
         + '💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊';
     const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
+      .setColor(Colors.DarkBlue)
       .setDescription(output)
       .setAuthor(null)
       .setFooter(null);

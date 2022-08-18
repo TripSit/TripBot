@@ -3,7 +3,7 @@
 // TODO: Luxon
 const path = require('path');
 const ms = require('ms');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');

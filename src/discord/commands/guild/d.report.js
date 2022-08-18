@@ -1,7 +1,10 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const {
+  SlashCommandBuilder,
+  Colors,
+} = require('discord.js');
 const template = require('../../utils/embed-template');
 const logger = require('../../../global/utils/logger');
 const { moderate } = require('../../../global/utils/moderate');
@@ -27,7 +30,7 @@ module.exports = {
     logger.debug(`[${PREFIX}] started!`);
     await interaction.deferReply({ ephemeral: true });
     const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
+      .setColor(Colors.DarkBlue)
       .setDescription('Reporting...');
     await interaction.editReply({ embeds: [embed], ephemeral: true });
 

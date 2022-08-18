@@ -2,8 +2,11 @@
 
 const PREFIX = require('path').parse(__filename).name;
 const ms = require('ms');
-const { time } = require('@discordjs/builders');
-const { MessageActionRow, MessageButton } = require('discord.js');
+const {
+  time,
+  Colors,
+} = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('./logger');
 const template = require('../../discord/utils/embed-template');
@@ -106,35 +109,35 @@ const teamRoles = [
   roleDeveloperId,
 ];
 
-const modButtons = new MessageActionRow()
+const modButtons = new ActionRowBuilder()
   .addComponents(
-    new MessageButton()
+    new ButtonBuilder()
       .setCustomId('warnbtn')
       .setLabel('Warn')
-      .setStyle('PRIMARY'),
-    new MessageButton()
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
       .setCustomId('timeoutbtn')
       .setLabel('Timeout')
-      .setStyle('SECONDARY'),
-    new MessageButton()
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
       .setCustomId('kickbtn')
       .setLabel('Kick')
-      .setStyle('SECONDARY'),
-    new MessageButton()
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
       .setCustomId('banbtn')
       .setLabel('Ban')
-      .setStyle('DANGER'),
+      .setStyle(ButtonStyle.Danger),
   );
 
-const warnButtons = new MessageActionRow().addComponents(
-  new MessageButton()
+const warnButtons = new ActionRowBuilder().addComponents(
+  new ButtonBuilder()
     .setCustomId('acknowledgebtn')
     .setLabel('I understand, it wont happen again!')
-    .setStyle('PRIMARY'),
-  new MessageButton()
+    .setStyle(ButtonStyle.Primary),
+  new ButtonBuilder()
     .setCustomId('refusalbtn')
     .setLabel('Nah, I do what I want!')
-    .setStyle('DANGER'),
+    .setStyle(ButtonStyle.Danger),
 );
 
 async function determineUserInfo(query) {
@@ -305,7 +308,7 @@ module.exports = {
 
     if (!targetUser) {
       const embed = template.embedTemplate()
-        .setColor('RED')
+        .setColor(Colors.Red)
         .setDescription('Target not found?');
       logger.debug(`[${PREFIX}] Target not found!`);
       const reply = { embeds: [embed], ephemeral: true };
@@ -354,7 +357,7 @@ module.exports = {
     if (command === 'warn') {
       if (targetPlatform === 'discord') {
         const warnEmbed = template.embedTemplate()
-          .setColor('YELLOW')
+          .setColor(Colors.Yellow)
           .setTitle('Warning!')
           .setDescription(stripIndents`
         You have been warned by Team TripSit:
@@ -639,7 +642,7 @@ module.exports = {
     // const targetModActions = targetData.modActions ? targetData.modActions : {};
     // logger.debug(`[${PREFIX}] targetModActions: ${JSON.stringify(targetModActions, null, 2)}`);
     const targetEmbed = template.embedTemplate()
-      .setColor('BLUE')
+      .setColor(Colors.Blue)
       .setDescription(`${actor} ${command}ed ${targetNickname}${targetChannel ? ` in ${targetChannel}` : ''}${duration ? ` for ${ms(minutes, { long: true })}` : ''}${reason ? ` because\n ${reason}` : ''}`)
       .addFields(
         { name: 'Nickname', value: `${targetNickname}`, inline: true },

@@ -1,7 +1,10 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const {
+  SlashCommandBuilder,
+  Colors,
+} = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 
@@ -24,18 +27,22 @@ module.exports = {
     .addStringOption(option => option.setName('units')
       .setDescription('In what units?')
       .setRequired(true)
-      .addChoice('kg', 'kg')
-      .addChoice('lbs', 'lbs'))
+      .addChoices(
+        { name: 'kg', value: 'kg' },
+        { name: 'lbs', value: 'lbs' },
+      ))
     .addStringOption(option => option.setName('taking')
       .setDescription('What are you taking? All products listed here contain DXM hBr as the sole active ingredient.')
       .setRequired(true)
-      .addChoice('RoboTablets (30 mg tablets)', 'RoboTablets (30 mg tablets)')
-      .addChoice('RoboCough (ml)', 'RoboCough (ml)')
-      .addChoice('Robitussin DX (oz)', 'Robitussin DX (oz)')
-      .addChoice('Robitussin DX (ml)', 'Robitussin DX (ml)')
-      .addChoice('Robitussin Gelcaps (15 mg caps)', 'Robitussin Gelcaps (15 mg caps)')
-      .addChoice('Pure (mg)', 'Pure (mg)')
-      .addChoice('30mg Gelcaps (30 mg caps)', '30mg Gelcaps (30 mg caps)')),
+      .addChoices(
+        { name: 'RoboTablets (30 mg tablets)', value: 'RoboTablets (30 mg tablets)' },
+        { name: 'RoboCough (ml)', value: 'RoboCough (ml)' },
+        { name: 'Robitussin DX (oz)', value: 'Robitussin DX (oz)' },
+        { name: 'Robitussin DX (ml)', value: 'Robitussin DX (ml)' },
+        { name: 'Robitussin Gelcaps (15 mg caps)', value: 'Robitussin Gelcaps (15 mg caps)' },
+        { name: 'Pure (mg)', value: 'Pure (mg)' },
+        { name: '30mg Gelcaps (30 mg caps)', value: '30mg Gelcaps (30 mg caps)' },
+      )),
   async execute(interaction, parameters) {
     // Calculate each plat min/max value
     const givenWeight = interaction.options.getInteger('calc_weight') || parameters.at(0);
@@ -82,7 +89,7 @@ module.exports = {
     logger.debug(`[${PREFIX}] calcWeight:`, calcWeight);
 
     const embed = template.embedTemplate()
-      .setColor('RANDOM')
+      .setColor(Colors.Purple)
       .setTitle('DXM Calculator')
       .setDescription(`
         Please note, these tools were developed and tested to the best possible ability by the TripSit team, and the greatest effort has been made not to produce incorrect or misleading results, though for unforeseen reasons these may occur. Always check your maths, and be careful.\n\n\

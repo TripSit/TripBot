@@ -1,5 +1,8 @@
 'use strict';
 
+const {
+  Colors,
+} = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../global/utils/logger');
 const template = require('../utils/embed-template');
@@ -48,7 +51,7 @@ module.exports = {
       // logger.debug(`[${PREFIX}] minutes: ${minutes}`);
       // logger.debug(`[${PREFIX}] seconds: ${seconds}`);
       const embed = template.embedTemplate()
-        .setColor('BLUE')
+        .setColor(Colors.Blue)
         .setDescription(`${member} has left the guild after\
                 ${years > 0 ? `${years} years` : ''}\
                 ${years === 0 && months > 0 ? `${months} months` : ''}\

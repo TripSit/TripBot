@@ -2,7 +2,10 @@
 
 const path = require('path');
 const { stripIndents } = require('common-tags/lib');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const {
+  SlashCommandBuilder,
+  Colors,
+} = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo } = require('../../../global/services/firebaseAPI');
@@ -56,7 +59,7 @@ module.exports = {
         url: 'https://www.youtube.com/watch?v=6r17Ez9V3AQ&t=132s',
       })
       .setThumbnail('https://i.imgur.com/2niEJJO.png')
-      .setColor('DARK_BLUE')
+      .setColor(Colors.DarkBlue)
       .setDescription(stripIndents`
       These are not useless internet points...
       This is an aqautic💧based social🌐media oral🦷experience!

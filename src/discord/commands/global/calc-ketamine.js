@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const calcKetamine = require('../../../global/utils/calc-ketamine');
@@ -20,9 +20,10 @@ module.exports = {
     .addStringOption(option => option.setName('units')
       .setDescription('In what unit?')
       .setRequired(true)
-      .addChoice('kg', 'kg')
-      .addChoice('lbs', 'lbs')),
-
+      .addChoices(
+        { name: 'kg', value: 'kg' },
+        { name: 'lbs', value: 'lbs' },
+      )),
   async execute(interaction, parameters) {
     const givenWeight = interaction.options.getInteger('weight') || parameters.at(0);
     logger.debug(`[${PREFIX}] weight:`, givenWeight);

@@ -1,7 +1,7 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
 const parseDuration = require('../../../global/utils/parseDuration');
@@ -54,8 +54,10 @@ module.exports = {
       .addStringOption(option => option
         .setName('toggle')
         .setDescription('On off?')
-        .addChoice('On', 'on')
-        .addChoice('Off', 'off')
+        .addChoices(
+          { name: 'On', value: 'on' },
+          { name: 'Off', value: 'off' },
+        )
         .setRequired(true))
       .setName('quiet'))
     .addSubcommand(subcommand => subcommand
@@ -90,8 +92,10 @@ module.exports = {
       .addStringOption(option => option
         .setName('toggle')
         .setDescription('On off?')
-        .addChoice('On', 'on')
-        .addChoice('Off', 'off')
+        .addChoices(
+          { name: 'On', value: 'on' },
+          { name: 'Off', value: 'off' },
+        )
         .setRequired(true))
       .setName('ban')),
   async execute(interaction) {

@@ -1,7 +1,9 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const {
+  SlashCommandBuilder,
+} = require('discord.js');
 const { Octokit } = require('@octokit/rest');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('../../../global/utils/logger');
@@ -19,25 +21,31 @@ module.exports = {
       .setName('bug_report'))
     .addStringOption(option => option
       .setDescription('How much effort will this take?')
-      .addChoice('High', 'High')
-      .addChoice('Medium', 'Medium')
-      .addChoice('Low', 'Low')
-      .addChoice('Trivial', 'Trivial')
+      .addChoices(
+        { name: 'High', value: 'High' },
+        { name: 'Medium', value: 'Medium' },
+        { name: 'Low', value: 'Low' },
+        { name: 'Trivial', value: 'Trivial' },
+      )
       .setName('effort'))
     .addStringOption(option => option
       .setDescription('How important is this?')
-      .addChoice('High', 'High')
-      .addChoice('Medium', 'Medium')
-      .addChoice('Low', 'Low')
+      .addChoices(
+        { name: 'High', value: 'High' },
+        { name: 'Medium', value: 'Medium' },
+        { name: 'Low', value: 'Low' },
+      )
       .setName('priority'))
     .addStringOption(option => option
       .setDescription('What type of issue is this?')
-      .addChoice('Bug', 'Bug')
-      .addChoice('Feature', 'Feature')
-      .addChoice('Enhancement', 'Enhancement')
-      .addChoice('Help Needed', 'Help Needed')
-      .addChoice('Idea', 'Idea')
-      .addChoice('Question', 'Question')
+      .addChoices(
+        { name: 'Bug', value: 'Bug' },
+        { name: 'Feature', value: 'Feature' },
+        { name: 'Enhancement', value: 'Enhancement' },
+        { name: 'Help Needed', value: 'Help Needed' },
+        { name: 'Idea', value: 'Idea' },
+        { name: 'Question', value: 'Question' },
+      )
       .setName('type')),
   async execute(interaction) {
     const sentByOwner = interaction.user === interaction.client.owner;
@@ -63,7 +71,7 @@ module.exports = {
         });
         const issueUrl = response.data.html_url;
         const embed = template.embedTemplate()
-          .setColor('#0099ff')
+          .setColor(0x0099ff)
           .setTitle('Issue created!')
           .setDescription(stripIndents`\
           Issue #${issueNumber} created on ${owner}/${repo}
@@ -73,7 +81,7 @@ module.exports = {
       .catch(ex => {
         logger.error(`[${PREFIX}] Failed to create issue on ${owner}/${repo}`, ex);
         const embed = template.embedTemplate()
-          .setColor('#ff0000')
+          .setColor(0xff0000)
           .setTitle('Issue creation failed!')
           .setDescription(`Your issue could not be created on ${owner}/${repo}\n\n${ex}`);
         interaction.reply({ embeds: [embed], ephemeral: false });

@@ -1,6 +1,6 @@
 'use strict';
 
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
 const imgur = require('../../../global/utils/imgur');
 const logger = require('../../../global/utils/logger');
@@ -17,17 +17,21 @@ module.exports = {
     .addStringOption(option => option
       .setName('sort')
       .setDescription('How should the results be sorted?')
-      .addChoice('Default: Top', 'top')
-      .addChoice('Viral', 'viral')
-      .addChoice('Time', 'time'))
+      .addChoices(
+        { name: 'Default: Top', value: 'top' },
+        { name: 'Viral', value: 'viral' },
+        { name: 'Time', value: 'time' },
+      ))
     .addStringOption(option => option
       .setName('window')
       .setDescription('How far back should we look?')
-      .addChoice('Default: All', 'all')
-      .addChoice('Day', 'day')
-      .addChoice('Week', 'week')
-      .addChoice('Month', 'month')
-      .addChoice('Year', 'year')),
+      .addChoices(
+        { name: 'Default: All', value: 'all' },
+        { name: 'Day', value: 'day' },
+        { name: 'Week', value: 'week' },
+        { name: 'Month', value: 'month' },
+        { name: 'Year', value: 'year' },
+      )),
   async execute(interaction) {
     // Sometimes the API takes a few seconds to respond.
     await interaction.reply('Searching Imgur...');

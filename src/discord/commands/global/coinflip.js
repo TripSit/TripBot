@@ -1,6 +1,6 @@
 'use strict';
 
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 // eslint-disable-next-line import/order
 const PREFIX = require('path').parse(__filename).name;

@@ -1,9 +1,15 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
+const {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  Colors,
+} = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
-const { ContextMenuCommandBuilder } = require('@discordjs/builders');
+const { ContextMenuCommandBuilder } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
@@ -45,23 +51,23 @@ module.exports = {
     }
 
     // Create the modal
-    const modal = new Modal()
+    const modal = new ModalBuilder()
       .setCustomId('timeoutModal')
       .setTitle('Tripbot Timeout');
-    const timeoutReason = new TextInputComponent()
+    const timeoutReason = new TextInputBuilder()
       .setLabel('Why are you timouting this person?')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder('Why are you timeouting this person?')
       .setCustomId('timeoutReason')
       .setRequired(true);
-    const timeoutDuration = new TextInputComponent()
+    const timeoutDuration = new TextInputBuilder()
       .setLabel('Timeout for how long? (Max/default 7 days)')
-      .setStyle('SHORT')
+      .setStyle(TextInputStyle.Short)
       .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
       .setCustomId('timeoutDuration');
     // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(timeoutReason);
-    const secondActionRow = new MessageActionRow().addComponents(timeoutDuration);
+    const firstActionRow = new ActionRowBuilder().addComponents(timeoutReason);
+    const secondActionRow = new ActionRowBuilder().addComponents(timeoutDuration);
 
     // Add inputs to the modal
     modal.addComponents(firstActionRow, secondActionRow);
@@ -72,7 +78,7 @@ module.exports = {
     logger.debug(`[${PREFIX}] started!`);
     // await interaction.deferReply({ ephemeral: true });
     const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
+      .setColor(Colors.DarkBlue)
       .setDescription('Reporting...');
     // await interaction.editReply({ embeds: [embed], ephemeral: true });
     logger.debug(`[${PREFIX}] options: ${JSON.stringify(interaction.options, null, 2)}`);

@@ -1,7 +1,11 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder, time } = require('@discordjs/builders');
+const {
+  SlashCommandBuilder,
+  time,
+  Colors,
+} = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
@@ -70,7 +74,7 @@ module.exports = {
 
     if (!target) {
       const embed = template.embedTemplate()
-        .setColor('RED')
+        .setColor(Colors.Red)
         .setDescription('Target not found?');
       interaction.reply({ embeds: [embed], ephemeral: true });
       logger.debug(`[${PREFIX}] Target not found!`);
@@ -96,7 +100,7 @@ module.exports = {
     }
 
     const targetEmbed = template.embedTemplate()
-      .setColor('BLUE')
+      .setColor(Colors.Blue)
       .setDescription(`${target.username}'s profile!`)
       .addFields(
         { name: 'Username', value: targetUsername, inline: true },
