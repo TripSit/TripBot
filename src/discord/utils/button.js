@@ -20,7 +20,7 @@ const {
   roleUnderbanId,
   channelGeneralId,
   channelStartId,
-  channelTripsitId,
+  // channelTripsitId,
 } = require('../../../env');
 
 module.exports = {
@@ -35,9 +35,8 @@ module.exports = {
 
     if (buttonID === 'memberbutton') {
       const member = await interaction.guild.members.fetch(interaction.user.id);
-      member.roles.add(
-        interaction.guild.roles.cache.find(role => role.id === roleMemberId),
-      );
+      const memberRole = interaction.guild.roles.cache.find(role => role.id === roleMemberId);
+      member.roles.add(memberRole);
 
       // Extract member data
       const [actorData] = await getUserInfo(member);
@@ -59,35 +58,36 @@ module.exports = {
       // logger.debug(`[${PREFIX}] hours: ${hours}`);
       // logger.debug(`[${PREFIX}] minutes: ${minutes}`);
       // logger.debug(`[${PREFIX}] seconds: ${seconds}`);
-      let colorValue = 'RED';
+      let colorValue = Colors.Red;
       if (years > 0) {
-        colorValue = 'WHITE';
+        colorValue = Colors.White;
       } else if (years === 0 && months > 0) {
-        colorValue = 'PURPLE';
+        colorValue = Colors.Purple;
       } else if (months === 0 && weeks > 0) {
-        colorValue = 'BLUE';
+        colorValue = Colors.Blue;
       } else if (weeks === 0 && days > 0) {
-        colorValue = 'GREEN';
+        colorValue = Colors.Green;
       } else if (days === 0 && hours > 0) {
-        colorValue = 'YELLOW';
+        colorValue = Colors.Yellow;
       } else if (hours === 0 && minutes > 0) {
-        colorValue = 'ORANGE';
-      } else if (minutes === 0 && seconds > 0) { colorValue = 'RED'; }
-      logger.debug(`[${PREFIX}] coloValue: ${colorValue}`);
+        colorValue = Colors.Orange;
+      } else if (minutes === 0 && seconds > 0) { colorValue = Colors.Red; }
+      // logger.debug(`[${PREFIX}] coloValue: ${colorValue}`);
       const channelGeneral = member.client.channels.cache.get(channelGeneralId);
       const channelStart = member.client.channels.cache.get(channelStartId);
-      const channelTripsit = member.client.channels.cache.get(channelTripsitId);
+      // const channelTripsit = member.client.channels.cache.get(channelTripsitId);
       const embed = template.embedTemplate()
-        .setAuthor({ name: '', iconURL: '', url: '' })
+        .setAuthor(null)
         .setColor(colorValue)
         .setThumbnail(member.user.displayAvatarURL())
+        .setFooter(null)
       // .setTitle(`Welcome to TripSit ${member.user.username}!`)
       // .setTitle(`Welcome ${member.toString()} to TripSit ${member}!`)
         .setDescription(stripIndents`
-                      **Welcome to TripSit ${member}!**
-                      This is a positivity-enforced, drug-neutral, harm-reduction space.
-                      **If you need a tripsitter, click the button in ${channelTripsit}!**
-                      Check out ${channelStart} for more information, stay safe!`);
+                      **Please welcome ${member} to the guild!**
+                      We're glad you're here and hope you enjoy your stay!
+                      Check out ${channelStart} set your color and icon
+                      Stay safe, be chill, have fun!`);
       if (actorData.inviteInfo) {
         embed.setFooter({ text: actorData.inviteInfo });
       }

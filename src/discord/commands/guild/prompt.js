@@ -3,11 +3,12 @@
 const {
   SlashCommandBuilder,
   AttachmentBuilder,
-  MessageActionRow,
-  MessageButton,
-  Modal,
-  TextInputComponent,
+  ActionRowBuilder,
+  ButtonBuilder,
+  TextInputBuilder,
   TextInputStyle,
+  ButtonStyle,
+  Modal,
   Colors,
 } = require('discord.js');
 
@@ -338,24 +339,24 @@ async function techhelp(interaction) {
   `;
 
   // Create buttons
-  const row = new MessageActionRow()
+  const row = new ActionRowBuilder()
     .addComponents(
-      new MessageButton()
+      new ButtonBuilder()
         .setCustomId('ircConnect')
         .setLabel('I can\'t connect to IRC!')
-        .setStyle(TextInputStyle.Success),
-      new MessageButton()
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
         .setCustomId('ircAppeal')
         .setLabel('I want to appeal my ban!')
-        .setStyle(TextInputStyle.Danger),
-      new MessageButton()
+        .setStyle(ButtonStyle.Danger),
+      new ButtonBuilder()
         .setCustomId('discordIssue')
         .setLabel('Discord issue/feedback!')
-        .setStyle(TextInputStyle.Primary),
-      new MessageButton()
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
         .setCustomId('ircOther')
         .setLabel('I have something else!')
-        .setStyle(TextInputStyle.Secondary),
+        .setStyle(ButtonStyle.Secondary),
     );
 
   // Create a new button
@@ -539,16 +540,16 @@ async function tripsitme(interaction) {
   `;
 
   // Create a new button embed
-  const row = new MessageActionRow()
+  const row = new ActionRowBuilder()
     .addComponents(
-      new MessageButton()
+      new ButtonBuilder()
         .setCustomId('tripsitme')
         .setLabel('I need assistance!')
-        .setStyle(TextInputStyle.Primary),
-      new MessageButton()
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
         .setCustomId('tripsat')
         .setLabel('I\'m good now!')
-        .setStyle(TextInputStyle.Success),
+        .setStyle(ButtonStyle.Success),
     );
 
   // Create a new button
@@ -582,18 +583,18 @@ async function ticketbooth(interaction) {
   `;
 
   // Create a new button embed
-  const row = new MessageActionRow()
+  const row = new ActionRowBuilder()
     .addComponents(
-      new MessageButton()
+      new ButtonBuilder()
         .setCustomId('memberbutton')
         .setLabel('I understand where to find help and will follow the rules!')
-        .setStyle(TextInputStyle.Success),
+        .setStyle(ButtonStyle.Success),
     )
     .addComponents(
-      new MessageButton()
+      new ButtonBuilder()
         .setCustomId('underban')
         .setLabel('I am underage but I need help!')
-        .setStyle(TextInputStyle.Secondary),
+        .setStyle(ButtonStyle.Secondary),
     );
 
   // Create a new button
@@ -668,14 +669,14 @@ module.exports = {
     const modal = new Modal()
       .setCustomId(`${issueType}ModmailIssueModal`)
       .setTitle('TripSit Feedback');
-    const timeoutReason = new TextInputComponent()
+    const timeoutReason = new TextInputBuilder()
       .setLabel('What is your issue? Be super detailed!')
       .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(placeholder)
       .setCustomId(`${issueType}IssueInput`)
       .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(timeoutReason);
+    const firstActionRow = new ActionRowBuilder().addComponents(timeoutReason);
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
     // Show the modal to the user
