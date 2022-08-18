@@ -33,12 +33,12 @@ module.exports = {
         // GatewayIntentBits.GuildScheduledEvents,
       ],
       partials: [
-        // Partials.USER,
+        Partials.User,
         Partials.Channel,
-        // Partials.GUILD_MEMBER,
-        // Partials.MESSAGE,
-        // Partials.REACTION,
-        // Partials.GUILD_SCHEDULED_EVENT,
+        Partials.GuildMember,
+        Partials.Message,
+        Partials.Reaction,
+        // Partials.GuildScheduledEvent,
       ],
     });
 
