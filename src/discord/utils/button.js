@@ -20,6 +20,8 @@ const {
   roleUnderbanId,
   channelGeneralId,
   channelStartId,
+  channelIrcId,
+  channelBotspamId,
   // channelTripsitId,
 } = require('../../../env');
 
@@ -75,6 +77,8 @@ module.exports = {
       // logger.debug(`[${PREFIX}] coloValue: ${colorValue}`);
       const channelGeneral = member.client.channels.cache.get(channelGeneralId);
       const channelStart = member.client.channels.cache.get(channelStartId);
+      const channelTechhelp = member.client.channels.cache.get(channelIrcId);
+      const channelBotspam = interaction.client.channels.cache.get(channelBotspamId);
       // const channelTripsit = member.client.channels.cache.get(channelTripsitId);
       const embed = template.embedTemplate()
         .setAuthor(null)
@@ -92,6 +96,17 @@ module.exports = {
         embed.setFooter({ text: actorData.inviteInfo });
       }
       channelGeneral.send({ embeds: [embed] });
+      interaction.reply({
+        content: stripIndents`
+      Awesome! This channel will disappear when you click away, before you go:
+      If you want to talk to the team about /anything/ you can start a new thread in ${channelTechhelp}
+      Go ahead and test out the bot in the ${channelBotspam} channel!
+      Check out ${channelStart} set your color and icon!
+      Or go say hi in ${channelGeneral}!
+      That's all, have fun!
+      `,
+        ephemeral: true,
+      });
     }
 
     if (buttonID === 'underban') {
