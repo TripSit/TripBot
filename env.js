@@ -42,6 +42,8 @@ exports.firebaseRealtimeKey = process.env.firebaseRealtimeKey;
 
 exports.TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 
+exports.imdbToken = process.env.imdbToken;
+
 exports.githubToken = process.env.githubToken;
 
 exports.rapidApiKey = process.env.rapidApiKey;
