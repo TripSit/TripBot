@@ -154,6 +154,7 @@ exports.rolePatronId = process.env.rolePatronId;
 exports.roleVipId = process.env.roleVipId;
 exports.roleDjId = process.env.roleDjId;
 exports.roleIrcVerifiedId = process.env.roleIrcVerifiedId;
+exports.roleUnverifiedId = process.env.roleUnverifiedId;
 
 exports.roleResearcherId = process.env.roleResearcherId;
 exports.roleClearmindId = process.env.roleClearmindId;
