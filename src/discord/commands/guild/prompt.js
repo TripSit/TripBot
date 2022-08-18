@@ -579,7 +579,7 @@ async function ticketbooth(interaction) {
   **1)** I do not currently need help and understand I can go to ${channelTripsit.toString()} to get help if I need it.
   **2)** I understand if no one responds in ${channelTripsit.toString()} I can talk in the "open" tripsit rooms.
   **3)** I understand that every room with a :link: is bridged to IRC and there may be lower quality chat in those rooms.
-  **4)** I have read the ${channelRules.toString()}: I will not buy/sell anything and I will try to keep a positive atmosphere for people currently in altered mindsets!
+  **4)** I have read the ${channelRules.toString()}: I will not buy/sell anything and I will try to keep a positive atmosphere!
   `;
 
   // Create a new button embed
