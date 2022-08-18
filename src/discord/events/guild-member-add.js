@@ -1,5 +1,9 @@
 'use strict';
 
+const {
+  time,
+  Colors,
+} = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
 const { stripIndents } = require('common-tags');
 const logger = require('../../global/utils/logger');
@@ -9,16 +13,14 @@ const { getUserInfo, setUserInfo } = require('../../global/services/firebaseAPI'
 
 const {
   discordGuildId,
-  channelGeneralId,
-  channelStartId,
-  channelTripsitId,
+  channelModlogId,
 } = require('../../../env');
 
 module.exports = {
   name: 'guildMemberAdd',
 
   async execute(member, client) {
-    // logger.debug(JSON.stringify(member, null, 2));
+    logger.debug(JSON.stringify(member, null, 2));
     // {
     //   "guildId": "960606557622657026",
     //   "joinedTimestamp": 1653515791290,
@@ -37,6 +39,7 @@ module.exports = {
     // }
 
     // Only run on Tripsit
+    logger.debug(`[${PREFIX}] guild: ${member.guild.id}`);
     if (member.guild.id === discordGuildId) {
       logger.info(`[${PREFIX}] ${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
 
@@ -85,11 +88,6 @@ module.exports = {
       // Load member data
       await setUserInfo(actorFbid, actorData);
 
-      const channelGeneral = member.client.channels.cache.get(channelGeneralId);
-      const channelStart = member.client.channels.cache.get(channelStartId);
-      const channelTripsit = member.client.channels.cache.get(channelTripsitId);
-
-      // NOTE: Can be simplified with luxon
       const diff = Math.abs(Date.now() - member.user.createdAt);
       const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
       const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
@@ -98,45 +96,40 @@ module.exports = {
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      // logger.debug(`[${PREFIX}] diff: ${diff}`);
-      // logger.debug(`[${PREFIX}] years: ${years}`);
-      // logger.debug(`[${PREFIX}] months: ${months}`);
-      // logger.debug(`[${PREFIX}] weeks: ${weeks}`);
-      // logger.debug(`[${PREFIX}] days: ${days}`);
-      // logger.debug(`[${PREFIX}] hours: ${hours}`);
-      // logger.debug(`[${PREFIX}] minutes: ${minutes}`);
-      // logger.debug(`[${PREFIX}] seconds: ${seconds}`);
-      let colorValue = 'RED';
+      let colorValue = Colors.Red;
       if (years > 0) {
-        colorValue = 'WHITE';
+        colorValue = Colors.White;
       } else if (years === 0 && months > 0) {
-        colorValue = 'PURPLE';
+        colorValue = Colors.Purple;
       } else if (months === 0 && weeks > 0) {
-        colorValue = 'BLUE';
+        colorValue = Colors.Blue;
       } else if (weeks === 0 && days > 0) {
-        colorValue = 'GREEN';
+        colorValue = Colors.Green;
       } else if (days === 0 && hours > 0) {
-        colorValue = 'YELLOW';
+        colorValue = Colors.Yellow;
       } else if (hours === 0 && minutes > 0) {
-        colorValue = 'ORANGE';
-      } else if (minutes === 0 && seconds > 0) {
-        colorValue = 'RED';
-      }
+        colorValue = Colors.Orange;
+      } else if (minutes === 0 && seconds > 0) { colorValue = Colors.Red; }
+      const channelModlog = member.guild.channels.cache.get(channelModlogId);
       const embed = template.embedTemplate()
-        .setAuthor({ name: '', iconURL: '', url: '' })
+        .setAuthor(null)
         .setColor(colorValue)
         .setThumbnail(member.user.displayAvatarURL())
-        // .setTitle(`Welcome to TripSit ${member.user.username}!`)
-        // .setTitle(`Welcome ${member.toString()} to TripSit ${member}!`)
-        .setDescription(stripIndents`
-                **Welcome to TripSit ${member}!**
-                This is a positivity-enforced, drug-neutral, harm-reduction space.
-                **If you need a tripsitter, click the button in ${channelTripsit}!**
-                Check out ${channelStart} for more information, stay safe!`);
-      embed.setFooter({
-        text: inviteInfo,
-      });
-      channelGeneral.send({ embeds: [embed] });
+        .setFooter(null)
+        .setDescription(stripIndents`**${member} has joined the guild!**`)
+        .addFields(
+          { name: 'Nickname', value: `${member.nickname}`, inline: true },
+          { name: 'Tag', value: `${member.user.username}#${member.user.discriminator}`, inline: true },
+          { name: 'ID', value: `${member.user.id}`, inline: true },
+        )
+        .addFields(
+          { name: 'Account created', value: `${time(member.user.createdAt, 'R')}`, inline: true },
+          { name: 'Joined', value: `${time(member.joinedAt, 'R')}`, inline: true },
+        );
+      if (actorData.inviteInfo) {
+        embed.setFooter({ text: actorData.inviteInfo });
+      }
+      channelModlog.send({ embeds: [embed] });
     }
   },
 };
