@@ -122,7 +122,7 @@ module.exports = {
 
     // Get user data
     const [actorData] = await getUserInfo(user);
-    logger.debug(`[${PREFIX}] Actor data: ${JSON.stringify(actorData, null, 2)}`);
+    // logger.debug(`[${PREFIX}] Actor data: ${JSON.stringify(actorData, null, 2)}`);
 
     if ('experience' in actorData) {
       logger.debug(`[${PREFIX}] Actor has experience!`);
