@@ -54,7 +54,7 @@ module.exports = {
       };
       const date = new Date(reaction.message.createdTimestamp);
       const formattedDate = date.toLocaleDateString('en-US', options);
-      let attachmentUrl = '';
+      let attachmentUrl = null;
       try {
         attachmentUrl = reaction.message.attachments.at(0).url;
       } catch (e) {
@@ -74,8 +74,11 @@ module.exports = {
         .addFields(
           { name: '\u200B', value: `[Go to post!](${reaction.message.url})`, inline: true },
         )
-        .setFooter({ text: `Sent in #${reaction.message.channel.name} at ${formattedDate}` })
-        .setImage(`${attachmentUrl}`);
+        .setFooter({ text: `Sent in #${reaction.message.channel.name} at ${formattedDate}` });
+
+      if (attachmentUrl) {
+        embed.setImage(`${attachmentUrl}`);
+      }
 
       channel.send({ embeds: [embed] });
     }
