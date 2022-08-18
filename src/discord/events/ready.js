@@ -25,7 +25,7 @@ async function getReactionRoles(client) {
     // logger.debug(`[${PREFIX}] reactionConfig: ${JSON.stringify(reactionConfig, null, 2)}`);
     global.manager = new ReactionRole(client, reactionConfig);
   }
-  logger.info(`[${PREFIX}] Reaction roles loaded!`);
+  // logger.info(`[${PREFIX}] Reaction roles loaded!`);
 }
 
 async function getInvites(client) {
@@ -36,10 +36,10 @@ async function getInvites(client) {
     if (guild.id !== discordGuildId) return;
     guild.invites.fetch()
       .then(invites => {
-        logger.info(`[${PREFIX}] Invites cached!`);
         const codeUses = new Map();
         invites.each(inv => codeUses.set(inv.code, inv.uses));
         global.guildInvites.set(guild.id, codeUses);
+        // logger.info(`[${PREFIX}] Invites cached!`);
       })
       .catch(err => {
         logger.debug(`[${PREFIX}] OnReady Error: ${err}`);
@@ -51,12 +51,9 @@ module.exports = {
   name: 'ready',
   once: true,
   async execute(client) {
-    logger.info(`[${PREFIX}] I am in ${client.guilds.cache.size} guilds.`);
-    // run this async so that it runs while everything else starts too
-
     startStatusLoop(client);
 
     Promise.all([getReactionRoles(client), getInvites(client)])
-      .then(() => logger.info(`[${PREFIX}] Discord bot fully inizialized: ready to fuck shit up!`));
+      .then(() => logger.info(`[${PREFIX}] Discord bot fully inizialized: ready to fuck shit up in ${client.guilds.cache.size} guilds!`));
   },
 };
