@@ -15,12 +15,12 @@ const {
 
 module.exports = {
   name: 'guildMemberRemove',
-
   async execute(member) {
     // Only run on Tripsit
+    logger.debug(`[${PREFIX}] guild: ${member.guild.id}`);
     if (member.guild.id === discordGuildId) {
       logger.debug(`[${PREFIX}] guildMemberRemove`);
-      // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
+      logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
 
       // Extract member data
       const [actorData] = await getUserInfo(member);
@@ -42,14 +42,6 @@ module.exports = {
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      // logger.debug(`[${PREFIX}] diff: ${diff}`);
-      // logger.debug(`[${PREFIX}] years: ${years}`);
-      // logger.debug(`[${PREFIX}] months: ${months}`);
-      // logger.debug(`[${PREFIX}] weeks: ${weeks}`);
-      // logger.debug(`[${PREFIX}] days: ${days}`);
-      // logger.debug(`[${PREFIX}] hours: ${hours}`);
-      // logger.debug(`[${PREFIX}] minutes: ${minutes}`);
-      // logger.debug(`[${PREFIX}] seconds: ${seconds}`);
       const embed = template.embedTemplate()
         .setColor(Colors.Blue)
         .setDescription(`${member} has left the guild after\
@@ -61,11 +53,9 @@ module.exports = {
                 ${hours === 0 && minutes > 0 ? `${minutes} minutes` : ''}\
                 ${minutes === 0 && seconds > 0 ? `${seconds} seconds` : ''}`);
       try {
-        const modlogChannel = await member.client.channels.cache.get(channelModlogId);
-        // logger.debug(`[${PREFIX}] channel_modlog_id: ${channelModlogId}`);
-        // logger.debug(`[${PREFIX}] modlog_channel: ${modlog_channel}`);
-        if (modlogChannel) {
-          modlogChannel.send({ embeds: [embed] });
+        const channelModlog = await member.client.channels.cache.get(channelModlogId);
+        if (channelModlog) {
+          channelModlog.send({ embeds: [embed] });
         }
       } catch (err) {
         logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
