@@ -25,14 +25,14 @@ async function start() {
 
   await discordConnect();
 
-  // await ircConnect();
+  await ircConnect();
 
   // Telegram breaks on connect =/
   // await telegramConnect();
 
-  // await runTimer();
+  await runTimer();
 
-  // await webserverConnect();
+  await webserverConnect();
 }
 
 start();
