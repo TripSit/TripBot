@@ -4,9 +4,6 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../global/utils/logger');
 
 const {
-  // NODE_ENV,
-  // discordGuildId,
-  // channelStartId,
   roleRedId,
   roleOrangeId,
   roleYellowId,

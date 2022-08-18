@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 
@@ -13,32 +13,33 @@ module.exports = {
     .setDescription('Fun toys to play with!')
     .addStringOption(option => option.setName('toy')
       .setDescription('Which toy?')
-      .addChoice('All', '25')
-      .addChoice('Random', '24')
-      .addChoice('Weavesilk', '1')
-      .addChoice('Arkadia', '2')
-      .addChoice('Chromoscope', '3')
-      .addChoice('Plink', '4')
-      .addChoice('Puddle', '5')
-      .addChoice('Hello Enjoy', '6')
-      .addChoice('Soft Murmur', '7')
-      .addChoice('Draw A 3D Mandala', '8')
-      .addChoice('A Way To Go', '9')
-      .addChoice('Water physics', '10')
-      .addChoice('Plasma Pong', '11')
-      .addChoice('Strobe', '12')
-      .addChoice('Lights', '13')
-      .addChoice('Patapap', '14')
-      .addChoice('Triangle', '15')
-      .addChoice('Neon Flames', '16')
-      .addChoice('Fluids', '17')
-      .addChoice('Particle Dream', '18')
-      .addChoice('Cosmic Symbolism', '19')
-      .addChoice('Hop Along', '20')
-      .addChoice('MyNoise.net', '21')
-      .addChoice('Mr Doob Harmony', '22')
-      .addChoice('Balls demo', '23')),
-
+      .addChoices(
+        { name: 'All', value: '25' },
+        { name: 'Random', value: '24' },
+        { name: 'Weavesilk', value: '1' },
+        { name: 'Arkadia', value: '2' },
+        { name: 'Chromoscope', value: '3' },
+        { name: 'Plink', value: '4' },
+        { name: 'Puddle', value: '5' },
+        { name: 'Hello Enjoy', value: '6' },
+        { name: 'Soft Murmur', value: '7' },
+        { name: 'Draw A 3D Mandala', value: '8' },
+        { name: 'A Way To Go', value: '9' },
+        { name: 'Water physics', value: '10' },
+        { name: 'Plasma Pong', value: '11' },
+        { name: 'Strobe', value: '12' },
+        { name: 'Lights', value: '13' },
+        { name: 'Patapap', value: '14' },
+        { name: 'Triangle', value: '15' },
+        { name: 'Neon Flames', value: '16' },
+        { name: 'Fluids', value: '17' },
+        { name: 'Particle Dream', value: '18' },
+        { name: 'Cosmic Symbolism', value: '19' },
+        { name: 'Hop Along', value: '20' },
+        { name: 'MyNoise.net', value: '21' },
+        { name: 'Mr Doob Harmony', value: '22' },
+        { name: 'Balls demo', value: '23' },
+      )),
   async execute(interaction) {
     const toyName = interaction.options.getString('toy') || '25';
     const toyId = parseInt(toyName, 10);

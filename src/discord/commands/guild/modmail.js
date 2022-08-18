@@ -3,13 +3,15 @@
 const PREFIX = require('path').parse(__filename).name;
 // const ms = require('ms');
 const {
-  MessageActionRow,
-  MessageButton,
-  Modal,
-  TextInputComponent,
+  ActionRowBuilder,
+  ModalBuilder,
+  ButtonBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  Colors,
 } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder, ButtonStyle } = require('discord.js');
 const template = require('../../utils/embed-template');
 const logger = require('../../../global/utils/logger');
 const {
@@ -29,28 +31,28 @@ const {
   roleDeveloperId,
 } = require('../../../../env');
 
-const modmailButtons = new MessageActionRow()
+const modmailButtons = new ActionRowBuilder()
   .addComponents(
-    new MessageButton()
+    new ButtonBuilder()
       .setCustomId('modmailTripsitter')
       .setLabel('I need a tripsitter')
-      .setStyle('SUCCESS'),
-    // new MessageButton()
+      .setStyle(ButtonStyle.Success),
+    // new ButtonBuilder()
     //   .setCustomId('modmailCommands')
     //   .setLabel('Show me your commands')
-    //   .setStyle('PRIMARY'),
-    new MessageButton()
+    //   .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
       .setCustomId('modmailFeedback')
       .setLabel('Give Feedback')
-      .setStyle('PRIMARY'),
-    new MessageButton()
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
       .setCustomId('modmailIrcissue')
       .setLabel('IRC issues')
-      .setStyle('DANGER'),
-    new MessageButton()
+      .setStyle(ButtonStyle.Danger),
+    new ButtonBuilder()
       .setCustomId('modmailDiscordissue')
       .setLabel('Discord issues')
-      .setStyle('SECONDARY'),
+      .setStyle(ButtonStyle.Secondary),
   );
 
 // Declare the static test nitice
@@ -159,7 +161,7 @@ module.exports = {
     // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
 
     const embed = template.embedTemplate()
-      .setColor('BLUE');
+      .setColor(Colors.Blue);
 
     const author = message.author;
     const guild = await message.client.guilds.fetch(discordGuildId);
@@ -185,17 +187,17 @@ module.exports = {
       http://discord.gg/tripsit`);
     }
     // Create the modal
-    // const modal = new Modal()
+    // const modal = new ModalBuilder()
     //   .setCustomId('tripsitModmailModal')
     //   .setTitle('TripSit Help Request');
-    // modal.addComponents(new MessageActionRow().addComponents(new TextInputComponent()
+    // modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
     //   .setCustomId('triageInput')
     //   .setLabel('What substance? How much taken? What time?')
-    //   .setStyle('SHORT')));
-    // modal.addComponents(new MessageActionRow().addComponents(new TextInputComponent()
+    //   .setStyle(TextInputStyle.Short')));
+    // modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
     //   .setCustomId('introInput')
     //   .setLabel('What\'s going on? Give us the details!')
-    //   .setStyle('PARAGRAPH')));
+    //   .setStyle(TextInputStyle.Paragraph)));
     // await interaction.showModal(modal);
   },
   // async modmailTripsitterSubmit(interaction) {
@@ -210,17 +212,17 @@ module.exports = {
   async modmailFeedback(interaction) {
     logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
     // Create the modal
-    const modal = new Modal()
+    const modal = new ModalBuilder()
       .setCustomId('modmailFeedbackModal')
       .setTitle('TripSit Feedback');
-    const timeoutReason = new TextInputComponent()
+    const timeoutReason = new TextInputBuilder()
       .setLabel('What would you like to let the team know?')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder('This bot is cool and I have a suggestion...')
       .setCustomId('feedbackInput')
       .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(timeoutReason);
+    const firstActionRow = new ActionRowBuilder().addComponents(timeoutReason);
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
     // Show the modal to the user
@@ -249,7 +251,7 @@ module.exports = {
     // Get the moderation channel
     const modChan = interaction.client.channels.cache.get(channelModeratorsId);
     const ircAdminEmbed = template.embedTemplate()
-      .setColor('RANDOM')
+      .setColor(Colors.Purple)
       .setDescription(stripIndents`
       Hey ${isDev ? 'moderators' : roleModerator}!
 
@@ -269,17 +271,17 @@ module.exports = {
       placeholder = 'I have an issue with discord, can you please help?';
     }
     // Create the modal
-    const modal = new Modal()
+    const modal = new ModalBuilder()
       .setCustomId(`${issueType}ModmailIssueModal`)
       .setTitle('TripSit Feedback');
-    const timeoutReason = new TextInputComponent()
+    const timeoutReason = new TextInputBuilder()
       .setLabel('What is your issue? Be super detailed!')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(placeholder)
       .setCustomId(`${issueType}IssueInput`)
       .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(timeoutReason);
+    const firstActionRow = new ActionRowBuilder().addComponents(timeoutReason);
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
     // Show the modal to the user

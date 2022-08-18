@@ -1,6 +1,9 @@
 'use strict';
 
-const path = require('path');
+const {
+  Colors,
+} = require('discord.js');
+const PREFIX = require('path').parse(__filename).name;
 const { stripIndents } = require('common-tags');
 const logger = require('../../global/utils/logger');
 const tripsitme = require('./tripsitme');
@@ -10,8 +13,6 @@ const modmail = require('../commands/guild/modmail');
 const ircButton = require('../commands/guild/prompt');
 const { getUserInfo } = require('../../global/services/firebaseAPI');
 
-const PREFIX = path.parse(__filename).name;
-
 const {
   discordGuildId,
   channelModeratorsId,
@@ -19,7 +20,9 @@ const {
   roleUnderbanId,
   channelGeneralId,
   channelStartId,
-  channelTripsitId,
+  channelIrcId,
+  channelBotspamId,
+  // channelTripsitId,
 } = require('../../../env');
 
 module.exports = {
@@ -34,9 +37,8 @@ module.exports = {
 
     if (buttonID === 'memberbutton') {
       const member = await interaction.guild.members.fetch(interaction.user.id);
-      member.roles.add(
-        interaction.guild.roles.cache.find(role => role.id === roleMemberId),
-      );
+      const memberRole = interaction.guild.roles.cache.find(role => role.id === roleMemberId);
+      member.roles.add(memberRole);
 
       // Extract member data
       const [actorData] = await getUserInfo(member);
@@ -58,39 +60,53 @@ module.exports = {
       // logger.debug(`[${PREFIX}] hours: ${hours}`);
       // logger.debug(`[${PREFIX}] minutes: ${minutes}`);
       // logger.debug(`[${PREFIX}] seconds: ${seconds}`);
-      let colorValue = 'RED';
+      let colorValue = Colors.Red;
       if (years > 0) {
-        colorValue = 'WHITE';
+        colorValue = Colors.White;
       } else if (years === 0 && months > 0) {
-        colorValue = 'PURPLE';
+        colorValue = Colors.Purple;
       } else if (months === 0 && weeks > 0) {
-        colorValue = 'BLUE';
+        colorValue = Colors.Blue;
       } else if (weeks === 0 && days > 0) {
-        colorValue = 'GREEN';
+        colorValue = Colors.Green;
       } else if (days === 0 && hours > 0) {
-        colorValue = 'YELLOW';
+        colorValue = Colors.Yellow;
       } else if (hours === 0 && minutes > 0) {
-        colorValue = 'ORANGE';
-      } else if (minutes === 0 && seconds > 0) { colorValue = 'RED'; }
-      logger.debug(`[${PREFIX}] coloValue: ${colorValue}`);
+        colorValue = Colors.Orange;
+      } else if (minutes === 0 && seconds > 0) { colorValue = Colors.Red; }
+      // logger.debug(`[${PREFIX}] coloValue: ${colorValue}`);
       const channelGeneral = member.client.channels.cache.get(channelGeneralId);
       const channelStart = member.client.channels.cache.get(channelStartId);
-      const channelTripsit = member.client.channels.cache.get(channelTripsitId);
+      const channelTechhelp = member.client.channels.cache.get(channelIrcId);
+      const channelBotspam = interaction.client.channels.cache.get(channelBotspamId);
+      // const channelTripsit = member.client.channels.cache.get(channelTripsitId);
       const embed = template.embedTemplate()
-        .setAuthor({ name: '', iconURL: '', url: '' })
+        .setAuthor(null)
         .setColor(colorValue)
         .setThumbnail(member.user.displayAvatarURL())
+        .setFooter(null)
       // .setTitle(`Welcome to TripSit ${member.user.username}!`)
       // .setTitle(`Welcome ${member.toString()} to TripSit ${member}!`)
         .setDescription(stripIndents`
-                      **Welcome to TripSit ${member}!**
-                      This is a positivity-enforced, drug-neutral, harm-reduction space.
-                      **If you need a tripsitter, click the button in ${channelTripsit}!**
-                      Check out ${channelStart} for more information, stay safe!`);
+                      **Please welcome ${member} to the guild!**
+                      We're glad you're here and hope you enjoy your stay!
+                      Check out ${channelStart} set your color and icon
+                      Stay safe, be chill, have fun!`);
       if (actorData.inviteInfo) {
         embed.setFooter({ text: actorData.inviteInfo });
       }
       channelGeneral.send({ embeds: [embed] });
+      interaction.reply({
+        content: stripIndents`
+      Awesome! This channel will disappear when you click away, before you go:
+      If you want to talk to the team about /anything/ you can start a new thread in ${channelTechhelp}
+      Go ahead and test out the bot in the ${channelBotspam} channel!
+      Check out ${channelStart} set your color and icon!
+      Or go say hi in ${channelGeneral}!
+      That's all, have fun!
+      `,
+        ephemeral: true,
+      });
     }
 
     if (buttonID === 'underban') {
@@ -101,7 +117,7 @@ module.exports = {
 
     if (buttonID === 'acknowledgebtn') {
       const embed = template.embedTemplate()
-        .setColor('GREEN')
+        .setColor(Colors.Green)
         .setDescription(`${interaction.user.username} has acknowledged their warning.`);
       modChan.send({ embeds: [embed] });
       interaction.reply('Thanks for understanding!');
@@ -113,7 +129,7 @@ module.exports = {
       logger.debug(guild);
       guild.members.ban(interaction.user, { days: 7, reason: 'Refused warning' });
       const embed = template.embedTemplate()
-        .setColor('RED')
+        .setColor(Colors.Red)
         .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
       modChan.send({ embeds: [embed] });
       interaction.reply('Thanks for making this easy!');
@@ -126,7 +142,7 @@ module.exports = {
       const botOwner = interaction.client.application.owner;
       logger.debug(`[${PREFIX}] bot_owner: ${botOwner}`);
       const embed = template.embedTemplate()
-        .setColor('GREEN')
+        .setColor(Colors.Green)
         .setDescription(`${interaction.user.username} has acknowledged their warning.`);
       botOwner.send({ embeds: [embed] });
       interaction.reply('Thanks for understanding!');
@@ -135,7 +151,7 @@ module.exports = {
 
     if (buttonID === 'warnbtn') {
       const embed = template.embedTemplate()
-        .setColor('RED')
+        .setColor(Colors.Red)
         .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
       modChan.send({ embeds: [embed] });
       interaction.reply('Thanks for making this easy!');

@@ -1,19 +1,24 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder, time } = require('@discordjs/builders');
-const { MessageActionRow, MessageButton } = require('discord.js');
+const {
+  SlashCommandBuilder,
+  time,
+  ButtonStyle,
+  Colors,
+} = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { getGuildInfo, setGuildInfo } = require('../../../global/services/firebaseAPI');
 
 const PREFIX = path.parse(__filename).name;
 
-const warnButtons = new MessageActionRow()
-  .addComponents(new MessageButton()
+const warnButtons = new ActionRowBuilder()
+  .addComponents(new ButtonBuilder()
     .setCustomId('guildacknowledgebtn')
     .setLabel('I understand, it wont happen again!')
-    .setStyle('PRIMARY'));
+    .setStyle(ButtonStyle.Primary));
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -40,17 +45,6 @@ module.exports = {
           .setName('reason')
           .setDescription('Reason for warn!')
           .setRequired(true)))
-      // .addSubcommand(subcommand =>
-      //     subcommand
-      //         .setName('timeout')
-      //         .setDescription('Timeout an ID')
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('target').setDescription('User to timeout!').setRequired(true))
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('reason').setDescription('Reason for timeout!').setRequired(true))
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('toggle').setDescription('On off?').addChoice('On', 'on').addChoice('Off', 'off').setRequired(true)),
-      // )
       .addSubcommand(subcommand => subcommand
         .setName('kick')
         .setDescription('Kick an ID')
@@ -76,8 +70,10 @@ module.exports = {
         .addStringOption(option => option
           .setName('toggle')
           .setDescription('On off?')
-          .addChoice('On', 'on')
-          .addChoice('Off', 'off')
+          .addChoices(
+            { name: 'On', value: 'on' },
+            { name: 'Off', value: 'off' },
+          )
           .setRequired(true))))
     .addSubcommandGroup(subcommandgroup => subcommandgroup
       .setName('user')
@@ -100,26 +96,6 @@ module.exports = {
           .setName('reason')
           .setDescription('Reason for warn!')
           .setRequired(true)))
-      // .addSubcommand(subcommand =>
-      //     subcommand
-      //         .setName('timeout')
-      //         .setDescription('Timeout an ID')
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('target').setDescription('User to timeout!').setRequired(true))
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('reason').setDescription('Reason for timeout!').setRequired(true))
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('toggle').setDescription('On off?').addChoice('On', 'on').addChoice('Off', 'off').setRequired(true)),
-      // )
-      // .addSubcommand(subcommand =>
-      //     subcommand
-      //         .setName('kick')
-      //         .setDescription('Kick an ID')
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('target').setDescription('User to kick!').setRequired(true))
-      // eslint-disable-next-line
-      //         .addStringOption(option => option.setName('reason').setDescription('Reason for kick!').setRequired(true)),
-      // )
       .addSubcommand(subcommand => subcommand
         .setName('ban')
         .setDescription('Ban an ID')
@@ -136,8 +112,10 @@ module.exports = {
         .addStringOption(option => option
           .setName('toggle')
           .setDescription('On off?')
-          .addChoice('On', 'on')
-          .addChoice('Off', 'off')
+          .addChoices(
+            { name: 'On', value: 'on' },
+            { name: 'Off', value: 'off' },
+          )
           .setRequired(true)))),
 
   async execute(interaction) {
@@ -201,7 +179,7 @@ module.exports = {
         if (toggle === 'on') {
           if (targetData.isBanned) {
             const embed = template.embedTemplate()
-              .setColor('GREEN')
+              .setColor(Colors.Green)
               .setTitle('Guild Already Banned')
               .addFields(
                 { name: 'Guild ID', value: targetId },
@@ -221,7 +199,7 @@ module.exports = {
         } else if (toggle === 'off') {
           if (!targetData.isBanned) {
             const embed = template.embedTemplate()
-              .setColor('GREEN')
+              .setColor(Colors.Green)
               .setTitle('Guild Not Banned')
               .addFields(
                 { name: 'Guild ID', value: targetId },
@@ -254,7 +232,7 @@ module.exports = {
 
       const title = `${actor} ${command}ed ${targetGuild} ${reason ? `because ${reason}` : ''}`;
       const targetEmbed = template.embedTemplate()
-        .setColor('BLUE')
+        .setColor(Colors.Blue)
         .setDescription(title)
         .addFields(
           { name: 'Guild Name', value: `${targetData.guild_name}`, inline: true },

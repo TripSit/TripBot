@@ -1,8 +1,11 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageButton } = require('discord.js');
+const {
+  SlashCommandBuilder,
+  ButtonStyle,
+} = require('discord.js');
+const { ButtonBuilder } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
@@ -11,9 +14,30 @@ const PREFIX = path.parse(__filename).name;
 
 const { discordGuildId } = require('../../../../env');
 
+// const buttonList = [
+//   new ButtonBuilder()
+//     .setCustomId('previousbtn')
+//     .setLabel('Previous')
+//     .setStyle(ButtonStyle.Danger),
+//   new ButtonBuilder()
+//     .setCustomId('nextbtn')
+//     .setLabel('Next')
+//     .setStyle(ButtonStyle.Success),
+// ];
+
+const button1 = new ButtonBuilder()
+  .setCustomId('previousbtn')
+  .setLabel('Previous')
+  .setStyle(ButtonStyle.Danger);
+
+const button2 = new ButtonBuilder()
+  .setCustomId('nextbtn')
+  .setLabel('Next')
+  .setStyle(ButtonStyle.Success);
+
 const buttonList = [
-  new MessageButton().setCustomId('previousbtn').setLabel('Previous').setStyle('DANGER'),
-  new MessageButton().setCustomId('nextbtn').setLabel('Next').setStyle('SUCCESS'),
+  button1,
+  button2,
 ];
 
 module.exports = {
@@ -130,7 +154,7 @@ module.exports = {
     // interaction.reply(paginationEmbed(interaction, book, buttonList))
     // if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
     // else {interaction.followUp({ embeds: [embed], ephemeral: false });}
-    paginationEmbed(interaction, book, buttonList);
+    paginationEmbed(interaction, book, buttonList, 120000);
     logger.debug(`[${PREFIX}] finished!`);
   },
 };

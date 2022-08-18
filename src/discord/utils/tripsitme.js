@@ -1,7 +1,11 @@
 'use strict';
 
 const {
-  MessageActionRow, Modal, TextInputComponent,
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  Colors,
 } = require('discord.js');
 const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
@@ -109,17 +113,17 @@ const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
 module.exports = {
   async execute(interaction) {
     // Create the modal
-    const modal = new Modal()
+    const modal = new ModalBuilder()
       .setCustomId('tripsitModal')
       .setTitle('TripSit Help Request');
-    modal.addComponents(new MessageActionRow().addComponents(new TextInputComponent()
+    modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
       .setCustomId('triageInput')
       .setLabel('What substance? How much taken? What time?')
-      .setStyle('SHORT')));
-    modal.addComponents(new MessageActionRow().addComponents(new TextInputComponent()
+      .setStyle(TextInputStyle.Short)));
+    modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
       .setCustomId('introInput')
       .setLabel('What\'s going on? Give us the details!')
-      .setStyle('PARAGRAPH')));
+      .setStyle(TextInputStyle.Paragraph)));
     await interaction.showModal(modal);
   },
   async submit(interaction, memberInput, triageGiven, introGiven) {
@@ -223,7 +227,7 @@ module.exports = {
         }
 
         const embed = template.embedTemplate()
-          .setColor('DARK_BLUE')
+          .setColor(Colors.DarkBlue)
           .setDescription(message);
         interaction.reply({ embeds: [embed], ephemeral: true });
         logger.debug(`[${PREFIX}] Rejected need for help`);
@@ -286,7 +290,7 @@ module.exports = {
           : stripIndents`You are a member of the team and cannot be publicly helped!
           Try asking in #teamtripsit =)`;
         const embed = template.embedTemplate()
-          .setColor('DARK_BLUE')
+          .setColor(Colors.DarkBlue)
           .setDescription(teamMessage);
         if (!interaction.replied) {
           await interaction.reply({ embeds: [embed], ephemeral: true });
@@ -348,7 +352,7 @@ module.exports = {
           }
 
           const embed = template.embedTemplate()
-            .setColor('DARK_BLUE')
+            .setColor(Colors.DarkBlue)
             .setDescription(message);
 
           interaction.reply({ embeds: [embed], ephemeral: true });
@@ -459,7 +463,7 @@ module.exports = {
     }
 
     const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
+      .setColor(Colors.DarkBlue)
       .setDescription(replyMessage);
     interaction.reply({ embeds: [embed], ephemeral: true });
     logger.debug(`[${PREFIX}] Sent response to user`);

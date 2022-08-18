@@ -1,6 +1,6 @@
 'use strict';
 
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const tripsitme = require('../../utils/tripsitme');
 const tripsat = require('../../utils/tripsat');
 
@@ -23,8 +23,10 @@ module.exports = {
     .addStringOption(option => option
       .setName('enable')
       .setDescription('On or Off?')
-      .addChoice('On', 'On')
-      .addChoice('Off', 'Off')),
+      .addChoices(
+        { name: 'On', value: 'on' },
+        { name: 'Off', value: 'off' },
+      )),
 
   async execute(interaction) {
     let enable = interaction.options.getString('enable');

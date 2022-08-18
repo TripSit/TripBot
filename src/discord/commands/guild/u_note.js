@@ -1,9 +1,14 @@
 'use strict';
 
 const path = require('path');
-const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
+const {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+} = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
-const { ContextMenuCommandBuilder } = require('@discordjs/builders');
+const { ContextMenuCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { moderate } = require('../../../global/utils/moderate');
@@ -30,17 +35,17 @@ module.exports = {
     // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
 
     // Create the modal
-    const modal = new Modal()
+    const modal = new ModalBuilder()
       .setCustomId('noteModal')
       .setTitle('Tripbot Note');
-    const noteReason = new TextInputComponent()
+    const noteReason = new TextInputBuilder()
       .setLabel('What are you noting about this person?')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(reason)
       .setCustomId('noteReason')
       .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(noteReason);
+    const firstActionRow = new ActionRowBuilder().addComponents(noteReason);
 
     // Add inputs to the modal
     modal.addComponents(firstActionRow);

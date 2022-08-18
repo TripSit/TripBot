@@ -1,7 +1,7 @@
 'use strict';
 
-const PREFIX = require('path').parse(__filename).name;
-const logger = require("../../global/utils/logger");
+// const PREFIX = require('path').parse(__filename).name;
+// const logger = require("../../global/utils/logger");
 
 // https://discord.js.org/#/docs/discord.js/stable/typedef/ActivityType
 // https://discord.com/developers/docs/game-sdk/activities#data-models-activitytype-enum
@@ -30,7 +30,7 @@ module.exports = {
   name: 'ready',
   once: true,
   async startStatusLoop(client) {
-    logger.debug(`[${PREFIX}] Starting status loop...`);
+    // logger.debug(`[${PREFIX}] Starting status loop...`);
     let state = 0;
     setInterval(() => {
       state = (state + 1) % activities.length;

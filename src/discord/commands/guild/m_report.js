@@ -1,9 +1,15 @@
 'use strict';
 
 const path = require('path');
-const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
+const {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  Colors,
+} = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
-const { ContextMenuCommandBuilder } = require('@discordjs/builders');
+const { ContextMenuCommandBuilder } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const template = require('../../utils/embed-template');
 const logger = require('../../../global/utils/logger');
@@ -50,17 +56,17 @@ module.exports = {
     }
 
     // Create the modal
-    const modal = new Modal()
+    const modal = new ModalBuilder()
       .setCustomId('reportModal')
       .setTitle('Tripbot Report');
-    const reportReason = new TextInputComponent()
+    const reportReason = new TextInputBuilder()
       .setLabel('Why are you reporting this?')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder('Please be descriptive!')
       .setCustomId('reportReason')
       .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(reportReason);
+    const firstActionRow = new ActionRowBuilder().addComponents(reportReason);
 
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
@@ -71,7 +77,7 @@ module.exports = {
     logger.debug(`[${PREFIX}] started!`);
     // await interaction.deferReply({ ephemeral: true });
     const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
+      .setColor(Colors.DarkBlue)
       .setDescription('Reporting...');
     // await interaction.editReply({ embeds: [embed], ephemeral: true });
     logger.debug(`[${PREFIX}] options: ${JSON.stringify(interaction.options, null, 2)}`);

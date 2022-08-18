@@ -1,7 +1,10 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const {
+  SlashCommandBuilder,
+  Colors,
+} = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { moderate } = require('../../../global/utils/moderate');
@@ -52,8 +55,10 @@ module.exports = {
       .addStringOption(option => option
         .setName('toggle')
         .setDescription('On off?')
-        .addChoice('On', 'on')
-        .addChoice('Off', 'off'))
+        .addChoices(
+          { name: 'On', value: 'on' },
+          { name: 'Off', value: 'off' },
+        ))
       .addStringOption(option => option
         .setName('duration')
         .setDescription('Duration of ban!'))
@@ -71,31 +76,12 @@ module.exports = {
       .addStringOption(option => option
         .setName('channel')
         .setDescription('Channel to kick from!'))
-      .setName('kick'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Ban a user')
-      .addStringOption(option => option
-        .setName('target')
-        .setDescription('User to ban!')
-        .setRequired(true))
-      .addStringOption(option => option
-        .setName('reason')
-        .setDescription('Reason for ban!')
-        .setRequired(true))
-      .addStringOption(option => option
-        .setName('duration')
-        .setDescription('How long to ban!'))
-      .addStringOption(option => option
-        .setName('toggle')
-        .setDescription('On off?')
-        .addChoice('On', 'on')
-        .addChoice('Off', 'off'))
-      .setName('ban')),
+      .setName('kick')),
   async execute(interaction) {
     logger.debug(`[${PREFIX}] started!`);
     await interaction.deferReply({ ephemeral: true });
     const embed = template.embedTemplate()
-      .setColor('DARK_BLUE')
+      .setColor(Colors.DarkBlue)
       .setDescription('Moderating...');
     await interaction.editReply({ embeds: [embed], ephemeral: true });
 

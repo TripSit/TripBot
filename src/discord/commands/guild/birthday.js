@@ -1,6 +1,6 @@
 'use strict';
 
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
@@ -17,18 +17,20 @@ module.exports = {
         .setRequired(true)
         .setName('month')
         .setDescription('Month value')
-        .addChoice('January', 'January')
-        .addChoice('February', 'February')
-        .addChoice('March', 'March')
-        .addChoice('April', 'April')
-        .addChoice('May', 'May')
-        .addChoice('June', 'June')
-        .addChoice('July', 'July')
-        .addChoice('August', 'August')
-        .addChoice('September', 'September')
-        .addChoice('October', 'October')
-        .addChoice('November', 'November')
-        .addChoice('December', 'December'))
+        .addChoices(
+          { name: 'January', value: 'January' },
+          { name: 'February', value: 'February' },
+          { name: 'March', value: 'March' },
+          { name: 'April', value: 'April' },
+          { name: 'May', value: 'May' },
+          { name: 'June', value: 'June' },
+          { name: 'July', value: 'July' },
+          { name: 'August', value: 'August' },
+          { name: 'September', value: 'September' },
+          { name: 'October', value: 'October' },
+          { name: 'November', value: 'November' },
+          { name: 'December', value: 'December' },
+        ))
       .addIntegerOption(option => option
         .setName('day')
         .setDescription('Day value')

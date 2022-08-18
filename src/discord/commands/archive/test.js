@@ -6,17 +6,15 @@
 
 'use strict';
 
-const path = require('path');
+const PREFIX = require('path').parse(__filename).name;
+
 const fs = require('fs/promises');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const COMMANDS_PATH = path.resolve('src/commands');
 const drugDataAll = require('../../../global/assets/data/drug_db_combined.json');
 const drugNames = drugDataAll.map(d => d.name);
-
-const PREFIX = path.parse(__filename).name;
-
 function sleep(ms) {
   return new Promise(resolve => {
     setTimeout(resolve, ms);
@@ -32,7 +30,7 @@ async function getCommands(commandType) {
 
 async function testReply(interaction, functionName, message) {
   const embed = template.embedTemplate()
-    .setColor('RANDOM')
+    .setColor(Colors.Purple)
     .setTitle(`Skipping ${functionName} because ${message}`)
   if (!interaction.replied) {
     interaction.reply({
@@ -54,9 +52,11 @@ module.exports = {
     .setDescription('This will test the bot and show all functionality!')
     .addStringOption(option => option.setName('scope')
       .setDescription('Global, guild, or all?')
-      .addChoice('All', 'All')
-      .addChoice('Guild', 'Guild')
-      .addChoice('Global', 'Global')),
+      .addChoices(
+				{ name: 'All', value: 'All' },
+				{ name: 'Guild', value: 'Guild' },
+				{ name: 'Global', value: 'Global' },
+			)),
   async execute(interaction) {
     await interaction.deferReply();
     const scope = interaction.options.getString('scope') || 'All';

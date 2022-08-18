@@ -1,7 +1,7 @@
 'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
-const { Client, Intents } = require('discord.js');
+const { Client, GatewayIntentBits, Partials } = require('discord.js');
 const logger = require('../global/utils/logger');
 const registerCommands = require('./commands');
 const registerEvents = require('./events');
@@ -14,23 +14,31 @@ module.exports = {
   discordConnect: async () => {
     const client = new Client({
       intents: [
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_MEMBERS,
-        // Intents.FLAGS.GUILD_PRESENCES,
-        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-        Intents.FLAGS.GUILD_INVITES,
-        Intents.FLAGS.DIRECT_MESSAGES,
-        Intents.FLAGS.DIRECT_MESSAGE_TYPING,
-        Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
-        Intents.FLAGS.GUILD_VOICE_STATES,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildBans,
+        GatewayIntentBits.GuildEmojisAndStickers,
+        // GatewayIntentBits.GuildIntegrations,
+        // GatewayIntentBits.GuildWebhooks,
+        GatewayIntentBits.GuildInvites,
+        // GatewayIntentBits.GuildVoiceStates,
+        // GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions,
+        // GatewayIntentBits.GuildMessageTyping,
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.DirectMessageReactions,
+        // GatewayIntentBits.DirectMessageTyping,
+        // GatewayIntentBits.GuildScheduledEvents,
       ],
       partials: [
-        'MESSAGE',
-        'CHANNEL',
-        'USER',
-        'GUILD_MEMBER',
-        'REACTION',
+        Partials.User,
+        Partials.Channel,
+        Partials.GuildMember,
+        Partials.Message,
+        Partials.Reaction,
+        // Partials.GuildScheduledEvent,
       ],
     });
 

@@ -1,6 +1,10 @@
 'use strict';
 
-const { SlashCommandBuilder, time } = require('@discordjs/builders');
+const {
+  SlashCommandBuilder,
+  time,
+  Colors,
+} = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
@@ -9,46 +13,46 @@ const PREFIX = require('path').parse(__filename).name; // eslint-disable-line
 
 const { channelModeratorsId } = require('../../../../env');
 
-// const mod_buttons = new MessageActionRow()
+// const mod_buttons = new ActionRowBuilder()
 //     .addComponents(
-//         new MessageButton()
+//         new ButtonBuilder()
 //             .setCustomId('warnbtn')
 //             .setLabel('Warn')
-//             .setStyle('PRIMARY'),
-//         new MessageButton()
+//             .setStyle(ButtonStyle.Primary),
+//         new ButtonBuilder()
 //             .setCustomId('timeoutbtn')
 //             .setLabel('Timeout')
-//             .setStyle('SECONDARY'),
-//         new MessageButton()
+//             .setStyle(ButtonStyle.Secondary)
+//         new ButtonBuilder()
 //             .setCustomId('kickbtn')
 //             .setLabel('Kick')
-//             .setStyle('SECONDARY'),
-//         new MessageButton()
+//             .setStyle(ButtonStyle.Secondary)
+//         new ButtonBuilder()
 //             .setCustomId('banbtn')
 //             .setLabel('Ban')
-//             .setStyle('DANGER'),
+//             .setStyle(ButtonStyle.Danger),
 //     );
 
-// const warnButtons = new MessageActionRow().addComponents(
-//   new MessageButton()
+// const warnButtons = new ActionRowBuilder().addComponents(
+//   new ButtonBuilder()
 //     .setCustomId('acknowledgebtn')
 //     .setLabel('I understand, it wont happen again!')
-//     .setStyle('PRIMARY'),
-//   new MessageButton()
+//     .setStyle(ButtonStyle.Primary),
+//   new ButtonBuilder()
 //     .setCustomId('refusalbtn')
 //     .setLabel('Nah, I do what I want!')
-//     .setStyle('DANGER'),
+//     .setStyle(ButtonStyle.Danger),
 // );
 
-// const backButton = new MessageButton()
+// const backButton = new ButtonBuilder()
 //     .setCustomId('previousbtn')
 //     .setLabel('Previous')
-//     .setStyle('DANGER');
+//     .setStyle(ButtonStyle.Danger);
 
-// const forwardButton = new MessageButton()
+// const forwardButton = new ButtonBuilder()
 //     .setCustomId('nextbtn')
 //     .setLabel('Next')
-//     .setStyle('SUCCESS');
+//     .setStyle(ButtonStyle.Success);
 // const buttonList = [
 //     backButton,
 //     forwardButton,
@@ -89,8 +93,10 @@ module.exports = {
       .addStringOption(option => option
         .setName('toggle')
         .setDescription('On off?')
-        .addChoice('On', 'on')
-        .addChoice('Off', 'off'))
+        .addChoices(
+          { name: 'On', value: 'on' },
+          { name: 'Off', value: 'off' },
+        ))
       .addStringOption(option => option
         .setName('duration')
         .setDescription('Duration of ban!'))
@@ -119,8 +125,10 @@ module.exports = {
       .addStringOption(option => option
         .setName('toggle')
         .setDescription('On off?')
-        .addChoice('On', 'on')
-        .addChoice('Off', 'off'))
+        .addChoices(
+          { name: 'On', value: 'on' },
+          { name: 'Off', value: 'off' },
+        ))
       .addStringOption(option => option
         .setName('duration')
         .setDescription('Duration of ban!'))
@@ -163,7 +171,7 @@ module.exports = {
 
     if (!target) {
       const embed = template.embedTemplate()
-        .setColor('RED')
+        .setColor(Colors.Red)
         .setDescription('target not found, are you sure they are in the server?');
       interaction.reply({ embeds: [embed], ephemeral: true });
       logger.debug(`[${PREFIX}] Target not found!`);
@@ -213,7 +221,7 @@ module.exports = {
     const title = `${actor} ${command}ed ${target} ${reason ? `because ${reason}` : ''}`;
     // const book = [];
     const targetEmbed = template.embedTemplate()
-      .setColor('BLUE')
+      .setColor(Colors.Blue)
       .setDescription(title)
       .addFields(
         { name: 'Username', value: `${isMember ? target.user.username : target.username}#${isMember ? target.user.discriminator : target.discriminator}`, inline: true },

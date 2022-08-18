@@ -1,13 +1,17 @@
 'use strict';
 
 const {
-  MessageAttachment,
-  MessageActionRow,
-  MessageButton,
+  SlashCommandBuilder,
+  AttachmentBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  ButtonStyle,
   Modal,
-  TextInputComponent,
+  Colors,
 } = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+
 const { ReactionRole } = require('discordjs-reaction-role');
 const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
@@ -20,7 +24,7 @@ const {
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 
-const file = new MessageAttachment('./src/discord/assets/img/RULES.png');
+const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
 
 const {
   // discordOwnerId,
@@ -143,7 +147,7 @@ async function howtotripsit(interaction) {
   const reactionRoles = targetGuildData.reactionRoles ? targetGuildData.reactionRoles : {};
 
   embed.setTitle('**How to use TripSit**');
-  embed.setColor('GREEN');
+  embed.setColor(Colors.Green);
   embed.setDescription(stripIndents`
   ${channelTripsit.toString()} is our main help channel.
   People who need help can click on the "I need assistance button" button
@@ -157,7 +161,7 @@ async function howtotripsit(interaction) {
   );
 
   embed.setTitle('');
-  embed.setColor('BLUE');
+  embed.setColor(Colors.Blue);
   embed.setDescription(stripIndents`
   **1)** The user's roles are changed so that they can only see the Harm Reduction rooms
   **2)** A new private thread is created in ${channelTripsit.toString()}
@@ -169,7 +173,7 @@ async function howtotripsit(interaction) {
     { embeds: [embed], ephemeral: false },
   );
 
-  embed.setColor('PURPLE');
+  embed.setColor(Colors.Purple);
   embed.setDescription(stripIndents`
   Finally, when the user is finished, they can click the “I’m good now” button.
   This will restore their old roles and bring them back to “normal”.
@@ -183,7 +187,7 @@ async function howtotripsit(interaction) {
     { embeds: [embed], ephemeral: false },
   );
 
-  embed.setColor('YELLOW');
+  embed.setColor(Colors.Yellow);
   embed.setDescription(stripIndents`
   **Are you interested in helping out in the Harm Reduction Centre?**
   By reacting to this message you will be given the **Helper** role.
@@ -335,24 +339,24 @@ async function techhelp(interaction) {
   `;
 
   // Create buttons
-  const row = new MessageActionRow()
+  const row = new ActionRowBuilder()
     .addComponents(
-      new MessageButton()
+      new ButtonBuilder()
         .setCustomId('ircConnect')
         .setLabel('I can\'t connect to IRC!')
-        .setStyle('SUCCESS'),
-      new MessageButton()
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
         .setCustomId('ircAppeal')
         .setLabel('I want to appeal my ban!')
-        .setStyle('DANGER'),
-      new MessageButton()
+        .setStyle(ButtonStyle.Danger),
+      new ButtonBuilder()
         .setCustomId('discordIssue')
         .setLabel('Discord issue/feedback!')
-        .setStyle('PRIMARY'),
-      new MessageButton()
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
         .setCustomId('ircOther')
         .setLabel('I have something else!')
-        .setStyle('SECONDARY'),
+        .setStyle(ButtonStyle.Secondary),
     );
 
   // Create a new button
@@ -369,7 +373,7 @@ async function rules(interaction) {
   const embed = template.embedTemplate()
     .setAuthor({ name: '', iconURL: '', url: '' })
     .setFooter({ text: '', iconURL: '' })
-    .setColor('RED')
+    .setColor(Colors.Red)
     .setImage('attachment://RULES.png');
   await interaction.channel.send({ embeds: [embed], files: [file], ephemeral: false });
 
@@ -477,7 +481,7 @@ async function starthere(interaction) {
       url: '',
     })
     .setFooter('These roles reset after 8 hours to accurately show your mindset!')
-    .setColor('PURPLE');
+    .setColor(Colors.Purple);
   await interaction.channel.send({ embeds: [mindsetEmbed], ephemeral: false })
     .then(async msg => {
       await msg.react(`${drunkEmoji}`);
@@ -495,7 +499,7 @@ async function starthere(interaction) {
   const colorEmbed = template.embedTemplate()
     .setAuthor({ name: 'React to this message to set the color of your nickname!', iconURL: '', url: '' })
     .setFooter(null)
-    .setColor('BLUE');
+    .setColor(Colors.Blue);
 
   await interaction.channel.send({ embeds: [colorEmbed], ephemeral: false })
     .then(async msg => {
@@ -536,16 +540,16 @@ async function tripsitme(interaction) {
   `;
 
   // Create a new button embed
-  const row = new MessageActionRow()
+  const row = new ActionRowBuilder()
     .addComponents(
-      new MessageButton()
+      new ButtonBuilder()
         .setCustomId('tripsitme')
         .setLabel('I need assistance!')
-        .setStyle('PRIMARY'),
-      new MessageButton()
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
         .setCustomId('tripsat')
         .setLabel('I\'m good now!')
-        .setStyle('SUCCESS'),
+        .setStyle(ButtonStyle.Success),
     );
 
   // Create a new button
@@ -575,22 +579,22 @@ async function ticketbooth(interaction) {
   **1)** I do not currently need help and understand I can go to ${channelTripsit.toString()} to get help if I need it.
   **2)** I understand if no one responds in ${channelTripsit.toString()} I can talk in the "open" tripsit rooms.
   **3)** I understand that every room with a :link: is bridged to IRC and there may be lower quality chat in those rooms.
-  **4)** I have read the ${channelRules.toString()}: I will not buy/sell anything and I will try to keep a positive atmosphere for people currently in altered mindsets!
+  **4)** I have read the ${channelRules.toString()}: I will not buy/sell anything and I will try to keep a positive atmosphere!
   `;
 
   // Create a new button embed
-  const row = new MessageActionRow()
+  const row = new ActionRowBuilder()
     .addComponents(
-      new MessageButton()
+      new ButtonBuilder()
         .setCustomId('memberbutton')
         .setLabel('I understand where to find help and will follow the rules!')
-        .setStyle('SUCCESS'),
+        .setStyle(ButtonStyle.Success),
     )
     .addComponents(
-      new MessageButton()
+      new ButtonBuilder()
         .setCustomId('underban')
         .setLabel('I am underage but I need help!')
-        .setStyle('SECONDARY'),
+        .setStyle(ButtonStyle.Secondary),
     );
 
   // Create a new button
@@ -665,14 +669,14 @@ module.exports = {
     const modal = new Modal()
       .setCustomId(`${issueType}ModmailIssueModal`)
       .setTitle('TripSit Feedback');
-    const timeoutReason = new TextInputComponent()
+    const timeoutReason = new TextInputBuilder()
       .setLabel('What is your issue? Be super detailed!')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(placeholder)
       .setCustomId(`${issueType}IssueInput`)
       .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(timeoutReason);
+    const firstActionRow = new ActionRowBuilder().addComponents(timeoutReason);
     // Add inputs to the modal
     modal.addComponents(firstActionRow);
     // Show the modal to the user

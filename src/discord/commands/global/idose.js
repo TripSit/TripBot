@@ -1,8 +1,12 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder, time } = require('@discordjs/builders');
-const { MessageButton } = require('discord.js');
+const {
+  SlashCommandBuilder,
+  time,
+  Colors,
+} = require('discord.js');
+const { ButtonBuilder, ButtonStyle } = require('discord.js');
 const paginationEmbed = require('discordjs-button-pagination');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
@@ -12,8 +16,8 @@ const parseDuration = require('../../../global/utils/parseDuration');
 const PREFIX = path.parse(__filename).name;
 
 const buttonList = [
-  new MessageButton().setCustomId('previousbtn').setLabel('Previous').setStyle('DANGER'),
-  new MessageButton().setCustomId('nextbtn').setLabel('Next').setStyle('SUCCESS'),
+  new ButtonBuilder().setCustomId('previousbtn').setLabel('Previous').setStyle(ButtonStyle.Danger),
+  new ButtonBuilder().setCustomId('nextbtn').setLabel('Next').setStyle(ButtonStyle.Success),
 ];
 
 module.exports = {
@@ -29,18 +33,20 @@ module.exports = {
       .addStringOption(option => option.setName('units')
         .setDescription('What units?')
         .setRequired(true)
-        .addChoice('mg (milligrams)', 'mg (milligrams)')
-        .addChoice('mL (milliliters)', 'mL (milliliters)')
-        .addChoice('µg (micrograms/ug/mcg)', 'µg (micrograms/ug/mcg)')
-        .addChoice('g (grams)', 'g (grams)')
-        .addChoice('oz (ounces)', 'oz (ounces)')
-        .addChoice('fl oz (fluid ounces)', 'fl oz (fluid ounces)')
-        .addChoice('tabs', 'tabs')
-        .addChoice('caps', 'caps')
-        .addChoice('pills', 'pills')
-        .addChoice('drops', 'drops')
-        .addChoice('sprays', 'sprays')
-        .addChoice('inhales', 'inhales'))
+        .addChoices(
+          { name: 'mg (milligrams)', value: 'mg (milligrams)' },
+          { name: 'mL (milliliters)', value: 'mL (milliliters)' },
+          { name: 'µg (micrograms/ug/mcg)', value: 'µg (micrograms/ug/mcg)' },
+          { name: 'g (grams)', value: 'g (grams)' },
+          { name: 'oz (ounces)', value: 'oz (ounces)' },
+          { name: 'fl oz (fluid ounces)', value: 'fl oz (fluid ounces)' },
+          { name: 'tabs', value: 'tabs' },
+          { name: 'caps', value: 'caps' },
+          { name: 'pills', value: 'pills' },
+          { name: 'drops', value: 'drops' },
+          { name: 'sprays', value: 'sprays' },
+          { name: 'inhales', value: 'inhales' },
+        ))
       .addStringOption(option => option.setName('substance')
         .setDescription('What Substance?')
         .setRequired(true)
@@ -186,7 +192,7 @@ module.exports = {
         name: `You dosed ${volume} ${units} of ${substance}`,
         value: `${relative} on ${timeString}`,
       };
-      embed.setColor('DARK_BLUE');
+      embed.setColor(Colors.DarkBlue);
       embed.setTitle('New iDose entry:');
       embed.addFields(embedField);
 

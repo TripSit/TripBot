@@ -1,9 +1,14 @@
 'use strict';
 
 const path = require('path');
-const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
+const {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+} = require('discord.js');
 const { ApplicationCommandType } = require('discord-api-types/v9');
-const { ContextMenuCommandBuilder } = require('@discordjs/builders');
+const { ContextMenuCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { moderate } = require('../../../global/utils/moderate');
@@ -31,23 +36,23 @@ module.exports = {
     // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
 
     // Create the modal
-    const modal = new Modal()
+    const modal = new ModalBuilder()
       .setCustomId('banModal')
       .setTitle('Tripbot Ban');
-    const banReason = new TextInputComponent()
+    const banReason = new TextInputBuilder()
       .setLabel('Why are you banning this person?')
-      .setStyle('PARAGRAPH')
+      .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(reason)
       .setCustomId('banReason')
       .setRequired(true);
-    const banDuration = new TextInputComponent()
+    const banDuration = new TextInputBuilder()
       .setLabel('How long should this ban last?')
-      .setStyle('SHORT')
+      .setStyle(TextInputStyle.Short)
       .setPlaceholder(duration)
       .setCustomId('banDuration');
     // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new MessageActionRow().addComponents(banReason);
-    const secondActionRow = new MessageActionRow().addComponents(banDuration);
+    const firstActionRow = new ActionRowBuilder().addComponents(banReason);
+    const secondActionRow = new ActionRowBuilder().addComponents(banDuration);
 
     // Add inputs to the modal
     modal.addComponents(firstActionRow, secondActionRow);
