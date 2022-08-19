@@ -164,13 +164,13 @@ module.exports = {
     } catch (e) {
       logger.debug(`[${PREFIX}] No lastMessageDate found for ${actor.username || actor.nick}`);
     }
-    logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
+    // logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
 
     const currMessageDate = message.createdTimestamp || Date.now();
-    logger.debug(`[${PREFIX}] currMessageDate: ${currMessageDate}`);
+    // logger.debug(`[${PREFIX}] currMessageDate: ${currMessageDate}`);
 
     const timeDiff = currMessageDate - lastMessageDate;
-    logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
+    // logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
 
     const bufferTime = bufferSeconds * 1000;
 
@@ -210,7 +210,7 @@ module.exports = {
           logger.debug(`[${PREFIX}] Exp update A (Increment)`);
         }
         if (actorData.experience.general) {
-          logger.debug(`[${PREFIX}] User has general experience`);
+          // logger.debug(`[${PREFIX}] User has general experience`);
           if (actorData.experience.general.level >= 5) {
             // logger.debug(`[${PREFIX}] User is over level 5`);
             if (message.member) {
