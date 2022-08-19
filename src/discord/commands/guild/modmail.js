@@ -9,6 +9,7 @@ const {
   TextInputBuilder,
   TextInputStyle,
   Colors,
+  ChannelType,
 } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const { SlashCommandBuilder, ButtonStyle } = require('discord.js');
@@ -367,7 +368,7 @@ module.exports = {
     const ticketThread = await channel.threads.create({
       name: `${actor.username}'s ${issueType} issue!`,
       autoArchiveDuration: 1440,
-      type: NODE_ENV === 'production' ? 'GUILD_PRIVATE_THREAD' : 'GUILD_PUBLIC_THREAD',
+      type: NODE_ENV === 'production' ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
       reason: `${actor.username} submitted a(n) ${issueType} issue`,
     });
     logger.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);
