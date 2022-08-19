@@ -4,9 +4,10 @@ const path = require('path');
 const {
   SlashCommandBuilder,
   ButtonStyle,
+  ButtonBuilder,
 } = require('discord.js');
-const { ButtonBuilder } = require('discord.js');
-const paginationEmbed = require('discordjs-button-pagination');
+// const paginationEmbed = require('discordjs-button-pagination');
+const paginationEmbed = require('../../utils/pagination');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 

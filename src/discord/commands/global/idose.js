@@ -5,9 +5,11 @@ const {
   SlashCommandBuilder,
   time,
   Colors,
+  ButtonBuilder,
+  ButtonStyle,
 } = require('discord.js');
-const { ButtonBuilder, ButtonStyle } = require('discord.js');
-const paginationEmbed = require('discordjs-button-pagination');
+// const paginationEmbed = require('discordjs-button-pagination');
+const paginationEmbed = require('../../utils/pagination');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
