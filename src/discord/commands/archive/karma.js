@@ -1,9 +1,13 @@
 'use strict';
 
 const path = require('path');
-const { SlashCommandBuilder } = require('discord.js');
-const { ButtonBuilder, ButtonStyle } = require('discord.js');
-const paginationEmbed = require('discordjs-button-pagination');
+const {
+  SlashCommandBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} = require('discord.js');
+// const paginationEmbed = require('discordjs-button-pagination');
+const paginationEmbed = require('../../utils/pagination');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo } = require('../../../global/services/firebaseAPI');
