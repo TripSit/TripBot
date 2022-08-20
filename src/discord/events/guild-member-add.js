@@ -24,7 +24,7 @@ module.exports = {
   name: 'guildMemberAdd',
 
   async execute(member, client) {
-    logger.debug(JSON.stringify(member, null, 2));
+    // logger.debug(JSON.stringify(member, null, 2));
     // {
     //   "guildId": "960606557622657026",
     //   "joinedTimestamp": 1653515791290,
@@ -121,7 +121,7 @@ module.exports = {
       const channelStart = member.client.channels.cache.get(channelStartId);
       const channelTripsit = member.client.channels.cache.get(channelTripsitId);
       const welcomeEmbed = template.embedTemplate()
-        .setAuthor({ name: '', iconURL: '', url: '' })
+        .setAuthor(null)
         .setColor(colorValue)
         .setThumbnail(member.user.displayAvatarURL())
         // .setTitle(`Welcome to TripSit ${member.user.username}!`)

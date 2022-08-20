@@ -6,6 +6,7 @@ const {
   TextInputBuilder,
   TextInputStyle,
   Colors,
+  ChannelType,
 } = require('discord.js');
 const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
@@ -426,7 +427,7 @@ module.exports = {
     threadDiscussUser = await tripsittersChannel.threads.create({
       name: `${target.user.username} discuss here!`,
       autoArchiveDuration: 1440,
-      type: NODE_ENV === 'production' ? 'GUILD_PRIVATE_THREAD' : 'GUILD_PUBLIC_THREAD',
+      type: NODE_ENV === 'production' ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
       reason: `${target.user.username} requested help`,
     });
     logger.debug(`[${PREFIX}] Created meta-thread ${threadDiscussUser.id}`);
@@ -436,7 +437,7 @@ module.exports = {
     threadHelpUser = await tripsitChannel.threads.create({
       name: `${target.nickname || target.user.username} chat here!`,
       autoArchiveDuration: 1440,
-      type: NODE_ENV === 'production' ? 'GUILD_PRIVATE_THREAD' : 'GUILD_PUBLIC_THREAD',
+      type: NODE_ENV === 'production' ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
       reason: `${target.nickname || target.user.username} requested help`,
     });
     logger.debug(`[${PREFIX}] Created threadHelpUser ${threadHelpUser.id}`);
