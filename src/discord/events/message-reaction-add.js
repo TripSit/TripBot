@@ -21,7 +21,6 @@ module.exports = {
 
     // When a reaction is received, check if the structure is partial
     if (reaction.partial) await reaction.fetch();
-    await reaction.users.fetch();
 
     // logger.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction.emoji.name, null, 2)}`);
     // logger.debug(`[${PREFIX}] users: ${JSON.stringify(reaction.users, null, 2)}`);
