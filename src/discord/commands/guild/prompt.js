@@ -134,8 +134,8 @@ const coderEmoji = NODE_ENV === 'production'
 async function howtotripsit(interaction) {
   logger.debug(`${PREFIX} how to tripsit!`);
   const embed = template.embedTemplate()
-    .setAuthor({ name: '', iconURL: '', url: '' })
-    .setFooter({ text: '', iconURL: '' });
+    .setAuthor(null)
+    .setFooter(null);
 
   const channelTripsit = interaction.client.channels.cache.get(channelTripsitId);
   // const channelTripsitInfo = interaction.client.channels.cache.get(channelHowToTripsitId);
@@ -372,8 +372,8 @@ async function rules(interaction) {
   const channelQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
 
   const embed = template.embedTemplate()
-    .setAuthor({ name: '', iconURL: '', url: '' })
-    .setFooter({ text: '', iconURL: '' })
+    .setAuthor(null)
+    .setFooter(null)
     .setColor(Colors.Red)
     .setImage('attachment://RULES.png');
   await interaction.channel.send({ embeds: [embed], files: [file], ephemeral: false });

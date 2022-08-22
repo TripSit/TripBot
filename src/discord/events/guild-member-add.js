@@ -54,7 +54,7 @@ module.exports = {
       /* Start *INVITE* code */
       const cachedInvites = global.guildInvites.get(member.guild.id);
       const newInvites = await member.guild.invites.fetch();
-      let inviteInfo = '';
+      let inviteInfo = null;
       try {
         const usedInvite = newInvites.find(inv => cachedInvites.get(inv.code) < inv.uses);
         logger.debug(`Cached ${[...cachedInvites.keys()]}`);
@@ -131,6 +131,7 @@ module.exports = {
                 This is a positivity-enforced, drug-neutral, harm-reduction space.
                 **If you need a tripsitter, click the button in ${channelTripsit}!**
                 Check out ${channelStart} for more information, stay safe!`);
+
       welcomeEmbed.setFooter({
         text: inviteInfo,
       });
