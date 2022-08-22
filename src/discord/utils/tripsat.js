@@ -299,7 +299,7 @@ module.exports = {
           // modal.addComponents(firstActionRow);
           // // Show the modal to the user
           // // interaction.showModal(modal);
-          logger.debug(`Collected ${reaction.emoji.name} from ${user.tag}`);
+          logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
           const finalEmbed = template.embedTemplate()
             .setColor(Colors.Blue)
             .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
