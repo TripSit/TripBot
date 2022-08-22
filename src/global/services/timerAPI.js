@@ -484,17 +484,29 @@ module.exports = {
 
                   const timeBetween = now - lastHelped;
                   let output = '';
-                  try {
-                    output = channelHelp.archived
-                      ? `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago in an archived channel`
-                      : `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago`;
-                  } catch (err) {
-                    logger.debug(`[${PREFIX}] Error getting time between lastHelped and now`);
-                    logger.debug(err);
-                    logger.debug(`[${PREFIX}] discordData: ${JSON.stringify(output, null, 2)}`);
-                  }
+                  if (channelHelp.id) {
+                    try {
+                      output = channelHelp.archived
+                        ? `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago in an archived channel`
+                        : `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago`;
+                    } catch (err) {
+                      logger.debug(`[${PREFIX}] Error getting time between lastHelped and now`);
+                      logger.debug(err);
+                      logger.debug(`[${PREFIX}] discordData: ${JSON.stringify(output, null, 2)}`);
+                    }
+                  } else {
+                    // Extract actor data
+                    // eslint-disable-next-line
+                    const [actorData, actorFbid] = await getUserInfo(member);
 
-                  logger.debug(output);
+                    // Transform actor data
+                    delete actorData.discord.lastHelpedMetaThreadId;
+                    delete actorData.discord.lastHelpedThreadId;
+
+                    // Load actor data
+                    setUserInfo(actorFbid, actorData);
+                    logger.debug(`[${PREFIX}] Channel does not exist anymore, removed lastHelpedThreadId`);
+                  }
 
                   // eslint-disable-next-line
                   if (yesterday > lastHelped && (Object.keys(channelHelp).length > 0 && !channelHelp.archived)) {
