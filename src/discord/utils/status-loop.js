@@ -46,7 +46,7 @@ module.exports = {
     setInterval(() => {
       state = (state + 1) % activities.length;
       presence = activities[state];
-      logger.debug(`[${PREFIX}] Setting activity to ${presence.type} ${presence.message}`);
+      // logger.debug(`[${PREFIX}] Setting activity to ${presence.type} ${presence.message}`);
       client.user.setActivity(presence.message, { type: presence.type });
     }, delay);
   },
