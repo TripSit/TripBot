@@ -536,8 +536,6 @@ async function tripsitme(interaction) {
     🛑 Please do not message helpers or tripsitters directly! 🛑
 
     All other topics of conversation are welcome in ${channelGeneral}!
-
-    Stay safe!
   `;
 
   // Create a new button embed
@@ -547,10 +545,6 @@ async function tripsitme(interaction) {
         .setCustomId('tripsitme')
         .setLabel('I need assistance!')
         .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId('tripsat')
-        .setLabel('I\'m good now!')
-        .setStyle(ButtonStyle.Success),
     );
 
   // Create a new button

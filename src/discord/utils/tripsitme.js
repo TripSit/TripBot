@@ -1,3 +1,5 @@
+// eslint-disable no-irregular-whitespace
+
 'use strict';
 
 const {
@@ -7,6 +9,8 @@ const {
   TextInputStyle,
   Colors,
   ChannelType,
+  ButtonBuilder,
+  ButtonStyle,
 } = require('discord.js');
 const { stripIndents } = require('common-tags');
 const PREFIX = require('path').parse(__filename).name;
@@ -20,6 +24,7 @@ const {
   channelHowToTripsitId,
   channelTripsittersId,
   channelTripsitId,
+  channelOpentripsitId,
   roleNeedshelpId,
   roleHelperId,
   roleDirectorId,
@@ -128,6 +133,7 @@ module.exports = {
     await interaction.showModal(modal);
   },
   async submit(interaction, memberInput, triageGiven, introGiven) {
+    logger.debug(`[${PREFIX}] starting!`);
     logger.debug(`[${PREFIX}] memberInput: ${memberInput}`);
 
     // Get the input from the modal, if it was submitted
@@ -155,6 +161,9 @@ module.exports = {
     const channelHowToTripsit = interaction.client.channels.cache
       .find(channel => channel.id === channelHowToTripsitId);
     logger.debug(`[${PREFIX}] channelHowToTripsit: ${channelHowToTripsit}`);
+
+    const channelOpenTripsit = interaction.guild.channels.cache
+      .find(chan => chan.id === channelOpentripsitId);
 
     // Determine the actor.
     const actor = interaction.member;
@@ -205,6 +214,12 @@ module.exports = {
     let threadDiscussUser = interaction.client.channels.cache.get(targetLastHelpedMetaThreadId);
     logger.debug(`[${PREFIX}] threadDiscussUser: ${threadDiscussUser}`);
 
+    // ██╗   ██╗██████╗ ██████╗  █████╗ ████████╗███████╗
+    // ██║   ██║██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝██╔════╝
+    // ██║   ██║██████╔╝██║  ██║███████║   ██║   █████╗
+    // ██║   ██║██╔═══╝ ██║  ██║██╔══██║   ██║   ██╔══╝
+    // ╚██████╔╝██║     ██████╔╝██║  ██║   ██║   ███████╗
+    //  ╚═════╝ ╚═╝     ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚══════╝
     if (targetHasRoleNeedshelp && threadHelpUser !== undefined && threadDiscussUser !== undefined) {
       logger.debug(`[${PREFIX}] Target already needs help, updating existing threads!`);
       // A user will have the NeedsHelp role when they click the button.
@@ -233,10 +248,24 @@ module.exports = {
         interaction.reply({ embeds: [embed], ephemeral: true });
         logger.debug(`[${PREFIX}] Rejected need for help`);
 
-        // Ping the user in the help thread
-        let helpMessage = stripIndents`
-          Hey ${target}, use this thread to keep in touch with the Team!
-        `;
+        // Send the update message to the thread
+        let helpMessage = memberInput
+          ? stripIndents`
+          Hey ${target}, the team thinks you could still use assistance!
+          ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper} will be with you as soon as they're available!
+          If this is a medical emergency please contact your local /EMS
+          We do not call EMS or ambulance on behalf of anyone.`
+          : stripIndents`
+          Hey ${target}, thank you for the update!
+          **If no responds right away you can try chatting in ${channelOpenTripsit}**
+
+          You've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
+
+          Your issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
+
+          ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper} will be with you as soon as they're available!
+          If this is a medical emergency please contact your local /EMS
+          We do not call EMS or ambulance on behalf of anyone.`;
 
         if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
           helpMessage = testNotice + helpMessage;
@@ -251,14 +280,12 @@ module.exports = {
         if (threadDiscussUser) {
           let metaUpdate = memberInput
             ? stripIndents`Hey ${interaction.member}, ${target.nickname || target.user.username} is already being helped!
-            Use this ${threadHelpUser} to discuss it!'`
-            : stripIndents`Hey team, ${target.nickname || target.user.username} sent a new request for help in ${threadHelpUser.toString()}!
+            Use this thread to discuss it!'`
+            : stripIndents`Hey ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper}, ${target.nickname || target.user.username} sent a new request for help in ${threadHelpUser.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
-            Their issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
-
-            Use this ${threadHelpUser} to discuss it!`;
+            Their issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}`;
           if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
             metaUpdate = testNotice + metaUpdate;
           }
@@ -324,6 +351,12 @@ module.exports = {
       Make sure the bot's role is higher than NeedsHelp in the Role list!`);
     }
 
+    // ██████╗ ███████╗ ██████╗ ██████╗ ███████╗███╗   ██╗
+    // ██╔══██╗██╔════╝██╔═══██╗██╔══██╗██╔════╝████╗  ██║
+    // ██████╔╝█████╗  ██║   ██║██████╔╝█████╗  ██╔██╗ ██║
+    // ██╔══██╗██╔══╝  ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║
+    // ██║  ██║███████╗╚██████╔╝██║     ███████╗██║ ╚████║
+    // ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝
     // If the user has been helped in the last week, direct them to the existing thread
     if (targetLastHelpedDate) {
       const lastWeek = Date.now() - (1000 * 60 * 60 * 24 * 7);
@@ -361,15 +394,22 @@ module.exports = {
           // Send the intro message to the thread
           let firstMessage = memberInput
             ? stripIndents`
-            Hey ${target}, the team thinks you could use assistance!
-            The team will be with you as soon as they're available!
+            Hey ${target}, the team thinks you could still use assistance!
+            ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper} will be with you as soon as they're available!
             If this is a medical emergency please contact your local /EMS
             We do not call EMS or ambulance on behalf of anyone.`
             : stripIndents`
-            Hey ${target}, thank you for asking for assistance!
-            The team will be with you as soon as they're available!
+            Hey ${target}, thank you for asking for help!
+
+            You've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
+
+            Your issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
+
+            ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper} will be with you as soon as they're available!
             If this is a medical emergency please contact your local /EMS
-            We do not call EMS or ambulance on behalf of anyone.`;
+            We do not call EMS or ambulance on behalf of anyone.
+
+            **If no responds right away you can try chatting in ${channelOpenTripsit}**`;
 
           if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
             firstMessage = testNotice + firstMessage;
@@ -379,7 +419,7 @@ module.exports = {
           // Update the meta thread too
           let helperMsg = memberInput
             ? stripIndents`
-            Hey team, ${actor} sent a new request for help on behalf of ${target.nickname || target.user.username} in ${threadHelpUser.toString()}!
+            Hey ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper}, ${actor} sent a new request for help on behalf of ${target.nickname || target.user.username} in ${threadHelpUser.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -387,7 +427,7 @@ module.exports = {
 
             Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!`
             : stripIndents`
-            Hey team, ${target.nickname || target.user.username} sent a new request for help in ${threadHelpUser.toString()}!
+            Hey ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper}, ${target.nickname || target.user.username} sent a new request for help in ${threadHelpUser.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -415,6 +455,12 @@ module.exports = {
       }
     }
 
+    // ███╗   ██╗███████╗██╗    ██╗
+    // ████╗  ██║██╔════╝██║    ██║
+    // ██╔██╗ ██║█████╗  ██║ █╗ ██║
+    // ██║╚██╗██║██╔══╝  ██║███╗██║
+    // ██║ ╚████║███████╗╚███╔███╔╝
+    // ╚═╝  ╚═══╝╚══════╝ ╚══╝╚══╝
     // Get the tripsitters channel from the guild
     const tripsittersChannel = interaction.guild.channels.cache
       .find(chan => chan.id === channelTripsittersId);
@@ -429,6 +475,7 @@ module.exports = {
       autoArchiveDuration: 1440,
       type: NODE_ENV === 'production' ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
       reason: `${target.user.username} requested help`,
+      invitable: NODE_ENV === 'production' ? false : null,
     });
     logger.debug(`[${PREFIX}] Created meta-thread ${threadDiscussUser.id}`);
 
@@ -473,19 +520,32 @@ module.exports = {
     let firstMessage = memberInput
       ? stripIndents`
       Hey ${target}, the team thinks you could use assistance!
-      A ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter} or ${actorHasRoleDeveloper ? 'helper' : roleHelper} will be with you as soon as they're available!
+      ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper} will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.`
       : stripIndents`
       Hey ${target}, thank you for asking for assistance!
-      A ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter} or ${actorHasRoleDeveloper ? 'helper' : roleHelper} will be with you as soon as they're available!
+
+      You've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
+
+      Your issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
+
+      ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper} will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
-      When you're feeling better you can use the "I'm Good" button in ${tripsitChannel.toString()} to let the team know you're okay.`;
+      When you're feeling better you can use the "I'm Good" button to let the team know you're okay.`;
 
     if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
       firstMessage = testNotice + firstMessage;
     }
 
-    await threadHelpUser.send(firstMessage);
+    const row = new ActionRowBuilder()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId('tripsat')
+          .setLabel('I\'m good now!')
+          .setStyle(ButtonStyle.Success),
+      );
+
+    await threadHelpUser.send({ content: firstMessage, components: [row] });
     logger.debug(`[${PREFIX}] Sent intro message to threadHelpUser ${threadHelpUser.id}`);
 
     // Send the intro message to the thread
@@ -519,7 +579,16 @@ module.exports = {
     if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
       helperMsg = testNotice + helperMsg;
     }
-    await threadDiscussUser.send(helperMsg);
+
+    const endSession = new ActionRowBuilder()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId(`tripsat_${target.id}`)
+          .setLabel('They\'re good now!')
+          .setStyle(ButtonStyle.Success),
+      );
+
+    await threadDiscussUser.send({ content: helperMsg, components: [endSession] });
     logger.debug(`[${PREFIX}] Sent intro message to meta-thread ${threadDiscussUser.id}`);
 
     // Update targetData with how many times they've been helped

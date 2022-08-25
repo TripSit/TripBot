@@ -160,6 +160,14 @@ module.exports = {
 
     if (buttonID === 'tripsitme') { return tripsitme.execute(interaction); }
     if (buttonID === 'tripsat') { return tripsat.execute(interaction); }
+    if (buttonID.startsWith('tripsat_')) {
+      logger.debug(`[${PREFIX}] tripsat_them: ${interaction.user.username}`);
+      logger.debug(`[${PREFIX}] channelId: ${interaction.channel.id}`);
+      logger.debug(`[${PREFIX}] ID: ${buttonID.slice(8)}`);
+      const target = await interaction.guild.members.fetch(buttonID.slice(8));
+      logger.debug(`[${PREFIX}] target: ${target}`);
+      return tripsat.execute(interaction, target);
+    }
     if (buttonID === 'modmailTripsitter') { return modmail.modmailTripsitter(interaction); }
     // if (buttonID === 'modmailCommands') { return modmail.modmailCommands(interaction); }
     if (buttonID === 'modmailFeedback') { return modmail.modmailFeedback(interaction); }
