@@ -15,7 +15,7 @@ const parseDuration = require('./parseDuration');
 
 const {
   NODE_ENV,
-  channelModeratorsId,
+  CHANNEL_MODERATORS,
   DISCORD_GUILD_ID,
 } = require('../../../env');
 
@@ -84,7 +84,7 @@ const {
   roleDiscordadminId,
   roleIrcopId,
   roleModeratorId,
-  roleTripsitterId,
+  ROLE_TRIPSITTER,
   roleTeamtripsitId,
   roleTripbotId,
   roleTripbot2Id,
@@ -101,7 +101,7 @@ const teamRoles = [
   roleDiscordadminId,
   roleIrcopId,
   roleModeratorId,
-  roleTripsitterId,
+  ROLE_TRIPSITTER,
   roleTeamtripsitId,
   roleTripbot2Id,
   roleTripbotId,
@@ -703,8 +703,8 @@ module.exports = {
       }
     }
 
-    logger.debug(`[${PREFIX}] channelModeratorsId: ${channelModeratorsId}`);
-    const modChan = await global.client.channels.fetch(channelModeratorsId);
+    logger.debug(`[${PREFIX}] CHANNEL_MODERATORS: ${CHANNEL_MODERATORS}`);
+    const modChan = await global.client.channels.fetch(CHANNEL_MODERATORS);
     // We must send the mention outside of the embed, cuz mentions dont work in embeds
     modChan.send(`Hey <@&${roleModerator.id}>!`);
     modChan.send({ embeds: [targetEmbed] });

@@ -13,8 +13,8 @@ const template = require('./embed-template');
 const {
   NODE_ENV,
   CHANNEL_MODLOG,
-  channelOpentripsitId,
-  channelSanctuaryId,
+  CHANNEL_OPENTRIPSIT,
+  CHANNEL_SANCTUARY,
   roleNeedshelpId,
   roleDirectorId,
   roleSuccessorId,
@@ -24,7 +24,7 @@ const {
   roleDiscordadminId,
   roleIrcopId,
   roleModeratorId,
-  roleTripsitterId,
+  ROLE_TRIPSITTER,
   roleTeamtripsitId,
   roleTripbotId,
   roleTripbot2Id,
@@ -63,7 +63,7 @@ const teamRoles = [
   roleDiscordadminId,
   roleIrcopId,
   roleModeratorId,
-  roleTripsitterId,
+  ROLE_TRIPSITTER,
   roleTeamtripsitId,
   roleTripbot2Id,
   roleTripbotId,
@@ -125,8 +125,8 @@ module.exports = {
     logger.debug(`[${PREFIX}] targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);
 
     const channelModlog = await interaction.client.channels.cache.get(CHANNEL_MODLOG);
-    const channelOpentripsit = await interaction.client.channels.cache.get(channelOpentripsitId);
-    const channelSanctuary = await interaction.client.channels.cache.get(channelSanctuaryId);
+    const channelOpentripsit = await interaction.client.channels.cache.get(CHANNEL_OPENTRIPSIT);
+    const channelSanctuary = await interaction.client.channels.cache.get(CHANNEL_SANCTUARY);
     // Get the channel objects for the help and meta threads
     const threadHelpUser = interaction.guild.channels.cache
       .find(chan => chan.id === targetLastHelpedThreadId);

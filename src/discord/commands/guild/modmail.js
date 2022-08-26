@@ -24,8 +24,8 @@ const {
   NODE_ENV,
   CHANNEL_TRIPSIT,
   DISCORD_GUILD_ID,
-  channelModeratorsId,
-  channelIrcId,
+  CHANNEL_MODERATORS,
+  CHANNEL_IRC,
   roleModeratorId,
   roleIrcadminId,
   roleDiscordadminId,
@@ -250,7 +250,7 @@ module.exports = {
     const roleModerator = tripsitGuild.roles.cache.find(role => role.id === roleModeratorId);
 
     // Get the moderation channel
-    const modChan = interaction.client.channels.cache.get(channelModeratorsId);
+    const modChan = interaction.client.channels.cache.get(CHANNEL_MODERATORS);
     const ircAdminEmbed = template.embedTemplate()
       .setColor(Colors.Purple)
       .setDescription(stripIndents`
@@ -318,14 +318,14 @@ module.exports = {
 
     logger.debug(`[${PREFIX}] isDev: ${JSON.stringify(isDev, null, 2)}!`);
 
-    const channel = interaction.client.channels.cache.get(channelIrcId);
+    const channel = interaction.client.channels.cache.get(CHANNEL_IRC);
     // Debating if there should be a sparate channel for discord issues or if just use irc?
     // if (issueType === 'discord') {
     //   // Get the moderation channel
-    //   channel = interaction.client.channels.cache.get(channelIrcId);
+    //   channel = interaction.client.channels.cache.get(CHANNEL_IRC);
     // } else if (issueType === 'irc') {
     //   // Get the irc channel
-    //   channel = interaction.client.channels.cache.get(channelIrcId);
+    //   channel = interaction.client.channels.cache.get(CHANNEL_IRC);
     // }
 
     // Get whatever they sent in the modal

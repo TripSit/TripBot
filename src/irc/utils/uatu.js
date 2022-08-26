@@ -4,9 +4,9 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../global/utils/logger');
 const { getUserInfo } = require('../../global/services/firebaseAPI');
 const {
-  channelSanctuaryId,
-  channelTripsittersId,
-  channelOpentripsitId,
+  CHANNEL_SANCTUARY,
+  CHANNEL_TRIPSITTERS,
+  CHANNEL_OPENTRIPSIT,
   channelOpentripsit1Id,
   channelOpentripsit2Id,
   channelClosedtripsitId,
@@ -16,7 +16,7 @@ const {
   channelSandboxId,
 
   channelMeetingroomId,
-  channelModeratorsId,
+  CHANNEL_MODERATORS,
   channelTeamtripsitId,
   channelOperatorsId,
   channelModhavenId,
@@ -75,16 +75,16 @@ const botNicknames = [
 const channels = {
   sandbox: channelSandboxId,
   sandboxdev: channelSandboxId,
-  sanctuary: channelSanctuaryId,
-  tripsitters: channelTripsittersId,
-  tripsit: channelOpentripsitId,
+  sanctuary: CHANNEL_SANCTUARY,
+  tripsitters: CHANNEL_TRIPSITTERS,
+  tripsit: CHANNEL_OPENTRIPSIT,
   tripsit1: channelOpentripsit1Id,
   tripsit2: channelOpentripsit2Id,
   tripsit3: channelClosedtripsitId,
   tripsitdev: channelDevelopmentId,
   meetingroom: channelMeetingroomId,
   content: channelWikicontentId,
-  moderators: channelModeratorsId,
+  moderators: CHANNEL_MODERATORS,
   teamtripsit: channelTeamtripsitId,
   operations: channelOperatorsId,
   modhaven: channelModhavenId,

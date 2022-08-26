@@ -1,10 +1,9 @@
-'use strict';
-
 // eslint-disable no-multi-spaces
 
+import {stripIndents} from 'common-tags';
+import logger from '../../global/utils/logger';
+
 const PREFIX = require('path').parse(__filename).name;
-const { stripIndents } = require('common-tags');
-const logger = require('./logger');
 
 const _ = {
   A: '[a|🅰|4|@]+',
@@ -121,68 +120,74 @@ const offensive = [
   [1488].join(''),
 ];
 
-module.exports = {
-  async bigBrother(messageContent) {
-    logger.debug(`[${PREFIX}] started!`);
-    logger.debug(`[${PREFIX}] messageContent: ${JSON.stringify(messageContent, null, 2)}!`);
+/**
+ * This runs on every message to determine if a badword is used
+ * @param {string} messageContent Message to scan
+ * @return {Promise<void>}
+ */
+export async function bigBrother(messageContent:string): Promise<string[]> {
+  logger.debug(`[${PREFIX}] started!`);
+  logger.debug(`[${PREFIX}] messageContent: ${JSON.stringify(messageContent, null, 2)}!`);
 
-    // Check for most offensive stuff first
-    const offensiveMatch = offensive.filter(
-      pattern => new RegExp(pattern).test(messageContent),
-    ).length > 0;
-    if (offensiveMatch) {
-      return ['offensive', stripIndents`
-      As a reminder to everyone: We have a lot of people currently in an altered mindset.
-      Please use inclusive language so we can all have a good time, thank you for cooperating!
-      `];
-    }
+  // Check for most offensive stuff first
+  const offensiveMatch = offensive.filter(
+      (pattern) => new RegExp(pattern).test(messageContent),
+  ).length > 0;
+  if (offensiveMatch) {
+    return ['offensive', stripIndents`
+    As a reminder to everyone: We have a lot of people currently in an altered mindset.
+    Please use inclusive language so we can all have a good time, thank you for cooperating!
+    `];
+  }
 
-    // Check for HR alerts next
-    const hrMatch = harmReduction.filter(
-      pattern => {
+  // Check for HR alerts next
+  const hrMatch = harmReduction.filter(
+      (pattern) => {
         logger.debug(`[${PREFIX}] pattern: ${pattern}`);
         return new RegExp(pattern).test(messageContent);
       },
-    ).length > 0;
-    if (hrMatch) {
-      return ['harm', ''];
-    }
+  ).length > 0;
+  if (hrMatch) {
+    return ['harm', ''];
+  }
 
-    // Check for horny people next
-    const hornyMatch = hornyJail.filter(
-      pattern => new RegExp(pattern).test(messageContent),
-    ).length > 0;
-    if (hornyMatch) {
-      return ['horny', 'We\'re all adults here, but this isn\'t really a place to talk about that. Maybe try #adult-swim?'];
-    }
+  // Check for horny people next
+  const hornyMatch = hornyJail.filter(
+      (pattern) => new RegExp(pattern).test(messageContent),
+  ).length > 0;
+  if (hornyMatch) {
+    return [
+      'horny',
+      'We\'re all adults here, but this isn\'t really a place to talk about that. Maybe try #adult-swim?'];
+  }
 
-    // Check for memes next
-    const memeMatch = memes.filter(
-      pattern => new RegExp(pattern).test(messageContent),
-    ).length > 0;
-    if (memeMatch) {
-      const memeResponses = [
-        'Never heard that one before! 😂😂',
-        'Did you come up with that?? 😂😂',
-        'LOOOOOL that\'s a good one LMAO!! 😂😂',
-        'OMG do you do stand-up?? 😂😂',
-        'Aww, that\'s nice dear 🙂',
-      ];
-      // get random meme response
-      const randomMemeResponse = memeResponses[Math.floor(Math.random() * memeResponses.length)];
-      return ['meme', randomMemeResponse];
-    }
+  // Check for memes next
+  const memeMatch = memes.filter(
+      (pattern) => new RegExp(pattern).test(messageContent),
+  ).length > 0;
+  if (memeMatch) {
+    const memeResponses = [
+      'Never heard that one before! 😂😂',
+      'Did you come up with that?? 😂😂',
+      'LOOOOOL that\'s a good one LMAO!! 😂😂',
+      'OMG do you do stand-up?? 😂😂',
+      'Aww, that\'s nice dear 🙂',
+    ];
+    // get random meme response
+    const randomMemeResponse = memeResponses[Math.floor(Math.random() * memeResponses.length)];
+    return ['meme', randomMemeResponse];
+  }
 
-    // Check for uncouth language
-    const pgMatch = pg13.filter(
-      pattern => new RegExp(pattern).test(messageContent),
-    ).length > 0;
-    if (pgMatch) {
-      // return ['pg13', stripIndents`
-      // As a reminder to everyone: We have a lot of people currently in an altered mindset.
-      // Please use inclusive language so we can all have a good time, thank you for cooperating!
-      // `];
-      return ['pg13', ''];
-    }
-  },
+  // Check for uncouth language
+  const pgMatch = pg13.filter(
+      (pattern) => new RegExp(pattern).test(messageContent),
+  ).length > 0;
+  if (pgMatch) {
+    // return ['pg13', stripIndents`
+    // As a reminder to everyone: We have a lot of people currently in an altered mindset.
+    // Please use inclusive language so we can all have a good time, thank you for cooperating!
+    // `];
+    return ['pg13', ''];
+  }
+  return [];
 };

@@ -1,14 +1,14 @@
 import {Message} from 'discord.js';
 import env from '../../global/utils/env.config';
-// import logger from '../../global/utils/logger';
-// const PREFIX = require('path').parse(__filename).name;
+import logger from '../../global/utils/logger';
+import {thoughtPolice} from '../utils/d.thoughtPolice';
+const PREFIX = require('path').parse(__filename).name;
 
 // const { WebhookClient } = require('discord.js');
 // const {stripIndents} = require('common-tags');
 // const {announcements} = require('../../global/utils/announcements');
 // const { karma } = require('../../global/utils/karma');
 // const {experience} = require('../../global/utils/experience');
-// const { thoughtPolice } = require('../utils/d.thoughtPolice');
 // const {modmailInitialResponse} = require('../commands/guild/modmail');
 // const template = require('../utils/embed-template');
 
@@ -17,6 +17,7 @@ import env from '../../global/utils/env.config';
 module.exports = {
   name: 'messageCreate',
   async execute(message: Message) {
+    logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
     // Only run on Tripsit
     if (message.guild) {
       if (message.guild.id !== env.DISCORD_GUILD_ID.toString()) {
@@ -49,7 +50,6 @@ module.exports = {
     //   "interaction": null,
     //   "cleanContent": "test"
     // }
-    // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
 
     // Don't run on bots
     if (message.author.bot) {
@@ -121,7 +121,7 @@ module.exports = {
 
     // announcements(message);
     // karma(message);
-    // thoughtPolice(message);
+    thoughtPolice(message);
     // experience(message);
   },
 };

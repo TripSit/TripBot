@@ -8,7 +8,7 @@ const logger = require('./logger');
 const {
   NODE_ENV,
   CHANNEL_GENERAL,
-  channelHowToTripsitId,
+  CHANNEL_HOWTOTRIPSIT,
   CHANNEL_TRIPSIT,
   channelViploungeId,
   channelPetsId,
@@ -79,7 +79,7 @@ module.exports = {
       channelGaming = message.client.channels.cache.get(channelGamingId);
       channelCreative = message.client.channels.cache.get(channelCreativeId);
       // channelPsychedelic = message.client.channels.cache.get(channelPsychedelicId);
-      channelHowToTripsit = message.client.channels.cache.get(channelHowToTripsitId);
+      channelHowToTripsit = message.client.channels.cache.get(CHANNEL_HOWTOTRIPSIT);
       channelTripsit = message.client.channels.cache.get(CHANNEL_TRIPSIT);
       channelVipWelcome = message.client.channels.cache.get(channelVipWelcomeId);
       channelViplounge = message.client.channels.cache.get(channelViploungeId);

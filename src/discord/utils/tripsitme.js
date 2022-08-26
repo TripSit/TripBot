@@ -17,11 +17,11 @@ const template = require('./embed-template');
 
 const {
   NODE_ENV,
-  channelHowToTripsitId,
-  channelTripsittersId,
+  CHANNEL_HOWTOTRIPSIT,
+  CHANNEL_TRIPSITTERS,
   CHANNEL_TRIPSIT,
   roleNeedshelpId,
-  roleHelperId,
+  ROLE_HELPER,
   roleDirectorId,
   roleSuccessorId,
   roleSysadminId,
@@ -30,7 +30,7 @@ const {
   roleDiscordadminId,
   roleIrcopId,
   roleModeratorId,
-  roleTripsitterId,
+  ROLE_TRIPSITTER,
   roleTeamtripsitId,
   roleTripbotId,
   roleTripbot2Id,
@@ -69,7 +69,7 @@ const teamRoles = [
   roleDiscordadminId,
   roleIrcopId,
   roleModeratorId,
-  roleTripsitterId,
+  ROLE_TRIPSITTER,
   roleTeamtripsitId,
   roleTripbot2Id,
   roleTripbotId,
@@ -144,16 +144,16 @@ module.exports = {
     // Get the roles we'll be referencing
     const roleNeedshelp = interaction.guild.roles.cache.find(role => role.id === roleNeedshelpId);
     logger.debug(`[${PREFIX}] roleNeedshelp: ${roleNeedshelp}`);
-    const roleTripsitter = interaction.guild.roles.cache.find(role => role.id === roleTripsitterId);
+    const roleTripsitter = interaction.guild.roles.cache.find(role => role.id === ROLE_TRIPSITTER);
     logger.debug(`[${PREFIX}] roleTripsitter: ${roleTripsitter}`);
-    const roleHelper = interaction.guild.roles.cache.find(role => role.id === roleHelperId);
+    const roleHelper = interaction.guild.roles.cache.find(role => role.id === ROLE_HELPER);
     logger.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
     const roleDeveloper = interaction.guild.roles.cache.find(role => role.id === roleDeveloperId);
     logger.debug(`[${PREFIX}] roleDeveloper: ${roleDeveloper}`);
 
     // Get the channels we'll be referencing
     const channelHowToTripsit = interaction.client.channels.cache
-      .find(channel => channel.id === channelHowToTripsitId);
+      .find(channel => channel.id === CHANNEL_HOWTOTRIPSIT);
     logger.debug(`[${PREFIX}] channelHowToTripsit: ${channelHowToTripsit}`);
 
     // Determine the actor.
@@ -417,7 +417,7 @@ module.exports = {
 
     // Get the tripsitters channel from the guild
     const tripsittersChannel = interaction.guild.channels.cache
-      .find(chan => chan.id === channelTripsittersId);
+      .find(chan => chan.id === CHANNEL_TRIPSITTERS);
 
     // Get the tripsit channel from the guild
     const tripsitChannel = interaction.guild.channels.cache

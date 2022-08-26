@@ -31,14 +31,14 @@ const {
   // DISCORD_OWNER_ID,
   NODE_ENV,
   CHANNEL_TRIPSIT,
-  channelTripsittersId,
-  // channelSanctuaryId,
-  // channelDrugQuestionsId,
-  // channelHowToTripsitId,
-  channelOpentripsitId,
-  roleHelperId,
+  CHANNEL_TRIPSITTERS,
+  // CHANNEL_SANCTUARY,
+  // CHANNEL_DRUGQUESTIONS,
+  // CHANNEL_HOWTOTRIPSIT,
+  CHANNEL_OPENTRIPSIT,
+  ROLE_HELPER,
   channelRulesId,
-  channelDrugQuestionsId,
+  CHANNEL_DRUGQUESTIONS,
   // channelDevofftopicId,
   // channelDevelopmentId,
   channelTripcordId,
@@ -47,14 +47,14 @@ const {
   channelWikicontentId,
   // channelTrippitId,
   // channelVipWelcomeId,
-  channelIrcId,
+  CHANNEL_IRC,
   DISCORD_GUILD_ID,
   roleModeratorId,
   roleIrcadminId,
   roleDiscordadminId,
   roleDeveloperId,
-  channelBotspamId,
-  channelSanctuaryId,
+  CHANNEL_BOTSPAM,
+  CHANNEL_SANCTUARY,
   CHANNEL_GENERAL,
   // channelViploungeId,
   // channelTalkToTSId,
@@ -138,8 +138,8 @@ async function howtotripsit(interaction) {
     .setFooter(null);
 
   const channelTripsit = interaction.client.channels.cache.get(CHANNEL_TRIPSIT);
-  // const channelTripsitInfo = interaction.client.channels.cache.get(channelHowToTripsitId);
-  const channelTripsitters = interaction.client.channels.cache.get(channelTripsittersId);
+  // const channelTripsitInfo = interaction.client.channels.cache.get(CHANNEL_HOWTOTRIPSIT);
+  const channelTripsitters = interaction.client.channels.cache.get(CHANNEL_TRIPSITTERS);
 
   // Extract guild data
   const [targetGuildData, targetGuildFbid] = await getGuildInfo(interaction.guild);
@@ -203,7 +203,7 @@ async function howtotripsit(interaction) {
       reactionRoles.howToTripsit = [{
         messageId: msg.id,
         reaction: `${helperEmoji.slice(2, -20)}`,
-        roleId: roleHelperId,
+        roleId: ROLE_HELPER,
       }];
       await msg.react(`${helperEmoji}`);
     });
@@ -310,7 +310,7 @@ async function consultants(interaction) {
 async function techhelp(interaction) {
   logger.debug(`${PREFIX} techhelp!`);
   const channelTripsit = interaction.client.channels.cache.get(CHANNEL_TRIPSIT);
-  const channelDrugQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
+  const channelDrugQuestions = interaction.client.channels.cache.get(CHANNEL_DRUGQUESTIONS);
 
   const buttonText = stripIndents`
     Welcome to TripSit's technical help channel!
@@ -367,9 +367,9 @@ async function techhelp(interaction) {
 async function rules(interaction) {
   logger.debug(`${PREFIX} rules!`);
   const channelTripsit = interaction.client.channels.cache.get(CHANNEL_TRIPSIT);
-  // const channelSanctuary = interaction.client.channels.cache.get(channelSanctuaryId);
-  // const channelIrc = interaction.client.channels.cache.get(channelIrcId);
-  const channelQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
+  // const channelSanctuary = interaction.client.channels.cache.get(CHANNEL_SANCTUARY);
+  // const channelIrc = interaction.client.channels.cache.get(CHANNEL_IRC);
+  const channelQuestions = interaction.client.channels.cache.get(CHANNEL_DRUGQUESTIONS);
 
   const embed = template.embedTemplate()
     .setAuthor(null)
@@ -428,10 +428,10 @@ async function rules(interaction) {
 
 async function starthere(interaction) {
   logger.debug(`[${PREFIX}] Starting!`);
-  // const channelIrc = interaction.member.client.channels.cache.get(channelIrcId);
-  // const channelQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
-  const channelBotspam = interaction.client.channels.cache.get(channelBotspamId);
-  // const channelSanctuary = interaction.client.channels.cache.get(channelSanctuaryId);
+  // const channelIrc = interaction.member.client.channels.cache.get(CHANNEL_IRC);
+  // const channelQuestions = interaction.client.channels.cache.get(CHANNEL_DRUGQUESTIONS);
+  const channelBotspam = interaction.client.channels.cache.get(CHANNEL_BOTSPAM);
+  // const channelSanctuary = interaction.client.channels.cache.get(CHANNEL_SANCTUARY);
   // const channelGeneral = interaction.client.channels.cache.get(CHANNEL_GENERAL);
   const channelTripsit = interaction.client.channels.cache.get(CHANNEL_TRIPSIT);
   const channelRules = interaction.client.channels.cache.get(channelRulesId);
@@ -519,8 +519,8 @@ async function starthere(interaction) {
 }
 
 async function tripsitme(interaction) {
-  const channelQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
-  const channelSanctuary = interaction.client.channels.cache.get(channelSanctuaryId);
+  const channelQuestions = interaction.client.channels.cache.get(CHANNEL_DRUGQUESTIONS);
+  const channelSanctuary = interaction.client.channels.cache.get(CHANNEL_SANCTUARY);
   const channelGeneral = interaction.client.channels.cache.get(CHANNEL_GENERAL);
 
   const buttonText = stripIndents`
@@ -561,8 +561,8 @@ async function tripsitme(interaction) {
 async function ticketbooth(interaction) {
   logger.debug(`[${PREFIX}] Starting!`);
   const channelTripsit = interaction.client.channels.cache.get(CHANNEL_TRIPSIT);
-  const channelSanctuary = interaction.client.channels.cache.get(channelSanctuaryId);
-  const channelOpentripsit = interaction.client.channels.cache.get(channelOpentripsitId);
+  const channelSanctuary = interaction.client.channels.cache.get(CHANNEL_SANCTUARY);
+  const channelOpentripsit = interaction.client.channels.cache.get(CHANNEL_OPENTRIPSIT);
   const channelRules = interaction.client.channels.cache.get(channelRulesId);
 
   const buttonText = `
@@ -715,14 +715,14 @@ module.exports = {
     const tripsitGuild = await interaction.client.guilds.cache.get(DISCORD_GUILD_ID);
     const roleModerator = tripsitGuild.roles.cache.find(role => role.id === roleModeratorId);
 
-    const channel = await interaction.client.channels.fetch(channelIrcId);
+    const channel = await interaction.client.channels.fetch(CHANNEL_IRC);
     // Debating if there should be a sparate channel for discord issues or if just use irc?
     // if (issueType === 'discord') {
     //   // Get the moderation channel
-    //   channel = interaction.client.channels.cache.get(channelIrcId);
+    //   channel = interaction.client.channels.cache.get(CHANNEL_IRC);
     // } else if (issueType === 'irc') {
     //   // Get the irc channel
-    //   channel = interaction.client.channels.cache.get(channelIrcId);
+    //   channel = interaction.client.channels.cache.get(CHANNEL_IRC);
     // }
 
     // Get whatever they sent in the modal
