@@ -2,7 +2,7 @@
 
 const axios = require('axios');
 const PREFIX = require('path').parse(__filename).name;
-const logger = require('./logger');
+const logger = require('../utils/logger');
 
 const {
   imgurId,
@@ -16,7 +16,7 @@ module.exports = {
         headers: {
           Authorization: `Client-ID ${imgurId}`,
         },
-      }).then(res => {
+      }).then((res) => {
         let imageLink = '';
 
         if (res.data.data.length > 0) {
@@ -42,7 +42,9 @@ module.exports = {
         logger.debug(`[${PREFIX}] imageLink: ${imageLink}`);
 
         resolve(imageLink);
-      }).catch(err => { reject(err); });
+      }).catch((err) => {
+        reject(err);
+      });
     });
   },
 };

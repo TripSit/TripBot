@@ -3,7 +3,7 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import env from '../../../env.config';
+import env from '../../../global/utils/env.config';
 import {SlashCommand} from '../../utils/commandDef';
 import logger from '../../../global/utils/logger';
 import {embedTemplate} from '../../utils/embedTemplate';

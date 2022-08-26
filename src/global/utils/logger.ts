@@ -4,7 +4,7 @@ import {
   transports,
   addColors,
 } from 'winston';
-import env from '../../env.config';
+import env from './env.config';
 
 const {
   combine,

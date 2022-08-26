@@ -2,7 +2,7 @@ const {
   EmbedBuilder,
   Colors,
 } = require('discord.js');
-import env from '../../env.config';
+import env from '../../global/utils/env.config';
 
 /**
  * Creates a template embed that can be used everywhere

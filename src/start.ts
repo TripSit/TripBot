@@ -1,7 +1,7 @@
 // Bad things happen if this is not at the start.
 require('dotenv').config();
 import {discordConnect} from './discord/discordAPI';
-import {validateEnv} from './env.validate';
+import {validateEnv} from './global/utils/env.validate';
 import logger from './global/utils/logger';
 import {firebaseConnect} from './global/utils/firebaseAPI';
 

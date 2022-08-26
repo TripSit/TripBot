@@ -2,7 +2,7 @@ import {SlashCommand} from './commandDef';
 import {REST} from '@discordjs/rest';
 import {Routes} from 'discord-api-types/v9';
 import fs from 'fs/promises';
-import env from '../../env.config';
+import env from '../../global/utils/env.config';
 import path from 'path';
 import logger from '../../global/utils/logger';
 const PREFIX = path.parse(__filename).name;

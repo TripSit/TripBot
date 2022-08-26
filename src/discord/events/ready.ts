@@ -2,7 +2,7 @@ import {
   Client,
   Collection,
 } from 'discord.js';
-import env from '../../env.config';
+import env from '../../global/utils/env.config';
 import {setTimeout} from 'timers/promises';
 import logger from '../../global/utils/logger';
 

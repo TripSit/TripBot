@@ -6,7 +6,7 @@ import {
 import logger from '../../global/utils/logger';
 const PREFIX = require('path').parse(__filename).name;
 
-import env from '../../env.config';
+import env from '../../global/utils/env.config';
 
 /**
  * Runs a slash command

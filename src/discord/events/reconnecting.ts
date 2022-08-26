@@ -1,7 +1,5 @@
-'use strict';
-
+import logger from '../../global/utils/logger';
 const PREFIX = require('path').parse(__filename).name;
-const logger = require('../../global/utils/logger');
 
 module.exports = {
   name: 'reconnecting',

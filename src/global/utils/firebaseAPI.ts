@@ -1,5 +1,5 @@
 // import {Client} from 'discord.js';
-import env from '../../env.config';
+import env from './env.config';
 import logger from './logger';
 import * as firebase from 'firebase-admin';
 import firebaseCreds from '../assets/config/firebase_creds.json';

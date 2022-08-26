@@ -3,7 +3,7 @@ import {
   GatewayIntentBits,
   Partials,
 } from 'discord.js';
-import env from '../env.config';
+import env from '../global/utils/env.config';
 import logger from '../global/utils/logger';
 import {registerCommands} from './commands';
 import {registerEvents} from './events';
@@ -24,13 +24,13 @@ export async function discordConnect(): Promise<void> {
       // GatewayIntentBits.GuildIntegrations,
       // GatewayIntentBits.GuildWebhooks,
       GatewayIntentBits.GuildInvites,
-      // GatewayIntentBits.GuildVoiceStates,
+      GatewayIntentBits.GuildVoiceStates,
       // GatewayIntentBits.GuildPresences,
       GatewayIntentBits.GuildMessages,
       GatewayIntentBits.GuildMessageReactions,
       // GatewayIntentBits.GuildMessageTyping,
       GatewayIntentBits.DirectMessages,
-      GatewayIntentBits.DirectMessageReactions,
+      // GatewayIntentBits.DirectMessageReactions,
       // GatewayIntentBits.DirectMessageTyping,
       // GatewayIntentBits.GuildScheduledEvents,
     ],

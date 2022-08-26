@@ -1,31 +1,17 @@
-'use strict';
-
+import {GuildMember, TextChannel} from 'discord.js';
+import logger from '../../global/utils/logger';
+import env from '../../global/utils/env.config';
 const PREFIX = require('path').parse(__filename).name;
-const logger = require('../../global/utils/logger');
-const { getUserInfo, setUserInfo } = require('../../global/services/firebaseAPI');
-
-const {
-  DISCORD_GUILD_ID,
-  CHANNEL_MODLOG,
-  ROLE_DRUNK,
-  ROLE_HIGH,
-  ROLE_ROLLING,
-  ROLE_TRIPPING,
-  ROLE_DISSOCIATING,
-  ROLE_STIMMING,
-  ROLE_NODDING,
-  ROLE_SOBER,
-} = require('../../../env');
 
 const mindsetRoles = [
-  ROLE_DRUNK,
-  ROLE_HIGH,
-  ROLE_ROLLING,
-  ROLE_TRIPPING,
-  ROLE_DISSOCIATING,
-  ROLE_STIMMING,
-  ROLE_NODDING,
-  ROLE_SOBER,
+  env.ROLE_DRUNK,
+  env.ROLE_HIGH,
+  env.ROLE_ROLLING,
+  env.ROLE_TRIPPING,
+  env.ROLE_DISSOCIATING,
+  env.ROLE_STIMMING,
+  env.ROLE_NODDING,
+  env.ROLE_SOBER,
 ];
 
 // {
@@ -55,20 +41,20 @@ const mindsetRoles = [
 module.exports = {
   name: 'guildMemberUpdate',
 
-  async execute(oldMember, newMember) {
+  async execute(oldMember: GuildMember, newMember: GuildMember) {
     logger.debug(`[${PREFIX}] starting!`);
     // logger.debug(`[${PREFIX}] guildMemberUpdate`);
     // logger.debug(`${PREFIX} Member.guildId: ${newMember.guild.id}`);
-    // logger.debug(`${PREFIX} DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}`);
+    // logger.debug(`${PREFIX} discordGuildId: ${discordGuildId}`);
     // Only run this on TripSit
-    if (newMember.guild.id.toString() === DISCORD_GUILD_ID.toString()) {
+    if (newMember.guild.id.toString() === env.DISCORD_GUILD_ID.toString()) {
       // logger.debug(`[${PREFIX}] Running on TripSit`);
       // logger.debug(`[${PREFIX}] oldMember: ${JSON.stringify(oldMember, null, 2)}`);
       // logger.debug(`[${PREFIX}] newMember: ${JSON.stringify(newMember, null, 2)}`);
 
-      const oldRoles = oldMember.roles.cache.map(role => role.id);
+      const oldRoles = oldMember.roles.cache.map((role) => role.id);
 
-      const newRoles = newMember.roles.cache.map(role => role.id);
+      const newRoles = newMember.roles.cache.map((role) => role.id);
 
       // If the oldRoles don't match the new roles
       if (oldRoles.toString() !== newRoles.toString()) {
@@ -77,13 +63,15 @@ module.exports = {
         // logger.debug(`[${PREFIX}] newRoles: ${newRoles}`);
 
         // Find the difference between the two arrays
-        const rolesAdded = newRoles.filter(x => !oldRoles.includes(x));
+        const rolesAdded = newRoles.filter((x) => !oldRoles.includes(x));
         // logger.debug(`[${PREFIX}] roleAdded: ${rolesAdded}`);
-        const rolesRemoved = oldRoles.filter(x => !newRoles.includes(x));
+        const rolesRemoved = oldRoles.filter((x) => !newRoles.includes(x));
         // logger.debug(`[${PREFIX}] roleRemoved: ${rolesRemoved}`);
 
         // If you added/removed more than one role then it wasnt a mindset change, so ignore it
-        if (rolesAdded.length > 1 || rolesRemoved.length > 1) { return; }
+        if (rolesAdded.length > 1 || rolesRemoved.length > 1) {
+          return;
+        }
 
         let differenceId = '';
         let action = '';
@@ -99,45 +87,25 @@ module.exports = {
         // logger.debug(`[${PREFIX}] action: ${action}`);
 
         const differentRole = newMember.guild.roles.cache
-          .find(role => role.id === differenceId);
+            .find((role) => role.id === differenceId);
 
-        logger.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${differentRole.name} (${differentRole.id})`);
+        logger.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${differentRole?.name} (${differentRole?.id})`);
 
         // The following code only cares if you add a mindset role
-        if (mindsetRoles.includes(differenceId)) {
+        if (mindsetRoles.includes(parseInt(differenceId))) {
           // Look up the role name
-          const roleName = await newMember.guild.roles.fetch(differenceId).then(role => role.name);
+          const roleName = await newMember.guild.roles.fetch(differenceId).then((role) => role?.name);
           // logger.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${roleName}`);
 
           // const userInfo = await getUserInfo(newMember.id);
-          const channel = newMember.guild.channels.cache.get(CHANNEL_MODLOG);
+          const channel = newMember.guild.channels.cache.get(env.CHANNEL_MODLOG.toString()) as TextChannel;
           channel.send(`${newMember.displayName} ${action} ${roleName}`);
 
-          // Extract actor data
-          const [actorData, actorFbid] = await getUserInfo(newMember);
-
-          // Transform actor data
-          if (action === 'added') {
-            if ('discord' in actorData) {
-              actorData.discord.lastSetMindset = roleName;
-              actorData.discord.lastSetMindsetDate = new Date();
-            } else {
-              actorData.discord = {
-                lastSetMindset: roleName,
-                lastSetMindsetDate: new Date(),
-              };
-            }
-          } else if (action === 'removed') {
-            if ('discord' in actorData) {
-              if ('lastSetMindsetDate' in actorData.discord) {
-                actorData.discord.lastSetMindsetDate = null;
-                actorData.discord.lastSetMindset = null;
-              }
-            }
-          }
-
-          // Load actor data
-          await setUserInfo(actorFbid, actorData);
+          const ref = db.ref(`${env.FIREBASE_DB_USERS}/${newMember.user.id}/discord`);
+          ref.update({
+            lastSetMindset: action === 'added' ? roleName : null,
+            lastSetMindsetDate: action === 'added' ? new Date() : null,
+          });
         }
       }
     }
