@@ -39,7 +39,7 @@ module.exports = {
     /* Define app variables */
     const app = Express(); // Create a web app
 
-    const httpPort = 80;
+    const httpPort = 4030;
     const httpsPort = 8080;
     let host = 'discord.tripsit.me';
     // let host = 'tripsit-discord-bot-kf4yk.ondigitalocean.app';
