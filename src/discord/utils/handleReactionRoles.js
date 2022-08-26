@@ -13,58 +13,58 @@ const {
   rolePinkId,
   roleBlackId,
   roleWhiteId,
-  roleDrunkId,
-  roleHighId,
-  roleRollingId,
-  roleTrippingId,
-  roleDissociatingId,
-  roleStimmingId,
-  roleNoddingId,
-  // roleSoberId,
-  roleTalkativeId,
-  roleWorkingId,
+  ROLE_DRUNK,
+  ROLE_HIGH,
+  ROLE_ROLLING,
+  ROLE_TRIPPING,
+  ROLE_DISSOCIATING,
+  ROLE_STIMMING,
+  ROLE_NODDING,
+  // ROLE_SOBER,
+  ROLE_TALKATIVE,
+  ROLE_WORKING,
 } = require('../../../env');
 
 const mindsetRoleMap = [
   {
     reaction: 'ts_drunk',
-    roleId: roleDrunkId,
+    roleId: ROLE_DRUNK,
   },
   {
     reaction: 'ts_high',
-    roleId: roleHighId,
+    roleId: ROLE_HIGH,
   },
   {
     reaction: 'ts_rolling',
-    roleId: roleRollingId,
+    roleId: ROLE_ROLLING,
   },
   {
     reaction: 'ts_tripping',
-    roleId: roleTrippingId,
+    roleId: ROLE_TRIPPING,
   },
   {
     reaction: 'ts_dissociating',
-    roleId: roleDissociatingId,
+    roleId: ROLE_DISSOCIATING,
   },
   {
     reaction: 'ts_stimming',
-    roleId: roleStimmingId,
+    roleId: ROLE_STIMMING,
   },
   {
     reaction: 'ts_nodding',
-    roleId: roleNoddingId,
+    roleId: ROLE_NODDING,
   },
   // {
   //   reaction: `ts_sober`,
-  //   roleId: roleSoberId,
+  //   roleId: ROLE_SOBER,
   // },
   {
     reaction: 'ts_talkative',
-    roleId: roleTalkativeId,
+    roleId: ROLE_TALKATIVE,
   },
   {
     reaction: 'ts_working',
-    roleId: roleWorkingId,
+    roleId: ROLE_WORKING,
   },
 ];
 

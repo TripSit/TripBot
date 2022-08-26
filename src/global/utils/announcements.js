@@ -7,9 +7,9 @@ const logger = require('./logger');
 
 const {
   NODE_ENV,
-  channelGeneralId,
+  CHANNEL_GENERAL,
   channelHowToTripsitId,
-  channelTripsitId,
+  CHANNEL_TRIPSIT,
   channelViploungeId,
   channelPetsId,
   channelFoodId,
@@ -71,7 +71,7 @@ module.exports = {
     let channelDissonaut;
 
     try {
-      channelGeneral = message.guild.channels.cache.get(channelGeneralId);
+      channelGeneral = message.guild.channels.cache.get(CHANNEL_GENERAL);
       channelPets = message.client.channels.cache.get(channelPetsId);
       channelFood = message.client.channels.cache.get(channelFoodId);
       channelMusic = message.client.channels.cache.get(channelMusicId);
@@ -80,7 +80,7 @@ module.exports = {
       channelCreative = message.client.channels.cache.get(channelCreativeId);
       // channelPsychedelic = message.client.channels.cache.get(channelPsychedelicId);
       channelHowToTripsit = message.client.channels.cache.get(channelHowToTripsitId);
-      channelTripsit = message.client.channels.cache.get(channelTripsitId);
+      channelTripsit = message.client.channels.cache.get(CHANNEL_TRIPSIT);
       channelVipWelcome = message.client.channels.cache.get(channelVipWelcomeId);
       channelViplounge = message.client.channels.cache.get(channelViploungeId);
       channelGoldLounge = message.client.channels.cache.get(channelGoldLoungeId);
@@ -216,7 +216,7 @@ module.exports = {
     if (messageCounter[message.channel.id] % frequency === 0) {
       let randomAnnouncement = null;
       let hydration = false;
-      if (channelGeneralId === message.channel.id) {
+      if (CHANNEL_GENERAL === message.channel.id) {
         // General channel
         const randomNumber = Math.floor(Math.random() * generalAnnouncements.length);
         randomAnnouncement = generalAnnouncements[randomNumber];

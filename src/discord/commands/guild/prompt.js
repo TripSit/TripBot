@@ -28,9 +28,9 @@ const template = require('../../utils/embed-template');
 const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
 
 const {
-  // discordOwnerId,
+  // DISCORD_OWNER_ID,
   NODE_ENV,
-  channelTripsitId,
+  CHANNEL_TRIPSIT,
   channelTripsittersId,
   // channelSanctuaryId,
   // channelDrugQuestionsId,
@@ -48,14 +48,14 @@ const {
   // channelTrippitId,
   // channelVipWelcomeId,
   channelIrcId,
-  discordGuildId,
+  DISCORD_GUILD_ID,
   roleModeratorId,
   roleIrcadminId,
   roleDiscordadminId,
   roleDeveloperId,
   channelBotspamId,
   channelSanctuaryId,
-  channelGeneralId,
+  CHANNEL_GENERAL,
   // channelViploungeId,
   // channelTalkToTSId,
   // channelClearmindId,
@@ -137,7 +137,7 @@ async function howtotripsit(interaction) {
     .setAuthor(null)
     .setFooter(null);
 
-  const channelTripsit = interaction.client.channels.cache.get(channelTripsitId);
+  const channelTripsit = interaction.client.channels.cache.get(CHANNEL_TRIPSIT);
   // const channelTripsitInfo = interaction.client.channels.cache.get(channelHowToTripsitId);
   const channelTripsitters = interaction.client.channels.cache.get(channelTripsittersId);
 
@@ -309,7 +309,7 @@ async function consultants(interaction) {
 
 async function techhelp(interaction) {
   logger.debug(`${PREFIX} techhelp!`);
-  const channelTripsit = interaction.client.channels.cache.get(channelTripsitId);
+  const channelTripsit = interaction.client.channels.cache.get(CHANNEL_TRIPSIT);
   const channelDrugQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
 
   const buttonText = stripIndents`
@@ -366,7 +366,7 @@ async function techhelp(interaction) {
 
 async function rules(interaction) {
   logger.debug(`${PREFIX} rules!`);
-  const channelTripsit = interaction.client.channels.cache.get(channelTripsitId);
+  const channelTripsit = interaction.client.channels.cache.get(CHANNEL_TRIPSIT);
   // const channelSanctuary = interaction.client.channels.cache.get(channelSanctuaryId);
   // const channelIrc = interaction.client.channels.cache.get(channelIrcId);
   const channelQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
@@ -432,8 +432,8 @@ async function starthere(interaction) {
   // const channelQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
   const channelBotspam = interaction.client.channels.cache.get(channelBotspamId);
   // const channelSanctuary = interaction.client.channels.cache.get(channelSanctuaryId);
-  // const channelGeneral = interaction.client.channels.cache.get(channelGeneralId);
-  const channelTripsit = interaction.client.channels.cache.get(channelTripsitId);
+  // const channelGeneral = interaction.client.channels.cache.get(CHANNEL_GENERAL);
+  const channelTripsit = interaction.client.channels.cache.get(CHANNEL_TRIPSIT);
   const channelRules = interaction.client.channels.cache.get(channelRulesId);
 
   const message = stripIndents`
@@ -521,7 +521,7 @@ async function starthere(interaction) {
 async function tripsitme(interaction) {
   const channelQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
   const channelSanctuary = interaction.client.channels.cache.get(channelSanctuaryId);
-  const channelGeneral = interaction.client.channels.cache.get(channelGeneralId);
+  const channelGeneral = interaction.client.channels.cache.get(CHANNEL_GENERAL);
 
   const buttonText = stripIndents`
     Welcome to the TripSit room!
@@ -560,7 +560,7 @@ async function tripsitme(interaction) {
 
 async function ticketbooth(interaction) {
   logger.debug(`[${PREFIX}] Starting!`);
-  const channelTripsit = interaction.client.channels.cache.get(channelTripsitId);
+  const channelTripsit = interaction.client.channels.cache.get(CHANNEL_TRIPSIT);
   const channelSanctuary = interaction.client.channels.cache.get(channelSanctuaryId);
   const channelOpentripsit = interaction.client.channels.cache.get(channelOpentripsitId);
   const channelRules = interaction.client.channels.cache.get(channelRulesId);
@@ -695,7 +695,7 @@ module.exports = {
     ) !== undefined;
 
     // Respond right away cuz the rest of this doesn't matter
-    const guild = await interaction.client.guilds.fetch(discordGuildId);
+    const guild = await interaction.client.guilds.fetch(DISCORD_GUILD_ID);
     const member = await guild.members.fetch(interaction.user.id);
     // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
     if (member) {
@@ -712,7 +712,7 @@ module.exports = {
       interaction.reply('Thank you, we will respond to right here when we can!');
     }
     // Get the moderator role
-    const tripsitGuild = await interaction.client.guilds.cache.get(discordGuildId);
+    const tripsitGuild = await interaction.client.guilds.cache.get(DISCORD_GUILD_ID);
     const roleModerator = tripsitGuild.roles.cache.find(role => role.id === roleModeratorId);
 
     const channel = await interaction.client.channels.fetch(channelIrcId);

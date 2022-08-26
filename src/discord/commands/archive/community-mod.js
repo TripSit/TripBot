@@ -41,14 +41,14 @@ const {
   roleBrownId,
   roleBlackId,
   roleWhiteId,
-  roleDrunkId,
-  roleHighId,
-  roleRollingId,
-  roleTrippingId,
-  roleDissociatingId,
-  roleStimmingId,
-  roleNoddingId,
-  roleSoberId,
+  ROLE_DRUNK,
+  ROLE_HIGH,
+  ROLE_ROLLING,
+  ROLE_TRIPPING,
+  ROLE_DISSOCIATING,
+  ROLE_STIMMING,
+  ROLE_NODDING,
+  ROLE_SOBER,
 } = require('../../../../env');
 
 const teamRoles = [
@@ -87,14 +87,14 @@ const colorRoles = [
 ];
 
 const mindsetRoles = [
-  roleDrunkId,
-  roleHighId,
-  roleRollingId,
-  roleTrippingId,
-  roleDissociatingId,
-  roleStimmingId,
-  roleNoddingId,
-  roleSoberId,
+  ROLE_DRUNK,
+  ROLE_HIGH,
+  ROLE_ROLLING,
+  ROLE_TRIPPING,
+  ROLE_DISSOCIATING,
+  ROLE_STIMMING,
+  ROLE_NODDING,
+  ROLE_SOBER,
 ];
 
 const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;

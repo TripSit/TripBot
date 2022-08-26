@@ -15,15 +15,15 @@ function generateRandomString() {
 
 window.onload = function main() {
   let url = 'https://discord.tripsit.me/';
-  let discordOauthUrl = 'https://discord.com/api/oauth2/authorize?client_id=957780726806380545&redirect_uri=https%3A%2F%2Fdiscord.tripsit.me%2F&response_type=code&scope=identify';
+  let DISCORD_CLIENT_REDIRECT_URI = 'https://discord.com/api/oauth2/authorize?client_id=957780726806380545&redirect_uri=https%3A%2F%2Fdiscord.tripsit.me%2F&response_type=code&scope=identify';
   // let url = 'https://tripsit-discord-bot-kf4yk.ondigitalocean.app/';
-  // let discordOauthUrl = 'https://discord.com/api/oauth2/authorize?client_id=957780726806380545&redirect_uri=https%3A%2F%2Ftripsit-discord-bot-kf4yk.ondigitalocean.app%2F&response_type=code&scope=identify';
+  // let DISCORD_CLIENT_REDIRECT_URI = 'https://discord.com/api/oauth2/authorize?client_id=957780726806380545&redirect_uri=https%3A%2F%2Ftripsit-discord-bot-kf4yk.ondigitalocean.app%2F&response_type=code&scope=identify';
   if (location.href.includes('localhost')) {
     url = 'https://localhost:8080/';
-    discordOauthUrl = 'https://discord.com/api/oauth2/authorize?client_id=977945272359452713&redirect_uri=https%3A%2F%2Flocalhost%3A8080%2F&response_type=code&scope=identify';
+    DISCORD_CLIENT_REDIRECT_URI = 'https://discord.com/api/oauth2/authorize?client_id=977945272359452713&redirect_uri=https%3A%2F%2Flocalhost%3A8080%2F&response_type=code&scope=identify';
   }
-  // console.log(`[${PREFIX}] discordOauthUrl: ${discordOauthUrl}`);
-  document.getElementById('login-link').href = discordOauthUrl;
+  // console.log(`[${PREFIX}] DISCORD_CLIENT_REDIRECT_URI: ${DISCORD_CLIENT_REDIRECT_URI}`);
+  document.getElementById('login-link').href = DISCORD_CLIENT_REDIRECT_URI;
   if (location.href.indexOf('code') > -1) { // Detect if you logged in or not
     const code = location.href.substring(location.href.indexOf('code') + 5, location.href.indexOf('state') - 1); // Get the code OAUTH gives you
     const state = location.href.substring(location.href.indexOf('state') + 6, location.href.length); // Get the code OAUTH gives you

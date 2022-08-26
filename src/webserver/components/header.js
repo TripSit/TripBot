@@ -113,7 +113,7 @@ class Header extends HTMLElement {
         </ul>
         <div class="d-flex ml-auto" id="headerlogin">
           <li class="nav-item" style="list-style: none;">
-            <a id='login-link' class="nav-link btn btn-outline-secondary login" href={{ discordOauthUrl }}>Login</a>
+            <a id='login-link' class="nav-link btn btn-outline-secondary login" href={{ DISCORD_CLIENT_REDIRECT_URI }}>Login</a>
           </li>
         </div>
       </div>

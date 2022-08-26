@@ -14,7 +14,7 @@ const template = require('../utils/embed-template');
 const { getTicketInfo } = require('../../global/services/firebaseAPI');
 
 const {
-  discordGuildId,
+  DISCORD_GUILD_ID,
   channelIrcId,
 } = require('../../../env');
 
@@ -25,7 +25,7 @@ module.exports = {
   async execute(message) {
     // Only run on Tripsit
     if (message.guild) {
-      if (message.guild.id !== discordGuildId) { return; }
+      if (message.guild.id !== DISCORD_GUILD_ID) { return; }
     }
     // {
     //   "channelId": "960606558549594162",
@@ -72,7 +72,7 @@ module.exports = {
         return message.author.send('You are blocked!');
       }
 
-      const guild = await message.client.guilds.fetch(discordGuildId);
+      const guild = await message.client.guilds.fetch(DISCORD_GUILD_ID);
       const member = await guild.members.fetch(message.author.id);
       // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
 

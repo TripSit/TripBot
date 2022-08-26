@@ -9,7 +9,7 @@ const { stripIndents } = require('common-tags/lib');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 
-const { githubToken } = require('../../../../env');
+const { GITHUB_AUTH_TOKEN } = require('../../../../env');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -52,7 +52,7 @@ module.exports = {
     const title = interaction.options.getString('bug_report');
     const owner = 'TripSit';
     const repo = 'tripsit-discord-bot';
-    const octokit = new Octokit({ auth: githubToken });
+    const octokit = new Octokit({ auth: GITHUB_AUTH_TOKEN });
 
     // Use octokit to create an issue
     await octokit.rest.issues.create({ owner, repo, title })

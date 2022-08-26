@@ -16,7 +16,7 @@ const parseDuration = require('./parseDuration');
 const {
   NODE_ENV,
   channelModeratorsId,
-  discordGuildId,
+  DISCORD_GUILD_ID,
 } = require('../../../env');
 
 const botPrefix = NODE_ENV === 'production' ? '~' : '-';
@@ -141,7 +141,7 @@ const warnButtons = new ActionRowBuilder().addComponents(
 );
 
 async function determineUserInfo(query) {
-  const tripsitGuild = await global.client.guilds.fetch(discordGuildId);
+  const tripsitGuild = await global.client.guilds.fetch(DISCORD_GUILD_ID);
 
   let userInfo = null;
   let userPlatform = null;
@@ -336,7 +336,7 @@ module.exports = {
         targetChannel = channel;
       } else if (channel.startsWith('<#') && channel.endsWith('>')) {
         // Discord channel mentions start with <#
-        const targetGuild = await global.client.guilds.fetch(discordGuildId);
+        const targetGuild = await global.client.guilds.fetch(DISCORD_GUILD_ID);
         targetChannel = await targetGuild.channels.fetch(channel.slice(2, -1));
       }
       logger.debug(`[${PREFIX}] targetChannel: ${JSON.stringify(targetChannel, null, 2)}`);
@@ -479,7 +479,7 @@ module.exports = {
               ? await parseDuration.execute(duration)
               : null;
             logger.debug(`[${PREFIX}] minutes: ${minutes}`);
-            const targetGuild = await global.client.guilds.fetch(discordGuildId);
+            const targetGuild = await global.client.guilds.fetch(DISCORD_GUILD_ID);
             targetGuild.members.ban(targetUser, { days: 7, reason });
             await targetUser.send(`You have been banned ${minutes ? `for ${ms(minutes, { long: true })}` : ''}${reason ? ` because\n ${reason}` : ''} `);
           } catch (err) {
@@ -488,7 +488,7 @@ module.exports = {
         } else {
           try {
             logger.debug(`[${PREFIX}] targetUser.id: ${targetUser.id}`);
-            const targetGuild = await global.client.guilds.fetch(discordGuildId);
+            const targetGuild = await global.client.guilds.fetch(DISCORD_GUILD_ID);
             const bans = await targetGuild.bans.fetch();
             logger.debug(`[${PREFIX}] targetGuild.bans.fetch(): ${bans}`);
             await targetGuild.bans.remove(targetUser, reason);
@@ -635,7 +635,7 @@ module.exports = {
     // }
 
     // Get the moderator role
-    const tripsitGuild = await global.client.guilds.fetch(discordGuildId);
+    const tripsitGuild = await global.client.guilds.fetch(DISCORD_GUILD_ID);
     const roleModerator = tripsitGuild.roles.cache.find(role => role.id === roleModeratorId);
 
     const targetAction = `received_${command}`;

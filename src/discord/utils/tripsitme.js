@@ -19,7 +19,7 @@ const {
   NODE_ENV,
   channelHowToTripsitId,
   channelTripsittersId,
-  channelTripsitId,
+  CHANNEL_TRIPSIT,
   roleNeedshelpId,
   roleHelperId,
   roleDirectorId,
@@ -50,14 +50,14 @@ const {
   roleBrownId,
   roleBlackId,
   roleWhiteId,
-  roleDrunkId,
-  roleHighId,
-  roleRollingId,
-  roleTrippingId,
-  roleDissociatingId,
-  roleStimmingId,
-  roleNoddingId,
-  roleSoberId,
+  ROLE_DRUNK,
+  ROLE_HIGH,
+  ROLE_ROLLING,
+  ROLE_TRIPPING,
+  ROLE_DISSOCIATING,
+  ROLE_STIMMING,
+  ROLE_NODDING,
+  ROLE_SOBER,
 } = require('../../../env');
 
 const teamRoles = [
@@ -96,14 +96,14 @@ const colorRoles = [
 ];
 
 const mindsetRoles = [
-  roleDrunkId,
-  roleHighId,
-  roleRollingId,
-  roleTrippingId,
-  roleDissociatingId,
-  roleStimmingId,
-  roleNoddingId,
-  roleSoberId,
+  ROLE_DRUNK,
+  ROLE_HIGH,
+  ROLE_ROLLING,
+  ROLE_TRIPPING,
+  ROLE_DISSOCIATING,
+  ROLE_STIMMING,
+  ROLE_NODDING,
+  ROLE_SOBER,
 ];
 
 const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
@@ -421,7 +421,7 @@ module.exports = {
 
     // Get the tripsit channel from the guild
     const tripsitChannel = interaction.guild.channels.cache
-      .find(chan => chan.id === channelTripsitId);
+      .find(chan => chan.id === CHANNEL_TRIPSIT);
 
     // Create a new threadDiscussUser in the tripsitters channel
     threadDiscussUser = await tripsittersChannel.threads.create({

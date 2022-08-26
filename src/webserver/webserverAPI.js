@@ -19,8 +19,8 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 /* Client Variables */
 const {
   NODE_ENV,
-  discordClientId,
-  discordClientSecret,
+  DISCORD_CLIENT_ID,
+  DISCORD_CLIENT_SECRET,
 } = require('../../env');
 const logger = require('../global/utils/logger');
 
@@ -99,8 +99,8 @@ module.exports = {
       logger.debug(`[${PREFIX}] url: ${redirectUrl}`);
       /* Create our Form Data */
       const data1 = new URLSearchParams(); // Create a new formData object with the constructor
-      data1.append('client_id', discordClientId); // Append the client_id variable to the data
-      data1.append('client_secret', discordClientSecret); // Append the client_secret variable to the data
+      data1.append('client_id', DISCORD_CLIENT_ID); // Append the client_id variable to the data
+      data1.append('client_secret', DISCORD_CLIENT_SECRET); // Append the client_secret variable to the data
       data1.append('grant_type', 'authorization_code'); // This field will tell the Discord API what you are wanting in your initial request.
       data1.append('redirect_uri', redirectUrl); // This is the redirect URL where the user will be redirected when they finish the Discord login
       data1.append('scope', 'identify'); // This tells the Discord API what info you would like to retrieve. You can change this to include guilds, connections, email, etc.

@@ -13,7 +13,7 @@ const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 
 const {
-  discordOwnerId,
+  DISCORD_OWNER_ID,
   roleDeveloperId,
   channelTripbotId,
 } = require('../../../../env');
@@ -50,7 +50,7 @@ module.exports = {
     const bugReport = interaction.fields.getTextInputValue('bugReport');
     logger.debug(`[${PREFIX}] bugReport:`, bugReport);
 
-    const botOwner = interaction.client.users.cache.get(discordOwnerId);
+    const botOwner = interaction.client.users.cache.get(DISCORD_OWNER_ID);
     const botOwnerEmbed = template.embedTemplate()
       .setColor(Colors.Purple)
       .setDescription(`Hey ${botOwner.toString()},\n${username}${guildMessage} reports:\n${bugReport}`);

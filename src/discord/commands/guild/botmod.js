@@ -138,7 +138,7 @@ module.exports = {
       let targetGuildOwner = {};
       try {
         targetGuild = await interaction.client.guilds.fetch(targetId);
-        targetGuildOwner = interaction.client.users.cache.get(targetGuild.discordOwnerId);
+        targetGuildOwner = interaction.client.users.cache.get(targetGuild.DISCORD_OWNER_ID);
       } catch (e) {
         interaction.reply('Invalid Guild ID, or i\'m not in that guild!');
         return;

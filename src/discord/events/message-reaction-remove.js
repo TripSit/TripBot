@@ -5,14 +5,14 @@ const logger = require('../../global/utils/logger');
 const { chitragupta } = require('../../global/utils/chitragupta');
 
 const {
-  discordGuildId,
+  DISCORD_GUILD_ID,
 } = require('../../../env');
 
 module.exports = {
   name: 'messageReactionRemove',
   async execute(reaction, user) {
     // Only run on Tripsit
-    if (reaction.message.guild.id !== discordGuildId) { return; }
+    if (reaction.message.guild.id !== DISCORD_GUILD_ID) { return; }
     if (user.bot) { return; }
     // logger.debug(`[${PREFIX}] Reaction added`);
     // logger.debug(`[${PREFIX}] Reaction: ${JSON.stringify(reaction, null, 2)}`);

@@ -5,27 +5,27 @@ const logger = require('../../global/utils/logger');
 const { getUserInfo, setUserInfo } = require('../../global/services/firebaseAPI');
 
 const {
-  discordGuildId,
-  channelModlogId,
-  roleDrunkId,
-  roleHighId,
-  roleRollingId,
-  roleTrippingId,
-  roleDissociatingId,
-  roleStimmingId,
-  roleNoddingId,
-  roleSoberId,
+  DISCORD_GUILD_ID,
+  CHANNEL_MODLOG,
+  ROLE_DRUNK,
+  ROLE_HIGH,
+  ROLE_ROLLING,
+  ROLE_TRIPPING,
+  ROLE_DISSOCIATING,
+  ROLE_STIMMING,
+  ROLE_NODDING,
+  ROLE_SOBER,
 } = require('../../../env');
 
 const mindsetRoles = [
-  roleDrunkId,
-  roleHighId,
-  roleRollingId,
-  roleTrippingId,
-  roleDissociatingId,
-  roleStimmingId,
-  roleNoddingId,
-  roleSoberId,
+  ROLE_DRUNK,
+  ROLE_HIGH,
+  ROLE_ROLLING,
+  ROLE_TRIPPING,
+  ROLE_DISSOCIATING,
+  ROLE_STIMMING,
+  ROLE_NODDING,
+  ROLE_SOBER,
 ];
 
 // {
@@ -59,9 +59,9 @@ module.exports = {
     logger.debug(`[${PREFIX}] starting!`);
     // logger.debug(`[${PREFIX}] guildMemberUpdate`);
     // logger.debug(`${PREFIX} Member.guildId: ${newMember.guild.id}`);
-    // logger.debug(`${PREFIX} discordGuildId: ${discordGuildId}`);
+    // logger.debug(`${PREFIX} DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}`);
     // Only run this on TripSit
-    if (newMember.guild.id.toString() === discordGuildId.toString()) {
+    if (newMember.guild.id.toString() === DISCORD_GUILD_ID.toString()) {
       // logger.debug(`[${PREFIX}] Running on TripSit`);
       // logger.debug(`[${PREFIX}] oldMember: ${JSON.stringify(oldMember, null, 2)}`);
       // logger.debug(`[${PREFIX}] newMember: ${JSON.stringify(newMember, null, 2)}`);
@@ -110,7 +110,7 @@ module.exports = {
           // logger.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${roleName}`);
 
           // const userInfo = await getUserInfo(newMember.id);
-          const channel = newMember.guild.channels.cache.get(channelModlogId);
+          const channel = newMember.guild.channels.cache.get(CHANNEL_MODLOG);
           channel.send(`${newMember.displayName} ${action} ${roleName}`);
 
           // Extract actor data

@@ -7,9 +7,9 @@ const template = require('../../discord/utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../services/firebaseAPI');
 
 const {
-  // discordGuildId,
+  // DISCORD_GUILD_ID,
   channelTripbotlogsId,
-  channelTripsitId,
+  CHANNEL_TRIPSIT,
   channelSanctuaryId,
   channelTripsittersId,
   channelHowToTripsitId,
@@ -36,7 +36,7 @@ const ignoredRoles = [
 ];
 
 const tripsitterChannels = [
-  channelTripsitId,
+  CHANNEL_TRIPSIT,
   channelSanctuaryId,
   channelTripsittersId,
   channelHowToTripsitId,
@@ -84,7 +84,7 @@ module.exports = {
   async experience(message) {
     // if (message.guildId) {
     //   // If not in tripsit, ignore it
-    //   if (message.guildId !== discordGuildId) { return; }
+    //   if (message.guildId !== DISCORD_GUILD_ID) { return; }
     // }
 
     let actorDataUpdated = false;

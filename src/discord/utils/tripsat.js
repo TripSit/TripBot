@@ -12,7 +12,7 @@ const template = require('./embed-template');
 
 const {
   NODE_ENV,
-  channelModlogId,
+  CHANNEL_MODLOG,
   channelOpentripsitId,
   channelSanctuaryId,
   roleNeedshelpId,
@@ -44,14 +44,14 @@ const {
   roleBrownId,
   roleBlackId,
   roleWhiteId,
-  roleDrunkId,
-  roleHighId,
-  roleRollingId,
-  roleTrippingId,
-  roleDissociatingId,
-  roleStimmingId,
-  roleNoddingId,
-  roleSoberId,
+  ROLE_DRUNK,
+  ROLE_HIGH,
+  ROLE_ROLLING,
+  ROLE_TRIPPING,
+  ROLE_DISSOCIATING,
+  ROLE_STIMMING,
+  ROLE_NODDING,
+  ROLE_SOBER,
 } = require('../../../env');
 
 const teamRoles = [
@@ -90,14 +90,14 @@ const colorRoles = [
 ];
 
 const mindsetRoles = [
-  roleDrunkId,
-  roleHighId,
-  roleRollingId,
-  roleTrippingId,
-  roleDissociatingId,
-  roleStimmingId,
-  roleNoddingId,
-  roleSoberId,
+  ROLE_DRUNK,
+  ROLE_HIGH,
+  ROLE_ROLLING,
+  ROLE_TRIPPING,
+  ROLE_DISSOCIATING,
+  ROLE_STIMMING,
+  ROLE_NODDING,
+  ROLE_SOBER,
 ];
 
 const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
@@ -124,7 +124,7 @@ module.exports = {
     const targetLastHelpedMetaThreadId = targetData.discord.lastHelpedMetaThreadId;
     logger.debug(`[${PREFIX}] targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);
 
-    const channelModlog = await interaction.client.channels.cache.get(channelModlogId);
+    const channelModlog = await interaction.client.channels.cache.get(CHANNEL_MODLOG);
     const channelOpentripsit = await interaction.client.channels.cache.get(channelOpentripsitId);
     const channelSanctuary = await interaction.client.channels.cache.get(channelSanctuaryId);
     // Get the channel objects for the help and meta threads

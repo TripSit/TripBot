@@ -4,7 +4,7 @@ const PREFIX = require('path').parse(__filename).name;
 const logger = require('../../global/utils/logger');
 
 const {
-  channelStartId,
+  CHANNEL_START,
 } = require('../../../env');
 
 module.exports = {
@@ -14,7 +14,7 @@ module.exports = {
     // const reactionEmoji = reaction.emoji;
 
     // Remove duplicate emojis
-    if (reaction.message.channelId === channelStartId && !user.bot) {
+    if (reaction.message.channelId === CHANNEL_START && !user.bot) {
       // This is slow as fuck, but it works
       // If we're in the start-here channel, and the user who reacted is not a bot
       await reaction.message.reactions.cache.forEach(async x => {

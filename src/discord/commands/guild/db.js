@@ -11,8 +11,8 @@ const PREFIX = path.parse(__filename).name;
 
 const { db } = global;
 const {
-  discordGuildId,
-  firebaseUserDbName,
+  DISCORD_GUILD_ID,
+  FIREBASE_DB_USERS,
 } = require('../../../../env');
 
 const firebaseProdUserDbName = 'users';
@@ -27,7 +27,7 @@ try {
 
 // eslint-disable-next-line no-unused-vars
 async function backup() {
-  logger.debug(`[${PREFIX}] Backing up from firebaseProdUserDbName to firebaseUserDbName`);
+  logger.debug(`[${PREFIX}] Backing up from firebaseProdUserDbName to FIREBASE_DB_USERS`);
 
   await db.ref('users').once('value', data => {
     if (data.val() !== null) {
@@ -47,7 +47,7 @@ async function backup() {
 // eslint-disable-next-line no-unused-vars
 async function removeEvents(interaction) {
   // Get the guild
-  const guildTripsit = interaction.client.guilds.cache.get(discordGuildId);
+  const guildTripsit = interaction.client.guilds.cache.get(DISCORD_GUILD_ID);
   // eslint-disable-next-line
   for (const doc of global.userDb) {
     const discordData = doc.value.discord;
@@ -142,7 +142,7 @@ async function removeEvents(interaction) {
   const userDb = [];
   if (db !== {}) {
     // Get user information
-    const snapshotUser = await db.collection(firebaseUserDbName).get();
+    const snapshotUser = await db.collection(FIREBASE_DB_USERS).get();
     snapshotUser.forEach(doc => {
       userDb.push({
         key: doc.id,
@@ -157,7 +157,7 @@ async function removeDupliates(/* interaction */) {
   // This command will check for duplicates within the database and merge them
   // This is a very slow command and should be run sparingly
 
-  const snapshotUser = await db.collection(firebaseUserDbName).get();
+  const snapshotUser = await db.collection(FIREBASE_DB_USERS).get();
 
   // Get a list of users who don't have a .discord property
   const deleteDb = [];
@@ -176,7 +176,7 @@ async function removeDupliates(/* interaction */) {
     logger.debug(`[${PREFIX}] ${user.key} has no discord data, deleting`);
     logger.debug(`[${PREFIX}] ${JSON.stringify(user.value, null, 2)}`);
     // eslint-disable-next-line
-    await db.collection(firebaseUserDbName).doc(user.key).delete();
+    await db.collection(FIREBASE_DB_USERS).doc(user.key).delete();
     logger.debug(`[${PREFIX}] deleted ${user.key}`);
   }
 
@@ -296,12 +296,12 @@ async function removeDupliates(/* interaction */) {
             `[${PREFIX}] Removing ${dupeUserValue.accountName} (${dupeUserKey})from the database...`,
           );
           // eslint-disable-next-line
-          await db.collection(firebaseUserDbName).doc(dupeUserKey).delete();
+          await db.collection(FIREBASE_DB_USERS).doc(dupeUserKey).delete();
         }
       }
 
       // logger.debug(`[${PREFIX}] Updating ${userValue.accountName} in the database...`);
-      // db.collection(firebaseUserDbName).doc(userKey).set(userValue);
+      // db.collection(FIREBASE_DB_USERS).doc(userKey).set(userValue);
     }
   });
 }
@@ -312,7 +312,7 @@ async function experience() {
 
   // Loop through everything in currentExperience and print the name
   // eslint-disable-next-line
-  const users = await db.collection(firebaseUserDbName).get();
+  const users = await db.collection(FIREBASE_DB_USERS).get();
   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
 
   for (let i = 0; i < users.size; i += 1) {
@@ -354,7 +354,7 @@ ${recordLevel} sent ${recordMessages} messages for ${recordExp} exp`);
             },
           };
           delete userData.discord.experience;
-          db.collection(firebaseUserDbName).doc(doc.id).set(userData);
+          db.collection(FIREBASE_DB_USERS).doc(doc.id).set(userData);
           break;
         }
       }
@@ -393,7 +393,7 @@ async function convert() {
 
     memberKey = memberKey.replace(/(\.|\$|#|\[|\]|\/)/g, '_');
 
-    const ref = db.ref(`${firebaseUserDbName}/${memberKey}`);
+    const ref = db.ref(`${FIREBASE_DB_USERS}/${memberKey}`);
     logger.debug(`[${PREFIX}] ref: ${ref}`);
     // eslint-disable-next-line
       await ref.once('value', data => {

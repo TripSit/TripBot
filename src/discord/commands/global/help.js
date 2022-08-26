@@ -13,7 +13,7 @@ const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
 
-const { discordGuildId } = require('../../../../env');
+const { DISCORD_GUILD_ID } = require('../../../../env');
 
 // const buttonList = [
 //   new ButtonBuilder()
@@ -71,9 +71,9 @@ module.exports = {
       );
 
     // logger.debug(`[${PREFIX}] interaction.guild.id: ${interaction.guild.id}`);
-    // logger.debug(`[${PREFIX}]] discordGuildId: ${discordGuildId}`);
+    // logger.debug(`[${PREFIX}]] DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}`);
     if (interaction.guild) {
-      if (interaction.guild.id !== discordGuildId) {
+      if (interaction.guild.id !== DISCORD_GUILD_ID) {
         return interaction.reply({ embeds: [globalEmbed], ephemeral: false });
       }
     } else {

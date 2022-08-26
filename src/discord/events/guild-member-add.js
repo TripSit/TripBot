@@ -12,12 +12,12 @@ const template = require('../utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../../global/services/firebaseAPI');
 
 const {
-  discordGuildId,
-  channelModlogId,
+  DISCORD_GUILD_ID,
+  CHANNEL_MODLOG,
   // roleUnverifiedId,
-  channelGeneralId,
-  channelStartId,
-  channelTripsitId,
+  CHANNEL_GENERAL,
+  CHANNEL_START,
+  CHANNEL_TRIPSIT,
 } = require('../../../env');
 
 module.exports = {
@@ -44,7 +44,7 @@ module.exports = {
 
     // Only run on Tripsit
     logger.debug(`[${PREFIX}] guild: ${member.guild.id}`);
-    if (member.guild.id === discordGuildId) {
+    if (member.guild.id === DISCORD_GUILD_ID) {
       logger.info(`[${PREFIX}] ${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
 
       // const roleUnverfied = member.guild.roles.cache.find(role => role.id === roleUnverifiedId);
@@ -117,9 +117,9 @@ module.exports = {
       } else if (hours === 0 && minutes > 0) {
         colorValue = Colors.Orange;
       } else if (minutes === 0 && seconds > 0) { colorValue = Colors.Red; }
-      const channelGeneral = member.client.channels.cache.get(channelGeneralId);
-      const channelStart = member.client.channels.cache.get(channelStartId);
-      const channelTripsit = member.client.channels.cache.get(channelTripsitId);
+      const channelGeneral = member.client.channels.cache.get(CHANNEL_GENERAL);
+      const channelStart = member.client.channels.cache.get(CHANNEL_START);
+      const channelTripsit = member.client.channels.cache.get(CHANNEL_TRIPSIT);
       const welcomeEmbed = template.embedTemplate()
         .setAuthor(null)
         .setColor(colorValue)
@@ -137,7 +137,7 @@ module.exports = {
       });
       channelGeneral.send({ embeds: [welcomeEmbed] });
 
-      const channelModlog = member.guild.channels.cache.get(channelModlogId);
+      const channelModlog = member.guild.channels.cache.get(CHANNEL_MODLOG);
       const embed = template.embedTemplate()
         .setAuthor(null)
         .setColor(colorValue)

@@ -9,8 +9,8 @@ const template = require('../utils/embed-template');
 const { getUserInfo } = require('../../global/services/firebaseAPI');
 
 const {
-  discordGuildId,
-  channelModlogId,
+  DISCORD_GUILD_ID,
+  CHANNEL_MODLOG,
 } = require('../../../env');
 
 module.exports = {
@@ -18,7 +18,7 @@ module.exports = {
   async execute(member) {
     // Only run on Tripsit
     logger.debug(`[${PREFIX}] guild: ${member.guild.id}`);
-    if (member.guild.id === discordGuildId) {
+    if (member.guild.id === DISCORD_GUILD_ID) {
       logger.debug(`[${PREFIX}] guildMemberRemove`);
       logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
 
@@ -53,7 +53,7 @@ module.exports = {
                 ${hours === 0 && minutes > 0 ? `${minutes} minutes` : ''}\
                 ${minutes === 0 && seconds > 0 ? `${seconds} seconds` : ''}`);
       try {
-        const channelModlog = await member.client.channels.cache.get(channelModlogId);
+        const channelModlog = await member.client.channels.cache.get(CHANNEL_MODLOG);
         if (channelModlog) {
           channelModlog.send({ embeds: [embed] });
         }

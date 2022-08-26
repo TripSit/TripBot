@@ -7,8 +7,8 @@ const template = require('../../discord/utils/embed-template');
 
 const {
   NODE_ENV,
-  firebaseUserDbName,
-  discordGuildId,
+  FIREBASE_DB_USERS,
+  DISCORD_GUILD_ID,
   roleNeedshelpId,
   roleAdminId,
   roleDiscordopId,
@@ -34,14 +34,14 @@ const {
   roleBrownId,
   roleBlackId,
   roleWhiteId,
-  roleDrunkId,
-  roleHighId,
-  roleRollingId,
-  roleTrippingId,
-  roleDissociatingId,
-  roleStimmingId,
-  roleNoddingId,
-  roleSoberId,
+  ROLE_DRUNK,
+  ROLE_HIGH,
+  ROLE_ROLLING,
+  ROLE_TRIPPING,
+  ROLE_DISSOCIATING,
+  ROLE_STIMMING,
+  ROLE_NODDING,
+  ROLE_SOBER,
 } = require('../../../env');
 
 const teamRoles = [
@@ -79,14 +79,14 @@ const colorRoles = [
 ];
 
 const mindsetRoles = [
-  roleDrunkId,
-  roleHighId,
-  roleRollingId,
-  roleTrippingId,
-  roleDissociatingId,
-  roleStimmingId,
-  roleNoddingId,
-  roleSoberId,
+  ROLE_DRUNK,
+  ROLE_HIGH,
+  ROLE_ROLLING,
+  ROLE_TRIPPING,
+  ROLE_DISSOCIATING,
+  ROLE_STIMMING,
+  ROLE_NODDING,
+  ROLE_SOBER,
 ];
 
 const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
@@ -132,7 +132,7 @@ module.exports = {
                       logger.debug(`[${PREFIX}] Sending reminder to ${userid}`);
 
                       // Get the guild
-                      const guildTripsit = global.client.guilds.cache.get(discordGuildId);
+                      const guildTripsit = global.client.guilds.cache.get(DISCORD_GUILD_ID);
                       // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                       // Get the memeber from the guild
@@ -150,7 +150,7 @@ module.exports = {
                         // eslint-disable-next-line
 
                         const { db } = global;
-                        const ref = db.ref(`${firebaseUserDbName}/${userKey}`);
+                        const ref = db.ref(`${FIREBASE_DB_USERS}/${userKey}`);
                         // eslint-disable-next-line
                         await ref.once('value', data => {
                           if (data.val() !== null) {
@@ -159,7 +159,7 @@ module.exports = {
                             // Transform actor data
                             delete actorData.reminders[reminderDate];
                             try {
-                              db.ref(firebaseUserDbName).update({
+                              db.ref(FIREBASE_DB_USERS).update({
                                 [userKey]: actorData,
                               });
                             } catch (error) {
@@ -217,7 +217,7 @@ module.exports = {
                     logger.debug(`[${PREFIX}] Added ${autoActionTime} more than 24 hours ago`);
 
                     // Get the guild
-                    const guildTripsit = global.client.guilds.cache.get(discordGuildId);
+                    const guildTripsit = global.client.guilds.cache.get(DISCORD_GUILD_ID);
                     // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                     // Get the memeber from the guild
@@ -233,7 +233,7 @@ module.exports = {
                       logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (B)`);
 
                       const { db } = global;
-                      const ref = db.ref(`${firebaseUserDbName}/${userKey}`);
+                      const ref = db.ref(`${FIREBASE_DB_USERS}/${userKey}`);
                       // eslint-disable-next-line
                       await ref.once('value', data => {
                         if (data.val() !== null) {
@@ -247,7 +247,7 @@ module.exports = {
 
                           // Load actor data
                           try {
-                            db.ref(firebaseUserDbName).update({
+                            db.ref(FIREBASE_DB_USERS).update({
                               [userKey]: actorData,
                             });
                           } catch (error) {
@@ -326,7 +326,7 @@ module.exports = {
                     logger.debug(`[${PREFIX}] Username: ${discordData.username}`);
                     logger.debug(`[${PREFIX}] lastSetMindsetDate: ${discordData.lastSetMindsetDate}`);
                     const { db } = global;
-                    const ref = db.ref(`${firebaseUserDbName}/${userKey}`);
+                    const ref = db.ref(`${FIREBASE_DB_USERS}/${userKey}`);
                     // eslint-disable-next-line
                     await ref.once('value', data => {
                       if (data.val() !== null) {
@@ -338,7 +338,7 @@ module.exports = {
 
                         // Load actor data
                         try {
-                          db.ref(firebaseUserDbName).update({
+                          db.ref(FIREBASE_DB_USERS).update({
                             [userKey]: actorData,
                           });
                         } catch (error) {
@@ -354,7 +354,7 @@ module.exports = {
                     logger.debug(`[${PREFIX}] ${discordData.username} added ${lastSetMindset} more than 8 hours ago`);
 
                     // Get the guild
-                    const guildTripsit = global.client.guilds.cache.get(discordGuildId);
+                    const guildTripsit = global.client.guilds.cache.get(DISCORD_GUILD_ID);
                     // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                     // Get the memeber from the guild
@@ -370,7 +370,7 @@ module.exports = {
                       logger.debug(`[${PREFIX}] Error getting member ${discordData.tag} from guild ${guildTripsit.name}, did they quit? (C)`);
 
                       const { db } = global;
-                      const ref = db.ref(`${firebaseUserDbName}/${userKey}`);
+                      const ref = db.ref(`${FIREBASE_DB_USERS}/${userKey}`);
                       // eslint-disable-next-line
                       await ref.once('value', data => {
                         if (data.val() !== null) {
@@ -382,7 +382,7 @@ module.exports = {
 
                           // Load actor data
                           try {
-                            db.ref(firebaseUserDbName).update({
+                            db.ref(FIREBASE_DB_USERS).update({
                               [userKey]: actorData,
                             });
                           } catch (error) {
@@ -430,7 +430,7 @@ module.exports = {
                 if (discordData.lastHelpedThreadId) {
                   logger.debug(`[${PREFIX}] processing lastHelpedThreadId on ${discordData.username}!`);
                   // Get the guild
-                  const guildTripsit = global.client.guilds.cache.get(discordGuildId);
+                  const guildTripsit = global.client.guilds.cache.get(DISCORD_GUILD_ID);
                   // logger.debug(`[${PREFIX}] guildTripsit: ${guildTripsit}`);
 
                   // Get the memeber from the guild
@@ -444,7 +444,7 @@ module.exports = {
                     logger.debug(`[${PREFIX}] Error getting member ${discordData.id} from guild ${guildTripsit.name}, did they quit? (D)`);
 
                     const { db } = global;
-                    const ref = db.ref(`${firebaseUserDbName}/${userKey}`);
+                    const ref = db.ref(`${FIREBASE_DB_USERS}/${userKey}`);
                     // eslint-disable-next-line
                     await ref.once('value', data => {
                       if (data.val() !== null) {
@@ -454,7 +454,7 @@ module.exports = {
                         delete actorData.discord.lastHelpedMetaThreadId;
                         delete actorData.discord.lastHelpedThreadId;
                         try {
-                          db.ref(firebaseUserDbName).update({
+                          db.ref(FIREBASE_DB_USERS).update({
                             [userKey]: actorData,
                           });
                         } catch (error) {

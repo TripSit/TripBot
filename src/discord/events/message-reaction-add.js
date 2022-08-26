@@ -9,15 +9,15 @@ const { sparklePoints } = require('../utils/sparkle-points');
 const { bestOf } = require('../utils/best-of-tripsit');
 
 const {
-  discordGuildId,
-  channelStartId,
+  DISCORD_GUILD_ID,
+  CHANNEL_START,
 } = require('../../../env');
 
 module.exports = {
   name: 'messageReactionAdd',
   async execute(reaction, user) {
     // Only run on Tripsit
-    if (reaction.message.guild.id !== discordGuildId) { return; }
+    if (reaction.message.guild.id !== DISCORD_GUILD_ID) { return; }
 
     // When a reaction is received, check if the structure is partial
     if (reaction.partial) await reaction.fetch();
@@ -34,7 +34,7 @@ module.exports = {
     //   "emojiId": "958721361587630210"
     // }
 
-    if (reaction.message.channelId === channelStartId && !user.bot) {
+    if (reaction.message.channelId === CHANNEL_START && !user.bot) {
       await handleReactionRoles(reaction, user);
     }
 

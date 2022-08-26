@@ -7,7 +7,7 @@ const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
 
-const { channelGeneralId } = require('../../../../env');
+const { CHANNEL_GENERAL } = require('../../../../env');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -28,7 +28,7 @@ module.exports = {
 
   async execute(interaction) {
     const channel = interaction.options.getChannel('channel')
-      || interaction.client.channels.cache.get(channelGeneralId);
+      || interaction.client.channels.cache.get(CHANNEL_GENERAL);
     const temporary = interaction.options.getBoolean('temporary') || false;
     const maxAge = interaction.options.getInteger('maxAge') || 0;
     const maxUses = interaction.options.getInteger('maxUses') || 0;

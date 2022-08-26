@@ -11,7 +11,7 @@ const logger = require('../../global/utils/logger');
 const {
   NODE_ENV,
   channelBestOfTripsitId,
-  channelTripsitId,
+  CHANNEL_TRIPSIT,
   channelSanctuaryId,
   channelTripsittersId,
   channelHowToTripsitId,
@@ -20,7 +20,7 @@ const {
 } = require('../../../env');
 
 const tripsitterChannels = [
-  channelTripsitId,
+  CHANNEL_TRIPSIT,
   channelSanctuaryId,
   channelTripsittersId,
   channelHowToTripsitId,

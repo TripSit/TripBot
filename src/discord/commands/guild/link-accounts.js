@@ -8,7 +8,7 @@ const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseA
 const template = require('../../utils/embed-template');
 
 const {
-  discordGuildId,
+  DISCORD_GUILD_ID,
   roleIrcVerifiedId,
 } = require('../../../../env');
 
@@ -152,7 +152,7 @@ module.exports = {
           actorData.irc.verified = true;
           await setUserInfo(actorFbid, actorData);
           global.ircClient.say(accountInfo.nick, 'Your account has been linked!');
-          const tripsitGuild = module.exports.interaction.client.guilds.cache.get(discordGuildId);
+          const tripsitGuild = module.exports.interaction.client.guilds.cache.get(DISCORD_GUILD_ID);
           const roleIrcVerified = tripsitGuild.roles.cache.get(roleIrcVerifiedId);
           logger.debug(`[${PREFIX}] discord ID: ${actorData.discord.id}`);
           const target = await tripsitGuild.members.fetch(actorData.discord.id);

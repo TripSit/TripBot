@@ -32,7 +32,7 @@ module.exports = {
         guild_joinedAt: guild.joinedAt,
         guild_description: `${guild.description ? guild.description : 'No description'}`,
         guild_member_count: guild.memberCount,
-        guild_owner_id: guild.discordOwnerId,
+        guild_owner_id: guild.DISCORD_OWNER_ID,
         guild_icon: guild.iconURL(),
         guild_banned: false,
         guild_large: guild.large,

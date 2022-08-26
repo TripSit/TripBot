@@ -14,15 +14,15 @@ const ircButton = require('../commands/guild/prompt');
 const { getUserInfo } = require('../../global/services/firebaseAPI');
 
 const {
-  discordGuildId,
+  DISCORD_GUILD_ID,
   channelModeratorsId,
   roleMemberId,
   roleUnderbanId,
-  channelGeneralId,
-  channelStartId,
+  CHANNEL_GENERAL,
+  CHANNEL_START,
   channelIrcId,
   channelBotspamId,
-  // channelTripsitId,
+  // CHANNEL_TRIPSIT,
 } = require('../../../env');
 
 module.exports = {
@@ -75,11 +75,11 @@ module.exports = {
         colorValue = Colors.Orange;
       } else if (minutes === 0 && seconds > 0) { colorValue = Colors.Red; }
       // logger.debug(`[${PREFIX}] coloValue: ${colorValue}`);
-      const channelGeneral = member.client.channels.cache.get(channelGeneralId);
-      const channelStart = member.client.channels.cache.get(channelStartId);
+      const channelGeneral = member.client.channels.cache.get(CHANNEL_GENERAL);
+      const channelStart = member.client.channels.cache.get(CHANNEL_START);
       const channelTechhelp = member.client.channels.cache.get(channelIrcId);
       const channelBotspam = interaction.client.channels.cache.get(channelBotspamId);
-      // const channelTripsit = member.client.channels.cache.get(channelTripsitId);
+      // const channelTripsit = member.client.channels.cache.get(CHANNEL_TRIPSIT);
       const embed = template.embedTemplate()
         .setAuthor(null)
         .setColor(colorValue)
@@ -125,7 +125,7 @@ module.exports = {
     }
 
     if (buttonID === 'refusalbtn') {
-      const guild = interaction.client.guilds.resolve(discordGuildId);
+      const guild = interaction.client.guilds.resolve(DISCORD_GUILD_ID);
       logger.debug(guild);
       guild.members.ban(interaction.user, { days: 7, reason: 'Refused warning' });
       const embed = template.embedTemplate()

@@ -22,8 +22,8 @@ const {
 
 const {
   NODE_ENV,
-  channelTripsitId,
-  discordGuildId,
+  CHANNEL_TRIPSIT,
+  DISCORD_GUILD_ID,
   channelModeratorsId,
   channelIrcId,
   roleModeratorId,
@@ -165,7 +165,7 @@ module.exports = {
       .setColor(Colors.Blue);
 
     const author = message.author;
-    const guild = await message.client.guilds.fetch(discordGuildId);
+    const guild = await message.client.guilds.fetch(DISCORD_GUILD_ID);
     logger.debug(`[${PREFIX}] Message sent in DM by ${message.author.username}!`);
     const description = stripIndents`Hey there ${author}! I'm a helper bot for ${guild} =)
 
@@ -175,11 +175,11 @@ module.exports = {
     message.author.send({ embeds: [embed], components: [modmailButtons] });
   },
   async modmailTripsitter(interaction) {
-    const guild = await interaction.client.guilds.fetch(discordGuildId);
+    const guild = await interaction.client.guilds.fetch(DISCORD_GUILD_ID);
     const member = await guild.members.fetch(interaction.user.id);
     logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
     if (member) {
-      const channelTripsit = await guild.channels.fetch(channelTripsitId);
+      const channelTripsit = await guild.channels.fetch(CHANNEL_TRIPSIT);
       interaction.reply(stripIndents`
       Click the button in ${channelTripsit.toString()}!`);
     } else {
@@ -202,7 +202,7 @@ module.exports = {
     // await interaction.showModal(modal);
   },
   // async modmailTripsitterSubmit(interaction) {
-  //   const guild = await interaction.client.guilds.fetch(discordGuildId);
+  //   const guild = await interaction.client.guilds.fetch(DISCORD_GUILD_ID);
   //   const member = await guild.members.fetch(interaction.user.id);
   //   logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
   // },
@@ -246,7 +246,7 @@ module.exports = {
     ) !== undefined;
 
     // Get the moderator role
-    const tripsitGuild = await interaction.client.guilds.cache.get(discordGuildId);
+    const tripsitGuild = await interaction.client.guilds.cache.get(DISCORD_GUILD_ID);
     const roleModerator = tripsitGuild.roles.cache.find(role => role.id === roleModeratorId);
 
     // Get the moderation channel
@@ -292,7 +292,7 @@ module.exports = {
     // logger.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}!`);
 
     // Respond right away cuz the rest of this doesn't matter
-    const guild = await interaction.client.guilds.fetch(discordGuildId);
+    const guild = await interaction.client.guilds.fetch(DISCORD_GUILD_ID);
     const member = await guild.members.fetch(interaction.user.id);
     // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
     if (member) {
@@ -309,7 +309,7 @@ module.exports = {
       interaction.reply('Thank you, we will respond to right here when we can!');
     }
     // Get the moderator role
-    const tripsitGuild = await interaction.client.guilds.cache.get(discordGuildId);
+    const tripsitGuild = await interaction.client.guilds.cache.get(DISCORD_GUILD_ID);
     const roleModerator = tripsitGuild.roles.cache.find(role => role.id === roleModeratorId);
     const roleDeveloper = tripsitGuild.roles.cache.find(role => role.id === roleDeveloperId);
 
