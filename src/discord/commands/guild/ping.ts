@@ -5,34 +5,35 @@ const {
   EmbedBuilder,
   ButtonBuilder,
 } = require('discord.js');
-const PREFIX = require('path').parse(__filename).name;
-const logger = require('../../../global/utils/logger');
-// const paginationEmbed = require('discordjs-button-pagination'); // eslint-disable-line
-const paginationEmbed = require('../../utils/pagination');
+import {SlashCommand} from '../../utils/commandDef';
+import logger from '../../../global/utils/logger';
+import {paginationEmbed} from '../../utils/pagination';
 
-module.exports = {
+const PREFIX = require('path').parse(__filename).name;
+
+export const ping: SlashCommand = {
   data: new SlashCommandBuilder()
-    .setName('ping')
-    .setDescription('Health check'),
+      .setName('ping')
+      .setDescription('Health check'),
 
   async execute(interaction) {
     const embed1 = new EmbedBuilder()
-      .setTitle('First Page')
-      .setDescription('This is the first page');
+        .setTitle('First Page')
+        .setDescription('This is the first page');
 
     const embed2 = new EmbedBuilder()
-      .setTitle('Second Page')
-      .setDescription('This is the second page');
+        .setTitle('Second Page')
+        .setDescription('This is the second page');
 
     const button1 = new ButtonBuilder()
-      .setCustomId('previousbtn')
-      .setLabel('Previous')
-      .setStyle('Danger');
+        .setCustomId('previousbtn')
+        .setLabel('Previous')
+        .setStyle('Danger');
 
     const button2 = new ButtonBuilder()
-      .setCustomId('nextbtn')
-      .setLabel('Next')
-      .setStyle('Success');
+        .setCustomId('nextbtn')
+        .setLabel('Next')
+        .setStyle('Success');
 
     // Create an array of embeds
     const pages = [

@@ -1,16 +1,16 @@
 import {
   Client,
   Interaction,
-  // InteractionType,
+  InteractionType,
 } from 'discord.js';
 import {commandRun} from '../utils/commandRun';
 import logger from '../../global/utils/logger';
+import {buttonClick} from '../utils/buttonClick';
 
 // const {  } = require('discord.js');
 // const logger = require('../../global/utils/logger');
 // const modalSubmit = require('../utils/modal-submit');
 // const autocomplete = require('../../global/utils/autocomplete');
-// const button = require('../utils/button');
 
 const PREFIX = require('path').parse(__filename).name;
 
@@ -46,17 +46,17 @@ module.exports = {
     //   return;
     // }
 
-    // if (interaction.type === InteractionType.MessageComponent) {
-    //   if (interaction.isButton()) {
-    //     button.execute(interaction, client);
-    //     return;
-    //   }
-    //   if (interaction.isContextMenu()) {
-    //     command.execute(interaction, client);
-    //     return;
-    //   }
-    //   logger.debug(`[${PREFIX}] Unknown interaction: ${JSON.stringify(interaction, null, 2)}`);
-    // }
+    if (interaction.type === InteractionType.MessageComponent) {
+      if (interaction.isButton()) {
+        buttonClick(interaction, client);
+        return;
+      }
+      // if (interaction.isContextMenu()) {
+      //   commandRun(interaction, client);
+      //   return;
+      // }
+      logger.debug(`[${PREFIX}] Unknown interaction: ${JSON.stringify(interaction, null, 2)}`);
+    }
 
     // if (interaction.type === InteractionType.ModalSubmit) {
     //   modalSubmit.execute(interaction, client);

@@ -7,7 +7,7 @@ import logger from '../../global/utils/logger';
 const PREFIX = require('path').parse(__filename).name;
 // const { chitragupta } = require('../../global/utils/chitragupta');
 // const { communityMod } = require('../utils/community-mod');
-// const { handleReactionRoles } = require('../utils/handleReactionRoles');
+import {handleReactionRoles} from '../utils/handleReactionRoles';
 // const { sparklePoints } = require('../utils/sparkle-points');
 // const {bestOf} = require('../utils/bestOfTripsit');
 import {bestOf} from '../utils/bestOfTripsit';
@@ -36,9 +36,9 @@ module.exports = {
     //   "emojiId": "958721361587630210"
     // }
 
-    // if (reaction.message.channelId === env.CHANNEL_START.toString() && !user.bot) {
-    //   await handleReactionRoles(reaction, user);
-    // }
+    if (reaction.message.channelId === env.CHANNEL_START.toString() && !user.bot) {
+      await handleReactionRoles(reaction, user);
+    }
 
     // This can run on bots
     // await sparklePoints(reaction, user);

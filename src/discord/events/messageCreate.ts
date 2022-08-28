@@ -1,8 +1,8 @@
 import {Message} from 'discord.js';
 import env from '../../global/utils/env.config';
-import logger from '../../global/utils/logger';
 import {thoughtPolice} from '../utils/d.thoughtPolice';
-const PREFIX = require('path').parse(__filename).name;
+// import logger from '../../global/utils/logger';
+// const PREFIX = require('path').parse(__filename).name;
 
 // const { WebhookClient } = require('discord.js');
 // const {stripIndents} = require('common-tags');
@@ -17,7 +17,7 @@ const PREFIX = require('path').parse(__filename).name;
 module.exports = {
   name: 'messageCreate',
   async execute(message: Message) {
-    logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
+    // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
     // Only run on Tripsit
     if (message.guild) {
       if (message.guild.id !== env.DISCORD_GUILD_ID.toString()) {
