@@ -8,7 +8,7 @@ const { moderate } = require('../../../global/utils/moderate');
 
 const {
   NODE_ENV,
-  roleModeratorId,
+  ROLE_MODERATOR,
   roleNewbieId,
   roleVotebannedId,
   roleVotekickedId,
@@ -18,15 +18,15 @@ const {
   roleSuccessorId,
   roleSysadminId,
   roleLeaddevId,
-  roleIrcadminId,
-  roleDiscordadminId,
+  ROLE_IRCADMIN,
+  ROLE_DISCORDADMIN,
   roleIrcopId,
   ROLE_TRIPSITTER,
   roleTeamtripsitId,
   roleTripbotId,
   roleTripbot2Id,
   roleBotId,
-  roleDeveloperId,
+  ROLE_DEVELOPER,
   roleTreeId,
   roleSproutId,
   roleSeedlingId,
@@ -56,16 +56,16 @@ const teamRoles = [
   roleSuccessorId,
   roleSysadminId,
   roleLeaddevId,
-  roleIrcadminId,
-  roleDiscordadminId,
+  ROLE_IRCADMIN,
+  ROLE_DISCORDADMIN,
   roleIrcopId,
-  roleModeratorId,
+  ROLE_MODERATOR,
   ROLE_TRIPSITTER,
   roleTeamtripsitId,
   roleTripbot2Id,
   roleTripbotId,
   roleBotId,
-  roleDeveloperId,
+  ROLE_DEVELOPER,
 ];
 
 const colorRoles = [
@@ -127,7 +127,7 @@ module.exports = {
     // logger.debug(`[${PREFIX}] target: ${target}`);
 
     const moderatorRole = reaction.message.guild.roles.cache
-      .find(role => role.id === roleModeratorId);
+      .find(role => role.id === ROLE_MODERATOR);
 
     logger.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction, null, 2)}`);
     logger.debug(`[${PREFIX}] reaction.message: ${JSON.stringify(reaction.message, null, 2)}`);

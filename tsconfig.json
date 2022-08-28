@@ -9,7 +9,7 @@
         "./src/**/*.ts",
         "environment.d.ts",
         "src/env.config.ts"
-, "envValidate.ts"    ],
+, "envValidate.ts"],
     "exclude": [
         "node_modules",
         "dist"

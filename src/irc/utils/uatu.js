@@ -11,8 +11,8 @@ const {
   channelOpentripsit2Id,
   channelClosedtripsitId,
 
-  channelDevelopmentId,
-  channelWikicontentId,
+  CHANNEL_DEVELOPMENT,
+  CHANNEL_WIKICONTENT,
   channelSandboxId,
 
   channelMeetingroomId,
@@ -81,9 +81,9 @@ const channels = {
   tripsit1: channelOpentripsit1Id,
   tripsit2: channelOpentripsit2Id,
   tripsit3: channelClosedtripsitId,
-  tripsitdev: channelDevelopmentId,
+  tripsitdev: CHANNEL_DEVELOPMENT,
   meetingroom: channelMeetingroomId,
-  content: channelWikicontentId,
+  content: CHANNEL_WIKICONTENT,
   moderators: CHANNEL_MODERATORS,
   teamtripsit: channelTeamtripsitId,
   operations: channelOperatorsId,

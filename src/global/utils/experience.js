@@ -25,7 +25,7 @@ const {
   roleMutedId,
   roleTempvoiceId,
   NODE_ENV,
-  channelViploungeId,
+  CHANNEL_VIPLOUNGE,
 } = require('../../../env');
 
 const ignoredRoles = [
@@ -240,7 +240,7 @@ module.exports = {
                 `;
                 message.member.send(intro);
 
-                const channelViplounge = discordClient.channels.cache.get(channelViploungeId);
+                const channelViplounge = discordClient.channels.cache.get(CHANNEL_VIPLOUNGE);
                 channelViplounge.send(`Please welcome ${message.member.displayName} to the VIP lounge!`);
                 actorData.experience.introSent = true;
                 logger.debug(`[${PREFIX}] Intro sent`);

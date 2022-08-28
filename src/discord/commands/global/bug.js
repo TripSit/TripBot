@@ -14,8 +14,8 @@ const template = require('../../utils/embed-template');
 
 const {
   DISCORD_OWNER_ID,
-  roleDeveloperId,
-  channelTripbotId,
+  ROLE_DEVELOPER,
+  CHANNEL_TRIPBOT,
 } = require('../../../../env');
 
 const PREFIX = path.parse(__filename).name;
@@ -56,8 +56,8 @@ module.exports = {
       .setDescription(`Hey ${botOwner.toString()},\n${username}${guildMessage} reports:\n${bugReport}`);
     botOwner.send({ embeds: [botOwnerEmbed] });
 
-    const developerRole = interaction.guild.roles.cache.find(role => role.id === roleDeveloperId);
-    const devChan = interaction.client.channels.cache.get(channelTripbotId);
+    const developerRole = interaction.guild.roles.cache.find(role => role.id === ROLE_DEVELOPER);
+    const devChan = interaction.client.channels.cache.get(CHANNEL_TRIPBOT);
     // const devEmbed = template.embedTemplate()
     //   .setColor(Colors.Purple)
     //   .setDescription(`Hey ${developerRole.toString()},

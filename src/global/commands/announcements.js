@@ -10,7 +10,7 @@ const {
   CHANNEL_GENERAL,
   CHANNEL_HOWTOTRIPSIT,
   CHANNEL_TRIPSIT,
-  channelViploungeId,
+  CHANNEL_VIPLOUNGE,
   channelPetsId,
   channelFoodId,
   channelMusicId,
@@ -18,12 +18,12 @@ const {
   channelGamingId,
   channelCreativeId,
   // channelPsychedelicId,
-  channelVipWelcomeId,
-  channelGoldLoungeId,
-  channelTalkToTSId,
-  // channelClearmindId,
-  channelPsychonautId,
-  channelDissonautId,
+  CHANNEL_VIPWELCOME,
+  CHANNEL_GOLDLOUNGE,
+  CHANNEL_TALKTOTS,
+  // CHANNEL_CLEARMIND,
+  CHANNEL_PSYCHONAUT,
+  CHANNEL_DISSONAUT,
 } = require('../../../env');
 
 let frequency = 50;
@@ -81,13 +81,13 @@ module.exports = {
       // channelPsychedelic = message.client.channels.cache.get(channelPsychedelicId);
       channelHowToTripsit = message.client.channels.cache.get(CHANNEL_HOWTOTRIPSIT);
       channelTripsit = message.client.channels.cache.get(CHANNEL_TRIPSIT);
-      channelVipWelcome = message.client.channels.cache.get(channelVipWelcomeId);
-      channelViplounge = message.client.channels.cache.get(channelViploungeId);
-      channelGoldLounge = message.client.channels.cache.get(channelGoldLoungeId);
-      channelTalkToTS = message.client.channels.cache.get(channelTalkToTSId);
-      // channelClearmind = message.client.channels.cache.get(channelClearmindId);
-      channelPsychonaut = message.client.channels.cache.get(channelPsychonautId);
-      channelDissonaut = message.client.channels.cache.get(channelDissonautId);
+      channelVipWelcome = message.client.channels.cache.get(CHANNEL_VIPWELCOME);
+      channelViplounge = message.client.channels.cache.get(CHANNEL_VIPLOUNGE);
+      channelGoldLounge = message.client.channels.cache.get(CHANNEL_GOLDLOUNGE);
+      channelTalkToTS = message.client.channels.cache.get(CHANNEL_TALKTOTS);
+      // channelClearmind = message.client.channels.cache.get(CHANNEL_CLEARMIND);
+      channelPsychonaut = message.client.channels.cache.get(CHANNEL_PSYCHONAUT);
+      channelDissonaut = message.client.channels.cache.get(CHANNEL_DISSONAUT);
     } catch (error) {
       const errorObj = error;
       errorObj.stackTraceLimit = Infinity;
@@ -223,7 +223,7 @@ module.exports = {
         if (randomNumber === 0) {
           hydration = true;
         }
-      } else if (channelViploungeId === message.channel.id) {
+      } else if (CHANNEL_VIPLOUNGE === message.channel.id) {
         // VIP channel
         randomAnnouncement = vipAnnouncements[
           Math.floor(Math.random() * vipAnnouncements.length)];

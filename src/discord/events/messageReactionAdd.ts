@@ -36,9 +36,7 @@ module.exports = {
     //   "emojiId": "958721361587630210"
     // }
 
-    if (reaction.message.channelId === env.CHANNEL_START.toString() && !user.bot) {
-      await handleReactionRoles(reaction, user);
-    }
+    await handleReactionRoles(reaction, user, true);
 
     // This can run on bots
     // await sparklePoints(reaction, user);
@@ -52,5 +50,6 @@ module.exports = {
     // await chitragupta(reaction, user, 1);
     await bestOf(reaction, user);
     // await communityMod(reaction, user);
+    logger.debug(`[${PREFIX}] finished!`);
   },
 };

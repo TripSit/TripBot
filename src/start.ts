@@ -6,8 +6,7 @@ import logger from './global/utils/logger';
 import {firebaseConnect} from './global/utils/firebaseAPI';
 
 const PREFIX = require('path').parse(__filename).name;
-
-
+global.bootTime = new Date();
 // const { ircConnect } = require('./irc/ircAPI');
 // const { telegramConnect } = require('./telegram/telegramAPI');
 // const { webserverConnect } = require('./webserver/webserverAPI');

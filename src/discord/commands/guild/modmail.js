@@ -26,10 +26,10 @@ const {
   DISCORD_GUILD_ID,
   CHANNEL_MODERATORS,
   CHANNEL_IRC,
-  roleModeratorId,
-  roleIrcadminId,
-  roleDiscordadminId,
-  roleDeveloperId,
+  ROLE_MODERATOR,
+  ROLE_IRCADMIN,
+  ROLE_DISCORDADMIN,
+  ROLE_DEVELOPER,
 } = require('../../../../env');
 
 const modmailButtons = new ActionRowBuilder()
@@ -238,7 +238,7 @@ module.exports = {
     const actor = interaction.user;
     logger.debug(`[${PREFIX}] actor: ${actor}!`);
 
-    const roleDeveloper = interaction.guild.roles.cache.find(role => role.id === roleDeveloperId);
+    const roleDeveloper = interaction.guild.roles.cache.find(role => role.id === ROLE_DEVELOPER);
     logger.debug(`[${PREFIX}] roleDeveloper: ${roleDeveloper}`);
 
     const isDev = interaction.member.roles.cache.find(
@@ -247,7 +247,7 @@ module.exports = {
 
     // Get the moderator role
     const tripsitGuild = await interaction.client.guilds.cache.get(DISCORD_GUILD_ID);
-    const roleModerator = tripsitGuild.roles.cache.find(role => role.id === roleModeratorId);
+    const roleModerator = tripsitGuild.roles.cache.find(role => role.id === ROLE_MODERATOR);
 
     // Get the moderation channel
     const modChan = interaction.client.channels.cache.get(CHANNEL_MODERATORS);
@@ -310,8 +310,8 @@ module.exports = {
     }
     // Get the moderator role
     const tripsitGuild = await interaction.client.guilds.cache.get(DISCORD_GUILD_ID);
-    const roleModerator = tripsitGuild.roles.cache.find(role => role.id === roleModeratorId);
-    const roleDeveloper = tripsitGuild.roles.cache.find(role => role.id === roleDeveloperId);
+    const roleModerator = tripsitGuild.roles.cache.find(role => role.id === ROLE_MODERATOR);
+    const roleDeveloper = tripsitGuild.roles.cache.find(role => role.id === ROLE_DEVELOPER);
 
     // Determine if this command was started by a Developer
     const isDev = await roleDeveloper.members.map(m => m.user.id === interaction.user.id);
@@ -416,11 +416,11 @@ module.exports = {
     let role = {};
     if (issueType.includes('irc')) {
       // Get the moderator role
-      role = await tripsitGuild.roles.fetch(roleIrcadminId);
+      role = await tripsitGuild.roles.fetch(ROLE_IRCADMIN);
     }
     if (issueType.includes('discord')) {
       // Get the moderator role
-      role = await tripsitGuild.roles.fetch(roleDiscordadminId);
+      role = await tripsitGuild.roles.fetch(ROLE_DISCORDADMIN);
     }
     const admins = await role.members;
     logger.debug(`[${PREFIX}] admins: ${JSON.stringify(admins, null, 2)}!`);

@@ -6,8 +6,9 @@ import env from '../../global/utils/env.config';
 import {setTimeout} from 'timers/promises';
 import logger from '../../global/utils/logger';
 
+import {startStatusLoop} from '../utils/statusLoop';
+
 // const { ReactionRole } = require('discordjs-reaction-role');
-// const { startStatusLoop } = require('../utils/status-loop');
 const PREFIX = require('path').parse(__filename).name;
 
 // Initialize the invite cache
@@ -58,10 +59,14 @@ module.exports = {
   once: true,
   async execute(client: Client) {
     await setTimeout(1000);
-    // startStatusLoop(client);
+    startStatusLoop(client);
     // Promise.all([getReactionRoles(client)])
     //     .then(() => logger.info(`[${PREFIX}] finished!`));
     Promise.all([getInvites(client)])
-        .then(() => logger.info(`[${PREFIX}] finished!`));
+        .then(() => {
+          const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
+          logger.info(`[${PREFIX}] finished booting in ${bootDuration}s!`);
+        })
+    ;
   },
 };

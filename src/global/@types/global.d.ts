@@ -8,6 +8,7 @@ declare global {
   var guildDb: { [key: string]: any };
   var guildInvites: Collection;
   var reactionRoles: { [key: string]: any };
+  var bootTime: Date;
 }
 
 export {};

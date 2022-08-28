@@ -80,16 +80,16 @@ const {
   roleSuccessorId,
   roleSysadminId,
   roleLeaddevId,
-  roleIrcadminId,
-  roleDiscordadminId,
+  ROLE_IRCADMIN,
+  ROLE_DISCORDADMIN,
   roleIrcopId,
-  roleModeratorId,
+  ROLE_MODERATOR,
   ROLE_TRIPSITTER,
   roleTeamtripsitId,
   roleTripbotId,
   roleTripbot2Id,
   roleBotId,
-  roleDeveloperId,
+  ROLE_DEVELOPER,
 } = require('../../../env');
 
 const teamRoles = [
@@ -97,16 +97,16 @@ const teamRoles = [
   roleSuccessorId,
   roleSysadminId,
   roleLeaddevId,
-  roleIrcadminId,
-  roleDiscordadminId,
+  ROLE_IRCADMIN,
+  ROLE_DISCORDADMIN,
   roleIrcopId,
-  roleModeratorId,
+  ROLE_MODERATOR,
   ROLE_TRIPSITTER,
   roleTeamtripsitId,
   roleTripbot2Id,
   roleTripbotId,
   roleBotId,
-  roleDeveloperId,
+  ROLE_DEVELOPER,
 ];
 
 const modButtons = new ActionRowBuilder()
@@ -636,7 +636,7 @@ module.exports = {
 
     // Get the moderator role
     const tripsitGuild = await global.client.guilds.fetch(DISCORD_GUILD_ID);
-    const roleModerator = tripsitGuild.roles.cache.find(role => role.id === roleModeratorId);
+    const roleModerator = tripsitGuild.roles.cache.find(role => role.id === ROLE_MODERATOR);
 
     const targetAction = `received_${command}`;
     // const targetModActions = targetData.modActions ? targetData.modActions : {};

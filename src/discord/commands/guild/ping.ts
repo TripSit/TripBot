@@ -15,7 +15,6 @@ export const ping: SlashCommand = {
   data: new SlashCommandBuilder()
       .setName('ping')
       .setDescription('Health check'),
-
   async execute(interaction) {
     const embed1 = new EmbedBuilder()
         .setTitle('First Page')

@@ -92,7 +92,7 @@ module.exports = {
         logger.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${differentRole?.name} (${differentRole?.id})`);
 
         // The following code only cares if you add a mindset role
-        if (mindsetRoles.includes(parseInt(differenceId))) {
+        if (mindsetRoles.includes(differenceId)) {
           // Look up the role name
           const roleName = await newMember.guild.roles.fetch(differenceId).then((role) => role?.name);
           // logger.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${roleName}`);
