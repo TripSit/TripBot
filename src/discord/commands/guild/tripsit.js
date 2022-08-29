@@ -1,6 +1,8 @@
 'use strict';
 
 const { SlashCommandBuilder } = require('discord.js');
+const PREFIX = require('path').parse(__filename).name;
+const logger = require('../../../global/utils/logger');
 const tripsitme = require('../../utils/tripsitme');
 const tripsat = require('../../utils/tripsat');
 
@@ -31,16 +33,21 @@ module.exports = {
   async execute(interaction) {
     let enable = interaction.options.getString('enable');
     // Default to on if no setting is provided
-    if (!enable) { enable = 'On'; }
+    if (!enable) { enable = 'on'; }
 
     const target = interaction.options.getMember('user');
     const triage = interaction.options.getString('their_dosage');
     const input = interaction.options.getString('their_issue');
 
-    if (enable === 'On') {
+    logger.debug(`[${PREFIX}] target: ${target}`);
+    logger.debug(`[${PREFIX}] triage: ${triage}`);
+    logger.debug(`[${PREFIX}] input: ${input}`);
+    logger.debug(`[${PREFIX}] enable: ${enable}`);
+
+    if (enable === 'on') {
       tripsitme.submit(interaction, target, triage, input);
     }
-    if (enable === 'Off') {
+    if (enable === 'off') {
       tripsat.execute(interaction, target);
     }
   },

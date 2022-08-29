@@ -1,59 +1,57 @@
-import {
-  Colors,
-  Interaction,
-  GuildMember,
-} from 'discord.js';
-import env from '../../global/utils/env.config';
-import {embedTemplate} from '../../utils/embedTemplate';
-import {stripIndents} from 'common-tags';
-
-import logger from '../../global/utils/logger';
-
+'use strict';
 
 const PREFIX = require('path').parse(__filename).name;
+const {
+  Colors,
+} = require('discord.js');
+const { stripIndents } = require('common-tags/lib');
+const logger = require('../../global/utils/logger');
+const { getUserInfo } = require('../../global/services/firebaseAPI');
+
+const template = require('./embed-template');
 
 const {
   NODE_ENV,
-  CHANNEL_MODLOG,
-  CHANNEL_OPENTRIPSIT,
-  CHANNEL_SANCTUARY,
+  channelTripsittersId,
+  channelOpentripsitId,
+  channelSanctuaryId,
   roleNeedshelpId,
   roleDirectorId,
   roleSuccessorId,
   roleSysadminId,
   roleLeaddevId,
-  ROLE_IRCADMIN,
-  ROLE_DISCORDADMIN,
+  roleIrcadminId,
+  roleDiscordadminId,
   roleIrcopId,
-  ROLE_MODERATOR,
-  ROLE_TRIPSITTER,
+  roleModeratorId,
+  roleTripsitterId,
   roleTeamtripsitId,
   roleTripbotId,
   roleTripbot2Id,
   roleBotId,
-  ROLE_DEVELOPER,
+  roleDeveloperId,
   roleTreeId,
   roleSproutId,
   roleSeedlingId,
   roleBoosterId,
-  ROLE_RED,
-  ROLE_ORANGE,
-  ROLE_YELLOW,
-  ROLE_GREEN,
-  ROLE_BLUE,
-  ROLE_PURPLE,
-  ROLE_PINK,
+  roleRedId,
+  roleOrangeId,
+  roleYellowId,
+  roleGreenId,
+  roleBlueId,
+  rolePurpleId,
+  rolePinkId,
   roleBrownId,
-  ROLE_BLACK,
-  ROLE_WHITE,
-  ROLE_DRUNK,
-  ROLE_HIGH,
-  ROLE_ROLLING,
-  ROLE_TRIPPING,
-  ROLE_DISSOCIATING,
-  ROLE_STIMMING,
-  ROLE_NODDING,
-  ROLE_SOBER,
+  roleBlackId,
+  roleWhiteId,
+  roleDrunkId,
+  roleHighId,
+  roleRollingId,
+  roleTrippingId,
+  roleDissociatingId,
+  roleStimmingId,
+  roleNoddingId,
+  roleSoberId,
 } = require('../../../env');
 
 const teamRoles = [
@@ -61,16 +59,16 @@ const teamRoles = [
   roleSuccessorId,
   roleSysadminId,
   roleLeaddevId,
-  ROLE_IRCADMIN,
-  ROLE_DISCORDADMIN,
+  roleIrcadminId,
+  roleDiscordadminId,
   roleIrcopId,
-  ROLE_MODERATOR,
-  ROLE_TRIPSITTER,
+  roleModeratorId,
+  roleTripsitterId,
   roleTeamtripsitId,
   roleTripbot2Id,
   roleTripbotId,
   roleBotId,
-  ROLE_DEVELOPER,
+  roleDeveloperId,
 ];
 
 const colorRoles = [
@@ -78,202 +76,185 @@ const colorRoles = [
   roleSproutId,
   roleSeedlingId,
   roleBoosterId,
-  ROLE_RED,
-  ROLE_ORANGE,
-  ROLE_YELLOW,
-  ROLE_GREEN,
-  ROLE_BLUE,
-  ROLE_PURPLE,
-  ROLE_PINK,
+  roleRedId,
+  roleOrangeId,
+  roleYellowId,
+  roleGreenId,
+  roleBlueId,
+  rolePurpleId,
+  rolePinkId,
   roleBrownId,
-  ROLE_BLACK,
-  ROLE_WHITE,
+  roleBlackId,
+  roleWhiteId,
 
 ];
 
 const mindsetRoles = [
-  ROLE_DRUNK,
-  ROLE_HIGH,
-  ROLE_ROLLING,
-  ROLE_TRIPPING,
-  ROLE_DISSOCIATING,
-  ROLE_STIMMING,
-  ROLE_NODDING,
-  ROLE_SOBER,
+  roleDrunkId,
+  roleHighId,
+  roleRollingId,
+  roleTrippingId,
+  roleDissociatingId,
+  roleStimmingId,
+  roleNoddingId,
+  roleSoberId,
 ];
 
 const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
 
 const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
 
-const invisibleEmoji = NODE_ENV === 'production' ?
-  '<:invisible:976853930489298984>' :
-  '<:invisible:976824380564852768>';
-/**
- * This removes "tripsit mode" from the user
- * @param {Interaction} interaction - The interaction to use
- * @param {GuildMember} memberInput - The member to use if we use the slash command
-*/
-export async function tripsat(interaction:Interaction, memberInput:GuildMember) {
-  let target = interaction.member;
-  const actor = interaction.member;
-  if (memberInput) {
-    target = memberInput;
-  }
+const invisibleEmoji = NODE_ENV === 'production'
+  ? '<:invisible:976853930489298984>'
+  : '<:invisible:976824380564852768>';
 
-  const [targetData] = await getUserInfo(target);
-  const targetLastHelpedDate = targetData.discord.lastHelpedDate;
-  logger.debug(`[${PREFIX}] targetLastHelpedDate: ${targetLastHelpedDate}`);
-  const targetLastHelpedThreadId = targetData.discord.lastHelpedThreadId;
-  logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
-  const targetLastHelpedMetaThreadId = targetData.discord.lastHelpedMetaThreadId;
-  logger.debug(`[${PREFIX}] targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);
+module.exports = {
+  async execute(interaction, memberInput) {
+    logger.debug(`[${PREFIX}] starting!`);
+    await interaction.deferReply({ ephemeral: true });
 
-  const channelModlog = await interaction.client.channels.cache.get(CHANNEL_MODLOG);
-  const channelOpentripsit = await interaction.client.channels.cache.get(CHANNEL_OPENTRIPSIT);
-  const channelSanctuary = await interaction.client.channels.cache.get(CHANNEL_SANCTUARY);
-  // Get the channel objects for the help and meta threads
-  const threadHelpUser = interaction.guild.channels.cache
-      .find((chan) => chan.id === targetLastHelpedThreadId);
-  const threadDiscussUser = interaction.guild.channels.cache
-      .find((chan) => chan.id === targetLastHelpedMetaThreadId);
-
-  const roleDeveloper = actor.roles.cache.find((role) => role.id === ROLE_DEVELOPER);
-  const roleNeedshelp = interaction.guild.roles.cache.find((role) => role.id === roleNeedshelpId);
-
-  const actorHasRoleDeveloper = actor.roles.cache.find(
-      (role) => role === roleDeveloper,
-  ) !== undefined;
-  logger.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
-
-  const targetHasRoleDeveloper = target.roles.cache.find(
-      (role) => role === roleDeveloper,
-  ) !== undefined;
-  logger.debug(`[${PREFIX}] targetHasRoleDeveloper: ${targetHasRoleDeveloper}`);
-
-  const targetHasNeedsHelpRole = target.roles.cache.find(
-      (role) => role === roleNeedshelp,
-  ) !== undefined;
-  logger.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
-
-  if (!targetHasNeedsHelpRole) {
-    let rejectMessage = memberInput ?
-        `Hey ${interaction.member}, ${target.nickname || target.user.username} isnt currently being taken care of!` :
-        `Hey ${interaction.member}, you're not currently being taken care of!`;
-
-    if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
-      rejectMessage = testNotice + rejectMessage;
+    let target = interaction.member;
+    const actor = interaction.member;
+    if (memberInput) {
+      target = memberInput;
     }
-    const embed = template.embedTemplate().setColor(Colors.DarkBlue);
-    embed.setDescription(rejectMessage);
-    logger.debug(`[${PREFIX}] target ${target} does not need help!`);
-    interaction.reply({embeds: [embed], ephemeral: true});
-    logger.debug(`[${PREFIX}] finished!`);
-    return;
-  }
 
-  if (targetLastHelpedDate && !memberInput) {
-    const lastHour = Date.now() - (1000 * 60 * 60);
-    logger.debug(`[${PREFIX}] lastHelp: ${targetLastHelpedDate.seconds * 1000}`);
-    logger.debug(`[${PREFIX}] lastHour: ${lastHour}`);
-    if (targetLastHelpedDate.seconds * 1000 > lastHour) {
-      let message = stripIndents`Hey ${interaction.member} you just asked for help recently!
+    const [targetData] = await getUserInfo(target);
+    const targetLastHelpedDate = targetData.discord.lastHelpedDate;
+    logger.debug(`[${PREFIX}] targetLastHelpedDate: ${targetLastHelpedDate}`);
+    const targetLastHelpedThreadId = targetData.discord.lastHelpedThreadId;
+    logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
+    const targetLastHelpedMetaThreadId = targetData.discord.lastHelpedMetaThreadId;
+    logger.debug(`[${PREFIX}] targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);
+
+    const tripsittersChannel = interaction.guild.channels.cache.get(channelTripsittersId);
+    const channelOpentripsit = await interaction.client.channels.cache.get(channelOpentripsitId);
+    const channelSanctuary = await interaction.client.channels.cache.get(channelSanctuaryId);
+    // Get the channel objects for the help and meta threads
+    const threadHelpUser = interaction.guild.channels.cache
+      .find(chan => chan.id === targetLastHelpedThreadId);
+    const threadDiscussUser = interaction.guild.channels.cache
+      .find(chan => chan.id === targetLastHelpedMetaThreadId);
+
+    const roleDeveloper = actor.roles.cache.find(role => role.id === roleDeveloperId);
+    const roleNeedshelp = interaction.guild.roles.cache.find(role => role.id === roleNeedshelpId);
+
+    const actorHasRoleDeveloper = actor.roles.cache.find(
+      role => role === roleDeveloper,
+    ) !== undefined;
+    logger.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
+
+    const targetHasRoleDeveloper = target.roles.cache.find(
+      role => role === roleDeveloper,
+    ) !== undefined;
+    logger.debug(`[${PREFIX}] targetHasRoleDeveloper: ${targetHasRoleDeveloper}`);
+
+    const targetHasNeedsHelpRole = target.roles.cache.find(
+      role => role === roleNeedshelp,
+    ) !== undefined;
+    logger.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
+
+    if (!targetHasNeedsHelpRole) {
+      let rejectMessage = memberInput
+        ? `Hey ${interaction.member}, ${target.nickname || target.user.username} isnt currently being taken care of!`
+        : `Hey ${interaction.member}, you're not currently being taken care of!`;
+
+      if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
+        rejectMessage = testNotice + rejectMessage;
+      }
+      const embed = template.embedTemplate().setColor(Colors.DarkBlue);
+      embed.setDescription(rejectMessage);
+      logger.debug(`[${PREFIX}] target ${target} does not need help!`);
+      interaction.editReply({ embeds: [embed], ephemeral: true });
+      logger.debug(`[${PREFIX}] finished!`);
+      return;
+    }
+
+    if (targetLastHelpedDate && !memberInput) {
+      const lastHour = Date.now() - (1000 * 60 * 60);
+      logger.debug(`[${PREFIX}] lastHelp: ${targetLastHelpedDate.seconds * 1000}`);
+      logger.debug(`[${PREFIX}] lastHour: ${lastHour}`);
+      if (targetLastHelpedDate.seconds * 1000 > lastHour) {
+        let message = stripIndents`Hey ${interaction.member} you just asked for help recently!
         Take a moment to breathe and wait for someone to respond =)
         Maybe try listening to some lofi music while you wait?
         You can also talk **calmly** in ${channelSanctuary} or ${channelOpentripsit}`;
 
-      if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
-        message = testNotice + message;
-      }
+        if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
+          message = testNotice + message;
+        }
 
-      const embed = template.embedTemplate()
+        const embed = template.embedTemplate()
           .setColor(Colors.DarkBlue)
           .setDescription(message);
-      interaction.reply({embeds: [embed], ephemeral: true});
+        interaction.editReply({ embeds: [embed], ephemeral: true });
 
-      if (threadDiscussUser) {
-        let metaUpdate = stripIndents`Hey team, ${target.nickname || target.user.username} said they're good but it's been less than an hour since they asked for help.
+        if (threadDiscussUser) {
+          let metaUpdate = stripIndents`Hey team, ${target.nickname || target.user.username} said they're good but it's been less than an hour since they asked for help.
 
             If they still need help it's okay to leave them with that role.
             If you're sure they don't need help you can use /tripsit to turn off TripSit-Mode`;
-        if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
-          metaUpdate = testNotice + metaUpdate;
+          if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
+            metaUpdate = testNotice + metaUpdate;
+          }
+          threadDiscussUser.send(metaUpdate);
         }
-        threadDiscussUser.send(metaUpdate);
+
+        logger.debug(`[${PREFIX}] finished!`);
+
+        logger.debug(`[${PREFIX}] Rejected the "im good" button`);
+        return;
       }
-
-      logger.debug(`[${PREFIX}] finished!`);
-
-      logger.debug(`[${PREFIX}] Rejected the "im good" button`);
-      return;
     }
-  }
 
-  let responseMessage = memberInput ?
-      stripIndents`
-      Hey ${interaction.member}, we're glad ${target.nickname || target.user.username} is feeling better!
-      We've restored their roles back to normal.
-      You can keep talking with them in ${threadHelpUser} if needed!` :
-      stripIndents`
-      Hey ${interaction.member}, we're glad you're feeling better =)
-      We've restored your old roles back to normal.
-      You can keep talking in ${threadHelpUser} if you want to follow up tomorrow!`;
-
-  if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
-    responseMessage = testNotice + responseMessage;
-  }
-
-  const embed = template.embedTemplate().setColor(Colors.DarkBlue);
-  embed.setDescription(responseMessage);
-  interaction.reply({embeds: [embed], ephemeral: true});
-
-  // For each role in targetRoles2, add it to the target
-  if (targetData.discord.roles) {
-    targetData.discord.roles.forEach((roleName) => {
-      const roleObj = interaction.guild.roles.cache.find((r) => r.name === roleName);
-      if (!ignoredRoles.includes(roleObj.id) && roleName !== '@everyone') {
-        logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.nickname || target.user.username}`);
-        try {
-          target.roles.add(roleObj);
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error adding role ${roleObj.name} to ${target.nickname || target.user.username}`);
-          logger.error(err);
+    // For each role in targetRoles2, add it to the target
+    if (targetData.discord.roles) {
+      targetData.discord.roles.forEach(roleName => {
+        const roleObj = interaction.guild.roles.cache.find(r => r.name === roleName);
+        if (!ignoredRoles.includes(roleObj.id) && roleName !== '@everyone') {
+          logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.nickname || target.user.username}`);
+          try {
+            target.roles.add(roleObj);
+          } catch (err) {
+            logger.error(`[${PREFIX}] Error adding role ${roleObj.name} to ${target.nickname || target.user.username}`);
+            logger.error(err);
+          }
         }
-      }
-    });
-  }
+      });
+    }
 
-  target.roles.remove(roleNeedshelp);
-  logger.debug(`[${PREFIX}] Removed ${roleNeedshelp.name} from ${target.nickname || target.user.username}`);
+    target.roles.remove(roleNeedshelp);
+    logger.debug(`[${PREFIX}] Removed ${roleNeedshelp.name} from ${target.nickname || target.user.username}`);
 
-  let endHelpMessage = memberInput ?
-      stripIndents`Hey ${target.nickname || target.user.username}, it looks like you're doing better =)
+    let endHelpMessage = memberInput
+      ? stripIndents`Hey ${target.nickname || target.user.username}, it looks like you're doing better =)
       This thread will remain here for a day if you want to follow up tomorrow.
-      After 7 days, or on request, it will be deleted to preserve your privacy =)` :
-      stripIndents`Hey ${target}, we're glad you're doing better!
+      After 7 days, or on request, it will be deleted to preserve your privacy =)`
+      : stripIndents`Hey ${target}, we're glad you're doing better!
+      We've restored your old roles back to normal <3
       This thread will remain here for a day if you want to follow up tomorrow.
       After 7 days, or on request, it will be deleted to preserve your privacy =)`;
 
-  if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
-    endHelpMessage = testNotice + endHelpMessage;
-  }
+    if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
+      endHelpMessage = testNotice + endHelpMessage;
+    }
 
-  try {
-    threadHelpUser.send(endHelpMessage);
-  } catch (err) {
-    // logger.error(`[${PREFIX}] Error sending end help message to ${threadHelpUser}`);
-    // logger.error(err);
-  }
+    try {
+      threadHelpUser.send(endHelpMessage);
+    } catch (err) {
+      // logger.error(`[${PREFIX}] Error sending end help message to ${threadHelpUser}`);
+      // logger.error(err);
+    }
 
-  let message = '';
-  await threadHelpUser.send(stripIndents`
+    let message = '';
+    await threadHelpUser.send(stripIndents`
         ${invisibleEmoji}
         > **If you have a minute, your feedback is important to us!**
         > Please rate your experience with the TripSit service by reacting below.
         > Thank you!
         ${invisibleEmoji}
         `)
-      .then(async (msg) => {
+      .then(async msg => {
         message = msg;
         await msg.react('🙁');
         await msg.react('😕');
@@ -283,34 +264,21 @@ export async function tripsat(interaction:Interaction, memberInput:GuildMember) 
 
         // Setup the reaction collector
         const filter = (reaction, user) => user.id === target.id;
-        const collector = message.createReactionCollector({filter, time: 1000 * 60 * 60 * 24});
+        const collector = message.createReactionCollector({ filter, time: 1000 * 60 * 60 * 24 });
         collector.on('collect', async (reaction, user) => {
           threadHelpUser.send(stripIndents`
             ${invisibleEmoji}
             > Thank you for your feedback, here's a cookie! 🍪
             ${invisibleEmoji}
             `);
-          // // Create the modal
-          // const modal = new ModalBuilder()
-          //   .setCustomId('feedbackModal')
-          //   .setTitle('TripSit Feedback Form');
-          // const bugReport = new TextInputBuilder()
-          //   .setCustomId('feedbackReport')
-          //   .setLabel('What feedback do you have for the team?')
-          //   .setStyle(TextInputStyle.Paragraph);
-          // // An action row only holds one text input, so you need one action row per text input.
-          // const firstActionRow = new ActionRowBuilder().addComponents(bugReport);
-          // // Add inputs to the modal
-          // modal.addComponents(firstActionRow);
-          // // Show the modal to the user
-          // // interaction.showModal(modal);
           logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
           const finalEmbed = template.embedTemplate()
-              .setColor(Colors.Blue)
-              .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
+            .setColor(Colors.Blue)
+            .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
+          logger.debug(`[${PREFIX}] tripsittersChannel ${tripsittersChannel}`);
           try {
-            if (channelModlog) {
-              await channelModlog.send({embeds: [finalEmbed]});
+            if (threadDiscussUser) {
+              await threadDiscussUser.send({ embeds: [finalEmbed] });
             }
           } catch (err) {
             logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
@@ -318,30 +286,28 @@ export async function tripsat(interaction:Interaction, memberInput:GuildMember) 
           msg.delete();
           collector.stop();
         });
-        // collector.on('end', async collected => {
-        //   logger.debug(`[${PREFIX}] collected: ${JSON.stringify(collected, null, 2)}`);
-        // });
       });
 
-  let endMetaHelpMessage = memberInput ?
-      stripIndents`${actor.user.username} has indicated that ${target.nickname || target.user.username} no longer needs help!
+    let endMetaHelpMessage = memberInput
+      ? stripIndents`${actor.user.username} has indicated that ${target.nickname || target.user.username} no longer needs help!
       *This thread, and ${threadHelpUser}, will remain un-archived for 24 hours to allow the user to follow-up.
       If the user requests help again within 7 days these threads will be un-archived.
-      After 7 days the threads will be deleted to preserve privacy.*` :
-      stripIndents`${target.nickname || target.user.username} has indicated that they no longer need help!
+      After 7 days the threads will be deleted to preserve privacy.*`
+      : stripIndents`${target.nickname || target.user.username} has indicated that they no longer need help!
       *This thread, and the #tripsit thread, will remain un-archived for 24 hours to allow the user to follow-up.
       If the user requests help again within 7 days these threads will be un-archived.
       After 7 days the threads will be deleted to preserve privacy.*`;
 
-  if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
-    endMetaHelpMessage = testNotice + endMetaHelpMessage;
-  }
+    if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
+      endMetaHelpMessage = testNotice + endMetaHelpMessage;
+    }
 
-  threadDiscussUser.send(endMetaHelpMessage);
+    threadDiscussUser.send(endMetaHelpMessage);
 
-  logger.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
-
-  logger.debug(`[${PREFIX}] finished!`);
+    logger.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
+    logger.debug(`[${PREFIX}] finished!`);
+    await interaction.editReply({ content: 'Done!', ephemeral: true });
+  },
   // async submit(interaction) {
   //   const feedback = interaction.fields.getTextInputValue('feedbackReport');
   //   logger.debug(feedback);

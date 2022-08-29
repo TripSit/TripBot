@@ -6,118 +6,129 @@ import logger from '../../global/utils/logger';
 const PREFIX = require('path').parse(__filename).name;
 
 const _ = {
-  A: '[a|🅰|4|@]+',
-  B: '[b|🅱]+',
-  C: '(c|🅲|k|ck|q)+',
-  D: '[d|🅳]+',
-  E: '[e|🅴|3|$]+',
-  F: '(f|🅵|ph)+',
-  G: '[g|🅶|🅱]+',
-  H: '[h|🅷]+',
-  I: '[i|🅸|1|!]+',
-  J: '[j|🅹]+',
-  K: '[k|🅺]+',
-  L: '[l|🅻|1|!]+',
-  M: '[m|🅼]+',
-  N: '[n|🅽]+',
-  O: '[o|🅾|0|@]+',
-  P: '[p|🅿]+',
-  Q: '[q|🆀]+',
-  R: '[r|🆁]+',
-  S: '[s|🆂|5|$]+',
-  T: '[t|🆃|7]+',
-  U: '[u|🆄|v]+',
-  V: '[v|🆅|u]+',
-  W: '[w|🆆|v|v]+',
-  X: '[x|🆇]+',
-  Y: '[y|🆈]+',
-  Z: '[z|🆉|5|$]+',
+  A: '[a|A|🅰|4|@]+',
+  B: '[b|B|🅱]+',
+  C: '(c|C|🅲|k|ck|q)+',
+  D: '[d|D|🅳]+',
+  E: '[e|E|🅴|3|$]+',
+  F: '(f|F|🅵|ph)+',
+  G: '[g|G|🅶|🅱]+',
+  H: '[h|H|🅷]+',
+  I: '[i|I|🅸|1|!]+',
+  J: '[j|J|🅹]+',
+  K: '[k|K|🅺]+',
+  L: '[l|L|🅻|1|!]+',
+  M: '[m|M|🅼]+',
+  N: '[n|N|🅽]+',
+  O: '[o|O|🅾|0|@]+',
+  P: '[p|P|🅿]+',
+  Q: '[q|Q|🆀]+',
+  R: '[r|R|🆁]+',
+  S: '[s|S|🆂|5|$]+',
+  T: '[t|T|🆃|7]+',
+  U: '[u|U|🆄|v]+',
+  V: '[v|V|🆅|u]+',
+  W: '[w|W|🆆|v|v]+',
+  X: '[x|X|🆇]+',
+  Y: '[y|Y|🆈]+',
+  Z: '[z|Z|🆉|5|$]+',
+  one: '[1|1️⃣!|¡]+',
+  two: '[2|2️⃣]+',
+  thr: '[3|3️⃣|£|E]+',
+  fou: '[4|4️⃣|A]+',
+  fiv: '[5|5️⃣|S]+',
+  six: '[6|6️⃣|G]+',
+  sev: '[7|7️⃣|T]+',
+  eig: '[8|8️⃣|*|O|0]+',
+  nin: '[9|9️⃣|q]+',
+  zer: '[0|0️⃣|O|o]+',
 };
 
+const s = '\\\\W*';
+
 const pg13 = [
-  [_.A, _.S, _.S].join(''), // ass
-  [_.A, _.S, _.S, _.H, _.O, _.L, _.E].join(''), // asshole
-  [_.B, _.A, _.S, _.T, _.A, _.R, _.D].join(''), // bastard
-  [_.D, _.A, _.M, _.N].join(''), // damn
-  [_.F, _.U, _.C, _.K].join(''), // fuck
-  [_.P, _.I, _.S, _.S].join(''), // piss
-  [_.S, _.H, _.I, _.T].join(''), // shit
+  [_.A, _.S, _.S].join(s), // ass
+  [_.A, _.S, _.S, _.H, _.O, _.L, _.E].join(s), // asshole
+  [_.B, _.A, _.S, _.T, _.A, _.R, _.D].join(s), // bastard
+  [_.D, _.A, _.M, _.N].join(s), // damn
+  [_.F, _.U, _.C, _.K].join(s), // fuck
+  [_.P, _.I, _.S, _.S].join(s), // piss
+  [_.S, _.H, _.I, _.T].join(s), // shit
 ];
 
 const harmReduction = [
-  [_.S, _.U, _.I, _.C, _.I, _.D, _.E].join(''), // suicide
-  [_.O, _.V, _.E, _.R, _.D, _.O, _.S, _.E].join(''), // overdose
-  [_.E, _.M, _.S].join(''), // EMS
-  [_.K, _.M, _.S].join(''), // KMS (kill myself)
+  [_.S, _.U, _.I, _.C, _.I, _.D, _.E].join(s), // suicide
+  [_.O, _.V, _.E, _.R, _.D, _.O, _.S, _.E].join(s), // overdose
+  [_.E, _.M, _.S].join(s), // EMS
+  [_.K, _.M, _.S].join(s), // KMS (kill myself)
 ];
 
 const hornyJail = [
-  [_.B, _.L, _.O, _.W, _.J, _.O, _.B].join(''),
-  [_.C, _.L, _.I, _.T].join(''),
-  [_.C, _.O, _.C, _.K].join(''),
-  [_.C, _.O, _.N, _.D, _.O, _.M].join(''),
-  [_.C, _.U, _.M].join(''),
-  [_.C, _.U, _.N, _.I, _.L, _.I, _.N, _.G, _.U, _.S].join(''),
-  [_.C, _.Y, _.B, _.E, _.R, _.F, _.U, _.C, _.K].join(''),
-  [_.D, _.I, _.C, _.K].join(''),
-  [_.D, _.I, _.L, _.D, _.O].join(''),
-  [_.E, _.J, _.A, _.C, _.U, _.L].join(''),
-  [_.F, _.E, _.L, _.A, _.T, _.I, _.O].join(''),
-  [_.G, _.A, _.N, _.G, _.B, _.A, _.N, _.G].join(''),
-  [_.H, _.O, _.R, _.N, _.Y].join(''),
-  [_.J, _.A, _.C, _.K, _.O, _.F, _.F].join(''),
-  [_.J, _.E, _.R, _.K, _.O, _.F, _.F].join(''),
-  [_.J, _.I, _.Z, _.Z].join(''),
-  [_.M, _.A, _.S, _.T, _.U, _.R, _.B, _.A, _.T, _.E].join(''),
-  [_.O, _.R, _.G, _.A, _.S, _.M].join(''),
-  [_.P, _.E, _.N, _.I, _.S].join(''),
-  [_.P, _.O, _.R, _.N].join(''), // porn
-  [_.P, _.R, _.I, _.C, _.K].join(''),
-  [_.P, _.U, _.S, _.S, _.Y].join(''),
-  [_.P, _.U, _.S, _.S, _.I, _.E].join(''),
-  [_.S, _.E, _.X].join(''), // sex
-  [_.S, _.M, _.U, _.T].join(''),
-  [_.S, _.P, _.U, _.N, _.K].join(''),
-  [_.T, _.W, _.A, _.T].join(''),
+  [_.B, _.L, _.O, _.W, _.J, _.O, _.B].join(s),
+  [_.C, _.L, _.I, _.T].join(s),
+  [_.C, _.O, _.C, _.K].join(s),
+  [_.C, _.O, _.N, _.D, _.O, _.M].join(s),
+  [_.C, _.U, _.M].join(s),
+  [_.C, _.U, _.N, _.I, _.L, _.I, _.N, _.G, _.U, _.S].join(s),
+  [_.C, _.Y, _.B, _.E, _.R, _.F, _.U, _.C, _.K].join(s),
+  [_.D, _.I, _.C, _.K].join(s),
+  [_.D, _.I, _.L, _.D, _.O].join(s),
+  [_.E, _.J, _.A, _.C, _.U, _.L].join(s),
+  [_.F, _.E, _.L, _.A, _.T, _.I, _.O].join(s),
+  [_.G, _.A, _.N, _.G, _.B, _.A, _.N, _.G].join(s),
+  [_.H, _.O, _.R, _.N, _.Y].join(s),
+  [_.J, _.A, _.C, _.K, _.O, _.F, _.F].join(s),
+  [_.J, _.E, _.R, _.K, _.O, _.F, _.F].join(s),
+  [_.J, _.I, _.Z, _.Z].join(s),
+  [_.M, _.A, _.S, _.T, _.U, _.R, _.B, _.A, _.T, _.E].join(s),
+  [_.O, _.R, _.G, _.A, _.S, _.M].join(s),
+  [_.P, _.E, _.N, _.I, _.S].join(s),
+  [_.P, _.O, _.R, _.N].join(s), // porn
+  [_.P, _.R, _.I, _.C, _.K].join(s),
+  [_.P, _.U, _.S, _.S, _.Y].join(s),
+  [_.P, _.U, _.S, _.S, _.I, _.E].join(s),
+  [_.S, _.E, _.X].join(s), // sex
+  [_.S, _.M, _.U, _.T].join(s),
+  [_.S, _.P, _.U, _.N, _.K].join(s),
+  [_.T, _.W, _.A, _.T].join(s),
 ];
 
 const memes = [
-  [_.Y, _.O, _.L, _.O].join(''),
-  [_.J, _.E, _.N, _.K, _.E, _.M].join(''),
-  [_.B, _.L, _.A, _.Z, _.E, _.I, _.T].join(''),
-  [_.S, _.W, _.A, _.G].join(''),
+  [_.Y, _.O, _.L, _.O].join(s),
+  [_.J, _.E, _.N, _.K, _.E, _.M].join(s),
+  [_.B, _.L, _.A, _.Z, _.E, _.I, _.T].join(s),
+  [_.S, _.W, _.A, _.G].join(s),
 ];
 
 const offensive = [
-  [_.B, _.E, _.A, _.S, _.T, _.E, _.A, _.L, _.I, _.T, _.Y].join(''),
-  [_.B, _.I, _.T, _.C, _.H].join(''), // bitch
-  [_.C, _.O, _.O, _.N].join(''),
-  [_.C, _.U, _.N, _.T].join(''),
-  [_.D, _.Y, _.K, _.E].join(''),
-  [_.E, _.S, _.K, _.I, _.M, _.O].join(''),
-  [_.F, _.A, _.G].join(''),
-  [_.G, _.A, _.Y].join(''),
-  [_.H, _.E, _.I, _.L].join(''),
-  [_.H, _.I, _.T, _.L, _.E, _.R].join(''),
-  [_.H, _.O, _.E].join(''),
-  [_.H, _.O, _.M, _.O].join(''),
-  [_.J, _.E, _.W].join(''),
-  [_.N, _.A, _.Z, _.I].join(''),
-  [_.N, _.I, _.G, _.G, _.A].join(''),
-  [_.N, _.I, _.G, _.G, _.E, _.R].join(''),
-  [_.N, _.I, _.G, _.L, _.E, _.T].join(''),
-  [_.Q, _.U, _.E, _.E, _.R].join(''),
-  [_.R, _.A, _.P, _.E].join(''),
-  [_.R, _.A, _.P, _.I, _.S, _.T].join(''),
-  [_.R, _.A, _.P, _.I, _.N, _.G].join(''),
-  [_.R, _.E, _.T, _.A, _.R, _.D].join(''),
-  [_.R, _.E, _.T, _.A, _.R, _.D].join(''),
-  [_.R, _.E, _.E, _.R, _.E, _.E].join(''),
-  [_.S, _.L, _.U, _.T].join(''),
-  [_.T, _.A, _.R, _.D].join(''),
-  [_.T, _.R, _.A, _.N, _.N, _.Y].join(''),
-  [_.W, _.H, _.O, _.R, _.E].join(''),
-  [1488].join(''),
+  [_.B, _.E, _.A, _.S, _.T, _.E, _.A, _.L, _.I, _.T, _.Y].join(s),
+  [_.B, _.I, _.T, _.C, _.H].join(s), // bitch
+  [_.C, _.O, _.O, _.N].join(s),
+  [_.C, _.U, _.N, _.T].join(s),
+  [_.D, _.Y, _.K, _.E].join(s),
+  [_.E, _.S, _.K, _.I, _.M, _.O].join(s),
+  [_.F, _.A, _.G].join(s),
+  [_.G, _.A, _.Y].join(s),
+  [_.H, _.E, _.I, _.L].join(s),
+  [_.H, _.I, _.T, _.L, _.E, _.R].join(s),
+  [_.H, _.O, _.E].join(s),
+  [_.H, _.O, _.M, _.O].join(s),
+  [_.J, _.E, _.W].join(s),
+  [_.N, _.A, _.Z, _.I].join(s),
+  [_.N, _.I, _.G, _.G, _.A].join(s),
+  [_.N, _.I, _.G, _.G, _.E, _.R].join(s),
+  [_.N, _.I, _.G, _.L, _.E, _.T].join(s),
+  [_.Q, _.U, _.E, _.E, _.R].join(s),
+  [_.R, _.A, _.P, _.E].join(s),
+  [_.R, _.A, _.P, _.I, _.S, _.T].join(s),
+  [_.R, _.A, _.P, _.I, _.N, _.G].join(s),
+  [_.R, _.E, _.T, _.A, _.R, _.D].join(s),
+  [_.R, _.E, _.E, _.R, _.E, _.E].join(s),
+  [_.S, _.L, _.U, _.T].join(s),
+  [_.T, _.A, _.R, _.D].join(s),
+  [_.T, _.R, _.A, _.N, _.N, _.Y].join(s),
+  [_.W, _.H, _.O, _.R, _.E].join(s),
+  [_.one, _.fou, _.eig, _.eig].join(s),
 ];
 
 /**
