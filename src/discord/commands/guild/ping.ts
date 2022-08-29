@@ -1,10 +1,9 @@
-'use strict';
-
-const {
+import {
   SlashCommandBuilder,
   EmbedBuilder,
   ButtonBuilder,
-} = require('discord.js');
+  ButtonStyle,
+} from 'discord.js';
 import {SlashCommand} from '../../utils/commandDef';
 import logger from '../../../global/utils/logger';
 import {paginationEmbed} from '../../utils/pagination';
@@ -27,12 +26,12 @@ export const ping: SlashCommand = {
     const button1 = new ButtonBuilder()
         .setCustomId('previousbtn')
         .setLabel('Previous')
-        .setStyle('Danger');
+        .setStyle(ButtonStyle.Danger);
 
     const button2 = new ButtonBuilder()
         .setCustomId('nextbtn')
         .setLabel('Next')
-        .setStyle('Success');
+        .setStyle(ButtonStyle.Success);
 
     // Create an array of embeds
     const pages = [
