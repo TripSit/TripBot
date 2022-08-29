@@ -52,15 +52,21 @@ export async function handleReactionRoles(
 
         // logger.debug(`[${PREFIX}] data.val(): ${JSON.stringify(data.val(), null, 2)}`);
         reactionRoles.forEach((value:ReactionRole) => {
-          if (value.reaction === reaction.emoji.name) {
-            // logger.debug(`[${PREFIX}] Found a match!`);
-            // logger.debug(`[${PREFIX}] value: ${JSON.stringify(value, null, 2)}`);
+          logger.debug(`[${PREFIX}] value.reaction: ${JSON.stringify(value.reaction, null, 2)}`);
+          if (value.reaction === reaction.emoji.name ||
+            value.reaction === reaction.emoji.id) {
+            logger.debug(`[${PREFIX}] Found a match!`);
             selectedRole = value.roleId;
           } else {
             // logger.debug(`[${PREFIX}] No match, adding to OtherRoles: ${value.roleId}`);
             otherRoles.push(value.roleId);
           }
         });
+
+        if (selectedRole === '') {
+          logger.debug(`[${PREFIX}] No role found!`);
+          return;
+        }
 
         if (!add) {
           // Remove the role
@@ -100,7 +106,8 @@ export async function handleReactionRoles(
         logger.debug(`[${PREFIX}] toString: ${reaction.emoji.toString()}`);
         for (let i = 0; i < reaction.message.reactions.cache.size; i++) {
           logger.debug(`[${PREFIX}] key: ${reaction.message.reactions.cache.keyAt(i)}`);
-          if (reaction.emoji.name !== reaction.message.reactions.cache.keyAt(i)) {
+          if (reaction.message.reactions.cache.keyAt(i) !== reaction.emoji.name &&
+              reaction.message.reactions.cache.keyAt(i) !== reaction.emoji.id) {
             const mreaction = reaction.message.reactions.resolve(
               reaction.message.reactions.cache.keyAt(i)!);
             mreaction?.users.remove(user);
