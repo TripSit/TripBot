@@ -39,12 +39,12 @@ module.exports = {
       });
     }
 
-    handleReactionRoles(reaction, user, false);
+    await handleReactionRoles(reaction, user, false);
 
-    if (reaction.message.author?.bot && user.bot) {
-      logger.debug(`[${PREFIX}] Ignoring bot interaction`);
-      return;
-    }
+    // if (reaction.message.author?.bot) {
+    //   logger.debug(`[${PREFIX}] Ignoring bot interaction`);
+    //   return;
+    // }
     // chitragupta(reaction, user, -1);
     logger.debug(`[${PREFIX}] finished!`);
   },

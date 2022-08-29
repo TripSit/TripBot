@@ -541,10 +541,10 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
     `)
       .setAuthor({
         name: 'React to this to show your mindset!',
-        iconURL: '',
-        url: '',
+        iconURL: null,
+        url: null,
       })
-      .setFooter('These roles reset after 8 hours to accurately show your mindset!')
+      .setFooter({text: 'These roles reset after 8 hours to accurately show your mindset!'})
       .setColor(Colors.Purple);
   let reactionRoleInfo = {} as ReactionRoleCollection;
   type ReactionRoleCollection = {
@@ -575,7 +575,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
           [msg.id]: [
             {
               name: 'Drunk',
-              reaction: `${drunkEmoji.slice(2, -20)}`,
+              reaction: `980917123322896395`,
               roleId: env.ROLE_DRUNK,
             },
             {
@@ -627,7 +627,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
   ref.update(reactionRoleInfo);
 
   const colorEmbed = embedTemplate()
-      .setAuthor({name: 'React to this message to set the color of your nickname!', iconURL: '', url: ''})
+      .setAuthor({name: 'React to this message to set the color of your nickname!', iconURL: null, url: null})
       .setFooter(null)
       .setColor(Colors.Blue);
 
@@ -693,7 +693,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
         };
       });
 
-  logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoleInfo)}`);
+  // logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoleInfo)}`);
   ref.update(reactionRoleInfo);
 
   logger.debug(`[${PREFIX}] finished!`);

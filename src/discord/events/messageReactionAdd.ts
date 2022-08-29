@@ -21,6 +21,12 @@ module.exports = {
       return;
     }
 
+    // Dont run on bots
+    if (user.bot) {
+      // logger.debug(`[${PREFIX}] Ignoring bot interaction`);
+      return;
+    }
+
     // When a reaction is received, check if the structure is partial
     if (reaction.partial) await reaction.fetch();
 
@@ -36,20 +42,19 @@ module.exports = {
     //   "emojiId": "958721361587630210"
     // }
 
-    await handleReactionRoles(reaction, user, true);
+    // if (reaction.message.author?.bot) {
+    //   logger.debug(`[${PREFIX}] Ignoring bot interaction`);
+    //   return;
+    // }
 
     // This can run on bots
     // await sparklePoints(reaction, user);
 
-    // Dont run on bots
-    if ((reaction.message.author?.bot || user.bot) && reaction.emoji.name !== 'karma_downvote') {
-      // logger.debug(`[${PREFIX}] Ignoring bot interaction`);
-      return;
-    }
+    handleReactionRoles(reaction, user, true);
 
     // await chitragupta(reaction, user, 1);
-    await bestOf(reaction, user);
+    bestOf(reaction, user);
     // await communityMod(reaction, user);
-    logger.debug(`[${PREFIX}] finished!`);
+    // logger.debug(`[${PREFIX}] finished!`);
   },
 };
