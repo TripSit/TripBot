@@ -19,7 +19,7 @@ const {
   channelOpentripsit2Id,
   channelClosedtripsitId,
   roleVipId,
-  roleNeedshelpId,
+  ROLE_NEEDSHELP,
   // ROLE_HELPER,
   roleNewbie,
   roleMutedId,
@@ -29,7 +29,7 @@ const {
 } = require('../../../env');
 
 const ignoredRoles = [
-  roleNeedshelpId,
+  ROLE_NEEDSHELP,
   roleNewbie,
   roleMutedId,
   roleTempvoiceId,

@@ -5,7 +5,7 @@ import logger from '../../global/utils/logger';
 
 const PREFIX = require('path').parse(__filename).name;
 
-// const tripsitme = require('./tripsitme');
+import {tripsitmeSubmit} from '../utils/tripsitme';
 // const bug = require('../commands/global/bug');
 // const uBan = require('../commands/guild/u_ban');
 // const uKick = require('../commands/guild/u_kick');
@@ -17,13 +17,11 @@ const PREFIX = require('path').parse(__filename).name;
 // const ircButton = require('../commands/guild/prompt');
 
 /**
- * This runs on every message to determine if a badword is used
- * @param {MessageReaction} interaction Reaction used
- * @param {User} user User that reacted
- * @return {Promise<void>}
+ * This runs whenever a modal is submitted
+ * @param {ModalSubmitInteraction} interaction Reaction used
  */
 export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<void> {
-  // logger.debug(`[${PREFIX}] interaction: ${interaction}`);
+  logger.debug(`[${PREFIX}] interaction: ${interaction}`);
   logger.debug(`[${PREFIX}] interaction: ${interaction.customId}`);
   // if (interaction.customId === 'ircConnectModmailIssueModal') {
   //   return ircButton.ircSubmit(interaction, 'ircConnect');
@@ -49,9 +47,10 @@ export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<v
   // if (interaction.customId === 'discordModmailIssueModal') {
   //   return modmail.modmailIssueSubmit(interaction, 'discord');
   // }
-  // if (interaction.customId === 'tripsitModal') {
-  //   return tripsitme.submit(interaction);
-  // }
+  if (interaction.customId === 'tripsitModal') {
+    tripsitmeSubmit(interaction);
+    return;
+  }
   // if (interaction.customId === 'banModal') {
   //   return uBan.submit(interaction);
   // }

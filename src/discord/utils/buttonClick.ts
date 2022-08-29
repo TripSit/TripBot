@@ -12,7 +12,9 @@ import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../utils/embedTemplate';
 
-// const tripsitme = require('./tripsitme');
+import {tripsitmeModal} from '../utils/tripsitme';
+import {tripsat} from '../utils/tripsat';
+
 // const tripsat = require('./tripsat');
 // const modmail = require('../commands/guild/modmail');
 // const ircButton = require('../commands/guild/prompt');
@@ -21,7 +23,7 @@ const PREFIX = require('path').parse(__filename).name;
 
 /**
  * This runs whenever a buttion is clicked
- * @param {Interaction} interaction The interaction that started this
+ * @param {ButtonInteraction} interaction The interaction that started this
  * @param {Client} client The client that manages it
  * @return {Promise<void>}
  */
@@ -170,12 +172,17 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     return;
   }
 
-  // if (buttonID === 'tripsitme') {
-  //   return tripsitme.execute(interaction);
-  // }
-  // if (buttonID === 'tripsat') {
-  //   return tripsat.execute(interaction);
-  // }
+  if (buttonID === 'tripsitme') {
+    return tripsitmeModal(interaction);
+  }
+  if (buttonID.startsWith('tripsat_')) {
+    logger.debug(`[${PREFIX}] tripsat_them: ${interaction.user.username}`);
+    logger.debug(`[${PREFIX}] channelId: ${interaction.channel!.id}`);
+    logger.debug(`[${PREFIX}] ID: ${buttonID.slice(8)}`);
+    const target = await interaction.guild!.members.fetch(buttonID.slice(8));
+    logger.debug(`[${PREFIX}] target: ${target}`);
+    return tripsat(interaction, target);
+  }
   // if (buttonID === 'modmailTripsitter') {
   //   return modmail.modmailTripsitter(interaction);
   // }

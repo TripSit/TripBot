@@ -746,10 +746,6 @@ export async function tripsitme(interaction:ChatInputCommandInteraction) {
               .setCustomId('tripsitme')
               .setLabel('I need assistance!')
               .setStyle(ButtonStyle.Primary),
-          new ButtonBuilder()
-              .setCustomId('tripsat')
-              .setLabel('I\'m good now!')
-              .setStyle(ButtonStyle.Success),
       );
 
   // Create a new button

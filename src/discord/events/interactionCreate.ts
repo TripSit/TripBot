@@ -6,10 +6,7 @@ import {
 import {commandRun} from '../utils/commandRun';
 import logger from '../../global/utils/logger';
 import {buttonClick} from '../utils/buttonClick';
-
-// const {  } = require('discord.js');
-// const logger = require('../../global/utils/logger');
-// const modalSubmit = require('../utils/modal-submit');
+import {modalSubmit} from '../utils/modalSubmit';
 // const autocomplete = require('../../global/utils/autocomplete');
 
 const PREFIX = require('path').parse(__filename).name;
@@ -58,8 +55,8 @@ module.exports = {
       logger.debug(`[${PREFIX}] Unknown interaction: ${JSON.stringify(interaction, null, 2)}`);
     }
 
-    // if (interaction.type === InteractionType.ModalSubmit) {
-    //   modalSubmit.execute(interaction, client);
-    // }
+    if (interaction.type === InteractionType.ModalSubmit) {
+      modalSubmit(interaction);
+    }
   },
 };

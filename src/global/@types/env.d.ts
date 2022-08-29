@@ -83,6 +83,21 @@ declare global {
         ROLE_WHITE: string;
         ROLE_BLACK: string;
         ROLE_PINK: string;
+        ROLE_DIRECTOR: string;
+        ROLE_SUCCESSOR: string;
+        ROLE_SYSADMIN: string;
+        ROLE_LEADDEV: string;
+        ROLE_IRCOP: string;
+        ROLE_TEAMTRIPSIT: string;
+        ROLE_TRIPBOT2: string;
+        ROLE_TRIPBOT: string;
+        ROLE_BOT: string;
+        ROLE_TREE: string;
+        ROLE_SPROUT: string;
+        ROLE_SEEDLING: string;
+        ROLE_BOOSTER: string;
+        ROLE_PATRON: string;
+        ROLE_NEEDSHELP: string;
         CHANNEL_TEMPVOICE: string;
         CATEGORY_TEMPVOICE: string;
       }
