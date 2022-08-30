@@ -17,6 +17,7 @@ import {
   TextChannel,
   ThreadChannel,
   ButtonInteraction,
+  ChatInputCommandInteraction,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
@@ -102,8 +103,8 @@ export async function tripsitmeModal(interaction:ButtonInteraction) {
  * @param {string} triageGiven Given triage information
  * @param {string} introGiven Given intro information
  */
-export async function tripsitmeSubmit(
-    interaction:ModalSubmitInteraction,
+export async function tripsitme(
+    interaction:ModalSubmitInteraction | ChatInputCommandInteraction,
     memberInput?:GuildMember,
     triageGiven?:string,
     introGiven?:string,
@@ -127,9 +128,9 @@ export async function tripsitmeSubmit(
   let triageInput = triageGiven;
   let introInput = introGiven;
   // Otherwise get the input from the modal, if it was submitted
-  if (interaction.fields) {
-    triageInput = interaction.fields.getTextInputValue('triageInput');
-    introInput = interaction.fields.getTextInputValue('introInput');
+  if ((interaction as ModalSubmitInteraction).fields) {
+    triageInput = (interaction as ModalSubmitInteraction).fields.getTextInputValue('triageInput');
+    introInput = (interaction as ModalSubmitInteraction).fields.getTextInputValue('introInput');
   }
   logger.debug(`[${PREFIX}] triageInput: ${triageInput}`);
   logger.debug(`[${PREFIX}] introInput: ${introInput}`);

@@ -1,18 +1,21 @@
-import {Message} from 'discord.js';
+import {
+  ChannelType,
+  Message,
+  ThreadChannel,
+  TextChannel,
+} from 'discord.js';
 import env from '../../global/utils/env.config';
 import {thoughtPolice} from '../utils/d.thoughtPolice';
+import {stripIndents} from 'common-tags';
+import {embedTemplate} from '../utils/embedTemplate';
 import {experience} from '../../global/utils/experience';
-// import logger from '../../global/utils/logger';
-// const PREFIX = require('path').parse(__filename).name;
+import logger from '../../global/utils/logger';
+const PREFIX = require('path').parse(__filename).name;
 
 // const { WebhookClient } = require('discord.js');
-// const {stripIndents} = require('common-tags');
 // const {announcements} = require('../../global/utils/announcements');
 // const { karma } = require('../../global/utils/karma');
-// const {modmailInitialResponse} = require('../commands/guild/modmail');
-// const template = require('../utils/embed-template');
-
-// const {getTicketInfo} = require('../../global/services/firebaseAPI');
+import {modmailInitialResponse} from '../commands/guild/modmail';
 
 module.exports = {
   name: 'messageCreate',
@@ -57,56 +60,66 @@ module.exports = {
     }
 
     // If this is a DM, run the modmail function.
-    // if (message.channel.type === 'DM') {
-    //   // Dont run if the user mentions @everyone or @here.
-    //   if (message.content.includes('@everyone') || message.content.includes('@here')) {
-    //     return message.author.send("You're not allowed to use those mentions.");
-    //   }
+    if (message.channel.type === ChannelType.DM) {
+      // Dont run if the user mentions @everyone or @here.
+      if (message.content.includes('@everyone') || message.content.includes('@here')) {
+        return message.author.send('You\'re not allowed to use those mentions.');
+      }
 
-    //   const [ticketData] = await getTicketInfo(message.author.id, 'user');
-    //   logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+      // Get the ticket info
+      let ticketData:any = {};
 
-    //   if (ticketData === 'blocked') {
-    //     return message.author.send('You are blocked!');
-    //   }
+      const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${message.author.id}/`);
+      await ref.once('value', (data) => {
+        if (data.val() !== null) {
+          ticketData = data.val();
+        } else {
+          return;
+        }
+      });
+      logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
-    //   const guild = await message.client.guilds.fetch(DISCORD_GUILD_ID);
-    //   const member = await guild.members.fetch(message.author.id);
-    //   // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
+      if (ticketData === 'blocked') {
+        return message.author.send('You are blocked!');
+      }
 
-    //   if (Object.keys(ticketData).length !== 0) {
-    //     // const webhookClient = new WebhookClient({
-    //     //   id: ticketInfo.issueWebhook.webhookId,
-    //     //   token: ticketInfo.issueWebhook.webhookToken,
-    //     // });
+      const guild = await message.client.guilds.fetch(env.DISCORD_GUILD_ID);
+      const member = await guild.members.fetch(message.author.id);
+      // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
 
-    //     // webhookClient.send({
-    //     //   content: message,
-    //     //   username: message.author.username,
-    //     //   avatarURL: message.author.avatarURL(),
-    //     // });
+      if (Object.keys(ticketData).length !== 0) {
+        // const webhookClient = new WebhookClient({
+        //   id: ticketInfo.issueWebhook.webhookId,
+        //   token: ticketInfo.issueWebhook.webhookToken,
+        // });
 
-    //     if (member) {
-    //       const channel = await message.client.channels.fetch(channelIrcId);
-    //       const issueThread = await channel.threads.fetch(ticketData.issueThread);
-    //       const embed = template.embedTemplate();
-    //       embed.setDescription(stripIndents`You already have an open issue here ${issueThread.toString()}!`);
-    //       message.reply({ embeds: [embed], ephemeral: true });
-    //       return;
-    //     }
+        // webhookClient.send({
+        //   content: message,
+        //   username: message.author.username,
+        //   avatarURL: message.author.avatarURL(),
+        // });
 
-    //     const channel = message.client.channels.cache.get(channelIrcId);
-    //     const thread = await channel.threads.fetch(ticketData.issueThread);
-    //     // logger.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
-    //     if (thread) {
-    //       return thread.send(message);
-    //     }
-    //   }
+        if (member) {
+          const channel = await message.client.channels.fetch(env.CHANNEL_IRC) as TextChannel;
+          const issueThread = await channel.threads.fetch(ticketData.issueThread) as ThreadChannel;
+          const embed = embedTemplate();
+          embed.setDescription(stripIndents`You already have an open issue here ${issueThread.toString()}!`);
+          message.reply({embeds: [embed]});
+          return;
+        }
 
-    //   return modmailInitialResponse(message);
-    // }
+        const channel = message.client.channels.cache.get(env.CHANNEL_IRC) as TextChannel;
+        const thread = await channel.threads.fetch(ticketData.issueThread) as ThreadChannel;
+        // logger.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
+        if (thread) {
+          return thread.send(message.cleanContent);
+        }
+      }
 
-    // if (message.channel.parentId === channelIrcId) {
+      return modmailInitialResponse(message);
+    }
+
+    // if (message.channel.parentId === CHANNEL_IRC) {
     //   // If this is a moderator channel, run the modmail function.
     //   logger.debug(`[${PREFIX}] IRC channel!`);
 

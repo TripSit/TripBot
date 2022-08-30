@@ -1,34 +1,30 @@
-'use strict';
-
-const path = require('path');
-const { stripIndents } = require('common-tags/lib');
-const {
+import {
   SlashCommandBuilder,
+  ChatInputCommandInteraction,
   Colors,
-} = require('discord.js');
-const logger = require('../../../global/utils/logger');
-const template = require('../../utils/embed-template');
-const { getUserInfo } = require('../../../global/services/firebaseAPI');
+} from 'discord.js';
+import {SlashCommand} from '../../utils/commandDef';
+import {embedTemplate} from '../../utils/embedTemplate';
+import {stripIndents} from 'common-tags';
+import env from '../../../global/utils/env.config';
+import logger from '../../../global/utils/logger';
+const PREFIX = require('path').parse(__filename).name;
 
-const PREFIX = path.parse(__filename).name;
-
-module.exports = {
+export const h2flow: SlashCommand = {
   data: new SlashCommandBuilder()
-    .setName('h2flow')
-    .setDescription('Welcome to the H2Flow Club!'),
+      .setName('h2flow')
+      .setDescription('Welcome to the H2Flow Club!'),
 
-  async execute(interaction) {
-    const actor = interaction.member;
-
-    // Extract actor data
-    const [actorData] = await getUserInfo(actor);
-
+  async execute(interaction:ChatInputCommandInteraction) {
     let sparklePoints = 0;
-    try {
-      sparklePoints = actorData.discord.sparkle_points || 0;
-    } catch (e) {
-      logger.error(`[${PREFIX}] Error extracting sparkle points: ${e}`);
-    }
+
+    const ref = db.ref(`${env.FIREBASE_DB_USERS}/${interaction.member!.user.id}/discord/sparkle_points`);
+    await ref.once('value', (data) => {
+      if (data.val() !== null) {
+        sparklePoints = data.val() + 1;
+      }
+    });
+
     const aquaBadges = sparklePoints / 10;
     let platinumClub = 'Non-member =(';
     if (sparklePoints >= 100) {
@@ -53,14 +49,14 @@ module.exports = {
       platinumClub = 'Diamond Club';
     }
 
-    const embed = template.embedTemplate()
-      .setAuthor({
-        name: 'Welcome to the H2Flow Club!',
-        url: 'https://www.youtube.com/watch?v=6r17Ez9V3AQ&t=132s',
-      })
-      .setThumbnail('https://i.imgur.com/2niEJJO.png')
-      .setColor(Colors.DarkBlue)
-      .setDescription(stripIndents`
+    const embed = embedTemplate()
+        .setAuthor({
+          name: 'Welcome to the H2Flow Club!',
+          url: 'https://www.youtube.com/watch?v=6r17Ez9V3AQ&t=132s',
+        })
+        .setThumbnail('https://i.imgur.com/2niEJJO.png')
+        .setColor(Colors.DarkBlue)
+        .setDescription(stripIndents`
       These are not useless internet points...
       This is an aqautic💧based social🌐media oral🦷experience!
 
@@ -79,14 +75,14 @@ module.exports = {
       If you get enough 🌊🔰 and we'll welcome you to the
 
       **🏆*H2Flow Club*🏆!**`)
-      .setFooter(null)
-      .addFields(
-        { name: 'Your Sparkle Points:', value: `${sparklePoints}`, inline: true },
-        { name: 'Your Aqua Badges:', value: `${aquaBadges}`, inline: true },
-        { name: 'H2Flow Club Status:', value: `${platinumClub}`, inline: true },
-      );
+        .setFooter(null)
+        .addFields(
+            {name: 'Your Sparkle Points:', value: `${sparklePoints}`, inline: true},
+            {name: 'Your Aqua Badges:', value: `${aquaBadges}`, inline: true},
+            {name: 'H2Flow Club Status:', value: `${platinumClub}`, inline: true},
+        );
 
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({embeds: [embed], ephemeral: false});
 
     logger.debug(`[${PREFIX}] finished!`);
   },

@@ -1,6 +1,8 @@
 import {
   Client,
   ChatInputCommandInteraction,
+  MessageContextMenuCommandInteraction,
+  UserContextMenuCommandInteraction,
 } from 'discord.js';
 // import {SlashCommand} from './commandDef';
 import logger from '../../global/utils/logger';
@@ -14,7 +16,9 @@ import env from '../../global/utils/env.config';
  * @param {Client} client The Client that manages this interaction
  * @return {Discord.MessageEmbed}
  */
-export async function commandRun(interaction: ChatInputCommandInteraction, client: Client) {
+export async function commandRun(
+    interaction: ChatInputCommandInteraction| MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction,
+    client: Client) {
   logger.debug(`[${PREFIX}] starting!`);
   // const blacklistUsers = [];
   // if (global.guild_db) {

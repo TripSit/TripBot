@@ -109,6 +109,8 @@ declare global {
         CHANNEL_TEMPVOICE: string;
         CATEGORY_TEMPVOICE: string;
         IRC_BOTPREFIX: string;
+        YOUTUBE_TOKEN: string;
+        GITHUB_TOKEN: string;
       }
     }
   }

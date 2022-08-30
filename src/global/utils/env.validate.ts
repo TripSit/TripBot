@@ -1,6 +1,6 @@
 export const validateEnv = () => {
-  if (!process.env.GITHUB_AUTH_TOKEN) {
-    console.warn(`Missing GITHUB_AUTH_TOKEN:
+  if (!process.env.GITHUB_TOKEN) {
+    console.warn(`Missing GITHUB_TOKEN:
     You wont be able to use /issue`);
   }
 

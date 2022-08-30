@@ -10,6 +10,8 @@ import {
   User,
   Role,
   Guild,
+  ModalSubmitInteraction,
+  UserContextMenuCommandInteraction,
 } from 'discord.js';
 import {stripIndents} from 'common-tags';
 import {parseDuration} from '../utils/parseDuration';
@@ -135,12 +137,12 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
 export async function moderate(
     actor:string | GuildMember,
     command:string,
-    target:string,
+    target:string | GuildMember,
     channel:unknown,
     toggle:string | undefined,
     reason:string | undefined,
     duration:string | undefined,
-    interaction:ChatInputCommandInteraction | undefined,
+    interaction:ChatInputCommandInteraction | ModalSubmitInteraction | UserContextMenuCommandInteraction | undefined,
 ):Promise<any> {
   logger.debug(stripIndents`[${PREFIX}]
       Actor: ${actor}
@@ -155,14 +157,14 @@ export async function moderate(
   let minutes = 604800000;
 
   // Get actor object
-  const {
+  const [
     // actorUser,
     actorUsername,
     actorPlatform,
     actorNickname,
     actorId,
     actorIsTeamMember,
-  } = await determineUserInfo(actor);
+  ] = await determineUserInfo(actor);
 
   // logger.debug(`[${PREFIX}] actorUser: ${JSON.stringify(actorUser, null, 2)}`);
   logger.debug(`[${PREFIX}] actorNickname: ${actorNickname}`);
@@ -684,7 +686,9 @@ export async function moderate(
  * @param {any} query A user object or a string of a user's ID
  * @return {string[]} A list of properties about this user
  */
-async function determineUserInfo(query:any):Promise<any> {
+async function determineUserInfo(
+    query:GuildMember | string,
+):Promise<any[]> {
   let userInfo:GuildMember | User | string = '';
   let userPlatform = null;
   let userNickname = null;
@@ -708,28 +712,28 @@ async function determineUserInfo(query:any):Promise<any> {
 
   // logger.debug(`[${PREFIX}] Query.userId: ${query.guildId}`);
 
-  if (query.guild) {
+  if ((query as GuildMember).guild) {
     // If the query is an object and has the userId property, it's a discord user
     logger.debug(`[${PREFIX}] Query is already discord member object`);
-    userInfo = query as GuildMember;
     userPlatform = 'discord';
-    userNickname = userInfo.nickname || userInfo.displayName;
-    userUsername = userInfo.user.username;
-    userId = userInfo.id;
-  } else if (query.startsWith('<@') && query.endsWith('>')) {
+    userInfo = query as GuildMember;
+    userNickname = (query as GuildMember).nickname;
+    userUsername = (query as GuildMember).user.username;
+    userId = (query as GuildMember).user.id;
+  } else if ((query as string).startsWith('<@') && (query as string).endsWith('>')) {
     // If the query string starts with a <@ and ends with > then it's likely a discord user
     logger.debug(`[${PREFIX}] Query is a discord mention`);
-    logger.debug(`[${PREFIX}] Query userId: ${query.slice(2, -1)}`);
+    logger.debug(`[${PREFIX}] Query userId: ${(query as string).slice(2, -1)}`);
     try {
       const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-      userInfo = await tripsitGuild.members.fetch(query.slice(2, -1)) as GuildMember;
+      userInfo = await tripsitGuild.members.fetch((query as string).slice(2, -1)) as GuildMember;
       userPlatform = 'discord';
       userNickname = userInfo.displayName;
       userUsername = userInfo.user.username;
       userId = userInfo.id;
     } catch (err) {
       logger.error(`[${PREFIX}] Error fetching discord user: ${err}`);
-      userInfo = await global.client.users.fetch(query.slice(2, -1)) as User;
+      userInfo = await global.client.users.fetch((query as string).slice(2, -1)) as User;
       userPlatform = 'discord';
       userNickname = userInfo.username;
       userUsername = userInfo.username;
@@ -797,5 +801,5 @@ async function determineUserInfo(query:any):Promise<any> {
   //     }
   //   }
   // }
-  return {userInfo, userNickname, userUsername, userId, userPlatform, userIsTeamMember};
+  return [userInfo, userNickname, userUsername, userId, userPlatform, userIsTeamMember];
 }

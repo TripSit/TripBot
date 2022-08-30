@@ -2,18 +2,24 @@ import {
   ModalSubmitInteraction,
 } from 'discord.js';
 import logger from '../../global/utils/logger';
+import {
+  modmailTripsitterSubmit,
+  modmailFeedbackSubmit,
+  modmailIssueSubmit,
+} from '../commands/guild/modmail';
 
 const PREFIX = require('path').parse(__filename).name;
 
-import {tripsitmeSubmit} from '../utils/tripsitme';
+import {tripsitme} from '../utils/tripsitme';
 // const bug = require('../commands/global/bug');
 // const uBan = require('../commands/guild/u_ban');
 // const uKick = require('../commands/guild/u_kick');
 // const uNote = require('../commands/guild/u_note');
 // const mTimeout = require('../commands/guild/m_timeout');
 // const mWarn = require('../commands/guild/m_warn');
-// const mReport = require('../commands/guild/m_report');
-// const modmail = require('../commands/guild/modmail');
+import {
+  report,
+} from '../commands/guild/m_report';
 // const ircButton = require('../commands/guild/prompt');
 
 /**
@@ -35,20 +41,24 @@ export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<v
   // if (interaction.customId === 'ircOtherModmailIssueModal') {
   //   return ircButton.ircSubmit(interaction, 'ircOther');
   // }
-  // if (interaction.customId === 'tripsitModmailModal') {
-  //   return modmail.modmailTripsitterSubmit(interaction);
-  // }
-  // if (interaction.customId === 'modmailFeedbackModal') {
-  //   return modmail.modmailFeedbackSubmit(interaction);
-  // }
-  // if (interaction.customId === 'ircModmailIssueModal') {
-  //   return modmail.modmailIssueSubmit(interaction, 'irc');
-  // }
-  // if (interaction.customId === 'discordModmailIssueModal') {
-  //   return modmail.modmailIssueSubmit(interaction, 'discord');
-  // }
+  if (interaction.customId === 'tripsitModmailModal') {
+    modmailTripsitterSubmit(interaction);
+    return;
+  }
+  if (interaction.customId === 'modmailFeedbackModal') {
+    modmailFeedbackSubmit(interaction);
+    return;
+  }
+  if (interaction.customId === 'ircModmailIssueModal') {
+    modmailIssueSubmit(interaction, 'irc');
+    return;
+  }
+  if (interaction.customId === 'discordModmailIssueModal') {
+    modmailIssueSubmit(interaction, 'discord');
+    return;
+  }
   if (interaction.customId === 'tripsitModal') {
-    tripsitmeSubmit(interaction);
+    tripsitme(interaction);
     return;
   }
   // if (interaction.customId === 'banModal') {
@@ -66,9 +76,9 @@ export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<v
   // if (interaction.customId === 'warnModal') {
   //   return mWarn.submit(interaction);
   // }
-  // if (interaction.customId === 'reportModal') {
-  //   return mReport.submit(interaction);
-  // }
+  if (interaction.customId === 'reportModal') {
+    return report.submit(interaction);
+  }
   // if (interaction.customId === 'bugReportModal') {
   //   return bug.submit(interaction);
   // }

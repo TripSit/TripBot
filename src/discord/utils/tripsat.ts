@@ -8,6 +8,7 @@ import {
   Message,
   MessageReaction,
   User,
+  ChatInputCommandInteraction,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
@@ -75,7 +76,7 @@ const invisibleEmoji = env.NODE_ENV === 'production' ?
  * @param {GuildMember} memberInput
  */
 export async function tripsat(
-    interaction:ButtonInteraction,
+    interaction:ButtonInteraction | ChatInputCommandInteraction,
     memberInput?:GuildMember,
 ) {
   logger.debug(`[${PREFIX}] starting!`);

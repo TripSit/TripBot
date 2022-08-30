@@ -11,9 +11,14 @@ import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../utils/embedTemplate';
-
 import {tripsitmeModal} from '../utils/tripsitme';
 import {tripsat} from '../utils/tripsat';
+import {
+  modmailTripsitter,
+  // modmailCommands,
+  modmailFeedback,
+  modmailIssue,
+} from '../commands/guild/modmail';
 
 // const tripsat = require('./tripsat');
 // const modmail = require('../commands/guild/modmail');
@@ -183,19 +188,21 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     logger.debug(`[${PREFIX}] target: ${target}`);
     return tripsat(interaction, target);
   }
-  // if (buttonID === 'modmailTripsitter') {
-  //   return modmail.modmailTripsitter(interaction);
+  if (buttonID === 'modmailTripsitter') {
+    return modmailTripsitter(interaction);
+  }
+  // if (buttonID === 'modmailCommands') {
+  //   return modmailCommands(interaction);
   // }
-  // // if (buttonID === 'modmailCommands') { return modmail.modmailCommands(interaction); }
-  // if (buttonID === 'modmailFeedback') {
-  //   return modmail.modmailFeedback(interaction);
-  // }
-  // if (buttonID === 'modmailIrcissue') {
-  //   return modmail.modmailIssue(interaction, 'irc');
-  // }
-  // if (buttonID === 'modmailDiscordissue') {
-  //   return modmail.modmailIssue(interaction, 'discord');
-  // }
+  if (buttonID === 'modmailFeedback') {
+    return modmailFeedback(interaction);
+  }
+  if (buttonID === 'modmailIrcissue') {
+    return modmailIssue(interaction, 'irc');
+  }
+  if (buttonID === 'modmailDiscordissue') {
+    return modmailIssue(interaction, 'discord');
+  }
   // if (buttonID === 'ircAppeal') {
   //   return ircButton.ircClick(interaction, 'ircAppeal');
   // }
