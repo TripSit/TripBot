@@ -59,7 +59,7 @@ export async function commandRun(interaction: ChatInputCommandInteraction, clien
   const commandsAdmin = [
     'update-guilds',
     'vip-welcome',
-    'clear-chat',
+    'clearChat',
     'start-here',
     'clean-db',
     'rules',

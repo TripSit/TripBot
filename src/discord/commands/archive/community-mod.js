@@ -9,7 +9,7 @@ const { moderate } = require('../../../global/utils/moderate');
 const {
   NODE_ENV,
   ROLE_MODERATOR,
-  roleNewbieId,
+  ROLE_NEWBIEId,
   roleVotebannedId,
   roleVotekickedId,
   roleVotetimeoutId,
@@ -223,14 +223,14 @@ module.exports = {
     // Process vote underban
     if (reaction.count === voteUnderbanThreshold && reaction.emoji.name === 'vote_underban') {
       const isNewbie = target.roles.cache.find(
-        role => role.id === roleNewbieId,
+        role => role.id === ROLE_NEWBIEId,
       ) !== undefined;
       if (isNewbie) { return; }
       logger.debug(`[${PREFIX}] ${target} has been ${reaction.emoji.name} ${voteUnderbanThreshold} times!`);
       const roleVoteunderban = reaction.message.guild.roles.cache
         .find(role => role.id === roleVoteunderbanId);
-      const roleNewbie = reaction.message.guild.roles.cache
-        .find(role => role.id === roleNewbieId);
+      const ROLE_NEWBIE = reaction.message.guild.roles.cache
+        .find(role => role.id === ROLE_NEWBIEId);
 
       // Remove all roles, except team and vanity, from the target
       target.roles.cache.forEach(role => {
@@ -245,12 +245,12 @@ module.exports = {
         }
       });
 
-      // Add the roleNewbie and roleVoteunderban role to the target
+      // Add the ROLE_NEWBIE and roleVoteunderban role to the target
       try {
         logger.debug(`[${PREFIX}] Adding role ${roleVoteunderban.name} to ${target.nickname || target.user.username}`);
         await target.roles.add(roleVoteunderban);
-        logger.debug(`[${PREFIX}] Adding role ${roleNewbie.name} to ${target.nickname || target.user.username}`);
-        await target.roles.add(roleNewbie);
+        logger.debug(`[${PREFIX}] Adding role ${ROLE_NEWBIE.name} to ${target.nickname || target.user.username}`);
+        await target.roles.add(ROLE_NEWBIE);
       } catch (err) {
         logger.error(`[${PREFIX}] Error adding role to target: ${err}`);
         return reaction.message.reply(stripIndents`There was an error adding the NeedsHelp role!
@@ -260,7 +260,7 @@ module.exports = {
       return reaction.message.reply(stripIndents`
       Hey ${moderatorRole}! ${target.username} was community underbanned for this, please review!
 
-      **They will stay in the ${roleNewbie.toString()} role until a moderator changes it!**`);
+      **They will stay in the ${ROLE_NEWBIE.toString()} role until a moderator changes it!**`);
     }
     logger.debug(`[${PREFIX}] finished!`);
   },

@@ -53,6 +53,7 @@ declare global {
         CHANNEL_DISSONAUT: string;
         CHANNEL_GOLDLOUNGE: string;
         CHANNEL_HUB: string;
+        CHANNEL_TRIPBOTLOGS: string;
         ROLE_MODERATOR: string;
         ROLE_IRCADMIN: string;
         ROLE_DISCORDADMIN: string;
@@ -98,8 +99,16 @@ declare global {
         ROLE_BOOSTER: string;
         ROLE_PATRON: string;
         ROLE_NEEDSHELP: string;
+        ROLE_NEWBIE: string;
+        ROLE_MUTED: string;
+        ROLE_TEMPVOICE: string;
+        ROLE_VIP: string;
+        CHANNEL_OPENTRIPSIT1: string;
+        CHANNEL_OPENTRIPSIT2: string;
+        CHANNEL_CLOSEDTRIPSIT: string;
         CHANNEL_TEMPVOICE: string;
         CATEGORY_TEMPVOICE: string;
+        IRC_BOTPREFIX: string;
       }
     }
   }

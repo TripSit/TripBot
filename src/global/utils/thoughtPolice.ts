@@ -138,7 +138,7 @@ const offensive = [
  */
 export async function bigBrother(messageContent:string): Promise<string[]> {
   logger.debug(`[${PREFIX}] started!`);
-  logger.debug(`[${PREFIX}] messageContent: ${JSON.stringify(messageContent, null, 2)}!`);
+  // logger.debug(`[${PREFIX}] messageContent: ${JSON.stringify(messageContent, null, 2)}!`);
 
   // Check for most offensive stuff first
   const offensiveMatch = offensive.filter(
@@ -154,7 +154,7 @@ export async function bigBrother(messageContent:string): Promise<string[]> {
   // Check for HR alerts next
   const hrMatch = harmReduction.filter(
       (pattern) => {
-        logger.debug(`[${PREFIX}] pattern: ${pattern}`);
+        // logger.debug(`[${PREFIX}] pattern: ${pattern}`);
         return new RegExp(pattern).test(messageContent);
       },
   ).length > 0;

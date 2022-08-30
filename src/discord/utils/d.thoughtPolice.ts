@@ -25,7 +25,7 @@ export async function thoughtPolice(message:Message): Promise<void> {
 
   const result = await bigBrother(message.cleanContent.toLowerCase());
 
-  logger.debug(`[${PREFIX}] result: ${result}`);
+  // logger.debug(`[${PREFIX}] result: ${result}`);
 
   if (result) {
     switch (result[0]) {

@@ -1,6 +1,7 @@
 import {Message} from 'discord.js';
 import env from '../../global/utils/env.config';
 import {thoughtPolice} from '../utils/d.thoughtPolice';
+import {experience} from '../../global/utils/experience';
 // import logger from '../../global/utils/logger';
 // const PREFIX = require('path').parse(__filename).name;
 
@@ -8,7 +9,6 @@ import {thoughtPolice} from '../utils/d.thoughtPolice';
 // const {stripIndents} = require('common-tags');
 // const {announcements} = require('../../global/utils/announcements');
 // const { karma } = require('../../global/utils/karma');
-// const {experience} = require('../../global/utils/experience');
 // const {modmailInitialResponse} = require('../commands/guild/modmail');
 // const template = require('../utils/embed-template');
 
@@ -122,6 +122,6 @@ module.exports = {
     // announcements(message);
     // karma(message);
     thoughtPolice(message);
-    // experience(message);
+    experience(message);
   },
 };
