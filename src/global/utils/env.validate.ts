@@ -4,6 +4,11 @@ export const validateEnv = () => {
     You wont be able to use /issue`);
   }
 
+  if (!process.env.RAPID_TOKEN) {
+    console.warn(`Missing RAPID_TOKEN:
+    You wont be able to use /joke`);
+  }
+
   if (!process.env.DISCORD_CLIENT_ID) {
     console.warn(`Missing DISCORD_CLIENT_ID:
     You wont be able to login to discord.`);

@@ -124,7 +124,7 @@ export const discordTemplate: SlashCommand = {
       definition,
       thumbnail,
     } = intDef;
-    let {color} = intDef;
+    const {color} = intDef;
     const output = `${emoji} ${status} ${emoji}`;
     embed.addFields(
         {name: 'Result', value: output},

@@ -1,46 +1,51 @@
-'use strict';
+import {
+  SlashCommandBuilder,
+} from 'discord.js';
+import {SlashCommand} from '../../utils/commandDef';
+import {embedTemplate} from '../../utils/embedTemplate';
+import logger from '../../../global/utils/logger';
+const PREFIX = require('path').parse(__filename).name;
 
-const path = require('path');
-const { SlashCommandBuilder } = require('discord.js');
-// const { stripIndents } = require('common-tags');
-const logger = require('../../../global/utils/logger');
-const template = require('../../utils/embed-template');
-// const emergency = require('../../../assets/emergency_contact.json');
-// const { MessageFlags } = require('discord.js');
-
-const PREFIX = path.parse(__filename).name;
-
-module.exports = {
+export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
-    .setName('ems')
-    .setDescription('Information that may be helpful in a serious situation.'),
+      .setName('ems')
+      .setDescription('Information that may be helpful in a serious situation.'),
   // .addStringOption(option => option.setName('country')
   //   .setDescription('Which country? Pick nothing for default.')
   //   .setAutocomplete(true)),
   async execute(interaction) {
     const country = interaction.options.getString('country');
-    const embed = template.embedTemplate();
+    const embed = embedTemplate();
     if (!country) {
       embed.setTitle('EMS Information');
       embed.addFields(
-        { name: 'Poison Control (USA)', value: 'Website: https://www.poison.org/\nPhone: (800) 222-1222\nWebhelp: https://triage.webpoisoncontrol.org/', inline: false },
-        { name: 'Never Use Alone (USA)', value: 'Website: https://neverusealone.com/\nPhone: (800) 484-3731', inline: false },
-        { name: 'National Overdose Response Service (Canada)', value: 'Website: https://www.nors.ca/\nPhone: 1 (888) 688-6677', inline: false },
-        { name: 'Talktofrank (UK)', value: 'Website: https://www.talktofrank.com/\nPhone: 0300 123 6600\nWebhelp: https://www.talktofrank.com/livechat', inline: false },
-        { name: 'NHS emergency line (UK)', value: 'Website: https://www.nhs.uk/live-well/addiction-support\nPhone: 999', inline: false },
-        { name: 'Mindzone (EU/germany)', value: 'Website: https://mindzone.info/gesundheit/drogennotfall/\nPhone: 112 (works EU wide)', inline: false },
+          {
+            name: 'Poison Control (USA)',
+            value: 'Website: https://www.poison.org/\nPhone: (800) 222-1222\nWebhelp: https://triage.webpoisoncontrol.org/', // eslint-disable-line max-len
+
+            inline: false},
+          {
+            name: 'Never Use Alone (USA)',
+            value: 'Website: https://neverusealone.com/\nPhone: (800) 484-3731',
+            inline: false},
+          {
+            name: 'National Overdose Response Service (Canada)',
+            value: 'Website: https://www.nors.ca/\nPhone: 1 (888) 688-6677',
+            inline: false},
+          {
+            name: 'Talktofrank (UK)',
+            value: 'Website: https://www.talktofrank.com/\nPhone: 0300 123 6600\nWebhelp: https://www.talktofrank.com/livechat', // eslint-disable-line max-len
+            inline: false},
+          {
+            name: 'NHS emergency line (UK)',
+            value: 'Website: https://www.nhs.uk/live-well/addiction-support\nPhone: 999',
+            inline: false},
+          {
+            name: 'Mindzone (EU/germany)',
+            value: 'Website: https://mindzone.info/gesundheit/drogennotfall/\nPhone: 112 (works EU wide)',
+            inline: false},
       );
-      if (!interaction.replied) {
-        interaction.reply({
-          embeds: [embed],
-          ephemeral: false,
-        });
-      } else {
-        interaction.followUp({
-          embeds: [embed],
-          ephemeral: false,
-        });
-      }
+      interaction.reply({embeds: [embed]});
       logger.debug(`[${PREFIX}] finished!`);
       // return;
     }

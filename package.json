@@ -38,6 +38,7 @@
     "@types/convert-units": "^2.3.5",
     "@types/ms": "^0.7.31",
     "@types/underscore": "^1.11.4",
+    "axios": "^0.27.2",
     "chalk": "^5.0.1",
     "common-tags": "^1.8.2",
     "convert-units": "^2.3.4",
@@ -48,7 +49,6 @@
     "firebase-admin": "^11.0.1",
     "fuse.js": "^6.6.2",
     "ms": "^2.1.3",
-    "underscore": "^1.13.4",
     "winston": "^3.8.1",
     "youtube-search": "^1.1.6"
   },

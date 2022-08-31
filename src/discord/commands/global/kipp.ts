@@ -1,16 +1,15 @@
-'use strict';
+import {
+  SlashCommandBuilder,
+} from 'discord.js';
+import {SlashCommand} from '../../utils/commandDef';
+import {embedTemplate} from '../../utils/embedTemplate';
+import logger from '../../../global/utils/logger';
+const PREFIX = require('path').parse(__filename).name;
 
-const path = require('path');
-const { SlashCommandBuilder } = require('discord.js');
-const logger = require('../../../global/utils/logger');
-const template = require('../../utils/embed-template');
-
-const PREFIX = path.parse(__filename).name;
-
-module.exports = {
+export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
-    .setName('kipp')
-    .setDescription('Keep it positive please!'),
+      .setName('kipp')
+      .setDescription('Keep it positive please!'),
 
   async execute(interaction) {
     const happyEmojis = [
@@ -28,10 +27,10 @@ module.exports = {
     const output = rowA.join(' ') + rowB + rowC.join(' ');
     logger.debug(`[${PREFIX}] Output: ${output}`);
 
-    const embed = template.embedTemplate()
-      .setDescription(output)
-      .setAuthor(null)
-      .setFooter(null);
+    const embed = embedTemplate()
+        .setDescription(output)
+        .setAuthor(null)
+        .setFooter(null);
 
     if (!interaction.replied) {
       interaction.reply({

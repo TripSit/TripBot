@@ -1,64 +1,75 @@
-'use strict';
-
-const path = require('path');
-const {
+import {
   SlashCommandBuilder,
   ButtonStyle,
   ButtonBuilder,
   Colors,
-} = require('discord.js');
-// const paginationEmbed = require('discordjs-button-pagination');
-const paginationEmbed = require('../../utils/pagination');
-const logger = require('../../../global/utils/logger');
-const template = require('../../utils/embed-template');
-const drugDataAll = require('../../../global/assets/data/drug_db_combined.json');
-const allComboData = require('../../../global/assets/data/combo_definitions.json');
+} from 'discord.js';
+import {SlashCommand} from '../../utils/commandDef';
+import {embedTemplate} from '../../utils/embedTemplate';
+import {paginationEmbed} from '../../utils/pagination';
+import logger from '../../../global/utils/logger';
 
-const PREFIX = path.parse(__filename).name;
+import drugDataAll from '../../../global/assets/data/drug_db_combined.json';
+import allComboData from '../../../global/assets/data/combo_definitions.json';
+
+const PREFIX = require('path').parse(__filename).name;
 
 const buttonList = [
   new ButtonBuilder().setCustomId('previousbtn').setLabel('Previous').setStyle(ButtonStyle.Danger),
   new ButtonBuilder().setCustomId('nextbtn').setLabel('Next').setStyle(ButtonStyle.Success),
 ];
 
-module.exports = {
+export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
-    .setName('drug')
-    .setDescription('Check substance information')
-    .addStringOption(option => option.setName('substance')
-      .setDescription('Pick a substance!')
-      .setRequired(true)
-      .setAutocomplete(true))
-    .addStringOption(option => option.setName('section')
-      .setDescription('What section?')
-      .setRequired(true)
-      .addChoices(
-        { name: 'Summary', value: 'Summary' },
-        { name: 'Dosage', value: 'Dosage' },
-        { name: 'Combos', value: 'Combos' },
-      )),
+      .setName('drug')
+      .setDescription('Check substance information')
+      .addStringOption((option) => option.setName('substance')
+          .setDescription('Pick a substance!')
+          .setRequired(true)
+          .setAutocomplete(true))
+      .addStringOption((option) => option.setName('section')
+          .setDescription('What section?')
+          .setRequired(true)
+          .addChoices(
+              {name: 'Summary', value: 'Summary'},
+              {name: 'Dosage', value: 'Dosage'},
+              {name: 'Combos', value: 'Combos'},
+          )),
 
-  async execute(interaction, parameters) {
-    const substance = interaction.options.getString('substance') || parameters.at(0);
-    const section = interaction.options.getString('section') || parameters.at(1);
-
+  async execute(interaction) {
+    const substance = interaction.options.getString('substance')!;
+    const section = interaction.options.getString('section')!;
     logger.debug(`[${PREFIX}] starting getDrugInfo with parameter: ${substance}`);
-    // loop through drug_data_all to find the substance
-    let drugData = {};
-    logger.debug(`[${PREFIX}] All drug data length is: ${Object.keys(drugDataAll).length}`);
-    for (let i = 0; i < Object.keys(drugDataAll).length; i += 1) {
-      // logger.debug(`[${PREFIX}] drug_data_all[i]['name'] is: ${drug_data_all[i]['name']}`)
-      if (drugDataAll[i].name === substance) {
-        logger.debug(`[${PREFIX}] found substance: ${substance}`);
-        drugData = drugDataAll[i];
-        break;
-      }
+
+    const embed = embedTemplate();
+
+    if (drugDataAll === null || drugDataAll === undefined) {
+      logger.error(`[${PREFIX}] drugDataAll is null or undefined`);
+      embed.setTitle(`Drug data was not found`);
+      embed.setDescription(
+          '...this shouldn\'t have happened, please tell the developer!');
+      // If this happens then something happened to the data files
+      interaction.reply({embeds: [embed]});
+      return;
     }
 
-    // logger.debug(`[${PREFIX}] ${drugData}`)
+
+    const drugData = drugDataAll.find((drug:any) => drug.name === substance);
+
+    // logger.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
+
+    if (!drugData) {
+      embed.setTitle(`${substance} was not found`);
+      embed.setDescription(
+          '...this shouldn\'t have happened, please tell the developer!');
+      // If this happens then something went wrong with the auto-complete
+      interaction.reply({embeds: [embed]});
+      return;
+    }
 
     // TODO: Cleanup
     let summary = `${drugData.name}\n\n`;
+
     if (drugData.aliases) {
       // turn aliases into a string with each alias on a new line
       let aliasString = '';
@@ -67,38 +78,61 @@ module.exports = {
       }
       summary += `Also known as: \n${aliasString}\n`;
     }
-    if (drugData.summary) { summary += `${drugData.summary}\n\n`; }
-    if (drugData.classes) {
-      if (drugData.classes.chemical) { summary += `Chemical Class: \n${drugData.classes.chemical}\n\n`; }
-      if (drugData.classes.psychoactive) { summary += `Psychoactive Class: \n${drugData.classes.psychoactive}\n\n`; }
+    if (drugData.summary) {
+      summary += `${drugData.summary}\n\n`;
     }
-    if (drugData.reagents) { summary += `Reagent test results: \n${drugData.reagents}\n\n`; }
-    if (drugData.toxicity) { summary += `Toxicity: \n${drugData.toxicity}\n\n`; }
-    if (drugData.addictionPotential) { summary += `Addiction Potential: \n${drugData.addictionPotential}\n\n`; }
+    if (drugData.classes) {
+      if (drugData.classes.chemical) {
+        summary += `Chemical Class: \n${drugData.classes.chemical}\n\n`;
+      }
+      if (drugData.classes.psychoactive) {
+        summary += `Psychoactive Class: \n${drugData.classes.psychoactive}\n\n`;
+      }
+    }
+    if (drugData.reagents) {
+      summary += `Reagent test results: \n${drugData.reagents}\n\n`;
+    }
+    if (drugData.toxicity) {
+      summary += `Toxicity: \n${drugData.toxicity}\n\n`;
+    }
+    if (drugData.addictionPotential) {
+      summary += `Addiction Potential: \n${drugData.addictionPotential}\n\n`;
+    }
 
     let dosage = '';
     if (drugData.roas) {
       for (let i = 0; i < drugData.roas.length; i += 1) {
         dosage += `${drugData.roas[i].name} Dosage\n`;
+        // @ts-ignore
         if (drugData.roas[i].bioavailability) {
+          // @ts-ignore
           dosage += `Bioavailability: ${drugData.roas[i].bioavailability}\n`;
         }
         if (drugData.roas[i].dosage) {
+          // @ts-ignore
           for (let j = 0; j < drugData.roas[i].dosage.length; j += 1) {
+            // @ts-ignore
             if (j === 0 && drugData.roas[i].dosage[j].note) {
+              // @ts-ignore
               dosage += `Note: ${drugData.roas[i].dosage[j].note}\n`;
             }
+            // @ts-ignore
             dosage += `${drugData.roas[i].dosage[j].name}: ${drugData.roas[i].dosage[j].value}\n`;
           }
         }
         if (drugData.roas[i].duration) {
+          // @ts-ignore
           dosage += `\n${drugData.roas[i].name} Duration\n`;
+          // @ts-ignore
           for (let j = 0; j < drugData.roas[i].duration.length; j += 1) {
+            // @ts-ignore
             if (j === 0 && drugData.roas[i].duration[j].note) {
+              // @ts-ignore
               dosage += `Note: ${drugData.roas[i].duration[j].note}\n`;
             }
             // eslint-disable-next-line
             // logger.debug(`[${PREFIX}] ${drugData["roas"][i].duration[j].name}: ${drugData["roas"][i].duration[j].value}`)
+            // @ts-ignore
             dosage += `${drugData.roas[i].duration[j].name}: ${drugData.roas[i].duration[j].value}\n`;
           }
           dosage += '\n';
@@ -125,7 +159,7 @@ module.exports = {
     let unknownSection = '';
     if (drugData.interactions) {
       // For each interaction status, make a list of those names
-      const { interactions } = drugData;
+      const {interactions} = drugData;
       for (let i = 0; i < interactions.length; i += 1) {
         if (interactions[i].status === 'Dangerous') {
           dangerSection += `${interactions[i].name}\n`;
@@ -177,11 +211,11 @@ module.exports = {
     if (section === 'Summary') {
       if (summary !== '') {
         // logger.debug(`[${PREFIX}] summary.length: ${summary.length}`);
-        const embed = template.embedTemplate()
-          .setColor(Colors.DarkBlue)
-          .setTitle(`${substance} Summary`)
-          .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
-          .setDescription(summary);
+        const embed = embedTemplate()
+            .setColor(Colors.DarkBlue)
+            .setTitle(`${substance} Summary`)
+            .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
+            .setDescription(summary);
 
         if (!interaction.replied) {
           interaction.reply({
@@ -223,20 +257,20 @@ module.exports = {
             messageStart = messageEnd;
             messageEnd += 512;
             messagesBuilt += 1;
-            const embed = template.embedTemplate()
-              .setTitle(`${substance} Dosage`)
-              .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
-              .setDescription(messagePart);
+            const embed = embedTemplate()
+                .setTitle(`${substance} Dosage`)
+                .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
+                .setDescription(messagePart);
             book.push(embed);
           }
         }
         if (entireMessage.length > 0 && entireMessage.length <= 512) {
           // logger.debug(`[${PREFIX}] ${section} is not too long`);
-          const embed = template.embedTemplate()
-            .setTitle(`${substance} Dosage`)
-            .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
-            .setDescription(entireMessage);
-          await interaction.reply({ embeds: [embed] });
+          const embed = embedTemplate()
+              .setTitle(`${substance} Dosage`)
+              .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
+              .setDescription(entireMessage);
+          await interaction.reply({embeds: [embed]});
           return;
         }
         if (book.length > 0) {
@@ -253,13 +287,13 @@ module.exports = {
     }
     if (section === 'Combos') {
       const comboResults = {
-        Dangerous: dangerSection,
-        Unsafe: unsafeSection,
-        Caution: cautionSection,
+        'Dangerous': dangerSection,
+        'Unsafe': unsafeSection,
+        'Caution': cautionSection,
         'Low Risk & Decrease': decreaseSection,
         'Low Risk & No Synergy': nosynSection,
         'Low Risk & Synergy': synergySection,
-        Unknown: unknownSection,
+        'Unknown': unknownSection,
       };
       const book = [];
       // loop through each dictionary in all_combo_data
@@ -275,7 +309,7 @@ module.exports = {
           definition,
           thumbnail,
         } = comboDef;
-        const sectionResults = comboResults[drugStatus];
+        const sectionResults = comboResults[drugStatus as keyof typeof comboResults];
         let entireMessage = sectionResults;
         if (sectionResults !== '') entireMessage = `${definition}\n\n${sectionResults}`;
         // logger.debug(`[${PREFIX}] entire_message is ${entire_message}`);
@@ -300,23 +334,23 @@ module.exports = {
             messageStart = messageEnd;
             messageEnd += 512;
             messagesBuilt += 1;
-            const embed = template.embedTemplate()
-              .setTitle(`${title}`)
-              .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
-              .setDescription(messagePart)
-              .setColor(color)
-              .setThumbnail(thumbnail);
+            const embed = embedTemplate()
+                .setTitle(`${title}`)
+                .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
+                .setDescription(messagePart)
+                .setColor(color)
+                .setThumbnail(thumbnail);
             book.push(embed);
           }
         }
         if (entireMessage.length > 0 && entireMessage.length <= 512) {
           logger.debug(`[${PREFIX}] ${drugStatus} is not too long`);
-          const embed = template.embedTemplate()
-            .setTitle(`${title}`)
-            .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
-            .setDescription(entireMessage)
-            .setColor(color)
-            .setThumbnail(thumbnail);
+          const embed = embedTemplate()
+              .setTitle(`${title}`)
+              .setURL(`https://wiki.tripsit.me/wiki/${substance}`)
+              .setDescription(entireMessage)
+              .setColor(color)
+              .setThumbnail(thumbnail);
           book.push(embed);
         }
       }

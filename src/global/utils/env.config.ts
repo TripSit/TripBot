@@ -108,4 +108,6 @@ export default {
   IRC_BOTPREFIX: process.env.IRC_BOTPREFIX ?? '!',
   YOUTUBE_TOKEN: process.env.YOUTUBE_TOKEN,
   GITHUB_TOKEN: process.env.GITHUB_TOKEN,
+  IMGUR_ID: process.env.IMGUR_ID,
+  RAPID_TOKEN: process.env.RAPID_TOKEN,
 };

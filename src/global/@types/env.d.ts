@@ -111,6 +111,8 @@ declare global {
         IRC_BOTPREFIX: string;
         YOUTUBE_TOKEN: string;
         GITHUB_TOKEN: string;
+        IMGUR_ID: string;
+        RAPID_TOKEN: string;
       }
     }
   }

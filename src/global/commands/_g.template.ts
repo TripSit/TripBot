@@ -6,8 +6,8 @@ import logger from '../utils/logger';
 const PREFIX = require('path').parse(__filename).name;
 
 /**
- * Does something
- * @return {any} Something
+ *
+ * @return {any}
  */
 export async function globalTemplate():Promise<any> {
   logger.debug(`${PREFIX} started!`);
