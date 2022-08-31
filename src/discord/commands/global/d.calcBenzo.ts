@@ -1,17 +1,21 @@
-'use strict';
-
-const path = require('path');
-const {
-  SlashCommandBuilder,
+import {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
   Colors,
-} = require('discord.js');
-const calcBenzo = require('../../../global/utils/calc-benzo');
-const logger = require('../../../global/utils/logger');
-const template = require('../../utils/embed-template');
+  SlashCommandBuilder,
+  ChatInputCommandInteraction,
+} from 'discord.js';
+import {SlashCommand} from '../../utils/commandDef';
+import {embedTemplate} from '../../utils/embedTemplate';
+import {stripIndents} from 'common-tags';
+import {calcBenzo} from '../../../global/commands/g.calcBenzo';
+import env from '../../../global/utils/env.config';
+import logger from '../../../global/utils/logger';
+const PREFIX = require('path').parse(__filename).name;
 
-const PREFIX = path.parse(__filename).name;
-
-module.exports = {
+export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc-benzo')
     .setDescription('Check combo information')
@@ -27,14 +31,14 @@ module.exports = {
       .setRequired(true)
       .setAutocomplete(true)),
 
-  async execute(interaction, parameters) {
-    const dosage = interaction.options.getInteger('i_have') || parameters.at(0);
-    const drugA = interaction.options.getString('mg_of') || parameters.at(1);
-    const drugB = interaction.options.getString('and_i_want_the_dose_of') || parameters.at(2);
+  async execute(interaction) {
+    const dosage = interaction.options.getInteger('i_have')!;
+    const drugA = interaction.options.getString('mg_of')!;
+    const drugB = interaction.options.getString('and_i_want_the_dose_of')!;
 
-    const data = await calcBenzo.calcBenzo(dosage, drugA, drugB);
+    const data = await calcBenzo(dosage, drugA, drugB);
 
-    const embed = template.embedTemplate()
+    const embed = embedTemplate()
       .setColor(Colors.Purple)
       .setTitle(`${dosage} mg of ${drugA} is ${data.result} mg of ${drugB}`)
       .setDescription(`

@@ -142,61 +142,54 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
   } else if (interaction.commandName === 'calc-benzo') {
     const options = {
       shouldSort: true,
+      threshold: 0.2,
+      location: 0,
+      distance: 100,
+      maxPatternLength: 32,
+      minMatchCharLength: 1,
       keys: [
         'name',
-        'aliasesStr',
+        'aliases',
       ],
     };
 
-    // Filter any drug not containing the dose_to_diazepam property
-    // let benzoCache = _.filter((drugCache), (dCache) => _.has(dCache.properties, 'dose_to_diazepam'));
+    if (drugDataTripsit === null || drugDataTripsit === undefined) {
+      logger.error(`[${PREFIX}] drugDataAll is null or undefined`);
+      return;
+    }
 
-    // _.each(benzoCache, (benzo) => {
-    //   _.each(benzo.aliases, (alias) => {
-    //     benzoCache.push({
-    //       // Add used aliases to new objects
-    //       name: alias,
-    //       pretty_name: alias.charAt(0).toUpperCase() + alias.slice(1),
-    //       properties: benzo.properties,
-    //       formatted_dose: benzo.formatted_dose,
-    //     });
-    //   });
-    // });
+    const drugNames = Object.keys(drugDataTripsit);
+    const benzoNames = drugNames.filter((drugName) => {
+      return drugDataTripsit[drugName as keyof typeof drugDataTripsit].properties.hasOwnProperty('dose_to_diazepam');
+    })
 
-    // benzoCache = _.sortBy(benzoCache, 'name');
-    // const regex = /\d+\.?\d?/;
-    // benzoCache = _.each(benzoCache, (bCache) => {
-    //   bCache.diazvalue = regex.exec(bCache.properties.dose_to_diazepam); // eslint-disable-line
-    // });
+    logger.debug(`[${PREFIX}] benzoNames: ${benzoNames}`);
 
-    const benzoCache:any[] = [];
-
-    Object.keys(drugDataTripsit).forEach((drugName) => {
-      logger.debug(`[${PREFIX}] drugName: ${drugName}`);
-      // drugDataTripsit[drugName].aliases.forEach((alias) => {
-      //   benzoCache.push({
-      //     // Add used aliases to new objects
-      //     name: alias,
-      //     pretty_name: alias.charAt(0).toUpperCase() + alias.slice(1),
-      //     properties: drug.properties,
-      //     formatted_dose: drug.formatted_dose,
-      //   });
-      // });
+    const benzoCache = benzoNames.map((drugName) => {
+      const drugObj = {
+        name: drugName,
+        aliases: [] as string[],
+      }
+      if (drugDataTripsit[drugName as keyof typeof drugDataTripsit].hasOwnProperty('aliases')) {
+        // @ts-ignore
+        drugObj.aliases = drugDataTripsit[drugName as keyof typeof drugDataTripsit].aliases;
+      }
+      return drugObj;
     });
 
-    const benzoDrugNames = benzoCache.map((d) => d.name);
+    logger.debug(`[${PREFIX}] benzoCache: ${JSON.stringify(benzoCache, null, 2)}`);
 
-    const fuse = new Fuse(benzoDrugNames, options);
+    const fuse = new Fuse(benzoCache, options);
     const focusedValue = interaction.options.getFocused();
     logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
     const results = fuse.search(focusedValue);
     logger.debug(`[${PREFIX}] results: ${JSON.stringify(results, null, 2)}`);
     if (results.length > 0) {
       const top25 = results.slice(0, 25);
-      interaction.respond(top25.map((choice) => ({name: choice.item, value: choice.item})));
+      interaction.respond(top25.map((choice:any) => ({name: choice.item.name, value: choice.item.name})));
     } else {
-      const defaultBenzoNames = benzoDrugNames.slice(0, 25);
-      interaction.respond(defaultBenzoNames.map((choice) => ({name: choice, value: choice})));
+      const defaultBenzoNames = benzoNames.slice(0, 25);
+      interaction.respond(defaultBenzoNames.map((choice:any) => ({name: choice, value: choice})));
     }
   } else if (interaction.commandName === 'time') {
     const options = {

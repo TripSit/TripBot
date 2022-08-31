@@ -77,7 +77,7 @@ export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<v
   //   return mWarn.submit(interaction);
   // }
   if (interaction.customId === 'reportModal') {
-    return report.submit(interaction);
+    return report.submit!(interaction);
   }
   // if (interaction.customId === 'bugReportModal') {
   //   return bug.submit(interaction);
