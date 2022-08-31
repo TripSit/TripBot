@@ -35,10 +35,12 @@
   "dependencies": {
     "@discordjs/rest": "^1.1.0",
     "@octokit/rest": "^19.0.4",
+    "@types/convert-units": "^2.3.5",
     "@types/ms": "^0.7.31",
     "@types/underscore": "^1.11.4",
     "chalk": "^5.0.1",
     "common-tags": "^1.8.2",
+    "convert-units": "^2.3.4",
     "discord-api-types": "^0.37.4",
     "discord.js": "^14.3.0",
     "dotenv": "^16.0.1",

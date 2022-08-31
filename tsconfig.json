@@ -1,18 +1,19 @@
 {
     "files": [
-        "src/start.ts"
+      "src/start.ts"
     ],
     "ts-node": {
       "files": true
     },
     "include": [
-        "./src/**/*.ts",
-        "environment.d.ts",
-        "src/env.config.ts"
-, "envValidate.ts"],
+      "./src/**/*.ts",
+      "environment.d.ts",
+      "src/env.config.ts",
+      "envValidate.ts",
+    ],
     "exclude": [
-        "node_modules",
-        "dist"
+      "node_modules",
+      "dist"
     ],
     "compilerOptions": {
       /* Visit https://aka.ms/tsconfig.json to read more about this file */

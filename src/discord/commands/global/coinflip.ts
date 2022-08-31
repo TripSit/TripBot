@@ -1,8 +1,8 @@
-'use strict';
-
-const { SlashCommandBuilder } = require('discord.js');
-const logger = require('../../../global/utils/logger');
-// eslint-disable-next-line import/order
+import {
+  SlashCommandBuilder,
+} from 'discord.js';
+import {SlashCommand} from '../../utils/commandDef';
+import logger from '../../../global/utils/logger';
 const PREFIX = require('path').parse(__filename).name;
 
 // Make an array of animal emojis
@@ -45,10 +45,10 @@ const animals = [
   '🙊',
 ];
 
-module.exports = {
+export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
-    .setName('coinflip')
-    .setDescription('Flip a coin'),
+      .setName('coinflip')
+      .setDescription('Flip a coin'),
 
   async execute(interaction) {
     // Get a random number between 0 and 1000

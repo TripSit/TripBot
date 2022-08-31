@@ -13,12 +13,13 @@ export interface SlashCommand {
     | Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'>
     | SlashCommandSubcommandsOnlyBuilder;
   execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+  submit?: (interaction: ModalSubmitInteraction) => Promise<void>;
 }
 
 export interface MessageCommand {
   data: ContextMenuCommandBuilder;
   execute: (interaction: MessageContextMenuCommandInteraction) => Promise<void>;
-  submit: (interaction: ModalSubmitInteraction) => Promise<void>;
+  submit?: (interaction: ModalSubmitInteraction) => Promise<void>;
 }
 
 export interface UserCommand {

@@ -1,8 +1,12 @@
 /* eslint-disable no-unused-vars */
 import {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  Colors,
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  Colors,
 } from 'discord.js';
 import {SlashCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
