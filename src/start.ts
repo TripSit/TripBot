@@ -2,15 +2,16 @@
 require('dotenv').config();
 import {discordConnect} from './discord/discordAPI';
 import {validateEnv} from './global/utils/env.validate';
-import logger from './global/utils/logger';
+import {runTimer} from './discord/utils/timerAPI';
 import {firebaseConnect} from './global/utils/firebaseAPI';
+
+import logger from './global/utils/logger';
 
 const PREFIX = require('path').parse(__filename).name;
 global.bootTime = new Date();
 // const { ircConnect } = require('./irc/ircAPI');
 // const { telegramConnect } = require('./telegram/telegramAPI');
 // const { webserverConnect } = require('./webserver/webserverAPI');
-// const { runTimer } = require('./global/services/timerAPI');
 
 /**
 * Starts everything in the bot.
@@ -27,7 +28,7 @@ async function start() {
   // Telegram breaks on connect =/
   // await telegramConnect();
 
-  // await runTimer();
+  await runTimer();
 
   // await webserverConnect();
 }

@@ -9,13 +9,13 @@ import {thoughtPolice} from '../utils/d.thoughtPolice';
 import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../utils/embedTemplate';
 import {experience} from '../../global/utils/experience';
+import {announcements} from '../utils/announcements';
+import {modmailInitialResponse} from '../commands/guild/modmail';
 import logger from '../../global/utils/logger';
 const PREFIX = require('path').parse(__filename).name;
 
 // const { WebhookClient } = require('discord.js');
-// const {announcements} = require('../../global/utils/announcements');
 // const { karma } = require('../../global/utils/karma');
-import {modmailInitialResponse} from '../commands/guild/modmail';
 
 module.exports = {
   name: 'messageCreate',
@@ -132,7 +132,7 @@ module.exports = {
     //   member.send(`TeamTripsit: ${message}`);
     // }
 
-    // announcements(message);
+    announcements(message);
     // karma(message);
     thoughtPolice(message);
     experience(message);

@@ -113,6 +113,15 @@ declare global {
         GITHUB_TOKEN: string;
         IMGUR_ID: string;
         RAPID_TOKEN: string;
+        CHANNEL_PETS: string;
+        CHANNEL_FOOD: string;
+        CHANNEL_MUSIC: string;
+        CHANNEL_SCIENCE: string;
+        CHANNEL_GAMING: string;
+        CHANNEL_CREATIVE: string;
+        CHANNEL_MOVIES: string;
+        ROLE_ADMIN: string;
+        ROLE_DISCORDOP: string;
       }
     }
   }

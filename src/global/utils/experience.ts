@@ -181,7 +181,7 @@ export async function experience(message:Message) {
       lastMessageChannel: '',
     } as Exp;
 
-    logger.debug(`[${PREFIX}] experienceDataA: ${JSON.stringify(experienceData, null, 2)}`);
+    // logger.debug(`[${PREFIX}] experienceDataA: ${JSON.stringify(experienceData, null, 2)}`);
 
     const ref = db.ref(`${env.FIREBASE_DB_USERS}/${actor.id}/experience/${expType}`);
     await ref.once('value', (data) => {
@@ -195,7 +195,7 @@ export async function experience(message:Message) {
         if (timeDiff > bufferTime) {
           // If the time diff is over one bufferTime, increase the experience points
           let experienceData = data.val();
-          logger.debug(`[${PREFIX}] experienceDataB: ${JSON.stringify(experienceData, null, 2)}`);
+          // logger.debug(`[${PREFIX}] experienceDataB: ${JSON.stringify(experienceData, null, 2)}`);
 
           let levelExpPoints = experienceData.levelExpPoints + expPoints;
           const totalExpPoints = experienceData.totalExpPoints + expPoints;
@@ -225,7 +225,7 @@ export async function experience(message:Message) {
             lastMessageDate: currMessageDate,
             lastMessageChannel: messageChannelId,
           };
-          logger.debug(`[${PREFIX}] experienceDataC: ${JSON.stringify(experienceData, null, 2)}`);
+          // logger.debug(`[${PREFIX}] experienceDataC: ${JSON.stringify(experienceData, null, 2)}`);
           ref.update(experienceData);
           // actorDataUpdated = true;
         }
@@ -272,7 +272,7 @@ export async function experience(message:Message) {
           }
         }
       } else {
-        logger.debug(`[${PREFIX}] experienceDataD: ${JSON.stringify(experienceData, null, 2)}`);
+        // logger.debug(`[${PREFIX}] experienceDataD: ${JSON.stringify(experienceData, null, 2)}`);
 
         ref.update(experienceData);
       }

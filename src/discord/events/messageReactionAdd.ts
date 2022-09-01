@@ -5,11 +5,10 @@ import {
 import env from '../../global/utils/env.config';
 import logger from '../../global/utils/logger';
 const PREFIX = require('path').parse(__filename).name;
-// const { chitragupta } = require('../../global/utils/chitragupta');
+import {chitragupta} from '../utils/chitragupta';
 // const { communityMod } = require('../utils/community-mod');
 import {handleReactionRoles} from '../utils/handleReactionRoles';
-// const { sparklePoints } = require('../utils/sparkle-points');
-// const {bestOf} = require('../utils/bestOfTripsit');
+import {sparklePoints} from '../utils/sparklePoints';
 import {bestOf} from '../utils/bestOfTripsit';
 
 module.exports = {
@@ -48,11 +47,11 @@ module.exports = {
     // }
 
     // This can run on bots
-    // await sparklePoints(reaction, user);
+    sparklePoints(reaction, user);
 
     handleReactionRoles(reaction, user, true);
 
-    // await chitragupta(reaction, user, 1);
+    chitragupta(reaction, user, 1);
     bestOf(reaction, user);
     // await communityMod(reaction, user);
     // logger.debug(`[${PREFIX}] finished!`);
