@@ -14,10 +14,10 @@ const { getUserInfo, setUserInfo } = require('../../global/services/firebaseAPI'
 const {
   discordGuildId,
   channelModlogId,
-  // roleUnverifiedId,
-  channelGeneralId,
-  channelStartId,
-  channelTripsitId,
+  roleUnverifiedId,
+  // channelGeneralId,
+  // channelStartId,
+  // channelTripsitId,
 } = require('../../../env');
 
 module.exports = {
@@ -47,8 +47,8 @@ module.exports = {
     if (member.guild.id === discordGuildId) {
       logger.info(`[${PREFIX}] ${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
 
-      // const roleUnverfied = member.guild.roles.cache.find(role => role.id === roleUnverifiedId);
-      // member.roles.add(roleUnverfied);
+      const roleUnverfied = member.guild.roles.cache.find(role => role.id === roleUnverifiedId);
+      member.roles.add(roleUnverfied);
 
       // (*INVITE*) https://github.com/AnIdiotsGuide/discordjs-bot-guide/blob/master/coding-guides/tracking-used-invites.md
       /* Start *INVITE* code */
@@ -117,25 +117,24 @@ module.exports = {
       } else if (hours === 0 && minutes > 0) {
         colorValue = Colors.Orange;
       } else if (minutes === 0 && seconds > 0) { colorValue = Colors.Red; }
-      const channelGeneral = member.client.channels.cache.get(channelGeneralId);
-      const channelStart = member.client.channels.cache.get(channelStartId);
-      const channelTripsit = member.client.channels.cache.get(channelTripsitId);
-      const welcomeEmbed = template.embedTemplate()
-        .setAuthor(null)
-        .setColor(colorValue)
-        .setThumbnail(member.user.displayAvatarURL())
-        // .setTitle(`Welcome to TripSit ${member.user.username}!`)
-        // .setTitle(`Welcome ${member.toString()} to TripSit ${member}!`)
-        .setDescription(stripIndents`
-                **Welcome to TripSit ${member}!**
-                This is a positivity-enforced, drug-neutral, harm-reduction space.
-                **If you need a tripsitter, click the button in ${channelTripsit}!**
-                Check out ${channelStart} for more information, stay safe!`);
-
-      welcomeEmbed.setFooter({
-        text: inviteInfo,
-      });
-      channelGeneral.send({ embeds: [welcomeEmbed] });
+      // const channelGeneral = member.client.channels.cache.get(channelGeneralId);
+      // const channelStart = member.client.channels.cache.get(channelStartId);
+      // const channelTripsit = member.client.channels.cache.get(channelTripsitId);
+      // const welcomeEmbed = template.embedTemplate()
+      //   .setAuthor({ name: '', iconURL: '', url: '' })
+      //   .setColor(colorValue)
+      //   .setThumbnail(member.user.displayAvatarURL())
+      //   // .setTitle(`Welcome to TripSit ${member.user.username}!`)
+      //   // .setTitle(`Welcome ${member.toString()} to TripSit ${member}!`)
+      //   .setDescription(stripIndents`
+      //           **Welcome to TripSit ${member}!**
+      //           This is a positivity-enforced, drug-neutral, harm-reduction space.
+      //           **If you need a tripsitter, click the button in ${channelTripsit}!**
+      //           Check out ${channelStart} for more information, stay safe!`);
+      // welcomeEmbed.setFooter({
+      //   text: inviteInfo,
+      // });
+      // channelGeneral.send({ embeds: [welcomeEmbed] });
 
       const channelModlog = member.guild.channels.cache.get(channelModlogId);
       const embed = template.embedTemplate()
