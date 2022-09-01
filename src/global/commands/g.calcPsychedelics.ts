@@ -1,17 +1,17 @@
-import {stripIndents} from 'common-tags';
-import env from '../utils/env.config';
 import logger from '../utils/logger';
 const PREFIX = require('path').parse(__filename).name;
 
 /**
  * Does something
- * @return {any} Something
+ * @param {number} lastDose
+ * @param {number | null} desiredDose
+ * @param {number} days
  */
- export async function calcPsychedelics(
-  lastDose:number, 
-  desiredDose:number | null, 
-  days:number
- ):Promise<number> {
+export async function calcPsychedelics(
+    lastDose:number,
+    desiredDose:number | null,
+    days:number,
+):Promise<number> {
   let estimatedDosage = (lastDose / 100) * 280.059565 * (days ** -0.412565956);
   let newAmount = 0;
   if (desiredDose) {

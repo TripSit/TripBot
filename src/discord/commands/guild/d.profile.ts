@@ -93,7 +93,7 @@ export const profile: SlashCommand = {
     const targetUsername = `${target.user.username}#${target.user.discriminator}`;
 
     const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}`);
-    await ref.once('value', (data) => {
+    await ref.once('value', (data:any) => {
       let targetData:any = {};
       if (data.val() !== null) {
         targetData = data.val();

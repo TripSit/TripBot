@@ -5,10 +5,7 @@ import {
   ModalBuilder,
   ButtonBuilder,
   TextInputBuilder,
-  TextInputStyle,
   Colors,
-  ChannelType,
-  ButtonStyle,
   GuildMember,
   ThreadChannel,
   Message,
@@ -17,6 +14,11 @@ import {
   ModalSubmitInteraction,
   Role,
 } from 'discord.js';
+import {
+  ChannelType,
+  ButtonStyle,
+  TextInputStyle,
+} from 'discord-api-types/v10';
 import {SlashCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
@@ -97,7 +99,7 @@ export const modmail: SlashCommand = {
     let ticketData:any = {};
 
     const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member.user.id}/`);
-    await ref.once('value', (data) => {
+    await ref.once('value', (data:any) => {
       if (data.val() !== null) {
         ticketData = data.val();
       } else {
@@ -380,7 +382,7 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
   let ticketData:any = {};
 
   const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member.user.id}/`);
-  await ref.once('value', (data) => {
+  await ref.once('value', (data:any) => {
     if (data.val() !== null) {
       ticketData = data.val();
     } else {

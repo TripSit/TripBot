@@ -1,8 +1,10 @@
 import {
   Client,
-  GatewayIntentBits,
   Partials,
 } from 'discord.js';
+import {
+  GatewayIntentBits,
+} from 'discord-api-types/v10';
 import env from '../global/utils/env.config';
 import logger from '../global/utils/logger';
 import {registerCommands} from './commands';

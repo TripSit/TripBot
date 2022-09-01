@@ -5,11 +5,8 @@ import {
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
-  TextInputStyle,
   Colors,
-  ChannelType,
   ButtonBuilder,
-  ButtonStyle,
   GuildMember,
   ModalSubmitInteraction,
   GuildMemberRoleManager,
@@ -19,6 +16,11 @@ import {
   ButtonInteraction,
   ChatInputCommandInteraction,
 } from 'discord.js';
+import {
+  TextInputStyle,
+  ChannelType,
+  ButtonStyle,
+} from 'discord-api-types/v10';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
 import logger from '../../global/utils/logger';
@@ -189,7 +191,7 @@ export async function tripsitme(
   let targetLastHelpedMetaThreadId = '';
 
   const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.user.id}/discord/tripsitsessions`);
-  await ref.once('value', (data) => {
+  await ref.once('value', (data:any) => {
     if (data.val() !== null) {
       targetLastHelpedDate = data.val().lastHelpedDate;
       targetLastHelpedThreadId = data.val().lastHelpedThreadId;

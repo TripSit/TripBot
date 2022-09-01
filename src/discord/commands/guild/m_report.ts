@@ -3,14 +3,16 @@ import {
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
-  TextInputStyle,
   Colors,
   ContextMenuCommandBuilder,
-  ApplicationCommandType,
   ModalSubmitInteraction,
   GuildMember,
   TextChannel,
 } from 'discord.js';
+import {
+  ApplicationCommandType,
+  TextInputStyle,
+} from 'discord-api-types/v10';
 import {MessageCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';

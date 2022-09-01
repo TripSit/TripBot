@@ -33,7 +33,7 @@ export const time: SlashCommand = {
     // logger.debug(`[${PREFIX}] actor.id: ${actor.id}`);
 
     const ref = db.ref(`${env.FIREBASE_DB_USERS}/${interaction.user.id}/timezone`);
-    await ref.once('value', (data) => {
+    await ref.once('value', (data:any) => {
       if (data.val() !== null) {
         logger.debug(`[${PREFIX}] data.val(): ${data.val()}`);
 

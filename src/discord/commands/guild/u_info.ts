@@ -1,8 +1,10 @@
 import {
   ContextMenuCommandBuilder,
-  ApplicationCommandType,
   GuildMember,
 } from 'discord.js';
+import {
+  ApplicationCommandType,
+} from 'discord-api-types/v10';
 import {UserCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';

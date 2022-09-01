@@ -1,7 +1,9 @@
 import {
   Client,
-  ActivityType,
 } from 'discord.js';
+import {
+  ActivityType,
+} from 'discord-api-types/v10';
 import env from '../../global/utils/env.config';
 import logger from '../../global/utils/logger';
 

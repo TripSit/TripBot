@@ -1,6 +1,8 @@
 import {
   SlashCommandBuilder,
   GuildMember,
+  TextChannel,
+  Message,
 } from 'discord.js';
 import {SlashCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
@@ -54,8 +56,8 @@ export const discordTemplate: SlashCommand = {
         .setDescription(stripIndents`${body}`)
         .setFooter({text: `*A poll by ${(interaction.member as GuildMember).displayName}*`});
 
-    await interaction.channel!.send({embeds: [pollEmbed]})
-        .then(async (msg) => {
+    await (interaction.channel as TextChannel).send({embeds: [pollEmbed]})
+        .then(async (msg:Message) => {
           for (let i = 0; i < optionsArray.length; i += 1) {
           /* eslint-disable no-await-in-loop */
             await msg.react(emojiDict[i + 1 as keyof typeof emojiDict]);

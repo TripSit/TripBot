@@ -105,7 +105,7 @@ export async function tripsat(
   let targetRoles:string[] = [];
 
   const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.user.id}/discord/tripsitsessions`);
-  await ref.once('value', (data) => {
+  await ref.once('value', (data:any) => {
     if (data.val() !== null) {
       targetLastHelpedDate = data.val().lastHelpedDate;
       targetLastHelpedThreadId = data.val().lastHelpedThreadId;

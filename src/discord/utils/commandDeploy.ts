@@ -1,6 +1,10 @@
+import {
+  REST,
+} from 'discord.js';
 import {SlashCommand} from './commandDef';
-import {REST} from '@discordjs/rest';
-import {Routes} from 'discord-api-types/v9';
+import {
+  Routes,
+} from 'discord-api-types/v10';
 import fs from 'fs/promises';
 import env from '../../global/utils/env.config';
 import path from 'path';

@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 import {
   Message,
+  TextChannel,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
 import {embedTemplate} from './embedTemplate';
@@ -191,7 +192,7 @@ export async function announcements(message:Message) {
     if (hydration) {
       embed.setAuthor(null);
       embed.setFooter({text: 'React to get your sparkle points for the /h2flow club!'});
-      await message.channel.send({embeds: [embed]})
+      await (message.channel as TextChannel).send({embeds: [embed]})
           .then(async (msg) => {
             await msg.react('💧');
           });
@@ -199,7 +200,7 @@ export async function announcements(message:Message) {
     }
 
     if (randomAnnouncement) {
-      message.channel.send({embeds: [embed]});
+      (message.channel as TextChannel).send({embeds: [embed]});
     }
   }
   messageCounter[message.channel.id] = messageCounter[message.channel.id] ?

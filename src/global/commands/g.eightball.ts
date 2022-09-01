@@ -1,8 +1,6 @@
-'use strict';
-
 /**
- * 
- * @return {any}
+ *
+ * @return {string} What the 8ball says
  */
 export async function eightball():Promise<any> {
   const answers = [

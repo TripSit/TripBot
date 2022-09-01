@@ -4,8 +4,10 @@ import {
   ButtonBuilder,
   ActionRowBuilder,
   Message,
-  ButtonStyle,
 } from 'discord.js';
+import {
+  ButtonStyle,
+} from 'discord-api-types/v10';
 import logger from '../../global/utils/logger';
 const PREFIX = require('path').parse(__filename).name;
 

@@ -1,13 +1,8 @@
-import {stripIndents} from 'common-tags';
-import env from '../utils/env.config';
-import logger from '../utils/logger';
-const PREFIX = require('path').parse(__filename).name;
-
 /**
  * Returns one of the breaking exercises
- * @return {string} choice Which exercise to return
+ * @param {string | null} choice Which exercise to return
  */
- export async function breathe(choice:string | null):Promise<string> {
+export async function breathe(choice:string | null):Promise<string> {
   switch (choice) {
     case undefined:
       return 'https://i.imgur.com/n5jBp45.gif';

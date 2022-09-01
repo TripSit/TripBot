@@ -19,7 +19,7 @@ module.exports = {
       logger.debug(`[${PREFIX}] Setting ${member.user.id}`);
       const ref = db.ref(`${env.FIREBASE_DB_USERS}/${member.user.id}`);
       let joinedTimestamp = member.joinedTimestamp;
-      await ref.once('value', (data) => {
+      await ref.once('value', (data:any) => {
         if (data.val() !== null) {
           if (data.val().discord) {
             joinedTimestamp = data.val().discord.joinedTimestamp;

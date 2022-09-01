@@ -1,10 +1,12 @@
 import {
   ContextMenuCommandBuilder,
-  ApplicationCommandType,
   GuildMember,
   Colors,
   time,
 } from 'discord.js';
+import {
+  ApplicationCommandType,
+} from 'discord-api-types/v10';
 import {UserCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
@@ -28,7 +30,7 @@ export const info: UserCommand = {
     const targetUsername = `${target.user.username}#${target.user.discriminator}`;
 
     const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}`);
-    await ref.once('value', (data) => {
+    await ref.once('value', (data:any) => {
       let targetData:any = {};
       if (data.val() !== null) {
         targetData = data.val();

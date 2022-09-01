@@ -184,7 +184,7 @@ export async function experience(message:Message) {
     // logger.debug(`[${PREFIX}] experienceDataA: ${JSON.stringify(experienceData, null, 2)}`);
 
     const ref = db.ref(`${env.FIREBASE_DB_USERS}/${actor.id}/experience/${expType}`);
-    await ref.once('value', (data) => {
+    await ref.once('value', (data:any) => {
       if (data.val() !== null) {
         lastMessageDate = new Date(data.val().lastMessageDate);
 

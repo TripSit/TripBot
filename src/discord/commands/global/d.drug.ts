@@ -1,9 +1,11 @@
 import {
   SlashCommandBuilder,
-  ButtonStyle,
   ButtonBuilder,
   Colors,
 } from 'discord.js';
+import {
+  ButtonStyle,
+} from 'discord-api-types/v10';
 import {SlashCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {paginationEmbed} from '../../utils/pagination';

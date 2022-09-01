@@ -2,8 +2,10 @@ import {
   SlashCommandBuilder,
   EmbedBuilder,
   ButtonBuilder,
-  ButtonStyle,
 } from 'discord.js';
+import {
+  ButtonStyle,
+} from 'discord-api-types/v10';
 import {SlashCommand} from '../../utils/commandDef';
 import logger from '../../../global/utils/logger';
 import {paginationEmbed} from '../../utils/pagination';

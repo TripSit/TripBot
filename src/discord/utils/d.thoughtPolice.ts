@@ -30,7 +30,7 @@ export async function thoughtPolice(message:Message): Promise<void> {
   if (result) {
     switch (result[0]) {
       case 'offensive':
-        message.channel.send(result[1]);
+        (message.channel as TextChannel).send(result[1]);
         message.delete();
         break;
       case 'harm':
@@ -38,19 +38,20 @@ export async function thoughtPolice(message:Message): Promise<void> {
           channelTripsitters.send(stripIndents`
             Hey ${roleTripsitter} and ${roleHelper}
             ${message.member?.displayName} is talking about something harmful\
-             in ${(message.channel as TextChannel).name}!
+             in ${((message.channel as TextChannel) as TextChannel).name}!
             `);
         }
         break;
       case 'horny':
-        message.channel.send(result[1]);
+        (message.channel as TextChannel).send(result[1]);
         break;
       case 'meme':
-        message.channel.send(result[1]);
+        (message.channel as TextChannel).send(result[1]);
         break;
       case 'pg13':
         channelTripsitters.send(stripIndents`
-          ${message.member?.displayName} is talking about something PG13 in ${(message.channel as TextChannel).name}!
+          ${message.member?.displayName} is talking about something PG13 in \
+          ${((message.channel as TextChannel) as TextChannel).name}!
           `);
         break;
       default:

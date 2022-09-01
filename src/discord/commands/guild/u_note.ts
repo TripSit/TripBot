@@ -2,11 +2,13 @@ import {
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
-  TextInputStyle,
   ContextMenuCommandBuilder,
-  ApplicationCommandType,
   GuildMember,
 } from 'discord.js';
+import {
+  ApplicationCommandType,
+  TextInputStyle,
+} from 'discord-api-types/v10';
 import {UserCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';

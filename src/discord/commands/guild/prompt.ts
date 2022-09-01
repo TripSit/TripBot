@@ -5,11 +5,8 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   TextInputBuilder,
-  TextInputStyle,
-  ButtonStyle,
   ModalBuilder,
   Colors,
-  ChannelType,
   ButtonInteraction,
   ChatInputCommandInteraction,
   ModalSubmitInteraction,
@@ -17,6 +14,11 @@ import {
   TextChannel,
   GuildMemberRoleManager,
 } from 'discord.js';
+import {
+  ChannelType,
+  ButtonStyle,
+  TextInputStyle,
+} from 'discord-api-types/v10';
 import env from '../../../global/utils/env.config';
 import {SlashCommand} from '../../utils/commandDef';
 import {stripIndents} from 'common-tags';
@@ -153,7 +155,7 @@ export async function howtotripsit(interaction:ChatInputCommandInteraction) {
   const embed = embedTemplate()
       .setAuthor(null)
       .setFooter(null);
-  if (!interaction.channel) {
+  if (!(interaction.channel as TextChannel)) {
     logger.error(`${PREFIX} how to tripsit: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');
     return;
@@ -183,7 +185,7 @@ export async function howtotripsit(interaction:ChatInputCommandInteraction) {
   **2)** "What's going on? Give us the details!"
   When ready, the user submits the prompt and the fun begins:
   `);
-  await interaction.channel.send(
+  await (interaction.channel as TextChannel).send(
       {embeds: [embed]},
   );
 
@@ -196,7 +198,7 @@ export async function howtotripsit(interaction:ChatInputCommandInteraction) {
   **3)** A second private thread is created in ${channelTripsitters.toString()}
   **-** Tripsitters and Helpers are invited to this channel to coordiante the session.
   `);
-  await interaction.channel.send(
+  await (interaction.channel as TextChannel).send(
       {embeds: [embed]},
   );
 
@@ -210,7 +212,7 @@ export async function howtotripsit(interaction:ChatInputCommandInteraction) {
 
   **[This information is also available with pictures online!](https://discord.tripsit.me/pages/tripsit.html)**
   `);
-  await interaction.channel.send(
+  await (interaction.channel as TextChannel).send(
       {embeds: [embed]},
   );
 
@@ -223,7 +225,7 @@ export async function howtotripsit(interaction:ChatInputCommandInteraction) {
   This role is completely optional, but we appreciate the help!
   `);
   let reactionRoleInfo = {};
-  await interaction.channel.send(
+  await (interaction.channel as TextChannel).send(
       {embeds: [embed]},
   )
       .then(async (msg) => {
@@ -248,7 +250,7 @@ export async function howtotripsit(interaction:ChatInputCommandInteraction) {
  */
 export async function consultants(interaction:ChatInputCommandInteraction) {
   logger.debug(`${PREFIX} consultants!`);
-  if (!interaction.channel) {
+  if (!(interaction.channel as TextChannel)) {
     logger.error(`${PREFIX} how to tripsit: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');
     return;
@@ -262,7 +264,7 @@ export async function consultants(interaction:ChatInputCommandInteraction) {
   // const channelTrippit = interaction.client.channels.cache.get(CHANNEL_TRIPSITREDDIT);
   // const channelVipWelcome = interaction.client.channels.cache.get(CHANNEL_VIPWELCOME);
 
-  await interaction.channel.send(stripIndents`
+  await (interaction.channel as TextChannel).send(stripIndents`
     Our development category holds the projects we're working on.
 
     > **We encourage you to make a new thread whenever possible!**
@@ -274,7 +276,7 @@ export async function consultants(interaction:ChatInputCommandInteraction) {
     If you have an idea or feedback, make a new thread: we're happy to hear all sorts of input and ideas!
   `);
 
-  await interaction.channel.send(stripIndents`
+  await (interaction.channel as TextChannel).send(stripIndents`
     **We have a couple ongoing projects that can always use volunteers:**
 
     ${channelTripcord}
@@ -301,7 +303,7 @@ export async function consultants(interaction:ChatInputCommandInteraction) {
     `);
 
   let reactionRoleInfo = {};
-  await interaction.channel.send(stripIndents`
+  await (interaction.channel as TextChannel).send(stripIndents`
         ${invisibleEmoji}
         > **Are you interested in TripSit projects?**
         > By reacting to this message you will be given the **Consultant** role
@@ -331,7 +333,7 @@ export async function consultants(interaction:ChatInputCommandInteraction) {
  */
 export async function techhelp(interaction:ChatInputCommandInteraction) {
   logger.debug(`${PREFIX} techhelp!`);
-  if (!interaction.channel) {
+  if (!(interaction.channel as TextChannel)) {
     logger.error(`${PREFIX} how to tripsit: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');
     return;
@@ -398,7 +400,7 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
       );
 
   // Create a new button
-  await interaction.channel.send({content: buttonText, components: [row]});
+  await (interaction.channel as TextChannel).send({content: buttonText, components: [row]});
 }
 
 /**
@@ -407,7 +409,7 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
  */
 export async function rules(interaction:ChatInputCommandInteraction) {
   logger.debug(`${PREFIX} rules!`);
-  if (!interaction.channel) {
+  if (!(interaction.channel as TextChannel)) {
     logger.error(`${PREFIX} how to tripsit: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');
     return;
@@ -430,9 +432,9 @@ export async function rules(interaction:ChatInputCommandInteraction) {
       .setFooter(null)
       .setColor(Colors.Red)
       .setImage('attachment://RULES.png');
-  await interaction.channel.send({embeds: [embed], files: [file]});
+  await (interaction.channel as TextChannel).send({embeds: [embed], files: [file]});
 
-  await interaction.channel.send(stripIndents`
+  await (interaction.channel as TextChannel).send(stripIndents`
     > **-** **You can be banned without warning if you do not follow the rules!**
     > **-** The "Big 4" rules are below, but generally be positive, be safe, and dont buy/sell stuff and you'll be fine.
     > **-** If you need to clarify anything you can review the full unabridged network rules: https://wiki.tripsit.me/wiki/Rules 
@@ -441,7 +443,7 @@ export async function rules(interaction:ChatInputCommandInteraction) {
     ${invisibleEmoji}
     `);
 
-  await interaction.channel.send(stripIndents`
+  await (interaction.channel as TextChannel).send(stripIndents`
     > **🔞 1. You must be over 18 to participate in most channels!**
     > **-** We believe that minors will use substances regardless of the info available to them so the best we can do is educate properly and send them on their way.
     > **-** ${channelTripsit.toString()} allows minors to get help from a tripsitter.
@@ -450,7 +452,7 @@ export async function rules(interaction:ChatInputCommandInteraction) {
     ${invisibleEmoji}
     `);
 
-  await interaction.channel.send(stripIndents`
+  await (interaction.channel as TextChannel).send(stripIndents`
     > **💊 2. No Sourcing!**
     > **-** Don't post anything that would help you or others acquire drugs; legal or illegal, neither in the server nor in DMs.
     > **-** Assume anyone attempting to buy or sell something is a scammer. Report scammers to the team to get a (virtual) cookie.
@@ -459,7 +461,7 @@ export async function rules(interaction:ChatInputCommandInteraction) {
     ${invisibleEmoji}
     `);
 
-  await interaction.channel.send(stripIndents`
+  await (interaction.channel as TextChannel).send(stripIndents`
     > **💀 3. Do not encourage unsafe usage!**
     > **-** Don't encourage or enable dangerous drug use; don't spread false, dangerous, or misleading information about drugs.
     > **-** Keep your dosage information and stash private unless it's relevant to a question. Posting absurd dosages to get a reaction will receive a reaction (a ban).
@@ -468,7 +470,7 @@ export async function rules(interaction:ChatInputCommandInteraction) {
     ${invisibleEmoji}
     `);
 
-  await interaction.channel.send(stripIndents`
+  await (interaction.channel as TextChannel).send(stripIndents`
     > **❤️ 4. Treat everyone with respect!**
     > **-** Don't participate in behaviour that purposefully causes discomfort to others.
     > **-** Don't submit anything that drastically disturbs the flow of chat without providing any added value.
@@ -486,7 +488,7 @@ export async function rules(interaction:ChatInputCommandInteraction) {
  */
 export async function starthere(interaction:ChatInputCommandInteraction) {
   logger.debug(`[${PREFIX}] Starting!`);
-  if (!interaction.channel) {
+  if (!(interaction.channel as TextChannel)) {
     logger.error(`${PREFIX} how to tripsit: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');
     return;
@@ -525,7 +527,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
     > Go crazy in ${channelBotspam} exploring the bot commands!
     `;
 
-  await interaction.channel.send(message);
+  await (interaction.channel as TextChannel).send(message);
 
   const mindsetEmbed = embedTemplate()
       .setDescription(stripIndents`
@@ -559,7 +561,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
     roleId: string;
   };
 
-  await interaction.channel.send({embeds: [mindsetEmbed]})
+  await (interaction.channel as TextChannel).send({embeds: [mindsetEmbed]})
       .then(async (msg) => {
         await msg.react(`${drunkEmoji}`);
         await msg.react(`${highEmoji}`);
@@ -640,7 +642,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
       .setFooter(null)
       .setColor(Colors.Blue);
 
-  await interaction.channel.send({embeds: [colorEmbed]})
+  await (interaction.channel as TextChannel).send({embeds: [colorEmbed]})
       .then(async (msg) => {
         await msg.react('❤');
         await msg.react('🧡');
@@ -713,7 +715,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function tripsitme(interaction:ChatInputCommandInteraction) {
-  if (!interaction.channel) {
+  if (!(interaction.channel as TextChannel)) {
     logger.error(`${PREFIX} how to tripsit: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');
     return;
@@ -749,7 +751,7 @@ export async function tripsitme(interaction:ChatInputCommandInteraction) {
       );
 
   // Create a new button
-  await interaction.channel.send({content: buttonText, components: [row]});
+  await (interaction.channel as TextChannel).send({content: buttonText, components: [row]});
   logger.debug(`[${PREFIX}] finished!`);
 }
 
@@ -758,7 +760,7 @@ export async function tripsitme(interaction:ChatInputCommandInteraction) {
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function ticketbooth(interaction:ChatInputCommandInteraction) {
-  if (!interaction.channel) {
+  if (!(interaction.channel as TextChannel)) {
     logger.error(`${PREFIX} how to tripsit: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');
     return;
@@ -803,7 +805,7 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
       );
 
   // Create a new button
-  await interaction.channel.send({content: buttonText, components: [row]});
+  await (interaction.channel as TextChannel).send({content: buttonText, components: [row]});
 
   logger.debug(`[${PREFIX}] finished!`);
 }

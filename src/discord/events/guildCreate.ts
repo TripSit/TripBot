@@ -11,7 +11,7 @@ module.exports = {
     logger.info(`[${PREFIX}] Joined guild: ${guild.name} (id: ${guild.id})`);
 
     const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${guild.id}`);
-    await ref.once('value', (data) => {
+    await ref.once('value', (data:any) => {
       if (data.val() !== null) {
         if (data.val().guild_banned) {
           logger.info(`[${PREFIX}] I'm banned from ${guild.name}, leaving!`);

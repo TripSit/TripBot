@@ -97,7 +97,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
               Check out ${channelStart} set your color and icon
               Stay safe, be chill, have fun!`);
       const ref = db.ref(`${env.FIREBASE_DB_USERS}/${interaction.user.id}/discord/inviteInfo`);
-      await ref.once('value', (data) => {
+      await ref.once('value', (data:any) => {
         if (data.val() !== null) {
           embed.setFooter({text: data.val()});
         }

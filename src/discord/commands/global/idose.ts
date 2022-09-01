@@ -3,10 +3,12 @@ import {
   time,
   Colors,
   ButtonBuilder,
-  ButtonStyle,
   EmbedBuilder,
-  ChannelType,
 } from 'discord.js';
+import {
+  ChannelType,
+  ButtonStyle,
+} from 'discord-api-types/v10';
 import {SlashCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {parseDuration} from '../../../global/utils/parseDuration';
@@ -86,7 +88,7 @@ export const discordTemplate: SlashCommand = {
     if (command === 'get') {
       // let doseData = {} as doseEntry[];
 
-      await ref.once('value', (data) => {
+      await ref.once('value', (data:any) => {
         if (data.val() !== null) {
           // doseData = data.val();
           embed.setTitle('Your dosage history');

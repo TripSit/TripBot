@@ -37,7 +37,7 @@ export async function handleReactionRoles(
   };
 
   const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${reaction.message.guild!.id}/reactionRoles/${reaction.message.id}`);
-  await ref.once('value', async (data) => {
+  await ref.once('value', async (data:any) => {
     if (data.val() !== null) {
       const reactionRoles = data.val() as ReactionRole[];
       // logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles, null, 2)}`);

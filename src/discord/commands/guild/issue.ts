@@ -7,10 +7,9 @@ import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
-import {Octokit} from '@octokit/rest';
+import {Octokit} from 'octokit';
 
 const PREFIX = require('path').parse(__filename).name;
-
 
 export const issue: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -57,7 +56,7 @@ export const issue: SlashCommand = {
 
     // Use octokit to create an issue
     await octokit.rest.issues.create({owner, repo, title})
-        .then(async (response) => {
+        .then(async (response:any) => {
           const issueNumber = response.data.number;
           octokit.rest.issues.addLabels({
             owner,

@@ -3,11 +3,16 @@ import {
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
-  TextInputStyle,
   Colors,
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
+import {
+  ApplicationCommandType,
+  ChannelType,
+  ButtonStyle,
+  TextInputStyle,
+} from 'discord-api-types/v10';
 import {SlashCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';

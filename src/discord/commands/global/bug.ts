@@ -2,11 +2,13 @@ import {
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
-  TextInputStyle,
   Colors,
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
+import {
+  TextInputStyle,
+} from 'discord-api-types/v10';
 import {SlashCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import env from '../../../global/utils/env.config';

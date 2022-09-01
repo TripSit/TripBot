@@ -1,8 +1,10 @@
 import {
   Client,
   Interaction,
-  InteractionType,
 } from 'discord.js';
+import {
+  InteractionType,
+} from 'discord-api-types/v10';
 import {commandRun} from '../utils/commandRun';
 import logger from '../../global/utils/logger';
 import {buttonClick} from '../utils/buttonClick';

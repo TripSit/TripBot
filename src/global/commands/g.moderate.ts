@@ -3,7 +3,6 @@ import {
   Colors,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle,
   GuildMember,
   TextChannel,
   ChatInputCommandInteraction,
@@ -13,6 +12,9 @@ import {
   ModalSubmitInteraction,
   UserContextMenuCommandInteraction,
 } from 'discord.js';
+import {
+  ButtonStyle,
+} from 'discord-api-types/v10';
 import {stripIndents} from 'common-tags';
 import {parseDuration} from '../utils/parseDuration';
 import {embedTemplate} from '../../discord/utils/embedTemplate';
