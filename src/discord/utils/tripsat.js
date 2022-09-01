@@ -12,7 +12,7 @@ const template = require('./embed-template');
 
 const {
   NODE_ENV,
-  channelModlogId,
+  channelTripsittersId,
   channelOpentripsitId,
   channelSanctuaryId,
   roleNeedshelpId,
@@ -110,6 +110,9 @@ const invisibleEmoji = NODE_ENV === 'production'
 
 module.exports = {
   async execute(interaction, memberInput) {
+    logger.debug(`[${PREFIX}] starting!`);
+    await interaction.deferReply({ ephemeral: true });
+
     let target = interaction.member;
     const actor = interaction.member;
     if (memberInput) {
@@ -124,7 +127,7 @@ module.exports = {
     const targetLastHelpedMetaThreadId = targetData.discord.lastHelpedMetaThreadId;
     logger.debug(`[${PREFIX}] targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);
 
-    const channelModlog = await interaction.client.channels.cache.get(channelModlogId);
+    const tripsittersChannel = interaction.guild.channels.cache.get(channelTripsittersId);
     const channelOpentripsit = await interaction.client.channels.cache.get(channelOpentripsitId);
     const channelSanctuary = await interaction.client.channels.cache.get(channelSanctuaryId);
     // Get the channel objects for the help and meta threads
@@ -162,7 +165,7 @@ module.exports = {
       const embed = template.embedTemplate().setColor(Colors.DarkBlue);
       embed.setDescription(rejectMessage);
       logger.debug(`[${PREFIX}] target ${target} does not need help!`);
-      interaction.reply({ embeds: [embed], ephemeral: true });
+      interaction.editReply({ embeds: [embed], ephemeral: true });
       logger.debug(`[${PREFIX}] finished!`);
       return;
     }
@@ -184,7 +187,7 @@ module.exports = {
         const embed = template.embedTemplate()
           .setColor(Colors.DarkBlue)
           .setDescription(message);
-        interaction.reply({ embeds: [embed], ephemeral: true });
+        interaction.editReply({ embeds: [embed], ephemeral: true });
 
         if (threadDiscussUser) {
           let metaUpdate = stripIndents`Hey team, ${target.nickname || target.user.username} said they're good but it's been less than an hour since they asked for help.
@@ -203,24 +206,6 @@ module.exports = {
         return;
       }
     }
-
-    let responseMessage = memberInput
-      ? stripIndents`
-      Hey ${interaction.member}, we're glad ${target.nickname || target.user.username} is feeling better!
-      We've restored their roles back to normal.
-      You can keep talking with them in ${threadHelpUser} if needed!`
-      : stripIndents`
-      Hey ${interaction.member}, we're glad you're feeling better =)
-      We've restored your old roles back to normal.
-      You can keep talking in ${threadHelpUser} if you want to follow up tomorrow!`;
-
-    if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
-      responseMessage = testNotice + responseMessage;
-    }
-
-    const embed = template.embedTemplate().setColor(Colors.DarkBlue);
-    embed.setDescription(responseMessage);
-    interaction.reply({ embeds: [embed], ephemeral: true });
 
     // For each role in targetRoles2, add it to the target
     if (targetData.discord.roles) {
@@ -246,6 +231,7 @@ module.exports = {
       This thread will remain here for a day if you want to follow up tomorrow.
       After 7 days, or on request, it will be deleted to preserve your privacy =)`
       : stripIndents`Hey ${target}, we're glad you're doing better!
+      We've restored your old roles back to normal <3
       This thread will remain here for a day if you want to follow up tomorrow.
       After 7 days, or on request, it will be deleted to preserve your privacy =)`;
 
@@ -285,27 +271,14 @@ module.exports = {
             > Thank you for your feedback, here's a cookie! 🍪
             ${invisibleEmoji}
             `);
-          // // Create the modal
-          // const modal = new ModalBuilder()
-          //   .setCustomId('feedbackModal')
-          //   .setTitle('TripSit Feedback Form');
-          // const bugReport = new TextInputBuilder()
-          //   .setCustomId('feedbackReport')
-          //   .setLabel('What feedback do you have for the team?')
-          //   .setStyle(TextInputStyle.Paragraph);
-          // // An action row only holds one text input, so you need one action row per text input.
-          // const firstActionRow = new ActionRowBuilder().addComponents(bugReport);
-          // // Add inputs to the modal
-          // modal.addComponents(firstActionRow);
-          // // Show the modal to the user
-          // // interaction.showModal(modal);
-          logger.debug(`Collected ${reaction.emoji.name} from ${user.tag}`);
+          logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
           const finalEmbed = template.embedTemplate()
             .setColor(Colors.Blue)
             .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
+          logger.debug(`[${PREFIX}] tripsittersChannel ${tripsittersChannel}`);
           try {
-            if (channelModlog) {
-              await channelModlog.send({ embeds: [finalEmbed] });
+            if (threadDiscussUser) {
+              await threadDiscussUser.send({ embeds: [finalEmbed] });
             }
           } catch (err) {
             logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
@@ -313,9 +286,6 @@ module.exports = {
           msg.delete();
           collector.stop();
         });
-        // collector.on('end', async collected => {
-        //   logger.debug(`[${PREFIX}] collected: ${JSON.stringify(collected, null, 2)}`);
-        // });
       });
 
     let endMetaHelpMessage = memberInput
@@ -335,8 +305,8 @@ module.exports = {
     threadDiscussUser.send(endMetaHelpMessage);
 
     logger.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
-
     logger.debug(`[${PREFIX}] finished!`);
+    await interaction.editReply({ content: 'Done!', ephemeral: true });
   },
   // async submit(interaction) {
   //   const feedback = interaction.fields.getTextInputValue('feedbackReport');

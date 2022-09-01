@@ -23,6 +23,7 @@ module.exports = {
 
   async execute(interaction, parameters) {
     const term = interaction.options.getString('define') || parameters;
+    logger.debug(`[${PREFIX}] UrbanDefine looking for ${term}`);
     const { data } = await axios.get(
       'https://mashape-community-urban-dictionary.p.rapidapi.com/define',
       {
@@ -34,6 +35,8 @@ module.exports = {
         },
       },
     );
+
+    logger.debug(`[${PREFIX}] UrbanDefine found ${data.list.length} results`);
 
     // Sort data by the thumbs_up value
     data.list.sort((a, b) => b.thumbs_up - a.thumbs_up);

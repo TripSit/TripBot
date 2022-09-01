@@ -24,7 +24,7 @@ module.exports = {
   name: 'guildMemberAdd',
 
   async execute(member, client) {
-    logger.debug(JSON.stringify(member, null, 2));
+    // logger.debug(JSON.stringify(member, null, 2));
     // {
     //   "guildId": "960606557622657026",
     //   "joinedTimestamp": 1653515791290,
@@ -54,7 +54,7 @@ module.exports = {
       /* Start *INVITE* code */
       const cachedInvites = global.guildInvites.get(member.guild.id);
       const newInvites = await member.guild.invites.fetch();
-      let inviteInfo = '';
+      let inviteInfo = null;
       try {
         const usedInvite = newInvites.find(inv => cachedInvites.get(inv.code) < inv.uses);
         logger.debug(`Cached ${[...cachedInvites.keys()]}`);

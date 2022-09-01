@@ -10,6 +10,7 @@ const {
   ButtonStyle,
   Modal,
   Colors,
+  ChannelType,
 } = require('discord.js');
 
 const { ReactionRole } = require('discordjs-reaction-role');
@@ -133,8 +134,8 @@ const coderEmoji = NODE_ENV === 'production'
 async function howtotripsit(interaction) {
   logger.debug(`${PREFIX} how to tripsit!`);
   const embed = template.embedTemplate()
-    .setAuthor({ name: '', iconURL: '', url: '' })
-    .setFooter({ text: '', iconURL: '' });
+    .setAuthor(null)
+    .setFooter(null);
 
   const channelTripsit = interaction.client.channels.cache.get(channelTripsitId);
   // const channelTripsitInfo = interaction.client.channels.cache.get(channelHowToTripsitId);
@@ -371,8 +372,8 @@ async function rules(interaction) {
   const channelQuestions = interaction.client.channels.cache.get(channelDrugQuestionsId);
 
   const embed = template.embedTemplate()
-    .setAuthor({ name: '', iconURL: '', url: '' })
-    .setFooter({ text: '', iconURL: '' })
+    .setAuthor(null)
+    .setFooter(null)
     .setColor(Colors.Red)
     .setImage('attachment://RULES.png');
   await interaction.channel.send({ embeds: [embed], files: [file], ephemeral: false });
@@ -535,8 +536,6 @@ async function tripsitme(interaction) {
     🛑 Please do not message helpers or tripsitters directly! 🛑
 
     All other topics of conversation are welcome in ${channelGeneral}!
-
-    Stay safe!
   `;
 
   // Create a new button embed
@@ -546,10 +545,6 @@ async function tripsitme(interaction) {
         .setCustomId('tripsitme')
         .setLabel('I need assistance!')
         .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId('tripsat')
-        .setLabel('I\'m good now!')
-        .setStyle(ButtonStyle.Success),
     );
 
   // Create a new button
@@ -770,7 +765,7 @@ module.exports = {
     const ticketThread = await channel.threads.create({
       name: `${actor.username}'s ${issueType} issue!`,
       autoArchiveDuration: 1440,
-      type: NODE_ENV === 'production' ? 'GUILD_PRIVATE_THREAD' : 'GUILD_PUBLIC_THREAD',
+      type: NODE_ENV === 'production' ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
       reason: `${actor.username} submitted a(n) ${issueType} issue`,
     });
     logger.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);

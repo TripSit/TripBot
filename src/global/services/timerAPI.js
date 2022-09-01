@@ -319,7 +319,36 @@ module.exports = {
                   const timeBetween = now - lastSetMindsetDate;
                   // logger.debug(`[${PREFIX}] Time between ${timeBetween}`);
 
-                  logger.debug(`[${PREFIX}] ${discordData.username} added ${lastSetMindset} ${ms(timeBetween, { long: true })} ago`);
+                  try {
+                    logger.debug(`[${PREFIX}] ${discordData.username} added ${lastSetMindset} ${ms(timeBetween, { long: true })} ago`);
+                  } catch (err) {
+                    logger.error(`[${PREFIX}] error: ${err}`);
+                    logger.debug(`[${PREFIX}] Username: ${discordData.username}`);
+                    logger.debug(`[${PREFIX}] lastSetMindsetDate: ${discordData.lastSetMindsetDate}`);
+                    const { db } = global;
+                    const ref = db.ref(`${firebaseUserDbName}/${userKey}`);
+                    // eslint-disable-next-line
+                    await ref.once('value', data => {
+                      if (data.val() !== null) {
+                        const actorData = data.val();
+
+                        // Transform actor data
+                        actorData.discord.lastSetMindset = null;
+                        actorData.discord.lastSetMindsetDate = null;
+
+                        // Load actor data
+                        try {
+                          db.ref(firebaseUserDbName).update({
+                            [userKey]: actorData,
+                          });
+                        } catch (error) {
+                          logger.error(`[${PREFIX}] ${error}`);
+                          logger.debug(`[${PREFIX}] id: ${userKey}`);
+                          logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 4)}`);
+                        }
+                      }
+                    });
+                  }
 
                   if (eightHoursAgo > lastSetMindsetDate) {
                     logger.debug(`[${PREFIX}] ${discordData.username} added ${lastSetMindset} more than 8 hours ago`);
@@ -484,17 +513,29 @@ module.exports = {
 
                   const timeBetween = now - lastHelped;
                   let output = '';
-                  try {
-                    output = channelHelp.archived
-                      ? `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago in an archived channel`
-                      : `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago`;
-                  } catch (err) {
-                    logger.debug(`[${PREFIX}] Error getting time between lastHelped and now`);
-                    logger.debug(err);
-                    logger.debug(`[${PREFIX}] discordData: ${JSON.stringify(output, null, 2)}`);
-                  }
+                  if (channelHelp.id) {
+                    try {
+                      output = channelHelp.archived
+                        ? `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago in an archived channel`
+                        : `[${PREFIX}] ${discordData.username} was last helped ${ms(timeBetween, { long: true })} ago`;
+                    } catch (err) {
+                      logger.debug(`[${PREFIX}] Error getting time between lastHelped and now`);
+                      logger.debug(err);
+                      logger.debug(`[${PREFIX}] discordData: ${JSON.stringify(output, null, 2)}`);
+                    }
+                  } else {
+                    // Extract actor data
+                    // eslint-disable-next-line
+                    const [actorData, actorFbid] = await getUserInfo(member);
 
-                  logger.debug(output);
+                    // Transform actor data
+                    delete actorData.discord.lastHelpedMetaThreadId;
+                    delete actorData.discord.lastHelpedThreadId;
+
+                    // Load actor data
+                    setUserInfo(actorFbid, actorData);
+                    logger.debug(`[${PREFIX}] Channel does not exist anymore, removed lastHelpedThreadId`);
+                  }
 
                   // eslint-disable-next-line
                   if (yesterday > lastHelped && (Object.keys(channelHelp).length > 0 && !channelHelp.archived)) {

@@ -28,7 +28,7 @@ const {
 
 let frequency = 50;
 if (NODE_ENV === 'development') {
-  frequency = 20;
+  frequency = 2;
 }
 const messageCounter = {};
 
@@ -214,7 +214,7 @@ module.exports = {
 
     // Check if this the messageCounter is a multiple of ${frequency}
     if (messageCounter[message.channel.id] % frequency === 0) {
-      let randomAnnouncement = '';
+      let randomAnnouncement = null;
       let hydration = false;
       if (channelGeneralId === message.channel.id) {
         // General channel
@@ -229,6 +229,7 @@ module.exports = {
           Math.floor(Math.random() * vipAnnouncements.length)];
       }
 
+      logger.debug(`[${PREFIX}] randomAnnouncement: ${randomAnnouncement}`);
       embed.setDescription(randomAnnouncement);
 
       if (hydration) {
