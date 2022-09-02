@@ -2,7 +2,7 @@
 
 /* Import dependencies */
 const Express = require('express'); // Import express
-const { URLSearchParams } = require('url'); // import URLSearchParams from url. You can also use form-data (const FormData = require('form-data');).
+const {URLSearchParams} = require('url'); // import URLSearchParams from url. You can also use form-data (const FormData = require('form-data');).
 const axios = require('axios'); // Import Axios
 const path = require('path'); // Import path
 const https = require('https');
@@ -12,7 +12,7 @@ const bodyParser = require('body-parser');
 const PREFIX = require('path').parse(__filename).name;
 // Import body-parser
 // eslint-disable-next-line no-shadow
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args)); // Import node-fetch asynchronously; see https://www.npmjs.com/package/node-fetch#installation for more info on why this is done.
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args)); // Import node-fetch asynchronously; see https://www.npmjs.com/package/node-fetch#installation for more info on why this is done.
 
 // https://circlertech.com/working-with-discord-oauth2
 
@@ -39,7 +39,7 @@ module.exports = {
     /* Define app variables */
     const app = Express(); // Create a web app
 
-    const httpPort = 80;
+    const httpPort = 4030;
     const httpsPort = 8080;
     let host = 'discord.tripsit.me';
     // let host = 'tripsit-discord-bot-kf4yk.ondigitalocean.app';
@@ -106,12 +106,12 @@ module.exports = {
       data1.append('scope', 'identify'); // This tells the Discord API what info you would like to retrieve. You can change this to include guilds, connections, email, etc.
       data1.append('code', codeValue); // This is a key parameter in our upcoming request. It is the code the user got from logging in. This will help us retrieve a token which we can use to get the user's info.
 
-      fetch('https://discord.com/api/oauth2/token', { method: 'POST', body: data1 }).then(response => response.json()).then(data => { // Make a request to the Discord API with the form data, convert the response to JSON, then take it and run the following code.
+      fetch('https://discord.com/api/oauth2/token', {method: 'POST', body: data1}).then((response) => response.json()).then((data) => { // Make a request to the Discord API with the form data, convert the response to JSON, then take it and run the following code.
         logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
-        axios.get('https://discord.com/api/users/@me', makeConfig(data.access_token)).then(response => { // Make a request yet again to the Discord API with the token from previously.
+        axios.get('https://discord.com/api/users/@me', makeConfig(data.access_token)).then((response) => { // Make a request yet again to the Discord API with the token from previously.
           // logger.debug(`[${PREFIX}] response: ${JSON.stringify(response)}`);
           res.status(200).send(response.data.username); // Send the username with a status code 200.
-        }).catch(err => { // Handle any errors in the request (such as 401 errors).
+        }).catch((err) => { // Handle any errors in the request (such as 401 errors).
           logger.error(err); // Log the error in the console
           logger.error(`[${PREFIX}] data: ${JSON.stringify(data)}`);
           res.sendStatus(500); // Send a 500 error.
