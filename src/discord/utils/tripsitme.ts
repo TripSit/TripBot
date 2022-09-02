@@ -175,6 +175,9 @@ export async function tripsitme(
   const targetRoleNames = (target.roles as GuildMemberRoleManager).cache.map((role) => role.name);
   logger.debug(`[${PREFIX}] targetRoleNames: ${targetRoleNames}`);
 
+  const targetRoleIds = (target.roles as GuildMemberRoleManager).cache.map((role) => role.id);
+  logger.debug(`[${PREFIX}] targetRoleIds: ${targetRoleIds}`);
+
   // Check if the target already needs help
   const targetHasRoleNeedshelp = (target.roles as GuildMemberRoleManager).cache.find(
       (role) => role === roleNeedshelp,
@@ -190,7 +193,7 @@ export async function tripsitme(
   let targetLastHelpedThreadId = '';
   let targetLastHelpedMetaThreadId = '';
 
-  const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.user.id}/discord/tripsitsessions`);
+  const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
   await ref.once('value', (data:any) => {
     if (data.val() !== null) {
       targetLastHelpedDate = data.val().lastHelpedDate;
@@ -437,7 +440,7 @@ export async function tripsitme(
         threadDiscussUser.send(helperMsg);
 
         ref.update({
-          roles: targetRoleNames,
+          roles: targetRoleIds,
           lastHelpedDate: new Date(),
         });
 
@@ -600,11 +603,24 @@ export async function tripsitme(
   //   targetData.discord = {modActions: {[targetAction]: 1}};
   // }
 
-  ref.update({
-    lastHelpedThreadId: threadHelpUser.id,
-    lastHelpedMetaThreadId: threadDiscussUser.id,
-    roles: targetRoleNames,
-    lastHelpedDate: new Date(),
+  const threadArchiveTime = new Date();
+  // define one week in milliseconds
+  const tenSec = 1000 * 10;
+  // const oneDay = 1000 * 60 * 60 * 24;
+  // const oneWeek = 1000 * 60 * 60 * 24 * 7;
+  threadArchiveTime.setTime(threadArchiveTime.getTime() + tenSec);
+  logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
+
+  ref.set({
+    [threadArchiveTime.valueOf()]: {
+      type: 'helpthread',
+      value: {
+        lastHelpedThreadId: threadHelpUser.id,
+        lastHelpedMetaThreadId: threadDiscussUser.id,
+        roles: targetRoleIds,
+        status: 'open',
+      },
+    },
   });
 
   logger.debug(`[${PREFIX}] finished!`);

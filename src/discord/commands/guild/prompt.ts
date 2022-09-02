@@ -240,8 +240,8 @@ export async function howtotripsit(interaction:ChatInputCommandInteraction) {
       });
 
   logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoleInfo)}`);
-  const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${interaction.guild!.id}/reactionRoles`);
-  ref.update(reactionRoleInfo);
+  const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${interaction.guild!.id}/reactionRoles/${interaction.channel!.id}`);
+  ref.set(reactionRoleInfo);
 }
 
 /**
@@ -323,8 +323,8 @@ export async function consultants(interaction:ChatInputCommandInteraction) {
       });
 
   logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoleInfo)}`);
-  const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${interaction.guild!.id}/reactionRoles`);
-  ref.update(reactionRoleInfo);
+  const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${interaction.guild!.id}/reactionRoles/${interaction.channel!.id}`);
+  ref.set(reactionRoleInfo);
 }
 
 /**
@@ -634,8 +634,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
       });
 
   logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoleInfo)}`);
-  const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${interaction.guild!.id}/reactionRoles`);
-  ref.update(reactionRoleInfo);
+  const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${interaction.guild!.id}/reactionRoles/${interaction.channel!.id}`);
 
   const colorEmbed = embedTemplate()
       .setAuthor({name: 'React to this message to set the color of your nickname!', iconURL: null, url: null})
@@ -653,59 +652,56 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
         await msg.react(pinkHeart);
         await msg.react('🖤');
         await msg.react('🤍');
-        reactionRoleInfo = {
-          [msg.id]: [
-            {
-              name: 'Red',
-              reaction: `❤`,
-              roleId: env.ROLE_RED,
-            },
-            {
-              name: 'Orange',
-              reaction: `🧡`,
-              roleId: env.ROLE_ORANGE,
-            },
-            {
-              name: 'Yellow',
-              reaction: `💛`,
-              roleId: env.ROLE_YELLOW,
-            },
-            {
-              name: 'Green',
-              reaction: `💚`,
-              roleId: env.ROLE_GREEN,
-            },
-            {
-              name: 'Blue',
-              reaction: `💙`,
-              roleId: env.ROLE_BLUE,
-            },
-            {
-              name: 'Purple',
-              reaction: `💜`,
-              roleId: env.ROLE_PURPLE,
-            },
-            {
-              name: 'Pink',
-              reaction: pinkHeart,
-              roleId: env.ROLE_PINK,
-            },
-            {
-              name: 'Black',
-              reaction: `🖤`,
-              roleId: env.ROLE_BLACK,
-            },
-            {
-              name: 'White',
-              reaction: `🤍`,
-              roleId: env.ROLE_WHITE,
-            },
-          ],
-        };
+        reactionRoleInfo[msg.id as any] = [
+          {
+            name: 'Red',
+            reaction: `❤`,
+            roleId: env.ROLE_RED,
+          },
+          {
+            name: 'Orange',
+            reaction: `🧡`,
+            roleId: env.ROLE_ORANGE,
+          },
+          {
+            name: 'Yellow',
+            reaction: `💛`,
+            roleId: env.ROLE_YELLOW,
+          },
+          {
+            name: 'Green',
+            reaction: `💚`,
+            roleId: env.ROLE_GREEN,
+          },
+          {
+            name: 'Blue',
+            reaction: `💙`,
+            roleId: env.ROLE_BLUE,
+          },
+          {
+            name: 'Purple',
+            reaction: `💜`,
+            roleId: env.ROLE_PURPLE,
+          },
+          {
+            name: 'Pink',
+            reaction: pinkHeart,
+            roleId: env.ROLE_PINK,
+          },
+          {
+            name: 'Black',
+            reaction: `🖤`,
+            roleId: env.ROLE_BLACK,
+          },
+          {
+            name: 'White',
+            reaction: `🤍`,
+            roleId: env.ROLE_WHITE,
+          },
+        ];
       });
 
-  // logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoleInfo)}`);
-  ref.update(reactionRoleInfo);
+  ref.set(reactionRoleInfo);
 
   logger.debug(`[${PREFIX}] finished!`);
 }

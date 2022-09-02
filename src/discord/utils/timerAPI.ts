@@ -1,5 +1,6 @@
 import {
   Guild,
+  Role,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
 import logger from '../../global/utils/logger';
@@ -81,11 +82,83 @@ export async function runTimer() {
                 }
                 if (timerEntry.type === 'mindset') {
                   const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
-                  logger.debug(`[${PREFIX}] tripsitGuild: ${tripsitGuild}`);
+                  const role = tripsitGuild.roles.cache.find((role:Role) => role.id === timerEntry.value) as Role;
+                  const member = await tripsitGuild.members.fetch(userId);
+                  if (member && role) {
+                    member.roles.remove(role);
+                  }
+                  const entryRef = `${env.FIREBASE_DB_TIMERS}/${userId}/${timevalue}`;
+                  logger.debug(`[${PREFIX}] deleting ${entryRef}`);
+                  await global.db.ref(entryRef).remove();
                   logger.debug(`[${PREFIX}] I would remove a mindset!`);
                 }
                 if (timerEntry.type === 'helpthread') {
-                  logger.debug(`[${PREFIX}] I would delete a thread!`);
+                  const helpThread = (timerEntry.value as any).lastHelpedThreadId;
+                  // logger.debug(`[${PREFIX}] helpThread: ${JSON.stringify(helpThread, null, 4)}`);
+                  const metaThread = (timerEntry.value as any).lastHelpedMetaThreadId;
+                  // logger.debug(`[${PREFIX}] metaThread: ${JSON.stringify(metaThread, null, 4)}`);
+                  const oldRoles = (timerEntry.value as any).roles;
+                  // logger.debug(`[${PREFIX}] oldRoles: ${JSON.stringify(oldRoles, null, 4)}`);
+                  const status = (timerEntry.value as any).status;
+                  // logger.debug(`[${PREFIX}] status: ${JSON.stringify(status, null, 4)}`);
+                  if (status === 'open') {
+                    const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
+                    // logger.debug(`[${PREFIX}] tripsitGuild: ${JSON.stringify(tripsitGuild, null, 4)}`);
+                    const member = await tripsitGuild.members.fetch(userId);
+                    // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 4)}`);
+                    const needsHelpRole = tripsitGuild.roles.cache.find(
+                        (role:Role) => role.id === env.ROLE_NEEDSHELP) as Role;
+                    // logger.debug(`[${PREFIX}] needsHelpRole: ${JSON.stringify(needsHelpRole, null, 4)}`);
+                    member.roles.remove(needsHelpRole);
+                    oldRoles.forEach(async (roleId:string) => {
+                      const role = tripsitGuild.roles.cache.find((role:Role) => role.id === roleId) as Role;
+                      // logger.debug(`[${PREFIX}] role: ${JSON.stringify(role, null, 4)}`);
+                      if (role && role.name !== '@everyone') {
+                        try {
+                          await member.roles.add(role);
+                        } catch (err) {
+                          logger.debug(`[${PREFIX}] I dont have permission to add ${role.name} to \
+                          ${member.user.username}`);
+                        }
+                      }
+                    });
+
+                    await global.db.ref(`${env.FIREBASE_DB_TIMERS}/${userId}/${timevalue}`).remove();
+
+                    const threadDeleteTime = new Date();
+                    // const oneDay = 1000 * 60 * 60 * 24;
+                    const thirtySec = 1000 * 30;
+                    threadDeleteTime.setTime(threadDeleteTime.getTime() + thirtySec);
+                    logger.debug(`[${PREFIX}] threadDeleteTime: ${threadDeleteTime}`);
+
+                    const newTimer = global.db.ref(`${env.FIREBASE_DB_TIMERS}/${userId}/`);
+                    await newTimer.update({
+                      [threadDeleteTime.valueOf()]: {
+                        type: 'helpthread',
+                        value: {
+                          lastHelpedThreadId: helpThread,
+                          lastHelpedMetaThreadId: metaThread,
+                          status: 'archived',
+                        },
+                      },
+                    });
+                  } if (status === 'archived') {
+                    const helpThread = (timerEntry.value as any).lastHelpedThreadId;
+                    logger.debug(`[${PREFIX}] helpThread: ${JSON.stringify(helpThread, null, 4)}`);
+                    const metaThread = (timerEntry.value as any).lastHelpedMetaThreadId;
+                    logger.debug(`[${PREFIX}] metaThread: ${JSON.stringify(metaThread, null, 4)}`);
+
+                    const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+                    const helpChannel = await tripsitGuild.channels.fetch(helpThread);
+                    if (helpChannel) {
+                      helpChannel.delete();
+                    }
+                    const metaChannel = await tripsitGuild.channels.fetch(metaThread);
+                    if (metaChannel) {
+                      metaChannel.delete();
+                    }
+                    await global.db.ref(`${env.FIREBASE_DB_TIMERS}/${userId}/${timevalue}`).remove();
+                  }
                 }
               }
             });

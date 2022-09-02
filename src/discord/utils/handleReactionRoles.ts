@@ -36,21 +36,32 @@ export async function handleReactionRoles(
     roleId: string;
   };
 
-  const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${reaction.message.guild!.id}/reactionRoles/${reaction.message.id}`);
-  await ref.once('value', async (data:any) => {
+  const guildId = reaction.message.guild!.id;
+  logger.debug(`[${PREFIX}] guildId: ${JSON.stringify(guildId, null, 2)}`);
+  const channelId = reaction.message.channel.id;
+  logger.debug(`[${PREFIX}] channelId: ${JSON.stringify(channelId, null, 2)}`);
+  const messageId = reaction.message.id;
+  logger.debug(`[${PREFIX}] messageId: ${JSON.stringify(messageId, null, 2)}`);
+
+  const refUrl = `${env.FIREBASE_DB_GUILDS}/${guildId}/reactionRoles/${channelId}/${messageId}`;
+  logger.debug(`[${PREFIX}] refUrl: ${refUrl}`);
+
+  const ref = db.ref(refUrl);
+  await ref.once('value', async (data) => {
     if (data.val() !== null) {
       const reactionRoles = data.val() as ReactionRole[];
-      // logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles, null, 2)}`);
+      logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles, null, 2)}`);
+
       // Get member data
       const member = await reaction.message?.guild?.members.fetch(user.id);
-      // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
+      logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
 
       const otherRoles:string[] = [];
       if (member) {
-        // logger.debug(`[${PREFIX}] add: ${add}`);
+        logger.debug(`[${PREFIX}] add: ${add}`);
         let selectedRole = '';
 
-        // logger.debug(`[${PREFIX}] data.val(): ${JSON.stringify(data.val(), null, 2)}`);
+        logger.debug(`[${PREFIX}] data.val(): ${JSON.stringify(data.val(), null, 2)}`);
         reactionRoles.forEach((value:ReactionRole) => {
           logger.debug(`[${PREFIX}] value.reaction: ${JSON.stringify(value.reaction, null, 2)}`);
           if (value.reaction === reaction.emoji.name ||
@@ -83,20 +94,6 @@ export async function handleReactionRoles(
 
         const roleObj = reaction.message?.guild?.roles.cache.find((r:Role) => r.id === selectedRole) as Role;
         member.roles.add(roleObj);
-
-        // {
-        //   "animated": false,
-        //   "name": "ts_drunk",
-        //   "id": "980917123322896395",
-        //   "guildId": "960606557622657026",
-        //   "requiresColons": true,
-        //   "managed": false,
-        //   "available": true,
-        //   "author": null,
-        //   "createdTimestamp": 1653939266759,
-        //   "url": "https://cdn.discordapp.com/emojis/980917123322896395.png",
-        //   "identifier": "ts_drunk:980917123322896395"
-        // }
 
         // Remove duplicate reactions
         // This is slow but it works
