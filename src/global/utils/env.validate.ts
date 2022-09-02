@@ -28,15 +28,5 @@ export const validateEnv = () => {
     You wont be able to login to discord.`);
   }
 
-  if (!process.env.DISCORD_OWNER_ID) {
-    console.warn(`Missing DISCORD_CLIENT_TOKEN:
-    This will limit your ability to interact with the discord bot.`);
-  }
-
-  if (!process.env.DISCORD_GUILD_ID) {
-    console.warn(`Missing DISCORD_CLIENT_TOKEN:
-    This will limit your bots ability to do a lot.`);
-  }
-
   return true;
 };

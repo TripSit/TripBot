@@ -19,6 +19,7 @@ declare global {
         FIREBASE_DB_TICKETS: string;
         FIREBASE_DB_GUILDS: string;
         FIREBASE_DB_USERS: string;
+        FIREBASE_DB_TIMERS: string;
         FIREBASE_PRIVATE_KEY_ID: string;
         FIREBASE_PRIVATE_KEY: string;
         FIREBASE_CLIENT_ID: number;
