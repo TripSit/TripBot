@@ -45,7 +45,8 @@ const destroy = () => {
   // } catch (err) {
   //   logger.error(`[${PREFIX}] ${err}`);
   // }
-  logger.info('Bot stopped.');
+  logger.debug(`[${PREFIX}] Gracefully stopping the bot (CTRL + C pressed)`);
+  process.exit(0);
 };
 
 process.on('unhandledRejection', (error: Error) => {

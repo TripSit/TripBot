@@ -92,7 +92,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
       // .setTitle(`Welcome to TripSit ${member.user.username}!`)
       // .setTitle(`Welcome ${member.toString()} to TripSit ${member}!`)
           .setDescription(stripIndents`
-              **Please welcome ${member} to the guild!**
+              **Please welcome ${member.displayName} to the guild!**
               We're glad you're here and hope you enjoy your stay!
               Check out ${channelStart} set your color and icon
               Stay safe, be chill, have fun!`);
