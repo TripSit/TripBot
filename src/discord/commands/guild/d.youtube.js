@@ -1,7 +1,7 @@
 'use strict';
 
 const { SlashCommandBuilder } = require('discord.js');
-const yt = require('youtube-search-without-api-key');
+const youtube = require('../../../global/utils/youtube');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 
@@ -15,27 +15,33 @@ module.exports = {
     .addStringOption(option => option
       .setDescription('What video do you want?')
       .setRequired(true)
-      .setName('query')),
+      .setName('search')),
 
   async execute(interaction) {
     const query = interaction.options.getString('query');
-    logger.debug(`[${PREFIX}] starting /youtube with query: ${query}`);
-    const res = await yt.search(query);
-    const video = res[0];
 
-    const embed = template.embedTemplate()
-      .setTitle(video.title)
-      .setURL(video.snippet.url)
-      .setThumbnail('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/YouTube_Logo_2017.svg/512px-YouTube_Logo_2017.svg.png')
-      .setImage(video.snippet.thumbnails.url)
-      .addFields(
-        { name: 'Duration', value: video.snippet.duration, inline: true },
-        { name: 'Published', value: video.snippet.publishedAt, inline: true },
-      );
+    youtube
+      .search(query)
+      // eslint-disable-next-line no-shadow
+      .then(result => {
+        // eslint-disable-next-line prefer-template
+        const embed = template.embedTemplate()
+          .setTitle(`YouTube: ${result[0].title}`)
+          .setURL(result[0].link)
+          .setThumbnail(result[0].thumbnails.high.url)
+          .setDescription(result[0].description)
+          .addFields([
+            { name: 'Channel', value: result[0].channelTitle },
+          ])
+          .setColor(0xFF0000);
+        interaction.reply({ embeds: [embed], ephemeral: false });
+      })
 
-    if (video.description !== '') {
-      embed.addField({ name: 'Description', value: video.description });
-    }
-
-    interaction.reply({ embeds: [embed] });
+      .catch(err => {
+        interaction.reply(
+          `Sorry, there was an ${err}`,
+        );
+        logger.debug(`[${PREFIX}] failed! ${err} `);
+      });
   },
+};
