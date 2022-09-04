@@ -44,7 +44,7 @@
     {
     "status": "Unknown",
     "emoji": "❓",
-    "color": "Black",
+    "color": "DarkButNotBlack",
     "definition": "Effects are unknown.",
     "thumbnail": "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/samsung/320/question-mark_2753.png"
     }
