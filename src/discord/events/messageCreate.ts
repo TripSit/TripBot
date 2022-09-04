@@ -71,14 +71,16 @@ module.exports = {
       // Get the ticket info
       let ticketData:any = {};
 
-      const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${message.author.id}/`);
-      await ref.once('value', (data:any) => {
-        if (data.val() !== null) {
-          ticketData = data.val();
-        } else {
-          return;
-        }
-      });
+      if (global.db) {
+        const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${message.author.id}/`);
+        await ref.once('value', (data:any) => {
+          if (data.val() !== null) {
+            ticketData = data.val();
+          } else {
+            return;
+          }
+        });
+      }
       logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
       if (ticketData === 'blocked') {

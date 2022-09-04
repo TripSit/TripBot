@@ -381,15 +381,17 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
   // Get the ticket info
   let ticketData:any = {};
 
-  const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member.user.id}/`);
-  await ref.once('value', (data:any) => {
-    if (data.val() !== null) {
-      ticketData = data.val();
-    } else {
-      interaction.reply({content: 'This user does not have a ticket!', ephemeral: true});
-      return;
-    }
-  });
+  if (global.db) {
+    const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member.user.id}/`);
+    await ref.once('value', (data:any) => {
+      if (data.val() !== null) {
+        ticketData = data.val();
+      } else {
+        interaction.reply({content: 'This user does not have a ticket!', ephemeral: true});
+        return;
+      }
+    });
+  }
 
   logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
@@ -415,7 +417,10 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
     } catch (err) {
       logger.debug(`[${PREFIX}] The thread has likely been deleted!`);
       ticketData.issueStatus = 'closed';
-      await ref.update(ticketData);
+      if (global.db) {
+        const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member.user.id}/`);
+        await ref.update(ticketData);
+      }
     }
   }
 
@@ -465,7 +470,10 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
     issueDesc: modalInput,
   };
 
-  await ref.update(newTicketData);
+  if (global.db) {
+    const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member.user.id}/`);
+    await ref.update(newTicketData);
+  }
 
   logger.debug(`[${PREFIX}] issueType: ${issueType}!`);
   await tripsitGuild.members.fetch();

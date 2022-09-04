@@ -32,36 +32,38 @@ export const time: SlashCommand = {
     }
     // logger.debug(`[${PREFIX}] actor.id: ${actor.id}`);
 
-    const ref = db.ref(`${env.FIREBASE_DB_USERS}/${interaction.user.id}/timezone`);
-    await ref.once('value', (data:any) => {
-      if (data.val() !== null) {
-        logger.debug(`[${PREFIX}] data.val(): ${data.val()}`);
+    if (global.db) {
+      const ref = db.ref(`${env.FIREBASE_DB_USERS}/${interaction.user.id}/timezone`);
+      await ref.once('value', (data:any) => {
+        if (data.val() !== null) {
+          logger.debug(`[${PREFIX}] data.val(): ${data.val()}`);
 
-        if (data.val() === tzCode) {
-          const embed = embedTemplate()
-              .setDescription(`${timezone} already is your timezone, you don't need to update it!`);
-          interaction.reply({embeds: [embed], ephemeral: true});
+          if (data.val() === tzCode) {
+            const embed = embedTemplate()
+                .setDescription(`${timezone} already is your timezone, you don't need to update it!`);
+            interaction.reply({embeds: [embed], ephemeral: true});
+            logger.debug(`[${PREFIX}] finished!`);
+            return;
+          }
+          ref.update(tzCode);
+          const embed = embedTemplate().setDescription(`I updated your timezone to ${timezone}`);
+          interaction.reply({
+            embeds: [embed],
+            ephemeral: true,
+          });
           logger.debug(`[${PREFIX}] finished!`);
           return;
         }
-        ref.update(tzCode);
-        const embed = embedTemplate().setDescription(`I updated your timezone to ${timezone}`);
+        logger.debug(`[${PREFIX}] tzCode: ${tzCode}`);
+        ref.set(tzCode);
+        const embed = embedTemplate().setDescription(`I set your timezone to ${timezone}`);
         interaction.reply({
           embeds: [embed],
           ephemeral: true,
         });
         logger.debug(`[${PREFIX}] finished!`);
         return;
-      }
-      logger.debug(`[${PREFIX}] tzCode: ${tzCode}`);
-      ref.set(tzCode);
-      const embed = embedTemplate().setDescription(`I set your timezone to ${timezone}`);
-      interaction.reply({
-        embeds: [embed],
-        ephemeral: true,
       });
-      logger.debug(`[${PREFIX}] finished!`);
-      return;
-    });
+    }
   },
 };

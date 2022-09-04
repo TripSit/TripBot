@@ -240,8 +240,10 @@ export async function howtotripsit(interaction:ChatInputCommandInteraction) {
       });
 
   logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoleInfo)}`);
-  const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${interaction.guild!.id}/reactionRoles/${interaction.channel!.id}`);
-  ref.set(reactionRoleInfo);
+  if (global.db) {
+    const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${interaction.guild!.id}/reactionRoles/${interaction.channel!.id}`);
+    ref.set(reactionRoleInfo);
+  }
 }
 
 /**

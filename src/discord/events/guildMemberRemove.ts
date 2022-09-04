@@ -17,15 +17,17 @@ module.exports = {
       logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
 
       logger.debug(`[${PREFIX}] Setting ${member.user.id}`);
-      const ref = db.ref(`${env.FIREBASE_DB_USERS}/${member.user.id}`);
       let joinedTimestamp = member.joinedTimestamp;
-      await ref.once('value', (data:any) => {
-        if (data.val() !== null) {
-          if (data.val().discord) {
-            joinedTimestamp = data.val().discord.joinedTimestamp;
+      if (global.db) {
+        const ref = db.ref(`${env.FIREBASE_DB_USERS}/${member.user.id}`);
+        await ref.once('value', (data:any) => {
+          if (data.val() !== null) {
+            if (data.val().discord) {
+              joinedTimestamp = data.val().discord.joinedTimestamp;
+            }
           }
-        }
-      });
+        });
+      }
 
       logger.debug(`[${PREFIX}] joinedTimestamp: ${joinedTimestamp}`);
       const embed = embedTemplate()

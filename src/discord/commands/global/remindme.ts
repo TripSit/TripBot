@@ -32,13 +32,15 @@ export const discordTemplate: SlashCommand = {
     }
     logger.debug(`[${PREFIX}] reminderDatetime: ${reminderDatetime}`);
 
-    const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${actor.id}`);
-    ref.update({
-      [reminderDatetime.valueOf()]: {
-        type: 'reminder',
-        value: reminder,
-      },
-    });
+    if (global.db) {
+      const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${actor.id}`);
+      ref.update({
+        [reminderDatetime.valueOf()]: {
+          type: 'reminder',
+          value: reminder,
+        },
+      });
+    }
 
     const timeBetween = reminderDatetime.valueOf() - new Date().valueOf();
 

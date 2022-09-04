@@ -46,76 +46,78 @@ export async function handleReactionRoles(
   const refUrl = `${env.FIREBASE_DB_GUILDS}/${guildId}/reactionRoles/${channelId}/${messageId}`;
   logger.debug(`[${PREFIX}] refUrl: ${refUrl}`);
 
-  const ref = db.ref(refUrl);
-  await ref.once('value', async (data) => {
-    if (data.val() !== null) {
-      const reactionRoles = data.val() as ReactionRole[];
-      logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles, null, 2)}`);
+  if (global.db) {
+    const ref = db.ref(refUrl);
+    await ref.once('value', async (data) => {
+      if (data.val() !== null) {
+        const reactionRoles = data.val() as ReactionRole[];
+        logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles, null, 2)}`);
 
-      // Get member data
-      const member = await reaction.message?.guild?.members.fetch(user.id);
-      logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
+        // Get member data
+        const member = await reaction.message?.guild?.members.fetch(user.id);
+        logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
 
-      const otherRoles:string[] = [];
-      if (member) {
-        logger.debug(`[${PREFIX}] add: ${add}`);
-        let selectedRole = '';
+        const otherRoles:string[] = [];
+        if (member) {
+          logger.debug(`[${PREFIX}] add: ${add}`);
+          let selectedRole = '';
 
-        logger.debug(`[${PREFIX}] data.val(): ${JSON.stringify(data.val(), null, 2)}`);
-        reactionRoles.forEach((value:ReactionRole) => {
-          logger.debug(`[${PREFIX}] value.reaction: ${JSON.stringify(value.reaction, null, 2)}`);
-          if (value.reaction === reaction.emoji.name ||
-            value.reaction === reaction.emoji.id) {
-            logger.debug(`[${PREFIX}] Found a match!`);
-            selectedRole = value.roleId;
-          } else {
-            // logger.debug(`[${PREFIX}] No match, adding to OtherRoles: ${value.roleId}`);
-            otherRoles.push(value.roleId);
+          logger.debug(`[${PREFIX}] data.val(): ${JSON.stringify(data.val(), null, 2)}`);
+          reactionRoles.forEach((value:ReactionRole) => {
+            logger.debug(`[${PREFIX}] value.reaction: ${JSON.stringify(value.reaction, null, 2)}`);
+            if (value.reaction === reaction.emoji.name ||
+              value.reaction === reaction.emoji.id) {
+              logger.debug(`[${PREFIX}] Found a match!`);
+              selectedRole = value.roleId;
+            } else {
+              // logger.debug(`[${PREFIX}] No match, adding to OtherRoles: ${value.roleId}`);
+              otherRoles.push(value.roleId);
+            }
+          });
+
+          if (selectedRole === '') {
+            logger.debug(`[${PREFIX}] No role found!`);
+            return;
           }
-        });
 
-        if (selectedRole === '') {
-          logger.debug(`[${PREFIX}] No role found!`);
-          return;
-        }
+          if (!add) {
+            // Remove the role
+            // logger.debug(`[${PREFIX}] Removing role ${selectedRole}`);
+            const roleObj = reaction.message?.guild?.roles.cache.find(
+                (r:Role) => r.id === selectedRole) as Role;
+            member.roles.remove(roleObj);
+            return;
+          }
 
-        if (!add) {
-          // Remove the role
-          // logger.debug(`[${PREFIX}] Removing role ${selectedRole}`);
-          const roleObj = reaction.message?.guild?.roles.cache.find(
-              (r:Role) => r.id === selectedRole) as Role;
-          member.roles.remove(roleObj);
-          return;
-        }
+          otherRoles.forEach((roleId) => {
+            member.roles.remove(roleId);
+          });
 
-        otherRoles.forEach((roleId) => {
-          member.roles.remove(roleId);
-        });
+          const roleObj = reaction.message?.guild?.roles.cache.find((r:Role) => r.id === selectedRole) as Role;
+          member.roles.add(roleObj);
 
-        const roleObj = reaction.message?.guild?.roles.cache.find((r:Role) => r.id === selectedRole) as Role;
-        member.roles.add(roleObj);
-
-        // Remove duplicate reactions
-        // This is slow but it works
-        logger.debug(`[${PREFIX}] name: ${reaction.emoji.name}`);
-        logger.debug(`[${PREFIX}] id: ${reaction.emoji.id}`);
-        logger.debug(`[${PREFIX}] identifier: ${reaction.emoji.identifier}`);
-        logger.debug(`[${PREFIX}] toString: ${reaction.emoji.toString()}`);
-        for (let i = 0; i < reaction.message.reactions.cache.size; i++) {
-          logger.debug(`[${PREFIX}] key: ${reaction.message.reactions.cache.keyAt(i)}`);
-          if (reaction.message.reactions.cache.keyAt(i) !== reaction.emoji.name &&
-              reaction.message.reactions.cache.keyAt(i) !== reaction.emoji.id) {
-            const mreaction = reaction.message.reactions.resolve(
-              reaction.message.reactions.cache.keyAt(i)!);
-            mreaction?.users.remove(user);
-            logger.debug(`[${PREFIX}] Removed duplicate reaction ${reaction.message.reactions.cache.keyAt(i)}`);
-            continue;
-          } else {
-            logger.debug(`[${PREFIX}] skipping ${reaction.message.reactions.cache.keyAt(i)}`);
+          // Remove duplicate reactions
+          // This is slow but it works
+          logger.debug(`[${PREFIX}] name: ${reaction.emoji.name}`);
+          logger.debug(`[${PREFIX}] id: ${reaction.emoji.id}`);
+          logger.debug(`[${PREFIX}] identifier: ${reaction.emoji.identifier}`);
+          logger.debug(`[${PREFIX}] toString: ${reaction.emoji.toString()}`);
+          for (let i = 0; i < reaction.message.reactions.cache.size; i++) {
+            logger.debug(`[${PREFIX}] key: ${reaction.message.reactions.cache.keyAt(i)}`);
+            if (reaction.message.reactions.cache.keyAt(i) !== reaction.emoji.name &&
+                reaction.message.reactions.cache.keyAt(i) !== reaction.emoji.id) {
+              const mreaction = reaction.message.reactions.resolve(
+                reaction.message.reactions.cache.keyAt(i)!);
+              mreaction?.users.remove(user);
+              logger.debug(`[${PREFIX}] Removed duplicate reaction ${reaction.message.reactions.cache.keyAt(i)}`);
+              continue;
+            } else {
+              logger.debug(`[${PREFIX}] skipping ${reaction.message.reactions.cache.keyAt(i)}`);
+            }
           }
         }
       }
-    }
-  });
+    });
+  }
   logger.debug(`[${PREFIX}] finished!`);
 };

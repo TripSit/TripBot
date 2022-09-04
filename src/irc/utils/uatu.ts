@@ -110,21 +110,25 @@ export async function watcher(
   let lastTalkGeneral = 0;
   const generalRef = `${env.FIREBASE_DB_USERS}/${accountName}/experience/general/lastMessageDate`;
   logger.debug(`[${PREFIX}] generalRef: ${generalRef}`);
-  await db.ref(generalRef).once('value', (data:any) => {
-    if (data.val() !== null) {
-      lastTalkGeneral = data.val();
-    }
-  });
+  if (global.db) {
+    await db.ref(generalRef).once('value', (data:any) => {
+      if (data.val() !== null) {
+        lastTalkGeneral = data.val();
+      }
+    });
+  }
   logger.debug(`[${PREFIX}] lastTalkGeneral: ${new Date(lastTalkGeneral)}`);
 
   let lastTalkTripsit = 0;
   const tripsitRef = `${env.FIREBASE_DB_USERS}/${accountName}/experience/tripsitter/lastMessageDate`;
   logger.debug(`[${PREFIX}] tripsitRef: ${tripsitRef}`);
-  await db.ref(tripsitRef).once('value', (data:any) => {
-    if (data.val() !== null) {
-      lastTalkTripsit = data.val();
-    }
-  });
+  if (global.db) {
+    await db.ref(tripsitRef).once('value', (data:any) => {
+      if (data.val() !== null) {
+        lastTalkTripsit = data.val();
+      }
+    });
+  }
   logger.debug(`[${PREFIX}] lastTalkTripsit: ${lastTalkTripsit}`);
 
   const lastTalkCategory = lastTalkGeneral > lastTalkTripsit ? 'general' : 'tripsitter';
@@ -162,15 +166,17 @@ export async function watcher(
       verbage = `${message.nick} has changed their nick to ${newNick}!`;
     }
 
-    const lastMessageChanRef = db.ref(
-        `${env.FIREBASE_DB_USERS}/${accountName}/experience/${lastTalkCategory}/lastMessageChannel`,
-    );
     let lastMessageChan = '';
-    await db.ref(lastMessageChanRef).once('value', (data:any) => {
-      if (data.val() !== null) {
-        lastMessageChan = data.val();
-      }
-    });
+    if (global.db) {
+      const lastMessageChanRef = db.ref(
+          `${env.FIREBASE_DB_USERS}/${accountName}/experience/${lastTalkCategory}/lastMessageChannel`,
+      );
+      await db.ref(lastMessageChanRef).once('value', (data:any) => {
+        if (data.val() !== null) {
+          lastMessageChan = data.val();
+        }
+      });
+    }
 
     logger.debug(`[${PREFIX}] lastMessageChan: ${lastMessageChan}`);
 

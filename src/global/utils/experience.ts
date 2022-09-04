@@ -188,97 +188,99 @@ export async function experience(
     userRef = `${env.FIREBASE_DB_USERS}/${accountName}/experience/${expType}`;
   }
   logger.debug(`[${PREFIX}] userRef: ${userRef}`);
-  const ref = db.ref(userRef);
-  await ref.once('value', (data:any) => {
-    if (data.val() !== null) {
-      lastMessageDate = new Date(data.val().lastMessageDate);
+  if (global.db) {
+    const ref = db.ref(userRef);
+    await ref.once('value', (data:any) => {
+      if (data.val() !== null) {
+        lastMessageDate = new Date(data.val().lastMessageDate);
 
-      const timeDiff = currMessageDate.valueOf() - lastMessageDate.valueOf();
-      // logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
+        const timeDiff = currMessageDate.valueOf() - lastMessageDate.valueOf();
+        // logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
 
-      const bufferTime = bufferSeconds * 1000;
-      if (timeDiff > bufferTime) {
-        // If the time diff is over one bufferTime, increase the experience points
-        let experienceData = data.val();
-        // logger.debug(`[${PREFIX}] experienceDataB: ${JSON.stringify(experienceData, null, 2)}`);
+        const bufferTime = bufferSeconds * 1000;
+        if (timeDiff > bufferTime) {
+          // If the time diff is over one bufferTime, increase the experience points
+          let experienceData = data.val();
+          // logger.debug(`[${PREFIX}] experienceDataB: ${JSON.stringify(experienceData, null, 2)}`);
 
-        let levelExpPoints = experienceData.levelExpPoints + expPoints;
-        const totalExpPoints = experienceData.totalExpPoints + expPoints;
+          let levelExpPoints = experienceData.levelExpPoints + expPoints;
+          const totalExpPoints = experienceData.totalExpPoints + expPoints;
 
-        let level = experienceData.level;
-        const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
+          let level = experienceData.level;
+          const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
 
-        // eslint-disable-next-line max-len
-        logger.debug(stripIndents`[${PREFIX}] ${actor.username ? actor.username : actor.nick } (lv${level}) +${expPoints} ${expType} exp | TotalExp: ${totalExpPoints}, LevelExp: ${levelExpPoints}, ExpToLevel ${level + 1}: ${expToLevel}`);
-        if (expToLevel < levelExpPoints) {
-          logger.debug(`[${PREFIX}] ${actor.username ? actor.username : actor.nick } has leveled up to \
-            ${expType} level ${level + 1}!`);
+          // eslint-disable-next-line max-len
+          logger.debug(stripIndents`[${PREFIX}] ${actor.username ? actor.username : actor.nick } (lv${level}) +${expPoints} ${expType} exp | TotalExp: ${totalExpPoints}, LevelExp: ${levelExpPoints}, ExpToLevel ${level + 1}: ${expToLevel}`);
+          if (expToLevel < levelExpPoints) {
+            logger.debug(`[${PREFIX}] ${actor.username ? actor.username : actor.nick } has leveled up to \
+              ${expType} level ${level + 1}!`);
 
-          const embed = embedTemplate();
-          embed.setDescription(`${actor.username ? actor.username : actor.nick } has leveled up to ${expType} \
-            level ${level + 1}!`);
-          const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_TRIPBOTLOGS) as TextChannel;
-          channelTripbotlogs.send({embeds: [embed]});
-          level += 1;
-          levelExpPoints -= expToLevel;
+            const embed = embedTemplate();
+            embed.setDescription(`${actor.username ? actor.username : actor.nick } has leveled up to ${expType} \
+              level ${level + 1}!`);
+            const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_TRIPBOTLOGS) as TextChannel;
+            channelTripbotlogs.send({embeds: [embed]});
+            level += 1;
+            levelExpPoints -= expToLevel;
+          }
+          experienceData = {
+            level,
+            levelExpPoints,
+            totalExpPoints,
+            lastMessageDate: currMessageDate.valueOf(),
+            lastMessageChannel: messageChannelId,
+          };
+          // logger.debug(`[${PREFIX}] experienceDataC: ${JSON.stringify(experienceData, null, 2)}`);
+          ref.update(experienceData);
+          // actorDataUpdated = true;
         }
-        experienceData = {
-          level,
-          levelExpPoints,
-          totalExpPoints,
-          lastMessageDate: currMessageDate.valueOf(),
-          lastMessageChannel: messageChannelId,
-        };
-        // logger.debug(`[${PREFIX}] experienceDataC: ${JSON.stringify(experienceData, null, 2)}`);
-        ref.update(experienceData);
-        // actorDataUpdated = true;
-      }
-      if (expType === 'general') {
-        const experienceData = data.val();
-        // logger.debug(`[${PREFIX}] User has general experience`);
-        if (experienceData.level >= 5) {
-          // logger.debug(`[${PREFIX}] User is over level 5`);
-          if (message instanceof Message) {
-            // logger.debug(`[${PREFIX}] User is in the guild`);
-            // Give the user the VIP role if they are level 5 or above
-            const vipRole = message.guild!.roles.cache.find((role:Role) => role.id === env.ROLE_VIP) as Role;
-            if (vipRole) {
-              message.member!.roles.add(vipRole);
-              logger.debug(`[${PREFIX}] VIP role added`);
+        if (expType === 'general') {
+          const experienceData = data.val();
+          // logger.debug(`[${PREFIX}] User has general experience`);
+          if (experienceData.level >= 5) {
+            // logger.debug(`[${PREFIX}] User is over level 5`);
+            if (message instanceof Message) {
+              // logger.debug(`[${PREFIX}] User is in the guild`);
+              // Give the user the VIP role if they are level 5 or above
+              const vipRole = message.guild!.roles.cache.find((role:Role) => role.id === env.ROLE_VIP) as Role;
+              if (vipRole) {
+                message.member!.roles.add(vipRole);
+                logger.debug(`[${PREFIX}] VIP role added`);
+              }
+              // if (experienceData.introSent === 'impossible') {
+              //   logger.debug(`[${PREFIX}] User has not been sent an intro yet`);
+
+              //   const intro = stripIndents`
+              //     Hey there, thanks for chatting on the TripSit discord!
+
+              //     We reward people active on our discord with the "VIP" role 😎
+
+              //     This gives you some access to channels and features that are not open to everybody:
+              //     > If you're interested in voice chat you can open a new room by joining the 🔥│𝘾𝙖𝙢𝙥𝙛𝙞𝙧𝙚 𝙑𝘾!
+              //     > Want to help out in 🟢│tripsit? Read the ❗│how-to-tripsit room and become a Helper!
+              //     > We always welcome feedback on our development projects: review 🔋│dev-onboarding and become a \
+              //     Consultant!
+
+              //     Access to the notorious 🧐│gold-lounge can be yours by subscribing to our patreon! \
+              //     (https://www.patreon.com/tripsit)
+
+              //     Thanks again for being active, we couldn't exist without awesome members like you!
+              //   `;
+              //   message.member.send(intro);
+
+              //   const channelViplounge = message.client.channels.cache.get(env.CHANNEL_VIPLOUNGE) as TextChannel;
+              //   channelViplounge.send(`Please welcome ${message.member.displayName} to the VIP lounge!`);
+              //   experienceData.introSent = true;
+              //   logger.debug(`[${PREFIX}] Intro sent`);
+              // }
             }
-            // if (experienceData.introSent === 'impossible') {
-            //   logger.debug(`[${PREFIX}] User has not been sent an intro yet`);
-
-            //   const intro = stripIndents`
-            //     Hey there, thanks for chatting on the TripSit discord!
-
-            //     We reward people active on our discord with the "VIP" role 😎
-
-            //     This gives you some access to channels and features that are not open to everybody:
-            //     > If you're interested in voice chat you can open a new room by joining the 🔥│𝘾𝙖𝙢𝙥𝙛𝙞𝙧𝙚 𝙑𝘾!
-            //     > Want to help out in 🟢│tripsit? Read the ❗│how-to-tripsit room and become a Helper!
-            //     > We always welcome feedback on our development projects: review 🔋│dev-onboarding and become a \
-            //     Consultant!
-
-            //     Access to the notorious 🧐│gold-lounge can be yours by subscribing to our patreon! \
-            //     (https://www.patreon.com/tripsit)
-
-            //     Thanks again for being active, we couldn't exist without awesome members like you!
-            //   `;
-            //   message.member.send(intro);
-
-            //   const channelViplounge = message.client.channels.cache.get(env.CHANNEL_VIPLOUNGE) as TextChannel;
-            //   channelViplounge.send(`Please welcome ${message.member.displayName} to the VIP lounge!`);
-            //   experienceData.introSent = true;
-            //   logger.debug(`[${PREFIX}] Intro sent`);
-            // }
           }
         }
-      }
-    } else {
-      // logger.debug(`[${PREFIX}] experienceDataD: ${JSON.stringify(experienceData, null, 2)}`);
+      } else {
+        // logger.debug(`[${PREFIX}] experienceDataD: ${JSON.stringify(experienceData, null, 2)}`);
 
-      ref.update(experienceData);
-    }
-  });
+        ref.update(experienceData);
+      }
+    });
+  }
 };

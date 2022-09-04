@@ -104,15 +104,18 @@ export async function tripsat(
   let targetLastHelpedMetaThreadId = '';
   let targetRoles:string[] = [];
 
-  const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.user.id}/discord/tripsitsessions`);
-  await ref.once('value', (data:any) => {
-    if (data.val() !== null) {
-      targetLastHelpedDate = data.val().lastHelpedDate;
-      targetLastHelpedThreadId = data.val().lastHelpedThreadId;
-      targetLastHelpedMetaThreadId = data.val().lastHelpedMetaThreadId;
-      targetRoles = data.val().roles;
-    }
-  });
+  if (global.db) {
+    const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.user.id}/discord/tripsitsessions`);
+    await ref.once('value', (data:any) => {
+      if (data.val() !== null) {
+        targetLastHelpedDate = data.val().lastHelpedDate;
+        targetLastHelpedThreadId = data.val().lastHelpedThreadId;
+        targetLastHelpedMetaThreadId = data.val().lastHelpedMetaThreadId;
+        targetRoles = data.val().roles;
+      }
+    });
+  }
+
   logger.debug(`[${PREFIX}] targetLastHelpedDate: ${targetLastHelpedDate}`);
   logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
   logger.debug(`[${PREFIX}] targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);

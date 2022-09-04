@@ -92,48 +92,50 @@ export const profile: SlashCommand = {
     // Extract target data
     const targetUsername = `${target.user.username}#${target.user.discriminator}`;
 
-    const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}`);
-    await ref.once('value', (data:any) => {
-      let targetData:any = {};
-      if (data.val() !== null) {
-        targetData = data.val();
-      }
-      const givenKarma = targetData.karma_given || 0;
-      const takenKarma = targetData.karma_received || 0;
-      let targetBirthday:string | Date = 'Use /birthday to set a birthday!';
-
-      if (targetData.discord) {
-        if (targetData.birthday) {
-          targetBirthday = targetData.birthday ?
-            new Date(`${targetData.birthday[0]} ${targetData.birthday[1]}, 2022`) :
-            'Use /birthday to set a birthday!';
-          logger.debug(`[${PREFIX}] targetBirthday: ${targetBirthday}`);
-          logger.debug(`[${PREFIX}] typeof targetBirthday: ${typeof targetBirthday}`);
+    if (global.db) {
+      const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}`);
+      await ref.once('value', (data:any) => {
+        let targetData:any = {};
+        if (data.val() !== null) {
+          targetData = data.val();
         }
-      }
+        const givenKarma = targetData.karma_given || 0;
+        const takenKarma = targetData.karma_received || 0;
+        let targetBirthday:string | Date = 'Use /birthday to set a birthday!';
 
-      const targetEmbed = embedTemplate()
-          .setColor(Colors.Blue)
-          .setDescription(`${target.user.username}'s profile!`)
-          .addFields(
-              {name: 'Username', value: targetUsername, inline: true},
-              {name: 'Nickname', value: `${target.nickname ? target.nickname : 'No nickname'}`, inline: true},
-              {name: 'Timezone', value: `${targetData.timezone ? targetData.timezone : 'Use /time set to set a timezone!'}`, inline: true},
-          )
-          .addFields(
-              {name: 'Account created', value: `${time(target.user.createdAt, 'R')}`, inline: true},
-              {name: 'Joined', value: `${target.joinedAt ? time(target.joinedAt, 'R') : 'idk'}`, inline: true},
-              {name: 'Birthday', value: `${typeof targetBirthday === 'string' ? targetBirthday : time(targetBirthday, 'R')}`, inline: true},
-          )
-          .addFields(
-              {name: 'Karma Given', value: `${givenKarma}`, inline: true},
-              {name: 'Karma Received', value: `${takenKarma}`, inline: true},
-              {name: '\u200B', value: '\u200B', inline: true},
-          );
+        if (targetData.discord) {
+          if (targetData.birthday) {
+            targetBirthday = targetData.birthday ?
+              new Date(`${targetData.birthday[0]} ${targetData.birthday[1]}, 2022`) :
+              'Use /birthday to set a birthday!';
+            logger.debug(`[${PREFIX}] targetBirthday: ${targetBirthday}`);
+            logger.debug(`[${PREFIX}] typeof targetBirthday: ${typeof targetBirthday}`);
+          }
+        }
 
-      interaction.reply({embeds: [targetEmbed], ephemeral: false});
+        const targetEmbed = embedTemplate()
+            .setColor(Colors.Blue)
+            .setDescription(`${target.user.username}'s profile!`)
+            .addFields(
+                {name: 'Username', value: targetUsername, inline: true},
+                {name: 'Nickname', value: `${target.nickname ? target.nickname : 'No nickname'}`, inline: true},
+                {name: 'Timezone', value: `${targetData.timezone ? targetData.timezone : 'Use /time set to set a timezone!'}`, inline: true},
+            )
+            .addFields(
+                {name: 'Account created', value: `${time(target.user.createdAt, 'R')}`, inline: true},
+                {name: 'Joined', value: `${target.joinedAt ? time(target.joinedAt, 'R') : 'idk'}`, inline: true},
+                {name: 'Birthday', value: `${typeof targetBirthday === 'string' ? targetBirthday : time(targetBirthday, 'R')}`, inline: true},
+            )
+            .addFields(
+                {name: 'Karma Given', value: `${givenKarma}`, inline: true},
+                {name: 'Karma Received', value: `${takenKarma}`, inline: true},
+                {name: '\u200B', value: '\u200B', inline: true},
+            );
 
-      logger.debug(`[${PREFIX}] finished!`);
-    });
+        interaction.reply({embeds: [targetEmbed], ephemeral: false});
+
+        logger.debug(`[${PREFIX}] finished!`);
+      });
+    }
   },
 };

@@ -192,15 +192,16 @@ export async function tripsitme(
   let targetLastHelpedDate = new Date();
   let targetLastHelpedThreadId = '';
   let targetLastHelpedMetaThreadId = '';
-
-  const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
-  await ref.once('value', (data:any) => {
-    if (data.val() !== null) {
-      targetLastHelpedDate = data.val().lastHelpedDate;
-      targetLastHelpedThreadId = data.val().lastHelpedThreadId;
-      targetLastHelpedMetaThreadId = data.val().lastHelpedMetaThreadId;
-    }
-  });
+  if (global.db) {
+    const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
+    await ref.once('value', (data:any) => {
+      if (data.val() !== null) {
+        targetLastHelpedDate = data.val().lastHelpedDate;
+        targetLastHelpedThreadId = data.val().lastHelpedThreadId;
+        targetLastHelpedMetaThreadId = data.val().lastHelpedMetaThreadId;
+      }
+    });
+  }
 
   logger.debug(`[${PREFIX}] targetLastHelpedDate: ${targetLastHelpedDate}`);
   logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
@@ -439,10 +440,13 @@ export async function tripsitme(
         }
         threadDiscussUser.send(helperMsg);
 
-        ref.update({
-          roles: targetRoleIds,
-          lastHelpedDate: new Date(),
-        });
+        if (global.db) {
+          const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
+          ref.update({
+            roles: targetRoleIds,
+            lastHelpedDate: new Date(),
+          });
+        }
 
         logger.debug(`[${PREFIX}] finished!`);
 
@@ -611,17 +615,21 @@ export async function tripsitme(
   threadArchiveTime.setTime(threadArchiveTime.getTime() + tenSec);
   logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
 
-  ref.set({
-    [threadArchiveTime.valueOf()]: {
-      type: 'helpthread',
-      value: {
-        lastHelpedThreadId: threadHelpUser.id,
-        lastHelpedMetaThreadId: threadDiscussUser.id,
-        roles: targetRoleIds,
-        status: 'open',
+  if (global.db) {
+    const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
+    ref.set({
+      [threadArchiveTime.valueOf()]: {
+        type: 'helpthread',
+        value: {
+          lastHelpedThreadId: threadHelpUser.id,
+          lastHelpedMetaThreadId: threadDiscussUser.id,
+          roles: targetRoleIds,
+          status: 'open',
+        },
       },
-    },
-  });
+    });
+  }
+
 
   logger.debug(`[${PREFIX}] finished!`);
 };

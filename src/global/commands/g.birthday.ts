@@ -31,7 +31,9 @@ export async function setBirthday(
   const birthday = [month, day];
 
   // logger.debug(`[${PREFIX}] Setting ${userId}/birthday = ${birthday}`);
-  const ref = db.ref(`${env.FIREBASE_DB_USERS}/${userId}/birthday`);
-  ref.set(birthday);
+  if (global.db) {
+    const ref = db.ref(`${env.FIREBASE_DB_USERS}/${userId}/birthday`);
+    ref.set(birthday);
+  }
   return `${birthday[0]} ${birthday[1]} is your new birthday!`;
 };

@@ -18,12 +18,14 @@ export const h2flow: SlashCommand = {
   async execute(interaction:ChatInputCommandInteraction) {
     let sparklePoints = 0;
 
-    const ref = db.ref(`${env.FIREBASE_DB_USERS}/${interaction.member!.user.id}/discord/sparkle_points`);
-    await ref.once('value', (data:any) => {
-      if (data.val() !== null) {
-        sparklePoints = data.val() + 1;
-      }
-    });
+    if (global.db) {
+      const ref = db.ref(`${env.FIREBASE_DB_USERS}/${interaction.member!.user.id}/discord/sparkle_points`);
+      await ref.once('value', (data:any) => {
+        if (data.val() !== null) {
+          sparklePoints = data.val() + 1;
+        }
+      });
+    }
 
     const aquaBadges = sparklePoints / 10;
     let platinumClub = 'Non-member =(';

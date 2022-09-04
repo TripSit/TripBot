@@ -96,12 +96,14 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
               We're glad you're here and hope you enjoy your stay!
               Check out ${channelStart} set your color and icon
               Stay safe, be chill, have fun!`);
-      const ref = db.ref(`${env.FIREBASE_DB_USERS}/${interaction.user.id}/discord/inviteInfo`);
-      await ref.once('value', (data:any) => {
-        if (data.val() !== null) {
-          embed.setFooter({text: data.val()});
-        }
-      });
+      if (global.db) {
+        const ref = db.ref(`${env.FIREBASE_DB_USERS}/${interaction.user.id}/discord/inviteInfo`);
+        await ref.once('value', (data:any) => {
+          if (data.val() !== null) {
+            embed.setFooter({text: data.val()});
+          }
+        });
+      }
 
       const channelGeneral = member.client.channels.cache.get(env.CHANNEL_GENERAL.toString()) as TextChannel;
       if (channelGeneral) {

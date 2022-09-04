@@ -21,35 +21,36 @@ const intervalSeconds = env.NODE_ENV === 'production' ? 60 : 5;
  */
 export async function runTimer() {
   logger.info(`[${PREFIX}] started!`);
-  const timerRef = global.db.ref(`${env.FIREBASE_DB_TIMERS}`);
   const timerDb = {} as any;
-
-  timerRef.on('child_changed', (snapshot) => {
-    if (snapshot.key !== null) {
+  if (global.db) {
+    const timerRef = global.db.ref(`${env.FIREBASE_DB_TIMERS}`);
+    timerRef.on('child_changed', (snapshot) => {
+      if (snapshot.key !== null) {
       // logger.debug(`[${PREFIX}] changed key: ${JSON.stringify(snapshot.key, null, 4)}`);
       // logger.debug(`[${PREFIX}] changed val: ${JSON.stringify(snapshot.val(), null, 4)}`);
-      timerDb[snapshot.key] = snapshot.val();
-    }
-  });
+        timerDb[snapshot.key] = snapshot.val();
+      }
+    });
 
-  timerRef.on('child_added', (snapshot) => {
-    if (snapshot.key !== null) {
+    timerRef.on('child_added', (snapshot) => {
+      if (snapshot.key !== null) {
       // logger.debug(`[${PREFIX}] added key: ${JSON.stringify(snapshot.key, null, 4)}`);
       // logger.debug(`[${PREFIX}] added val: ${JSON.stringify(snapshot.val(), null, 4)}`);
-      timerDb[snapshot.key] = snapshot.val();
+        timerDb[snapshot.key] = snapshot.val();
       // logger.debug(`[${PREFIX}] global.userDb: ${JSON.stringify(global.userDb, null, 4)}`);
-    }
-  });
+      }
+    });
 
-  timerRef.on('child_removed', (snapshot) => {
-    if (snapshot.key !== null) {
+    timerRef.on('child_removed', (snapshot) => {
+      if (snapshot.key !== null) {
       // logger.debug(`[${PREFIX}] removed key: ${JSON.stringify(snapshot.key, null, 4)}`);
       // logger.debug(`[${PREFIX}] removed val: ${JSON.stringify(snapshot.val(), null, 4)}`);
       // logger.debug(`[${PREFIX}] timerDb[snapshot.key]: ${JSON.stringify(timerDb[snapshot.key], null, 4)}`);
       // logger.debug(`[${PREFIX}] snapshot.val().key: ${JSON.stringify(Object.keys(snapshot.val())[0], null, 4)}`);
-      delete timerDb[snapshot.key][Object.keys(snapshot.val())[0]];
-    }
-  });
+        delete timerDb[snapshot.key][Object.keys(snapshot.val())[0]];
+      }
+    });
+  }
 
   // let i = 0;
   /**

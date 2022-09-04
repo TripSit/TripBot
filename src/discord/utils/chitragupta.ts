@@ -40,27 +40,31 @@ export async function chitragupta(
   logger.debug(`[${PREFIX}] ${user.username} gave ${reaction.emoji.name} to \
   ${target.username} in ${reaction.message.guild}!`);
 
-  const actorRef = db.ref(`${env.FIREBASE_DB_USERS}/${actor.id}/discord/karma_given`);
-  await actorRef.once('value', (data:any) => {
-    let points = 1;
-    if (data.val() !== null) {
-      points = data.val() + 1;
-      actorRef.update(points);
-    } else {
-      actorRef.set(points);
-    }
-  });
+  if (global.db) {
+    const actorRef = db.ref(`${env.FIREBASE_DB_USERS}/${actor.id}/discord/karma_given`);
+    await actorRef.once('value', (data:any) => {
+      let points = 1;
+      if (data.val() !== null) {
+        points = data.val() + 1;
+        actorRef.update(points);
+      } else {
+        actorRef.set(points);
+      }
+    });
+  }
 
-  const targetRef = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}/discord/karma_received`);
-  await targetRef.once('value', (data:any) => {
-    let points = 1;
-    if (data.val() !== null) {
-      points = data.val() + 1;
-      actorRef.update(points);
-    } else {
-      targetRef.set(points);
-    }
-  });
+  if (global.db) {
+    const targetRef = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}/discord/karma_received`);
+    await targetRef.once('value', (data:any) => {
+      let points = 1;
+      if (data.val() !== null) {
+        points = data.val() + 1;
+        targetRef.update(points);
+      } else {
+        targetRef.set(points);
+      }
+    });
+  }
 
   return logger.debug(`[${PREFIX}] finished!`);
 };

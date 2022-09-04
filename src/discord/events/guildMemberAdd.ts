@@ -60,13 +60,15 @@ module.exports = {
           new Collection(newInvites.map((invite) => [invite.code, invite.uses])),
       );
 
-      const ref = db.ref(`${env.FIREBASE_DB_USERS}/${member.user.id}/discord`);
-      ref.update({
-        tag: member.user.tag,
-        joinedTimestamp: member.joinedTimestamp,
-        nickname: member.nickname,
-        inviteInfo,
-      });
+      if (global.db) {
+        const ref = db.ref(`${env.FIREBASE_DB_USERS}/${member.user.id}/discord`);
+        ref.update({
+          tag: member.user.tag,
+          joinedTimestamp: member.joinedTimestamp,
+          nickname: member.nickname,
+          inviteInfo,
+        });
+      }
 
       logger.debug(`[${PREFIX}] Date.now(): ${Date.now()}`);
       logger.debug(`[${PREFIX}] member.user.createdAt: ${member.user.createdAt.toString()}`);

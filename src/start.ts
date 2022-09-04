@@ -4,7 +4,7 @@ import {discordConnect} from './discord/discordAPI';
 import {ircConnect} from './irc/ircAPI';
 import {validateEnv} from './global/utils/env.validate';
 import {runTimer} from './discord/utils/timerAPI';
-import {firebaseConnect} from './global/utils/firebaseAPI';
+// import {firebaseConnect} from './global/utils/firebaseAPI';
 import {webserverConnect} from './webserver/webserverAPI';
 
 
@@ -20,7 +20,7 @@ global.bootTime = new Date();
 async function start() {
   logger.info(`[${PREFIX}] Starting service!`);
   if (!validateEnv()) return;
-  await firebaseConnect();
+  // await firebaseConnect();
 
   await discordConnect();
 
