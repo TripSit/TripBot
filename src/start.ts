@@ -1,36 +1,37 @@
 // Bad things happen if this is not at the start.
 require('dotenv').config();
-import {discordConnect} from './discord/discordAPI';
-import {ircConnect} from './irc/ircAPI';
-import {validateEnv} from './global/utils/env.validate';
-import {runTimer} from './discord/utils/timerAPI';
-import {firebaseConnect} from './global/utils/firebaseAPI';
+// import {discordConnect} from './discord/discordAPI';
+// import {ircConnect} from './irc/ircAPI';
+// import {validateEnv} from './global/utils/env.validate';
+// import {runTimer} from './discord/utils/timerAPI';
+// import {firebaseConnect} from './global/utils/firebaseAPI';
+import {webserverConnect} from './webserver/webserverAPI';
+
 
 import logger from './global/utils/logger';
 
 const PREFIX = require('path').parse(__filename).name;
 global.bootTime = new Date();
 // const { telegramConnect } = require('./telegram/telegramAPI');
-// const { webserverConnect } = require('./webserver/webserverAPI');
 
 /**
 * Starts everything in the bot.
 */
 async function start() {
   logger.info(`[${PREFIX}] Starting service!`);
-  if (!validateEnv()) return;
-  await firebaseConnect();
+  // if (!validateEnv()) return;
+  // await firebaseConnect();
 
-  await discordConnect();
+  // await discordConnect();
 
-  await ircConnect();
+  // await ircConnect();
 
   // Telegram breaks on connect =/
   // await telegramConnect();
 
-  await runTimer();
+  // await runTimer();
 
-  // await webserverConnect();
+  await webserverConnect();
 }
 
 start();

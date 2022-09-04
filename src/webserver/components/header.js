@@ -4,6 +4,8 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-console */
 /* eslint-disable no-useless-constructor */
+/* eslint-disable require-jsdoc */
+/* eslint-disable max-len */
 
 class Header extends HTMLElement {
   constructor() {
@@ -15,7 +17,7 @@ class Header extends HTMLElement {
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid container">
       <a class="navbar-brand" href="/">
-        <img src="../assets/bot.png" alt="" width="50" height="50" class="rounded-circle">
+        <img src="../assets/img/bot.png" alt="" width="50" height="50" class="rounded-circle">
         &nbsp;
         <span>
           TripSit Discord
