@@ -10,7 +10,6 @@ const PREFIX = require('path').parse(__filename).name;
  * Controls connections to the database
  */
 export async function firebaseConnect(): Promise<void> {
-  logger.debug(`[${PREFIX}] starting firebaseConnect!`);
   // logger.info(`[${PREFIX}] connecting...`);
   // Initialize firebase app
   firebaseCreds.private_key_id = env.FIREBASE_PRIVATE_KEY_ID;
@@ -27,4 +26,5 @@ export async function firebaseConnect(): Promise<void> {
   });
 
   global.db = firebase.database();
+  logger.info(`[${PREFIX}] connected!`);
 }

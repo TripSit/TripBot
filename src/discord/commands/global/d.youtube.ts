@@ -18,18 +18,32 @@ export const discordTemplate: SlashCommand = {
           .setName('search')),
 
   async execute(interaction:ChatInputCommandInteraction) {
-    const query = interaction.options.getString('query');
+    const query = interaction.options.getString('search')!;
+    logger.debug(`[${PREFIX}] - query: ${query}`);
 
-    youtubeSearch(query!)
+    youtubeSearch(query)
         .then((result) => {
+          logger.debug(`${PREFIX} result: ${JSON.stringify(result.length, null, 2)}`);
+          let topIndex = 0;
+          let topViews = 0;
+          result.forEach((item, index) => {
+            // logger.debug(`${PREFIX} item: ${JSON.stringify(item, null, 2)}`);
+            logger.debug(`${PREFIX} index: ${index}`);
+            logger.debug(`${PREFIX} item.title: ${item.title}`);
+            logger.debug(`${PREFIX} item.views: ${item.views}`);
+            if (item.views > topViews) {
+              topViews = item.views;
+              topIndex = index;
+            }
+          });
+
+          logger.debug(`${PREFIX} ${result[topIndex].title} has the most views (${result[topIndex].views})`);
+
           const embed = embedTemplate()
-              .setTitle(`YouTube: ${result[0].title}`)
-              .setURL(result[0].link)
-              .setThumbnail(result[0].thumbnails.high.url)
-              .setDescription(result[0].description)
-              .addFields([
-                {name: 'Channel', value: result[0].channelTitle},
-              ])
+              .setTitle(`${result[topIndex].title}`)
+              .setURL(result[topIndex].url)
+              .setThumbnail(result[topIndex].snippet.thumbnails.high.url)
+              // .setDescription(result[topIndex].description)
               .setColor(0xFF0000);
           interaction.reply({embeds: [embed], ephemeral: false});
         })

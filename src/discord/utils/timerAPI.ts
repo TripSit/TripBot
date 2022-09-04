@@ -20,7 +20,7 @@ const intervalSeconds = env.NODE_ENV === 'production' ? 60 : 5;
  * This function starts the timer
  */
 export async function runTimer() {
-  logger.info(`[${PREFIX}] started!`);
+  // logger.info(`[${PREFIX}] started!`);
   const timerDb = {} as any;
   if (global.db) {
     const timerRef = global.db.ref(`${env.FIREBASE_DB_TIMERS}`);
@@ -169,5 +169,6 @@ export async function runTimer() {
         interval,
     );
   }
+  logger.info(`[${PREFIX}] started!`);
   checkTimers(intervalSeconds * 1000);
 };

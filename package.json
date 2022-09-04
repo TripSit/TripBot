@@ -54,7 +54,8 @@
     "node-fetch": "^3.2.10",
     "octokit": "^2.0.7",
     "winston": "^3.8.1",
-    "youtube-search": "^1.1.6"
+    "youtube-search": "^1.1.6",
+    "youtube-search-without-api-key": "^1.0.7"
   },
   "devDependencies": {
     "@types/common-tags": "^1.8.1",
