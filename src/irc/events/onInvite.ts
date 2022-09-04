@@ -1,11 +1,13 @@
-'use strict';
-
+import logger from '../../global/utils/logger';
 const PREFIX = require('path').parse(__filename).name;
-const logger = require('../../global/utils/logger');
 
+/**
+ *
+ * @return {Promise<void>}
+ */
 module.exports = {
   async execute() {
-    global.ircClient.addListener('EXAMPLE', (channel, nick, message) => {
+    global.ircClient.addListener('EXAMPLE', (channel:any, nick:any, message:any) => {
       logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
     });
   },

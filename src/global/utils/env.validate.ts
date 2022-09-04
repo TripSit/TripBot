@@ -28,5 +28,10 @@ export const validateEnv = () => {
     You wont be able to login to discord.`);
   }
 
+  if (!process.env.IRC_PASSWORD) {
+    console.warn(`Missing IRC_PASSWORD:
+    You wont be able to login to IRC.`);
+  }
+
   return true;
 };

@@ -51,17 +51,17 @@ export async function runTimer() {
     }
   });
 
-  let i = 0;
+  // let i = 0;
   /**
    * This timer runs every minute to determine if there are any tasks to perform
    * This function uses setTimeout so that it can finish runing before the next loop
    * @param {number} interval How often to run the loop
    */
   function checkTimers(interval:number) {
-    i += 1;
+    // i += 1;
     setTimeout(
         async () => {
-          logger.debug(`[${PREFIX}] iteration ${i} at ${new Date()}`);
+          // logger.debug(`[${PREFIX}] iteration ${i} at ${new Date()}`);
           Object.keys(timerDb).forEach(async (userId) => {
             const userInfo = timerDb[userId as keyof typeof timerDb] as timerEntry;
             // logger.debug(`[${PREFIX}] ${JSON.stringify(userInfo, null, 4)}`);

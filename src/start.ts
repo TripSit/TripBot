@@ -1,6 +1,7 @@
 // Bad things happen if this is not at the start.
 require('dotenv').config();
 import {discordConnect} from './discord/discordAPI';
+import {ircConnect} from './irc/ircAPI';
 import {validateEnv} from './global/utils/env.validate';
 import {runTimer} from './discord/utils/timerAPI';
 import {firebaseConnect} from './global/utils/firebaseAPI';
@@ -9,7 +10,6 @@ import logger from './global/utils/logger';
 
 const PREFIX = require('path').parse(__filename).name;
 global.bootTime = new Date();
-// const { ircConnect } = require('./irc/ircAPI');
 // const { telegramConnect } = require('./telegram/telegramAPI');
 // const { webserverConnect } = require('./webserver/webserverAPI');
 
@@ -23,7 +23,7 @@ async function start() {
 
   await discordConnect();
 
-  // await ircConnect();
+  await ircConnect();
 
   // Telegram breaks on connect =/
   // await telegramConnect();

@@ -65,7 +65,7 @@ module.exports = {
     Promise.all([getInvites(client)])
         .then(() => {
           const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
-          logger.info(`[${PREFIX}] finished booting in ${bootDuration}s!`);
+          logger.info(`[${PREFIX}] Discord finished booting in ${bootDuration}s!`);
         })
     ;
   },

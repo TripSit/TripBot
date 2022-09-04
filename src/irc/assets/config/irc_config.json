@@ -1,9 +1,9 @@
 {
-  "userName": null,
+  "userName": "",
   "realName": "TripSit Mod Relay",
-  "password": null,
+  "password": "",
   "port": 6667,
-  "channels": null,
+  "channels": [""],
   "autoConnect": true,
   "autoRejoin": true,
   "autoRenick": true,
