@@ -1,10 +1,10 @@
 // Bad things happen if this is not at the start.
 require('dotenv').config();
-// import {discordConnect} from './discord/discordAPI';
-// import {ircConnect} from './irc/ircAPI';
-// import {validateEnv} from './global/utils/env.validate';
-// import {runTimer} from './discord/utils/timerAPI';
-// import {firebaseConnect} from './global/utils/firebaseAPI';
+import {discordConnect} from './discord/discordAPI';
+import {ircConnect} from './irc/ircAPI';
+import {validateEnv} from './global/utils/env.validate';
+import {runTimer} from './discord/utils/timerAPI';
+import {firebaseConnect} from './global/utils/firebaseAPI';
 import {webserverConnect} from './webserver/webserverAPI';
 
 
@@ -19,17 +19,17 @@ global.bootTime = new Date();
 */
 async function start() {
   logger.info(`[${PREFIX}] Starting service!`);
-  // if (!validateEnv()) return;
-  // await firebaseConnect();
+  if (!validateEnv()) return;
+  await firebaseConnect();
 
-  // await discordConnect();
+  await discordConnect();
 
-  // await ircConnect();
+  await ircConnect();
 
   // Telegram breaks on connect =/
   // await telegramConnect();
 
-  // await runTimer();
+  await runTimer();
 
   await webserverConnect();
 }
