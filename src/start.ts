@@ -34,8 +34,10 @@ async function start() {
     discordConnect();
   }
 
-  firebaseConnect();
-  runTimer();
+  if (env.FIREBASE_PRIVATE_KEY_ID) {
+    firebaseConnect();
+    runTimer();
+  }
 }
 
 start();
