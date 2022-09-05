@@ -25,7 +25,7 @@ let reason = 'Why are you kicking this person?';
 
 export const info: UserCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('Kick')
+      .setName('u_kick')
       .setType(ApplicationCommandType.User),
   async execute(interaction) {
     actor = interaction.member as GuildMember;

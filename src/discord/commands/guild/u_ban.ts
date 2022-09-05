@@ -26,7 +26,7 @@ const embed = embedTemplate();
 
 export const ban: UserCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('Ban')
+      .setName('u_ban')
       .setType(ApplicationCommandType.User),
   async execute(interaction:UserContextMenuCommandInteraction) {
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction

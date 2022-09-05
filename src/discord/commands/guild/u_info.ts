@@ -19,7 +19,7 @@ const embed = embedTemplate();
 
 export const info: UserCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('Info')
+      .setName('u_info')
       .setType(ApplicationCommandType.User),
   async execute(interaction) {
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction

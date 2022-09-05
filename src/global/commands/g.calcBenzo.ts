@@ -8,6 +8,7 @@ import drugDataTripsit from '../assets/data/drug_db_tripsit.json';
  * @param {number} dosage
  * @param {string} drugA
  * @param {string} drugB
+ * @return {Promise<any>}
  */
 export async function calcBenzo(
     dosage:number,
@@ -21,109 +22,46 @@ export async function calcBenzo(
     return;
   }
 
-  const drugData = drugDataTripsit[drugA as keyof typeof drugDataTripsit];
+  const drugDataA = drugDataTripsit[drugA as keyof typeof drugDataTripsit];
 
-  if (!drugData) {
+  if (!drugDataA) {
     logger.error(`[${PREFIX}] ${drugA} was not found in drugDataTripsit`);
     return;
   }
 
-  if (!drugData.properties.hasOwnProperty('dose_to_diazepam')) {
+  if (!drugDataA.properties.hasOwnProperty('dose_to_diazepam')) {
     logger.error(`[${PREFIX}] ${drugA} does not have a dose_to_diazepam property`);
     return;
   }
 
   const regex = /[0-9]+\.?[0-9]?/;
-  const convertedDose = regex.exec(drugData.properties['dose_to_diazepam' as keyof typeof drugData.properties]);
+  const convertedDoseA = regex.exec(drugDataA.properties['dose_to_diazepam' as keyof typeof drugDataA.properties])!;
 
-  logger.debug(`[${PREFIX}] convertedDose: ${convertedDose}`);
+  const drugDataB = drugDataTripsit[drugB as keyof typeof drugDataTripsit];
 
-  // let benzoCache = {};
-  // benzoCache = _.filter((drugCache), bCache => _.has(bCache.properties, 'dose_to_diazepam'));
+  if (!drugDataB) {
+    logger.error(`[${PREFIX}] ${drugB} was not found in drugDataTripsit`);
+    return;
+  }
 
-  // _.each(benzoCache, benzo => {
-  //   _.each(benzo.aliases, alias => {
-  //     benzoCache.push({
-  //       name: alias,
-  //       pretty_name: alias.charAt(0).toUpperCase() + alias.slice(1),
-  //       properties: benzo.properties,
-  //       formatted_dose: benzo.formatted_dose,
-  //     });
-  //   });
-  // });
+  if (!drugDataB.properties.hasOwnProperty('dose_to_diazepam')) {
+    logger.error(`[${PREFIX}] ${drugB} does not have a dose_to_diazepam property`);
+    return;
+  }
 
-  // benzoCache = _.sortBy(benzoCache, 'name');
-  // benzoCache = _.each(benzoCache, bCache => {
-  //   // logger.debug(`[${PREFIX}] converted: ${converted}`);
-  //         bCache.diazvalue = converted; // eslint-disable-line
-  // });
+  const convertedDoseB = regex.exec(drugDataB.properties['dose_to_diazepam' as keyof typeof drugDataB.properties])!;
 
-  // const drugNames = [];
-  //     for (const eachDrug in benzoCache) { // eslint-disable-line
-  //   drugNames.push({
-  //     label: benzoCache[eachDrug].name,
-  //     value: benzoCache[eachDrug].name,
-  //   });
-  // }
+  logger.debug(`[${PREFIX}] convertedDoseA: ${convertedDoseA}`);
+  logger.debug(`[${PREFIX}] convertedDoseA: ${convertedDoseA.toString()}`);
+  logger.debug(`[${PREFIX}] convertedDoseA: ${parseFloat(convertedDoseA.toString())}`);
+  logger.debug(`[${PREFIX}] convertedDoseB: ${convertedDoseB}`);
+  logger.debug(`[${PREFIX}] convertedDoseB: ${convertedDoseB.toString()}`);
+  logger.debug(`[${PREFIX}] convertedDoseB: ${parseFloat(convertedDoseB.toString())}`);
+  logger.debug(`[${PREFIX}] dosage: ${dosage}`);
+  logger.debug(`[${PREFIX}] dosage1: ${dosage / parseFloat(convertedDoseA.toString())}`);
+  logger.debug(`[${PREFIX}] dosage2: ${parseFloat(convertedDoseA.toString()) * parseFloat(convertedDoseB.toString())}`);
 
-  // let doseA = 0;
-  // let doseB = 0;
-  // let drugAResult = {};
-  // let drugBResult = {};
-  //     for (const eachBenzo of benzoCache) { // eslint-disable-line
-  //   if (eachBenzo.name === drugA) {
-  //     drugAResult = eachBenzo;
-  //     doseA = eachBenzo.diazvalue;
-  //     logger.debug(`[${PREFIX}] ${drugA} dose_a: ${doseA}`);
-  //   }
-  //   if (eachBenzo.name === drugB) {
-  //     drugBResult = eachBenzo;
-  //     doseB = eachBenzo.diazvalue;
-  //     logger.debug(`[${PREFIX}] ${drugB} dose_b: ${doseB}`);
-  //   }
-  // }
-
-  // const result = (dosage / doseA) * doseB;
-  // let drugADosageText = '';
-  // if (drugAResult.formatted_dose.Oral) {
-  //         console.log(`[${PREFIX}] ${drugA} is Oral`); // eslint-disable-line
-  //   drugADosageText = `\
-  //         ${drugAResult.formatted_dose.Oral.Light ? `Light: ${drugAResult.formatted_dose.Oral.Light}\n` : ''}\
-  //         ${drugAResult.formatted_dose.Oral.Low ? `Low: ${drugAResult.formatted_dose.Oral.Low}\n` : ''}\
-  //         ${drugAResult.formatted_dose.Oral.Common ? `Common: ${drugAResult.formatted_dose.Oral.Common}\n` : ''}\
-  //         ${drugAResult.formatted_dose.Oral.Heavy ? `Heavy: ${drugAResult.formatted_dose.Oral.Heavy}\n` : ''}\
-  //         ${drugAResult.formatted_dose.Oral.Strong ? `Strong: ${drugAResult.formatted_dose.Oral.Strong}\n` : ''}`;
-  // } else if (drugAResult.formatted_dose.Light) {
-  //         console.log(`[${PREFIX}] ${drugA} is Light`); // eslint-disable-line
-  //   drugADosageText = `\
-  //         ${drugAResult.formatted_dose.Light.Light ? `Light: ${drugAResult.formatted_dose.Light.Light}\n` : ''}\
-  //         ${drugAResult.formatted_dose.Light.Low ? `Low: ${drugAResult.formatted_dose.Light.Low}\n` : ''}\
-  //         ${drugAResult.formatted_dose.Light.Common ? `Common: ${drugAResult.formatted_dose.Light.Common}\n` : ''}\
-  //         ${drugAResult.formatted_dose.Light.Heavy ? `Heavy: ${drugAResult.formatted_dose.Light.Heavy}\n` : ''}\
-  //         ${drugAResult.formatted_dose.Light.Strong ? `Strong: ${drugAResult.formatted_dose.Light.Strong}\n` : ''}`;
-  // }
-  // drugAResult.drugADosageText = drugADosageText;
-
-  // let drugBDosageText = '';
-  // if (drugBResult.formatted_dose.Oral) {
-  //         console.log(`[${PREFIX}] ${drugA} is Oral`); // eslint-disable-line
-  //   drugBDosageText = `\
-  //         ${drugBResult.formatted_dose.Oral.Light ? `Light: ${drugBResult.formatted_dose.Oral.Light}\n` : ''}\
-  //         ${drugBResult.formatted_dose.Oral.Low ? `Low: ${drugBResult.formatted_dose.Oral.Low}\n` : ''}\
-  //         ${drugBResult.formatted_dose.Oral.Common ? `Common: ${drugBResult.formatted_dose.Oral.Common}\n` : ''}\
-  //         ${drugBResult.formatted_dose.Oral.Heavy ? `Heavy: ${drugBResult.formatted_dose.Oral.Heavy}\n` : ''}\
-  //         ${drugBResult.formatted_dose.Oral.Strong ? `Strong: ${drugBResult.formatted_dose.Oral.Strong}\n` : ''}`;
-  // } else if (drugBResult.formatted_dose.Light) {
-  //         console.log(`[${PREFIX}] ${drugA} is Light`); // eslint-disable-line
-  //   drugBDosageText = `\
-  //         ${drugBResult.formatted_dose.Light.Light ? `Light: ${drugBResult.formatted_dose.Light.Light}\n` : ''}\
-  //         ${drugBResult.formatted_dose.Light.Low ? `Low: ${drugBResult.formatted_dose.Light.Low}\n` : ''}\
-  //         ${drugBResult.formatted_dose.Light.Common ? `Common: ${drugBResult.formatted_dose.Light.Common}\n` : ''}\
-  //         ${drugBResult.formatted_dose.Light.Heavy ? `Heavy: ${drugBResult.formatted_dose.Light.Heavy}\n` : ''}\
-  //         ${drugBResult.formatted_dose.Light.Strong ? `Strong: ${drugBResult.formatted_dose.Light.Strong}\n` : ''}`;
-  // }
-  // drugBResult.drugBDosageText = drugBDosageText;
-
-  // // console.log(drugAResult);
-  // return { result, drugAResult, drugBResult };
+  const result = (dosage / parseFloat(convertedDoseA.toString())) * parseFloat(convertedDoseB.toString());
+  logger.debug(`[${PREFIX}] result: ${result}`);
+  return result;
 };

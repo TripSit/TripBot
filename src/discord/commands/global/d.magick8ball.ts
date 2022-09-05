@@ -6,7 +6,7 @@ import {eightball} from '../../../global/commands/g.eightball';
 
 export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('magickball')
+      .setName('magick8ball')
       .setDescription('Ask the magick 8-ball a question!')
       .addStringOption((option) => option.setName('question')
           .setDescription('What is your question?')),

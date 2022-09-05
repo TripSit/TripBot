@@ -81,7 +81,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
       }
       // logger.debug(`[${PREFIX}] coloValue: ${colorValue}`);
       const channelStart = member.client.channels.cache.get(env.CHANNEL_START.toString());
-      const channelTechhelp = member.client.channels.cache.get(env.CHANNEL_IRC);
+      const channelTechhelp = member.client.channels.cache.get(env.CHANNEL_TECHHELP);
       const channelBotspam = interaction.client.channels.cache.get(env.CHANNEL_BOTSPAM);
       // const channelTripsit = member.client.channels.cache.get(CHANNEL_TRIPSIT);
       const embed = embedTemplate()

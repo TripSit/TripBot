@@ -104,7 +104,6 @@ declare global {
         CHANNEL_TRIPCORD: string;
         CHANNEL_TRIPBOT: string;
         CHANNEL_DESIGN: string;
-        CHANNEL_IRC: string;
         CHANNEL_SANDBOX: string;
         CHANNEL_WIKICONTENT: string;
         CHANNEL_MINECRAFTADMIN: string;

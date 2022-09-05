@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import {
   SlashCommandBuilder,
   ButtonBuilder,
@@ -33,117 +34,92 @@ export const help: SlashCommand = {
       .setName('help')
       .setDescription('Information bout TripBot Commands'),
   async execute(interaction) {
-    const globalEmbed = embedTemplate()
-        .setTitle('TripBot Commands')
-        .addFields(
-            {name: 'Drug', value: 'This command looks up drug information!', inline: true},
-            {name: 'iDose', value: 'Remind yourself when you last dosed.', inline: true},
-            {name: 'Calc Psychedelics', value: 'Calculate psychedelic dosages', inline: true},
+    logger.debug(`[${PREFIX}] starting!`);
 
-            {name: 'Calc DXM', value: 'Use this to calculate dxm dosages', inline: true},
-            {name: 'Calc Benzos', value: 'Calculate dosages between benzos', inline: true},
-            {name: 'Calc Ketamine', value: 'Calculate ketamine dosages', inline: true},
+    const globalCommands = await client.application?.commands.fetch();
+    const guildCommands = await client.application?.commands.fetch({guildId: env.DISCORD_GUILD_ID});
 
-            {name: 'Combo', value: 'Checks the interactions between two drugs.', inline: true},
-            {name: 'ComboChart', value: 'Checks the interactions between two drugs.', inline: true},
-            {name: 'Reagents', value: 'Shows a reaction chart.', inline: true},
-
-            {name: 'Breathe', value: 'Gif: Breathing exercises.', inline: true},
-            {name: 'Hydrate', value: 'Reminder to drink water.', inline: true},
-            {name: 'EMS', value: 'Emergency medical info.', inline: true},
-
-            {name: 'About', value: 'Information on Team TripSit and who built this bot.', inline: true},
-            {name: 'Contact', value: 'How to contact Team TripSit and the bot builder.', inline: true},
-            {name: 'Bug', value: 'Sends a message to dev.\nAll feedback welcome!', inline: true},
-        );
-
-    // logger.debug(`[${PREFIX}] interaction.guild.id: ${interaction.guild.id}`);
-    // logger.debug(`[${PREFIX}]] DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}`);
-    if (interaction.guild) {
-      if (interaction.guild.id !== env.DISCORD_GUILD_ID) {
-        interaction.reply({embeds: [globalEmbed], ephemeral: false});
-        return;
-      }
-    } else {
-      interaction.reply({embeds: [globalEmbed], ephemeral: false});
-      return;
+    /**
+     * Gets the description of a command
+     * @param {string} commandName
+     * @return {string}
+     */
+    function getDesc(commandName:string) {
+      logger.debug(`[${PREFIX}] getDesc: ${commandName}`);
+      const desc = globalCommands?.filter((command) => command.name === commandName).at(0)?.description ??
+      guildCommands?.filter((command) => command.name === commandName).at(0)?.description;
+      logger.debug(`[${PREFIX}] getDesc: ${desc}`);
+      return desc;
     }
 
     const hrEmbed = embedTemplate()
         .setTitle('Harm Reduction Modules')
         .addFields(
-            {name: 'Drug', value: 'This command looks up drug information!', inline: true},
-            {name: 'iDose', value: 'Remind yourself when you last dosed.', inline: true},
-            {name: 'Calc Psychedelics', value: 'Calculate psychedelic dosages', inline: true},
+            {name: 'Drug', value: getDesc('drug'), inline: true},
+            {name: 'Combo', value: getDesc('drug'), inline: true},
+            {name: 'iDose', value: getDesc('idose'), inline: true},
 
-            {name: 'Calc DXM', value: 'Use this to calculate dxm dosages', inline: true},
-            {name: 'Calc Benzos', value: 'Calculate dosages between benzos', inline: true},
-            {name: 'Calc Ketamine', value: 'Calculate ketamine dosages', inline: true},
+            {name: 'ComboChart', value: getDesc('drug'), inline: true},
+            {name: 'Reagents', value: getDesc('drug'), inline: true},
+            {name: 'Calc Psychedelics', value: getDesc('psychedelic_calc'), inline: true},
 
-            {name: 'Combo', value: 'Checks the interactions between two drugs.', inline: true},
-            {name: 'ComboChart', value: 'Checks the interactions between two drugs.', inline: true},
-            {name: 'Reagents', value: 'Shows a reaction chart.', inline: true},
+            {name: 'Calc DXM', value: getDesc('dxm_calc'), inline: true},
+            {name: 'Calc Benzos', value: getDesc('benzo_calc'), inline: true},
+            {name: 'Calc Ketamine', value: getDesc('ketamine_calc'), inline: true},
+
+            {name: 'Recovery', value: getDesc('recovery'), inline: true},
+            {name: 'Breathe', value: getDesc('breathe'), inline: true},
+            {name: 'Warmline', value: getDesc('warmline'), inline: true},
+
+            {name: 'KIPP', value: getDesc('kipp'), inline: true},
+            {name: 'Hydrate', value: getDesc('hydrate'), inline: true},
+            {name: 'EMS', value: getDesc('ems'), inline: true},
         );
 
-    const tripsittingEmbed = embedTemplate()
-        .setTitle('Tripsitting Modules')
+    const funEmbed = embedTemplate()
+        .setTitle('Other Modules')
         .addFields(
-            {name: 'TripSit', value: 'Applies the "NeedsHelp" role on a user, removes all other roles.', inline: true},
-            {name: 'Recovery', value: 'Image: Recovery position.', inline: true},
-            {name: 'Breathe', value: 'Gif: Breathing exercises.', inline: true},
+            {name: 'About', value: getDesc('about'), inline: true},
+            {name: 'Contact', value: getDesc('contact'), inline: true},
+            {name: 'Bug', value: getDesc('bug'), inline: true},
 
-            {name: 'KIPP', value: 'Keep It Positive Please!', inline: true},
-            {name: 'Hydrate', value: 'Reminder to drink water.', inline: true},
-            {name: 'EMS', value: 'Emergency medical info.', inline: true},
+            {name: 'Triptoys', value: getDesc('triptoys'), inline: true},
+            {name: 'Imgur', value: getDesc('imgur'), inline: true},
+            {name: 'Magick8Ball', value: getDesc('magick8ball'), inline: true},
 
-            {name: 'Topic', value: 'Displays a random topic.', inline: true},
-            {name: 'Joke', value: 'Displays a random joke.', inline: true},
-            {name: 'Motivate', value: 'Displays a random quote.', inline: true},
+            {name: 'Urban Define', value: getDesc('urban_define'), inline: true},
+            {name: 'Topic', value: getDesc('topic'), inline: true},
+            {name: 'Joke', value: getDesc('joke'), inline: true},
 
-            {name: 'Triptoys', value: 'Cool toys to play with!', inline: true},
-            {name: 'Urban Define', value: 'Defines a word.', inline: true},
-            {name: 'Remindme', value: 'Sends a reminder in PM.', inline: true},
-        );
+            {name: 'Youtube', value: getDesc('youtube'), inline: true},
+            {name: 'Coinflip', value: getDesc('coinflip'), inline: true},
+            {name: 'Lovebomb', value: getDesc('lovebomb'), inline: true},
 
-    const utilityEmbed = embedTemplate()
-        .setTitle('Utility Modules')
-        .addFields(
-            {name: 'About', value: 'Information on Team TripSit and who built this bot.', inline: true},
-            {name: 'Contact', value: 'How to contact Team TripSit and the bot builder.', inline: true},
-            {name: 'Help', value: 'Information on all commands, you\'re here now!', inline: true},
-
-            {name: 'Time', value: 'Set and view user\'s timezones', inline: true},
-            {name: 'Birthday', value: 'Set and view user\'s birthday', inline: true},
-            {name: 'Bug', value: 'Sends a message to dev.\nAll feedback welcome!', inline: true},
-
-            {name: 'Karma', value: 'Displays karma (reactions) given and received.', inline: true},
-            {name: 'Report', value: 'Allows users to report someone to the TripSit Team.', inline: true},
-            {name: '\u200b', value: '\u200b', inline: true},
+            {name: 'Remindme', value: getDesc('remindme'), inline: true},
+            {name: 'Convert', value: getDesc('convert'), inline: true},
+            {name: 'Poll', value: getDesc('poll'), inline: true},
         );
 
     const tripsitEmbed = embedTemplate()
-        .setTitle('Admin Modules')
+        .setTitle('Tripsit-Only Modules')
         .addFields(
-            {name: 'Mod', value: 'Applies mod actions on a user (timeout, kick, ban).', inline: true},
-            {name: 'Botmod', value: 'Bans users/guilds from the bot after abuse.', inline: true},
-            {name: 'Issue', value: 'Submits an issue to the github', inline: true},
+            {name: 'TripSit', value: getDesc('tripsit'), inline: true},
+            {name: 'Clearchat', value: getDesc('clear-chat'), inline: true},
+            {name: 'Bridge', value: getDesc('bridge'), inline: true},
 
-            {name: 'Button', value: 'Creates the button in the #tripsit room', inline: true},
-            {name: 'Invite', value: 'Create an invite to the server for a specific room.', inline: true},
-            {name: 'Test', value: 'Tests every command, this is locked to Admin only', inline: true},
+            {name: 'Birthday', value: getDesc('birthday'), inline: true},
+            {name: 'Time', value: getDesc('time'), inline: true},
+            {name: 'Profile', value: getDesc('profile'), inline: true},
+
+            {name: 'Moderate', value: getDesc('mod'), inline: true},
+            {name: 'Report', value: getDesc('report'), inline: true},
         );
 
     const book = [
       hrEmbed,
-      tripsittingEmbed,
-      utilityEmbed,
+      funEmbed,
       tripsitEmbed,
     ];
-    // eslint-disable-next-line
-    // interaction.reply({ embeds: [paginationEmbed(interaction, book, buttonList)], ephemeral: false });
-    // interaction.reply(paginationEmbed(interaction, book, buttonList))
-    // if (!interaction.replied) { interaction.reply({ embeds: [embed], ephemeral: false });}
-    // else {interaction.followUp({ embeds: [embed], ephemeral: false });}
     paginationEmbed(interaction, book, buttonList, 120000);
     logger.debug(`[${PREFIX}] finished!`);
   },

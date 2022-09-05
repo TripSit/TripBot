@@ -12,7 +12,7 @@ import {
   ButtonInteraction,
   TextChannel,
   ModalSubmitInteraction,
-  Role,
+  // Role,
 } from 'discord.js';
 import {
   ChannelType,
@@ -281,17 +281,18 @@ export async function modmailFeedbackSubmit(interaction:ModalSubmitInteraction) 
   // Get the moderator role
   const roleModerator = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_MODERATOR);
 
+
   // Get the moderation channel
-  const modChan = interaction.client.channels.cache.get(env.CHANNEL_MODERATORS)! as TextChannel;
+  const channel = interaction.client.channels.cache.get(env.CHANNEL_DEVELOPMENT)! as TextChannel;
   const ircAdminEmbed = embedTemplate()
       .setColor(Colors.Purple)
       .setDescription(stripIndents`
     Hey ${isDev ? 'moderators' : roleModerator}!
 
-    Someone has subitted feedback:
+    Someone has submitted feedback:
 
     > ${modalInput}`);
-  modChan.send({embeds: [ircAdminEmbed]});
+  channel.send({embeds: [ircAdminEmbed]});
   interaction.reply('Thank you for the feedback! Here\'s a cookie: 🍪');
 }
 
@@ -352,23 +353,23 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
     interaction.reply('Thank you, we will respond to right here when we can!');
   }
   // Get the moderator role
-  const tripsitGuild = await interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+  const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
   const roleModerator = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_MODERATOR);
   const roleDeveloper = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER)!;
 
   // Determine if this command was started by a Developer
-  const isDev = await roleDeveloper.members.map((m) => m.user.id === interaction.user.id);
+  const isDev = roleDeveloper.members.map((m) => m.user.id === interaction.user.id);
 
   logger.debug(`[${PREFIX}] isDev: ${JSON.stringify(isDev, null, 2)}!`);
 
-  const channel = interaction.client.channels.cache.get(env.CHANNEL_IRC) as TextChannel;
+  const channel = interaction.client.channels.cache.get(env.CHANNEL_TECHHELP) as TextChannel;
   // Debating if there should be a sparate channel for discord issues or if just use irc?
   // if (issueType === 'discord') {
   //   // Get the moderation channel
-  //   channel = interaction.client.channels.cache.get(CHANNEL_IRC);
+  //   channel = interaction.client.channels.cache.get(CHANNEL_TECHHELP);
   // } else if (issueType === 'irc') {
   //   // Get the irc channel
-  //   channel = interaction.client.channels.cache.get(CHANNEL_IRC);
+  //   channel = interaction.client.channels.cache.get(CHANNEL_TECHHELP);
   // }
 
   // Get whatever they sent in the modal
@@ -475,26 +476,26 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
     await ref.update(newTicketData);
   }
 
-  logger.debug(`[${PREFIX}] issueType: ${issueType}!`);
-  await tripsitGuild.members.fetch();
-  let role:Role = {} as Role;
-  if (issueType.includes('irc')) {
-    // Get the moderator role
-    role = await tripsitGuild.roles.fetch(env.ROLE_IRCADMIN) as Role;
-  }
-  if (issueType.includes('discord')) {
-    // Get the moderator role
-    role = await tripsitGuild.roles.fetch(env.ROLE_DISCORDADMIN) as Role;
-  }
-  const admins = await role.members;
-  logger.debug(`[${PREFIX}] admins: ${JSON.stringify(admins, null, 2)}!`);
-  admins.forEach(async (admin) => {
-    // Alert the admin that the new thread is created
-    let response = stripIndents`
-    Hey ${admin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`;
-    if (isDev) {
-      response = testNotice + response;
-    }
-    admin.send(response);
-  });
+  // logger.debug(`[${PREFIX}] issueType: ${issueType}!`);
+  // await tripsitGuild.members.fetch();
+  // let role:Role = {} as Role;
+  // if (issueType.includes('irc')) {
+  //   // Get the moderator role
+  //   role = await tripsitGuild.roles.fetch(env.ROLE_IRCADMIN) as Role;
+  // }
+  // if (issueType.includes('discord')) {
+  //   // Get the moderator role
+  //   role = await tripsitGuild.roles.fetch(env.ROLE_DISCORDADMIN) as Role;
+  // }
+  // const admins = await role.members;
+  // logger.debug(`[${PREFIX}] admins: ${JSON.stringify(admins, null, 2)}!`);
+  // admins.forEach(async (admin) => {
+  //   // Alert the admin that the new thread is created
+  //   let response = stripIndents`
+  //   Hey ${admin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`;
+  //   if (isDev) {
+  //     response = testNotice + response;
+  //   }
+  //   admin.send(response);
+  // });
 };

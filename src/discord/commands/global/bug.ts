@@ -36,16 +36,16 @@ export const bug: SlashCommand = {
     modal.addComponents(firstActionRow);
     // Show the modal to the user
     await interaction.showModal(modal);
-    logger.debug(`[${PREFIX}] finished!`);
+    logger.debug(`[${PREFIX}] displayed modal!`);
   },
   async submit(interaction) {
     const username = `${interaction.user.username}#${interaction.user.discriminator}`;
     const guildMessage = `${interaction.guild ? ` in ${interaction.guild.name}` : 'DM'}`;
 
     const bugReport = interaction.fields.getTextInputValue('bugReport');
-    logger.debug(`[${PREFIX}] bugReport:`, bugReport);
+    // logger.debug(`[${PREFIX}] bugReport:`, bugReport);
 
-    const botOwner = interaction.client.users.cache.get(env.DISCORD_OWNER_ID)!;
+    const botOwner = await interaction.client.users.fetch(env.DISCORD_OWNER_ID)!;
     const botOwnerEmbed = embedTemplate()
         .setColor(Colors.Purple)
         .setDescription(`Hey ${botOwner.toString()},\n${username}${guildMessage} reports:\n${bugReport}`);

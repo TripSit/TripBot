@@ -11,7 +11,7 @@ import {
 const PREFIX = require('path').parse(__filename).name;
 
 import {tripsitme} from '../utils/tripsitme';
-// const bug = require('../commands/global/bug');
+import {bug} from '../commands/global/bug';
 // const uBan = require('../commands/guild/u_ban');
 // const uKick = require('../commands/guild/u_kick');
 // const uNote = require('../commands/guild/u_note');
@@ -27,7 +27,6 @@ import {
  * @param {ModalSubmitInteraction} interaction Reaction used
  */
 export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<void> {
-  logger.debug(`[${PREFIX}] interaction: ${interaction}`);
   logger.debug(`[${PREFIX}] interaction: ${interaction.customId}`);
   // if (interaction.customId === 'ircConnectModmailIssueModal') {
   //   return ircButton.ircSubmit(interaction, 'ircConnect');
@@ -77,10 +76,12 @@ export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<v
   //   return mWarn.submit(interaction);
   // }
   if (interaction.customId === 'reportModal') {
-    return report.submit!(interaction);
+    report.submit!(interaction);
+    return;
   }
-  // if (interaction.customId === 'bugReportModal') {
-  //   return bug.submit(interaction);
-  // }
+  if (interaction.customId === 'bugReportModal') {
+    bug.submit!(interaction);
+    return;
+  }
   // logger.debug(`[${PREFIX}] finished!`);
 };

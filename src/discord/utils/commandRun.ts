@@ -103,9 +103,12 @@ export async function commandRun(
   // }
 
   try {
-    command.execute(interaction);
-  } catch (error) {
-    logger.error(`[${PREFIX}] error: ${error}`);
+    await command.execute(interaction);
+  } catch (error:any) {
+    logger.error(`[${PREFIX}] Client error ${JSON.stringify(error, null, 2)}`);
+    logger.error(`[${PREFIX}] error.name: ${error.name}`);
+    logger.error(`[${PREFIX}] error.message: ${error.message}`);
+    logger.error(`[${PREFIX}] error.stack: ${error.stack}`);
     interaction.reply({
       content: 'There was an error while executing this command!',
       ephemeral: true,

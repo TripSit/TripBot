@@ -495,7 +495,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
     interaction.reply('You must run this in the channel you want the prompt to be in!');
     return;
   }
-  // const channelIrc = interaction.member.client.channels.cache.get(CHANNEL_IRC);
+  // const channelIrc = interaction.member.client.channels.cache.get(CHANNEL_TECHHELP);
   // const channelQuestions = interaction.client.channels.cache.get(CHANNEL_DRUGQUESTIONS);
   const channelBotspam = interaction.client.channels.cache.get(env.CHANNEL_BOTSPAM);
   // const channelSanctuary = interaction.client.channels.cache.get(CHANNEL_SANCTUARY);
@@ -881,14 +881,14 @@ export async function ircSubmit(interaction:ModalSubmitInteraction, issueType:st
   const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID);
   const roleModerator = tripsitGuild!.roles.cache.find((role) => role.id === env.ROLE_MODERATOR);
 
-  const channel = await interaction.client.channels.fetch(env.CHANNEL_IRC) as TextChannel;
+  const channel = await interaction.client.channels.fetch(env.CHANNEL_TECHHELP) as TextChannel;
   // Debating if there should be a sparate channel for discord issues or if just use irc?
   // if (issueType === 'discord') {
   //   // Get the moderation channel
-  //   channel = interaction.client.channels.cache.get(CHANNEL_IRC);
+  //   channel = interaction.client.channels.cache.get(CHANNEL_TECHHELP);
   // } else if (issueType === 'irc') {
   //   // Get the irc channel
-  //   channel = interaction.client.channels.cache.get(CHANNEL_IRC);
+  //   channel = interaction.client.channels.cache.get(CHANNEL_TECHHELP);
   // }
 
   // Get whatever they sent in the modal
@@ -980,26 +980,26 @@ export async function ircSubmit(interaction:ModalSubmitInteraction, issueType:st
   // };
   // setTicketInfo(memberKey, newTicketData);
 
-  logger.debug(`[${PREFIX}] issueType: ${issueType}!`);
-  await tripsitGuild!.members.fetch();
-  let role = {} as Role;
-  if (issueType.includes('irc')) {
-    // Get the moderator role
-    role = await tripsitGuild!.roles.fetch(env.ROLE_IRCADMIN) as Role;
-  }
-  if (issueType.includes('discord')) {
-    // Get the moderator role
-    role = await tripsitGuild!.roles.fetch(env.ROLE_DISCORDADMIN) as Role;
-  }
-  const admins = role.members;
-  logger.debug(`[${PREFIX}] admins: ${JSON.stringify(admins, null, 2)}!`);
-  admins.forEach(async (admin) => {
-    // Alert the admin that the new thread is created
-    let response = stripIndents`
-    Hey ${admin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`;
-    if (isDev) {
-      response = testNotice + response;
-    }
-    admin.send(response);
-  });
+  // logger.debug(`[${PREFIX}] issueType: ${issueType}!`);
+  // await tripsitGuild!.members.fetch();
+  // let role = {} as Role;
+  // if (issueType.includes('irc')) {
+  //   // Get the moderator role
+  //   role = await tripsitGuild!.roles.fetch(env.ROLE_IRCADMIN) as Role;
+  // }
+  // if (issueType.includes('discord')) {
+  //   // Get the moderator role
+  //   role = await tripsitGuild!.roles.fetch(env.ROLE_DISCORDADMIN) as Role;
+  // }
+  // const admins = role.members;
+  // logger.debug(`[${PREFIX}] admins: ${JSON.stringify(admins, null, 2)}!`);
+  // admins.forEach(async (admin) => {
+  //   // Alert the admin that the new thread is created
+  //   let response = stripIndents`
+  //   Hey ${admin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`;
+  //   if (isDev) {
+  //     response = testNotice + response;
+  //   }
+  //   admin.send(response);
+  // });
 };

@@ -29,7 +29,7 @@ const command = 'timeout';
 
 export const report: MessageCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('Timeout')
+      .setName('m_timeout')
       .setType(ApplicationCommandType.Message),
   async execute(interaction:MessageContextMenuCommandInteraction) {
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction

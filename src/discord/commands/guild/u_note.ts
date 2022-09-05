@@ -25,7 +25,7 @@ let reason = 'What are you noting about this person?';
 
 export const info: UserCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('Note')
+      .setName('u_note')
       .setType(ApplicationCommandType.User),
   async execute(interaction) {
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction

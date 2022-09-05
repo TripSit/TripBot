@@ -24,7 +24,7 @@ type DxmDataType = {
 
 export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('calc-dxm')
+      .setName('dxm_calc')
       .setDescription('Get DXM dosage information')
       .addIntegerOption((option) => option.setName('calc_weight')
           .setDescription('How much do you weigh?')
@@ -52,16 +52,16 @@ export const discordTemplate: SlashCommand = {
   async execute(interaction) {
     // Calculate each plat min/max value
     const givenWeight = interaction.options.getInteger('calc_weight')!;
-    logger.debug(`[${PREFIX}] calc_weight:`, givenWeight);
+    // logger.debug(`[${PREFIX}] calc_weight:`, givenWeight);
 
     const weightUnits = interaction.options.getString('units');
-    logger.debug(`[${PREFIX}] weight_units:`, weightUnits);
+    // logger.debug(`[${PREFIX}] weight_units:`, weightUnits);
 
     let calcWeight = weightUnits === 'lbs' ? givenWeight * 0.453592 : givenWeight;
-    logger.debug(`[${PREFIX}] calc_weight:`, calcWeight);
+    // logger.debug(`[${PREFIX}] calc_weight:`, calcWeight);
 
     const taking = interaction.options.getString('taking');
-    logger.debug(`[${PREFIX}] taking:`, taking);
+    // logger.debug(`[${PREFIX}] taking:`, taking);
 
     let roaValue = 0;
     let units = '';
@@ -88,44 +88,37 @@ export const discordTemplate: SlashCommand = {
       units = '(30 mg tablets)';
     }
 
-    logger.debug(`[${PREFIX}] roaValue:`, roaValue);
-    logger.debug(`[${PREFIX}] units:`, units);
+    // logger.debug(`[${PREFIX}] roaValue:`, roaValue);
+    // logger.debug(`[${PREFIX}] units:`, units);
 
     calcWeight /= roaValue;
-    logger.debug(`[${PREFIX}] calcWeight:`, calcWeight);
+    // logger.debug(`[${PREFIX}] calcWeight:`, calcWeight);
 
     const embed = embedTemplate()
         .setColor(Colors.Purple)
-        .setTitle('DXM Calculator')
-        .setDescription(`
-        Please note, these tools were developed and tested to the best possible ability by the TripSit team, and the greatest effort has been made not to produce incorrect or misleading results, though for unforeseen reasons these may occur. Always check your maths, and be careful.\n\n\
-        You should always start low and work your way up untill you find the doses that are right for you.\n\n\
-        DXM-containing products may also contain several potentially dangerous adulterants; you must make sure that your product contains only DXM as its active ingredient. For more information about DXM adulterants, see: https://wiki.tripsit.me/wiki/DXM#Adulteration\n\n\
-        For a description of the plateau model, and the effects you can expect at each level, click: https://wiki.tripsit.me/wiki/DXM#Plateaus
-      `);
+        .setTitle(`DXM Dosages`)
+        .setDescription(`For a ${givenWeight}${weightUnits} individual taking ${taking}`);
+      //   .setDescription(`
+      //   Please note, these tools were developed and tested to the best possible ability by the TripSit team, and the greatest effort has been made not to produce incorrect or misleading results, though for unforeseen reasons these may occur. Always check your maths, and be careful.\n\n\
+      //   You should always start low and work your way up untill you find the doses that are right for you.\n\n\
+      //   DXM-containing products may also contain several potentially dangerous adulterants; you must make sure that your product contains only DXM as its active ingredient. For more information about DXM adulterants, see: https://wiki.tripsit.me/wiki/DXM#Adulteration\n\n\
+      //   For a description of the plateau model, and the effects you can expect at each level, click: https://wiki.tripsit.me/wiki/DXM#Plateaus
+      // `);
 
     // Loop through the keys in dxm_data and calculate the min/max values
 
+    let header = true;
     Object.keys(dxmData).forEach((key) => {
       const min = Math.round((dxmData[key as keyof DxmDataType].min * calcWeight) * 100) / 100;
       const max = Math.round((dxmData[key as keyof DxmDataType].max * calcWeight) * 100) / 100;
       embed.addFields(
-          {name: 'Plateau', value: `${key}`, inline: true},
-          {name: 'Minimum', value: `${min} ${units}`, inline: true},
-          {name: 'Maximum', value: `${max} ${units}`, inline: true},
+          {name: `${header ? 'Plateau' : '\u200B'}`, value: `**${key}**`, inline: true},
+          {name: `${header ? 'Minimum' : '\u200B'}`, value: `${min} ${units}`, inline: true},
+          {name: `${header ? 'Maximum' : '\u200B'}`, value: `${max} ${units}`, inline: true},
       );
+      header = false;
     });
-    if (!interaction.replied) {
-      interaction.reply({
-        embeds: [embed],
-        ephemeral: false,
-      });
-    } else {
-      interaction.followUp({
-        embeds: [embed],
-        ephemeral: false,
-      });
-    }
+    interaction.reply({embeds: [embed], ephemeral: false});
     logger.debug(`[${PREFIX}] finished!`);
   },
 };

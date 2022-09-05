@@ -275,11 +275,12 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
         }));
           // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
         interaction.respond(listResults);
+      } else {
+        const defaultMeasurements = measurementNames.slice(0, 25);
+        const listResults = defaultMeasurements.map((choice) => ({name: choice, value: choice}));
+        // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
+        interaction.respond(listResults);
       }
-      const defaultMeasurements = measurementNames.slice(0, 25);
-      const listResults = defaultMeasurements.map((choice) => ({name: choice, value: choice}));
-      // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
-      interaction.respond(listResults);
     }
   } else { // If you don't need a specific autocomplete, return a list of drug names
     const options = {

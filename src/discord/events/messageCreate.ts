@@ -104,7 +104,7 @@ module.exports = {
         // });
 
         if (member) {
-          const channel = await message.client.channels.fetch(env.CHANNEL_IRC) as TextChannel;
+          const channel = await message.client.channels.fetch(env.CHANNEL_TECHHELP) as TextChannel;
           const issueThread = await channel.threads.fetch(ticketData.issueThread) as ThreadChannel;
           const embed = embedTemplate();
           embed.setDescription(stripIndents`You already have an open issue here ${issueThread.toString()}!`);
@@ -112,7 +112,7 @@ module.exports = {
           return;
         }
 
-        const channel = message.client.channels.cache.get(env.CHANNEL_IRC) as TextChannel;
+        const channel = message.client.channels.cache.get(env.CHANNEL_TECHHELP) as TextChannel;
         const thread = await channel.threads.fetch(ticketData.issueThread) as ThreadChannel;
         // logger.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
         if (thread) {
@@ -123,7 +123,7 @@ module.exports = {
       return modmailInitialResponse(message);
     }
 
-    // if (message.channel.parentId === CHANNEL_IRC) {
+    // if (message.channel.parentId === CHANNEL_TECHHELP) {
     //   // If this is a moderator channel, run the modmail function.
     //   logger.debug(`[${PREFIX}] IRC channel!`);
 

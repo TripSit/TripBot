@@ -10,7 +10,7 @@ const PREFIX = require('path').parse(__filename).name;
 // Calculate insufflated dosages
 export const dCalcKetamine: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('calc-ketamine')
+      .setName('ketamine_calc')
       .setDescription('Get ketamine dosage information')
       .addIntegerOption((option) => option.setName('weight')
           .setDescription('How much do you weigh?')
