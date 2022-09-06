@@ -10,12 +10,9 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import {UserCommand} from '../../utils/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
 import {moderate} from '../../../global/commands/g.moderate';
 const PREFIX = require('path').parse(__filename).name;
-
-const embed = embedTemplate();
 
 let actor = {} as GuildMember;
 let target = {} as GuildMember | string;
@@ -23,9 +20,9 @@ const command = 'kick';
 
 let reason = 'Why are you kicking this person?';
 
-export const info: UserCommand = {
+export const uKick: UserCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('u_kick')
+      .setName('Kick')
       .setType(ApplicationCommandType.User),
   async execute(interaction) {
     actor = interaction.member as GuildMember;
@@ -35,7 +32,7 @@ export const info: UserCommand = {
       logger.debug(`[${PREFIX}] message: ${JSON.stringify(interaction.options.data[0].message, null, 2)}`);
       // This is a bot, so we need to get the username of the user
       target = interaction.user.username;
-      logger.debug(`[${PREFIX}] target: ${target}`);
+      // logger.debug(`[${PREFIX}] target: ${target}`);
     } else {
       target = interaction.targetMember as GuildMember;
     }
@@ -66,17 +63,15 @@ export const info: UserCommand = {
     // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
     reason = interaction.fields.getTextInputValue('kickReason');
     logger.debug(`[${PREFIX}] reason: ${reason}`);
-    embed.setTitle('Tripbot Kick');
-    embed.setDescription(`${actor.user.username} has kicked ${(target as GuildMember).user.username}`);
     // embed.addField('Reason', reason);
     // embed.addField('Duration', duration);
     // embed.addField('Toggle', toggle);
     const result = await moderate(actor, command, target, undefined, 'on', reason, undefined, interaction);
     logger.debug(`[${PREFIX}] Result: ${result}`);
 
-    embed.setDescription(result);
+    // embed.setDescription(result);
 
-    interaction.reply({embeds: [embed], ephemeral: true});
+    interaction.reply(result);
 
     logger.debug(`[${PREFIX}] finished!`);
   },

@@ -94,25 +94,25 @@ const teamRoles = [
   env.ROLE_DEVELOPER,
 ];
 
-const modButtons = new ActionRowBuilder()
-    .addComponents(
-        new ButtonBuilder()
-            .setCustomId('warnbtn')
-            .setLabel('Warn')
-            .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-            .setCustomId('timeoutbtn')
-            .setLabel('Timeout')
-            .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-            .setCustomId('kickbtn')
-            .setLabel('Kick')
-            .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-            .setCustomId('banbtn')
-            .setLabel('Ban')
-            .setStyle(ButtonStyle.Danger),
-    );
+// const modButtons = new ActionRowBuilder()
+//     .addComponents(
+//         new ButtonBuilder()
+//             .setCustomId('warnbtn')
+//             .setLabel('Warn')
+//             .setStyle(ButtonStyle.Primary),
+//         new ButtonBuilder()
+//             .setCustomId('timeoutbtn')
+//             .setLabel('Timeout')
+//             .setStyle(ButtonStyle.Secondary),
+//         new ButtonBuilder()
+//             .setCustomId('kickbtn')
+//             .setLabel('Kick')
+//             .setStyle(ButtonStyle.Secondary),
+//         new ButtonBuilder()
+//             .setCustomId('banbtn')
+//             .setLabel('Ban')
+//             .setStyle(ButtonStyle.Danger),
+//     );
 
 const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
@@ -159,12 +159,13 @@ export async function moderate(
   let minutes = 604800000;
 
   // Get actor object
+
   const [
-    // actorUser,
-    actorUsername,
-    actorPlatform,
+    actorUser, // eslint-disable-line
     actorNickname,
+    actorUsername, // eslint-disable-line
     actorId,
+    actorPlatform,
     actorIsTeamMember,
   ] = await determineUserInfo(actor);
 
@@ -172,7 +173,7 @@ export async function moderate(
   logger.debug(`[${PREFIX}] actorNickname: ${actorNickname}`);
   logger.debug(`[${PREFIX}] actorId: ${actorId}`);
   logger.debug(`[${PREFIX}] actorPlatform: ${actorPlatform}`);
-  logger.debug(`[${PREFIX}] actorUsername: ${actorUsername}`);
+  // logger.debug(`[${PREFIX}] actorUsername: ${actorUsername}`);
   logger.debug(`[${PREFIX}] actorIsTeamMember: ${actorIsTeamMember}`);
 
   // Actor Team check - Only team members can use mod actions (except report)
@@ -184,13 +185,14 @@ export async function moderate(
   // Get target object
   const [
     targetUser,
-    targetUsername,
     targetNickname,
+    targetUsername,
     targetId,
     targetPlatform,
     targetIsTeamMember,
   ] = await determineUserInfo(target);
-  logger.debug(`[${PREFIX}] targetUser: ${JSON.stringify(targetUser, null, 2)}`);
+
+  // logger.debug(`[${PREFIX}] targetUser: ${JSON.stringify(targetUser, null, 2)}`);
 
   if (!targetUser) {
     return `[${PREFIX}] Target not found!`;
@@ -286,7 +288,7 @@ export async function moderate(
         try {
           await targetUser.send(`You have been unquieted because:\n${reason}`);
           targetUser.timeout(0, reason);
-          logger.debug(`[${PREFIX}] I untimeouted ${targetUsername} because\n '${reason}'!`);
+          logger.debug(`[${PREFIX}] I untimeouted ${targetNickname} because\n '${reason}'!`);
         } catch (err) {
           logger.error(`[${PREFIX}] Error: ${err}`);
         }
@@ -327,7 +329,7 @@ export async function moderate(
   } else if (command === 'kick') {
     if (targetPlatform === 'discord') {
       try {
-        await targetUser.send(`You have been kicked because\n ${reason}`);
+        // await targetUser.send(`You have been kicked from the TripSit guild because\n ${reason}`);
         targetUser.kick();
       } catch (err) {
         logger.error(`[${PREFIX}] Error: ${err}`);
@@ -374,7 +376,7 @@ export async function moderate(
           const bans = await targetGuild.bans.fetch();
           logger.debug(`[${PREFIX}] targetGuild.bans.fetch(): ${bans}`);
           await targetGuild.bans.remove(targetUser, reason);
-          logger.debug(`[${PREFIX}] I unbanned ${targetUsername}!`);
+          logger.debug(`[${PREFIX}] I unbanned ${targetNickname}!`);
           targetUser.send(`You have been unbanned for ${reason}`);
         } catch (err) {
           logger.error(`[${PREFIX}] Error: ${err}`);
@@ -521,26 +523,23 @@ export async function moderate(
   const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
   const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
 
-  // Extract targetUser data
-  // const [targetData, targetFbid] = await getUserInfo(targetUser);
-  // const targetAction = `received_${command}`;
-  // const targetModActions = targetData.modActions ? targetData.modActions : {};
-  // logger.debug(`[${PREFIX}] targetModActions: ${JSON.stringify(targetModActions, null, 2)}`);
   const targetEmbed = embedTemplate()
       .setColor(Colors.Blue)
+      // .setImage(targetUser.displayAvatarURL)
+      // .setThumbnail(targetUser.displayAvatarURL)
       .setDescription(`${actor} ${command}ed ${targetNickname}\
-      ${targetChannel ? ` in ${targetChannel}` : ''}\
+      ${targetChannel.name ? ` in ${targetChannel.name}` : ''}\
       ${duration ? ` for ${ms(minutes, {long: true})}` : ''}\
       ${reason ? ` because\n ${reason}` : ''}`)
       .addFields(
-          {name: 'Nickname', value: `${targetNickname}`, inline: true},
+          {name: 'Displayname', value: `${targetNickname !== null ? targetNickname : 'None'}`, inline: true},
           {name: 'Username', value: `${targetUsername}`, inline: true},
           {name: 'ID', value: `${targetId}`, inline: true},
       );
   if (targetPlatform === 'discord') {
     targetEmbed.addFields(
         {
-          name: 'Account created',
+          name: 'Created',
           value: `${(targetUser as GuildMember).user ? time(targetUser.user.createdAt, 'R') :
           time(targetUser.createdAt, 'R')}`, inline: true},
         {name: 'Joined', value: `${time(targetUser.joinedAt, 'R')}`, inline: true},
@@ -575,8 +574,9 @@ export async function moderate(
   if (command === 'info') {
     if (targetPlatform === 'discord') {
       try {
-        const reply = {embeds: [targetEmbed], ephemeral: true, components: [modButtons]};
-        logger.debug(`[${PREFIX}] replied to user ${actor} with info about ${targetUser}`);
+        // const reply = {embeds: [targetEmbed], ephemeral: true, components: [modButtons]};
+        const reply = {embeds: [targetEmbed], ephemeral: true};
+        logger.debug(`[${PREFIX}] returned info about ${targetUser}`);
         logger.debug(`[${PREFIX}] finished!`);
         return reply;
       } catch (err) {
@@ -599,7 +599,7 @@ export async function moderate(
   // We must send the mention outside of the embed, cuz mentions dont work in embeds
   modChan.send(`Hey <@&${roleModerator.id}>!`);
   modChan.send({embeds: [targetEmbed]});
-  logger.debug(`[${PREFIX}] send a message to the moderators room`);
+  logger.debug(`[${PREFIX}] sent a message to the moderators room`);
 
   // const now = new Date().toString();
   // const targetModAction = {
@@ -680,7 +680,10 @@ export async function moderate(
   // await setUserInfo(actorFbid, actorData);
 
   // logger.debug(`[${PREFIX}] finished!`);
-  return `${targetNickname} has been ${command}ed!`;
+  const response = embedTemplate()
+      .setColor(Colors.Yellow)
+      .setDescription(`${targetNickname} has been ${command}ed!`);
+  return {embeds: [response], ephemeral: true};
 };
 
 /**
@@ -697,9 +700,9 @@ async function determineUserInfo(
   let userUsername = null;
   let userId = null;
   let userIsTeamMember = false;
-  logger.debug(`[${PREFIX}] Query: ${typeof query}`);
-  logger.debug(`[${PREFIX}] Query: ${query}`);
-  logger.debug(`[${PREFIX}] Query: ${JSON.stringify(query, null, 2)}`);
+  // logger.debug(`[${PREFIX}] Query: ${typeof query}`);
+  // logger.debug(`[${PREFIX}] Query: ${query}`);
+  // logger.debug(`[${PREFIX}] Query: ${JSON.stringify(query, null, 2)}`);
 
   if (query === 'The community') {
     logger.debug(`[${PREFIX}] Community!`);
@@ -719,9 +722,9 @@ async function determineUserInfo(
     logger.debug(`[${PREFIX}] Query is already discord member object`);
     userPlatform = 'discord';
     userInfo = query as GuildMember;
-    userNickname = (query as GuildMember).nickname;
-    userUsername = (query as GuildMember).user.username;
-    userId = (query as GuildMember).user.id;
+    userNickname = userInfo.displayName;
+    userUsername = `${userInfo.user.username}#${userInfo.user.discriminator}`;
+    userId = userInfo.user.id;
   } else if ((query as string).startsWith('<@') && (query as string).endsWith('>')) {
     // If the query string starts with a <@ and ends with > then it's likely a discord user
     logger.debug(`[${PREFIX}] Query is a discord mention`);
@@ -731,14 +734,14 @@ async function determineUserInfo(
       userInfo = await tripsitGuild.members.fetch((query as string).slice(2, -1)) as GuildMember;
       userPlatform = 'discord';
       userNickname = userInfo.displayName;
-      userUsername = userInfo.user.username;
+      userUsername = `${userInfo.user.username}#${userInfo.user.discriminator}`;
       userId = userInfo.id;
     } catch (err) {
       logger.error(`[${PREFIX}] Error fetching discord user: ${err}`);
       userInfo = await global.client.users.fetch((query as string).slice(2, -1)) as User;
       userPlatform = 'discord';
       userNickname = userInfo.username;
-      userUsername = userInfo.username;
+      userUsername = `${userInfo.username}#${userInfo.discriminator}`;
       userId = userInfo.id;
     }
   }

@@ -3,7 +3,6 @@ import {
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
-  Colors,
   ContextMenuCommandBuilder,
   ModalSubmitInteraction,
   GuildMember,
@@ -14,7 +13,6 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import {MessageCommand} from '../../utils/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import logger from '../../../global/utils/logger';
 import {moderate} from '../../../global/commands/g.moderate';
@@ -29,7 +27,7 @@ const command = 'report';
 
 export const report: MessageCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('m_report')
+      .setName('Report')
       .setType(ApplicationCommandType.Message),
   async execute(interaction:MessageContextMenuCommandInteraction) {
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction
@@ -79,12 +77,6 @@ export const report: MessageCommand = {
   async submit(interaction:ModalSubmitInteraction) {
     logger.debug(`[${PREFIX}] started!`);
     // await interaction.deferReply({ ephemeral: true });
-    const embed = embedTemplate()
-        .setColor(Colors.DarkBlue)
-        .setDescription('Reporting...');
-    // await interaction.editReply({ embeds: [embed], ephemeral: true });
-    // logger.debug(`[${PREFIX}] options: ${JSON.stringify(interaction.options, null, 2)}`);
-
     channel = interaction.channel as TextChannel;
     actor = interaction.member as GuildMember;
     logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor.displayName, null, 2)}`);
@@ -105,9 +97,7 @@ export const report: MessageCommand = {
     const result = await moderate(actor, command, target, channel, toggle, reason, duration, interaction);
     logger.debug(`[${PREFIX}] Result: ${result}`);
 
-    embed.setDescription(result);
-
-    interaction.reply({embeds: [embed], ephemeral: true});
+    interaction.reply(result);
 
     logger.debug(`[${PREFIX}] finished!`);
   },

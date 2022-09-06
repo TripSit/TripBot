@@ -14,6 +14,10 @@ import {embedTemplate} from '../utils/embedTemplate';
 import {tripsitmeModal} from '../utils/tripsitme';
 import {tripsat} from '../utils/tripsat';
 import {
+  ircClick,
+} from '../commands/guild/prompt';
+
+import {
   modmailTripsitter,
   // modmailCommands,
   modmailFeedback,
@@ -22,7 +26,6 @@ import {
 
 // const tripsat = require('./tripsat');
 // const modmail = require('../commands/guild/modmail');
-// const ircButton = require('../commands/guild/prompt');
 
 const PREFIX = require('path').parse(__filename).name;
 
@@ -44,6 +47,11 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     const member = await interaction.guild?.members.fetch(interaction.user.id);
     const memberRole = interaction.guild?.roles.cache.find((role:Role) => role.id === env.ROLE_MEMBER);
     let colorValue = 1;
+
+    const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_TRIPBOTLOGS) as TextChannel;
+    channelTripbotlogs.send({
+      content: `Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`});
+
     if (member && memberRole) {
       member.roles.add(memberRole);
 
@@ -193,9 +201,6 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   if (buttonID === 'modmailTripsitter') {
     return modmailTripsitter(interaction);
   }
-  // if (buttonID === 'modmailCommands') {
-  //   return modmailCommands(interaction);
-  // }
   if (buttonID === 'modmailFeedback') {
     return modmailFeedback(interaction);
   }
@@ -205,18 +210,18 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   if (buttonID === 'modmailDiscordissue') {
     return modmailIssue(interaction, 'discord');
   }
-  // if (buttonID === 'ircAppeal') {
-  //   return ircButton.ircClick(interaction, 'ircAppeal');
-  // }
-  // if (buttonID === 'ircConnect') {
-  //   return ircButton.ircClick(interaction, 'ircConnect');
-  // }
-  // if (buttonID === 'ircOther') {
-  //   return ircButton.ircClick(interaction, 'ircOther');
-  // }
-  // if (buttonID === 'discordIssue') {
-  //   return ircButton.ircClick(interaction, 'discordIssue');
-  // }
+  if (buttonID === 'ircAppeal') {
+    return ircClick(interaction, 'ircAppeal');
+  }
+  if (buttonID === 'ircConnect') {
+    return ircClick(interaction, 'ircConnect');
+  }
+  if (buttonID === 'ircOther') {
+    return ircClick(interaction, 'ircOther');
+  }
+  if (buttonID === 'discordIssue') {
+    return ircClick(interaction, 'discordIssue');
+  }
 
   if (!command) return;
 

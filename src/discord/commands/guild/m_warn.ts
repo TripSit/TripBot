@@ -27,9 +27,9 @@ let channel = {} as TextChannel;
 let messageUrl = '';
 const command = 'timeout';
 
-export const report: MessageCommand = {
+export const mWarn: MessageCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('m_warn')
+      .setName('Warn')
       .setType(ApplicationCommandType.Message),
   async execute(interaction:MessageContextMenuCommandInteraction) {
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction

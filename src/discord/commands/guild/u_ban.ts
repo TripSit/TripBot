@@ -11,7 +11,6 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import {UserCommand} from '../../utils/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
 import {moderate} from '../../../global/commands/g.moderate';
 const PREFIX = require('path').parse(__filename).name;
@@ -22,11 +21,10 @@ let target = {} as GuildMember | string;
 const command = 'ban';
 let reason = 'Why are you banning this person?';
 let duration = '4 days 3hrs 2 mins 30 seconds';
-const embed = embedTemplate();
 
-export const ban: UserCommand = {
+export const uBan: UserCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('u_ban')
+      .setName('Ban')
       .setType(ApplicationCommandType.User),
   async execute(interaction:UserContextMenuCommandInteraction) {
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction
@@ -66,17 +64,10 @@ export const ban: UserCommand = {
     logger.debug(`[${PREFIX}] duration: ${duration}`);
     reason = interaction.fields.getTextInputValue('banReason');
     logger.debug(`[${PREFIX}] reason: ${reason}`);
-    embed.setTitle('Tripbot Ban');
-    embed.setDescription(`${actor.user.username} has banned ${(target as GuildMember).user.username}`);
-    // embed.addField('Reason', reason);
-    // embed.addField('Duration', duration);
-    // embed.addField('Toggle', toggle);
     const result = await moderate(actor, command, target, undefined, 'on', reason, duration, interaction);
     logger.debug(`[${PREFIX}] Result: ${result}`);
 
-    embed.setDescription(result);
-
-    interaction.reply({embeds: [embed], ephemeral: true});
+    interaction.reply(result);
 
     logger.debug(`[${PREFIX}] finished!`);
   },

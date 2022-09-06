@@ -18,7 +18,7 @@ let target = {} as GuildMember;
 
 export const info: UserCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('u_profile')
+      .setName('Profile')
       .setType(ApplicationCommandType.User),
   async execute(interaction) {
     actor = interaction.member as GuildMember;

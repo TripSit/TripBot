@@ -3,6 +3,9 @@ import {
 } from 'discord.js';
 import logger from '../../global/utils/logger';
 import {
+  ircSubmit,
+} from '../commands/guild/prompt';
+import {
   modmailTripsitterSubmit,
   modmailFeedbackSubmit,
   modmailIssueSubmit,
@@ -12,11 +15,11 @@ const PREFIX = require('path').parse(__filename).name;
 
 import {tripsitme} from '../utils/tripsitme';
 import {bug} from '../commands/global/bug';
-// const uBan = require('../commands/guild/u_ban');
-// const uKick = require('../commands/guild/u_kick');
-// const uNote = require('../commands/guild/u_note');
-// const mTimeout = require('../commands/guild/m_timeout');
-// const mWarn = require('../commands/guild/m_warn');
+import {uKick} from '../commands/guild/u_kick';
+import {uBan} from '../commands/guild/u_ban';
+import {uNote} from '../commands/guild/u_note';
+import {mTimeout} from '../commands/guild/m_timeout';
+import {mWarn} from '../commands/guild/m_warn';
 import {
   report,
 } from '../commands/guild/m_report';
@@ -28,18 +31,22 @@ import {
  */
 export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<void> {
   logger.debug(`[${PREFIX}] interaction: ${interaction.customId}`);
-  // if (interaction.customId === 'ircConnectModmailIssueModal') {
-  //   return ircButton.ircSubmit(interaction, 'ircConnect');
-  // }
-  // if (interaction.customId === 'discordIssueModmailIssueModal') {
-  //   return ircButton.ircSubmit(interaction, 'discordIssue');
-  // }
-  // if (interaction.customId === 'ircAppealModmailIssueModal') {
-  //   return ircButton.ircSubmit(interaction, 'ircAppeal');
-  // }
-  // if (interaction.customId === 'ircOtherModmailIssueModal') {
-  //   return ircButton.ircSubmit(interaction, 'ircOther');
-  // }
+  if (interaction.customId === 'ircConnectModmailIssueModal') {
+    ircSubmit(interaction, 'ircConnect');
+    return;
+  }
+  if (interaction.customId === 'discordIssueModmailIssueModal') {
+    ircSubmit(interaction, 'discordIssue');
+    return;
+  }
+  if (interaction.customId === 'ircAppealModmailIssueModal') {
+    ircSubmit(interaction, 'ircAppeal');
+    return;
+  }
+  if (interaction.customId === 'ircOtherModmailIssueModal') {
+    ircSubmit(interaction, 'ircOther');
+    return;
+  }
   if (interaction.customId === 'tripsitModmailModal') {
     modmailTripsitterSubmit(interaction);
     return;
@@ -60,21 +67,21 @@ export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<v
     tripsitme(interaction);
     return;
   }
-  // if (interaction.customId === 'banModal') {
-  //   return uBan.submit(interaction);
-  // }
-  // if (interaction.customId === 'kickModal') {
-  //   return uKick.submit(interaction);
-  // }
-  // if (interaction.customId === 'noteModal') {
-  //   return uNote.submit(interaction);
-  // }
-  // if (interaction.customId === 'timeoutModal') {
-  //   return mTimeout.submit(interaction);
-  // }
-  // if (interaction.customId === 'warnModal') {
-  //   return mWarn.submit(interaction);
-  // }
+  if (interaction.customId === 'banModal') {
+    return uBan.submit!(interaction);
+  }
+  if (interaction.customId === 'kickModal') {
+    return uKick.submit!(interaction);
+  }
+  if (interaction.customId === 'noteModal') {
+    return uNote.submit!(interaction);
+  }
+  if (interaction.customId === 'timeoutModal') {
+    return mTimeout.submit!(interaction);
+  }
+  if (interaction.customId === 'warnModal') {
+    return mWarn.submit!(interaction);
+  }
   if (interaction.customId === 'reportModal') {
     report.submit!(interaction);
     return;

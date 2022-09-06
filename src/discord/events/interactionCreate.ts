@@ -19,23 +19,22 @@ module.exports = {
     // logger.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}`);
     // logger.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction)}`);
     // logger.debug(`[${PREFIX}] interaction: ${interaction}`);
-    // check if the user is a bot and if so, ignore it
-    // we do a check for banned users in the "command" function
-    logger.debug(`[${PREFIX}] typeof interaction: ${typeof interaction}`);
-    logger.debug(`[${PREFIX}] interaction.type: ${interaction.type}`);
+    // logger.debug(`[${PREFIX}] typeof interaction: ${typeof interaction}`);
+    // logger.debug(`[${PREFIX}] interaction.type: ${interaction.type}`);
 
     if (interaction.user.bot) {
-      return logger.debug(`[${PREFIX}] Ignoring bot interaction`);
+      // logger.debug(`[${PREFIX}] Ignoring bot interaction`);
+      return;
     }
 
     if (interaction.isChatInputCommand()) {
-      logger.debug(`[${PREFIX}] Interaction isChatInputCommand!`);
+      // logger.debug(`[${PREFIX}] Interaction isChatInputCommand!`);
       commandRun(interaction, client);
       return;
     }
 
     if (interaction.type === InteractionType.ApplicationCommand) {
-      logger.debug(`[${PREFIX}] interaction.isContextMenuCommand(): ${interaction.isContextMenuCommand()}`);
+      // logger.debug(`[${PREFIX}] interaction.isContextMenuCommand(): ${interaction.isContextMenuCommand()}`);
       if (interaction.isContextMenuCommand()) {
         commandRun(interaction, client);
         return;
@@ -52,10 +51,10 @@ module.exports = {
         buttonClick(interaction, client);
         return;
       }
-      // if (interaction.isContextMenuCommand()) {
-      //   commandRun(interaction, client);
-      //   return;
-      // }
+      if (interaction.isContextMenuCommand()) {
+        commandRun(interaction, client);
+        return;
+      }
       logger.debug(`[${PREFIX}] Unknown interaction: ${JSON.stringify(interaction, null, 2)}`);
     }
 

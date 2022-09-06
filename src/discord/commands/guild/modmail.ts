@@ -32,10 +32,6 @@ const modmailButtons = new ActionRowBuilder<ButtonBuilder>()
             .setCustomId('modmailTripsitter')
             .setLabel('I need a tripsitter')
             .setStyle(ButtonStyle.Success),
-        // new ButtonBuilder()
-        //   .setCustomId('modmailCommands')
-        //   .setLabel('Show me your commands')
-        //   .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
             .setCustomId('modmailFeedback')
             .setLabel('Give Feedback')
@@ -64,9 +60,6 @@ export const modmail: SlashCommand = {
               .setDescription('Modmail target to act on!')
               .setRequired(true))
           .setName('closed'))
-  // .addSubcommand(subcommand => subcommand
-  //   .setDescription('Get the ID of this ticket')
-  //   .setName('id'))
       .addSubcommand((subcommand) => subcommand
           .setDescription('Block this user from future messages/tickets')
           .addUserOption((option) => option
@@ -202,19 +195,6 @@ export async function modmailTripsitter(interaction:ButtonInteraction) {
     You must join ${guild} to get tripsitting help!
     http://discord.gg/tripsit`);
   }
-  // Create the modal
-  // const modal = new ModalBuilder()
-  //   .setCustomId('tripsitModmailModal')
-  //   .setTitle('TripSit Help Request');
-  // modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
-  //   .setCustomId('triageInput')
-  //   .setLabel('What substance? How much taken? What time?')
-  //   .setStyle(TextInputStyle.Short')));
-  // modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
-  //   .setCustomId('introInput')
-  //   .setLabel('What\'s going on? Give us the details!')
-  //   .setStyle(TextInputStyle.Paragraph)));
-  // await interaction.showModal(modal);
 }
 
 /**
@@ -226,11 +206,6 @@ export async function modmailTripsitterSubmit(interaction:ModalSubmitInteraction
   const member = await guild.members.fetch(interaction.user.id);
   logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
 }
-
-// export async function modmailCommands(interaction) {
-//   logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
-//   interaction.reply(`[${PREFIX}] modmailCommands!`);
-// }
 
 /**
  *

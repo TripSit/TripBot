@@ -95,7 +95,7 @@ const coderEmoji = env.NODE_ENV === 'production' ?
  * The how to tripsit prompt
  * @param {Interaction} interaction The interaction that triggered this
  */
-export const ping: SlashCommand = {
+export const prompt: SlashCommand = {
   data: new SlashCommandBuilder()
       .setName('prompt')
       .setDescription('Sets various static prompts')
@@ -247,7 +247,7 @@ export async function howtotripsit(interaction:ChatInputCommandInteraction) {
 }
 
 /**
- * The how to tripsit prompt
+ * The consultants prompt
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function consultants(interaction:ChatInputCommandInteraction) {
@@ -330,7 +330,7 @@ export async function consultants(interaction:ChatInputCommandInteraction) {
 }
 
 /**
- * The how to tripsit prompt
+ * The techhelp prompt
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function techhelp(interaction:ChatInputCommandInteraction) {
@@ -406,7 +406,7 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
 }
 
 /**
- * The how to tripsit prompt
+ * The rules prompt
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function rules(interaction:ChatInputCommandInteraction) {
@@ -485,7 +485,7 @@ export async function rules(interaction:ChatInputCommandInteraction) {
 }
 
 /**
- * The how to tripsit prompt
+ * The starthere prompt
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function starthere(interaction:ChatInputCommandInteraction) {
@@ -709,7 +709,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
 }
 
 /**
- * The how to tripsit prompt
+ * The tripsitme prompt
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function tripsitme(interaction:ChatInputCommandInteraction) {
@@ -754,7 +754,7 @@ export async function tripsitme(interaction:ChatInputCommandInteraction) {
 }
 
 /**
- * The how to tripsit prompt
+ * The ticketbooth prompt
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function ticketbooth(interaction:ChatInputCommandInteraction) {
@@ -809,7 +809,7 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
 }
 
 /**
- * The how to tripsit prompt
+ * The ircClick prompt
  * @param {ButtonInteraction} interaction The interaction that triggered this
  * @param {string} issueType The issue type to set
  */
@@ -845,7 +845,7 @@ export async function ircClick(interaction:ButtonInteraction, issueType:string) 
 }
 
 /**
- * The how to tripsit prompt
+ * The ircSubmit prompt
  * @param {ModalSubmitInteraction} interaction The modal that submitted this
  * @param {string} issueType The issue type to set
  */
