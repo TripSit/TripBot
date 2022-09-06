@@ -38,34 +38,6 @@ for (let i = 0; i < pillShapes.length; i += 1) {
 const defaultShapes = pillShapeNames.slice(0, 25);
 // logger.debug(`[${PREFIX}] pill_shape_names: ${pill_shape_names}`);
 
-// The following code came from the benzo_convert tool in the github
-// const drugCache = drugDataTripsit;
-// Filter any drug not containing the dose_to_diazepam property
-// let benzoCache = _.filter((drugCache), (dCache) => _.has(dCache.properties, 'dose_to_diazepam'));
-
-// _.each(benzoCache, (benzo) => {
-//   _.each(benzo.aliases, (alias) => {
-//     benzoCache.push({
-//       // Add used aliases to new objects
-//       name: alias,
-//       pretty_name: alias.charAt(0).toUpperCase() + alias.slice(1),
-//       properties: benzo.properties,
-//       formatted_dose: benzo.formatted_dose,
-//     });
-//   });
-// });
-
-// benzoCache = _.sortBy(benzoCache, 'name');
-// const regex = /\d+\.?\d?/;
-// benzoCache = _.each(benzoCache, (bCache) => {
-//   bCache.diazvalue = regex.exec(bCache.properties.dose_to_diazepam); // eslint-disable-line
-// });
-// End borrowed code, thanks bjorn!
-
-// const benzoDrugNames = benzoCache.map((d) => d.name);
-// const defaultBenzoNames = benzoDrugNames.slice(0, 25);
-
-
 /**
  * Handles autocomplete information
  * @param {AutocompleteInteraction} interaction
@@ -74,38 +46,6 @@ const defaultShapes = pillShapeNames.slice(0, 25);
  */
 export async function autocomplete(interaction:AutocompleteInteraction, client:Client):Promise<void> {
   logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
-  // if (interaction.commandName === 'ems') {
-  //   const emsData = Object.keys(emergency).map(key => ({
-  //   country: key, data: emergency[key]
-  // }));
-  //   // logger.debug(`[${PREFIX}] emsData: ${JSON.stringify(emsData, null, 2)}`);
-  //   const options = {
-  //     shouldSort: true,
-  //     keys: [
-  //       'country',
-  //     ],
-  //   };
-  //   const fuse = new Fuse(emsData, options);
-  //   // logger.debug(`[${PREFIX}] fuse: ${JSON.stringify(fuse, null, 2)}`);
-  //   const focusedValue = interaction.options.getFocused();
-  //   logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
-  //   const results = fuse.search(focusedValue);
-  //   // logger.debug(`[${PREFIX}] Autocomplete results: ${results}`);
-  //   if (results.length > 0) {
-  //     const top25 = results.slice(0, 25);
-  //     const listResults = top25.map(choice => ({
-  //       name: choice.item.country,
-  //       value: choice.item.country,
-  //     }));
-  //     // logger.debug(`[${PREFIX}] list_results1: ${listResults}`);
-  //     interaction.respond(listResults);
-  //   } else {
-  //     const defaultEms = Object.keys(emergency).slice(0, 25);
-  //     const listResults = defaultEms.map(choice => ({ name: choice, value: choice }));
-  //     // logger.debug(`[${PREFIX}] list_results2: ${listResults}`);
-  //     interaction.respond(listResults);
-  //   }
-  // } else
   if (interaction.commandName === 'pill-id') {
     const focusedOption = interaction.options.getFocused(true).name;
     const options = {

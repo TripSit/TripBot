@@ -92,17 +92,6 @@ module.exports = {
       // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
 
       if (Object.keys(ticketData).length !== 0) {
-        // const webhookClient = new WebhookClient({
-        //   id: ticketInfo.issueWebhook.webhookId,
-        //   token: ticketInfo.issueWebhook.webhookToken,
-        // });
-
-        // webhookClient.send({
-        //   content: message,
-        //   username: message.author.username,
-        //   avatarURL: message.author.avatarURL(),
-        // });
-
         if (member) {
           const channel = await message.client.channels.fetch(env.CHANNEL_TECHHELP) as TextChannel;
           const issueThread = await channel.threads.fetch(ticketData.issueThread) as ThreadChannel;
@@ -122,19 +111,6 @@ module.exports = {
 
       return modmailInitialResponse(message);
     }
-
-    // if (message.channel.parentId === CHANNEL_TECHHELP) {
-    //   // If this is a moderator channel, run the modmail function.
-    //   logger.debug(`[${PREFIX}] IRC channel!`);
-
-    //   const [ticketData] = await getTicketInfo(message.channel.id);
-    //   logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
-
-    //   const member = await message.client.users.fetch(ticketData.issueUser);
-    //   logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
-
-    //   member.send(`TeamTripsit: ${message}`);
-    // }
 
     announcements(message);
     // karma(message);

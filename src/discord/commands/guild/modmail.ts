@@ -91,9 +91,9 @@ export const modmail: SlashCommand = {
   async execute(interaction:ChatInputCommandInteraction) {
     logger.debug(`[${PREFIX}] Started!`);
     const command = interaction.options.getSubcommand();
-    logger.debug(`[${PREFIX}] Command: ${command}`);
+    // logger.debug(`[${PREFIX}] Command: ${command}`);
     const member = interaction.options.getMember('target')! as GuildMember;
-    logger.debug(`[${PREFIX}] member:`, member);
+    // logger.debug(`[${PREFIX}] member:`, member);
 
     // Get the ticket info
     let ticketData:any = {};
