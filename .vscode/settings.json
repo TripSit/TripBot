@@ -12,5 +12,5 @@
     "config.json": true,
     "**/*.json": true
   },
-  "npm.exclude": "**/node_modules - Copy/**"
+  "npm.exclude": "**/node_modules_bak/**"
 }
