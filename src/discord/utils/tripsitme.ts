@@ -609,10 +609,12 @@ export async function tripsitme(
 
   const threadArchiveTime = new Date();
   // define one week in milliseconds
-  const tenSec = 1000 * 10;
-  // const oneDay = 1000 * 60 * 60 * 24;
-  // const oneWeek = 1000 * 60 * 60 * 24 * 7;
-  threadArchiveTime.setTime(threadArchiveTime.getTime() + tenSec);
+  const thirtySec = 1000 * 30;
+  const oneDay = 1000 * 60 * 60 * 24;
+  const archiveTime = env.NODE_ENV === 'production' ?
+    threadArchiveTime.getTime() + oneDay :
+    threadArchiveTime.getTime() + thirtySec;
+  threadArchiveTime.setTime(archiveTime);
   logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
 
   if (global.db) {

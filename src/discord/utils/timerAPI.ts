@@ -1,6 +1,7 @@
 import {
   Guild,
   Role,
+  ThreadChannel,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
 import logger from '../../global/utils/logger';
@@ -124,12 +125,30 @@ export async function runTimer() {
                       }
                     });
 
+                    // Lock the threads
+                    const helpChannel = await tripsitGuild.channels.fetch(helpThread);
+                    if (helpChannel && helpChannel.isThread()) {
+                      (helpChannel as ThreadChannel).setLocked(true, 'Help thread closed');
+                      logger.debug(`[${PREFIX}] Help thread locked`);
+                    }
+                    const metaChannel = await tripsitGuild.channels.fetch(metaThread);
+                    if (metaChannel && metaChannel.isThread()) {
+                      (metaChannel as ThreadChannel).setLocked(true, 'Meta thread closed');
+                      logger.debug(`[${PREFIX}] Meta thread locked`);
+                    }
+
+
                     await global.db.ref(`${env.FIREBASE_DB_TIMERS}/${userId}/${timevalue}`).remove();
 
                     const threadDeleteTime = new Date();
                     // const oneDay = 1000 * 60 * 60 * 24;
                     const thirtySec = 1000 * 30;
-                    threadDeleteTime.setTime(threadDeleteTime.getTime() + thirtySec);
+                    const oneWeek = 1000 * 60 * 60 * 24 * 7;
+                    const deleteTime = env.NODE_ENV === 'production' ?
+                      threadDeleteTime.getTime() + oneWeek :
+                      threadDeleteTime.getTime() + thirtySec;
+
+                    threadDeleteTime.setTime(deleteTime);
                     logger.debug(`[${PREFIX}] threadDeleteTime: ${threadDeleteTime}`);
 
                     const newTimer = global.db.ref(`${env.FIREBASE_DB_TIMERS}/${userId}/`);
