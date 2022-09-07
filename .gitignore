@@ -360,4 +360,4 @@ src/assets/reminders.json
 backups/*.json
 cert/
 built/
-node_modules - Copy/
+node_modules_bak

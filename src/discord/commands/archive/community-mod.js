@@ -8,93 +8,93 @@ const { moderate } = require('../../../global/utils/moderate');
 
 const {
   NODE_ENV,
-  roleModeratorId,
-  roleNewbieId,
+  ROLE_MODERATOR,
+  ROLE_NEWBIEId,
   roleVotebannedId,
   roleVotekickedId,
   roleVotetimeoutId,
   roleVoteunderbanId,
-  roleDirectorId,
-  roleSuccessorId,
-  roleSysadminId,
-  roleLeaddevId,
-  roleIrcadminId,
-  roleDiscordadminId,
-  roleIrcopId,
-  roleTripsitterId,
-  roleTeamtripsitId,
-  roleTripbotId,
-  roleTripbot2Id,
-  roleBotId,
-  roleDeveloperId,
-  roleTreeId,
-  roleSproutId,
-  roleSeedlingId,
-  roleBoosterId,
-  roleRedId,
-  roleOrangeId,
-  roleYellowId,
-  roleGreenId,
-  roleBlueId,
-  rolePurpleId,
-  rolePinkId,
-  roleBrownId,
-  roleBlackId,
-  roleWhiteId,
-  roleDrunkId,
-  roleHighId,
-  roleRollingId,
-  roleTrippingId,
-  roleDissociatingId,
-  roleStimmingId,
-  roleNoddingId,
-  roleSoberId,
+  ROLE_DIRECTOR,
+  ROLE_SUCCESSOR,
+  ROLE_SYSADMIN,
+  ROLE_LEADDEV,
+  ROLE_IRCADMIN,
+  ROLE_DISCORDADMIN,
+  ROLE_IRCOP,
+  ROLE_TRIPSITTER,
+  ROLE_TEAMTRIPSIT,
+  ROLE_TRIPBOT,
+  ROLE_TRIPBOT2,
+  ROLE_BOT,
+  ROLE_DEVELOPER,
+  ROLE_TREE,
+  ROLE_SPROUT,
+  ROLE_SEEDLING,
+  ROLE_BOOSTER,
+  ROLE_RED,
+  ROLE_ORANGE,
+  ROLE_YELLOW,
+  ROLE_GREEN,
+  ROLE_BLUE,
+  ROLE_PURPLE,
+  ROLE_PINK,
+  ROLE_BROWN,
+  ROLE_BLACK,
+  ROLE_WHITE,
+  ROLE_DRUNK,
+  ROLE_HIGH,
+  ROLE_ROLLING,
+  ROLE_TRIPPING,
+  ROLE_DISSOCIATING,
+  ROLE_STIMMING,
+  ROLE_NODDING,
+  ROLE_SOBER,
 } = require('../../../../env');
 
 const teamRoles = [
-  roleDirectorId,
-  roleSuccessorId,
-  roleSysadminId,
-  roleLeaddevId,
-  roleIrcadminId,
-  roleDiscordadminId,
-  roleIrcopId,
-  roleModeratorId,
-  roleTripsitterId,
-  roleTeamtripsitId,
-  roleTripbot2Id,
-  roleTripbotId,
-  roleBotId,
-  roleDeveloperId,
+  ROLE_DIRECTOR,
+  ROLE_SUCCESSOR,
+  ROLE_SYSADMIN,
+  ROLE_LEADDEV,
+  ROLE_IRCADMIN,
+  ROLE_DISCORDADMIN,
+  ROLE_IRCOP,
+  ROLE_MODERATOR,
+  ROLE_TRIPSITTER,
+  ROLE_TEAMTRIPSIT,
+  ROLE_TRIPBOT2,
+  ROLE_TRIPBOT,
+  ROLE_BOT,
+  ROLE_DEVELOPER,
 ];
 
 const colorRoles = [
-  roleTreeId,
-  roleSproutId,
-  roleSeedlingId,
-  roleBoosterId,
-  roleRedId,
-  roleOrangeId,
-  roleYellowId,
-  roleGreenId,
-  roleBlueId,
-  rolePurpleId,
-  rolePinkId,
-  roleBrownId,
-  roleBlackId,
-  roleWhiteId,
+  ROLE_TREE,
+  ROLE_SPROUT,
+  ROLE_SEEDLING,
+  ROLE_BOOSTER,
+  ROLE_RED,
+  ROLE_ORANGE,
+  ROLE_YELLOW,
+  ROLE_GREEN,
+  ROLE_BLUE,
+  ROLE_PURPLE,
+  ROLE_PINK,
+  ROLE_BROWN,
+  ROLE_BLACK,
+  ROLE_WHITE,
 
 ];
 
 const mindsetRoles = [
-  roleDrunkId,
-  roleHighId,
-  roleRollingId,
-  roleTrippingId,
-  roleDissociatingId,
-  roleStimmingId,
-  roleNoddingId,
-  roleSoberId,
+  ROLE_DRUNK,
+  ROLE_HIGH,
+  ROLE_ROLLING,
+  ROLE_TRIPPING,
+  ROLE_DISSOCIATING,
+  ROLE_STIMMING,
+  ROLE_NODDING,
+  ROLE_SOBER,
 ];
 
 const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
@@ -127,7 +127,7 @@ module.exports = {
     // logger.debug(`[${PREFIX}] target: ${target}`);
 
     const moderatorRole = reaction.message.guild.roles.cache
-      .find(role => role.id === roleModeratorId);
+      .find(role => role.id === ROLE_MODERATOR);
 
     logger.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction, null, 2)}`);
     logger.debug(`[${PREFIX}] reaction.message: ${JSON.stringify(reaction.message, null, 2)}`);
@@ -223,14 +223,14 @@ module.exports = {
     // Process vote underban
     if (reaction.count === voteUnderbanThreshold && reaction.emoji.name === 'vote_underban') {
       const isNewbie = target.roles.cache.find(
-        role => role.id === roleNewbieId,
+        role => role.id === ROLE_NEWBIEId,
       ) !== undefined;
       if (isNewbie) { return; }
       logger.debug(`[${PREFIX}] ${target} has been ${reaction.emoji.name} ${voteUnderbanThreshold} times!`);
       const roleVoteunderban = reaction.message.guild.roles.cache
         .find(role => role.id === roleVoteunderbanId);
-      const roleNewbie = reaction.message.guild.roles.cache
-        .find(role => role.id === roleNewbieId);
+      const ROLE_NEWBIE = reaction.message.guild.roles.cache
+        .find(role => role.id === ROLE_NEWBIEId);
 
       // Remove all roles, except team and vanity, from the target
       target.roles.cache.forEach(role => {
@@ -245,12 +245,12 @@ module.exports = {
         }
       });
 
-      // Add the roleNewbie and roleVoteunderban role to the target
+      // Add the ROLE_NEWBIE and roleVoteunderban role to the target
       try {
         logger.debug(`[${PREFIX}] Adding role ${roleVoteunderban.name} to ${target.nickname || target.user.username}`);
         await target.roles.add(roleVoteunderban);
-        logger.debug(`[${PREFIX}] Adding role ${roleNewbie.name} to ${target.nickname || target.user.username}`);
-        await target.roles.add(roleNewbie);
+        logger.debug(`[${PREFIX}] Adding role ${ROLE_NEWBIE.name} to ${target.nickname || target.user.username}`);
+        await target.roles.add(ROLE_NEWBIE);
       } catch (err) {
         logger.error(`[${PREFIX}] Error adding role to target: ${err}`);
         return reaction.message.reply(stripIndents`There was an error adding the NeedsHelp role!
@@ -260,7 +260,7 @@ module.exports = {
       return reaction.message.reply(stripIndents`
       Hey ${moderatorRole}! ${target.username} was community underbanned for this, please review!
 
-      **They will stay in the ${roleNewbie.toString()} role until a moderator changes it!**`);
+      **They will stay in the ${ROLE_NEWBIE.toString()} role until a moderator changes it!**`);
     }
     logger.debug(`[${PREFIX}] finished!`);
   },

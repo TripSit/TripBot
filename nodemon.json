@@ -1,6 +1,6 @@
 {
   "watch": ["src"],
-  "ext": ".js",
-  "ignore": ["src/assets/*"],
-  "exec": "node --inspect ./src/start.js"
+  "ext": ".ts",
+  "ignore": ["src/assets/*", "backups/*"],
+  "exec": "ts-node src/start.ts"
 }

@@ -11,7 +11,7 @@ const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseA
 
 const PREFIX = require('path').parse(__filename).name; // eslint-disable-line
 
-const { channelModeratorsId } = require('../../../../env');
+const { CHANNEL_MODERATORS } = require('../../../../env');
 
 // const mod_buttons = new ActionRowBuilder()
 //     .addComponents(
@@ -261,8 +261,8 @@ module.exports = {
       logger.debug(`[${PREFIX}] finished!`);
       return;
     }
-    logger.debug(`${PREFIX} channelModeratorsId: ${channelModeratorsId}`);
-    const modChan = interaction.client.channels.cache.get(channelModeratorsId);
+    logger.debug(`${PREFIX} CHANNEL_MODERATORS: ${CHANNEL_MODERATORS}`);
+    const modChan = interaction.client.channels.cache.get(CHANNEL_MODERATORS);
     // mod_chan.send({ embeds: [target_embed], components: [mod_buttons] });
     modChan.send({ embeds: [targetEmbed] });
     logger.debug(`${PREFIX} send a message to the moderators room`);

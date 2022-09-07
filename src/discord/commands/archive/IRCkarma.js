@@ -8,7 +8,7 @@ const { getGuildInfo, setGuildInfo } = require('../../../global/services/firebas
 const PREFIX = path.parse(__filename).name;
 
 const {
-  discordGuildId,
+  DISCORD_GUILD_ID,
 } = require('../../../../env');
 
 module.exports = {
@@ -29,7 +29,7 @@ module.exports = {
       // If the user is typing "C++", ignore it
       if (wordBeforePlus === 'C') { return; }
 
-      const [targetData, targetFbid] = message.client.guilds.resolve(discordGuildId);
+      const [targetData, targetFbid] = message.client.guilds.resolve(DISCORD_GUILD_ID);
 
       let karmaValue = 1;
       // Transform guild data
@@ -58,7 +58,7 @@ module.exports = {
       logger.debug(`[${PREFIX}] Word before --: ${wordBeforePlus}`);
 
       // Extract guild data
-      const tripsitGuild = message.client.guilds.resolve(discordGuildId);
+      const tripsitGuild = message.client.guilds.resolve(DISCORD_GUILD_ID);
       const [targetData, targetFbid] = await getGuildInfo(tripsitGuild);
 
       let karmaValue = 1;
