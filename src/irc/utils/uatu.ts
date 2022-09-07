@@ -104,7 +104,7 @@ export async function watcher(
   }
 
 
-  const accountName = message.host.split('/')[2] ?? message.host.replace('/', '-');
+  const accountName = message.host.split('/')[2] ?? message.host.replace(/(\.|\$|#|\[|\]|\/)/g, '-');
 
 
   let lastTalkGeneral = 0;
