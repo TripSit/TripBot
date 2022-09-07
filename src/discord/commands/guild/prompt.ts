@@ -794,12 +794,6 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
               .setCustomId('memberbutton')
               .setLabel('I understand where to find help and will follow the rules!')
               .setStyle(ButtonStyle.Success),
-      )
-      .addComponents(
-          new ButtonBuilder()
-              .setCustomId('underban')
-              .setLabel('I am underage but I need help!')
-              .setStyle(ButtonStyle.Secondary),
       );
 
   // Create a new button
