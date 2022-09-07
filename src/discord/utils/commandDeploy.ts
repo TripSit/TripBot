@@ -25,7 +25,7 @@ async function getCommands(commandType: string): Promise<SlashCommand[]> {
   const files = await fs.readdir(path.join(commandDir, commandType));
   return files
       .filter((file) => file.endsWith('.ts') && !file.endsWith('index.ts'))
-      .map((file) => require(`${commandDir}\\${commandType}\\${file}`))
+      .map((file) => require(`${commandDir}/${commandType}/${file}`))
       .map((command) => command[Object.keys(command)[0]].data.toJSON());
 }
 
