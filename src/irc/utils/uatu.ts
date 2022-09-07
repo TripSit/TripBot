@@ -152,11 +152,13 @@ export async function watcher(
     logger.debug(`[${PREFIX}] ${message.nick} has sent a message in the last 10 minutes!`);
 
     let verbage = '';
-    if (message.command === 'JOIN') {
-      verbage = `${message.nick} has joined ${message.args[0]}!`;
-    } else if (message.command === 'PART') {
-      verbage = `${message.nick} has left ${message.args[0]}!`;
-    } else if (message.command === 'KICK') {
+    // if (message.command === 'JOIN') {
+    //   verbage = `${message.nick} has joined ${message.args[0]}!`;
+    // } else
+    // if (message.command === 'PART') {
+    //   verbage = `${message.nick} has left ${message.args[0]}!`;
+    // } else
+    if (message.command === 'KICK') {
       verbage = `${message.nick} has been kicked from ${message.args[0]}!`;
     } else if (message.command === 'QUIT') {
       verbage = `${message.nick} has quit the server!`;
