@@ -678,7 +678,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
           },
           {
             name: 'Pink',
-            reaction: pinkHeart,
+            reaction: pinkHeart.slice(pinkHeart.indexOf(':', 3)+1, pinkHeart.indexOf('>')),
             roleId: env.ROLE_PINK,
           },
           {
