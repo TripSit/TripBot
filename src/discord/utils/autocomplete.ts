@@ -79,7 +79,7 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
         interaction.respond(defaultShapes.map((choice) => ({name: choice, value: choice})));
       }
     }
-  } else if (interaction.commandName === 'calc-benzo') {
+  } else if (interaction.commandName === 'benzo_calc') {
     const options = {
       shouldSort: true,
       threshold: 0.2,
@@ -103,7 +103,7 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
       return drugDataTripsit[drugName as keyof typeof drugDataTripsit].properties.hasOwnProperty('dose_to_diazepam');
     });
 
-    logger.debug(`[${PREFIX}] benzoNames: ${benzoNames}`);
+    // logger.debug(`[${PREFIX}] benzoNames: ${benzoNames}`);
 
     const benzoCache = benzoNames.map((drugName) => {
       const drugObj = {
@@ -117,13 +117,13 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
       return drugObj;
     });
 
-    logger.debug(`[${PREFIX}] benzoCache: ${JSON.stringify(benzoCache, null, 2)}`);
+    // logger.debug(`[${PREFIX}] benzoCache: ${JSON.stringify(benzoCache, null, 2)}`);
 
     const fuse = new Fuse(benzoCache, options);
     const focusedValue = interaction.options.getFocused();
-    logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
+    // logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
     const results = fuse.search(focusedValue);
-    logger.debug(`[${PREFIX}] results: ${JSON.stringify(results, null, 2)}`);
+    // logger.debug(`[${PREFIX}] results: ${JSON.stringify(results, null, 2)}`);
     if (results.length > 0) {
       const top25 = results.slice(0, 25);
       interaction.respond(top25.map((choice:any) => ({name: choice.item.name, value: choice.item.name})));
