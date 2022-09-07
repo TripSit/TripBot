@@ -207,7 +207,7 @@ export async function announcements(message:Message) {
       messageCounter[message.channel.id] + 1 :
       1;
 
-  logger.debug(`${PREFIX} - messageCounter: ${JSON.stringify(messageCounter, null, 2)}`);
+  // logger.debug(`${PREFIX} - messageCounter: ${JSON.stringify(messageCounter, null, 2)}`);
   // logger.debug(`[${PREFIX}] messageCounter: ${messageCounter}`);
   // logger.debug(`[${PREFIX}] finished!`);
 };
