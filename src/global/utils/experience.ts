@@ -183,10 +183,11 @@ export async function experience(
     userRef = `${env.FIREBASE_DB_USERS}/${actor.id}/experience/${expType}`;
   } else {
     // logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
-    const accountName = message.host.split('/')[2] ?? message.host.replace('/', '-');
+    const accountName = message.host.split('/')[2] ?? message.host.replace(/(\.|\$|#|\[|\]|\/)/g, '-');
 
     userRef = `${env.FIREBASE_DB_USERS}/${accountName}/experience/${expType}`;
   }
+
   logger.debug(`[${PREFIX}] userRef: ${userRef}`);
   if (global.db) {
     const ref = db.ref(userRef);
