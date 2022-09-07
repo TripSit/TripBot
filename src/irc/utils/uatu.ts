@@ -81,7 +81,7 @@ export async function watcher(
     message:ircMessage,
     newNick?:any,
 ): Promise<void> {
-  logger.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}`);
+  // logger.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}`);
   if (botNicknames.includes(message.nick)) {
     // logger.debug(`[${PREFIX}] ${message.nick} is a bot!`);
     return;

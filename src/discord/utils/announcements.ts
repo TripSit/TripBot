@@ -165,10 +165,10 @@ export async function announcements(message:Message) {
   const embed = embedTemplate();
 
   // Check if this the messageCounter is a multiple of ${frequency}
-  logger.debug(`${PREFIX} - messageCounter: ${JSON.stringify(messageCounter, null, 2)}`);
-  logger.debug(`${PREFIX} - message.channel.id: ${JSON.stringify(message.channel.id, null, 2)}`);
-  logger.debug(`${PREFIX} - message.channel.id: ${JSON.stringify(messageCounter[message.channel.id], null, 2)}`);
-  logger.debug(`${PREFIX} - frequency: ${frequency}`);
+  // logger.debug(`${PREFIX} - messageCounter: ${JSON.stringify(messageCounter, null, 2)}`);
+  // logger.debug(`${PREFIX} - message.channel.id: ${JSON.stringify(message.channel.id, null, 2)}`);
+  // logger.debug(`${PREFIX} - message.channel.id: ${JSON.stringify(messageCounter[message.channel.id], null, 2)}`);
+  // logger.debug(`${PREFIX} - frequency: ${frequency}`);
 
   if (messageCounter[message.channel.id] % frequency === 0) {
     let randomAnnouncement = null;
