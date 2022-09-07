@@ -7,7 +7,7 @@
     "dev": "npm run lint && npm run patch && npm run deploy && npm run nodemon",
     "lint": "eslint --ext ts .",
     "patch": "npm version patch -git-tag-version false",
-    "deploy": "ts-node ./src/discord/utils/commandDeploy.ts",
+    "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
     "nodemon": "nodemon --config ./nodemon.json",
     "start": "npm run deploy && npm run prod",
     "build": "npx tsc",
