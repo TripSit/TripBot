@@ -20,9 +20,8 @@ import {uBan} from '../commands/guild/u_ban';
 import {uNote} from '../commands/guild/u_note';
 import {mTimeout} from '../commands/guild/m_timeout';
 import {mWarn} from '../commands/guild/m_warn';
-import {
-  report,
-} from '../commands/guild/m_report';
+import {report} from '../commands/guild/m_report';
+import {issue} from '../commands/guild/issue';
 // const ircButton = require('../commands/guild/prompt');
 
 /**
@@ -31,6 +30,10 @@ import {
  */
 export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<void> {
   logger.debug(`[${PREFIX}] interaction: ${interaction.customId}`);
+  if (interaction.customId === 'issueModal') {
+    issue.submit!(interaction);
+    return;
+  }
   if (interaction.customId === 'ircConnectModmailIssueModal') {
     ircSubmit(interaction, 'ircConnect');
     return;
@@ -68,19 +71,24 @@ export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<v
     return;
   }
   if (interaction.customId === 'banModal') {
-    return uBan.submit!(interaction);
+    uBan.submit!(interaction);
+    return;
   }
   if (interaction.customId === 'kickModal') {
-    return uKick.submit!(interaction);
+    uKick.submit!(interaction);
+    return;
   }
   if (interaction.customId === 'noteModal') {
-    return uNote.submit!(interaction);
+    uNote.submit!(interaction);
+    return;
   }
   if (interaction.customId === 'timeoutModal') {
-    return mTimeout.submit!(interaction);
+    mTimeout.submit!(interaction);
+    return;
   }
   if (interaction.customId === 'warnModal') {
-    return mWarn.submit!(interaction);
+    mWarn.submit!(interaction);
+    return;
   }
   if (interaction.customId === 'reportModal') {
     report.submit!(interaction);
