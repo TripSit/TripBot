@@ -43,6 +43,10 @@ export async function handleReactionRoles(
   const messageId = reaction.message.id;
   logger.debug(`[${PREFIX}] messageId: ${JSON.stringify(messageId, null, 2)}`);
 
+  logger.debug(`[${PREFIX}] reaction.emoji.id: ${reaction.emoji.id}`);
+  logger.debug(`[${PREFIX}] reaction.emoji.name: ${reaction.emoji.name}`);
+
+
   const refUrl = `${env.FIREBASE_DB_GUILDS}/${guildId}/reactionRoles/${channelId}/${messageId}`;
   logger.debug(`[${PREFIX}] refUrl: ${refUrl}`);
 
@@ -51,18 +55,18 @@ export async function handleReactionRoles(
     await ref.once('value', async (data) => {
       if (data.val() !== null) {
         const reactionRoles = data.val() as ReactionRole[];
-        logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles, null, 2)}`);
+        // logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles, null, 2)}`);
 
         // Get member data
         const member = await reaction.message?.guild?.members.fetch(user.id);
-        logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
+        // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
 
         const otherRoles:string[] = [];
         if (member) {
           logger.debug(`[${PREFIX}] add: ${add}`);
           let selectedRole = '';
 
-          logger.debug(`[${PREFIX}] data.val(): ${JSON.stringify(data.val(), null, 2)}`);
+          // logger.debug(`[${PREFIX}] data.val(): ${JSON.stringify(data.val(), null, 2)}`);
           reactionRoles.forEach((value:ReactionRole) => {
             logger.debug(`[${PREFIX}] value.reaction: ${JSON.stringify(value.reaction, null, 2)}`);
             if (value.reaction === reaction.emoji.name ||
