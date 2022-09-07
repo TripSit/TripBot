@@ -15,7 +15,7 @@ export async function registerEvents(client: Client): Promise<void> {
   const eventFiles = await fs.readdir(eventDir);
   eventFiles
       .filter((file) => file.endsWith('.ts') && !file.endsWith('index.ts'))
-      .map((file) => require(`${eventDir}\\${file}`))
+      .map((file) => require(`${eventDir}/${file}`))
       .forEach((event) => {
         // logger.debug(`[${PREFIX}] event: ${JSON.stringify(event, null, 2)}`);
         if (event.once) client.once(event.name, (...args) => event.execute(...args));
