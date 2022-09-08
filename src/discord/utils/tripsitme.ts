@@ -196,9 +196,15 @@ export async function tripsitme(
     const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
     await ref.once('value', (data:any) => {
       if (data.val() !== null) {
-        targetLastHelpedDate = data.val().lastHelpedDate;
-        targetLastHelpedThreadId = data.val().lastHelpedThreadId;
-        targetLastHelpedMetaThreadId = data.val().lastHelpedMetaThreadId;
+        Object.keys(data.val()).forEach((key) => {
+          logger.debug(`[${PREFIX}] data.val()[key]: ${JSON.stringify(data.val()[key], null, 2)}`);
+          logger.debug(`[${PREFIX}] key: ${key}`);
+          if (data.val()[key].type === 'helpthread') {
+            targetLastHelpedDate = new Date(parseInt(key));
+            targetLastHelpedThreadId = data.val()[key].value.lastHelpedThreadId;
+            targetLastHelpedMetaThreadId = data.val()[key].value.lastHelpedMetaThreadId;
+          }
+        });
       }
     });
   }
@@ -441,10 +447,29 @@ export async function tripsitme(
         threadDiscussUser.send(helperMsg);
 
         if (global.db) {
+          const threadArchiveTime = new Date();
+          // define one week in milliseconds
+          // const thirtySec = 1000 * 30;
+          const tenMins = 1000 * 60 * 10;
+          const oneDay = 1000 * 60 * 60 * 24;
+          const archiveTime = env.NODE_ENV === 'production' ?
+            threadArchiveTime.getTime() + oneDay :
+            threadArchiveTime.getTime() + tenMins;
+          threadArchiveTime.setTime(archiveTime);
+          logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
+
+          await db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/${targetLastHelpedDate.valueOf()}`).remove();
           const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
-          ref.update({
-            roles: targetRoleIds,
-            lastHelpedDate: new Date(),
+          ref.set({
+            [threadArchiveTime.valueOf()]: {
+              type: 'helpthread',
+              value: {
+                lastHelpedThreadId: threadHelpUser.id,
+                lastHelpedMetaThreadId: threadDiscussUser.id,
+                roles: targetRoleIds,
+                status: 'open',
+              },
+            },
           });
         }
 
@@ -609,11 +634,12 @@ export async function tripsitme(
 
   const threadArchiveTime = new Date();
   // define one week in milliseconds
-  const thirtySec = 1000 * 30;
+  // const thirtySec = 1000 * 30;
+  const tenMins = 1000 * 60 * 10;
   const oneDay = 1000 * 60 * 60 * 24;
   const archiveTime = env.NODE_ENV === 'production' ?
     threadArchiveTime.getTime() + oneDay :
-    threadArchiveTime.getTime() + thirtySec;
+    threadArchiveTime.getTime() + tenMins;
   threadArchiveTime.setTime(archiveTime);
   logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
 

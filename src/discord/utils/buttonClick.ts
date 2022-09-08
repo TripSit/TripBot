@@ -193,10 +193,23 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   if (buttonID.startsWith('tripsat_')) {
     logger.debug(`[${PREFIX}] tripsat_them: ${interaction.user.username}`);
     logger.debug(`[${PREFIX}] channelId: ${interaction.channel!.id}`);
+    logger.debug(`[${PREFIX}] channel.name: ${(interaction.channel! as TextChannel).name}`);
     logger.debug(`[${PREFIX}] ID: ${buttonID.slice(8)}`);
     const target = await interaction.guild!.members.fetch(buttonID.slice(8));
     logger.debug(`[${PREFIX}] target: ${target}`);
-    return tripsat(interaction, target);
+    if ((interaction.channel! as TextChannel).name.includes('discuss')) {
+      logger.debug(`[${PREFIX}] discussion channel!`);
+      tripsat(interaction, target);
+      return;
+    } else {
+      if (interaction.user.id === target.id) {
+        tripsat(interaction, target);
+        return;
+      } else {
+        interaction.reply({content: 'You can only use this in the discussion channel!', ephemeral: true});
+        return;
+      }
+    }
   }
   if (buttonID === 'modmailTripsitter') {
     return modmailTripsitter(interaction);

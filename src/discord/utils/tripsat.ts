@@ -105,13 +105,19 @@ export async function tripsat(
   let targetRoles:string[] = [];
 
   if (global.db) {
-    const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.user.id}/discord/tripsitsessions`);
-    await ref.once('value', (data:any) => {
+    const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
+    await ref.once('value', (data) => {
       if (data.val() !== null) {
-        targetLastHelpedDate = data.val().lastHelpedDate;
-        targetLastHelpedThreadId = data.val().lastHelpedThreadId;
-        targetLastHelpedMetaThreadId = data.val().lastHelpedMetaThreadId;
-        targetRoles = data.val().roles;
+        Object.keys(data.val()).forEach((key) => {
+          logger.debug(`[${PREFIX}] data.val()[key]: ${JSON.stringify(data.val()[key], null, 2)}`);
+          logger.debug(`[${PREFIX}] key: ${key}`);
+          if (data.val()[key].type === 'helpthread') {
+            targetLastHelpedDate = new Date(parseInt(key));
+            targetLastHelpedThreadId = data.val()[key].value.lastHelpedThreadId;
+            targetLastHelpedMetaThreadId = data.val()[key].value.lastHelpedMetaThreadId;
+            targetRoles = data.val()[key].value.roles;
+          }
+        });
       }
     });
   }
@@ -204,9 +210,10 @@ export async function tripsat(
 
   // For each role in targetRoles2, add it to the target
   if (targetRoles) {
-    targetRoles.forEach((roleName) => {
-      const roleObj = interaction.guild!.roles.cache.find((r) => r.name === roleName) as Role;
-      if (!ignoredRoles.includes(roleObj.id) && roleName !== '@everyone') {
+    targetRoles.forEach((roleId) => {
+      logger.debug(`[${PREFIX}] Re-adding roleId: ${roleId}`);
+      const roleObj = interaction.guild!.roles.cache.find((r) => r.id === roleId) as Role;
+      if (!ignoredRoles.includes(roleObj.id) && roleObj.name !== '@everyone') {
         logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.nickname || target.user.username}`);
         try {
           target.roles.add(roleObj);
@@ -237,8 +244,8 @@ export async function tripsat(
   try {
     threadHelpUser.send(endHelpMessage);
   } catch (err) {
-    // logger.error(`[${PREFIX}] Error sending end help message to ${threadHelpUser}`);
-    // logger.error(err);
+    logger.error(`[${PREFIX}] Error sending end help message to ${threadHelpUser}`);
+    logger.error(err);
   }
 
   let message:Message;
