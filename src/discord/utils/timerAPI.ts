@@ -85,10 +85,14 @@ export async function runTimer() {
                 if (timerEntry.type === 'mindset') {
                   const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
                   const role = tripsitGuild.roles.cache.find((role:Role) => role.id === timerEntry.value) as Role;
+                  try {
                   const member = await tripsitGuild.members.fetch(userId);
                   if (member && role) {
                     member.roles.remove(role);
                   }
+                } catch(err) {
+                  logger.error(`[${PREFIX}] Member left the server`);
+                }
                   const entryRef = `${env.FIREBASE_DB_TIMERS}/${userId}/${timevalue}`;
                   logger.debug(`[${PREFIX}] deleting ${entryRef}`);
                   await global.db.ref(entryRef).remove();
@@ -106,6 +110,7 @@ export async function runTimer() {
                   if (status === 'open') {
                     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
                     // logger.debug(`[${PREFIX}] tripsitGuild: ${JSON.stringify(tripsitGuild, null, 4)}`);
+                    try {
                     const member = await tripsitGuild.members.fetch(userId);
                     // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 4)}`);
                     const needsHelpRole = tripsitGuild.roles.cache.find(
@@ -124,6 +129,9 @@ export async function runTimer() {
                         }
                       }
                     });
+                  } catch (err) {
+                    logger.error(`[${PREFIX}] Member left the server`);
+                  }
 
                     // Lock the threads
                     const helpChannel = await tripsitGuild.channels.fetch(helpThread);
