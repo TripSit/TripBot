@@ -17,6 +17,7 @@ import {SlashCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import {globalTemplate} from '../../../global/commands/_g.template';
+import {joinWording} from 'src/global/commands/g.join';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
 const PREFIX = require('path').parse(__filename).name;
@@ -100,8 +101,7 @@ export const discordTemplate: SlashCommand = {
         break;
     }
 
-    interaction.reply(`🤖🔗 <#${discordChannel}> is bridged with ${ircChannel} on IRC. Just click on the channel, 
-      or type /join ${ircChannel} on irc. /bridge for more information`);
+    interaction.reply(await joinWording());
 
     logger.debug(`[${PREFIX}] finished!`);
   },
