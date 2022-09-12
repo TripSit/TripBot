@@ -85,9 +85,13 @@ export async function runTimer() {
                 if (timerEntry.type === 'mindset') {
                   const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
                   const role = tripsitGuild.roles.cache.find((role:Role) => role.id === timerEntry.value) as Role;
-                  const member = await tripsitGuild.members.fetch(userId);
-                  if (member && role) {
-                    member.roles.remove(role);
+                  try {
+                    const member = await tripsitGuild.members.fetch(userId);
+                    if (member && role) {
+                      member.roles.remove(role);
+                    }
+                  } catch (err) {
+                    logger.error(`[${PREFIX}] Member left the server`);
                   }
                   const entryRef = `${env.FIREBASE_DB_TIMERS}/${userId}/${timevalue}`;
                   logger.debug(`[${PREFIX}] deleting ${entryRef}`);
@@ -106,24 +110,28 @@ export async function runTimer() {
                   if (status === 'open') {
                     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
                     // logger.debug(`[${PREFIX}] tripsitGuild: ${JSON.stringify(tripsitGuild, null, 4)}`);
-                    const member = await tripsitGuild.members.fetch(userId);
-                    // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 4)}`);
-                    const needsHelpRole = tripsitGuild.roles.cache.find(
-                        (role:Role) => role.id === env.ROLE_NEEDSHELP) as Role;
-                    // logger.debug(`[${PREFIX}] needsHelpRole: ${JSON.stringify(needsHelpRole, null, 4)}`);
-                    member.roles.remove(needsHelpRole);
-                    oldRoles.forEach(async (roleId:string) => {
-                      const role = tripsitGuild.roles.cache.find((role:Role) => role.id === roleId) as Role;
-                      // logger.debug(`[${PREFIX}] role: ${JSON.stringify(role, null, 4)}`);
-                      if (role && role.name !== '@everyone') {
-                        try {
-                          await member.roles.add(role);
-                        } catch (err) {
-                          logger.debug(`[${PREFIX}] I dont have permission to add ${role.name} to \
+                    try {
+                      const member = await tripsitGuild.members.fetch(userId);
+                      // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 4)}`);
+                      const needsHelpRole = tripsitGuild.roles.cache.find(
+                          (role:Role) => role.id === env.ROLE_NEEDSHELP) as Role;
+                      // logger.debug(`[${PREFIX}] needsHelpRole: ${JSON.stringify(needsHelpRole, null, 4)}`);
+                      member.roles.remove(needsHelpRole);
+                      oldRoles.forEach(async (roleId:string) => {
+                        const role = tripsitGuild.roles.cache.find((role:Role) => role.id === roleId) as Role;
+                        // logger.debug(`[${PREFIX}] role: ${JSON.stringify(role, null, 4)}`);
+                        if (role && role.name !== '@everyone') {
+                          try {
+                            await member.roles.add(role);
+                          } catch (err) {
+                            logger.debug(`[${PREFIX}] I dont have permission to add ${role.name} to \
                           ${member.user.username}`);
+                          }
                         }
-                      }
-                    });
+                      });
+                    } catch (err) {
+                      logger.error(`[${PREFIX}] Member left the server`);
+                    }
 
                     // Lock the threads
                     const helpChannel = await tripsitGuild.channels.fetch(helpThread);
