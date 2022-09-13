@@ -21,6 +21,8 @@ export default {
   FIREBASE_REALTIME_KEY: process.env.FIREBASE_REALTIME_KEY,
   IRC_PASSWORD: process.env.IRC_PASSWORD,
 
+  IMDB_TOKEN: process.env.IMDB_TOKEN,
+
   PORT: '8080',
   TS_ICON_URL: 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png',
   FLAME_ICON_URL: 'https://imgur.com/b923xK2.png',
