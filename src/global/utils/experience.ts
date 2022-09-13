@@ -7,7 +7,6 @@ import {
 import env from './env.config';
 import logger from './logger';
 // import {stripIndents} from 'common-tags';
-import {embedTemplate} from '../../discord/utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import {ircMessage} from '../../irc/@types/irc';
 
@@ -216,11 +215,13 @@ export async function experience(
             logger.debug(`[${PREFIX}] ${actor.username ? actor.username : actor.nick } has leveled up to \
               ${expType} level ${level + 1}!`);
 
-            const embed = embedTemplate();
-            embed.setDescription(`${actor.username ? actor.username : actor.nick } has leveled up to ${expType} \
-              level ${level + 1}!`);
+            // const embed = embedTemplate();
+            // embed.setDescription(`${actor.username ? actor.username : actor.nick } has leveled up to ${expType} \
+            //   level ${level + 1}!`);
             const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_TRIPBOTLOGS) as TextChannel;
-            channelTripbotlogs.send({embeds: [embed]});
+            // channelTripbotlogs.send({embeds: [embed]});
+            channelTripbotlogs.send(`${actor.username ? actor.username : actor.nick } has leveled up to ${expType} \
+            level ${level + 1}!`);
             level += 1;
             levelExpPoints -= expToLevel;
           }
