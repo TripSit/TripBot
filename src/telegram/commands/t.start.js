@@ -1,11 +1,12 @@
 'use strict';
 
-const { Composer } = require('telegraf');
-const { stripIndents } = require('common-tags');
-const PREFIX = require('path').parse(__filename).name;
+const {Composer} = require('telegraf');
+const {stripIndents} = require('common-tags');
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 const logger = require('../../global/utils/logger');
 
-module.exports = Composer.command('start', async ctx => {
+module.exports = Composer.command('start', async (ctx) => {
   logger.debug(`[${PREFIX}] started!`);
   // logger.log(ctx.update.message.text.split(' '));
   ctx.replyWithHTML(stripIndents`<b>Welcome to TripBot</b>!👋

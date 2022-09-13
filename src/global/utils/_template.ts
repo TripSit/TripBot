@@ -5,7 +5,8 @@ import {
 // import {embedTemplate} from '../../discord/utils/embedTemplate';
 // import {stripIndents} from 'common-tags';
 import logger from './logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 /**
  * Template

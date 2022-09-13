@@ -5,7 +5,8 @@ import {SlashCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcKetamine} from '../../../global/commands/g.calcKetamine';
 import logger from '../../../global/utils/logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 // Calculate insufflated dosages
 export const dCalcKetamine: SlashCommand = {

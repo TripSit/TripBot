@@ -1,7 +1,8 @@
 // import {moderate} from '../../global/commands/g.moderate';
 // import logger from '../../global/utils/logger';
 
-// const PREFIX = require('path').parse(__filename).name;
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 // /**
 //  * @param {any} command

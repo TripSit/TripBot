@@ -15,7 +15,8 @@ import {stripIndents} from 'common-tags';
 import logger from '../../global/utils/logger';
 import {embedTemplate} from '../utils/embedTemplate';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 const teamRoles = [
   env.ROLE_DIRECTOR,

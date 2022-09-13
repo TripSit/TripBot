@@ -1,7 +1,8 @@
 import {Client} from 'discord.js';
 import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 module.exports = {
   name: 'template',

@@ -1,8 +1,8 @@
 import env from '../utils/env.config';
 import * as imdb from 'imdb-api';
-// const imdb = require('imdb-api');
 // import logger from '../utils/logger';
-// const PREFIX = require('path').parse(__filename).name;
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 /**
  *

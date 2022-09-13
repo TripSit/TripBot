@@ -1,6 +1,7 @@
 'use strict';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 const { SlashCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/logger');
 

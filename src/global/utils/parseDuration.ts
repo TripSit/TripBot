@@ -1,5 +1,6 @@
 // import logger from './logger';
-// const PREFIX = require('path').parse(__filename).name;
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 /**
  * This takes a string and converts it into time

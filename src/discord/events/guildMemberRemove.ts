@@ -6,7 +6,8 @@ import {
 import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
 import {embedTemplate} from '../utils/embedTemplate';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 module.exports = {
   name: 'guildMemberRemove',

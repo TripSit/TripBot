@@ -2,7 +2,8 @@ import env from '../../global/utils/env.config';
 import logger from '../../global/utils/logger';
 import {WhoisResponse} from 'matrix-org-irc';
 import {ircMessage} from '../@types/irc.d';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 // {
 //   "prefix": "TSDev!~TSDev@tripsit/bridge/TS1",

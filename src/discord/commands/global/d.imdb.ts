@@ -7,7 +7,8 @@ import {embedTemplate} from '../../utils/embedTemplate';
 import {getImdb} from '../../../global/commands/g.imdb';
 import logger from '../../../global/utils/logger';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()

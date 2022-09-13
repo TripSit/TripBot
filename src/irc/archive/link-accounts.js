@@ -1,15 +1,16 @@
 'use strict';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 const logger = require('../../global/utils/logger');
-const { verifyLink } = require('../../discord/commands/guild/link-accounts');
+const {verifyLink} = require('../../discord/commands/guild/link-accounts');
 
 module.exports = {
   async linkAccounts(from, token) {
     logger.debug(`[${PREFIX}] start!`);
     logger.debug(`[${PREFIX}] PM token: ${token}`);
     global.ircClient.say(from, `Your token is ${token}`);
-    await global.ircClient.whois(from, info => {
+    await global.ircClient.whois(from, (info) => {
       if (!info.account) {
         global.ircClient.say(from, `${from} is not registered on IRC, please go ~register on IRC!`);
       }

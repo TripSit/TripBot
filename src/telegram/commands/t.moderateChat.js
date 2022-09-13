@@ -1,12 +1,13 @@
 'use strict';
 
-const { Composer } = require('telegraf');
+const {Composer} = require('telegraf');
 const fs = require('fs');
-const { stripIndents } = require('common-tags');
-const PREFIX = require('path').parse(__filename).name;
+const {stripIndents} = require('common-tags');
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 const logger = require('../../global/utils/logger');
 
-module.exports = Composer.command('moderatechat', async ctx => {
+module.exports = Composer.command('moderatechat', async (ctx) => {
   // check if the chat the command was executed in is a group or channel
   if (ctx.update.message.chat.type === 'private') {
     ctx.replyWithHTML(stripIndents`❌ <b>Task failed successfully!</b> ❌\n
@@ -32,7 +33,7 @@ module.exports = Composer.command('moderatechat', async ctx => {
 
       if (!moderatedChats.includes(ctx.update.message.chat.id)) {
         moderatedChats.push(ctx.update.message.chat.id);
-        fs.writeFileSync(`${__dirname}/../cache/moderatedChats.json`, JSON.stringify(moderatedChats), { encoding: 'utf8' });
+        fs.writeFileSync(`${__dirname}/../cache/moderatedChats.json`, JSON.stringify(moderatedChats), {encoding: 'utf8'});
         ctx.replyWithHTML(stripIndents`✅ <b>Check!</b> ✅\n
         This group is moderated by tripbot now.\n
         This allows the administrators of this group to use the /gban command and users /gban'ned in other chats moderated by tripbot will get banned in this chat too.`);

@@ -27,7 +27,8 @@ import {
 // const tripsat = require('./tripsat');
 // const modmail = require('../commands/guild/modmail');
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 /**
  * This runs whenever a buttion is clicked

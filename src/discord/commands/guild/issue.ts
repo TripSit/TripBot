@@ -15,7 +15,8 @@ import {stripIndents} from 'common-tags';
 import env from '../../../global/utils/env.config';
 import {Octokit} from 'octokit';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 export const issue: SlashCommand = {
   data: new SlashCommandBuilder()

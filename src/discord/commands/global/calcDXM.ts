@@ -6,7 +6,8 @@ import {
 import {SlashCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 const dxmData:DxmDataType = {
   First: {min: 1.5, max: 2.5},

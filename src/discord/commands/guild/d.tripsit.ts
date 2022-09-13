@@ -10,7 +10,8 @@ import {SlashCommand} from '../../utils/commandDef';
 import logger from '../../../global/utils/logger';
 import {tripsat} from '../../utils/tripsat';
 import {tripsitme} from '../../utils/tripsitme';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 export const tripsit: SlashCommand = {
   data: new SlashCommandBuilder()

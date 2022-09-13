@@ -8,7 +8,8 @@ import {embedTemplate} from '../../utils/embedTemplate';
 import {calcBenzo} from '../../../global/commands/g.calcBenzo';
 import logger from '../../../global/utils/logger';
 import {stripIndents} from 'common-tags';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()

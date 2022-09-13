@@ -9,7 +9,8 @@ import env from '../global/utils/env.config';
 import logger from '../global/utils/logger';
 import {registerCommands} from './commands';
 import {registerEvents} from './events';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 /**
  * Starts the discord bot

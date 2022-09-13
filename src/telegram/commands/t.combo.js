@@ -1,12 +1,13 @@
 'use strict';
 
-const { Composer } = require('telegraf');
-const { stripIndents } = require('common-tags');
-const PREFIX = require('path').parse(__filename).name;
+const {Composer} = require('telegraf');
+const {stripIndents} = require('common-tags');
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 const logger = require('../../global/utils/logger');
-const { combo } = require('../../global/utils/combo');
+const {combo} = require('../../global/utils/combo');
 
-module.exports = Composer.command('combo', async ctx => {
+module.exports = Composer.command('combo', async (ctx) => {
   const splitCommand = ctx.update.message.text.split(' ');
 
   const drugA = splitCommand[1];

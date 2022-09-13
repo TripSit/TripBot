@@ -6,7 +6,8 @@ import {SlashCommand} from '../../utils/commandDef';
 import {stripIndents} from 'common-tags';
 import {bridgeWording} from '../../../global/commands/g.bridge';
 // import logger from '../../../global/utils/logger';
-// const PREFIX = require('path').parse(__filename).name;
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 export const bridge: SlashCommand = {
   data: new SlashCommandBuilder()

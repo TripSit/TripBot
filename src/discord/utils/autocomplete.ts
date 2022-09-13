@@ -5,7 +5,8 @@ import {
 import logger from '../../global/utils/logger';
 import Fuse from 'fuse.js';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 import pillColors from '../../global/assets/data/pill_colors.json';
 import pillShapes from '../../global/assets/data/pill_shapes.json';

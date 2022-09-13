@@ -1,11 +1,12 @@
 import logger from '../global/utils/logger';
 import env from '../global/utils/env.config';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 import Express from 'express';
 import {URLSearchParams} from 'url';
 import axios from 'axios';
-import path from 'path';
+// import path from 'path';
 import https from 'https';
 import http from 'http';
 import fs from 'fs';

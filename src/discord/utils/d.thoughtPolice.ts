@@ -9,7 +9,8 @@ import {stripIndents} from 'common-tags';
 
 import {bigBrother} from '../../global/utils/thoughtPolice';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 /**
  * This runs on every message to determine if a badword is used

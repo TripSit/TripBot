@@ -11,7 +11,8 @@ import {
   modmailIssueSubmit,
 } from '../commands/guild/modmail';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 import {tripsitme} from '../utils/tripsitme';
 import {bug} from '../commands/global/bug';

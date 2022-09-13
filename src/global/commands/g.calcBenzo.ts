@@ -1,5 +1,6 @@
 import logger from '../utils/logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 import drugDataTripsit from '../assets/data/drug_db_tripsit.json';
 

@@ -9,7 +9,8 @@ import logger from '../../../global/utils/logger';
 
 import drugDataAll from '../../../global/assets/data/drug_db_combined.json';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 export const drug: SlashCommand = {
   data: new SlashCommandBuilder()

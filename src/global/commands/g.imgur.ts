@@ -1,7 +1,8 @@
 import env from '../utils/env.config';
 import logger from '../utils/logger';
 import axios from 'axios';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 /**
  *

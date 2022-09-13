@@ -9,7 +9,8 @@ import logger from '../../global/utils/logger';
 import {startStatusLoop} from '../utils/statusLoop';
 
 // const { ReactionRole } = require('discordjs-reaction-role');
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 // Initialize the invite cache
 global.guildInvites = new Collection();

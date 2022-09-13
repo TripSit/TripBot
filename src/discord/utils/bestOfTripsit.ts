@@ -10,7 +10,8 @@ import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 const tripsitterChannels = [
   env.CHANNEL_TRIPSIT,

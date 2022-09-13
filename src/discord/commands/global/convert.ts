@@ -6,7 +6,8 @@ import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
 import convert from 'convert-units';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()

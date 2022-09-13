@@ -1,13 +1,14 @@
 'use strict';
 
-const { Composer } = require('telegraf');
+const {Composer} = require('telegraf');
 const fs = require('fs');
-const { stripIndents } = require('common-tags');
+const {stripIndents} = require('common-tags');
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 const logger = require('../../global/utils/logger');
 
-module.exports = Composer.command('gban', async ctx => {
+module.exports = Composer.command('gban', async (ctx) => {
   // check if the chat the command was executed in is a group or channel
   if (ctx.update.message.chat.type === 'private') {
     ctx.replyWithHTML(stripIndents`❌ <b>Task failed successfully!</b> ❌

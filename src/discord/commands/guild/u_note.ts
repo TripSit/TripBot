@@ -12,7 +12,8 @@ import {
 import {UserCommand} from '../../utils/commandDef';
 import logger from '../../../global/utils/logger';
 import {moderate} from '../../../global/commands/g.moderate';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 let actor = {} as GuildMember;
 let target = {} as GuildMember | string;

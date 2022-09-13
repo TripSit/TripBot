@@ -1,11 +1,12 @@
 'use strict';
 
-const { Composer } = require('telegraf');
-const PREFIX = require('path').parse(__filename).name;
+const {Composer} = require('telegraf');
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 const logger = require('../../global/utils/logger');
-const { drug } = require('../../global/utils/drug');
+const {drug} = require('../../global/utils/drug');
 
-module.exports = Composer.command('drug', async ctx => {
+module.exports = Composer.command('drug', async (ctx) => {
   logger.debug(`[${PREFIX}] ctx.update.message.text: ${ctx.update.message.text}`);
   const splitCommand = ctx.update.message.text.split(' ');
 

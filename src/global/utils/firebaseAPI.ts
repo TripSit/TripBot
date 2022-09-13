@@ -4,7 +4,8 @@ import logger from './logger';
 import * as firebase from 'firebase-admin';
 import firebaseCreds from '../assets/config/firebase_creds.json';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 /**
  * Controls connections to the database

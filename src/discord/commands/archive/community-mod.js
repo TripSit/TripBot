@@ -1,6 +1,7 @@
 'use strict';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 const { stripIndents } = require('common-tags');
 const logger = require('../../../global/utils/logger');
 const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');

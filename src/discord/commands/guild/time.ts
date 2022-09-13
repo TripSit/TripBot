@@ -7,7 +7,8 @@ import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
 import env from '../../../global/utils/env.config';
 import timezones from '../../../global/assets/data/timezones.json';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 export const time: SlashCommand = {
   data: new SlashCommandBuilder()

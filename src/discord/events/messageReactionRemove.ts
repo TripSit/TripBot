@@ -5,7 +5,8 @@ import {
 import env from '../../global/utils/env.config';
 import {handleReactionRoles} from '../utils/handleReactionRoles';
 import logger from '../../global/utils/logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 // const { chitragupta } = require('../../global/utils/chitragupta');
 
 module.exports = {

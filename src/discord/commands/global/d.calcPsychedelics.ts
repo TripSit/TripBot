@@ -6,7 +6,8 @@ import {SlashCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcPsychedelics} from '../../../global/commands/g.calcPsychedelics';
 import logger from '../../../global/utils/logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()

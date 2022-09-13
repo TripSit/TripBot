@@ -22,7 +22,8 @@ import {stripIndents} from 'common-tags';
 import {globalTemplate} from '../../../global/commands/_g.template';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()

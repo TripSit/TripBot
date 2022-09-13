@@ -1,10 +1,11 @@
 'use strict';
 
-const PREFIX = require('path').parse(__filename).name;
-const { stripIndents } = require('common-tags');
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
+const {stripIndents} = require('common-tags');
 const logger = require('../../global/utils/logger');
-const { bigBrother } = require('../../global/utils/thoughtPolice');
-const { moderate } = require('../../global/utils/moderate');
+const {bigBrother} = require('../../global/utils/thoughtPolice');
+const {moderate} = require('../../global/utils/moderate');
 
 const {
   NODE_ENV,

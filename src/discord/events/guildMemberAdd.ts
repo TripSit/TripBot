@@ -12,7 +12,8 @@ import env from '../../global/utils/env.config';
 import {embedTemplate} from '../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 module.exports = {
   name: 'guildMemberAdd',

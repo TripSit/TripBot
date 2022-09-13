@@ -11,7 +11,8 @@ import {buttonClick} from '../utils/buttonClick';
 import {modalSubmit} from '../utils/modalSubmit';
 import {autocomplete} from '../utils/autocomplete';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 module.exports = {
   name: 'interactionCreate',

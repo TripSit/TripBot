@@ -7,7 +7,8 @@ import env from '../../global/utils/env.config';
 import {embedTemplate} from './embedTemplate';
 import {stripIndents} from 'common-tags';
 import logger from '../../global/utils/logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 let frequency = 50;
 if (env.NODE_ENV === 'development') {

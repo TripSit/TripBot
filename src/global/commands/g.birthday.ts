@@ -1,7 +1,8 @@
 /* eslint-disable max-len */
 // import logger from '../utils/logger';
 import env from '../utils/env.config';
-// const PREFIX = require('path').parse(__filename).name;
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 /**
  * Information about the bot!

@@ -10,7 +10,8 @@ import logger from './logger';
 import {stripIndents} from 'common-tags';
 import {ircMessage} from '../../irc/@types/irc';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 const ignoredRoles = [
   env.ROLE_NEEDSHELP,

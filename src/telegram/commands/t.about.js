@@ -1,11 +1,12 @@
 'use strict';
 
-const { Composer } = require('telegraf');
-const PREFIX = require('path').parse(__filename).name;
-const { about } = require('../../global/utils/about');
+const {Composer} = require('telegraf');
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
+const {about} = require('../../global/utils/about');
 const logger = require('../../global/utils/logger');
 
-module.exports = Composer.command('about', async ctx => {
+module.exports = Composer.command('about', async (ctx) => {
   const tripsitInfo = await about();
 
   // It says "This bot is built using the discord.js library"

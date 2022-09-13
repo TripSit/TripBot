@@ -7,7 +7,8 @@ import {parseDuration} from '../../../global/utils/parseDuration';
 import ms from 'ms';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()

@@ -3,7 +3,8 @@ import logger from '../../global/utils/logger';
 import {ircMessage} from '../@types/irc.d';
 import {experience} from '../../global/utils/experience';
 import {echo} from '../commands/echo';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 // const {moderate} = require('../archive/i.moderate.ts');
 // const { thoughtPolice } = require('../utils/i.thoughtPolice');

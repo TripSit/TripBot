@@ -1,7 +1,8 @@
 'use strict';
 
-const { Telegraf } = require('telegraf');
-const PREFIX = require('path').parse(__filename).name;
+const {Telegraf} = require('telegraf');
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 const commands = require('./commands/t.index');
 const logger = require('../global/utils/logger');
 

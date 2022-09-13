@@ -9,7 +9,8 @@ const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
 const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
 
-const PREFIX = require('path').parse(__filename).name; // eslint-disable-line
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name; // eslint-disable-line
 
 const { CHANNEL_MODERATORS } = require('../../../../env');
 

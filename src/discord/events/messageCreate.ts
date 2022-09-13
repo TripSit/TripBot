@@ -14,7 +14,8 @@ import {experience} from '../../global/utils/experience';
 import {announcements} from '../utils/announcements';
 import {modmailInitialResponse} from '../commands/guild/modmail';
 import logger from '../../global/utils/logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 // const { WebhookClient } = require('discord.js');
 // const { karma } = require('../../global/utils/karma');

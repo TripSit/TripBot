@@ -4,7 +4,8 @@ import {
 import {SlashCommand} from '../../utils/commandDef';
 import {breathe} from '../../../global/commands/g.breathe';
 import logger from '../../../global/utils/logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()

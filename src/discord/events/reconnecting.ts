@@ -1,5 +1,6 @@
 import logger from '../../global/utils/logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 module.exports = {
   name: 'reconnecting',

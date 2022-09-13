@@ -6,7 +6,8 @@ const irc = require('matrix-org-irc');
 import ircConfig from './assets/config/irc_config.json';
 import {registerEvents} from './utils/registerEvents';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 /**
  *

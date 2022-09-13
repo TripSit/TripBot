@@ -11,7 +11,8 @@ import {UserCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
 import env from '../../../global/utils/env.config';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 let actor = {} as GuildMember;
 let target = {} as GuildMember;

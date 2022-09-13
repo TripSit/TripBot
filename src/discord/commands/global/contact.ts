@@ -5,7 +5,8 @@ import {
 import {SlashCommand} from '../../utils/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 export const contact: SlashCommand = {
   data: new SlashCommandBuilder()

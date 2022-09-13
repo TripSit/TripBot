@@ -25,7 +25,8 @@ import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
 

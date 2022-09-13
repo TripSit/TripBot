@@ -9,7 +9,8 @@ import env from './global/utils/env.config';
 
 import logger from './global/utils/logger';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 global.bootTime = new Date();
 // const { telegramConnect } = require('./telegram/telegramAPI');
 

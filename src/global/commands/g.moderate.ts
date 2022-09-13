@@ -21,7 +21,8 @@ import {embedTemplate} from '../../discord/utils/embedTemplate';
 import ms from 'ms';
 import env from '../utils/env.config';
 import logger from '../utils/logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 let generalChannels = [];
 let hrChannels = [] as string[];

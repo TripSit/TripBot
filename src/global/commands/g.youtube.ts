@@ -1,7 +1,8 @@
 import env from '../utils/env.config';
 import ytSearch from 'youtube-search';
 import logger from '../utils/logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 /**
  * Looks up youtube videos

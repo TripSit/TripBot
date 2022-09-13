@@ -7,7 +7,8 @@ import {
 import env from '../../global/utils/env.config';
 import logger from '../../global/utils/logger';
 
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 // https://discord.js.org/#/docs/discord.js/stable/typedef/ActivityType
 // https://discord.com/developers/docs/game-sdk/activities#data-models-activitytype-enum

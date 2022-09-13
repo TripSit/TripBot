@@ -7,7 +7,8 @@ import {SlashCommand} from '../../utils/commandDef';
 import {setBirthday} from '../../../global/commands/g.birthday';
 import logger from '../../../global/utils/logger';
 import {embedTemplate} from '../../utils/embedTemplate';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 export const birthday: SlashCommand = {
   data: new SlashCommandBuilder()

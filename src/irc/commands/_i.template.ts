@@ -1,7 +1,8 @@
 /* eslint-disable no-unused-vars */
 import env from '../../global/utils/env.config';
 import logger from '../../global/utils/logger';
-const PREFIX = require('path').parse(__filename).name;
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 /**
  *
