@@ -246,7 +246,7 @@ export async function experience(
               const vipRole = message.guild!.roles.cache.find((role:Role) => role.id === env.ROLE_VIP) as Role;
               if (vipRole) {
                 message.member!.roles.add(vipRole);
-                logger.debug(`[${PREFIX}] VIP role added`);
+                // logger.debug(`[${PREFIX}] VIP role added`);
               }
               // if (experienceData.introSent === 'impossible') {
               //   logger.debug(`[${PREFIX}] User has not been sent an intro yet`);

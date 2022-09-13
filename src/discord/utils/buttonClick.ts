@@ -97,20 +97,24 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
           .setColor(colorValue)
           .setThumbnail(member.user.displayAvatarURL())
           .setFooter(null)
-      // .setTitle(`Welcome to TripSit ${member.user.username}!`)
-      // .setTitle(`Welcome ${member.toString()} to TripSit ${member}!`)
           .setDescription(stripIndents`
               **Please welcome ${member.displayName} to the guild!**
               We're glad you're here and hope you enjoy your stay!
               Check out ${channelStart} set your color and icon
               Stay safe, be chill, have fun!`);
       if (global.db) {
-        const ref = db.ref(`${env.FIREBASE_DB_USERS}/${interaction.user.id}/discord/inviteInfo`);
-        await ref.once('value', (data:any) => {
-          if (data.val() !== null) {
-            embed.setFooter({text: data.val()});
-          }
-        });
+        try {
+          const ref = db.ref(`${env.FIREBASE_DB_USERS}/${interaction.user.id}/discord/inviteInfo`);
+          await ref.once('value', (data:any) => {
+            if (data.val() !== null) {
+              logger.debug(`[${PREFIX}] data.val(): ${data.val()}`);
+              embed.setFooter({text: data.val()});
+            }
+          });
+        } catch (e) {
+          logger.error(`[${PREFIX}] ${e}`);
+          logger.error(`[${PREFIX}] Error pulling: ${env.FIREBASE_DB_USERS}/${interaction.user.id}/discord/inviteInfo`);
+        }
       }
 
       const channelGeneral = member.client.channels.cache.get(env.CHANNEL_GENERAL.toString()) as TextChannel;

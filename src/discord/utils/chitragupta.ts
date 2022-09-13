@@ -46,10 +46,8 @@ export async function chitragupta(
       let points = 1;
       if (data.val() !== null) {
         points = data.val() + 1;
-        actorRef.update(points);
-      } else {
-        actorRef.set(points);
       }
+      actorRef.set(points);
     });
   }
 
@@ -59,10 +57,8 @@ export async function chitragupta(
       let points = 1;
       if (data.val() !== null) {
         points = data.val() + 1;
-        targetRef.update(points);
-      } else {
-        targetRef.set(points);
       }
+      targetRef.set(points);
     });
   }
 
