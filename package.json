@@ -4,10 +4,10 @@
   "description": "A bot for TripSit (and maybe the world)",
   "main": "start.ts",
   "scripts": {
-    "dev": "npm run patch && npm run nodemon",
+    "dev": "npm run lint && npm run patch && npm run nodemon",
     "patch": "npm version patch -git-tag-version false",
     "nodemon": "nodemon --config ./nodemon.json",
-    "start": "npm run lint && npm run deploy && npm run prod",
+    "start": "npm run deploy && npm run prod",
     "lint": "eslint --ext ts .",
     "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
     "prod": "ts-node --transpile-only src/start.ts"
