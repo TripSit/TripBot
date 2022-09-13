@@ -32,8 +32,6 @@ async function start() {
     // }
   }
 
-  ircConnect();
-
   if (env.DISCORD_CLIENT_TOKEN) {
     discordConnect();
   }
