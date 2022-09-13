@@ -42,7 +42,22 @@ export const discordTemplate: SlashCommand = {
     const title = interaction.options.getString('title');
 
     imdbClient.get({name: `${title}`}).then(async (result) => {
-      console.log(result);
+      const embed = embedTemplate()
+          .setTitle(`${result.title} (${result.year})`)
+          .setImage(result.poster)
+          .setURL(result.imdburl)
+          .addFields(
+              {name: 'Title', value: `${result.title}`},
+              {name: 'Year', value: `${result.year}`},
+              {name: 'Director', value: `${result.director}`},
+              {name: 'Actors', value: `${result.actors}`},
+              {name: 'Plot', value: `||${result.plot}||`},
+              {name: 'Rating', value: `${result.rating} :star: `},
+
+          );
+      interaction.reply({embeds: [embed], ephemeral: false});
+    }).catch((err) => {
+      logger.debug(`[${PREFIX}] ${err}`);
     });
 
 
