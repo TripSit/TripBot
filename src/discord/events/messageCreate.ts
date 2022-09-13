@@ -17,9 +17,6 @@ import logger from '../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-// const { WebhookClient } = require('discord.js');
-// const { karma } = require('../../global/utils/karma');
-
 module.exports = {
   name: 'messageCreate',
   async execute(message: Message) {
@@ -114,7 +111,6 @@ module.exports = {
     }
 
     announcements(message);
-    // karma(message);
     thoughtPolice(message);
     experience(message);
   },

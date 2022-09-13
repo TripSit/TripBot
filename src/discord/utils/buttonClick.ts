@@ -24,9 +24,6 @@ import {
   modmailIssue,
 } from '../commands/guild/modmail';
 
-// const tripsat = require('./tripsat');
-// const modmail = require('../commands/guild/modmail');
-
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 

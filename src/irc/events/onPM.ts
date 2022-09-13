@@ -3,7 +3,7 @@ import {ircMessage} from '../@types/irc.d';
 import logger from '../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
-// const {linkAccounts} = require('../archive/link-accounts');
+// import {linkAccounts} from '../archive/link-accounts';
 
 /**
  *

@@ -5,6 +5,8 @@ import {validateEnv} from './global/utils/env.validate';
 import {runTimer} from './discord/utils/timerAPI';
 import {firebaseConnect} from './global/utils/firebaseAPI';
 import {webserverConnect} from './webserver/webserverAPI';
+// import { telegramConnect } from './telegram/telegramAPI';
+
 import env from './global/utils/env.config';
 
 import logger from './global/utils/logger';
@@ -12,7 +14,6 @@ import logger from './global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 global.bootTime = new Date();
-// const { telegramConnect } = require('./telegram/telegramAPI');
 
 /**
 * Starts everything in the bot.
@@ -30,6 +31,8 @@ async function start() {
     //   await telegramConnect();
     // }
   }
+
+  ircConnect();
 
   if (env.DISCORD_CLIENT_TOKEN) {
     discordConnect();

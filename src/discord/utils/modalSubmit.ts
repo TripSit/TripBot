@@ -23,7 +23,6 @@ import {mTimeout} from '../commands/guild/m_timeout';
 import {mWarn} from '../commands/guild/m_warn';
 import {report} from '../commands/guild/m_report';
 import {issue} from '../commands/guild/issue';
-// const ircButton = require('../commands/guild/prompt');
 
 /**
  * This runs whenever a modal is submitted

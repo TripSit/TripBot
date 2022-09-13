@@ -1,8 +1,6 @@
 import env from '../global/utils/env.config';
 import logger from '../global/utils/logger';
-// import irc from 'matrix-org-irc';
-// import irc from 'matrix-org-irc';
-const irc = require('matrix-org-irc');
+import * as irc from 'matrix-org-irc';
 import ircConfig from './assets/config/irc_config.json';
 import {registerEvents} from './utils/registerEvents';
 

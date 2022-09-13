@@ -8,7 +8,6 @@ import logger from '../../global/utils/logger';
 
 import {startStatusLoop} from '../utils/statusLoop';
 
-// const { ReactionRole } = require('discordjs-reaction-role');
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 

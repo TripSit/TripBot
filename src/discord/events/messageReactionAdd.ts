@@ -7,7 +7,6 @@ import logger from '../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 import {chitragupta} from '../utils/chitragupta';
-// const { communityMod } = require('../utils/community-mod');
 import {handleReactionRoles} from '../utils/handleReactionRoles';
 import {sparklePoints} from '../utils/sparklePoints';
 import {bestOf} from '../utils/bestOfTripsit';

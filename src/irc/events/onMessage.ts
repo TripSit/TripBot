@@ -6,9 +6,6 @@ import {echo} from '../commands/echo';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-// const {moderate} = require('../archive/i.moderate.ts');
-// const { thoughtPolice } = require('../utils/i.thoughtPolice');
-
 // const modCommands = [
 //   'w',
 //   'warn',
