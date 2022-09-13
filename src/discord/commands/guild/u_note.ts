@@ -9,7 +9,7 @@ import {
   ApplicationCommandType,
   TextInputStyle,
 } from 'discord-api-types/v10';
-import {UserCommand} from '../../utils/commandDef';
+import {UserCommand} from '../../@types/commandDef';
 import logger from '../../../global/utils/logger';
 import {moderate} from '../../../global/commands/g.moderate';
 import * as path from 'path';

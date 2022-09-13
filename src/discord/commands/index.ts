@@ -2,15 +2,15 @@ import {Client} from 'discord.js';
 import {Collection} from 'discord.js';
 import fs from 'fs/promises';
 import path from 'path';
-// import logger from '../../global/utils/logger';
-// const PREFIX = path.parse(__filename).name;
+import logger from '../../global/utils/logger';
+const PREFIX = path.parse(__filename).name;
 
 /**
  * @param {client} client The discord client
  * @return {Promise<Command[]>} The list of commands
  */
 export async function registerCommands(client: Client): Promise<void> {
-  // logger.debug(`[${PREFIX}] command start!`);
+  logger.debug(`[${PREFIX}] command start!`);
   /**
      *
      * @param {string} commandType The type of command either global or guild

@@ -2,6 +2,9 @@ import {
   MessageReaction,
   User,
 } from 'discord.js';
+import {
+  reactionEvent,
+} from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 import logger from '../../global/utils/logger';
 import * as path from 'path';
@@ -11,7 +14,7 @@ import {handleReactionRoles} from '../utils/handleReactionRoles';
 import {sparklePoints} from '../utils/sparklePoints';
 import {bestOf} from '../utils/bestOfTripsit';
 
-module.exports = {
+export const messageReactionAdd: reactionEvent = {
   name: 'messageReactionAdd',
   async execute(reaction: MessageReaction, user: User) {
     logger.debug(`[${PREFIX}] starting!`);

@@ -3,7 +3,7 @@ import {
   ChatInputCommandInteraction,
   GuildMember,
 } from 'discord.js';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 // import {embedTemplate} from '../../utils/embedTemplate';
 // import {stripIndents} from 'common-tags';
 // import env from '../../../global/utils/env.config';

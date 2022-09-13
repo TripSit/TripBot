@@ -12,7 +12,7 @@ import {
   ApplicationCommandType,
   TextInputStyle,
 } from 'discord-api-types/v10';
-import {MessageCommand} from '../../utils/commandDef';
+import {MessageCommand} from '../../@types/commandDef';
 import {stripIndents} from 'common-tags';
 import logger from '../../../global/utils/logger';
 import {moderate} from '../../../global/commands/g.moderate';

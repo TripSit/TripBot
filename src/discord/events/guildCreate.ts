@@ -1,10 +1,12 @@
 import {Guild} from 'discord.js';
+import {
+  guildEvent,
+} from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 import logger from '../../global/utils/logger';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = require('path').parse(__filename).name;
 
-module.exports = {
+export const guildCreate: guildEvent = {
   name: 'guildCreate',
 
   async execute(guild: Guild) {

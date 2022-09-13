@@ -6,10 +6,8 @@ const PREFIX = path.parse(__filename).name;
  *
  * @return {Promise<void>}
  */
-module.exports = {
-  async execute() {
-    global.ircClient.addListener('EXAMPLE', (channel:any, nick:any, message:any) => {
-      logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
-    });
-  },
+export async function execute():Promise<void> {
+  global.ircClient.addListener('EXAMPLE', (channel:any, nick:any, message:any) => {
+    logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
+  });
 };

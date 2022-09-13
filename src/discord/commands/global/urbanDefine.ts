@@ -1,7 +1,7 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import env from '../../../global/utils/env.config';
 import axios from 'axios';
@@ -9,7 +9,7 @@ import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const discordTemplate: SlashCommand = {
+export const durbandefine: SlashCommand = {
   data: new SlashCommandBuilder()
       .setName('urban_define')
       .setDescription('Define a word on Urban Dictionary')

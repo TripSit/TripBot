@@ -2,7 +2,7 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {getImdb} from '../../../global/commands/g.imdb';
 import logger from '../../../global/utils/logger';
@@ -10,7 +10,7 @@ import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const discordTemplate: SlashCommand = {
+export const imdb: SlashCommand = {
   data: new SlashCommandBuilder()
       .setName('imdb')
       .setDescription('Search imdb')

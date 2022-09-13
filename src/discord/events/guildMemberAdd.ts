@@ -7,6 +7,9 @@ import {
   UserResolvable,
   Collection,
 } from 'discord.js';
+import {
+  guildMemberEvent,
+} from '../@types/eventDef';
 import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
 import {embedTemplate} from '../utils/embedTemplate';
@@ -15,7 +18,7 @@ import {stripIndents} from 'common-tags';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-module.exports = {
+export const guildMemberAdd: guildMemberEvent = {
   name: 'guildMemberAdd',
   async execute(member: GuildMember, client: Client) {
     logger.debug(`[${PREFIX}] starting!`);

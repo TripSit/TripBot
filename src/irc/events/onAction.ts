@@ -6,10 +6,9 @@ const PREFIX = path.parse(__filename).name;
  *
  * @return {Promise<void>}
  */
-module.exports = {
-  async execute() {
-    global.ircClient.addListener('action', (/* from, to, text, message */) => {
-      logger.debug(`[${PREFIX}] starting!`);
+export async function execute():Promise<void> {
+  global.ircClient.addListener('action', (/* from, to, text, message */) => {
+    logger.debug(`[${PREFIX}] starting!`);
     // logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
     // {
     //   "prefix": "phusion!~phusion@tripsit/moderator/phusion",
@@ -24,6 +23,5 @@ module.exports = {
     //     "\u0001ACTION flexes\u0001
     //   ]
     // }
-    });
-  },
+  });
 };

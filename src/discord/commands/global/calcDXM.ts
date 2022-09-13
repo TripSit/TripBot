@@ -3,7 +3,7 @@ import {
   Colors,
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
@@ -23,7 +23,7 @@ type DxmDataType = {
   Fourth: {min: number, max: number};
 };
 
-export const discordTemplate: SlashCommand = {
+export const calxDXM: SlashCommand = {
   data: new SlashCommandBuilder()
       .setName('dxm_calc')
       .setDescription('Get DXM dosage information')

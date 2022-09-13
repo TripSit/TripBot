@@ -3,7 +3,7 @@
 const path = require('path');
 const logger = require('../../../global/utils/logger');
 const template = require('../../utils/embed-template');
-const { getGuildInfo, setGuildInfo } = require('../../../global/services/firebaseAPI');
+const {getGuildInfo, setGuildInfo} = require('../../../global/services/firebaseAPI');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -21,13 +21,17 @@ module.exports = {
       logger.debug(`[${PREFIX}] Word before ++: ${wordBeforePlus}`);
 
       // If the word is blank, ignore it
-      if (wordBeforePlus === null
-        || wordBeforePlus === undefined
-        || wordBeforePlus.length === 0
-      ) { return; }
+      if (wordBeforePlus === null ||
+        wordBeforePlus === undefined ||
+        wordBeforePlus.length === 0
+      ) {
+        return;
+      }
 
       // If the user is typing "C++", ignore it
-      if (wordBeforePlus === 'C') { return; }
+      if (wordBeforePlus === 'C') {
+        return;
+      }
 
       const [targetData, targetFbid] = message.client.guilds.resolve(DISCORD_GUILD_ID);
 
@@ -38,13 +42,13 @@ module.exports = {
         karmaValue = (targetData.karma[wordBeforePlus] || 0) + karmaValue;
         targetData.karma[wordBeforePlus] = karmaValue;
       } else {
-        targetData.karma = { [wordBeforePlus]: karmaValue };
+        targetData.karma = {[wordBeforePlus]: karmaValue};
       }
 
       setGuildInfo(targetFbid, targetData);
       const embed = template
-        .embedTemplate()
-        .setDescription(`'${wordBeforePlus}' karma increased to ${karmaValue}!`);
+          .embedTemplate()
+          .setDescription(`'${wordBeforePlus}' karma increased to ${karmaValue}!`);
       message.channel.send({
         embeds: [embed],
         ephemeral: false,
@@ -68,14 +72,14 @@ module.exports = {
         karmaValue = (targetData.karma[wordBeforePlus] || 0) - karmaValue;
         targetData.karma[wordBeforePlus] = karmaValue;
       } else {
-        targetData.karma = { [wordBeforePlus]: karmaValue };
+        targetData.karma = {[wordBeforePlus]: karmaValue};
       }
 
       setGuildInfo(targetFbid, targetData);
       const embed = template
-        .embedTemplate()
-        .setDescription(`'${wordBeforePlus}' karma decreased to ${karmaValue}!`);
-      message.channel.send({ embeds: [embed], ephemeral: false });
+          .embedTemplate()
+          .setDescription(`'${wordBeforePlus}' karma decreased to ${karmaValue}!`);
+      message.channel.send({embeds: [embed], ephemeral: false});
     }
   },
 };

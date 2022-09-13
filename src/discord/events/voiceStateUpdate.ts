@@ -6,9 +6,10 @@ import {
 // import env from '../../global/utils/env.config';
 import logger from '../../global/utils/logger';
 import * as path from 'path';
+import {voiceEvent} from '../@types/eventDef';
 const PREFIX = path.parse(__filename).name;
 
-module.exports = {
+export const voiceStateUpdate: voiceEvent = {
   name: 'voiceStateUpdate',
   async execute(Old: VoiceState, New: VoiceState) {
     logger.debug(`[${PREFIX}] starting!`);

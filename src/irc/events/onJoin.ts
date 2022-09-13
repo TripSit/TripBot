@@ -1,5 +1,5 @@
 import {watcher} from '../utils/uatu';
-import {ircMessage} from '../@types/irc.d';
+import {ircMessage} from '../@types/irc';
 // import logger from '../../global/utils/logger';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
@@ -8,12 +8,11 @@ import {ircMessage} from '../@types/irc.d';
  *
  * @return {Promise<void>}
  */
-module.exports = {
-  async execute() {
-    global.ircClient.addListener('join', (
-        channel:string,
-        nick:string,
-        message:ircMessage) => {
+export async function execute():Promise<void> {
+  global.ircClient.addListener('join', (
+      channel:string,
+      nick:string,
+      message:ircMessage) => {
     // {
     //   "prefix": "TSDev!~TSDev@tripsit/bridge/TS1",
     //   "nick": "TSDev",
@@ -26,7 +25,6 @@ module.exports = {
     //     "#sandbox-dev"
     //   ]
     // }
-      watcher(message);
-    });
-  },
+    watcher(message);
+  });
 };

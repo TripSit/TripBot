@@ -9,7 +9,7 @@ import {
   ChannelType,
   ButtonStyle,
 } from 'discord-api-types/v10';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import {paginationEmbed} from '../../utils/pagination';
@@ -31,7 +31,7 @@ const buttonList = [
 //   }
 // }
 
-export const discordTemplate: SlashCommand = {
+export const didose: SlashCommand = {
   data: new SlashCommandBuilder()
       .setName('idose')
       .setDescription('Your personal dosage information!')

@@ -2,7 +2,7 @@ import {
   SlashCommandBuilder,
   Colors,
 } from 'discord.js';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import logger from '../../../global/utils/logger';

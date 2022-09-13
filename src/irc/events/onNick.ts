@@ -1,5 +1,5 @@
 import {watcher} from '../utils/uatu';
-import {ircMessage} from '../@types/irc.d';
+import {ircMessage} from '../@types/irc';
 // import logger from '../../global/utils/logger';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
@@ -8,14 +8,13 @@ import {ircMessage} from '../@types/irc.d';
  *
  * @return {Promise<void>}
  */
-module.exports = {
-  async execute() {
-    global.ircClient.addListener('nick', (
-        oldnick:string,
-        newnick:string,
-        channels:string,
-        message:ircMessage,
-    ) => {
+export async function execute():Promise<void> {
+  global.ircClient.addListener('nick', (
+      oldnick:string,
+      newnick:string,
+      channels:string,
+      message:ircMessage,
+  ) => {
     // {
     //   "prefix": "Moony!~teknos@tripsit/founder/Teknos",
     //   "nick": "Moony",
@@ -28,7 +27,6 @@ module.exports = {
     //     "Moonpie"
     //   ]
     // }
-      watcher(message, newnick);
-    });
-  },
+    watcher(message, newnick);
+  });
 };

@@ -3,6 +3,7 @@ import {
   Collection,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
+import {clientEvent} from '../@types/eventDef';
 import {setTimeout} from 'timers/promises';
 import logger from '../../global/utils/logger';
 
@@ -30,10 +31,10 @@ async function getInvites(client: Client) {
   });
 }
 
-module.exports = {
+export const ready: clientEvent = {
   name: 'ready',
   once: true,
-  async execute(client: Client) {
+  async execute(client: Client):Promise<void> {
     await setTimeout(1000);
     startStatusLoop(client);
     Promise.all([getInvites(client)])

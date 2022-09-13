@@ -3,7 +3,7 @@ import {
   ChatInputCommandInteraction,
   Colors,
 } from 'discord.js';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {about} from '../../../global/commands/g.about';
 import logger from '../../../global/utils/logger';

@@ -4,7 +4,7 @@ import {
   Colors,
   GuildMember,
 } from 'discord.js';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {moderate} from '../../../global/commands/g.moderate';
 import logger from '../../../global/utils/logger';

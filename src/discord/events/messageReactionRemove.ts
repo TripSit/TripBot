@@ -2,6 +2,9 @@ import {
   MessageReaction,
   User,
 } from 'discord.js';
+import {
+  reactionEvent,
+} from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 import {handleReactionRoles} from '../utils/handleReactionRoles';
 import {chitragupta} from '../utils/chitragupta';
@@ -9,7 +12,7 @@ import logger from '../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-module.exports = {
+export const messageReactionRemove: reactionEvent = {
   name: 'messageReactionRemove',
   async execute(reaction: MessageReaction, user: User) {
     logger.debug(`[${PREFIX}] starting!`);

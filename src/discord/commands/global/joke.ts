@@ -1,7 +1,7 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import axios from 'axios';
 import env from '../../../global/utils/env.config';
@@ -9,7 +9,7 @@ import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const discordTemplate: SlashCommand = {
+export const djoke: SlashCommand = {
   data: new SlashCommandBuilder()
       .setName('joke')
       .setDescription('Random jokes'),

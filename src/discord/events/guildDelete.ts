@@ -1,9 +1,12 @@
 import {Guild} from 'discord.js';
+import {
+  guildEvent,
+} from '../@types/eventDef';
 import logger from '../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-module.exports = {
+export const guildDelete: guildEvent = {
   name: 'guildDelete',
 
   async execute(guild: Guild) {

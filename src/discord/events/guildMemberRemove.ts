@@ -3,13 +3,16 @@ import {
   Colors,
   TextChannel,
 } from 'discord.js';
+import {
+  guildMemberEvent,
+} from '../@types/eventDef';
 import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
 import {embedTemplate} from '../utils/embedTemplate';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-module.exports = {
+export const guildMemberRemove: guildMemberEvent = {
   name: 'guildMemberRemove',
   async execute(member: GuildMember) {
     logger.debug(`[${PREFIX}] starting!`);

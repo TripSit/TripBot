@@ -3,7 +3,7 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {setBirthday} from '../../../global/commands/g.birthday';
 import logger from '../../../global/utils/logger';
 import {embedTemplate} from '../../utils/embedTemplate';

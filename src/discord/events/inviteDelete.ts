@@ -1,12 +1,15 @@
 import {
   Invite,
 } from 'discord.js';
+import {
+  inviteEvent,
+} from '../@types/eventDef';
 import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-module.exports = {
+export const inviteDelete: inviteEvent = {
   name: 'inviteDelete',
 
   async execute(invite: Invite) {

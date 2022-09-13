@@ -7,7 +7,7 @@ import {
 import {
   ApplicationCommandType,
 } from 'discord-api-types/v10';
-import {UserCommand} from '../../utils/commandDef';
+import {UserCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
 import env from '../../../global/utils/env.config';

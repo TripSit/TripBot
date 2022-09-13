@@ -1,10 +1,10 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {recovery} from '../../../global/commands/g.recovery';
 
-export const discordTemplate: SlashCommand = {
+export const drecovery: SlashCommand = {
   data: new SlashCommandBuilder()
       .setName('recovery')
       .setDescription('Information that may be helpful in a serious situation.'),

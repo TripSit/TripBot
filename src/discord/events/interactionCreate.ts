@@ -5,6 +5,9 @@ import {
 import {
   InteractionType,
 } from 'discord-api-types/v10';
+import {
+  interactionEvent,
+} from '../@types/eventDef';
 import {commandRun} from '../utils/commandRun';
 import logger from '../../global/utils/logger';
 import {buttonClick} from '../utils/buttonClick';
@@ -14,7 +17,7 @@ import {autocomplete} from '../utils/autocomplete';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-module.exports = {
+export const interactionCreate: interactionEvent = {
   name: 'interactionCreate',
   async execute(interaction: Interaction, client: Client) {
     // logger.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}`);

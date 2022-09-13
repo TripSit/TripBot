@@ -2,7 +2,7 @@ import {
   SlashCommandBuilder,
   Colors,
 } from 'discord.js';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
@@ -51,7 +51,7 @@ import comboDefs from '../../../global/assets/data/combo_definitions.json';
 //   },
 // }[];
 
-export const discordTemplate: SlashCommand = {
+export const combo: SlashCommand = {
   data: new SlashCommandBuilder()
       .setName('combo')
       .setDescription('Check combo information')

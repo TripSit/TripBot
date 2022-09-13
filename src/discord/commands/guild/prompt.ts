@@ -20,7 +20,7 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import env from '../../../global/utils/env.config';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';

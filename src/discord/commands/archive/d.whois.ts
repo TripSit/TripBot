@@ -2,7 +2,7 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {whoisIRC} from '../../../global/commands/g.whois';
 import logger from '../../../global/utils/logger';

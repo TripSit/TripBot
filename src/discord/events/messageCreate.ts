@@ -6,6 +6,9 @@ import {
 import {
   ChannelType,
 } from 'discord-api-types/v10';
+import {
+  messageEvent,
+} from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 import {thoughtPolice} from '../utils/d.thoughtPolice';
 import {stripIndents} from 'common-tags';
@@ -17,9 +20,9 @@ import logger from '../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-module.exports = {
+export const messageCreate: messageEvent = {
   name: 'messageCreate',
-  async execute(message: Message) {
+  async execute(message: Message):Promise<void> {
     // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
     // Only run on Tripsit
     if (message.guild) {
@@ -63,7 +66,8 @@ module.exports = {
     if (message.channel.type === ChannelType.DM) {
       // Dont run if the user mentions @everyone or @here.
       if (message.content.includes('@everyone') || message.content.includes('@here')) {
-        return message.author.send('You\'re not allowed to use those mentions.');
+        message.author.send('You\'re not allowed to use those mentions.');
+        return;
       }
 
       // Get the ticket info
@@ -82,7 +86,8 @@ module.exports = {
       logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
       if (ticketData === 'blocked') {
-        return message.author.send('You are blocked!');
+        message.author.send('You are blocked!');
+        return;
       }
 
       const guild = await message.client.guilds.fetch(env.DISCORD_GUILD_ID);
@@ -103,7 +108,8 @@ module.exports = {
         const thread = await channel.threads.fetch(ticketData.issueThread) as ThreadChannel;
         // logger.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
         if (thread) {
-          return thread.send(message.cleanContent);
+          thread.send(message.cleanContent);
+          return;
         }
       }
 

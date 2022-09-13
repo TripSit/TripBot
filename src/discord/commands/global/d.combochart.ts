@@ -1,10 +1,10 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {combochart} from '../../../global/commands/g.combochart';
 
-export const discordTemplate: SlashCommand = {
+export const dcombochart: SlashCommand = {
   data: new SlashCommandBuilder()
       .setName('combochart')
       .setDescription('Display TripSit\'s Combo Chart'),

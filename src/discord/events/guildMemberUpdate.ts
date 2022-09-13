@@ -3,6 +3,9 @@ import {
   TextChannel,
   Message,
 } from 'discord.js';
+import {
+  guildMemberUpdateEvent,
+} from '../@types/eventDef';
 import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
 import * as path from 'path';
@@ -43,9 +46,8 @@ const mindsetRoles = [
 //   "displayAvatarURL": "https://cdn.discordapp.com/avatars/177537158419054592/6be89e31c477b7809a4b3351a060da61.webp"
 // }
 
-module.exports = {
+export const guildMemberUpdate: guildMemberUpdateEvent = {
   name: 'guildMemberUpdate',
-
   async execute(oldMember: GuildMember, newMember: GuildMember) {
     logger.debug(`[${PREFIX}] starting!`);
     // logger.debug(`[${PREFIX}] guildMemberUpdate`);

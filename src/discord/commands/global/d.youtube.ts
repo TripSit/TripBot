@@ -2,14 +2,14 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {youtubeSearch} from '../../../global/commands/archive/g.openyoutube';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const discordTemplate: SlashCommand = {
+export const dyoutube: SlashCommand = {
   data: new SlashCommandBuilder()
       .setName('youtube')
       .setDescription('Search YouTube')

@@ -3,7 +3,7 @@ import {
   ChatInputCommandInteraction,
 } from 'discord.js';
 import {stripIndents} from 'common-tags';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
@@ -92,7 +92,7 @@ const bridgeMap = {
   [env.CHANNEL_DELERIANTS]: null,
 };
 
-export const discordTemplate: SlashCommand = {
+export const dinvite: SlashCommand = {
   data: new SlashCommandBuilder()
       .setName('invite')
       .setDescription('Display a message to join a bridged channel on both sides')

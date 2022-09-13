@@ -2,7 +2,7 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {stripIndents} from 'common-tags';
 import {bridgeWording} from '../../../global/commands/g.bridge';
 // import logger from '../../../global/utils/logger';

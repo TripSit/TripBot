@@ -1,7 +1,7 @@
 import {
   REST,
 } from 'discord.js';
-import {SlashCommand} from './commandDef';
+import {SlashCommand} from '../@types/commandDef';
 import {
   Routes,
 } from 'discord-api-types/v10';

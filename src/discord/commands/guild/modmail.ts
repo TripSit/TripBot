@@ -19,7 +19,7 @@ import {
   ButtonStyle,
   TextInputStyle,
 } from 'discord-api-types/v10';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import env from '../../../global/utils/env.config';

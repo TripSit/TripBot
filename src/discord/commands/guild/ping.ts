@@ -6,7 +6,7 @@ import {
 import {
   ButtonStyle,
 } from 'discord-api-types/v10';
-import {SlashCommand} from '../../utils/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import logger from '../../../global/utils/logger';
 import {paginationEmbed} from '../../utils/pagination';
 
