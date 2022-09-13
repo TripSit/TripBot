@@ -52,15 +52,16 @@ export const drug: SlashCommand = {
     if (drugData.summary) {
       summary = `${drugData.summary}\n\n`;
     }
-    let aliases = '';
-    if (drugData.aliases) {
-      aliases = `Aliases: ${drugData.aliases.join(', ')}\n\n`;
-    }
 
     embed.setColor(Colors.Purple);
     embed.setTitle(`🌐 ${drugData.name} Information`);
     embed.setURL(`https://wiki.tripsit.me/wiki/${substance}`);
-    embed.setDescription(summary + aliases);
+    embed.setDescription(summary);
+
+    if (drugData.aliases) {
+      const aliases = `Aliases: ${drugData.aliases.join(', ')}\n\n`;
+      embed.addFields({name: 'Aliases', value: aliases, inline: false});
+    }
 
     if (drugData.interactions) {
       const dangerInt = drugData.interactions.filter((i:any) => i.status === 'Dangerous');
