@@ -13,6 +13,8 @@ export default {
   YOUTUBE_TOKEN: process.env.YOUTUBE_TOKEN,
   IMGUR_ID: process.env.IMGUR_ID,
   RAPID_TOKEN: process.env.RAPID_TOKEN,
+  IMDB_TOKEN: process.env.IMDB_TOKEN,
+
   FIREBASE_DB_URL: process.env.FIREBASE_DB_URL,
   FIREBASE_PRIVATE_KEY_ID: process.env.FIREBASE_PRIVATE_KEY_ID,
   FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY,

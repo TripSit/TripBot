@@ -177,13 +177,22 @@ export async function runTimer() {
                     logger.debug(`[${PREFIX}] metaThread: ${JSON.stringify(metaThread, null, 4)}`);
 
                     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-                    const helpChannel = await tripsitGuild.channels.fetch(helpThread);
-                    if (helpChannel) {
-                      helpChannel.delete();
+                    try {
+                      const helpChannel = await tripsitGuild.channels.fetch(helpThread);
+                      if (helpChannel) {
+                        helpChannel.delete();
+                      }
+                    } catch (err) {
+                      logger.debug(`[${PREFIX}] Help thread already deleted`);
                     }
-                    const metaChannel = await tripsitGuild.channels.fetch(metaThread);
-                    if (metaChannel) {
-                      metaChannel.delete();
+
+                    try {
+                      const metaChannel = await tripsitGuild.channels.fetch(metaThread);
+                      if (metaChannel) {
+                        metaChannel.delete();
+                      }
+                    } catch (err) {
+                      logger.debug(`[${PREFIX}] Meta thread already deleted`);
                     }
                     await global.db.ref(`${env.FIREBASE_DB_TIMERS}/${userId}/${timevalue}`).remove();
                   }

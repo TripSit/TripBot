@@ -44,10 +44,10 @@ export const help: SlashCommand = {
      * @param {string} commandName
      * @return {string}
      */
-    function getDesc(commandName:string) {
+    function getDesc(commandName:string):string {
       logger.debug(`[${PREFIX}] getDesc: ${commandName}`);
       const desc = globalCommands?.filter((command) => command.name === commandName).at(0)?.description ??
-      guildCommands?.filter((command) => command.name === commandName).at(0)?.description;
+      guildCommands?.filter((command) => command.name === commandName).at(0)?.description!;
       logger.debug(`[${PREFIX}] getDesc: ${desc}`);
       return desc;
     }

@@ -545,8 +545,8 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
     `)
       .setAuthor({
         name: 'React to this to show your mindset!',
-        iconURL: null,
-        url: null,
+        iconURL: undefined,
+        url: undefined,
       })
       .setFooter({text: 'These roles reset after 8 hours to accurately show your mindset!'})
       .setColor(Colors.Purple);
@@ -630,7 +630,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
   const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${interaction.guild!.id}/reactionRoles/${interaction.channel!.id}`);
 
   const colorEmbed = embedTemplate()
-      .setAuthor({name: 'React to this message to set the color of your nickname!', iconURL: null, url: null})
+      .setAuthor({name: 'React to this message to set the color of your nickname!', iconURL: undefined, url: undefined})
       .setFooter(null)
       .setColor(Colors.Blue);
 

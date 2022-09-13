@@ -8,6 +8,7 @@ declare global {
         GITHUB_TOKEN: string;
         IMGUR_ID: string;
         RAPID_TOKEN: string;
+        IMDB_TOKEN: string;
         PORT?: number;
         TS_ICON_URL?: string;
         FLAME_ICON_URL?: string;
