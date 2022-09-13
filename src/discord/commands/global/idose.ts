@@ -90,7 +90,7 @@ export const didose: SlashCommand = {
       if (command === 'get') {
         // let doseData = {} as doseEntry[];
 
-        await ref.once('value', (data:any) => {
+        await ref.once('value', (data) => {
           if (data.val() !== null) {
             // doseData = data.val();
             embed.setTitle('Your dosage history');

@@ -2,6 +2,7 @@
 /* eslint no-unused-vars: 0 */
 import * as firebase from 'firebase-admin';
 import {Client} from 'discord.js';
+import * as irc from 'matrix-org-irc';
 
 declare global {
   var db: firebase.database.Database;
@@ -11,7 +12,7 @@ declare global {
   var reactionRoles: { [key: string]: any };
   var bootTime: Date;
   var client: Client;
-  var ircClient: any;
+  var ircClient: irc.Client;
 }
 
 export {};

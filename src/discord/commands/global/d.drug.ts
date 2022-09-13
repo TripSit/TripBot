@@ -5,6 +5,8 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
+import {CbSubstance} from '../../../global/@types/combined.d';
+
 import logger from '../../../global/utils/logger';
 
 import drugDataAll from '../../../global/assets/data/drug_db_combined.json';
@@ -37,7 +39,7 @@ export const drug: SlashCommand = {
       return;
     }
 
-    const drugData = drugDataAll.find((drug:any) => drug.name === substance);
+    const drugData = (drugDataAll as CbSubstance[]).find((drug) => drug.name === substance);
     logger.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
 
     if (!drugData) {
@@ -65,8 +67,8 @@ export const drug: SlashCommand = {
     }
 
     if (drugData.interactions) {
-      const dangerInt = drugData.interactions.filter((i:any) => i.status === 'Dangerous');
-      const dangerNames = dangerInt.map((i:any) => i.name);
+      const dangerInt = drugData.interactions.filter((i) => i.status === 'Dangerous');
+      const dangerNames = dangerInt.map((i) => i.name);
       if (dangerNames.length > 0) {
         embed.addFields({name: '**💀 Dangerous 🛑 Interactions 💀**', value: dangerNames.join(', '), inline: false});
       }
@@ -190,7 +192,7 @@ export const drug: SlashCommand = {
             const roaInfo = (drugData.roas as roaType[]).find((r:roaType) => r.name === roaName)!;
             if (roaInfo.dosage) {
               let dosageString = '';
-              roaInfo.dosage.forEach((d:any) => {
+              roaInfo.dosage.forEach((d) => {
                 dosageString += `${d.name}: ${d.value}\n`;
               });
               embed.addFields({name: `💊 Dosage (${roaName})`, value: dosageString, inline: true});
@@ -247,14 +249,16 @@ export const drug: SlashCommand = {
         let durationColumns = 0;
         roaNames.forEach((roaName) => {
           if (durationColumns < 3) {
-            const roaInfo = (drugData.roas as any[]).find((r:any) => r.name === roaName);
-            if (roaInfo.duration) {
-              let durationString = '';
-              roaInfo.duration.forEach((d:any) => {
-                durationString += `${d.name}: ${d.value}\n`;
-              });
-              embed.addFields({name: `⏳ Duration (${roaName})`, value: durationString, inline: true});
-              durationColumns++;
+            const roaInfo = drugData.roas.find((r) => r.name === roaName);
+            if (roaInfo) {
+              if (roaInfo.duration) {
+                let durationString = '';
+                roaInfo.duration.forEach((d) => {
+                  durationString += `${d.name}: ${d.value}\n`;
+                });
+                embed.addFields({name: `⏳ Duration (${roaName})`, value: durationString, inline: true});
+                durationColumns++;
+              }
             }
           }
         });

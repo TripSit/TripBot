@@ -7,6 +7,7 @@ import {
   Colors,
   GuildMember,
 } from 'discord.js';
+import {userDbEntry} from '../../../global/@types/database';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import env from '../../../global/utils/env.config';
@@ -95,8 +96,8 @@ export const profile: SlashCommand = {
 
     if (global.db) {
       const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}`);
-      await ref.once('value', (data:any) => {
-        let targetData:any = {};
+      await ref.once('value', (data) => {
+        let targetData = {} as userDbEntry;
         if (data.val() !== null) {
           targetData = data.val();
         }

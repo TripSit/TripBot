@@ -32,7 +32,7 @@ async function start() {
     // }
   }
 
-  ircConnect();
+  // ircConnect();
 
   if (env.DISCORD_CLIENT_TOKEN) {
     discordConnect();

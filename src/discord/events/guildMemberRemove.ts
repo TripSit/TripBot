@@ -24,7 +24,7 @@ export const guildMemberRemove: guildMemberEvent = {
       let joinedTimestamp = member.joinedTimestamp;
       if (global.db) {
         const ref = db.ref(`${env.FIREBASE_DB_USERS}/${member.user.id}`);
-        await ref.once('value', (data:any) => {
+        await ref.once('value', (data) => {
           if (data.val() !== null) {
             if (data.val().discord) {
               joinedTimestamp = data.val().discord.joinedTimestamp;

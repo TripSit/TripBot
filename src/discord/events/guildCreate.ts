@@ -15,7 +15,7 @@ export const guildCreate: guildEvent = {
 
     if (global.db) {
       const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${guild.id}`);
-      await ref.once('value', (data:any) => {
+      await ref.once('value', (data) => {
         if (data.val() !== null) {
           if (data.val().guild_banned) {
             logger.info(`[${PREFIX}] I'm banned from ${guild.name}, leaving!`);

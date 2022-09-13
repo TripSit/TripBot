@@ -195,7 +195,7 @@ export async function tripsitme(
   let targetLastHelpedMetaThreadId = '';
   if (global.db) {
     const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
-    await ref.once('value', (data:any) => {
+    await ref.once('value', (data) => {
       if (data.val() !== null) {
         Object.keys(data.val()).forEach((key) => {
           logger.debug(`[${PREFIX}] data.val()[key]: ${JSON.stringify(data.val()[key], null, 2)}`);

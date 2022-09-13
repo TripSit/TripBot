@@ -80,7 +80,7 @@ const botNicknames = [
  */
 export async function watcher(
     message:ircMessage,
-    newNick?:any,
+    newNick?:string,
 ): Promise<void> {
   // logger.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}`);
   if (botNicknames.includes(message.nick)) {
@@ -90,12 +90,14 @@ export async function watcher(
 
   logger.debug(`[${PREFIX}] (${message.nick}!${message.user}@${message.host}) ${message.command}ed}`);
 
-  let user = null;
+  let user = {} as WhoisResponse;
   if (message.command === 'KICK') {
     // logger.debug(`[${PREFIX}] Whoising ${message.args[1]}`);
-    await global.ircClient.whois(message.args[1], async (resp:WhoisResponse) => {
+    await global.ircClient.whois(message.args[1], async (resp) => {
       // logger.debug(`[${PREFIX}] Whoised ${JSON.stringify(resp, null, 2)}`);
-      user = resp;
+      if (resp) {
+        user = resp;
+      }
     });
     while (user === null) {
       await new Promise(resolve => setTimeout(resolve, 100)); // eslint-disable-line
@@ -112,7 +114,7 @@ export async function watcher(
   const generalRef = `${env.FIREBASE_DB_USERS}/${accountName}/experience/general/lastMessageDate`;
   logger.debug(`[${PREFIX}] generalRef: ${generalRef}`);
   if (global.db) {
-    await db.ref(generalRef).once('value', (data:any) => {
+    await db.ref(generalRef).once('value', (data) => {
       if (data.val() !== null) {
         lastTalkGeneral = data.val();
       }
@@ -124,7 +126,7 @@ export async function watcher(
   const tripsitRef = `${env.FIREBASE_DB_USERS}/${accountName}/experience/tripsitter/lastMessageDate`;
   logger.debug(`[${PREFIX}] tripsitRef: ${tripsitRef}`);
   if (global.db) {
-    await db.ref(tripsitRef).once('value', (data:any) => {
+    await db.ref(tripsitRef).once('value', (data) => {
       if (data.val() !== null) {
         lastTalkTripsit = data.val();
       }
@@ -174,7 +176,7 @@ export async function watcher(
       const lastMessageChanRef = db.ref(
           `${env.FIREBASE_DB_USERS}/${accountName}/experience/${lastTalkCategory}/lastMessageChannel`,
       );
-      await db.ref(lastMessageChanRef).once('value', (data:any) => {
+      await db.ref(lastMessageChanRef).once('value', (data) => {
         if (data.val() !== null) {
           lastMessageChan = data.val();
         }

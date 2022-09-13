@@ -16,6 +16,7 @@ import {embedTemplate} from '../utils/embedTemplate';
 import {experience} from '../../global/utils/experience';
 import {announcements} from '../utils/announcements';
 import {modmailInitialResponse} from '../commands/guild/modmail';
+import {ticketDbEntry} from '../../global/@types/database';
 import logger from '../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -71,11 +72,11 @@ export const messageCreate: messageEvent = {
       }
 
       // Get the ticket info
-      let ticketData:any = {};
+      let ticketData = {} as ticketDbEntry;
 
       if (global.db) {
         const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${message.author.id}/`);
-        await ref.once('value', (data:any) => {
+        await ref.once('value', (data) => {
           if (data.val() !== null) {
             ticketData = data.val();
           } else {
@@ -85,7 +86,7 @@ export const messageCreate: messageEvent = {
       }
       logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
-      if (ticketData === 'blocked') {
+      if (ticketData.issueStatus === 'blocked') {
         message.author.send('You are blocked!');
         return;
       }

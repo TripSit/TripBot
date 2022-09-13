@@ -340,7 +340,9 @@ export async function moderate(
       // eslint-disable-next-line no-restricted-syntax
       for (const ircChannel of allChannels) {
         try {
-          global.ircClient.send('KICK', ircChannel, targetNickname, reason);
+          if (reason !== undefined) {
+            global.ircClient.send('KICK', ircChannel, targetNickname, reason);
+          }
         } catch (err) {
           logger.error(`[${PREFIX}] ${err}`);
         }

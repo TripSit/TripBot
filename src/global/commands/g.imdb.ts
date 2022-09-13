@@ -9,6 +9,6 @@ import * as imdb from 'imdb-api';
  * @param {string} title
  * @return {any}
  */
-export async function getImdb(title:string):Promise<any> {
+export async function getImdb(title:string):Promise<imdb.Movie> {
   return await imdb.get({name: title}, {apiKey: env.IMDB_TOKEN, timeout: 30000});
 };

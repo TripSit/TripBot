@@ -33,10 +33,24 @@ export const durbandefine: SlashCommand = {
         },
     );
 
+    type urbanDefinition = {
+      definition: string,
+      permalink: string,
+      thumbs_up: number,
+      sound_urls: string[],
+      author: string,
+      word: string,
+      defid: number,
+      current_vote: string,
+      written_on: string,
+      example: string,
+      thumbs_down: number
+    }
+
     logger.debug(`[${PREFIX}] UrbanDefine found ${data.list.length} results`);
 
     // Sort data by the thumbs_up value
-    data.list.sort((a:any, b:any) => b.thumbs_up - a.thumbs_up);
+    (data.list as urbanDefinition[]).sort((a, b) => b.thumbs_up - a.thumbs_up);
     // logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
     const definition = `${data.list[0].definition.length > 1024 ?
       `${data.list[0].definition.slice(0, 1020)}...` :
@@ -51,36 +65,6 @@ export const durbandefine: SlashCommand = {
         .setDescription(`**Definition for *${term}* ** (+${upvotes}/-${downvotes})
         ${definition}
         Example: ${example}`);
-    // if (data.list[1]) {
-    //   embed.addFields(
-    //       {
-    //         name: `Definition B (+${data.list[1].thumbs_up}/-${data.list[1].thumbs_down})`,
-    //         value: `${data.list[1].definition.length > 1024 ?
-    //           `${data.list[1].definition.slice(0, 1020)}...` :
-    //           data.list[1].definition}`,
-    //         inline: false},
-    //       {
-    //         name: 'Example B',
-    //         value: data.list[1].example,
-    //         inline: false,
-    //       },
-    //   );
-    // }
-    // if (data.list[2]) {
-    //   embed.addFields(
-    //       {
-    //         name: `Definition C (+${data.list[2].thumbs_up}/-${data.list[2].thumbs_down})`,
-    //         value: `${data.list[2].definition.length > 1024 ?
-    //           `${data.list[2].definition.slice(0, 1020)}...` : data.list[2].definition}`,
-    //         inline: false,
-    //       },
-    //       {
-    //         name: 'Example C',
-    //         value: data.list[2].example,
-    //         inline: false,
-    //       },
-    //   );
-    // }
     if (interaction.replied) {
       interaction.followUp({embeds: [embed], ephemeral: false});
     } else {

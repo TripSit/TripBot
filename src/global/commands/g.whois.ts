@@ -2,6 +2,7 @@
 import {stripIndents} from 'common-tags';
 import logger from '../utils/logger';
 import * as path from 'path';
+import {WhoisResponse} from 'matrix-org-irc';
 const PREFIX = path.parse(__filename).name;
 
 /**
@@ -10,11 +11,13 @@ const PREFIX = path.parse(__filename).name;
  * @return {string} The whois
  */
 export async function whoisIRC(target:string):Promise<string> {
-  let data:any = {};
+  let data = {} as WhoisResponse;
 
   if (global.ircClient) {
-    await global.ircClient.whois(target, async (resp:any) => {
-      data = resp;
+    await global.ircClient.whois(target, async (resp) => {
+      if (resp) {
+        data = resp;
+      }
     });
   } else {
     logger.debug(`[${PREFIX}] Failed! IRC Client not running`);
@@ -34,6 +37,6 @@ export async function whoisIRC(target:string):Promise<string> {
 
   return stripIndents`
         **${data.nick}** (${data.user}@${data.host}) ${data.account ? `${data.accountinfo} ${data.account}` : ''}
-        Channels include: ${data.channels.join(', ')}
+        Channels include: ${data.channels ? data.channels.join(', ') : 'None'}
       `;
 };

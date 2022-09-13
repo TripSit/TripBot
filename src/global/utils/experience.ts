@@ -191,7 +191,7 @@ export async function experience(
   logger.debug(`[${PREFIX}] userRef: ${userRef}`);
   if (global.db) {
     const ref = db.ref(userRef);
-    await ref.once('value', (data:any) => {
+    await ref.once('value', (data) => {
       if (data.val() !== null) {
         lastMessageDate = new Date(data.val().lastMessageDate);
 

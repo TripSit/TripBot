@@ -11,6 +11,7 @@ import {UserCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
 import env from '../../../global/utils/env.config';
+import {userDbEntry} from '../../../global/@types/database';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -32,8 +33,8 @@ export const info: UserCommand = {
 
     if (global.db) {
       const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}`);
-      await ref.once('value', (data:any) => {
-        let targetData:any = {};
+      await ref.once('value', (data) => {
+        let targetData = {} as userDbEntry;
         if (data.val() !== null) {
           targetData = data.val();
         }

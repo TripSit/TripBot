@@ -21,7 +21,7 @@ export async function sparklePoints(reaction:MessageReaction, user:User) {
   if ((reaction.message?.author?.bot && reactionEmoji.name === '💧') && !user.bot) {
     if (global.db) {
       const ref = db.ref(`${env.FIREBASE_DB_USERS}/${user.id}/discord/sparkle_points`);
-      await ref.once('value', (data:any) => {
+      await ref.once('value', (data) => {
         let points = 1;
         if (data.val() !== null) {
           points = data.val() + 1;

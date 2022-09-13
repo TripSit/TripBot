@@ -105,15 +105,24 @@ export async function commandRun(
 
   try {
     await command.execute(interaction);
-  } catch (error:any) {
-    logger.error(`[${PREFIX}] Client error ${JSON.stringify(error, null, 2)}`);
-    logger.error(`[${PREFIX}] error.name: ${error.name}`);
-    logger.error(`[${PREFIX}] error.message: ${error.message}`);
-    logger.error(`[${PREFIX}] error.stack: ${error.stack}`);
-    interaction.reply({
-      content: 'There was an error while executing this command!',
-      ephemeral: true,
-    });
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error(`[${PREFIX}] Client error ${JSON.stringify(error, null, 2)}`);
+      logger.error(`[${PREFIX}] error.name: ${error.name}`);
+      logger.error(`[${PREFIX}] error.message: ${error.message}`);
+      logger.error(`[${PREFIX}] error.stack: ${error.stack}`);
+      interaction.reply({
+        content: 'There was an error while executing this command!',
+        ephemeral: true,
+      });
+    } else {
+      logger.error(`[${PREFIX}] Error: ${error}`);
+      logger.error(error);
+      interaction.reply({
+        content: 'There was an unexpected error while executing this command!',
+        ephemeral: true,
+      });
+    }
   }
   logger.debug(`[${PREFIX}] finished!`);
 };

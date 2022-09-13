@@ -127,10 +127,10 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
     // logger.debug(`[${PREFIX}] results: ${JSON.stringify(results, null, 2)}`);
     if (results.length > 0) {
       const top25 = results.slice(0, 25);
-      interaction.respond(top25.map((choice:any) => ({name: choice.item.name, value: choice.item.name})));
+      interaction.respond(top25.map((choice) => ({name: choice.item.name, value: choice.item.name})));
     } else {
       const defaultBenzoNames = benzoNames.slice(0, 25);
-      interaction.respond(defaultBenzoNames.map((choice:any) => ({name: choice, value: choice})));
+      interaction.respond(defaultBenzoNames.map((choice) => ({name: choice, value: choice})));
     }
   } else if (interaction.commandName === 'time') {
     const options = {
@@ -147,7 +147,7 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
     // logger.debug(`[${PREFIX}] Autocomplete results: ${results}`);
     if (results.length > 0) {
       const top25 = results.slice(0, 25);
-      const listResults = top25.map((choice:any) => ({
+      const listResults = top25.map((choice) => ({
         name: choice.item.label,
         value: choice.item.label,
       }));
@@ -201,7 +201,7 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
     // logger.debug(`[${PREFIX}] Autocomplete results: ${results}`);
     if (results.length > 0) {
       const top25 = results.slice(0, 25);
-      const listResults = top25.map((choice:any) => ({
+      const listResults = top25.map((choice) => ({
         name: choice.item.abbr,
         value: choice.item.abbr,
       }));
@@ -210,7 +210,7 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
     } else {
       if (measure !== '') {
         const top25 = displayUnits.slice(0, 25);
-        const listResults = top25.map((choice:any) => ({
+        const listResults = top25.map((choice) => ({
           name: choice.abbr,
           value: choice.abbr,
         }));
@@ -242,7 +242,7 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
     let top25 = [];
     if (results.length > 0) {
       top25 = results.slice(0, 25);
-      interaction.respond(top25.map((choice:any) => (
+      interaction.respond(top25.map((choice) => (
         {name: choice.item.name, value: choice.item.name})));
     } else {
       const TOP_PSYCHS = ['Cannabis', 'MDMA', 'LSD', 'DMT', 'Mushrooms'];

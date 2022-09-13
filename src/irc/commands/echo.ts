@@ -1,3 +1,4 @@
+import {ircMessage} from '../@types/irc';
 import logger from '../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -7,7 +8,7 @@ const PREFIX = path.parse(__filename).name;
  * @param {string} message
  * @return {Promise<void>}
  */
-export async function echo(message:any): Promise<void> {
+export async function echo(message:ircMessage): Promise<void> {
   logger.debug(`[${PREFIX}] start!`);
   // Split out the command and the rest of the message
   const text = message.args[1].split(' ');

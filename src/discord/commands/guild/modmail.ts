@@ -24,6 +24,7 @@ import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
+import {ticketDbEntry} from '../../../global/@types/database';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -90,10 +91,10 @@ export const modmail: SlashCommand = {
     // logger.debug(`[${PREFIX}] member:`, member);
 
     // Get the ticket info
-    let ticketData:any = {};
+    let ticketData = {} as ticketDbEntry;
 
     const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member.user.id}/`);
-    await ref.once('value', (data:any) => {
+    await ref.once('value', (data) => {
       if (data.val() !== null) {
         ticketData = data.val();
       } else {
@@ -356,11 +357,11 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
   const actor = interaction.user;
 
   // Get the ticket info
-  let ticketData:any = {};
+  let ticketData = {} as ticketDbEntry;
 
   if (global.db) {
     const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member.user.id}/`);
-    await ref.once('value', (data:any) => {
+    await ref.once('value', (data) => {
       if (data.val() !== null) {
         ticketData = data.val();
       } else {

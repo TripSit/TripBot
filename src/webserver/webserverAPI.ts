@@ -120,11 +120,11 @@ export async function webserverConnect(): Promise<void> {
     // This will help us retrieve a token which we can use to get the user's info.
 
     fetch('https://discord.com/api/oauth2/token', {method: 'POST', body: data1}).then((response) =>
-      response.json()).then((data:any) => {
+      response.json()).then((data) => {
       // Make a request to the Discord API with the form data, convert the response to JSON,
       // then take it and run the following code.
       logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
-      axios.get('https://discord.com/api/users/@me', makeConfig(data.access_token)).then((response:any) => {
+      axios.get('https://discord.com/api/users/@me', makeConfig(data.access_token)).then((response) => {
         // Make a request yet again to the Discord API with the token from previously.
         // logger.debug(`[${PREFIX}] response: ${JSON.stringify(response)}`);
         res.status(200).send(response.data.username); // Send the username with a status code 200.

@@ -6,6 +6,9 @@ import {
 import {
   guildMemberUpdateEvent,
 } from '../@types/eventDef';
+import {
+  reactionRoleList,
+} from '../../global/@types/database';
 import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
 import * as path from 'path';
@@ -130,14 +133,7 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
             const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${newMember.guild.id}/reactionRoles/`);
             await ref.once('value', async (data) => {
               if (data.val() !== null) {
-                const allReactionRoles = data.val();
-                // type reactionRole = {
-                //   [key:string]: {
-                //     name: string;
-                //     reaction: string;
-                //     roleId: string;
-                //   }
-                // }
+                const allReactionRoles = data.val() as reactionRoleList;
                 // logger.debug(`[${PREFIX}] differenceId: ${differenceId}`);
                 Object.keys(allReactionRoles).forEach(async (channelId) => {
                   const channelMessages = allReactionRoles[channelId];
@@ -145,7 +141,7 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
                     // logger.debug(`[${PREFIX}] messageId: ${messageId}`);
                     const reactionRoles = allReactionRoles[channelId][messageId];
                     // logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles, null, 2)}`);
-                    reactionRoles.forEach(async (reactionRole:any) => {
+                    reactionRoles.forEach(async (reactionRole) => {
                       if (reactionRole.roleId === differenceId) {
                         logger.debug(`[${PREFIX}] reactionRole: ${reactionRole.name}`);
                         const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
