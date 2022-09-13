@@ -478,7 +478,7 @@ export async function tripsitme(
         // Return here so that we don't create the new thread below
         return;
       } catch (err) {
-        logger.info(`[${PREFIX}] The previous thread was likely deleted, starting fresh!:\n ${err}`);
+        logger.info(`[${PREFIX}] The previous thread was likely deleted, starting fresh!`);
       }
     }
   }
