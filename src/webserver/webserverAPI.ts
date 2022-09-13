@@ -120,7 +120,7 @@ export async function webserverConnect(): Promise<void> {
     // This will help us retrieve a token which we can use to get the user's info.
 
     fetch('https://discord.com/api/oauth2/token', {method: 'POST', body: data1}).then((response) =>
-      response.json()).then((data) => {
+      response.json()).then((data:any) => {
       // Make a request to the Discord API with the form data, convert the response to JSON,
       // then take it and run the following code.
       logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
