@@ -549,7 +549,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
         iconURL: undefined,
         url: undefined,
       })
-      .setFooter({text: 'These roles reset after 8 hours to accurately show your mindset!'})
+      // .setFooter({text: 'These roles reset after 8 hours to accurately show your mindset!'})
       .setColor(Colors.Purple);
   let reactionRoleInfo = {} as ReactionRoleCollection;
   type ReactionRoleCollection = {

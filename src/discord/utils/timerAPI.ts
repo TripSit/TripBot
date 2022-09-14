@@ -83,22 +83,22 @@ export async function runTimer() {
                   logger.debug(`[${PREFIX}] deleting ${entryRef}`);
                   await global.db.ref(entryRef).remove();
                 }
-                if (timerEntry.type === 'mindset') {
-                  const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
-                  const role = tripsitGuild.roles.cache.find((role:Role) => role.id === timerEntry.value) as Role;
-                  try {
-                    const member = await tripsitGuild.members.fetch(userId);
-                    if (member && role) {
-                      member.roles.remove(role);
-                    }
-                  } catch (err) {
-                    logger.error(`[${PREFIX}] Member left the server`);
-                  }
-                  const entryRef = `${env.FIREBASE_DB_TIMERS}/${userId}/${timevalue}`;
-                  logger.debug(`[${PREFIX}] deleting ${entryRef}`);
-                  await global.db.ref(entryRef).remove();
-                  logger.debug(`[${PREFIX}] I would remove a mindset!`);
-                }
+                // if (timerEntry.type === 'mindset') {
+                //   const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
+                //   const role = tripsitGuild.roles.cache.find((role:Role) => role.id === timerEntry.value) as Role;
+                //   try {
+                //     const member = await tripsitGuild.members.fetch(userId);
+                //     if (member && role) {
+                //       member.roles.remove(role);
+                //     }
+                //   } catch (err) {
+                //     logger.error(`[${PREFIX}] Member left the server`);
+                //   }
+                //   const entryRef = `${env.FIREBASE_DB_TIMERS}/${userId}/${timevalue}`;
+                //   logger.debug(`[${PREFIX}] deleting ${entryRef}`);
+                //   await global.db.ref(entryRef).remove();
+                //   logger.debug(`[${PREFIX}] I would remove a mindset!`);
+                // }
                 if (timerEntry.type === 'helpthread') {
                   const helpThread = (timerEntry.value as any).lastHelpedThreadId;
                   // logger.debug(`[${PREFIX}] helpThread: ${JSON.stringify(helpThread, null, 4)}`);
