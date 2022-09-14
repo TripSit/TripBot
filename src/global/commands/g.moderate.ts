@@ -600,7 +600,9 @@ export async function moderate(
   logger.debug(`[${PREFIX}] CHANNEL_MODERATORS: ${env.CHANNEL_MODERATORS}`);
   const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
   // We must send the mention outside of the embed, cuz mentions dont work in embeds
-  modChan.send(`Hey <@&${roleModerator.id}>!`);
+  if (command !== 'note') {
+    modChan.send(`Hey <@&${roleModerator.id}>!`);
+  }
   modChan.send({embeds: [targetEmbed]});
   logger.debug(`[${PREFIX}] sent a message to the moderators room`);
 
