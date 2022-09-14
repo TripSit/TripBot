@@ -2,8 +2,8 @@ import {
   MessageReaction,
   User,
 } from 'discord.js';
-import logger from '../../global/utils/logger';
-import env from '../../global/utils/env.config';
+import logger from '../../../global/utils/logger';
+import env from '../../../global/utils/env.config';
 
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;

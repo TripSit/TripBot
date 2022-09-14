@@ -1,6 +1,6 @@
 // Bad things happen if this is not at the start.
 import {discordConnect} from './discord/discordAPI';
-import {ircConnect} from './irc/ircAPI';
+// import {ircConnect} from './irc/ircAPI';
 import {validateEnv} from './global/utils/env.validate';
 import {runTimer} from './discord/utils/timerAPI';
 import {firebaseConnect} from './global/utils/firebaseAPI';
