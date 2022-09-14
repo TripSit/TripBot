@@ -19,7 +19,7 @@ export const voiceStateUpdate: voiceEvent = {
     if (New.channelId === env.CHANNEL_TEMPVOICE) {
       console.log('user joinded tempvoice');
       New.member?.guild.channels.create({
-        name: `⛺│${New.member.user.username}'s tent`,
+        name: `⛺│${New.member.displayName}'s tent`,
         type: ChannelType.GuildVoice,
         parent: env.CATEGORY_TEMPVOICE,
       }).then((result) => {
@@ -27,8 +27,6 @@ export const voiceStateUpdate: voiceEvent = {
         New.member?.voice.setChannel(result.id);
         logger.debug(`[${PREFIX}] Moved user to the newly created voice channel`);
       });
-    } else {
-      console.log(`user joined channel ${New.channelId}, tempvoice is ${env.CHANNEL_TEMPVOICE}`);
     }
 
     try {
