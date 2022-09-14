@@ -83,7 +83,7 @@ export const imdb: SlashCommand = {
             {name: 'Writer(s)', value: `${result.writer}`, inline: true},
         );
 
-    result.ratings.forEach((rating) => {
+    result.ratings.forEach((rating: { source: any; value: any; }) => {
       embed.addFields({name: rating.source, value: rating.value, inline: true});
     });
 
