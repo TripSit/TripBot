@@ -1,14 +1,14 @@
 import {
   GuildMember,
   TextChannel,
-  Message,
+  // Message,
 } from 'discord.js';
 import {
   guildMemberUpdateEvent,
 } from '../@types/eventDef';
-import {
-  reactionRoleList,
-} from '../../global/@types/database';
+// import {
+//   reactionRoleList,
+// } from '../../global/@types/database';
 import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
 import * as path from 'path';
@@ -111,67 +111,67 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
           const channel = newMember.guild.channels.cache.get(env.CHANNEL_MODLOG.toString()) as TextChannel;
           channel.send(`${newMember.displayName} ${action} ${roleName}`);
 
-          if (action === 'added') {
-            const mindsetRemovalTime = new Date();
-            // define one week in milliseconds
-            const fiveSec = 1000 * 5;
-            // const oneWeek = 1000 * 60 * 60 * 24 * 7;
-            mindsetRemovalTime.setTime(mindsetRemovalTime.getTime() + fiveSec);
-            logger.debug(`[${PREFIX}] reminderDatetime: ${mindsetRemovalTime}`);
+          // if (action === 'added') {
+          //   // const mindsetRemovalTime = new Date();
+          //   // // define one week in milliseconds
+          //   // const fiveSec = 1000 * 5;
+          //   // // const oneWeek = 1000 * 60 * 60 * 24 * 7;
+          //   // mindsetRemovalTime.setTime(mindsetRemovalTime.getTime() + fiveSec);
+          //   // logger.debug(`[${PREFIX}] reminderDatetime: ${mindsetRemovalTime}`);
 
-            if (global.db) {
-              const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${newMember.user.id}`);
-              ref.update({
-                [mindsetRemovalTime.valueOf()]: {
-                  type: 'mindset',
-                  value: differenceId,
-                },
-              });
-            }
-          }
-          if (action === 'removed' ) {
-            const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${newMember.guild.id}/reactionRoles/`);
-            await ref.once('value', async (data) => {
-              if (data.val() !== null) {
-                const allReactionRoles = data.val() as reactionRoleList;
-                // logger.debug(`[${PREFIX}] differenceId: ${differenceId}`);
-                Object.keys(allReactionRoles).forEach(async (channelId) => {
-                  const channelMessages = allReactionRoles[channelId];
-                  Object.keys(channelMessages).forEach(async (messageId) => {
-                    // logger.debug(`[${PREFIX}] messageId: ${messageId}`);
-                    const reactionRoles = allReactionRoles[channelId][messageId];
-                    // logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles, null, 2)}`);
-                    reactionRoles.forEach(async (reactionRole) => {
-                      if (reactionRole.roleId === differenceId) {
-                        logger.debug(`[${PREFIX}] reactionRole: ${reactionRole.name}`);
-                        const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-                        logger.debug(`[${PREFIX}] channelId: ${channelId}`);
-                        const channel = await tripsitGuild.channels.fetch(channelId) as TextChannel;
-                        logger.debug(`[${PREFIX}] messageId: ${messageId}`);
-                        const message = await channel.messages.fetch(messageId) as Message;
+          //   // if (global.db) {
+          //   //   const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${newMember.user.id}`);
+          //   //   ref.update({
+          //   //     [mindsetRemovalTime.valueOf()]: {
+          //   //       type: 'mindset',
+          //   //       value: differenceId,
+          //   //     },
+          //   //   });
+          //   // }
+          // }
+          // if (action === 'removed' ) {
+          //   const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${newMember.guild.id}/reactionRoles/`);
+          //   await ref.once('value', async (data) => {
+          //     if (data.val() !== null) {
+          //       const allReactionRoles = data.val() as reactionRoleList;
+          //       // logger.debug(`[${PREFIX}] differenceId: ${differenceId}`);
+          //       Object.keys(allReactionRoles).forEach(async (channelId) => {
+          //         const channelMessages = allReactionRoles[channelId];
+          //         Object.keys(channelMessages).forEach(async (messageId) => {
+          //           // logger.debug(`[${PREFIX}] messageId: ${messageId}`);
+          //           const reactionRoles = allReactionRoles[channelId][messageId];
+          //           // logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles, null, 2)}`);
+          //           reactionRoles.forEach(async (reactionRole) => {
+          //             if (reactionRole.roleId === differenceId) {
+          //               logger.debug(`[${PREFIX}] reactionRole: ${reactionRole.name}`);
+          //               const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+          //               logger.debug(`[${PREFIX}] channelId: ${channelId}`);
+          //               const channel = await tripsitGuild.channels.fetch(channelId) as TextChannel;
+          //               logger.debug(`[${PREFIX}] messageId: ${messageId}`);
+          //               const message = await channel.messages.fetch(messageId) as Message;
 
-                        for (let i = 0; i < message.reactions.cache.size; i++) {
-                          logger.debug(`[${PREFIX}] key: ${message.reactions.cache.keyAt(i)}`);
-                          const mreaction = message.reactions.resolve(
-                            message.reactions.cache.keyAt(i)!);
-                          mreaction?.users.remove(newMember.id);
-                          // if (message.reactions.cache.keyAt(i) !== reaction.emoji.name &&
-                          //     message.reactions.cache.keyAt(i) !== reaction.emoji.id) {
-                          //   const mreaction = message.reactions.resolve(
-                          //     message.reactions.cache.keyAt(i)!);
-                          //   mreaction?.users.remove(user);
-                          //   continue;
-                          // } else {
-                          //   logger.debug(`[${PREFIX}] skipping ${message.reactions.cache.keyAt(i)}`);
-                          // }
-                        }
-                      }
-                    });
-                  });
-                });
-              }
-            });
-          }
+          //               for (let i = 0; i < message.reactions.cache.size; i++) {
+          //                 logger.debug(`[${PREFIX}] key: ${message.reactions.cache.keyAt(i)}`);
+          //                 const mreaction = message.reactions.resolve(
+          //                   message.reactions.cache.keyAt(i)!);
+          //                 mreaction?.users.remove(newMember.id);
+          //                 // if (message.reactions.cache.keyAt(i) !== reaction.emoji.name &&
+          //                 //     message.reactions.cache.keyAt(i) !== reaction.emoji.id) {
+          //                 //   const mreaction = message.reactions.resolve(
+          //                 //     message.reactions.cache.keyAt(i)!);
+          //                 //   mreaction?.users.remove(user);
+          //                 //   continue;
+          //                 // } else {
+          //                 //   logger.debug(`[${PREFIX}] skipping ${message.reactions.cache.keyAt(i)}`);
+          //                 // }
+          //               }
+          //             }
+          //           });
+          //         });
+          //       });
+          //     }
+          //   });
+          // }
         }
       }
     }
