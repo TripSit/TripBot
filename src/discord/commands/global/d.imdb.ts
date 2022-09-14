@@ -6,11 +6,11 @@ import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {getImdb} from '../../../global/commands/g.imdb';
 import logger from '../../../global/utils/logger';
-
+import * as imdb from 'imdb-api';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const imdb: SlashCommand = {
+export const imdbSearch: SlashCommand = {
   data: new SlashCommandBuilder()
       .setName('imdb')
       .setDescription('Search imdb')
@@ -83,7 +83,7 @@ export const imdb: SlashCommand = {
             {name: 'Writer(s)', value: `${result.writer}`, inline: true},
         );
 
-    result.ratings.forEach((rating: { source: any; value: any; }) => {
+    result.ratings.forEach((rating:imdb.Rating) => {
       embed.addFields({name: rating.source, value: rating.value, inline: true});
     });
 
