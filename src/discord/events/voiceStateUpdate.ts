@@ -16,6 +16,12 @@ export const voiceStateUpdate: voiceEvent = {
     if (New.member?.user?.bot) return;
     if (Old.member?.user?.bot) return;
 
+    logger.debug(`[${PREFIX}] Tempvoice channel is is ${env.CHANNEL_TEMPVOICE}`);
+
+    logger.debug(`[${PREFIX}] ${New.member?.displayName} ${New.channelId ?
+      `joined channel ${New.channel?.name} (${New.channelId})` :
+      `left channel ${Old.channel?.name} (${Old.channelId})`} `);
+
     if (New.channelId === env.CHANNEL_TEMPVOICE) {
       console.log('user joinded tempvoice');
       New.member?.guild.channels.create({
@@ -23,9 +29,9 @@ export const voiceStateUpdate: voiceEvent = {
         type: ChannelType.GuildVoice,
         parent: env.CATEGORY_TEMPVOICE,
       }).then((result) => {
-        logger.debug(`[${PREFIX}] created a temporary voice channel`);
+        logger.debug(`[${PREFIX}] created a temporary voice channel for ${New.member?.displayName}`);
         New.member?.voice.setChannel(result.id);
-        logger.debug(`[${PREFIX}] Moved user to the newly created voice channel`);
+        logger.debug(`[${PREFIX}] Moved ${New.member?.displayName} to the newly created voice channel`);
       });
     }
 
