@@ -23,9 +23,9 @@ async function start() {
   if (!validateEnv()) return;
   webserverConnect();
   if (env.NODE_ENV === 'production') {
-    if (env.IRC_PASSWORD) {
-      ircConnect();
-    }
+    // if (env.IRC_PASSWORD) {
+    //   ircConnect();
+    // }
     // if (env.TELEGRAM_TOKEN) {
     //   // Telegram breaks on connect =/
     //   await telegramConnect();
