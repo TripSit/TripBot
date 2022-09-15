@@ -2,12 +2,31 @@
 
 export type userDbEntry = {
     name: string;
-    karma_given: number;
-    karma_received: number;
+    karma: {
+        karma_given: number;
+        karma_received: number;
+    }
     discord: discordEntry;
-    birthday: string;
+    birthday: {
+        month: string;
+        day: number;
+    };
     timezone: string;
+    experience: {
+        general?: expEntry
+        tripsitter?: expEntry
+        developer?: expEntry
+    }
 }
+
+export type expEntry = {
+    level: number,
+    levelExpPoints: number,
+    totalExpPoints: number,
+    lastMessageDate: number,
+    lastMessageChannel: string,
+}
+
 
 export type discordEntry = {
     id: string;

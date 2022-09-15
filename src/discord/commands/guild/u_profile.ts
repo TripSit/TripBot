@@ -38,14 +38,14 @@ export const info: UserCommand = {
         if (data.val() !== null) {
           targetData = data.val();
         }
-        const givenKarma = targetData.karma_given || 0;
-        const takenKarma = targetData.karma_received || 0;
+        const givenKarma = targetData.karma.karma_given || 0;
+        const takenKarma = targetData.karma.karma_received || 0;
         let targetBirthday:string | Date = 'Use /birthday to set a birthday!';
 
         if (targetData.discord) {
           if (targetData.birthday) {
             targetBirthday = targetData.birthday ?
-              new Date(`${targetData.birthday[0]} ${targetData.birthday[1]}, 2022`) :
+              new Date(`${targetData.birthday.month} ${targetData.birthday.day}, 2022`) :
               'Use /birthday to set a birthday!';
             logger.debug(`[${PREFIX}] targetBirthday: ${targetBirthday}`);
             logger.debug(`[${PREFIX}] typeof targetBirthday: ${typeof targetBirthday}`);

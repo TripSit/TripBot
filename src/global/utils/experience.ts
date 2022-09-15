@@ -4,6 +4,7 @@ import {
   TextChannel,
   User,
 } from 'discord.js';
+import {expEntry} from '../../global/@types/database';
 import env from './env.config';
 import logger from './logger';
 // import {stripIndents} from 'common-tags';
@@ -155,28 +156,13 @@ export async function experience(
 
   let lastMessageDate = new Date();
 
-  type Exp = {
-    /** The user's current level*/
-    level: number;
-    /** Number of exp points to next level*/
-    levelExpPoints: number;
-    /** Total number of exp points*/
-    totalExpPoints: number;
-    /** The date of the last message sent in this channel*/
-    lastMessageDate: number;
-    /** The ID of the channel that the last message was sent in*/
-    lastMessageChannel: string;
-    /** Toggle that the "welcome to VIP" has been sent*/
-    introSent: boolean;
-  };
-
   const experienceData = {
     level: 0,
     levelExpPoints: expPoints,
     totalExpPoints: expPoints,
     lastMessageDate: lastMessageDate.valueOf(),
     lastMessageChannel: '',
-  } as Exp;
+  } as expEntry;
 
   let userRef = '';
   if (message instanceof Message) {
@@ -201,7 +187,7 @@ export async function experience(
         const bufferTime = bufferSeconds * 1000;
         if (timeDiff > bufferTime) {
           // If the time diff is over one bufferTime, increase the experience points
-          let experienceData = data.val();
+          let experienceData = data.val() as expEntry;
           // logger.debug(`[${PREFIX}] experienceDataB: ${JSON.stringify(experienceData, null, 2)}`);
 
           let levelExpPoints = experienceData.levelExpPoints + expPoints;
