@@ -132,7 +132,7 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
       const defaultBenzoNames = benzoNames.slice(0, 25);
       interaction.respond(defaultBenzoNames.map((choice) => ({name: choice, value: choice})));
     }
-  } else if (interaction.commandName === 'time') {
+  } else if (interaction.commandName === 'timezone') {
     const options = {
       shouldSort: true,
       keys: [

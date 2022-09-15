@@ -5,6 +5,7 @@ import {
 import env from '../../global/utils/env.config';
 import logger from '../../global/utils/logger';
 import * as path from 'path';
+import {stripIndents} from 'common-tags';
 const PREFIX = path.parse(__filename).name;
 
 /**
@@ -38,28 +39,32 @@ export async function chitragupta(
     return;
   }
 
-  logger.debug(`[${PREFIX}] ${user.username} gave ${reaction.emoji.name} to \
+  logger.debug(stripIndents`[${PREFIX}] ${user.username} gave ${reaction.emoji.name} to \
   ${target.username} in ${reaction.message.guild}!`);
 
   if (global.db) {
-    const actorRef = db.ref(`${env.FIREBASE_DB_USERS}/${actor.id}/discord/karma_given`);
+    const actorRef = db.ref(`${env.FIREBASE_DB_USERS}/${actor.id}/karma/karma_given`);
     await actorRef.once('value', (data) => {
-      let points = 1;
+      let points = action;
       if (data.val() !== null) {
-        points = data.val() + 1;
+        logger.debug(`[${PREFIX}] data.val(): ${JSON.stringify(data.val(), null, 2)}`);
+        points = data.val() + action;
       }
       actorRef.set(points);
+      logger.debug(`[${PREFIX}] ${env.FIREBASE_DB_USERS}/${actor.id}/karma/karma_given set to ${points}`);
     });
   }
 
   if (global.db) {
-    const targetRef = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}/discord/karma_received`);
+    const targetRef = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}/karma/karma_received`);
     await targetRef.once('value', (data) => {
-      let points = 1;
+      let points = action;
       if (data.val() !== null) {
-        points = data.val() + 1;
+        logger.debug(`[${PREFIX}] data.val(): ${JSON.stringify(data.val(), null, 2)}`);
+        points = data.val() + action;
       }
       targetRef.set(points);
+      logger.debug(`[${PREFIX}] ${env.FIREBASE_DB_USERS}/${target.id}/karma/karma_received set to ${points}`);
     });
   }
 
