@@ -2,17 +2,17 @@
 
 export type userDbEntry = {
     name: string;
-    karma: {
+    karma?: {
         karma_given: number;
         karma_received: number;
     }
-    discord: discordEntry;
-    birthday: {
+    discord?: discordEntry;
+    birthday?: {
         month: string;
         day: number;
     };
-    timezone: string;
-    experience: {
+    timezone?: string;
+    experience?: {
         general?: expEntry
         tripsitter?: expEntry
         developer?: expEntry

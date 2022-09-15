@@ -38,8 +38,16 @@ export const info: UserCommand = {
         if (data.val() !== null) {
           targetData = data.val();
         }
-        const givenKarma = targetData.karma.karma_given || 0;
-        const takenKarma = targetData.karma.karma_received || 0;
+        let givenKarma = 0;
+        let takenKarma = 0;
+        if (targetData.karma) {
+          if (targetData.karma.karma_given) {
+            givenKarma = targetData.karma.karma_given || 0;
+          }
+          if (targetData.karma.karma_received) {
+            takenKarma = targetData.karma.karma_received || 0;
+          }
+        }
         let targetBirthday:string | Date = 'Use /birthday to set a birthday!';
 
         if (targetData.discord) {

@@ -156,8 +156,14 @@ export const profile: SlashCommand = {
           logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
           let x = 50;
           context.font = `25px sans-serif`;
-          context.fillText(`Karma Given: ${targetData.karma.karma_given || 0}`, 35, x+=30);
-          context.fillText(`Karma Received: ${targetData.karma.karma_received || 0}`, canvas.width/2, x);
+          if (targetData.karma) {
+            if (targetData.karma.karma_given) {
+              context.fillText(`Karma Given: ${targetData.karma.karma_given || 0}`, 35, x+=30);
+            }
+            if (targetData.karma.karma_received) {
+              context.fillText(`Karma Received: ${targetData.karma.karma_received || 0}`, canvas.width/2, x);
+            }
+          }
 
           context.fillText(`Timezone: ${targetData.timezone !== undefined ? targetData.timezone : 'Use /timezone!'}`, 35, x+=30);
           context.fillText(`Birthday: ${targetData.birthday !== undefined ? `${targetData.birthday.month} ${targetData.birthday.day}` : 'Use /birthday!'}`, canvas.width/2, x);
