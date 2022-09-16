@@ -25,13 +25,13 @@ export const dCalcKetamine: SlashCommand = {
           )),
   async execute(interaction) {
     const givenWeight = interaction.options.getInteger('weight')!;
-    logger.debug(`[${PREFIX}] weight:`, givenWeight);
+    // logger.debug(`[${PREFIX}] weight: ${givenWeight}`);
 
     const weightUnits = interaction.options.getString('units')! as 'kg' | 'lbs';
-    logger.debug(`[${PREFIX}] weightUnits:`, weightUnits);
+    // logger.debug(`[${PREFIX}] weightUnits: ${weightUnits}`);
 
     const calcWeight = weightUnits === 'kg' ? givenWeight * 2.20462 : givenWeight;
-    logger.debug(`[${PREFIX}] calcWeight:`, calcWeight);
+    // logger.debug(`[${PREFIX}] calcWeight: ${calcWeight}`);
 
     const embed = embedTemplate();
     if (weightUnits === 'kg' && givenWeight > 179) {
@@ -53,6 +53,8 @@ export const dCalcKetamine: SlashCommand = {
 
     const data = await calcKetamine(givenWeight, weightUnits);
 
+    logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+
     embed.addFields(
         {
           name: 'Insufflated Dosages',
@@ -66,17 +68,7 @@ export const dCalcKetamine: SlashCommand = {
         },
     );
 
-    if (!interaction.replied) {
-      interaction.reply({
-        embeds: [embed],
-        ephemeral: false,
-      });
-    } else {
-      interaction.followUp({
-        embeds: [embed],
-        ephemeral: false,
-      });
-    }
+    interaction.reply({embeds: [embed],ephemeral: false,});
     logger.debug(`[${PREFIX}] finished!`);
     return;
   },

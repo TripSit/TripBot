@@ -144,7 +144,7 @@ module.exports = {
         global.ircClient.say('#sandbox', `Sent: ${botPrefix}${command} ${target}`);
       }
     } catch (err) {
-      logger.error(`[${PREFIX}] Error:`, err);
+      logger.error(`[${PREFIX}] Error: ${err}`);
     }
 
     interaction.reply(`I ${command}ed ${target} ${channel ? `in ${channel}` : ''}${minutes ? ` for ${minutes} minutes` : ''} because '${reason}'`);

@@ -39,7 +39,7 @@ export const messageReactionRemove: reactionEvent = {
       // If the message this reaction belongs to was removed,
       // the fetching might result in an API error which should be handled
       await reaction.fetch().catch((ex) => {
-        logger.error(`[${PREFIX}] reaction3:`, ex);
+        logger.error(`[${PREFIX}] reaction3: ${JSON.stringify(ex, null, 4)}`);
       });
     }
 

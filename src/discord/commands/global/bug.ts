@@ -44,7 +44,7 @@ export const bug: SlashCommand = {
     const guildMessage = `${interaction.guild ? ` in ${interaction.guild.name}` : 'DM'}`;
 
     const bugReport = interaction.fields.getTextInputValue('bugReport');
-    // logger.debug(`[${PREFIX}] bugReport:`, bugReport);
+    // logger.debug(`[${PREFIX}] bugReport: ${bugReport}`);
 
     const botOwner = await interaction.client.users.fetch(env.DISCORD_OWNER_ID)!;
     const botOwnerEmbed = embedTemplate()

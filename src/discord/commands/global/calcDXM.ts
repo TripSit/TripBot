@@ -53,16 +53,16 @@ export const calxDXM: SlashCommand = {
   async execute(interaction) {
     // Calculate each plat min/max value
     const givenWeight = interaction.options.getInteger('calc_weight')!;
-    // logger.debug(`[${PREFIX}] calc_weight:`, givenWeight);
+    // logger.debug(`[${PREFIX}] calc_weight: ${givenWeight}`);
 
     const weightUnits = interaction.options.getString('units');
-    // logger.debug(`[${PREFIX}] weight_units:`, weightUnits);
+    // logger.debug(`[${PREFIX}] weight_units: ${weightUnits}`);
 
     let calcWeight = weightUnits === 'lbs' ? givenWeight * 0.453592 : givenWeight;
-    // logger.debug(`[${PREFIX}] calc_weight:`, calcWeight);
+    // logger.debug(`[${PREFIX}] calc_weight: ${calcWeight}`);
 
     const taking = interaction.options.getString('taking');
-    // logger.debug(`[${PREFIX}] taking:`, taking);
+    // logger.debug(`[${PREFIX}] taking:  ${taking}`);
 
     let roaValue = 0;
     let units = '';
@@ -89,11 +89,11 @@ export const calxDXM: SlashCommand = {
       units = '(30 mg tablets)';
     }
 
-    // logger.debug(`[${PREFIX}] roaValue:`, roaValue);
-    // logger.debug(`[${PREFIX}] units:`, units);
+    // logger.debug(`[${PREFIX}] roaValue:  ${roaValue}`);
+    // logger.debug(`[${PREFIX}] units: ${units}`);
 
     calcWeight /= roaValue;
-    // logger.debug(`[${PREFIX}] calcWeight:`, calcWeight);
+    // logger.debug(`[${PREFIX}] calcWeight: ${calcWeight}`);
 
     const embed = embedTemplate()
         .setColor(Colors.Purple)

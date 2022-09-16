@@ -137,15 +137,15 @@ module.exports = {
 
   async execute(interaction) {
     const actor = interaction.member;
-    logger.debug(`[${PREFIX}] Actor:`, actor);
+    logger.debug(`[${PREFIX}] Actor: ${actor.displayName}`);
     let command = interaction.options.getSubcommand();
-    logger.debug(`[${PREFIX}] Command:`, command);
+    logger.debug(`[${PREFIX}] Command: ${command}`);
     let target = interaction.options.getMember('target');
-    logger.debug(`[${PREFIX}] target:`, target);
+    logger.debug(`[${PREFIX}] target: ${target.displayName}`);
     const toggle = interaction.options.getString('toggle');
-    logger.debug(`[${PREFIX}] toggle:`, toggle);
+    logger.debug(`[${PREFIX}] toggle: ${toggle}`);
     const reason = interaction.options.getString('reason');
-    logger.debug(`[${PREFIX}] reason:`, reason);
+    logger.debug(`[${PREFIX}] reason: ${reason}`);
     // const duration = interaction.options.getString('duration');
     // logger.debug(`[${PREFIX}] duration: ${duration}`);
 
@@ -155,9 +155,9 @@ module.exports = {
       if (command === 'ban') {
         target = interaction.options.getUser('target');
         isMember = false;
-        logger.debug(`[${PREFIX}] target_user.id:`, target.id);
+        logger.debug(`[${PREFIX}] target_user.id: ${target.id}`);
         const bans = await interaction.guild.bans.fetch();
-        logger.debug(`[${PREFIX}] interaction.guild.bans.fetch():`, bans);
+        logger.debug(`[${PREFIX}] interaction.guild.bans.fetch(): ${bans}`);
         command = 'unban';
         // color = 'GREEN';
         await interaction.guild.bans.remove(target, reason);

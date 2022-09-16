@@ -41,7 +41,7 @@ module.exports = {
       },
     );
 
-    logger.debug(`[${PREFIX}] data:`, data);
+    logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
     // const embed = template.embedTemplate()
     //     .setTitle(`Definition for: ${word}`)
     //     .addFields(

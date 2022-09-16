@@ -44,7 +44,7 @@ export const dtriptoys: SlashCommand = {
   async execute(interaction) {
     const toyName = interaction.options.getString('toy') || '25';
     const toyId = parseInt(toyName, 10);
-    logger.debug(`[${PREFIX}] toy_name:`, toyName);
+    logger.debug(`[${PREFIX}] toy_name: ${toyName}`);
 
     const toys = {
       1: {name: 'Weavesilk', value: '[Generate art](http://weavesilk.com/)', inline: true},
