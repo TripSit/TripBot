@@ -101,20 +101,20 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
               We're glad you're here and hope you enjoy your stay!
               Check out ${channelStart} set your color and icon
               Stay safe, be chill, have fun!`);
-      if (global.db) {
-        try {
-          const ref = db.ref(`${env.FIREBASE_DB_USERS}/${interaction.user.id}/discord/inviteInfo`);
-          await ref.once('value', (data) => {
-            if (data.val() !== null) {
-              logger.debug(`[${PREFIX}] data.val(): ${data.val()}`);
-              embed.setFooter({text: data.val()});
-            }
-          });
-        } catch (e) {
-          logger.error(`[${PREFIX}] ${e}`);
-          logger.error(`[${PREFIX}] Error pulling: ${env.FIREBASE_DB_USERS}/${interaction.user.id}/discord/inviteInfo`);
-        }
-      }
+      // if (global.db) {
+      //   try {
+      //     const ref = db.ref(`${env.FIREBASE_DB_USERS}/${interaction.user.id}/discord/inviteInfo`);
+      //     await ref.once('value', (data) => {
+      //       if (data.val() !== null) {
+      //         logger.debug(`[${PREFIX}] data.val(): ${data.val()}`);
+      //         embed.setFooter({text: data.val()});
+      //       }
+      //     });
+      //   } catch (e) {
+      //     logger.error(`[${PREFIX}] ${e}`);
+      //     logger.error(`[${PREFIX}] Error pulling: ${env.FIREBASE_DB_USERS}/${interaction.user.id}/discord/inviteInfo`);
+      //   }
+      // }
 
       const channelGeneral = member.client.channels.cache.get(env.CHANNEL_GENERAL.toString()) as TextChannel;
       if (channelGeneral) {
