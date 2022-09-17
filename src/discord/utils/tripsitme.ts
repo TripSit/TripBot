@@ -74,7 +74,11 @@ const mindsetRoles = [
   env.ROLE_SOBER,
 ];
 
-const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
+const otherRoles = [
+  env.ROLE_VERIFIED,
+];
+
+const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles},${otherRoles}`;
 
 // Declare the static test nitice
 const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
