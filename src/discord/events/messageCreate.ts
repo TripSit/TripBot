@@ -117,7 +117,7 @@ export const messageCreate: messageEvent = {
       return modmailInitialResponse(message);
     }
 
-    // announcements(message);
+    announcements(message);
     // thoughtPolice(message);
     experience(message);
   },
