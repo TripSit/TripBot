@@ -82,7 +82,7 @@ export async function announcements(message:Message) {
   const channelOpenTripsit1 = await message.client.channels.fetch(env.CHANNEL_OPENTRIPSIT1)!;
   const channelOpenTripsit2 = await message.client.channels.fetch(env.CHANNEL_OPENTRIPSIT2)!;
   const channelSanctuary = await message.client.channels.fetch(env.CHANNEL_SANCTUARY)!;
-  const channelHrResources = await message.client.channels.fetch(env.CHANNEL_HRRESOURCES)!;
+  // const channelHrResources = await message.client.channels.fetch(env.CHANNEL_HRRESOURCES)!;
   const channelDrugQuestions = await message.client.channels.fetch(env.CHANNEL_DRUGQUESTIONS)!;
   // const channelGeneral = await message.guild!.channels.fetch(env.CHANNEL_GENERAL)!;
   const channelPets = await message.client.channels.fetch(env.CHANNEL_PETS)!;
@@ -153,8 +153,8 @@ export async function announcements(message:Message) {
     `Need help from a tripsitter? Use ${channelTripsit!.toString()}!`,
     `${channelOpenTripsit!.toString()}, ${channelOpenTripsit1!.toString()}, and ${channelOpenTripsit2!.toString()} are "communal" tripsit rooms!`,
     `Slowmode is enabled in ${channelSanctuary!.toString()} to let people have a chill experience!`,
-    `Check out harm reduction resources in ${channelHrResources!.toString()}!`,
-    `Ask questions about drugs in ${channelDrugQuestions!.toString()} to make sure they're not lost!`,
+    // `Check out harm reduction resources in ${channelHrResources!.toString()}!`,
+    // `Ask questions about drugs in ${channelDrugQuestions!.toString()} to make sure they're not lost!`,
     `Share pictures of your doggos, kittos and other creaturos in ${channelPets!.toString()}!`,
     `Compare recipes and drool over someone's latest creation in ${channelFood!.toString()}!`,
     `Share your favorite songs in ${channelMusic!.toString()}!`,
