@@ -102,19 +102,14 @@ export const help: SlashCommand = {
         );
 
     const tripsitEmbed = embedTemplate()
-        .setTitle('Tripsit-Only Modules')
-        .addFields(
-            {name: 'TripSit', value: getDesc('tripsit'), inline: true},
-            {name: 'Clearchat', value: getDesc('clear-chat'), inline: true},
-            {name: 'Bridge', value: getDesc('bridge'), inline: true},
-
-            {name: 'Birthday', value: getDesc('birthday'), inline: true},
-            {name: 'Time', value: getDesc('time'), inline: true},
-            {name: 'Profile', value: getDesc('profile'), inline: true},
-
-            {name: 'Moderate', value: getDesc('mod'), inline: true},
-            {name: 'Report', value: getDesc('report'), inline: true},
-        );
+        .setTitle('Tripsit-Only Modules');
+    tripsitEmbed.addFields({name: 'TripSit', value: getDesc('tripsit'), inline: true});
+    tripsitEmbed.addFields({name: 'Clearchat', value: getDesc('clear-chat'), inline: true});
+    tripsitEmbed.addFields({name: 'Birthday', value: getDesc('birthday'), inline: true});
+    tripsitEmbed.addFields({name: 'Timezone', value: getDesc('timezone'), inline: true});
+    tripsitEmbed.addFields({name: 'Profile', value: getDesc('profile'), inline: true});
+    tripsitEmbed.addFields({name: 'Moderate', value: getDesc('mod'), inline: true});
+    tripsitEmbed.addFields({name: 'Report', value: getDesc('report'), inline: true});
 
     const book = [
       hrEmbed,
