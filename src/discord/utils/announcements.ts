@@ -70,45 +70,45 @@ type messageCounterType = {
 export async function announcements(message:Message) {
   logger.debug(`[${PREFIX}] starting!`);
 
-  const channelStart = message.client.channels.cache.get(env.CHANNEL_START)!.toString();
-  const channelAnnouncements = message.client.channels.cache.get(env.CHANNEL_ANNOUNCEMENTS)!.toString();
-  const channelRules = message.client.channels.cache.get(env.CHANNEL_RULES)!.toString();
-  const channelBotspam = message.client.channels.cache.get(env.CHANNEL_BOTSPAM)!.toString();
-  const channelTechhelp = message.client.channels.cache.get(env.CHANNEL_TECHHELP)!.toString();
-  // const channelHowToTripsit = message.client.channels.cache.get(env.CHANNEL_HOWTOTRIPSIT)!.toString();
-  const channelTripsit = message.client.channels.cache.get(env.CHANNEL_TRIPSIT)!.toString();
-  // const channelRTripsit = message.client.channels.cache.get(env.CHANNEL_TRIPSIT)!.toString();
-  const channelOpenTripsit = message.client.channels.cache.get(env.CHANNEL_OPENTRIPSIT)!.toString();
-  const channelOpenTripsit1 = message.client.channels.cache.get(env.CHANNEL_OPENTRIPSIT1)!.toString();
-  const channelOpenTripsit2 = message.client.channels.cache.get(env.CHANNEL_OPENTRIPSIT2)!.toString();
-  const channelSanctuary = message.client.channels.cache.get(env.CHANNEL_SANCTUARY)!.toString();
-  const channelHrResources = message.client.channels.cache.get(env.CHANNEL_HRRESOURCES)!.toString();
-  const channelDrugQuestions = message.client.channels.cache.get(env.CHANNEL_DRUGQUESTIONS)!.toString();
-  // const channelGeneral = message.guild!.channels.cache.get(env.CHANNEL_GENERAL)!.toString();
-  const channelPets = message.client.channels.cache.get(env.CHANNEL_PETS)!.toString();
-  const channelFood = message.client.channels.cache.get(env.CHANNEL_FOOD)!.toString();
-  const channelMusic = message.client.channels.cache.get(env.CHANNEL_MUSIC)!.toString();
-  const channelMovies = message.client.channels.cache.get(env.CHANNEL_MOVIES)!.toString();
-  const channelGaming = message.client.channels.cache.get(env.CHANNEL_GAMING)!.toString();
-  const channelScience = message.client.channels.cache.get(env.CHANNEL_SCIENCE)!.toString();
-  const channelCreative = message.client.channels.cache.get(env.CHANNEL_CREATIVE)!.toString();
-  const channelMemes = message.client.channels.cache.get(env.CHANNEL_MEMES)!.toString();
-  const channelTrivia = message.client.channels.cache.get(env.CHANNEL_TRIVIA)!.toString();
-  const channelLounge = message.client.channels.cache.get(env.CHANNEL_LOUNGE)!.toString();
-  const channelStims = message.client.channels.cache.get(env.CHANNEL_STIMULANTS)!.toString();
-  const channelDepressants = message.client.channels.cache.get(env.CHANNEL_DEPRESSANTS)!.toString();
-  const channelDissociatives = message.client.channels.cache.get(env.CHANNEL_DISSOCIATIVES)!.toString();
-  const channelPsychedelics = message.client.channels.cache.get(env.CHANNEL_PSYCHEDELICS)!.toString();
-  // const channelOpioids = message.client.channels.cache.get(env.CHANNEL_OPIATES)!.toString();
-  const channelTrees = message.client.channels.cache.get(env.CHANNEL_TREES)!.toString();
-  // const channelViplounge = message.client.channels.cache.get(env.CHANNEL_VIPLOUNGE)!.toString();
-  // const channelAdultSwim = message.client.channels.cache.get(env.CHANNEL_ADULTSWIM)!.toString();
-  // const channelGoldLounge = message.client.channels.cache.get(env.CHANNEL_GOLDLOUNGE)!.toString();
-  // const channelTalkToTS = message.client.channels.cache.get(env.CHANNEL_TALKTOTS)!.toString();
-  // const channelBestOf = message.client.channels.cache.get(env.CHANNEL_BESTOF)!.toString();
-  // const channelKudos = message.client.channels.cache.get(env.CHANNEL_KUDOS)!.toString();
-  // const channelCampfire = message.client.channels.cache.get(env.CHANNEL_HUB)!.toString();
-  // const channelDevWelcome = message.client.channels.cache.get(env.CHANNEL_DEVWELCOME)!.toString();
+  const channelStart = await message.client.channels.fetch(env.CHANNEL_START);
+  const channelAnnouncements = await message.client.channels.fetch(env.CHANNEL_ANNOUNCEMENTS)!;
+  const channelRules = await message.client.channels.fetch(env.CHANNEL_RULES)!;
+  const channelBotspam = await message.client.channels.fetch(env.CHANNEL_BOTSPAM)!;
+  const channelTechhelp = await message.client.channels.fetch(env.CHANNEL_TECHHELP)!;
+  // const channelHowToTripsit = await message.client.channels.fetch(env.CHANNEL_HOWTOTRIPSIT)!;
+  const channelTripsit = await message.client.channels.fetch(env.CHANNEL_TRIPSIT)!;
+  // const channelRTripsit = await message.client.channels.fetch(env.CHANNEL_TRIPSIT)!;
+  const channelOpenTripsit = await message.client.channels.fetch(env.CHANNEL_OPENTRIPSIT)!;
+  const channelOpenTripsit1 = await message.client.channels.fetch(env.CHANNEL_OPENTRIPSIT1)!;
+  const channelOpenTripsit2 = await message.client.channels.fetch(env.CHANNEL_OPENTRIPSIT2)!;
+  const channelSanctuary = await message.client.channels.fetch(env.CHANNEL_SANCTUARY)!;
+  const channelHrResources = await message.client.channels.fetch(env.CHANNEL_HRRESOURCES)!;
+  const channelDrugQuestions = await message.client.channels.fetch(env.CHANNEL_DRUGQUESTIONS)!;
+  // const channelGeneral = await message.guild!.channels.fetch(env.CHANNEL_GENERAL)!;
+  const channelPets = await message.client.channels.fetch(env.CHANNEL_PETS)!;
+  const channelFood = await message.client.channels.fetch(env.CHANNEL_FOOD)!;
+  const channelMusic = await message.client.channels.fetch(env.CHANNEL_MUSIC)!;
+  const channelMovies = await message.client.channels.fetch(env.CHANNEL_MOVIES)!;
+  const channelGaming = await message.client.channels.fetch(env.CHANNEL_GAMING)!;
+  const channelScience = await message.client.channels.fetch(env.CHANNEL_SCIENCE)!;
+  const channelCreative = await message.client.channels.fetch(env.CHANNEL_CREATIVE)!;
+  const channelMemes = await message.client.channels.fetch(env.CHANNEL_MEMES)!;
+  const channelTrivia = await message.client.channels.fetch(env.CHANNEL_TRIVIA)!;
+  const channelLounge = await message.client.channels.fetch(env.CHANNEL_LOUNGE)!;
+  const channelStims = await message.client.channels.fetch(env.CHANNEL_STIMULANTS)!;
+  const channelDepressants = await message.client.channels.fetch(env.CHANNEL_DEPRESSANTS)!;
+  const channelDissociatives = await message.client.channels.fetch(env.CHANNEL_DISSOCIATIVES)!;
+  const channelPsychedelics = await message.client.channels.fetch(env.CHANNEL_PSYCHEDELICS)!;
+  // const channelOpioids = await message.client.channels.fetch(env.CHANNEL_OPIATES)!;
+  const channelTrees = await message.client.channels.fetch(env.CHANNEL_TREES)!;
+  // const channelViplounge = await message.client.channels.fetch(env.CHANNEL_VIPLOUNGE)!;
+  // const channelAdultSwim = await message.client.channels.fetch(env.CHANNEL_ADULTSWIM)!;
+  // const channelGoldLounge = await message.client.channels.fetch(env.CHANNEL_GOLDLOUNGE)!;
+  // const channelTalkToTS = await message.client.channels.fetch(env.CHANNEL_TALKTOTS)!;
+  // const channelBestOf = await message.client.channels.fetch(env.CHANNEL_BESTOF)!;
+  // const channelKudos = await message.client.channels.fetch(env.CHANNEL_KUDOS)!;
+  // const channelCampfire = await message.client.channels.fetch(env.CHANNEL_HUB)!;
+  // const channelDevWelcome = await message.client.channels.fetch(env.CHANNEL_DEVWELCOME)!;
 
 
   const kipp = stripIndents`
@@ -145,31 +145,31 @@ export async function announcements(message:Message) {
   ];
 
   const channelAnnouncments = [
-    `You can change your color and mindset in the ${channelStart}`,
-    `Stay up to date with TripSit news in ${channelAnnouncements}`,
-    `Make sure to follow the ${channelRules}!`,
-    `Test out bot commands in ${channelBotspam}!`,
-    `Have an issue and need to talk with the team? Use ${channelTechhelp}!`,
-    `Need help from a tripsitter? Use ${channelTripsit}!`,
-    `${channelOpenTripsit}, ${channelOpenTripsit1}, and ${channelOpenTripsit2} are "communal" tripsit rooms!`,
-    `Slowmode is enabled in ${channelSanctuary} to let people have a chill experience!`,
-    `Check out harm reduction resources in ${channelHrResources}!`,
-    `Ask questions about drugs in ${channelDrugQuestions} to make sure they're not lost!`,
-    `Share pictures of your doggos, kittos and other creaturos in ${channelPets}!`,
-    `Compare recipes and drool over someone's latest creation in ${channelFood}!`,
-    `Share your favorite songs in ${channelMusic}!`,
-    `Talk about your favorite shows/movies in ${channelMovies}!`,
-    `Do you enjoy playing games? Join ${channelGaming} for gaming talk and join the TripSit Steam group!`,
-    `Science enthusiasts of all types are welcome in ${channelScience}!`,
-    `Show off your latest hobby, painting, or even song of your own making in ${channelCreative}!`,
-    `Post your favorite memes in ${channelMemes}!`,
-    `Prove your superiority in ${channelTrivia}!`,
-    `Enjoy a more relaxed environment in ${channelLounge}!`,
-    `Want to talk fast? Join ${channelStims}!`,
-    `Opiate/benzo talk is welcome tin ${channelDepressants}!`,
-    `Get real weird with it in ${channelDissociatives}!`,
-    `Open your third eye in ${channelPsychedelics}!`,
-    `Start a sesh in ${channelTrees}!`,
+    `You can change your color and mindset in the ${channelStart!.toString()}`,
+    `Stay up to date with TripSit news in ${channelAnnouncements!.toString()}`,
+    `Make sure to follow the ${channelRules!.toString()}!`,
+    `Test out bot commands in ${channelBotspam!.toString()}!`,
+    `Have an issue and need to talk with the team? Use ${channelTechhelp!.toString()}!`,
+    `Need help from a tripsitter? Use ${channelTripsit!.toString()}!`,
+    `${channelOpenTripsit!.toString()}, ${channelOpenTripsit1!.toString()}, and ${channelOpenTripsit2!.toString()} are "communal" tripsit rooms!`,
+    `Slowmode is enabled in ${channelSanctuary!.toString()} to let people have a chill experience!`,
+    `Check out harm reduction resources in ${channelHrResources!.toString()}!`,
+    `Ask questions about drugs in ${channelDrugQuestions!.toString()} to make sure they're not lost!`,
+    `Share pictures of your doggos, kittos and other creaturos in ${channelPets!.toString()}!`,
+    `Compare recipes and drool over someone's latest creation in ${channelFood!.toString()}!`,
+    `Share your favorite songs in ${channelMusic!.toString()}!`,
+    `Talk about your favorite shows/movies in ${channelMovies!.toString()}!`,
+    `Do you enjoy playing games? Join ${channelGaming!.toString()} for gaming talk and join the TripSit Steam group!`,
+    `Science enthusiasts of all types are welcome in ${channelScience!.toString()}!`,
+    `Show off your latest hobby, painting, or even song of your own making in ${channelCreative!.toString()}!`,
+    `Post your favorite memes in ${channelMemes!.toString()}!`,
+    `Prove your superiority in ${channelTrivia!.toString()}!`,
+    `Enjoy a more relaxed environment in ${channelLounge!.toString()}!`,
+    `Want to talk fast? Join ${channelStims!.toString()}!`,
+    `Opiate/benzo talk is welcome tin ${channelDepressants!.toString()}!`,
+    `Get real weird with it in ${channelDissociatives!.toString()}!`,
+    `Open your third eye in ${channelPsychedelics!.toString()}!`,
+    `Start a sesh in ${channelTrees!.toString()}!`,
   ];
 
   const commandAnnouncements = [
