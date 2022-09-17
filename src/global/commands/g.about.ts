@@ -21,9 +21,11 @@ export async function about():Promise<any> {
         We also strongly advise using a testing kit and scales to ensure you are taking the\
         correct dosage. These can both be bought online for reasonable prices.
       `,
+
+    // [IRC](https://chat.tripsit.me) or the
     support: stripIndents`
         TripSit is a completely free service run by volunteers.
-        If you wish to help out, feel free to join the [IRC](https://chat.tripsit.me) or the [discord](https://discord.gg/TripSit),\
+        If you wish to help out, feel free to join the [discord](https://discord.gg/TripSit),\
         follow and share our content on social media, or make a donation on the [Patreon](https://www.patreon.com/TripSit)!
       `,
     feedback: stripIndents`

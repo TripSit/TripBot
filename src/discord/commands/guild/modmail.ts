@@ -38,10 +38,10 @@ const modmailButtons = new ActionRowBuilder<ButtonBuilder>()
             .setCustomId('modmailFeedback')
             .setLabel('Give Feedback')
             .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-            .setCustomId('modmailIrcissue')
-            .setLabel('IRC issues')
-            .setStyle(ButtonStyle.Danger),
+        // new ButtonBuilder()
+        //     .setCustomId('modmailIrcissue')
+        //     .setLabel('IRC issues')
+        //     .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
             .setCustomId('modmailDiscordissue')
             .setLabel('Discord issues')

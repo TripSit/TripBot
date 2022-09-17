@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {stripIndents} from 'common-tags';
-import {bridgeWording} from '../../../global/commands/g.bridge';
+import {bridgeWording} from '../../../global/commands/archive/g.bridge';
 // import logger from '../../../global/utils/logger';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;

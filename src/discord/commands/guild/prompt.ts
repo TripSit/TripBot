@@ -354,6 +354,15 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
     return;
   }
 
+  // If you **can't connect** to the IRC and don't know why, click the **green🟩button** and give us your details.
+  // This will make a **private** thread with moderators, so please be detailed and include your IP address.
+  // Don't know your IP address? Go to <https://whatismyip.com> and copy the IP address!
+
+  // If you've been **banned** and know why, click the **red🟥button** and give us your details.
+  // This will also make a **private** thread with moderators.
+  // Please do not interact with the rest of the discord while your appeal is being processed.
+  // It may be considered ban evasion if you get banned on IRC and immediately chat on discord outside of this channel!
+
   const buttonText = stripIndents`
     Welcome to TripSit's technical help channel!
 
@@ -362,15 +371,6 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
     **If you need psychological help try ${channelTripsit.toString()}!**
 
     **If you have questions on drugs try ${channelDrugQuestions.toString()}!**
-
-    If you **can't connect** to the IRC and don't know why, click the **green🟩button** and give us your details.
-    This will make a **private** thread with moderators, so please be detailed and include your IP address.
-    Don't know your IP address? Go to <https://whatismyip.com> and copy the IP address!
-
-    If you've been **banned** and know why, click the **red🟥button** and give us your details.
-    This will also make a **private** thread with moderators.
-    Please do not interact with the rest of the discord while your appeal is being processed.
-    It may be considered ban evasion if you get banned on IRC and immediately chat on discord outside of this channel!
 
     **Discord issues, feedback or questions**can be discussesed with the team via the **blue🟦button**.
 
@@ -384,14 +384,14 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
   // Create buttons
   const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
-          new ButtonBuilder()
-              .setCustomId('ircConnect')
-              .setLabel('I can\'t connect to IRC!')
-              .setStyle(ButtonStyle.Success),
-          new ButtonBuilder()
-              .setCustomId('ircAppeal')
-              .setLabel('I want to appeal my ban!')
-              .setStyle(ButtonStyle.Danger),
+          // new ButtonBuilder()
+          //     .setCustomId('ircConnect')
+          //     .setLabel('I can\'t connect to IRC!')
+          //     .setStyle(ButtonStyle.Success),
+          // new ButtonBuilder()
+          //     .setCustomId('ircAppeal')
+          //     .setLabel('I want to appeal my ban!')
+          //     .setStyle(ButtonStyle.Danger),
           new ButtonBuilder()
               .setCustomId('discordIssue')
               .setLabel('Discord issue/feedback!')
@@ -504,6 +504,11 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
   const channelTripsit = interaction.client.channels.cache.get(env.CHANNEL_TRIPSIT);
   const channelRules = interaction.client.channels.cache.get(env.CHANNEL_RULES);
 
+  // **If someone has the "bot" tag they are talking from IRC!**
+  // > IRC is an older chat system where TripSit started: chat.tripsit.me
+  // > The 🔗 icon in the channel name means the channel is linked with IRC.
+  // > Users on IRC cannot see when you Reply to their message, or any custom emojis.
+
   const message = stripIndents`
     **Welcome to the TripSit Discord!**
     > TripSit has always been a bit...different.
@@ -520,11 +525,6 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
     ***1*** Use the /report interface to report someone to the mod team! Also use Right Click > Apps > Report!
     ***2*** Mention the @moderators to get attention from the mod team!
     ***3*** Message TripBot and click the "I have a discord issue" button to start a thread with the team!
-
-    **If someone has the "bot" tag they are talking from IRC!**
-    > IRC is an older chat system where TripSit started: chat.tripsit.me
-    > The 🔗 icon in the channel name means the channel is linked with IRC.
-    > Users on IRC cannot see when you Reply to their message, or any custom emojis.
 
     **We have our own custom bot!**
     > Go crazy in ${channelBotspam} exploring the bot commands!
@@ -761,6 +761,8 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
   const channelOpentripsit = interaction.client.channels.cache.get(env.CHANNEL_OPENTRIPSIT);
   const channelRules = interaction.client.channels.cache.get(env.CHANNEL_RULES);
 
+  // **3)** I understand that every room with a :link: is bridged to IRC and there may be lower quality chat in those rooms.
+
   const buttonText = `
   Welcome to TripSit!
 
@@ -775,8 +777,7 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
 
   **1)** I do not currently need help and understand I can go to ${channelTripsit!.toString()} to get help if I need it.
   **2)** I understand if no one responds in ${channelTripsit!.toString()} I can talk in the "open" tripsit rooms.
-  **3)** I understand that every room with a :link: is bridged to IRC and there may be lower quality chat in those rooms.
-  **4)** I have read the ${channelRules!.toString()}: I will not buy/sell anything and I will try to keep a positive atmosphere!
+  **3)** I have read the ${channelRules!.toString()}: I will not buy/sell anything and I will try to keep a positive atmosphere!
   `;
 
   // Create a new button embed
