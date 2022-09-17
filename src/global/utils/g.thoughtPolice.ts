@@ -1,10 +1,9 @@
 // eslint-disable no-multi-spaces
 
 import {stripIndents} from 'common-tags';
-import logger from '../../global/utils/logger';
-
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+// import logger from './logger';
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 const _ = {
   A: '[a|A|🅰|4|@]+',
@@ -138,7 +137,7 @@ const offensive = [
  * @return {Promise<void>}
  */
 export async function bigBrother(messageContent:string): Promise<string[]> {
-  logger.debug(`[${PREFIX}] started!`);
+  // logger.debug(`[${PREFIX}] started!`);
   // logger.debug(`[${PREFIX}] messageContent: ${JSON.stringify(messageContent, null, 2)}!`);
 
   // Check for most offensive stuff first

@@ -30,8 +30,8 @@ export const dCalcKetamine: SlashCommand = {
     const weightUnits = interaction.options.getString('units')! as 'kg' | 'lbs';
     // logger.debug(`[${PREFIX}] weightUnits: ${weightUnits}`);
 
-    const calcWeight = weightUnits === 'kg' ? givenWeight * 2.20462 : givenWeight;
-    // logger.debug(`[${PREFIX}] calcWeight: ${calcWeight}`);
+    // const calcWeight = weightUnits === 'kg' ? givenWeight * 2.20462 : givenWeight;
+    // // logger.debug(`[${PREFIX}] calcWeight: ${calcWeight}`);
 
     const embed = embedTemplate();
     if (weightUnits === 'kg' && givenWeight > 179) {
@@ -68,7 +68,7 @@ export const dCalcKetamine: SlashCommand = {
         },
     );
 
-    interaction.reply({embeds: [embed],ephemeral: false,});
+    interaction.reply({embeds: [embed], ephemeral: false});
     logger.debug(`[${PREFIX}] finished!`);
     return;
   },

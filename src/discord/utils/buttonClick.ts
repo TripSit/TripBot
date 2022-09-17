@@ -46,7 +46,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     const memberRole = interaction.guild?.roles.cache.find((role:Role) => role.id === env.ROLE_MEMBER);
     let colorValue = 1;
 
-    logger.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`)
+    logger.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
     const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
     channelTripbotlogs.send({
       content: `Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`});
@@ -112,7 +112,8 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
       //     });
       //   } catch (e) {
       //     logger.error(`[${PREFIX}] ${e}`);
-      //     logger.error(`[${PREFIX}] Error pulling: ${env.FIREBASE_DB_USERS}/${interaction.user.id}/discord/inviteInfo`);
+      //     logger.error(`[${PREFIX}] Error pulling:
+      // ${env.FIREBASE_DB_USERS}/${interaction.user.id}/discord/inviteInfo`);
       //   }
       // }
 

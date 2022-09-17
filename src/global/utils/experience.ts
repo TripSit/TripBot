@@ -96,8 +96,8 @@ export async function experience(
       return;
     }
 
-    logger.debug(`[${PREFIX}] Message sent by ${message.author.username} \
-        in ${(message.channel as TextChannel).name} on ${message.guild}`);
+    logger.debug(stripIndents`[${PREFIX}] Message sent by ${message.author.username} \
+in ${(message.channel as TextChannel).name} on ${message.guild}`);
     actor = message.author;
 
     // Determine what kind of experience to give
@@ -145,8 +145,8 @@ export async function experience(
     messageChannelId = message.args[0].replace(/(\.|\$|#|\[|\]|\/)/g, '');
   }
 
-  logger.debug(`[${PREFIX}] expType: ${expType}`);
-  logger.debug(`[${PREFIX}] messageChannelId: ${messageChannelId}`);
+  // logger.debug(`[${PREFIX}] expType: ${expType}`);
+  // logger.debug(`[${PREFIX}] messageChannelId: ${messageChannelId}`);
 
   // Get random value between 15 and 25
   const expPoints = Math.floor(Math.random() * (25 - 15 + 1)) + 15;

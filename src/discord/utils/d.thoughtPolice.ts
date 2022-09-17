@@ -7,7 +7,7 @@ import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
 
-import {bigBrother} from '../../global/utils/thoughtPolice';
+import {bigBrother} from '../../global/utils/g.thoughtPolice';
 
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
