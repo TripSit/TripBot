@@ -83,7 +83,7 @@ export async function announcements(message:Message) {
   const channelOpenTripsit2 = await message.client.channels.fetch(env.CHANNEL_OPENTRIPSIT2)!;
   const channelSanctuary = await message.client.channels.fetch(env.CHANNEL_SANCTUARY)!;
   // const channelHrResources = await message.client.channels.fetch(env.CHANNEL_HRRESOURCES)!;
-  const channelDrugQuestions = await message.client.channels.fetch(env.CHANNEL_DRUGQUESTIONS)!;
+  // const channelDrugQuestions = await message.client.channels.fetch(env.CHANNEL_DRUGQUESTIONS)!;
   // const channelGeneral = await message.guild!.channels.fetch(env.CHANNEL_GENERAL)!;
   const channelPets = await message.client.channels.fetch(env.CHANNEL_PETS)!;
   const channelFood = await message.client.channels.fetch(env.CHANNEL_FOOD)!;
@@ -261,8 +261,8 @@ export async function announcements(message:Message) {
       logger.debug(`[${PREFIX}] generalChatCategories.includes(message.channel.parentId): ${generalChatCategories.includes(message.channel.parentId)}`);
       if (generalChatCategories.includes(message.channel.parentId)) {
         messageCounter[message.channel.id] = messageCounter[message.channel.id] ?
-        messageCounter[message.channel.id] + 1 :
-        1;
+          messageCounter[message.channel.id] + 1 :
+          1;
 
         if (messageCounter[message.channel.id] % frequency === 0) {
           // If the number of messages sent in the channel / by (frequency) has no remainder..

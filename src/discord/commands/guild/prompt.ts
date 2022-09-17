@@ -289,7 +289,7 @@ export async function consultants(interaction:ChatInputCommandInteraction) {
     > No coding experience is necessary to help make the discord an awesome place to be =)
 
     ${channelTripbot}
-    > Our ombi-bot Tripbot has made it's way into the discord server!
+    > Our omni-bot Tripbot has made it's way into the discord server!
     > This is a somewhat complex bot that is continually growing to meet the needs of TripSit.
     > It also can be added to other servers to provide a subset of harm reduction features to the public
 
@@ -347,12 +347,12 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
     interaction.reply('We can\'t find the tripsit channel!');
     return;
   }
-  const channelDrugQuestions = interaction.client.channels.cache.get(env.CHANNEL_DRUGQUESTIONS);
-  if (!channelDrugQuestions) {
-    logger.error(`${PREFIX} how to tripsit: no channel`);
-    interaction.reply('We can\'t find the drugquestions channel!');
-    return;
-  }
+  // const channelDrugQuestions = interaction.client.channels.cache.get(env.CHANNEL_DRUGQUESTIONS);
+  // if (!channelDrugQuestions) {
+  //   logger.error(`${PREFIX} how to tripsit: no channel`);
+  //   interaction.reply('We can\'t find the drugquestions channel!');
+  //   return;
+  // }
 
   // If you **can't connect** to the IRC and don't know why, click the **green🟩button** and give us your details.
   // This will make a **private** thread with moderators, so please be detailed and include your IP address.
@@ -363,6 +363,9 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
   // Please do not interact with the rest of the discord while your appeal is being processed.
   // It may be considered ban evasion if you get banned on IRC and immediately chat on discord outside of this channel!
 
+
+  // **If you have questions on drugs try ${channelDrugQuestions.toString()}!**
+
   const buttonText = stripIndents`
     Welcome to TripSit's technical help channel!
 
@@ -370,7 +373,6 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
 
     **If you need psychological help try ${channelTripsit.toString()}!**
 
-    **If you have questions on drugs try ${channelDrugQuestions.toString()}!**
 
     **Discord issues, feedback or questions**can be discussesed with the team via the **blue🟦button**.
 
@@ -423,12 +425,12 @@ export async function rules(interaction:ChatInputCommandInteraction) {
     interaction.reply('We can\'t find the tripsit channel!');
     return;
   }
-  const channelDrugQuestions = interaction.client.channels.cache.get(env.CHANNEL_DRUGQUESTIONS);
-  if (!channelDrugQuestions) {
-    logger.error(`${PREFIX} how to tripsit: no channel`);
-    interaction.reply('We can\'t find the drugquestions channel!');
-    return;
-  }
+  // const channelDrugQuestions = interaction.client.channels.cache.get(env.CHANNEL_DRUGQUESTIONS);
+  // if (!channelDrugQuestions) {
+  //   logger.error(`${PREFIX} how to tripsit: no channel`);
+  //   interaction.reply('We can\'t find the drugquestions channel!');
+  //   return;
+  // }
 
   const embed = embedTemplate()
       .setAuthor(null)
@@ -450,7 +452,6 @@ export async function rules(interaction:ChatInputCommandInteraction) {
     > **🔞 1. You must be over 18 to participate in most channels!**
     > **-** We believe that minors will use substances regardless of the info available to them so the best we can do is educate properly and send them on their way.
     > **-** ${channelTripsit.toString()} allows minors to get help from a tripsitter.
-    > **-** ${channelDrugQuestions.toString()} allows minors to ask questions on substances.
     > **-** We appreciate the support, but beyond this it is our belief that minors have more productive activitives than contributing to a harm reduction network <3
     ${invisibleEmoji}
     `);
@@ -710,14 +711,12 @@ export async function tripsitme(interaction:ChatInputCommandInteraction) {
     interaction.reply('You must run this in the channel you want the prompt to be in!');
     return;
   }
-  const channelQuestions = interaction.client.channels.cache.get(env.CHANNEL_DRUGQUESTIONS);
+  // const channelQuestions = interaction.client.channels.cache.get(env.CHANNEL_DRUGQUESTIONS);
   const channelSanctuary = interaction.client.channels.cache.get(env.CHANNEL_SANCTUARY);
   const channelGeneral = interaction.client.channels.cache.get(env.CHANNEL_GENERAL);
 
   const buttonText = stripIndents`
     Welcome to the TripSit room!
-
-    Non-urgent questions on drugs? Make a thread in ${channelQuestions!.toString()}!
 
     Don't need immediate help but want a peaceful chat? Come to ${channelSanctuary!.toString()}!
 
