@@ -26,7 +26,7 @@ const applyText = (canvas:Canvas.Canvas, text:string) => {
 
   do {
     // Assign the font to the context and decrement it so it can be measured again
-    context.font = `${fontSize -= 10}px sans-serif`;
+    context.font = `${fontSize -= 10}px`;
     // Compare pixel width of the text to the canvas minus the approximate avatar size
   } while (context.measureText(text).width > canvas.width - 300);
 
@@ -110,7 +110,6 @@ export const profile: SlashCommand = {
       return;
     }
 
-
     // Create a 700x250 pixel canvas and get its context
     // The context will be used to modify the canvas
     const canvasWidth = 700;
@@ -147,7 +146,7 @@ export const profile: SlashCommand = {
         if (data.val() !== null && data.val() !== undefined) {
           targetData = data.val();
           logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
-          context.font = `25px sans-serif`;
+          context.font = `25px`;
 
           if (targetData.karma) {
             if (targetData.karma.karma_given) {
