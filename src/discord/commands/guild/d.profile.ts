@@ -121,7 +121,7 @@ export const profile: SlashCommand = {
     const x = 15;
 
     // Get background image
-    const background = await Canvas.loadImage('./src/discord/assets/img/wallpaper.png');
+    const background = await Canvas.loadImage('.\\src\\discord\\assets\\img\\wallpaper.png');
     // This uses the canvas dimensions to stretch the image onto the entire canvas
     context.drawImage(background, 0, 0, canvas.width, canvas.height);
 
