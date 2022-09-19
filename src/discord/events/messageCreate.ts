@@ -15,6 +15,7 @@ import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../utils/embedTemplate';
 import {experience} from '../../global/utils/experience';
 import {announcements} from '../utils/announcements';
+import {messageCommand} from '../utils/messageCommand';
 import {modmailInitialResponse} from '../commands/guild/modmail';
 import {ticketDbEntry} from '../../global/@types/database';
 import logger from '../../global/utils/logger';
@@ -25,38 +26,13 @@ export const messageCreate: messageEvent = {
   name: 'messageCreate',
   async execute(message: Message):Promise<void> {
     // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
+
     // Only run on Tripsit
     if (message.guild) {
       if (message.guild.id !== env.DISCORD_GUILD_ID.toString()) {
         return;
       }
     }
-    // {
-    //   "channelId": "960606558549594162",
-    //   "guildId": "960606557622657026",
-    //   "id": "983832049687363655",
-    //   "createdTimestamp": 1654634239361,
-    //   "type": "DEFAULT",
-    //   "system": false,
-    //   "content": "test",
-    //   "authorId": "177537158419054592",
-    //   "pinned": false,
-    //   "tts": false,
-    //   "nonce": "983832049582342144",
-    //   "embeds": [],
-    //   "components": [],
-    //   "attachments": [],
-    //   "stickers": [],
-    //   "editedTimestamp": null,
-    //   "webhookId": null,
-    //   "groupActivityApplicationId": null,
-    //   "applicationId": null,
-    //   "activity": null,
-    //   "flags": 0,
-    //   "reference": null,
-    //   "interaction": null,
-    //   "cleanContent": "test"
-    // }
 
     // Don't run on bots
     if (message.author.bot) {
@@ -120,5 +96,6 @@ export const messageCreate: messageEvent = {
     announcements(message);
     // thoughtPolice(message);
     experience(message);
+    messageCommand(message);
   },
 };

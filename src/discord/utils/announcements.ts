@@ -253,12 +253,12 @@ export async function announcements(message:Message) {
     env.CATEGORY_VIPCABINS,
   ];
 
-  logger.debug(`[${PREFIX}] instance of TextChannel: ${message.channel instanceof TextChannel}`);
+  // logger.debug(`[${PREFIX}] instance of TextChannel: ${message.channel instanceof TextChannel}`);
   if (message.channel instanceof TextChannel) {
-    logger.debug(`[${PREFIX}] message.channel.parentId: ${message.channel.parentId}`);
+    // logger.debug(`[${PREFIX}] message.channel.parentId: ${message.channel.parentId}`);
     if (message.channel.parentId) {
-      logger.debug(`[${PREFIX}] generalChatCategories: ${generalChatCategories}`);
-      logger.debug(`[${PREFIX}] generalChatCategories.includes(message.channel.parentId): ${generalChatCategories.includes(message.channel.parentId)}`);
+      // logger.debug(`[${PREFIX}] generalChatCategories: ${generalChatCategories}`);
+      // logger.debug(`[${PREFIX}] generalChatCategories.includes(message.channel.parentId): ${generalChatCategories.includes(message.channel.parentId)}`);
       if (generalChatCategories.includes(message.channel.parentId)) {
         messageCounter[message.channel.id] = messageCounter[message.channel.id] ?
           messageCounter[message.channel.id] + 1 :
