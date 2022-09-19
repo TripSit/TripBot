@@ -100,7 +100,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
           .setThumbnail(member.user.displayAvatarURL())
           .setFooter(null)
           .setDescription(stripIndents`
-              **Please welcome ${member.displayName} to the guild!**
+              **Please welcome ${member.toString()} to the guild!**
               We're glad you're here and hope you enjoy your stay!
               Check out ${channelStart} set your color and icon
               Stay safe, be chill, have fun!`);
