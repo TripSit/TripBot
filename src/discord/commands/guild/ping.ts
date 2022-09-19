@@ -2,10 +2,12 @@ import {
   SlashCommandBuilder,
   EmbedBuilder,
   ButtonBuilder,
+  // TextChannel,
 } from 'discord.js';
 import {
   ButtonStyle,
 } from 'discord-api-types/v10';
+// import env from '../../../global/utils/env.config';
 import {SlashCommand} from '../../@types/commandDef';
 import logger from '../../../global/utils/logger';
 import {paginationEmbed} from '../../utils/pagination';
@@ -55,6 +57,7 @@ export const ping: SlashCommand = {
     // after this you can't change pages (in ms), defaults to 120000
     paginationEmbed(interaction, pages, buttonList, 120000);
     // There you go, now you have paged embeds
+
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
