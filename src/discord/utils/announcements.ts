@@ -12,7 +12,7 @@ const PREFIX = path.parse(__filename).name;
 
 let frequency = 50;
 if (env.NODE_ENV === 'development') {
-  frequency = 2;
+  frequency = 20;
 }
 const messageCounter = {} as messageCounterType;
 

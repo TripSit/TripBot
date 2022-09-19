@@ -49,7 +49,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       // Update helpCounter with the current date that the user sent this command
       helpCounter.set(message.author.id, Date.now().valueOf());
     } else {
-      message.channel.send(`Hey ${message.member!.displayName}, use /help to get a list of commands on discord!`);
+      message.channel.send(`Hey ${displayName}, use /help to get a list of commands on discord!`);
     }
   }
 };
