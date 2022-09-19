@@ -19,7 +19,9 @@ const helpCounter = new Map<string, number>();
 export async function messageCommand(message: Message): Promise<void> {
   logger.debug(`[${PREFIX}] starting!`);
   // logger.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}!`);
-  logger.debug(stripIndents`[${PREFIX}] ${message.member!.displayName} said\
+  const displayName = message.member ? message.member.displayName : message.author.username;
+
+  logger.debug(stripIndents`[${PREFIX}] ${displayName} said\
   ${message.content} in ${(message.channel as GuildTextBasedChannel).name}!`);
   logger.debug(`[${PREFIX}] finished!`);
 
@@ -28,7 +30,6 @@ export async function messageCommand(message: Message): Promise<void> {
     const command = message.content.split(' ')[0].slice(1);
     logger.debug(`[${PREFIX}] command: ${command}`);
 
-    const displayName = message.member ? message.member.displayName : message.author.username;
 
     if (command === 'tripsit') {
       const now = Date.now().valueOf();
