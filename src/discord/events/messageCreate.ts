@@ -34,6 +34,9 @@ export const messageCreate: messageEvent = {
       }
     }
 
+    // This needs to run here beacuse the widgetbot peeps will use this and they are "bot users"
+    messageCommand(message);
+
     // Don't run on bots
     if (message.author.bot) {
       return;
@@ -96,6 +99,5 @@ export const messageCreate: messageEvent = {
     announcements(message);
     // thoughtPolice(message);
     experience(message);
-    messageCommand(message);
   },
 };
