@@ -46,6 +46,9 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     const memberRole = interaction.guild?.roles.cache.find((role:Role) => role.id === env.ROLE_MEMBER);
     let colorValue = 1;
 
+    logger.debug(`[${PREFIX}] member: ${member?.roles.cache}`);
+
+
     logger.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
     const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
     channelTripbotlogs.send({
@@ -101,25 +104,9 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
               We're glad you're here and hope you enjoy your stay!
               Check out ${channelStart} set your color and icon
               Stay safe, be chill, have fun!`);
-      // if (global.db) {
-      //   try {
-      //     const ref = db.ref(`${env.FIREBASE_DB_USERS}/${interaction.user.id}/discord/inviteInfo`);
-      //     await ref.once('value', (data) => {
-      //       if (data.val() !== null) {
-      //         logger.debug(`[${PREFIX}] data.val(): ${data.val()}`);
-      //         embed.setFooter({text: data.val()});
-      //       }
-      //     });
-      //   } catch (e) {
-      //     logger.error(`[${PREFIX}] ${e}`);
-      //     logger.error(`[${PREFIX}] Error pulling:
-      // ${env.FIREBASE_DB_USERS}/${interaction.user.id}/discord/inviteInfo`);
-      //   }
-      // }
 
       const channelGeneral = member.client.channels.cache.get(env.CHANNEL_GENERAL.toString()) as TextChannel;
       if (channelGeneral) {
-        channelGeneral.send({embeds: [embed]});
         interaction.reply({
           content: stripIndents`
         Awesome! This channel will disappear when you click away, before you go:
@@ -131,6 +118,11 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
         `,
           ephemeral: true,
         });
+        if (member?.roles.cache.has(memberRole?.id as string)) {
+          logger.debug(`[${PREFIX}] Member already has role!`);
+          return;
+        }
+        channelGeneral.send({embeds: [embed]});
       }
     }
   }
