@@ -136,7 +136,7 @@ export const profile: SlashCommand = {
     // Select the style that will be used to fill the text in
     context.fillStyle = '#ffffff';
     // Actually fill the text with a solid color
-    context.fillText(`${(interaction.member! as GuildMember).displayName}'s profile!`, x, y);
+    context.fillText(`${(target as GuildMember).displayName}'s profile!`, x, y);
 
 
     if (global.db) {
@@ -179,7 +179,7 @@ export const profile: SlashCommand = {
     }
 
     // Define avatar image
-    const avatar = await Canvas.loadImage(interaction.user.displayAvatarURL({extension: 'jpg'}));
+    const avatar = await Canvas.loadImage(target.user.displayAvatarURL({extension: 'jpg'}));
     // Pick up the pen
     context.beginPath();
     // Start the arc to form a circle
