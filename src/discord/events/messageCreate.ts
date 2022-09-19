@@ -15,7 +15,7 @@ import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../utils/embedTemplate';
 import {experience} from '../../global/utils/experience';
 import {announcements} from '../utils/announcements';
-import {messageCommand} from '../utils/messageCommand';
+// import {messageCommand} from '../utils/messageCommand';
 import {modmailInitialResponse} from '../commands/guild/modmail';
 import {ticketDbEntry} from '../../global/@types/database';
 import logger from '../../global/utils/logger';
@@ -35,7 +35,7 @@ export const messageCreate: messageEvent = {
     }
 
     // This needs to run here beacuse the widgetbot peeps will use this and they are "bot users"
-    messageCommand(message);
+    // messageCommand(message);
 
     // Don't run on bots
     if (message.author.bot) {
