@@ -113,11 +113,15 @@ export const profile: SlashCommand = {
 
     // Create a 700x250 pixel canvas and get its context
     // The context will be used to modify the canvas
-    const canvas = Canvas.createCanvas(700, 250);
+    const canvasWidth = 700;
+    const canvasHeight = 250;
+    const canvas = Canvas.createCanvas(canvasWidth, canvasHeight);
     const context = canvas.getContext('2d');
+    let y = 65;
+    const x = 15;
 
     // Get background image
-    const background = await Canvas.loadImage(path.join(__dirname, '../../assets/img/wallpaper.jpg'));
+    const background = await Canvas.loadImage(path.join(__dirname, '../../assets/img/wallpaper.png'));
     // This uses the canvas dimensions to stretch the image onto the entire canvas
     context.drawImage(background, 0, 0, canvas.width, canvas.height);
 
@@ -131,21 +135,8 @@ export const profile: SlashCommand = {
     // Select the style that will be used to fill the text in
     context.fillStyle = '#ffffff';
     // Actually fill the text with a solid color
-    context.fillText(`${(interaction.member! as GuildMember).displayName}'s profile!`, 35, 35);
+    context.fillText(`${(interaction.member! as GuildMember).displayName}'s profile!`, x, y);
 
-
-    // Define avatar image
-    // const avatar = await Canvas.loadImage(interaction.user.displayAvatarURL({extension: 'jpg'}));
-    // // Pick up the pen
-    // context.beginPath();
-    // // Start the arc to form a circle
-    // context.arc(300, 125, 100, 0, Math.PI * 2, true);
-    // // Put the pen down
-    // context.closePath();
-    // // Clip off the region you drew on
-    // context.clip();
-    // // Draw a shape onto the main canvas
-    // context.drawImage(avatar, 25, 25, 200, 200);
 
     if (global.db) {
       const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}`);
@@ -154,42 +145,55 @@ export const profile: SlashCommand = {
         if (data.val() !== null && data.val() !== undefined) {
           targetData = data.val();
           logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
-          let x = 50;
           context.font = `25px sans-serif`;
+
           if (targetData.karma) {
             if (targetData.karma.karma_given) {
-              context.fillText(`Karma Given: ${targetData.karma.karma_given || 0}`, 35, x+=30);
+              context.fillText(`Karma Given: ${targetData.karma.karma_given || 0}`, x, y+=80);
             }
             if (targetData.karma.karma_received) {
-              context.fillText(`Karma Received: ${targetData.karma.karma_received || 0}`, canvas.width/2, x);
+              context.fillText(`Karma Received: ${targetData.karma.karma_received || 0}`, canvas.width/2, y);
             }
           }
-
-          context.fillText(`Timezone: ${targetData.timezone !== undefined ? targetData.timezone : 'Use /timezone!'}`, 35, x+=30);
-          context.fillText(`Birthday: ${targetData.birthday !== undefined ? `${targetData.birthday.month} ${targetData.birthday.day}` : 'Use /birthday!'}`, canvas.width/2, x);
-
-          context.fillText(`Created: ${target.user.createdAt.toDateString()}`, 35, x+=30);
-          context.fillText(`Joined: ${target.joinedAt?.toDateString()}`, canvas.width/2, x);
 
           if (targetData.experience) {
             if (targetData.experience.general) {
-              context.fillText(`General LV: ${targetData.experience.general.level}`, 35, x+=30);
+              context.fillText(`General LV: ${targetData.experience.general.level}`, x, y+=30);
             }
             if (targetData.experience.tripsitter) {
-              context.fillText(`Tripsitter LV: ${targetData.experience.tripsitter.level}`, canvas.width/2, x);
+              context.fillText(`Tripsitter LV: ${targetData.experience.tripsitter.level}`, canvas.width/2, y);
             }
             if (targetData.experience.developer) {
-              context.fillText(`Tripsitter LV: ${targetData.experience.developer.level}`, canvas.width/2, x);
+              context.fillText(`Tripsitter LV: ${targetData.experience.developer.level}`, canvas.width/2, y);
             }
           }
 
-          // Use the helpful Attachment class structure to process the file for you
-          const attachment = new AttachmentBuilder(await canvas.encode('png'), {name: 'profile-image.png'});
-          interaction.reply({files: [attachment]});
-        }
+          context.fillText(`Timezone: ${targetData.timezone !== undefined ? targetData.timezone : 'Use /timezone!'}`, x, y+=30);
+          context.fillText(`Birthday: ${targetData.birthday !== undefined ? `${targetData.birthday.month} ${targetData.birthday.day}` : 'Use /birthday!'}`, canvas.width/2, y);
 
-        logger.debug(`[${PREFIX}] finished!`);
+          context.fillText(`Created: ${target.user.createdAt.toDateString()}`, x, y+=30);
+          context.fillText(`Joined: ${target.joinedAt?.toDateString()}`, canvas.width/2, y);
+        }
       });
     }
+
+    // Define avatar image
+    const avatar = await Canvas.loadImage(interaction.user.displayAvatarURL({extension: 'jpg'}));
+    // Pick up the pen
+    context.beginPath();
+    // Start the arc to form a circle
+    context.arc(canvasWidth-65, 65, 50, 0, Math.PI * 2, true);
+    // Put the pen down
+    context.closePath();
+    // Clip off the region you drew on
+    context.clip();
+    // // Draw a shape onto the main canvas
+    context.drawImage(avatar, canvasWidth-115, 15, 100, 100);
+
+    // Use the helpful Attachment class structure to process the file for you
+    const attachment = new AttachmentBuilder(await canvas.encode('png'), {name: 'profile-image.png'});
+    interaction.reply({files: [attachment]});
+
+    logger.debug(`[${PREFIX}] finished!`);
   },
 };
