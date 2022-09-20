@@ -11,6 +11,7 @@ import {
 import {commandRun} from '../utils/commandRun';
 import logger from '../../global/utils/logger';
 import {buttonClick} from '../utils/buttonClick';
+import {selectMenu} from '../utils/selectMenu';
 import {modalSubmit} from '../utils/modalSubmit';
 import {autocomplete} from '../utils/autocomplete';
 
@@ -51,15 +52,19 @@ export const interactionCreate: interactionEvent = {
     }
 
     if (interaction.type === InteractionType.MessageComponent) {
-      if (interaction.isButton()) {
-        buttonClick(interaction, client);
-        return;
-      }
       if (interaction.isContextMenuCommand()) {
         commandRun(interaction, client);
         return;
-      }
-      logger.debug(`[${PREFIX}] Unknown interaction: ${JSON.stringify(interaction, null, 2)}`);
+      };
+      if (interaction.isSelectMenu()) {
+        selectMenu(interaction, client);
+        return;
+      };
+      if (interaction.isButton()) {
+        buttonClick(interaction, client);
+        return;
+      };
+      logger.debug(`[${PREFIX}] Unknown interaction!`);
     }
 
     if (interaction.type === InteractionType.ModalSubmit) {

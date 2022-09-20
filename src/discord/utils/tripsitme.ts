@@ -14,7 +14,7 @@ import {
   TextChannel,
   ThreadChannel,
   ButtonInteraction,
-  ChatInputCommandInteraction,
+  PermissionsBitField,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -87,10 +87,20 @@ const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
  * Creates the tripsit modal
  * @param {ButtonInteraction} interaction The interaction that started this
  */
-export async function tripsitmeModal(interaction:ButtonInteraction) {
+export async function tripsitmeClick(interaction:ButtonInteraction) {
   // Create the modal
+
+  // logger.debug(`[${PREFIX}] interaction.customId: ${interaction.customId}`);
+  const needshelpId = interaction.customId.split('~')[1];
+  const tripsitterId = interaction.customId.split('~')[2];
+  const tripsittersId = interaction.customId.split('~')[3];
+
+  // logger.debug(`[${PREFIX}] needshelpId: ${needshelpId}\n
+  // tripsitterId: ${tripsitterId}\n
+  // tripsittersId: ${tripsittersId}`);
+
   const modal = new ModalBuilder()
-      .setCustomId('tripsitModal')
+      .setCustomId(`tripsitModal~${needshelpId}~${tripsitterId}~${tripsittersId}`)
       .setTitle('TripSit Help Request');
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
       .setCustomId('triageInput')
@@ -110,8 +120,8 @@ export async function tripsitmeModal(interaction:ButtonInteraction) {
  * @param {string} triageGiven Given triage information
  * @param {string} introGiven Given intro information
  */
-export async function tripsitme(
-    interaction:ModalSubmitInteraction | ChatInputCommandInteraction,
+export async function tripsitmeSubmit(
+    interaction:ModalSubmitInteraction,
     memberInput?:GuildMember,
     triageGiven?:string,
     introGiven?:string,
@@ -130,6 +140,14 @@ export async function tripsitme(
     return;
   }
 
+  // logger.debug(`[${PREFIX}] interaction.customId: ${interaction.customId}`);
+  const needshelpId = interaction.customId.split('~')[1];
+  const tripsitterId = interaction.customId.split('~')[2];
+  const tripsittersId = interaction.customId.split('~')[3];
+
+  // logger.debug(`[${PREFIX}] needshelpId: ${needshelpId}\n
+  // tripsitterId: ${tripsitterId}\n
+  // tripsittersId: ${tripsittersId}`);
 
   // Get the input from the modal, if it was submitted
   let triageInput = triageGiven;
@@ -143,32 +161,25 @@ export async function tripsitme(
   logger.debug(`[${PREFIX}] introInput: ${introInput}`);
 
   // Get the roles we'll be referencing
-  const roleNeedshelp = interaction.guild.roles.cache.find((role) => role.id === env.ROLE_NEEDSHELP) as Role;
+  const roleNeedshelp = await interaction.guild.roles.fetch(needshelpId) as Role;
   logger.debug(`[${PREFIX}] roleNeedshelp: ${roleNeedshelp}`);
-  const roleTripsitter = interaction.guild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
+  const roleTripsitter = await interaction.guild.roles.fetch(tripsitterId) as Role;
   logger.debug(`[${PREFIX}] roleTripsitter: ${roleTripsitter}`);
-  const roleHelper = interaction.guild.roles.cache.find((role) => role.id === env.ROLE_HELPER) as Role;
-  logger.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
-  const roleDeveloper = interaction.guild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER) as Role;
-  logger.debug(`[${PREFIX}] roleDeveloper: ${roleDeveloper}`);
 
   // Get the channels we'll be referencing
-  const channelHowToTripsit = interaction.client.channels.cache
-      .find((channel) => channel.id === env.CHANNEL_HOWTOTRIPSIT) as TextChannel;
-  logger.debug(`[${PREFIX}] channelHowToTripsit: ${channelHowToTripsit}`);
+  // const channelHowToTripsit = interaction.client.channels.cache
+  //     .find((channel) => channel.id === env.CHANNEL_HOWTOTRIPSIT) as TextChannel;
+  // logger.debug(`[${PREFIX}] channelHowToTripsit: ${channelHowToTripsit}`);
 
-  const channelOpenTripsit = interaction.guild.channels.cache
-      .find((chan) => chan.id === env.CHANNEL_OPENTRIPSIT);
+  // const channelOpenTripsit = interaction.guild.channels.cache
+  //     .find((chan) => chan.id === env.CHANNEL_OPENTRIPSIT);
 
   // Determine the actor.
   const actor = interaction.member;
   logger.debug(`[${PREFIX}] actor: ${actor.user.username}#${actor.user.discriminator}`);
 
   // Determine if this command was started by a Developer
-  const actorHasRoleDeveloper = (actor.roles as GuildMemberRoleManager).cache.find(
-      (role) => role.id === roleDeveloper.id,
-  ) !== undefined;
-  logger.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
+  const actorHasRoleDeveloper = (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
 
   // Determine the target.
   // If the user clicked the button, the target is whoever started the interaction.
@@ -189,9 +200,7 @@ export async function tripsitme(
   ) !== undefined;
   logger.debug(`[${PREFIX}] targetHasRoleNeedshelp: ${targetHasRoleNeedshelp}`);
 
-  const targetHasRoleDeveloper = (target.roles as GuildMemberRoleManager).cache.find(
-      (role) => role === roleDeveloper,
-  ) !== undefined;
+  const targetHasRoleDeveloper = (target as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
   logger.debug(`[${PREFIX}] targetHasRoleDeveloper: ${targetHasRoleDeveloper}`);
 
   let targetLastHelpedDate = new Date();
@@ -264,18 +273,17 @@ export async function tripsitme(
       let helpMessage = memberInput ?
           stripIndents`
           Hey ${target}, the team thinks you could still use assistance!
-          ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper} will be with you as soon as they're available!
+          ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} will be with you as soon as they're available!
           If this is a medical emergency please contact your local /EMS
           We do not call EMS or ambulance on behalf of anyone.` :
           stripIndents`
           Hey ${target}, thank you for the update!
-          **If no responds right away you can try chatting in ${channelOpenTripsit}**
 
           You've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
           Your issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
 
-          ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper} will be with you as soon as they're available!
+          ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and will be with you as soon as they're available!
           If this is a medical emergency please contact your local /EMS
           We do not call EMS or ambulance on behalf of anyone.`;
 
@@ -293,7 +301,7 @@ export async function tripsitme(
         let metaUpdate = memberInput ?
             stripIndents`Hey ${interaction.member}, ${target.nickname || target.user.username} is already being helped!
             Use this thread to discuss it!'` :
-            stripIndents`Hey ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper}, ${target.nickname || target.user.username} sent a new request for help in ${threadHelpUser.toString()}!
+            stripIndents`Hey ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}, ${target.nickname || target.user.username} sent a new request for help in ${threadHelpUser.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -407,7 +415,7 @@ export async function tripsitme(
         let firstMessage = memberInput ?
             stripIndents`
             Hey ${target}, the team thinks you could still use assistance!
-            ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper} will be with you as soon as they're available!
+            ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} will be with you as soon as they're available!
             If this is a medical emergency please contact your local /EMS
             We do not call EMS or ambulance on behalf of anyone.` :
             stripIndents`
@@ -417,11 +425,9 @@ export async function tripsitme(
 
             Your issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
 
-            ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper} will be with you as soon as they're available!
+            ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} will be with you as soon as they're available!
             If this is a medical emergency please contact your local /EMS
-            We do not call EMS or ambulance on behalf of anyone.
-
-            **If no responds right away you can try chatting in ${channelOpenTripsit}**`;
+            We do not call EMS or ambulance on behalf of anyone.`;
 
         if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
           firstMessage = testNotice + firstMessage;
@@ -431,7 +437,7 @@ export async function tripsitme(
         // Update the meta thread too
         let helperMsg = memberInput ?
             stripIndents`
-            Hey ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper}, ${actor} sent a new request for help on behalf of ${target.nickname || target.user.username} in ${threadHelpUser.toString()}!
+            Hey ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}, ${actor} sent a new request for help on behalf of ${target.nickname || target.user.username} in ${threadHelpUser.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -439,7 +445,7 @@ export async function tripsitme(
 
             Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!` :
             stripIndents`
-            Hey ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper}, ${target.nickname || target.user.username} sent a new request for help in ${threadHelpUser.toString()}!
+            Hey ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}, ${target.nickname || target.user.username} sent a new request for help in ${threadHelpUser.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -495,12 +501,11 @@ export async function tripsitme(
   // ██║ ╚████║███████╗╚███╔███╔╝
   // ╚═╝  ╚═══╝╚══════╝ ╚══╝╚══╝
   // Get the tripsitters channel from the guild
-  const tripsittersChannel = interaction.guild.channels.cache
-      .find((chan) => chan.id === env.CHANNEL_TRIPSITTERS) as TextChannel;
+
+  const tripsittersChannel = await interaction.guild?.channels.fetch(tripsittersId)! as TextChannel;
 
   // Get the tripsit channel from the guild
-  const tripsitChannel = interaction.guild.channels.cache
-      .find((chan) => chan.id === env.CHANNEL_TRIPSIT) as TextChannel;
+  const tripsitChannel = interaction.channel as TextChannel;
 
   // Create a new threadDiscussUser in the tripsitters channel
   threadDiscussUser = await tripsittersChannel.threads.create({
@@ -553,7 +558,7 @@ export async function tripsitme(
   let firstMessage = memberInput ?
       stripIndents`
       Hey ${target}, the team thinks you could use assistance!
-      ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper} will be with you as soon as they're available!
+      ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.` :
       stripIndents`
       Hey ${target}, thank you for asking for assistance!
@@ -562,7 +567,7 @@ export async function tripsitme(
 
       Your issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
 
-      ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper} will be with you as soon as they're available!
+      ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
       When you're feeling better you can use the "I'm Good" button to let the team know you're okay.`;
 
@@ -573,7 +578,7 @@ export async function tripsitme(
   const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
           new ButtonBuilder()
-              .setCustomId(`tripsat_${target.id}`)
+              .setCustomId(`tripsat~me~${target.id}~${threadDiscussUser.id}~${roleNeedshelp.id}`)
               .setLabel('I\'m good now!')
               .setStyle(ButtonStyle.Success),
       );
@@ -584,7 +589,7 @@ export async function tripsitme(
   // Send the intro message to the thread
   let helperMsg = memberInput ?
       stripIndents`
-      Hey ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helper' : roleHelper}, ${actor} thinks ${target.nickname || target.user.username} can use some help in ${threadHelpUser.toString()}!
+      Hey ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter}, ${actor} thinks ${target.nickname || target.user.username} can use some help in ${threadHelpUser.toString()}!
 
       They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -592,11 +597,10 @@ export async function tripsitme(
 
       Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!
 
-      *You're receiving this alert because you're a Helper/Tripsitter!*
-      *Only Tripsitters, Helpers and Moderators can see this thread*!
-      *You can remove the helper role in ${channelHowToTripsit.toString()}*!` :
+      *You're receiving this alert because you're a Tripsitter!*
+      *Only Tripsitters, Helpers and Moderators can see this thread*!` :
       stripIndents`
-      Hey ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helper' : roleHelper}, ${target.nickname || target.user.username} can use some help in ${threadHelpUser.toString()}!
+      Hey ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter}, ${target.nickname || target.user.username} can use some help in ${threadHelpUser.toString()}!
 
       They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -604,9 +608,8 @@ export async function tripsitme(
 
       Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!
 
-      *You're receiving this alert because you're a Helper/Tripsitter!*
-      *Only Tripsitters, Helpers and Moderators can see this thread*!
-      *You can remove the helper role in ${channelHowToTripsit.toString()}*!`;
+      *You're receiving this alert because you're a Tripsitter!*
+      *Only Tripsitters and Moderators can see this thread*!`;
     // send a message to the thread
 
   if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
@@ -616,7 +619,7 @@ export async function tripsitme(
   const endSession = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
           new ButtonBuilder()
-              .setCustomId(`tripsat_${target.id}`)
+              .setCustomId(`tripsat~them~${target.id}~${threadHelpUser.id}~${roleNeedshelp.id}`)
               .setLabel('They\'re good now!')
               .setStyle(ButtonStyle.Success),
       );

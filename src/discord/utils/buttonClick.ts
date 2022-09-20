@@ -11,12 +11,10 @@ import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../utils/embedTemplate';
-import {tripsitmeModal} from '../utils/tripsitme';
+import {applicationStart, applicationAccept} from '../utils/application';
+import {tripsitmeClick} from '../utils/tripsitme';
 import {tripsat} from '../utils/tripsat';
-import {
-  ircClick,
-} from '../commands/guild/prompt';
-
+import {techHelpClick, techHelpClose, techHelpOwn} from '../utils/techHelp';
 import {
   modmailTripsitter,
   // modmailCommands,
@@ -39,6 +37,18 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   const command = client.commands.get(interaction.customId);
   if (command) {
     logger.debug(`[${PREFIX}] command: ${command}`);
+  }
+
+  if (buttonID.startsWith('approveApplication')) {
+    applicationAccept(interaction);
+  }
+
+  if (buttonID.startsWith('tripsitterApplication')) {
+    applicationStart(interaction);
+  }
+
+  if (buttonID.startsWith('consultantApplication')) {
+    applicationStart(interaction);
   }
 
   if (buttonID === 'memberbutton') {
@@ -183,30 +193,25 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     return;
   }
 
-  if (buttonID === 'tripsitme') {
-    return tripsitmeModal(interaction);
+  if (buttonID.startsWith('tripsitme')) {
+    return tripsitmeClick(interaction);
   }
-  if (buttonID.startsWith('tripsat_')) {
-    logger.debug(`[${PREFIX}] tripsat_them: ${interaction.user.username}`);
-    logger.debug(`[${PREFIX}] channelId: ${interaction.channel!.id}`);
-    logger.debug(`[${PREFIX}] channel.name: ${(interaction.channel! as TextChannel).name}`);
-    logger.debug(`[${PREFIX}] ID: ${buttonID.slice(8)}`);
-    const target = await interaction.guild!.members.fetch(buttonID.slice(8));
-    logger.debug(`[${PREFIX}] target: ${target}`);
-    if ((interaction.channel! as TextChannel).name.includes('discuss')) {
-      logger.debug(`[${PREFIX}] discussion channel!`);
-      tripsat(interaction, target);
-      return;
-    } else {
-      if (interaction.user.id === target.id) {
-        tripsat(interaction, target);
-        return;
-      } else {
-        interaction.reply({content: 'You can only use this in the discussion channel!', ephemeral: true});
-        return;
-      }
-    }
+
+  if (buttonID.startsWith('tripsat')) {
+    tripsat(interaction);
   }
+
+  if (buttonID === 'techHelpOwn') {
+    return techHelpOwn(interaction);
+  };
+
+  if (buttonID === 'techHelpClose') {
+    return techHelpClose(interaction);
+  };
+
+  if (buttonID.startsWith('techhelp_')) {
+    return techHelpClick(interaction);
+  };
   if (buttonID === 'modmailTripsitter') {
     return modmailTripsitter(interaction);
   }
@@ -218,18 +223,6 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   }
   if (buttonID === 'modmailDiscordissue') {
     return modmailIssue(interaction, 'discord');
-  }
-  if (buttonID === 'ircAppeal') {
-    return ircClick(interaction, 'ircAppeal');
-  }
-  if (buttonID === 'ircConnect') {
-    return ircClick(interaction, 'ircConnect');
-  }
-  if (buttonID === 'ircOther') {
-    return ircClick(interaction, 'ircOther');
-  }
-  if (buttonID === 'discordIssue') {
-    return ircClick(interaction, 'discordIssue');
   }
 
   if (!command) return;
