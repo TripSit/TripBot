@@ -58,7 +58,7 @@ export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<v
     modmailIssueSubmit(interaction, 'discord');
     return;
   }
-  if (interaction.customId.startsWith('tripsitModal')) {
+  if (interaction.customId.startsWith('tripsitmeSubmit')) {
     tripsitmeSubmit(interaction);
     return;
   }

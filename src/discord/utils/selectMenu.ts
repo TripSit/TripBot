@@ -17,7 +17,7 @@ export async function selectMenu(interaction:SelectMenuInteraction, client:Clien
   logger.debug(`[${PREFIX}] finished!`);
   const buttonID = interaction.customId;
 
-  if (buttonID.startsWith('rejectApplication')) {
+  if (buttonID.startsWith('applicationReject')) {
     applicationReject(interaction);
   }
 

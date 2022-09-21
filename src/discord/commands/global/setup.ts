@@ -21,9 +21,17 @@ import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
 const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
-
 /**
- * The how to tripsit prompt
+ * This command populates various channels with static prompts
+ * This is actually kind of complicated, but not really, let me explain:
+ * Each prompt generally allows a response from the user, like giving a role or sending a message
+ * To customize the action based on the guild, we need to dynamically create the command's >>>> customID <<<<
+ * This customID is then parsed to determine the specifics of that command
+ * For example, in the /setup tripsit command we create a button with the following customID:
+ *     .setCustomId(`tripsitme~${roleNeedshelp.id}~${roleTripsitter.id}~${channelTripsitters.id}`)
+ * As you can see:   command  ~ role              ~  role              ~  channel
+ * In the buttonClick.ts script we parse the customID and determine what to do, usually create a modal
+ * That modal will also have a customID, which is in-turn parsed by modalSubmit.ts, etc
  * @param {Interaction} interaction The interaction that triggered this
  */
 export const prompt: SlashCommand = {
@@ -142,7 +150,7 @@ export async function hasPermissions(
     channel: TextChannel) {
   logger.debug(`[${PREFIX}] Checking permissions`);
   const me = interaction.guild!.members.me!;
-  const channelPerms = (channel).permissionsFor(me);
+  const channelPerms = channel.permissionsFor(me);
   logger.debug(`[${PREFIX}] channelPerms: ${channelPerms?.toArray()}`);
 
   if (!channelPerms.has('ViewChannel')) {
@@ -230,14 +238,13 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
     buttonText += `\n\nAll other topics of conversation are welcome in ${channelGeneral.toString()}!`;
   }
 
-
   buttonText += `\n\nStay safe!\n\n`;
 
   // Create a new button embed
   const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
           new ButtonBuilder()
-              .setCustomId(`tripsitme~${roleNeedshelp.id}~${roleTripsitter.id}~${channelTripsitters.id}`)
+              .setCustomId(`tripsitmeClick~${roleNeedshelp.id}~${roleTripsitter.id}~${channelTripsitters.id}`)
               .setLabel('I need assistance!')
               .setStyle(ButtonStyle.Primary),
       );
@@ -269,9 +276,11 @@ export async function tripsitter(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  if (!await hasPermissions(interaction, (interaction.options.getChannel('applications') as TextChannel))) {
-    logger.debug(`${PREFIX} bot does NOT has permission to post!`);
-    return;
+  if (interaction.options.getChannel('applications')) {
+    if (!await hasPermissions(interaction, (interaction.options.getChannel('applications') as TextChannel))) {
+      logger.debug(`${PREFIX} bot does NOT has permission to post!`);
+      return;
+    }
   }
 
   const channelTripsit = interaction.options.getChannel('tripsit');
@@ -310,7 +319,7 @@ export async function tripsitter(interaction:ChatInputCommandInteraction) {
           components: [new ActionRowBuilder<ButtonBuilder>()
               .addComponents(
                   new ButtonBuilder()
-                      .setCustomId(`tripsitterApplication#${channelApplications!.id}&${roleTripsitter!.id}`)
+                      .setCustomId(`applicationStart~${channelApplications!.id}~${roleTripsitter!.id}`)
                       .setLabel('I want to be a tripsitter!')
                       .setStyle(ButtonStyle.Primary),
               )]},
@@ -354,8 +363,8 @@ export async function applications(interaction:ChatInputCommandInteraction) {
       components: [new ActionRowBuilder<ButtonBuilder>()
           .addComponents(
               new ButtonBuilder()
-                  .setCustomId(`consultantApplication#&${roleConsultant!.id}`)
-                  .setLabel('I want to be a consultant!')
+                  .setCustomId(`applicationStart~${interaction.channel!.id}~${roleConsultant!.id}`)
+                  .setLabel(`I want to be a ${roleConsultant!.name}!`)
                   .setStyle(ButtonStyle.Primary),
           )]},
   );
