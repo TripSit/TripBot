@@ -104,7 +104,7 @@ export async function tripsitmeClick(interaction:ButtonInteraction) {
 
   const modal = new ModalBuilder()
       .setCustomId(`tripsitmeSubmit~${roleNeedshelpId}~${roleTripsitterId}~${channelTripsittersId}`)
-      .setTitle('TripSit Help Request');
+      .setTitle('Tripsitter Help Request');
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
       .setCustomId('triageInput')
       .setLabel('What substance? How much taken? What time?')
@@ -338,8 +338,7 @@ export async function tripsitmeSubmit(
       const teamMessage = memberInput ?
           stripIndents`Hey ${actor}, ${target.nickname || target.user.username} is a team member!
           Did you mean to do that?` :
-          stripIndents`You are a member of the team and cannot be publicly helped!
-          Try asking in #teamtripsit =)`;
+          stripIndents`You are a member of the team and cannot be publicly helped!`;
       const embed = embedTemplate()
           .setColor(Colors.DarkBlue)
           .setDescription(teamMessage);
@@ -844,7 +843,7 @@ If they still need help it's okay to leave them with that role.`;
   await threadHelpUser.send(stripIndents`
       ${env.EMOJI_INVISIBLE}
       > **If you have a minute, your feedback is important to us!**
-      > Please rate your experience with the TripSit service by reacting below.
+      > Please rate your experience with ${interaction.guild.name}'s service by reacting below.
       > Thank you!
       ${env.EMOJI_INVISIBLE}
       `)
@@ -882,7 +881,7 @@ If they still need help it's okay to leave them with that role.`;
       });
 
   let endMetaHelpMessage = stripIndents`${target.displayName} has indicated that they no longer need help!
-    *This thread, and the #tripsit thread, will remain un-archived for 24 hours to allow the user to follow-up.
+    *This thread, and ${threadHelpUser.toString()}, will remain un-archived for 24 hours to allow the user to follow-up.
     If the user requests help again within 7 days these threads will be un-archived.
     After 7 days the threads will be deleted to preserve privacy.*`;
 

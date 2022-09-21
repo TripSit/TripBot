@@ -12,10 +12,10 @@ import {
   PermissionsBitField,
   // TextChannel,
 } from 'discord.js';
-import env from '../../global/utils/env.config';
+import env from '../../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
-import logger from '../../global/utils/logger';
-import {embedTemplate} from '../utils/embedTemplate';
+import logger from '../../../global/utils/logger';
+import {embedTemplate} from '../../utils/embedTemplate';
 
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
