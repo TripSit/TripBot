@@ -435,6 +435,7 @@ export async function tripsitmeSubmit(
           firstMessage = testNotice + firstMessage;
         }
         threadHelpUser.send(firstMessage);
+        threadHelpUser.setName(`💜│${target.displayName} discussion`);
 
         // Update the meta thread too
         let helperMsg = memberInput ?
@@ -458,6 +459,7 @@ export async function tripsitmeSubmit(
           helperMsg = testNotice + helperMsg;
         }
         threadDiscussUser.send(helperMsg);
+        threadDiscussUser.setName(`💜│${target.displayName} discussion`);
 
         if (global.db) {
           const threadArchiveTime = new Date();
@@ -511,7 +513,7 @@ export async function tripsitmeSubmit(
 
   // Create a new threadDiscussUser in the tripsitters channel
   threadDiscussUser = await tripsittersChannel.threads.create({
-    name: `${target.user.username} discuss here!`,
+    name: `💜│${target.displayName} discussion`,
     autoArchiveDuration: 1440,
     type: env.NODE_ENV === 'production' ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
     reason: `${target.user.username} requested help`,
@@ -522,7 +524,7 @@ export async function tripsitmeSubmit(
   // Create a new private thread in the channel
   // If we're not in production we need to create a public thread
   threadHelpUser = await tripsitChannel.threads.create({
-    name: `${target.nickname || target.user.username} chat here!`,
+    name: `💜│${target.displayName}'s channel!`,
     autoArchiveDuration: 1440,
     type: env.NODE_ENV === 'production' ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
     reason: `${target.nickname || target.user.username} requested help`,
@@ -839,6 +841,8 @@ If they still need help it's okay to leave them with that role.`;
     logger.error(err);
   }
 
+  threadHelpUser.setName(`💚│${target.displayName}'s channel!`);
+
   let message:Message;
   await threadHelpUser.send(stripIndents`
       ${env.EMOJI_INVISIBLE}
@@ -890,6 +894,8 @@ If they still need help it's okay to leave them with that role.`;
   }
 
   threadDiscussUser.send(endMetaHelpMessage);
+
+  threadDiscussUser.setName(`💚│${target.displayName} discussion`);
 
   logger.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
   logger.debug(`[${PREFIX}] finished!`);
