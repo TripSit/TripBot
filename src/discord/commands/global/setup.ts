@@ -75,14 +75,18 @@ export const prompt: SlashCommand = {
           )
           .addRoleOption((option) => option
               .setDescription('What is your Tripsitter role?')
-              .setName('tripsitter')
+              .setName('role_tripsitter')
               .setRequired(true),
           )
           .addChannelOption((option) => option
               .setDescription('Do you have an applications room?')
               .setName('applications'),
-
-          ))
+          )
+          .addRoleOption((option) => option
+              .setDescription('Who will review these applications?')
+              .setName('role_reviewer'),
+          ),
+      )
       .addSubcommand((subcommand) => subcommand
           .setDescription('Application info!')
           .setName('applications')
@@ -309,7 +313,9 @@ export async function tripsitter(interaction:ChatInputCommandInteraction) {
   `;
 
   const channelApplications = interaction.options.getChannel('applications');
-  const roleTripsitter = interaction.options.getRole('tripsitter');
+  const roleTripsitter = interaction.options.getRole('role_tripsitter');
+  const roleReviewer = interaction.options.getRole('role_reviewer');
+
   if (channelApplications ) {
     message += `
 
@@ -326,7 +332,7 @@ export async function tripsitter(interaction:ChatInputCommandInteraction) {
           components: [new ActionRowBuilder<ButtonBuilder>()
               .addComponents(
                   new ButtonBuilder()
-                      .setCustomId(`applicationStart~${channelApplications!.id}~${roleTripsitter!.id}`)
+                      .setCustomId(`applicationStart~${channelApplications!.id}~${roleTripsitter!.id}~${roleReviewer!.id}`)
                       .setLabel(`I want to be a ${roleTripsitter!.name}!`)
                       .setStyle(ButtonStyle.Primary),
               )]},
