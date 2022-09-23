@@ -77,12 +77,14 @@ export async function applicationStart(
       .setRequired(true)
       .setLabel('Why do you want to help out?')
       .setPlaceholder('This helps us get to know you a bit before you join the team!')
+      .setMaxLength(2000)
       .setStyle(TextInputStyle.Paragraph)));
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
       .setCustomId('skills')
       .setRequired(true)
       .setLabel('What skills can you bring to the team?')
       .setPlaceholder(`What makes you qualified to be a ${roleRequested!.name}? What can you bring to the team?`)
+      .setMaxLength(2000)
       .setStyle(TextInputStyle.Paragraph)));
   await interaction.showModal(modal);
   logger.debug(`[${PREFIX}] finished!`);
@@ -137,6 +139,7 @@ export async function applicationSubmit(
 
   const appEmbed = embedTemplate()
       .setColor(Colors.DarkBlue)
+      .setDescription(`**Reason:** ${reason}\n**Skills:** ${skills}`)
       .addFields(
           {
             name: 'Displayname',
@@ -166,12 +169,6 @@ export async function applicationSubmit(
           inline: true},
     );
   }
-  logger.debug(`[${PREFIX}] reason: ${reason}`);
-  logger.debug(`[${PREFIX}] skills: ${skills}`);
-  appEmbed.addFields(
-      {name: 'Reason', value: reason, inline: false},
-      {name: 'Skills', value: skills, inline: false},
-  );
 
   const approveButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
