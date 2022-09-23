@@ -166,6 +166,8 @@ export async function applicationSubmit(
           inline: true},
     );
   }
+  logger.debug(`[${PREFIX}] reason: ${reason}`);
+  logger.debug(`[${PREFIX}] skills: ${skills}`);
   appEmbed.addFields(
       {name: 'Reason', value: reason, inline: false},
       {name: 'Skills', value: skills, inline: false},
