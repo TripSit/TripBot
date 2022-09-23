@@ -428,11 +428,11 @@ Thanks for reading, stay safe!
   const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
           new ButtonBuilder()
-              .setCustomId(`techhelp_discord&${roleModerator.id}`)
+              .setCustomId(`techHelpClick~discord~${roleModerator.id}`)
               .setLabel('Discord issue/feedback!')
               .setStyle(ButtonStyle.Primary),
           new ButtonBuilder()
-              .setCustomId(`techhelp_other&${roleModerator.id}`)
+              .setCustomId(`techHelpClick~other~${roleModerator.id}`)
               .setLabel('I have something else!')
               .setStyle(ButtonStyle.Secondary),
       );

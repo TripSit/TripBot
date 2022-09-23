@@ -38,7 +38,7 @@ export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<v
     issue.submit!(interaction);
     return;
   }
-  if (interaction.customId.startsWith('techhelp_')) {
+  if (interaction.customId.startsWith('techHelpSubmit')) {
     techHelpSubmit(interaction);
     return;
   };

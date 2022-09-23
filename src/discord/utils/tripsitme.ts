@@ -437,7 +437,7 @@ export async function tripsitmeSubmit(
           firstMessage = testNotice + firstMessage;
         }
         threadHelpUser.send(firstMessage);
-        threadHelpUser.setName(`💜│${target.displayName} discussion`);
+        threadHelpUser.setName(`🧡│${target.displayName} discussion`);
 
         // Update the meta thread too
         let helperMsg = memberInput ?
@@ -461,7 +461,7 @@ export async function tripsitmeSubmit(
           helperMsg = testNotice + helperMsg;
         }
         threadDiscussUser.send(helperMsg);
-        threadDiscussUser.setName(`💜│${target.displayName} discussion`);
+        threadDiscussUser.setName(`🧡│${target.displayName} discussion`);
 
         if (global.db) {
           const threadArchiveTime = new Date();
@@ -515,7 +515,7 @@ export async function tripsitmeSubmit(
 
   // Create a new threadDiscussUser in the tripsitters channel
   threadDiscussUser = await tripsittersChannel.threads.create({
-    name: `💜│${target.displayName} discussion`,
+    name: `🧡│${target.displayName} discussion`,
     autoArchiveDuration: 1440,
     type: interaction.guild?.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
     reason: `${target.user.username} requested help`,
@@ -526,7 +526,7 @@ export async function tripsitmeSubmit(
   // Create a new private thread in the channel
   // If we're not in production we need to create a public thread
   threadHelpUser = await tripsitChannel.threads.create({
-    name: `💜│${target.displayName}'s channel!`,
+    name: `🧡│${target.displayName}'s channel!`,
     autoArchiveDuration: 1440,
     type: interaction.guild?.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
     reason: `${target.displayName} requested help`,

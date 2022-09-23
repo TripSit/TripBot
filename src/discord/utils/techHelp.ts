@@ -7,6 +7,7 @@ import {
   TextChannel,
   ButtonBuilder,
   GuildMember,
+  ThreadChannel,
 } from 'discord.js';
 import {
   ChannelType,
@@ -26,8 +27,8 @@ const PREFIX = path.parse(__filename).name;
 export async function techHelpClick(interaction:ButtonInteraction) {
   // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
 
-  const issueType = interaction.customId.split('_')[1].split('&')[0];
-  const roleId = interaction.customId.split('_')[1].split('&')[1];
+  const issueType = interaction.customId.split('~')[1];
+  const roleId = interaction.customId.split('~')[2];
 
   const role = await interaction.guild?.roles.fetch(roleId)!;
 
@@ -48,7 +49,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   // }
   // Create the modal
   const modal = new ModalBuilder()
-      .setCustomId(`techhelp_${issueType}&${role!.id}`)
+      .setCustomId(`techHelpSubmit~${issueType}~${role!.id}`)
       .setTitle('TripSit Feedback');
   const timeoutReason = new TextInputBuilder()
       .setLabel('What is your issue? Be super detailed!')
@@ -71,8 +72,8 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
   // logger.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}!`);
 
-  const issueType = interaction.customId.split('_')[1].split('&')[0];
-  const roleId = interaction.customId.split('_')[1].split('&')[1];
+  const issueType = interaction.customId.split('~')[1];
+  const roleId = interaction.customId.split('~')[2];
 
   const roleModerator = await interaction.guild?.roles.fetch(roleId)!;
 
@@ -106,7 +107,7 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
 
   // Create a new thread in channel
   const ticketThread = await (interaction.channel as TextChannel).threads.create({
-    name: `${actor.username}'s ${issueType} issue!`,
+    name: `🧡│${actor.username}'s ${issueType} issue!`,
     autoArchiveDuration: 1440,
     type: interaction.guild!.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
     reason: `${actor.username} submitted a(n) ${issueType} issue`,
@@ -127,11 +128,11 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
   const techHelpButtons = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
           new ButtonBuilder()
-              .setCustomId('techHelpOwn')
+              .setCustomId(`techHelpOwn~${issueType}~${actor.id}`)
               .setLabel('Own this issue!')
               .setStyle(ButtonStyle.Primary),
           new ButtonBuilder()
-              .setCustomId('techHelpClose')
+              .setCustomId(`techHelpClose~${issueType}~${actor.id}`)
               .setLabel('Close this issue!')
               .setStyle(ButtonStyle.Success),
       );
@@ -145,8 +146,13 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
  * @param {ButtonInteraction} interaction The button that submitted this
  */
 export async function techHelpOwn(interaction:ButtonInteraction) {
+  const issueType = interaction.customId.split('~')[1];
+  const targetId = interaction.customId.split('~')[2];
+  const target = await interaction.guild!.members.fetch(targetId) as GuildMember;
+
   interaction.reply({content: stripIndents`${(interaction.member! as GuildMember).displayName} has claimed this \
-  issue and will either help you or figure out how to get you help!`});
+issue and will either help you or figure out how to get you help!`});
+  (interaction.channel as ThreadChannel)!.setName(`💛│${target.displayName}'s ${issueType} issue!`);
 };
 
 /**
@@ -154,7 +160,12 @@ export async function techHelpOwn(interaction:ButtonInteraction) {
  * @param {ButtonInteraction} interaction The button that submitted this
  */
 export async function techHelpClose(interaction:ButtonInteraction) {
+  const issueType = interaction.customId.split('~')[1];
+  const targetId = interaction.customId.split('~')[2];
+  const target = await interaction.guild!.members.fetch(targetId) as GuildMember;
+
   interaction.reply({content: stripIndents`${(interaction.member! as GuildMember).displayName} has indicated that \
-  this issue has been resolved!`});
+this issue has been resolved!`});
+(interaction.channel as ThreadChannel)!.setName(`💚│${target.displayName}'s ${issueType} issue!`);
 };
 

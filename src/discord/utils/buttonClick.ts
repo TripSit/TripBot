@@ -53,15 +53,15 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     applicationApprove(interaction);
     return;
   }
-  if (buttonID === 'techHelpOwn') {
+  if (buttonID.startsWith('techHelpOwn')) {
     techHelpOwn(interaction);
     return;
   };
-  if (buttonID === 'techHelpClose') {
+  if (buttonID.startsWith('techHelpClose')) {
     techHelpClose(interaction);
     return;
   };
-  if (buttonID.startsWith('techhelp_')) {
+  if (buttonID.startsWith('techHelpClick')) {
     techHelpClick(interaction);
     return;
   };

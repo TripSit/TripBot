@@ -404,7 +404,7 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
 
   // Create a new thread in channel
   const ticketThread = await channel.threads.create({
-    name: `${actor.username}'s ${issueType} issue!`,
+    name: `🧡│${actor.username}'s ${issueType} issue!`,
     autoArchiveDuration: 1440,
     type: interaction.guild!.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
     reason: `${actor.username} submitted a(n) ${issueType} issue`,
