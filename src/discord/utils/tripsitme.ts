@@ -183,7 +183,7 @@ export async function tripsitmeSubmit(
   logger.debug(`[${PREFIX}] actor: ${actor.user.username}#${actor.user.discriminator}`);
 
   // Determine if this command was started by a Developer
-  const actorHasRoleDeveloper = false; // (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
+  const actorHasRoleDeveloper = (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
 
   // Determine the target.
   // If the user clicked the button, the target is whoever started the interaction.
