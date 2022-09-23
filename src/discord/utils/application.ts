@@ -74,11 +74,13 @@ export async function applicationStart(
       .setTitle(`${roleRequested!.name} Application`);
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
       .setCustomId('reason')
+      .setRequired(true)
       .setLabel('Why do you want to help out?')
       .setPlaceholder('This helps us get to know you a bit before you join the team!')
       .setStyle(TextInputStyle.Paragraph)));
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
       .setCustomId('skills')
+      .setRequired(true)
       .setLabel('What skills can you bring to the team?')
       .setPlaceholder(`What makes you qualified to be a ${roleRequested!.name}? What can you bring to the team?`)
       .setStyle(TextInputStyle.Paragraph)));
@@ -155,15 +157,19 @@ export async function applicationSubmit(
             name: 'Created',
             value: `${time((interaction.member.user as User).createdAt, 'R')}`,
             inline: true},
-          {
-            name: 'Joined',
-            value: `${time((interaction.member as GuildMember).joinedAt!, 'R')}`,
-            inline: true},
-      )
-      .addFields(
-          {name: 'Reason', value: reason, inline: false},
-          {name: 'Skills', value: skills, inline: false},
       );
+  if ((interaction.member as GuildMember).joinedAt) {
+    appEmbed.addFields(
+        {
+          name: 'Joined',
+          value: `${time((interaction.member as GuildMember).joinedAt!, 'R')}`,
+          inline: true},
+    );
+  }
+  appEmbed.addFields(
+      {name: 'Reason', value: reason, inline: false},
+      {name: 'Skills', value: skills, inline: false},
+  );
 
   const approveButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
