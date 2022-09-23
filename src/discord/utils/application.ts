@@ -17,6 +17,7 @@ import {
   SelectMenuBuilder,
   SelectMenuInteraction,
   Role,
+  PermissionsBitField,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -58,17 +59,19 @@ export async function applicationStart(
   logger.debug(`[${PREFIX} - applicationStart] customId: ${interaction.customId}`);
 
   const channelId = interaction.customId.split('~')[1];
-  const roleId = interaction.customId.split('~')[2];
-
-  const role = await interaction.guild?.roles.fetch(roleId);
+  const roleRequestedId = interaction.customId.split('~')[2];
+  const roleReviewerId = interaction.customId.split('~')[3];
 
   logger.debug(`[${PREFIX} - applicationStart] channelId: ${channelId}`);
-  logger.debug(`[${PREFIX} - applicationStart] roleId: ${roleId}`);
+  logger.debug(`[${PREFIX} - applicationStart] roleRequestedId: ${roleRequestedId}`);
+  logger.debug(`[${PREFIX} - applicationStart] roleReviewerId: ${roleReviewerId}`);
+
+  const roleRequested = await interaction.guild?.roles.fetch(roleRequestedId);
 
   // Create the modal
   const modal = new ModalBuilder()
-      .setCustomId(`applicationSubmit~${channelId}~${roleId}`)
-      .setTitle(`${role!.name} Application`);
+      .setCustomId(`applicationSubmit~${channelId}~${roleRequestedId}~${roleReviewerId}`)
+      .setTitle(`${roleRequested!.name} Application`);
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
       .setCustomId('reason')
       .setLabel('Why do you want to help out?')
@@ -77,7 +80,7 @@ export async function applicationStart(
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
       .setCustomId('skills')
       .setLabel('What skills can you bring to the team?')
-      .setPlaceholder(`What makes you qualified to be a ${role!.name}? What can you bring to the team?`)
+      .setPlaceholder(`What makes you qualified to be a ${roleRequested!.name}? What can you bring to the team?`)
       .setStyle(TextInputStyle.Paragraph)));
   await interaction.showModal(modal);
   logger.debug(`[${PREFIX}] finished!`);
@@ -105,12 +108,16 @@ export async function applicationSubmit(
   }
 
   const channelId = interaction.customId.split('~')[1];
-  const roleId = interaction.customId.split('~')[2];
+  const roleRequestedId = interaction.customId.split('~')[2];
+  const roleReviewerId = interaction.customId.split('~')[3];
 
-  logger.debug(`[${PREFIX} - applicationStart] channelId: ${channelId}`);
-  logger.debug(`[${PREFIX} - applicationStart] roleId: ${roleId}`);
+  logger.debug(`[${PREFIX} - applicationSubmit] channelId: ${channelId}`);
+  logger.debug(`[${PREFIX} - applicationSubmit] roleRequestedId: ${roleRequestedId}`);
+  logger.debug(`[${PREFIX} - applicationSubmit] roleReviewerId: ${roleReviewerId}`);
 
-  const role = await interaction.guild?.roles.fetch(roleId) as Role;
+  const roleRequested = await interaction.guild?.roles.fetch(roleRequestedId) as Role;
+  const roleReviewer = await interaction.guild?.roles.fetch(roleReviewerId) as Role;
+
   const channel = channelId !== '' ?
     await interaction.guild.channels.fetch(channelId) as TextChannel :
     interaction.channel as TextChannel;
@@ -119,7 +126,7 @@ export async function applicationSubmit(
   const skills = (interaction as ModalSubmitInteraction).fields.getTextInputValue('skills');
 
   const applicationThread = await channel.threads.create({
-    name: `${(interaction.member as GuildMember).displayName}'s ${role.name} application!`,
+    name: `${(interaction.member as GuildMember).displayName}'s ${roleRequested.name} application!`,
     autoArchiveDuration: 1440,
     type: env.NODE_ENV === 'production' ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
     reason: `${(interaction.member as GuildMember).displayName} submitted an application!`,
@@ -160,7 +167,7 @@ export async function applicationSubmit(
 
   const approveButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-          .setCustomId(`applicationApprove~${(interaction.member as GuildMember).id}~${roleId}`)
+          .setCustomId(`applicationApprove~${(interaction.member as GuildMember).id}~${roleRequestedId}`)
           .setLabel('Approve')
           .setStyle(ButtonStyle.Primary),
   );
@@ -232,6 +239,10 @@ export async function applicationSubmit(
           ),
   );
 
+  const actorHasRoleDeveloper = (interaction.member as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
+  logger.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
+
+  applicationThread.send(`Hey ${actorHasRoleDeveloper ? 'team!' : roleReviewer} there is a new application!`);
   applicationThread.send({embeds: [appEmbed], components: [approveButton, rejectMenu]});
 
   // Respond to the user

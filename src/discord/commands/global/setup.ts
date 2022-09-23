@@ -88,8 +88,15 @@ export const prompt: SlashCommand = {
           .setName('applications')
           .addRoleOption((option) => option
               .setDescription('What role are people applying for?')
-              .setName('role'),
-          ))
+              .setName('role_requested')
+              .setRequired(true),
+          )
+          .addRoleOption((option) => option
+              .setDescription('What role reviews applications?')
+              .setName('role_reviewer')
+              .setRequired(true),
+          ),
+      )
       .addSubcommand((subcommand) => subcommand
           .setDescription('techhelp info!')
           .setName('techhelp')
@@ -151,7 +158,7 @@ export async function hasPermissions(
   logger.debug(`[${PREFIX}] Checking permissions`);
   const me = interaction.guild!.members.me!;
   const channelPerms = channel.permissionsFor(me);
-  logger.debug(`[${PREFIX}] channelPerms: ${channelPerms?.toArray()}`);
+  // logger.debug(`[${PREFIX}] channelPerms: ${channelPerms?.toArray()}`);
 
   if (!channelPerms.has('ViewChannel')) {
     const embed = embedTemplate()
@@ -347,7 +354,10 @@ export async function applications(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  const roleConsultant = interaction.options.getRole('role');
+  const roleRequested = interaction.options.getRole('role_requested');
+  const roleReviewer = interaction.options.getRole('role_reviewer');
+
+  // logger.debug(`[${PREFIX}] roleReviewer: ${JSON.stringify(roleReviewer, null, 2)}`);
 
   // Send the initial message
   await (interaction.channel as TextChannel).send(
@@ -363,8 +373,8 @@ export async function applications(interaction:ChatInputCommandInteraction) {
       components: [new ActionRowBuilder<ButtonBuilder>()
           .addComponents(
               new ButtonBuilder()
-                  .setCustomId(`applicationStart~${interaction.channel!.id}~${roleConsultant!.id}`)
-                  .setLabel(`I want to be a ${roleConsultant!.name}!`)
+                  .setCustomId(`applicationStart~${interaction.channel!.id}~${roleRequested!.id}~${roleReviewer!.id}`)
+                  .setLabel(`I want to be a ${roleRequested!.name}!`)
                   .setStyle(ButtonStyle.Primary),
           )]},
   );
