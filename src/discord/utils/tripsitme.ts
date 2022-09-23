@@ -514,10 +514,11 @@ export async function tripsitmeSubmit(
   const tripsitChannel = interaction.channel as TextChannel;
 
   // Create a new threadDiscussUser in the tripsitters channel
+  const guildPremiumLevel = interaction.guild?.premiumTier;
   threadDiscussUser = await tripsittersChannel.threads.create({
     name: `💜│${target.displayName} discussion`,
     autoArchiveDuration: 1440,
-    type: env.NODE_ENV === 'production' ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
+    type: guildPremiumLevel > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
     reason: `${target.user.username} requested help`,
     invitable: env.NODE_ENV === 'production' ? false : undefined,
   }) as ThreadChannel;
