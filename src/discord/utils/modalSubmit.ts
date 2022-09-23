@@ -2,9 +2,7 @@ import {
   ModalSubmitInteraction,
 } from 'discord.js';
 import logger from '../../global/utils/logger';
-import {
-  ircSubmit,
-} from '../commands/guild/prompt';
+import {techHelpSubmit} from '../utils/techHelp';
 import {
   modmailTripsitterSubmit,
   modmailFeedbackSubmit,
@@ -14,7 +12,8 @@ import {
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-import {tripsitme} from '../utils/tripsitme';
+import {tripsitmeSubmit} from '../utils/tripsitme';
+import {applicationSubmit} from '../utils/application';
 import {bug} from '../commands/global/bug';
 import {uKick} from '../commands/guild/u_kick';
 import {uBan} from '../commands/guild/u_ban';
@@ -30,26 +29,19 @@ import {issue} from '../commands/guild/issue';
  */
 export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<void> {
   logger.debug(`[${PREFIX}] interaction: ${interaction.customId}`);
+
+  if (interaction.customId.startsWith('application')) {
+    applicationSubmit(interaction);
+    return;
+  }
   if (interaction.customId === 'issueModal') {
     issue.submit!(interaction);
     return;
   }
-  if (interaction.customId === 'ircConnectModmailIssueModal') {
-    ircSubmit(interaction, 'ircConnect');
+  if (interaction.customId.startsWith('techhelp_')) {
+    techHelpSubmit(interaction);
     return;
-  }
-  if (interaction.customId === 'discordIssueModmailIssueModal') {
-    ircSubmit(interaction, 'discordIssue');
-    return;
-  }
-  if (interaction.customId === 'ircAppealModmailIssueModal') {
-    ircSubmit(interaction, 'ircAppeal');
-    return;
-  }
-  if (interaction.customId === 'ircOtherModmailIssueModal') {
-    ircSubmit(interaction, 'ircOther');
-    return;
-  }
+  };
   if (interaction.customId === 'tripsitModmailModal') {
     modmailTripsitterSubmit(interaction);
     return;
@@ -66,8 +58,8 @@ export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<v
     modmailIssueSubmit(interaction, 'discord');
     return;
   }
-  if (interaction.customId === 'tripsitModal') {
-    tripsitme(interaction);
+  if (interaction.customId.startsWith('tripsitmeSubmit')) {
+    tripsitmeSubmit(interaction);
     return;
   }
   if (interaction.customId === 'banModal') {

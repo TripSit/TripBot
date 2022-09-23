@@ -1,7 +1,6 @@
 import {
   Guild,
   Role,
-  ThreadChannel,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
 import logger from '../../global/utils/logger';
@@ -135,25 +134,25 @@ export async function runTimer() {
                     }
 
                     // Lock the threads
-                    try {
-                      const helpChannel = await tripsitGuild.channels.fetch(helpThread);
-                      if (helpChannel && helpChannel.isThread()) {
-                        (helpChannel as ThreadChannel).setLocked(true, 'Help thread closed');
-                        logger.debug(`[${PREFIX}] Help thread locked`);
-                      }
-                    } catch (err) {
-                      logger.debug(`[${PREFIX}] Help thread not found`);
-                    }
+                    // try {
+                    //   const helpChannel = await tripsitGuild.channels.fetch(helpThread);
+                    //   if (helpChannel && helpChannel.isThread()) {
+                    //     (helpChannel as ThreadChannel).setLocked(true, 'Help thread closed');
+                    //     logger.debug(`[${PREFIX}] Help thread locked`);
+                    //   }
+                    // } catch (err) {
+                    //   logger.debug(`[${PREFIX}] Help thread not found`);
+                    // }
 
-                    try {
-                      const metaChannel = await tripsitGuild.channels.fetch(metaThread);
-                      if (metaChannel && metaChannel.isThread()) {
-                        (metaChannel as ThreadChannel).setLocked(true, 'Meta thread closed');
-                        logger.debug(`[${PREFIX}] Meta thread locked`);
-                      }
-                    } catch (err) {
-                      logger.debug(`[${PREFIX}] Meta thread not found`);
-                    }
+                    // try {
+                    //   const metaChannel = await tripsitGuild.channels.fetch(metaThread);
+                    //   if (metaChannel && metaChannel.isThread()) {
+                    //     (metaChannel as ThreadChannel).setLocked(true, 'Meta thread closed');
+                    //     logger.debug(`[${PREFIX}] Meta thread locked`);
+                    //   }
+                    // } catch (err) {
+                    //   logger.debug(`[${PREFIX}] Meta thread not found`);
+                    // }
 
                     await global.db.ref(`${env.FIREBASE_DB_TIMERS}/${userId}/${timevalue}`).remove();
 

@@ -12,8 +12,11 @@ import {registerEvents} from './events';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
+// eslint-disable-next-line
+// https://discord.com/api/oauth2/authorize?client_id=977945272359452713&permissions=378225575936&scope=bot%20applications.commands
 /**
  * Starts the discord bot
+ * eslint disable-next-line
  */
 export async function discordConnect(): Promise<void> {
   logger.debug(`[${PREFIX}] Starting discord bot!`);

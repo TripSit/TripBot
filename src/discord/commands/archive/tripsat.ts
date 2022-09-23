@@ -8,12 +8,14 @@ import {
   Message,
   MessageReaction,
   User,
-  ChatInputCommandInteraction,
+  // ChatInputCommandInteraction,
+  PermissionsBitField,
+  // TextChannel,
 } from 'discord.js';
-import env from '../../global/utils/env.config';
+import env from '../../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
-import logger from '../../global/utils/logger';
-import {embedTemplate} from '../utils/embedTemplate';
+import logger from '../../../global/utils/logger';
+import {embedTemplate} from '../../utils/embedTemplate';
 
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -74,15 +76,12 @@ const invisibleEmoji = env.NODE_ENV === 'production' ?
 /**
  * Handles removing of the NeedsHelp mode
  * @param {ButtonInteraction} interaction
- * @param {GuildMember} memberInput
  */
 export async function tripsat(
-    interaction:ButtonInteraction | ChatInputCommandInteraction,
-    memberInput?:GuildMember,
+    interaction:ButtonInteraction,
 ) {
   logger.debug(`[${PREFIX}] starting!`);
   await interaction.deferReply({ephemeral: true});
-
   if (!interaction.guild) {
     logger.debug(`[${PREFIX}] no guild!`);
     interaction.reply('This must be performed in a guild!');
@@ -94,10 +93,18 @@ export async function tripsat(
     return;
   }
 
-  let target = interaction.member as GuildMember;
-  const actor = interaction.member;
-  if (memberInput) {
-    target = memberInput;
+  const meOrThem = interaction.customId.split('~')[1];
+  const targetId = interaction.customId.split('~')[2];
+  // const threadId = interaction.customId.split('~')[3];
+  const needsHelpId = interaction.customId.split('~')[4];
+
+  const target = await interaction.guild?.members.fetch(targetId)!;
+  const actor = interaction.member as GuildMember;
+
+  if (meOrThem === 'me' && targetId !== actor.id) {
+    logger.debug(`[${PREFIX}] not the target!`);
+    interaction.reply({content: 'Only the user receiving help can click this button!', ephemeral: true});
+    return;
   }
 
   let targetLastHelpedDate = new Date();
@@ -127,38 +134,28 @@ export async function tripsat(
   logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
   logger.debug(`[${PREFIX}] targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);
 
-  const tripsittersChannel = interaction.guild.channels.cache.get(env.CHANNEL_TRIPSITTERS);
-  const channelOpentripsit = await interaction.client.channels.cache.get(env.CHANNEL_OPENTRIPSIT);
-  const channelSanctuary = await interaction.client.channels.cache.get(env.CHANNEL_SANCTUARY);
+  // const channelOpentripsit = await interaction.client.channels.cache.get(env.CHANNEL_OPENTRIPSIT);
+  // const channelSanctuary = await interaction.client.channels.cache.get(env.CHANNEL_SANCTUARY);
   // Get the channel objects for the help and meta threads
   const threadHelpUser = interaction.guild.channels.cache
       .find((chan) => chan.id === targetLastHelpedThreadId) as ThreadChannel;
   const threadDiscussUser = interaction.guild.channels.cache
       .find((chan) => chan.id === targetLastHelpedMetaThreadId) as ThreadChannel;
 
-  const roleDeveloper = (actor.roles as GuildMemberRoleManager).cache.find(
-      (role:Role) => role.id === env.ROLE_DEVELOPER) as Role;
-  const roleNeedshelp = interaction.guild.roles.cache.find((role:Role) => role.id === env.ROLE_NEEDSHELP) as Role;
-
-  const actorHasRoleDeveloper = (actor.roles as GuildMemberRoleManager).cache.find(
-      (role:Role) => role === roleDeveloper,
-  ) !== undefined;
+  const actorHasRoleDeveloper = (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
   logger.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
 
-  const targetHasRoleDeveloper = (target.roles as GuildMemberRoleManager).cache.find(
-      (role:Role) => role === roleDeveloper,
-  ) !== undefined;
+  const targetHasRoleDeveloper = (target as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
   logger.debug(`[${PREFIX}] targetHasRoleDeveloper: ${targetHasRoleDeveloper}`);
 
+  const roleNeedshelp = await interaction.guild.roles.fetch(needsHelpId)!;
   const targetHasNeedsHelpRole = (target.roles as GuildMemberRoleManager).cache.find(
       (role:Role) => role === roleNeedshelp,
   ) !== undefined;
   logger.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
 
   if (!targetHasNeedsHelpRole) {
-    let rejectMessage = memberInput ?
-        `Hey ${interaction.member}, ${target.nickname || target.user.username} isnt currently being taken care of!` :
-        `Hey ${interaction.member}, you're not currently being taken care of!`;
+    let rejectMessage = `Hey ${interaction.member}, you're not currently being taken care of!`;
 
     if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
       rejectMessage = testNotice + rejectMessage;
@@ -171,15 +168,14 @@ export async function tripsat(
     return;
   }
 
-  if (targetLastHelpedDate && !memberInput) {
+  if (targetLastHelpedDate) {
     const lastHour = Date.now() - (1000 * 60 * 60);
     logger.debug(`[${PREFIX}] lastHelp: ${targetLastHelpedDate.valueOf() * 1000}`);
     logger.debug(`[${PREFIX}] lastHour: ${lastHour.valueOf()}`);
     if (targetLastHelpedDate.valueOf() * 1000 > lastHour.valueOf()) {
       let message = stripIndents`Hey ${interaction.member} you just asked for help recently!
         Take a moment to breathe and wait for someone to respond =)
-        Maybe try listening to some lofi music while you wait?
-        You can also talk **calmly** in ${channelSanctuary} or ${channelOpentripsit}`;
+        Maybe try listening to some lofi music while you wait?`;
 
       if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
         message = testNotice + message;
@@ -192,10 +188,9 @@ export async function tripsat(
 
       if (threadDiscussUser) {
         let metaUpdate = stripIndents`Hey team, ${target.nickname || target.user.username} said they're good \
-        but it's been less than an hour since they asked for help.
+but it's been less than an hour since they asked for help.
 
-            If they still need help it's okay to leave them with that role.
-            If you're sure they don't need help you can use /tripsit to turn off TripSit-Mode`;
+If they still need help it's okay to leave them with that role.`;
         if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
           metaUpdate = testNotice + metaUpdate;
         }
@@ -226,14 +221,10 @@ export async function tripsat(
     });
   }
 
-  target.roles.remove(roleNeedshelp);
-  logger.debug(`[${PREFIX}] Removed ${roleNeedshelp.name} from ${target.nickname || target.user.username}`);
+  target.roles.remove(roleNeedshelp!);
+  logger.debug(`[${PREFIX}] Removed ${roleNeedshelp!.name} from ${target.nickname || target.user.username}`);
 
-  let endHelpMessage = memberInput ?
-      stripIndents`Hey ${target.nickname || target.user.username}, it looks like you're doing better =)
-      This thread will remain here for a day if you want to follow up tomorrow.
-      After 7 days, or on request, it will be deleted to preserve your privacy =)` :
-      stripIndents`Hey ${target}, we're glad you're doing better!
+  let endHelpMessage = stripIndents`Hey ${target}, we're glad you're doing better!
       We've restored your old roles back to normal <3
       This thread will remain here for a day if you want to follow up tomorrow.
       After 7 days, or on request, it will be deleted to preserve your privacy =)`;
@@ -278,7 +269,6 @@ export async function tripsat(
           const finalEmbed = embedTemplate()
               .setColor(Colors.Blue)
               .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
-          logger.debug(`[${PREFIX}] tripsittersChannel ${tripsittersChannel}`);
           try {
             if (threadDiscussUser) {
               await threadDiscussUser.send({embeds: [finalEmbed]});
@@ -291,13 +281,7 @@ export async function tripsat(
         });
       });
 
-  let endMetaHelpMessage = memberInput ?
-      // eslint-disable-next-line max-len
-      stripIndents`${actor.user.username} has indicated that ${target.nickname || target.user.username} no longer needs help!
-      *This thread, and ${threadHelpUser}, will remain un-archived for 24 hours to allow the user to follow-up.
-      If the user requests help again within 7 days these threads will be un-archived.
-      After 7 days the threads will be deleted to preserve privacy.*` :
-      stripIndents`${target.nickname || target.user.username} has indicated that they no longer need help!
+  let endMetaHelpMessage = stripIndents`${target.displayName} has indicated that they no longer need help!
       *This thread, and the #tripsit thread, will remain un-archived for 24 hours to allow the user to follow-up.
       If the user requests help again within 7 days these threads will be un-archived.
       After 7 days the threads will be deleted to preserve privacy.*`;

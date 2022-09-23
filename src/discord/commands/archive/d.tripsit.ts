@@ -8,8 +8,8 @@ import {SlashCommand} from '../../@types/commandDef';
 // import {stripIndents} from 'common-tags';
 // import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
-import {tripsat} from '../../utils/tripsat';
-import {tripsitme} from '../../utils/tripsitme';
+// import {tripsat} from '../../utils/tripsat';
+// import {tripsitme} from '../../utils/tripsitme';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -53,11 +53,11 @@ export const tripsit: SlashCommand = {
     logger.debug(`[${PREFIX}] input: ${input}`);
     logger.debug(`[${PREFIX}] enable: ${enable}`);
 
-    if (enable === 'on') {
-      tripsitme(interaction, target, triage, input);
-    }
-    if (enable === 'off') {
-      tripsat(interaction, target);
-    }
+    // if (enable === 'on') {
+    //   tripsitme(interaction, target, triage, input);
+    // }
+    // if (enable === 'off') {
+    //   tripsat(interaction, target);
+    // }
   },
 };

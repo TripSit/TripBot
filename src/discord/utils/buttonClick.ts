@@ -11,12 +11,9 @@ import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../utils/embedTemplate';
-import {tripsitmeModal} from '../utils/tripsitme';
-import {tripsat} from '../utils/tripsat';
-import {
-  ircClick,
-} from '../commands/guild/prompt';
-
+import {applicationStart, applicationApprove} from '../utils/application';
+import {tripsitmeClick, tripsitmeFinish} from '../utils/tripsitme';
+import {techHelpClick, techHelpClose, techHelpOwn} from '../utils/techHelp';
 import {
   modmailTripsitter,
   // modmailCommands,
@@ -40,7 +37,50 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   if (command) {
     logger.debug(`[${PREFIX}] command: ${command}`);
   }
-
+  if (buttonID.startsWith('tripsitmeClick')) {
+    tripsitmeClick(interaction);
+    return;
+  }
+  if (buttonID.startsWith('tripsitmeFinish')) {
+    tripsitmeFinish(interaction);
+    return;
+  }
+  if (buttonID.startsWith('applicationStart')) {
+    applicationStart(interaction);
+    return;
+  }
+  if (buttonID.startsWith('applicationApprove')) {
+    applicationApprove(interaction);
+    return;
+  }
+  if (buttonID === 'techHelpOwn') {
+    techHelpOwn(interaction);
+    return;
+  };
+  if (buttonID === 'techHelpClose') {
+    techHelpClose(interaction);
+    return;
+  };
+  if (buttonID.startsWith('techhelp_')) {
+    techHelpClick(interaction);
+    return;
+  };
+  if (buttonID === 'modmailTripsitter') {
+    modmailTripsitter(interaction);
+    return;
+  }
+  if (buttonID === 'modmailFeedback') {
+    modmailFeedback(interaction);
+    return;
+  }
+  if (buttonID === 'modmailIrcissue') {
+    modmailIssue(interaction, 'irc');
+    return;
+  }
+  if (buttonID === 'modmailDiscordissue') {
+    modmailIssue(interaction, 'discord');
+    return;
+  }
   if (buttonID === 'memberbutton') {
     const member = await interaction.guild?.members.fetch(interaction.user.id);
     const memberRole = interaction.guild?.roles.cache.find((role:Role) => role.id === env.ROLE_MEMBER);
@@ -126,13 +166,11 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
       }
     }
   }
-
   if (buttonID === 'underban') {
     const roleUnderban = interaction.guild?.roles.cache.find(
         (role:Role) => role.id === env.ROLE_UNDERBAN.toString()) as Role;
     (interaction.member?.roles as GuildMemberRoleManager).add(roleUnderban);
   }
-
   const modChan = interaction.client.channels.cache.get(env.CHANNEL_MODERATORS) as TextChannel;
   if (buttonID === 'acknowledgebtn') {
     const embed = embedTemplate()
@@ -144,7 +182,6 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     interaction.reply('Thanks for understanding!');
     return;
   }
-
   if (buttonID === 'refusalbtn') {
     const guild = interaction.client.guilds.resolve(env.DISCORD_GUILD_ID.toString());
     logger.debug(guild);
@@ -158,7 +195,6 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     interaction.reply('Thanks for making this easy!');
     return;
   }
-
   if (buttonID === 'guildacknowledgebtn') {
     // Get the owner of the client
     await interaction.client?.application?.fetch();
@@ -173,7 +209,6 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     interaction.reply('Thanks for understanding!');
     return;
   }
-
   if (buttonID === 'warnbtn') {
     const embed = embedTemplate()
         .setColor(Colors.Red)
@@ -181,55 +216,6 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     modChan.send({embeds: [embed]});
     interaction.reply('Thanks for making this easy!');
     return;
-  }
-
-  if (buttonID === 'tripsitme') {
-    return tripsitmeModal(interaction);
-  }
-  if (buttonID.startsWith('tripsat_')) {
-    logger.debug(`[${PREFIX}] tripsat_them: ${interaction.user.username}`);
-    logger.debug(`[${PREFIX}] channelId: ${interaction.channel!.id}`);
-    logger.debug(`[${PREFIX}] channel.name: ${(interaction.channel! as TextChannel).name}`);
-    logger.debug(`[${PREFIX}] ID: ${buttonID.slice(8)}`);
-    const target = await interaction.guild!.members.fetch(buttonID.slice(8));
-    logger.debug(`[${PREFIX}] target: ${target}`);
-    if ((interaction.channel! as TextChannel).name.includes('discuss')) {
-      logger.debug(`[${PREFIX}] discussion channel!`);
-      tripsat(interaction, target);
-      return;
-    } else {
-      if (interaction.user.id === target.id) {
-        tripsat(interaction, target);
-        return;
-      } else {
-        interaction.reply({content: 'You can only use this in the discussion channel!', ephemeral: true});
-        return;
-      }
-    }
-  }
-  if (buttonID === 'modmailTripsitter') {
-    return modmailTripsitter(interaction);
-  }
-  if (buttonID === 'modmailFeedback') {
-    return modmailFeedback(interaction);
-  }
-  if (buttonID === 'modmailIrcissue') {
-    return modmailIssue(interaction, 'irc');
-  }
-  if (buttonID === 'modmailDiscordissue') {
-    return modmailIssue(interaction, 'discord');
-  }
-  if (buttonID === 'ircAppeal') {
-    return ircClick(interaction, 'ircAppeal');
-  }
-  if (buttonID === 'ircConnect') {
-    return ircClick(interaction, 'ircConnect');
-  }
-  if (buttonID === 'ircOther') {
-    return ircClick(interaction, 'ircOther');
-  }
-  if (buttonID === 'discordIssue') {
-    return ircClick(interaction, 'discordIssue');
   }
 
   if (!command) return;
