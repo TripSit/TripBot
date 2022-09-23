@@ -320,7 +320,7 @@ export async function tripsitter(interaction:ChatInputCommandInteraction) {
               .addComponents(
                   new ButtonBuilder()
                       .setCustomId(`applicationStart~${channelApplications!.id}~${roleTripsitter!.id}`)
-                      .setLabel('I want to be a tripsitter!')
+                      .setLabel(`I want to be a ${roleTripsitter!.name}!`)
                       .setStyle(ButtonStyle.Primary),
               )]},
     );

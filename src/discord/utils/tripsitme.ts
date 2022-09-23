@@ -147,7 +147,6 @@ export async function tripsitmeSubmit(
   const roleNeedshelpId = interaction.customId.split('~')[1];
   const roleTripsitterId = interaction.customId.split('~')[2];
   const channelTripsittersId = interaction.customId.split('~')[3];
-  const roleHelper = interaction.guild.roles.cache.find((role) => role.id === env.ROLE_HELPER) as Role;
 
   // logger.debug(`[${PREFIX}] roleNeedshelpId: ${roleNeedshelpId}\n
   // roleTripsitterId: ${roleTripsitterId}\n
@@ -167,7 +166,9 @@ export async function tripsitmeSubmit(
   // Get the roles we'll be referencing
   const roleNeedshelp = await interaction.guild.roles.fetch(roleNeedshelpId) as Role;
   logger.debug(`[${PREFIX}] roleNeedshelp: ${roleNeedshelp}`);
-  const roleTripsitter = await interaction.guild.roles.fetch(roleTripsitterId) as Role;
+  const roleHelper = await interaction.guild.roles.fetch(roleTripsitterId) as Role;
+  logger.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
+  const roleTripsitter = interaction.guild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
   logger.debug(`[${PREFIX}] roleTripsitter: ${roleTripsitter}`);
 
   // Get the channels we'll be referencing
@@ -277,7 +278,7 @@ export async function tripsitmeSubmit(
       let helpMessage = memberInput ?
           stripIndents`
           Hey ${target}, the team thinks you could still use assistance!
-          ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}${roleHelper ? `${actorHasRoleDeveloper ? ' and helpers' : ` and ${roleHelper}`}` : ''} will be with you as soon as they're available!
+          ${actorHasRoleDeveloper ? 'helpers' : roleHelper}${roleHelper ? `${actorHasRoleDeveloper ? ' and tripsitters' : ` and ${roleTripsitter}`}` : ''} will be with you as soon as they're available!
           If this is a medical emergency please contact your local /EMS
           We do not call EMS or ambulance on behalf of anyone.` :
           stripIndents`
@@ -287,7 +288,7 @@ export async function tripsitmeSubmit(
 
           Your issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
 
-          ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}${roleHelper ? `${actorHasRoleDeveloper ? ' and helpers' : ` and ${roleHelper}`}` : ''} will be with you as soon as they're available!
+          ${actorHasRoleDeveloper ? 'helpers' : roleHelper}${roleHelper ? `${actorHasRoleDeveloper ? ' and tripsitters' : ` and ${roleTripsitter}`}` : ''} will be with you as soon as they're available!
           If this is a medical emergency please contact your local /EMS
           We do not call EMS or ambulance on behalf of anyone.`;
 
@@ -418,7 +419,7 @@ export async function tripsitmeSubmit(
         let firstMessage = memberInput ?
             stripIndents`
             Hey ${target}, the team thinks you could still use assistance!
-            ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}${roleHelper ? `${actorHasRoleDeveloper ? ' and helpers' : ` and ${roleHelper}`}` : ''} will be with you as soon as they're available!
+            ${actorHasRoleDeveloper ? 'helpers' : roleHelper}${roleHelper ? `${actorHasRoleDeveloper ? ' and tripsitters' : ` and ${roleTripsitter}`}` : ''} will be with you as soon as they're available!
             If this is a medical emergency please contact your local /EMS
             We do not call EMS or ambulance on behalf of anyone.` :
             stripIndents`
@@ -428,7 +429,7 @@ export async function tripsitmeSubmit(
 
             Your issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
 
-            ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}${roleHelper ? `${actorHasRoleDeveloper ? ' and helpers' : ` and ${roleHelper}`}` : ''} will be with you as soon as they're available!
+            ${actorHasRoleDeveloper ? 'helpers' : roleHelper}${roleHelper ? `${actorHasRoleDeveloper ? ' and tripsitters' : ` and ${roleTripsitter}`}` : ''} will be with you as soon as they're available!
             If this is a medical emergency please contact your local /EMS
             We do not call EMS or ambulance on behalf of anyone.`;
 
@@ -563,7 +564,7 @@ export async function tripsitmeSubmit(
   let firstMessage = memberInput ?
       stripIndents`
       Hey ${target}, the team thinks you could use assistance!
-      ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}${roleHelper ? `${actorHasRoleDeveloper ? ' and helpers' : ` and ${roleHelper}`}` : ''} will be with you as soon as they're available!
+      ${actorHasRoleDeveloper ? 'helpers' : roleHelper}${roleHelper ? `${actorHasRoleDeveloper ? ' and tripsitters' : ` and ${roleTripsitter}`}` : ''} will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.` :
       stripIndents`
       Hey ${target}, thank you for asking for assistance!
@@ -572,7 +573,7 @@ export async function tripsitmeSubmit(
 
       Your issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
 
-      ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}${roleHelper ? `${actorHasRoleDeveloper ? ' and helpers' : ` and ${roleHelper}`}` : ''} will be with you as soon as they're available!
+      ${actorHasRoleDeveloper ? 'helpers' : roleHelper}${roleHelper ? `${actorHasRoleDeveloper ? ' and tripsitters' : ` and ${roleTripsitter}`}` : ''} will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
       When you're feeling better you can use the "I'm Good" button to let the team know you're okay.`;
 
