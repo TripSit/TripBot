@@ -147,6 +147,7 @@ export async function tripsitmeSubmit(
   const roleNeedshelpId = interaction.customId.split('~')[1];
   const roleTripsitterId = interaction.customId.split('~')[2];
   const channelTripsittersId = interaction.customId.split('~')[3];
+  const roleHelper = interaction.guild.roles.cache.find((role) => role.id === env.ROLE_HELPER) as Role;
 
   // logger.debug(`[${PREFIX}] roleNeedshelpId: ${roleNeedshelpId}\n
   // roleTripsitterId: ${roleTripsitterId}\n
@@ -182,7 +183,7 @@ export async function tripsitmeSubmit(
   logger.debug(`[${PREFIX}] actor: ${actor.user.username}#${actor.user.discriminator}`);
 
   // Determine if this command was started by a Developer
-  const actorHasRoleDeveloper = (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
+  const actorHasRoleDeveloper = false; // (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
 
   // Determine the target.
   // If the user clicked the button, the target is whoever started the interaction.
@@ -255,7 +256,7 @@ export async function tripsitmeSubmit(
     // Remind the user that they have a channel open
     try {
       let message = memberInput ?
-          stripIndents`Hey ${interaction.member}, ${target.nickname || target.user.username} is already being helped!
+          stripIndents`Hey ${interaction.member}, ${target.displayName} is already being helped!
 
           Check your channel list for '${threadHelpUser.toString()} to help them!'` :
           stripIndents`Hey ${interaction.member}, you are already being helped!
@@ -276,7 +277,7 @@ export async function tripsitmeSubmit(
       let helpMessage = memberInput ?
           stripIndents`
           Hey ${target}, the team thinks you could still use assistance!
-          ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} will be with you as soon as they're available!
+          ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}${roleHelper ? `${actorHasRoleDeveloper ? ' and helpers' : ` and ${roleHelper}`}` : ''} will be with you as soon as they're available!
           If this is a medical emergency please contact your local /EMS
           We do not call EMS or ambulance on behalf of anyone.` :
           stripIndents`
@@ -286,7 +287,7 @@ export async function tripsitmeSubmit(
 
           Your issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
 
-          ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and will be with you as soon as they're available!
+          ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}${roleHelper ? `${actorHasRoleDeveloper ? ' and helpers' : ` and ${roleHelper}`}` : ''} will be with you as soon as they're available!
           If this is a medical emergency please contact your local /EMS
           We do not call EMS or ambulance on behalf of anyone.`;
 
@@ -302,9 +303,9 @@ export async function tripsitmeSubmit(
       // Update the meta thread
       if (threadDiscussUser) {
         let metaUpdate = memberInput ?
-            stripIndents`Hey ${interaction.member}, ${target.nickname || target.user.username} is already being helped!
+            stripIndents`Hey ${interaction.member}, ${target.displayName} is already being helped!
             Use this thread to discuss it!'` :
-            stripIndents`Hey ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}, ${target.nickname || target.user.username} sent a new request for help in ${threadHelpUser.toString()}!
+            stripIndents`Hey ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}, ${target.displayName} sent a new request for help in ${threadHelpUser.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -336,7 +337,7 @@ export async function tripsitmeSubmit(
     if (targetIsTeamMember) {
       logger.debug(`[${PREFIX}] Target is a team member!`);
       const teamMessage = memberInput ?
-          stripIndents`Hey ${actor}, ${target.nickname || target.user.username} is a team member!
+          stripIndents`Hey ${actor}, ${target.displayName} is a team member!
           Did you mean to do that?` :
           stripIndents`You are a member of the team and cannot be publicly helped!`;
       const embed = embedTemplate()
@@ -354,18 +355,18 @@ export async function tripsitmeSubmit(
   target.roles.cache.forEach((role) => {
     logger.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
     if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone') && !role.name.includes('NeedsHelp')) {
-      logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.nickname || target.user.username}`);
+      logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.displayName}`);
       try {
         target.roles.remove(role);
       } catch (err) {
-        logger.debug(`[${PREFIX}] There was an error removing the role ${role.name} from ${target.nickname || target.user.username}\n${err}`);
+        logger.debug(`[${PREFIX}] There was an error removing the role ${role.name} from ${target.displayName}\n${err}`);
       }
     }
   });
 
   // Add the needsHelp role to the target
   try {
-    logger.debug(`[${PREFIX}] Adding role ${roleNeedshelp.name} to ${target.nickname || target.user.username}`);
+    logger.debug(`[${PREFIX}] Adding role ${roleNeedshelp.name} to ${target.displayName}`);
     await target.roles.add(roleNeedshelp);
   } catch (err) {
     logger.error(`[${PREFIX}] Error adding role to target: ${err}`);
@@ -417,7 +418,7 @@ export async function tripsitmeSubmit(
         let firstMessage = memberInput ?
             stripIndents`
             Hey ${target}, the team thinks you could still use assistance!
-            ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} will be with you as soon as they're available!
+            ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}${roleHelper ? `${actorHasRoleDeveloper ? ' and helpers' : ` and ${roleHelper}`}` : ''} will be with you as soon as they're available!
             If this is a medical emergency please contact your local /EMS
             We do not call EMS or ambulance on behalf of anyone.` :
             stripIndents`
@@ -427,7 +428,7 @@ export async function tripsitmeSubmit(
 
             Your issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
 
-            ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} will be with you as soon as they're available!
+            ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}${roleHelper ? `${actorHasRoleDeveloper ? ' and helpers' : ` and ${roleHelper}`}` : ''} will be with you as soon as they're available!
             If this is a medical emergency please contact your local /EMS
             We do not call EMS or ambulance on behalf of anyone.`;
 
@@ -440,7 +441,7 @@ export async function tripsitmeSubmit(
         // Update the meta thread too
         let helperMsg = memberInput ?
             stripIndents`
-            Hey ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}, ${actor} sent a new request for help on behalf of ${target.nickname || target.user.username} in ${threadHelpUser.toString()}!
+            Hey ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper}, ${actor} sent a new request for help on behalf of ${target.displayName} in ${threadHelpUser.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -448,7 +449,7 @@ export async function tripsitmeSubmit(
 
             Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!` :
             stripIndents`
-            Hey ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}, ${target.nickname || target.user.username} sent a new request for help in ${threadHelpUser.toString()}!
+            Hey ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper}, ${target.displayName} sent a new request for help in ${threadHelpUser.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -527,7 +528,7 @@ export async function tripsitmeSubmit(
     name: `💜│${target.displayName}'s channel!`,
     autoArchiveDuration: 1440,
     type: env.NODE_ENV === 'production' ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
-    reason: `${target.nickname || target.user.username} requested help`,
+    reason: `${target.displayName} requested help`,
   }) as ThreadChannel;
   logger.debug(`[${PREFIX}] Created threadHelpUser ${threadHelpUser.id}`);
 
@@ -562,7 +563,7 @@ export async function tripsitmeSubmit(
   let firstMessage = memberInput ?
       stripIndents`
       Hey ${target}, the team thinks you could use assistance!
-      ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} will be with you as soon as they're available!
+      ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}${roleHelper ? `${actorHasRoleDeveloper ? ' and helpers' : ` and ${roleHelper}`}` : ''} will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.` :
       stripIndents`
       Hey ${target}, thank you for asking for assistance!
@@ -571,7 +572,7 @@ export async function tripsitmeSubmit(
 
       Your issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
 
-      ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter} will be with you as soon as they're available!
+      ${actorHasRoleDeveloper ? 'tripsitters' : roleTripsitter}${roleHelper ? `${actorHasRoleDeveloper ? ' and helpers' : ` and ${roleHelper}`}` : ''} will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
       When you're feeling better you can use the "I'm Good" button to let the team know you're okay.`;
 
@@ -593,7 +594,7 @@ export async function tripsitmeSubmit(
   // Send the intro message to the thread
   let helperMsg = memberInput ?
       stripIndents`
-      Hey ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter}, ${actor} thinks ${target.nickname || target.user.username} can use some help in ${threadHelpUser.toString()}!
+      Hey ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper}, ${actor} thinks ${target.displayName} can use some help in ${threadHelpUser.toString()}!
 
       They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -604,7 +605,7 @@ export async function tripsitmeSubmit(
       *You're receiving this alert because you're a Tripsitter!*
       *Only Tripsitters, Helpers and Moderators can see this thread*!` :
       stripIndents`
-      Hey ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter}, ${target.nickname || target.user.username} can use some help in ${threadHelpUser.toString()}!
+      Hey ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper}, ${target.displayName} can use some help in ${threadHelpUser.toString()}!
 
       They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -788,7 +789,7 @@ export async function tripsitmeFinish(
       interaction.editReply({embeds: [embed]});
 
       if (threadDiscussUser) {
-        let metaUpdate = stripIndents`Hey team, ${target.nickname || target.user.username} said they're good \
+        let metaUpdate = stripIndents`Hey team, ${target.displayName} said they're good \
 but it's been less than an hour since they asked for help.
 
 If they still need help it's okay to leave them with that role.`;
@@ -811,11 +812,11 @@ If they still need help it's okay to leave them with that role.`;
       logger.debug(`[${PREFIX}] Re-adding roleId: ${roleId}`);
       const roleObj = interaction.guild!.roles.cache.find((r) => r.id === roleId) as Role;
       if (!ignoredRoles.includes(roleObj.id) && roleObj.name !== '@everyone') {
-        logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.nickname || target.user.username}`);
+        logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.displayName}`);
         try {
           target.roles.add(roleObj);
         } catch (err) {
-          logger.error(`[${PREFIX}] Error adding role ${roleObj.name} to ${target.nickname || target.user.username}`);
+          logger.error(`[${PREFIX}] Error adding role ${roleObj.name} to ${target.displayName}`);
           logger.error(err);
         }
       }
@@ -823,7 +824,7 @@ If they still need help it's okay to leave them with that role.`;
   }
 
   target.roles.remove(roleNeedshelp!);
-  logger.debug(`[${PREFIX}] Removed ${roleNeedshelp!.name} from ${target.nickname || target.user.username}`);
+  logger.debug(`[${PREFIX}] Removed ${roleNeedshelp!.name} from ${target.displayName}`);
 
   let endHelpMessage = stripIndents`Hey ${target}, we're glad you're doing better!
     We've restored your old roles back to normal <3
