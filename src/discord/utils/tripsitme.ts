@@ -514,11 +514,10 @@ export async function tripsitmeSubmit(
   const tripsitChannel = interaction.channel as TextChannel;
 
   // Create a new threadDiscussUser in the tripsitters channel
-  const guildPremiumLevel = interaction.guild?.premiumTier;
   threadDiscussUser = await tripsittersChannel.threads.create({
     name: `💜│${target.displayName} discussion`,
     autoArchiveDuration: 1440,
-    type: guildPremiumLevel > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
+    type: interaction.guild?.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
     reason: `${target.user.username} requested help`,
     invitable: env.NODE_ENV === 'production' ? false : undefined,
   }) as ThreadChannel;
@@ -529,7 +528,7 @@ export async function tripsitmeSubmit(
   threadHelpUser = await tripsitChannel.threads.create({
     name: `💜│${target.displayName}'s channel!`,
     autoArchiveDuration: 1440,
-    type: env.NODE_ENV === 'production' ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
+    type: interaction.guild?.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
     reason: `${target.displayName} requested help`,
   }) as ThreadChannel;
   logger.debug(`[${PREFIX}] Created threadHelpUser ${threadHelpUser.id}`);

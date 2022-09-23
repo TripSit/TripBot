@@ -16,7 +16,6 @@ import {
 import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../utils/embedTemplate';
 import logger from '../../global/utils/logger';
-import env from '../../global/utils/env.config';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -109,7 +108,7 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
   const ticketThread = await (interaction.channel as TextChannel).threads.create({
     name: `${actor.username}'s ${issueType} issue!`,
     autoArchiveDuration: 1440,
-    type: env.NODE_ENV === 'production' ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
+    type: interaction.guild!.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
     reason: `${actor.username} submitted a(n) ${issueType} issue`,
   });
   logger.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);

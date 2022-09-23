@@ -132,7 +132,7 @@ export async function applicationSubmit(
   const applicationThread = await channel.threads.create({
     name: `${(interaction.member as GuildMember).displayName}'s ${roleRequested.name} application!`,
     autoArchiveDuration: 1440,
-    type: env.NODE_ENV === 'production' ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
+    type: interaction.guild?.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
     reason: `${(interaction.member as GuildMember).displayName} submitted an application!`,
     invitable: env.NODE_ENV === 'production' ? false : undefined,
   }) as ThreadChannel;
