@@ -269,6 +269,14 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
  * The tripsitter info
  * @param {Interaction} interaction The interaction that triggered this
  */
+export async function tripsitterModal(interaction:ChatInputCommandInteraction) {
+
+}
+
+/**
+ * The tripsitter info
+ * @param {Interaction} interaction The interaction that triggered this
+ */
 export async function tripsitter(interaction:ChatInputCommandInteraction) {
   logger.debug(`${PREFIX} how to tripsit!`);
   if (!(interaction.channel as TextChannel)) {
@@ -318,14 +326,16 @@ export async function tripsitter(interaction:ChatInputCommandInteraction) {
 
   if (channelApplications ) {
     message += `
+**Interested in helping out?**
 
-    Interested in helping out?
-  
-    We want people who love ${interaction.guild!.name}, want to see and contribute to its growth, and be part of our success!
-  
-    A basic knowledge of drugs and how they interact with other drugs and mental conditions is highly preferred.
-  
-    If you are interested in becoming a tripsitter, please click the button below to fill out the application form.
+We want people who love ${interaction.guild!.name}, want to contribute to its growth, and be part of our success!
+To ensure quality support in our assistance channels we appreciate candidates apply only when they meet the following requirements:
+1) A basic knowledge of drugs and how they interact with other drugs and mental conditions is highly preferred.
+- You don't need a PhD, and this doesn't mean personal experience.
+2) A short tenure on the org: While we appreciate the interest you should familiarize yourself with the culture before applying. 
+- Around two weeks or level 10 with the bot (use /rank)!
+
+If you meet the above and are interested in becoming a ${roleTripsitter!.name}, please click the button below to fill out the application form!
     `;
     await (interaction.channel as TextChannel).send(
         {content: message,

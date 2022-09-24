@@ -20,9 +20,15 @@ export const ping: SlashCommand = {
       .setName('ping')
       .setDescription('Health check'),
   async execute(interaction) {
+    const role = interaction.guild!.roles.cache.find((r) => r.name === 'TripBot');
+
     const embed1 = new EmbedBuilder()
         .setTitle('First Page')
-        .setDescription('This is the first page');
+        .setDescription(`
+        role.icon: ${role?.icon}
+        role.iconUrl: ${role?.iconURL()}
+        role.unicodeEmoji: ${role?.unicodeEmoji}
+        `);
 
     const embed2 = new EmbedBuilder()
         .setTitle('Second Page')
@@ -33,9 +39,10 @@ export const ping: SlashCommand = {
         .setLabel('Previous')
         .setStyle(ButtonStyle.Danger);
 
+
     const button2 = new ButtonBuilder()
         .setCustomId('nextbtn')
-        .setLabel('Next')
+        .setLabel(`Next`)
         .setStyle(ButtonStyle.Success);
 
     // Create an array of embeds
