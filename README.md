@@ -28,5 +28,10 @@ Firebase realtime database support
 2a) Make sure you 'npm run dev' before you commit to lint and increment version number
 3) Commit your changes: `git commit -am 'Add some feature'`
 4) Push to the branch: `git push origin my-new-feature`
-5) Submit a pull request :D
+5) Submit a pull request :D 
+
+## Get in touch 
+Feel free to join our discord guild under https://discord.gg/tripsit 
+
+
 
