@@ -12,7 +12,7 @@ const PREFIX = path.parse(__filename).name;
 
 export const template: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('support')
+      .setName('donate')
       .setDescription('Shows different ways to support TripSit!'),
   async execute(interaction:ChatInputCommandInteraction) {
     const embed = embedTemplate()
