@@ -1,4 +1,4 @@
-import env from './env.config';
+// import env from './env.config';
 // import logger from './logger';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
