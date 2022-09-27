@@ -103,7 +103,7 @@ export const help: SlashCommand = {
 
     const tripsitEmbed = embedTemplate()
         .setTitle('Tripsit-Only Modules');
-    tripsitEmbed.addFields({name: 'TripSit', value: getDesc('tripsit'), inline: true});
+    // tripsitEmbed.addFields({name: 'TripSit', value: getDesc('tripsit'), inline: true});
     tripsitEmbed.addFields({name: 'Clearchat', value: getDesc('clear-chat'), inline: true});
     tripsitEmbed.addFields({name: 'Birthday', value: getDesc('birthday'), inline: true});
     tripsitEmbed.addFields({name: 'Timezone', value: getDesc('timezone'), inline: true});
