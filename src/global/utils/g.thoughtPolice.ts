@@ -42,7 +42,10 @@ const _ = {
   zer: '[0|0️⃣|O|o]+',
 };
 
-const s = env.NODE_ENV === 'production' ? '\\\\W*' : '\\W*';
+// const s = env.NODE_ENV === 'production' ? '\\\\W*' : '\\W*';
+
+const s = '\\W*';
+
 
 const offensive = [
   /* beasteality */[_.B, _.E, _.A, _.S, _.T, _.E, _.A, _.L, _.I, _.T, _.Y].join(s),
@@ -82,7 +85,7 @@ const hornyJail = [
   /* blowjob */[_.B, _.L, _.O, _.W, _.J, _.O, _.B].join(s),
   /* clit */[_.C, _.L, _.I, _.T].join(s),
   /* cock */[_.C, _.O, _.C, _.K].join(s),
-  /* condom */[_.C, _.O, _.N, _.D, _.O, _.M].join(s),
+  // /* condom */[_.C, _.O, _.N, _.D, _.O, _.M].join(s),
   /* cum */[_.C, _.U, _.M].join(s),
   /* cuck */[_.C, _.U, _.C, _.K].join(s),
   /* cunilingus */[_.C, _.U, _.N, _.I, _.L, _.I, _.N, _.G, _.U, _.S].join(s),
