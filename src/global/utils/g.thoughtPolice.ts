@@ -1,3 +1,4 @@
+import env from './env.config';
 // import logger from './logger';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
@@ -41,7 +42,7 @@ const _ = {
   zer: '[0|0️⃣|O|o]+',
 };
 
-const s = '\\\\W*';
+const s = env.NODE_ENV === 'production' ? '\\\\W*' : '\\W*';
 
 const offensive = [
   /* beasteality */[_.B, _.E, _.A, _.S, _.T, _.E, _.A, _.L, _.I, _.T, _.Y].join(s),

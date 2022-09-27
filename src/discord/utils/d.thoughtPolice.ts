@@ -3,14 +3,14 @@ import {
   Message,
   TextChannel,
 } from 'discord.js';
-import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
 
 import {bigBrother} from '../../global/utils/g.thoughtPolice';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+// import logger from '../../global/utils/logger';
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 /**
  * This runs on every message to determine if a badword is used
@@ -18,8 +18,8 @@ const PREFIX = path.parse(__filename).name;
  * @return {Promise<void>}
  */
 export async function thoughtPolice(message:Message): Promise<void> {
-  logger.debug(`[${PREFIX}] started!`);
-  // logger.debug(`[${PREFIX}] ${message.member.displayName} said "${message.cleanContent}"`);
+  // logger.debug(`[${PREFIX}] started!`);
+  // logger.debug(`[${PREFIX}] ${message.member!.displayName} said "${message.cleanContent}"`);
   const channelModerators = message.client.channels.cache.get(env.CHANNEL_MODERATORS) as TextChannel;
   const roleModerators = message.guild?.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR);
 
@@ -31,7 +31,7 @@ export async function thoughtPolice(message:Message): Promise<void> {
     switch (result) {
       case 'offensive':
         message.delete();
-        (message.channel as TextChannel).send(`
+        (message.channel as TextChannel).send(stripIndents`
         As a reminder to everyone: We have a lot of people currently in an altered mindset.
         Please use non-offensive language so we can all have a good time, thank you for cooperating!
         `);
@@ -54,7 +54,7 @@ export async function thoughtPolice(message:Message): Promise<void> {
         break;
       case 'horny':
         (message.channel as TextChannel).send(`
-        We\'re all adults here, but there's better places to talk about that.
+        We\'re all adults here, but there's probably a better place to talk about that?
         `);
         break;
       case 'meme':
@@ -79,5 +79,5 @@ export async function thoughtPolice(message:Message): Promise<void> {
         break;
     }
   }
-  logger.debug(`[${PREFIX}] finished!`);
+  // logger.debug(`[${PREFIX}] finished!`);
 };
