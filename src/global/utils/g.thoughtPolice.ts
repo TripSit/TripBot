@@ -1,6 +1,3 @@
-// eslint-disable no-multi-spaces
-
-import {stripIndents} from 'common-tags';
 // import logger from './logger';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
@@ -46,89 +43,90 @@ const _ = {
 
 const s = '\\\\W*';
 
-const pg13 = [
-  [_.A, _.S, _.S].join(s), // ass
-  [_.A, _.S, _.S, _.H, _.O, _.L, _.E].join(s), // asshole
-  [_.B, _.A, _.S, _.T, _.A, _.R, _.D].join(s), // bastard
-  [_.D, _.A, _.M, _.N].join(s), // damn
-  [_.F, _.U, _.C, _.K].join(s), // fuck
-  [_.P, _.I, _.S, _.S].join(s), // piss
-  [_.S, _.H, _.I, _.T].join(s), // shit
+const offensive = [
+  /* beasteality */[_.B, _.E, _.A, _.S, _.T, _.E, _.A, _.L, _.I, _.T, _.Y].join(s),
+  /* bitch */[_.B, _.I, _.T, _.C, _.H].join(s),
+  /* coon */[_.C, _.O, _.O, _.N].join(s),
+  /* cunt */[_.C, _.U, _.N, _.T].join(s),
+  /* dyke */[_.D, _.Y, _.K, _.E].join(s),
+  /* eskimo */[_.E, _.S, _.K, _.I, _.M, _.O].join(s),
+  /* fag */[_.F, _.A, _.G].join(s),
+  /* gay */[_.G, _.A, _.Y].join(s),
+  /* heil */[_.H, _.E, _.I, _.L].join(s),
+  /* hitler */[_.H, _.I, _.T, _.L, _.E, _.R].join(s),
+  /* hoe */[_.H, _.O, _.E].join(s),
+  /* nazi */[_.N, _.A, _.Z, _.I].join(s),
+  /* nigga */[_.N, _.I, _.G, _.G, _.A].join(s),
+  /* nigger */[_.N, _.I, _.G, _.G, _.E, _.R].join(s),
+  /* niglet */[_.N, _.I, _.G, _.L, _.E, _.T].join(s),
+  /* rape */[_.R, _.A, _.P, _.E].join(s),
+  /* rapist */[_.R, _.A, _.P, _.I, _.S, _.T].join(s),
+  /* raping */[_.R, _.A, _.P, _.I, _.N, _.G].join(s),
+  /* reeree */[_.R, _.E, _.E, _.R, _.E, _.E].join(s),
+  /* slut */[_.S, _.L, _.U, _.T].join(s),
+  /* tard */[_.T, _.A, _.R, _.D].join(s),
+  /* tranny */[_.T, _.R, _.A, _.N, _.N, _.Y].join(s),
+  /* whore */[_.W, _.H, _.O, _.R, _.E].join(s),
+  /* 1488 */[_.one, _.fou, _.eig, _.eig].join(s),
 ];
 
 const harmReduction = [
-  [_.S, _.U, _.I, _.C, _.I, _.D, _.E].join(s), // suicide
-  [_.O, _.V, _.E, _.R, _.D, _.O, _.S, _.E].join(s), // overdose
-  [_.E, _.M, _.S].join(s), // EMS
-  [_.K, _.M, _.S].join(s), // KMS (kill myself)
+  /* suicide */[_.S, _.U, _.I, _.C, _.I, _.D, _.E].join(s),
+  /* overdose */[_.O, _.V, _.E, _.R, _.D, _.O, _.S, _.E].join(s),
+  /* ems */[_.E, _.M, _.S].join(s),
+  /* kms */[_.K, _.M, _.S].join(s),
 ];
 
 const hornyJail = [
-  [_.B, _.L, _.O, _.W, _.J, _.O, _.B].join(s),
-  [_.C, _.L, _.I, _.T].join(s),
-  [_.C, _.O, _.C, _.K].join(s),
-  [_.C, _.O, _.N, _.D, _.O, _.M].join(s),
-  [_.C, _.U, _.M].join(s),
-  [_.C, _.U, _.N, _.I, _.L, _.I, _.N, _.G, _.U, _.S].join(s),
-  [_.C, _.Y, _.B, _.E, _.R, _.F, _.U, _.C, _.K].join(s),
-  [_.D, _.I, _.C, _.K].join(s),
-  [_.D, _.I, _.L, _.D, _.O].join(s),
-  [_.E, _.J, _.A, _.C, _.U, _.L].join(s),
-  [_.F, _.E, _.L, _.A, _.T, _.I, _.O].join(s),
-  [_.G, _.A, _.N, _.G, _.B, _.A, _.N, _.G].join(s),
-  [_.H, _.O, _.R, _.N, _.Y].join(s),
-  [_.J, _.A, _.C, _.K, _.O, _.F, _.F].join(s),
-  [_.J, _.E, _.R, _.K, _.O, _.F, _.F].join(s),
-  [_.J, _.I, _.Z, _.Z].join(s),
-  [_.M, _.A, _.S, _.T, _.U, _.R, _.B, _.A, _.T, _.E].join(s),
-  [_.O, _.R, _.G, _.A, _.S, _.M].join(s),
-  [_.P, _.E, _.N, _.I, _.S].join(s),
-  [_.P, _.O, _.R, _.N].join(s), // porn
-  [_.P, _.R, _.I, _.C, _.K].join(s),
-  [_.P, _.U, _.S, _.S, _.Y].join(s),
-  [_.P, _.U, _.S, _.S, _.I, _.E].join(s),
-  [_.S, _.E, _.X].join(s), // sex
-  [_.S, _.M, _.U, _.T].join(s),
-  [_.S, _.P, _.U, _.N, _.K].join(s),
-  [_.T, _.W, _.A, _.T].join(s),
+  /* blowjob */[_.B, _.L, _.O, _.W, _.J, _.O, _.B].join(s),
+  /* clit */[_.C, _.L, _.I, _.T].join(s),
+  /* cock */[_.C, _.O, _.C, _.K].join(s),
+  /* condom */[_.C, _.O, _.N, _.D, _.O, _.M].join(s),
+  /* cum */[_.C, _.U, _.M].join(s),
+  /* cunilingus */[_.C, _.U, _.N, _.I, _.L, _.I, _.N, _.G, _.U, _.S].join(s),
+  /* cyberfuck */[_.C, _.Y, _.B, _.E, _.R, _.F, _.U, _.C, _.K].join(s),
+  /* dick */[_.D, _.I, _.C, _.K].join(s),
+  /* dildo */[_.D, _.I, _.L, _.D, _.O].join(s),
+  /* ejacul */[_.E, _.J, _.A, _.C, _.U, _.L].join(s),
+  /* felatio */[_.F, _.E, _.L, _.A, _.T, _.I, _.O].join(s),
+  /* gangbang */[_.G, _.A, _.N, _.G, _.B, _.A, _.N, _.G].join(s),
+  /* horny */[_.H, _.O, _.R, _.N, _.Y].join(s),
+  /* jackoff */[_.J, _.A, _.C, _.K, _.O, _.F, _.F].join(s),
+  /* jerkoff */[_.J, _.E, _.R, _.K, _.O, _.F, _.F].join(s),
+  /* jizz */[_.J, _.I, _.Z, _.Z].join(s),
+  /* masturbate */[_.M, _.A, _.S, _.T, _.U, _.R, _.B, _.A, _.T, _.E].join(s),
+  /* orgasm */[_.O, _.R, _.G, _.A, _.S, _.M].join(s),
+  /* penis */[_.P, _.E, _.N, _.I, _.S].join(s),
+  /* porn */[_.P, _.O, _.R, _.N].join(s), // porn
+  /* prick */[_.P, _.R, _.I, _.C, _.K].join(s),
+  /* pussy */[_.P, _.U, _.S, _.S, _.Y].join(s),
+  /* pussie */[_.P, _.U, _.S, _.S, _.I, _.E].join(s),
+  /* sex */[_.S, _.E, _.X].join(s), // sex
+  /* smut */[_.S, _.M, _.U, _.T].join(s),
+  /* spunk */[_.S, _.P, _.U, _.N, _.K].join(s),
+  /* twat */[_.T, _.W, _.A, _.T].join(s),
+];
+
+const pg13 = [
+  // /* ass */ [_.A, _.S, _.S].join(s),
+  // /* asshole */[_.A, _.S, _.S, _.H, _.O, _.L, _.E].join(s),
+  /* bastard */[_.B, _.A, _.S, _.T, _.A, _.R, _.D].join(s),
+  // /* damn */[_.D, _.A, _.M, _.N].join(s),
+  // /* fuck */[_.F, _.U, _.C, _.K].join(s),
+  /* homo */[_.H, _.O, _.M, _.O].join(s),
+  /* jew */[_.J, _.E, _.W].join(s),
+  /* murder */ [_.M, _.U, _.R, _.D, _.E, _.R].join(s),
+  // /* piss */[_.P, _.I, _.S, _.S].join(s),
+  /* queer */[_.Q, _.U, _.E, _.E, _.R].join(s),
+  /* retard */[_.R, _.E, _.T, _.A, _.R, _.D].join(s), // Some drugs have "retard" (slow) in their name
+  // /* shit */[_.S, _.H, _.I, _.T].join(s),
 ];
 
 const memes = [
-  [_.Y, _.O, _.L, _.O].join(s),
-  [_.J, _.E, _.N, _.K, _.E, _.M].join(s),
-  [_.B, _.L, _.A, _.Z, _.E, _.I, _.T].join(s),
-  [_.S, _.W, _.A, _.G].join(s),
-];
-
-const offensive = [
-  [_.B, _.E, _.A, _.S, _.T, _.E, _.A, _.L, _.I, _.T, _.Y].join(s),
-  [_.B, _.I, _.T, _.C, _.H].join(s), // bitch
-  [_.C, _.O, _.O, _.N].join(s),
-  [_.C, _.U, _.N, _.T].join(s),
-  [_.D, _.Y, _.K, _.E].join(s),
-  [_.E, _.S, _.K, _.I, _.M, _.O].join(s),
-  [_.F, _.A, _.G].join(s),
-  [_.G, _.A, _.Y].join(s),
-  [_.H, _.E, _.I, _.L].join(s),
-  [_.H, _.I, _.T, _.L, _.E, _.R].join(s),
-  [_.H, _.O, _.E].join(s),
-  [_.H, _.O, _.M, _.O].join(s),
-  [_.J, _.E, _.W].join(s),
-  [_.N, _.A, _.Z, _.I].join(s),
-  [_.N, _.I, _.G, _.G, _.A].join(s),
-  [_.N, _.I, _.G, _.G, _.E, _.R].join(s),
-  [_.N, _.I, _.G, _.L, _.E, _.T].join(s),
-  [_.Q, _.U, _.E, _.E, _.R].join(s),
-  [_.R, _.A, _.P, _.E].join(s),
-  [_.R, _.A, _.P, _.I, _.S, _.T].join(s),
-  [_.R, _.A, _.P, _.I, _.N, _.G].join(s),
-  [_.R, _.E, _.T, _.A, _.R, _.D].join(s),
-  [_.R, _.E, _.E, _.R, _.E, _.E].join(s),
-  [_.S, _.L, _.U, _.T].join(s),
-  [_.T, _.A, _.R, _.D].join(s),
-  [_.T, _.R, _.A, _.N, _.N, _.Y].join(s),
-  [_.W, _.H, _.O, _.R, _.E].join(s),
-  [_.one, _.fou, _.eig, _.eig].join(s),
+  /* yolo */[_.Y, _.O, _.L, _.O].join(s),
+  /* jenkum */[_.J, _.E, _.N, _.K, _.E, _.M].join(s),
+  /* blazeit */[_.B, _.L, _.A, _.Z, _.E, _.I, _.T].join(s),
+  /* swag */[_.S, _.W, _.A, _.G].join(s),
 ];
 
 /**
@@ -136,69 +134,34 @@ const offensive = [
  * @param {string} messageContent Message to scan
  * @return {Promise<void>}
  */
-export async function bigBrother(messageContent:string): Promise<string[]> {
+export async function bigBrother(messageContent:string): Promise<string> {
   // logger.debug(`[${PREFIX}] started!`);
   // logger.debug(`[${PREFIX}] messageContent: ${JSON.stringify(messageContent, null, 2)}!`);
 
   // Check for most offensive stuff first
-  const offensiveMatch = offensive.filter(
-      (pattern) => new RegExp(pattern).test(messageContent),
-  ).length > 0;
-  if (offensiveMatch) {
-    return ['offensive', stripIndents`
-    As a reminder to everyone: We have a lot of people currently in an altered mindset.
-    Please use inclusive language so we can all have a good time, thank you for cooperating!
-    `];
+  if (offensive.filter((pattern) => new RegExp(pattern).test(messageContent)).length > 0) {
+    return 'offensive';
   }
 
   // Check for HR alerts next
-  const hrMatch = harmReduction.filter(
-      (pattern) => {
-        // logger.debug(`[${PREFIX}] pattern: ${pattern}`);
-        return new RegExp(pattern).test(messageContent);
-      },
-  ).length > 0;
-  if (hrMatch) {
-    return ['harm', ''];
+  if (harmReduction.filter((pattern) => new RegExp(pattern).test(messageContent)).length > 0) {
+    return 'harm';
   }
 
   // Check for horny people next
-  const hornyMatch = hornyJail.filter(
-      (pattern) => new RegExp(pattern).test(messageContent),
-  ).length > 0;
-  if (hornyMatch) {
-    return [
-      'horny',
-      'We\'re all adults here, but this isn\'t really a place to talk about that. Maybe try #adult-swim?'];
-  }
-
-  // Check for memes next
-  const memeMatch = memes.filter(
-      (pattern) => new RegExp(pattern).test(messageContent),
-  ).length > 0;
-  if (memeMatch) {
-    const memeResponses = [
-      'Never heard that one before! 😂😂',
-      'Did you come up with that?? 😂😂',
-      'LOOOOOL that\'s a good one LMAO!! 😂😂',
-      'OMG do you do stand-up?? 😂😂',
-      'Aww, that\'s nice dear 🙂',
-    ];
-    // get random meme response
-    const randomMemeResponse = memeResponses[Math.floor(Math.random() * memeResponses.length)];
-    return ['meme', randomMemeResponse];
+  if (hornyJail.filter((pattern) => new RegExp(pattern).test(messageContent)).length > 0) {
+    return 'horny';
   }
 
   // Check for uncouth language
-  const pgMatch = pg13.filter(
-      (pattern) => new RegExp(pattern).test(messageContent),
-  ).length > 0;
-  if (pgMatch) {
-    // return ['pg13', stripIndents`
-    // As a reminder to everyone: We have a lot of people currently in an altered mindset.
-    // Please use inclusive language so we can all have a good time, thank you for cooperating!
-    // `];
-    return ['pg13', ''];
+  if (pg13.filter((pattern) => new RegExp(pattern).test(messageContent)).length > 0) {
+    return 'pg13';
   }
-  return [];
+
+  // Check for memes next
+  if (memes.filter((pattern) => new RegExp(pattern).test(messageContent)).length > 0) {
+    return 'meme';
+  }
+
+  return 'none';
 };

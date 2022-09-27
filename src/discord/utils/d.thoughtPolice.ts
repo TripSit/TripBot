@@ -20,40 +20,60 @@ const PREFIX = path.parse(__filename).name;
 export async function thoughtPolice(message:Message): Promise<void> {
   logger.debug(`[${PREFIX}] started!`);
   // logger.debug(`[${PREFIX}] ${message.member.displayName} said "${message.cleanContent}"`);
-  const channelTripsitters = message.client.channels.cache.get(env.CHANNEL_TRIPSITTERS) as TextChannel;
-  const roleHelper = message.guild?.roles.cache.find((role:Role) => role.id === env.ROLE_HELPER);
-  const roleTripsitter = message.guild?.roles.cache.find((role:Role) => role.id === env.ROLE_TRIPSITTER);
+  const channelModerators = message.client.channels.cache.get(env.CHANNEL_MODERATORS) as TextChannel;
+  const roleModerators = message.guild?.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR);
 
   const result = await bigBrother(message.cleanContent.toLowerCase());
 
   // logger.debug(`[${PREFIX}] result: ${result}`);
 
   if (result) {
-    switch (result[0]) {
+    switch (result) {
       case 'offensive':
-        (message.channel as TextChannel).send(result[1]);
         message.delete();
+        (message.channel as TextChannel).send(`
+        As a reminder to everyone: We have a lot of people currently in an altered mindset.
+        Please use non-offensive language so we can all have a good time, thank you for cooperating!
+        `);
+        if (channelModerators) {
+          channelModerators.send(stripIndents`
+            Hey ${roleModerators}
+            ${message.member?.displayName} said "${message.cleanContent}" in ${(message.channel as TextChannel).name}
+            I removed it but keep an eye on them!
+            `);
+        }
         break;
       case 'harm':
-        if (channelTripsitters) {
-          channelTripsitters.send(stripIndents`
-            Hey ${roleTripsitter} and ${roleHelper}
+        if (channelModerators) {
+          channelModerators.send(stripIndents`
+            Hey ${roleModerators}
             ${message.member?.displayName} is talking about something harmful\
              in ${((message.channel as TextChannel) as TextChannel).name}!
             `);
         }
         break;
       case 'horny':
-        (message.channel as TextChannel).send(result[1]);
+        (message.channel as TextChannel).send(`
+        We\'re all adults here, but there's better places to talk about that.
+        `);
         break;
       case 'meme':
-        (message.channel as TextChannel).send(result[1]);
+        const memeResponses = [
+          'Never heard that one before! 😂😂',
+          'Did you come up with that?? 😂😂',
+          'LOOOOOL that\'s a good one LMAO!! 😂😂',
+          'OMG do you do stand-up?? 😂😂',
+          'Aww, that\'s nice dear 🙂',
+        ];
+        // get random meme response
+        const randomMemeResponse = memeResponses[Math.floor(Math.random() * memeResponses.length)];
+        (message.channel as TextChannel).send(randomMemeResponse);
         break;
       case 'pg13':
-        channelTripsitters.send(stripIndents`
-          ${message.member?.displayName} is talking about something PG13 in \
-          ${((message.channel as TextChannel) as TextChannel).name}!
-          `);
+        channelModerators.send(stripIndents`
+        ${message.member?.displayName} said "${message.cleanContent}" in ${(message.channel as TextChannel).name}
+        Keep an eye on them!
+        `);
         break;
       default:
         break;
