@@ -310,7 +310,8 @@ export async function tripsitmeSubmit(
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
-            Their issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}`;
+            Their issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
+            **Keep in mind: We're not qualified to handle suicidal users here. If the user is considering / talking about suicide, direct them to the suicide hotline!**`;
         if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
           metaUpdate = testNotice + metaUpdate;
         }
@@ -456,6 +457,7 @@ export async function tripsitmeSubmit(
 
             Their issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
 
+            **Keep in mind: We're not qualified to handle suicidal users here. If the user is considering / talking about suicide, direct them to the suicide hotline!**
             Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!`;
         if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
           helperMsg = testNotice + helperMsg;
@@ -575,7 +577,9 @@ export async function tripsitmeSubmit(
 
       ${actorHasRoleDeveloper ? 'helpers' : roleHelper}${roleHelper ? `${actorHasRoleDeveloper ? ' and tripsitters' : ` and ${roleTripsitter}`}` : ''} will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
-      When you're feeling better you can use the "I'm Good" button to let the team know you're okay.`;
+      When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
+      If you just would like someone to talk to, check out the (https://warmline.org/warmdir.html#directory)[Warmline]
+      `;
 
   if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
     firstMessage = testNotice + firstMessage;
@@ -604,7 +608,8 @@ export async function tripsitmeSubmit(
       Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!
 
       *You're receiving this alert because you're a Tripsitter!*
-      *Only Tripsitters, Helpers and Moderators can see this thread*!` :
+      *Only Tripsitters, Helpers and Moderators can see this thread*!
+      **Keep in mind: We're not qualified to handle suicidal users here. If the user is considering / talking about suicide, direct them to the suicide hotline!**` :
       stripIndents`
       Hey ${actorHasRoleDeveloper ? 'tripsitter' : roleTripsitter} and ${actorHasRoleDeveloper ? 'helpers' : roleHelper}, ${target.displayName} can use some help in ${threadHelpUser.toString()}!
 
@@ -615,7 +620,8 @@ export async function tripsitmeSubmit(
       Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!
 
       *You're receiving this alert because you're a Tripsitter!*
-      *Only Tripsitters and Moderators can see this thread*!`;
+      *Only Tripsitters and Moderators can see this thread*!
+      **Keep in mind: We're not qualified to handle suicidal users here. If the user is considering / talking about suicide, direct them to the suicide hotline!**`;
     // send a message to the thread
 
   if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
