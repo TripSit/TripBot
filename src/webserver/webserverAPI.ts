@@ -46,14 +46,14 @@ export async function webserverConnect(): Promise<void> {
   const httpsPort = 8080;
   let host = 'discord.tripsit.me';
   // let host = 'tripsit-discord-bot-kf4yk.ondigitalocean.app';
-  let httpUrl = `http://${host}:${httpPort}/`;
-  let httpsUrl = `https://${host}:${httpsPort}/`;
+  // const httpUrl = `http://${host}:${httpPort}/`;
+  // let httpsUrl = `https://${host}:${httpsPort}/`;
 
   // If we're in development we need to create our own SSL certificate
   if (env.NODE_ENV === 'development') {
     host = 'localhost';
-    httpUrl = `http://${host}:${httpPort}/`;
-    httpsUrl = `https://${host}:${httpsPort}/`;
+    // httpUrl = `http://${host}:${httpPort}/`;
+    // httpsUrl = `https://${host}:${httpsPort}/`;
 
     const options = {
       key: fs.readFileSync('./cert/CA/localhost/client-1.local.key', 'utf8'),
@@ -62,21 +62,27 @@ export async function webserverConnect(): Promise<void> {
     const httpsServer = https.createServer(options, app);
     const httpServer = http.createServer(app);
 
-    httpsServer.listen(httpsPort, () => {
-      logger.info(`[${PREFIX}] HTTPS Server running at: ${httpsUrl}`);
-    });
+    httpsServer.listen(httpsPort);
+    httpServer.listen(httpPort);
+    logger.info(`[${PREFIX}] Webserver running at: https://${host}:${httpsPort}/`);
+    // httpsServer.listen(httpsPort, () => {
+    //   logger.info(`[${PREFIX}] HTTPS Server running at: ${httpsUrl}`);
+    // });
 
-    httpServer.listen(httpPort, () => {
-      logger.info(`[${PREFIX}] HTTP Server running at: ${httpUrl}`);
-    });
+    // httpServer.listen(httpPort, () => {
+    //   logger.info(`[${PREFIX}] HTTP Server running at: ${httpUrl}`);
+    // });
   } else {
-    app.listen(httpsPort, () => {
-      logger.info(`[${PREFIX}] HTTPS Server running at: ${httpsUrl}`);
-    });
+    app.listen(httpsPort);
+    app.listen(httpPort);
+    logger.info(`[${PREFIX}] Webserver running at: https://${host}:${httpsPort}/`);
+    // app.listen(httpsPort, () => {
+    //   logger.info(`[${PREFIX}] HTTPS Server running at: ${httpsUrl}`);
+    // });
 
-    app.listen(httpPort, () => {
-      logger.info(`[${PREFIX}] HTTP Server running at: ${httpUrl}`);
-    });
+    // app.listen(httpPort, () => {
+    //   logger.info(`[${PREFIX}] HTTP Server running at: ${httpUrl}`);
+    // });
   }
 
   /* Configure the app */

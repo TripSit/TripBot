@@ -19,7 +19,7 @@ const PREFIX = path.parse(__filename).name;
  * eslint disable-next-line
  */
 export async function discordConnect(): Promise<void> {
-  logger.debug(`[${PREFIX}] Starting discord bot!`);
+  // logger.info(`[${PREFIX}] Starting discord bot!`);
   const client = new Client({
     intents: [
       GatewayIntentBits.MessageContent,
@@ -54,5 +54,5 @@ export async function discordConnect(): Promise<void> {
 
   Promise.all([registerCommands(client), registerEvents(client)])
       .then(() => client.login(env.DISCORD_CLIENT_TOKEN))
-      .then(() => logger.debug(`[${PREFIX}] ${client.user?.username} logged in!`));
+      .then(() => logger.info(`[${PREFIX}] ${client.user?.username} logged in!`));
 }

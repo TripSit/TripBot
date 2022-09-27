@@ -96,8 +96,8 @@ export async function experience(
       return;
     }
 
-    logger.debug(stripIndents`[${PREFIX}] Message sent by ${message.author.username} \
-in ${(message.channel as TextChannel).name} on ${message.guild}`);
+    //     logger.debug(stripIndents`[${PREFIX}] Message sent by ${message.author.username} \
+    // in ${(message.channel as TextChannel).name} on ${message.guild}`);
     actor = message.author;
 
     // Determine what kind of experience to give
@@ -174,7 +174,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
     userRef = `${env.FIREBASE_DB_USERS}/${accountName}/experience/${expType}`;
   }
 
-  logger.debug(`[${PREFIX}] userRef: ${userRef}`);
+  // logger.debug(`[${PREFIX}] userRef: ${userRef}`);
   if (global.db) {
     const ref = db.ref(userRef);
     await ref.once('value', (data) => {

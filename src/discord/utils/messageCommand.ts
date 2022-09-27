@@ -17,7 +17,7 @@ const helpCounter = new Map<string, number>();
  * @return {Promise<void>}
 **/
 export async function messageCommand(message: Message): Promise<void> {
-  logger.debug(`[${PREFIX}] starting!`);
+  // logger.debug(`[${PREFIX}] starting!`);
   // logger.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}!`);
   const displayName = message.member ? message.member.displayName : message.author.username;
 
