@@ -21,8 +21,8 @@ global.bootTime = new Date();
 async function start() {
   logger.info(`[${PREFIX}] Starting service!`);
   if (!validateEnv()) return;
-  webserverConnect();
   if (env.NODE_ENV === 'production') {
+    webserverConnect();
     // if (env.IRC_PASSWORD) {
     //   ircConnect();
     // }
