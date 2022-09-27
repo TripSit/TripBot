@@ -84,6 +84,7 @@ const hornyJail = [
   /* cock */[_.C, _.O, _.C, _.K].join(s),
   /* condom */[_.C, _.O, _.N, _.D, _.O, _.M].join(s),
   /* cum */[_.C, _.U, _.M].join(s),
+  /* cuck */[_.C, _.U, _.C, _.K].join(s),
   /* cunilingus */[_.C, _.U, _.N, _.I, _.L, _.I, _.N, _.G, _.U, _.S].join(s),
   /* cyberfuck */[_.C, _.Y, _.B, _.E, _.R, _.F, _.U, _.C, _.K].join(s),
   /* dick */[_.D, _.I, _.C, _.K].join(s),
