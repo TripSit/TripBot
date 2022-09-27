@@ -366,9 +366,9 @@ export async function moderate(
           logger.debug(`[${PREFIX}] minutes: ${minutes}`);
           const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
           targetGuild.members.ban(targetUser, {deleteMessageDays: 7, reason});
-          await targetUser.send(
-              `You have been banned ${minutes ? `for ${ms(minutes, {long: true})}` : ''}\
-            ${reason ? ` because\n ${reason}` : ''} `);
+          // await targetUser.send(
+          //     `You have been banned ${minutes ? `for ${ms(minutes, {long: true})}` : ''}\
+          //   ${reason ? ` because\n ${reason}` : ''} `);
         } catch (err) {
           logger.error(`[${PREFIX}] Error: ${err}`);
         }
@@ -685,6 +685,8 @@ export async function moderate(
   // await setUserInfo(actorFbid, actorData);
 
   // logger.debug(`[${PREFIX}] finished!`);
+
+  logger.debug(`[${PREFIX}] ${targetNickname} has been ${command}ed!`);
   const response = embedTemplate()
       .setColor(Colors.Yellow)
       .setDescription(`${targetNickname} has been ${command}ed!`);

@@ -3,7 +3,7 @@ import {
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
-  Colors,
+  // Colors,
   ContextMenuCommandBuilder,
   ModalSubmitInteraction,
   GuildMember,
@@ -14,7 +14,7 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import {MessageCommand} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
+// import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import logger from '../../../global/utils/logger';
 import {moderate} from '../../../global/commands/g.moderate';
@@ -26,7 +26,7 @@ let target = {} as GuildMember | string;
 let message = {};
 let channel = {} as TextChannel;
 let messageUrl = '';
-const command = 'timeout';
+const command = 'warn';
 
 export const mWarn: MessageCommand = {
   data: new ContextMenuCommandBuilder()
@@ -77,9 +77,9 @@ export const mWarn: MessageCommand = {
   async submit(interaction:ModalSubmitInteraction) {
     logger.debug(`[${PREFIX}] started!`);
     // await interaction.deferReply({ ephemeral: true });
-    const embed = embedTemplate()
-        .setColor(Colors.DarkBlue)
-        .setDescription('Reporting...');
+    // const embed = embedTemplate()
+    //     .setColor(Colors.DarkBlue)
+    //     .setDescription('Reporting...');
     // await interaction.editReply({ embeds: [embed], ephemeral: true });
 
     channel = interaction.channel as TextChannel;
@@ -101,8 +101,8 @@ export const mWarn: MessageCommand = {
     const result = await moderate(actor, command, target, channel, toggle, reason, duration, interaction);
     logger.debug(`[${PREFIX}] Result: ${result}`);
 
-    embed.setDescription(result);
+    // embed.setDescription(result);
 
-    interaction.reply({embeds: [embed], ephemeral: true});
+    interaction.reply(result);
   },
 };
