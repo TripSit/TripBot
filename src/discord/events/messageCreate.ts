@@ -10,7 +10,7 @@ import {
   messageEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
-import {thoughtPolice} from '../utils/d.thoughtPolice';
+// import {thoughtPolice} from '../utils/d.thoughtPolice';
 import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../utils/embedTemplate';
 import {experience} from '../../global/utils/experience';
@@ -97,7 +97,7 @@ export const messageCreate: messageEvent = {
     }
 
     announcements(message);
-    thoughtPolice(message);
+    // thoughtPolice(message);
     experience(message);
   },
 };
