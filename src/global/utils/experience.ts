@@ -199,17 +199,16 @@ export async function experience(
           // eslint-disable-next-line max-len
           logger.debug(stripIndents`[${PREFIX}] ${actor.username ? actor.username : actor.nick } (lv${level}) +${expPoints} ${expType} exp | TotalExp: ${totalExpPoints}, LevelExp: ${levelExpPoints}, ExpToLevel ${level + 1}: ${expToLevel}`);
           if (expToLevel < levelExpPoints) {
-            logger.debug(`[${PREFIX}] ${actor.username ? actor.username : actor.nick } has leveled up to \
-              ${expType} level ${level + 1}!`);
-
-            // const embed = embedTemplate();
-            // embed.setDescription(`${actor.username ? actor.username : actor.nick } has leveled up to ${expType} \
-            //   level ${level + 1}!`);
-            const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_TRIPBOTLOGS) as TextChannel;
-            // channelTripbotlogs.send({embeds: [embed]});
-            channelTripbotlogs.send(`${actor.username ? actor.username : actor.nick } has leveled up to ${expType} \
-            level ${level + 1}!`);
             level += 1;
+            logger.debug(`[${PREFIX}] ${actor.username ? actor.username : actor.nick } has leveled up to \
+              ${expType} level ${level}!`);
+
+            if (level % 5 === 0) {
+              const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_TRIPBOTLOGS) as TextChannel;
+              channelTripbotlogs.send(`${actor.username ? actor.username : actor.nick } has leveled up to ${expType} \
+              level ${level}!`);
+            }
+            // channelTripbotlogs.send({embeds: [embed]});
             levelExpPoints -= expToLevel;
           }
           experienceData = {

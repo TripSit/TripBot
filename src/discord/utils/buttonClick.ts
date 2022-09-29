@@ -90,7 +90,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
 
 
     logger.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
-    const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
+    const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_TRIPBOTLOGS) as TextChannel;
     channelTripbotlogs.send({
       content: `Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`});
 
