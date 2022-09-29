@@ -80,12 +80,14 @@ export async function bestOf(reaction:MessageReaction, user:User) {
             url: reaction.message.url,
           })
           .setColor(Colors.Purple)
-          .setDescription(reaction.message.content)
           .addFields(
               {name: '\u200B', value: `[Go to post!](${reaction.message.url})`, inline: true},
           )
           .setFooter({text: `Sent in #${(reaction.message.channel as TextChannel).name} at ${formattedDate}`});
 
+      if (reaction.message.content) {
+        embed.setDescription(reaction.message.content);
+      }
       if (attachmentUrl) {
         embed.setImage(`${attachmentUrl}`);
       }
