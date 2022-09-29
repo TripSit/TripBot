@@ -23,7 +23,7 @@ const tripsitterChannels = [
 ];
 
 // How many votes are needed for each action, in production and dev
-const votePinThreshold = env.NODE_ENV === 'production' ? 10 : 2;
+const votePinThreshold = env.NODE_ENV === 'production' ? 5 : 2;
 
 /**
  * This runs when there are enough upvotes on a message
