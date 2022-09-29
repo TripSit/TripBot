@@ -437,7 +437,7 @@ export async function tripsitmeSubmit(
           firstMessage = testNotice + firstMessage;
         }
         threadHelpUser.send(firstMessage);
-        threadHelpUser.setName(`🧡│${target.displayName} discussion`);
+        threadHelpUser.setName(`🧡│${target.displayName}'s channel!`);
 
         // Update the meta thread too
         let helperMsg = memberInput ?
