@@ -1,6 +1,5 @@
 import {
   SlashCommandBuilder,
-  ChatInputCommandInteraction,
   GuildMember,
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
@@ -30,7 +29,7 @@ export const time: SlashCommand = {
               .setRequired(true)
               .setAutocomplete(true)),
       ),
-  async execute(interaction:ChatInputCommandInteraction) {
+  execute: async (interaction) => {
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     const tzValue = interaction.options.getString('timezone')!;
     let user = interaction.options.getMember('user');
@@ -44,6 +43,8 @@ export const time: SlashCommand = {
     }
 
     const response = await timezone(command, (user as GuildMember), tzValue);
+
+    logger.debug(`[${PREFIX}] response: ${response}`);
 
     if (command === 'get') {
       interaction.reply(response);

@@ -7,18 +7,19 @@ import {GuildMember} from 'discord.js';
 const PREFIX = path.parse(__filename).name;
 
 /**
- * Information about the bot!
- * @param {'get' | 'set'} command
- * @param {GuildMember} member The key of the user who set their birthday
- * @param {string} timezone The timezone
- * @return {any} an object with information about the bot
+ * Get and set someone's timezone!
+ * @param {'get' | 'set'} command You can get 'get' or 'set' the timezone!
+ * @param {GuildMember} member The user to either set or get the timezone!
+ * @param {string} timezone (Not always there) The timezone!
+ * @return {string} an object with information about the bot
  */
 export async function timezone(
     command: 'get' | 'set',
     member: GuildMember,
-    timezone?:string | null):Promise<any> {
+    timezone?:string | null):Promise<string> {
   logger.debug(`[${PREFIX}] timezone: ${command} ${member} ${timezone}`);
 
+  let response = '';
   if (command === 'set') {
     // define offset as the value from the timezones array
     let tzCode = '';
@@ -33,32 +34,31 @@ export async function timezone(
     if (global.db) {
       const ref = db.ref(`${env.FIREBASE_DB_USERS}/${member.id}/timezone`);
       ref.set(tzCode);
-      logger.debug(`[${PREFIX}] finished!`);
-      return `I updated your timezone to ${timezone}`;
     }
-    return `${timezone} is your new timezone!`;
+    response = `I updated your timezone to ${timezone}`;
   } else if (command === 'get') {
     let tzCode = '';
     const ref = db.ref(`${env.FIREBASE_DB_USERS}/${member.id}/timezone`);
     await ref.once('value', (data) => {
       if (data.val() !== null) {
+        logger.debug(`[${PREFIX}] data.val(): ${data.val()}`);
         tzCode = data.val();
+
+        let gmtValue = '';
+        for (let i = 0; i < timezones.length; i += 1) {
+          if (timezones[i].tzCode === tzCode) {
+            gmtValue = timezones[i].offset;
+            logger.debug(`${PREFIX} gmtValue: ${gmtValue}`);
+          }
+        }
+        // get the user's timezone from the database
+        const timestring = new Date().toLocaleTimeString('en-US', {timeZone: tzCode});
+        response = `It is likely ${timestring} (GMT${gmtValue}) wherever ${member.displayName} is located.`;
       } else {
-        return `${member.displayName} is a timeless treasure <3 (and has not set a time zone)`;
+        logger.debug(`[${PREFIX}] data.val() for ${member.displayName} is null!`);
+        response = `${member.displayName} is a timeless treasure <3 (and has not set a time zone)`;
       }
     });
-
-    let gmtValue = '';
-    for (let i = 0; i < timezones.length; i += 1) {
-      if (timezones[i].tzCode === tzCode) {
-        gmtValue = timezones[i].offset;
-        logger.debug(`${PREFIX} gmtValue: ${gmtValue}`);
-      }
-    }
-
-    // get the user's timezone from the database
-    const timestring = new Date().toLocaleTimeString('en-US', {timeZone: tzCode});
-    return `It is likely ${timestring} (GMT${gmtValue}) wherever ${member.displayName} is located.`;
-    logger.debug(`[${PREFIX}] finished!`);
   }
+  return response;
 };
