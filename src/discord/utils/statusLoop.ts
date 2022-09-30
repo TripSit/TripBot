@@ -24,13 +24,22 @@ const PREFIX = path.parse(__filename).name;
 // 3  - WATCHING  - Watching {message}
 // 4  - CUSTOM    - {emoji} {message} (See note!)
 // "Bots cannot set a CUSTOM activity type, it is only for custom statuses received from users"
-// SO WHY IS IT AN OPION???
+// SO WHY IS IT AN OPTION???
 // 5  - COMPETING - Competing in {message}
 
 const activities = [
   {message: 'with a scale', type: ActivityType.Playing},
+  {message: '/urban_define', type:ActivityType.Watching},
+  {message: 'you /breathe', type:ActivityType.Listening},
+  {message: 'around with /drug', type: ActivityType.Playing},
   {message: 'test kit results', type: ActivityType.Watching},
+  {message: 'laughter at /joke', type:ActivityType.Listening},
+  {message: 'with /triptoys', type:ActivityType.Playing},
+  {message: 'people /hydrate', type:ActivityType.Watching},
   {message: 'someone talk', type: ActivityType.Listening},
+  {message: 'with /magic8ball', type: ActivityType.Playing},
+  {message: 'the /coinflip result', type: ActivityType.Watching},
+  {message: 'to a new /topic', type:ActivityType.Listening},
 ];
 
 const delay = env.NODE_ENV === 'production' ? 5 * 60 * 1000 : 5 * 1000;
