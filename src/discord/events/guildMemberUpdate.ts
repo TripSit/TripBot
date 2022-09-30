@@ -108,8 +108,10 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
           // logger.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${roleName}`);
 
           // const userInfo = await getUserInfo(newMember.id);
-          const channel = newMember.guild.channels.cache.get(env.CHANNEL_MODLOG.toString()) as TextChannel;
-          channel.send(`${newMember.displayName} ${action} ${roleName}`);
+          const channelBotlog = newMember.guild.channels.cache.get(env.CHANNEL_TRIPBOTLOGS) as TextChannel;
+          if (channelBotlog) {
+            channelBotlog.send(`${newMember.displayName} ${action} ${roleName}`);
+          }
 
           // if (action === 'added') {
           //   // const mindsetRemovalTime = new Date();

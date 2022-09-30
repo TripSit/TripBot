@@ -23,7 +23,7 @@ const tripsitterChannels = [
 ];
 
 // How many votes are needed for each action, in production and dev
-const votePinThreshold = env.NODE_ENV === 'production' ? 10 : 2;
+const votePinThreshold = env.NODE_ENV === 'production' ? 5 : 2;
 
 /**
  * This runs when there are enough upvotes on a message
@@ -80,12 +80,14 @@ export async function bestOf(reaction:MessageReaction, user:User) {
             url: reaction.message.url,
           })
           .setColor(Colors.Purple)
-          .setDescription(reaction.message.content)
           .addFields(
               {name: '\u200B', value: `[Go to post!](${reaction.message.url})`, inline: true},
           )
           .setFooter({text: `Sent in #${(reaction.message.channel as TextChannel).name} at ${formattedDate}`});
 
+      if (reaction.message.content) {
+        embed.setDescription(reaction.message.content);
+      }
       if (attachmentUrl) {
         embed.setImage(`${attachmentUrl}`);
       }
