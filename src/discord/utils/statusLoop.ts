@@ -39,7 +39,7 @@ const activities = [
   {message: 'someone talk', type: ActivityType.Listening},
   {message: 'with /magic8ball', type: ActivityType.Playing},
   {message: 'the /coinflip result', type: ActivityType.Watching},
-  {message: 'to a new /topic', type: ActivityType.Listening},
+  {message: 'a new /topic', type: ActivityType.Listening},
 ];
 
 const delay = env.NODE_ENV === 'production' ? 5 * 60 * 1000 : 5 * 1000;
