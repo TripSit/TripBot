@@ -75,28 +75,30 @@ function sleep(ms:number):Promise<void> {
  * @param {string} name
  */
 async function runCommand(interaction:ChatInputCommandInteraction, name:string) {
+  if (name !== 'breathe') {
+    return false;
+  }
   await sleep(1000);
-  await interaction.channel!.send(`**${name}** - Starting test!`);
-  await sleep(100);
-
   const command = await interaction.client.commands.get(name);
   if (command) {
-    logger.debug(`Running ${name}!`);
+    logger.debug(`[${PREFIX}] Running command ${name}`);
+    await interaction.channel!.send(`**${name}** - Starting test!`);
     // if (name == 'birthday') {
     //   await testReply(interaction, name, 'i havnt set up the test code yet!');
     // }
     // if (name == 'botmod') {
     //   await testReply(interaction, name, 'this should be tested manually!');
     // }
-    // if (name == 'breathe') {
-    //   await command.execute(interaction, '1');
-    //   await sleep(1000);
-    //   await command.execute(interaction, '2');
-    //   await sleep(1000);
-    //   await command.execute(interaction, '3');
-    //   await sleep(1000);
-    //   await command.execute(interaction, '4');
-    // }
+    if (name == 'breathe') {
+      await command.execute(interaction);
+      await sleep(1000);
+      await command.execute(interaction, '2');
+      // await sleep(1000);
+      // await command.execute(interaction, '3');
+      // await sleep(1000);
+      // await command.execute(interaction, '4');
+      return true;
+    }
     // if (name == 'bug') {
     //   // await command.execute(interaction, 'This is a bug report!');
     //   await testReply(interaction, name, 'i havnt set up the test code yet!');
@@ -244,6 +246,79 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
   }
 };
 
+type resultsObject = {
+  total:number
+  passed:number
+  failed:number
+}
+
+/**
+ *
+ * @param {ChatInputCommandInteraction} interaction
+ */
+async function testGlobal(interaction:ChatInputCommandInteraction):Promise<resultsObject> {
+  const scope = interaction.options.getString('scope') || 'All';
+  const results = {total: 0, passed: 0, failed: 0};
+  if (scope === 'All' || scope === 'Global') {
+    await client.application?.commands.fetch({force: true})
+        .then(async (globalCommands) => {
+          results.total = globalCommands.size;
+          await interaction.followUp(`Testing ${globalCommands.size} global commands!`);
+          for (const command of globalCommands) {
+            // logger.debug(`[${PREFIX}] Testing global command ${command[1].name}`);
+            await runCommand(interaction, command[1].name)
+                .then((result) => {
+                  if (result) {
+                    // logger.debug(`[${PREFIX}] Global command ${command[1].name} passed!`);
+                    results.passed++;
+                  } else {
+                    // logger.debug(`[${PREFIX}] Global command ${command[1].name} failed!`);
+                    results.failed++;
+                  }
+                });
+          };
+        });
+    // .finally(() => {
+    //   // logger.debug(`[${PREFIX}] Global commands results: ${JSON.stringify(results)}`);
+    // });
+  }
+  return results;
+}
+
+/**
+ *
+ * @param {ChatInputCommandInteraction} interaction
+ */
+async function testGuild(interaction:ChatInputCommandInteraction):Promise<resultsObject> {
+  const scope = interaction.options.getString('scope') || 'All';
+  const results = {total: 0, passed: 0, failed: 0};
+  if (scope === 'All' || scope === 'Guild') {
+    await interaction.guild!.commands.fetch({force: true})
+        .then(async (guildCommands) => {
+          results.total = guildCommands.size;
+          await interaction.followUp(`Testing ${guildCommands.size} guild commands!`);
+          for (const command of guildCommands) {
+            // logger.debug(`[${PREFIX}] Testing guild command ${command[1].name}`);
+            await runCommand(interaction, command[1].name)
+                .then((result) => {
+                  if (result) {
+                    // logger.debug(`[${PREFIX}] Global command ${command[1].name} passed!`);
+                    results.passed++;
+                  } else {
+                    // logger.debug(`[${PREFIX}] Global command ${command[1].name} failed!`);
+                    results.failed++;
+                  }
+                });
+          };
+        });
+    // .finally(() => {
+    //   // logger.debug(`[${PREFIX}] Guild commands finished!`);
+    //   // logger.debug(`[${PREFIX}] Guild commands results: ${JSON.stringify(results)}`);
+    // });
+  }
+  return results;
+}
+
 export const test: SlashCommand = {
   data: new SlashCommandBuilder()
       .setName('test')
@@ -256,57 +331,27 @@ export const test: SlashCommand = {
               {name: 'Global', value: 'Global'},
           )),
   async execute(interaction) {
-    await interaction.reply('Starting testing...');
-
     const scope = interaction.options.getString('scope') || 'All';
+    await interaction.reply(`Testing ${scope} commands!`);
 
-    const globalCommands = await client.application?.commands.fetch({force: true})!;
-    const guildCommands = await interaction.guild!.commands.fetch({force: true})!;
-
-    if (scope === 'All' || scope === 'Global') {
-      await interaction.followUp(`Testing ${globalCommands.size} global commands...`);
-      globalCommands.forEach(async (command) => {
-        // logger.debug(JSON.stringify(command, null, 2));
-        logger.debug(`[${PREFIX}] ${command.name} - ${command.guild} - ${command.guildId}`);
-      });
-      // Get a list of all commands registered to the bot
-      if (false) {
-        runCommand(interaction, 'lol (( butts');
-      }
-      // getCommands('global').then(async (globalCommandNames) => {
-      //   for (let i = 0; i < globalCommandNames.length; i++) {
-      //     const name = globalCommandNames[i];
-      //     runCommand(interaction, name);
-      //     break;
-      //   }
-      // });
-      logger.debug(`[${PREFIX}] Global commands finished!`);
-    }
-    if (scope === 'All' || scope === 'Guild') {
-      await interaction.followUp(`Testing ${guildCommands.size} guild commands...`);
-      guildCommands.forEach(async (command) => {
-        // logger.debug(JSON.stringify(command, null, 2));
-        logger.debug(`[${PREFIX}] ${command.name} - ${command.guild} - ${command.guildId}`);
-      });
-      // getCommands('guild').then(async (guildCommandNames) => {
-      //   for (let i = 0; i < guildCommandNames.length; i++) {
-      //     const name = guildCommandNames[i];
-      //     runCommand(interaction, name);
-      //     break;
-      //   }
-      // });
-      logger.debug(`[${PREFIX}] Guild commands finished!`);
-    }
-    const embed = embedTemplate();
-    embed.setTitle('Testing Results');
-    embed.addFields(
-        {name: 'Guild Tested', value: `${guildCommands.size}`, inline: true},
-        {name: 'Guild Success', value: `X`, inline: true},
-        {name: 'Guild Failed', value: `Y`, inline: true},
-        {name: 'Global Tested', value: `${globalCommands.size}`, inline: true},
-        {name: 'Global Success', value: `A`, inline: true},
-        {name: 'Global Failed', value: `B`, inline: true},
-    );
-    await interaction.followUp({embeds: [embed]});
+    await testGlobal(interaction)
+        .then(async (globalResults) => {
+          logger.debug(`[${PREFIX}] Global results: ${JSON.stringify(globalResults)}`);
+          await testGuild(interaction)
+              .then(async (guildResults) => {
+                logger.debug(`[${PREFIX}] Guild results: ${JSON.stringify(guildResults)}`);
+                const embed = embedTemplate()
+                    .setTitle('Testing Results')
+                    .addFields(
+                        {name: 'Global Tested', value: `${globalResults.total}`, inline: true},
+                        {name: 'Global Success', value: `${globalResults.passed}`, inline: true},
+                        {name: 'Global Failed', value: `${globalResults.failed}`, inline: true},
+                        {name: 'Guild Tested', value: `${guildResults.total}`, inline: true},
+                        {name: 'Guild Success', value: `${guildResults.passed}`, inline: true},
+                        {name: 'Guild Failed', value: `${guildResults.failed}`, inline: true},
+                    );
+                await interaction.channel!.send({embeds: [embed]});
+              });
+        });
   },
 };
