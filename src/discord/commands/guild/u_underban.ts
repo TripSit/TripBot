@@ -5,9 +5,11 @@ import {
   TextChannel,
   time,
 } from 'discord.js';
+
 import {
   ApplicationCommandType,
 } from 'discord-api-types/v10';
+
 import {UserCommand} from '../../@types/commandDef';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
@@ -68,15 +70,21 @@ const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles},${otherRoles}`;
 
 let target = {} as GuildMember;
 export const uUnderban: UserCommand = {
+
   data: new ContextMenuCommandBuilder()
       .setName('Underban')
       .setType(ApplicationCommandType.User),
+
   async execute(interaction) {
+    logger.debug(`[${PREFIX}] starting!`);
+
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction
     target = interaction.targetMember as GuildMember;
     // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+    // Add the underban role
     const role = interaction.guild!.roles.cache.find((r) => r.id === env.ROLE_UNDERBAN)!;
     target.roles.add(role);
+
     // Remove all roles, except team and vanity, from the target
     target.roles.cache.forEach((role) => {
       logger.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
@@ -91,6 +99,8 @@ export const uUnderban: UserCommand = {
         }
       }
     });
+
+    // construct the embed to send to the team channel
     const targetEmbed = embedTemplate()
         .setColor(Colors.Yellow)
         .setDescription(`${target} ***was underbanned***`)
@@ -105,21 +115,26 @@ export const uUnderban: UserCommand = {
         .addFields(
             {name: 'Account created', value: `${time(target.user.createdAt, 'R')}`, inline: true},
         );
+
     if (target.joinedAt) {
       targetEmbed.addFields(
           {name: 'Joined', value: `${time(target.joinedAt, 'R')}`, inline: true},
       );
     }
-    // Here
-    logger.debug(`[${PREFIX}] CHANNEL_MODERATORS: ${env.CHANNEL_MODERATORS}`);
+
+    // Send the notification to the moderator's channel, we have to send the mention outside the embed.
     const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
-    // We must send the mention outside of the embed, cuz mentions dont work in embeds
+    modChan.send(`Hey <@&${env.ROLE_MODERATOR}>!`);
     modChan.send({embeds: [targetEmbed]});
+
     logger.debug(`[${PREFIX}] sent a message to the moderators room`);
 
+    // send ephemeral confirmation reply to the moderator who issued the command
     interaction.reply({
       ephemeral: true,
       content: 'Done!',
     });
+
+    logger.debug(`[${PREFIX}] finished!`);
   },
 };
