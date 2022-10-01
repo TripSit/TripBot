@@ -51,15 +51,13 @@ export const drug: SlashCommand = {
       return;
     }
 
-    let summary = '';
     if (drugData.summary) {
-      summary = `${drugData.summary}\n\n`;
+      embed.setDescription(`${drugData.summary}\n\n`);
     }
 
     embed.setColor(Colors.Purple);
     embed.setTitle(`🌐 ${drugData.name} Information`);
     embed.setURL(`https://wiki.tripsit.me/wiki/${substance}`);
-    embed.setDescription(summary);
 
     if (drugData.aliases) {
       const aliases = `Aliases: ${drugData.aliases.join(', ')}\n\n`;
