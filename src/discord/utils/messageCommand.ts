@@ -1,6 +1,6 @@
 import {
   Message,
-  // GuildTextBasedChannel,
+  GuildTextBasedChannel,
   Role,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
@@ -21,8 +21,8 @@ export async function messageCommand(message: Message): Promise<void> {
   // logger.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}!`);
   const displayName = message.member ? message.member.displayName : message.author.username;
 
-  // logger.debug(stripIndents`[${PREFIX}] ${displayName} said\
-  // ${message.content} in ${(message.channel as GuildTextBasedChannel).name}!`);
+  logger.debug(stripIndents`[${PREFIX}] ${displayName} said\
+  ${message.content} in ${(message.channel as GuildTextBasedChannel).name}!`);
   // logger.debug(`[${PREFIX}] finished!`);
 
   if (message.content.startsWith('~')) {
@@ -51,5 +51,21 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
     } else {
       message.channel.send(`Hey ${displayName}, use /help to get a list of commands on discord!`);
     }
+  } else if (message.content.startsWith(`_pokes <@${env.DISCORD_CLIENT_ID}>_`)) {
+    const faces = [
+      '( ͡° ͜ʖ ͡°)',
+      '😯',
+      '😳',
+      '😘',
+      '🫣',
+      '🤨',
+    ];
+    message.channel.send(faces[Math.floor(Math.random() * faces.length)]);
+  } else if (message.mentions.has(message.client.user)) {
+    const responses = [
+      `*boops quietly*`,
+      `*beeps quietly*`,
+    ];
+    message.channel.send(responses[Math.floor(Math.random() * responses.length)]);
   }
 };
