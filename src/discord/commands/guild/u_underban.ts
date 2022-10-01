@@ -119,7 +119,7 @@ export const uUnderban: UserCommand = {
 
     interaction.reply({
       ephemeral: true,
-      content: 'Done!'
+      content: 'Done!',
     });
   },
 };
