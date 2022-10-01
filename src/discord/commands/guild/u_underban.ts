@@ -3,6 +3,7 @@ import {
   ContextMenuCommandBuilder,
   GuildMember,
   TextChannel,
+  time,
 } from 'discord.js';
 import {
   ApplicationCommandType,
@@ -10,7 +11,7 @@ import {
 import {UserCommand} from '../../@types/commandDef';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
-import {env} from 'node:process';
+import env from '../../../global/utils/env.config';
 import {embedTemplate} from '../../utils/embedTemplate';
 const PREFIX = path.parse(__filename).name;
 
@@ -74,7 +75,7 @@ export const uUnderban: UserCommand = {
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction
     target = interaction.targetMember as GuildMember;
     // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
-    const role = interaction.guild!.roles.cache.find((r) => r.id === '958017108036448287')!;
+    const role = interaction.guild!.roles.cache.find((r) => r.id === env.ROLE_UNDERBAN)!;
     target.roles.add(role);
     // Remove all roles, except team and vanity, from the target
     target.roles.cache.forEach((role) => {
@@ -92,13 +93,33 @@ export const uUnderban: UserCommand = {
     });
     const targetEmbed = embedTemplate()
         .setColor(Colors.Yellow)
-        .setDescription(`${target.displayName} was underbanned`);
-
+        .setDescription(`${target} ***was underbanned***`)
+        .setAuthor(null)
+        .setThumbnail(target.user.displayAvatarURL())
+        .setFooter(null)
+        .addFields(
+            {name: 'Nickname', value: `${target.nickname}`, inline: true},
+            {name: 'Tag', value: `${target.user.username}#${target.user.discriminator}`, inline: true},
+            {name: 'ID', value: `${target.user.id}`, inline: true},
+        )
+        .addFields(
+            {name: 'Account created', value: `${time(target.user.createdAt, 'R')}`, inline: true},
+        );
+    if (target.joinedAt) {
+      targetEmbed.addFields(
+          {name: 'Joined', value: `${time(target.joinedAt, 'R')}`, inline: true},
+      );
+    }
     // Here
     logger.debug(`[${PREFIX}] CHANNEL_MODERATORS: ${env.CHANNEL_MODERATORS}`);
     const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
     // We must send the mention outside of the embed, cuz mentions dont work in embeds
     modChan.send({embeds: [targetEmbed]});
     logger.debug(`[${PREFIX}] sent a message to the moderators room`);
+
+    interaction.reply({
+      ephemeral: true,
+      content: 'Done!'
+    });
   },
 };
