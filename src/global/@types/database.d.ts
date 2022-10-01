@@ -1,7 +1,6 @@
 /* eslint-disable no-unused-vars */
 
 export type userDbEntry = {
-    name: string;
     karma?: {
         karma_given: number;
         karma_received: number;

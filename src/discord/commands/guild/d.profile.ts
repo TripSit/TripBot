@@ -10,6 +10,7 @@ import {
 import {userDbEntry} from '../../../global/@types/database';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
+import {userExample} from '../../../global/utils/exampleUser';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
 import Canvas from '@napi-rs/canvas';
@@ -138,45 +139,49 @@ export const profile: SlashCommand = {
     // Actually fill the text with a solid color
     context.fillText(`${(target as GuildMember).displayName}'s profile!`, x, y);
 
+    let targetData = {} as userDbEntry;
 
     if (global.db) {
       const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}`);
       await ref.once('value', async (data) => {
-        let targetData = {} as userDbEntry;
         if (data.val() !== null && data.val() !== undefined) {
           targetData = data.val();
-          logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
-          context.font = `25px`;
-
-          if (targetData.karma) {
-            if (targetData.karma.karma_given) {
-              context.fillText(`Karma Given: ${targetData.karma.karma_given || 0}`, x, y+=80);
-            }
-            if (targetData.karma.karma_received) {
-              context.fillText(`Karma Received: ${targetData.karma.karma_received || 0}`, canvas.width/2, y);
-            }
-          }
-
-          if (targetData.experience) {
-            if (targetData.experience.general) {
-              context.fillText(`General LV: ${targetData.experience.general.level}`, x, y+=30);
-            }
-            if (targetData.experience.tripsitter) {
-              context.fillText(`Tripsitter LV: ${targetData.experience.tripsitter.level}`, canvas.width/2, y);
-            }
-            if (targetData.experience.developer) {
-              context.fillText(`Tripsitter LV: ${targetData.experience.developer.level}`, canvas.width/2, y);
-            }
-          }
-
-          context.fillText(`Timezone: ${targetData.timezone !== undefined ? targetData.timezone : 'Use /timezone!'}`, x, y+=30);
-          context.fillText(`Birthday: ${targetData.birthday !== undefined ? `${targetData.birthday.month} ${targetData.birthday.day}` : 'Use /birthday!'}`, canvas.width/2, y);
-
-          context.fillText(`Created: ${target.user.createdAt.toDateString()}`, x, y+=30);
-          context.fillText(`Joined: ${target.joinedAt?.toDateString()}`, canvas.width/2, y);
         }
       });
+    } else {
+      logger.error('Firebase not initialized!');
+      targetData = userExample as userDbEntry;
     }
+
+    logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
+    context.font = `25px`;
+
+    if (targetData.karma) {
+      if (targetData.karma.karma_given) {
+        context.fillText(`Karma Given: ${targetData.karma.karma_given || 0}`, x, y+=80);
+      }
+      if (targetData.karma.karma_received) {
+        context.fillText(`Karma Received: ${targetData.karma.karma_received || 0}`, canvas.width/2, y);
+      }
+    }
+
+    if (targetData.experience) {
+      if (targetData.experience.general) {
+        context.fillText(`General LV: ${targetData.experience.general.level}`, x, y+=30);
+      }
+      if (targetData.experience.tripsitter) {
+        context.fillText(`Tripsitter LV: ${targetData.experience.tripsitter.level}`, canvas.width/2, y);
+      }
+      if (targetData.experience.developer) {
+        context.fillText(`Tripsitter LV: ${targetData.experience.developer.level}`, canvas.width/2, y);
+      }
+    }
+
+    context.fillText(`Timezone: ${targetData.timezone !== undefined ? targetData.timezone : 'Use /timezone!'}`, x, y+=30);
+    context.fillText(`Birthday: ${targetData.birthday !== undefined ? `${targetData.birthday.month} ${targetData.birthday.day}` : 'Use /birthday!'}`, canvas.width/2, y);
+
+    context.fillText(`Created: ${target.user.createdAt.toDateString()}`, x, y+=30);
+    context.fillText(`Joined: ${target.joinedAt?.toDateString()}`, canvas.width/2, y);
 
     // Define avatar image
     const avatar = await Canvas.loadImage(target.user.displayAvatarURL({extension: 'jpg'}));
