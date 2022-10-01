@@ -25,8 +25,9 @@ export async function sparklePoints(reaction:MessageReaction, user:User) {
         let points = 1;
         if (data.val() !== null) {
           points = data.val() + 1;
+          ref.update(points);
         }
-        ref.update(points);
+        ref.set(points);
       });
     }
   }
