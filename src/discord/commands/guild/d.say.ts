@@ -4,6 +4,7 @@ import {
   ModalBuilder,
   TextInputBuilder,
   Colors,
+  GuildMember,
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
@@ -43,6 +44,12 @@ export const bug: SlashCommand = {
       content: `I said '${say}' in ${channel ? channel.toString() : interaction.channel?.toString()}`,
       ephemeral: true},
     );
+
+    const channelBotlog = interaction.guild!.channels.cache.get(env.CHANNEL_TRIPBOTLOGS) as TextChannel;
+    if (channelBotlog) {
+      channelBotlog.send(`${(interaction.member as GuildMember).displayName} made me say '${say}' \
+in ${channel ? channel.toString() : interaction.channel?.toString()}`);
+    }
 
     logger.debug(`[${PREFIX}] finished!`);
   },
