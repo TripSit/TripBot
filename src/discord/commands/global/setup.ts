@@ -336,6 +336,8 @@ To ensure quality support in our assistance channels we appreciate candidates ap
 - Around two weeks or level 10 with the bot (use /rank)!
 
 If you meet the above and are interested in becoming a ${roleTripsitter!.name}, please click the button below to fill out the application form!
+
+Note: this is **not** a formal application for a team role, just extra access as a user!
     `;
     await (interaction.channel as TextChannel).send(
         {content: message,
@@ -382,9 +384,11 @@ export async function applications(interaction:ChatInputCommandInteraction) {
 
       We're always looking for people who want to contribute to the back-end of the organization!
 
-      Not just coders, but anyone who wants to give input or test out new features!
+      We appreciate all types of help: Not just coders, but anyone who wants to give input or test out new features!
 
       If you want to help out with ${interaction.guild!.name}, please click the button below to fill out the application form.
+
+      Note: this is not a formal application for a team role, just extra access as a user!
     `,
       components: [new ActionRowBuilder<ButtonBuilder>()
           .addComponents(
