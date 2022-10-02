@@ -21,11 +21,8 @@ export const dbreathe: SlashCommand1 = {
           )),
   async execute(interaction) {
     const choice = interaction.options.getString('exercise');
-    logger.debug(`[${PREFIX}] choice: ${choice}`);
-
     const data = await breathe(choice);
-    logger.debug(`[${PREFIX}] data: ${data}`);
-
+    logger.debug(`[${PREFIX}] choice: ${choice} = ${data}`);
     interaction.reply(data);
     return true;
   },

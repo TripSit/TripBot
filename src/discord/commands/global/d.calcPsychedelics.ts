@@ -5,9 +5,9 @@ import {
 import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcPsychedelics} from '../../../global/commands/g.calcPsychedelics';
-import logger from '../../../global/utils/logger';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+// import logger from '../../../global/utils/logger';
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 export const dcalcPsychedelics: SlashCommand1 = {
   data: new SlashCommandBuilder()
@@ -42,7 +42,6 @@ export const dcalcPsychedelics: SlashCommand1 = {
 
     const command = interaction.options.getSubcommand();
 
-    logger.debug(`[${PREFIX}] last_dose: ${lastDose} | desired_dose: ${desiredDose} | days: ${days}`);
 
     // Code here inspired by https://codepen.io/cyberoxide/pen/BaNarGd
     // Seems like the original source is offline (https://psychedeliccalc.herokuapp.com)
@@ -67,7 +66,7 @@ export const dcalcPsychedelics: SlashCommand1 = {
       `);
     interaction.reply({embeds: [embed], ephemeral: false});
 
-    logger.debug(`[${PREFIX}] finished!`);
+    // logger.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

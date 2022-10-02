@@ -6,10 +6,10 @@ import {
 import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcBenzo} from '../../../global/commands/g.calcBenzo';
-import logger from '../../../global/utils/logger';
+// import logger from '../../../global/utils/logger';
 import {stripIndents} from 'common-tags';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 export const dcalcBenzo: SlashCommand1 = {
   data: new SlashCommandBuilder()
@@ -41,25 +41,8 @@ export const dcalcBenzo: SlashCommand1 = {
         **Please make sure to research the substances thoroughly before using them.**
         It's a good idea to start with a lower dose than the calculator shows, since everybody can react differently to different substances.
         `);
-    // .addFields(
-    //     {name: `${drugA} Summary`, value: `${data.drugAResult.properties.summary}`, inline: true},
-    //     {name: `${drugB} Summary`, value: `${data.drugBResult.properties.summary}`, inline: true},
-    //     {name: '\u200b', value: '\u200b', inline: true},
-    //     {name: 'Effects', value: `${data.drugAResult.properties.effects}`, inline: true},
-    //     {name: 'Effects', value: `${data.drugBResult.properties.effects}`, inline: true},
-    //     {name: '\u200b', value: '\u200b', inline: true},
-    //     {name: 'Dose', value: `${data.drugAResult.drugADosageText}`, inline: true},
-    //     {name: 'Dose', value: `${data.drugBResult.drugBDosageText}`, inline: true},
-    //     {name: '\u200b', value: '\u200b', inline: true},
-    //     {name: 'Duration', value: `${data.drugAResult.properties.duration}`, inline: true},
-    //     {name: 'Duration', value: `${data.drugBResult.properties.duration}`, inline: true},
-    //     {name: '\u200b', value: '\u200b', inline: true},
-    //     {name: 'After Effects', value: `${data.drugAResult.properties['after-effects']}`, inline: true},
-    //     {name: 'After Effects', value: `${data.drugBResult.properties['after-effects']}`, inline: true},
-    //     {name: '\u200b', value: '\u200b', inline: true},
-    // );
     interaction.reply({embeds: [embed], ephemeral: false});
-    logger.debug(`[${PREFIX}] finished!`);
+    // logger.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

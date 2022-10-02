@@ -20,9 +20,11 @@ type DxmDataType = {
  * @return {any}
  */
 export async function calcDxm(givenWeight:number, weightUnits:string, taking:string):Promise<any> {
-  logger.debug(`${PREFIX} started!`);
+  // logger.debug(`[${PREFIX}] started!`);
   let calcWeight = weightUnits === 'lbs' ? givenWeight * 0.453592 : givenWeight;
   // logger.debug(`[${PREFIX}] calc_weight: ${calcWeight}`);
+
+  logger.debug(`[${PREFIX}] givenWeight: ${givenWeight} | weightUnits: ${weightUnits} | taking:  ${taking}`);
 
   let roaValue = 0;
   let units = '';
@@ -79,6 +81,6 @@ export async function calcDxm(givenWeight:number, weightUnits:string, taking:str
     };
   });
 
-  logger.debug(`${PREFIX} finished!`);
+  logger.debug(`[${PREFIX}] returnData: ${JSON.stringify(returnData)}`);
   return [returnData, units];
 };

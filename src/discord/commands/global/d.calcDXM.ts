@@ -6,9 +6,9 @@ import {
 import {SlashCommand1} from '../../@types/commandDef';
 import {calcDxm} from '../../../global/commands/g.calcDxm';
 import {embedTemplate} from '../../utils/embedTemplate';
-import logger from '../../../global/utils/logger';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+// import logger from '../../../global/utils/logger';
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 type DxmDataType = {
   First: {min: number, max: number};
@@ -47,13 +47,9 @@ export const calxDXM: SlashCommand1 = {
   async execute(interaction) {
     // Calculate each plat min/max value
     const givenWeight = interaction.options.getInteger('calc_weight')!;
-    // logger.debug(`[${PREFIX}] calc_weight: ${givenWeight}`);
-
     const weightUnits = interaction.options.getString('units')!;
-    // logger.debug(`[${PREFIX}] weight_units: ${weightUnits}`);
-
     const taking = interaction.options.getString('taking')!;
-    // logger.debug(`[${PREFIX}] taking:  ${taking}`);
+
 
     const results = await calcDxm(givenWeight, weightUnits, taking);
     const dosageData = results[0] as DxmDataType;
@@ -73,7 +69,7 @@ export const calxDXM: SlashCommand1 = {
       header = false;
     });
     interaction.reply({embeds: [embed], ephemeral: false});
-    logger.debug(`[${PREFIX}] finished!`);
+    // logger.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

@@ -53,7 +53,6 @@ export const dCalcKetamine: SlashCommand1 = {
 
     const data = await calcKetamine(givenWeight, weightUnits);
 
-    logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
 
     embed.addFields(
         {
