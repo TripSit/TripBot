@@ -61,7 +61,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       '🤨',
     ];
     message.channel.send(faces[Math.floor(Math.random() * faces.length)]);
-  } else if (message.mentions.has(message.client.user)) {
+  } else if (message.mentions.has(message.client.user!)) {
     const responses = [
       `*boops quietly*`,
       `*beeps quietly*`,
