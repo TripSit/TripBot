@@ -3,6 +3,21 @@ import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
 /**
+ * Calculates ketamine dosages
+ * @param {number} weight Weight in lbs
+ * @param {'lbs' | 'kg'} unit
+ * @return {any} Something
+ */
+export async function calcKetamine(weight:number, unit:'lbs' | 'kg'):Promise<any> {
+  const calcWeight = unit === 'kg' ? weight * 2.20462 : weight;
+
+  return {
+    insufflated: await generateInsufflatedDosages(calcWeight),
+    rectal: await generateRectalDosages(calcWeight),
+  };
+};
+
+/**
  * Calculates insuffilated dosages
  * @param {number} weightInLbs Weight in lbs
  * @return {any} Something
@@ -36,18 +51,3 @@ export async function generateRectalDosages(weightInLbs:number):Promise<any> {
   ]
       .join('\n');
 }
-
-/**
- * Calculates rectal dosages
- * @param {number} weight Weight in lbs
- * @param {'lbs' | 'kg'} unit
- * @return {any} Something
- */
-export async function calcKetamine(weight:number, unit:'lbs' | 'kg'):Promise<any> {
-  const calcWeight = unit === 'kg' ? weight * 2.20462 : weight;
-
-  return {
-    insufflated: await generateInsufflatedDosages(calcWeight),
-    rectal: await generateRectalDosages(calcWeight),
-  };
-};

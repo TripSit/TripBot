@@ -2,16 +2,16 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcPsychedelics} from '../../../global/commands/g.calcPsychedelics';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const dcalcPsychedelics: SlashCommand = {
+export const dcalcPsychedelics: SlashCommand1 = {
   data: new SlashCommandBuilder()
-      .setName('psychedelic_calc')
+      .setName('calc_psychedelics')
       .setDescription('Check psychedelic tolerance information')
       .addSubcommand((subcommand) => subcommand
           .setName('lsd')
@@ -68,5 +68,6 @@ export const dcalcPsychedelics: SlashCommand = {
     interaction.reply({embeds: [embed], ephemeral: false});
 
     logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };

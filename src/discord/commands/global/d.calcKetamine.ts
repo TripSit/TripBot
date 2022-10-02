@@ -1,7 +1,7 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcKetamine} from '../../../global/commands/g.calcKetamine';
 import logger from '../../../global/utils/logger';
@@ -9,9 +9,9 @@ import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
 // Calculate insufflated dosages
-export const dCalcKetamine: SlashCommand = {
+export const dCalcKetamine: SlashCommand1 = {
   data: new SlashCommandBuilder()
-      .setName('ketamine_calc')
+      .setName('calc_ketamine')
       .setDescription('Get ketamine dosage information')
       .addIntegerOption((option) => option.setName('weight')
           .setDescription('How much do you weigh?')
@@ -40,7 +40,7 @@ export const dCalcKetamine: SlashCommand = {
         embeds: [embed],
         ephemeral: true,
       });
-      return;
+      return false;
     }
     if (weightUnits === 'lbs' && givenWeight > 398) {
       embed.setTitle('Please enter a valid weight less than 398 lbs.');
@@ -48,7 +48,7 @@ export const dCalcKetamine: SlashCommand = {
         embeds: [embed],
         ephemeral: true,
       });
-      return;
+      return false;
     }
 
     const data = await calcKetamine(givenWeight, weightUnits);
@@ -70,6 +70,6 @@ export const dCalcKetamine: SlashCommand = {
 
     interaction.reply({embeds: [embed], ephemeral: false});
     logger.debug(`[${PREFIX}] finished!`);
-    return;
+    return true;
   },
 };

@@ -32,57 +32,36 @@ function sleep(ms:number):Promise<void> {
 
 /**
  *
- * @param {'global'|'guild'} commandType
- * @return {Promise<command[]>}
- */
-// async function getCommands(commandType:'global'|'guild') {
-//   const files = await fs.readdir(path.join(path.resolve('src/discord/commands'), commandType));
-//   return files
-//       .filter((file) => file.endsWith('.ts') && !file.endsWith('index.js'))
-//       .map((file) => file.slice(0, -3));
-// }
-
-/**
- *
- * @param {ChatInputCommandInteraction} interaction
- * @param {string} functionName
- * @param {string }message
- * @return {void}
- */
-// async function testReply(
-//     interaction:ChatInputCommandInteraction,
-//     functionName:string,
-//     message:string):Promise<void> {
-//   const embed = embedTemplate()
-//       .setColor(Colors.Purple)
-//       .setTitle(`Skipping ${functionName} because ${message}`);
-//   if (!interaction.replied) {
-//     interaction.reply({
-//       embeds: [embed],
-//       ephemeral: false,
-//     });
-//   } else {
-//     interaction.followUp({
-//       embeds: [embed],
-//       ephemeral: false,
-//     });
-//   }
-// }
-
-/**
- *
  * @param {ChatInputCommandInteraction} interaction
  * @param {string} name
  */
 async function runCommand(interaction:ChatInputCommandInteraction, name:string) {
-  if (name !== 'breathe') {
+  const testInteraction = {
+    options: {},
+    reply: (content:string) => {
+      return interaction.followUp(content);
+    },
+  };
+
+  const testableCommands = [
+    'breathe',
+    'calc_dxm',
+    'calc_ketamine',
+    'calc_psychedelics',
+    'calc_benzo',
+  ];
+
+  if (!testableCommands.includes(name)) {
     return false;
   }
+
+  await interaction.channel!.send(`**${name}** - Starting test!`);
+
   await sleep(1000);
+
   const command = await interaction.client.commands.get(name);
   if (command) {
-    logger.debug(`[${PREFIX}] Running command ${name}`);
-    await interaction.channel!.send(`**${name}** - Starting test!`);
+    // logger.debug(`[${PREFIX}] Running command ${name}`);
     // if (name == 'birthday') {
     //   await testReply(interaction, name, 'i havnt set up the test code yet!');
     // }
@@ -90,14 +69,41 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     //   await testReply(interaction, name, 'this should be tested manually!');
     // }
     if (name == 'breathe') {
-      await command.execute(interaction);
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'exercise') {
+            return '1';
+          }
+        },
+      };
+      await command.execute(testInteraction);
       await sleep(1000);
-      await command.execute(interaction, '2');
-      // await sleep(1000);
-      // await command.execute(interaction, '3');
-      // await sleep(1000);
-      // await command.execute(interaction, '4');
-      return true;
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'exercise') {
+            return '2';
+          }
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'exercise') {
+            return '3';
+          }
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'exercise') {
+            return '4';
+          }
+        },
+      };
+      return await command.execute(testInteraction);
     }
     // if (name == 'bug') {
     //   // await command.execute(interaction, 'This is a bug report!');
@@ -106,24 +112,132 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // if (name == 'button') {
     //   await testReply(interaction, name, 'this should be tested manually!');
     // }
-    // if (name == 'calc-benzo') {
-    //   await command.execute(interaction, ['10', 'alprazolam', 'ativan']);
-    // }
-    // if (name == 'calc-dxm') {
-    //   await command.execute(interaction, ['200', 'lbs', 'RoboTablets (30 mg tablets)']);
-    // }
-    // if (name == 'calc-ketamine') {
-    //   await command.execute(interaction, ['200', 'lbs']);
-    // }
-    // if (name == 'calc-psychedelics') {
-    //   await command.execute(interaction, ['2', '4', '4', 'mushrooms']);
-    //   await sleep(1000);
-    //   await command.execute(interaction, ['2', '', '4', 'mushrooms']);
-    //   await sleep(1000);
-    //   await command.execute(interaction, ['200', '400', '4', 'lsd']);
-    //   await sleep(1000);
-    //   await command.execute(interaction, ['200', '', '4', 'lsd']);
-    // }
+    if (name == 'calc_benzo') {
+      // await command.execute(interaction, ['10', 'alprazolam', 'ativan']);
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'mg_of') {
+            return 'clorazepate';
+          }
+          if (name === 'and_i_want_the_dose_of') {
+            return 'flubromazepam';
+          }
+        },
+        getInteger: (name:string) => {
+          if (name === 'i_have') {
+            return '14.5';
+          }
+        },
+      };
+      return await command.execute(testInteraction);
+    }
+    if (name == 'calc_dxm') {
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'units') {
+            return 'lbs';
+          }
+          if (name === 'taking') {
+            return 'RoboTablets (30 mg tablets)';
+          }
+        },
+        getInteger: (name:string) => {
+          if (name === 'calc_weight') {
+            return '200';
+          }
+        },
+      };
+      return await command.execute(testInteraction);
+    }
+    if (name == 'calc_ketamine') {
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'units') {
+            return 'lbs';
+          }
+        },
+        getInteger: (name:string) => {
+          if (name === 'weight') {
+            return '200';
+          }
+        },
+      };
+      return await command.execute(testInteraction);
+    }
+    if (name == 'calc_psychedelics') {
+      // await command.execute(interaction, ['200', '', '4', 'lsd']);
+      testInteraction.options = {
+        getInteger: (name:string) => {
+          if (name === 'last_dose') {
+            return 2;
+          }
+          if (name === 'desired_dose') {
+            return 4;
+          }
+          if (name === 'days') {
+            return 4;
+          }
+        },
+        getSubcommand: (name:string) => {
+          return 'mushrooms';
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+      testInteraction.options = {
+        getInteger: (name:string) => {
+          if (name === 'last_dose') {
+            return 2;
+          }
+          if (name === 'desired_dose') {
+            return null;
+          }
+          if (name === 'days') {
+            return 4;
+          }
+        },
+        getSubcommand: (name:string) => {
+          return 'mushrooms';
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+      testInteraction.options = {
+        getInteger: (name:string) => {
+          if (name === 'last_dose') {
+            return 200;
+          }
+          if (name === 'desired_dose') {
+            return 400;
+          }
+          if (name === 'days') {
+            return 4;
+          }
+        },
+        getSubcommand: (name:string) => {
+          return 'lsd';
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+      testInteraction.options = {
+        getInteger: (name:string) => {
+          if (name === 'last_dose') {
+            return 200;
+          }
+          if (name === 'desired_dose') {
+            return null;
+          }
+          if (name === 'days') {
+            return 4;
+          }
+        },
+        getSubcommand: (name:string) => {
+          return 'lsd';
+        },
+      };
+      return command.execute(testInteraction);
+    }
     // if (name == 'chitragupta') {
     //   await testReply(interaction, name, 'this does not need to be tested!');
     // }

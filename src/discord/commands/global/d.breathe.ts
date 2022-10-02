@@ -1,13 +1,13 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {breathe} from '../../../global/commands/g.breathe';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const dbreathe: SlashCommand = {
+export const dbreathe: SlashCommand1 = {
   data: new SlashCommandBuilder()
       .setName('breathe')
       .setDescription('Remember to breathe')
@@ -24,10 +24,9 @@ export const dbreathe: SlashCommand = {
     logger.debug(`[${PREFIX}] choice: ${choice}`);
 
     const data = await breathe(choice);
-
     logger.debug(`[${PREFIX}] data: ${data}`);
 
-    if (interaction.replied) interaction.followUp(data);
-    else interaction.reply(data);
+    interaction.reply(data);
+    return true;
   },
 };

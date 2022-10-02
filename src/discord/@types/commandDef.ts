@@ -16,6 +16,14 @@ export interface SlashCommand {
   submit?: (interaction: ModalSubmitInteraction) => Promise<void>;
 }
 
+export interface SlashCommand1 {
+  data:
+    | Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'>
+    | SlashCommandSubcommandsOnlyBuilder;
+  execute: (interaction: ChatInputCommandInteraction) => Promise<boolean>;
+  submit?: (interaction: ModalSubmitInteraction) => Promise<void>;
+}
+
 export interface MessageCommand {
   data: ContextMenuCommandBuilder;
   execute: (interaction: MessageContextMenuCommandInteraction) => Promise<void>;

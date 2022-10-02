@@ -3,7 +3,7 @@ import {
   Colors,
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcBenzo} from '../../../global/commands/g.calcBenzo';
 import logger from '../../../global/utils/logger';
@@ -11,9 +11,9 @@ import {stripIndents} from 'common-tags';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const dcalcBenzo: SlashCommand = {
+export const dcalcBenzo: SlashCommand1 = {
   data: new SlashCommandBuilder()
-      .setName('benzo_calc')
+      .setName('calc_benzo')
       .setDescription('This tool helps figure out how much of a given benzo dose converts into another benzo dose.')
       .addIntegerOption((option) => option.setName('i_have')
           .setDescription('mg')
@@ -60,5 +60,6 @@ export const dcalcBenzo: SlashCommand = {
     // );
     interaction.reply({embeds: [embed], ephemeral: false});
     logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };
