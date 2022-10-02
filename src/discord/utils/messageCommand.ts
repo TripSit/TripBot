@@ -1,6 +1,6 @@
 import {
   Message,
-  GuildTextBasedChannel,
+  // GuildTextBasedChannel,
   Role,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
@@ -21,8 +21,8 @@ export async function messageCommand(message: Message): Promise<void> {
   // logger.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}!`);
   const displayName = message.member ? message.member.displayName : message.author.username;
 
-  logger.debug(stripIndents`[${PREFIX}] ${displayName} said\
-  ${message.content} in ${(message.channel as GuildTextBasedChannel).name}!`);
+  // logger.debug(stripIndents`[${PREFIX}] ${displayName} said\
+  // ${message.content} in ${(message.channel as GuildTextBasedChannel).name}!`);
   // logger.debug(`[${PREFIX}] finished!`);
 
   if (message.content.startsWith('~')) {
