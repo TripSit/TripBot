@@ -53,56 +53,44 @@ export const help: SlashCommand = {
       return desc;
     }
 
-    const hrEmbed = embedTemplate()
-        .setTitle('Harm Reduction Modules')
-        .addFields(
-            {name: 'Drug', value: getDesc('drug'), inline: true},
-            {name: 'Combo', value: getDesc('drug'), inline: true},
-            {name: 'iDose', value: getDesc('idose'), inline: true},
+    const hrEmbed = embedTemplate();
+    hrEmbed.setTitle('Harm Reduction Modules');
+    hrEmbed.addFields({name: 'Drug', value: getDesc('drug'), inline: true});
+    hrEmbed.addFields({name: 'Combo', value: getDesc('drug'), inline: true});
+    hrEmbed.addFields({name: 'iDose', value: getDesc('idose'), inline: true});
+    hrEmbed.addFields({name: 'ComboChart', value: getDesc('drug'), inline: true});
+    hrEmbed.addFields({name: 'Reagents', value: getDesc('drug'), inline: true});
+    hrEmbed.addFields({name: 'Calc Psychedelics', value: getDesc('calc_psychedelics'), inline: true});
+    hrEmbed.addFields({name: 'Calc DXM', value: getDesc('calc_dxm'), inline: true});
+    hrEmbed.addFields({name: 'Calc Benzos', value: getDesc('calc_benzo'), inline: true});
+    hrEmbed.addFields({name: 'Calc Ketamine', value: getDesc('calc_ketamine'), inline: true});
+    hrEmbed.addFields({name: 'Recovery', value: getDesc('recovery'), inline: true});
+    hrEmbed.addFields({name: 'Breathe', value: getDesc('breathe'), inline: true});
+    hrEmbed.addFields({name: 'Warmline', value: getDesc('warmline'), inline: true});
+    hrEmbed.addFields({name: 'KIPP', value: getDesc('kipp'), inline: true});
+    hrEmbed.addFields({name: 'Hydrate', value: getDesc('hydrate'), inline: true});
+    hrEmbed.addFields({name: 'EMS', value: getDesc('ems'), inline: true});
 
-            {name: 'ComboChart', value: getDesc('drug'), inline: true},
-            {name: 'Reagents', value: getDesc('drug'), inline: true},
-            {name: 'Calc Psychedelics', value: getDesc('psychedelic_calc'), inline: true},
+    const funEmbed = embedTemplate();
+    funEmbed.setTitle('Other Modules');
+    funEmbed.addFields({name: 'About', value: getDesc('about'), inline: true});
+    funEmbed.addFields({name: 'Contact', value: getDesc('contact'), inline: true});
+    funEmbed.addFields({name: 'Bug', value: getDesc('bug'), inline: true});
+    funEmbed.addFields({name: 'Triptoys', value: getDesc('triptoys'), inline: true});
+    funEmbed.addFields({name: 'Imgur', value: getDesc('imgur'), inline: true});
+    funEmbed.addFields({name: 'Magick8Ball', value: getDesc('magick8ball'), inline: true});
+    funEmbed.addFields({name: 'Urban Define', value: getDesc('urban_define'), inline: true});
+    funEmbed.addFields({name: 'Topic', value: getDesc('topic'), inline: true});
+    funEmbed.addFields({name: 'Joke', value: getDesc('joke'), inline: true});
+    funEmbed.addFields({name: 'Youtube', value: getDesc('youtube'), inline: true});
+    funEmbed.addFields({name: 'Coinflip', value: getDesc('coinflip'), inline: true});
+    funEmbed.addFields({name: 'Lovebomb', value: getDesc('lovebomb'), inline: true});
+    funEmbed.addFields({name: 'Remindme', value: getDesc('remindme'), inline: true});
+    funEmbed.addFields({name: 'Convert', value: getDesc('convert'), inline: true});
+    funEmbed.addFields({name: 'Poll', value: getDesc('poll'), inline: true});
 
-            {name: 'Calc DXM', value: getDesc('dxm_calc'), inline: true},
-            {name: 'Calc Benzos', value: getDesc('benzo_calc'), inline: true},
-            {name: 'Calc Ketamine', value: getDesc('ketamine_calc'), inline: true},
-
-            {name: 'Recovery', value: getDesc('recovery'), inline: true},
-            {name: 'Breathe', value: getDesc('breathe'), inline: true},
-            {name: 'Warmline', value: getDesc('warmline'), inline: true},
-
-            {name: 'KIPP', value: getDesc('kipp'), inline: true},
-            {name: 'Hydrate', value: getDesc('hydrate'), inline: true},
-            {name: 'EMS', value: getDesc('ems'), inline: true},
-        );
-
-    const funEmbed = embedTemplate()
-        .setTitle('Other Modules')
-        .addFields(
-            {name: 'About', value: getDesc('about'), inline: true},
-            {name: 'Contact', value: getDesc('contact'), inline: true},
-            {name: 'Bug', value: getDesc('bug'), inline: true},
-
-            {name: 'Triptoys', value: getDesc('triptoys'), inline: true},
-            {name: 'Imgur', value: getDesc('imgur'), inline: true},
-            {name: 'Magick8Ball', value: getDesc('magick8ball'), inline: true},
-
-            {name: 'Urban Define', value: getDesc('urban_define'), inline: true},
-            {name: 'Topic', value: getDesc('topic'), inline: true},
-            {name: 'Joke', value: getDesc('joke'), inline: true},
-
-            {name: 'Youtube', value: getDesc('youtube'), inline: true},
-            {name: 'Coinflip', value: getDesc('coinflip'), inline: true},
-            {name: 'Lovebomb', value: getDesc('lovebomb'), inline: true},
-
-            {name: 'Remindme', value: getDesc('remindme'), inline: true},
-            {name: 'Convert', value: getDesc('convert'), inline: true},
-            {name: 'Poll', value: getDesc('poll'), inline: true},
-        );
-
-    const tripsitEmbed = embedTemplate()
-        .setTitle('Tripsit-Only Modules');
+    const tripsitEmbed = embedTemplate();
+    tripsitEmbed.setTitle('Tripsit-Only Modules');
     // tripsitEmbed.addFields({name: 'TripSit', value: getDesc('tripsit'), inline: true});
     tripsitEmbed.addFields({name: 'Clearchat', value: getDesc('clear-chat'), inline: true});
     tripsitEmbed.addFields({name: 'Birthday', value: getDesc('birthday'), inline: true});
