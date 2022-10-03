@@ -55,9 +55,8 @@ export async function birthday(
     const ref = db.ref(`${env.FIREBASE_DB_USERS}/${member.id}/birthday`);
     await ref.once('value', (data) => {
       if (data.val() !== null) {
-        logger.debug(`[${PREFIX}] data is VALUE`);
         const birthday = data.val() as birthdayEntry;
-        logger.debug(`[${PREFIX}] birthday: ${JSON.stringify(birthday, null, 2)}`);
+        logger.debug(`[${PREFIX}] birthday: ${JSON.stringify(birthday)}`);
         resp = `${member.displayName} was born on ${birthday.month} ${birthday.day}`;
       } else {
         logger.debug(`[${PREFIX}] data is NULL`);

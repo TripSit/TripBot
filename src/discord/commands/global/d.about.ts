@@ -3,14 +3,14 @@ import {
   ChatInputCommandInteraction,
   Colors,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {about} from '../../../global/commands/g.about';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const template: SlashCommand = {
+export const template: SlashCommand1 = {
   data: new SlashCommandBuilder()
       .setName('about')
       .setDescription('Shows information about this bot!'),
@@ -39,8 +39,8 @@ export const template: SlashCommand = {
               value: tripsitInfo.credits,
             },
         );
-    if (interaction.replied) interaction.followUp({embeds: [embed]});
-    else interaction.reply({embeds: [embed]});
+    interaction.reply({embeds: [embed]});
     logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };

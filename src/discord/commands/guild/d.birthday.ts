@@ -2,13 +2,13 @@ import {
   SlashCommandBuilder,
   GuildMember,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {birthday} from '../../../global/commands/g.birthday';
-import logger from '../../../global/utils/logger';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+// import logger from '../../../global/utils/logger';
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
-export const dbirthday: SlashCommand = {
+export const dbirthday: SlashCommand1 = {
   data: new SlashCommandBuilder()
       .setName('birthday')
       .setDescription('Birthday info!')
@@ -63,11 +63,10 @@ export const dbirthday: SlashCommand = {
     const response = await birthday(command, (user as GuildMember), month, day);
 
     if (command === 'get') {
-      interaction.reply(response);
+      await interaction.reply(response);
     } else {
-      interaction.reply({content: response, ephemeral: true});
+      await interaction.reply({content: response, ephemeral: true});
     }
-
-    logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };

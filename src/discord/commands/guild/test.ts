@@ -16,6 +16,7 @@ import {embedTemplate} from '../../utils/embedTemplate';
 // import fs from 'fs/promises';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
+// import convert from 'convert-units';
 const PREFIX = path.parse(__filename).name;
 // import drugDataAll from '../../../global/assets/data/drug_db_combined.json';
 // const drugNames = drugDataAll.map((d) => d.name);
@@ -44,11 +45,66 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
   };
 
   const testableCommands = [
-    'breathe',
-    'calc_dxm',
-    'calc_ketamine',
-    'calc_psychedelics',
-    'calc_benzo',
+    // 'about', /* updated */
+    // 'birthday', /* updated */
+    // 'breathe', /* updated */
+    'bug',
+    // 'calc_dxm', /* updated */
+    // 'calc_ketamine', /* updated */
+    // 'calc_psychedelics', /* updated */
+    // 'calc_benzo', /* updated */
+    // 'clearchat',
+    // 'combo',
+    // 'contact',
+    // 'convert',
+    // 'coinflip',
+    // 'combochart',
+    // 'drug',
+    // 'eyeballing',
+    // 'grounding',
+    // 'h2flow',
+    // 'imdb',
+    // 'imgur',
+    // 'issue',
+    // 'karma',
+    // 'magick8ball',
+    // 'moderate',
+    // 'modmail',
+    // 'ping',
+    // 'profile',
+    // 'recovery',
+    // 'report',
+    // 'say',
+    // 'test',
+    // 'timezone',
+    // 'topic',
+    // 'youtube',
+    // 'donate',
+    // 'dramacounter',
+    // 'ems',
+    // 'help',
+    // 'helpline',
+    // 'hydrate',
+    // 'idose',
+    // 'joke',
+    // 'kipp',
+    // 'lovebomb',
+    // 'm_report',
+    // 'm_timeout',
+    // 'm_warn',
+    // 'poll',
+    // 'reagents',
+    // 'remindme',
+    // 'setup',
+    // 'testkits',
+    // 'triptoys',
+    // 'u_ban',
+    // 'u_info',
+    // 'u_kick',
+    // 'u_note',
+    // 'u_underban',
+    // 'urbanDefine',
+    // 'warmline',
   ];
 
   if (!testableCommands.includes(name)) {
@@ -61,10 +117,62 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
 
   const command = await interaction.client.commands.get(name);
   if (command) {
-    // logger.debug(`[${PREFIX}] Running command ${name}`);
-    // if (name == 'birthday') {
-    //   await testReply(interaction, name, 'i havnt set up the test code yet!');
+    // if (name == 'template') {
+    //   testInteraction.options = {
+    //     getString: (name:string) => {
+    //       if (name === 'name') return 'value';
+    //     },
+    //     getInteger: (name:string) => {
+    //       if (name === 'name') return 0;
+    //     },
+    //     getMember: (name:string) => {
+    //       if (name === 'name') return interaction.member;
+    //     },
+    //     getSubcommand: () => {
+    //       return 'name';
+    //     },
+    //   };
+    //   return await command.execute(testInteraction);
     // }
+    if (name == 'about') {
+      return await command.execute(testInteraction);
+    }
+    if (name == 'birthday') {
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'month') return 'june';
+        },
+        getInteger: (name:string) => {
+          if (name === 'day') return 3;
+        },
+        getMember: (name:string) => {
+          if (name === 'user') return interaction.member;
+        },
+        getSubcommand: () => {
+          return 'set';
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'month') return 'june';
+        },
+        getInteger: (name:string) => {
+          if (name === 'day') return 3;
+        },
+        getMember: (name:string) => {
+          if (name === 'user') return interaction.member;
+        },
+        getSubcommand: () => {
+          return 'get';
+        },
+      };
+      return await command.execute(testInteraction);
+    }
+    if (name == 'bug') {
+      return false;
+    }
     // if (name == 'botmod') {
     //   await testReply(interaction, name, 'this should be tested manually!');
     // }
@@ -178,7 +286,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
             return 4;
           }
         },
-        getSubcommand: (name:string) => {
+        getSubcommand: () => {
           return 'mushrooms';
         },
       };
