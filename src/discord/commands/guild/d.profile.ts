@@ -11,29 +11,18 @@ import {userDbEntry} from '../../../global/@types/database';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {userExample} from '../../../global/utils/exampleUser';
+import timezones from '../../../global/assets/data/timezones.json';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
 import Canvas from '@napi-rs/canvas';
+import moment from 'moment';
 import * as path from 'path';
-
 const PREFIX = path.parse(__filename).name;
 
-// Pass the entire Canvas object because you'll need access to its width and context
-const applyText = (canvas:Canvas.Canvas, text:string) => {
-  const context = canvas.getContext('2d');
-
-  // Declare a base size of the font
-  let fontSize = 70;
-
-  do {
-    // Assign the font to the context and decrement it so it can be measured again
-    context.font = `${fontSize -= 10}px`;
-    // Compare pixel width of the text to the canvas minus the approximate avatar size
-  } while (context.measureText(text).width > canvas.width - 300);
-
-  // Return the result to use in the actual canvas
-  return context.font;
-};
+Canvas.GlobalFonts.registerFromPath(
+    path.join(__dirname, '../../assets/img/Futura.otf'),
+    'futura',
+);
 
 export const profile: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -102,6 +91,7 @@ export const profile: SlashCommand = {
 
     // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
 
+    // Error Message
     if (!target) {
       const embed = embedTemplate()
           .setColor(Colors.Red)
@@ -111,36 +101,93 @@ export const profile: SlashCommand = {
       return;
     }
 
-    // Create a 700x250 pixel canvas and get its context
-    // The context will be used to modify the canvas
-    const canvasWidth = 700;
-    const canvasHeight = 250;
+    // Choose colour based on user's role
+
+    let ColoredCard = 'src/discord/assets/img/profilecardDefault.png';
+    let CardColor = '#141414';
+    let TextColor = '#ffffff';
+    
+    const ColorRole = target.roles.color;
+
+    if (ColorRole) {
+      logger.debug(`[${PREFIX}] ColorRole: ${ColorRole.id}`);
+      if (ColorRole.id === env.ROLE_PURPLE)  {
+        ColoredCard = 'src/discord/assets/img/profilecardPurple.png';
+        CardColor = '#2d2636';
+        // var ChipColor = '#FFC0CB';
+        TextColor = '#b072ff';
+      } else if (ColorRole.id === env.ROLE_BLUE) {
+        ColoredCard = 'src/discord/assets/img/profilecardBlue.png';
+        CardColor = '#283438';
+        // var ChipColor = '#FFA500';
+        TextColor = '#5acff5';
+      } else if (ColorRole.id === env.ROLE_GREEN) {
+        ColoredCard = 'src/discord/assets/img/profilecardGreen.png';
+        CardColor = '#252e28';
+        // var ChipColor = '#00FF00';
+        TextColor = '#6de194';
+      } else if (ColorRole.id === env.ROLE_PINK) {
+        ColoredCard = 'src/discord/assets/img/profilecardPink.png';
+        CardColor = '#352530';
+        // var ChipColor = '#FF0000';
+        TextColor = '#ff6dcd';
+      } else if (ColorRole.id === env.ROLE_RED) {
+        ColoredCard = 'src/discord/assets/img/profilecardRed.png';
+        CardColor = '#382727';
+        // var ChipColor = '#FF0000';
+        TextColor = '#ff5f60';
+      } else if (ColorRole.id === env.ROLE_ORANGE) {
+        ColoredCard = 'src/discord/assets/img/profilecardOrange.png';
+        CardColor = '#342b24';
+        // var ChipColor = '#FFA500';
+        TextColor = '#ffa45f';
+      } else if (ColorRole.id === env.ROLE_YELLOW) {
+        ColoredCard = 'src/discord/assets/img/profilecardYellow.png';
+        CardColor = '#333024';
+        // var ChipColor = '#FFFF00';
+        TextColor = '#ffdd5d';
+      } else if (ColorRole.id === env.ROLE_WHITE) {
+        ColoredCard = 'src/discord/assets/img/profilecardWhite.png';
+        CardColor = '#404040';
+        // var ChipColor = '#FFFFFF';
+        TextColor = '#ffffff';
+      } else if (ColorRole.id === env.ROLE_BLACK) {
+        ColoredCard = 'src/discord/assets/img/profilecardBlack.png';
+        CardColor = '#181818';
+        // var ChipColor = '#000000';
+        TextColor = '#626262';
+      }
+    }
+
+    logger.debug(`[${PREFIX}] CardColor: ${CardColor} | TextColor: ${TextColor} | ColoredCard: ${ColoredCard}`);
+
+    // Create Canvas and Context
+    const canvasWidth = 934;
+    const canvasHeight = 282;
     const canvas = Canvas.createCanvas(canvasWidth, canvasHeight);
     const context = canvas.getContext('2d');
-    let y = 65;
-    const x = 15;
 
-    // Get background image
-    // const background = await Canvas.loadImage('./src/discord/assets/img/wallpaper.png');
-    const background = await Canvas.loadImage('https://i.imgur.com/uFp3u7j.png');
-
-    // This uses the canvas dimensions to stretch the image onto the entire canvas
+    // Backround Image
+    const background = await Canvas.loadImage(ColoredCard);
     context.drawImage(background, 0, 0, canvas.width, canvas.height);
 
-    // Set the color of the stroke
-    context.strokeStyle = '#0099ff';
-    // Draw a rectangle with the dimensions of the entire canvas
-    context.strokeRect(0, 0, canvas.width, canvas.height);
+    // Username Text Resize to fit
+    const applyUsername = (canvas:Canvas.Canvas, text:string) => {
+      const context = canvas.getContext('2d');
+      let fontSize = 50;
+      do {
+        context.font = `${fontSize -= 2}px futura`;
+      } while (context.measureText(text).width > 435);
+      return context.font;
+    };
 
-    // Select the font size and type from one of the natively available fonts
-    context.font = applyText(canvas, `${(interaction.member! as GuildMember).displayName}!`);
-    // Select the style that will be used to fill the text in
-    context.fillStyle = '#ffffff';
-    // Actually fill the text with a solid color
-    context.fillText(`${(target as GuildMember).displayName}'s profile!`, x, y);
+    // Username Text
+    context.font = applyUsername(canvas, `${target.user.tag}`);
+    context.fillStyle = TextColor;
+    context.fillText(`${target.user.tag}`, 245, 124);
 
+    // Get User Data
     let targetData = {} as userDbEntry;
-
     if (global.db) {
       const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}`);
       await ref.once('value', async (data) => {
@@ -152,52 +199,172 @@ export const profile: SlashCommand = {
       logger.error('Firebase not initialized!');
       targetData = userExample as userDbEntry;
     }
+    // logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
 
-    logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
-    context.font = `25px`;
+    // User Info Text
+    context.font = `30px futura`;
+    context.textAlign = 'right';
+    context.fillStyle = '#ffffff';
+
+    let gmtValue = '';
+    let now = new Date();
+    if (targetData.timezone) {
+      now = moment(Date.now()).tz(targetData.timezone);
+      const fmt = now?.toLocaleDateString('en-US', {timeZoneName: 'short'});
+      context.fillText(`${targetData.timezone !== undefined ? `${now.format('HH:mm A')}` : 'Not set!'}`, 446, 190);
+
+    }
+    // for (let i = 0; i < timezones.length; i += 1) {
+    //   if (timezones[i].tzCode === targetData.timezone) {
+    //     // gmtValue = timezones[i].offset;
+    //     // Get current time from timezone
+    //     const now = moment().tz(targetData.timezone);
+    //     const time = now.format('HH:mm A'); // idk if we would want 24-hour or 12-hour time
+    //     // Pull in the first three character (the hour offset)
+        
+    //     gmtValue = gmtValue.slice(0, 3);
+    //   }
+    // }
+    context.fillText(`${targetData.timezone !== undefined ? `${now.format('HH:mm A')}` : 'Not set!'}`, 446, 190);
+
+    if (targetData.birthday) {
+      if (targetData.birthday.day < 10) {
+        context.fillText(`${targetData.birthday.month}-0${targetData.birthday.day}`, 440, 253); ;
+      } else {
+        context.fillText(`${targetData.birthday.month}-${targetData.birthday.day}`, 440, 253);
+      }
+    } else {
+      context.fillText(`Not set!`, 440, 253); ;
+    }
+
+    // Messages Sent Text
+    function numFormatter(num:number) {
+      if (num > 999 && num < 1000000) {
+        return (num/1000).toFixed(2) + 'K';
+      } else if (num > 1000000) {
+        return (num/1000000).toFixed(2) + 'M';
+      } else if (num < 900) {
+        return num;
+      }
+    }
+    const MessagesSent = targetData.experience!.total.totalExpPoints / 20;
+    context.fillText(`${numFormatter(MessagesSent)}`, 684, 253);
 
     if (targetData.karma) {
-      if (targetData.karma.karma_given) {
-        context.fillText(`Karma Given: ${targetData.karma.karma_given || 0}`, x, y+=80);
-      }
       if (targetData.karma.karma_received) {
-        context.fillText(`Karma Received: ${targetData.karma.karma_received || 0}`, canvas.width/2, y);
+        context.fillText(`${numFormatter(targetData.karma.karma_received || 0)}`, 684, 190);
       }
+    } else {
+      context.fillText(`0`, 684, 190);
     }
 
+    // Choose and Draw the Star Image
+    const level = targetData.experience!.total.level;
+    let starImagePath = 'src/discord/assets/img';
+    if (level < 6) {
+      starImagePath += '/VIP.png';
+    } else if (level < 10) {
+      starImagePath += '/VIPLVL5.png';
+    } else if (level < 20) {
+      starImagePath += '/VIPLVL10.png';
+    } else if (level < 30) {
+      starImagePath += '/VIPLVL20.png';
+    } else if (level < 40) {
+      starImagePath += '/VIPLVL30.png';
+    } else if (level < 50) {
+      starImagePath += '/VIPLVL40.png';
+    } else if (level > 50) {
+      starImagePath += '/VIPLVL50.png';
+    }
+    const starImage = await Canvas.loadImage(starImagePath);
+    context.drawImage(starImage, 727, 61, 162, 162);
+
+    // VIP Level Text Resize to fit
+    const applyLevel = (canvas:Canvas.Canvas, text:string) => {
+      const context = canvas.getContext('2d');
+      let fontSize = 50;
+      do {
+        context.textAlign = 'center';
+        context.font = `${fontSize -= 10}px futura`;
+      } while (context.measureText(text).width > 62);
+      return context.font;
+    };
+
+
+    // VIP Level Text
     if (targetData.experience) {
-      if (targetData.experience.general) {
-        context.fillText(`General LV: ${targetData.experience.general.level}`, x, y+=30);
-      }
-      if (targetData.experience.tripsitter) {
-        context.fillText(`Tripsitter LV: ${targetData.experience.tripsitter.level}`, canvas.width/2, y);
-      }
-      if (targetData.experience.developer) {
-        context.fillText(`Tripsitter LV: ${targetData.experience.developer.level}`, canvas.width/2, y);
+      if (targetData.experience.total) {
+        context.font = applyLevel(canvas, `${targetData.experience.total.level}`);
+        context.fillStyle = CardColor;
+        context.fillText(`${targetData.experience.total.level}`, 807, 154);
       }
     }
 
-    context.fillText(`Timezone: ${targetData.timezone !== undefined ? targetData.timezone : 'Use /timezone!'}`, x, y+=30);
-    context.fillText(`Birthday: ${targetData.birthday !== undefined ? `${targetData.birthday.month} ${targetData.birthday.day}` : 'Use /birthday!'}`, canvas.width/2, y);
-
-    context.fillText(`Created: ${target.user.createdAt.toDateString()}`, x, y+=30);
-    context.fillText(`Joined: ${target.joinedAt?.toDateString()}`, canvas.width/2, y);
-
-    // Define avatar image
+    // Avatar Image
     const avatar = await Canvas.loadImage(target.user.displayAvatarURL({extension: 'jpg'}));
-    // Pick up the pen
+    context.save();
     context.beginPath();
-    // Start the arc to form a circle
-    context.arc(canvasWidth-65, 65, 50, 0, Math.PI * 2, true);
-    // Put the pen down
+    context.arc(128, 141, 96, 0, Math.PI * 2, true);
     context.closePath();
-    // Clip off the region you drew on
     context.clip();
-    // // Draw a shape onto the main canvas
-    context.drawImage(avatar, canvasWidth-115, 15, 100, 100);
+    context.drawImage(avatar, 30, 44, 195, 195);
+    context.restore();
 
-    // Use the helpful Attachment class structure to process the file for you
-    const attachment = new AttachmentBuilder(await canvas.encode('png'), {name: 'profile-image.png'});
+    // Level Bar Math
+    const levelExpPoints = targetData.experience!.total!.totalExpPoints;
+    const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
+    const percentageOfLevel = (levelExpPoints / expToLevel) / 100;
+    logger.debug(`[${PREFIX}] percentageOfLevel: ${percentageOfLevel}`);
+
+    // Circular Level Bar
+    context.save();
+    context.translate(0, 282);
+    context.rotate(270 * Math.PI / 180);
+    context.beginPath();
+    context.lineWidth = 21;
+    context.lineCap = 'round';
+    context.arc(141, 807, 86, 0, Math.PI * (percentageOfLevel * 2), false);
+    context.strokeStyle = TextColor;
+    context.stroke();
+    context.restore();
+
+    // Status Icon
+    context.save();
+    context.beginPath();
+    context.arc(191, 211, 31, 0, Math.PI * 2, true);
+    context.closePath();
+    context.fillStyle = CardColor;
+    context.fill();
+    context.restore();
+    await interaction.guild?.members.fetch({user: target.id, withPresences: true, force: true});
+
+    if (target.presence?.status === undefined) {
+      const statusIcon = await Canvas.loadImage(`src/discord/assets/img/offline.png`);
+      context.drawImage(statusIcon, 160, 180, 62, 62);
+    } else {
+      const statusIcon = await Canvas.loadImage(`src/discord/assets/img/${target.presence!.status}.png`);
+      context.drawImage(statusIcon, 160, 180, 62, 62);
+    }
+
+    // Birthday Mode
+
+    if (targetData.birthday) {
+      const birthday = new Date(`${targetData.birthday!.month}, ${targetData.birthday!.day+1}, 2022`);
+      const today = new Date();
+
+      if (today.getMonth() === birthday.getMonth() && today.getDay() === birthday.getDay()) {
+        logger.debug(`[${PREFIX}] Birthday Match!`);
+        context.font = '45px futura';
+        context.textAlign = 'center';
+        context.fillStyle = TextColor;
+        context.fillText('HAPPY BIRTHDAY!', 467, 55);
+        const birthdayOverlay = await Canvas.loadImage('src/discord/assets/img/birthdayOverlay.png');
+        context.drawImage(birthdayOverlay, 0, 0, 934, 282);
+      }
+    }
+
+    // Process The Entire Card and Send it to Discord
+    const attachment = new AttachmentBuilder(await canvas.encode('png'), {name: 'tripsit-profile-image.png'});
     interaction.reply({files: [attachment]});
 
     logger.debug(`[${PREFIX}] finished!`);
