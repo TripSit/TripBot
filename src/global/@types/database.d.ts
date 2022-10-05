@@ -12,6 +12,7 @@ export type userDbEntry = {
     };
     timezone?: string;
     experience?: {
+        total: expEntry
         general?: expEntry
         tripsitter?: expEntry
         developer?: expEntry
