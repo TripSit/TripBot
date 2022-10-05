@@ -210,9 +210,10 @@ export const profile: SlashCommand = {
     let now = new Date();
     if (targetData.timezone) {
       now = moment(Date.now()).tz(targetData.timezone);
-      const fmt = now?.toLocaleDateString('en-US', {timeZoneName: 'short'});
-      context.fillText(`${targetData.timezone !== undefined ? `${now.format('HH:mm A')}` : 'Not set!'}`, 446, 190);
-
+      const fmt = now.toLocaleDateString('en-US', {timeZoneName: 'short'});
+      context.fillText(now, 446, 190);
+    } else {
+      context.fillText('Not set!', 446, 190);
     }
     // for (let i = 0; i < timezones.length; i += 1) {
     //   if (timezones[i].tzCode === targetData.timezone) {
