@@ -18,12 +18,10 @@ const helpCounter = new Map<string, number>();
 **/
 export async function messageCommand(message: Message): Promise<void> {
   // logger.debug(`[${PREFIX}] starting!`);
-  // logger.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}!`);
   const displayName = message.member ? message.member.displayName : message.author.username;
 
   // logger.debug(stripIndents`[${PREFIX}] ${displayName} said\
   // ${message.content} in ${(message.channel as GuildTextBasedChannel).name}!`);
-  // logger.debug(`[${PREFIX}] finished!`);
 
   if (message.content.startsWith('~')) {
     // Find the word that appears after ~
@@ -61,7 +59,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       '🤨',
     ];
     message.channel.send(faces[Math.floor(Math.random() * faces.length)]);
-  } else if (message.mentions.has(message.client.user)) {
+  } else if (message.mentions.has(message.client.user) || message.cleanContent.toLowerCase().includes('tripbot')) {
     const responses = [
       `*boops quietly*`,
       `*beeps quietly*`,

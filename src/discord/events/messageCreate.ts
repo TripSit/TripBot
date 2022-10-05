@@ -25,14 +25,14 @@ const PREFIX = path.parse(__filename).name;
 export const messageCreate: messageEvent = {
   name: 'messageCreate',
   async execute(message: Message):Promise<void> {
-    // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
-
     // Only run on Tripsit
     if (message.guild) {
       if (message.guild.id !== env.DISCORD_GUILD_ID.toString()) {
         return;
       }
     }
+
+    // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
 
     // This needs to run here beacuse the widgetbot peeps will use this and they are "bot users"
     messageCommand(message);
