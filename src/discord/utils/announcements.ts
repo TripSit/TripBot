@@ -74,7 +74,7 @@ export async function announcements(message:Message) {
   const channelAnnouncements = await message.client.channels.fetch(env.CHANNEL_ANNOUNCEMENTS)!;
   const channelRules = await message.client.channels.fetch(env.CHANNEL_RULES)!;
   const channelBotspam = await message.client.channels.fetch(env.CHANNEL_BOTSPAM)!;
-  const channelTechhelp = await message.client.channels.fetch(env.CHANNEL_TECHHELP)!;
+  const channelTechhelp = await message.client.channels.fetch(env.CHANNEL_HELPDESK)!;
   // const channelHowToTripsit = await message.client.channels.fetch(env.CHANNEL_HOWTOTRIPSIT)!;
   const channelTripsit = await message.client.channels.fetch(env.CHANNEL_TRIPSIT)!;
   // const channelRTripsit = await message.client.channels.fetch(env.CHANNEL_TRIPSIT)!;
@@ -102,12 +102,12 @@ export async function announcements(message:Message) {
   // const channelOpioids = await message.client.channels.fetch(env.CHANNEL_OPIATES)!;
   const channelTrees = await message.client.channels.fetch(env.CHANNEL_TREES)!;
   // const channelViplounge = await message.client.channels.fetch(env.CHANNEL_VIPLOUNGE)!;
-  // const channelAdultSwim = await message.client.channels.fetch(env.CHANNEL_ADULTSWIM)!;
+  // const channelAdultSwim = await message.client.channels.fetch(env.CHANNEL_REALTALK)!;
   // const channelGoldLounge = await message.client.channels.fetch(env.CHANNEL_GOLDLOUNGE)!;
   // const channelTalkToTS = await message.client.channels.fetch(env.CHANNEL_TALKTOTS)!;
   // const channelBestOf = await message.client.channels.fetch(env.CHANNEL_BESTOF)!;
   // const channelKudos = await message.client.channels.fetch(env.CHANNEL_KUDOS)!;
-  // const channelCampfire = await message.client.channels.fetch(env.CHANNEL_HUB)!;
+  // const channelCampfire = await message.client.channels.fetch(env.CHANNEL_CAMPFIRE)!;
   // const channelDevWelcome = await message.client.channels.fetch(env.CHANNEL_DEVWELCOME)!;
 
 
@@ -250,7 +250,6 @@ export async function announcements(message:Message) {
   const generalChatCategories = [
     env.CATEGORY_BACKSTAGE,
     env.CATEGORY_CAMPGROUND,
-    env.CATEGORY_VIPCABINS,
   ];
 
   // logger.debug(`[${PREFIX}] instance of TextChannel: ${message.channel instanceof TextChannel}`);

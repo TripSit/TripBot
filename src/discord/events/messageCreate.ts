@@ -76,7 +76,7 @@ export const messageCreate: messageEvent = {
 
       if (Object.keys(ticketData).length !== 0) {
         if (member) {
-          const channel = await message.client.channels.fetch(env.CHANNEL_TECHHELP) as TextChannel;
+          const channel = await message.client.channels.fetch(env.CHANNEL_HELPDESK) as TextChannel;
           const issueThread = await channel.threads.fetch(ticketData.issueThread) as ThreadChannel;
           const embed = embedTemplate();
           embed.setDescription(stripIndents`You already have an open issue here ${issueThread.toString()}!`);
@@ -84,7 +84,7 @@ export const messageCreate: messageEvent = {
           return;
         }
 
-        const channel = message.client.channels.cache.get(env.CHANNEL_TECHHELP) as TextChannel;
+        const channel = message.client.channels.cache.get(env.CHANNEL_HELPDESK) as TextChannel;
         const thread = await channel.threads.fetch(ticketData.issueThread) as ThreadChannel;
         // logger.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
         if (thread) {

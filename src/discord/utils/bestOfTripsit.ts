@@ -16,8 +16,7 @@ const PREFIX = path.parse(__filename).name;
 const tripsitterChannels = [
   env.CHANNEL_TRIPSIT,
   env.CHANNEL_SANCTUARY,
-  env.CHANNEL_TRIPSITTERS,
-  env.CHANNEL_HOWTOTRIPSIT,
+  env.CHANNEL_TRIPSITMETA,
   env.CHANNEL_DRUGQUESTIONS,
   env.CHANNEL_OPENTRIPSIT,
 ];

@@ -11,11 +11,15 @@ export type userDbEntry = {
         day: number;
     };
     timezone?: string;
-    experience?: {
-        general?: expEntry
-        tripsitter?: expEntry
-        developer?: expEntry
-    }
+    experience?: expDict;
+}
+
+export type expDict = {
+    total: expEntry
+    general?: expEntry
+    tripsitter?: expEntry
+    developer?: expEntry
+    team?: expEntry
 }
 
 export type expEntry = {

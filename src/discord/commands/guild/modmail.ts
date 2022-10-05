@@ -339,14 +339,14 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
 
   logger.debug(`[${PREFIX}] isDev: ${JSON.stringify(isDev, null, 2)}!`);
 
-  const channel = interaction.client.channels.cache.get(env.CHANNEL_TECHHELP) as TextChannel;
+  const channel = interaction.client.channels.cache.get(env.CHANNEL_HELPDESK) as TextChannel;
   // Debating if there should be a sparate channel for discord issues or if just use irc?
   // if (issueType === 'discord') {
   //   // Get the moderation channel
-  //   channel = interaction.client.channels.cache.get(CHANNEL_TECHHELP);
+  //   channel = interaction.client.channels.cache.get(CHANNEL_HELPDESK);
   // } else if (issueType === 'irc') {
   //   // Get the irc channel
-  //   channel = interaction.client.channels.cache.get(CHANNEL_TECHHELP);
+  //   channel = interaction.client.channels.cache.get(CHANNEL_HELPDESK);
   // }
 
   // Get whatever they sent in the modal

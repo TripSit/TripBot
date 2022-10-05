@@ -39,11 +39,11 @@ declare global {
         CHANNEL_ANNOUNCEMENTS: string;
         CHANNEL_BOTSPAM: string;
         CHANNEL_RULES: string;
-        CHANNEL_TECHHELP: string;
+        CHANNEL_HELPDESK: string;
 
-        CATEGORY_VOLUNTEERS: string;
+        CATEGORY_HRCENTER: string;
         CHANNEL_HOWTOTRIPSIT: string;
-        CHANNEL_TRIPSITTERS: string;
+        CHANNEL_TRIPSITMETA: string;
         CHANNEL_RTRIPSIT: string;
 
         CATEGROY_HARMREDUCTIONCENTRE: string;
@@ -78,12 +78,12 @@ declare global {
         CATEGORY_VIPCABINS: string;
         CHANNEL_KUDOS: string;
         CHANNEL_VIPLOUNGE: string;
-        CHANNEL_ADULTSWIM: string;
+        CHANNEL_REALTALK: string;
         CHANNEL_GOLDLOUNGE: string;
         CHANNEL_TALKTOTS: string;
         CHANNEL_BESTOF: string;
         CHANNEL_MINECRAFT: string;
-        CHANNEL_HUB: string;
+        CHANNEL_CAMPFIRE: string;
 
         CATEGORY_COLLABORATION: string;
 
@@ -102,13 +102,13 @@ declare global {
         CHANNEL_DEVOFFTOPIC: string;
         CHANNEL_DEVELOPMENT: string;
         CHANNEL_DEVPOLLS: string;
-        CHANNEL_TRIPCORD: string;
+        CHANNEL_DISCORD: string;
         CHANNEL_TRIPBOT: string;
         CHANNEL_DESIGN: string;
         CHANNEL_SANDBOX: string;
         CHANNEL_WIKICONTENT: string;
         CHANNEL_MINECRAFTADMIN: string;
-        CHANNEL_TRIPBOTLOGS: string;
+        CHANNEL_BOTLOG: string;
         CHANNEL_DEVELOPMENTVC: string;
 
         CATEGORY_ARCHIVED: string;

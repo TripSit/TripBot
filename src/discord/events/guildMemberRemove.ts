@@ -53,7 +53,7 @@ export const guildMemberRemove: guildMemberEvent = {
       embed.setDescription(`${member} has left the guild`);
     }
 
-    const channelBotlog = member.guild.channels.cache.get(env.CHANNEL_TRIPBOTLOGS) as TextChannel;
+    const channelBotlog = member.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
       channelBotlog.send({embeds: [embed]});
     }

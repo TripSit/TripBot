@@ -538,7 +538,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
     interaction.reply('You must run this in the channel you want the prompt to be in!');
     return;
   }
-  // const channelIrc = interaction.member.client.channels.cache.get(CHANNEL_TECHHELP);
+  // const channelIrc = interaction.member.client.channels.cache.get(CHANNEL_HELPDESK);
   // const channelQuestions = interaction.client.channels.cache.get(CHANNEL_DRUGQUESTIONS);
   const channelBotspam = interaction.client.channels.cache.get(env.CHANNEL_BOTSPAM);
   // const channelSanctuary = interaction.client.channels.cache.get(CHANNEL_SANCTUARY);

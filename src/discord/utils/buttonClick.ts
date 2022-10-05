@@ -90,7 +90,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
 
 
     logger.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
-    const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_TRIPBOTLOGS) as TextChannel;
+    const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     channelTripbotlogs.send({
       content: `Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`});
 
@@ -131,7 +131,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
       }
       // logger.debug(`[${PREFIX}] coloValue: ${colorValue}`);
       const channelStart = member.client.channels.cache.get(env.CHANNEL_START.toString());
-      const channelTechhelp = member.client.channels.cache.get(env.CHANNEL_TECHHELP);
+      const channelTechhelp = member.client.channels.cache.get(env.CHANNEL_HELPDESK);
       const channelBotspam = interaction.client.channels.cache.get(env.CHANNEL_BOTSPAM);
       // const channelTripsit = member.client.channels.cache.get(CHANNEL_TRIPSIT);
       const embed = embedTemplate()
