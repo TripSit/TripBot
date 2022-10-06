@@ -268,11 +268,11 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
                 lastMessageDate: lastMessageDate.valueOf(),
                 lastMessageChannel: messageChannelId,
               };
-              logger.debug(`[${PREFIX}] categoryExperienceData: ${JSON.stringify(expData, null, 2)}`);
-              logger.debug(`[${PREFIX}] experienceType: ${expType}`);
+              // logger.debug(`[${PREFIX}] categoryExperienceData: ${JSON.stringify(expData, null, 2)}`);
+              // logger.debug(`[${PREFIX}] experienceType: ${expType}`);
 
               experienceDict[expType as keyof typeof experienceDict] = expData;
-              logger.debug(`[${PREFIX}] experienceDictA: ${JSON.stringify(experienceDict, null, 2)}`);
+              // logger.debug(`[${PREFIX}] experienceDictA: ${JSON.stringify(experienceDict, null, 2)}`);
               // logger.debug(`[${PREFIX}] experienceDataC: ${JSON.stringify(experienceData, null, 2)}`);
             }
           } else {
