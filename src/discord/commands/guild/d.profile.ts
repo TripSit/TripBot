@@ -21,11 +21,6 @@ Canvas.GlobalFonts.registerFromPath(
   'futura',
 );
 
-let background = {} as any;
-(async () => {
-  background = await Canvas.loadImage('./src/discord/assets/img/cards/profilecardDefault.png');
-})();
-
 export const profile: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('profile')
@@ -149,10 +144,10 @@ export const profile: SlashCommand = {
       // logger.debug(`[${PREFIX}] tryK: ${tryK}`);
       // const tryL = './src/discord/assets/img/cards/profilecardDefault.png';
       // logger.debug(`[${PREFIX}] tryL: ${tryL}`);
-      // const tryM = '~/src/discord/assets/img/cards/profilecardDefault.png';
-      // logger.debug(`[${PREFIX}] tryM: ${tryM}`);
+      const tryM = '~/src/discord/assets/img/cards/profilecardDefault.png';
+      logger.debug(`[${PREFIX}] tryM: ${tryM}`);
 
-      // const background = await Canvas.loadImage(tryM);
+      const background = await Canvas.loadImage(tryM);
 
       logger.debug(`[${PREFIX}] image loaded`);
       logger.debug(`[${PREFIX}] background: ${background}`);
