@@ -21,6 +21,11 @@ Canvas.GlobalFonts.registerFromPath(
   'futura',
 );
 
+let background = {} as any;
+(async () => {
+  background = await Canvas.loadImage('./src/discord/assets/img/cards/profilecardDefault.png');
+})();
+
 export const profile: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('profile')
@@ -142,14 +147,15 @@ export const profile: SlashCommand = {
       // logger.debug(`[${PREFIX}] tryJ: ${tryJ}`);
       // const tryK = '~\\src\\discord\\assets\\img\\cards\\profilecardDefault.png';
       // logger.debug(`[${PREFIX}] tryK: ${tryK}`);
-      const tryL = './src/discord/assets/img/cards/profilecardDefault.png';
-      logger.debug(`[${PREFIX}] tryL: ${tryL}`);
-      const tryM = '~/src/discord/assets/img/cards/profilecardDefault.png';
-      logger.debug(`[${PREFIX}] tryM: ${tryM}`);
+      // const tryL = './src/discord/assets/img/cards/profilecardDefault.png';
+      // logger.debug(`[${PREFIX}] tryL: ${tryL}`);
+      // const tryM = '~/src/discord/assets/img/cards/profilecardDefault.png';
+      // logger.debug(`[${PREFIX}] tryM: ${tryM}`);
 
-      const background = await Canvas.loadImage(tryM);
+      // const background = await Canvas.loadImage(tryM);
 
       logger.debug(`[${PREFIX}] image loaded`);
+      logger.debug(`[${PREFIX}] background: ${background}`);
       context.drawImage(background, 0, 0, canvas.width, canvas.height);
       logger.debug(`[${PREFIX}] image drawn`);
     } catch (err) {
@@ -247,11 +253,13 @@ export const profile: SlashCommand = {
       } else if (num > 1000000) {
         return (num/1000000).toFixed(2) + 'M';
       } else {
-        return num.toString();
+        return num.toFixed(0);
       }
     }
     const MessagesSent = targetData.experience!.total.totalExpPoints / 20;
-    context.fillText(`${numFormatter(MessagesSent)}`, 684, 253);
+    const test = numFormatter(MessagesSent);
+    logger.debug(`[${PREFIX}] test: ${test}`);
+    context.fillText(`${test}`, 684, 253);
 
     if (targetData.karma) {
       if (targetData.karma.karma_received) {
