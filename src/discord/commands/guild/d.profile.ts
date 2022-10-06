@@ -374,7 +374,7 @@ export const profile: SlashCommand = {
     context.restore();
     await interaction.guild?.members.fetch({user: target.id, withPresences: true, force: true});
 
-    let statusIcon = '';
+    let statusIcon = 'https://i.imgur.com/eICJIwe.png';
     if (target.presence) {
       if (target.presence.status === 'online') {
         // statusIcon = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
