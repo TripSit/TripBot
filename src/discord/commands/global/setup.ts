@@ -21,6 +21,7 @@ import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
 const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
+
 /**
  * This command populates various channels with static prompts
  * This is actually kind of complicated, but not really, let me explain:
