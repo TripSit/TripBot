@@ -40,7 +40,9 @@ export const profile: SlashCommand = {
     }
 
     // Choose colour based on user's role
-    let coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardDefault.png');
+    // const defaultCard = path.resolve(__dirname, '../../assets/img/cards/profilecardDefault.png');
+    const defaultCard = 'https://imgur.com/WKfLb8T.png';
+    let coloredCard = defaultCard;
     let cardColor = '#141414';
     let textColor = '#ffffff';
 
@@ -48,47 +50,57 @@ export const profile: SlashCommand = {
     logger.debug(`[${PREFIX}] colorRole: ${colorRole?.id}`);
     if (colorRole) {
       if (colorRole.id === env.ROLE_PURPLE) {
-        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardPurple.png');
+        // const purpleCard = path.resolve(__dirname, '../../assets/img/cards/profilecardPurple.png')
+        const purpleCard = 'https://imgur.com/UOV7Bkn.png';
+        coloredCard = purpleCard;
         cardColor = '#2d2636';
         // chipColor = '#FFC0CB';
         textColor = '#b072ff';
       } else if (colorRole.id === env.ROLE_BLUE) {
-        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardBlue.png');
+        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardBlue.png');
+        coloredCard = 'https://imgur.com/76P7af1.png';
         cardColor = '#283438';
         // chipColor = '#FFA500';
         textColor = '#5acff5';
       } else if (colorRole.id === env.ROLE_GREEN) {
-        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardGreen.png');
+        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardGreen.png');
+        coloredCard = 'https://imgur.com/eNQWeSM.png';
         cardColor = '#252e28';
         // chipColor = '#00FF00';
         textColor = '#6de194';
       } else if (colorRole.id === env.ROLE_PINK) {
-        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardPink.png');
+        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardPink.png');
+        coloredCard = 'https://imgur.com/DHp5Cwl.png';
         cardColor = '#352530';
         // chipColor = '#FF0000';
         textColor = '#ff6dcd';
       } else if (colorRole.id === env.ROLE_RED) {
-        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardRed.png');
+        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardRed.png');
+        coloredCard = 'https://imgur.com/HBM5RLI';
         cardColor = '#382727';
         // chipColor = '#FF0000';
         textColor = '#ff5f60';
       } else if (colorRole.id === env.ROLE_ORANGE) {
-        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardOrange.png');
+        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardOrange.png');
+        coloredCard = 'https://imgur.com/oagaenH.png';
         cardColor = '#342b24';
         // chipColor = '#FFA500';
         textColor = '#ffa45f';
       } else if (colorRole.id === env.ROLE_YELLOW) {
-        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardYellow.png');
+        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardYellow.png');
+        coloredCard = 'https://imgur.com/C0zd92H.png';
         cardColor = '#333024';
         // chipColor = '#FFFF00';
         textColor = '#ffdd5d';
       } else if (colorRole.id === env.ROLE_WHITE) {
-        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardWhite.png');
+        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardWhite.png');
+        coloredCard = 'https://imgur.com/7KGS566.png';
         cardColor = '#404040';
         // chipColor = '#FFFFFF';
         textColor = '#ffffff';
       } else if (colorRole.id === env.ROLE_BLACK) {
-        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardBlack.png');
+        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardBlack.png');
+        coloredCard = 'https://imgur.com/0QgZvFi.png';
         cardColor = '#181818';
         // chipColor = '#000000';
         textColor = '#626262';
@@ -144,10 +156,10 @@ export const profile: SlashCommand = {
       // logger.debug(`[${PREFIX}] tryK: ${tryK}`);
       // const tryL = './src/discord/assets/img/cards/profilecardDefault.png';
       // logger.debug(`[${PREFIX}] tryL: ${tryL}`);
-      const tryM = '~/src/discord/assets/img/cards/profilecardDefault.png';
-      logger.debug(`[${PREFIX}] tryM: ${tryM}`);
+      // const tryM = '~/src/discord/assets/img/cards/profilecardDefault.png';
+      // logger.debug(`[${PREFIX}] tryM: ${tryM}`);
 
-      const background = await Canvas.loadImage(tryM);
+      const background = await Canvas.loadImage(coloredCard);
 
       logger.debug(`[${PREFIX}] image loaded`);
       logger.debug(`[${PREFIX}] background: ${background}`);
@@ -267,21 +279,28 @@ export const profile: SlashCommand = {
     }
     // Choose and Draw the Star Image
     const level = targetData.experience!.total.level;
-    let starImagePath = '';
+    let starImagePath = 'https://imgur.com/vU1erLP.png';
     if (level < 6) {
-      starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIP.png';
+      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIP.png';
+      starImagePath = 'https://imgur.com/vU1erLP.png.png';
     } else if (level < 10) {
-      starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL5.png';
+      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL5.png';
+      starImagePath = 'https://imgur.com/DRaOnUY.png';
     } else if (level < 20) {
-      starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL10.png';
+      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL10.png';
+      starImagePath = 'https://imgur.com/hBuDOvE.png';
     } else if (level < 30) {
-      starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL20.png';
+      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL20.png';
+      starImagePath = 'https://imgur.com/3jfSa7x.png';
     } else if (level < 40) {
-      starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL30.png';
+      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL30.png';
+      starImagePath = 'https://imgur.com/tlVnx1o.png';
     } else if (level < 50) {
-      starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL40.png';
+      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL40.png';
+      starImagePath = 'https://imgur.com/zNB2rtD.png';
     } else if (level > 50) {
-      starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL50.png';
+      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL50.png';
+      starImagePath = 'https://imgur.com/5ElzDZ8.png';
     }
     try {
       logger.debug(`[${PREFIX}] starImagePath: ${starImagePath}`);
@@ -354,11 +373,26 @@ export const profile: SlashCommand = {
     context.restore();
     await interaction.guild?.members.fetch({user: target.id, withPresences: true, force: true});
 
+    let statusIcon = '';
+    if (target.presence!.status === 'online') {
+      // statusIcon = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
+      statusIcon = `https://imgur.com/pJZGATd.png`;
+    } else if (target.presence!.status === 'idle') {
+      // statusIcon = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
+      statusIcon = 'https://imgur.com/3ZtlfpR.png';
+    } else if (target.presence!.status === 'dnd') {
+      // statusIcon = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
+      statusIcon = 'https://imgur.com/2ZVC480.png';
+    } else if (target.presence!.status === 'offline') {
+      // statusIcon = '.\\src\\discord\\assets\\img\\icons\\offline.png';
+      statusIcon = 'https://imgur.com/eICJIwe.png';
+    } else {
+      statusIcon = 'https://imgur.com/eICJIwe.png';
+    }
+
     try {
-      const statusIcon = target.presence?.status === undefined ?
-        await Canvas.loadImage('.\\src\\discord\\assets\\img\\icons\\offline.png'):
-        await Canvas.loadImage(`.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`);
-      context.drawImage(statusIcon, 160, 180, 62, 62);
+      const status = await Canvas.loadImage(statusIcon);
+      context.drawImage(status, 160, 180, 62, 62);
     } catch (err) {
       logger.error(`[${PREFIX}] Error loading status icon: ${err}`);
     }
@@ -370,7 +404,9 @@ export const profile: SlashCommand = {
       context.textAlign = 'center';
       context.fillStyle = textColor;
       context.fillText('HAPPY BIRTHDAY!', 467, 55);
-      const birthdayOverlay = await Canvas.loadImage('.src\\discord\\assets\\img\\cards\\birthdayOverlay.png');
+      // const birthdayImage = '.src\\discord\\assets\\img\\cards\\birthdayOverlay.png';
+      const birthdayImage = 'https://imgur.com/uOkR6uf';
+      const birthdayOverlay = await Canvas.loadImage(birthdayImage);
       context.drawImage(birthdayOverlay, 0, 0, 934, 282);
     }
 
