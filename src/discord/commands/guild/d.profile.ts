@@ -17,7 +17,7 @@ import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
 Canvas.GlobalFonts.registerFromPath(
-  path.join(__dirname, '../../assets/img/Futura.otf'),
+  path.resolve(__dirname, '../../assets/img/Futura.otf'),
   'futura',
 );
 
@@ -40,7 +40,7 @@ export const profile: SlashCommand = {
     }
 
     // Choose colour based on user's role
-    let coloredCard = path.join(__dirname, '../../assets/img/cards/profilecardDefault.png');
+    let coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardDefault.png');
     let cardColor = '#141414';
     let textColor = '#ffffff';
 
@@ -48,47 +48,47 @@ export const profile: SlashCommand = {
     logger.debug(`[${PREFIX}] colorRole: ${colorRole?.id}`);
     if (colorRole) {
       if (colorRole.id === env.ROLE_PURPLE) {
-        coloredCard = path.join(__dirname, '../../assets/img/cards/profilecardPurple.png');
+        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardPurple.png');
         cardColor = '#2d2636';
         // chipColor = '#FFC0CB';
         textColor = '#b072ff';
       } else if (colorRole.id === env.ROLE_BLUE) {
-        coloredCard = path.join(__dirname, '../../assets/img/cards/profilecardBlue.png');
+        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardBlue.png');
         cardColor = '#283438';
         // chipColor = '#FFA500';
         textColor = '#5acff5';
       } else if (colorRole.id === env.ROLE_GREEN) {
-        coloredCard = path.join(__dirname, '../../assets/img/cards/profilecardGreen.png');
+        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardGreen.png');
         cardColor = '#252e28';
         // chipColor = '#00FF00';
         textColor = '#6de194';
       } else if (colorRole.id === env.ROLE_PINK) {
-        coloredCard = path.join(__dirname, '../../assets/img/cards/profilecardPink.png');
+        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardPink.png');
         cardColor = '#352530';
         // chipColor = '#FF0000';
         textColor = '#ff6dcd';
       } else if (colorRole.id === env.ROLE_RED) {
-        coloredCard = path.join(__dirname, '../../assets/img/cards/profilecardRed.png');
+        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardRed.png');
         cardColor = '#382727';
         // chipColor = '#FF0000';
         textColor = '#ff5f60';
       } else if (colorRole.id === env.ROLE_ORANGE) {
-        coloredCard = path.join(__dirname, '../../assets/img/cards/profilecardOrange.png');
+        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardOrange.png');
         cardColor = '#342b24';
         // chipColor = '#FFA500';
         textColor = '#ffa45f';
       } else if (colorRole.id === env.ROLE_YELLOW) {
-        coloredCard = path.join(__dirname, '../../assets/img/cards/profilecardYellow.png');
+        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardYellow.png');
         cardColor = '#333024';
         // chipColor = '#FFFF00';
         textColor = '#ffdd5d';
       } else if (colorRole.id === env.ROLE_WHITE) {
-        coloredCard = path.join(__dirname, '../../assets/img/cards/profilecardWhite.png');
+        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardWhite.png');
         cardColor = '#404040';
         // chipColor = '#FFFFFF';
         textColor = '#ffffff';
       } else if (colorRole.id === env.ROLE_BLACK) {
-        coloredCard = path.join(__dirname, '../../assets/img/cards/profilecardBlack.png');
+        coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardBlack.png');
         cardColor = '#181818';
         // chipColor = '#000000';
         textColor = '#626262';
@@ -223,23 +223,24 @@ export const profile: SlashCommand = {
     }
     // Choose and Draw the Star Image
     const level = targetData.experience!.total.level;
-    let starImagePath = path.join(__dirname, '../../assets/img/badges');
+    let starImagePath = '';
     if (level < 6) {
-      starImagePath = path.join(starImagePath, '/VIP.png');
+      starImagePath = path.resolve(__dirname, '../../assets/img/badges/VIP.png');
     } else if (level < 10) {
-      starImagePath = path.join(starImagePath, '/VIPLVL5.png');
+      starImagePath = path.resolve(__dirname, '../../assets/img/badges/VIPLVL5.png');
     } else if (level < 20) {
-      starImagePath = path.join(starImagePath, '/VIPLVL10.png');
+      starImagePath = path.resolve(__dirname, '../../assets/img/badges/VIPLVL10.png');
     } else if (level < 30) {
-      starImagePath = path.join(starImagePath, '/VIPLVL20.png');
+      starImagePath = path.resolve(__dirname, '../../assets/img/badges/VIPLVL20.png');
     } else if (level < 40) {
-      starImagePath = path.join(starImagePath, '/VIPLVL30.png');
+      starImagePath = path.resolve(__dirname, '../../assets/img/badges/VIPLVL30.png');
     } else if (level < 50) {
-      starImagePath = path.join(starImagePath, '/VIPLVL40.png');
+      starImagePath = path.resolve(__dirname, '../../assets/img/badges/VIPLVL40.png');
     } else if (level > 50) {
-      starImagePath = path.join(starImagePath, '/VIPLVL50.png');
+      starImagePath = path.resolve(__dirname, '../../assets/img/badges/VIPLVL50.png');
     }
     try {
+      logger.debug(`[${PREFIX}] starImagePath: ${starImagePath}`);
       const starImage = await Canvas.loadImage(starImagePath);
       context.drawImage(starImage, 727, 61, 162, 162);
     } catch (err) {
@@ -308,8 +309,8 @@ export const profile: SlashCommand = {
 
     try {
       const statusIcon = target.presence?.status === undefined ?
-        await Canvas.loadImage(path.join(__dirname, '../../assets/img/icons/offline.png')) :
-        await Canvas.loadImage(path.join(__dirname, `../../assets/img/icons/${target.presence!.status}.png`));
+        await Canvas.loadImage(path.resolve(__dirname, '../../assets/img/icons/offline.png')) :
+        await Canvas.loadImage(path.resolve(__dirname, `../../assets/img/icons/${target.presence!.status}.png`));
       context.drawImage(statusIcon, 160, 180, 62, 62);
     } catch (err) {
       logger.error(`[${PREFIX}] Error loading status icon: ${err}`);
@@ -322,7 +323,7 @@ export const profile: SlashCommand = {
       context.textAlign = 'center';
       context.fillStyle = textColor;
       context.fillText('HAPPY BIRTHDAY!', 467, 55);
-      const birthdayOverlay = await Canvas.loadImage(path.join(__dirname, '../../assets/img/cards/birthdayOverlay.png'));
+      const birthdayOverlay = await Canvas.loadImage(path.resolve(__dirname, '../../assets/img/cards/birthdayOverlay.png'));
       context.drawImage(birthdayOverlay, 0, 0, 934, 282);
     }
 
