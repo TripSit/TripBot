@@ -160,7 +160,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
     messageChannelId = channel.id;
   }
 
-  logger.debug(`[${PREFIX}] Message sent in ${experienceType} channel`);
+  // logger.debug(`[${PREFIX}] Message sent in ${experienceType} channel`);
 
   // if (!(message instanceof Message)) {
   //   // If the user is not a member of the guild, then this probably came from IRC
@@ -217,7 +217,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
       const accountName = message.host.split('/')[2] ?? message.host.replace(/(\.|\$|#|\[|\]|\/)/g, '-');
       userRef = `${env.FIREBASE_DB_USERS}/${accountName}/experience`;
     }
-    logger.debug(`[${PREFIX}] userRef: ${userRef}`);
+    // logger.debug(`[${PREFIX}] userRef: ${userRef}`);
 
     const ref = db.ref(userRef);
     await ref.once('value', async (data) => {
@@ -236,7 +236,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
         ):Promise<expDict> {
           let expData = expDict[expType as keyof typeof expDict];
           if (expData) {
-            logger.debug(`[${PREFIX}] ${expType} exp found!`);
+            // logger.debug(`[${PREFIX}] ${expType} exp found!`);
             const lastMessageDate = new Date(expData.lastMessageDate);
             const timeDiff = currMessageDate.valueOf() - lastMessageDate.valueOf();
             // logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
@@ -276,7 +276,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
               // logger.debug(`[${PREFIX}] experienceDataC: ${JSON.stringify(experienceData, null, 2)}`);
             }
           } else {
-            experienceDict[experienceType as keyof typeof experienceDict] = {
+            experienceDict[expType as keyof typeof expDict] = {
               level: 0,
               levelExpPoints: expPoints,
               totalExpPoints: expPoints,
@@ -284,16 +284,17 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
               lastMessageChannel: messageChannelId,
             };
           }
+          // logger.debug(`[${PREFIX}] experienceDictB: ${JSON.stringify(experienceDict, null, 2)}`);
           return experienceDict;
         };
 
-        // logger.debug(`[${PREFIX}] experienceDict1: ${JSON.stringify(experienceDict, null, 2)}`);
+        logger.debug(`[${PREFIX}] experienceDict1: ${JSON.stringify(experienceDict, null, 2)}`);
         await processExp(experienceDict, 'total')
           .then(async (expDictA) => {
-            // logger.debug(`[${PREFIX}] experienceDict2: ${JSON.stringify(expDictA, null, 2)}`);
+            logger.debug(`[${PREFIX}] experienceDict2: ${JSON.stringify(expDictA, null, 2)}`);
             await processExp(expDictA, experienceType)
               .then(async (expDictB) => {
-                // logger.debug(`[${PREFIX}] experienceDict3: ${JSON.stringify(expDictB, null, 2)}`);
+                logger.debug(`[${PREFIX}] experienceDict3: ${JSON.stringify(expDictB, null, 2)}`);
                 ref.update(expDictB);
               });
           });
@@ -306,6 +307,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
           lastMessageDate: currMessageDate.valueOf(),
           lastMessageChannel: messageChannelId,
         };
+        logger.debug(`[${PREFIX}] settin new EXP}`);
         ref.set(experienceDict);
       }
     });

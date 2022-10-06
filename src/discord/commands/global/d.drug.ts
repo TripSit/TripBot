@@ -40,7 +40,7 @@ export const drug: SlashCommand = {
     }
 
     const drugData = (drugDataAll as CbSubstance[]).find((drug) => drug.name === substance);
-    logger.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
+    // logger.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
 
     if (!drugData) {
       embed.setTitle(`${substance} was not found`);
