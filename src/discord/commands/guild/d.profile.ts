@@ -138,10 +138,16 @@ export const profile: SlashCommand = {
       // Error loading background image: TypeError [ERR_INVALID_URL]: Invalid URL
       // const tryI = '../../assets/img/cards/profilecardDefault.png';
       // logger.debug(`[${PREFIX}] tryI: ${tryI}`);
-      const tryJ = '.\\src\\discord\\assets\\img\\cards\\profilecardDefault.png';
-      logger.debug(`[${PREFIX}] tryJ: ${tryJ}`);
+      // const tryJ = '.\\src\\discord\\assets\\img\\cards\\profilecardDefault.png';
+      // logger.debug(`[${PREFIX}] tryJ: ${tryJ}`);
+      // const tryK = '~\\src\\discord\\assets\\img\\cards\\profilecardDefault.png';
+      // logger.debug(`[${PREFIX}] tryK: ${tryK}`);
+      const tryL = './src/discord/assets/img/cards/profilecardDefault.png';
+      logger.debug(`[${PREFIX}] tryL: ${tryL}`);
+      const tryM = '~/src/discord/assets/img/cards/profilecardDefault.png';
+      logger.debug(`[${PREFIX}] tryM: ${tryM}`);
 
-      const background = await Canvas.loadImage(tryJ);
+      const background = await Canvas.loadImage(tryM);
 
       logger.debug(`[${PREFIX}] image loaded`);
       context.drawImage(background, 0, 0, canvas.width, canvas.height);
