@@ -310,8 +310,8 @@ export const profile: SlashCommand = {
 
     try {
       const statusIcon = target.presence?.status === undefined ?
-        await Canvas.loadImage(`./src/discord/assets/img/icons/offline.png`) :
-        await Canvas.loadImage(`./src/discord/assets/img/icons/${target.presence!.status}.png`);
+        await Canvas.loadImage(`${filePrefix}/src/discord/assets/img/icons/offline.png`) :
+        await Canvas.loadImage(`${filePrefix}/src/discord/assets/img/icons/${target.presence!.status}.png`);
       context.drawImage(statusIcon, 160, 180, 62, 62);
     } catch (err) {
       logger.error(`[${PREFIX}] Error loading status icon: ${err}`);

@@ -288,13 +288,13 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
           return experienceDict;
         };
 
-        logger.debug(`[${PREFIX}] experienceDict1: ${JSON.stringify(experienceDict, null, 2)}`);
+        // logger.debug(`[${PREFIX}] experienceDict1: ${JSON.stringify(experienceDict, null, 2)}`);
         await processExp(experienceDict, 'total')
           .then(async (expDictA) => {
-            logger.debug(`[${PREFIX}] experienceDict2: ${JSON.stringify(expDictA, null, 2)}`);
+            // logger.debug(`[${PREFIX}] experienceDict2: ${JSON.stringify(expDictA, null, 2)}`);
             await processExp(expDictA, experienceType)
               .then(async (expDictB) => {
-                logger.debug(`[${PREFIX}] experienceDict3: ${JSON.stringify(expDictB, null, 2)}`);
+                // logger.debug(`[${PREFIX}] experienceDict3: ${JSON.stringify(expDictB, null, 2)}`);
                 ref.update(expDictB);
               });
           });
