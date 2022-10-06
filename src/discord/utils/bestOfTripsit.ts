@@ -33,6 +33,9 @@ const votePinThreshold = env.NODE_ENV === 'production' ? 5 : 2;
 export async function bestOf(reaction:MessageReaction, user:User) {
   logger.debug(`[${PREFIX}] starting!`);
 
+  logger.debug(`[${PREFIX}] reaction.count: ${reaction.count}`);
+  logger.debug(`[${PREFIX}] reaction.emoji.name: ${reaction.emoji.name}`);
+
   if (reaction.count === votePinThreshold && reaction.emoji.name?.includes('upvote')) {
     // Check if the message.channe.id is in the list of tripsitter channels
     if (tripsitterChannels.includes(reaction.message.channel.id)) {
