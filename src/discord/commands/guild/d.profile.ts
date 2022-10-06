@@ -40,7 +40,7 @@ export const profile: SlashCommand = {
     }
 
     // Choose colour based on user's role
-    let coloredCard = path.resolve('src/discord/assets/img/cards/profilecardDefault.png');
+    let coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardDefault.png');
     let cardColor = '#141414';
     let textColor = '#ffffff';
 
@@ -106,8 +106,30 @@ export const profile: SlashCommand = {
 
     // Backround Image
     try {
-      logger.debug(`[${PREFIX}] loading image: ${coloredCard}`);
-      const background = await Canvas.loadImage(coloredCard);
+      const tryB = path.resolve(__dirname, '../../assets/img/cards/profilecardDefault.png');
+      logger.debug(`[${PREFIX}] tryB: ${tryB}`);
+      await Canvas.loadImage(tryB);
+      const tryC = path.join(__dirname, '../../assets/img/cards/profilecardDefault.png');
+      logger.debug(`[${PREFIX}] tryC: ${tryC}`);
+      await Canvas.loadImage(tryC);
+      const tryD = path.resolve('src/discord/assets/img/cards/profilecardDefault.png');
+      logger.debug(`[${PREFIX}] tryD: ${tryD}`);
+      await Canvas.loadImage(tryD);
+      const tryE = path.resolve('./src/discord/assets/img/cards/profilecardDefault.png');
+      logger.debug(`[${PREFIX}] tryE: ${tryE}`);
+      const background = await Canvas.loadImage(tryE);
+
+      // Doesn't work on windows
+      // TypeError [ERR_INVALID_PROTOCOL]: Protocol "c:" not supported. Expected "http:"
+      // const tryA = `C:\Projects\TS\tripsit-discord-bot\src\discord\assets\img\cards\profilecardDefault.png`;
+      // logger.debug(`[${PREFIX}] tryA: ${tryA}`);
+      // await Canvas.loadImage(tryA);
+      // Doesnt work on windows
+      // Error loading background image: TypeError [ERR_INVALID_PROTOCOL]: Protocol "c:" not supported. Expected "http:"
+      // const tryF = path.resolve('~/src/discord/assets/img/cards/profilecardDefault.png');
+      // logger.debug(`[${PREFIX}] tryF: ${tryF}`);
+      // await Canvas.loadImage(tryF);
+
       logger.debug(`[${PREFIX}] image loaded`);
       context.drawImage(background, 0, 0, canvas.width, canvas.height);
       logger.debug(`[${PREFIX}] image drawn`);
