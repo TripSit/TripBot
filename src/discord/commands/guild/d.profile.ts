@@ -40,7 +40,7 @@ export const profile: SlashCommand = {
     }
 
     // Choose colour based on user's role
-    let coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardDefault.png');
+    let coloredCard = path.resolve('src/discord/assets/img/cards/profilecardDefault.png');
     let cardColor = '#141414';
     let textColor = '#ffffff';
 
@@ -280,10 +280,13 @@ export const profile: SlashCommand = {
     context.restore();
 
     // Level Bar Math
-    const levelExpPoints = targetData.experience!.total!.totalExpPoints;
-    const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
-    const percentageOfLevel = (levelExpPoints / expToLevel) / 100;
-    logger.debug(`[${PREFIX}] percentageOfLevel: ${percentageOfLevel}`);
+    let percentageOfLevel = 0;
+    if (targetData.experience) {
+      const levelExpPoints = targetData.experience.total.levelExpPoints;
+      const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
+      percentageOfLevel = (levelExpPoints / expToLevel);
+      logger.debug(`[${PREFIX}] percentageOfLevel: ${percentageOfLevel}`);
+    }
 
     // Circular Level Bar
     context.save();
