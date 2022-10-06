@@ -36,7 +36,7 @@ export async function generateInsufflatedDosages(weightInLbs:number):Promise<any
     `**Strong**: ${Math.round(weightInLbs * 0.5)}-${Math.round(weightInLbs * 0.75)}mg`,
     `**K-hole**: ${weightInLbs}mg`,
   ]
-      .join('\n');
+    .join('\n');
 };
 
 /**
@@ -53,5 +53,5 @@ export async function generateRectalDosages(weightInLbs:number):Promise<any> {
     `**Strong**: ${Math.round(weightInLbs * 2)}-${Math.round(weightInLbs * 2.5)}mg`,
     `**K-hole**: ${Math.round(weightInLbs * 3)}-${Math.round(weightInLbs * 4)}mg`,
   ]
-      .join('\n');
+    .join('\n');
 }

@@ -38,10 +38,10 @@ export const ready: clientEvent = {
     await setTimeout(1000);
     startStatusLoop(client);
     Promise.all([getInvites(client)])
-        .then(() => {
-          const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
-          logger.info(`[${PREFIX}] Discord finished booting in ${bootDuration}s!`);
-        })
+      .then(() => {
+        const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
+        logger.info(`[${PREFIX}] Discord finished booting in ${bootDuration}s!`);
+      })
     ;
   },
 };

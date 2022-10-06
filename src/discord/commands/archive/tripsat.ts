@@ -78,7 +78,7 @@ const invisibleEmoji = env.NODE_ENV === 'production' ?
  * @param {ButtonInteraction} interaction
  */
 export async function tripsat(
-    interaction:ButtonInteraction,
+  interaction:ButtonInteraction,
 ) {
   logger.debug(`[${PREFIX}] starting!`);
   await interaction.deferReply({ephemeral: true});
@@ -138,9 +138,9 @@ export async function tripsat(
   // const channelSanctuary = await interaction.client.channels.cache.get(env.CHANNEL_SANCTUARY);
   // Get the channel objects for the help and meta threads
   const threadHelpUser = interaction.guild.channels.cache
-      .find((chan) => chan.id === targetLastHelpedThreadId) as ThreadChannel;
+    .find((chan) => chan.id === targetLastHelpedThreadId) as ThreadChannel;
   const threadDiscussUser = interaction.guild.channels.cache
-      .find((chan) => chan.id === targetLastHelpedMetaThreadId) as ThreadChannel;
+    .find((chan) => chan.id === targetLastHelpedMetaThreadId) as ThreadChannel;
 
   const actorHasRoleDeveloper = (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
   logger.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
@@ -150,7 +150,7 @@ export async function tripsat(
 
   const roleNeedshelp = await interaction.guild.roles.fetch(needsHelpId)!;
   const targetHasNeedsHelpRole = (target.roles as GuildMemberRoleManager).cache.find(
-      (role:Role) => role === roleNeedshelp,
+    (role:Role) => role === roleNeedshelp,
   ) !== undefined;
   logger.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
 
@@ -182,8 +182,8 @@ export async function tripsat(
       }
 
       const embed = embedTemplate()
-          .setColor(Colors.DarkBlue)
-          .setDescription(message);
+        .setColor(Colors.DarkBlue)
+        .setDescription(message);
       interaction.editReply({embeds: [embed]});
 
       if (threadDiscussUser) {
@@ -248,38 +248,38 @@ If they still need help it's okay to leave them with that role.`;
         > Thank you!
         ${invisibleEmoji}
         `)
-      .then(async (msg) => {
-        message = msg;
-        await msg.react('🙁');
-        await msg.react('😕');
-        await msg.react('😐');
-        await msg.react('🙂');
-        await msg.react('😁');
+    .then(async (msg) => {
+      message = msg;
+      await msg.react('🙁');
+      await msg.react('😕');
+      await msg.react('😐');
+      await msg.react('🙂');
+      await msg.react('😁');
 
-        // Setup the reaction collector
-        const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
-        const collector = message.createReactionCollector({filter, time: 1000 * 60 * 60 * 24});
-        collector.on('collect', async (reaction, user) => {
-          threadHelpUser.send(stripIndents`
+      // Setup the reaction collector
+      const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
+      const collector = message.createReactionCollector({filter, time: 1000 * 60 * 60 * 24});
+      collector.on('collect', async (reaction, user) => {
+        threadHelpUser.send(stripIndents`
             ${invisibleEmoji}
             > Thank you for your feedback, here's a cookie! 🍪
             ${invisibleEmoji}
             `);
-          logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
-          const finalEmbed = embedTemplate()
-              .setColor(Colors.Blue)
-              .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
-          try {
-            if (threadDiscussUser) {
-              await threadDiscussUser.send({embeds: [finalEmbed]});
-            }
-          } catch (err) {
-            logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
+        logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
+        const finalEmbed = embedTemplate()
+          .setColor(Colors.Blue)
+          .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
+        try {
+          if (threadDiscussUser) {
+            await threadDiscussUser.send({embeds: [finalEmbed]});
           }
-          msg.delete();
-          collector.stop();
-        });
+        } catch (err) {
+          logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
+        }
+        msg.delete();
+        collector.stop();
       });
+    });
 
   let endMetaHelpMessage = stripIndents`${target.displayName} has indicated that they no longer need help!
       *This thread, and the #tripsit thread, will remain un-archived for 24 hours to allow the user to follow-up.

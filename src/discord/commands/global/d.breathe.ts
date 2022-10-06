@@ -9,16 +9,16 @@ const PREFIX = path.parse(__filename).name;
 
 export const dbreathe: SlashCommand1 = {
   data: new SlashCommandBuilder()
-      .setName('breathe')
-      .setDescription('Remember to breathe')
-      .addStringOption((option) => option.setName('exercise')
-          .setDescription('Which exercise?')
-          .addChoices(
-              {name: '1', value: '1'},
-              {name: '2', value: '2'},
-              {name: '3', value: '3'},
-              {name: '4', value: '4'},
-          )),
+    .setName('breathe')
+    .setDescription('Remember to breathe')
+    .addStringOption((option) => option.setName('exercise')
+      .setDescription('Which exercise?')
+      .addChoices(
+        {name: '1', value: '1'},
+        {name: '2', value: '2'},
+        {name: '3', value: '3'},
+        {name: '4', value: '4'},
+      )),
   async execute(interaction) {
     const choice = interaction.options.getString('exercise');
     const data = await breathe(choice);

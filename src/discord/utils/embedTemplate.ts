@@ -10,9 +10,9 @@ import env from '../../global/utils/env.config';
  */
 export function embedTemplate():EmbedBuilder {
   return new EmbedBuilder()
-      .setAuthor({name: 'TripSit.Me', iconURL: env.TS_ICON_URL, url: 'http://www.tripsit.me'})
-      .setColor(Colors.Purple)
-      .setFooter({text: env.DISCLAIMER, iconURL: env.FLAME_ICON_URL});
+    .setAuthor({name: 'TripSit.Me', iconURL: env.TS_ICON_URL, url: 'http://www.tripsit.me'})
+    .setColor(Colors.Purple)
+    .setFooter({text: env.DISCLAIMER, iconURL: env.FLAME_ICON_URL});
   // .setThumbnail(tsIconUrl)
   // .setTitle('TITLE)
   // .setURL('https://tripsit.me/')

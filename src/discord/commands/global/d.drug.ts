@@ -16,12 +16,12 @@ const PREFIX = path.parse(__filename).name;
 
 export const drug: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('drug')
-      .setDescription('Check substance information')
-      .addStringOption((option) => option.setName('substance')
-          .setDescription('Pick a substance!')
-          .setRequired(true)
-          .setAutocomplete(true)),
+    .setName('drug')
+    .setDescription('Check substance information')
+    .addStringOption((option) => option.setName('substance')
+      .setDescription('Pick a substance!')
+      .setRequired(true)
+      .setAutocomplete(true)),
 
   async execute(interaction) {
     const substance = interaction.options.getString('substance')!;
@@ -33,7 +33,7 @@ export const drug: SlashCommand = {
       logger.error(`[${PREFIX}] drugDataAll is null or undefined`);
       embed.setTitle(`Drug data was not found`);
       embed.setDescription(
-          '...this shouldn\'t have happened, please tell the developer!');
+        '...this shouldn\'t have happened, please tell the developer!');
       // If this happens then something happened to the data files
       interaction.reply({embeds: [embed]});
       return;
@@ -45,7 +45,7 @@ export const drug: SlashCommand = {
     if (!drugData) {
       embed.setTitle(`${substance} was not found`);
       embed.setDescription(
-          '...this shouldn\'t have happened, please tell the developer!');
+        '...this shouldn\'t have happened, please tell the developer!');
       // If this happens then something went wrong with the auto-complete
       interaction.reply({embeds: [embed]});
       return;

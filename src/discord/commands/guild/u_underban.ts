@@ -72,8 +72,8 @@ let target = {} as GuildMember;
 export const uUnderban: UserCommand = {
 
   data: new ContextMenuCommandBuilder()
-      .setName('Underban')
-      .setType(ApplicationCommandType.User),
+    .setName('Underban')
+    .setType(ApplicationCommandType.User),
 
   async execute(interaction) {
     logger.debug(`[${PREFIX}] starting!`);
@@ -94,7 +94,7 @@ export const uUnderban: UserCommand = {
           target.roles.remove(role);
         } catch (err) {
           logger.debug(
-              `[${PREFIX}] There was an error removing the role ${role.name} from ${target.displayName}\n${err}`,
+            `[${PREFIX}] There was an error removing the role ${role.name} from ${target.displayName}\n${err}`,
           );
         }
       }
@@ -102,23 +102,23 @@ export const uUnderban: UserCommand = {
 
     // construct the embed to send to the team channel
     const targetEmbed = embedTemplate()
-        .setColor(Colors.Yellow)
-        .setDescription(`${target} ***was underbanned***`)
-        .setAuthor(null)
-        .setThumbnail(target.user.displayAvatarURL())
-        .setFooter(null)
-        .addFields(
-            {name: 'Nickname', value: `${target.nickname}`, inline: true},
-            {name: 'Tag', value: `${target.user.username}#${target.user.discriminator}`, inline: true},
-            {name: 'ID', value: `${target.user.id}`, inline: true},
-        )
-        .addFields(
-            {name: 'Account created', value: `${time(target.user.createdAt, 'R')}`, inline: true},
-        );
+      .setColor(Colors.Yellow)
+      .setDescription(`${target} ***was underbanned***`)
+      .setAuthor(null)
+      .setThumbnail(target.user.displayAvatarURL())
+      .setFooter(null)
+      .addFields(
+        {name: 'Nickname', value: `${target.nickname}`, inline: true},
+        {name: 'Tag', value: `${target.user.username}#${target.user.discriminator}`, inline: true},
+        {name: 'ID', value: `${target.user.id}`, inline: true},
+      )
+      .addFields(
+        {name: 'Account created', value: `${time(target.user.createdAt, 'R')}`, inline: true},
+      );
 
     if (target.joinedAt) {
       targetEmbed.addFields(
-          {name: 'Joined', value: `${time(target.joinedAt, 'R')}`, inline: true},
+        {name: 'Joined', value: `${time(target.joinedAt, 'R')}`, inline: true},
       );
     }
 

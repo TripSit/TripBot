@@ -9,8 +9,8 @@ const PREFIX = path.parse(__filename).name;
 
 export const dkipp: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('kipp')
-      .setDescription('Keep it positive please!'),
+    .setName('kipp')
+    .setDescription('Keep it positive please!'),
 
   async execute(interaction) {
     const happyEmojis = [
@@ -29,9 +29,9 @@ export const dkipp: SlashCommand = {
     logger.debug(`[${PREFIX}] Output: ${output}`);
 
     const embed = embedTemplate()
-        .setDescription(output)
-        .setAuthor(null)
-        .setFooter(null);
+      .setDescription(output)
+      .setAuthor(null)
+      .setFooter(null);
 
     if (!interaction.replied) {
       interaction.reply({

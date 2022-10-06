@@ -135,11 +135,11 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
       const channelBotspam = interaction.client.channels.cache.get(env.CHANNEL_BOTSPAM);
       // const channelTripsit = member.client.channels.cache.get(CHANNEL_TRIPSIT);
       const embed = embedTemplate()
-          .setAuthor(null)
-          .setColor(colorValue)
-          .setThumbnail(member.user.displayAvatarURL())
-          .setFooter(null)
-          .setDescription(stripIndents`
+        .setAuthor(null)
+        .setColor(colorValue)
+        .setThumbnail(member.user.displayAvatarURL())
+        .setFooter(null)
+        .setDescription(stripIndents`
               **Please welcome ${member.toString()} to the guild!**
               We're glad you're here and hope you enjoy your stay!
               Check out ${channelStart} set your color and icon
@@ -168,14 +168,14 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   }
   if (buttonID === 'underban') {
     const roleUnderban = interaction.guild?.roles.cache.find(
-        (role:Role) => role.id === env.ROLE_UNDERBAN.toString()) as Role;
+      (role:Role) => role.id === env.ROLE_UNDERBAN.toString()) as Role;
     (interaction.member?.roles as GuildMemberRoleManager).add(roleUnderban);
   }
   const modChan = interaction.client.channels.cache.get(env.CHANNEL_MODERATORS) as TextChannel;
   if (buttonID === 'acknowledgebtn') {
     const embed = embedTemplate()
-        .setColor(Colors.Green)
-        .setDescription(`${interaction.user.username} has acknowledged their warning.`);
+      .setColor(Colors.Green)
+      .setDescription(`${interaction.user.username} has acknowledged their warning.`);
     if (modChan) {
       modChan.send({embeds: [embed]});
     }
@@ -189,8 +189,8 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
       guild.members.ban(interaction.user, {deleteMessageDays: 7, reason: 'Refused warning'});
     }
     const embed = embedTemplate()
-        .setColor(Colors.Red)
-        .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
+      .setColor(Colors.Red)
+      .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
     modChan.send({embeds: [embed]});
     interaction.reply('Thanks for making this easy!');
     return;
@@ -201,8 +201,8 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     const botOwner = interaction.client?.application?.owner as User;
     logger.debug(`[${PREFIX}] bot_owner: ${botOwner}`);
     const embed = embedTemplate()
-        .setColor(Colors.Green)
-        .setDescription(`${interaction.user.username} has acknowledged their warning.`);
+      .setColor(Colors.Green)
+      .setDescription(`${interaction.user.username} has acknowledged their warning.`);
     if (botOwner) {
       botOwner.send({embeds: [embed]});
     }
@@ -211,8 +211,8 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   }
   if (buttonID === 'warnbtn') {
     const embed = embedTemplate()
-        .setColor(Colors.Red)
-        .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
+      .setColor(Colors.Red)
+      .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
     modChan.send({embeds: [embed]});
     interaction.reply('Thanks for making this easy!');
     return;

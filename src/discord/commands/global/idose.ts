@@ -33,40 +33,40 @@ const buttonList = [
 
 export const didose: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('idose')
-      .setDescription('Your personal dosage information!')
-      .addSubcommand((subcommand) => subcommand
-          .setName('set')
-          .setDescription('Record when you dosed something')
-          .addNumberOption((option) => option.setName('volume')
-              .setDescription('How much?')
-              .setRequired(true))
-          .addStringOption((option) => option.setName('units')
-              .setDescription('What units?')
-              .setRequired(true)
-              .addChoices(
-                  {name: 'mg (milligrams)', value: 'mg (milligrams)'},
-                  {name: 'mL (milliliters)', value: 'mL (milliliters)'},
-                  {name: 'µg (micrograms/ug/mcg)', value: 'µg (micrograms/ug/mcg)'},
-                  {name: 'g (grams)', value: 'g (grams)'},
-                  {name: 'oz (ounces)', value: 'oz (ounces)'},
-                  {name: 'fl oz (fluid ounces)', value: 'fl oz (fluid ounces)'},
-                  {name: 'tabs', value: 'tabs'},
-                  {name: 'caps', value: 'caps'},
-                  {name: 'pills', value: 'pills'},
-                  {name: 'drops', value: 'drops'},
-                  {name: 'sprays', value: 'sprays'},
-                  {name: 'inhales', value: 'inhales'},
-              ))
-          .addStringOption((option) => option.setName('substance')
-              .setDescription('What Substance?')
-              .setRequired(true)
-              .setAutocomplete(true))
-          .addStringOption((option) => option.setName('offset')
-              .setDescription('How long ago? EG: 4 hours 32 mins ago')))
-      .addSubcommand((subcommand) => subcommand
-          .setName('get')
-          .setDescription('Get your dosage records!')),
+    .setName('idose')
+    .setDescription('Your personal dosage information!')
+    .addSubcommand((subcommand) => subcommand
+      .setName('set')
+      .setDescription('Record when you dosed something')
+      .addNumberOption((option) => option.setName('volume')
+        .setDescription('How much?')
+        .setRequired(true))
+      .addStringOption((option) => option.setName('units')
+        .setDescription('What units?')
+        .setRequired(true)
+        .addChoices(
+          {name: 'mg (milligrams)', value: 'mg (milligrams)'},
+          {name: 'mL (milliliters)', value: 'mL (milliliters)'},
+          {name: 'µg (micrograms/ug/mcg)', value: 'µg (micrograms/ug/mcg)'},
+          {name: 'g (grams)', value: 'g (grams)'},
+          {name: 'oz (ounces)', value: 'oz (ounces)'},
+          {name: 'fl oz (fluid ounces)', value: 'fl oz (fluid ounces)'},
+          {name: 'tabs', value: 'tabs'},
+          {name: 'caps', value: 'caps'},
+          {name: 'pills', value: 'pills'},
+          {name: 'drops', value: 'drops'},
+          {name: 'sprays', value: 'sprays'},
+          {name: 'inhales', value: 'inhales'},
+        ))
+      .addStringOption((option) => option.setName('substance')
+        .setDescription('What Substance?')
+        .setRequired(true)
+        .setAutocomplete(true))
+      .addStringOption((option) => option.setName('offset')
+        .setDescription('How long ago? EG: 4 hours 32 mins ago')))
+    .addSubcommand((subcommand) => subcommand
+      .setName('get')
+      .setDescription('Get your dosage records!')),
   // .addSubcommand(subcommand => subcommand
   //   .setName('delete')
   //   .setDescription('Delete your dosage records!')),

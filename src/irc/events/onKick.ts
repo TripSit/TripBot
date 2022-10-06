@@ -10,11 +10,11 @@ import {ircMessage} from '../@types/irc';
  */
 export async function execute():Promise<void> {
   global.ircClient.addListener('kick', (
-      channel:string,
-      nick:string,
-      by:string,
-      reason:string,
-      message:ircMessage,
+    channel:string,
+    nick:string,
+    by:string,
+    reason:string,
+    message:ircMessage,
   ) => {
     // logger.debug(`[${PREFIX}] ${JSON.stringify(message, null, 2)}`);
     // {

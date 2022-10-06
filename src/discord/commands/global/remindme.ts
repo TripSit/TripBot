@@ -12,14 +12,14 @@ const PREFIX = path.parse(__filename).name;
 
 export const dremindme: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('remindme')
-      .setDescription('Set a reminder!')
-      .addStringOption((option) => option.setName('offset')
-          .setDescription('When? EG: 4 hours 32 mins')
-          .setRequired(true))
-      .addStringOption((option) => option.setName('reminder')
-          .setDescription('What do you want to be reminded?')
-          .setRequired(true)),
+    .setName('remindme')
+    .setDescription('Set a reminder!')
+    .addStringOption((option) => option.setName('offset')
+      .setDescription('When? EG: 4 hours 32 mins')
+      .setRequired(true))
+    .addStringOption((option) => option.setName('reminder')
+      .setDescription('What do you want to be reminded?')
+      .setRequired(true)),
   async execute(interaction) {
     const offset = interaction.options.getString('offset');
     const reminder = interaction.options.getString('reminder');
@@ -46,7 +46,7 @@ export const dremindme: SlashCommand = {
     const timeBetween = reminderDatetime.valueOf() - new Date().valueOf();
 
     const embed = embedTemplate()
-        .setDescription(`In ${ms(timeBetween, {long: true})} I will remind you: ${reminder}`);
+      .setDescription(`In ${ms(timeBetween, {long: true})} I will remind you: ${reminder}`);
 
     interaction.reply({embeds: [embed], ephemeral: true});
 

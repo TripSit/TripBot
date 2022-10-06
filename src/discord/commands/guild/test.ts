@@ -483,23 +483,23 @@ async function testGlobal(interaction:ChatInputCommandInteraction):Promise<resul
   const results = {total: 0, passed: 0, failed: 0};
   if (scope === 'All' || scope === 'Global') {
     await client.application?.commands.fetch({force: true})
-        .then(async (globalCommands) => {
-          results.total = globalCommands.size;
-          await interaction.followUp(`Testing ${globalCommands.size} global commands!`);
-          for (const command of globalCommands) {
-            // logger.debug(`[${PREFIX}] Testing global command ${command[1].name}`);
-            await runCommand(interaction, command[1].name)
-                .then((result) => {
-                  if (result) {
-                    // logger.debug(`[${PREFIX}] Global command ${command[1].name} passed!`);
-                    results.passed++;
-                  } else {
-                    // logger.debug(`[${PREFIX}] Global command ${command[1].name} failed!`);
-                    results.failed++;
-                  }
-                });
-          };
-        });
+      .then(async (globalCommands) => {
+        results.total = globalCommands.size;
+        await interaction.followUp(`Testing ${globalCommands.size} global commands!`);
+        for (const command of globalCommands) {
+          // logger.debug(`[${PREFIX}] Testing global command ${command[1].name}`);
+          await runCommand(interaction, command[1].name)
+            .then((result) => {
+              if (result) {
+                // logger.debug(`[${PREFIX}] Global command ${command[1].name} passed!`);
+                results.passed++;
+              } else {
+                // logger.debug(`[${PREFIX}] Global command ${command[1].name} failed!`);
+                results.failed++;
+              }
+            });
+        };
+      });
     // .finally(() => {
     //   // logger.debug(`[${PREFIX}] Global commands results: ${JSON.stringify(results)}`);
     // });
@@ -516,23 +516,23 @@ async function testGuild(interaction:ChatInputCommandInteraction):Promise<result
   const results = {total: 0, passed: 0, failed: 0};
   if (scope === 'All' || scope === 'Guild') {
     await interaction.guild!.commands.fetch({force: true})
-        .then(async (guildCommands) => {
-          results.total = guildCommands.size;
-          await interaction.followUp(`Testing ${guildCommands.size} guild commands!`);
-          for (const command of guildCommands) {
-            // logger.debug(`[${PREFIX}] Testing guild command ${command[1].name}`);
-            await runCommand(interaction, command[1].name)
-                .then((result) => {
-                  if (result) {
-                    // logger.debug(`[${PREFIX}] Global command ${command[1].name} passed!`);
-                    results.passed++;
-                  } else {
-                    // logger.debug(`[${PREFIX}] Global command ${command[1].name} failed!`);
-                    results.failed++;
-                  }
-                });
-          };
-        });
+      .then(async (guildCommands) => {
+        results.total = guildCommands.size;
+        await interaction.followUp(`Testing ${guildCommands.size} guild commands!`);
+        for (const command of guildCommands) {
+          // logger.debug(`[${PREFIX}] Testing guild command ${command[1].name}`);
+          await runCommand(interaction, command[1].name)
+            .then((result) => {
+              if (result) {
+                // logger.debug(`[${PREFIX}] Global command ${command[1].name} passed!`);
+                results.passed++;
+              } else {
+                // logger.debug(`[${PREFIX}] Global command ${command[1].name} failed!`);
+                results.failed++;
+              }
+            });
+        };
+      });
     // .finally(() => {
     //   // logger.debug(`[${PREFIX}] Guild commands finished!`);
     //   // logger.debug(`[${PREFIX}] Guild commands results: ${JSON.stringify(results)}`);
@@ -543,37 +543,37 @@ async function testGuild(interaction:ChatInputCommandInteraction):Promise<result
 
 export const test: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('test')
-      .setDescription('This will test the bot and show all functionality!')
-      .addStringOption((option) => option.setName('scope')
-          .setDescription('Global, guild, or all?')
-          .addChoices(
-              {name: 'All', value: 'All'},
-              {name: 'Guild', value: 'Guild'},
-              {name: 'Global', value: 'Global'},
-          )),
+    .setName('test')
+    .setDescription('This will test the bot and show all functionality!')
+    .addStringOption((option) => option.setName('scope')
+      .setDescription('Global, guild, or all?')
+      .addChoices(
+        {name: 'All', value: 'All'},
+        {name: 'Guild', value: 'Guild'},
+        {name: 'Global', value: 'Global'},
+      )),
   async execute(interaction) {
     const scope = interaction.options.getString('scope') || 'All';
     await interaction.reply(`Testing ${scope} commands!`);
 
     await testGlobal(interaction)
-        .then(async (globalResults) => {
-          logger.debug(`[${PREFIX}] Global results: ${JSON.stringify(globalResults)}`);
-          await testGuild(interaction)
-              .then(async (guildResults) => {
-                logger.debug(`[${PREFIX}] Guild results: ${JSON.stringify(guildResults)}`);
-                const embed = embedTemplate()
-                    .setTitle('Testing Results')
-                    .addFields(
-                        {name: 'Global Tested', value: `${globalResults.total}`, inline: true},
-                        {name: 'Global Success', value: `${globalResults.passed}`, inline: true},
-                        {name: 'Global Failed', value: `${globalResults.failed}`, inline: true},
-                        {name: 'Guild Tested', value: `${guildResults.total}`, inline: true},
-                        {name: 'Guild Success', value: `${guildResults.passed}`, inline: true},
-                        {name: 'Guild Failed', value: `${guildResults.failed}`, inline: true},
-                    );
-                await interaction.channel!.send({embeds: [embed]});
-              });
-        });
+      .then(async (globalResults) => {
+        logger.debug(`[${PREFIX}] Global results: ${JSON.stringify(globalResults)}`);
+        await testGuild(interaction)
+          .then(async (guildResults) => {
+            logger.debug(`[${PREFIX}] Guild results: ${JSON.stringify(guildResults)}`);
+            const embed = embedTemplate()
+              .setTitle('Testing Results')
+              .addFields(
+                {name: 'Global Tested', value: `${globalResults.total}`, inline: true},
+                {name: 'Global Success', value: `${globalResults.passed}`, inline: true},
+                {name: 'Global Failed', value: `${globalResults.failed}`, inline: true},
+                {name: 'Guild Tested', value: `${guildResults.total}`, inline: true},
+                {name: 'Guild Success', value: `${guildResults.passed}`, inline: true},
+                {name: 'Guild Failed', value: `${guildResults.failed}`, inline: true},
+              );
+            await interaction.channel!.send({embeds: [embed]});
+          });
+      });
   },
 };

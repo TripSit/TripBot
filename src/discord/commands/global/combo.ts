@@ -53,16 +53,16 @@ import comboDefs from '../../../global/assets/data/combo_definitions.json';
 
 export const combo: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('combo')
-      .setDescription('Check combo information')
-      .addStringOption((option) => option.setName('first_drug')
-          .setDescription('Pick the first drug')
-          .setRequired(true)
-          .setAutocomplete(true))
-      .addStringOption((option) => option.setName('second_drug')
-          .setDescription('Pick the second drug')
-          .setRequired(true)
-          .setAutocomplete(true)),
+    .setName('combo')
+    .setDescription('Check combo information')
+    .addStringOption((option) => option.setName('first_drug')
+      .setDescription('Pick the first drug')
+      .setRequired(true)
+      .setAutocomplete(true))
+    .addStringOption((option) => option.setName('second_drug')
+      .setDescription('Pick the second drug')
+      .setRequired(true)
+      .setAutocomplete(true)),
   async execute(interaction) {
     const drugA = interaction.options.getString('first_drug');
     const drugB = interaction.options.getString('second_drug');
@@ -74,7 +74,7 @@ export const combo: SlashCommand = {
       logger.error(`[${PREFIX}] drugDataAll is null or undefined`);
       embed.setTitle(`Drug data was not found`);
       embed.setDescription(
-          '...this shouldn\'t have happened, please tell the developer!');
+        '...this shouldn\'t have happened, please tell the developer!');
       // If this happens then something happened to the data files
       interaction.reply({embeds: [embed]});
       return;
@@ -87,7 +87,7 @@ export const combo: SlashCommand = {
     if (!drugData) {
       embed.setTitle(`${drugA} was not found`);
       embed.setDescription(
-          '...this shouldn\'t have happened, please tell the developer!');
+        '...this shouldn\'t have happened, please tell the developer!');
       // If this happens then something went wrong with the auto-complete
       interaction.reply({embeds: [embed]});
       return;
@@ -96,7 +96,7 @@ export const combo: SlashCommand = {
     if (!drugData.interactions) {
       embed.setTitle(`${drugA} has no known interactions!`);
       embed.setDescription(
-          'This does not mean combining this with anything is safe!\nThis means we don\'t have information on it!');
+        'This does not mean combining this with anything is safe!\nThis means we don\'t have information on it!');
       interaction.reply({embeds: [embed]});
       return;
     }
@@ -108,7 +108,7 @@ export const combo: SlashCommand = {
     if (!drugInteraction) {
       embed.setTitle(`${drugA} and ${drugB} have no known interactions!`);
       embed.setDescription(
-          'This does not mean combining them is safe!\nThis means we don\'t have information on it!');
+        'This does not mean combining them is safe!\nThis means we don\'t have information on it!');
       interaction.reply({embeds: [embed]});
       return;
     }
@@ -128,8 +128,8 @@ export const combo: SlashCommand = {
     const {color} = intDef;
     const output = `${emoji} ${status} ${emoji}`;
     embed.addFields(
-        {name: 'Result', value: output},
-        {name: 'Definition', value: definition},
+      {name: 'Result', value: output},
+      {name: 'Definition', value: definition},
     );
     embed.setThumbnail(thumbnail);
 

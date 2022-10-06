@@ -49,14 +49,14 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   // }
   // Create the modal
   const modal = new ModalBuilder()
-      .setCustomId(`techHelpSubmit~${issueType}~${role!.id}`)
-      .setTitle('TripSit Feedback');
+    .setCustomId(`techHelpSubmit~${issueType}~${role!.id}`)
+    .setTitle('TripSit Feedback');
   const timeoutReason = new TextInputBuilder()
-      .setLabel('What is your issue? Be super detailed!')
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder(placeholder)
-      .setCustomId(`${issueType}IssueInput`)
-      .setRequired(true);
+    .setLabel('What is your issue? Be super detailed!')
+    .setStyle(TextInputStyle.Paragraph)
+    .setPlaceholder(placeholder)
+    .setCustomId(`${issueType}IssueInput`)
+    .setRequired(true);
   // An action row only holds one text input, so you need one action row per text input.
   const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutReason);
   // Add inputs to the modal
@@ -126,16 +126,16 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
     Please look into it and respond to them in this thread!`;
 
   const techHelpButtons = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-          new ButtonBuilder()
-              .setCustomId(`techHelpOwn~${issueType}~${actor.id}`)
-              .setLabel('Own this issue!')
-              .setStyle(ButtonStyle.Primary),
-          new ButtonBuilder()
-              .setCustomId(`techHelpClose~${issueType}~${actor.id}`)
-              .setLabel('Close this issue!')
-              .setStyle(ButtonStyle.Success),
-      );
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId(`techHelpOwn~${issueType}~${actor.id}`)
+        .setLabel('Own this issue!')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId(`techHelpClose~${issueType}~${actor.id}`)
+        .setLabel('Close this issue!')
+        .setStyle(ButtonStyle.Success),
+    );
 
   await ticketThread.send({content: message, components: [techHelpButtons]});
   logger.debug(`[${PREFIX}] Sent intro message to meta-thread ${ticketThread.id}`);
@@ -166,6 +166,6 @@ export async function techHelpClose(interaction:ButtonInteraction) {
 
   interaction.reply({content: stripIndents`${(interaction.member! as GuildMember).displayName} has indicated that \
 this issue has been resolved!`});
-(interaction.channel as ThreadChannel)!.setName(`💚│${target.displayName}'s ${issueType} issue!`);
+  (interaction.channel as ThreadChannel)!.setName(`💚│${target.displayName}'s ${issueType} issue!`);
 };
 

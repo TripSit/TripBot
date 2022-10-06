@@ -16,9 +16,9 @@ const PREFIX = path.parse(__filename).name;
  * @return {string} an object with information about the bot
  */
 export async function timezone(
-    command: 'get' | 'set',
-    member: GuildMember,
-    timezone?:string | null):Promise<string> {
+  command: 'get' | 'set',
+  member: GuildMember,
+  timezone?:string | null):Promise<string> {
   logger.debug(`[${PREFIX}] timezone: ${command} ${member} ${timezone}`);
 
   let response = '';

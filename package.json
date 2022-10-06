@@ -8,7 +8,7 @@
     "patch": "npm version patch -git-tag-version false",
     "nodemon": "nodemon --config ./nodemon.json",
     "start": "npm run deploy && npm run prod",
-    "lint": "eslint --ext ts .",
+    "lint": "eslint --fix --ext ts .",
     "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
     "prod": "ts-node --transpile-only src/start.ts"
   },

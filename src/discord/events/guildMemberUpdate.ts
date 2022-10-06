@@ -97,7 +97,7 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
         // logger.debug(`[${PREFIX}] action: ${action}`);
 
         const differentRole = newMember.guild.roles.cache
-            .find((role) => role.id === differenceId);
+          .find((role) => role.id === differenceId);
 
         logger.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${differentRole?.name} (${differentRole?.id})`);
 

@@ -10,8 +10,8 @@ import {eyeballing} from '../../../global/commands/g.eyeballing';
 
 export const deyeballing: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('eyeballing')
-      .setDescription('Instructions on how to eyeball a dose'),
+    .setName('eyeballing')
+    .setDescription('Instructions on how to eyeball a dose'),
   async execute(interaction:ChatInputCommandInteraction) {
     // logger.debug(`[${PREFIX}] starting!`);
     interaction.reply(await eyeballing());

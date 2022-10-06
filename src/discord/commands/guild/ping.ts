@@ -17,33 +17,33 @@ const PREFIX = path.parse(__filename).name;
 
 export const ping: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('ping')
-      .setDescription('Health check'),
+    .setName('ping')
+    .setDescription('Health check'),
   async execute(interaction) {
     const role = interaction.guild!.roles.cache.find((r) => r.name === 'TripBot');
 
     const embed1 = new EmbedBuilder()
-        .setTitle('First Page')
-        .setDescription(`
+      .setTitle('First Page')
+      .setDescription(`
         role.icon: ${role?.icon}
         role.iconUrl: ${role?.iconURL()}
         role.unicodeEmoji: ${role?.unicodeEmoji}
         `);
 
     const embed2 = new EmbedBuilder()
-        .setTitle('Second Page')
-        .setDescription('This is the second page');
+      .setTitle('Second Page')
+      .setDescription('This is the second page');
 
     const button1 = new ButtonBuilder()
-        .setCustomId('previousbtn')
-        .setLabel('Previous')
-        .setStyle(ButtonStyle.Danger);
+      .setCustomId('previousbtn')
+      .setLabel('Previous')
+      .setStyle(ButtonStyle.Danger);
 
 
     const button2 = new ButtonBuilder()
-        .setCustomId('nextbtn')
-        .setLabel(`Next`)
-        .setStyle(ButtonStyle.Success);
+      .setCustomId('nextbtn')
+      .setLabel(`Next`)
+      .setStyle(ButtonStyle.Success);
 
     // Create an array of embeds
     const pages = [

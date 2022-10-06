@@ -13,8 +13,8 @@ const PREFIX = path.parse(__filename).name;
 
 export const h2flow: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('h2flow')
-      .setDescription('Welcome to the H2Flow Club!'),
+    .setName('h2flow')
+    .setDescription('Welcome to the H2Flow Club!'),
 
   async execute(interaction:ChatInputCommandInteraction) {
     let sparklePoints = 0;
@@ -53,13 +53,13 @@ export const h2flow: SlashCommand = {
     }
 
     const embed = embedTemplate()
-        .setAuthor({
-          name: 'Welcome to the H2Flow Club!',
-          url: 'https://www.youtube.com/watch?v=6r17Ez9V3AQ&t=132s',
-        })
-        .setThumbnail('https://i.imgur.com/2niEJJO.png')
-        .setColor(Colors.DarkBlue)
-        .setDescription(stripIndents`
+      .setAuthor({
+        name: 'Welcome to the H2Flow Club!',
+        url: 'https://www.youtube.com/watch?v=6r17Ez9V3AQ&t=132s',
+      })
+      .setThumbnail('https://i.imgur.com/2niEJJO.png')
+      .setColor(Colors.DarkBlue)
+      .setDescription(stripIndents`
       These are not useless internet points...
       This is an aqautic💧based social🌐media oral🦷experience!
 
@@ -78,12 +78,12 @@ export const h2flow: SlashCommand = {
       If you get enough 🌊🔰 and we'll welcome you to the
 
       **🏆*H2Flow Club*🏆!**`)
-        .setFooter(null)
-        .addFields(
-            {name: 'Your Sparkle Points:', value: `${sparklePoints}`, inline: true},
-            {name: 'Your Aqua Badges:', value: `${aquaBadges}`, inline: true},
-            {name: 'H2Flow Club Status:', value: `${platinumClub}`, inline: true},
-        );
+      .setFooter(null)
+      .addFields(
+        {name: 'Your Sparkle Points:', value: `${sparklePoints}`, inline: true},
+        {name: 'Your Aqua Badges:', value: `${aquaBadges}`, inline: true},
+        {name: 'H2Flow Club Status:', value: `${platinumClub}`, inline: true},
+      );
 
     interaction.reply({embeds: [embed], ephemeral: false});
 

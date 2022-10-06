@@ -11,26 +11,26 @@ const PREFIX = path.parse(__filename).name;
 
 export const durbandefine: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('urban_define')
-      .setDescription('Define a word on Urban Dictionary')
-      .addStringOption((option) => option
-          .setName('define')
-          .setDescription('What do you want to define?')
-          .setRequired(true)),
+    .setName('urban_define')
+    .setDescription('Define a word on Urban Dictionary')
+    .addStringOption((option) => option
+      .setName('define')
+      .setDescription('What do you want to define?')
+      .setRequired(true)),
 
   async execute(interaction) {
     const term = interaction.options.getString('define')!;
     logger.debug(`[${PREFIX}] UrbanDefine looking for ${term}`);
     const {data} = await axios.get(
-        'https://mashape-community-urban-dictionary.p.rapidapi.com/define',
-        {
-          params: {term},
-          headers: {
-            'X-RapidAPI-Host': 'mashape-community-urban-dictionary.p.rapidapi.com',
-            'X-RapidAPI-Key': env.RAPID_TOKEN,
-            'useQueryString': true,
-          },
+      'https://mashape-community-urban-dictionary.p.rapidapi.com/define',
+      {
+        params: {term},
+        headers: {
+          'X-RapidAPI-Host': 'mashape-community-urban-dictionary.p.rapidapi.com',
+          'X-RapidAPI-Key': env.RAPID_TOKEN,
+          'useQueryString': true,
         },
+      },
     );
 
     type urbanDefinition = {
@@ -62,7 +62,7 @@ export const durbandefine: SlashCommand = {
     const downvotes = `${data.list[0].thumbs_down}`;
 
     const embed = embedTemplate()
-        .setDescription(`**Definition for *${term}* ** (+${upvotes}/-${downvotes})
+      .setDescription(`**Definition for *${term}* ** (+${upvotes}/-${downvotes})
         ${definition}
         Example: ${example}`);
     if (interaction.replied) {

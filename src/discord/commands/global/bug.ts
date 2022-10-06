@@ -18,19 +18,19 @@ const PREFIX = path.parse(__filename).name;
 
 export const bug: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('bug')
-      .setDescription('Report a bug or other feedback to the bot dev team!'),
+    .setName('bug')
+    .setDescription('Report a bug or other feedback to the bot dev team!'),
   async execute(interaction) {
     logger.debug(`[${PREFIX}] starting!`);
 
     // Create the modal
     const modal = new ModalBuilder()
-        .setCustomId('bugReportModal')
-        .setTitle('Tripbot Bug Report');
+      .setCustomId('bugReportModal')
+      .setTitle('Tripbot Bug Report');
     const bugReport = new TextInputBuilder()
-        .setCustomId('bugReport')
-        .setLabel('What would you like to tell the bot dev team?')
-        .setStyle(TextInputStyle.Paragraph);
+      .setCustomId('bugReport')
+      .setLabel('What would you like to tell the bot dev team?')
+      .setStyle(TextInputStyle.Paragraph);
     // An action row only holds one text input, so you need one action row per text input.
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(bugReport);
     // Add inputs to the modal
@@ -48,8 +48,8 @@ export const bug: SlashCommand = {
 
     const botOwner = await interaction.client.users.fetch(env.DISCORD_OWNER_ID)!;
     const botOwnerEmbed = embedTemplate()
-        .setColor(Colors.Purple)
-        .setDescription(`Hey ${botOwner.toString()},\n${username}${guildMessage} reports:\n${bugReport}`);
+      .setColor(Colors.Purple)
+      .setDescription(`Hey ${botOwner.toString()},\n${username}${guildMessage} reports:\n${bugReport}`);
     botOwner.send({embeds: [botOwnerEmbed]});
 
     const tripsitGuild = await interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
@@ -62,10 +62,10 @@ export const bug: SlashCommand = {
     devChan.send(`Hey ${developerRole.toString()}, a user submitted a bug report:\n${bugReport}`);
 
     const embed = embedTemplate()
-        .setColor(Colors.Purple)
-        .setTitle('Thank you!')
-        // eslint-disable-next-line max-len
-        .setDescription('I\'ve submitted this feedback to the bot owner. \n\n\You\'re more than welcome to join the TripSit server and speak to Moonbear directly if you want! Check the /contact command for more info.');
+      .setColor(Colors.Purple)
+      .setTitle('Thank you!')
+    // eslint-disable-next-line max-len
+      .setDescription('I\'ve submitted this feedback to the bot owner. \n\n\You\'re more than welcome to join the TripSit server and speak to Moonbear directly if you want! Check the /contact command for more info.');
     if (!interaction.replied) {
       interaction.reply({
         embeds: [embed],

@@ -11,8 +11,8 @@ import {bridgeWording} from '../../../global/commands/archive/g.bridge';
 
 export const bridge: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('bridge')
-      .setDescription('Information on the bridge!'),
+    .setName('bridge')
+    .setDescription('Information on the bridge!'),
   execute: async (interaction: ChatInputCommandInteraction) => {
     // logger.debug(`[${PREFIX}] starting!`);
     const response = await bridgeWording();

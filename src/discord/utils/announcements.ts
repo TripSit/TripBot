@@ -236,10 +236,10 @@ export async function announcements(message:Message) {
   const embed = embedTemplate();
 
   const genAnnouncements = hrAnnouncements.concat(
-      hrAnnouncements,
-      channelAnnouncments,
-      commandAnnouncements,
-      funAnnouncements,
+    hrAnnouncements,
+    channelAnnouncments,
+    commandAnnouncements,
+    funAnnouncements,
   );
 
   // const allAnncouneemnts = [
@@ -280,9 +280,9 @@ export async function announcements(message:Message) {
             embed.setAuthor(null);
             embed.setFooter({text: 'React to get your sparkle points for the /h2flow club!'});
             await (message.channel as TextChannel).send({embeds: [embed]})
-                .then(async (msg) => {
-                  await msg.react('💧');
-                });
+              .then(async (msg) => {
+                await msg.react('💧');
+              });
             return;
           }
 

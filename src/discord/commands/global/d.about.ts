@@ -12,33 +12,33 @@ const PREFIX = path.parse(__filename).name;
 
 export const template: SlashCommand1 = {
   data: new SlashCommandBuilder()
-      .setName('about')
-      .setDescription('Shows information about this bot!'),
+    .setName('about')
+    .setDescription('Shows information about this bot!'),
   async execute(interaction:ChatInputCommandInteraction) {
     const tripsitInfo = await about();
     const embed = embedTemplate()
-        .setColor(Colors.DarkBlue)
-        .setTitle('About TripSit')
-        .setURL('https://tripsit.me/about/')
-        .setDescription(tripsitInfo.description)
-        .addFields(
-            {
-              name: 'Disclaimer',
-              value: tripsitInfo.disclaimer,
-            },
-            {
-              name: 'Support TripSit',
-              value: tripsitInfo.support,
-            },
-            {
-              name: 'Feedback',
-              value: tripsitInfo.feedback,
-            },
-            {
-              name: 'Credits',
-              value: tripsitInfo.credits,
-            },
-        );
+      .setColor(Colors.DarkBlue)
+      .setTitle('About TripSit')
+      .setURL('https://tripsit.me/about/')
+      .setDescription(tripsitInfo.description)
+      .addFields(
+        {
+          name: 'Disclaimer',
+          value: tripsitInfo.disclaimer,
+        },
+        {
+          name: 'Support TripSit',
+          value: tripsitInfo.support,
+        },
+        {
+          name: 'Feedback',
+          value: tripsitInfo.feedback,
+        },
+        {
+          name: 'Credits',
+          value: tripsitInfo.credits,
+        },
+      );
     interaction.reply({embeds: [embed]});
     logger.debug(`[${PREFIX}] finished!`);
     return true;

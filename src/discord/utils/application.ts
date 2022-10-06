@@ -53,7 +53,7 @@ const rejectionMessages = {
  * @return {Promise<void>}
 **/
 export async function applicationStart(
-    interaction: ButtonInteraction,
+  interaction: ButtonInteraction,
 ): Promise<void> {
   logger.debug(`[${PREFIX} - applicationStart] starting!`);
   logger.debug(`[${PREFIX} - applicationStart] customId: ${interaction.customId}`);
@@ -70,22 +70,22 @@ export async function applicationStart(
 
   // Create the modal
   const modal = new ModalBuilder()
-      .setCustomId(`applicationSubmit~${channelId}~${roleRequestedId}~${roleReviewerId}`)
-      .setTitle(`${roleRequested!.name} Application`);
+    .setCustomId(`applicationSubmit~${channelId}~${roleRequestedId}~${roleReviewerId}`)
+    .setTitle(`${roleRequested!.name} Application`);
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setCustomId('reason')
-      .setRequired(true)
-      .setLabel('Why do you want to help out?')
-      .setPlaceholder('This helps us get to know you a bit before you join the team!')
-      .setMaxLength(2000)
-      .setStyle(TextInputStyle.Paragraph)));
+    .setCustomId('reason')
+    .setRequired(true)
+    .setLabel('Why do you want to help out?')
+    .setPlaceholder('This helps us get to know you a bit before you join the team!')
+    .setMaxLength(2000)
+    .setStyle(TextInputStyle.Paragraph)));
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setCustomId('skills')
-      .setRequired(true)
-      .setLabel('What skills can you bring to the team?')
-      .setPlaceholder(`What makes you qualified to be a ${roleRequested!.name}? What can you bring to the team?`)
-      .setMaxLength(2000)
-      .setStyle(TextInputStyle.Paragraph)));
+    .setCustomId('skills')
+    .setRequired(true)
+    .setLabel('What skills can you bring to the team?')
+    .setPlaceholder(`What makes you qualified to be a ${roleRequested!.name}? What can you bring to the team?`)
+    .setMaxLength(2000)
+    .setStyle(TextInputStyle.Paragraph)));
   await interaction.showModal(modal);
   logger.debug(`[${PREFIX}] finished!`);
 };
@@ -96,7 +96,7 @@ export async function applicationStart(
  * @return {Promise<void>}
 **/
 export async function applicationSubmit(
-    interaction: ModalSubmitInteraction,
+  interaction: ModalSubmitInteraction,
 ): Promise<void> {
   logger.debug(`[${PREFIX}] starting!`);
 
@@ -138,110 +138,110 @@ export async function applicationSubmit(
   }) as ThreadChannel;
 
   const appEmbed = embedTemplate()
-      .setColor(Colors.DarkBlue)
-      .setDescription(`**Reason:** ${reason}\n**Skills:** ${skills}`)
-      .addFields(
-          {
-            name: 'Displayname',
-            value: `${(interaction.member as GuildMember).displayName}`,
-            inline: true},
-          {
-            name: 'Username',
-            value: `${interaction.member.user.username}#${interaction.member.user.discriminator}`,
-            inline: true},
-          {
-            name: 'ID',
-            value: `${interaction.member.user.id}`,
-            inline: true,
-          },
-      )
-      .addFields(
-          {
-            name: 'Created',
-            value: `${time((interaction.member.user as User).createdAt, 'R')}`,
-            inline: true},
-      );
+    .setColor(Colors.DarkBlue)
+    .setDescription(`**Reason:** ${reason}\n**Skills:** ${skills}`)
+    .addFields(
+      {
+        name: 'Displayname',
+        value: `${(interaction.member as GuildMember).displayName}`,
+        inline: true},
+      {
+        name: 'Username',
+        value: `${interaction.member.user.username}#${interaction.member.user.discriminator}`,
+        inline: true},
+      {
+        name: 'ID',
+        value: `${interaction.member.user.id}`,
+        inline: true,
+      },
+    )
+    .addFields(
+      {
+        name: 'Created',
+        value: `${time((interaction.member.user as User).createdAt, 'R')}`,
+        inline: true},
+    );
   if ((interaction.member as GuildMember).joinedAt) {
     appEmbed.addFields(
-        {
-          name: 'Joined',
-          value: `${time((interaction.member as GuildMember).joinedAt!, 'R')}`,
-          inline: true},
+      {
+        name: 'Joined',
+        value: `${time((interaction.member as GuildMember).joinedAt!, 'R')}`,
+        inline: true},
     );
   }
 
   const approveButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-          .setCustomId(`applicationApprove~${(interaction.member as GuildMember).id}~${roleRequestedId}`)
-          .setLabel('Approve')
-          .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId(`applicationApprove~${(interaction.member as GuildMember).id}~${roleRequestedId}`)
+      .setLabel('Approve')
+      .setStyle(ButtonStyle.Primary),
   );
 
   const rejectMenu = new ActionRowBuilder<SelectMenuBuilder>().addComponents(
-      new SelectMenuBuilder()
-          .setCustomId(`applicationReject~${(interaction.member as GuildMember).id}~${roleRequestedId}`)
-          .addOptions(
-              {
-                label: 'Generic Rejection',
-                value: 'generic',
-                description: 'No specific reason, try not to use this one',
-              },
-              {
-                label: 'Discord Account Too New',
-                value: 'tooNew',
-                description: 'Their Discord account was created too recently',
-              },
-              {
-                label: 'Recent History of Misinformation',
-                value: 'misinformation',
-                description: 'They have a history of spreading misinformation',
-              },
-              {
-                label: 'Discrepancies in Application',
-                value: 'discrepancies',
-                description: 'They have provided false/misleading information in their application',
-              },
-              {
-                label: 'Recent History of Enabling Poor Choices',
-                value: 'enabling',
-                description: 'They have a history of enabling poor choices',
-              },
-              {
-                label: 'History of Demerits on Account',
-                value: 'demerits',
-                description: 'They have a history of demerits on their account',
-              },
-              {
-                label: 'Blank or Unhelpful Application',
-                value: 'blank',
-                description: 'They have provided a blank or unhelpful application',
-              },
-              {
-                label: 'Too Young',
-                value: 'young',
-                description: 'They are too young to be a part of the team',
-              },
-              {
-                label: 'Failed Identity Check',
-                value: 'identity',
-                description: 'They failed the identity check',
-              },
-              {
-                label: 'Currently Overstaffed for Area of Interest',
-                value: 'overstaffed',
-                description: 'We are currently overstaffed for their area of interest',
-              },
-              {
-                label: 'Low Exposure to Drugs or Drug Use',
-                value: 'exposure',
-                description: 'They have low exposure to drugs or drug use',
-              },
-              {
-                label: 'Miscellaneous / Potentially Bad Fit',
-                value: 'culture',
-                description: 'They are a potential bad fit for our culture',
-              },
-          ),
+    new SelectMenuBuilder()
+      .setCustomId(`applicationReject~${(interaction.member as GuildMember).id}~${roleRequestedId}`)
+      .addOptions(
+        {
+          label: 'Generic Rejection',
+          value: 'generic',
+          description: 'No specific reason, try not to use this one',
+        },
+        {
+          label: 'Discord Account Too New',
+          value: 'tooNew',
+          description: 'Their Discord account was created too recently',
+        },
+        {
+          label: 'Recent History of Misinformation',
+          value: 'misinformation',
+          description: 'They have a history of spreading misinformation',
+        },
+        {
+          label: 'Discrepancies in Application',
+          value: 'discrepancies',
+          description: 'They have provided false/misleading information in their application',
+        },
+        {
+          label: 'Recent History of Enabling Poor Choices',
+          value: 'enabling',
+          description: 'They have a history of enabling poor choices',
+        },
+        {
+          label: 'History of Demerits on Account',
+          value: 'demerits',
+          description: 'They have a history of demerits on their account',
+        },
+        {
+          label: 'Blank or Unhelpful Application',
+          value: 'blank',
+          description: 'They have provided a blank or unhelpful application',
+        },
+        {
+          label: 'Too Young',
+          value: 'young',
+          description: 'They are too young to be a part of the team',
+        },
+        {
+          label: 'Failed Identity Check',
+          value: 'identity',
+          description: 'They failed the identity check',
+        },
+        {
+          label: 'Currently Overstaffed for Area of Interest',
+          value: 'overstaffed',
+          description: 'We are currently overstaffed for their area of interest',
+        },
+        {
+          label: 'Low Exposure to Drugs or Drug Use',
+          value: 'exposure',
+          description: 'They have low exposure to drugs or drug use',
+        },
+        {
+          label: 'Miscellaneous / Potentially Bad Fit',
+          value: 'culture',
+          description: 'They are a potential bad fit for our culture',
+        },
+      ),
   );
 
   const actorHasRoleDeveloper = (interaction.member as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
@@ -249,17 +249,17 @@ export async function applicationSubmit(
 
   applicationThread.send(`Hey ${actorHasRoleDeveloper ? 'team!' : roleReviewer} there is a new application!`);
   await applicationThread.send({embeds: [appEmbed], components: [approveButton, rejectMenu]})
-      .then(async (message) => {
-        await message.react('👍');
-        await message.react('👎');
-      });
+    .then(async (message) => {
+      await message.react('👍');
+      await message.react('👎');
+    });
 
   // Respond to the user
   logger.debug(`[${PREFIX}] reason: ${reason}`);
   logger.debug(`[${PREFIX}] skills: ${skills}`);
   const embed = embedTemplate()
-      .setColor(Colors.DarkBlue)
-      .setDescription('Thank you for your interest! We will try to get back to you as soon as possible!');
+    .setColor(Colors.DarkBlue)
+    .setDescription('Thank you for your interest! We will try to get back to you as soon as possible!');
   interaction.reply({embeds: [embed], ephemeral: true});
   logger.debug(`[${PREFIX}] finished!`);
 };
@@ -270,7 +270,7 @@ export async function applicationSubmit(
  * @return {Promise<void>}
 **/
 export async function applicationReject(
-    interaction: SelectMenuInteraction,
+  interaction: SelectMenuInteraction,
 ): Promise<void> {
   // logger.debug(`[${PREFIX} - applicationReject] starting!`);
   const actor = (interaction.member as GuildMember);
@@ -306,7 +306,7 @@ export async function applicationReject(
  * @return {Promise<void>}
 **/
 export async function applicationApprove(
-    interaction: ButtonInteraction,
+  interaction: ButtonInteraction,
 ): Promise<void> {
   // logger.debug(`[${PREFIX} - applicationAccept] starting!`);
   const actor = (interaction.member as GuildMember);

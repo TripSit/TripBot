@@ -98,7 +98,7 @@ const teamChannels = Object.values({
  * @param {Message} message The message object to check
  */
 export async function experience(
-    message:Message | ircMessage,
+  message:Message | ircMessage,
 ) {
   let actor = {} as User | any;
   let messageChannelId = '';
@@ -231,8 +231,8 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
          * @return {expDict} - the processed exp data
          */
         async function processExp(
-            expDict:expDict,
-            expType:string,
+          expDict:expDict,
+          expType:string,
         ):Promise<expDict> {
           let expData = expDict[expType as keyof typeof expDict];
           if (expData) {
@@ -289,14 +289,14 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
 
         // logger.debug(`[${PREFIX}] experienceDict1: ${JSON.stringify(experienceDict, null, 2)}`);
         await processExp(experienceDict, 'total')
-            .then(async (expDictA) => {
-              // logger.debug(`[${PREFIX}] experienceDict2: ${JSON.stringify(expDictA, null, 2)}`);
-              await processExp(expDictA, experienceType)
-                  .then(async (expDictB) => {
-                    // logger.debug(`[${PREFIX}] experienceDict3: ${JSON.stringify(expDictB, null, 2)}`);
-                    ref.update(expDictB);
-                  });
-            });
+          .then(async (expDictA) => {
+            // logger.debug(`[${PREFIX}] experienceDict2: ${JSON.stringify(expDictA, null, 2)}`);
+            await processExp(expDictA, experienceType)
+              .then(async (expDictB) => {
+                // logger.debug(`[${PREFIX}] experienceDict3: ${JSON.stringify(expDictB, null, 2)}`);
+                ref.update(expDictB);
+              });
+          });
       } else {
         // logger.debug(`[${PREFIX}] experienceDictB: ${JSON.stringify(experienceDict, null, 2)}`);
         experienceDict[experienceType as keyof typeof experienceDict] = {

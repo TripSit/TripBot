@@ -11,18 +11,18 @@ const PREFIX = path.parse(__filename).name;
 // Calculate insufflated dosages
 export const dCalcKetamine: SlashCommand1 = {
   data: new SlashCommandBuilder()
-      .setName('calc_ketamine')
-      .setDescription('Get ketamine dosage information')
-      .addIntegerOption((option) => option.setName('weight')
-          .setDescription('How much do you weigh?')
-          .setRequired(true))
-      .addStringOption((option) => option.setName('units')
-          .setDescription('In what unit?')
-          .setRequired(true)
-          .addChoices(
-              {name: 'kg', value: 'kg'},
-              {name: 'lbs', value: 'lbs'},
-          )),
+    .setName('calc_ketamine')
+    .setDescription('Get ketamine dosage information')
+    .addIntegerOption((option) => option.setName('weight')
+      .setDescription('How much do you weigh?')
+      .setRequired(true))
+    .addStringOption((option) => option.setName('units')
+      .setDescription('In what unit?')
+      .setRequired(true)
+      .addChoices(
+        {name: 'kg', value: 'kg'},
+        {name: 'lbs', value: 'lbs'},
+      )),
   async execute(interaction) {
     const givenWeight = interaction.options.getInteger('weight')!;
     // logger.debug(`[${PREFIX}] weight: ${givenWeight}`);
@@ -55,16 +55,16 @@ export const dCalcKetamine: SlashCommand1 = {
 
 
     embed.addFields(
-        {
-          name: 'Insufflated Dosages',
-          value: data.insufflated,
-          inline: true,
-        },
-        {
-          name: 'Rectal Dosages',
-          value: data.rectal,
-          inline: true,
-        },
+      {
+        name: 'Insufflated Dosages',
+        value: data.insufflated,
+        inline: true,
+      },
+      {
+        name: 'Rectal Dosages',
+        value: data.rectal,
+        inline: true,
+      },
     );
 
     interaction.reply({embeds: [embed], ephemeral: false});

@@ -12,12 +12,12 @@ const PREFIX = path.parse(__filename).name;
 
 export const imdbSearch: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('imdb')
-      .setDescription('Search imdb')
-      .addStringOption((option) => option
-          .setName('title')
-          .setDescription('Movie / Series title')
-          .setRequired(true)),
+    .setName('imdb')
+    .setDescription('Search imdb')
+    .addStringOption((option) => option
+      .setName('title')
+      .setDescription('Movie / Series title')
+      .setRequired(true)),
 
   async execute(interaction:ChatInputCommandInteraction) {
     logger.debug(`[${PREFIX}] starting!`);
@@ -73,15 +73,15 @@ export const imdbSearch: SlashCommand = {
     // logger.debug(`[${PREFIX}] data: ${JSON.stringify(result)}`);
 
     const embed = embedTemplate()
-        .setTitle(`${result.title} (${result.year}) [${result.rated}]`)
-        .setDescription(`||${result.plot}||`)
-        .setThumbnail(result.poster)
-        .setURL(result.imdburl)
-        .addFields(
-            {name: 'Director(s)', value: `${result.director}`, inline: true},
-            {name: 'Actor(s)', value: `${result.actors}`, inline: true},
-            {name: 'Writer(s)', value: `${result.writer}`, inline: true},
-        );
+      .setTitle(`${result.title} (${result.year}) [${result.rated}]`)
+      .setDescription(`||${result.plot}||`)
+      .setThumbnail(result.poster)
+      .setURL(result.imdburl)
+      .addFields(
+        {name: 'Director(s)', value: `${result.director}`, inline: true},
+        {name: 'Actor(s)', value: `${result.actors}`, inline: true},
+        {name: 'Writer(s)', value: `${result.writer}`, inline: true},
+      );
 
     result.ratings.forEach((rating:imdb.Rating) => {
       embed.addFields({name: rating.source, value: rating.value, inline: true});

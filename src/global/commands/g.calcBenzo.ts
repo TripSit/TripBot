@@ -12,9 +12,9 @@ import drugDataTripsit from '../assets/data/drug_db_tripsit.json';
  * @return {Promise<any>}
  */
 export async function calcBenzo(
-    dosage:number,
-    drugA:string,
-    drugB:string,
+  dosage:number,
+  drugA:string,
+  drugB:string,
 ):Promise<any> {
   logger.debug(`[${PREFIX}] dosage: ${dosage} | drug_a: ${drugA} | drug_b: ${drugB}`);
 

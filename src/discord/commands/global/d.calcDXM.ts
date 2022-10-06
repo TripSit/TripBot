@@ -19,31 +19,31 @@ type DxmDataType = {
 
 export const calxDXM: SlashCommand1 = {
   data: new SlashCommandBuilder()
-      .setName('calc_dxm')
-      .setDescription('Get DXM dosage information')
-      .addIntegerOption((option) => option.setName('calc_weight')
-          .setDescription('How much do you weigh?')
-          .setRequired(true))
-      .addStringOption((option) => option.setName('units')
-          .setDescription('In what units?')
-          .setRequired(true)
-          .addChoices(
-              {name: 'kg', value: 'kg'},
-              {name: 'lbs', value: 'lbs'},
-          ))
-      .addStringOption((option) => option.setName('taking')
-          // eslint-disable-next-line max-len
-          .setDescription('What are you taking? All products listed here contain DXM hBr as the sole active ingredient.')
-          .setRequired(true)
-          .addChoices(
-              {name: 'RoboTablets (30 mg tablets)', value: 'RoboTablets (30 mg tablets)'},
-              {name: 'RoboCough (ml)', value: 'RoboCough (ml)'},
-              {name: 'Robitussin DX (oz)', value: 'Robitussin DX (oz)'},
-              {name: 'Robitussin DX (ml)', value: 'Robitussin DX (ml)'},
-              {name: 'Robitussin Gelcaps (15 mg caps)', value: 'Robitussin Gelcaps (15 mg caps)'},
-              {name: 'Pure (mg)', value: 'Pure (mg)'},
-              {name: '30mg Gelcaps (30 mg caps)', value: '30mg Gelcaps (30 mg caps)'},
-          )),
+    .setName('calc_dxm')
+    .setDescription('Get DXM dosage information')
+    .addIntegerOption((option) => option.setName('calc_weight')
+      .setDescription('How much do you weigh?')
+      .setRequired(true))
+    .addStringOption((option) => option.setName('units')
+      .setDescription('In what units?')
+      .setRequired(true)
+      .addChoices(
+        {name: 'kg', value: 'kg'},
+        {name: 'lbs', value: 'lbs'},
+      ))
+    .addStringOption((option) => option.setName('taking')
+    // eslint-disable-next-line max-len
+      .setDescription('What are you taking? All products listed here contain DXM hBr as the sole active ingredient.')
+      .setRequired(true)
+      .addChoices(
+        {name: 'RoboTablets (30 mg tablets)', value: 'RoboTablets (30 mg tablets)'},
+        {name: 'RoboCough (ml)', value: 'RoboCough (ml)'},
+        {name: 'Robitussin DX (oz)', value: 'Robitussin DX (oz)'},
+        {name: 'Robitussin DX (ml)', value: 'Robitussin DX (ml)'},
+        {name: 'Robitussin Gelcaps (15 mg caps)', value: 'Robitussin Gelcaps (15 mg caps)'},
+        {name: 'Pure (mg)', value: 'Pure (mg)'},
+        {name: '30mg Gelcaps (30 mg caps)', value: '30mg Gelcaps (30 mg caps)'},
+      )),
   async execute(interaction) {
     // Calculate each plat min/max value
     const givenWeight = interaction.options.getInteger('calc_weight')!;
@@ -56,15 +56,15 @@ export const calxDXM: SlashCommand1 = {
     const units = results[1] as string;
 
     const embed = embedTemplate()
-        .setColor(Colors.Purple)
-        .setTitle(`DXM Dosages`)
-        .setDescription(`For a ${givenWeight}${weightUnits} individual taking ${taking}`);
+      .setColor(Colors.Purple)
+      .setTitle(`DXM Dosages`)
+      .setDescription(`For a ${givenWeight}${weightUnits} individual taking ${taking}`);
     let header = true;
     Object.keys(dosageData).forEach((key) => {
       embed.addFields(
-          {name: `${header ? 'Plateau' : '\u200B'}`, value: `**${key}**`, inline: true},
-          {name: `${header ? 'Minimum' : '\u200B'}`, value: `${dosageData[key as keyof DxmDataType].min} ${units}`, inline: true},
-          {name: `${header ? 'Maximum' : '\u200B'}`, value: `${dosageData[key as keyof DxmDataType].max} ${units}`, inline: true},
+        {name: `${header ? 'Plateau' : '\u200B'}`, value: `**${key}**`, inline: true},
+        {name: `${header ? 'Minimum' : '\u200B'}`, value: `${dosageData[key as keyof DxmDataType].min} ${units}`, inline: true},
+        {name: `${header ? 'Maximum' : '\u200B'}`, value: `${dosageData[key as keyof DxmDataType].max} ${units}`, inline: true},
       );
       header = false;
     });

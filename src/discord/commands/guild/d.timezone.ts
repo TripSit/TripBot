@@ -10,25 +10,25 @@ const PREFIX = path.parse(__filename).name;
 
 export const time: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('timezone')
-      .setDescription('Get or set timezones!')
-      .addSubcommand((subcommand) => subcommand
-          .setName('get')
-          .setDescription('Get someone\'s timezone!')
-          .addUserOption((option) => option
-              .setName('user')
-              .setDescription('User to lookup'),
-          ),
-      )
-      .addSubcommand((subcommand) => subcommand
-          .setName('set')
-          .setDescription('Set your timezone!')
-          .addStringOption((option) => option
-              .setName('timezone')
-              .setDescription('Timezone value')
-              .setRequired(true)
-              .setAutocomplete(true)),
+    .setName('timezone')
+    .setDescription('Get or set timezones!')
+    .addSubcommand((subcommand) => subcommand
+      .setName('get')
+      .setDescription('Get someone\'s timezone!')
+      .addUserOption((option) => option
+        .setName('user')
+        .setDescription('User to lookup'),
       ),
+    )
+    .addSubcommand((subcommand) => subcommand
+      .setName('set')
+      .setDescription('Set your timezone!')
+      .addStringOption((option) => option
+        .setName('timezone')
+        .setDescription('Timezone value')
+        .setRequired(true)
+        .setAutocomplete(true)),
+    ),
   execute: async (interaction) => {
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     const tzValue = interaction.options.getString('timezone')!;

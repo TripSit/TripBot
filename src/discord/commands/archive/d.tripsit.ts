@@ -15,27 +15,27 @@ const PREFIX = path.parse(__filename).name;
 
 export const tripsit: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('tripsit')
-      .setDescription(
-          'This command will apply the NeedsHelp role onto a user, and remove other roles!',
-      )
-      .addUserOption((option) => option
-          .setName('user')
-          .setDescription('Member to help')
-          .setRequired(true))
-      .addStringOption((option) => option
-          .setName('their_dosage')
-          .setDescription('What have they taken?'))
-      .addStringOption((option) => option
-          .setName('their_issue')
-          .setDescription('What\'s going on with them?'))
-      .addStringOption((option) => option
-          .setName('enable')
-          .setDescription('On or Off?')
-          .addChoices(
-              {name: 'On', value: 'on'},
-              {name: 'Off', value: 'off'},
-          )),
+    .setName('tripsit')
+    .setDescription(
+      'This command will apply the NeedsHelp role onto a user, and remove other roles!',
+    )
+    .addUserOption((option) => option
+      .setName('user')
+      .setDescription('Member to help')
+      .setRequired(true))
+    .addStringOption((option) => option
+      .setName('their_dosage')
+      .setDescription('What have they taken?'))
+    .addStringOption((option) => option
+      .setName('their_issue')
+      .setDescription('What\'s going on with them?'))
+    .addStringOption((option) => option
+      .setName('enable')
+      .setDescription('On or Off?')
+      .addChoices(
+        {name: 'On', value: 'on'},
+        {name: 'Off', value: 'off'},
+      )),
 
   async execute(interaction:ChatInputCommandInteraction) {
     let enable = interaction.options.getString('enable');

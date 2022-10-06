@@ -16,10 +16,10 @@ const PREFIX = path.parse(__filename).name;
  * @return {any} an object with information about the bot
  */
 export async function birthday(
-    command: 'get' | 'set',
-    member: GuildMember,
-    month?: string,
-    day?: number):Promise<any> {
+  command: 'get' | 'set',
+  member: GuildMember,
+  month?: string,
+  day?: number):Promise<any> {
   if (command === 'set') {
     // TODO: Use luxon
     const month30 = ['April', 'June', 'September', 'November'];

@@ -20,15 +20,15 @@ const PREFIX = path.parse(__filename).name;
 
 export const bug: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('say')
-      .setDescription('Say something like a real person!')
-      .addStringOption((option) => option.setName('say')
-          .setDescription('What do you want to say?')
-          .setRequired(true))
-      .addChannelOption((option) => option
-          .setDescription(`Where should I say it? (Default: 'here')`)
-          .setName('channel'),
-      ),
+    .setName('say')
+    .setDescription('Say something like a real person!')
+    .addStringOption((option) => option.setName('say')
+      .setDescription('What do you want to say?')
+      .setRequired(true))
+    .addChannelOption((option) => option
+      .setDescription(`Where should I say it? (Default: 'here')`)
+      .setName('channel'),
+    ),
   async execute(interaction) {
     logger.debug(`[${PREFIX}] starting!`);
     const channel = interaction.options.getChannel('channel') as TextChannel;

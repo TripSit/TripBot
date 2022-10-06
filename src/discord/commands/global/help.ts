@@ -16,14 +16,14 @@ import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
 const button1 = new ButtonBuilder()
-    .setCustomId('previousbtn')
-    .setLabel('Previous')
-    .setStyle(ButtonStyle.Danger);
+  .setCustomId('previousbtn')
+  .setLabel('Previous')
+  .setStyle(ButtonStyle.Danger);
 
 const button2 = new ButtonBuilder()
-    .setCustomId('nextbtn')
-    .setLabel('Next')
-    .setStyle(ButtonStyle.Success);
+  .setCustomId('nextbtn')
+  .setLabel('Next')
+  .setStyle(ButtonStyle.Success);
 
 const buttonList = [
   button1,
@@ -32,8 +32,8 @@ const buttonList = [
 
 export const help: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('help')
-      .setDescription('Information bout TripBot Commands'),
+    .setName('help')
+    .setDescription('Information bout TripBot Commands'),
   async execute(interaction) {
     logger.debug(`[${PREFIX}] starting!`);
 

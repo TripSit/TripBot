@@ -102,16 +102,16 @@ export async function tripsitmeClick(interaction:ButtonInteraction) {
   // channelTripsittersId: ${channelTripsittersId}`);
 
   const modal = new ModalBuilder()
-      .setCustomId(`tripsitmeSubmit~${roleNeedshelpId}~${roleTripsitterId}~${channelTripsittersId}`)
-      .setTitle('Tripsitter Help Request');
+    .setCustomId(`tripsitmeSubmit~${roleNeedshelpId}~${roleTripsitterId}~${channelTripsittersId}`)
+    .setTitle('Tripsitter Help Request');
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setCustomId('triageInput')
-      .setLabel('What substance? How much taken? What time?')
-      .setStyle(TextInputStyle.Short)));
+    .setCustomId('triageInput')
+    .setLabel('What substance? How much taken? What time?')
+    .setStyle(TextInputStyle.Short)));
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setCustomId('introInput')
-      .setLabel('What\'s going on? Give us the details!')
-      .setStyle(TextInputStyle.Paragraph)));
+    .setCustomId('introInput')
+    .setLabel('What\'s going on? Give us the details!')
+    .setStyle(TextInputStyle.Paragraph)));
   await interaction.showModal(modal);
 }
 
@@ -123,10 +123,10 @@ export async function tripsitmeClick(interaction:ButtonInteraction) {
  * @param {string} introGiven Given intro information
  */
 export async function tripsitmeSubmit(
-    interaction:ModalSubmitInteraction,
-    memberInput?:GuildMember,
-    triageGiven?:string,
-    introGiven?:string,
+  interaction:ModalSubmitInteraction,
+  memberInput?:GuildMember,
+  triageGiven?:string,
+  introGiven?:string,
 ) {
   logger.debug(`[${PREFIX}] starting!`);
   logger.debug(`[${PREFIX}] memberInput: ${memberInput}`);
@@ -203,7 +203,7 @@ export async function tripsitmeSubmit(
 
   // Check if the target already needs help
   const targetHasRoleNeedshelp = (target.roles as GuildMemberRoleManager).cache.find(
-      (role) => role === roleNeedshelp,
+    (role) => role === roleNeedshelp,
   ) !== undefined;
   logger.debug(`[${PREFIX}] targetHasRoleNeedshelp: ${targetHasRoleNeedshelp}`);
 
@@ -256,27 +256,27 @@ export async function tripsitmeSubmit(
     // Remind the user that they have a channel open
     try {
       const message = memberInput ?
-          stripIndents`Hey ${interaction.member}, ${target.displayName} is already being helped!
+        stripIndents`Hey ${interaction.member}, ${target.displayName} is already being helped!
 
           Check your channel list for '${threadHelpUser.toString()} to help them!'` :
-          stripIndents`Hey ${interaction.member}, you are already being helped!
+        stripIndents`Hey ${interaction.member}, you are already being helped!
 
           Check your channel list for '${threadHelpUser.toString()} to get help!`;
 
       const embed = embedTemplate()
-          .setColor(Colors.DarkBlue)
-          .setDescription(message);
+        .setColor(Colors.DarkBlue)
+        .setDescription(message);
       interaction.reply({embeds: [embed], ephemeral: true});
       logger.debug(`[${PREFIX}] Rejected need for help`);
 
       // Send the update message to the thread
       const helpMessage = memberInput ?
-          stripIndents`
+        stripIndents`
           Hey ${target}, the team thinks you could still use assistance!
           ${roleHelper} and ${roleTripsitter} will be with you as soon as they're available!
           If this is a medical emergency please contact your local /EMS
           We do not call EMS or ambulance on behalf of anyone.` :
-          stripIndents`
+        stripIndents`
           Hey ${target}, thank you for the update!
 
           You've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
@@ -300,9 +300,9 @@ export async function tripsitmeSubmit(
       // Update the meta thread
       if (threadDiscussUser) {
         const metaUpdate = memberInput ?
-            stripIndents`Hey ${interaction.member}, ${target.displayName} is already being helped!
+          stripIndents`Hey ${interaction.member}, ${target.displayName} is already being helped!
             Use this thread to discuss it!'` :
-            stripIndents`Hey ${roleHelper} and ${roleTripsitter}, ${target.displayName} sent a new request for help in ${threadHelpUser.toString()}!
+          stripIndents`Hey ${roleHelper} and ${roleTripsitter}, ${target.displayName} sent a new request for help in ${threadHelpUser.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
 
@@ -338,12 +338,12 @@ export async function tripsitmeSubmit(
     if (targetIsTeamMember) {
       logger.debug(`[${PREFIX}] Target is a team member!`);
       const teamMessage = memberInput ?
-          stripIndents`Hey ${actor}, ${target.displayName} is a team member!
+        stripIndents`Hey ${actor}, ${target.displayName} is a team member!
           Did you mean to do that?` :
-          stripIndents`You are a member of the team and cannot be publicly helped!`;
+        stripIndents`You are a member of the team and cannot be publicly helped!`;
       const embed = embedTemplate()
-          .setColor(Colors.DarkBlue)
-          .setDescription(teamMessage);
+        .setColor(Colors.DarkBlue)
+        .setDescription(teamMessage);
       if (!interaction.replied) {
         await interaction.reply({embeds: [embed], ephemeral: true});
       }
@@ -392,13 +392,13 @@ export async function tripsitmeSubmit(
       try {
         // Respond to the user and remind them they have an open thread
         const message = memberInput ?
-            stripIndents`
+          stripIndents`
               Hey ${actor}, thank you for requestiong assistance on the behalf of ${target.user.username}!
 
               Click here to be taken to their private room: ${threadHelpUser.toString()}
 
               You can also click in your channel list to see their private room!` :
-            stripIndents`
+          stripIndents`
               Hey ${target}, thank you for asking for assistance!
 
               Click here to be taken to your private room: ${threadHelpUser.toString()}
@@ -406,19 +406,19 @@ export async function tripsitmeSubmit(
               You can also click in your channel list to see your private room!`;
 
         const embed = embedTemplate()
-            .setColor(Colors.DarkBlue)
-            .setDescription(message);
+          .setColor(Colors.DarkBlue)
+          .setDescription(message);
 
         interaction.reply({embeds: [embed], ephemeral: true});
 
         // Send the intro message to the thread
         const firstMessage = memberInput ?
-            stripIndents`
+          stripIndents`
             Hey ${target}, the team thinks you could still use assistance!
             ${roleHelper} and ${roleTripsitter} will be with you as soon as they're available!
             If this is a medical emergency please contact your local /EMS
             We do not call EMS or ambulance on behalf of anyone.` :
-            stripIndents`
+          stripIndents`
             Hey ${target}, thank you for asking for help!
 
             You've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
@@ -439,7 +439,7 @@ export async function tripsitmeSubmit(
 
         // Update the meta thread too
         const helperMsg = memberInput ?
-            stripIndents`
+          stripIndents`
             Hey ${roleHelper} and ${roleTripsitter}, ${actor} sent a new request for help on behalf of ${target.displayName} in ${threadHelpUser.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
@@ -447,7 +447,7 @@ export async function tripsitmeSubmit(
             Their issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
 
             Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!` :
-            stripIndents`
+          stripIndents`
             Hey ${roleHelper} and ${roleTripsitter}, ${target.displayName} sent a new request for help in ${threadHelpUser.toString()}!
 
             They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
@@ -537,7 +537,7 @@ export async function tripsitmeSubmit(
 
   // Send the triage info to the thread
   const replyMessage = memberInput ?
-      stripIndents`
+    stripIndents`
         Hey ${interaction.member}, we've activated tripsit mode on ${target.user.username}!
 
         Check your channel list for ${threadHelpUser.toString()} to talk to the user
@@ -545,7 +545,7 @@ export async function tripsitmeSubmit(
         Check your channel list for ${threadDiscussUser.toString()} to meta-talk about the user
 
         **Be sure add some information about the user to the thread!**` :
-      stripIndents`
+    stripIndents`
         Hey ${target}, thank you for asking for assistance!
 
         Click here to be taken to your private room: ${threadHelpUser.toString()}
@@ -553,18 +553,18 @@ export async function tripsitmeSubmit(
         You can also click in your channel list to see your private room!`;
 
   const embed = embedTemplate()
-      .setColor(Colors.DarkBlue)
-      .setDescription(replyMessage);
+    .setColor(Colors.DarkBlue)
+    .setDescription(replyMessage);
   interaction.reply({embeds: [embed], ephemeral: true});
   logger.debug(`[${PREFIX}] Sent response to user`);
 
   // Send the intro message to the threadHelpUser
   const firstMessage = memberInput ?
-      stripIndents`
+    stripIndents`
       Hey ${target}, the team thinks you could use assistance!
       ${roleHelper} and ${roleTripsitter} will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.` :
-      stripIndents`
+    stripIndents`
       Hey ${target}, thank you for asking for assistance!
 
       You've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
@@ -578,12 +578,12 @@ export async function tripsitmeSubmit(
       `;
 
   const row = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-          new ButtonBuilder()
-              .setCustomId(`tripsitmeFinish~me~${target.id}~${threadDiscussUser.id}~${roleNeedshelp.id}`)
-              .setLabel('I\'m good now!')
-              .setStyle(ButtonStyle.Success),
-      );
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId(`tripsitmeFinish~me~${target.id}~${threadDiscussUser.id}~${roleNeedshelp.id}`)
+        .setLabel('I\'m good now!')
+        .setStyle(ButtonStyle.Success),
+    );
 
   threadHelpUser.send({
     content: firstMessage,
@@ -598,7 +598,7 @@ export async function tripsitmeSubmit(
 
   // Send the intro message to the thread
   const helperMsg = memberInput ?
-      stripIndents`
+    stripIndents`
       Hey ${roleHelper} and ${roleTripsitter}, ${actor} thinks ${target.displayName} can use some help in ${threadHelpUser.toString()}!
 
       They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
@@ -610,7 +610,7 @@ export async function tripsitmeSubmit(
       *You're receiving this alert because you're a Tripsitter!*
       *Only Tripsitters, Helpers and Moderators can see this thread*!
       **Keep in mind: We're not qualified to handle suicidal users here. If the user is considering / talking about suicide, direct them to the suicide hotline!**` :
-      stripIndents`
+    stripIndents`
       Hey ${roleHelper} and ${roleTripsitter}, ${target.displayName} can use some help in ${threadHelpUser.toString()}!
 
       They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
@@ -625,12 +625,12 @@ export async function tripsitmeSubmit(
     // send a message to the thread
 
   const endSession = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-          new ButtonBuilder()
-              .setCustomId(`tripsitmeFinish~them~${target.id}~${threadHelpUser.id}~${roleNeedshelp.id}`)
-              .setLabel('They\'re good now!')
-              .setStyle(ButtonStyle.Success),
-      );
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId(`tripsitmeFinish~them~${target.id}~${threadHelpUser.id}~${roleNeedshelp.id}`)
+        .setLabel('They\'re good now!')
+        .setStyle(ButtonStyle.Success),
+    );
 
   threadDiscussUser.send({
     content: helperMsg,
@@ -689,7 +689,7 @@ export async function tripsitmeSubmit(
  * @param {ButtonInteraction} interaction
  */
 export async function tripsitmeFinish(
-    interaction:ButtonInteraction,
+  interaction:ButtonInteraction,
 ) {
   logger.debug(`[${PREFIX}] starting!`);
   await interaction.deferReply({ephemeral: true});
@@ -749,16 +749,16 @@ export async function tripsitmeFinish(
   // const channelSanctuary = await interaction.client.channels.cache.get(env.CHANNEL_SANCTUARY);
   // Get the channel objects for the help and meta threads
   const threadHelpUser = interaction.guild.channels.cache
-      .find((chan) => chan.id === targetLastHelpedThreadId) as ThreadChannel;
+    .find((chan) => chan.id === targetLastHelpedThreadId) as ThreadChannel;
   const threadDiscussUser = interaction.guild.channels.cache
-      .find((chan) => chan.id === targetLastHelpedMetaThreadId) as ThreadChannel;
+    .find((chan) => chan.id === targetLastHelpedMetaThreadId) as ThreadChannel;
 
   await threadDiscussUser.setName(`💚│${target.displayName} discussion`);
   await threadHelpUser.setName(`💚│${target.displayName}'s channel!`);
 
   const roleNeedshelp = await interaction.guild.roles.fetch(roleNeedshelpId)!;
   const targetHasNeedsHelpRole = (target.roles as GuildMemberRoleManager).cache.find(
-      (role:Role) => role === roleNeedshelp,
+    (role:Role) => role === roleNeedshelp,
   ) !== undefined;
   logger.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
 
@@ -783,8 +783,8 @@ export async function tripsitmeFinish(
       Maybe try listening to some lofi music while you wait?`;
 
       const embed = embedTemplate()
-          .setColor(Colors.DarkBlue)
-          .setDescription(message);
+        .setColor(Colors.DarkBlue)
+        .setDescription(message);
       interaction.editReply({embeds: [embed]});
 
       if (threadDiscussUser) {
@@ -843,38 +843,38 @@ If they still need help it's okay to leave them with that role.`;
       > Thank you!
       ${env.EMOJI_INVISIBLE}
       `)
-      .then(async (msg) => {
-        message = msg;
-        await msg.react('🙁');
-        await msg.react('😕');
-        await msg.react('😐');
-        await msg.react('🙂');
-        await msg.react('😁');
+    .then(async (msg) => {
+      message = msg;
+      await msg.react('🙁');
+      await msg.react('😕');
+      await msg.react('😐');
+      await msg.react('🙂');
+      await msg.react('😁');
 
-        // Setup the reaction collector
-        const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
-        const collector = message.createReactionCollector({filter, time: 1000 * 60 * 60 * 24});
-        collector.on('collect', async (reaction, user) => {
-          threadHelpUser.send(stripIndents`
+      // Setup the reaction collector
+      const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
+      const collector = message.createReactionCollector({filter, time: 1000 * 60 * 60 * 24});
+      collector.on('collect', async (reaction, user) => {
+        threadHelpUser.send(stripIndents`
           ${env.EMOJI_INVISIBLE}
           > Thank you for your feedback, here's a cookie! 🍪
           ${env.EMOJI_INVISIBLE}
           `);
-          logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
-          const finalEmbed = embedTemplate()
-              .setColor(Colors.Blue)
-              .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
-          try {
-            if (threadDiscussUser) {
-              await threadDiscussUser.send({embeds: [finalEmbed]});
-            }
-          } catch (err) {
-            logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
+        logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
+        const finalEmbed = embedTemplate()
+          .setColor(Colors.Blue)
+          .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
+        try {
+          if (threadDiscussUser) {
+            await threadDiscussUser.send({embeds: [finalEmbed]});
           }
-          msg.delete();
-          collector.stop();
-        });
+        } catch (err) {
+          logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
+        }
+        msg.delete();
+        collector.stop();
       });
+    });
 
   const endMetaHelpMessage = stripIndents`${meOrThem === 'me' ? target.displayName : actor.displayName} has indicated that ${meOrThem === 'me' ? 'they' : target.displayName} no longer need help!
     *This thread, and ${threadHelpUser.toString()}, will remain un-archived for 24 hours to allow the user to follow-up.

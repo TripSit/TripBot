@@ -25,8 +25,8 @@ let duration = '4 days 3hrs 2 mins 30 seconds';
 
 export const uBan: UserCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('Ban')
-      .setType(ApplicationCommandType.User),
+    .setName('Ban')
+    .setType(ApplicationCommandType.User),
   async execute(interaction:UserContextMenuCommandInteraction) {
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction
     actor = interaction.member as GuildMember;
@@ -36,19 +36,19 @@ export const uBan: UserCommand = {
 
     // Create the modal
     const modal = new ModalBuilder()
-        .setCustomId('banModal')
-        .setTitle('Tripbot Ban');
+      .setCustomId('banModal')
+      .setTitle('Tripbot Ban');
     const banReason = new TextInputBuilder()
-        .setLabel('Why are you banning this person?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder(reason)
-        .setCustomId('banReason')
-        .setRequired(true);
+      .setLabel('Why are you banning this person?')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder(reason)
+      .setCustomId('banReason')
+      .setRequired(true);
     const banDuration = new TextInputBuilder()
-        .setLabel('How long should this ban last?')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder(duration)
-        .setCustomId('banDuration');
+      .setLabel('How long should this ban last?')
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder(duration)
+      .setCustomId('banDuration');
     // An action row only holds one text input, so you need one action row per text input.
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(banReason);
     const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(banDuration);

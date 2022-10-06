@@ -30,8 +30,8 @@ const command = 'warn';
 
 export const mWarn: MessageCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('Warn')
-      .setType(ApplicationCommandType.Message),
+    .setName('Warn')
+    .setType(ApplicationCommandType.Message),
   async execute(interaction:MessageContextMenuCommandInteraction) {
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction
     actor = interaction.member as GuildMember;
@@ -58,14 +58,14 @@ export const mWarn: MessageCommand = {
 
     // Create the modal
     const modal = new ModalBuilder()
-        .setCustomId('warnModal')
-        .setTitle('Tripbot Warn');
+      .setCustomId('warnModal')
+      .setTitle('Tripbot Warn');
     const warnReason = new TextInputBuilder()
-        .setLabel('Why are you warning this person?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Why are you warning this person?')
-        .setCustomId('reasonGiven')
-        .setRequired(true);
+      .setLabel('Why are you warning this person?')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder('Why are you warning this person?')
+      .setCustomId('reasonGiven')
+      .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(warnReason);
 

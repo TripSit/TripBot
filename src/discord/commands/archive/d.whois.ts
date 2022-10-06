@@ -11,12 +11,12 @@ const PREFIX = path.parse(__filename).name;
 
 export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('whois')
-      .setDescription('IRC whois')
-      .addStringOption((option) => option
-          .setDescription('User to whois!')
-          .setRequired(true)
-          .setName('target')),
+    .setName('whois')
+    .setDescription('IRC whois')
+    .addStringOption((option) => option
+      .setDescription('User to whois!')
+      .setRequired(true)
+      .setName('target')),
 
   async execute(interaction:ChatInputCommandInteraction) {
     logger.debug(`[${PREFIX}] started!`);
@@ -28,9 +28,9 @@ export const discordTemplate: SlashCommand = {
       body = await whoisIRC(target!);
     } catch (err:any) {
       const embed = embedTemplate()
-          .setDescription(err.message)
-          .setTitle(`Whois for ${target}`)
-          .setColor(0x00FF00);
+        .setDescription(err.message)
+        .setTitle(`Whois for ${target}`)
+        .setColor(0x00FF00);
       interaction.reply({
         embeds: [embed],
         ephemeral: true,
@@ -39,9 +39,9 @@ export const discordTemplate: SlashCommand = {
     }
 
     const embed = embedTemplate()
-        .setDescription(body)
-        .setTitle(`Whois for ${target}`)
-        .setColor(0x00FF00);
+      .setDescription(body)
+      .setTitle(`Whois for ${target}`)
+      .setColor(0x00FF00);
     interaction.reply({
       embeds: [embed],
       ephemeral: true,

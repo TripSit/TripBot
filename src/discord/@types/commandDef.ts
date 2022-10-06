@@ -10,16 +10,16 @@ import {
 
 export interface SlashCommand {
   data:
-    | Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'>
-    | SlashCommandSubcommandsOnlyBuilder;
+  | Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'>
+  | SlashCommandSubcommandsOnlyBuilder;
   execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
   submit?: (interaction: ModalSubmitInteraction) => Promise<void>;
 }
 
 export interface SlashCommand1 {
   data:
-    | Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'>
-    | SlashCommandSubcommandsOnlyBuilder;
+  | Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'>
+  | SlashCommandSubcommandsOnlyBuilder;
   execute: (interaction: ChatInputCommandInteraction) => Promise<boolean>;
   submit?: (interaction: ModalSubmitInteraction) => Promise<void>;
 }

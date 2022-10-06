@@ -53,7 +53,7 @@ export async function bestOf(reaction:MessageReaction, user:User) {
 
     if (channel !== undefined) {
       reaction.message.reply(
-          stripIndents`This got ${votePinThreshold} upvotes and has been pinned to ${channel.toString()}!`,
+        stripIndents`This got ${votePinThreshold} upvotes and has been pinned to ${channel.toString()}!`,
       );
 
       if (reaction.partial) await reaction.fetch();
@@ -73,16 +73,16 @@ export async function bestOf(reaction:MessageReaction, user:User) {
       logger.debug(`[${PREFIX}] attachmentUrl: ${attachmentUrl}`);
 
       const embed = new EmbedBuilder()
-          .setAuthor({
-            name: reaction.message.author?.username ?? '',
-            iconURL: reaction.message.author?.displayAvatarURL(),
-            url: reaction.message.url,
-          })
-          .setColor(Colors.Purple)
-          .addFields(
-              {name: '\u200B', value: `[Go to post!](${reaction.message.url})`, inline: true},
-          )
-          .setFooter({text: `Sent in #${(reaction.message.channel as TextChannel).name} at ${formattedDate}`});
+        .setAuthor({
+          name: reaction.message.author?.username ?? '',
+          iconURL: reaction.message.author?.displayAvatarURL(),
+          url: reaction.message.url,
+        })
+        .setColor(Colors.Purple)
+        .addFields(
+          {name: '\u200B', value: `[Go to post!](${reaction.message.url})`, inline: true},
+        )
+        .setFooter({text: `Sent in #${(reaction.message.channel as TextChannel).name} at ${formattedDate}`});
 
       if (reaction.message.content) {
         embed.setDescription(reaction.message.content);

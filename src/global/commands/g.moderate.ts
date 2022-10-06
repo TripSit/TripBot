@@ -116,14 +116,14 @@ const teamRoles = [
 //     );
 
 const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-        .setCustomId('acknowledgebtn')
-        .setLabel('I understand, it wont happen again!')
-        .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-        .setCustomId('refusalbtn')
-        .setLabel('Nah, I do what I want!')
-        .setStyle(ButtonStyle.Danger),
+  new ButtonBuilder()
+    .setCustomId('acknowledgebtn')
+    .setLabel('I understand, it wont happen again!')
+    .setStyle(ButtonStyle.Primary),
+  new ButtonBuilder()
+    .setCustomId('refusalbtn')
+    .setLabel('Nah, I do what I want!')
+    .setStyle(ButtonStyle.Danger),
 );
 
 /**
@@ -138,14 +138,14 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
  * @param {ChatInputCommandInteraction} interaction
  */
 export async function moderate(
-    actor:string | GuildMember,
-    command:string,
-    target:string | GuildMember,
-    channel:unknown,
-    toggle:string | undefined,
-    reason:string | undefined,
-    duration:string | undefined,
-    interaction:ChatInputCommandInteraction | ModalSubmitInteraction | UserContextMenuCommandInteraction | undefined,
+  actor:string | GuildMember,
+  command:string,
+  target:string | GuildMember,
+  channel:unknown,
+  toggle:string | undefined,
+  reason:string | undefined,
+  duration:string | undefined,
+  interaction:ChatInputCommandInteraction | ModalSubmitInteraction | UserContextMenuCommandInteraction | undefined,
 ):Promise<any> {
   logger.debug(stripIndents`[${PREFIX}]
       Actor: ${actor}
@@ -227,8 +227,8 @@ export async function moderate(
   // Get duration
   if (duration) {
     minutes = duration ?
-        await parseDuration(duration) :
-        604800000;
+      await parseDuration(duration) :
+      604800000;
     logger.debug(`[${PREFIX}] minutes: ${minutes}`);
   }
 
@@ -238,9 +238,9 @@ export async function moderate(
   if (command === 'warn') {
     if (targetPlatform === 'discord') {
       const warnEmbed = embedTemplate()
-          .setColor(Colors.Yellow)
-          .setTitle('Warning!')
-          .setDescription(stripIndents`
+        .setColor(Colors.Yellow)
+        .setTitle('Warning!')
+        .setDescription(stripIndents`
         You have been warned by Team TripSit:
 
         ${reason}
@@ -281,7 +281,7 @@ export async function moderate(
           logger.debug(`[${PREFIX}] timeout minutes: ${minutes}`);
           targetUser.timeout(minutes, reason);
           await targetUser.send(
-              `You have been quieted for ${ms(minutes, {long: true})}${reason ? ` because:\n ${reason}` : ''} `);
+            `You have been quieted for ${ms(minutes, {long: true})}${reason ? ` because:\n ${reason}` : ''} `);
         } catch (err) {
           logger.error(`[${PREFIX}] Error: ${err}`);
         }
@@ -307,7 +307,7 @@ export async function moderate(
         }
         try {
           global.ircClient.say(targetNickname,
-              `You have been quieted for ${ms(minutes, {long: true})}${reason ? ` because:\n ${reason}` : ''} `);
+            `You have been quieted for ${ms(minutes, {long: true})}${reason ? ` because:\n ${reason}` : ''} `);
         } catch (err) {
           logger.error(`[${PREFIX}] Error: ${err}`);
         }
@@ -361,8 +361,8 @@ export async function moderate(
         try {
           // The length of the timout defaults to forever if no time is given
           minutes = duration ?
-              await parseDuration(duration) :
-              0;
+            await parseDuration(duration) :
+            0;
           logger.debug(`[${PREFIX}] minutes: ${minutes}`);
           const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
           targetGuild.members.ban(targetUser, {deleteMessageDays: 7, reason});
@@ -390,7 +390,7 @@ export async function moderate(
       if (toggle === 'on' || toggle === null) {
         // Just go straight for the akill
         global.ircClient.say(targetNickname,
-            `You have been banned for ${ms(minutes, {long: true})}${reason ? ` because:\n ${reason}` : ''} `);
+          `You have been banned for ${ms(minutes, {long: true})}${reason ? ` because:\n ${reason}` : ''} `);
 
         const ircCommand = `akill add ${targetId} !P ${reason}`;
         global.ircClient.say('operserv', ircCommand);
@@ -527,27 +527,27 @@ export async function moderate(
   const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
 
   const targetEmbed = embedTemplate()
-      .setColor(Colors.Blue)
-      // .setImage(targetUser.displayAvatarURL)
-      // .setThumbnail(targetUser.displayAvatarURL)
-      .setDescription(`${actor} ${command}ed ${targetNickname}\
+    .setColor(Colors.Blue)
+  // .setImage(targetUser.displayAvatarURL)
+  // .setThumbnail(targetUser.displayAvatarURL)
+    .setDescription(`${actor} ${command}ed ${targetNickname}\
       ${targetChannel.name ? ` in ${targetChannel.name}` : ''}\
       ${duration ? ` for ${ms(minutes, {long: true})}` : ''}\
       ${reason ? ` because\n ${reason}` : ''}`)
-      .addFields(
-          {name: 'Displayname', value: `${targetNickname !== null ? targetNickname : 'None'}`, inline: true},
-          {name: 'Username', value: `${targetUsername}`, inline: true},
-          {name: 'ID', value: `${targetId}`, inline: true},
-      );
+    .addFields(
+      {name: 'Displayname', value: `${targetNickname !== null ? targetNickname : 'None'}`, inline: true},
+      {name: 'Username', value: `${targetUsername}`, inline: true},
+      {name: 'ID', value: `${targetId}`, inline: true},
+    );
   if (targetPlatform === 'discord') {
     targetEmbed.addFields(
-        {
-          name: 'Created',
-          value: `${(targetUser as GuildMember).user ? time(targetUser.user.createdAt, 'R') :
+      {
+        name: 'Created',
+        value: `${(targetUser as GuildMember).user ? time(targetUser.user.createdAt, 'R') :
           time(targetUser.createdAt, 'R')}`, inline: true},
-        {name: 'Joined', value: `${time(targetUser.joinedAt, 'R')}`, inline: true},
-        // { name: 'Timeout until', value: `${targetUser.communicationDisabledUntil
-        // ? time(targetUser.communicationDisabledUntil, 'R') : 'Not Timeouted'}`, inline: true },
+      {name: 'Joined', value: `${time(targetUser.joinedAt, 'R')}`, inline: true},
+      // { name: 'Timeout until', value: `${targetUser.communicationDisabledUntil
+      // ? time(targetUser.communicationDisabledUntil, 'R') : 'Not Timeouted'}`, inline: true },
     );
   }
   // .addFields(
@@ -688,8 +688,8 @@ export async function moderate(
 
   logger.debug(`[${PREFIX}] ${targetNickname} has been ${command}ed!`);
   const response = embedTemplate()
-      .setColor(Colors.Yellow)
-      .setDescription(`${targetNickname} has been ${command}ed!`);
+    .setColor(Colors.Yellow)
+    .setDescription(`${targetNickname} has been ${command}ed!`);
   return {embeds: [response], ephemeral: true};
 };
 
@@ -699,7 +699,7 @@ export async function moderate(
  * @return {string[]} A list of properties about this user
  */
 async function determineUserInfo(
-    query:GuildMember | string,
+  query:GuildMember | string,
 ):Promise<any[]> {
   let userInfo:GuildMember | User | string = '';
   let userPlatform = null;

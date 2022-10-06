@@ -10,13 +10,13 @@ const PREFIX = path.parse(__filename).name;
 
 export const dwarmline: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('testkits')
-      .setDescription('Information on how to get a test kit'),
+    .setName('testkits')
+    .setDescription('Information on how to get a test kit'),
 
   async execute(interaction) {
     const embed = embedTemplate()
-        .setTitle('Test Kit Resources and information!')
-        .setDescription(stripIndents`
+      .setTitle('Test Kit Resources and information!')
+      .setDescription(stripIndents`
         [Dosetest](https://dosetest.com/) (Worldwide) offers 20% off test kits with code TripSit!
         [ReagentTests UK](https://www.reagent-tests.uk/shop/) (UK & EU ONLY) offers 10% off with code tripsitwiki!
 

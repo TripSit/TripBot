@@ -23,8 +23,8 @@ let reason = 'What are you noting about this person?';
 
 export const uNote: UserCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('Note')
-      .setType(ApplicationCommandType.User),
+    .setName('Note')
+    .setType(ApplicationCommandType.User),
   async execute(interaction) {
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction
     actor = interaction.member as GuildMember;
@@ -34,14 +34,14 @@ export const uNote: UserCommand = {
 
     // Create the modal
     const modal = new ModalBuilder()
-        .setCustomId('noteModal')
-        .setTitle('Tripbot Note');
+      .setCustomId('noteModal')
+      .setTitle('Tripbot Note');
     const noteReason = new TextInputBuilder()
-        .setLabel('What are you noting about this person?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder(reason)
-        .setCustomId('noteReason')
-        .setRequired(true);
+      .setLabel('What are you noting about this person?')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder(reason)
+      .setCustomId('noteReason')
+      .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(noteReason);
 

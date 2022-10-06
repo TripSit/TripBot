@@ -11,30 +11,30 @@ import {calcPsychedelics} from '../../../global/commands/g.calcPsychedelics';
 
 export const dcalcPsychedelics: SlashCommand1 = {
   data: new SlashCommandBuilder()
-      .setName('calc_psychedelics')
-      .setDescription('Check psychedelic tolerance information')
-      .addSubcommand((subcommand) => subcommand
-          .setName('lsd')
-          .setDescription('Check LSD tolerance information')
-          .addIntegerOption((option) => option.setName('last_dose')
-              .setDescription('ug of LSD')
-              .setRequired(true))
-          .addIntegerOption((option) => option.setName('days')
-              .setDescription('Number of days since last dose?')
-              .setRequired(true))
-          .addIntegerOption((option) => option.setName('desired_dose')
-              .setDescription('ug of LSD')))
-      .addSubcommand((subcommand) => subcommand
-          .setName('mushrooms')
-          .setDescription('Check mushroom tolerance information')
-          .addIntegerOption((option) => option.setName('last_dose')
-              .setDescription('g of mushrooms')
-              .setRequired(true))
-          .addIntegerOption((option) => option.setName('days')
-              .setDescription('Number of days since last dose?')
-              .setRequired(true))
-          .addIntegerOption((option) => option.setName('desired_dose')
-              .setDescription('g of mushrooms'))),
+    .setName('calc_psychedelics')
+    .setDescription('Check psychedelic tolerance information')
+    .addSubcommand((subcommand) => subcommand
+      .setName('lsd')
+      .setDescription('Check LSD tolerance information')
+      .addIntegerOption((option) => option.setName('last_dose')
+        .setDescription('ug of LSD')
+        .setRequired(true))
+      .addIntegerOption((option) => option.setName('days')
+        .setDescription('Number of days since last dose?')
+        .setRequired(true))
+      .addIntegerOption((option) => option.setName('desired_dose')
+        .setDescription('ug of LSD')))
+    .addSubcommand((subcommand) => subcommand
+      .setName('mushrooms')
+      .setDescription('Check mushroom tolerance information')
+      .addIntegerOption((option) => option.setName('last_dose')
+        .setDescription('g of mushrooms')
+        .setRequired(true))
+      .addIntegerOption((option) => option.setName('days')
+        .setDescription('Number of days since last dose?')
+        .setRequired(true))
+      .addIntegerOption((option) => option.setName('desired_dose')
+        .setDescription('g of mushrooms'))),
   async execute(interaction) {
     const lastDose = interaction.options.getInteger('last_dose')!;
     const desiredDose = interaction.options.getInteger('desired_dose');
@@ -58,8 +58,8 @@ export const dcalcPsychedelics: SlashCommand1 = {
     }
 
     const embed = embedTemplate()
-        .setTitle(title)
-        .setDescription(`
+      .setTitle(title)
+      .setDescription(`
         This ESTIMATE only works for tryptamines (LSD and Magic Mushrooms).
         As all bodies and brains are different, results may vary. 
         [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 

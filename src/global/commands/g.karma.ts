@@ -16,10 +16,10 @@ const PREFIX = path.parse(__filename).name;
  * @return {any} an object with information about the bot
  */
 export async function karma(
-    command: 'get' | 'set',
-    member: GuildMember,
-    value?: number | null,
-    type?: string | null):Promise<string> {
+  command: 'get' | 'set',
+  member: GuildMember,
+  value?: number | null,
+  type?: string | null):Promise<string> {
   logger.debug(`[${PREFIX}] starting!`);
 
   logger.debug(`[${PREFIX}] timezone: ${command} ${member} ${value} ${type}`);
