@@ -36,94 +36,94 @@ const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
  */
 export const prompt: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('setup')
-      .setDescription('Set up various channels and prompts!')
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('Tripsit info!')
-          .setName('tripsit')
-          .addRoleOption((option) => option
-              .setDescription('What is your Tripsitter role?')
-              .setName('tripsitter')
-              .setRequired(true),
-          )
-          .addRoleOption((option) => option
-              .setDescription('What is your Needshelp role?')
-              .setName('needshelp')
-              .setRequired(true),
-          )
-          .addChannelOption((option) => option
-              .setDescription('What is your Meta-tripsit channel?')
-              .setName('tripsitters')
-              .setRequired(true),
-          )
-          .addChannelOption((option) => option
-              .setDescription('Do you have a sanctuary room?')
-              .setName('sanctuary'),
-          )
-          .addChannelOption((option) => option
-              .setDescription('Do you have a general room?')
-              .setName('general'),
-          ),
+    .setName('setup')
+    .setDescription('Set up various channels and prompts!')
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('Tripsit info!')
+      .setName('tripsit')
+      .addRoleOption((option) => option
+        .setDescription('What is your Tripsitter role?')
+        .setName('tripsitter')
+        .setRequired(true),
       )
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('Tripsitter info!')
-          .setName('tripsitter')
-          .addChannelOption((option) => option
-              .setDescription('What is the tripsit room?')
-              .setName('tripsit')
-              .setRequired(true),
-          )
-          .addRoleOption((option) => option
-              .setDescription('What is your Tripsitter role?')
-              .setName('role_tripsitter')
-              .setRequired(true),
-          )
-          .addChannelOption((option) => option
-              .setDescription('Do you have an applications room?')
-              .setName('applications'),
-          )
-          .addRoleOption((option) => option
-              .setDescription('Who will review these applications?')
-              .setName('role_reviewer'),
-          ),
+      .addRoleOption((option) => option
+        .setDescription('What is your Needshelp role?')
+        .setName('needshelp')
+        .setRequired(true),
       )
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('Application info!')
-          .setName('applications')
-          .addRoleOption((option) => option
-              .setDescription('What role are people applying for?')
-              .setName('role_requested')
-              .setRequired(true),
-          )
-          .addRoleOption((option) => option
-              .setDescription('What role reviews applications?')
-              .setName('role_reviewer')
-              .setRequired(true),
-          ),
+      .addChannelOption((option) => option
+        .setDescription('What is your Meta-tripsit channel?')
+        .setName('tripsitters')
+        .setRequired(true),
       )
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('techhelp info!')
-          .setName('techhelp')
-          .addRoleOption((option) => option
-              .setDescription('What role responds to tickets here?')
-              .setName('moderator')
-              .setRequired(true),
-          )
-          .addChannelOption((option) => option
-              .setDescription('Do you have a tripsit room?')
-              .setName('tripsit'),
-          ),
+      .addChannelOption((option) => option
+        .setDescription('Do you have a sanctuary room?')
+        .setName('sanctuary'),
       )
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('rules info!')
-          .setName('rules'))
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('starthere info!')
-          .setName('starthere'))
+      .addChannelOption((option) => option
+        .setDescription('Do you have a general room?')
+        .setName('general'),
+      ),
+    )
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('Tripsitter info!')
+      .setName('tripsitter')
+      .addChannelOption((option) => option
+        .setDescription('What is the tripsit room?')
+        .setName('tripsit')
+        .setRequired(true),
+      )
+      .addRoleOption((option) => option
+        .setDescription('What is your Tripsitter role?')
+        .setName('role_tripsitter')
+        .setRequired(true),
+      )
+      .addChannelOption((option) => option
+        .setDescription('Do you have an applications room?')
+        .setName('applications'),
+      )
+      .addRoleOption((option) => option
+        .setDescription('Who will review these applications?')
+        .setName('role_reviewer'),
+      ),
+    )
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('Application info!')
+      .setName('applications')
+      .addRoleOption((option) => option
+        .setDescription('What role are people applying for?')
+        .setName('role_requested')
+        .setRequired(true),
+      )
+      .addRoleOption((option) => option
+        .setDescription('What role reviews applications?')
+        .setName('role_reviewer')
+        .setRequired(true),
+      ),
+    )
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('techhelp info!')
+      .setName('techhelp')
+      .addRoleOption((option) => option
+        .setDescription('What role responds to tickets here?')
+        .setName('moderator')
+        .setRequired(true),
+      )
+      .addChannelOption((option) => option
+        .setDescription('Do you have a tripsit room?')
+        .setName('tripsit'),
+      ),
+    )
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('rules info!')
+      .setName('rules'))
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('starthere info!')
+      .setName('starthere'))
 
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('ticketbooth info!')
-          .setName('ticketbooth')),
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('ticketbooth info!')
+      .setName('ticketbooth')),
   async execute(interaction:ChatInputCommandInteraction) {
     logger.debug(`[${PREFIX}] Starting!`);
     await interaction.deferReply({ephemeral: true});
@@ -157,8 +157,8 @@ export const prompt: SlashCommand = {
  * @return {Promise<any>}
  */
 export async function hasPermissions(
-    interaction: ChatInputCommandInteraction,
-    channel: TextChannel) {
+  interaction: ChatInputCommandInteraction,
+  channel: TextChannel) {
   logger.debug(`[${PREFIX}] Checking permissions`);
   const me = interaction.guild!.members.me!;
   const channelPerms = channel.permissionsFor(me);
@@ -166,37 +166,37 @@ export async function hasPermissions(
 
   if (!channelPerms.has('ViewChannel')) {
     const embed = embedTemplate()
-        .setTitle(`I need the 'ViewChannel' permissions in ${channel.name} to view the channel!`);
+      .setTitle(`I need the 'ViewChannel' permissions in ${channel.name} to view the channel!`);
     interaction.editReply({embeds: [embed]});
     return false;
   }
   if (!channelPerms.has('SendMessages')) {
     const embed = embedTemplate()
-        .setTitle(`I need the 'SendMessages' permissions in ${channel.name} to send messages!`);
+      .setTitle(`I need the 'SendMessages' permissions in ${channel.name} to send messages!`);
     interaction.editReply({embeds: [embed]});
     return false;
   }
   if (!channelPerms.has('CreatePrivateThreads')) {
     const embed = embedTemplate()
-        .setTitle(`I need the 'CreatePrivateThreads' permissions in ${channel.name} to create a private thread!`);
+      .setTitle(`I need the 'CreatePrivateThreads' permissions in ${channel.name} to create a private thread!`);
     interaction.editReply({embeds: [embed]});
     return false;
   }
   if (!channelPerms.has('CreatePublicThreads')) {
     const embed = embedTemplate()
-        .setTitle(`I need the 'CreatePublicThreads' permissions in ${channel.name} create a public thread!`);
+      .setTitle(`I need the 'CreatePublicThreads' permissions in ${channel.name} create a public thread!`);
     interaction.editReply({embeds: [embed]});
     return false;
   }
   if (!channelPerms.has('SendMessagesInThreads')) {
     const embed = embedTemplate()
-        .setTitle(`I need the 'SendMessagesInThreads' permissions in ${channel.name} send messages in threads!`);
+      .setTitle(`I need the 'SendMessagesInThreads' permissions in ${channel.name} send messages in threads!`);
     interaction.editReply({embeds: [embed]});
     return false;
   }
   if (!channelPerms.has('EmbedLinks')) {
     const embed = embedTemplate()
-        .setTitle(`I need the 'EmbedLinks' permissions in ${channel.name} send messages in threads!`);
+      .setTitle(`I need the 'EmbedLinks' permissions in ${channel.name} send messages in threads!`);
     interaction.editReply({embeds: [embed]});
     return false;
   }
@@ -253,12 +253,12 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
 
   // Create a new button embed
   const row = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-          new ButtonBuilder()
-              .setCustomId(`tripsitmeClick~${roleNeedshelp.id}~${roleTripsitter.id}~${channelTripsitters.id}`)
-              .setLabel('I need assistance!')
-              .setStyle(ButtonStyle.Primary),
-      );
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId(`tripsitmeClick~${roleNeedshelp.id}~${roleTripsitter.id}~${channelTripsitters.id}`)
+        .setLabel('I need assistance!')
+        .setStyle(ButtonStyle.Primary),
+    );
 
   // Create a new button
   await (interaction.channel as TextChannel).send({content: buttonText, components: [row]});
@@ -340,14 +340,14 @@ If you meet the above and are interested in becoming a ${roleTripsitter!.name}, 
 Note: this is **not** a formal application for a team role, just extra access as a user!
     `;
     await (interaction.channel as TextChannel).send(
-        {content: message,
-          components: [new ActionRowBuilder<ButtonBuilder>()
-              .addComponents(
-                  new ButtonBuilder()
-                      .setCustomId(`applicationStart~${channelApplications!.id}~${roleTripsitter!.id}~${roleReviewer!.id}`)
-                      .setLabel(`I want to be a ${roleTripsitter!.name}!`)
-                      .setStyle(ButtonStyle.Primary),
-              )]},
+      {content: message,
+        components: [new ActionRowBuilder<ButtonBuilder>()
+          .addComponents(
+            new ButtonBuilder()
+              .setCustomId(`applicationStart~${channelApplications!.id}~${roleTripsitter!.id}~${roleReviewer!.id}`)
+              .setLabel(`I want to be a ${roleTripsitter!.name}!`)
+              .setStyle(ButtonStyle.Primary),
+          )]},
     );
     return;
   }
@@ -379,7 +379,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
 
   // Send the initial message
   await (interaction.channel as TextChannel).send(
-      {content: stripIndents`
+    {content: stripIndents`
       Welcome to ${interaction.channel}!
 
       We're always looking for people who want to contribute to the back-end of the organization!
@@ -390,13 +390,13 @@ export async function applications(interaction:ChatInputCommandInteraction) {
 
       Note: this is not a formal application for a team role, just extra access as a user!
     `,
-      components: [new ActionRowBuilder<ButtonBuilder>()
-          .addComponents(
-              new ButtonBuilder()
-                  .setCustomId(`applicationStart~${interaction.channel!.id}~${roleRequested!.id}~${roleReviewer!.id}`)
-                  .setLabel(`I want to be a ${roleRequested!.name}!`)
-                  .setStyle(ButtonStyle.Primary),
-          )]},
+    components: [new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId(`applicationStart~${interaction.channel!.id}~${roleRequested!.id}~${roleReviewer!.id}`)
+          .setLabel(`I want to be a ${roleRequested!.name}!`)
+          .setStyle(ButtonStyle.Primary),
+      )]},
   );
 }
 
@@ -440,16 +440,16 @@ Thanks for reading, stay safe!
 
   // Create buttons
   const row = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-          new ButtonBuilder()
-              .setCustomId(`techHelpClick~discord~${roleModerator.id}`)
-              .setLabel('Discord issue/feedback!')
-              .setStyle(ButtonStyle.Primary),
-          new ButtonBuilder()
-              .setCustomId(`techHelpClick~other~${roleModerator.id}`)
-              .setLabel('I have something else!')
-              .setStyle(ButtonStyle.Secondary),
-      );
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId(`techHelpClick~discord~${roleModerator.id}`)
+        .setLabel('Discord issue/feedback!')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId(`techHelpClick~other~${roleModerator.id}`)
+        .setLabel('I have something else!')
+        .setStyle(ButtonStyle.Secondary),
+    );
 
   // Create a new button
   await (interaction.channel as TextChannel).send({content: text, components: [row]});
@@ -474,10 +474,10 @@ export async function rules(interaction:ChatInputCommandInteraction) {
   }
 
   const embed = embedTemplate()
-      .setAuthor(null)
-      .setFooter(null)
-      .setColor(Colors.Red)
-      .setImage('attachment://RULES.png');
+    .setAuthor(null)
+    .setFooter(null)
+    .setColor(Colors.Red)
+    .setImage('attachment://RULES.png');
   await (interaction.channel as TextChannel).send({embeds: [embed], files: [file]});
 
   await (interaction.channel as TextChannel).send(stripIndents`
@@ -575,7 +575,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
   await (interaction.channel as TextChannel).send(message);
 
   const mindsetEmbed = embedTemplate()
-      .setDescription(stripIndents`
+    .setDescription(stripIndents`
       ${env.EMOJI_DRUNK} - Drunk
       ${env.EMOJI_HIGH} - High
       ${env.EMOJI_ROLLING} - Rolling
@@ -586,13 +586,13 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
       ${env.EMOJI_TALKATIVE} - I'm just happy to chat!
       ${env.EMOJI_WORKING} - I'm busy and may be slow to respond!
     `)
-      .setAuthor({
-        name: 'React to this to show your mindset!',
-        iconURL: undefined,
-        url: undefined,
-      })
-      // .setFooter({text: 'These roles reset after 8 hours to accurately show your mindset!'})
-      .setColor(Colors.Purple);
+    .setAuthor({
+      name: 'React to this to show your mindset!',
+      iconURL: undefined,
+      url: undefined,
+    })
+  // .setFooter({text: 'These roles reset after 8 hours to accurately show your mindset!'})
+    .setColor(Colors.Purple);
   let reactionRoleInfo = {} as ReactionRoleCollection;
   type ReactionRoleCollection = {
     [key: number]: ReactionRole[];
@@ -607,135 +607,135 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
   };
 
   await (interaction.channel as TextChannel).send({embeds: [mindsetEmbed]})
-      .then(async (msg) => {
-        await msg.react(`${env.EMOJI_DRUNK}`);
-        await msg.react(`${env.EMOJI_HIGH}`);
-        await msg.react(`${env.EMOJI_ROLLING}`);
-        await msg.react(`${env.EMOJI_TRIPPING}`);
-        await msg.react(`${env.EMOJI_DISSOCIATING}`);
-        await msg.react(`${env.EMOJI_STIMMING}`);
-        await msg.react(`${env.EMOJI_SEDATED}`);
-        // await msg.react(`${env.EMOJI_SOBER}`);
-        await msg.react(`${env.EMOJI_TALKATIVE}`);
-        await msg.react(`${env.EMOJI_WORKING}`);
-        reactionRoleInfo = {
-          [msg.id]: [
-            {
-              name: 'Drunk',
-              reaction: env.EMOJI_DRUNK.slice(env.EMOJI_DRUNK.indexOf(':', 3)+1, env.EMOJI_DRUNK.indexOf('>')),
-              roleId: env.ROLE_DRUNK,
-            },
-            {
-              name: 'High',
-              reaction: env.EMOJI_HIGH.slice(env.EMOJI_HIGH.indexOf(':', 3)+1, env.EMOJI_HIGH.indexOf('>')),
-              roleId: env.ROLE_HIGH,
-            },
-            {
-              name: 'Rolling',
-              reaction: env.EMOJI_ROLLING.slice(env.EMOJI_ROLLING.indexOf(':', 3)+1, env.EMOJI_ROLLING.indexOf('>')),
-              roleId: env.ROLE_ROLLING,
-            },
-            {
-              name: 'Tripping',
-              reaction: env.EMOJI_TRIPPING.slice(env.EMOJI_TRIPPING.indexOf(':', 3)+1, env.EMOJI_TRIPPING.indexOf('>')),
-              roleId: env.ROLE_TRIPPING,
-            },
-            {
-              name: 'Dissociating',
-              reaction: env.EMOJI_DISSOCIATING.slice(env.EMOJI_DISSOCIATING.indexOf(':', 3)+1, env.EMOJI_DISSOCIATING.indexOf('>')),
-              roleId: env.ROLE_DISSOCIATING,
-            },
-            {
-              name: 'Stimming',
-              reaction: env.EMOJI_STIMMING.slice(env.EMOJI_STIMMING.indexOf(':', 3)+1, env.EMOJI_STIMMING.indexOf('>')),
-              roleId: env.ROLE_STIMMING,
-            },
-            {
-              name: 'Sedated',
-              reaction: env.EMOJI_SEDATED.slice(env.EMOJI_SEDATED.indexOf(':', 3)+1, env.EMOJI_SEDATED.indexOf('>')),
-              roleId: env.ROLE_NODDING,
-            },
-            {
-              name: 'Talkative',
-              reaction: env.EMOJI_TALKATIVE.slice(env.EMOJI_TALKATIVE.indexOf(':', 3)+1, env.EMOJI_TALKATIVE.indexOf('>')),
-              roleId: env.ROLE_TALKATIVE,
-            },
-            {
-              name: 'Working',
-              reaction: env.EMOJI_WORKING.slice(env.EMOJI_WORKING.indexOf(':', 3)+1, env.EMOJI_WORKING.indexOf('>')),
-              roleId: env.ROLE_WORKING,
-            },
-          ],
-        };
-      });
+    .then(async (msg) => {
+      await msg.react(`${env.EMOJI_DRUNK}`);
+      await msg.react(`${env.EMOJI_HIGH}`);
+      await msg.react(`${env.EMOJI_ROLLING}`);
+      await msg.react(`${env.EMOJI_TRIPPING}`);
+      await msg.react(`${env.EMOJI_DISSOCIATING}`);
+      await msg.react(`${env.EMOJI_STIMMING}`);
+      await msg.react(`${env.EMOJI_SEDATED}`);
+      // await msg.react(`${env.EMOJI_SOBER}`);
+      await msg.react(`${env.EMOJI_TALKATIVE}`);
+      await msg.react(`${env.EMOJI_WORKING}`);
+      reactionRoleInfo = {
+        [msg.id]: [
+          {
+            name: 'Drunk',
+            reaction: env.EMOJI_DRUNK.slice(env.EMOJI_DRUNK.indexOf(':', 3)+1, env.EMOJI_DRUNK.indexOf('>')),
+            roleId: env.ROLE_DRUNK,
+          },
+          {
+            name: 'High',
+            reaction: env.EMOJI_HIGH.slice(env.EMOJI_HIGH.indexOf(':', 3)+1, env.EMOJI_HIGH.indexOf('>')),
+            roleId: env.ROLE_HIGH,
+          },
+          {
+            name: 'Rolling',
+            reaction: env.EMOJI_ROLLING.slice(env.EMOJI_ROLLING.indexOf(':', 3)+1, env.EMOJI_ROLLING.indexOf('>')),
+            roleId: env.ROLE_ROLLING,
+          },
+          {
+            name: 'Tripping',
+            reaction: env.EMOJI_TRIPPING.slice(env.EMOJI_TRIPPING.indexOf(':', 3)+1, env.EMOJI_TRIPPING.indexOf('>')),
+            roleId: env.ROLE_TRIPPING,
+          },
+          {
+            name: 'Dissociating',
+            reaction: env.EMOJI_DISSOCIATING.slice(env.EMOJI_DISSOCIATING.indexOf(':', 3)+1, env.EMOJI_DISSOCIATING.indexOf('>')),
+            roleId: env.ROLE_DISSOCIATING,
+          },
+          {
+            name: 'Stimming',
+            reaction: env.EMOJI_STIMMING.slice(env.EMOJI_STIMMING.indexOf(':', 3)+1, env.EMOJI_STIMMING.indexOf('>')),
+            roleId: env.ROLE_STIMMING,
+          },
+          {
+            name: 'Sedated',
+            reaction: env.EMOJI_SEDATED.slice(env.EMOJI_SEDATED.indexOf(':', 3)+1, env.EMOJI_SEDATED.indexOf('>')),
+            roleId: env.ROLE_NODDING,
+          },
+          {
+            name: 'Talkative',
+            reaction: env.EMOJI_TALKATIVE.slice(env.EMOJI_TALKATIVE.indexOf(':', 3)+1, env.EMOJI_TALKATIVE.indexOf('>')),
+            roleId: env.ROLE_TALKATIVE,
+          },
+          {
+            name: 'Working',
+            reaction: env.EMOJI_WORKING.slice(env.EMOJI_WORKING.indexOf(':', 3)+1, env.EMOJI_WORKING.indexOf('>')),
+            roleId: env.ROLE_WORKING,
+          },
+        ],
+      };
+    });
 
   logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoleInfo)}`);
   const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${interaction.guild!.id}/reactionRoles/${interaction.channel!.id}`);
 
   const colorEmbed = embedTemplate()
-      .setAuthor({name: 'React to this message to set the color of your nickname!', iconURL: undefined, url: undefined})
-      .setFooter(null)
-      .setColor(Colors.Blue);
+    .setAuthor({name: 'React to this message to set the color of your nickname!', iconURL: undefined, url: undefined})
+    .setFooter(null)
+    .setColor(Colors.Blue);
 
   await (interaction.channel as TextChannel).send({embeds: [colorEmbed]})
-      .then(async (msg) => {
-        await msg.react('❤');
-        await msg.react('🧡');
-        await msg.react('💛');
-        await msg.react('💚');
-        await msg.react('💙');
-        await msg.react('💜');
-        await msg.react(env.EMOJI_PINKHEART);
-        await msg.react('🖤');
-        await msg.react('🤍');
-        reactionRoleInfo[msg.id as any] = [
-          {
-            name: 'Red',
-            reaction: `❤`,
-            roleId: env.ROLE_RED,
-          },
-          {
-            name: 'Orange',
-            reaction: `🧡`,
-            roleId: env.ROLE_ORANGE,
-          },
-          {
-            name: 'Yellow',
-            reaction: `💛`,
-            roleId: env.ROLE_YELLOW,
-          },
-          {
-            name: 'Green',
-            reaction: `💚`,
-            roleId: env.ROLE_GREEN,
-          },
-          {
-            name: 'Blue',
-            reaction: `💙`,
-            roleId: env.ROLE_BLUE,
-          },
-          {
-            name: 'Purple',
-            reaction: `💜`,
-            roleId: env.ROLE_PURPLE,
-          },
-          {
-            name: 'Pink',
-            reaction: env.EMOJI_PINKHEART.slice(env.EMOJI_PINKHEART.indexOf(':', 3)+1, env.EMOJI_PINKHEART.indexOf('>')),
-            roleId: env.ROLE_PINK,
-          },
-          {
-            name: 'Black',
-            reaction: `🖤`,
-            roleId: env.ROLE_BLACK,
-          },
-          {
-            name: 'White',
-            reaction: `🤍`,
-            roleId: env.ROLE_WHITE,
-          },
-        ];
-      });
+    .then(async (msg) => {
+      await msg.react('❤');
+      await msg.react('🧡');
+      await msg.react('💛');
+      await msg.react('💚');
+      await msg.react('💙');
+      await msg.react('💜');
+      await msg.react(env.EMOJI_PINKHEART);
+      await msg.react('🖤');
+      await msg.react('🤍');
+      reactionRoleInfo[msg.id as any] = [
+        {
+          name: 'Red',
+          reaction: `❤`,
+          roleId: env.ROLE_RED,
+        },
+        {
+          name: 'Orange',
+          reaction: `🧡`,
+          roleId: env.ROLE_ORANGE,
+        },
+        {
+          name: 'Yellow',
+          reaction: `💛`,
+          roleId: env.ROLE_YELLOW,
+        },
+        {
+          name: 'Green',
+          reaction: `💚`,
+          roleId: env.ROLE_GREEN,
+        },
+        {
+          name: 'Blue',
+          reaction: `💙`,
+          roleId: env.ROLE_BLUE,
+        },
+        {
+          name: 'Purple',
+          reaction: `💜`,
+          roleId: env.ROLE_PURPLE,
+        },
+        {
+          name: 'Pink',
+          reaction: env.EMOJI_PINKHEART.slice(env.EMOJI_PINKHEART.indexOf(':', 3)+1, env.EMOJI_PINKHEART.indexOf('>')),
+          roleId: env.ROLE_PINK,
+        },
+        {
+          name: 'Black',
+          reaction: `🖤`,
+          roleId: env.ROLE_BLACK,
+        },
+        {
+          name: 'White',
+          reaction: `🤍`,
+          roleId: env.ROLE_WHITE,
+        },
+      ];
+    });
 
   ref.set(reactionRoleInfo);
 
@@ -779,12 +779,12 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
 
   // Create a new button embed
   const row = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-          new ButtonBuilder()
-              .setCustomId('memberbutton')
-              .setLabel('I understand where to find help and will follow the rules!')
-              .setStyle(ButtonStyle.Success),
-      );
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId('memberbutton')
+        .setLabel('I understand where to find help and will follow the rules!')
+        .setStyle(ButtonStyle.Success),
+    );
 
   // Create a new button
   await (interaction.channel as TextChannel).send({content: buttonText, components: [row]});
