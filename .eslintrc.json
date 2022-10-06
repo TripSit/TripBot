@@ -16,10 +16,11 @@
     "@typescript-eslint"
   ],
   "rules": {
-    // "@typescript-eslint/indent": [
-    //   "error",
-    //   2
-    // ],
+    "@typescript-eslint/indent": [
+      "error",
+      2
+    ],
+    "indent": "off",
     "linebreak-style": ["error", "unix"],
     "max-len": ["error", {"code": 120}]
   }

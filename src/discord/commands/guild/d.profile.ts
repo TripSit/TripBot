@@ -17,19 +17,19 @@ import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
 Canvas.GlobalFonts.registerFromPath(
-    path.join(__dirname, '../../assets/img/Futura.otf'),
-    'futura',
+  path.join(__dirname, '../../assets/img/Futura.otf'),
+  'futura',
 );
 
 export const profile: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('profile')
-      .setDescription('Return the user\'s profile!')
-      .addUserOption((option) => option
-          .setName('target')
-          .setDescription('User to get info on!')),
+    .setName('profile')
+    .setDescription('Return the user\'s profile!')
+    .addUserOption((option) => option
+      .setName('target')
+      .setDescription('User to get info on!')),
   async execute(
-      interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction) {
+    interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction) {
     const target = interaction.options.getMember('target') ?
       interaction.options.getMember('target') as GuildMember :
       interaction.member as GuildMember;
@@ -40,7 +40,7 @@ export const profile: SlashCommand = {
     }
 
     // Choose colour based on user's role
-    let coloredCard = './src/discord/assets/img/cards/profilecardDefault.png';
+    let coloredCard = './src/discord/assets/img/cards/profilecardDefault1.png';
     let cardColor = '#141414';
     let textColor = '#ffffff';
 
@@ -108,7 +108,6 @@ export const profile: SlashCommand = {
     try {
       const background = await Canvas.loadImage(coloredCard);
       logger.debug(`[${PREFIX}] image loaded`);
-
       context.drawImage(background, 0, 0, canvas.width, canvas.height);
       logger.debug(`[${PREFIX}] image drawn`);
     } catch (err) {
@@ -159,12 +158,12 @@ export const profile: SlashCommand = {
 
     if (targetData.timezone) {
       const timestring = new Date().toLocaleTimeString(
-          'en-US', {
-            timeZone: targetData.timezone,
-            hour12: true,
-            hour: 'numeric',
-            minute: 'numeric',
-          },
+        'en-US', {
+          timeZone: targetData.timezone,
+          hour12: true,
+          hour: 'numeric',
+          minute: 'numeric',
+        },
       );
       context.fillText(timestring, 446, 190);
     } else {
@@ -224,7 +223,7 @@ export const profile: SlashCommand = {
 
     // Choose and Draw the Star Image
     const level = targetData.experience!.total.level;
-    let starImagePath = './src/discord/assets/img/badges';
+    let starImagePath = './src/discord/assets/img1/badges';
     if (level < 6) {
       starImagePath += '/VIP.png';
     } else if (level < 10) {
@@ -240,8 +239,13 @@ export const profile: SlashCommand = {
     } else if (level > 50) {
       starImagePath += '/VIPLVL50.png';
     }
-    const starImage = await Canvas.loadImage(starImagePath);
-    context.drawImage(starImage, 727, 61, 162, 162);
+    try {
+      const starImage = await Canvas.loadImage(starImagePath);
+      context.drawImage(starImage, 727, 61, 162, 162);
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error loading star image: ${err}`);
+    }
+
 
     // VIP Level Text Resize to fit
     const applyLevel = (canvas:Canvas.Canvas, text:string) => {
@@ -302,12 +306,13 @@ export const profile: SlashCommand = {
     context.restore();
     await interaction.guild?.members.fetch({user: target.id, withPresences: true, force: true});
 
-    if (target.presence?.status === undefined) {
-      const statusIcon = await Canvas.loadImage(`./src/discord/assets/img/icons/offline.png`);
+    try {
+      const statusIcon = target.presence?.status === undefined ?
+        await Canvas.loadImage(`./src/discord/assets/img/icons1/offline.png`) :
+        await Canvas.loadImage(`./src/discord/assets/img/icons1/${target.presence!.status}.png`);
       context.drawImage(statusIcon, 160, 180, 62, 62);
-    } else {
-      const statusIcon = await Canvas.loadImage(`./src/discord/assets/img/icons/${target.presence!.status}.png`);
-      context.drawImage(statusIcon, 160, 180, 62, 62);
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error loading status icon: ${err}`);
     }
 
     // Birthday Mode
