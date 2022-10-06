@@ -260,19 +260,19 @@ export const profile: SlashCommand = {
     const level = targetData.experience!.total.level;
     let starImagePath = '';
     if (level < 6) {
-      starImagePath = path.resolve(__dirname, '../../assets/img/badges/VIP.png');
+      starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIP.png';
     } else if (level < 10) {
-      starImagePath = path.resolve(__dirname, '../../assets/img/badges/VIPLVL5.png');
+      starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL5.png';
     } else if (level < 20) {
-      starImagePath = path.resolve(__dirname, '../../assets/img/badges/VIPLVL10.png');
+      starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL10.png';
     } else if (level < 30) {
-      starImagePath = path.resolve(__dirname, '../../assets/img/badges/VIPLVL20.png');
+      starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL20.png';
     } else if (level < 40) {
-      starImagePath = path.resolve(__dirname, '../../assets/img/badges/VIPLVL30.png');
+      starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL30.png';
     } else if (level < 50) {
-      starImagePath = path.resolve(__dirname, '../../assets/img/badges/VIPLVL40.png');
+      starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL40.png';
     } else if (level > 50) {
-      starImagePath = path.resolve(__dirname, '../../assets/img/badges/VIPLVL50.png');
+      starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL50.png';
     }
     try {
       logger.debug(`[${PREFIX}] starImagePath: ${starImagePath}`);
@@ -347,8 +347,8 @@ export const profile: SlashCommand = {
 
     try {
       const statusIcon = target.presence?.status === undefined ?
-        await Canvas.loadImage(path.resolve(__dirname, '../../assets/img/icons/offline.png')) :
-        await Canvas.loadImage(path.resolve(__dirname, `../../assets/img/icons/${target.presence!.status}.png`));
+        await Canvas.loadImage('.\\src\\discord\\assets\\img\\icons\\offline.png'):
+        await Canvas.loadImage(`.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`);
       context.drawImage(statusIcon, 160, 180, 62, 62);
     } catch (err) {
       logger.error(`[${PREFIX}] Error loading status icon: ${err}`);
@@ -361,7 +361,7 @@ export const profile: SlashCommand = {
       context.textAlign = 'center';
       context.fillStyle = textColor;
       context.fillText('HAPPY BIRTHDAY!', 467, 55);
-      const birthdayOverlay = await Canvas.loadImage(path.resolve(__dirname, '../../assets/img/cards/birthdayOverlay.png'));
+      const birthdayOverlay = await Canvas.loadImage('.src\\discord\\assets\\img\\cards\\birthdayOverlay.png');
       context.drawImage(birthdayOverlay, 0, 0, 934, 282);
     }
 
