@@ -40,7 +40,8 @@ export const profile: SlashCommand = {
     }
 
     // Choose colour based on user's role
-    let coloredCard = './src/discord/assets/img/cards/profilecardDefault1.png';
+    const filePrefix = env.NODE_ENV === 'production' ? '~' : '.';
+    let coloredCard = `${filePrefix}/src/discord/assets/img/cards/profilecardDefault.png`;
     let cardColor = '#141414';
     let textColor = '#ffffff';
 
@@ -48,47 +49,47 @@ export const profile: SlashCommand = {
     logger.debug(`[${PREFIX}] colorRole: ${colorRole?.id}`);
     if (colorRole) {
       if (colorRole.id === env.ROLE_PURPLE) {
-        coloredCard = './src/discord/assets/img/cards/profilecardPurple.png';
+        coloredCard = `${filePrefix}/src/discord/assets/img/cards/profilecardPurple.png`;
         cardColor = '#2d2636';
         // chipColor = '#FFC0CB';
         textColor = '#b072ff';
       } else if (colorRole.id === env.ROLE_BLUE) {
-        coloredCard = './src/discord/assets/img/cards/profilecardBlue.png';
+        coloredCard = `${filePrefix}/src/discord/assets/img/cards/profilecardBlue.png`;
         cardColor = '#283438';
         // chipColor = '#FFA500';
         textColor = '#5acff5';
       } else if (colorRole.id === env.ROLE_GREEN) {
-        coloredCard = './src/discord/assets/img/cards/profilecardGreen.png';
+        coloredCard = `${filePrefix}/src/discord/assets/img/cards/profilecardGreen.png`;
         cardColor = '#252e28';
         // chipColor = '#00FF00';
         textColor = '#6de194';
       } else if (colorRole.id === env.ROLE_PINK) {
-        coloredCard = './src/discord/assets/img/cards/profilecardPink.png';
+        coloredCard = `${filePrefix}/src/discord/assets/img/cards/profilecardPink.png`;
         cardColor = '#352530';
         // chipColor = '#FF0000';
         textColor = '#ff6dcd';
       } else if (colorRole.id === env.ROLE_RED) {
-        coloredCard = './src/discord/assets/img/cards/profilecardRed.png';
+        coloredCard = `${filePrefix}/src/discord/assets/img/cards/profilecardRed.png`;
         cardColor = '#382727';
         // chipColor = '#FF0000';
         textColor = '#ff5f60';
       } else if (colorRole.id === env.ROLE_ORANGE) {
-        coloredCard = './src/discord/assets/img/cards/profilecardOrange.png';
+        coloredCard = `${filePrefix}/src/discord/assets/img/cards/profilecardOrange.png`;
         cardColor = '#342b24';
         // chipColor = '#FFA500';
         textColor = '#ffa45f';
       } else if (colorRole.id === env.ROLE_YELLOW) {
-        coloredCard = './src/discord/assets/img/cards/profilecardYellow.png';
+        coloredCard = `${filePrefix}/src/discord/assets/img/cards/profilecardYellow.png`;
         cardColor = '#333024';
         // chipColor = '#FFFF00';
         textColor = '#ffdd5d';
       } else if (colorRole.id === env.ROLE_WHITE) {
-        coloredCard = './src/discord/assets/img/cards/profilecardWhite.png';
+        coloredCard = `${filePrefix}/src/discord/assets/img/cards/profilecardWhite.png`;
         cardColor = '#404040';
         // chipColor = '#FFFFFF';
         textColor = '#ffffff';
       } else if (colorRole.id === env.ROLE_BLACK) {
-        coloredCard = './src/discord/assets/img/cards/profilecardBlack.png';
+        coloredCard = `${filePrefix}/src/discord/assets/img/cards/profilecardBlack.png`;
         cardColor = '#181818';
         // chipColor = '#000000';
         textColor = '#626262';
@@ -106,6 +107,7 @@ export const profile: SlashCommand = {
 
     // Backround Image
     try {
+      logger.debug(`[${PREFIX}] loading image: ${coloredCard}`);
       const background = await Canvas.loadImage(coloredCard);
       logger.debug(`[${PREFIX}] image loaded`);
       context.drawImage(background, 0, 0, canvas.width, canvas.height);
@@ -223,7 +225,7 @@ export const profile: SlashCommand = {
 
     // Choose and Draw the Star Image
     const level = targetData.experience!.total.level;
-    let starImagePath = './src/discord/assets/img1/badges';
+    let starImagePath = `${filePrefix}/src/discord/assets/img/badges`;
     if (level < 6) {
       starImagePath += '/VIP.png';
     } else if (level < 10) {
@@ -308,8 +310,8 @@ export const profile: SlashCommand = {
 
     try {
       const statusIcon = target.presence?.status === undefined ?
-        await Canvas.loadImage(`./src/discord/assets/img/icons1/offline.png`) :
-        await Canvas.loadImage(`./src/discord/assets/img/icons1/${target.presence!.status}.png`);
+        await Canvas.loadImage(`./src/discord/assets/img/icons/offline.png`) :
+        await Canvas.loadImage(`./src/discord/assets/img/icons/${target.presence!.status}.png`);
       context.drawImage(statusIcon, 160, 180, 62, 62);
     } catch (err) {
       logger.error(`[${PREFIX}] Error loading status icon: ${err}`);
@@ -322,7 +324,7 @@ export const profile: SlashCommand = {
       context.textAlign = 'center';
       context.fillStyle = textColor;
       context.fillText('HAPPY BIRTHDAY!', 467, 55);
-      const birthdayOverlay = await Canvas.loadImage('./src/discord/assets/img/birthdayOverlay.png');
+      const birthdayOverlay = await Canvas.loadImage(`${filePrefix}/src/discord/assets/img/birthdayOverlay.png`);
       context.drawImage(birthdayOverlay, 0, 0, 934, 282);
     }
 
