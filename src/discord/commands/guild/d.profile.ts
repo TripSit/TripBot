@@ -47,7 +47,7 @@ export const profile: SlashCommand = {
     let textColor = '#ffffff';
 
     const colorRole = target.roles.color;
-    logger.debug(`[${PREFIX}] colorRole: ${colorRole?.id}`);
+    // logger.debug(`[${PREFIX}] colorRole: ${colorRole?.id}`);
     if (colorRole) {
       if (colorRole.id === env.ROLE_PURPLE) {
         // const purpleCard = path.resolve(__dirname, '../../assets/img/cards/profilecardPurple.png')
@@ -114,7 +114,7 @@ export const profile: SlashCommand = {
     const canvas = Canvas.createCanvas(canvasWidth, canvasHeight);
     const context = canvas.getContext('2d');
 
-    logger.debug(`[${PREFIX}] canvas created`);
+    // logger.debug(`[${PREFIX}] canvas created`);
 
     // Backround Image
     try {
@@ -162,10 +162,10 @@ export const profile: SlashCommand = {
       const background = await Canvas.loadImage(coloredCard);
       // const background = await Canvas.loadImage('https://i.imgur.com/uFp3u7j.png');
 
-      logger.debug(`[${PREFIX}] image loaded`);
-      logger.debug(`[${PREFIX}] background: ${background}`);
+      // logger.debug(`[${PREFIX}] image loaded`);
+      // logger.debug(`[${PREFIX}] background: ${background}`);
       context.drawImage(background, 0, 0, canvas.width, canvas.height);
-      logger.debug(`[${PREFIX}] image drawn`);
+      // logger.debug(`[${PREFIX}] image drawn`);
     } catch (err) {
       logger.error(`[${PREFIX}] Error loading background image: ${err}`);
     }
@@ -180,7 +180,7 @@ export const profile: SlashCommand = {
       return context.font;
     };
 
-    logger.debug(`[${PREFIX}] username resize`);
+    // logger.debug(`[${PREFIX}] username resize`);
 
     // Username Text
     context.font = applyUsername(canvas, `${target.user.tag}`);
@@ -190,7 +190,7 @@ export const profile: SlashCommand = {
     // context.fillStyle = textColor;
     // context.fillText(`${target.displayName}`, 245, 124);
 
-    logger.debug(`[${PREFIX}] username`);
+    // logger.debug(`[${PREFIX}] username`);
 
     // Get User Data
     let targetData = {} as userDbEntry;
@@ -230,25 +230,30 @@ export const profile: SlashCommand = {
     let itIsYourBirthday = false;
 
     if (targetData.birthday) {
-      targetBirthday = new Date(`${targetData.birthday.month}, ${targetData.birthday.day+1}, 2022`);
-      logger.debug(`[${PREFIX}] targetBirthday: ${targetBirthday}`);
-      logger.debug(`[${PREFIX}] targetBirthday: ${targetBirthday.toLocaleString('en-US', {month: 'short'})}`);
+      // logger.debug(`[${PREFIX}] targetData.birthday: ${JSON.stringify(targetData.birthday, null, 2)}`);
+      // logger.debug(`[${PREFIX}] targetData.birthday.month: ${targetData.birthday.month}`);
+      // logger.debug(`[${PREFIX}] targetData.birthday.day: ${targetData.birthday.day}`);
+      targetBirthday = new Date(`${targetData.birthday.month}, ${targetData.birthday.day}, 2022`);
+      // logger.debug(`[${PREFIX}] targetBirthday: ${targetBirthday}`);
+      // logger.debug(`[${PREFIX}] targetBirthday (short month): ${targetBirthday.toLocaleString('en-US', {month: 'short'})}`);
+      // logger.debug(`[${PREFIX}] targetBirthday.getMonth(): ${targetBirthday.getMonth()}`);
+      // logger.debug(`[${PREFIX}] targetBirthday.getDate(): ${targetBirthday.getDate()}`);
 
       const today = new Date();
-      if (today.getMonth() === targetBirthday.getMonth() && today.getDay() === targetBirthday.getDay()) {
+      if (today.getMonth() === targetBirthday.getMonth() && today.getDate() === targetBirthday.getDate()) {
         logger.debug(`[${PREFIX}] Birthday Match!`);
         itIsYourBirthday = true;
       }
-      if (targetBirthday.getDay() < 10) {
-        context.fillText(`${targetBirthday.toLocaleString('en-US', {month: 'short'})} 0${targetBirthday.getDay()}`, 446, 253); ;
+      if (targetBirthday.getDate() < 10) {
+        context.fillText(`${targetBirthday.toLocaleString('en-US', {month: 'short'})} 0${targetBirthday.getDate()}`, 446, 253); ;
       } else {
-        context.fillText(`${targetBirthday.toLocaleString('en-US', {month: 'short'})} ${targetBirthday.getDay()}`, 446, 253);
+        context.fillText(`${targetBirthday.toLocaleString('en-US', {month: 'short'})} ${targetBirthday.getDate()}`, 446, 253);
       }
     } else {
       context.fillText(`Not set!`, 446, 253); ;
     }
 
-    logger.debug(`[${PREFIX}] birthday`);
+    // logger.debug(`[${PREFIX}] birthday`);
 
     /**
      * Messages Sent Text
@@ -265,9 +270,7 @@ export const profile: SlashCommand = {
       }
     }
     const MessagesSent = targetData.experience!.total.totalExpPoints / 20;
-    const test = numFormatter(MessagesSent);
-    logger.debug(`[${PREFIX}] test: ${test}`);
-    context.fillText(`${test}`, 684, 253);
+    context.fillText(`${numFormatter(MessagesSent)}`, 684, 253);
 
     if (targetData.karma) {
       if (targetData.karma.karma_received) {
@@ -416,7 +419,5 @@ export const profile: SlashCommand = {
     // Process The Entire Card and Send it to Discord
     const attachment = new AttachmentBuilder(await canvas.encode('png'), {name: 'tripsit-profile-image.png'});
     interaction.reply({files: [attachment]});
-
-    logger.debug(`[${PREFIX}] finished!`);
   },
 };
