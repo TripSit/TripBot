@@ -15,11 +15,11 @@ export type userDbEntry = {
 }
 
 export type expDict = {
-  total: expEntry
-  general?: expEntry
-  tripsitter?: expEntry
-  developer?: expEntry
-  team?: expEntry
+  total: expEntry,
+  general?: expEntry,
+  tripsitter?: expEntry,
+  developer?: expEntry,
+  team?: expEntry,
 }
 
 export type expEntry = {
@@ -28,6 +28,7 @@ export type expEntry = {
   totalExpPoints: number,
   lastMessageDate: number,
   lastMessageChannel: string,
+  mee6converted?: boolean
 }
 
 
