@@ -76,7 +76,7 @@ export const profile: SlashCommand = {
         textColor = '#ff6dcd';
       } else if (colorRole.id === env.ROLE_RED) {
         // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardRed.png');
-        coloredCard = 'https://i.imgur.com/HBM5RLI';
+        coloredCard = 'https://i.imgur.com/HBM5RLI.png';
         cardColor = '#382727';
         // chipColor = '#FF0000';
         textColor = '#ff5f60';
