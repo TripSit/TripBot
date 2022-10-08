@@ -186,7 +186,7 @@ export async function announcements(message:Message) {
     `Get </drug:997960179217879092> info on various substances!`,
     `Use </dxm_calc:1017060823279087658> to get a DXM dosage!`,
     `Get </ems:966500308048031755> information if you need it!`,
-    `Get really good at </eyeballing:1019720888544935946>!`,
+    // `Get really good at </eyeballing:1019720888544935946>!`,
     `Overwhelmed? Use and follow </grounding:1019720888544935947>`,
     `Check your sparkle points with </h2flow:984560964051537972>`,
     `Get info on every command with </help:966477926763757629>`,
