@@ -240,6 +240,8 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
             const dbFilename = `./backups/mee6-leaderboard.csv`;
             const data = fs.readFileSync(dbFilename, 'utf8');
             const dataarray = data.split('\r\n');
+            logger.debug(`[${PREFIX}] dataarray: ${dataarray.length}`);
+            logger.debug(`[${PREFIX}] searching for actor.tag: ${actor.tag}`);
             const userInfo = dataarray.find((line) => {
               const linearray = line.split(',');
               const tag = `${linearray[0]}${linearray[1]}`;
@@ -247,6 +249,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
                 return true;
               }
             });
+            logger.debug(`[${PREFIX}] userInfo: ${userInfo}`);
             if (userInfo) {
               const bonusPoints = parseInt(userInfo.split(',')[2], 10);
               logger.debug(`[${PREFIX}] Giving ${actor} ${bonusPoints} experience points`);
@@ -285,9 +288,14 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
           const expData = expDict[expType as keyof typeof expDict];
           if (expData) {
             // logger.debug(`[${PREFIX}] ${expType} exp found!`);
+            // logger.debug(`[${PREFIX}] expData.lastMessageDate: ${expData.lastMessageDate}`);
             const lastMessageDate = new Date(expData.lastMessageDate);
+            // logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
+            // logger.debug(`[${PREFIX}] currMessageDate.valueOf(): ${currMessageDate.valueOf()}`);
+            // logger.debug(`[${PREFIX}] lastMessageDate.valueOf(): ${lastMessageDate.valueOf()}`);
             const timeDiff = currMessageDate.valueOf() - lastMessageDate.valueOf();
-            // logger.debug(`[${PREFIX}] Time difference: ${timeDiff}`);
+            // logger.debug(`[${PREFIX}] timeDiff: ${timeDiff}`);
+            // logger.debug(`[${PREFIX}] bufferTime: ${bufferTime}`);
             if (timeDiff > bufferTime) {
               // If the time diff is over one bufferTime, increase the experience points
               let levelExpPoints = expData.levelExpPoints + expPoints;
@@ -312,7 +320,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
               expData.level = level;
               expData.levelExpPoints = levelExpPoints;
               expData.totalExpPoints = totalExpPoints;
-              expData.lastMessageDate = lastMessageDate.valueOf();
+              expData.lastMessageDate = currMessageDate.valueOf();
               expData.lastMessageChannel = messageChannelId;
               // logger.debug(`[${PREFIX}] categoryExperienceData: ${JSON.stringify(expData, null, 2)}`);
               // logger.debug(`[${PREFIX}] experienceType: ${expType}`);
