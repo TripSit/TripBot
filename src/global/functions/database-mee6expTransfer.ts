@@ -5,6 +5,8 @@ import * as path from 'path';
 import fs from 'fs';
 import * as firebase from 'firebase-admin';
 import firebaseCreds from '../assets/config/firebase_creds.json';
+import mee6data from '../assets/config/mee6-leaderboard.json';
+
 const PREFIX = path.parse(__filename).name;
 
 /**

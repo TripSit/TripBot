@@ -14,6 +14,7 @@ import fs from 'fs';
 // import {stripIndents} from 'common-tags';
 import {stripIndents} from 'common-tags';
 import {ircMessage} from '../../irc/@types/irc';
+import mee6data from '../assets/config/mee6-leaderboard.json';
 
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -237,9 +238,10 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
         if (experienceDict.total) {
           if (!experienceDict.total.mee6converted) {
             logger.debug(`[${PREFIX}] Mee6 conversion not yet complete`);
-            const dbFilename = `./backups/mee6-leaderboard.csv`;
-            const data = fs.readFileSync(dbFilename, 'utf8');
-            const dataarray = data.split('\r\n');
+            // const dbFilename = `./backups/mee6-leaderboard.csv`;
+            // const data = fs.readFileSync(dbFilename, 'utf8');
+            // const dataarray = data.split('\r\n');
+            const dataarray = Object.keys(mee6data);
             logger.debug(`[${PREFIX}] dataarray: ${dataarray.length}`);
             logger.debug(`[${PREFIX}] searching for actor.tag: ${actor.tag}`);
             const userInfo = dataarray.find((line) => {
