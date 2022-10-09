@@ -269,8 +269,14 @@ export const profile: SlashCommand = {
         return num.toFixed(0);
       }
     }
-    const MessagesSent = targetData.experience!.total.totalExpPoints / 20;
-    context.fillText(`${numFormatter(MessagesSent)}`, 684, 253);
+
+    // Messages Sent Text
+    if (targetData.experience) {
+      if (targetData.experience.total) {
+        const MessagesSent = targetData.experience!.total.totalExpPoints / 20;
+        context.fillText(`${numFormatter(MessagesSent)}`, 684, 253);
+      }
+    }
 
     if (targetData.karma) {
       if (targetData.karma.karma_received) {
