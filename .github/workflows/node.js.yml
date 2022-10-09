@@ -29,10 +29,3 @@ jobs:
       run: npx eslint --ext ts .
     - name: Testing
       run: echo "I would test now!"
-    - name: Webhook
-      uses: tripsit/tripsit-discord-bot@main
-      with:
-        url: ${{ secrets.CAPROVER_WEBHOOK_URL }}
-        headers: '{"repository": "tripsit/tripsit-discord-bot"}'
-        body: '{"event": "deployment", "repository": "tripsit/tripsit-discord-bot"}'
-
