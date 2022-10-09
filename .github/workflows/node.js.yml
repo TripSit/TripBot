@@ -24,43 +24,14 @@ jobs:
     - name: Update npm
       run: npm install -g npm
     - name: Install eslint
-      run: npm install -g eslint
+      run: npm install -g eslint eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import
     - name: Linting
       run: eslint --ext ts .
-    - name: Install dependencies
-      run: npm ci
-      
-  lint:
-
-    runs-on: ubuntu-latest
-
-    steps:
-
-    - name: Linting
-      run: eslint --ext ts .
-      
-  test:
-
-    runs-on: ubuntu-latest
-
-    steps:
     - name: Testing
       run: echo "I would test now!"
-      
-  build:
-  
-    runs-on: ubuntu-latest
-
-    steps:
     - name: Install dependencies
-      run: npm ci
+      run: npm ci      
     - name: Build docker image
       run: echo "I would build the docker image now!"
-  
-  deploy:
-
-    runs-on: ubuntu-latest
-
-    steps:
     - name: Deploy
       run: echo "I would deploy the docker image now!"
