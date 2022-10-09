@@ -29,8 +29,6 @@ jobs:
       run: npm install eslint eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import --save-dev
     - name: Print eslint version
       run: npx eslint --version
-    - name: Turn on ESlint
-      run: npx eslint --init
     - name: Linting
       run: npx eslint --ext ts .
     - name: Testing
