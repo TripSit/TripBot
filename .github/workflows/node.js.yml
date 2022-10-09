@@ -25,6 +25,14 @@ jobs:
       run: npm install -g npm
     - name: Install dependencies
       run: npm ci
+  
+  lint:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Linting
+      run: eslint --ext ts .
       
   test:
 
