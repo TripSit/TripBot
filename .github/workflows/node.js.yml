@@ -23,10 +23,14 @@ jobs:
         cache: 'npm'
     - name: Update npm
       run: npm install -g npm
+    - name: Print NPM version
+      run: npm --version
     - name: Install eslint
       run: npm install -g eslint eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import
+    - name: Print eslint version
+      run: npx eslint --version
     - name: Linting
-      run: eslint --ext ts .
+      run: npx eslint --ext ts .
     - name: Testing
       run: echo "I would test now!"
     - name: Install dependencies
