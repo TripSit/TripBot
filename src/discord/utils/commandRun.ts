@@ -18,9 +18,9 @@ import env from '../../global/utils/env.config';
  * @return {Discord.MessageEmbed}
  */
 export async function commandRun(
-    interaction: ChatInputCommandInteraction| MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction,
-    client: Client) {
-  logger.debug(`[${PREFIX}] starting!`);
+  interaction: ChatInputCommandInteraction| MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction,
+  client: Client) {
+  // logger.debug(`[${PREFIX}] starting!`);
   // const blacklistUsers = [];
   // if (global.guild_db) {
   //   global.guild_db.forEach((doc) => {
@@ -124,5 +124,5 @@ export async function commandRun(
       });
     }
   }
-  logger.debug(`[${PREFIX}] finished!`);
+  // logger.debug(`[${PREFIX}] finished!`);
 };

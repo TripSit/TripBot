@@ -21,26 +21,26 @@ const PREFIX = path.parse(__filename).name;
 
 export const bug: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('dramacounter')
-      .setDescription('How long since the last drama incident?!')
-      .addSubcommand((subcommand) => subcommand
-          .setName('get')
-          .setDescription('Get the time since last drama.'),
+    .setName('dramacounter')
+    .setDescription('How long since the last drama incident?!')
+    .addSubcommand((subcommand) => subcommand
+      .setName('get')
+      .setDescription('Get the time since last drama.'),
+    )
+    .addSubcommand((subcommand) => subcommand
+      .setName('reset')
+      .setDescription('Reset the dramacounter >.<')
+      .addStringOption((option) => option
+        .setName('dramatime')
+        .setDescription('When did the drama happen? "3 hours (ago)"')
+        .setRequired(true),
       )
-      .addSubcommand((subcommand) => subcommand
-          .setName('reset')
-          .setDescription('Reset the dramacounter >.<')
-          .addStringOption((option) => option
-              .setName('dramatime')
-              .setDescription('When did the drama happen? "3 hours (ago)"')
-              .setRequired(true),
-          )
-          .addStringOption((option) => option
-              .setName('dramaissue')
-              .setDescription('What was the drama? Be descriptive, or cryptic.')
-              .setRequired(true),
-          ),
+      .addStringOption((option) => option
+        .setName('dramaissue')
+        .setDescription('What was the drama? Be descriptive, or cryptic.')
+        .setRequired(true),
       ),
+    ),
   async execute(interaction) {
     logger.debug(`[${PREFIX}] starting!`);
     const command = interaction.options.getSubcommand() as 'get' | 'reset';
@@ -53,9 +53,9 @@ export const bug: SlashCommand = {
             const timeVal = data.val().time;
             const issue = data.val().issue;
             const embed = embedTemplate()
-                .setTitle('Drama Counter')
-                .setDescription(
-                    `The last drama was ${time(new Date(timeVal), 'R')}: ${issue}`);
+              .setTitle('Drama Counter')
+              .setDescription(
+                `The last drama was ${time(new Date(timeVal), 'R')}: ${issue}`);
             interaction.reply({embeds: [embed]});
           } else {
             interaction.reply('No drama has been reported yet! Be thankful while it lasts...');
@@ -76,8 +76,8 @@ export const bug: SlashCommand = {
         });
         const timeDate = time(new Date(Date.now().valueOf() - dramatimeValue), 'R');
         const embed = embedTemplate()
-            .setTitle('Drama Counter')
-            .setDescription(`The drama counter has been reset to ${timeDate} ago, \
+          .setTitle('Drama Counter')
+          .setDescription(`The drama counter has been reset to ${timeDate} ago, \
 and the issue was: ${dramaIssue}`);
         interaction.reply({embeds: [embed]});
       }

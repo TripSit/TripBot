@@ -10,18 +10,18 @@ const PREFIX = path.parse(__filename).name;
 
 export const dhydrate: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('hydrate')
-      .setDescription('Remember to hydrate!'),
+    .setName('hydrate')
+    .setDescription('Remember to hydrate!'),
 
   async execute(interaction) {
     const output = '💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊\n\n' +
         '⚠️ ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ ⚠️\n\n' +
         '💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊';
     const embed = embedTemplate()
-        .setColor(Colors.DarkBlue)
-        .setDescription(output)
-        .setAuthor(null)
-        .setFooter(null);
+      .setColor(Colors.DarkBlue)
+      .setDescription(output)
+      .setAuthor(null)
+      .setFooter(null);
 
     if (!interaction.replied) {
       interaction.reply({

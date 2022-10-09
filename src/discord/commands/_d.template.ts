@@ -19,19 +19,19 @@ const PREFIX = path.parse(__filename).name;
 
 export const bug: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('template')
-      .setDescription('Example!'),
+    .setName('template')
+    .setDescription('Example!'),
   async execute(interaction) {
     logger.debug(`[${PREFIX}] starting!`);
 
     // Create the modal
     const modal = new ModalBuilder()
-        .setCustomId('modal')
-        .setTitle('Modal');
+      .setCustomId('modal')
+      .setTitle('Modal');
     const modalInput = new TextInputBuilder()
-        .setCustomId('modalInput')
-        .setLabel('Input')
-        .setStyle(TextInputStyle.Paragraph);
+      .setCustomId('modalInput')
+      .setLabel('Input')
+      .setStyle(TextInputStyle.Paragraph);
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(modalInput);
     modal.addComponents(firstActionRow);
     await interaction.showModal(modal);
@@ -41,9 +41,9 @@ export const bug: SlashCommand = {
     const modalOutput = interaction.fields.getTextInputValue('modalInput');
 
     const embed = embedTemplate()
-        .setColor(Colors.Purple)
-        .setTitle('Title')
-        .setDescription(modalOutput);
+      .setColor(Colors.Purple)
+      .setTitle('Title')
+      .setDescription(modalOutput);
     interaction.reply({embeds: [embed], ephemeral: true});
   },
 };

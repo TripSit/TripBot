@@ -1,6 +1,6 @@
 import {
   Message,
-  GuildTextBasedChannel,
+  // GuildTextBasedChannel,
   Role,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
@@ -18,12 +18,10 @@ const helpCounter = new Map<string, number>();
 **/
 export async function messageCommand(message: Message): Promise<void> {
   // logger.debug(`[${PREFIX}] starting!`);
-  // logger.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}!`);
   const displayName = message.member ? message.member.displayName : message.author.username;
 
-  logger.debug(stripIndents`[${PREFIX}] ${displayName} said\
-  ${message.content} in ${(message.channel as GuildTextBasedChannel).name}!`);
-  // logger.debug(`[${PREFIX}] finished!`);
+  // logger.debug(stripIndents`[${PREFIX}] ${displayName} said\
+  // ${message.content} in ${(message.channel as GuildTextBasedChannel).name}!`);
 
   if (message.content.startsWith('~')) {
     // Find the word that appears after ~
@@ -44,7 +42,7 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
       const roleTripsitter = message.guild!.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
       const roleHelper = message.guild!.roles.cache.find((role) => role.id === env.ROLE_HELPER) as Role;
       message.channel.send(
-          `Hey ${displayName}, thank you for asking for help! We've notified our ${roleTripsitter} and\
+        `Hey ${displayName}, thank you for asking for help! We've notified our ${roleTripsitter} and\
 ${roleHelper}. Can you start off by telling us how much you took and the details of your problem?`);
       // Update helpCounter with the current date that the user sent this command
       helpCounter.set(message.author.id, Date.now().valueOf());
@@ -61,7 +59,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       '🤨',
     ];
     message.channel.send(faces[Math.floor(Math.random() * faces.length)]);
-  } else if (message.mentions.has(message.client.user!)) {
+  } else if (message.mentions.has(message.client.user) || message.cleanContent.toLowerCase().includes('tripbot')) {
     const responses = [
       `*boops quietly*`,
       `*beeps quietly*`,

@@ -97,7 +97,7 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
         // logger.debug(`[${PREFIX}] action: ${action}`);
 
         const differentRole = newMember.guild.roles.cache
-            .find((role) => role.id === differenceId);
+          .find((role) => role.id === differenceId);
 
         logger.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${differentRole?.name} (${differentRole?.id})`);
 
@@ -108,7 +108,7 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
           // logger.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${roleName}`);
 
           // const userInfo = await getUserInfo(newMember.id);
-          const channelBotlog = newMember.guild.channels.cache.get(env.CHANNEL_TRIPBOTLOGS) as TextChannel;
+          const channelBotlog = newMember.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
           if (channelBotlog) {
             channelBotlog.send(`${newMember.displayName} ${action} ${roleName}`);
           }

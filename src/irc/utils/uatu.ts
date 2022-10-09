@@ -79,8 +79,8 @@ const botNicknames = [
  * @return {Promise<void>}
  */
 export async function watcher(
-    message:ircMessage,
-    newNick?:string,
+  message:ircMessage,
+  newNick?:string,
 ): Promise<void> {
   // logger.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}`);
   if (botNicknames.includes(message.nick)) {
@@ -174,7 +174,7 @@ export async function watcher(
     let lastMessageChan = '';
     if (global.db) {
       const lastMessageChanRef = db.ref(
-          `${env.FIREBASE_DB_USERS}/${accountName}/experience/${lastTalkCategory}/lastMessageChannel`,
+        `${env.FIREBASE_DB_USERS}/${accountName}/experience/${lastTalkCategory}/lastMessageChannel`,
       );
       await db.ref(lastMessageChanRef).once('value', (data) => {
         if (data.val() !== null) {

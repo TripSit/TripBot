@@ -25,16 +25,16 @@ const emojiDict = {
 
 export const dpoll: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('poll')
-      .setDescription('Creates a poll!')
-      .addStringOption((option) => option
-          .setName('question')
-          .setDescription('What do you want to ask?')
-          .setRequired(true))
-      .addStringOption((option) => option
-          .setName('options')
-          .setDescription('CSV of options, EG: "Red, Blue, Green"')
-          .setRequired(true)),
+    .setName('poll')
+    .setDescription('Creates a poll!')
+    .addStringOption((option) => option
+      .setName('question')
+      .setDescription('What do you want to ask?')
+      .setRequired(true))
+    .addStringOption((option) => option
+      .setName('options')
+      .setDescription('CSV of options, EG: "Red, Blue, Green"')
+      .setRequired(true)),
   async execute(interaction) {
     logger.debug(`[${PREFIX}] Starting!`);
     await interaction.deferReply({ephemeral: true});
@@ -52,18 +52,18 @@ export const dpoll: SlashCommand = {
     }
 
     const pollEmbed = embedTemplate()
-        .setAuthor(null)
-        .setTitle(`**${question}**`)
-        .setDescription(stripIndents`${body}`)
-        .setFooter({text: `*A poll by ${(interaction.member as GuildMember).displayName}*`});
+      .setAuthor(null)
+      .setTitle(`**${question}**`)
+      .setDescription(stripIndents`${body}`)
+      .setFooter({text: `*A poll by ${(interaction.member as GuildMember).displayName}*`});
 
     await (interaction.channel as TextChannel).send({embeds: [pollEmbed]})
-        .then(async (msg:Message) => {
-          for (let i = 0; i < optionsArray.length; i += 1) {
+      .then(async (msg:Message) => {
+        for (let i = 0; i < optionsArray.length; i += 1) {
           /* eslint-disable no-await-in-loop */
-            await msg.react(emojiDict[i + 1 as keyof typeof emojiDict]);
-          }
-        });
+          await msg.react(emojiDict[i + 1 as keyof typeof emojiDict]);
+        }
+      });
 
     await interaction.editReply('Done!');
     logger.debug(`[${PREFIX}] finished!`);

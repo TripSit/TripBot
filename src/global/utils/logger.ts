@@ -51,20 +51,20 @@ const myFormat = printf( ({level, message, timestamp, stack, ...metadata}) => {
 const Logger = createLogger({
   level: 'debug',
   format: combine(
-      format.colorize({all: true}),
-      splat(),
-      timestamp({format: 'YYYY-MM-DD HH:mm:ss'}),
-      myFormat,
+    format.colorize({all: true}),
+    splat(),
+    timestamp({format: 'YYYY-MM-DD HH:mm:ss'}),
+    myFormat,
   ),
   transports: [
     new transports.Console(),
-    new transports.File({
-      filename: 'logs/error.log',
-      level: 'error',
-    }),
-    new transports.File({
-      filename: 'logs/all.log',
-    }),
+    // new transports.File({
+    //   filename: 'logs/error.log',
+    //   level: 'error',
+    // }),
+    // new transports.File({
+    //   filename: 'logs/all.log',
+    // }),
   ],
 });
 

@@ -17,9 +17,9 @@ const PREFIX = path.parse(__filename).name;
  * @return {Promise<void>}
  */
 export async function handleReactionRoles(
-    reaction:MessageReaction,
-    user:User,
-    add:boolean,
+  reaction:MessageReaction,
+  user:User,
+  add:boolean,
 ): Promise<void> {
   logger.debug(`[${PREFIX}] started!`);
   // logger.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction, null, 2)}`);

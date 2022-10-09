@@ -10,9 +10,9 @@ import {ircMessage} from '../@types/irc';
  */
 export async function execute():Promise<void> {
   global.ircClient.addListener('join', (
-      channel:string,
-      nick:string,
-      message:ircMessage) => {
+    channel:string,
+    nick:string,
+    message:ircMessage) => {
     // {
     //   "prefix": "TSDev!~TSDev@tripsit/bridge/TS1",
     //   "nick": "TSDev",

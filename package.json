@@ -8,9 +8,11 @@
     "patch": "npm version patch -git-tag-version false",
     "nodemon": "nodemon --config ./nodemon.json",
     "start": "npm run deploy && npm run prod",
-    "lint": "eslint --ext ts .",
+    "lint": "eslint --fix --ext ts .",
     "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
-    "prod": "ts-node --transpile-only src/start.ts"
+    "prod": "ts-node --transpile-only src/start.ts",
+    "DB_backup": "ts-node --transpile-only ./src/global/functions/database-backup.ts",
+    "DB_ETL": "ts-node --transpile-only ./src/global/functions/database-mee6expTransfer.ts"
   },
   "repository": {
     "type": "git",
@@ -74,7 +76,7 @@
     "typescript": "^4.8.4"
   },
   "engines": {
-    "node": "16.17.0",
+    "node": "16.17.1",
     "npm": "8.19.2"
   }
 }

@@ -9,12 +9,12 @@ const PREFIX = path.parse(__filename).name;
 
 export const dwarmline: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('warmline')
-      .setDescription('(USA only) Need someone to talk to, but don\'t need a "hotline"?'),
+    .setName('warmline')
+    .setDescription('(USA only) Need someone to talk to, but don\'t need a "hotline"?'),
 
   async execute(interaction) {
     const embed = embedTemplate()
-        .setDescription('[Check out the warmline directory](https://warmline.org/warmdir.html#directory)');
+      .setDescription('[Check out the warmline directory](https://warmline.org/warmdir.html#directory)');
     interaction.reply({embeds: [embed], ephemeral: false});
     logger.debug(`[${PREFIX}] finished!`);
   },

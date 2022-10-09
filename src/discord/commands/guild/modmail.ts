@@ -29,60 +29,60 @@ import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
 const modmailButtons = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-        new ButtonBuilder()
-            .setCustomId('modmailTripsitter')
-            .setLabel('I need a tripsitter')
-            .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-            .setCustomId('modmailFeedback')
-            .setLabel('Give Feedback')
-            .setStyle(ButtonStyle.Primary),
-        // new ButtonBuilder()
-        //     .setCustomId('modmailIrcissue')
-        //     .setLabel('IRC issues')
-        //     .setStyle(ButtonStyle.Danger),
-        new ButtonBuilder()
-            .setCustomId('modmailDiscordissue')
-            .setLabel('Discord issues')
-            .setStyle(ButtonStyle.Secondary),
-    );
+  .addComponents(
+    new ButtonBuilder()
+      .setCustomId('modmailTripsitter')
+      .setLabel('I need a tripsitter')
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId('modmailFeedback')
+      .setLabel('Give Feedback')
+      .setStyle(ButtonStyle.Primary),
+    // new ButtonBuilder()
+    //     .setCustomId('modmailIrcissue')
+    //     .setLabel('IRC issues')
+    //     .setStyle(ButtonStyle.Danger),
+    new ButtonBuilder()
+      .setCustomId('modmailDiscordissue')
+      .setLabel('Discord issues')
+      .setStyle(ButtonStyle.Secondary),
+  );
 
 // Declare the static test nitice
 const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
 
 export const modmail: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('modmail')
-      .setDescription('Modmail actions!')
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('Close this ticket as resolved')
-          .addUserOption((option) => option
-              .setName('target')
-              .setDescription('Modmail target to act on!')
-              .setRequired(true))
-          .setName('closed'))
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('Block this user from future messages/tickets')
-          .addUserOption((option) => option
-              .setName('target')
-              .setDescription('Modmail target to act on!')
-              .setRequired(true))
-          .setName('blocked'))
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('Take the ticket off hold')
-          .addUserOption((option) => option
-              .setName('target')
-              .setDescription('Modmail target to act on!')
-              .setRequired(true))
-          .setName('open'))
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('Put the ticket on hold')
-          .addUserOption((option) => option
-              .setName('target')
-              .setDescription('Modmail target to act on!')
-              .setRequired(true))
-          .setName('paused')),
+    .setName('modmail')
+    .setDescription('Modmail actions!')
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('Close this ticket as resolved')
+      .addUserOption((option) => option
+        .setName('target')
+        .setDescription('Modmail target to act on!')
+        .setRequired(true))
+      .setName('closed'))
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('Block this user from future messages/tickets')
+      .addUserOption((option) => option
+        .setName('target')
+        .setDescription('Modmail target to act on!')
+        .setRequired(true))
+      .setName('blocked'))
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('Take the ticket off hold')
+      .addUserOption((option) => option
+        .setName('target')
+        .setDescription('Modmail target to act on!')
+        .setRequired(true))
+      .setName('open'))
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('Put the ticket on hold')
+      .addUserOption((option) => option
+        .setName('target')
+        .setDescription('Modmail target to act on!')
+        .setRequired(true))
+      .setName('paused')),
   async execute(interaction:ChatInputCommandInteraction) {
     logger.debug(`[${PREFIX}] Started!`);
     const command = interaction.options.getSubcommand();
@@ -167,7 +167,7 @@ export async function modmailInitialResponse(message:Message) {
   // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
 
   const embed = embedTemplate()
-      .setColor(Colors.Blue);
+    .setColor(Colors.Blue);
 
   const author = message.author;
   const guild = await message.client.guilds.fetch(env.DISCORD_GUILD_ID);
@@ -217,14 +217,14 @@ export async function modmailFeedback(interaction:ButtonInteraction) {
   logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
   // Create the modal
   const modal = new ModalBuilder()
-      .setCustomId('modmailFeedbackModal')
-      .setTitle('TripSit Feedback');
+    .setCustomId('modmailFeedbackModal')
+    .setTitle('TripSit Feedback');
   const timeoutReason = new TextInputBuilder()
-      .setLabel('What would you like to let the team know?')
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('This bot is cool and I have a suggestion...')
-      .setCustomId('feedbackInput')
-      .setRequired(true);
+    .setLabel('What would you like to let the team know?')
+    .setStyle(TextInputStyle.Paragraph)
+    .setPlaceholder('This bot is cool and I have a suggestion...')
+    .setCustomId('feedbackInput')
+    .setRequired(true);
   // An action row only holds one text input, so you need one action row per text input.
   const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutReason);
   // Add inputs to the modal
@@ -252,7 +252,7 @@ export async function modmailFeedbackSubmit(interaction:ModalSubmitInteraction) 
 
   const member = await tripsitGuild.members.fetch(interaction.user.id);
   const isDev = member.roles.cache.find(
-      (role) => role.id === env.ROLE_DEVELOPER,
+    (role) => role.id === env.ROLE_DEVELOPER,
   ) !== undefined;
 
   // Get the moderator role
@@ -262,8 +262,8 @@ export async function modmailFeedbackSubmit(interaction:ModalSubmitInteraction) 
   // Get the moderation channel
   const channel = interaction.client.channels.cache.get(env.CHANNEL_DEVELOPMENT)! as TextChannel;
   const ircAdminEmbed = embedTemplate()
-      .setColor(Colors.Purple)
-      .setDescription(stripIndents`
+    .setColor(Colors.Purple)
+    .setDescription(stripIndents`
     Hey ${isDev ? 'moderators' : roleModerator}!
 
     Someone has submitted feedback:
@@ -288,14 +288,14 @@ export async function modmailIssue(interaction:ButtonInteraction, issueType:'irc
   }
   // Create the modal
   const modal = new ModalBuilder()
-      .setCustomId(`${issueType}ModmailIssueModal`)
-      .setTitle('TripSit Feedback');
+    .setCustomId(`${issueType}ModmailIssueModal`)
+    .setTitle('TripSit Feedback');
   const timeoutReason = new TextInputBuilder()
-      .setLabel('What is your issue? Be super detailed!')
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder(placeholder)
-      .setCustomId(`${issueType}IssueInput`)
-      .setRequired(true);
+    .setLabel('What is your issue? Be super detailed!')
+    .setStyle(TextInputStyle.Paragraph)
+    .setPlaceholder(placeholder)
+    .setCustomId(`${issueType}IssueInput`)
+    .setRequired(true);
   // An action row only holds one text input, so you need one action row per text input.
   const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutReason);
   // Add inputs to the modal
@@ -339,14 +339,14 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
 
   logger.debug(`[${PREFIX}] isDev: ${JSON.stringify(isDev, null, 2)}!`);
 
-  const channel = interaction.client.channels.cache.get(env.CHANNEL_TECHHELP) as TextChannel;
+  const channel = interaction.client.channels.cache.get(env.CHANNEL_HELPDESK) as TextChannel;
   // Debating if there should be a sparate channel for discord issues or if just use irc?
   // if (issueType === 'discord') {
   //   // Get the moderation channel
-  //   channel = interaction.client.channels.cache.get(CHANNEL_TECHHELP);
+  //   channel = interaction.client.channels.cache.get(CHANNEL_HELPDESK);
   // } else if (issueType === 'irc') {
   //   // Get the irc channel
-  //   channel = interaction.client.channels.cache.get(CHANNEL_TECHHELP);
+  //   channel = interaction.client.channels.cache.get(CHANNEL_HELPDESK);
   // }
 
   // Get whatever they sent in the modal

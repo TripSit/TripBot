@@ -24,9 +24,9 @@ async function getCommands(commandType: string): Promise<SlashCommand[]> {
   const commandDir = path.join(__dirname, '../commands');
   const files = await fs.readdir(path.join(commandDir, commandType));
   return files
-      .filter((file) => file.endsWith('.ts') && !file.endsWith('index.ts'))
-      .map((file) => require(`${commandDir}/${commandType}/${file}`))
-      .map((command) => command[Object.keys(command)[0]].data.toJSON());
+    .filter((file) => file.endsWith('.ts') && !file.endsWith('index.ts'))
+    .map((file) => require(`${commandDir}/${commandType}/${file}`))
+    .map((command) => command[Object.keys(command)[0]].data.toJSON());
 }
 
 const rest = new REST({version: '9'}).setToken(
@@ -35,18 +35,18 @@ const rest = new REST({version: '9'}).setToken(
 
 Promise.all([
   getCommands('global').then((commands) => rest.put(
-      Routes.applicationCommands(env.DISCORD_CLIENT_ID.toString()),
-      {body: commands},
+    Routes.applicationCommands(env.DISCORD_CLIENT_ID.toString()),
+    {body: commands},
   )),
   getCommands('guild').then((commands) => rest.put(
-      Routes.applicationGuildCommands(env.DISCORD_CLIENT_ID.toString(), env.DISCORD_GUILD_ID.toString()),
-      {body: commands},
+    Routes.applicationGuildCommands(env.DISCORD_CLIENT_ID.toString(), env.DISCORD_GUILD_ID.toString()),
+    {body: commands},
   )),
 ])
-    .then(() => {
-      console.log('Commands successfully registered!');
-    })
-    .catch((ex) => {
-      console.error('Error in registering commands:', ex);
-      process.exit(1);
-    });
+  .then(() => {
+    console.log('Commands successfully registered!');
+  })
+  .catch((ex) => {
+    console.error('Error in registering commands:', ex);
+    process.exit(1);
+  });

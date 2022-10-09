@@ -10,8 +10,8 @@ import {grounding} from '../../../global/commands/g.grounding';
 
 export const dgrounding: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('grounding')
-      .setDescription('Send an image with the 5-senses grounding exercise'),
+    .setName('grounding')
+    .setDescription('Send an image with the 5-senses grounding exercise'),
   async execute(interaction:ChatInputCommandInteraction) {
     // logger.debug(`[${PREFIX}] starting!`);
     interaction.reply(await grounding());

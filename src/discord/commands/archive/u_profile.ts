@@ -20,8 +20,8 @@ let target = {} as GuildMember;
 
 export const info: UserCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('Profile')
-      .setType(ApplicationCommandType.User),
+    .setName('Profile')
+    .setType(ApplicationCommandType.User),
   async execute(interaction) {
     actor = interaction.member as GuildMember;
     logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
@@ -61,25 +61,25 @@ export const info: UserCommand = {
         }
 
         const targetEmbed = embedTemplate()
-            .setColor(Colors.Blue)
-            .setDescription(`${target.user.username}'s profile!`)
-            .addFields(
-                {name: 'Username', value: targetUsername, inline: true},
-                {name: 'Nickname', value: `${target.nickname ? target.nickname : 'No nickname'}`, inline: true},
-                // eslint-disable-next-line max-len
-                {name: 'Timezone', value: `${targetData.timezone ? targetData.timezone : 'Use /time set to set a timezone!'}`, inline: true},
-            )
-            .addFields(
-                {name: 'Account created', value: `${time(target.user.createdAt, 'R')}`, inline: true},
-                {name: 'Joined', value: `${target.joinedAt ? time(target.joinedAt, 'R') : 'idk'}`, inline: true},
-                // eslint-disable-next-line max-len
-                {name: 'Birthday', value: `${typeof targetBirthday === 'string' ? targetBirthday : time(targetBirthday, 'R')}`, inline: true},
-            )
-            .addFields(
-                {name: 'Karma Given', value: `${givenKarma}`, inline: true},
-                {name: 'Karma Received', value: `${takenKarma}`, inline: true},
-                {name: '\u200B', value: '\u200B', inline: true},
-            );
+          .setColor(Colors.Blue)
+          .setDescription(`${target.user.username}'s profile!`)
+          .addFields(
+            {name: 'Username', value: targetUsername, inline: true},
+            {name: 'Nickname', value: `${target.nickname ? target.nickname : 'No nickname'}`, inline: true},
+            // eslint-disable-next-line max-len
+            {name: 'Timezone', value: `${targetData.timezone ? targetData.timezone : 'Use /time set to set a timezone!'}`, inline: true},
+          )
+          .addFields(
+            {name: 'Account created', value: `${time(target.user.createdAt, 'R')}`, inline: true},
+            {name: 'Joined', value: `${target.joinedAt ? time(target.joinedAt, 'R') : 'idk'}`, inline: true},
+            // eslint-disable-next-line max-len
+            {name: 'Birthday', value: `${typeof targetBirthday === 'string' ? targetBirthday : time(targetBirthday, 'R')}`, inline: true},
+          )
+          .addFields(
+            {name: 'Karma Given', value: `${givenKarma}`, inline: true},
+            {name: 'Karma Received', value: `${takenKarma}`, inline: true},
+            {name: '\u200B', value: '\u200B', inline: true},
+          );
 
         interaction.reply({embeds: [targetEmbed], ephemeral: false});
 

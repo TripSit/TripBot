@@ -10,8 +10,8 @@ const PREFIX = path.parse(__filename).name;
 
 export const dcoinflip: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('coinflip')
-      .setDescription('Flip a coin'),
+    .setName('coinflip')
+    .setDescription('Flip a coin'),
   async execute(interaction) {
     interaction.reply(await coinflip());
     logger.debug(`[${PREFIX}] finished!`);

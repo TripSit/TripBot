@@ -9,10 +9,11 @@ const PREFIX = path.parse(__filename).name;
  * @param {number} days
  */
 export async function calcPsychedelics(
-    lastDose:number,
-    desiredDose:number | null,
-    days:number,
+  lastDose:number,
+  desiredDose:number | null,
+  days:number,
 ):Promise<number> {
+  logger.debug(`[${PREFIX}] lastDose: ${lastDose} | desiredDose: ${desiredDose} | days: ${days}`);
   let estimatedDosage = (lastDose / 100) * 280.059565 * (days ** -0.412565956);
   let newAmount = 0;
   if (desiredDose) {
@@ -22,7 +23,10 @@ export async function calcPsychedelics(
     newAmount = ((estimatedDosage < lastDose) ? lastDose : estimatedDosage);
   }
 
-  logger.debug(`[${PREFIX}] finished!`);
 
-  return Math.round(newAmount * 10) / 10;
+  const result = Math.round(newAmount * 10) / 10;
+
+  logger.debug(`[${PREFIX}] result: ${result}!`);
+
+  return result;
 };

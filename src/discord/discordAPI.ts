@@ -31,7 +31,7 @@ export async function discordConnect(): Promise<void> {
       // GatewayIntentBits.GuildWebhooks,
       GatewayIntentBits.GuildInvites,
       GatewayIntentBits.GuildVoiceStates,
-      // GatewayIntentBits.GuildPresences,
+      GatewayIntentBits.GuildPresences,
       GatewayIntentBits.GuildMessages,
       GatewayIntentBits.GuildMessageReactions,
       // GatewayIntentBits.GuildMessageTyping,
@@ -53,6 +53,6 @@ export async function discordConnect(): Promise<void> {
   global.client = client;
 
   Promise.all([registerCommands(client), registerEvents(client)])
-      .then(() => client.login(env.DISCORD_CLIENT_TOKEN))
-      .then(() => logger.info(`[${PREFIX}] ${client.user?.username} logged in!`));
+    .then(() => client.login(env.DISCORD_CLIENT_TOKEN))
+    .then(() => logger.info(`[${PREFIX}] ${client.user?.username} logged in!`));
 }

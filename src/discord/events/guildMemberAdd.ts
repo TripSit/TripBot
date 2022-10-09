@@ -55,13 +55,13 @@ export const guildMemberAdd: guildMemberEvent = {
       if (invite) {
         const inviter = await client.users.fetch(invite.inviter?.id as UserResolvable);
         inviteInfo = inviter ?
-        `Joined via ${inviter.tag}'s invite to ${invite.channel?.name} (${invite.code}-${invite.uses})` :
-        `Joined via the vanity url`;
+          `Joined via ${inviter.tag}'s invite to ${invite.channel?.name} (${invite.code}-${invite.uses})` :
+          `Joined via the vanity url`;
       }
       logger.debug(`[${PREFIX}] inviteInfo: ${inviteInfo}`);
       global.guildInvites.set(
-          member.guild.id,
-          new Collection(newInvites.map((invite) => [invite.code, invite.uses])),
+        member.guild.id,
+        new Collection(newInvites.map((invite) => [invite.code, invite.uses])),
       );
 
       if (global.db) {
@@ -104,28 +104,28 @@ export const guildMemberAdd: guildMemberEvent = {
       }
 
       const embed = embedTemplate()
-          .setAuthor(null)
-          .setColor(colorValue)
-          .setThumbnail(member.user.displayAvatarURL())
-          .setFooter(null)
-          .setDescription(stripIndents`**${member} has joined the guild!**`)
-          .addFields(
-              {name: 'Nickname', value: `${member.nickname}`, inline: true},
-              {name: 'Tag', value: `${member.user.username}#${member.user.discriminator}`, inline: true},
-              {name: 'ID', value: `${member.user.id}`, inline: true},
-          )
-          .addFields(
-              {name: 'Account created', value: `${time(member.user.createdAt, 'R')}`, inline: true},
-          );
+        .setAuthor(null)
+        .setColor(colorValue)
+        .setThumbnail(member.user.displayAvatarURL())
+        .setFooter(null)
+        .setDescription(stripIndents`**${member} has joined the guild!**`)
+        .addFields(
+          {name: 'Nickname', value: `${member.nickname}`, inline: true},
+          {name: 'Tag', value: `${member.user.username}#${member.user.discriminator}`, inline: true},
+          {name: 'ID', value: `${member.user.id}`, inline: true},
+        )
+        .addFields(
+          {name: 'Account created', value: `${time(member.user.createdAt, 'R')}`, inline: true},
+        );
       if (member.joinedAt) {
         embed.addFields(
-            {name: 'Joined', value: `${time(member.joinedAt, 'R')}`, inline: true},
+          {name: 'Joined', value: `${time(member.joinedAt, 'R')}`, inline: true},
         );
       }
       if (inviteInfo) {
         embed.setFooter({text: inviteInfo});
       }
-      const channelBotlog = member.guild.channels.cache.get(env.CHANNEL_TRIPBOTLOGS) as TextChannel;
+      const channelBotlog = member.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
       if (channelBotlog) {
         channelBotlog.send({embeds: [embed]});
       }
@@ -138,9 +138,9 @@ export const guildMemberAdd: guildMemberEvent = {
               const timer = data.val()[key];
               if (timer.type === 'helpthread') {
                 const helpChannel = await member.client.channels.fetch(
-                    timer.value.lastHelpedThreadId) as TextChannel;
+                  timer.value.lastHelpedThreadId) as TextChannel;
                 const metaChannel = await member.client.channels.fetch(
-                    timer.value.lastHelpedMetaThreadId) as TextChannel;
+                  timer.value.lastHelpedMetaThreadId) as TextChannel;
                 helpChannel.send(`${member.user} has rejoined the guild!`);
                 metaChannel.send(`${member.user} has rejoined the guild!`);
               }

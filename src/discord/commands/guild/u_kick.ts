@@ -23,8 +23,8 @@ let reason = 'Why are you kicking this person?';
 
 export const uKick: UserCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('Kick')
-      .setType(ApplicationCommandType.User),
+    .setName('Kick')
+    .setType(ApplicationCommandType.User),
   async execute(interaction) {
     actor = interaction.member as GuildMember;
     // logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
@@ -41,14 +41,14 @@ export const uKick: UserCommand = {
 
     // Create the modal
     const modal = new ModalBuilder()
-        .setCustomId('kickModal')
-        .setTitle('Tripbot Kick');
+      .setCustomId('kickModal')
+      .setTitle('Tripbot Kick');
     const banReason = new TextInputBuilder()
-        .setLabel('Why are you kicking this person?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder(reason)
-        .setRequired(true)
-        .setCustomId('kickReason');
+      .setLabel('Why are you kicking this person?')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder(reason)
+      .setRequired(true)
+      .setCustomId('kickReason');
 
     // An action row only holds one text input, so you need one action row per text input.
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(banReason);

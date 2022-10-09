@@ -14,11 +14,11 @@ export async function registerEvents(client: Client): Promise<void> {
   // logger.debug(`[${PREFIX}] eventDir: ${eventDir}`);
   const eventFiles = await fs.readdir(eventDir);
   eventFiles
-      .filter((file) => file.endsWith('.ts') && !file.endsWith('index.ts'))
-      .map((file) => require(`${eventDir}/${file}`))
-      .forEach((event) => {
-        const fileName = Object.keys(event)[0];
-        if (event[fileName].once) client.once(event[fileName].name, (...args) => event[fileName].execute(...args));
-        else client.on(event[fileName].name, (...args) => event[fileName].execute(...args, client));
-      });
+    .filter((file) => file.endsWith('.ts') && !file.endsWith('index.ts'))
+    .map((file) => require(`${eventDir}/${file}`))
+    .forEach((event) => {
+      const fileName = Object.keys(event)[0];
+      if (event[fileName].once) client.once(event[fileName].name, (...args) => event[fileName].execute(...args));
+      else client.on(event[fileName].name, (...args) => event[fileName].execute(...args, client));
+    });
 };

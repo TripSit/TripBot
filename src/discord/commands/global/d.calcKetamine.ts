@@ -1,7 +1,7 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcKetamine} from '../../../global/commands/g.calcKetamine';
 import logger from '../../../global/utils/logger';
@@ -9,20 +9,20 @@ import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
 // Calculate insufflated dosages
-export const dCalcKetamine: SlashCommand = {
+export const dCalcKetamine: SlashCommand1 = {
   data: new SlashCommandBuilder()
-      .setName('ketamine_calc')
-      .setDescription('Get ketamine dosage information')
-      .addIntegerOption((option) => option.setName('weight')
-          .setDescription('How much do you weigh?')
-          .setRequired(true))
-      .addStringOption((option) => option.setName('units')
-          .setDescription('In what unit?')
-          .setRequired(true)
-          .addChoices(
-              {name: 'kg', value: 'kg'},
-              {name: 'lbs', value: 'lbs'},
-          )),
+    .setName('calc_ketamine')
+    .setDescription('Get ketamine dosage information')
+    .addIntegerOption((option) => option.setName('weight')
+      .setDescription('How much do you weigh?')
+      .setRequired(true))
+    .addStringOption((option) => option.setName('units')
+      .setDescription('In what unit?')
+      .setRequired(true)
+      .addChoices(
+        {name: 'kg', value: 'kg'},
+        {name: 'lbs', value: 'lbs'},
+      )),
   async execute(interaction) {
     const givenWeight = interaction.options.getInteger('weight')!;
     // logger.debug(`[${PREFIX}] weight: ${givenWeight}`);
@@ -40,7 +40,7 @@ export const dCalcKetamine: SlashCommand = {
         embeds: [embed],
         ephemeral: true,
       });
-      return;
+      return false;
     }
     if (weightUnits === 'lbs' && givenWeight > 398) {
       embed.setTitle('Please enter a valid weight less than 398 lbs.');
@@ -48,28 +48,27 @@ export const dCalcKetamine: SlashCommand = {
         embeds: [embed],
         ephemeral: true,
       });
-      return;
+      return false;
     }
 
     const data = await calcKetamine(givenWeight, weightUnits);
 
-    logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
 
     embed.addFields(
-        {
-          name: 'Insufflated Dosages',
-          value: data.insufflated,
-          inline: true,
-        },
-        {
-          name: 'Rectal Dosages',
-          value: data.rectal,
-          inline: true,
-        },
+      {
+        name: 'Insufflated Dosages',
+        value: data.insufflated,
+        inline: true,
+      },
+      {
+        name: 'Rectal Dosages',
+        value: data.rectal,
+        inline: true,
+      },
     );
 
     interaction.reply({embeds: [embed], ephemeral: false});
     logger.debug(`[${PREFIX}] finished!`);
-    return;
+    return true;
   },
 };

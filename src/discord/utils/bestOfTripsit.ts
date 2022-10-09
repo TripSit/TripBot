@@ -16,8 +16,7 @@ const PREFIX = path.parse(__filename).name;
 const tripsitterChannels = [
   env.CHANNEL_TRIPSIT,
   env.CHANNEL_SANCTUARY,
-  env.CHANNEL_TRIPSITTERS,
-  env.CHANNEL_HOWTOTRIPSIT,
+  env.CHANNEL_TRIPSITMETA,
   env.CHANNEL_DRUGQUESTIONS,
   env.CHANNEL_OPENTRIPSIT,
 ];
@@ -34,10 +33,13 @@ const votePinThreshold = env.NODE_ENV === 'production' ? 5 : 2;
 export async function bestOf(reaction:MessageReaction, user:User) {
   logger.debug(`[${PREFIX}] starting!`);
 
+  logger.debug(`[${PREFIX}] reaction.count: ${reaction.count}`);
+  logger.debug(`[${PREFIX}] reaction.emoji.name: ${reaction.emoji.name}`);
+
   if (reaction.count === votePinThreshold && reaction.emoji.name?.includes('upvote')) {
     // Check if the message.channe.id is in the list of tripsitter channels
     if (tripsitterChannels.includes(reaction.message.channel.id)) {
-      // logger.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
+      logger.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
       return;
     }
 
@@ -45,16 +47,18 @@ export async function bestOf(reaction:MessageReaction, user:User) {
 
     if (channelObj.parentId) {
       if (tripsitterChannels.includes(channelObj.parentId)) {
-      // logger.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
+        logger.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
         return;
       }
     }
 
     const channel = channelObj.guild.channels.cache.get(env.CHANNEL_BESTOF) as TextChannel;
 
+    logger.debug(`[${PREFIX}] Sending message to ${channel.name}`);
+
     if (channel !== undefined) {
       reaction.message.reply(
-          stripIndents`This got ${votePinThreshold} upvotes and has been pinned to ${channel.toString()}!`,
+        stripIndents`This got ${votePinThreshold} upvotes and has been pinned to ${channel.toString()}!`,
       );
 
       if (reaction.partial) await reaction.fetch();
@@ -74,16 +78,16 @@ export async function bestOf(reaction:MessageReaction, user:User) {
       logger.debug(`[${PREFIX}] attachmentUrl: ${attachmentUrl}`);
 
       const embed = new EmbedBuilder()
-          .setAuthor({
-            name: reaction.message.author?.username ?? '',
-            iconURL: reaction.message.author?.displayAvatarURL(),
-            url: reaction.message.url,
-          })
-          .setColor(Colors.Purple)
-          .addFields(
-              {name: '\u200B', value: `[Go to post!](${reaction.message.url})`, inline: true},
-          )
-          .setFooter({text: `Sent in #${(reaction.message.channel as TextChannel).name} at ${formattedDate}`});
+        .setAuthor({
+          name: reaction.message.author?.username ?? '',
+          iconURL: reaction.message.author?.displayAvatarURL(),
+          url: reaction.message.url,
+        })
+        .setColor(Colors.Purple)
+        .addFields(
+          {name: '\u200B', value: `[Go to post!](${reaction.message.url})`, inline: true},
+        )
+        .setFooter({text: `Sent in #${(reaction.message.channel as TextChannel).name} at ${formattedDate}`});
 
       if (reaction.message.content) {
         embed.setDescription(reaction.message.content);

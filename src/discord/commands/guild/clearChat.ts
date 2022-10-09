@@ -10,17 +10,17 @@ const PREFIX = path.parse(__filename).name;
 
 export const clearChat: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('clear-chat')
-      .setDescription('This will delete the last 100 messages!')
-      .addIntegerOption((option) => option
-          .setDescription('Number of messages to delete (default/max: 99)')
-          .setName('count'))
-      .addBooleanOption((option) => option
-          .setDescription('Delete threads? (default: true)')
-          .setName('delete-threads'))
-      .addBooleanOption((option) => option
-          .setDescription('Delete threads? (default: true)')
-          .setName('delete-archived-threads')),
+    .setName('clear-chat')
+    .setDescription('This will delete the last 100 messages!')
+    .addIntegerOption((option) => option
+      .setDescription('Number of messages to delete (default/max: 99)')
+      .setName('count'))
+    .addBooleanOption((option) => option
+      .setDescription('Delete threads? (default: true)')
+      .setName('delete-threads'))
+    .addBooleanOption((option) => option
+      .setDescription('Delete threads? (default: true)')
+      .setName('delete-archived-threads')),
   async execute(interaction:ChatInputCommandInteraction) {
     logger.debug(`[${PREFIX}] started!`);
     if (!interaction.channel) {
@@ -33,9 +33,9 @@ export const clearChat: SlashCommand = {
 
     // const count = interaction.options.getInteger('count');
     await interaction.reply({content: 'Clearing chat...', fetchReply: true})
-        .then(async (msg) => {
-          await msg.delete();
-        });
+      .then(async (msg) => {
+        await msg.delete();
+      });
 
     await (interaction.channel as TextChannel).bulkDelete(count, true);
 

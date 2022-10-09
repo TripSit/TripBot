@@ -11,19 +11,19 @@ const PREFIX = path.parse(__filename).name;
 
 export const convertUnits: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('convert')
-      .setDescription('Convert one unit into another')
-      .addStringOption((option) => option.setName('value')
-          .setDescription('#')
-          .setRequired(true))
-      .addStringOption((option) => option.setName('units')
-          .setDescription('What unit?')
-          .setRequired(true)
-          .setAutocomplete(true))
-      .addStringOption((option) => option.setName('into_units')
-          .setDescription('Convert into?')
-          .setRequired(true)
-          .setAutocomplete(true)),
+    .setName('convert')
+    .setDescription('Convert one unit into another')
+    .addStringOption((option) => option.setName('value')
+      .setDescription('#')
+      .setRequired(true))
+    .addStringOption((option) => option.setName('units')
+      .setDescription('What unit?')
+      .setRequired(true)
+      .setAutocomplete(true))
+    .addStringOption((option) => option.setName('into_units')
+      .setDescription('Convert into?')
+      .setRequired(true)
+      .setAutocomplete(true)),
 
   async execute(interaction) {
     const value = parseFloat(interaction.options.getString('value')!);
@@ -40,7 +40,7 @@ export const convertUnits: SlashCommand = {
     const result = convert(value).from(units as convert.Unit).to(intoUnits as convert.Unit);
 
     const embed = embedTemplate()
-        .setTitle(`${value} ${units} is ${result} ${intoUnits}`);
+      .setTitle(`${value} ${units} is ${result} ${intoUnits}`);
       // .setDescription(`${value} ${units} is ${result} ${intoUnits}`);
     if (interaction.replied) interaction.followUp({embeds: [embed]});
     else interaction.reply({embeds: [embed]});

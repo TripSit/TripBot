@@ -20,58 +20,58 @@ const PREFIX = path.parse(__filename).name;
 
 export const issue: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('issue')
-      .setDescription('Create issue on github')
-      .addStringOption((option) => option
-          .setDescription('What type of issue is this?')
-          .addChoices(
-              {name: 'Bug/Problem', value: 'Bug'},
-              {name: 'Feature Request', value: 'Feature'},
-              {name: 'Enhancement', value: 'Enhancement'},
-              {name: 'Idea', value: 'Idea'},
-              {name: 'Question', value: 'Question'},
-          )
-          .setRequired(true)
-          .setName('type'))
-      .addStringOption((option) => option
-          .setDescription('How important is this?')
-          .addChoices(
-              {name: 'Critical', value: 'P0: Critical'},
-              {name: 'High', value: 'P1: High'},
-              {name: 'Medium', value: 'P2: Medium'},
-              {name: 'Low', value: 'P3: Low'},
-          )
-          .setName('priority'))
-      .addStringOption((option) => option
-          .setDescription('How much effort will this take?')
-          .addChoices(
-              {name: 'High', value: 'E0: High'},
-              {name: 'Medium', value: 'E1: Medium'},
-              {name: 'Low', value: 'E2: Low'},
-              {name: 'Trivial', value: 'E3: Trivial'},
-          )
-          .setName('effort')),
+    .setName('issue')
+    .setDescription('Create issue on github')
+    .addStringOption((option) => option
+      .setDescription('What type of issue is this?')
+      .addChoices(
+        {name: 'Bug/Problem', value: 'Bug'},
+        {name: 'Feature Request', value: 'Feature'},
+        {name: 'Enhancement', value: 'Enhancement'},
+        {name: 'Idea', value: 'Idea'},
+        {name: 'Question', value: 'Question'},
+      )
+      .setRequired(true)
+      .setName('type'))
+    .addStringOption((option) => option
+      .setDescription('How important is this?')
+      .addChoices(
+        {name: 'Critical', value: 'P0: Critical'},
+        {name: 'High', value: 'P1: High'},
+        {name: 'Medium', value: 'P2: Medium'},
+        {name: 'Low', value: 'P3: Low'},
+      )
+      .setName('priority'))
+    .addStringOption((option) => option
+      .setDescription('How much effort will this take?')
+      .addChoices(
+        {name: 'High', value: 'E0: High'},
+        {name: 'Medium', value: 'E1: Medium'},
+        {name: 'Low', value: 'E2: Low'},
+        {name: 'Trivial', value: 'E3: Trivial'},
+      )
+      .setName('effort')),
   async execute(interaction:ChatInputCommandInteraction) {
     logger.debug(`[${PREFIX}] starting!`);
     // Create the modal
     const modal = new ModalBuilder()
-        .setCustomId('issueModal')
-        .setTitle('TripBot Issue Creation');
+      .setCustomId('issueModal')
+      .setTitle('TripBot Issue Creation');
     // An action row only holds one text input, so you need one action row per text input.
     const title = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('Issue Title')
-        .setPlaceholder('Sumarize the issue here!')
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true)
-        .setCustomId('issueTitle'));
+      .setLabel('Issue Title')
+      .setPlaceholder('Sumarize the issue here!')
+      .setStyle(TextInputStyle.Short)
+      .setRequired(true)
+      .setCustomId('issueTitle'));
     const body = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('Issue Body')
-        .setPlaceholder(
-            'Please describe the issue in detail! Include steps to reproduce, any specific circumstances, etc.')
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true)
-        // eslint-disable-next-line max-len
-        .setCustomId(`${interaction.options.getString('type')},${interaction.options.getString('priority')},${interaction.options.getString('effort')},S0: Review Needed`));
+      .setLabel('Issue Body')
+      .setPlaceholder(
+        'Please describe the issue in detail! Include steps to reproduce, any specific circumstances, etc.')
+      .setStyle(TextInputStyle.Paragraph)
+      .setRequired(true)
+    // eslint-disable-next-line max-len
+      .setCustomId(`${interaction.options.getString('type')},${interaction.options.getString('priority')},${interaction.options.getString('effort')},S0: Review Needed`));
     // Add inputs to the modal
     modal.addComponents([title, body]);
     // Show the modal to the user
@@ -102,32 +102,32 @@ export const issue: SlashCommand = {
       title: interaction.fields.getTextInputValue('issueTitle'),
       body: issueBody,
     })
-        .then(async (response) => {
-          const issueNumber = response.data.number;
-          octokit.rest.issues.addLabels({
-            owner,
-            repo,
-            issue_number: issueNumber,
-            labels: filteredLabels,
-          });
-          const issueUrl = response.data.html_url;
-          const embed = embedTemplate()
-              .setColor(0x0099ff)
-              .setTitle('Issue created!')
-              .setDescription(stripIndents`\
+      .then(async (response) => {
+        const issueNumber = response.data.number;
+        octokit.rest.issues.addLabels({
+          owner,
+          repo,
+          issue_number: issueNumber,
+          labels: filteredLabels,
+        });
+        const issueUrl = response.data.html_url;
+        const embed = embedTemplate()
+          .setColor(0x0099ff)
+          .setTitle('Issue created!')
+          .setDescription(stripIndents`\
           Issue #${issueNumber} created on ${owner}/${repo}
           Click here to view: ${issueUrl}`);
-          interaction.reply({embeds: [embed], ephemeral: true});
-        })
-        .catch((error:Error) => {
-          logger.error(`[${PREFIX}] Failed to create issue on ${owner}/${repo}\n\n${error}`);
-          const embed = embedTemplate()
-              .setColor(0xff0000)
-              .setTitle('Issue creation failed!')
-              .setDescription(`Your issue could not be created on ${owner}/${repo}\n\n${error}`);
-          interaction.reply({embeds: [embed], ephemeral: false});
-          return Promise.reject(error);
-        });
+        interaction.reply({embeds: [embed], ephemeral: true});
+      })
+      .catch((error:Error) => {
+        logger.error(`[${PREFIX}] Failed to create issue on ${owner}/${repo}\n\n${error}`);
+        const embed = embedTemplate()
+          .setColor(0xff0000)
+          .setTitle('Issue creation failed!')
+          .setDescription(`Your issue could not be created on ${owner}/${repo}\n\n${error}`);
+        interaction.reply({embeds: [embed], ephemeral: false});
+        return Promise.reject(error);
+      });
     logger.debug(`[${PREFIX}] finished!`);
   },
 };

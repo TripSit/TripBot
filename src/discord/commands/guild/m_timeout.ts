@@ -28,8 +28,8 @@ const command = 'timeout';
 
 export const mTimeout: MessageCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('Timeout')
-      .setType(ApplicationCommandType.Message),
+    .setName('Timeout')
+    .setType(ApplicationCommandType.Message),
   async execute(interaction:MessageContextMenuCommandInteraction) {
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction
     actor = interaction.member as GuildMember;
@@ -56,19 +56,19 @@ export const mTimeout: MessageCommand = {
 
     // Create the modal
     const modal = new ModalBuilder()
-        .setCustomId('timeoutModal')
-        .setTitle('Tripbot Timeout');
+      .setCustomId('timeoutModal')
+      .setTitle('Tripbot Timeout');
     const timeoutReason = new TextInputBuilder()
-        .setLabel('Why are you timouting this person?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Why are you timeouting this person?')
-        .setCustomId('timeoutReason')
-        .setRequired(true);
+      .setLabel('Why are you timouting this person?')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder('Why are you timeouting this person?')
+      .setCustomId('timeoutReason')
+      .setRequired(true);
     const timeoutDuration = new TextInputBuilder()
-        .setLabel('Timeout for how long? (Max/default 7 days)')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
-        .setCustomId('timeoutDuration');
+      .setLabel('Timeout for how long? (Max/default 7 days)')
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
+      .setCustomId('timeoutDuration');
     // An action row only holds one text input, so you need one action row per text input.
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutReason);
     const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutDuration);
@@ -89,7 +89,7 @@ export const mTimeout: MessageCommand = {
     logger.debug(`[${PREFIX}] channel: ${JSON.stringify(channel.name, null, 2)}`);
     const reason = stripIndents`
     > ${interaction.fields.getTextInputValue(
-        'timeoutReason') ? interaction.fields.getTextInputValue('timeoutReason') : 'No reason given'}
+    'timeoutReason') ? interaction.fields.getTextInputValue('timeoutReason') : 'No reason given'}
 
     [The offending message:](${messageUrl})
     > ${message}

@@ -15,9 +15,9 @@ const PREFIX = path.parse(__filename).name;
  * @param {1 | -1} action
  */
 export async function chitragupta(
-    reaction:MessageReaction,
-    user:User,
-    action: 1 | -1,
+  reaction:MessageReaction,
+  user:User,
+  action: 1 | -1,
 ) {
   logger.debug(`[${PREFIX}] start!`);
   const actor = user;

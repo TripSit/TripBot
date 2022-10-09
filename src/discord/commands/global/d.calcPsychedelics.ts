@@ -2,39 +2,39 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcPsychedelics} from '../../../global/commands/g.calcPsychedelics';
-import logger from '../../../global/utils/logger';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+// import logger from '../../../global/utils/logger';
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
-export const dcalcPsychedelics: SlashCommand = {
+export const dcalcPsychedelics: SlashCommand1 = {
   data: new SlashCommandBuilder()
-      .setName('psychedelic_calc')
-      .setDescription('Check psychedelic tolerance information')
-      .addSubcommand((subcommand) => subcommand
-          .setName('lsd')
-          .setDescription('Check LSD tolerance information')
-          .addIntegerOption((option) => option.setName('last_dose')
-              .setDescription('ug of LSD')
-              .setRequired(true))
-          .addIntegerOption((option) => option.setName('days')
-              .setDescription('Number of days since last dose?')
-              .setRequired(true))
-          .addIntegerOption((option) => option.setName('desired_dose')
-              .setDescription('ug of LSD')))
-      .addSubcommand((subcommand) => subcommand
-          .setName('mushrooms')
-          .setDescription('Check mushroom tolerance information')
-          .addIntegerOption((option) => option.setName('last_dose')
-              .setDescription('g of mushrooms')
-              .setRequired(true))
-          .addIntegerOption((option) => option.setName('days')
-              .setDescription('Number of days since last dose?')
-              .setRequired(true))
-          .addIntegerOption((option) => option.setName('desired_dose')
-              .setDescription('g of mushrooms'))),
+    .setName('calc_psychedelics')
+    .setDescription('Check psychedelic tolerance information')
+    .addSubcommand((subcommand) => subcommand
+      .setName('lsd')
+      .setDescription('Check LSD tolerance information')
+      .addIntegerOption((option) => option.setName('last_dose')
+        .setDescription('ug of LSD')
+        .setRequired(true))
+      .addIntegerOption((option) => option.setName('days')
+        .setDescription('Number of days since last dose?')
+        .setRequired(true))
+      .addIntegerOption((option) => option.setName('desired_dose')
+        .setDescription('ug of LSD')))
+    .addSubcommand((subcommand) => subcommand
+      .setName('mushrooms')
+      .setDescription('Check mushroom tolerance information')
+      .addIntegerOption((option) => option.setName('last_dose')
+        .setDescription('g of mushrooms')
+        .setRequired(true))
+      .addIntegerOption((option) => option.setName('days')
+        .setDescription('Number of days since last dose?')
+        .setRequired(true))
+      .addIntegerOption((option) => option.setName('desired_dose')
+        .setDescription('g of mushrooms'))),
   async execute(interaction) {
     const lastDose = interaction.options.getInteger('last_dose')!;
     const desiredDose = interaction.options.getInteger('desired_dose');
@@ -42,7 +42,6 @@ export const dcalcPsychedelics: SlashCommand = {
 
     const command = interaction.options.getSubcommand();
 
-    logger.debug(`[${PREFIX}] last_dose: ${lastDose} | desired_dose: ${desiredDose} | days: ${days}`);
 
     // Code here inspired by https://codepen.io/cyberoxide/pen/BaNarGd
     // Seems like the original source is offline (https://psychedeliccalc.herokuapp.com)
@@ -59,14 +58,15 @@ export const dcalcPsychedelics: SlashCommand = {
     }
 
     const embed = embedTemplate()
-        .setTitle(title)
-        .setDescription(`
+      .setTitle(title)
+      .setDescription(`
         This ESTIMATE only works for tryptamines (LSD and Magic Mushrooms).
         As all bodies and brains are different, results may vary. 
         [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
       `);
     interaction.reply({embeds: [embed], ephemeral: false});
 
-    logger.debug(`[${PREFIX}] finished!`);
+    // logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };

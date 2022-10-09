@@ -97,10 +97,10 @@ const PREFIX = path.parse(__filename).name;
  */
 export async function execute():Promise<void> {
   global.ircClient.addListener('message#', (
-      nick:string,
-      to:string,
-      text:string,
-      message:ircMessage,
+    nick:string,
+    to:string,
+    text:string,
+    message:ircMessage,
   ) => {
     // Example 'message' event
     // logger.debug(`[${PREFIX}] nick: ${JSON.stringify(nick, null, 2)}`);

@@ -80,7 +80,8 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
         interaction.respond(defaultShapes.map((choice) => ({name: choice, value: choice})));
       }
     }
-  } else if (interaction.commandName === 'benzo_calc') {
+  } else if (interaction.commandName === 'calc_benzo') {
+    logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
     const options = {
       shouldSort: true,
       threshold: 0.2,

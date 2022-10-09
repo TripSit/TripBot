@@ -11,8 +11,8 @@ const PREFIX = path.parse(__filename).name;
  */
 export async function execute():Promise<void> {
   global.ircClient.addListener('pm', async (
-      from:string,
-      message:ircMessage,
+    from:string,
+    message:ircMessage,
   ) => {
     logger.debug(`[${PREFIX}] PM from ${from}: ${message}`);
     // If the message matches the format of a token

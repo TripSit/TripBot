@@ -8,8 +8,8 @@ const PREFIX = path.parse(__filename).name;
 
 export const dreagents: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('reagents')
-      .setDescription('Display reagent color chart!'),
+    .setName('reagents')
+    .setDescription('Display reagent color chart!'),
 
   async execute(interaction) {
     interaction.reply('https://i.imgur.com/wETJsZr.png');

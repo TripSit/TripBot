@@ -94,12 +94,12 @@ const bridgeMap = {
 
 export const dinvite: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('invite')
-      .setDescription('Display a message to join a bridged channel on both sides')
-      .addChannelOption((option) => option
-          .setRequired(true)
-          .setDescription('Which channel do you want people to join?')
-          .setName('channel')),
+    .setName('invite')
+    .setDescription('Display a message to join a bridged channel on both sides')
+    .addChannelOption((option) => option
+      .setRequired(true)
+      .setDescription('Which channel do you want people to join?')
+      .setName('channel')),
 
   async execute(interaction:ChatInputCommandInteraction) {
     logger.debug(`[${PREFIX}] starting!`);

@@ -28,8 +28,8 @@ const command = 'report';
 
 export const report: MessageCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('Report')
-      .setType(ApplicationCommandType.Message),
+    .setName('Report')
+    .setType(ApplicationCommandType.Message),
   async execute(interaction:MessageContextMenuCommandInteraction) {
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction
     actor = interaction.member as GuildMember;
@@ -59,14 +59,14 @@ export const report: MessageCommand = {
 
     // Create the modal
     const modal = new ModalBuilder()
-        .setCustomId('reportModal')
-        .setTitle('Tripbot Report');
+      .setCustomId('reportModal')
+      .setTitle('Tripbot Report');
     const reportReason = new TextInputBuilder()
-        .setLabel('Why are you reporting this?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Please be descriptive!')
-        .setCustomId('reportReason')
-        .setRequired(true);
+      .setLabel('Why are you reporting this?')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder('Please be descriptive!')
+      .setCustomId('reportReason')
+      .setRequired(true);
     // An action row only holds one text input, so you need one action row per text input.
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(reportReason);
 

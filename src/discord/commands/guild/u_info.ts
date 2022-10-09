@@ -17,8 +17,8 @@ const command = 'info';
 
 export const info: UserCommand = {
   data: new ContextMenuCommandBuilder()
-      .setName('Info')
-      .setType(ApplicationCommandType.User),
+    .setName('Info')
+    .setType(ApplicationCommandType.User),
   async execute(interaction) {
     // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction
     actor = interaction.member as GuildMember;

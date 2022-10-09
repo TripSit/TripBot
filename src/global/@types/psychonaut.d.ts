@@ -1,52 +1,52 @@
 /* eslint-disable no-unused-vars */
 
 export interface PwSubstance {
-    name: String;
-    url: String;
-    featured: Boolean;
-    effects: [Effect];
-    experiences: [Experience];
-    class: SubstanceClass;
-    tolerance: SubstanceTolerance;
-    roa: SubstanceRoaTypes;
-    roas: [SubstanceRoa];
-    summary: String;
-    images: [SubstanceImage];
-    addictionPotential: String;
-    toxicity: [String];
-    crossTolerances: [String];
-    commonNames: [String];
-    uncertainInteractions: [PwSubstance];
-    unsafeInteractions: [PwSubstance];
-    dangerousInteractions: [PwSubstance];
+  name: String;
+  url: String;
+  featured: Boolean;
+  effects: [Effect];
+  experiences: [Experience];
+  class: SubstanceClass;
+  tolerance: SubstanceTolerance;
+  roa: SubstanceRoaTypes;
+  roas: [SubstanceRoa];
+  summary: String;
+  images: [SubstanceImage];
+  addictionPotential: String;
+  toxicity: [String];
+  crossTolerances: [String];
+  commonNames: [String];
+  uncertainInteractions: [PwSubstance];
+  unsafeInteractions: [PwSubstance];
+  dangerousInteractions: [PwSubstance];
 }
 
 export type SubstanceClass = {
-    chemical: [String]
-    psychoactive: [String]
+  chemical: [String]
+  psychoactive: [String]
 }
 
 export type SubstanceTolerance = {
-    full: String
-    half: String
-    zero: String
-  }
+  full: String
+  half: String
+  zero: String
+}
 
 export interface RoaRange {
-    min: number
-    max: number
-    units?: string
+  min: number
+  max: number
+  units?: string
 }
 
 
 export type SubstanceRoaDose = {
-    units: String
-    threshold: number
-    heavy: number
-    common: RoaRange
-    light: RoaRange
-    strong: RoaRange
-  }
+  units: String
+  threshold: number
+  heavy: number
+  common: RoaRange
+  light: RoaRange
+  strong: RoaRange
+}
 
   type SubstanceRoaDuration = {
     afterglow: RoaRange

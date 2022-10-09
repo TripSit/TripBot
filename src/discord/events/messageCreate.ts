@@ -25,14 +25,14 @@ const PREFIX = path.parse(__filename).name;
 export const messageCreate: messageEvent = {
   name: 'messageCreate',
   async execute(message: Message):Promise<void> {
-    // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
-
     // Only run on Tripsit
     if (message.guild) {
       if (message.guild.id !== env.DISCORD_GUILD_ID.toString()) {
         return;
       }
     }
+
+    // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
 
     // This needs to run here beacuse the widgetbot peeps will use this and they are "bot users"
     messageCommand(message);
@@ -76,7 +76,7 @@ export const messageCreate: messageEvent = {
 
       if (Object.keys(ticketData).length !== 0) {
         if (member) {
-          const channel = await message.client.channels.fetch(env.CHANNEL_TECHHELP) as TextChannel;
+          const channel = await message.client.channels.fetch(env.CHANNEL_HELPDESK) as TextChannel;
           const issueThread = await channel.threads.fetch(ticketData.issueThread) as ThreadChannel;
           const embed = embedTemplate();
           embed.setDescription(stripIndents`You already have an open issue here ${issueThread.toString()}!`);
@@ -84,7 +84,7 @@ export const messageCreate: messageEvent = {
           return;
         }
 
-        const channel = message.client.channels.cache.get(env.CHANNEL_TECHHELP) as TextChannel;
+        const channel = message.client.channels.cache.get(env.CHANNEL_HELPDESK) as TextChannel;
         const thread = await channel.threads.fetch(ticketData.issueThread) as ThreadChannel;
         // logger.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
         if (thread) {

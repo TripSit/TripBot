@@ -74,7 +74,7 @@ export async function announcements(message:Message) {
   const channelAnnouncements = await message.client.channels.fetch(env.CHANNEL_ANNOUNCEMENTS)!;
   const channelRules = await message.client.channels.fetch(env.CHANNEL_RULES)!;
   const channelBotspam = await message.client.channels.fetch(env.CHANNEL_BOTSPAM)!;
-  const channelTechhelp = await message.client.channels.fetch(env.CHANNEL_TECHHELP)!;
+  const channelTechhelp = await message.client.channels.fetch(env.CHANNEL_HELPDESK)!;
   // const channelHowToTripsit = await message.client.channels.fetch(env.CHANNEL_HOWTOTRIPSIT)!;
   const channelTripsit = await message.client.channels.fetch(env.CHANNEL_TRIPSIT)!;
   // const channelRTripsit = await message.client.channels.fetch(env.CHANNEL_TRIPSIT)!;
@@ -102,12 +102,12 @@ export async function announcements(message:Message) {
   // const channelOpioids = await message.client.channels.fetch(env.CHANNEL_OPIATES)!;
   const channelTrees = await message.client.channels.fetch(env.CHANNEL_TREES)!;
   // const channelViplounge = await message.client.channels.fetch(env.CHANNEL_VIPLOUNGE)!;
-  // const channelAdultSwim = await message.client.channels.fetch(env.CHANNEL_ADULTSWIM)!;
+  // const channelAdultSwim = await message.client.channels.fetch(env.CHANNEL_REALTALK)!;
   // const channelGoldLounge = await message.client.channels.fetch(env.CHANNEL_GOLDLOUNGE)!;
   // const channelTalkToTS = await message.client.channels.fetch(env.CHANNEL_TALKTOTS)!;
   // const channelBestOf = await message.client.channels.fetch(env.CHANNEL_BESTOF)!;
   // const channelKudos = await message.client.channels.fetch(env.CHANNEL_KUDOS)!;
-  // const channelCampfire = await message.client.channels.fetch(env.CHANNEL_HUB)!;
+  // const channelCampfire = await message.client.channels.fetch(env.CHANNEL_CAMPFIRE)!;
   // const channelDevWelcome = await message.client.channels.fetch(env.CHANNEL_DEVWELCOME)!;
 
 
@@ -186,7 +186,7 @@ export async function announcements(message:Message) {
     `Get </drug:997960179217879092> info on various substances!`,
     `Use </dxm_calc:1017060823279087658> to get a DXM dosage!`,
     `Get </ems:966500308048031755> information if you need it!`,
-    `Get really good at </eyeballing:1019720888544935946>!`,
+    // `Get really good at </eyeballing:1019720888544935946>!`,
     `Overwhelmed? Use and follow </grounding:1019720888544935947>`,
     `Check your sparkle points with </h2flow:984560964051537972>`,
     `Get info on every command with </help:966477926763757629>`,
@@ -236,10 +236,10 @@ export async function announcements(message:Message) {
   const embed = embedTemplate();
 
   const genAnnouncements = hrAnnouncements.concat(
-      hrAnnouncements,
-      channelAnnouncments,
-      commandAnnouncements,
-      funAnnouncements,
+    hrAnnouncements,
+    channelAnnouncments,
+    commandAnnouncements,
+    funAnnouncements,
   );
 
   // const allAnncouneemnts = [
@@ -250,7 +250,6 @@ export async function announcements(message:Message) {
   const generalChatCategories = [
     env.CATEGORY_BACKSTAGE,
     env.CATEGORY_CAMPGROUND,
-    env.CATEGORY_VIPCABINS,
   ];
 
   // logger.debug(`[${PREFIX}] instance of TextChannel: ${message.channel instanceof TextChannel}`);
@@ -281,9 +280,9 @@ export async function announcements(message:Message) {
             embed.setAuthor(null);
             embed.setFooter({text: 'React to get your sparkle points for the /h2flow club!'});
             await (message.channel as TextChannel).send({embeds: [embed]})
-                .then(async (msg) => {
-                  await msg.react('💧');
-                });
+              .then(async (msg) => {
+                await msg.react('💧');
+              });
             return;
           }
 

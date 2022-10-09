@@ -2,50 +2,50 @@ import {
   SlashCommandBuilder,
   GuildMember,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {birthday} from '../../../global/commands/g.birthday';
-import logger from '../../../global/utils/logger';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+// import logger from '../../../global/utils/logger';
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
-export const dbirthday: SlashCommand = {
+export const dbirthday: SlashCommand1 = {
   data: new SlashCommandBuilder()
-      .setName('birthday')
-      .setDescription('Birthday info!')
-      .addSubcommand((subcommand) => subcommand
-          .setName('get')
-          .setDescription('Get someone\'s birthday!')
-          .addUserOption((option) => option
-              .setName('user')
-              .setDescription('User to lookup'),
-          ),
-      )
-      .addSubcommand((subcommand) => subcommand
-          .setName('set')
-          .setDescription('Set your birthday!')
-          .addStringOption((option) => option
-              .setRequired(true)
-              .setDescription('Month value')
-              .addChoices(
-                  {name: 'January', value: 'January'},
-                  {name: 'February', value: 'February'},
-                  {name: 'March', value: 'March'},
-                  {name: 'April', value: 'April'},
-                  {name: 'May', value: 'May'},
-                  {name: 'June', value: 'June'},
-                  {name: 'July', value: 'July'},
-                  {name: 'August', value: 'August'},
-                  {name: 'September', value: 'September'},
-                  {name: 'October', value: 'October'},
-                  {name: 'November', value: 'November'},
-                  {name: 'December', value: 'December'},
-              )
-              .setName('month'))
-          .addIntegerOption((option) => option
-              .setRequired(true)
-              .setDescription('Day value')
-              .setName('day')),
+    .setName('birthday')
+    .setDescription('Birthday info!')
+    .addSubcommand((subcommand) => subcommand
+      .setName('get')
+      .setDescription('Get someone\'s birthday!')
+      .addUserOption((option) => option
+        .setName('user')
+        .setDescription('User to lookup'),
       ),
+    )
+    .addSubcommand((subcommand) => subcommand
+      .setName('set')
+      .setDescription('Set your birthday!')
+      .addStringOption((option) => option
+        .setRequired(true)
+        .setDescription('Month value')
+        .addChoices(
+          {name: 'January', value: 'January'},
+          {name: 'February', value: 'February'},
+          {name: 'March', value: 'March'},
+          {name: 'April', value: 'April'},
+          {name: 'May', value: 'May'},
+          {name: 'June', value: 'June'},
+          {name: 'July', value: 'July'},
+          {name: 'August', value: 'August'},
+          {name: 'September', value: 'September'},
+          {name: 'October', value: 'October'},
+          {name: 'November', value: 'November'},
+          {name: 'December', value: 'December'},
+        )
+        .setName('month'))
+      .addIntegerOption((option) => option
+        .setRequired(true)
+        .setDescription('Day value')
+        .setName('day')),
+    ),
   execute: async (interaction) => {
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     let user = interaction.options.getMember('user');
@@ -63,11 +63,10 @@ export const dbirthday: SlashCommand = {
     const response = await birthday(command, (user as GuildMember), month, day);
 
     if (command === 'get') {
-      interaction.reply(response);
+      await interaction.reply(response);
     } else {
-      interaction.reply({content: response, ephemeral: true});
+      await interaction.reply({content: response, ephemeral: true});
     }
-
-    logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };

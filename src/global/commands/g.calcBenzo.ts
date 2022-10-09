@@ -12,9 +12,9 @@ import drugDataTripsit from '../assets/data/drug_db_tripsit.json';
  * @return {Promise<any>}
  */
 export async function calcBenzo(
-    dosage:number,
-    drugA:string,
-    drugB:string,
+  dosage:number,
+  drugA:string,
+  drugB:string,
 ):Promise<any> {
   logger.debug(`[${PREFIX}] dosage: ${dosage} | drug_a: ${drugA} | drug_b: ${drugB}`);
 
@@ -51,16 +51,16 @@ export async function calcBenzo(
   }
 
   const convertedDoseB = regex.exec(drugDataB.properties['dose_to_diazepam' as keyof typeof drugDataB.properties])!;
-
-  logger.debug(`[${PREFIX}] convertedDoseA: ${convertedDoseA}`);
-  logger.debug(`[${PREFIX}] convertedDoseA: ${convertedDoseA.toString()}`);
-  logger.debug(`[${PREFIX}] convertedDoseA: ${parseFloat(convertedDoseA.toString())}`);
-  logger.debug(`[${PREFIX}] convertedDoseB: ${convertedDoseB}`);
-  logger.debug(`[${PREFIX}] convertedDoseB: ${convertedDoseB.toString()}`);
-  logger.debug(`[${PREFIX}] convertedDoseB: ${parseFloat(convertedDoseB.toString())}`);
-  logger.debug(`[${PREFIX}] dosage: ${dosage}`);
-  logger.debug(`[${PREFIX}] dosage1: ${dosage / parseFloat(convertedDoseA.toString())}`);
-  logger.debug(`[${PREFIX}] dosage2: ${parseFloat(convertedDoseA.toString()) * parseFloat(convertedDoseB.toString())}`);
+  // logger.debug(`[${PREFIX}] convertedDoseA: ${convertedDoseA}`);
+  // logger.debug(`[${PREFIX}] convertedDoseA: ${convertedDoseA.toString()}`);
+  // logger.debug(`[${PREFIX}] convertedDoseA: ${parseFloat(convertedDoseA.toString())}`);
+  // logger.debug(`[${PREFIX}] convertedDoseB: ${convertedDoseB}`);
+  // logger.debug(`[${PREFIX}] convertedDoseB: ${convertedDoseB.toString()}`);
+  // logger.debug(`[${PREFIX}] convertedDoseB: ${parseFloat(convertedDoseB.toString())}`);
+  // logger.debug(`[${PREFIX}] dosage: ${dosage}`);
+  // logger.debug(`[${PREFIX}] dosage1: ${dosage / parseFloat(convertedDoseA.toString())}`);
+  // logger.debug(`[${PREFIX}] dosage2: ${parseFloat(convertedDoseA.toString()) *
+  // parseFloat(convertedDoseB.toString())}`);
 
   const result = (dosage / parseFloat(convertedDoseA.toString())) * parseFloat(convertedDoseB.toString());
   logger.debug(`[${PREFIX}] result: ${result}`);

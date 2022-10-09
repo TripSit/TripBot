@@ -16,10 +16,10 @@ const PREFIX = path.parse(__filename).name;
  * @return {any} an object with information about the bot
  */
 export async function birthday(
-    command: 'get' | 'set',
-    member: GuildMember,
-    month?: string,
-    day?: number):Promise<any> {
+  command: 'get' | 'set',
+  member: GuildMember,
+  month?: string,
+  day?: number):Promise<any> {
   if (command === 'set') {
     // TODO: Use luxon
     const month30 = ['April', 'June', 'September', 'November'];
@@ -55,9 +55,8 @@ export async function birthday(
     const ref = db.ref(`${env.FIREBASE_DB_USERS}/${member.id}/birthday`);
     await ref.once('value', (data) => {
       if (data.val() !== null) {
-        logger.debug(`[${PREFIX}] data is VALUE`);
         const birthday = data.val() as birthdayEntry;
-        logger.debug(`[${PREFIX}] birthday: ${JSON.stringify(birthday, null, 2)}`);
+        logger.debug(`[${PREFIX}] birthday: ${JSON.stringify(birthday)}`);
         resp = `${member.displayName} was born on ${birthday.month} ${birthday.day}`;
       } else {
         logger.debug(`[${PREFIX}] data is NULL`);

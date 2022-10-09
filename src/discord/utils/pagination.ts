@@ -21,10 +21,10 @@ const PREFIX = path.parse(__filename).name;
  * @return {Promise<void>}
  */
 export async function paginationEmbed(
-    interaction:CommandInteraction,
-    pages:EmbedBuilder[],
-    buttonList:ButtonBuilder[],
-    timeout = 120000,
+  interaction:CommandInteraction,
+  pages:EmbedBuilder[],
+  buttonList:ButtonBuilder[],
+  timeout = 120000,
 ): Promise<Message> {
   if (!pages) throw new Error('Pages are not given.');
   if (!buttonList) throw new Error('Buttons are not given.');
@@ -34,7 +34,7 @@ export async function paginationEmbed(
     buttonList[1].data.style === ButtonStyle.Link
   ) {
     throw new Error(
-        'Link buttons are not supported with discordjs-button-pagination',
+      'Link buttons are not supported with discordjs-button-pagination',
     );
   }
   if (buttonList.length !== 2) throw new Error('Need two buttons.');
@@ -92,8 +92,8 @@ export async function paginationEmbed(
   collector.on('end', (_, reason) => {
     if (reason !== 'messageDelete') {
       const disabledRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-          buttonList[0].setDisabled(true),
-          buttonList[1].setDisabled(true),
+        buttonList[0].setDisabled(true),
+        buttonList[1].setDisabled(true),
       );
       curPage.edit({
         embeds: [

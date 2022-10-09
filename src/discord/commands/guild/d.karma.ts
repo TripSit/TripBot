@@ -12,17 +12,17 @@ const PREFIX = path.parse(__filename).name;
 
 export const birthday: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('karma')
-      .setDescription('Keep it positive please!')
-      .addSubcommand((subcommand) => subcommand
-          .setName('get')
-          .setDescription('Get someone\'s karma!')
-          .addUserOption((option) => option
-              .setName('user')
-              .setDescription('User to lookup')
-              .setRequired(true),
-          ),
+    .setName('karma')
+    .setDescription('Keep it positive please!')
+    .addSubcommand((subcommand) => subcommand
+      .setName('get')
+      .setDescription('Get someone\'s karma!')
+      .addUserOption((option) => option
+        .setName('user')
+        .setDescription('User to lookup')
+        .setRequired(true),
       ),
+    ),
   // .addSubcommand((subcommand) => subcommand
   //     .setName('set')
   //     .setDescription('Set someone\'s karma!')

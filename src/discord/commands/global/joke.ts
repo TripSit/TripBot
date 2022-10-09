@@ -11,8 +11,8 @@ const PREFIX = path.parse(__filename).name;
 
 export const djoke: SlashCommand = {
   data: new SlashCommandBuilder()
-      .setName('joke')
-      .setDescription('Random jokes'),
+    .setName('joke')
+    .setDescription('Random jokes'),
 
   async execute(interaction) {
     const {data} = await axios.get('https://jokeapi-v2.p.rapidapi.com/joke/Misc,Pun', {

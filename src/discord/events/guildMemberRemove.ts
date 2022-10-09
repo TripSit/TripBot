@@ -26,7 +26,7 @@ export const guildMemberRemove: guildMemberEvent = {
 
     logger.debug(`[${PREFIX}] joinedTimestamp: ${joinedTimestamp}`);
     const embed = embedTemplate()
-        .setColor(Colors.Red);
+      .setColor(Colors.Red);
 
     if (joinedTimestamp) {
       logger.debug(`[${PREFIX}] Date.now(): ${Date.now()}`);
@@ -53,7 +53,7 @@ export const guildMemberRemove: guildMemberEvent = {
       embed.setDescription(`${member} has left the guild`);
     }
 
-    const channelBotlog = member.guild.channels.cache.get(env.CHANNEL_TRIPBOTLOGS) as TextChannel;
+    const channelBotlog = member.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
       channelBotlog.send({embeds: [embed]});
     }
@@ -66,9 +66,9 @@ export const guildMemberRemove: guildMemberEvent = {
             const timer = data.val()[key];
             if (timer.type === 'helpthread') {
               const helpChannel = await member.client.channels.fetch(
-                  timer.value.lastHelpedThreadId) as TextChannel;
+                timer.value.lastHelpedThreadId) as TextChannel;
               const metaChannel = await member.client.channels.fetch(
-                  timer.value.lastHelpedMetaThreadId) as TextChannel;
+                timer.value.lastHelpedMetaThreadId) as TextChannel;
               helpChannel.send(`${member.user} has left the guild!`);
               metaChannel.send(`${member.user} has left the guild!`);
             }

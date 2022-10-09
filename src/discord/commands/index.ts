@@ -21,14 +21,14 @@ export async function registerCommands(client: Client): Promise<void> {
     const commandDir = path.join(__dirname, '../commands');
     const files = await fs.readdir(path.join(commandDir, commandType));
     files
-        .filter((file) => file.endsWith('.ts') && !file.endsWith('index.ts'))
-        .map((file) => require(`${commandDir}/${commandType}/${file}`))
-        .forEach((command) => {
-          // logger.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
-          const fileName = Object.keys(command)[0];
-          const functionName = command[fileName].data.name;
-          client.commands.set(functionName, command[fileName]);
-        });
+      .filter((file) => file.endsWith('.ts') && !file.endsWith('index.ts'))
+      .map((file) => require(`${commandDir}/${commandType}/${file}`))
+      .forEach((command) => {
+        // logger.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
+        const fileName = Object.keys(command)[0];
+        const functionName = command[fileName].data.name;
+        client.commands.set(functionName, command[fileName]);
+      });
   }
   Promise.all([registerType('global'), registerType('guild')]);
   // .then(() => logger.debug(`[${PREFIX}] command loaded!`));
