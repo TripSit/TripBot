@@ -26,6 +26,11 @@ export const imdbSearch: SlashCommand = {
 
     const result = await getImdb(title);
 
+    if (!result.title) {
+      interaction.reply({content: `Could not find ${title}, make sure you're exact!`, ephemeral: true});
+      return;
+    }
+
     // {
     //   "ratings": [
     //     {
