@@ -10,7 +10,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  prepare:
+  deploy:
 
     runs-on: ubuntu-latest
 
@@ -22,13 +22,9 @@ jobs:
         node-version: '16.17.1'
         cache: 'npm'
     - name: Update npm
-      run: npm install -g npm
-    - name: Print NPM version
-      run: npm --version
+      run: npm install -g npm && npm --version
     - name: Install eslint
-      run: npm install eslint eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import --save-dev
-    - name: Print eslint version
-      run: npx eslint --version
+      run: npm install eslint eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import --save-dev && npx eslint --version
     - name: Linting
       run: npx eslint --ext ts .
     - name: Testing
