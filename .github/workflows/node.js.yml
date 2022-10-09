@@ -10,7 +10,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  prepare:
 
     runs-on: ubuntu-latest
 
@@ -23,14 +23,15 @@ jobs:
         cache: 'npm'
     - name: Update npm
       run: npm install -g npm
-    - name: Install dependencies
-      run: npm ci
-  
+    - name: Install eslint
+      run: npm install -g eslint
+      
   lint:
 
     runs-on: ubuntu-latest
 
     steps:
+
     - name: Linting
       run: eslint --ext ts .
       
@@ -41,6 +42,16 @@ jobs:
     steps:
     - name: Testing
       run: echo "I would test now!"
+      
+  build:
+  
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install dependencies
+      run: npm ci
+    - name: Build docker image
+      run: echo "I would build the docker image now!"
   
   deploy:
 
@@ -48,4 +59,4 @@ jobs:
 
     steps:
     - name: Deploy
-      run: echo "i would deploy now!"
+      run: echo "I would deploy the docker image now!"
