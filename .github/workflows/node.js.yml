@@ -29,9 +29,10 @@ jobs:
       run: npx eslint --ext ts .
     - name: Testing
       run: echo "I would test now!"
-    - name: Install dependencies
-      run: npm ci      
-    - name: Build docker image
-      run: echo "I would build the docker image now!"
-    - name: Deploy
-      run: echo "I would deploy the docker image now!"
+    - name: Webhook
+      uses: tripsit/tripsit-discord-bot@main
+      with:
+        url: ${{ secrets.CAPROVER_WEBHOOK_URL }}
+        headers: '{"repository": "tripsit/tripsit-discord-bot"}'
+        body: '{"event": "deployment", "repository": "tripsit/tripsit-discord-bot"}'
+
