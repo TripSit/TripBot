@@ -127,10 +127,12 @@ export const combo: SlashCommand = {
     } = intDef;
     const {color} = intDef;
     const output = `${emoji} ${status} ${emoji}`;
-    embed.addFields(
-      {name: 'Result', value: output},
-      {name: 'Definition', value: definition},
-    );
+    embed.setTitle(`Mixing **${drugA}** and **${drugB}**: ${output}`);
+    embed.setDescription(definition);
+    // embed.addFields(
+    //   {name: 'Result', value: output},
+    //   {name: 'Definition', value: definition},
+    // );
     embed.setThumbnail(thumbnail);
 
     // logger.debug(`[${PREFIX}] color: ${color}`);
