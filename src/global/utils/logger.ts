@@ -23,8 +23,10 @@ addColors({
 
 const myFormat = printf( ({level, message, timestamp, stack, ...metadata}) => {
   let msg = ``;
-  if (env.NODE_ENV !== 'production') {
-    msg += `${timestamp} `;
+  if (env.NODE_ENV === 'production') {
+    msg += `(P) `;
+  } else {
+    msg += `(D) ${timestamp} `;
   }
 
   // This makes it so that the logs look nice and even
