@@ -12,6 +12,7 @@ import env from './global/utils/env.config';
 import logger from './global/utils/logger';
 
 import * as path from 'path';
+import {TextChannel} from 'discord.js';
 const PREFIX = path.parse(__filename).name;
 global.bootTime = new Date();
 
@@ -60,9 +61,15 @@ const destroy = () => {
 };
 
 process.on('unhandledRejection', (error: Error) => {
-  logger.error(`[${PREFIX}] error.name: ${error.name}`);
-  logger.error(`[${PREFIX}] error.message: ${error.message}`);
-  logger.error(`[${PREFIX}] error.stack: ${error.stack}`);
+  logger.error(`error.name: ${error.name}`);
+  logger.error(`error.message: ${error.message}`);
+  logger.error(`error.stack: ${error.stack}`);
+  const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+  const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+  const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
+  botlog.send(`Hey ${tripbotdevrole}, I just got an error:
+  ${error.stack}
+  `);
 });
 
 process.on('SIGINT', destroy);

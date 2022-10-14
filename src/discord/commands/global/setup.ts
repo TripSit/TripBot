@@ -7,13 +7,16 @@ import {
   Colors,
   ChatInputCommandInteraction,
   TextChannel,
+  ModalBuilder,
+  TextInputBuilder,
+  SelectMenuBuilder,
 } from 'discord.js';
 import {
-  ButtonStyle,
+  ButtonStyle, TextInputStyle,
 } from 'discord-api-types/v10';
 import env from '../../../global/utils/env.config';
 import {SlashCommand} from '../../@types/commandDef';
-import {stripIndents} from 'common-tags';
+import {stripIndent, stripIndents} from 'common-tags';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
 
@@ -89,17 +92,49 @@ export const prompt: SlashCommand = {
       ),
     )
     .addSubcommand((subcommand) => subcommand
-      .setDescription('Application info!')
+      .setDescription('Set up the application page. 5 roles max!')
       .setName('applications')
       .addRoleOption((option) => option
         .setDescription('What role are people applying for?')
-        .setName('role_requested')
+        .setName('application_role_a')
         .setRequired(true),
       )
       .addRoleOption((option) => option
-        .setDescription('What role reviews applications?')
-        .setName('role_reviewer')
+        .setDescription('What role reviews those applications?')
+        .setName('application_reviewer_a')
         .setRequired(true),
+      )
+      .addRoleOption((option) => option
+        .setDescription('What role are people applying for?')
+        .setName('application_role_b'),
+      )
+      .addRoleOption((option) => option
+        .setDescription('What role reviews those applications?')
+        .setName('application_reviewer_b'),
+      )
+      .addRoleOption((option) => option
+        .setDescription('What role are people applying for?')
+        .setName('application_role_c'),
+      )
+      .addRoleOption((option) => option
+        .setDescription('What role reviews those applications?')
+        .setName('application_reviewer_c'),
+      )
+      .addRoleOption((option) => option
+        .setDescription('What role are people applying for?')
+        .setName('application_role_d'),
+      )
+      .addRoleOption((option) => option
+        .setDescription('What role reviews those applications?')
+        .setName('application_reviewer_d'),
+      )
+      .addRoleOption((option) => option
+        .setDescription('What role are people applying for?')
+        .setName('application_role_e'),
+      )
+      .addRoleOption((option) => option
+        .setDescription('What role reviews those applications?')
+        .setName('application_reviewer_e'),
       ),
     )
     .addSubcommand((subcommand) => subcommand
@@ -127,12 +162,9 @@ export const prompt: SlashCommand = {
       .setName('ticketbooth')),
   async execute(interaction:ChatInputCommandInteraction) {
     logger.debug(`[${PREFIX}] Starting!`);
-    await interaction.deferReply({ephemeral: true});
-
+    // await interaction.deferReply({ephemeral: true});
     const command = interaction.options.getSubcommand();
-    if (command === 'tripsitter') {
-      await tripsitter(interaction);
-    } else if (command === 'applications') {
+    if (command === 'applications') {
       await applications(interaction);
     } else if (command === 'techhelp') {
       await techhelp(interaction);
@@ -145,8 +177,8 @@ export const prompt: SlashCommand = {
     } else if (command === 'ticketbooth') {
       await ticketbooth(interaction);
     }
-
-    await interaction.editReply('Donezo!');
+    // await interaction.editReply('Donezo!');
+    // await interaction.reply({content: 'Donezo!', ephemeral: true});
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
@@ -267,138 +299,122 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
 }
 
 /**
- * The tripsitter info
- * @param {Interaction} interaction The interaction that triggered this
- */
-export async function tripsitterModal(interaction:ChatInputCommandInteraction) {
-
-}
-
-/**
- * The tripsitter info
- * @param {Interaction} interaction The interaction that triggered this
- */
-export async function tripsitter(interaction:ChatInputCommandInteraction) {
-  logger.debug(`${PREFIX} how to tripsit!`);
-  if (!(interaction.channel as TextChannel)) {
-    logger.error(`${PREFIX} how to tripsit: no channel`);
-    interaction.reply('You must run this in the channel you want the prompt to be in!');
-    return;
-  }
-
-  if (!await hasPermissions(interaction, (interaction.channel as TextChannel))) {
-    logger.debug(`${PREFIX} bot does NOT has permission to post in !`);
-    return;
-  }
-
-  if (!await hasPermissions(interaction, (interaction.options.getChannel('tripsit') as TextChannel))) {
-    logger.debug(`${PREFIX} bot does NOT has permission to post!`);
-    return;
-  }
-
-  if (interaction.options.getChannel('applications')) {
-    if (!await hasPermissions(interaction, (interaction.options.getChannel('applications') as TextChannel))) {
-      logger.debug(`${PREFIX} bot does NOT has permission to post!`);
-      return;
-    }
-  }
-
-  const channelTripsit = interaction.options.getChannel('tripsit');
-  logger.debug(`${PREFIX} channelTripsit: ${JSON.stringify(channelTripsit, null, 2)}`);
-
-  let message = stripIndents`
-  Welcome to ${interaction.channel}! This channel explains the tripsitting process.
-
-  As people need help, a thread will be created in ${channelTripsit} and a sister-thread will be created here.
-  We use the thread in ${channelTripsit} to help the person in need, and use the thread here to coordinate with the team.
-
-  ${channelTripsit} threads are archived after 24 hours, and deleted after 7 days.
-
-  For full details on how the ${channelTripsit} works, please see https://discord.tripsit.me/pages/tripsit.html
-
-  For a refresher on tripsitting please see the following resources:
-  - <https://docs.google.com/document/d/1vE3jl9imdT3o62nNGn19k5HZVOkECF3jhjra8GkgvwE>
-  - <https://wiki.tripsit.me/wiki/How_To_Tripsit_Online>
-  `;
-
-  const channelApplications = interaction.options.getChannel('applications');
-  const roleTripsitter = interaction.options.getRole('role_tripsitter');
-  const roleReviewer = interaction.options.getRole('role_reviewer');
-
-  if (channelApplications ) {
-    message += `
-**Interested in helping out?**
-
-We want people who love ${interaction.guild!.name}, want to contribute to its growth, and be part of our success!
-To ensure quality support in our assistance channels we appreciate candidates apply only when they meet the following requirements:
-1) A basic knowledge of drugs and how they interact with other drugs and mental conditions is highly preferred.
-- You don't need a PhD, and this doesn't mean personal experience.
-2) A short tenure on the org: While we appreciate the interest you should familiarize yourself with the culture before applying. 
-- Around two weeks or level 10 with the bot (use /rank)!
-
-If you meet the above and are interested in becoming a ${roleTripsitter!.name}, please click the button below to fill out the application form!
-
-Note: this is **not** a formal application for a team role, just extra access as a user!
-    `;
-    await (interaction.channel as TextChannel).send(
-      {content: message,
-        components: [new ActionRowBuilder<ButtonBuilder>()
-          .addComponents(
-            new ButtonBuilder()
-              .setCustomId(`applicationStart~${channelApplications!.id}~${roleTripsitter!.id}~${roleReviewer!.id}`)
-              .setLabel(`I want to be a ${roleTripsitter!.name}!`)
-              .setStyle(ButtonStyle.Primary),
-          )]},
-    );
-    return;
-  }
-
-  await (interaction.channel as TextChannel).send({content: message});
-}
-
-/**
  * The consultants prompt
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function applications(interaction:ChatInputCommandInteraction) {
-  logger.debug(`${PREFIX} applications!`);
+  logger.debug(`[${PREFIX}] Setting up applications!`);
   if (!(interaction.channel as TextChannel)) {
-    logger.error(`${PREFIX} how to tripsit: no channel`);
+    logger.error(`${PREFIX} applications: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');
     return;
   }
 
-  if (!await hasPermissions(interaction, (interaction.channel as TextChannel))) {
-    logger.debug(`${PREFIX} bot does NOT has permission to post in !`);
+  const hasPermission = await hasPermissions(interaction, (interaction.channel as TextChannel));
+  if (!hasPermission) {
+    logger.debug(`[${PREFIX}] bot does NOT has permission to post in ${interaction.channel}!`);
     return;
   }
 
-  const roleRequested = interaction.options.getRole('role_requested');
-  const roleReviewer = interaction.options.getRole('role_reviewer');
+  /* eslint-disable no-unused-vars */
+  const roleRequestdA = interaction.options.getRole('application_role_a')!;
+  const roleReviewerA = interaction.options.getRole('application_reviewer_a')!;
+  const roleRequestdB = interaction.options.getRole('application_role_b');
+  const roleReviewerB = interaction.options.getRole('application_reviewer_b');
+  const roleRequestdC = interaction.options.getRole('application_role_c');
+  const roleReviewerC = interaction.options.getRole('application_reviewer_c');
+  const roleRequestdD = interaction.options.getRole('application_role_d');
+  const roleReviewerD = interaction.options.getRole('application_reviewer_d');
+  const roleRequestdE = interaction.options.getRole('application_role_e');
+  const roleReviewerE = interaction.options.getRole('application_reviewer_e');
 
-  // logger.debug(`[${PREFIX}] roleReviewer: ${JSON.stringify(roleReviewer, null, 2)}`);
+  const roleArray = [
+    [roleRequestdA, roleReviewerA],
+    [roleRequestdB, roleReviewerB],
+    [roleRequestdC, roleReviewerC],
+    [roleRequestdD, roleReviewerD],
+    [roleRequestdE, roleReviewerE],
+  ];
 
-  // Send the initial message
-  await (interaction.channel as TextChannel).send(
-    {content: stripIndents`
-      Welcome to ${interaction.channel}!
+  const modal = new ModalBuilder()
+    .setCustomId(`appModal`)
+    .setTitle('Tripsitter Help Request');
+  modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+    .setCustomId('appliationText')
+    .setLabel('What wording do you want to appear?')
+    .setStyle(TextInputStyle.Paragraph)
+    .setValue(stripIndent`
+    **Interested in helping out?**
 
-      We're always looking for people who want to contribute to the back-end of the organization!
+    Welcome to ${interaction.channel}! This channel allows you to apply for positions here at ${interaction.guild!.name}!
 
-      We appreciate all types of help: Not just coders, but anyone who wants to give input or test out new features!
+    We want people who love ${interaction.guild!.name}, want to contribute to its growth, and be part of our success!
 
-      If you want to help out with ${interaction.guild!.name}, please click the button below to fill out the application form.
+    We currently have two positions open:
 
-      Note: this is not a formal application for a team role, just extra access as a user!
-    `,
-    components: [new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        new ButtonBuilder()
-          .setCustomId(`applicationStart~${interaction.channel!.id}~${roleRequested!.id}~${roleReviewer!.id}`)
-          .setLabel(`I want to be a ${roleRequested!.name}!`)
-          .setStyle(ButtonStyle.Primary),
-      )]},
+    * Helper
+    * Consultant
+
+    *These are not formal roles, but rather a way to get access to the rooms to help out and prove you want to be a part of the org!*
+    
+    Both positions require that you have a short tenure on the org: 
+    While we appreciate the interest you should familiarize yourself with the culture before applying! 
+    If you have not been here that long please chat and get to know people before applying again (at least two weeks)!
+    
+    The **Helper** role is for people who want to help out in the tripsitting rooms.
+    To ensure quality support in our assistance channels we appreciate candidates apply only when they meet the following requirements:
+    1) A basic knowledge of drugs and how they interact with other drugs and mental conditions is highly preferred.
+    - You don't need a PhD, and this doesn't mean personal experience.
+    
+    The **Consultant** role is for people who want to help out in the back-end with development or other organizational work.
+    You don't need to code, but you should have some experience with the org and be able to contribute to the org in some way.
+    We appreciate all types of help: Not just coders, but anyone who wants to give input or test out new features!
+  
+    If you want to help out with ${interaction.guild!.name}, please click the button below to fill out the application form.
+    `)),
   );
+  await interaction.showModal(modal);
+
+  // Collect a modal submit interaction
+  const filter = (interaction:any) => interaction.customId === 'appModal';
+  interaction.awaitModalSubmit({filter, time: 150000})
+    .then(async (interaction) => {
+      const selectMenu = new SelectMenuBuilder()
+        .setCustomId('applicationRoleSelectMenu')
+        .setPlaceholder('Select role here!')
+        .setMaxValues(1);
+      selectMenu.addOptions(
+        {
+          label: 'Select role here!',
+          value: `none`,
+        });
+      roleArray.forEach((role) => {
+        if (role[0]) {
+          if (role[1]) {
+            // logger.debug(`[${PREFIX}] role: ${role[0].name}`);
+            selectMenu.addOptions(
+              {
+                label: role[0].name,
+                value: `${interaction.channel!.id}~${role[0].id}~${role[1].id}`,
+              },
+            );
+          } else {
+            interaction.reply('Error: You must provide both a role and a reviewer role!');
+          }
+        }
+      });
+
+      // Send the initial message
+      await (interaction.channel as TextChannel).send(
+        {
+          content: stripIndents`${interaction.fields.getTextInputValue('appliationText')}`,
+          components: [new ActionRowBuilder<SelectMenuBuilder>()
+            .addComponents(selectMenu)],
+        },
+      );
+      interaction.reply({content: 'Donezo!', ephemeral: true});
+    })
+    .catch(console.error);
 }
 
 /**

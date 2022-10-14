@@ -144,7 +144,7 @@ declare global {
       ROLE_NEEDSHELP: string;
       ROLE_RESEARCHER: string;
       ROLE_CLEARMIND: string;
-      ROLE_CODER: string;
+      ROLE_CONSULTANT: string;
       ROLE_MEMBER: string;
       ROLE_UNDERBAN: string;
       ROLE_VIP: string;

@@ -13,7 +13,6 @@ import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
 import {tripsitmeSubmit} from '../utils/tripsitme';
-import {applicationSubmit} from '../utils/application';
 import {bug} from '../commands/global/bug';
 import {uKick} from '../commands/guild/u_kick';
 import {uBan} from '../commands/guild/u_ban';
@@ -30,10 +29,6 @@ import {issue} from '../commands/guild/issue';
 export async function modalSubmit(interaction:ModalSubmitInteraction): Promise<void> {
   logger.debug(`[${PREFIX}] interaction: ${interaction.customId}`);
 
-  if (interaction.customId.startsWith('application')) {
-    applicationSubmit(interaction);
-    return;
-  }
   if (interaction.customId === 'issueModal') {
     issue.submit!(interaction);
     return;

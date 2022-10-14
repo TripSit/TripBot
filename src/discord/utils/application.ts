@@ -18,6 +18,7 @@ import {
   SelectMenuInteraction,
   Role,
   PermissionsBitField,
+  CategoryChannel,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -49,24 +50,32 @@ const rejectionMessages = {
 
 /**
  *
- * @param {ButtonInteraction} interaction The Client that manages this interaction
+ * @param {SelectMenuInteraction} interaction The Client that manages this interaction
  * @return {Promise<void>}
 **/
 export async function applicationStart(
-  interaction: ButtonInteraction,
+  interaction: SelectMenuInteraction,
 ): Promise<void> {
   logger.debug(`[${PREFIX} - applicationStart] starting!`);
   logger.debug(`[${PREFIX} - applicationStart] customId: ${interaction.customId}`);
+  logger.debug(`[${PREFIX} - applicationStart] values: ${interaction.values}`);
 
-  const channelId = interaction.customId.split('~')[1];
-  const roleRequestedId = interaction.customId.split('~')[2];
-  const roleReviewerId = interaction.customId.split('~')[3];
+  if (interaction.values[0] === 'none') {
+    interaction.reply({content: 'No application selected.', ephemeral: true});
+    return;
+  };
 
+  const channelId = interaction.values[0].split('~')[0];
+  const roleRequestedId = interaction.values[0].split('~')[1];
+  const roleReviewerId = interaction.values[0].split('~')[2];
   logger.debug(`[${PREFIX} - applicationStart] channelId: ${channelId}`);
   logger.debug(`[${PREFIX} - applicationStart] roleRequestedId: ${roleRequestedId}`);
   logger.debug(`[${PREFIX} - applicationStart] roleReviewerId: ${roleReviewerId}`);
 
   const roleRequested = await interaction.guild?.roles.fetch(roleRequestedId);
+  // const roleReviewer = await interaction.guild?.roles.fetch(roleReviewerId);
+  // const channel = await interaction.guild?.channels.fetch(channelId);
+
 
   // Create the modal
   const modal = new ModalBuilder()
@@ -87,180 +96,176 @@ export async function applicationStart(
     .setMaxLength(2000)
     .setStyle(TextInputStyle.Paragraph)));
   await interaction.showModal(modal);
-  logger.debug(`[${PREFIX}] finished!`);
-};
 
-/**
- *
- * @param {ModalSubmitInteraction} interaction The Client that manages this interaction
- * @return {Promise<void>}
-**/
-export async function applicationSubmit(
-  interaction: ModalSubmitInteraction,
-): Promise<void> {
-  logger.debug(`[${PREFIX}] starting!`);
+  // Collect a modal submit interaction
+  const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`applicationSubmit`);
+  interaction.awaitModalSubmit({filter, time: 0})
+    .then(async (interaction) => {
+      if (!interaction.guild) {
+        logger.debug(`[${PREFIX}] no guild!`);
+        interaction.reply('This must be performed in a guild!');
+        return;
+      }
+      if (!interaction.member) {
+        logger.debug(`[${PREFIX}] no member!`);
+        interaction.reply('This must be performed by a member of a guild!');
+        return;
+      }
 
-  if (!interaction.guild) {
-    logger.debug(`[${PREFIX}] no guild!`);
-    interaction.reply('This must be performed in a guild!');
-    return;
-  }
-  if (!interaction.member) {
-    logger.debug(`[${PREFIX}] no member!`);
-    interaction.reply('This must be performed by a member of a guild!');
-    return;
-  }
+      const channelId = interaction.customId.split('~')[1];
+      const roleRequestedId = interaction.customId.split('~')[2];
+      const roleReviewerId = interaction.customId.split('~')[3];
 
-  const channelId = interaction.customId.split('~')[1];
-  const roleRequestedId = interaction.customId.split('~')[2];
-  const roleReviewerId = interaction.customId.split('~')[3];
+      logger.debug(`[${PREFIX} - applicationSubmit] channelId: ${channelId}`);
+      logger.debug(`[${PREFIX} - applicationSubmit] roleRequestedId: ${roleRequestedId}`);
+      logger.debug(`[${PREFIX} - applicationSubmit] roleReviewerId: ${roleReviewerId}`);
 
-  logger.debug(`[${PREFIX} - applicationSubmit] channelId: ${channelId}`);
-  logger.debug(`[${PREFIX} - applicationSubmit] roleRequestedId: ${roleRequestedId}`);
-  logger.debug(`[${PREFIX} - applicationSubmit] roleReviewerId: ${roleReviewerId}`);
+      const roleRequested = await interaction.guild?.roles.fetch(roleRequestedId) as Role;
+      const roleReviewer = await interaction.guild?.roles.fetch(roleReviewerId) as Role;
 
-  const roleRequested = await interaction.guild?.roles.fetch(roleRequestedId) as Role;
-  const roleReviewer = await interaction.guild?.roles.fetch(roleReviewerId) as Role;
+      const channel = channelId !== '' ?
+        await interaction.guild.channels.fetch(channelId) as TextChannel :
+        interaction.channel as TextChannel;
 
-  const channel = channelId !== '' ?
-    await interaction.guild.channels.fetch(channelId) as TextChannel :
-    interaction.channel as TextChannel;
+      const reason = (interaction as ModalSubmitInteraction).fields.getTextInputValue('reason');
+      const skills = (interaction as ModalSubmitInteraction).fields.getTextInputValue('skills');
 
-  const reason = (interaction as ModalSubmitInteraction).fields.getTextInputValue('reason');
-  const skills = (interaction as ModalSubmitInteraction).fields.getTextInputValue('skills');
+      const applicationThread = await channel.threads.create({
+        name: `💛│${(interaction.member as GuildMember).displayName}'s ${roleRequested.name} application!`,
+        autoArchiveDuration: 1440,
+        type: interaction.guild?.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
+        reason: `${(interaction.member as GuildMember).displayName} submitted an application!`,
+        invitable: env.NODE_ENV === 'production' ? false : undefined,
+      }) as ThreadChannel;
 
-  const applicationThread = await channel.threads.create({
-    name: `💛│${(interaction.member as GuildMember).displayName}'s ${roleRequested.name} application!`,
-    autoArchiveDuration: 1440,
-    type: interaction.guild?.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
-    reason: `${(interaction.member as GuildMember).displayName} submitted an application!`,
-    invitable: env.NODE_ENV === 'production' ? false : undefined,
-  }) as ThreadChannel;
+      const appEmbed = embedTemplate()
+        .setColor(Colors.DarkBlue)
+        .setDescription(`**Reason:** ${reason}\n**Skills:** ${skills}`)
+        .addFields(
+          {
+            name: 'Displayname',
+            value: `${(interaction.member as GuildMember).displayName}`,
+            inline: true},
+          {
+            name: 'Username',
+            value: `${interaction.member.user.username}#${interaction.member.user.discriminator}`,
+            inline: true},
+          {
+            name: 'ID',
+            value: `${interaction.member.user.id}`,
+            inline: true,
+          },
+        )
+        .addFields(
+          {
+            name: 'Created',
+            value: `${time((interaction.member.user as User).createdAt, 'R')}`,
+            inline: true},
+        );
+      if ((interaction.member as GuildMember).joinedAt) {
+        appEmbed.addFields(
+          {
+            name: 'Joined',
+            value: `${time((interaction.member as GuildMember).joinedAt!, 'R')}`,
+            inline: true},
+        );
+      }
 
-  const appEmbed = embedTemplate()
-    .setColor(Colors.DarkBlue)
-    .setDescription(`**Reason:** ${reason}\n**Skills:** ${skills}`)
-    .addFields(
-      {
-        name: 'Displayname',
-        value: `${(interaction.member as GuildMember).displayName}`,
-        inline: true},
-      {
-        name: 'Username',
-        value: `${interaction.member.user.username}#${interaction.member.user.discriminator}`,
-        inline: true},
-      {
-        name: 'ID',
-        value: `${interaction.member.user.id}`,
-        inline: true,
-      },
-    )
-    .addFields(
-      {
-        name: 'Created',
-        value: `${time((interaction.member.user as User).createdAt, 'R')}`,
-        inline: true},
-    );
-  if ((interaction.member as GuildMember).joinedAt) {
-    appEmbed.addFields(
-      {
-        name: 'Joined',
-        value: `${time((interaction.member as GuildMember).joinedAt!, 'R')}`,
-        inline: true},
-    );
-  }
+      const approveButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`applicationApprove~${(interaction.member as GuildMember).id}~${roleRequestedId}`)
+          .setLabel('Approve')
+          .setStyle(ButtonStyle.Primary),
+      );
 
-  const approveButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`applicationApprove~${(interaction.member as GuildMember).id}~${roleRequestedId}`)
-      .setLabel('Approve')
-      .setStyle(ButtonStyle.Primary),
-  );
+      const rejectMenu = new ActionRowBuilder<SelectMenuBuilder>().addComponents(
+        new SelectMenuBuilder()
+          .setCustomId(`applicationReject~${(interaction.member as GuildMember).id}~${roleRequestedId}`)
+          .addOptions(
+            {
+              label: 'Generic Rejection',
+              value: 'generic',
+              description: 'No specific reason, try not to use this one',
+            },
+            {
+              label: 'Discord Account Too New',
+              value: 'tooNew',
+              description: 'Their Discord account was created too recently',
+            },
+            {
+              label: 'Recent History of Misinformation',
+              value: 'misinformation',
+              description: 'They have a history of spreading misinformation',
+            },
+            {
+              label: 'Discrepancies in Application',
+              value: 'discrepancies',
+              description: 'They have provided false/misleading information in their application',
+            },
+            {
+              label: 'Recent History of Enabling Poor Choices',
+              value: 'enabling',
+              description: 'They have a history of enabling poor choices',
+            },
+            {
+              label: 'History of Demerits on Account',
+              value: 'demerits',
+              description: 'They have a history of demerits on their account',
+            },
+            {
+              label: 'Blank or Unhelpful Application',
+              value: 'blank',
+              description: 'They have provided a blank or unhelpful application',
+            },
+            {
+              label: 'Too Young',
+              value: 'young',
+              description: 'They are too young to be a part of the team',
+            },
+            {
+              label: 'Failed Identity Check',
+              value: 'identity',
+              description: 'They failed the identity check',
+            },
+            {
+              label: 'Currently Overstaffed for Area of Interest',
+              value: 'overstaffed',
+              description: 'We are currently overstaffed for their area of interest',
+            },
+            {
+              label: 'Low Exposure to Drugs or Drug Use',
+              value: 'exposure',
+              description: 'They have low exposure to drugs or drug use',
+            },
+            {
+              label: 'Miscellaneous / Potentially Bad Fit',
+              value: 'culture',
+              description: 'They are a potential bad fit for our culture',
+            },
+          ),
+      );
 
-  const rejectMenu = new ActionRowBuilder<SelectMenuBuilder>().addComponents(
-    new SelectMenuBuilder()
-      .setCustomId(`applicationReject~${(interaction.member as GuildMember).id}~${roleRequestedId}`)
-      .addOptions(
-        {
-          label: 'Generic Rejection',
-          value: 'generic',
-          description: 'No specific reason, try not to use this one',
-        },
-        {
-          label: 'Discord Account Too New',
-          value: 'tooNew',
-          description: 'Their Discord account was created too recently',
-        },
-        {
-          label: 'Recent History of Misinformation',
-          value: 'misinformation',
-          description: 'They have a history of spreading misinformation',
-        },
-        {
-          label: 'Discrepancies in Application',
-          value: 'discrepancies',
-          description: 'They have provided false/misleading information in their application',
-        },
-        {
-          label: 'Recent History of Enabling Poor Choices',
-          value: 'enabling',
-          description: 'They have a history of enabling poor choices',
-        },
-        {
-          label: 'History of Demerits on Account',
-          value: 'demerits',
-          description: 'They have a history of demerits on their account',
-        },
-        {
-          label: 'Blank or Unhelpful Application',
-          value: 'blank',
-          description: 'They have provided a blank or unhelpful application',
-        },
-        {
-          label: 'Too Young',
-          value: 'young',
-          description: 'They are too young to be a part of the team',
-        },
-        {
-          label: 'Failed Identity Check',
-          value: 'identity',
-          description: 'They failed the identity check',
-        },
-        {
-          label: 'Currently Overstaffed for Area of Interest',
-          value: 'overstaffed',
-          description: 'We are currently overstaffed for their area of interest',
-        },
-        {
-          label: 'Low Exposure to Drugs or Drug Use',
-          value: 'exposure',
-          description: 'They have low exposure to drugs or drug use',
-        },
-        {
-          label: 'Miscellaneous / Potentially Bad Fit',
-          value: 'culture',
-          description: 'They are a potential bad fit for our culture',
-        },
-      ),
-  );
+      const actorHasRoleDeveloper = (interaction.member as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
+      logger.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
 
-  const actorHasRoleDeveloper = (interaction.member as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
-  logger.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
+      applicationThread.send(`Hey ${actorHasRoleDeveloper ? 'team!' : roleReviewer} there is a new application!`);
+      await applicationThread.send({embeds: [appEmbed], components: [approveButton, rejectMenu]})
+        .then(async (message) => {
+          await message.react('👍');
+          await message.react('👎');
+        });
 
-  applicationThread.send(`Hey ${actorHasRoleDeveloper ? 'team!' : roleReviewer} there is a new application!`);
-  await applicationThread.send({embeds: [appEmbed], components: [approveButton, rejectMenu]})
-    .then(async (message) => {
-      await message.react('👍');
-      await message.react('👎');
-    });
+      // Respond to the user
+      logger.debug(`[${PREFIX}] reason: ${reason}`);
+      logger.debug(`[${PREFIX}] skills: ${skills}`);
+      const embed = embedTemplate()
+        .setColor(Colors.DarkBlue)
+        .setDescription('Thank you for your interest! We will try to get back to you as soon as possible!');
+      interaction.reply({embeds: [embed], ephemeral: true});
+      logger.debug(`[${PREFIX}] finished!`);
+    })
+    .catch(console.error);
 
-  // Respond to the user
-  logger.debug(`[${PREFIX}] reason: ${reason}`);
-  logger.debug(`[${PREFIX}] skills: ${skills}`);
-  const embed = embedTemplate()
-    .setColor(Colors.DarkBlue)
-    .setDescription('Thank you for your interest! We will try to get back to you as soon as possible!');
-  interaction.reply({embeds: [embed], ephemeral: true});
   logger.debug(`[${PREFIX}] finished!`);
 };
 
@@ -308,6 +313,9 @@ export async function applicationReject(
 export async function applicationApprove(
   interaction: ButtonInteraction,
 ): Promise<void> {
+  // let message = stripIndents`
+
+  // `;
   // logger.debug(`[${PREFIX} - applicationAccept] starting!`);
   const actor = (interaction.member as GuildMember);
   if (actor.permissions.has(PermissionFlagsBits.ManageRoles)) {
@@ -324,8 +332,84 @@ export async function applicationApprove(
 
     logger.debug(`[${PREFIX} - applicationAccept] Giving ${target.displayName} ${role.name} role!`);
     target.roles.add(role);
+
+    if (role.id === env.ROLE_HELPER) {
+      const channelTripsitMeta = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSITMETA) as TextChannel;
+      const channelTripsit = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
+      const hrCategory = await interaction.guild?.channels.fetch(env.CATEGROY_HARMREDUCTIONCENTRE) as CategoryChannel;
+      channelTripsitMeta.send(stripIndents`
+      Please welcome our newest ${role.name}, ${target}! We're excited to have you here! 
+      
+      As a ${role.name}, some things have changed:
+
+      - You now have access this this channel, which is used to coordinate with others!
+
+      Please use this room to ask for help if you're overwhelmed, and feel free to make a thread if it gets busy!
+
+      - You are able to receive and respond to help requests in the ${hrCategory}!
+
+      As people need help, a thread will be created in ${channelTripsit}.
+      We use the thread in ${channelTripsit} to help the person in need, and talk here to coordinate with the team.
+    
+      ${channelTripsit} threads are archived after 24 hours, and deleted after 7 days.
+    
+      For full details on how the ${channelTripsit} works, please see https://discord.tripsit.me/pages/tripsit.html
+    
+      For a refresher on tripsitting please see the following resources:
+      - <https://docs.google.com/document/d/1vE3jl9imdT3o62nNGn19k5HZVOkECF3jhjra8GkgvwE>
+      - <https://wiki.tripsit.me/wiki/How_To_Tripsit_Online>
+
+      If you have any questions, please reach out to a moderator or the team lead!
+    `);
+    }
+    if (role.id === env.ROLE_CONSULTANT) {
+      const devCategory = await interaction.guild?.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
+      const channelTripcord = await interaction.guild?.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
+      const channelTripbot = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
+      const channelTripmobile = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPMOBILE) as TextChannel;
+      const channelContent = await interaction.guild?.channels.fetch(env.CHANNEL_WIKICONTENT) as TextChannel;
+      const channelDevelopment = await interaction.guild?.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
+      // const channelIrc = await interaction.guild?.channels.fetch(env.CHANNEL_IRC) as TextChannel;
+      // const channelMatrix = await interaction.guild?.channels.fetch(env.CHANNEL_MATRIX) as TextChannel;
+
+      channelDevelopment.send(stripIndents`
+      Please welcome our newest ${role.name}, ${target}! We're excited to have you here! 
+      
+      Our ${devCategory} category holds the projects we're working on.
+
+      > **We encourage you to make a new thread whenever possible!**
+      > This allows us to organize our efforts and not lose track of our thoughts!
+
+      TripSit is run by volunteers, so things may be a bit slower than your day job.
+      Almost all the code is open source and can be found on our GitHub: <http://github.com/tripsit>
+      Discussion of changes happens mostly in the public channels in this category.
+      If you have an idea or feedback, make a new thread: we're happy to hear all sorts of input and ideas!
+
+      ${channelTripcord}
+      > While this discord has existed for years, TS has only started focusing on it relatively recently.
+      > It is still an ongoing WIP, and this channel is where we coordinate changes to the discord server!
+      > Ideas and suggestions are always welcome, and we're always looking to improve the experience!
+      > No coding experience is necessary to help make the discord an awesome place to be =)
+
+      ${channelTripbot}
+      > Our ombi-bot Tripbot has made it's way into the discord server!
+      > This is a somewhat complex bot that is continually growing to meet the needs of TripSit.
+      > It also can be added to other servers to provide a subset of harm reduction features to the public
+
+      ${channelTripmobile}
+      > Tripsit has a mobile application: <https://play.google.com/store/apps/details?id=me.tripsit.mobile>
+      > **We would love react native developers to help out on this project!**
+      > We're always looking to improve the mobile experience, and we need testers to help us
+
+      ${channelContent}
+      > We have a ton of drug information available online: <https://drugs.tripsit.me>
+      > We're always looking to improve our substance information, and we need researchers to help us!
+      > If you want to make a change to the wiki, please make a new thread in this category.
+      > *Changes to the wiki will only be made after given a credible source!*
+    `);
+    }
   } else {
-    interaction.reply({content: 'You do not have permission to do that!', ephemeral: true});
+    interaction.reply({content: 'You do not have permission to modify roles!', ephemeral: true});
   }
   // logger.debug(`[${PREFIX} - applicationAccept] finished!`);
 };
