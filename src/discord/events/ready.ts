@@ -1,6 +1,7 @@
 import {
   Client,
   Collection,
+  TextChannel,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
 import {clientEvent} from '../@types/eventDef';
@@ -40,6 +41,10 @@ export const ready: clientEvent = {
     Promise.all([getInvites(client)])
       .then(() => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
+        const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+        const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+        const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
+        botlog.send(`Hey ${tripbotdevrole}, bot has restart! Booted in ${bootDuration} seconds`);
         logger.info(`[${PREFIX}] Discord finished booting in ${bootDuration}s!`);
       })
     ;
