@@ -345,7 +345,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
     .setValue(stripIndent`
     **Interested in helping out?**
 
-    Welcome to ${interaction.channel}! This channel allows you to apply for positions here at ${interaction.guild!.name}!
+    Welcome to ${interaction.channel}! This channel allows you to apply for intern positions here at ${interaction.guild!.name}!
 
     We want people who love ${interaction.guild!.name}, want to contribute to its growth, and be part of our success!
 
@@ -354,16 +354,15 @@ export async function applications(interaction:ChatInputCommandInteraction) {
     * Helper
     * Consultant
 
-    *These are not formal roles, but rather a way to get access to the rooms to help out and prove you want to be a part of the org!*
+    **These are not formal roles, but rather a way to get access to the rooms to help out and prove you want to be a part of the org!**
     
     Both positions require that you have a short tenure on the org: 
     While we appreciate the interest you should familiarize yourself with the culture before applying! 
     If you have not been here that long please chat and get to know people before applying again (at least two weeks)!
     
     The **Helper** role is for people who want to help out in the tripsitting rooms.
-    To ensure quality support in our assistance channels we appreciate candidates apply only when they meet the following requirements:
-    1) A basic knowledge of drugs and how they interact with other drugs and mental conditions is highly preferred.
-    - You don't need a PhD, and this doesn't mean personal experience.
+    As long as you have a general understanding of how drugs work and how hey interact with mental health conditions we do not require a formal education for users interested in taking on the helper role. 
+    While we do value lived/living experience with drug use it is not required to be an effective helper!
     
     The **Consultant** role is for people who want to help out in the back-end with development or other organizational work.
     You don't need to code, but you should have some experience with the org and be able to contribute to the org in some way.
