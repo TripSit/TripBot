@@ -270,7 +270,6 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
 
   const channelSanctuary = interaction.options.getChannel('sanctuary')!;
   const channelGeneral = interaction.options.getChannel('general')!;
-  const channelTripsitters = interaction.options.getChannel('tripsitters')!;
   const roleNeedshelp = interaction.options.getRole('needshelp')!;
   const roleTripsitter = interaction.options.getRole('tripsitter')!;
 
@@ -288,7 +287,7 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId(`tripsitmeClick~${roleNeedshelp.id}~${roleTripsitter.id}~${channelTripsitters.id}`)
+        .setCustomId(`tripsitmeClick~${roleNeedshelp.id}~${roleTripsitter.id}`)
         .setLabel('I need assistance!')
         .setStyle(ButtonStyle.Primary),
     );
