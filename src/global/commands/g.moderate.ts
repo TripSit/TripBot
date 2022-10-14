@@ -606,6 +606,10 @@ export async function moderate(
   modChan.send({embeds: [targetEmbed]});
   logger.debug(`[${PREFIX}] sent a message to the moderators room`);
 
+  const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+  modlog.send({embeds: [targetEmbed]});
+  logger.debug(`[${PREFIX}] sent a message to the modlog room`);
+
   // const now = new Date().toString();
   // const targetModAction = {
   //   [now]: {
