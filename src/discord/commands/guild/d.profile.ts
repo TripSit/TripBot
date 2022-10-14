@@ -417,7 +417,7 @@ export const profile: SlashCommand = {
       context.fillStyle = textColor;
       context.fillText('HAPPY BIRTHDAY!', 467, 55);
       // const birthdayImage = '.src\\discord\\assets\\img\\cards\\birthdayOverlay.png';
-      const birthdayImage = 'https://i.imgur.com/uOkR6uf';
+      const birthdayImage = 'https://i.imgur.com/uOkR6uf.png';
       const birthdayOverlay = await Canvas.loadImage(birthdayImage);
       context.drawImage(birthdayOverlay, 0, 0, 934, 282);
     }
