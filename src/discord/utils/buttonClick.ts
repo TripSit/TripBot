@@ -11,7 +11,7 @@ import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../utils/embedTemplate';
-import {applicationStart, applicationApprove} from '../utils/application';
+import {applicationApprove} from '../utils/application';
 import {tripsitmeClick, tripsitmeFinish} from '../utils/tripsitme';
 import {techHelpClick, techHelpClose, techHelpOwn} from '../utils/techHelp';
 import {
@@ -45,10 +45,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     tripsitmeFinish(interaction);
     return;
   }
-  if (buttonID.startsWith('applicationStart')) {
-    applicationStart(interaction);
-    return;
-  }
+
   if (buttonID.startsWith('applicationApprove')) {
     applicationApprove(interaction);
     return;

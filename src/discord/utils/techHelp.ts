@@ -32,8 +32,8 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
   const role = await interaction.guild?.roles.fetch(roleId)!;
 
-  logger.debug(`[${PREFIX} - applicationStart] issueType: ${issueType}`);
-  logger.debug(`[${PREFIX} - applicationStart] role: ${role!.id}`);
+  logger.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
+  logger.debug(`[${PREFIX} - techHelpClick] role: ${role!.id}`);
 
   let placeholder = '';
   if (issueType === 'discord') {
@@ -77,8 +77,8 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
 
   const roleModerator = await interaction.guild?.roles.fetch(roleId)!;
 
-  logger.debug(`[${PREFIX} - applicationStart] issueType: ${issueType}`);
-  logger.debug(`[${PREFIX} - applicationStart] role: ${roleModerator!.id}`);
+  logger.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
+  logger.debug(`[${PREFIX} - techHelpClick] role: ${roleModerator!.id}`);
 
   // Respond right away cuz the rest of this doesn't matter
   const member = await interaction.guild!.members.fetch(interaction.user.id);
