@@ -12,15 +12,13 @@ export const error: errorEvent = {
   once: false,
   async execute(error: Error):Promise<void> {
     logger.error(`[${PREFIX}] Client error ${JSON.stringify(error, null, 2)}`);
-    logger.error(`[${PREFIX}] error.name: ${error.name}`);
-    logger.error(`[${PREFIX}] error.message: ${error.message}`);
-    logger.error(`[${PREFIX}] error.stack: ${error.stack}`);
+    // logger.error(`[${PREFIX}] error.name: ${error.name}`);
+    // logger.error(`[${PREFIX}] error.message: ${error.message}`);
+    logger.error(`[${PREFIX}] ERROR: ${error.stack}`);
     const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
     const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
     botlog.send(`Hey ${tripbotdevrole}, I just got an error:
-    ${error.name}
-    ${error.message}
     ${error.stack}
     `);
   },

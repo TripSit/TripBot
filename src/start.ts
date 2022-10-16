@@ -61,9 +61,7 @@ const destroy = () => {
 };
 
 process.on('unhandledRejection', (error: Error) => {
-  logger.error(`error.name: ${error.name}`);
-  logger.error(`error.message: ${error.message}`);
-  logger.error(`error.stack: ${error.stack}`);
+  logger.error(`[${PREFIX}] ERROR: ${error.stack}`);
   const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
   const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
   const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);

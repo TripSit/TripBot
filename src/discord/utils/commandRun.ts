@@ -3,6 +3,7 @@ import {
   ChatInputCommandInteraction,
   MessageContextMenuCommandInteraction,
   UserContextMenuCommandInteraction,
+  TextChannel,
 } from 'discord.js';
 // import {SlashCommand} from './commandDef';
 import logger from '../../global/utils/logger';
@@ -107,17 +108,28 @@ export async function commandRun(
     await command.execute(interaction);
   } catch (error) {
     if (error instanceof Error) {
-      logger.error(`[${PREFIX}] Client error ${JSON.stringify(error, null, 2)}`);
-      logger.error(`[${PREFIX}] error.name: ${error.name}`);
-      logger.error(`[${PREFIX}] error.message: ${error.message}`);
-      logger.error(`[${PREFIX}] error.stack: ${error.stack}`);
+      // logger.error(`[${PREFIX}] Client error ${JSON.stringify(error, null, 2)}`);
+      // logger.error(`[${PREFIX}] error.name: ${error.name}`);
+      // logger.error(`[${PREFIX}] error.message: ${error.message}`);
+      logger.error(`[${PREFIX}] ERROR: ${error.stack}`);
+      const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+      const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+      const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
+      botlog.send(`Hey ${tripbotdevrole}, I just got an error:
+      ${error.stack}
+      `);
       interaction.reply({
         content: 'There was an error while executing this command!',
         ephemeral: true,
       });
     } else {
-      logger.error(`[${PREFIX}] Error: ${error}`);
-      logger.error(error);
+      logger.error(`[${PREFIX}] ERROR: ${error}`);
+      const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+      const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+      const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
+      botlog.send(`Hey ${tripbotdevrole}, I just got an error:
+        ${JSON.stringify(error, null, 2)}
+      `);
       interaction.reply({
         content: 'There was an unexpected error while executing this command!',
         ephemeral: true,
