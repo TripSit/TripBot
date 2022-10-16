@@ -307,7 +307,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
               const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
 
               // eslint-disable-next-line max-len
-              logger.debug(stripIndents`[${PREFIX}] ${actor.username } (lv${level}) +${expPoints} ${expType} exp | TotalExp: ${totalExpPoints}, LevelExp: ${levelExpPoints}, ExpToLevel ${level + 1}: ${expToLevel}`);
+              logger.debug(stripIndents`[${PREFIX}] ${actor.username } (lv${level}) +${expPoints} ${expType} exp | TotalExp: ${totalExpPoints}, LevelExp: ${levelExpPoints}, ExpNeededForLevel ${level + 1}: ${expToLevel}`);
               if (expToLevel < levelExpPoints) {
                 level += 1;
                 logger.debug(stripIndents`[${PREFIX}] ${actor.username} has leveled up to ${expType} level ${level}!`);

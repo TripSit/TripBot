@@ -112,28 +112,32 @@ export async function commandRun(
       // logger.error(`[${PREFIX}] error.name: ${error.name}`);
       // logger.error(`[${PREFIX}] error.message: ${error.message}`);
       logger.error(`[${PREFIX}] ERROR: ${error.stack}`);
-      const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-      const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
-      const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
-      botlog.send(`Hey ${tripbotdevrole}, I just got an error:
-      ${error.stack}
-      `);
       interaction.reply({
         content: 'There was an error while executing this command!',
         ephemeral: true,
       });
+      if (env.NODE_ENV === 'production') {
+        const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+        const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+        const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
+        botlog.send(`Hey ${tripbotdevrole}, I just got an error (commandRun: ${commandName}):
+        ${error.stack}
+        `);
+      }
     } else {
       logger.error(`[${PREFIX}] ERROR: ${error}`);
-      const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-      const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
-      const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
-      botlog.send(`Hey ${tripbotdevrole}, I just got an error:
-        ${JSON.stringify(error, null, 2)}
-      `);
       interaction.reply({
         content: 'There was an unexpected error while executing this command!',
         ephemeral: true,
       });
+      if (env.NODE_ENV === 'production') {
+        const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+        const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+        const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
+        botlog.send(`Hey ${tripbotdevrole}, I just got an error (commandRun: ${commandName}):
+        ${error}
+        `);
+      }
     }
   }
   // logger.debug(`[${PREFIX}] finished!`);

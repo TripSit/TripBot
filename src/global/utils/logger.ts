@@ -4,6 +4,8 @@ import {
   transports,
   addColors,
 } from 'winston';
+import {Logtail} from '@logtail/node';
+import {LogtailTransport} from '@logtail/winston';
 import env from './env.config';
 
 const {
@@ -50,6 +52,19 @@ const myFormat = printf( ({level, message, timestamp, stack, ...metadata}) => {
   return msg;
 });
 
+// We only want logtail logs in production
+let transportOptions = [];
+if (env.NODE_ENV === 'production') {
+  transportOptions = [
+    new transports.Console(),
+    new LogtailTransport(new Logtail('wCKy55XyvN5aJRqyiRTYbza5')),
+  ];
+} else {
+  transportOptions = [
+    new transports.Console(),
+  ];
+}
+
 const Logger = createLogger({
   level: 'debug',
   format: combine(
@@ -58,16 +73,7 @@ const Logger = createLogger({
     timestamp({format: 'YYYY-MM-DD HH:mm:ss'}),
     myFormat,
   ),
-  transports: [
-    new transports.Console(),
-    // new transports.File({
-    //   filename: 'logs/error.log',
-    //   level: 'error',
-    // }),
-    // new transports.File({
-    //   filename: 'logs/all.log',
-    // }),
-  ],
+  transports: transportOptions,
 });
 
 export default Logger;

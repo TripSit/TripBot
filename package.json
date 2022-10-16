@@ -1,6 +1,6 @@
 {
   "name": "tripsit-tripbot",
-  "version": "5.0.15",
+  "version": "5.0.16",
   "description": "A bot for TripSit (and maybe the world)",
   "main": "start.ts",
   "scripts": {
@@ -36,6 +36,8 @@
   "homepage": "https://github.com/TripSit/tripsit-discord-bot#readme",
   "dependencies": {
     "@discordjs/rest": "^1.3.0",
+    "@logtail/node": "^0.1.12",
+    "@logtail/winston": "^0.1.13",
     "@napi-rs/canvas": "^0.1.30",
     "@octokit/rest": "^19.0.5",
     "axios": "^1.1.2",

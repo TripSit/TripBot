@@ -15,11 +15,13 @@ export const error: errorEvent = {
     // logger.error(`[${PREFIX}] error.name: ${error.name}`);
     // logger.error(`[${PREFIX}] error.message: ${error.message}`);
     logger.error(`[${PREFIX}] ERROR: ${error.stack}`);
-    const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-    const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
-    const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
-    botlog.send(`Hey ${tripbotdevrole}, I just got an error:
-    ${error.stack}
-    `);
+    if (env.NODE_ENV === 'production') {
+      const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+      const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+      const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
+      botlog.send(`Hey ${tripbotdevrole}, I just got an error (error):
+      ${error.stack}
+      `);
+    }
   },
 };
