@@ -287,30 +287,39 @@ export const profile: SlashCommand = {
     } else {
       context.fillText(`0`, 684, 190);
     }
+
     // Choose and Draw the Star Image
-    const level = targetData.experience!.total.level;
     let starImagePath = 'https://i.imgur.com/vU1erLP.png';
-    if (level < 6) {
-      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIP.png';
-      starImagePath = 'https://i.imgur.com/vU1erLP.png';
-    } else if (level < 10) {
-      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL5.png';
-      starImagePath = 'https://i.imgur.com/DRaOnUY.png';
-    } else if (level < 20) {
-      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL10.png';
-      starImagePath = 'https://i.imgur.com/hBuDOvE.png';
-    } else if (level < 30) {
-      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL20.png';
-      starImagePath = 'https://i.imgur.com/3jfSa7x.png';
-    } else if (level < 40) {
-      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL30.png';
-      starImagePath = 'https://i.imgur.com/tlVnx1o.png';
-    } else if (level < 50) {
-      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL40.png';
-      starImagePath = 'https://i.imgur.com/zNB2rtD.png';
-    } else if (level > 50) {
-      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL50.png';
-      starImagePath = 'https://i.imgur.com/5ElzDZ8.png';
+    let level = 0;
+
+    if (targetData.experience) {
+      if (targetData.experience.total) {
+        if (targetData.experience.total.level) {
+          level = targetData.experience.total.level;
+          if (level < 6) {
+            // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIP.png';
+            starImagePath = 'https://i.imgur.com/vU1erLP.png';
+          } else if (level < 10) {
+            // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL5.png';
+            starImagePath = 'https://i.imgur.com/DRaOnUY.png';
+          } else if (level < 20) {
+            // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL10.png';
+            starImagePath = 'https://i.imgur.com/hBuDOvE.png';
+          } else if (level < 30) {
+            // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL20.png';
+            starImagePath = 'https://i.imgur.com/3jfSa7x.png';
+          } else if (level < 40) {
+            // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL30.png';
+            starImagePath = 'https://i.imgur.com/tlVnx1o.png';
+          } else if (level < 50) {
+            // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL40.png';
+            starImagePath = 'https://i.imgur.com/zNB2rtD.png';
+          } else if (level > 50) {
+            // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL50.png';
+            starImagePath = 'https://i.imgur.com/5ElzDZ8.png';
+          }
+        }
+      }
     }
     try {
       logger.debug(`[${PREFIX}] starImagePath: ${starImagePath}`);
