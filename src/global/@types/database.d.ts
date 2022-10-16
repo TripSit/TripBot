@@ -37,9 +37,12 @@ export type discordEntry = {
 };
 
 export type ticketDbEntry = {
-  name: string;
-  issueThread: string;
+  issueDesc: string;
   issueStatus: 'open' | 'closed' | 'blocked' | 'paused';
+  issueThread: string;
+  issueType: 'appeal' | 'tripsit' | 'tech';
+  issueUser: string;
+  issueUserIsBanned: boolean;
 }
 
 export type reactionRoleList = {

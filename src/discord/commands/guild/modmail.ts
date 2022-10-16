@@ -12,6 +12,7 @@ import {
   ButtonInteraction,
   TextChannel,
   ModalSubmitInteraction,
+  AllowedThreadTypeForTextChannel,
   // Role,
 } from 'discord.js';
 import {
@@ -32,7 +33,7 @@ const modmailButtons = new ActionRowBuilder<ButtonBuilder>()
   .addComponents(
     new ButtonBuilder()
       .setCustomId('modmailTripsitter')
-      .setLabel('I need a tripsitter')
+      .setLabel('Trip Sit Me!')
       .setStyle(ButtonStyle.Success),
     new ButtonBuilder()
       .setCustomId('modmailFeedback')
@@ -44,8 +45,12 @@ const modmailButtons = new ActionRowBuilder<ButtonBuilder>()
     //     .setStyle(ButtonStyle.Danger),
     new ButtonBuilder()
       .setCustomId('modmailDiscordissue')
-      .setLabel('Discord issues')
+      .setLabel('Tech Issues')
       .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId('banappeal')
+      .setLabel('Ban Appeals')
+      .setStyle(ButtonStyle.Danger),
   );
 
 // Declare the static test nitice
@@ -174,7 +179,14 @@ export async function modmailInitialResponse(message:Message) {
   logger.debug(`[${PREFIX}] Message sent in DM by ${message.author.username}!`);
   const description = stripIndents`Hey there ${author}! I'm a helper bot for ${guild} =)
 
-  How can I help?`;
+  💚 Trip Sit Me! - This starts a thread with Team TripSit! You can also join our Discord server and ask for help there!
+  
+  💙 Give Feedback - Sends a note to the dev team: Can be a suggestion, feedback, or issue. Please be detailed!
+
+  🖤 Technical Issues - Starts a thread with the tech team. Please be detailed with your problem so we can try to help!
+
+  ❤ Ban Appeal - Starts a thread with the moderator team. Please be patient and do not PM moderators directly.
+  `;
   embed.setDescription(description);
 
   message.author.send({embeds: [embed], components: [modmailButtons]});
@@ -185,16 +197,15 @@ export async function modmailInitialResponse(message:Message) {
  * @param {ButtonInteraction} interaction
  */
 export async function modmailTripsitter(interaction:ButtonInteraction) {
-  const guild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID);
-  const member = await guild.members.fetch(interaction.user.id);
+  const member = interaction.member;
   logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
-  if (member) {
-    const channelTripsit = await guild.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
+  if (member instanceof GuildMember) {
+    const channelTripsit = await member.guild.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
     interaction.reply(stripIndents`
     Click the button in ${channelTripsit.toString()}!`);
   } else {
     interaction.reply(stripIndents`
-    You must join ${guild} to get tripsitting help!
+    You must join TripSit to get tripsitting help!
     http://discord.gg/tripsit`);
   }
 }
@@ -246,30 +257,13 @@ export async function modmailFeedbackSubmit(interaction:ModalSubmitInteraction) 
   const actor = interaction.user;
   logger.debug(`[${PREFIX}] actor: ${actor}!`);
 
-  const tripsitGuild = await interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
-  const roleDeveloper = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER);
-  logger.debug(`[${PREFIX}] roleDeveloper: ${roleDeveloper}`);
-
-  const member = await tripsitGuild.members.fetch(interaction.user.id);
-  const isDev = member.roles.cache.find(
-    (role) => role.id === env.ROLE_DEVELOPER,
-  ) !== undefined;
-
-  // Get the moderator role
-  const roleModerator = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_MODERATOR);
-
-
   // Get the moderation channel
-  const channel = interaction.client.channels.cache.get(env.CHANNEL_DEVELOPMENT)! as TextChannel;
-  const ircAdminEmbed = embedTemplate()
-    .setColor(Colors.Purple)
-    .setDescription(stripIndents`
-    Hey ${isDev ? 'moderators' : roleModerator}!
-
-    Someone has submitted feedback:
-
-    > ${modalInput}`);
-  channel.send({embeds: [ircAdminEmbed]});
+  const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+  const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+  const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
+  botlog.send(`Hey ${tripbotdevrole}, someone has submitted feedback:
+    ${modalInput}
+  `);
   interaction.reply('Thank you for the feedback! Here\'s a cookie: 🍪');
 }
 
@@ -313,10 +307,9 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
   // logger.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}!`);
 
   // Respond right away cuz the rest of this doesn't matter
-  const guild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID);
-  const member = await guild.members.fetch(interaction.user.id);
-  // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
-  if (member) {
+  const member = interaction.member;
+  logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
+  if (member instanceof GuildMember) {
     // Dont run if the user is on timeout
     if (member.communicationDisabledUntilTimestamp !== null) {
       return member.send(stripIndents`
@@ -326,9 +319,8 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
 
       You can't use the modmail while on timeout.`);
     }
-  } else {
-    interaction.reply('Thank you, we will respond to right here when we can!');
   }
+
   // Get the moderator role
   const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
   const roleModerator = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_MODERATOR);
@@ -340,27 +332,19 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
   logger.debug(`[${PREFIX}] isDev: ${JSON.stringify(isDev, null, 2)}!`);
 
   const channel = interaction.client.channels.cache.get(env.CHANNEL_HELPDESK) as TextChannel;
-  // Debating if there should be a sparate channel for discord issues or if just use irc?
-  // if (issueType === 'discord') {
-  //   // Get the moderation channel
-  //   channel = interaction.client.channels.cache.get(CHANNEL_HELPDESK);
-  // } else if (issueType === 'irc') {
-  //   // Get the irc channel
-  //   channel = interaction.client.channels.cache.get(CHANNEL_HELPDESK);
-  // }
 
   // Get whatever they sent in the modal
   const modalInput = interaction.fields.getTextInputValue(`${issueType}IssueInput`);
   logger.debug(`[${PREFIX}] modalInput: ${modalInput}!`);
 
-  // // Get the actor
+  // Get the actor
   const actor = interaction.user;
 
   // Get the ticket info
   let ticketData = {} as ticketDbEntry;
 
   if (global.db) {
-    const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member.user.id}/`);
+    const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member ? member.user.id : interaction.user.id}/`);
     await ref.once('value', (data) => {
       if (data.val() !== null) {
         ticketData = data.val();
@@ -382,13 +366,20 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
       if (issueThread) {
         // Ping the user in the help thread
         const helpMessage = stripIndents`
-          Hey team, ${actor} submitted a new request for help:
+            Hey team, ${actor} submitted a new request for help:
 
-          > ${modalInput}
-        `;
+            > ${modalInput}
+          `;
         issueThread.send(helpMessage);
         const embed = embedTemplate();
-        embed.setDescription(stripIndents`You already have an open issue here ${issueThread.toString()}!`);
+        embed.setDescription(stripIndents`
+        You already have an open issue, we've updated it with your notes, but please be patient!
+        `);
+        if (member instanceof GuildMember) {
+          embed.setDescription(stripIndents`
+          You already have an open issue here, please be patient! ${issueThread.toString()}!
+          `);
+        }
         interaction.reply({embeds: [embed], ephemeral: true});
         return;
       }
@@ -396,24 +387,38 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
       logger.debug(`[${PREFIX}] The thread has likely been deleted!`);
       ticketData.issueStatus = 'closed';
       if (global.db) {
-        const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member.user.id}/`);
+        const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member ? member.user.id : interaction.user.id}/`);
         await ref.update(ticketData);
       }
     }
   }
 
   // Create a new thread in channel
+  let threadtype = {} as AllowedThreadTypeForTextChannel;
+  if (channel.guild.premiumTier > 2) {
+    threadtype = ChannelType.PrivateThread;
+  } else {
+    threadtype = ChannelType.PublicThread;
+  }
+
   const ticketThread = await channel.threads.create({
     name: `🧡│${actor.username}'s ${issueType} issue!`,
     autoArchiveDuration: 1440,
-    type: interaction.guild!.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
+    type: threadtype,
     reason: `${actor.username} submitted a(n) ${issueType} issue`,
   });
   logger.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);
 
-  const embed = embedTemplate();
-  embed.setDescription(stripIndents`Thank you, check out ${ticketThread} to talk with a team member about your issue!`);
-  interaction.reply({embeds: [embed], ephemeral: true});
+
+  if (member instanceof GuildMember) {
+    const embed = embedTemplate();
+    embed.setDescription(stripIndents`
+    Thank you, check out ${ticketThread} to talk with a team member about your issue!
+    `);
+    interaction.reply({embeds: [embed], ephemeral: true});
+  } else {
+    interaction.reply('Thank you, we will respond to right here when we can!');
+  }
 
   let message = stripIndents`
     Hey ${isDev ? 'moderators' : roleModerator}! ${actor} has submitted a new issue:
@@ -449,30 +454,7 @@ export async function modmailIssueSubmit(interaction:ModalSubmitInteraction, iss
   };
 
   if (global.db) {
-    const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member.user.id}/`);
+    const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member ? member.user.id : interaction.user.id}/`);
     await ref.update(newTicketData);
   }
-
-  // logger.debug(`[${PREFIX}] issueType: ${issueType}!`);
-  // await tripsitGuild.members.fetch();
-  // let role:Role = {} as Role;
-  // if (issueType.includes('irc')) {
-  //   // Get the moderator role
-  //   role = await tripsitGuild.roles.fetch(env.ROLE_IRCADMIN) as Role;
-  // }
-  // if (issueType.includes('discord')) {
-  //   // Get the moderator role
-  //   role = await tripsitGuild.roles.fetch(env.ROLE_DISCORDADMIN) as Role;
-  // }
-  // const admins = await role.members;
-  // logger.debug(`[${PREFIX}] admins: ${JSON.stringify(admins, null, 2)}!`);
-  // admins.forEach(async (admin) => {
-  //   // Alert the admin that the new thread is created
-  //   let response = stripIndents`
-  //   Hey ${admin.toString()}, ${actor} has an issue in ${ticketThread.toString()}!`;
-  //   if (isDev) {
-  //     response = testNotice + response;
-  //   }
-  //   admin.send(response);
-  // });
 };
