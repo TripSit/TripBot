@@ -86,82 +86,57 @@ export const modmail: SlashCommand = {
       return;
     }
 
+    const target = interaction.client.users.cache.get(ticketData.issueUser) as User;
+    let verb = '';
+    let noun = '';
+    if (command === 'close') {
+      logger.debug(`[${PREFIX}] Closing ticket!`);
+      ticketData.issueStatus = 'closed';
+      noun = 'Ticket';
+      verb = 'CLOSED';
+      // Reply before you archive, or else you'll just unarchive
+      await interaction.reply(`It looks like we're done here, this ticket has been closed!`);
+    } else if (command === 'block') {
+      logger.debug(`[${PREFIX}] Blocking user!`);
+      ticketData.issueStatus = 'blocked';
+      noun = 'User';
+      verb = 'BLOCKED';
+      ticketChannel.setArchived(true, 'Archiving after close');
+    } else if (command === 'unblock') {
+      ticketData.issueStatus = 'open';
+      noun = 'User';
+      verb = 'UNBLOCKED';
+    } else if (command === 'unpause') {
+      ticketData.issueStatus = 'open';
+      noun = 'Ticket';
+      verb = 'UNPAUSE';
+    } else if (command === 'pause') {
+      ticketData.issueStatus = 'paused';
+      noun = 'Ticket';
+      verb = 'PAUSE';
+    }
+
+    await interaction.reply(`${noun} has been ${verb} by ${actor}! (The user cannot see this)`);
+
+    if (command === 'close' || command === 'block') {
+      ticketChannel.setArchived(true, 'Archiving after close');
+    }
+
+    if (command === 'pause' || command === 'unpause' || command === 'closed') {
+      ticketChannel.send(false, 'Unarchiving after close');
+    }
+
+    if (global.db) {
+      const ref = db.ref(path);
+      await ref.set(ticketData);
+    }
+
     const channelModlog = interaction.guild!.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
     // Transform actor data
     const modlogEmbed = embedTemplate()
       .setColor(Colors.Blue)
-    // .setImage(targetUser.displayAvatarURL)
-    // .setThumbnail(targetUser.displayAvatarURL)
-      .setDescription(`${actor} ${command}ed ${targetNickname}\
-      ${targetChannel.name ? ` in ${targetChannel.name}` : ''}\
-      ${duration ? ` for ${ms(minutes, {long: true})}` : ''}\
-      ${reason ? ` because\n ${reason}` : ''}`)
-      .addFields(
-        {name: 'Displayname', value: `${targetNickname !== null ? targetNickname : 'None'}`, inline: true},
-        {name: 'Username', value: `${targetUsername}`, inline: true},
-        {name: 'ID', value: `${targetId}`, inline: true},
-      );
-
-    if (command === 'close') {
-      logger.debug(`[${PREFIX}] Closing ticket!`);
-      ticketData.issueStatus = 'closed';
-
-      // Reply before you archive, or else you'll just unarchive
-      await interaction.reply('It looks like we\'re done here, this ticket has been archived by a moderator!');
-
-      ticketChannel.setArchived(true, 'Archiving after close');
-
-      if (global.db) {
-        const ref = db.ref(path);
-        await ref.set(ticketData);
-      }
-    } else if (command === 'block') {
-      logger.debug(`[${PREFIX}] Blocking user!`);
-      ticketData.issueStatus = 'blocked';
-
-      // Reply before you archive, or else you'll just unarchive
-      await interaction.reply(`User BLOCKED by ${actor}! (The user cannot see this)`);
-
-      ticketChannel.setArchived(true, 'Archiving after close');
-
-      if (global.db) {
-        const ref = db.ref(path);
-        await ref.set(ticketData);
-      }
-    } else if (command === 'unblock') {
-      logger.debug(`[${PREFIX}] Unblocking user!`);
-      ticketData.issueStatus = 'open';
-
-      // Reply before you archive, or else you'll just unarchive
-      await interaction.reply(`User UNBLOCKED by ${actor}! (The user cannot see this)`);
-
-      if (global.db) {
-        const ref = db.ref(path);
-        await ref.set(ticketData);
-      }
-    } else if (command === 'unpause') {
-      logger.debug(`[${PREFIX}] Unpausing ticket!`);
-      ticketData.issueStatus = 'open';
-
-      // Reply before you archive, or else you'll just unarchive
-      await interaction.reply(`Ticked UNPAUSED by ${actor}! (The user cannot see this)`);
-
-      if (global.db) {
-        const ref = db.ref(path);
-        await ref.set(ticketData);
-      }
-    } else if (command === 'pause') {
-      logger.debug(`[${PREFIX}] Pausing ticket!`);
-      ticketData.issueStatus = 'paused';
-
-      // Reply before you archive, or else you'll just unarchive
-      await interaction.reply(`Ticked PAUSED by ${actor}! (The user cannot see this)`);
-
-      if (global.db) {
-        const ref = db.ref(path);
-        await ref.set(ticketData);
-      }
-    }
+      .setDescription(`${actor} ${command}ed ${target.tag} in ${ticketChannel}`);
+    channelModlog.send({embeds: [modlogEmbed]});
   },
 };
 
