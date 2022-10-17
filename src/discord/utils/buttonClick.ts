@@ -15,10 +15,7 @@ import {applicationApprove} from '../utils/application';
 import {tripsitmeClick, tripsitmeFinish} from '../utils/tripsitme';
 import {techHelpClick, techHelpClose, techHelpOwn} from '../utils/techHelp';
 import {
-  modmailTripsitter,
-  // modmailCommands,
-  modmailFeedback,
-  modmailIssue,
+  modmailCreate,
 } from '../commands/guild/modmail';
 
 import * as path from 'path';
@@ -63,19 +60,19 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     return;
   };
   if (buttonID === 'modmailTripsitter') {
-    modmailTripsitter(interaction);
+    modmailCreate(interaction, 'tripsit');
     return;
   }
   if (buttonID === 'modmailFeedback') {
-    modmailFeedback(interaction);
+    modmailCreate(interaction, 'feedback');
     return;
   }
-  if (buttonID === 'modmailIrcissue') {
-    modmailIssue(interaction, 'irc');
+  if (buttonID === 'modmailTechIssue') {
+    modmailCreate(interaction, 'tech');
     return;
   }
-  if (buttonID === 'modmailDiscordissue') {
-    modmailIssue(interaction, 'discord');
+  if (buttonID === 'modmailBanAppeal') {
+    modmailCreate(interaction, 'appeal');
     return;
   }
   if (buttonID === 'memberbutton') {

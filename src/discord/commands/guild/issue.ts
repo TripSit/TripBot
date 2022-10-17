@@ -80,7 +80,7 @@ export const issue: SlashCommand = {
     logger.debug(`[${PREFIX}] displayed modal!`);
 
     // Collect a modal submit interaction
-    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`applicationSubmit`);
+    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`issueModal`);
     interaction.awaitModalSubmit({filter, time: 0})
       .then(async (interaction) => {
         logger.debug(`[${PREFIX}] submitted!`);
