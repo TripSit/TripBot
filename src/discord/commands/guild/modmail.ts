@@ -39,35 +39,45 @@ export const modmail: SlashCommand = {
     .setDescription('Modmail actions!')
     .addSubcommand((subcommand) => subcommand
       .setDescription('Close this ticket as resolved')
-      .setName('closed'))
+      .setName('close'))
     .addSubcommand((subcommand) => subcommand
       .setDescription('Block this user from future messages/tickets')
-      .setName('blocked'))
+      .setName('block'))
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('Unblock this user')
+      .setName('unblock'))
     .addSubcommand((subcommand) => subcommand
       .setDescription('Take the ticket off hold')
-      .setName('open'))
+      .setName('unpause'))
     .addSubcommand((subcommand) => subcommand
       .setDescription('Put the ticket on hold')
-      .setName('paused')),
+      .setName('pause')),
   async execute(interaction:ChatInputCommandInteraction) {
     logger.debug(`[${PREFIX}] Started!`);
     const command = interaction.options.getSubcommand();
-    // logger.debug(`[${PREFIX}] Command: ${command}`);
-    const member = interaction.options.getMember('target')! as GuildMember;
-    // logger.debug(`[${PREFIX}] member: ${member}`);
+    logger.debug(`[${PREFIX}] Command: ${command}`);
+
+    const actor = interaction.member as GuildMember;
 
     // Get the ticket info
     let ticketData = {} as ticketDbEntry;
+    let path = `${env.FIREBASE_DB_TICKETS}`;
+    if (global.db) {
+      const ref = db.ref(path);
+      await ref.once('value', (data) => {
+        if (data.val() !== null) {
+          const allTickets = data.val();
+          Object.keys(allTickets).forEach((key) => {
+            if (allTickets[key].issueThread === interaction.channel!.id) {
+              ticketData = allTickets[key];
+              path = `${env.FIREBASE_DB_TICKETS}/${key}`;
+            }
+          });
+        }
+      });
+    }
 
-    const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member.user.id}/`);
-    await ref.once('value', (data) => {
-      if (data.val() !== null) {
-        ticketData = data.val();
-      } else {
-        interaction.reply({content: 'This user does not have a ticket!', ephemeral: true});
-        return;
-      }
-    });
+    logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
     const ticketChannel = interaction.client.channels.cache.get(ticketData.issueThread) as ThreadChannel;
 
@@ -76,8 +86,23 @@ export const modmail: SlashCommand = {
       return;
     }
 
+    const channelModlog = interaction.guild!.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
     // Transform actor data
-    if (command === 'closed') {
+    const modlogEmbed = embedTemplate()
+      .setColor(Colors.Blue)
+    // .setImage(targetUser.displayAvatarURL)
+    // .setThumbnail(targetUser.displayAvatarURL)
+      .setDescription(`${actor} ${command}ed ${targetNickname}\
+      ${targetChannel.name ? ` in ${targetChannel.name}` : ''}\
+      ${duration ? ` for ${ms(minutes, {long: true})}` : ''}\
+      ${reason ? ` because\n ${reason}` : ''}`)
+      .addFields(
+        {name: 'Displayname', value: `${targetNickname !== null ? targetNickname : 'None'}`, inline: true},
+        {name: 'Username', value: `${targetUsername}`, inline: true},
+        {name: 'ID', value: `${targetId}`, inline: true},
+      );
+
+    if (command === 'close') {
       logger.debug(`[${PREFIX}] Closing ticket!`);
       ticketData.issueStatus = 'closed';
 
@@ -86,41 +111,56 @@ export const modmail: SlashCommand = {
 
       ticketChannel.setArchived(true, 'Archiving after close');
 
-      await ref.set(ticketData);
+      if (global.db) {
+        const ref = db.ref(path);
+        await ref.set(ticketData);
+      }
     } else if (command === 'block') {
       logger.debug(`[${PREFIX}] Blocking user!`);
       ticketData.issueStatus = 'blocked';
 
       // Reply before you archive, or else you'll just unarchive
-      await interaction.reply('This user has been blocked from creating future tickets!');
+      await interaction.reply(`User BLOCKED by ${actor}! (The user cannot see this)`);
 
       ticketChannel.setArchived(true, 'Archiving after close');
 
-      await ref.set(ticketData);
+      if (global.db) {
+        const ref = db.ref(path);
+        await ref.set(ticketData);
+      }
     } else if (command === 'unblock') {
       logger.debug(`[${PREFIX}] Unblocking user!`);
       ticketData.issueStatus = 'open';
 
       // Reply before you archive, or else you'll just unarchive
-      await interaction.reply('This user has been un-blocked from creating future tickets!');
+      await interaction.reply(`User UNBLOCKED by ${actor}! (The user cannot see this)`);
 
-      await ref.set(ticketData);
+      if (global.db) {
+        const ref = db.ref(path);
+        await ref.set(ticketData);
+      }
     } else if (command === 'unpause') {
       logger.debug(`[${PREFIX}] Unpausing ticket!`);
       ticketData.issueStatus = 'open';
 
       // Reply before you archive, or else you'll just unarchive
-      await interaction.reply('This ticket has been unpaused and can communication can resume!');
+      await interaction.reply(`Ticked UNPAUSED by ${actor}! (The user cannot see this)`);
 
-      await ref.set(ticketData);
+      if (global.db) {
+        const ref = db.ref(path);
+        await ref.set(ticketData);
+      }
     } else if (command === 'pause') {
       logger.debug(`[${PREFIX}] Pausing ticket!`);
       ticketData.issueStatus = 'paused';
 
       // Reply before you archive, or else you'll just unarchive
-      await interaction.reply('This ticket has been paused, please wait to communicate further!');
+      await interaction.reply(`Ticked PAUSED by ${actor}! (The user cannot see this)`);
 
-      await ref.set(ticketData);
+      if (global.db) {
+        const ref = db.ref(path);
+        await ref.set(ticketData);
+      }
     }
   },
 };
@@ -356,9 +396,12 @@ export async function modmailCreate(
       logger.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
       const roleTripsitter = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
       logger.debug(`[${PREFIX}] roleTripsitter: ${roleTripsitter}`);
+
+      // If the user is on the guild, direct them to their thread
+      const embed = embedTemplate();
+      let firstResponse = '';
       if (member instanceof GuildMember) {
-        const embed = embedTemplate();
-        let firstResponse = stripIndents`
+        firstResponse = stripIndents`
           Hey ${actor}, ${modmailVars[issueType].firstResponse}
 
           Click here to be taken to your private room: ${ticketThread.toString()}
@@ -379,10 +422,12 @@ export async function modmailCreate(
           If you just would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
         `;
         }
-        embed.setDescription(firstResponse);
-        interaction.reply({embeds: [embed], ephemeral: true});
+        interaction.reply({
+          embeds: [embed],
+          flags: ['SuppressEmbeds'],
+        });
       } else {
-        let firstResponse = stripIndents`
+        firstResponse = stripIndents`
           Hey ${actor}, ${modmailVars[issueType].firstResponse}
 
           We've sent the following details to the team:
@@ -391,7 +436,6 @@ export async function modmailCreate(
           ${modalInputB !== '' ? stripIndents`${modmailVars[issueType].labelB}
           > ${modalInputB}
           ` : ''}
-
           **We will respond to right here when we can!**
         `;
         if (issueType === 'tripsit') {
@@ -413,7 +457,22 @@ export async function modmailCreate(
           **We will respond to right here when we can!**`
           ;
         }
-        interaction.reply({content: firstResponse, flags: ['SuppressEmbeds']});
+        embed.setDescription(firstResponse);
+
+        const finishedButton = new ActionRowBuilder<ButtonBuilder>()
+          .addComponents(
+            new ButtonBuilder()
+              .setCustomId(`issueFinish`)
+              .setLabel('I\'m good now!')
+              .setStyle(ButtonStyle.Success),
+          );
+
+        interaction.reply({
+          embeds: [embed],
+          components: [finishedButton],
+          ephemeral: false,
+          flags: ['SuppressEmbeds'],
+        });
       }
 
       // Determine if this command was started by a Developer
@@ -421,7 +480,7 @@ export async function modmailCreate(
       const isDev = roleDeveloper.members.map((m) => m.user.id === interaction.user.id);
       logger.debug(`[${PREFIX}] isDev: ${JSON.stringify(isDev, null, 2)}!`);
       const pingRole = tripsitGuild.roles.cache.find((role) => role.id === modmailVars[issueType].pingRole)!;
-      const message = stripIndents`
+      let threadFirstResponse = stripIndents`
         Hey ${isDev ? pingRole.toString() : pingRole}! ${actor} has submitted a new ticket:
 
         ${modmailVars[issueType].labelA}
@@ -433,8 +492,35 @@ export async function modmailCreate(
 
         When you're done remember to '/modmail close' this ticket!
       `;
+      if (issueType === 'tripsit') {
+        threadFirstResponse = stripIndents`
+          Hey ${isDev ? pingRole.toString() : pingRole}! ${actor} has submitted a new ticket:
 
-      await ticketThread.send(message);
+          ${modmailVars[issueType].labelA}
+          > ${modalInputA}
+          ${modalInputB !== '' ? `${modmailVars[issueType].labelB}
+          > ${modalInputB}
+          ` : ''}
+          Please look into it and respond to them in this thread!
+
+          When you're done remember to '/modmail close' this ticket!
+        `;
+      }
+
+      const finishedButton = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          new ButtonBuilder()
+            .setCustomId(`issueFinish`)
+            .setLabel(`We're done here!`)
+            .setStyle(ButtonStyle.Success),
+        );
+
+      await ticketThread.send({
+        content: threadFirstResponse,
+        components: [finishedButton],
+        flags: ['SuppressEmbeds'],
+      });
+
       logger.debug(`[${PREFIX}] Sent intro message to thread ${ticketThread.id}`);
 
       // Set ticket information
@@ -556,7 +642,6 @@ export async function modmailDMInteraction(message:Message) {
       });
       embed.setFooter(null);
       thread.send({embeds: [embed]});
-      // thread.send(`<${message.author.tag}> ${message.content}`);
       return;
     }
   }
@@ -617,52 +702,6 @@ export async function modmailThreadInteraction(message:Message) {
       }
     }
   }
-}
-
-/**
- *
- * @param {ButtonInteraction} interaction
- */
-export async function modmailFeedback(interaction:ButtonInteraction) {
-  logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
-  // Create the modal
-  const modal = new ModalBuilder()
-    .setCustomId('modmailFeedbackModal')
-    .setTitle('TripSit Feedback');
-  const timeoutReason = new TextInputBuilder()
-    .setLabel('What would you like to let the team know?')
-    .setStyle(TextInputStyle.Paragraph)
-    .setPlaceholder('This bot is cool and I have a suggestion...')
-    .setCustomId('feedbackInput')
-    .setRequired(true);
-  // An action row only holds one text input, so you need one action row per text input.
-  const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutReason);
-  // Add inputs to the modal
-  modal.addComponents(firstActionRow);
-  // Show the modal to the user
-  await interaction.showModal(modal);
-
-  // Collect a modal submit interaction
-  const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`modmailFeedbackModal`);
-  interaction.awaitModalSubmit({filter, time: 0})
-    .then(async (interaction) => {
-      logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
-      const modalInput = interaction.fields.getTextInputValue('feedbackInput');
-      logger.debug(`[${PREFIX}] modalInput: ${modalInput}!`);
-
-      // Get the actor
-      const actor = interaction.user;
-      logger.debug(`[${PREFIX}] actor: ${actor}!`);
-
-      // Get the moderation channel
-      const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-      const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
-      const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
-      botlog.send(`Hey ${tripbotdevrole}, someone has submitted feedback:
-        ${modalInput}
-      `);
-      interaction.reply('Thank you for the feedback! Here\'s a cookie: 🍪');
-    });
 }
 
 /**
