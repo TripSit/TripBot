@@ -123,7 +123,7 @@ export const modmail: SlashCommand = {
     }
 
     if (command === 'pause' || command === 'unpause' || command === 'closed') {
-      ticketChannel.send(false, 'Unarchiving after close');
+      ticketChannel.send('Unarchiving after close');
     }
 
     if (global.db) {
