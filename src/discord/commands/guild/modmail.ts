@@ -548,7 +548,15 @@ export async function modmailDMInteraction(message:Message) {
     }
     // logger.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
     if (thread.id) {
-      thread.send(`<${message.author.tag}> ${message.content}`);
+      const embed = embedTemplate();
+      embed.setDescription(message.content);
+      embed.setAuthor({
+        name: message.author.username,
+        iconURL: message.author.displayAvatarURL(),
+      });
+      embed.setFooter(null);
+      thread.send({embeds: [embed]});
+      // thread.send(`<${message.author.tag}> ${message.content}`);
       return;
     }
   }
@@ -595,7 +603,15 @@ export async function modmailThreadInteraction(message:Message) {
           // Get the user from the ticketData
           const user = await message.client.users.fetch(ticketData.issueUser);
           // logger.debug(`[${PREFIX}] user: ${JSON.stringify(user, null, 2)}!`);
-          user.send(`<${message.member.nickname}> ${message.content}`);
+          const embed = embedTemplate();
+          embed.setDescription(message.content);
+          embed.setAuthor({
+            name: message.member.displayName,
+            iconURL: message.member.displayAvatarURL(),
+          });
+          embed.setFooter(null);
+          user.send({embeds: [embed]});
+          // user.send(`<${message.member.nickname}> ${message.content}`);
           return;
         }
       }

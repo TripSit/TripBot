@@ -101,8 +101,6 @@ export async function runTimer() {
               if (timerEntry.type === 'helpthread') {
                 const helpThread = (timerEntry.value as any).lastHelpedThreadId;
                 // logger.debug(`[${PREFIX}] helpThread: ${JSON.stringify(helpThread, null, 4)}`);
-                const metaThread = (timerEntry.value as any).lastHelpedMetaThreadId;
-                // logger.debug(`[${PREFIX}] metaThread: ${JSON.stringify(metaThread, null, 4)}`);
                 const oldRoles = (timerEntry.value as any).roles;
                 // logger.debug(`[${PREFIX}] oldRoles: ${JSON.stringify(oldRoles, null, 4)}`);
                 const status = (timerEntry.value as any).status;
@@ -133,27 +131,6 @@ export async function runTimer() {
                     logger.debug(`[${PREFIX}] Member left the server`);
                   }
 
-                  // Lock the threads
-                  // try {
-                  //   const helpChannel = await tripsitGuild.channels.fetch(helpThread);
-                  //   if (helpChannel && helpChannel.isThread()) {
-                  //     (helpChannel as ThreadChannel).setLocked(true, 'Help thread closed');
-                  //     logger.debug(`[${PREFIX}] Help thread locked`);
-                  //   }
-                  // } catch (err) {
-                  //   logger.debug(`[${PREFIX}] Help thread not found`);
-                  // }
-
-                  // try {
-                  //   const metaChannel = await tripsitGuild.channels.fetch(metaThread);
-                  //   if (metaChannel && metaChannel.isThread()) {
-                  //     (metaChannel as ThreadChannel).setLocked(true, 'Meta thread closed');
-                  //     logger.debug(`[${PREFIX}] Meta thread locked`);
-                  //   }
-                  // } catch (err) {
-                  //   logger.debug(`[${PREFIX}] Meta thread not found`);
-                  // }
-
                   await global.db.ref(`${env.FIREBASE_DB_TIMERS}/${userId}/${timevalue}`).remove();
 
                   const threadDeleteTime = new Date();
@@ -173,7 +150,6 @@ export async function runTimer() {
                       type: 'helpthread',
                       value: {
                         lastHelpedThreadId: helpThread,
-                        lastHelpedMetaThreadId: metaThread,
                         status: 'archived',
                       },
                     },
@@ -181,8 +157,6 @@ export async function runTimer() {
                 } if (status === 'archived') {
                   const helpThread = (timerEntry.value as any).lastHelpedThreadId;
                   logger.debug(`[${PREFIX}] helpThread: ${JSON.stringify(helpThread, null, 4)}`);
-                  const metaThread = (timerEntry.value as any).lastHelpedMetaThreadId;
-                  logger.debug(`[${PREFIX}] metaThread: ${JSON.stringify(metaThread, null, 4)}`);
 
                   const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
                   try {
@@ -194,14 +168,6 @@ export async function runTimer() {
                     logger.debug(`[${PREFIX}] Help thread already deleted`);
                   }
 
-                  try {
-                    const metaChannel = await tripsitGuild.channels.fetch(metaThread);
-                    if (metaChannel) {
-                      metaChannel.delete();
-                    }
-                  } catch (err) {
-                    logger.debug(`[${PREFIX}] Meta thread already deleted`);
-                  }
                   await global.db.ref(`${env.FIREBASE_DB_TIMERS}/${userId}/${timevalue}`).remove();
                 }
               }
