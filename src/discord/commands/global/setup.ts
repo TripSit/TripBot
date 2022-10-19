@@ -178,7 +178,7 @@ export const prompt: SlashCommand = {
       await ticketbooth(interaction);
     }
     // await interaction.editReply('Donezo!');
-    // await interaction.reply({content: 'Donezo!', ephemeral: true});
+    await interaction.reply({content: 'Donezo!', ephemeral: true});
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
@@ -272,6 +272,7 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
   const channelGeneral = interaction.options.getChannel('general')!;
   const roleNeedshelp = interaction.options.getRole('needshelp')!;
   const roleTripsitter = interaction.options.getRole('tripsitter')!;
+  const channelTripsitMeta = interaction.options.getChannel('tripsitters')!;
 
   if (channelSanctuary) {
     buttonText += `\n\nDon't need immediate help but want a peaceful chat? Come to ${channelSanctuary.toString()}!`;
@@ -287,7 +288,7 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId(`tripsitmeClick~${roleNeedshelp.id}~${roleTripsitter.id}`)
+        .setCustomId(`tripsitmeClick~${roleNeedshelp.id}~${roleTripsitter.id}~${channelTripsitMeta.id}`)
         .setLabel('I need assistance!')
         .setStyle(ButtonStyle.Primary),
     );

@@ -95,13 +95,14 @@ export async function tripsitmeClick(interaction:ButtonInteraction) {
   // logger.debug(`[${PREFIX}] interaction.customId: ${interaction.customId}`);
   const roleNeedshelpId = interaction.customId.split('~')[1];
   const roleTripsitterId = interaction.customId.split('~')[2];
+  const channelTripsittersId = interaction.customId.split('~')[3];
 
   // logger.debug(`[${PREFIX}] roleNeedshelpId: ${roleNeedshelpId}\n
   // roleTripsitterId: ${roleTripsitterId}\n
   // channelTripsittersId: ${channelTripsittersId}`);
 
   const modal = new ModalBuilder()
-    .setCustomId(`tripsitmeSubmit~${roleNeedshelpId}~${roleTripsitterId}`)
+    .setCustomId(`tripsitmeSubmit~${roleNeedshelpId}~${roleTripsitterId}~${channelTripsittersId}`)
     .setTitle('Tripsitter Help Request');
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
     .setCustomId('triageInput')
@@ -127,7 +128,7 @@ export async function tripsitmeSubmit(
   triageGiven?:string,
   introGiven?:string,
 ) {
-  logger.debug(`[${PREFIX}] starting!`);
+  logger.debug(`[${PREFIX}] Submit starting!`);
   logger.debug(`[${PREFIX}] memberInput: ${memberInput}`);
 
   if (!interaction.guild) {
@@ -144,6 +145,7 @@ export async function tripsitmeSubmit(
   // logger.debug(`[${PREFIX}] interaction.customId: ${interaction.customId}`);
   const roleNeedshelpId = interaction.customId.split('~')[1];
   const roleTripsitterId = interaction.customId.split('~')[2];
+  const channelTripsitters = interaction.customId.split('~')[3];
 
   // logger.debug(`[${PREFIX}] roleNeedshelpId: ${roleNeedshelpId}\n
   // roleTripsitterId: ${roleTripsitterId}\n
@@ -207,7 +209,6 @@ export async function tripsitmeSubmit(
 
   let targetLastHelpedDate = new Date();
   let targetLastHelpedThreadId = '';
-  // let targetLastHelpedMetaThreadId = '';
   if (global.db) {
     const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
     await ref.once('value', (data) => {
@@ -218,7 +219,6 @@ export async function tripsitmeSubmit(
           if (data.val()[key].type === 'helpthread') {
             targetLastHelpedDate = new Date(parseInt(key));
             targetLastHelpedThreadId = data.val()[key].value.lastHelpedThreadId;
-            // targetLastHelpedMetaThreadId = data.val()[key].value.lastHelpedMetaThreadId;
           }
         });
       }
@@ -227,15 +227,11 @@ export async function tripsitmeSubmit(
 
   logger.debug(`[${PREFIX}] targetLastHelpedDate: ${targetLastHelpedDate}`);
   logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
-  // logger.debug(`[${PREFIX}] targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);
 
-  // Get the channel objects for the help and meta threads
+  // Get the channel objects for the help thread
   // const threadHelpUser = interaction.client.channels.cache.get(targetLastHelpedThreadId);
   let threadHelpUser = interaction.client.channels.cache.get(targetLastHelpedThreadId) as ThreadChannel;
   logger.debug(`[${PREFIX}] threadHelpUser: ${threadHelpUser}`);
-
-  // let threadDiscussUser = interaction.client.channels.cache.get(targetLastHelpedMetaThreadId) as ThreadChannel;
-  // logger.debug(`[${PREFIX}] threadDiscussUser: ${threadDiscussUser}`);
 
   // ██╗   ██╗██████╗ ██████╗  █████╗ ████████╗███████╗
   // ██║   ██║██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝██╔════╝
@@ -294,28 +290,6 @@ export async function tripsitmeSubmit(
         });
       }
       logger.debug(`[${PREFIX}] Pinged user in help thread`);
-
-      // Update the meta thread
-      // if (threadDiscussUser) {
-      //   const metaUpdate = memberInput ?
-      //     stripIndents`Hey ${interaction.member}, ${target.displayName} is already being helped!
-      //       Use this thread to discuss it!'` :
-      //     stripIndents`Hey ${roleHelper} and ${roleTripsitter}, ${target.displayName} sent a new request for help in ${threadHelpUser.toString()}!
-
-      //       They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
-
-      //       Their issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
-      //       **Keep in mind: We're not qualified to handle suicidal users here. If the user is considering / talking about suicide, direct them to the suicide hotline!**`;
-
-      //   threadDiscussUser.send({
-      //     content: metaUpdate,
-      //     allowedMentions: {
-      //       'parse': showMentions,
-      //     },
-      //   });
-      // }
-
-      logger.debug(`[${PREFIX}] Updated meta help thread`);
 
       return;
     } catch (err) {
@@ -435,34 +409,6 @@ export async function tripsitmeSubmit(
         });
         threadHelpUser.setName(`🧡│${target.displayName}'s channel!`);
 
-        // Update the meta thread too
-        // const helperMsg = memberInput ?
-        //   stripIndents`
-        //     Hey ${roleHelper} and ${roleTripsitter}, ${actor} sent a new request for help on behalf of ${target.displayName} in ${threadHelpUser.toString()}!
-
-        //     They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
-
-        //     Their issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
-
-        //     Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!` :
-        //   stripIndents`
-        //     Hey ${roleHelper} and ${roleTripsitter}, ${target.displayName} sent a new request for help in ${threadHelpUser.toString()}!
-
-        //     They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
-
-        //     Their issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
-
-        //     **Keep in mind: We're not qualified to handle suicidal users here. If the user is considering / talking about suicide, direct them to the suicide hotline!**
-        //     Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!`;
-
-        // threadDiscussUser.send({
-        //   content: helperMsg,
-        //   allowedMentions: {
-        //     'parse': showMentions,
-        //   },
-        // });
-        // threadDiscussUser.setName(`🧡│${target.displayName} discussion`);
-
         if (global.db) {
           const threadArchiveTime = new Date();
           // define one week in milliseconds
@@ -482,7 +428,6 @@ export async function tripsitmeSubmit(
               type: 'helpthread',
               value: {
                 lastHelpedThreadId: threadHelpUser.id,
-                // lastHelpedMetaThreadId: threadDiscussUser.id,
                 roles: targetRoleIds,
                 status: 'open',
               },
@@ -512,16 +457,6 @@ export async function tripsitmeSubmit(
 
   // Get the tripsit channel from the guild
   const tripsitChannel = interaction.channel as TextChannel;
-
-  // Create a new threadDiscussUser in the tripsitters channel
-  // threadDiscussUser = await tripsittersChannel.threads.create({
-  //   name: `🧡│${target.displayName} discussion`,
-  //   autoArchiveDuration: 1440,
-  //   type: interaction.guild?.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
-  //   reason: `${target.user.username} requested help`,
-  //   invitable: env.NODE_ENV === 'production' ? false : undefined,
-  // }) as ThreadChannel;
-  // logger.debug(`[${PREFIX}] Created meta-thread ${threadDiscussUser.id}`);
 
   // Create a new private thread in the channel
   // If we're not in production we need to create a public thread
@@ -576,7 +511,7 @@ export async function tripsitmeSubmit(
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId(`tripsitmeFinish~me~${target.id}~${roleNeedshelp.id}`)
+        .setCustomId(`tripsitmeFinish~me~${target.id}~${roleNeedshelp.id}~${channelTripsitters}`)
         .setLabel('I\'m good now!')
         .setStyle(ButtonStyle.Success),
     );
@@ -628,15 +563,6 @@ export async function tripsitmeSubmit(
   //       .setStyle(ButtonStyle.Success),
   //   );
 
-  // threadDiscussUser.send({
-  //   content: helperMsg,
-  //   components: [endSession],
-  //   allowedMentions: {
-  //     'parse': showMentions,
-  //   },
-  // });
-  // logger.debug(`[${PREFIX}] Sent intro message to meta-thread ${threadDiscussUser.id}`);
-
   // Update targetData with how many times they've been helped
   // logger.debug(`[${PREFIX}] Updating target data`);
   // if ('discord' in targetData) {
@@ -668,7 +594,6 @@ export async function tripsitmeSubmit(
         type: 'helpthread',
         value: {
           lastHelpedThreadId: threadHelpUser.id,
-          // lastHelpedMetaThreadId: threadDiscussUser.id,
           roles: targetRoleIds,
           status: 'open',
         },
@@ -687,7 +612,7 @@ export async function tripsitmeSubmit(
 export async function tripsitmeFinish(
   interaction:ButtonInteraction,
 ) {
-  logger.debug(`[${PREFIX}] starting!`);
+  logger.debug(`[${PREFIX}] Finish starting!`);
   await interaction.deferReply({ephemeral: true});
   if (!interaction.guild) {
     logger.debug(`[${PREFIX}] no guild!`);
@@ -703,6 +628,7 @@ export async function tripsitmeFinish(
   const meOrThem = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
   const roleNeedshelpId = interaction.customId.split('~')[3];
+  const channelTripsittersId = interaction.customId.split('~')[4];
 
   const target = await interaction.guild?.members.fetch(targetId)!;
   const actor = interaction.member as GuildMember;
@@ -715,7 +641,6 @@ export async function tripsitmeFinish(
 
   let targetLastHelpedDate = new Date();
   let targetLastHelpedThreadId = '';
-  let targetLastHelpedMetaThreadId = '';
   let targetRoles:string[] = [];
 
   if (global.db) {
@@ -723,12 +648,11 @@ export async function tripsitmeFinish(
     await ref.once('value', (data) => {
       if (data.val() !== null) {
         Object.keys(data.val()).forEach((key) => {
-          logger.debug(`[${PREFIX}] data.val()[key]: ${JSON.stringify(data.val()[key], null, 2)}`);
+          // logger.debug(`[${PREFIX}] data.val()[key]: ${JSON.stringify(data.val()[key], null, 2)}`);
           logger.debug(`[${PREFIX}] key: ${key}`);
           if (data.val()[key].type === 'helpthread') {
             targetLastHelpedDate = new Date(parseInt(key));
             targetLastHelpedThreadId = data.val()[key].value.lastHelpedThreadId;
-            targetLastHelpedMetaThreadId = data.val()[key].value.lastHelpedMetaThreadId;
             targetRoles = data.val()[key].value.roles;
           }
         });
@@ -738,18 +662,14 @@ export async function tripsitmeFinish(
 
   logger.debug(`[${PREFIX}] targetLastHelpedDate: ${targetLastHelpedDate}`);
   logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
-  logger.debug(`[${PREFIX}] targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);
 
   // const channelOpentripsit = await interaction.client.channels.cache.get(env.CHANNEL_OPENTRIPSIT);
   // const channelSanctuary = await interaction.client.channels.cache.get(env.CHANNEL_SANCTUARY);
-  // Get the channel objects for the help and meta threads
+  // Get the channel objects for the help thread
   const threadHelpUser = interaction.guild.channels.cache
     .find((chan) => chan.id === targetLastHelpedThreadId) as ThreadChannel;
-  // const threadDiscussUser = interaction.guild.channels.cache
-  //   .find((chan) => chan.id === targetLastHelpedMetaThreadId) as ThreadChannel;
-
-  // await threadDiscussUser.setName(`💚│${target.displayName} discussion`);
-  await threadHelpUser.setName(`💚│${target.displayName}'s channel!`);
+  logger.debug(`[${PREFIX}] threadHelpUser: ${threadHelpUser.name} = 💚│${target.displayName}'s channel!`);
+  threadHelpUser.setName(`💚│${target.displayName}'s channel123123123123!`);
 
   const roleNeedshelp = await interaction.guild.roles.fetch(roleNeedshelpId)!;
   const targetHasNeedsHelpRole = (target.roles as GuildMemberRoleManager).cache.find(
@@ -782,14 +702,6 @@ export async function tripsitmeFinish(
   //       .setDescription(message);
   //     interaction.editReply({embeds: [embed]});
 
-  //     //       if (threadDiscussUser) {
-  //     //         const metaUpdate = stripIndents`Hey team, ${target.displayName} said they're good \
-  //     // but it's been less than an hour since they asked for help.
-
-  //     // If they still need help it's okay to leave them with that role.`;
-  //     //         threadDiscussUser.send(metaUpdate);
-  //     //       }
-
   //     logger.debug(`[${PREFIX}] finished!`);
 
   //     logger.debug(`[${PREFIX}] Rejected the "im good" button`);
@@ -802,7 +714,9 @@ export async function tripsitmeFinish(
     targetRoles.forEach((roleId) => {
       logger.debug(`[${PREFIX}] Re-adding roleId: ${roleId}`);
       const roleObj = interaction.guild!.roles.cache.find((r) => r.id === roleId) as Role;
-      if (!ignoredRoles.includes(roleObj.id) && roleObj.name !== '@everyone') {
+      if (!ignoredRoles.includes(roleObj.id) &&
+      roleObj.name !== '@everyone' &&
+      roleObj.id !== roleNeedshelp!.id) {
         logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.displayName}`);
         try {
           target.roles.add(roleObj);
@@ -814,8 +728,13 @@ export async function tripsitmeFinish(
     });
   }
 
-  target.roles.remove(roleNeedshelp!);
-  logger.debug(`[${PREFIX}] Removed ${roleNeedshelp!.name} from ${target.displayName}`);
+  try {
+    target.roles.remove(roleNeedshelp!);
+    logger.debug(`[${PREFIX}] Removed ${roleNeedshelp!.name} from ${target.displayName}`);
+  } catch (err) {
+    logger.error(`[${PREFIX}] Error removing ${roleNeedshelp!.name} from ${target.displayName}`);
+    logger.error(err);
+  }
 
   const endHelpMessage = stripIndents`Hey ${target}, we're glad you're doing better!
     We've restored your old roles back to normal <3
@@ -855,12 +774,12 @@ export async function tripsitmeFinish(
           > Thank you for your feedback, here's a cookie! 🍪
           ${env.EMOJI_INVISIBLE}
           `);
-        logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
+        logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${threadHelpUser}`);
         const finalEmbed = embedTemplate()
           .setColor(Colors.Blue)
-          .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
+          .setDescription(`Collected ${reaction.emoji.name} from ${threadHelpUser}`);
         try {
-          const channelTripsitMeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
+          const channelTripsitMeta = interaction.client.channels.cache.get(channelTripsittersId) as TextChannel;
           await channelTripsitMeta.send({embeds: [finalEmbed]});
         } catch (err) {
           logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
@@ -869,14 +788,6 @@ export async function tripsitmeFinish(
         collector.stop();
       });
     });
-
-  // const endMetaHelpMessage = stripIndents`${meOrThem === 'me' ? target.displayName : actor.displayName} has indicated that ${meOrThem === 'me' ? 'they' : target.displayName} no longer need help!
-  //   *This thread, and ${threadHelpUser.toString()}, will remain un-archived for 24 hours to allow the user to follow-up.
-  //   If the user requests help again within 7 days these threads will be un-archived.
-  //   After 7 days the threads will be deleted to preserve privacy.*`;
-
-  // threadDiscussUser.send(endMetaHelpMessage);
-
 
   logger.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
   logger.debug(`[${PREFIX}] finished!`);
