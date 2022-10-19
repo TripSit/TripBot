@@ -101,7 +101,7 @@ export const modmail: SlashCommand = {
       noun = 'User';
       verb = 'BLOCKED';
       target.send('You have been blocked from using modmail. Please email us at appeals@tripsit.me if you feel this was an error!');
-      ticketChannel.setArchived(true, 'Archiving after close');
+      // ticketChannel.setArchived(true, 'Archiving after close');
     } else if (command === 'unblock') {
       ticketData.issueStatus = 'open';
       noun = 'User';
@@ -110,12 +110,12 @@ export const modmail: SlashCommand = {
     } else if (command === 'unpause') {
       ticketData.issueStatus = 'open';
       noun = 'Ticket';
-      verb = 'UNPAUSE';
+      verb = 'UNPAUSED';
       target.send('This ticket has been taken off hold, thank you for your patience!');
     } else if (command === 'pause') {
       ticketData.issueStatus = 'paused';
       noun = 'Ticket';
-      verb = 'PAUSE';
+      verb = 'PAUSED';
       target.send('This ticket has been paused while we look into this, thank you for your patience!');
     }
 
@@ -276,7 +276,7 @@ export async function modmailCreate(
   const channel = interaction.client.channels.cache.get(modmailVars[issueType].channelId) as TextChannel;
 
   // Check if an open thread already exists, and if so, update that thread
-  if (Object.keys(ticketData).length !== 0) {
+  if (Object.keys(ticketData).length !== 0 && ticketData.issueStatus !== 'closed') {
     // const issueType = ticketInfo.issueType;
     let issueThread = {} as ThreadChannel;
     try {
@@ -402,6 +402,7 @@ export async function modmailCreate(
           Hey ${actor}, ${modmailVars[issueType].firstResponse}
 
           We've sent the following details to the team:
+
           ${modmailVars[issueType].labelA}
           > ${modalInputA}
           ${modalInputB !== '' ? stripIndents`${modmailVars[issueType].labelB}
@@ -420,29 +421,34 @@ export async function modmailCreate(
             ${modalInputB !== '' ? stripIndents`${modmailVars[issueType].labelB}
           > ${modalInputB}
           ` : ''}
+
           ${roleHelper.name} and ${roleTripsitter.name} will be with you as soon as they're available!
-          If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
-          When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
+          **If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.**
           If you just would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
-  
+
+          When you're feeling better you can use the "I'm Good" button to let the team know you're okay!
+
           **We will respond to right here when we can!**`
           ;
         }
-        embed.setDescription(firstResponse);
+
+        logger.debug(`[${PREFIX}] firstResponse: ${firstResponse}`);
+        const embedDM = embedTemplate();
+        embedDM.setDescription(firstResponse);
 
         const finishedButton = new ActionRowBuilder<ButtonBuilder>()
           .addComponents(
             new ButtonBuilder()
               .setCustomId(`issueFinish`)
-              .setLabel('I\'m good now!')
+              .setLabel(`I'm good now!`)
               .setStyle(ButtonStyle.Success),
           );
 
         interaction.reply({
-          embeds: [embed],
+          embeds: [embedDM],
           components: [finishedButton],
           ephemeral: false,
-          flags: ['SuppressEmbeds'],
+          // flags: ['SuppressEmbeds'],
         });
       }
 
@@ -473,7 +479,11 @@ export async function modmailCreate(
           ` : ''}
           Please look into it and respond to them in this thread!
 
-          When you're done remember to '/modmail close' this ticket!
+          If this is a medical emergency they need to initiate EMS: we do not call EMS on behalf of anyone.
+          When they're feeling better you can use the "I'm Good" button to let the team know they're okay.
+          If you they would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
+
+          When you're done remember to '/modmail close' this ticket or click the button!
         `;
       }
 
@@ -578,7 +588,7 @@ export async function modmailDMInteraction(message:Message) {
     return;
   }
 
-  if (Object.keys(ticketData).length !== 0) {
+  if (Object.keys(ticketData).length !== 0 && ticketData.issueStatus !== 'closed') {
     const guild = await message.client.guilds.fetch(env.DISCORD_GUILD_ID);
     let member = {} as GuildMember;
     try {
