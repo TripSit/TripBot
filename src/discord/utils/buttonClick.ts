@@ -15,7 +15,7 @@ import {applicationApprove} from '../utils/application';
 import {tripsitmeClick, tripsitmeFinish} from '../utils/tripsitme';
 import {techHelpClick, techHelpClose, techHelpOwn} from '../utils/techHelp';
 import {
-  modmailCreate,
+  modmailCreate, modmailActions,
 } from '../commands/guild/modmail';
 
 import * as path from 'path';
@@ -34,6 +34,11 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   if (command) {
     logger.debug(`[${PREFIX}] command: ${command}`);
   }
+  if (buttonID.startsWith('modmailIssue')) {
+    await modmailActions(interaction);
+    return;
+  }
+
   if (buttonID.startsWith('tripsitmeClick')) {
     tripsitmeClick(interaction);
     return;

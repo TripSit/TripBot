@@ -15,7 +15,7 @@ import {
   ModalSubmitInteraction,
   Role,
   GuildMemberRoleManager,
-  MessageReaction,
+  // MessageReaction,
   User,
   // Role,
 } from 'discord.js';
@@ -53,86 +53,7 @@ export const modmail: SlashCommand = {
       .setDescription('Put the ticket on hold')
       .setName('pause')),
   async execute(interaction:ChatInputCommandInteraction) {
-    logger.debug(`[${PREFIX}] Started!`);
-    const command = interaction.options.getSubcommand();
-    logger.debug(`[${PREFIX}] Command: ${command}`);
-
-    const actor = interaction.member as GuildMember;
-
-    // Get the ticket info
-    let ticketData = {} as ticketDbEntry;
-    let path = `${env.FIREBASE_DB_TICKETS}`;
-    if (global.db) {
-      const ref = db.ref(path);
-      await ref.once('value', (data) => {
-        if (data.val() !== null) {
-          const allTickets = data.val();
-          Object.keys(allTickets).forEach((key) => {
-            if (allTickets[key].issueThread === interaction.channel!.id) {
-              ticketData = allTickets[key];
-              path = `${env.FIREBASE_DB_TICKETS}/${key}`;
-            }
-          });
-        }
-      });
-    }
-    logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
-
-    const ticketChannel = interaction.client.channels.cache.get(ticketData.issueThread) as ThreadChannel;
-
-    if (!ticketChannel) {
-      interaction.reply({content: 'This user\'s ticket thread does not exist!', ephemeral: true});
-      return;
-    }
-
-    const target = interaction.client.users.cache.get(ticketData.issueUser) as User;
-    let verb = '';
-    let noun = '';
-    if (command === 'close') {
-      logger.debug(`[${PREFIX}] Closing ticket!`);
-      ticketData.issueStatus = 'closed';
-      noun = 'Ticket';
-      verb = 'CLOSED';
-      target.send(`It looks like we're good here! We've closed this ticket, but if you need anything else, feel free to open a new one!`);
-      // ticketChannel.setArchived(true, 'Archiving after close');
-    } else if (command === 'block') {
-      logger.debug(`[${PREFIX}] Blocking user!`);
-      ticketData.issueStatus = 'blocked';
-      noun = 'User';
-      verb = 'BLOCKED';
-      target.send('You have been blocked from using modmail. Please email us at appeals@tripsit.me if you feel this was an error!');
-      // ticketChannel.setArchived(true, 'Archiving after close');
-    } else if (command === 'unblock') {
-      ticketData.issueStatus = 'open';
-      noun = 'User';
-      verb = 'UNBLOCKED';
-      target.send('You have been unblocked from using modmail!');
-    } else if (command === 'unpause') {
-      ticketData.issueStatus = 'open';
-      noun = 'Ticket';
-      verb = 'UNPAUSED';
-      target.send('This ticket has been taken off hold, thank you for your patience!');
-    } else if (command === 'pause') {
-      ticketData.issueStatus = 'paused';
-      noun = 'Ticket';
-      verb = 'PAUSED';
-      target.send('This ticket has been paused while we look into this, thank you for your patience!');
-    }
-
-    await interaction.reply(`${noun} has been ${verb} by ${actor}! (The user cannot see this)`);
-
-    if (global.db) {
-      const ref = db.ref(path);
-      logger.debug(`[${PREFIX}] ticketData update: ${JSON.stringify(ticketData, null, 2)}!`);
-      await ref.set(ticketData);
-    }
-
-    const channelModlog = interaction.guild!.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
-    // Transform actor data
-    const modlogEmbed = embedTemplate()
-      .setColor(Colors.Blue)
-      .setDescription(`${actor} ${command}ed ${target.tag} in ${ticketChannel}`);
-    channelModlog.send({embeds: [modlogEmbed]});
+    await modmailActions(interaction);
   },
 };
 
@@ -197,9 +118,12 @@ export async function modmailCreate(
   // Get the actor
   const actor = interaction.user;
 
+  // Get the member object, if it exists
+  // This is used later on to check if the user is part of the guild or not
   const member = interaction.member as GuildMember;
   logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
 
+  // Create a dict of variables to be used based on the type of request
   const modmailVars = {
     appeal: {
       customId: `ModmailIssueModal~${issueType}`,
@@ -258,7 +182,6 @@ export async function modmailCreate(
       firstResponse: 'thank you for your feedback!',
     },
   };
-
 
   // Get the ticket info, if it exists
   let ticketData = {} as ticketDbEntry;
@@ -320,6 +243,7 @@ export async function modmailCreate(
     .setRequired(true),
   );
 
+  // Only the Tripsit modal has a second text input
   if (modmailVars[issueType].labelB !== '') {
     const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
       .setLabel(modmailVars[issueType].labelB)
@@ -361,14 +285,15 @@ export async function modmailCreate(
       });
       logger.debug(`[${PREFIX}] Created thread ${ticketThread.id}`);
 
+      // Get the tripsit guild
       const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
-
+      // Get the helper and TS roles
       const roleHelper = await tripsitGuild.roles.fetch(env.ROLE_TRIPSITTER) as Role;
       logger.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
       const roleTripsitter = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
       logger.debug(`[${PREFIX}] roleTripsitter: ${roleTripsitter}`);
 
-      // If the user is on the guild, direct them to their thread
+      // Respond to the user
       const embed = embedTemplate();
       let firstResponse = '';
       if (member instanceof GuildMember) {
@@ -456,6 +381,8 @@ export async function modmailCreate(
       const roleDeveloper = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER)!;
       const isDev = roleDeveloper.members.map((m) => m.user.id === interaction.user.id);
       const pingRole = tripsitGuild.roles.cache.find((role) => role.id === modmailVars[issueType].pingRole)!;
+
+      // Send a message to the thread
       let threadFirstResponse = stripIndents`
         Hey ${isDev ? pingRole.toString() : pingRole}! ${actor} has submitted a new ticket:
 
@@ -464,9 +391,8 @@ export async function modmailCreate(
         ${modalInputB !== '' ? `${modmailVars[issueType].labelB}
         > ${modalInputB}
         ` : ''}
-        Please look into it and respond to them in this thread!
 
-        When you're done remember to '/modmail close' this ticket!
+        Please look into it and respond to them in this thread!
       `;
       if (issueType === 'tripsit') {
         threadFirstResponse = stripIndents`
@@ -482,25 +408,35 @@ export async function modmailCreate(
           If this is a medical emergency they need to initiate EMS: we do not call EMS on behalf of anyone.
           When they're feeling better you can use the "I'm Good" button to let the team know they're okay.
           If you they would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
-
-          When you're done remember to '/modmail close' this ticket or click the button!
         `;
       }
 
-      const finishedButton = new ActionRowBuilder<ButtonBuilder>()
+      // Create the buttons
+      const modmailButtons = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           new ButtonBuilder()
-            .setCustomId(`issueFinish`)
-            .setLabel(`We're done here!`)
+            .setCustomId('modmailIssue~own')
+            .setLabel('Own')
             .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId('modmailIssue~pause')
+            .setLabel('Pause')
+            .setStyle(ButtonStyle.Primary),
+          new ButtonBuilder()
+            .setCustomId('modmailIssue~block')
+            .setLabel('Block')
+            .setStyle(ButtonStyle.Danger),
+          new ButtonBuilder()
+            .setCustomId('modmailIssue~close')
+            .setLabel(`Close`)
+            .setStyle(ButtonStyle.Secondary),
         );
 
       await ticketThread.send({
         content: threadFirstResponse,
-        components: [finishedButton],
+        components: [modmailButtons],
         flags: ['SuppressEmbeds'],
       });
-
       logger.debug(`[${PREFIX}] Sent intro message to thread ${ticketThread.id}`);
 
       // Set ticket information
@@ -519,17 +455,15 @@ export async function modmailCreate(
         ` : ''}`,
       };
 
+      // Determine when the thread should be archived
       const threadArchiveTime = new Date();
-      // define one week in milliseconds
-      // const thirtySec = 1000 * 30;
-      const tenMins = 1000 * 60 * 10;
-      const oneDay = 1000 * 60 * 60 * 24;
       const archiveTime = env.NODE_ENV === 'production' ?
-        threadArchiveTime.getTime() + oneDay :
-        threadArchiveTime.getTime() + tenMins;
+        threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 :
+        threadArchiveTime.getTime() + 1000 * 60 * 10;
       threadArchiveTime.setTime(archiveTime);
       logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
 
+      // Update thet ticket in the DB
       if (global.db) {
         const ticketRef = db.ref(`${env.FIREBASE_DB_TICKETS}/${member ? member.user.id : interaction.user.id}/`);
         await ticketRef.update(newTicketData);
@@ -690,248 +624,148 @@ export async function modmailThreadInteraction(message:Message) {
 }
 
 /**
- * Handles finishing the session
+ * Handles modmail buttons
  * @param {ButtonInteraction} interaction
  */
-export async function modmailFinish(
-  interaction:ButtonInteraction,
+export async function modmailActions(
+  interaction:ButtonInteraction | ChatInputCommandInteraction,
 ) {
   logger.debug(`[${PREFIX}] starting!`);
-  await interaction.deferReply({ephemeral: true});
-  if (!interaction.guild) {
-    logger.debug(`[${PREFIX}] no guild!`);
-    interaction.editReply('This must be performed in a guild!');
-    return;
-  }
-  if (!interaction.member) {
-    logger.debug(`[${PREFIX}] no member!`);
-    interaction.editReply('This must be performed by a member of a guild!');
-    return;
+
+  let command = '';
+  if (interaction.isButton()) {
+    command = interaction.customId.split('~')[1];
+  } else if (interaction.isCommand()) {
+    command = interaction.options.getSubcommand();
   }
 
-  const meOrThem = interaction.customId.split('~')[1];
-  const targetId = interaction.customId.split('~')[2];
-  const roleNeedshelpId = interaction.customId.split('~')[3];
+  logger.debug(`[${PREFIX}] Command: ${command}`);
 
-  const target = await interaction.guild?.members.fetch(targetId)!;
   const actor = interaction.member as GuildMember;
 
-  if (meOrThem === 'me' && targetId !== actor.id) {
-    logger.debug(`[${PREFIX}] not the target!`);
-    interaction.editReply({content: 'Only the user receiving help can click this button!'});
-    return;
-  }
-
-  let targetLastHelpedDate = new Date();
-  let targetLastHelpedThreadId = '';
-  let targetLastHelpedMetaThreadId = '';
-  let targetRoles:string[] = [];
-
+  // Get the ticket info
+  let ticketData = {} as ticketDbEntry;
+  let path = `${env.FIREBASE_DB_TICKETS}`;
   if (global.db) {
-    const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
+    const ref = db.ref(path);
     await ref.once('value', (data) => {
       if (data.val() !== null) {
-        Object.keys(data.val()).forEach((key) => {
-          logger.debug(`[${PREFIX}] data.val()[key]: ${JSON.stringify(data.val()[key], null, 2)}`);
-          logger.debug(`[${PREFIX}] key: ${key}`);
-          if (data.val()[key].type === 'helpthread') {
-            targetLastHelpedDate = new Date(parseInt(key));
-            targetLastHelpedThreadId = data.val()[key].value.lastHelpedThreadId;
-            targetLastHelpedMetaThreadId = data.val()[key].value.lastHelpedMetaThreadId;
-            targetRoles = data.val()[key].value.roles;
+        const allTickets = data.val();
+        Object.keys(allTickets).forEach((key) => {
+          if (allTickets[key].issueThread === interaction.channel!.id) {
+            ticketData = allTickets[key];
+            path = `${env.FIREBASE_DB_TICKETS}/${key}`;
           }
         });
       }
     });
   }
+  logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
-  logger.debug(`[${PREFIX}] targetLastHelpedDate: ${targetLastHelpedDate}`);
-  logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
-  logger.debug(`[${PREFIX}] targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);
+  const ticketChannel = interaction.client.channels.cache.get(ticketData.issueThread) as ThreadChannel;
 
-  // const channelOpentripsit = await interaction.client.channels.cache.get(env.CHANNEL_OPENTRIPSIT);
-  // const channelSanctuary = await interaction.client.channels.cache.get(env.CHANNEL_SANCTUARY);
-  // Get the channel objects for the help and meta threads
-  const threadHelpUser = interaction.guild.channels.cache
-    .find((chan) => chan.id === targetLastHelpedThreadId) as ThreadChannel;
-  // const threadDiscussUser = interaction.guild.channels.cache
-  //   .find((chan) => chan.id === targetLastHelpedMetaThreadId) as ThreadChannel;
-
-  // await threadDiscussUser.setName(`💚│${target.displayName} discussion`);
-  await threadHelpUser.setName(`💚│${target.displayName}'s channel!`);
-
-  const roleNeedshelp = await interaction.guild.roles.fetch(roleNeedshelpId)!;
-  const targetHasNeedsHelpRole = (target.roles as GuildMemberRoleManager).cache.find(
-    (role:Role) => role === roleNeedshelp,
-  ) !== undefined;
-  logger.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
-
-  if (!targetHasNeedsHelpRole) {
-    const rejectMessage = `Hey ${interaction.member}, ${meOrThem === 'me' ? 'you\'re' : `${target} is`} not currently being taken care of!`;
-
-    const embed = embedTemplate().setColor(Colors.DarkBlue);
-    embed.setDescription(rejectMessage);
-    logger.debug(`[${PREFIX}] target ${target} does not need help!`);
-    interaction.editReply({embeds: [embed]});
-    logger.debug(`[${PREFIX}] finished!`);
+  if (!ticketChannel) {
+    interaction.reply({content: 'This user\'s ticket thread does not exist!', ephemeral: true});
     return;
   }
 
-  // if (targetLastHelpedDate && meOrThem === 'me') {
-  //   const lastHour = Date.now() - (1000 * 60 * 60);
-  //   logger.debug(`[${PREFIX}] lastHelp: ${targetLastHelpedDate.valueOf() * 1000}`);
-  //   logger.debug(`[${PREFIX}] lastHour: ${lastHour.valueOf()}`);
-  //   if (targetLastHelpedDate.valueOf() * 1000 > lastHour.valueOf()) {
-  //     const message = stripIndents`Hey ${interaction.member} you just asked for help recently!
-  //     Take a moment to breathe and wait for someone to respond =)
-  //     Maybe try listening to some lofi music while you wait?`;
+  const target = interaction.client.users.cache.get(ticketData.issueUser) as User;
+  const channel = interaction.client.channels.cache.get(ticketData.issueThread) as ThreadChannel;
+  let verb = '';
+  let noun = '';
+  if (command === 'close') {
+    logger.debug(`[${PREFIX}] Closing ticket!`);
+    ticketData.issueStatus = 'closed';
+    noun = 'Ticket';
+    verb = 'CLOSED';
+    target.send(`It looks like we're good here! We've closed this ticket, but if you need anything else, feel free to open a new one!`);
+    channel.setName(`💚${channel.name.substring(1)}`);
+    //   let message:Message;
+    //   await threadHelpUser.send(stripIndents`
+    //       ${env.EMOJI_INVISIBLE}
+    //       > **If you have a minute, your feedback is important to us!**
+    //       > Please rate your experience with ${interaction.guild.name}'s service by reacting below.
+    //       > Thank you!
+    //       ${env.EMOJI_INVISIBLE}
+    //       `)
+    //     .then(async (msg) => {
+    //       message = msg;
+    //       await msg.react('🙁');
+    //       await msg.react('😕');
+    //       await msg.react('😐');
+    //       await msg.react('🙂');
+    //       await msg.react('😁');
 
-  //     const embed = embedTemplate()
-  //       .setColor(Colors.DarkBlue)
-  //       .setDescription(message);
-  //     interaction.editReply({embeds: [embed]});
+  //       // Setup the reaction collector
+  //       const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
+  //       const collector = message.createReactionCollector({filter, time: 1000 * 60 * 60 * 24});
+  //       collector.on('collect', async (reaction, user) => {
+  //         threadHelpUser.send(stripIndents`
+  //           ${env.EMOJI_INVISIBLE}
+  //           > Thank you for your feedback, here's a cookie! 🍪
+  //           ${env.EMOJI_INVISIBLE}
+  //           `);
+  //         logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
+  //         const finalEmbed = embedTemplate()
+  //           .setColor(Colors.Blue)
+  //           .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
+  //         try {
+  //           const channelTripsitMeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
+  //           await channelTripsitMeta.send({embeds: [finalEmbed]});
+  //         } catch (err) {
+  //           logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
+  //         }
+  //         msg.delete();
+  //         collector.stop();
+  //       });
+  //     });
+    // ticketChannel.setArchived(true, 'Archiving after close');
+  } else if (command === 'block') {
+    logger.debug(`[${PREFIX}] Blocking user!`);
+    ticketData.issueStatus = 'blocked';
+    noun = 'User';
+    verb = 'BLOCKED';
+    target.send('You have been blocked from using modmail. Please email us at appeals@tripsit.me if you feel this was an error!');
+    // ticketChannel.setArchived(true, 'Archiving after close');
+    channel.setName(`❤${channel.name.substring(1)}`);
+  } else if (command === 'unblock') {
+    ticketData.issueStatus = 'open';
+    noun = 'User';
+    verb = 'UNBLOCKED';
+    target.send('You have been unblocked from using modmail!');
+    channel.setName(`💛${channel.name.substring(1)}`);
+  } else if (command === 'unpause') {
+    ticketData.issueStatus = 'open';
+    noun = 'Ticket';
+    verb = 'UNPAUSED';
+    target.send('This ticket has been taken off hold, thank you for your patience!');
+    channel.setName(`💛${channel.name.substring(1)}`);
+  } else if (command === 'pause') {
+    ticketData.issueStatus = 'paused';
+    noun = 'Ticket';
+    verb = 'PAUSED';
+    target.send('This ticket has been paused while we look into this, thank you for your patience!');
+    channel.setName(`🤎${channel.name.substring(1)}`);
+  } else if (command === 'own') {
+    noun = 'Ticket';
+    verb = 'OWNED';
+    target.send(`${actor} has claimed this issue and will either help you or figure out how to get you help!`);
+    channel.setName(`💛${channel.name.substring(1)}`);
+  }
+  await interaction.reply(`${noun} has been ${verb} by ${actor}! (The user cannot see this)`);
 
-  //     //       if (threadDiscussUser) {
-  //     //         const metaUpdate = stripIndents`Hey team, ${target.displayName} said they're good \
-  //     // but it's been less than an hour since they asked for help.
-
-  //     // If they still need help it's okay to leave them with that role.`;
-  //     //         threadDiscussUser.send(metaUpdate);
-  //     //       }
-
-  //     logger.debug(`[${PREFIX}] finished!`);
-
-  //     logger.debug(`[${PREFIX}] Rejected the "im good" button`);
-  //     return;
-  //   }
-  // }
-
-  // For each role in targetRoles2, add it to the target
-  if (targetRoles) {
-    targetRoles.forEach((roleId) => {
-      logger.debug(`[${PREFIX}] Re-adding roleId: ${roleId}`);
-      const roleObj = interaction.guild!.roles.cache.find((r) => r.id === roleId) as Role;
-      if (!ignoredRoles.includes(roleObj.id) && roleObj.name !== '@everyone') {
-        logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.displayName}`);
-        try {
-          target.roles.add(roleObj);
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error adding role ${roleObj.name} to ${target.displayName}`);
-          logger.error(err);
-        }
-      }
-    });
+  if (global.db) {
+    const ref = db.ref(path);
+    logger.debug(`[${PREFIX}] ticketData update: ${JSON.stringify(ticketData, null, 2)}!`);
+    await ref.set(ticketData);
   }
 
-  target.roles.remove(roleNeedshelp!);
-  logger.debug(`[${PREFIX}] Removed ${roleNeedshelp!.name} from ${target.displayName}`);
+  const channelModlog = interaction.guild!.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
+  // Transform actor data
+  const modlogEmbed = embedTemplate()
+    .setColor(Colors.Blue)
+    .setDescription(`${actor} ${command}ed ${target.tag} in ${ticketChannel}`);
+  channelModlog.send({embeds: [modlogEmbed]});
 
-  const endHelpMessage = stripIndents`Hey ${target}, we're glad you're doing better!
-    We've restored your old roles back to normal <3
-    This thread will remain here for a day if you want to follow up tomorrow.
-    After 7 days, or on request, it will be deleted to preserve your privacy =)`;
-
-  try {
-    threadHelpUser.send(endHelpMessage);
-  } catch (err) {
-    logger.error(`[${PREFIX}] Error sending end help message to ${threadHelpUser}`);
-    logger.error(err);
-  }
-
-
-  let message:Message;
-  await threadHelpUser.send(stripIndents`
-      ${env.EMOJI_INVISIBLE}
-      > **If you have a minute, your feedback is important to us!**
-      > Please rate your experience with ${interaction.guild.name}'s service by reacting below.
-      > Thank you!
-      ${env.EMOJI_INVISIBLE}
-      `)
-    .then(async (msg) => {
-      message = msg;
-      await msg.react('🙁');
-      await msg.react('😕');
-      await msg.react('😐');
-      await msg.react('🙂');
-      await msg.react('😁');
-
-      // Setup the reaction collector
-      const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
-      const collector = message.createReactionCollector({filter, time: 1000 * 60 * 60 * 24});
-      collector.on('collect', async (reaction, user) => {
-        threadHelpUser.send(stripIndents`
-          ${env.EMOJI_INVISIBLE}
-          > Thank you for your feedback, here's a cookie! 🍪
-          ${env.EMOJI_INVISIBLE}
-          `);
-        logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
-        const finalEmbed = embedTemplate()
-          .setColor(Colors.Blue)
-          .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
-        try {
-          const channelTripsitMeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
-          await channelTripsitMeta.send({embeds: [finalEmbed]});
-        } catch (err) {
-          logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
-        }
-        msg.delete();
-        collector.stop();
-      });
-    });
-
-
-  logger.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
   logger.debug(`[${PREFIX}] finished!`);
-  await interaction.editReply({content: 'Done!'});
 };
-
-const teamRoles = [
-  env.ROLE_DIRECTOR,
-  env.ROLE_SUCCESSOR,
-  env.ROLE_SYSADMIN,
-  env.ROLE_LEADDEV,
-  env.ROLE_IRCADMIN,
-  env.ROLE_DISCORDADMIN,
-  env.ROLE_IRCOP,
-  env.ROLE_MODERATOR,
-  env.ROLE_TRIPSITTER,
-  env.ROLE_TEAMTRIPSIT,
-  env.ROLE_TRIPBOT2,
-  env.ROLE_TRIPBOT,
-  env.ROLE_BOT,
-  env.ROLE_DEVELOPER,
-];
-
-const colorRoles = [
-  env.ROLE_TREE,
-  env.ROLE_SPROUT,
-  env.ROLE_SEEDLING,
-  env.ROLE_BOOSTER,
-  env.ROLE_RED,
-  env.ROLE_ORANGE,
-  env.ROLE_YELLOW,
-  env.ROLE_GREEN,
-  env.ROLE_BLUE,
-  env.ROLE_PURPLE,
-  env.ROLE_PINK,
-  // env.ROLE_BROWN,
-  env.ROLE_BLACK,
-  env.ROLE_WHITE,
-];
-
-const mindsetRoles = [
-  env.ROLE_DRUNK,
-  env.ROLE_HIGH,
-  env.ROLE_ROLLING,
-  env.ROLE_TRIPPING,
-  env.ROLE_DISSOCIATING,
-  env.ROLE_STIMMING,
-  env.ROLE_NODDING,
-  env.ROLE_SOBER,
-];
-
-const otherRoles = [
-  env.ROLE_VERIFIED,
-];
-
-const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles},${otherRoles}`;
