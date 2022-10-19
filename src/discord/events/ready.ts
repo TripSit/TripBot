@@ -45,10 +45,10 @@ export const ready: clientEvent = {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
         logger.info(`[${PREFIX}] Discord finished booting in ${bootDuration}s!`);
         if (env.NODE_ENV === 'production') {
-          const channelTripbot = client.channels.cache.get(env.CHANNEL_TRIPBOT) as TextChannel;
+          const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
           const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
           const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
-          channelTripbot.send(`Hey ${tripbotdevrole}, bot has restart! Booted in ${bootDuration} seconds`);
+          botlog.send(`Hey ${tripbotdevrole}, bot has restart! Booted in ${bootDuration} seconds`);
         }
       })
     ;
