@@ -43,6 +43,7 @@ export type ticketDbEntry = {
   issueType: 'appeal' | 'tripsit' | 'tech';
   issueUser: string;
   issueUserIsBanned: boolean;
+  issueFirstMessage: string;
 }
 
 export type reactionRoleList = {
