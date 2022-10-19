@@ -1,18 +1,9 @@
-/* eslint-disable no-unused-vars */
 import {
-  ActionRowBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  Colors,
   SlashCommandBuilder,
-  TextChannel,
 } from 'discord.js';
-import {
-  TextInputStyle,
-} from 'discord-api-types/v10';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
-import env from '../../../global/utils/env.config';
+import ms from 'ms';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 import {stripIndents} from 'common-tags';
@@ -36,6 +27,9 @@ export const botstats: SlashCommand = {
     // Get the number of commands the bot has
     const commandCount = interaction.client.commands.size;
     logger.debug(`[${PREFIX}] commandCount: ${commandCount}`);
+    const uptime = (new Date().getTime() - global.bootTime.getTime());
+    logger.debug(`[${PREFIX}] uptime: ${uptime}`);
+
 
     // Create the embed
     const embed = embedTemplate();
@@ -46,6 +40,7 @@ export const botstats: SlashCommand = {
       Users: ${userCount.toString()}
       Channels: ${channelCount.toString()}
       Commands: ${commandCount.toString()}
+      Uptime: ${ms(uptime)}
     `);
     logger.debug(`[${PREFIX}] finished!`);
     interaction.reply({embeds: [embed]});
