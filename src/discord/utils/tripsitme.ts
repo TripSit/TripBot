@@ -669,7 +669,7 @@ export async function tripsitmeFinish(
   const threadHelpUser = interaction.guild.channels.cache
     .find((chan) => chan.id === targetLastHelpedThreadId) as ThreadChannel;
   logger.debug(`[${PREFIX}] threadHelpUser: ${threadHelpUser.name} = 💚│${target.displayName}'s channel!`);
-  threadHelpUser.setName(`💚│${target.displayName}'s channel123123123123!`);
+  threadHelpUser.setName(`💚│${target.displayName}'s channel!`);
 
   const roleNeedshelp = await interaction.guild.roles.fetch(roleNeedshelpId)!;
   const targetHasNeedsHelpRole = (target.roles as GuildMemberRoleManager).cache.find(
