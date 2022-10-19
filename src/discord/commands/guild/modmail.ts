@@ -76,7 +76,6 @@ export const modmail: SlashCommand = {
         }
       });
     }
-
     logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
     const ticketChannel = interaction.client.channels.cache.get(ticketData.issueThread) as ThreadChannel;
@@ -94,40 +93,37 @@ export const modmail: SlashCommand = {
       ticketData.issueStatus = 'closed';
       noun = 'Ticket';
       verb = 'CLOSED';
-      // Reply before you archive, or else you'll just unarchive
-      await interaction.reply(`It looks like we're done here, this ticket has been closed!`);
+      target.send(`It looks like we're good here! We've closed this ticket, but if you need anything else, feel free to open a new one!`);
+      // ticketChannel.setArchived(true, 'Archiving after close');
     } else if (command === 'block') {
       logger.debug(`[${PREFIX}] Blocking user!`);
       ticketData.issueStatus = 'blocked';
       noun = 'User';
       verb = 'BLOCKED';
+      target.send('You have been blocked from using modmail. Please email us at appeals@tripsit.me if you feel this was an error!');
       ticketChannel.setArchived(true, 'Archiving after close');
     } else if (command === 'unblock') {
       ticketData.issueStatus = 'open';
       noun = 'User';
       verb = 'UNBLOCKED';
+      target.send('You have been unblocked from using modmail!');
     } else if (command === 'unpause') {
       ticketData.issueStatus = 'open';
       noun = 'Ticket';
       verb = 'UNPAUSE';
+      target.send('This ticket has been taken off hold, thank you for your patience!');
     } else if (command === 'pause') {
       ticketData.issueStatus = 'paused';
       noun = 'Ticket';
       verb = 'PAUSE';
+      target.send('This ticket has been paused while we look into this, thank you for your patience!');
     }
 
     await interaction.reply(`${noun} has been ${verb} by ${actor}! (The user cannot see this)`);
 
-    if (command === 'close' || command === 'block') {
-      ticketChannel.setArchived(true, 'Archiving after close');
-    }
-
-    if (command === 'pause' || command === 'unpause' || command === 'closed') {
-      ticketChannel.send('Unarchiving after close');
-    }
-
     if (global.db) {
       const ref = db.ref(path);
+      logger.debug(`[${PREFIX}] ticketData update: ${JSON.stringify(ticketData, null, 2)}!`);
       await ref.set(ticketData);
     }
 
@@ -453,7 +449,6 @@ export async function modmailCreate(
       // Determine if this command was started by a Developer
       const roleDeveloper = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER)!;
       const isDev = roleDeveloper.members.map((m) => m.user.id === interaction.user.id);
-      logger.debug(`[${PREFIX}] isDev: ${JSON.stringify(isDev, null, 2)}!`);
       const pingRole = tripsitGuild.roles.cache.find((role) => role.id === modmailVars[issueType].pingRole)!;
       let threadFirstResponse = stripIndents`
         Hey ${isDev ? pingRole.toString() : pingRole}! ${actor} has submitted a new ticket:
@@ -574,7 +569,12 @@ export async function modmailDMInteraction(message:Message) {
   // logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
   if (ticketData.issueStatus === 'blocked') {
-    message.author.send('You are blocked!');
+    message.author.send('*beeps sadly*');
+    return;
+  }
+
+  if (ticketData.issueStatus === 'paused') {
+    message.author.send('Hey there! This ticket is currently on hold, please wait for a moderator to respond before sending another message.');
     return;
   }
 
@@ -869,21 +869,10 @@ export async function modmailFinish(
       });
     });
 
-  // const endMetaHelpMessage = stripIndents`${meOrThem === 'me' ? target.displayName : actor.displayName} has indicated that ${meOrThem === 'me' ? 'they' : target.displayName} no longer need help!
-  //   *This thread, and ${threadHelpUser.toString()}, will remain un-archived for 24 hours to allow the user to follow-up.
-  //   If the user requests help again within 7 days these threads will be un-archived.
-  //   After 7 days the threads will be deleted to preserve privacy.*`;
-
-  // threadDiscussUser.send(endMetaHelpMessage);
-
 
   logger.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
   logger.debug(`[${PREFIX}] finished!`);
   await interaction.editReply({content: 'Done!'});
-// async submit(interaction) {
-//   const feedback = interaction.fields.getTextInputValue('feedbackReport');
-//   logger.debug(feedback);
-// },
 };
 
 const teamRoles = [
