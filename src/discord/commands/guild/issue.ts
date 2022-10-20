@@ -4,6 +4,7 @@ import {
   ModalBuilder,
   TextInputBuilder,
   ActionRowBuilder,
+  ModalSubmitInteraction,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -77,57 +78,61 @@ export const issue: SlashCommand = {
     // Show the modal to the user
     await interaction.showModal(modal);
     logger.debug(`[${PREFIX}] displayed modal!`);
-  },
-  async submit(interaction) {
-    logger.debug(`[${PREFIX}] submitted!`);
-    const sentByOwner = interaction.user === interaction.client.application!.owner;
-    // @ts-ignore
-    let issueBody = interaction.components[1].components[0].value;
-    if (sentByOwner) {
-      issueBody += `This issue was submitted by ${interaction.member} in ${interaction.guild}`;
-    }
-    logger.debug(`[${PREFIX}] issueBody: ${JSON.stringify(issueBody, null, 2)}`);
 
-    // @ts-ignore
-    const labels = interaction.components[1].components[0].customId.split(',');
-    const filteredLabels = labels.filter((label:string) => label !== 'null');
+    // Collect a modal submit interaction
+    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`issueModal`);
+    interaction.awaitModalSubmit({filter, time: 0})
+      .then(async (interaction) => {
+        logger.debug(`[${PREFIX}] submitted!`);
+        const sentByOwner = interaction.user === interaction.client.application!.owner;
+        // @ts-ignore
+        let issueBody = interaction.components[1].components[0].value;
+        if (sentByOwner) {
+          issueBody += `This issue was submitted by ${interaction.member} in ${interaction.guild}`;
+        }
+        logger.debug(`[${PREFIX}] issueBody: ${JSON.stringify(issueBody, null, 2)}`);
 
-    // Use octokit to create an issue
-    const owner = 'TripSit';
-    const repo = 'tripsit-discord-bot';
-    const octokit = new Octokit({auth: env.GITHUB_TOKEN});
-    await octokit.rest.issues.create({
-      owner,
-      repo,
-      title: interaction.fields.getTextInputValue('issueTitle'),
-      body: issueBody,
-    })
-      .then(async (response) => {
-        const issueNumber = response.data.number;
-        octokit.rest.issues.addLabels({
+        // @ts-ignore
+        const labels = interaction.components[1].components[0].customId.split(',');
+        const filteredLabels = labels.filter((label:string) => label !== 'null');
+
+        // Use octokit to create an issue
+        const owner = 'TripSit';
+        const repo = 'tripsit-discord-bot';
+        const octokit = new Octokit({auth: env.GITHUB_TOKEN});
+        await octokit.rest.issues.create({
           owner,
           repo,
-          issue_number: issueNumber,
-          labels: filteredLabels,
-        });
-        const issueUrl = response.data.html_url;
-        const embed = embedTemplate()
-          .setColor(0x0099ff)
-          .setTitle('Issue created!')
-          .setDescription(stripIndents`\
-          Issue #${issueNumber} created on ${owner}/${repo}
-          Click here to view: ${issueUrl}`);
-        interaction.reply({embeds: [embed], ephemeral: true});
-      })
-      .catch((error:Error) => {
-        logger.error(`[${PREFIX}] Failed to create issue on ${owner}/${repo}\n\n${error}`);
-        const embed = embedTemplate()
-          .setColor(0xff0000)
-          .setTitle('Issue creation failed!')
-          .setDescription(`Your issue could not be created on ${owner}/${repo}\n\n${error}`);
-        interaction.reply({embeds: [embed], ephemeral: false});
-        return Promise.reject(error);
+          title: interaction.fields.getTextInputValue('issueTitle'),
+          body: issueBody,
+        })
+          .then(async (response) => {
+            const issueNumber = response.data.number;
+            octokit.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: issueNumber,
+              labels: filteredLabels,
+            });
+            const issueUrl = response.data.html_url;
+            const embed = embedTemplate()
+              .setColor(0x0099ff)
+              .setTitle('Issue created!')
+              .setDescription(stripIndents`\
+              Issue #${issueNumber} created on ${owner}/${repo}
+              Click here to view: ${issueUrl}`);
+            interaction.reply({embeds: [embed], ephemeral: true});
+          })
+          .catch((error:Error) => {
+            logger.error(`[${PREFIX}] Failed to create issue on ${owner}/${repo}\n\n${error}`);
+            const embed = embedTemplate()
+              .setColor(0xff0000)
+              .setTitle('Issue creation failed!')
+              .setDescription(`Your issue could not be created on ${owner}/${repo}\n\n${error}`);
+            interaction.reply({embeds: [embed], ephemeral: false});
+            return Promise.reject(error);
+          });
+        logger.debug(`[${PREFIX}] finished!`);
       });
-    logger.debug(`[${PREFIX}] finished!`);
   },
 };
