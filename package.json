@@ -12,7 +12,7 @@
     "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
     "prod": "ts-node --transpile-only src/start.ts",
     "DB_backup": "ts-node --transpile-only ./src/global/functions/database-backup.ts",
-    "DB_ETL": "ts-node --transpile-only ./src/global/functions/database-mee6expTransfer.ts"
+    "DB_test": "ts-node --transpile-only ./src/global/functions/database-test.ts"
   },
   "repository": {
     "type": "git",
@@ -35,6 +35,7 @@
   },
   "homepage": "https://github.com/TripSit/tripsit-discord-bot#readme",
   "dependencies": {
+    "@databases/pg": "^5.4.1",
     "@discordjs/rest": "^1.3.0",
     "@logtail/node": "^0.1.12",
     "@logtail/winston": "^0.1.13",
@@ -56,6 +57,8 @@
     "node-fetch": "^3.2.10",
     "npm-check-updates": "^16.3.11",
     "octokit": "^2.0.9",
+    "pg": "^8.8.0",
+    "pgtools": "^0.3.2",
     "ts-node": "^10.9.1",
     "winston": "^3.8.2",
     "youtube-search": "^1.1.6",

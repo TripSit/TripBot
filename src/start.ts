@@ -5,6 +5,7 @@ import {validateEnv} from './global/utils/env.validate';
 import {runTimer} from './discord/utils/timerAPI';
 import {firebaseConnect} from './global/utils/firebaseAPI';
 import {webserverConnect} from './webserver/webserverAPI';
+import db from './global/utils/database';
 // import { telegramConnect } from './telegram/telegramAPI';
 
 import env from './global/utils/env.config';
@@ -47,19 +48,6 @@ async function start() {
 
 start();
 
-// Stop the bot when the process is closed (via Ctrl-C).
-const destroy = () => {
-  // try {
-  //   if (global.manager) {
-  //     global.manager.teardown();
-  //   }
-  // } catch (err) {
-  //   logger.error(`[${PREFIX}] ${err}`);
-  // }
-  logger.debug(`[${PREFIX}] Gracefully stopping the bot (CTRL + C pressed)`);
-  process.exit(0);
-};
-
 process.on('unhandledRejection', (error: Error) => {
   logger.error(`[${PREFIX}] ERROR: ${error.stack}`);
   if (env.NODE_ENV === 'production') {
@@ -72,5 +60,20 @@ process.on('unhandledRejection', (error: Error) => {
   }
 });
 
+// Stop the bot when the process is closed (via Ctrl-C).
+const destroy = () => {
+  // try {
+  //   if (global.manager) {
+  //     global.manager.teardown();
+  //   }
+  // } catch (err) {
+  //   logger.error(`[${PREFIX}] ${err}`);
+  // }
+  logger.debug(`[${PREFIX}] Gracefully stopping the bot (CTRL + C pressed)`);
+  db.dispose().catch((ex) => {
+    console.error(ex);
+  });
+  process.exit(0);
+};
 process.on('SIGINT', destroy);
 process.on('SIGTERM', destroy);
