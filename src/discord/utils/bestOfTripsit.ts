@@ -18,7 +18,8 @@ const tripsitterChannels = [
   env.CHANNEL_SANCTUARY,
   env.CHANNEL_TRIPSITMETA,
   env.CHANNEL_DRUGQUESTIONS,
-  env.CHANNEL_OPENTRIPSIT,
+  env.CHANNEL_OPENTRIPSIT1,
+  env.CHANNEL_OPENTRIPSIT2,
 ];
 
 // How many votes are needed for each action, in production and dev

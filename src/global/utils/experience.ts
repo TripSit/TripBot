@@ -60,7 +60,7 @@ const ignoredChannels = Object.values({
 const tripsitterChannels = Object.values({
   'tripsit-meta': [env.CHANNEL_TRIPSITMETA, '#tripsit-meta'],
   'tripsit': [env.CHANNEL_TRIPSIT, '#tripsit'],
-  'opentripsit': [env.CHANNEL_OPENTRIPSIT, '#opentripsit'],
+  // 'opentripsit': [env.CHANNEL_OPENTRIPSIT, '#opentripsit'],
   'opentripsit1': [env.CHANNEL_OPENTRIPSIT1, '#opentripsit1'],
   'opentripsit2': [env.CHANNEL_OPENTRIPSIT2, '#opentripsit2'],
   'webtripsit': [env.CHANNEL_WEBTRIPSIT, '#webtripsit'],
