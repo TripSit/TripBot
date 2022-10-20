@@ -78,7 +78,7 @@ export async function announcements(message:Message) {
   // const channelHowToTripsit = await message.client.channels.fetch(env.CHANNEL_HOWTOTRIPSIT)!;
   const channelTripsit = await message.client.channels.fetch(env.CHANNEL_TRIPSIT)!;
   // const channelRTripsit = await message.client.channels.fetch(env.CHANNEL_TRIPSIT)!;
-  const channelOpenTripsit = await message.client.channels.fetch(env.CHANNEL_OPENTRIPSIT)!;
+  // const channelOpenTripsit = await message.client.channels.fetch(env.CHANNEL_OPENTRIPSIT)!;
   const channelOpenTripsit1 = await message.client.channels.fetch(env.CHANNEL_OPENTRIPSIT1)!;
   const channelOpenTripsit2 = await message.client.channels.fetch(env.CHANNEL_OPENTRIPSIT2)!;
   const channelSanctuary = await message.client.channels.fetch(env.CHANNEL_SANCTUARY)!;
@@ -151,7 +151,7 @@ export async function announcements(message:Message) {
     `Test out bot commands in ${channelBotspam!.toString()}!`,
     `Have an issue and need to talk with the team? Use ${channelTechhelp!.toString()}!`,
     `Need help from a tripsitter? Use ${channelTripsit!.toString()}!`,
-    `${channelOpenTripsit!.toString()}, ${channelOpenTripsit1!.toString()}, and ${channelOpenTripsit2!.toString()} are "communal" tripsit rooms!`,
+    `${channelOpenTripsit1!.toString()}, and ${channelOpenTripsit2!.toString()} are "communal" tripsit rooms!`,
     `Slowmode is enabled in ${channelSanctuary!.toString()} to let people have a chill experience!`,
     // `Check out harm reduction resources in ${channelHrResources!.toString()}!`,
     // `Ask questions about drugs in ${channelDrugQuestions!.toString()} to make sure they're not lost!`,
