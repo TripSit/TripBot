@@ -178,7 +178,9 @@ export const prompt: SlashCommand = {
       await ticketbooth(interaction);
     }
     // await interaction.editReply('Donezo!');
-    await interaction.reply({content: 'Donezo!', ephemeral: true});
+    if (!interaction.replied) {
+      await interaction.reply({content: 'Donezo!', ephemeral: true});
+    }
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
