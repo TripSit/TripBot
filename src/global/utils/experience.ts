@@ -219,7 +219,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
       if (env.NODE_ENV === 'production') {
         userRef = `${env.FIREBASE_DB_USERS}/${actor.id}/experience`;
       } else {
-        userRef = `users_backup/${actor.id}/experience`;
+        userRef = `users_dev/${actor.id}/experience`;
       }
     }
     // else {
