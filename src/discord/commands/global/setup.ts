@@ -178,7 +178,9 @@ export const prompt: SlashCommand = {
       await ticketbooth(interaction);
     }
     // await interaction.editReply('Donezo!');
-    await interaction.reply({content: 'Donezo!', ephemeral: true});
+    if (!interaction.replied) {
+      await interaction.reply({content: 'Donezo!', ephemeral: true});
+    }
     logger.debug(`[${PREFIX}] finished!`);
   },
 };
@@ -771,7 +773,7 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
   logger.debug(`[${PREFIX}] Starting!`);
   const channelTripsit = interaction.client.channels.cache.get(env.CHANNEL_TRIPSIT);
   const channelSanctuary = interaction.client.channels.cache.get(env.CHANNEL_SANCTUARY);
-  const channelOpentripsit = interaction.client.channels.cache.get(env.CHANNEL_OPENTRIPSIT);
+  const channelOpentripsit = interaction.client.channels.cache.get(env.CHANNEL_OPENTRIPSIT1);
   const channelRules = interaction.client.channels.cache.get(env.CHANNEL_RULES);
 
   // **3)** I understand that every room with a :link: is bridged to IRC and there may be lower quality chat in those rooms.

@@ -12,7 +12,7 @@ const PREFIX = path.parse(__filename).name;
 export const voiceStateUpdate: voiceEvent = {
   name: 'voiceStateUpdate',
   async execute(Old: VoiceState, New: VoiceState) {
-    logger.debug(`[${PREFIX}] starting!`);
+    // logger.debug(`[${PREFIX}] starting!`);
     if (New.guild.id !== env.DISCORD_GUILD_ID) return;
     if (New.member?.user?.bot) return;
     if (Old.member?.user?.bot) return;

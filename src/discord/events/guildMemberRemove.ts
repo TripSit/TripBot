@@ -67,10 +67,7 @@ export const guildMemberRemove: guildMemberEvent = {
             if (timer.type === 'helpthread') {
               const helpChannel = await member.client.channels.fetch(
                 timer.value.lastHelpedThreadId) as TextChannel;
-              const metaChannel = await member.client.channels.fetch(
-                timer.value.lastHelpedMetaThreadId) as TextChannel;
               helpChannel.send(`${member.user} has left the guild!`);
-              metaChannel.send(`${member.user} has left the guild!`);
             }
             if (timer.type === 'reminder') {
               logger.debug(`[${PREFIX}] delete reminder ${key}`);

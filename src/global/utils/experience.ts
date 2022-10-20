@@ -60,7 +60,7 @@ const ignoredChannels = Object.values({
 const tripsitterChannels = Object.values({
   'tripsit-meta': [env.CHANNEL_TRIPSITMETA, '#tripsit-meta'],
   'tripsit': [env.CHANNEL_TRIPSIT, '#tripsit'],
-  'opentripsit': [env.CHANNEL_OPENTRIPSIT, '#opentripsit'],
+  // 'opentripsit': [env.CHANNEL_OPENTRIPSIT, '#opentripsit'],
   'opentripsit1': [env.CHANNEL_OPENTRIPSIT1, '#opentripsit1'],
   'opentripsit2': [env.CHANNEL_OPENTRIPSIT2, '#opentripsit2'],
   'webtripsit': [env.CHANNEL_WEBTRIPSIT, '#webtripsit'],
@@ -219,7 +219,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
       if (env.NODE_ENV === 'production') {
         userRef = `${env.FIREBASE_DB_USERS}/${actor.id}/experience`;
       } else {
-        userRef = `users_backup/${actor.id}/experience`;
+        userRef = `users_dev/${actor.id}/experience`;
       }
     }
     // else {

@@ -70,7 +70,7 @@ export async function runTimer() {
           Object.keys(userInfo).forEach(async (timevalue) => {
             const timerEntry = userInfo[timevalue];
             const reminderTime = new Date(parseInt(timevalue, 10));
-            logger.debug(`[${PREFIX}] ${userId} has a ${timerEntry.type} at ${reminderTime} - ${timerEntry.value}`);
+            // logger.debug(`[${PREFIX}] ${userId} has a ${timerEntry.type} at ${reminderTime} - ${timerEntry.value}`);
             const now = new Date();
             if (now > reminderTime) {
               if (timerEntry.type === 'reminder') {
@@ -167,7 +167,6 @@ export async function runTimer() {
                   } catch (err) {
                     logger.debug(`[${PREFIX}] Help thread already deleted`);
                   }
-
                   await global.db.ref(`${env.FIREBASE_DB_TIMERS}/${userId}/${timevalue}`).remove();
                 }
               }
