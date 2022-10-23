@@ -4,6 +4,7 @@ import {
   TextInputBuilder,
   ContextMenuCommandBuilder,
   GuildMember,
+  ModalSubmitInteraction,
 } from 'discord.js';
 import {
   ApplicationCommandType,
@@ -58,22 +59,25 @@ export const uKick: UserCommand = {
 
     // Show the modal to the user
     await interaction.showModal(modal);
-  },
-  async submit(interaction) {
-    // logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
-    // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
-    reason = interaction.fields.getTextInputValue('kickReason');
-    logger.debug(`[${PREFIX}] reason: ${reason}`);
-    // embed.addField('Reason', reason);
-    // embed.addField('Duration', duration);
-    // embed.addField('Toggle', toggle);
-    const result = await moderate(actor, command, target, undefined, 'on', reason, undefined, interaction);
-    logger.debug(`[${PREFIX}] Result: ${result}`);
 
-    // embed.setDescription(result);
+    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`kickModal`);
+    interaction.awaitModalSubmit({filter, time: 0})
+      .then(async (interaction) => {
+        // logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
+        // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+        reason = interaction.fields.getTextInputValue('kickReason');
+        logger.debug(`[${PREFIX}] reason: ${reason}`);
+        // embed.addField('Reason', reason);
+        // embed.addField('Duration', duration);
+        // embed.addField('Toggle', toggle);
+        const result = await moderate(actor, command, target, undefined, 'on', reason, undefined, interaction);
+        logger.debug(`[${PREFIX}] Result: ${result}`);
 
-    interaction.reply(result);
+        // embed.setDescription(result);
 
-    logger.debug(`[${PREFIX}] finished!`);
+        interaction.reply(result);
+
+        logger.debug(`[${PREFIX}] finished!`);
+      });
   },
 };

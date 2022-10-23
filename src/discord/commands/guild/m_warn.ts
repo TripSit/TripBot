@@ -73,36 +73,39 @@ export const mWarn: MessageCommand = {
     modal.addComponents(firstActionRow);
     // Show the modal to the user
     await interaction.showModal(modal);
-  },
-  async submit(interaction:ModalSubmitInteraction) {
-    logger.debug(`[${PREFIX}] started!`);
-    // await interaction.deferReply({ ephemeral: true });
-    // const embed = embedTemplate()
-    //     .setColor(Colors.DarkBlue)
-    //     .setDescription('Reporting...');
-    // await interaction.editReply({ embeds: [embed], ephemeral: true });
 
-    channel = interaction.channel as TextChannel;
-    actor = interaction.member as GuildMember;
-    logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor.displayName, null, 2)}`);
-    logger.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
-    logger.debug(`[${PREFIX}] target: ${JSON.stringify((target as GuildMember).displayName, null, 2)}`);
-    logger.debug(`[${PREFIX}] channel: ${JSON.stringify(channel.name, null, 2)}`);
-    const reason = stripIndents`
-    > ${interaction.fields.getTextInputValue('reasonGiven')}
+    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`warnModal`);
+    interaction.awaitModalSubmit({filter, time: 0})
+      .then(async (interaction) => {
+        logger.debug(`[${PREFIX}] started!`);
+        // await interaction.deferReply({ ephemeral: true });
+        // const embed = embedTemplate()
+        //     .setColor(Colors.DarkBlue)
+        //     .setDescription('Reporting...');
+        // await interaction.editReply({ embeds: [embed], ephemeral: true });
 
-    [The offending message:](${messageUrl})
-    > ${message}
+        channel = interaction.channel as TextChannel;
+        actor = interaction.member as GuildMember;
+        logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor.displayName, null, 2)}`);
+        logger.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
+        logger.debug(`[${PREFIX}] target: ${JSON.stringify((target as GuildMember).displayName, null, 2)}`);
+        logger.debug(`[${PREFIX}] channel: ${JSON.stringify(channel.name, null, 2)}`);
+        const reason = stripIndents`
+        > ${interaction.fields.getTextInputValue('reasonGiven')}
+    
+        [The offending message:](${messageUrl})
+        > ${message}
+    
+        `;
 
-    `;
+        const toggle = undefined;
+        const duration = undefined;
+        const result = await moderate(actor, command, target, channel, toggle, reason, duration, interaction);
+        logger.debug(`[${PREFIX}] Result: ${result}`);
 
-    const toggle = undefined;
-    const duration = undefined;
-    const result = await moderate(actor, command, target, channel, toggle, reason, duration, interaction);
-    logger.debug(`[${PREFIX}] Result: ${result}`);
+        // embed.setDescription(result);
 
-    // embed.setDescription(result);
-
-    interaction.reply(result);
+        interaction.reply(result);
+      });
   },
 };

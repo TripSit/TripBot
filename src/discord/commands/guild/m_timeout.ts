@@ -77,32 +77,34 @@ export const mTimeout: MessageCommand = {
     modal.addComponents(firstActionRow, secondActionRow);
     // Show the modal to the user
     await interaction.showModal(modal);
-  },
-  async submit(interaction:ModalSubmitInteraction) {
-    logger.debug(`[${PREFIX}] started!`);
+    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`timeoutModal`);
+    interaction.awaitModalSubmit({filter, time: 0})
+      .then(async (interaction) => {
+        logger.debug(`[${PREFIX}] started!`);
 
-    channel = interaction.channel as TextChannel;
-    actor = interaction.member as GuildMember;
-    logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor.displayName, null, 2)}`);
-    logger.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
-    logger.debug(`[${PREFIX}] target: ${JSON.stringify((target as GuildMember).displayName, null, 2)}`);
-    logger.debug(`[${PREFIX}] channel: ${JSON.stringify(channel.name, null, 2)}`);
-    const reason = stripIndents`
-    > ${interaction.fields.getTextInputValue(
+        channel = interaction.channel as TextChannel;
+        actor = interaction.member as GuildMember;
+        logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor.displayName, null, 2)}`);
+        logger.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
+        logger.debug(`[${PREFIX}] target: ${JSON.stringify((target as GuildMember).displayName, null, 2)}`);
+        logger.debug(`[${PREFIX}] channel: ${JSON.stringify(channel.name, null, 2)}`);
+        const reason = stripIndents`
+        > ${interaction.fields.getTextInputValue(
     'timeoutReason') ? interaction.fields.getTextInputValue('timeoutReason') : 'No reason given'}
+    
+        [The offending message:](${messageUrl})
+        > ${message}
+    
+        `;
 
-    [The offending message:](${messageUrl})
-    > ${message}
+        const toggle = undefined;
+        const duration = interaction.fields.getTextInputValue('timeoutDuration');
+        const result = await moderate(actor, command, target, channel, toggle, reason, duration, interaction);
+        logger.debug(`[${PREFIX}] Result: ${result}`);
 
-    `;
+        interaction.reply(result);
 
-    const toggle = undefined;
-    const duration = interaction.fields.getTextInputValue('timeoutDuration');
-    const result = await moderate(actor, command, target, channel, toggle, reason, duration, interaction);
-    logger.debug(`[${PREFIX}] Result: ${result}`);
-
-    interaction.reply(result);
-
-    logger.debug(`[${PREFIX}] finished!`);
+        logger.debug(`[${PREFIX}] finished!`);
+      });
   },
 };
