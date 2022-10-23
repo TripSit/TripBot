@@ -12,7 +12,6 @@ import {commandRun} from '../utils/commandRun';
 import logger from '../../global/utils/logger';
 import {buttonClick} from '../utils/buttonClick';
 import {selectMenu} from '../utils/selectMenu';
-import {modalSubmit} from '../utils/modalSubmit';
 import {autocomplete} from '../utils/autocomplete';
 
 import * as path from 'path';
@@ -65,10 +64,6 @@ export const interactionCreate: interactionEvent = {
         return;
       };
       logger.debug(`[${PREFIX}] Unknown interaction!`);
-    }
-
-    if (interaction.type === InteractionType.ModalSubmit) {
-      modalSubmit(interaction);
     }
   },
 };

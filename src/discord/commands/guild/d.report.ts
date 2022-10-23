@@ -39,13 +39,17 @@ export const report: SlashCommand = {
 
     const actor = interaction.member as GuildMember;
     const command = 'report';
-    const target = interaction.options.getString('target');
+    const target = interaction.options.getString('target')!;
     const channel = interaction.options.getString('channel');
     const toggle = undefined;
     const reason = `${interaction.options.getString('reason')}`;
     const duration = undefined;
 
-    const result = await moderate(actor!, command, target!, channel!, toggle, reason, duration, interaction);
+    logger.debug(`[${PREFIX}] target: ${target}`);
+
+    const targetMember = interaction.guild!.members.cache.find((member) => member.user.tag === target) as GuildMember;
+
+    const result = await moderate(actor!, command, targetMember, channel!, toggle, reason, duration, interaction);
     logger.debug(`[${PREFIX}] Result: ${result}`);
 
     embed.setDescription(result);

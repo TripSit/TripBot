@@ -95,10 +95,14 @@ export const mod: SlashCommand = {
     const duration = interaction.options.getString('duration') || undefined;
     const channel = interaction.options.getString('channel');
 
+    logger.debug(`[${PREFIX}] target: ${target}`);
+
+    const targetMember = interaction.guild!.members.cache.find((member) => member.user.tag === target) as GuildMember;
+
     const result = await moderate(
       actor as GuildMember,
       command,
-      target!,
+      targetMember,
       channel,
       toggle,
       reason,
