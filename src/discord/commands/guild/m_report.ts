@@ -32,28 +32,38 @@ export const mReport: MessageCommand = {
     const modal = new ModalBuilder()
       .setCustomId('reportModal')
       .setTitle('Tripbot Report');
-    const reportReason = new TextInputBuilder()
+    const privReason = new TextInputBuilder()
       .setLabel('Why are you reporting this?')
       .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder('Please be descriptive!')
       .setRequired(true)
-      .setCustomId('reportReason');
+      .setCustomId('privReason');
 
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(reportReason);
+    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
     modal.addComponents(firstActionRow);
     await interaction.showModal(modal);
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`reportModal`);
     interaction.awaitModalSubmit({filter, time: 0})
       .then(async (interaction) => {
-        const reason = stripIndents`
-        > ${interaction.fields.getTextInputValue('reportReason')}
+        const privReason = stripIndents`
+        > ${interaction.fields.getTextInputValue('privReason')}
     
         [The offending message:](${messageUrl})
         > ${message}
     
         `;
 
-        const result = await moderate(actor, 'report', target, channel, undefined, reason, undefined, interaction);
+        const result = await moderate(
+          actor,
+          'report',
+          target,
+          channel,
+          undefined,
+          privReason,
+          undefined,
+          undefined,
+          interaction,
+        );
         logger.debug(`[${PREFIX}] Result: ${result}`);
         interaction.reply(result);
 

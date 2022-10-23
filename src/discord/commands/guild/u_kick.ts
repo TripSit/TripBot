@@ -27,22 +27,40 @@ export const uKick: UserCommand = {
     const modal = new ModalBuilder()
       .setCustomId('kickModal')
       .setTitle('Tripbot Kick');
-    const banReason = new TextInputBuilder()
+    const privReason = new TextInputBuilder()
       .setLabel('Why are you kicking this person?')
       .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('No reason provided')
+      .setPlaceholder('Tell the team why you are kicking this user.')
       .setRequired(true)
-      .setCustomId('kickReason');
+      .setCustomId('privReason');
+    const pubReason = new TextInputBuilder()
+      .setLabel('What should we tell the user?')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder('This will be sent to the user!')
+      .setRequired(true)
+      .setCustomId('pubReason');
 
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(banReason);
-    modal.addComponents(firstActionRow);
+    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
+    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
+    modal.addComponents(firstActionRow, secondActionRow);
     await interaction.showModal(modal);
 
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`kickModal`);
     interaction.awaitModalSubmit({filter, time: 0})
       .then(async (interaction) => {
-        const reason = interaction.fields.getTextInputValue('kickReason');
-        const result = await moderate(actor, 'kick', target, undefined, 'on', reason, undefined, interaction);
+        const privReason = interaction.fields.getTextInputValue('privReason');
+        const pubReason = interaction.fields.getTextInputValue('pubReason');
+        const result = await moderate(
+          actor,
+          'kick',
+          target,
+          undefined,
+          'on',
+          privReason,
+          pubReason,
+          undefined,
+          interaction,
+        );
 
         logger.debug(`[${PREFIX}] Result: ${result}`);
         interaction.reply(result);

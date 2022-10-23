@@ -3,10 +3,12 @@ import {
   ChatInputCommandInteraction,
   Colors,
   GuildMember,
+  TextChannel,
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {moderate} from '../../../global/commands/g.moderate';
+import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -49,7 +51,11 @@ export const report: SlashCommand = {
 
     const targetMember = interaction.guild!.members.cache.find((member) => member.user.tag === target) as GuildMember;
 
-    const result = await moderate(actor!, command, targetMember, channel!, toggle, reason, duration, interaction);
+    logger.debug(`[${PREFIX}] channel: ${channel}`);
+    const targetGuild = await interaction!.client.guilds.fetch(env.DISCORD_GUILD_ID);
+    const targetChannel = await targetGuild.channels.fetch((channel as string).slice(2, -1)) as TextChannel;
+
+    const result = await moderate(actor!, command, targetMember, targetChannel, toggle, reason, duration, interaction);
     logger.debug(`[${PREFIX}] Result: ${result}`);
 
     embed.setDescription(result);

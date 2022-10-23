@@ -27,22 +27,32 @@ export const uNote: UserCommand = {
     const modal = new ModalBuilder()
       .setCustomId('noteModal')
       .setTitle('Tripbot Note');
-    const noteReason = new TextInputBuilder()
+    const privReason = new TextInputBuilder()
       .setLabel('What are you noting about this person?')
       .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('No reason provided')
+      .setPlaceholder('Tell the team why you are noting this user.')
       .setRequired(true)
-      .setCustomId('noteReason');
+      .setCustomId('privReason');
 
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(noteReason);
+    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
     modal.addComponents(firstActionRow);
     await interaction.showModal(modal);
 
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`noteModal`);
     interaction.awaitModalSubmit({filter, time: 0})
       .then(async (interaction) => {
-        const reason = interaction.fields.getTextInputValue('noteReason');
-        const result = await moderate(actor, 'note', target, undefined, 'on', reason, undefined, interaction);
+        const privReason = interaction.fields.getTextInputValue('privReason');
+        const result = await moderate(
+          actor,
+          'note',
+          target,
+          undefined,
+          'on',
+          privReason,
+          undefined,
+          undefined,
+          interaction,
+        );
 
         logger.debug(`[${PREFIX}] Result: ${result}`);
         interaction.reply(result);

@@ -28,7 +28,7 @@ export const contact: SlashCommand = {
           // eslint-disable-next-line max-len
           value: '[Join our discord](http://discord.gg/TripSit)\nTalk to one of the admins.\nThis is the quickest/easiest way to get in contact with Moonbear (bot owner)',
         },
-        {name: 'IRC', value: '[Webchat](http://chat.tripsit.me)'},
+        {name: 'Webchat', value: '[Webchat](http://chat.tripsit.me)'},
         {name: 'Bot Issues Email', value: 'discord_bot @ tripsit (dot) me'},
         {name: 'Drug Information Issues Email', value: 'content @ tripsit (dot) me'},
       )

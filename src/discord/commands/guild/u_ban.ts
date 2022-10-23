@@ -27,22 +27,40 @@ export const uBan: UserCommand = {
     const modal = new ModalBuilder()
       .setCustomId('banModal')
       .setTitle('Tripbot Ban');
-    const banReason = new TextInputBuilder()
+    const privReason = new TextInputBuilder()
       .setLabel('Why are you banning this user?')
       .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('No reason provided')
+      .setPlaceholder('Tell the team why you are banning this user.')
       .setRequired(true)
-      .setCustomId('banReason');
+      .setCustomId('privReason');
+    const pubReason = new TextInputBuilder()
+      .setLabel('What should we tell the user?')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder('This will be sent to the user!')
+      .setRequired(true)
+      .setCustomId('pubReason');
 
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(banReason);
-    modal.addComponents(firstActionRow);
+    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
+    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
+    modal.addComponents(firstActionRow, secondActionRow);
     await interaction.showModal(modal);
 
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`banModal`);
     interaction.awaitModalSubmit({filter, time: 0})
       .then(async (interaction) => {
-        const reason = interaction.fields.getTextInputValue('banReason');
-        const result = await moderate(actor, 'ban', target, undefined, 'on', reason, undefined, interaction);
+        const privReason = interaction.fields.getTextInputValue('privReason');
+        const pubReason = interaction.fields.getTextInputValue('pubReason');
+
+        const result = await moderate(
+          actor,
+          'ban',
+          target,
+          undefined,
+          'on',
+          privReason,
+          pubReason,
+          undefined,
+          interaction);
 
         logger.debug(`[${PREFIX}] Result: ${result}`);
         interaction.reply(result);

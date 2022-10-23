@@ -3,10 +3,12 @@ import {
   ChatInputCommandInteraction,
   Colors,
   GuildMember,
+  TextChannel,
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {moderate} from '../../../global/commands/g.moderate';
+import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -90,29 +92,43 @@ export const mod: SlashCommand = {
     const actor = interaction.member;
     const command = interaction.options.getSubcommand();
     const target = interaction.options.getString('target');
-    const toggle = interaction.options.getString('toggle') || 'on';
+    let toggle = interaction.options.getString('toggle') as 'on' | 'off' | undefined;
     const reason = interaction.options.getString('reason') || 'No reason provided';
+    // const reason = interaction.options.getString('reason') || 'No reason provided';
     const duration = interaction.options.getString('duration') || undefined;
     const channel = interaction.options.getString('channel');
 
-    logger.debug(`[${PREFIX}] target: ${target}`);
+    if (toggle === null) {
+      toggle = 'on';
+    }
 
-    const targetMember = interaction.guild!.members.cache.find((member) => member.user.tag === target) as GuildMember;
+    logger.debug(`[${PREFIX}] toggle: ${toggle}`);
+
+    const targetGuild = await interaction!.client.guilds.fetch(env.DISCORD_GUILD_ID);
+
+    logger.debug(`[${PREFIX}] target: ${target}`);
+    const targetMember = await targetGuild.members.fetch((target as string).slice(2, -1)) as GuildMember;
+    logger.debug(`[${PREFIX}] targetMember: ${targetMember}`);
+
+    logger.debug(`[${PREFIX}] channel: ${channel}`);
+    const targetChannel = channel !== null ?
+      await targetGuild.channels.fetch((channel as string).slice(2, -1)) as TextChannel :
+      undefined;
+
 
     const result = await moderate(
       actor as GuildMember,
       command,
       targetMember,
-      channel,
+      targetChannel,
       toggle,
       reason,
+      undefined,
       duration,
       interaction);
     logger.debug(`[${PREFIX}] Result: ${result}`);
 
-    embed.setDescription(result);
-
-    interaction.editReply({embeds: [embed]});
+    interaction.editReply(result);
 
     logger.debug(`[${PREFIX}] finished!`);
   },

@@ -32,27 +32,34 @@ export const mTimeout: MessageCommand = {
     const modal = new ModalBuilder()
       .setCustomId('timeoutModal')
       .setTitle('Tripbot Timeout');
-    const timeoutReason = new TextInputBuilder()
+    const privReason = new TextInputBuilder()
       .setLabel('Why are you timouting this person?')
       .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('Why are you timeouting this person?')
+      .setPlaceholder('Tell the team why you are timeouting this user.')
       .setRequired(true)
-      .setCustomId('timeoutReason');
+      .setCustomId('privReason');
+    const pubReason = new TextInputBuilder()
+      .setLabel('What should we tell the user?')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder('This will be sent to the user!')
+      .setRequired(true)
+      .setCustomId('pubReason');
     const timeoutDuration = new TextInputBuilder()
       .setLabel('Timeout for how long? (Max/default 7 days)')
       .setStyle(TextInputStyle.Short)
       .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
       .setCustomId('timeoutDuration');
 
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutReason);
-    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutDuration);
-    modal.addComponents(firstActionRow, secondActionRow);
+    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
+    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
+    const thirdActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutDuration);
+    modal.addComponents(firstActionRow, secondActionRow, thirdActionRow);
     await interaction.showModal(modal);
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`timeoutModal`);
     interaction.awaitModalSubmit({filter, time: 0})
       .then(async (interaction) => {
-        const reason = stripIndents`
-        > ${interaction.fields.getTextInputValue('timeoutReason')}
+        const privReason = stripIndents`
+        > ${interaction.fields.getTextInputValue('privReason')}
     
         [The offending message:](${messageUrl})
         > ${message}
@@ -60,7 +67,17 @@ export const mTimeout: MessageCommand = {
         `;
 
         const duration = interaction.fields.getTextInputValue('timeoutDuration');
-        const result = await moderate(actor, 'timeout', target, channel, undefined, reason, duration, interaction);
+        const result = await moderate(
+          actor,
+          'timeout',
+          target,
+          channel,
+          undefined,
+          privReason,
+          interaction.fields.getTextInputValue('pubReason'),
+          duration,
+          interaction,
+        );
         logger.debug(`[${PREFIX}] Result: ${result}`);
         interaction.reply(result);
       });

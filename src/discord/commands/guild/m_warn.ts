@@ -32,28 +32,43 @@ export const mWarn: MessageCommand = {
     const modal = new ModalBuilder()
       .setCustomId('warnModal')
       .setTitle('Tripbot Warn');
-    const warnReason = new TextInputBuilder()
+    const privReason = new TextInputBuilder()
       .setLabel('Why are you warning this person?')
       .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('Why are you warning this person?')
+      .setPlaceholder('Tell the team why you are warning this user.')
       .setRequired(true)
-      .setCustomId('reasonGiven');
-
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(warnReason);
-    modal.addComponents(firstActionRow);
+      .setCustomId('privReason');
+    const pubReason = new TextInputBuilder()
+      .setLabel('What should we tell the user?')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder('This will be sent to the user!')
+      .setRequired(true)
+      .setCustomId('pubReason');
+    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
+    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
+    modal.addComponents(firstActionRow, secondActionRow);
     await interaction.showModal(modal);
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`warnModal`);
     interaction.awaitModalSubmit({filter, time: 0})
       .then(async (interaction) => {
-        const reason = stripIndents`
-        > ${interaction.fields.getTextInputValue('reasonGiven')}
+        const privReason = stripIndents`
+        > ${interaction.fields.getTextInputValue('privReason')}
     
         [The offending message:](${messageUrl})
         > ${message}
     
         `;
 
-        const result = await moderate(actor, 'warn', target, channel, undefined, reason, undefined, interaction);
+        const result = await moderate(
+          actor,
+          'warn',
+          target,
+          channel,
+          undefined,
+          privReason,
+          interaction.fields.getTextInputValue('pubReason'),
+          undefined,
+          interaction);
         logger.debug(`[${PREFIX}] Result: ${result}`);
         interaction.reply(result);
       });

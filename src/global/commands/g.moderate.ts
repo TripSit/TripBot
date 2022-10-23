@@ -10,6 +10,7 @@ import {
   Guild,
   ModalSubmitInteraction,
   UserContextMenuCommandInteraction,
+  ColorResolvable,
 } from 'discord.js';
 import {
   ButtonStyle,
@@ -50,13 +51,14 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
 );
 
 /**
- * Takes a user and returns information on them
- * @param {string | GuildMember} actor
+ * Takes a user and performs a moderation action on them
+ * @param {GuildMember} actor
  * @param {string} command
- * @param {string} target
- * @param {string} channel
+ * @param {GuildMember} target
+ * @param {TextChannel} channel
  * @param {string} toggle
- * @param {string} reason
+ * @param {string} privReason
+ * @param {string} pubReason
  * @param {string} duration
  * @param {ChatInputCommandInteraction} interaction
  */
@@ -64,9 +66,10 @@ export async function moderate(
   actor: GuildMember,
   command:string,
   target: GuildMember,
-  channel: unknown,
-  toggle: string | undefined,
-  reason: string | undefined,
+  channel: TextChannel | undefined,
+  toggle: 'on' | 'off' | undefined,
+  privReason: string | undefined,
+  pubReason: string | undefined,
   duration: string | undefined,
   interaction:ChatInputCommandInteraction | ModalSubmitInteraction | UserContextMenuCommandInteraction | undefined,
 ):Promise<any> {
@@ -77,58 +80,35 @@ export async function moderate(
       Target: ${target}
       Channel: ${channel}
       Duration: ${duration}
-      Reason: ${reason}
+      PubReason: ${pubReason}
+      PrivReason: ${privReason}
     `);
 
   let minutes = 604800000;
 
   // Determine if the actor is on the team
-  let actorIsTeamMember = false;
-  if ((actor as GuildMember).roles) {
+  if (actor.roles) {
     // If you're unbanning a actor they wont have roles
-    (actor as GuildMember).roles.cache.forEach(async (role) => {
+    actor.roles.cache.forEach(async (role) => {
       if (teamRoles.includes(role.id)) {
-        actorIsTeamMember = true;
+        // Actor Team check - Only team members can use mod actions (except report)
+        if (command !== 'report') {
+          // logger.debug(`[${PREFIX}] actor is NOT a team member!`);
+          return {content: stripIndents`Hey ${actor}, you need to be a team member to ${command}!`, ephemeral: true};
+        }
       }
     });
-  }
-
-  // Actor Team check - Only team members can use mod actions (except report)
-  if (!actorIsTeamMember && command !== 'report') {
-    logger.debug(`[${PREFIX}] actor is NOT a team member!`);
-    return stripIndents`Hey ${actor}, you need to be a team member to ${command}!`;
   }
 
   // Determine if the target is on the team
-  let targetIsTeamMember = false;
-  if ((target as GuildMember).roles) {
-    (target as GuildMember).roles.cache.forEach(async (role) => {
+  if (target.roles) {
+    target.roles.cache.forEach(async (role) => {
       if (teamRoles.includes(role.id)) {
-        targetIsTeamMember = true;
+        // Target Team check - Only NON team members can be targeted by mod actions
+        logger.debug(`[${PREFIX}] Target is a team member!`);
+        return {content: stripIndents`Hey ${actor}, you cannot ${command} a team member!`, ephemeral: true};
       }
     });
-  }
-
-  // Target Team check - Only NON team members can be targeted by mod actions
-  if (targetIsTeamMember) {
-    logger.debug(`[${PREFIX}] Target is a team member!`);
-    return stripIndents`Hey ${actor}, you cannot ${command} a team member!`;
-  }
-
-  // Get channel object
-  let targetChannel = {} as TextChannel;
-  if (channel) {
-    if ((channel as TextChannel).guild) {
-      // If the query is an object and has the userId property, it's a discord user
-      logger.debug(`[${PREFIX}] Channel given is already channel object!`);
-      targetChannel = channel as TextChannel;
-    } else if ((channel as string).startsWith('<#') && (channel as string).endsWith('>')) {
-      // Discord channel mentions start with <#
-      const targetGuild = await interaction!.client.guilds.fetch(env.DISCORD_GUILD_ID);
-      targetChannel = await targetGuild.channels.fetch((channel as string).slice(2, -1)) as TextChannel;
-    }
-    logger.debug(`[${PREFIX}] targetChannel: ${JSON.stringify(targetChannel, null, 2)}`);
-    logger.debug(`[${PREFIX}] targetChannel: ${targetChannel.name}`);
   }
 
   // Get duration
@@ -138,129 +118,147 @@ export async function moderate(
       604800000;
     logger.debug(`[${PREFIX}] minutes: ${minutes}`);
   }
-
-  logger.debug(`[${PREFIX}] command: ${command}`);
   logger.debug(`[${PREFIX}] duration: ${duration}`);
-  if (command === 'warn') {
-    const warnEmbed = embedTemplate()
-      .setColor(Colors.Yellow)
-      .setTitle('Warning!')
-      .setDescription(stripIndents`
-        You have been warned by Team TripSit:
 
-        ${reason}
-
-        Please read the rules and be respectful of them.
-
-        Contact a TripSit Team Member if you have any questions!`);
-    try {
-      await target.user.send({embeds: [warnEmbed], components: [warnButtons]});
-    } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
-    }
-  } else if (command === 'timeout') {
+  // Perform various mod actions
+  let embedColor = Colors.Red as ColorResolvable;
+  let embedTitle = '';
+  let verb = '';
+  if (command === 'timeout') {
     if (toggle === 'on' || toggle === null) {
+      embedColor = Colors.Yellow;
+      embedTitle = 'Timeout!';
+      verb = 'timed out';
       try {
-        // The length of the timout defaults to 1 week if no time is given
-
-        logger.debug(`[${PREFIX}] timeout minutes: ${minutes}`);
-        target.timeout(minutes, reason);
-        await target.user.send(
-          `You have been quieted for ${ms(minutes, {long: true})}${reason ? ` because:\n ${reason}` : ''} `);
+        target.timeout(minutes, privReason);
       } catch (err) {
         logger.error(`[${PREFIX}] Error: ${err}`);
       }
     } else {
+      embedColor = Colors.Green;
+      embedTitle = 'Untimeout!';
+      verb = 'removed from time-out';
       try {
-        await target.user.send(`You have been unquieted because:\n${reason}`);
-        target.timeout(0, reason);
-        logger.debug(`[${PREFIX}] I untimeouted ${target.displayName} because\n '${reason}'!`);
+        target.timeout(0, privReason);
+        logger.debug(`[${PREFIX}] I untimeouted ${target.displayName} because\n '${privReason}'!`);
       } catch (err) {
         logger.error(`[${PREFIX}] Error: ${err}`);
       }
     }
   } else if (command === 'kick') {
+    embedColor = Colors.Orange;
+    embedTitle = 'Kicked!';
+    verb = 'kicked';
     try {
-      // await target.user.send(`You have been kicked from the TripSit guild because\n ${reason}`);
       target.kick();
     } catch (err) {
       logger.error(`[${PREFIX}] Error: ${err}`);
     }
   } else if (command === 'ban') {
     if (toggle === 'on' || toggle === null) {
+      embedColor = Colors.Red;
+      embedTitle = 'Banned!';
+      verb = 'banned';
       try {
-        // The length of the timout defaults to forever if no time is given
-        minutes = duration ?
-          await parseDuration(duration) :
-          0;
-        logger.debug(`[${PREFIX}] minutes: ${minutes}`);
         const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-        targetGuild.members.ban(target, {reason});
-        // await targetUser.send(
-        //     `You have been banned ${minutes ? `for ${ms(minutes, {long: true})}` : ''}\
-        //   ${reason ? ` because\n ${reason}` : ''} `);
+        targetGuild.members.ban(target, {reason: privReason});
+      } catch (err) {
+        logger.error(`[${PREFIX}] Error: ${err}`);
+      }
+    } else {
+      embedColor = Colors.Green;
+      embedTitle = 'Un-banned!';
+      verb = 'un-banned';
+      try {
+        const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+        await targetGuild.bans.fetch();
+        await targetGuild.bans.remove(target.user, privReason);
+      } catch (err) {
+        logger.error(`[${PREFIX}] Error: ${err}`);
+      }
+    }
+  } else if (command === 'underban') {
+    if (toggle === 'on' || toggle === null) {
+      embedColor = Colors.Blue;
+      embedTitle = 'Underbanned!';
+      verb = 'underbanned';
+      try {
+        const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+        targetGuild.members.ban(target, {reason: privReason});
       } catch (err) {
         logger.error(`[${PREFIX}] Error: ${err}`);
       }
     } else {
       try {
-        logger.debug(`[${PREFIX}] targetUser.id: ${target.user.id}`);
         const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-        const bans = await targetGuild.bans.fetch();
-        logger.debug(`[${PREFIX}] targetGuild.bans.fetch(): ${bans}`);
-        await targetGuild.bans.remove(target.user, reason);
-        logger.debug(`[${PREFIX}] I unbanned ${target.displayName}!`);
-        target.user.send(`You have been unbanned for ${reason}`);
+        await targetGuild.bans.fetch();
+        await targetGuild.bans.remove(target.user, privReason);
       } catch (err) {
         logger.error(`[${PREFIX}] Error: ${err}`);
       }
     }
+  } else if (command === 'warn') {
+    embedColor = Colors.Yellow;
+    embedTitle = 'Warned!';
+    verb = 'warned';
   }
-  // else if (command === 'underban') {
-  //     if (toggle === 'on' || toggle === null) {
-  //       try {
-  //         logger.debug(`[${PREFIX}] I would underban on discord`);
-  //         await target.user.send(`You have been underbanned for
-  // ${ms(minutes, { long: true })}${reason ? ` because:\n ${reason}` : ''} `);
-  //       } catch (err) {
-  //         logger.error(`[${PREFIX}] Error: ${err}`);
-  //       }
-  //     } else {
-  //       try {
-  //         logger.debug(`[${PREFIX}] I would remove underban on discord`);
-  //         await target.user.send(`The underban has been removed because:\n${reason}`);
-  //       } catch (err) {
-  //         logger.error(`[${PREFIX}] Error: ${err}`);
-  //       }
-  //     }
 
-  // Get the moderator role
-  const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
-  const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
+  const warnEmbed = embedTemplate()
+    .setColor(embedColor)
+    .setTitle(embedTitle)
+    .setDescription(stripIndents`
+    Hey ${target}, you have been ${verb} ${duration ? `for ${ms(minutes, {long: true})}` : ''} by Team TripSit:
 
-  const targetEmbed = embedTemplate()
+    ${pubReason}
+
+    **Do not message a moderator to talk about this**
+    
+    You can respond to this bot and it will provide you a way to appeal!
+
+    Please read the rules and be respectful of them.
+
+    https://tripsit.me/rules
+    `);
+
+  await target.user.send({embeds: [warnEmbed], components: [warnButtons]});
+
+  // Send the embed to the mod channel
+  const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
+  if (command !== 'note') {
+    // We must send the mention outside of the embed, cuz mentions dont work in embeds
+    const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
+    const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
+    modChan.send(stripIndents`
+      Hey ${roleModerator}!
+      ${actor.displayName} ${verb} ${target.displayName}\
+      ${channel ? `in ${channel.name}` : ''}\
+      ${duration ? `for ${ms(minutes, {long: true})}` : ''}\
+      ${privReason ? `\nPriv Reason: ${privReason}` : ''}
+      `);
+  }
+  logger.debug(`[${PREFIX}] sent a message to the moderators room`);
+
+  // Create the embed that will be sent to the mod-log channel
+  const modlogEmbed = embedTemplate()
     .setColor(Colors.Blue)
-  // .setImage(target.displayAvatarURL)
-  // .setThumbnail(target.displayAvatarURL)
     .setDescription(`${actor} ${command}ed ${target.displayName}\
-      ${targetChannel.name ? ` in ${targetChannel.name}` : ''}\
+      ${channel ? ` in ${channel.name}` : ''}\
       ${duration ? ` for ${ms(minutes, {long: true})}` : ''}\
-      ${reason ? ` because\n ${reason}` : ''}`)
+      ${privReason ? ` because\n ${privReason}` : ''}`)
     .addFields(
       {name: 'Displayname', value: `${target.displayName}`, inline: true},
       {name: 'Username', value: `${target.user.username}`, inline: true},
       {name: 'ID', value: `${target.id}`, inline: true},
     );
-  targetEmbed.addFields(
-    {
-      name: 'Created',
-      value: `${time(target.user.createdAt, 'R')}`, inline: true},
+  modlogEmbed.addFields(
+    {name: 'Created', value: `${time(target.user.createdAt, 'R')}`, inline: true},
     {name: 'Joined', value: `${target.joinedAt ? time(target.joinedAt!, 'R') : 'Unknown'}`, inline: true},
   );
 
+  // If this is the info command then just return with the above embed in an emphemeral message
   if (command === 'info') {
     try {
-      const reply = {embeds: [targetEmbed], ephemeral: true};
+      const reply = {embeds: [modlogEmbed], ephemeral: true};
       logger.debug(`[${PREFIX}] returned info about ${target.displayName}`);
       logger.debug(`[${PREFIX}] finished!`);
       return reply;
@@ -269,19 +267,12 @@ export async function moderate(
     }
   }
 
-  logger.debug(`[${PREFIX}] CHANNEL_MODERATORS: ${env.CHANNEL_MODERATORS}`);
-  const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
-  // We must send the mention outside of the embed, cuz mentions dont work in embeds
-  if (command !== 'note') {
-    modChan.send(`Hey <@&${roleModerator.id}>!`);
-  }
-  modChan.send({embeds: [targetEmbed]});
-  logger.debug(`[${PREFIX}] sent a message to the moderators room`);
-
+  // Send the embed to the mod-log room
   const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
-  modlog.send({embeds: [targetEmbed]});
+  modlog.send({embeds: [modlogEmbed]});
   logger.debug(`[${PREFIX}] sent a message to the modlog room`);
 
+  // Return a message to the user confirming the user was acted on
   logger.debug(`[${PREFIX}] ${target.displayName} has been ${command}ed!`);
   const response = embedTemplate()
     .setColor(Colors.Yellow)
