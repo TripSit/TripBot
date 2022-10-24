@@ -218,39 +218,6 @@ export async function moderate(
   }
 
   // Update the database
-  // let actorModActions = [] as modActionDict[];
-  let targetModActions = [] as modActionDict[];
-  if (global.db) {
-    const actionData = {
-      actor: actor.id,
-      command: command,
-      target: target.id,
-      channel: channel ? channel.id : null,
-      duration: duration ? minutes : null,
-      privReason: privReason,
-      pubReason: pubReason,
-    };
-
-    const participants = [actor.id, target.id];
-    participants.forEach(async (participant, index) => {
-      const ref = db.ref(`${env.FIREBASE_DB_USERS}/${participant}/modActions/`);
-      await ref.once('value', (data) => {
-        let actions = [];
-        if (data.val() !== null) {
-          actions = data.val();
-        }
-        actions.push({[Date.now().valueOf()]: actionData});
-        // if (index === 0) {
-        //   actorModActions = actions;
-        // }
-        if (index === 1) {
-          targetModActions = actions;
-        }
-        ref.set(actions);
-      });
-    });
-  }
-
   // Get the count of times this action has been performed on this user from targetModActions
   const actionDict = {
     timeout: 0,
@@ -261,14 +228,37 @@ export async function moderate(
     note: 0,
     report: 0,
   };
-  if (targetModActions.length > 0) {
-    targetModActions.forEach((action) => {
-      const actionKey = Object.keys(action)[0];
-      const actionValue = action[actionKey];
-      const actionCommand = actionValue.command;
-      if (actionCommand in actionDict) {
-        actionDict[actionCommand as keyof typeof actionDict] += 1;
-      }
+  if (global.db) {
+    const actionData = {
+      actor: actor.id,
+      command: command,
+      target: target.id,
+      channel: channel ? channel.id : undefined,
+      duration: duration ? minutes : undefined,
+      privReason: privReason,
+      pubReason: pubReason,
+    };
+
+    const participants = [actor.id, target.id];
+    participants.forEach(async (participant, index) => {
+      const ref = db.ref(`${env.FIREBASE_DB_USERS}/${participant}/modActions/`);
+      await ref.once('value', (data) => {
+        let actions = {} as modActionDict;
+        if (data.val() !== null) {
+          actions = data.val();
+        }
+        actions[Date.now().valueOf().toString()] = actionData;
+        if (index === 1) {
+          Object.keys(actions).forEach((actionDate) => {
+            const actionValue = actions[actionDate];
+            const actionCommand = actionValue.command;
+            if (actionCommand in actionDict) {
+              actionDict[actionCommand as keyof typeof actionDict] += 1;
+            }
+          });
+        }
+        ref.set(actions);
+      });
     });
   }
 

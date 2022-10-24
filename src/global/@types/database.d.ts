@@ -14,7 +14,7 @@ export type userDbEntry = {
   };
   timezone?: string;
   experience?: expDict;
-  modActions: modActionDict[];
+  modActions: modActionDict;
 }
 
 export type modActionDict = {
@@ -23,11 +23,11 @@ export type modActionDict = {
     command: string;
     target: string;
     channel?: string;
-    duration?: string;
+    duration?: number;
     pubReason?: string;
     privReason?: string;
   };
-}
+};
 
 export type expDict = {
   total: expEntry,
