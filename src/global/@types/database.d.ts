@@ -5,13 +5,28 @@ export type userDbEntry = {
     karma_given: number;
     karma_received: number;
   }
-  discord?: discordEntry;
+  discord?: {
+    id: string;
+  };
   birthday?: {
     month: string;
     day: number;
   };
   timezone?: string;
   experience?: expDict;
+  modActions: modActionDict[];
+}
+
+export type modActionDict = {
+  [key: string]: {
+    actor: string;
+    command: string;
+    target: string;
+    channel?: string;
+    duration?: string;
+    pubReason?: string;
+    privReason?: string;
+  };
 }
 
 export type expDict = {
@@ -30,11 +45,6 @@ export type expEntry = {
   lastMessageChannel: string,
   mee6converted?: boolean
 }
-
-
-export type discordEntry = {
-  id: string;
-};
 
 export type ticketDbEntry = {
   issueDesc: string;

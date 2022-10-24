@@ -15,9 +15,11 @@ import {
 import {
   ButtonStyle,
 } from 'discord-api-types/v10';
+import {modActionDict} from '../@types/database.d';
 import {stripIndents} from 'common-tags';
 import {parseDuration} from '../utils/parseDuration';
 import {embedTemplate} from '../../discord/utils/embedTemplate';
+
 import ms from 'ms';
 import env from '../utils/env.config';
 import logger from '../utils/logger';
@@ -201,30 +203,120 @@ export async function moderate(
     embedColor = Colors.Yellow;
     embedTitle = 'Warned!';
     verb = 'warned';
+  } else if (command === 'note') {
+    embedColor = Colors.Yellow;
+    embedTitle = 'Note!';
+    verb = 'noted';
+  } else if (command === 'report') {
+    embedColor = Colors.Orange;
+    embedTitle = 'Report!';
+    verb = 'reported';
+  } else if (command === 'info') {
+    embedColor = Colors.Green;
+    embedTitle = 'Info!';
+    verb = 'got info on';
   }
 
-  const warnEmbed = embedTemplate()
-    .setColor(embedColor)
-    .setTitle(embedTitle)
-    .setDescription(stripIndents`
+  // Update the database
+  // let actorModActions = [] as modActionDict[];
+  let targetModActions = [] as modActionDict[];
+  if (global.db) {
+    const actionData = {
+      actor: actor.id,
+      command: command,
+      target: target.id,
+      channel: channel ? channel.id : null,
+      duration: duration ? minutes : null,
+      privReason: privReason,
+      pubReason: pubReason,
+    };
+
+    const participants = [actor.id, target.id];
+    participants.forEach(async (participant, index) => {
+      const ref = db.ref(`${env.FIREBASE_DB_USERS}/${participant}/modActions/`);
+      await ref.once('value', (data) => {
+        let actions = [];
+        if (data.val() !== null) {
+          actions = data.val();
+        }
+        actions.push({[Date.now().valueOf()]: actionData});
+        // if (index === 0) {
+        //   actorModActions = actions;
+        // }
+        if (index === 1) {
+          targetModActions = actions;
+        }
+        ref.set(actions);
+      });
+    });
+  }
+
+  // Get the count of times this action has been performed on this user from targetModActions
+  const actionDict = {
+    timeout: 0,
+    kick: 0,
+    ban: 0,
+    underban: 0,
+    warn: 0,
+    note: 0,
+    report: 0,
+  };
+  if (targetModActions.length > 0) {
+    targetModActions.forEach((action) => {
+      const actionKey = Object.keys(action)[0];
+      const actionValue = action[actionKey];
+      const actionCommand = actionValue.command;
+      if (actionCommand in actionDict) {
+        actionDict[actionCommand as keyof typeof actionDict] += 1;
+      }
+    });
+  }
+
+  const modlogEmbed = embedTemplate()
+    .setDescription(`${actor.displayName} ${command}ed ${target.displayName}`)
+    .setColor(Colors.Blue)
+    .addFields(
+      {name: 'Displayname', value: `${target.displayName}`, inline: true},
+      {name: 'Username', value: `${target.user.username}`, inline: true},
+      {name: 'ID', value: `${target.id}`, inline: true},
+      {name: 'Created', value: `${time(target.user.createdAt, 'R')}`, inline: true},
+      {name: 'Joined', value: `${target.joinedAt ? time(target.joinedAt!, 'R') : 'Unknown'}`, inline: true},
+      {name: '# of Reports', value: `${actionDict.report}`, inline: true},
+      {name: '# of Timeouts', value: `${actionDict.timeout}`, inline: true},
+      {name: '# of Warns', value: `${actionDict.warn}`, inline: true},
+      {name: '# of Kicks', value: `${actionDict.kick}`, inline: true},
+      {name: '# of Bans', value: `${actionDict.ban}`, inline: true},
+      {name: '# of Notes', value: `${actionDict.note}`, inline: true},
+      {name: '# of Tripsitmes', value: `TBD`, inline: true},
+      {name: '# of I\'m Good', value: `TBD`, inline: true},
+      {name: '# of Fucks to Give', value: '0', inline: true},
+    );
+
+  // Send a message to the user
+  if (command !== 'report' && command !== 'note' && command !== 'info') {
+    const warnEmbed = embedTemplate()
+      .setColor(embedColor)
+      .setTitle(embedTitle)
+      .setDescription(stripIndents`
     Hey ${target}, you have been ${verb} ${duration ? `for ${ms(minutes, {long: true})}` : ''} by Team TripSit:
 
     ${pubReason}
 
-    **Do not message a moderator to talk about this**
+    **Do not message a moderator to talk about this!**
     
-    You can respond to this bot and it will provide you a way to appeal!
-
+    ${command !== 'ban' && command !== 'underban' ?
+    `You can respond to this bot and it will allow you to talk to the team privately!` :
+    `You can send an email to appeals@tripsit.me to appeal this ban!`}
     Please read the rules and be respectful of them.
 
-    https://tripsit.me/rules
+    https://tripsit.me/rules 
     `);
+    await target.user.send({embeds: [warnEmbed], components: [warnButtons]});
+  }
 
-  await target.user.send({embeds: [warnEmbed], components: [warnButtons]});
-
-  // Send the embed to the mod channel
-  const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
-  if (command !== 'note') {
+  // Send the message to the mod channel
+  if (command !== 'note' && command !== 'info') {
+    const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
     // We must send the mention outside of the embed, cuz mentions dont work in embeds
     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
     const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
@@ -235,42 +327,26 @@ export async function moderate(
       ${duration ? `for ${ms(minutes, {long: true})}` : ''}\
       ${privReason ? `\nPriv Reason: ${privReason}` : ''}
       `);
+    modChan.send({embeds: [modlogEmbed]});
+    logger.debug(`[${PREFIX}] sent a message to the moderators room`);
   }
-  logger.debug(`[${PREFIX}] sent a message to the moderators room`);
 
-  // Create the embed that will be sent to the mod-log channel
-  const modlogEmbed = embedTemplate()
-    .setColor(Colors.Blue)
-    .setDescription(`${actor} ${command}ed ${target.displayName}\
-      ${channel ? ` in ${channel.name}` : ''}\
-      ${duration ? ` for ${ms(minutes, {long: true})}` : ''}\
-      ${privReason ? ` because\n ${privReason}` : ''}`)
-    .addFields(
-      {name: 'Displayname', value: `${target.displayName}`, inline: true},
-      {name: 'Username', value: `${target.user.username}`, inline: true},
-      {name: 'ID', value: `${target.id}`, inline: true},
-    );
-  modlogEmbed.addFields(
-    {name: 'Created', value: `${time(target.user.createdAt, 'R')}`, inline: true},
-    {name: 'Joined', value: `${target.joinedAt ? time(target.joinedAt!, 'R') : 'Unknown'}`, inline: true},
-  );
-
-  // If this is the info command then just return with the above embed in an emphemeral message
+  // If this is the info command then return with info
   if (command === 'info') {
     try {
-      const reply = {embeds: [modlogEmbed], ephemeral: true};
       logger.debug(`[${PREFIX}] returned info about ${target.displayName}`);
-      logger.debug(`[${PREFIX}] finished!`);
-      return reply;
+      return {embeds: [modlogEmbed], ephemeral: true};
     } catch (err) {
       logger.error(`[${PREFIX}] Error: ${err}`);
     }
   }
 
-  // Send the embed to the mod-log room
-  const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
-  modlog.send({embeds: [modlogEmbed]});
-  logger.debug(`[${PREFIX}] sent a message to the modlog room`);
+  // Send a message to the modlog room
+  if (command !== 'info') {
+    const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+    modlog.send({embeds: [modlogEmbed]});
+    logger.debug(`[${PREFIX}] sent a message to the modlog room`);
+  }
 
   // Return a message to the user confirming the user was acted on
   logger.debug(`[${PREFIX}] ${target.displayName} has been ${command}ed!`);

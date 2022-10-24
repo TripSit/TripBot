@@ -55,7 +55,17 @@ export const report: SlashCommand = {
     const targetGuild = await interaction!.client.guilds.fetch(env.DISCORD_GUILD_ID);
     const targetChannel = await targetGuild.channels.fetch((channel as string).slice(2, -1)) as TextChannel;
 
-    const result = await moderate(actor!, command, targetMember, targetChannel, toggle, reason, duration, interaction);
+    const result = await moderate(
+      actor,
+      command,
+      targetMember,
+      targetChannel,
+      toggle,
+      reason,
+      undefined,
+      duration,
+      interaction,
+    );
     logger.debug(`[${PREFIX}] Result: ${result}`);
 
     embed.setDescription(result);
