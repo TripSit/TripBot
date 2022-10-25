@@ -40,6 +40,64 @@ const teamRoles = [
   env.ROLE_DEVELOPER,
 ];
 
+const embedVariables = {
+  timeout: {
+    embedColor: Colors.Yellow,
+    embedTitle: 'Timeout!',
+    verb: 'timed out',
+  },
+  untimeout: {
+    embedColor: Colors.Green,
+    embedTitle: 'Untimeout!',
+    verb: 'removed from time-out',
+  },
+  kick: {
+    embedColor: Colors.Orange,
+    embedTitle: 'Kicked!',
+    verb: 'kicked',
+  },
+  ban: {
+    embedColor: Colors.Red,
+    embedTitle: 'Banned!',
+    verb: 'banned',
+  },
+  unban: {
+    embedColor: Colors.Green,
+    embedTitle: 'Un-banned!',
+    verb: 'un-banned',
+  },
+  underban: {
+    embedColor: Colors.Blue,
+    embedTitle: 'Underbanned!',
+    verb: 'underbanned',
+  },
+  ununderban: {
+    embedColor: Colors.Green,
+    embedTitle: 'Un-Underbanned!',
+    verb: 'un-underbanned',
+  },
+  warn: {
+    embedColor: Colors.Yellow,
+    embedTitle: 'Warned!',
+    verb: 'warned',
+  },
+  note: {
+    embedColor: Colors.Yellow,
+    embedTitle: 'Note!',
+    verb: 'noted',
+  },
+  report: {
+    embedColor: Colors.Orange,
+    embedTitle: 'Report!',
+    verb: 'reported',
+  },
+  info: {
+    embedColor: Colors.Green,
+    embedTitle: 'Info!',
+    verb: 'got info on',
+  },
+};
+
 const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
   new ButtonBuilder()
     .setCustomId('acknowledgebtn')
@@ -116,65 +174,6 @@ export async function moderate(
       604800000;
     logger.debug(`[${PREFIX}] minutes: ${minutes}`);
   }
-  logger.debug(`[${PREFIX}] duration: ${duration}`);
-
-  const embedVariables = {
-    timeout: {
-      embedColor: Colors.Yellow,
-      embedTitle: 'Timeout!',
-      verb: 'timed out',
-    },
-    untimeout: {
-      embedColor: Colors.Green,
-      embedTitle: 'Untimeout!',
-      verb: 'removed from time-out',
-    },
-    kick: {
-      embedColor: Colors.Orange,
-      embedTitle: 'Kicked!',
-      verb: 'kicked',
-    },
-    ban: {
-      embedColor: Colors.Red,
-      embedTitle: 'Banned!',
-      verb: 'banned',
-    },
-    unban: {
-      embedColor: Colors.Green,
-      embedTitle: 'Un-banned!',
-      verb: 'un-banned',
-    },
-    underban: {
-      embedColor: Colors.Blue,
-      embedTitle: 'Underbanned!',
-      verb: 'underbanned',
-    },
-    ununderban: {
-      embedColor: Colors.Green,
-      embedTitle: 'Un-Underbanned!',
-      verb: 'un-underbanned',
-    },
-    warn: {
-      embedColor: Colors.Yellow,
-      embedTitle: 'Warned!',
-      verb: 'warned',
-    },
-    note: {
-      embedColor: Colors.Yellow,
-      embedTitle: 'Note!',
-      verb: 'noted',
-    },
-    report: {
-      embedColor: Colors.Orange,
-      embedTitle: 'Report!',
-      verb: 'reported',
-    },
-    info: {
-      embedColor: Colors.Green,
-      embedTitle: 'Info!',
-      verb: 'got info on',
-    },
-  };
 
   // Send a message to the user
   /* eslint-disable max-len */
@@ -329,7 +328,6 @@ export async function moderate(
     logger.debug(`[${PREFIX}] targetActionDict: ${JSON.stringify(targetActionDict)}`);
     logger.debug(`[${PREFIX}] actorActionDict: ${JSON.stringify(actorActionDict)}`);
   }
-
   await populateActionDict();
 
   logger.debug(`[${PREFIX}] targetActionDict1: ${JSON.stringify(targetActionDict)}`);
