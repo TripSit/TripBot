@@ -269,69 +269,86 @@ export async function moderate(
     note: 0,
     report: 0,
   };
-  const actorActionDict = {
-    timeout: 0,
-    kick: 0,
-    ban: 0,
-    underban: 0,
-    warn: 0,
-    note: 0,
-    report: 0,
-  };
   /**
    * Get the count of times this action has been performed on this user from targetModActions and Update the database
   */
-  async function populateActionDict() {
-    if (global.db) {
-      const actionData = {
-        actor: actor.id,
-        command: command,
-        target: target.id,
-        duration: duration ? minutes : null,
-        privReason: privReason,
-        pubReason: pubReason,
-      };
+  // async function populateActionDict() {
+  //   if (global.db) {
+  //     const actionData = {
+  //       actor: actor.id,
+  //       command: command,
+  //       target: target.id,
+  //       duration: duration ? minutes : null,
+  //       privReason: privReason,
+  //       pubReason: pubReason,
+  //     };
 
-      const participants = [actor.id, target.id];
-      participants.forEach(async (participant, index) => {
-        const ref = db.ref(`${env.FIREBASE_DB_USERS}/${participant}/modActions/`);
-        await ref.once('value', (data) => {
-          let actions = {} as modActionDict;
-          if (data.val() !== null) {
-            actions = data.val();
-          }
-          actions[Date.now().valueOf().toString()] = actionData;
-          Object.keys(actions).forEach(async (actionDate) => {
-            const actionValue = actions[actionDate];
-            const actionCommand = actionValue.command;
-            // logger.debug(`[${PREFIX}] actionCommand: ${actionCommand}`);
-            if (index === 0) {
-              // logger.debug(`[${PREFIX}] index: ${index}`);
-              if (actionCommand in actorActionDict) {
-                // logger.debug(`[${PREFIX}] incrementing: ${actionCommand}`);
-                actorActionDict[actionCommand as keyof typeof actorActionDict] += 1;
-              }
-            }
-            if (index === 1) {
-              // logger.debug(`[${PREFIX}] index: ${index}`);
-              if (actionCommand in targetActionDict) {
-                // logger.debug(`[${PREFIX}] incrementing: ${actionCommand}`);
-                targetActionDict[actionCommand as keyof typeof targetActionDict] += 1;
-              }
-            }
-          });
-          // logger.debug(`[${PREFIX}] actions: ${JSON.stringify(actions, null, 2)}`);
-          ref.set(actions);
-        });
+  //     const participants = [actor.id, target.id];
+  //     participants.forEach(async (participant, index) => {
+  //       const ref = db.ref(`${env.FIREBASE_DB_USERS}/${participant}/modActions/`);
+  //       await ref.once('value', (data) => {
+  //         let actions = {} as modActionDict;
+  //         if (data.val() !== null) {
+  //           actions = data.val();
+  //         }
+  //         actions[Date.now().valueOf().toString()] = actionData;
+  //         Object.keys(actions).forEach(async (actionDate) => {
+  //           const actionValue = actions[actionDate];
+  //           const actionCommand = actionValue.command;
+  //           // logger.debug(`[${PREFIX}] actionCommand: ${actionCommand}`);
+  //           if (index === 0) {
+  //             // logger.debug(`[${PREFIX}] index: ${index}`);
+  //             if (actionCommand in actorActionDict) {
+  //               // logger.debug(`[${PREFIX}] incrementing: ${actionCommand}`);
+  //               actorActionDict[actionCommand as keyof typeof actorActionDict] += 1;
+  //             }
+  //           }
+  //           if (index === 1) {
+  //             // logger.debug(`[${PREFIX}] index: ${index}`);
+  //             if (actionCommand in targetActionDict) {
+  //               // logger.debug(`[${PREFIX}] incrementing: ${actionCommand}`);
+  //               targetActionDict[actionCommand as keyof typeof targetActionDict] += 1;
+  //             }
+  //           }
+  //         });
+  //         // logger.debug(`[${PREFIX}] actions: ${JSON.stringify(actions, null, 2)}`);
+  //         ref.set(actions);
+  //       });
+  //     });
+  //   }
+  //   logger.debug(`[${PREFIX}] targetActionDict: ${JSON.stringify(targetActionDict)}`);
+  //   logger.debug(`[${PREFIX}] actorActionDict: ${JSON.stringify(actorActionDict)}`);
+  // }
+  // await populateActionDict();
+
+  const actionData = {
+    actor: actor.id,
+    command: command,
+    target: target.id,
+    duration: duration ? minutes : null,
+    privReason: privReason,
+    pubReason: pubReason,
+  };
+  let actions = {} as modActionDict;
+  const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}/modActions/`);
+  await ref.once('value', (data) => {
+    if (data.val() !== null) {
+      actions = data.val();
+      actions[Date.now().valueOf().toString()] = actionData;
+      Object.keys(actions).forEach(async (actionDate) => {
+        const actionValue = actions[actionDate];
+        const actionCommand = actionValue.command;
+        if (actionCommand in targetActionDict) {
+          targetActionDict[actionCommand as keyof typeof targetActionDict] += 1;
+        }
       });
+      ref.set(actions);
     }
-    logger.debug(`[${PREFIX}] targetActionDict: ${JSON.stringify(targetActionDict)}`);
-    logger.debug(`[${PREFIX}] actorActionDict: ${JSON.stringify(actorActionDict)}`);
-  }
-  await populateActionDict();
+  });
 
-  logger.debug(`[${PREFIX}] targetActionDict1: ${JSON.stringify(targetActionDict)}`);
-  logger.debug(`[${PREFIX}] actorActionDict1: ${JSON.stringify(actorActionDict)}`);
+  // logger.debug(`[${PREFIX}] actions: ${JSON.stringify(actions)}`);
+  // logger.debug(`[${PREFIX}] targetActionDict: ${JSON.stringify(targetActionDict)}`);
+
 
   const modlogEmbed = embedTemplate()
     // eslint-disable-next-line
@@ -387,9 +404,9 @@ export async function moderate(
   }
 
   // Return a message to the user confirming the user was acted on
-  logger.debug(`[${PREFIX}] ${target.displayName} has been ${command}ed!`);
+  logger.debug(`[${PREFIX}] ${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}ed!`);
   const response = embedTemplate()
     .setColor(Colors.Yellow)
-    .setDescription(`${target.displayName} has been ${command}ed!`);
+    .setDescription(`${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}ed!`);
   return {embeds: [response], ephemeral: true};
 };

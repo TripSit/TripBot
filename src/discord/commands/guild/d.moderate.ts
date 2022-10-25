@@ -96,13 +96,13 @@ export const mod: SlashCommand = {
       toggle = 'on';
     }
 
-    logger.debug(`[${PREFIX}] toggle: ${toggle}`);
+    // logger.debug(`[${PREFIX}] toggle: ${toggle}`);
 
     const targetGuild = await interaction!.client.guilds.fetch(env.DISCORD_GUILD_ID);
 
-    logger.debug(`[${PREFIX}] target: ${target}`);
+    // logger.debug(`[${PREFIX}] target: ${target}`);
     const targetMember = await targetGuild.members.fetch((target as string).slice(2, -1)) as GuildMember;
-    logger.debug(`[${PREFIX}] targetMember: ${targetMember}`);
+    // logger.debug(`[${PREFIX}] targetMember: ${targetMember}`);
 
     let verb = '';
     if (command === 'ban') {
@@ -171,9 +171,12 @@ export const mod: SlashCommand = {
       .setCustomId('duration');
 
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
-    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
-    modal.addComponents(firstActionRow, secondActionRow);
+    modal.addComponents(firstActionRow);
 
+    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
+    if (['warn', 'timeout', 'kick', 'ban', 'underban'].includes(command)) {
+      modal.addComponents(secondActionRow);
+    }
     if (command === 'timeout') {
       const thirdActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutDuration);
       modal.addComponents(thirdActionRow);
