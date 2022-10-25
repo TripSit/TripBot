@@ -33,5 +33,18 @@ Firebase realtime database support
 ## Get in touch 
 Feel free to join our discord guild under https://discord.gg/tripsit 
 
+## Postgres stuff
+Okay so moonbear is using this section to take notes on how to use postgres, cuz i have no clue what im doing
 
+### Setup desktop programs
+1) Install/run pgAdmin4
+2) Create a database called tripsit
+3) Create a user called tripsit with password TripSitLol123\
+- If you don't use these credentials, change the env.config file
 
+Remember that postgres is a database that runs as a webserver, so you can access it from anywhere. You can also access it from the command line, but I'm not sure how to do that yet.
+
+### Setup project
+1) Install the project (npm install)
+- There is a database file called global/utils/database.ts that is used for all connections to the database
+2) Run the postgres-test file to make sure everything is working! (npm run postgres-test)

@@ -88,8 +88,16 @@ const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles},${otherRoles}`;
 /**
  * Creates the tripsit modal
  * @param {ButtonInteraction} interaction The interaction that started this
+ * @param {GuildMember?} memberInput The member being aced upon
+ * @param {string} triageGiven Given triage information
+ * @param {string} introGiven Given intro information
  */
-export async function tripsitmeClick(interaction:ButtonInteraction) {
+export async function tripsitmeClick(
+  interaction:ButtonInteraction,
+  memberInput?:GuildMember,
+  triageGiven?:string,
+  introGiven?:string,
+) {
   // Create the modal
 
   // logger.debug(`[${PREFIX}] interaction.customId: ${interaction.customId}`);
@@ -113,164 +121,153 @@ export async function tripsitmeClick(interaction:ButtonInteraction) {
     .setLabel('What\'s going on? Give us the details!')
     .setStyle(TextInputStyle.Paragraph)));
   await interaction.showModal(modal);
-}
 
-/**
- * This handles the submission of the tripsit modal
- * @param {ModalSubmitInteraction} interaction The interaction that was submitted
- * @param {GuildMember?} memberInput The member being aced upon
- * @param {string} triageGiven Given triage information
- * @param {string} introGiven Given intro information
- */
-export async function tripsitmeSubmit(
-  interaction:ModalSubmitInteraction,
-  memberInput?:GuildMember,
-  triageGiven?:string,
-  introGiven?:string,
-) {
-  logger.debug(`[${PREFIX}] Submit starting!`);
-  logger.debug(`[${PREFIX}] memberInput: ${memberInput}`);
+  const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`tripsitmeSubmit`);
+  interaction.awaitModalSubmit({filter, time: 0})
+    .then(async (interaction) => {
+      logger.debug(`[${PREFIX}] Submit starting!`);
+      logger.debug(`[${PREFIX}] memberInput: ${memberInput}`);
 
-  if (!interaction.guild) {
-    logger.debug(`[${PREFIX}] no guild!`);
-    interaction.reply('This must be performed in a guild!');
-    return;
-  }
-  if (!interaction.member) {
-    logger.debug(`[${PREFIX}] no member!`);
-    interaction.reply('This must be performed by a member of a guild!');
-    return;
-  }
+      if (!interaction.guild) {
+        logger.debug(`[${PREFIX}] no guild!`);
+        interaction.reply('This must be performed in a guild!');
+        return;
+      }
+      if (!interaction.member) {
+        logger.debug(`[${PREFIX}] no member!`);
+        interaction.reply('This must be performed by a member of a guild!');
+        return;
+      }
 
-  // logger.debug(`[${PREFIX}] interaction.customId: ${interaction.customId}`);
-  const roleNeedshelpId = interaction.customId.split('~')[1];
-  const roleTripsitterId = interaction.customId.split('~')[2];
-  const channelTripsitters = interaction.customId.split('~')[3];
+      // logger.debug(`[${PREFIX}] interaction.customId: ${interaction.customId}`);
+      const roleNeedshelpId = interaction.customId.split('~')[1];
+      const roleTripsitterId = interaction.customId.split('~')[2];
+      const channelTripsitters = interaction.customId.split('~')[3];
 
-  // logger.debug(`[${PREFIX}] roleNeedshelpId: ${roleNeedshelpId}\n
-  // roleTripsitterId: ${roleTripsitterId}\n
-  // channelTripsittersId: ${channelTripsittersId}`);
+      // logger.debug(`[${PREFIX}] roleNeedshelpId: ${roleNeedshelpId}\n
+      // roleTripsitterId: ${roleTripsitterId}\n
+      // channelTripsittersId: ${channelTripsittersId}`);
 
-  // Get the input from the modal, if it was submitted
-  let triageInput = triageGiven;
-  let introInput = introGiven;
-  // Otherwise get the input from the modal, if it was submitted
-  if ((interaction as ModalSubmitInteraction).fields) {
-    triageInput = (interaction as ModalSubmitInteraction).fields.getTextInputValue('triageInput');
-    introInput = (interaction as ModalSubmitInteraction).fields.getTextInputValue('introInput');
-  }
-  logger.debug(`[${PREFIX}] triageInput: ${triageInput}`);
-  logger.debug(`[${PREFIX}] introInput: ${introInput}`);
+      // Get the input from the modal, if it was submitted
+      let triageInput = triageGiven;
+      let introInput = introGiven;
+      // Otherwise get the input from the modal, if it was submitted
+      if ((interaction as ModalSubmitInteraction).fields) {
+        triageInput = (interaction as ModalSubmitInteraction).fields.getTextInputValue('triageInput');
+        introInput = (interaction as ModalSubmitInteraction).fields.getTextInputValue('introInput');
+      }
+      logger.debug(`[${PREFIX}] triageInput: ${triageInput}`);
+      logger.debug(`[${PREFIX}] introInput: ${introInput}`);
 
-  // Get the roles we'll be referencing
-  const roleNeedshelp = await interaction.guild.roles.fetch(roleNeedshelpId) as Role;
-  logger.debug(`[${PREFIX}] roleNeedshelp: ${roleNeedshelp}`);
-  const roleHelper = await interaction.guild.roles.fetch(roleTripsitterId) as Role;
-  logger.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
-  const roleTripsitter = interaction.guild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
-  logger.debug(`[${PREFIX}] roleTripsitter: ${roleTripsitter}`);
+      // Get the roles we'll be referencing
+      const roleNeedshelp = await interaction.guild.roles.fetch(roleNeedshelpId) as Role;
+      logger.debug(`[${PREFIX}] roleNeedshelp: ${roleNeedshelp}`);
+      const roleHelper = await interaction.guild.roles.fetch(roleTripsitterId) as Role;
+      logger.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
+      const roleTripsitter = interaction.guild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
+      logger.debug(`[${PREFIX}] roleTripsitter: ${roleTripsitter}`);
 
-  // Get the channels we'll be referencing
-  // const channelHowToTripsit = interaction.client.channels.cache
-  //     .find((channel) => channel.id === env.CHANNEL_HOWTOTRIPSIT) as TextChannel;
-  // logger.debug(`[${PREFIX}] channelHowToTripsit: ${channelHowToTripsit}`);
+      // Get the channels we'll be referencing
+      // const channelHowToTripsit = interaction.client.channels.cache
+      //     .find((channel) => channel.id === env.CHANNEL_HOWTOTRIPSIT) as TextChannel;
+      // logger.debug(`[${PREFIX}] channelHowToTripsit: ${channelHowToTripsit}`);
 
-  // const channelOpenTripsit = interaction.guild.channels.cache
-  //     .find((chan) => chan.id === env.CHANNEL_OPENTRIPSIT);
+      // const channelOpenTripsit = interaction.guild.channels.cache
+      //     .find((chan) => chan.id === env.CHANNEL_OPENTRIPSIT);
 
-  // Determine the actor.
-  const actor = interaction.member;
-  logger.debug(`[${PREFIX}] actor: ${actor.user.username}#${actor.user.discriminator}`);
+      // Determine the actor.
+      const actor = interaction.member;
+      logger.debug(`[${PREFIX}] actor: ${actor.user.username}#${actor.user.discriminator}`);
 
-  // Determine if this command was started by a Developer
-  const actorIsAdmin = (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
-  const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
-  logger.debug(`[${PREFIX}] actorIsAdmin: ${actorIsAdmin}`);
-  logger.debug(`[${PREFIX}] showMentions: ${showMentions}`);
+      // Determine if this command was started by a Developer
+      const actorIsAdmin = (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
+      const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
+      logger.debug(`[${PREFIX}] actorIsAdmin: ${actorIsAdmin}`);
+      logger.debug(`[${PREFIX}] showMentions: ${showMentions}`);
 
-  // Determine the target.
-  // If the user clicked the button, the target is whoever started the interaction.
-  // Otherwise, the target is the user mentioned in the /tripsit command.
-  const target = (interaction.member || memberInput) as GuildMember;
-  logger.debug(`[${PREFIX}] target: ${target}`);
+      // Determine the target.
+      // If the user clicked the button, the target is whoever started the interaction.
+      // Otherwise, the target is the user mentioned in the /tripsit command.
+      const target = (interaction.member || memberInput) as GuildMember;
+      logger.debug(`[${PREFIX}] target: ${target}`);
 
-  // Get a list of the target's roles
-  const targetRoleNames = (target.roles as GuildMemberRoleManager).cache.map((role) => role.name);
-  logger.debug(`[${PREFIX}] targetRoleNames: ${targetRoleNames}`);
+      // Get a list of the target's roles
+      const targetRoleNames = (target.roles as GuildMemberRoleManager).cache.map((role) => role.name);
+      logger.debug(`[${PREFIX}] targetRoleNames: ${targetRoleNames}`);
 
-  const targetRoleIds = (target.roles as GuildMemberRoleManager).cache.map((role) => role.id);
-  logger.debug(`[${PREFIX}] targetRoleIds: ${targetRoleIds}`);
+      const targetRoleIds = (target.roles as GuildMemberRoleManager).cache.map((role) => role.id);
+      logger.debug(`[${PREFIX}] targetRoleIds: ${targetRoleIds}`);
 
-  // Check if the target already needs help
-  const targetHasRoleNeedshelp = (target.roles as GuildMemberRoleManager).cache.find(
-    (role) => role === roleNeedshelp,
-  ) !== undefined;
-  logger.debug(`[${PREFIX}] targetHasRoleNeedshelp: ${targetHasRoleNeedshelp}`);
+      // Check if the target already needs help
+      const targetHasRoleNeedshelp = (target.roles as GuildMemberRoleManager).cache.find(
+        (role) => role === roleNeedshelp,
+      ) !== undefined;
+      logger.debug(`[${PREFIX}] targetHasRoleNeedshelp: ${targetHasRoleNeedshelp}`);
 
-  let targetLastHelpedDate = new Date();
-  let targetLastHelpedThreadId = '';
-  if (global.db) {
-    const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
-    await ref.once('value', (data) => {
-      if (data.val() !== null) {
-        Object.keys(data.val()).forEach((key) => {
-          // logger.debug(`[${PREFIX}] data.val()[key]: ${JSON.stringify(data.val()[key], null, 2)}`);
-          logger.debug(`[${PREFIX}] key: ${key}`);
-          if (data.val()[key].type === 'helpthread') {
-            targetLastHelpedDate = new Date(parseInt(key));
-            targetLastHelpedThreadId = data.val()[key].value.lastHelpedThreadId;
+      let targetLastHelpedDate = new Date();
+      let targetLastHelpedThreadId = '';
+      if (global.db) {
+        const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
+        await ref.once('value', (data) => {
+          if (data.val() !== null) {
+            Object.keys(data.val()).forEach((key) => {
+              // logger.debug(`[${PREFIX}] data.val()[key]: ${JSON.stringify(data.val()[key], null, 2)}`);
+              logger.debug(`[${PREFIX}] key: ${key}`);
+              if (data.val()[key].type === 'helpthread') {
+                targetLastHelpedDate = new Date(parseInt(key));
+                targetLastHelpedThreadId = data.val()[key].value.lastHelpedThreadId;
+              }
+            });
           }
         });
       }
-    });
-  }
 
-  logger.debug(`[${PREFIX}] targetLastHelpedDate: ${targetLastHelpedDate}`);
-  logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
+      logger.debug(`[${PREFIX}] targetLastHelpedDate: ${targetLastHelpedDate}`);
+      logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
 
-  // Get the channel objects for the help thread
-  // const threadHelpUser = interaction.client.channels.cache.get(targetLastHelpedThreadId);
-  let threadHelpUser = interaction.client.channels.cache.get(targetLastHelpedThreadId) as ThreadChannel;
-  logger.debug(`[${PREFIX}] threadHelpUser: ${threadHelpUser}`);
+      // Get the channel objects for the help thread
+      // const threadHelpUser = interaction.client.channels.cache.get(targetLastHelpedThreadId);
+      let threadHelpUser = interaction.client.channels.cache.get(targetLastHelpedThreadId) as ThreadChannel;
+      logger.debug(`[${PREFIX}] threadHelpUser: ${threadHelpUser}`);
 
-  // ██╗   ██╗██████╗ ██████╗  █████╗ ████████╗███████╗
-  // ██║   ██║██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝██╔════╝
-  // ██║   ██║██████╔╝██║  ██║███████║   ██║   █████╗
-  // ██║   ██║██╔═══╝ ██║  ██║██╔══██║   ██║   ██╔══╝
-  // ╚██████╔╝██║     ██████╔╝██║  ██║   ██║   ███████╗
-  //  ╚═════╝ ╚═╝     ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚══════╝
-  if (targetHasRoleNeedshelp && threadHelpUser !== undefined) {
-    logger.debug(`[${PREFIX}] Target already needs help, updating existing threads!`);
-    // A user will have the NeedsHelp role when they click the button.
-    // After they click the button, their roles are saved and then removed
-    // So we need to stop the code below from saving an empty list of roles
-    // We trust that the button did it's job and saved the roles and applied the channels,
-    // so it assumes that it doesn't need to do anything as long as the user has this role.
+      // ██╗   ██╗██████╗ ██████╗  █████╗ ████████╗███████╗
+      // ██║   ██║██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝██╔════╝
+      // ██║   ██║██████╔╝██║  ██║███████║   ██║   █████╗
+      // ██║   ██║██╔═══╝ ██║  ██║██╔══██║   ██║   ██╔══╝
+      // ╚██████╔╝██║     ██████╔╝██║  ██║   ██║   ███████╗
+      //  ╚═════╝ ╚═╝     ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚══════╝
+      if (targetHasRoleNeedshelp && threadHelpUser !== undefined) {
+        logger.debug(`[${PREFIX}] Target already needs help, updating existing threads!`);
+        // A user will have the NeedsHelp role when they click the button.
+        // After they click the button, their roles are saved and then removed
+        // So we need to stop the code below from saving an empty list of roles
+        // We trust that the button did it's job and saved the roles and applied the channels,
+        // so it assumes that it doesn't need to do anything as long as the user has this role.
 
-    // Remind the user that they have a channel open
-    try {
-      const message = memberInput ?
-        stripIndents`Hey ${interaction.member}, ${target.displayName} is already being helped!
+        // Remind the user that they have a channel open
+        try {
+          const message = memberInput ?
+            stripIndents`Hey ${interaction.member}, ${target.displayName} is already being helped!
 
           Check your channel list for '${threadHelpUser.toString()} to help them!'` :
-        stripIndents`Hey ${interaction.member}, you are already being helped!
+            stripIndents`Hey ${interaction.member}, you are already being helped!
 
           Check your channel list for '${threadHelpUser.toString()} to get help!`;
 
-      const embed = embedTemplate()
-        .setColor(Colors.DarkBlue)
-        .setDescription(message);
-      interaction.reply({embeds: [embed], ephemeral: true});
-      logger.debug(`[${PREFIX}] Rejected need for help`);
+          const embed = embedTemplate()
+            .setColor(Colors.DarkBlue)
+            .setDescription(message);
+          interaction.reply({embeds: [embed], ephemeral: true});
+          logger.debug(`[${PREFIX}] Rejected need for help`);
 
-      // Send the update message to the thread
-      const helpMessage = memberInput ?
-        stripIndents`
+          // Send the update message to the thread
+          const helpMessage = memberInput ?
+            stripIndents`
           Hey ${target}, the team thinks you could still use assistance!
           ${roleHelper} and ${roleTripsitter} will be with you as soon as they're available!
           If this is a medical emergency please contact your local /EMS
           We do not call EMS or ambulance on behalf of anyone.` :
-        stripIndents`
+            stripIndents`
           Hey ${target}, thank you for the update!
 
           You've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
@@ -281,116 +278,116 @@ export async function tripsitmeSubmit(
           If this is a medical emergency please contact your local /EMS
           We do not call EMS or ambulance on behalf of anyone.`;
 
-      if (threadHelpUser && !memberInput) {
-        threadHelpUser.send({
-          content: helpMessage,
-          allowedMentions: {
-            'parse': showMentions,
-          },
+          if (threadHelpUser && !memberInput) {
+            threadHelpUser.send({
+              content: helpMessage,
+              allowedMentions: {
+                'parse': showMentions,
+              },
+            });
+          }
+          logger.debug(`[${PREFIX}] Pinged user in help thread`);
+
+          return;
+        } catch (err) {
+          logger.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted:\n ${err}`);
+        }
+      }
+
+      // Team check - Cannot be run on team members
+      // If this user is a developer then this is a test run and ignore this check,
+      // but we'll change the output down below to make it clear this is a test.
+      let targetIsTeamMember = false;
+      if (!actorIsAdmin) {
+        target.roles.cache.forEach(async (role) => {
+          if (teamRoles.includes(role.id)) {
+            targetIsTeamMember = true;
+          }
         });
-      }
-      logger.debug(`[${PREFIX}] Pinged user in help thread`);
-
-      return;
-    } catch (err) {
-      logger.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted:\n ${err}`);
-    }
-  }
-
-  // Team check - Cannot be run on team members
-  // If this user is a developer then this is a test run and ignore this check,
-  // but we'll change the output down below to make it clear this is a test.
-  let targetIsTeamMember = false;
-  if (!actorIsAdmin) {
-    target.roles.cache.forEach(async (role) => {
-      if (teamRoles.includes(role.id)) {
-        targetIsTeamMember = true;
-      }
-    });
-    if (targetIsTeamMember) {
-      logger.debug(`[${PREFIX}] Target is a team member!`);
-      const teamMessage = memberInput ?
-        stripIndents`Hey ${actor}, ${target.displayName} is a team member!
+        if (targetIsTeamMember) {
+          logger.debug(`[${PREFIX}] Target is a team member!`);
+          const teamMessage = memberInput ?
+            stripIndents`Hey ${actor}, ${target.displayName} is a team member!
           Did you mean to do that?` :
-        stripIndents`You are a member of the team and cannot be publicly helped!`;
-      const embed = embedTemplate()
-        .setColor(Colors.DarkBlue)
-        .setDescription(teamMessage);
-      if (!interaction.replied) {
-        await interaction.reply({embeds: [embed], ephemeral: true});
+            stripIndents`You are a member of the team and cannot be publicly helped!`;
+          const embed = embedTemplate()
+            .setColor(Colors.DarkBlue)
+            .setDescription(teamMessage);
+          if (!interaction.replied) {
+            await interaction.reply({embeds: [embed], ephemeral: true});
+          }
+          return;
+        }
       }
-      return;
-    }
-  }
-  logger.debug(`[${PREFIX}] Target is not a team member!`);
+      logger.debug(`[${PREFIX}] Target is not a team member!`);
 
-  // Remove all roles, except team and vanity, from the target
-  target.roles.cache.forEach((role) => {
-    logger.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
-    if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone') && !role.name.includes('NeedsHelp')) {
-      logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.displayName}`);
+      // Remove all roles, except team and vanity, from the target
+      target.roles.cache.forEach((role) => {
+        logger.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
+        if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone') && !role.name.includes('NeedsHelp')) {
+          logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.displayName}`);
+          try {
+            target.roles.remove(role);
+          } catch (err) {
+            logger.debug(`[${PREFIX}] There was an error removing the role ${role.name} from ${target.displayName}\n${err}`);
+          }
+        }
+      });
+
+      // Add the needsHelp role to the target
       try {
-        target.roles.remove(role);
+        logger.debug(`[${PREFIX}] Adding role ${roleNeedshelp.name} to ${target.displayName}`);
+        await target.roles.add(roleNeedshelp);
       } catch (err) {
-        logger.debug(`[${PREFIX}] There was an error removing the role ${role.name} from ${target.displayName}\n${err}`);
-      }
-    }
-  });
-
-  // Add the needsHelp role to the target
-  try {
-    logger.debug(`[${PREFIX}] Adding role ${roleNeedshelp.name} to ${target.displayName}`);
-    await target.roles.add(roleNeedshelp);
-  } catch (err) {
-    logger.error(`[${PREFIX}] Error adding role to target: ${err}`);
-    return interaction.reply(stripIndents`There was an error adding the NeedsHelp role!
+        logger.error(`[${PREFIX}] Error adding role to target: ${err}`);
+        return interaction.reply(stripIndents`There was an error adding the NeedsHelp role!
       Make sure the bot's role is higher than NeedsHelp in the Role list!`);
-  }
+      }
 
-  // ██████╗ ███████╗ ██████╗ ██████╗ ███████╗███╗   ██╗
-  // ██╔══██╗██╔════╝██╔═══██╗██╔══██╗██╔════╝████╗  ██║
-  // ██████╔╝█████╗  ██║   ██║██████╔╝█████╗  ██╔██╗ ██║
-  // ██╔══██╗██╔══╝  ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║
-  // ██║  ██║███████╗╚██████╔╝██║     ███████╗██║ ╚████║
-  // ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝
-  // If the user has been helped in the last week, direct them to the existing thread
-  if (targetLastHelpedDate) {
-    const lastWeek = Date.now() - (1000 * 60 * 60 * 24 * 7);
-    logger.debug(`[${PREFIX}] lastHelp: ${targetLastHelpedDate.valueOf()}`);
-    logger.debug(`[${PREFIX}] lastWeek: ${lastWeek}`);
-    if (targetLastHelpedDate.valueOf() > lastWeek) {
-      logger.debug(`[${PREFIX}] Target was last helped within the last week!`);
-      // Ping them in the open thread
-      try {
-        // Respond to the user and remind them they have an open thread
-        const message = memberInput ?
-          stripIndents`
+      // ██████╗ ███████╗ ██████╗ ██████╗ ███████╗███╗   ██╗
+      // ██╔══██╗██╔════╝██╔═══██╗██╔══██╗██╔════╝████╗  ██║
+      // ██████╔╝█████╗  ██║   ██║██████╔╝█████╗  ██╔██╗ ██║
+      // ██╔══██╗██╔══╝  ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║
+      // ██║  ██║███████╗╚██████╔╝██║     ███████╗██║ ╚████║
+      // ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝
+      // If the user has been helped in the last week, direct them to the existing thread
+      if (targetLastHelpedDate) {
+        const lastWeek = Date.now() - (1000 * 60 * 60 * 24 * 7);
+        logger.debug(`[${PREFIX}] lastHelp: ${targetLastHelpedDate.valueOf()}`);
+        logger.debug(`[${PREFIX}] lastWeek: ${lastWeek}`);
+        if (targetLastHelpedDate.valueOf() > lastWeek) {
+          logger.debug(`[${PREFIX}] Target was last helped within the last week!`);
+          // Ping them in the open thread
+          try {
+            // Respond to the user and remind them they have an open thread
+            const message = memberInput ?
+              stripIndents`
               Hey ${actor}, thank you for requestiong assistance on the behalf of ${target.user.username}!
 
               Click here to be taken to their private room: ${threadHelpUser.toString()}
 
               You can also click in your channel list to see their private room!` :
-          stripIndents`
+              stripIndents`
               Hey ${target}, thank you for asking for assistance!
 
               Click here to be taken to your private room: ${threadHelpUser.toString()}
 
               You can also click in your channel list to see your private room!`;
 
-        const embed = embedTemplate()
-          .setColor(Colors.DarkBlue)
-          .setDescription(message);
+            const embed = embedTemplate()
+              .setColor(Colors.DarkBlue)
+              .setDescription(message);
 
-        interaction.reply({embeds: [embed], ephemeral: true});
+            interaction.reply({embeds: [embed], ephemeral: true});
 
-        // Send the intro message to the thread
-        const firstMessage = memberInput ?
-          stripIndents`
+            // Send the intro message to the thread
+            const firstMessage = memberInput ?
+              stripIndents`
             Hey ${target}, the team thinks you could still use assistance!
             ${roleHelper} and ${roleTripsitter} will be with you as soon as they're available!
             If this is a medical emergency please contact your local /EMS
             We do not call EMS or ambulance on behalf of anyone.` :
-          stripIndents`
+              stripIndents`
             Hey ${target}, thank you for asking for help!
 
             You've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
@@ -401,101 +398,101 @@ export async function tripsitmeSubmit(
             If this is a medical emergency please contact your local /EMS
             We do not call EMS or ambulance on behalf of anyone.`;
 
-        threadHelpUser.send({
-          content: firstMessage,
-          allowedMentions: {
-            'parse': showMentions,
-          },
-        });
-        threadHelpUser.setName(`🧡│${target.displayName}'s channel!`);
-
-        if (global.db) {
-          const threadArchiveTime = new Date();
-          // define one week in milliseconds
-          // const thirtySec = 1000 * 30;
-          const tenMins = 1000 * 60 * 10;
-          const oneDay = 1000 * 60 * 60 * 24;
-          const archiveTime = env.NODE_ENV === 'production' ?
-            threadArchiveTime.getTime() + oneDay :
-            threadArchiveTime.getTime() + tenMins;
-          threadArchiveTime.setTime(archiveTime);
-          logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
-
-          await db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/${targetLastHelpedDate.valueOf()}`).remove();
-          const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
-          ref.set({
-            [threadArchiveTime.valueOf()]: {
-              type: 'helpthread',
-              value: {
-                lastHelpedThreadId: threadHelpUser.id,
-                roles: targetRoleIds,
-                status: 'open',
+            threadHelpUser.send({
+              content: firstMessage,
+              allowedMentions: {
+                'parse': showMentions,
               },
-            },
-          });
+            });
+            threadHelpUser.setName(`🧡│${target.displayName}'s channel!`);
+
+            if (global.db) {
+              const threadArchiveTime = new Date();
+              // define one week in milliseconds
+              // const thirtySec = 1000 * 30;
+              const tenMins = 1000 * 60 * 10;
+              const oneDay = 1000 * 60 * 60 * 24;
+              const archiveTime = env.NODE_ENV === 'production' ?
+                threadArchiveTime.getTime() + oneDay :
+                threadArchiveTime.getTime() + tenMins;
+              threadArchiveTime.setTime(archiveTime);
+              logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
+
+              await db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/${targetLastHelpedDate.valueOf()}`).remove();
+              const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
+              ref.set({
+                [threadArchiveTime.valueOf()]: {
+                  type: 'helpthread',
+                  value: {
+                    lastHelpedThreadId: threadHelpUser.id,
+                    roles: targetRoleIds,
+                    status: 'open',
+                  },
+                },
+              });
+            }
+
+            logger.debug(`[${PREFIX}] finished!`);
+
+            // Return here so that we don't create the new thread below
+            return;
+          } catch (err) {
+            logger.info(`[${PREFIX}] The previous thread was likely deleted, starting fresh!`);
+          }
         }
-
-        logger.debug(`[${PREFIX}] finished!`);
-
-        // Return here so that we don't create the new thread below
-        return;
-      } catch (err) {
-        logger.info(`[${PREFIX}] The previous thread was likely deleted, starting fresh!`);
       }
-    }
-  }
 
-  // ███╗   ██╗███████╗██╗    ██╗
-  // ████╗  ██║██╔════╝██║    ██║
-  // ██╔██╗ ██║█████╗  ██║ █╗ ██║
-  // ██║╚██╗██║██╔══╝  ██║███╗██║
-  // ██║ ╚████║███████╗╚███╔███╔╝
-  // ╚═╝  ╚═══╝╚══════╝ ╚══╝╚══╝
-  // Get the tripsitters channel from the guild
+      // ███╗   ██╗███████╗██╗    ██╗
+      // ████╗  ██║██╔════╝██║    ██║
+      // ██╔██╗ ██║█████╗  ██║ █╗ ██║
+      // ██║╚██╗██║██╔══╝  ██║███╗██║
+      // ██║ ╚████║███████╗╚███╔███╔╝
+      // ╚═╝  ╚═══╝╚══════╝ ╚══╝╚══╝
+      // Get the tripsitters channel from the guild
 
-  // const tripsittersChannel = await interaction.guild?.channels.fetch(channelTripsittersId)! as TextChannel;
+      // const tripsittersChannel = await interaction.guild?.channels.fetch(channelTripsittersId)! as TextChannel;
 
-  // Get the tripsit channel from the guild
-  const tripsitChannel = interaction.channel as TextChannel;
+      // Get the tripsit channel from the guild
+      const tripsitChannel = interaction.channel as TextChannel;
 
-  // Create a new private thread in the channel
-  // If we're not in production we need to create a public thread
-  threadHelpUser = await tripsitChannel.threads.create({
-    name: `🧡│${target.displayName}'s channel!`,
-    autoArchiveDuration: 1440,
-    type: interaction.guild?.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
-    reason: `${target.displayName} requested help`,
-  }) as ThreadChannel;
-  logger.debug(`[${PREFIX}] Created threadHelpUser ${threadHelpUser.id}`);
+      // Create a new private thread in the channel
+      // If we're not in production we need to create a public thread
+      threadHelpUser = await tripsitChannel.threads.create({
+        name: `🧡│${target.displayName}'s channel!`,
+        autoArchiveDuration: 1440,
+        type: interaction.guild?.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
+        reason: `${target.displayName} requested help`,
+      }) as ThreadChannel;
+      logger.debug(`[${PREFIX}] Created threadHelpUser ${threadHelpUser.id}`);
 
-  // Send the triage info to the thread
-  const replyMessage = memberInput ?
-    stripIndents`
+      // Send the triage info to the thread
+      const replyMessage = memberInput ?
+        stripIndents`
         Hey ${interaction.member}, we've activated tripsit mode on ${target.user.username}!
 
         Check your channel list for ${threadHelpUser.toString()} to talk to the user
 
         **Be sure add some information about the user to the thread!**` :
-    stripIndents`
+        stripIndents`
         Hey ${target}, thank you for asking for assistance!
 
         Click here to be taken to your private room: ${threadHelpUser.toString()}
 
         You can also click in your channel list to see your private room!`;
 
-  const embed = embedTemplate()
-    .setColor(Colors.DarkBlue)
-    .setDescription(replyMessage);
-  interaction.reply({embeds: [embed], ephemeral: true});
-  logger.debug(`[${PREFIX}] Sent response to user`);
+      const embed = embedTemplate()
+        .setColor(Colors.DarkBlue)
+        .setDescription(replyMessage);
+      interaction.reply({embeds: [embed], ephemeral: true});
+      logger.debug(`[${PREFIX}] Sent response to user`);
 
-  // Send the intro message to the threadHelpUser
-  const firstMessage = memberInput ?
-    stripIndents`
+      // Send the intro message to the threadHelpUser
+      const firstMessage = memberInput ?
+        stripIndents`
       Hey ${target}, the team thinks you could use assistance!
       ${roleHelper} and ${roleTripsitter} will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.` :
-    stripIndents`
+        stripIndents`
       Hey ${target}, thank you for asking for assistance!
 
       You've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
@@ -508,101 +505,102 @@ export async function tripsitmeSubmit(
       If you just would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
       `;
 
-  const row = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      new ButtonBuilder()
-        .setCustomId(`tripsitmeFinish~me~${target.id}~${roleNeedshelp.id}~${channelTripsitters}`)
-        .setLabel('I\'m good now!')
-        .setStyle(ButtonStyle.Success),
-    );
+      const row = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          new ButtonBuilder()
+            .setCustomId(`tripsitmeFinish~me~${target.id}~${roleNeedshelp.id}~${channelTripsitters}`)
+            .setLabel('I\'m good now!')
+            .setStyle(ButtonStyle.Success),
+        );
 
-  threadHelpUser.send({
-    content: firstMessage,
-    components: [row],
-    allowedMentions: {
-      'parse': showMentions,
-    },
-    flags: ['SuppressEmbeds'],
-  });
-
-  logger.debug(`[${PREFIX}] Sent intro message to threadHelpUser ${threadHelpUser.id}`);
-
-  // Send the intro message to the thread
-  // const helperMsg = memberInput ?
-  //   stripIndents`
-  //     Hey ${roleHelper} and ${roleTripsitter}, ${actor} thinks ${target.displayName} can use some help in ${threadHelpUser.toString()}!
-
-  //     They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
-
-  //     Their issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
-
-  //     Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!
-
-  //     *You're receiving this alert because you're a Tripsitter!*
-  //     *Only Tripsitters, Helpers and Moderators can see this thread*!
-  //     **Keep in mind: We're not qualified to handle suicidal users here. If the user is considering / talking about suicide, direct them to the suicide hotline!**` :
-  //   stripIndents`
-  //     Hey ${roleHelper} and ${roleTripsitter}, ${target.displayName} can use some help in ${threadHelpUser.toString()}!
-
-  //     They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
-
-  //     Their issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
-
-  //     Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!
-
-  //     *You're receiving this alert because you're a Tripsitter!*
-  //     *Only Tripsitters and Moderators can see this thread*!
-  //     **Keep in mind: We're not qualified to handle suicidal users here. If the user is considering / talking about suicide, direct them to the suicide hotline!**`;
-  // send a message to the thread
-
-  // const endSession = new ActionRowBuilder<ButtonBuilder>()
-  //   .addComponents(
-  //     new ButtonBuilder()
-  //       .setCustomId(`tripsitmeFinish~them~${target.id}~${threadHelpUser.id}~${roleNeedshelp.id}`)
-  //       .setLabel('They\'re good now!')
-  //       .setStyle(ButtonStyle.Success),
-  //   );
-
-  // Update targetData with how many times they've been helped
-  // logger.debug(`[${PREFIX}] Updating target data`);
-  // if ('discord' in targetData) {
-  //   if ('modActions' in targetData.discord) {
-  //     targetData.discord.modActions[targetAction] = (
-  //       targetData.discord.modActions[targetAction] || 0) + 1;
-  //   } else {
-  //     targetData.discord.modActions = {[targetAction]: 1};
-  //   }
-  // } else {
-  //   targetData.discord = {modActions: {[targetAction]: 1}};
-  // }
-
-  const threadArchiveTime = new Date();
-  // define one week in milliseconds
-  // const thirtySec = 1000 * 30;
-  const tenMins = 1000 * 60 * 10;
-  const oneDay = 1000 * 60 * 60 * 24;
-  const archiveTime = env.NODE_ENV === 'production' ?
-    threadArchiveTime.getTime() + oneDay :
-    threadArchiveTime.getTime() + tenMins;
-  threadArchiveTime.setTime(archiveTime);
-  logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
-
-  if (global.db) {
-    const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
-    ref.set({
-      [threadArchiveTime.valueOf()]: {
-        type: 'helpthread',
-        value: {
-          lastHelpedThreadId: threadHelpUser.id,
-          roles: targetRoleIds,
-          status: 'open',
+      threadHelpUser.send({
+        content: firstMessage,
+        components: [row],
+        allowedMentions: {
+          'parse': showMentions,
         },
-      },
+        flags: ['SuppressEmbeds'],
+      });
+
+      logger.debug(`[${PREFIX}] Sent intro message to threadHelpUser ${threadHelpUser.id}`);
+
+      // Send the intro message to the thread
+      // const helperMsg = memberInput ?
+      //   stripIndents`
+      //     Hey ${roleHelper} and ${roleTripsitter}, ${actor} thinks ${target.displayName} can use some help in ${threadHelpUser.toString()}!
+
+      //     They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
+
+      //     Their issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
+
+      //     Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!
+
+      //     *You're receiving this alert because you're a Tripsitter!*
+      //     *Only Tripsitters, Helpers and Moderators can see this thread*!
+      //     **Keep in mind: We're not qualified to handle suicidal users here. If the user is considering / talking about suicide, direct them to the suicide hotline!**` :
+      //   stripIndents`
+      //     Hey ${roleHelper} and ${roleTripsitter}, ${target.displayName} can use some help in ${threadHelpUser.toString()}!
+
+      //     They've taken: ${triageInput ? `\n${triageInput}` : '\n*No info given*'}
+
+      //     Their issue: ${introInput ? `\n${introInput}` : '\n*No info given*'}
+
+      //     Please read the log before interacting and use this thread to coordinate efforts with your fellow Tripsitters/Helpers!
+
+      //     *You're receiving this alert because you're a Tripsitter!*
+      //     *Only Tripsitters and Moderators can see this thread*!
+      //     **Keep in mind: We're not qualified to handle suicidal users here. If the user is considering / talking about suicide, direct them to the suicide hotline!**`;
+      // send a message to the thread
+
+      // const endSession = new ActionRowBuilder<ButtonBuilder>()
+      //   .addComponents(
+      //     new ButtonBuilder()
+      //       .setCustomId(`tripsitmeFinish~them~${target.id}~${threadHelpUser.id}~${roleNeedshelp.id}`)
+      //       .setLabel('They\'re good now!')
+      //       .setStyle(ButtonStyle.Success),
+      //   );
+
+      // Update targetData with how many times they've been helped
+      // logger.debug(`[${PREFIX}] Updating target data`);
+      // if ('discord' in targetData) {
+      //   if ('modActions' in targetData.discord) {
+      //     targetData.discord.modActions[targetAction] = (
+      //       targetData.discord.modActions[targetAction] || 0) + 1;
+      //   } else {
+      //     targetData.discord.modActions = {[targetAction]: 1};
+      //   }
+      // } else {
+      //   targetData.discord = {modActions: {[targetAction]: 1}};
+      // }
+
+      const threadArchiveTime = new Date();
+      // define one week in milliseconds
+      // const thirtySec = 1000 * 30;
+      const tenMins = 1000 * 60 * 10;
+      const oneDay = 1000 * 60 * 60 * 24;
+      const archiveTime = env.NODE_ENV === 'production' ?
+        threadArchiveTime.getTime() + oneDay :
+        threadArchiveTime.getTime() + tenMins;
+      threadArchiveTime.setTime(archiveTime);
+      logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
+
+      if (global.db) {
+        const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${target.user.id}/`);
+        ref.set({
+          [threadArchiveTime.valueOf()]: {
+            type: 'helpthread',
+            value: {
+              lastHelpedThreadId: threadHelpUser.id,
+              roles: targetRoleIds,
+              status: 'open',
+            },
+          },
+        });
+      }
+
+
+      logger.debug(`[${PREFIX}] finished!`);
     });
-  }
-
-
-  logger.debug(`[${PREFIX}] finished!`);
 };
 
 /**
