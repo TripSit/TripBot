@@ -155,7 +155,7 @@ export async function moderate(
     target.roles.cache.forEach(async (role) => {
       if (teamRoles.includes(role.id)) {
         // Target Team check - Only NON team members can be targeted by mod actions
-        logger.debug(`[${PREFIX}] Target is a team member!`);
+        logger.debug(`[${PREFIX}] Target is a team member111!`);
         return {content: stripIndents`Hey ${actor}, you cannot ${command} a team member!`, ephemeral: true};
       }
     });
@@ -336,13 +336,13 @@ export async function moderate(
     // We must send the mention outside of the embed, cuz mentions dont work in embeds
     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
     const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
-    modChan.send({content: stripIndents`Hey ${roleModerator}!`, embeds: [modlogEmbed]});
+    modChan.send({content: `${command !== 'note' ? `Hey ${roleModerator}` : ``}`, embeds: [modlogEmbed]});
     logger.debug(`[${PREFIX}] sent a message to the moderators room`);
   }
 
   // If this is the info command then return with info
   if (command === 'info') {
-    let infoString = '';
+    let infoString = 'Squeaky clean!';
     if (targetActionCount.report > 0) {
       infoString += stripIndents`
         ${targetActionList.ban.length > 0 ? `**Bans**\n${targetActionList.ban.join('\n')}` : ''}
