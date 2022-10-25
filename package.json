@@ -12,7 +12,7 @@
     "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
     "prod": "ts-node --transpile-only src/start.ts",
     "DB_backup": "ts-node --transpile-only ./src/global/functions/database-backup.ts",
-    "DB_ETL": "ts-node --transpile-only ./src/global/functions/database-mee6expTransfer.ts"
+    "postgres-test": "ts-node --transpile-only ./src/global/functions/postgres-test.ts"
   },
   "repository": {
     "type": "git",

@@ -9,6 +9,8 @@ export default {
   DISCORD_CLIENT_REDIRECT_URI: process.env.DISCORD_CLIENT_REDIRECT_URI,
   DISCORD_CLIENT_TOKEN: process.env.DISCORD_CLIENT_TOKEN,
 
+  POSTGRES_DBURL: isProd ? process.env.POSTGRES_PASSWORD : 'postgres://tripsit:TripSitLol123@localhost:5432/tripsit',
+
   GITHUB_TOKEN: process.env.GITHUB_TOKEN,
   YOUTUBE_TOKEN: process.env.YOUTUBE_TOKEN,
   IMGUR_ID: process.env.IMGUR_ID,
