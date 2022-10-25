@@ -1,12 +1,19 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  Colors,
+  // Colors,
   GuildMember,
   TextChannel,
+  ModalBuilder,
+  TextInputBuilder,
+  ActionRowBuilder,
+  ModalSubmitInteraction,
 } from 'discord.js';
+import {
+  TextInputStyle,
+} from 'discord-api-types/v10';
 import {SlashCommand} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
+// import {embedTemplate} from '../../utils/embedTemplate';
 import {moderate} from '../../../global/commands/g.moderate';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
@@ -25,14 +32,24 @@ export const mod: SlashCommand = {
         .setRequired(true))
       .setName('info'))
     .addSubcommand((subcommand) => subcommand
+      .setDescription('Ban a user')
+      .addStringOption((option) => option
+        .setName('target')
+        .setDescription('User to ban!')
+        .setRequired(true))
+      .setName('ban'))
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('Underban a user')
+      .addStringOption((option) => option
+        .setName('target')
+        .setDescription('User to underban!')
+        .setRequired(true))
+      .setName('underban'))
+    .addSubcommand((subcommand) => subcommand
       .setDescription('Warn a user')
       .addStringOption((option) => option
         .setName('target')
         .setDescription('User to warn!')
-        .setRequired(true))
-      .addStringOption((option) => option
-        .setName('reason')
-        .setDescription('VISIBLE TO USER: Reason for warn!')
         .setRequired(true))
       .setName('warn'))
     .addSubcommand((subcommand) => subcommand
@@ -40,10 +57,6 @@ export const mod: SlashCommand = {
       .addStringOption((option) => option
         .setName('target')
         .setDescription('User to note about!')
-        .setRequired(true))
-      .addStringOption((option) => option
-        .setName('reason')
-        .setDescription('Reason for note!')
         .setRequired(true))
       .setName('note'))
     .addSubcommand((subcommand) => subcommand
@@ -53,19 +66,12 @@ export const mod: SlashCommand = {
         .setDescription('User to timeout!')
         .setRequired(true))
       .addStringOption((option) => option
-        .setName('reason')
-        .setDescription('VISIBLE TO USER: Reason for timeout!')
-        .setRequired(true))
-      .addStringOption((option) => option
         .setName('toggle')
         .setDescription('On off?')
         .addChoices(
           {name: 'On', value: 'on'},
           {name: 'Off', value: 'off'},
         ))
-      .addStringOption((option) => option
-        .setName('duration')
-        .setDescription('Duration of ban!'))
       .setName('timeout'))
     .addSubcommand((subcommand) => subcommand
       .setDescription('Kick a user')
@@ -73,28 +79,19 @@ export const mod: SlashCommand = {
         .setName('target')
         .setDescription('User to kick!')
         .setRequired(true))
-      .addStringOption((option) => option
-        .setName('reason')
-        .setDescription('Reason for kick!')
-        .setRequired(true))
-      .addStringOption((option) => option
-        .setName('channel')
-        .setDescription('Channel to kick from!'))
       .setName('kick')),
   async execute(interaction:ChatInputCommandInteraction) {
-    logger.debug(`[${PREFIX}] started!`);
-    await interaction.deferReply({ephemeral: true});
-    const embed = embedTemplate()
-      .setColor(Colors.DarkBlue)
-      .setDescription('Moderating...');
-    await interaction.editReply({embeds: [embed]});
+    // logger.debug(`[${PREFIX}] started!`);
+    // await interaction.deferReply({ephemeral: true});
+    // const embed = embedTemplate()
+    //   .setColor(Colors.DarkBlue)
+    //   .setDescription('Moderating...');
+    // await interaction.editReply({embeds: [embed]});
 
     const actor = interaction.member;
     const command = interaction.options.getSubcommand();
     const target = interaction.options.getString('target');
     let toggle = interaction.options.getString('toggle') as 'on' | 'off' | undefined;
-    const reason = interaction.options.getString('reason') || 'No reason provided';
-    // const reason = interaction.options.getString('reason') || 'No reason provided';
     const duration = interaction.options.getString('duration') || undefined;
     const channel = interaction.options.getString('channel');
 
@@ -115,21 +112,73 @@ export const mod: SlashCommand = {
       await targetGuild.channels.fetch((channel as string).slice(2, -1)) as TextChannel :
       undefined;
 
+    let verb = '';
+    if (command === 'ban') {
+      if (toggle === 'on') {
+        verb = 'banning';
+      } else {
+        verb = 'unbanning';
+      }
+    } else if (command === 'underban') {
+      if (toggle === 'on') {
+        verb = 'underbanning';
+      } else {
+        verb = 'un-underbanning';
+      }
+    } else if (command === 'warn') {
+      verb = 'warning';
+    } else if (command === 'note') {
+      verb = 'noting';
+    } else if (command === 'timeout') {
+      if (toggle === 'on') {
+        verb = 'timing out';
+      } else {
+        verb = 'untiming out';
+      }
+    } else if (command === 'kick') {
+      verb = 'kicking';
+    }
 
-    const result = await moderate(
-      actor as GuildMember,
-      command,
-      targetMember,
-      targetChannel,
-      toggle,
-      reason,
-      undefined,
-      duration,
-      interaction);
-    logger.debug(`[${PREFIX}] Result: ${result}`);
+    const modal = new ModalBuilder()
+      .setCustomId(`${command}Modal`)
+      .setTitle(`Tripbot ${command}`);
+    const privReason = new TextInputBuilder()
+      .setLabel(`Why are you ${verb} this user?`)
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder(`Tell the team why you're doing this`)
+      .setRequired(true)
+      .setCustomId('privReason');
+    const pubReason = new TextInputBuilder()
+      .setLabel('What should we tell the user?')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder(`Tell the user why you're doing this`)
+      .setRequired(true)
+      .setCustomId('pubReason');
 
-    interaction.editReply(result);
+    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
+    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
+    modal.addComponents(firstActionRow, secondActionRow);
+    await interaction.showModal(modal);
 
-    logger.debug(`[${PREFIX}] finished!`);
+    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`banModal`);
+    interaction.awaitModalSubmit({filter, time: 0})
+      .then(async (interaction) => {
+        const privReason = interaction.fields.getTextInputValue('privReason');
+        const pubReason = interaction.fields.getTextInputValue('pubReason');
+
+        const result = await moderate(
+          actor as GuildMember,
+          command,
+          targetMember,
+          targetChannel,
+          toggle,
+          privReason,
+          pubReason,
+          duration,
+          interaction);
+        logger.debug(`[${PREFIX}] Result: ${result}`);
+        interaction.editReply(result);
+        logger.debug(`[${PREFIX}] finished!`);
+      });
   },
 };
