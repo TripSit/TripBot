@@ -38,7 +38,7 @@ export type discordEntry = {
 
 export type ticketDbEntry = {
   issueDesc: string;
-  issueStatus: 'open' | 'closed' | 'blocked' | 'paused';
+  issueStatus: 'open' | 'closed' | 'blocked' | 'paused' | 'resolved';
   issueThread: string;
   issueType: 'appeal' | 'tripsit' | 'tech';
   issueUser: string;
