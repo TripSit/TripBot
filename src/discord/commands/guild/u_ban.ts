@@ -55,11 +55,10 @@ export const uBan: UserCommand = {
           actor,
           'ban',
           target,
-          undefined,
           'on',
           privReason,
           pubReason,
-          undefined,
+          null,
           interaction);
 
         logger.debug(`[${PREFIX}] Result: ${result}`);

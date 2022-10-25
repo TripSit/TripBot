@@ -3,7 +3,6 @@ import {
   ChatInputCommandInteraction,
   // Colors,
   GuildMember,
-  TextChannel,
   ModalBuilder,
   TextInputBuilder,
   ActionRowBuilder,
@@ -91,9 +90,7 @@ export const mod: SlashCommand = {
     const actor = interaction.member;
     const command = interaction.options.getSubcommand();
     const target = interaction.options.getString('target');
-    let toggle = interaction.options.getString('toggle') as 'on' | 'off' | undefined;
-    const duration = interaction.options.getString('duration') || undefined;
-    const channel = interaction.options.getString('channel');
+    let toggle = interaction.options.getString('toggle') as 'on' | 'off' | null;
 
     if (toggle === null) {
       toggle = 'on';
@@ -106,11 +103,6 @@ export const mod: SlashCommand = {
     logger.debug(`[${PREFIX}] target: ${target}`);
     const targetMember = await targetGuild.members.fetch((target as string).slice(2, -1)) as GuildMember;
     logger.debug(`[${PREFIX}] targetMember: ${targetMember}`);
-
-    logger.debug(`[${PREFIX}] channel: ${channel}`);
-    const targetChannel = channel !== null ?
-      await targetGuild.channels.fetch((channel as string).slice(2, -1)) as TextChannel :
-      undefined;
 
     let verb = '';
     if (command === 'ban') {
@@ -137,10 +129,28 @@ export const mod: SlashCommand = {
       }
     } else if (command === 'kick') {
       verb = 'kicking';
+    } else if (command === 'info') {
+      verb = 'getting info on';
+    }
+
+    if (command === 'info') {
+      const result = await moderate(
+        actor as GuildMember,
+        'info',
+        targetMember,
+        toggle,
+        null,
+        null,
+        null,
+        interaction);
+      logger.debug(`[${PREFIX}] Result: ${result}`);
+      interaction.reply(result);
+      logger.debug(`[${PREFIX}] finished!`);
+      return;
     }
 
     const modal = new ModalBuilder()
-      .setCustomId(`${command}Modal`)
+      .setCustomId(`modModal~${command}`)
       .setTitle(`Tripbot ${command}`);
     const privReason = new TextInputBuilder()
       .setLabel(`Why are you ${verb} this user?`)
@@ -154,30 +164,46 @@ export const mod: SlashCommand = {
       .setPlaceholder(`Tell the user why you're doing this`)
       .setRequired(true)
       .setCustomId('pubReason');
+    const timeoutDuration = new TextInputBuilder()
+      .setLabel('Timeout for how long? (Max/default 7 days)')
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
+      .setCustomId('duration');
 
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
     const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
     modal.addComponents(firstActionRow, secondActionRow);
+
+    if (command === 'timeout') {
+      const thirdActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutDuration);
+      modal.addComponents(thirdActionRow);
+    }
+
     await interaction.showModal(modal);
 
-    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`banModal`);
+    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`modModal`);
     interaction.awaitModalSubmit({filter, time: 0})
       .then(async (interaction) => {
         const privReason = interaction.fields.getTextInputValue('privReason');
         const pubReason = interaction.fields.getTextInputValue('pubReason');
-
+        let duration = null;
+        try {
+          duration = interaction.fields.getTextInputValue('duration');
+        } catch (e) {
+          // logger.error(`[${PREFIX}] ${e}`);
+        }
+        const modalCommand = interaction.customId.split('~')[1];
         const result = await moderate(
           actor as GuildMember,
-          command,
+          modalCommand,
           targetMember,
-          targetChannel,
           toggle,
           privReason,
           pubReason,
           duration,
           interaction);
         logger.debug(`[${PREFIX}] Result: ${result}`);
-        interaction.editReply(result);
+        interaction.reply(result);
         logger.debug(`[${PREFIX}] finished!`);
       });
   },

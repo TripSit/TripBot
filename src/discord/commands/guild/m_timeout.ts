@@ -5,7 +5,6 @@ import {
   ContextMenuCommandBuilder,
   GuildMember,
   ModalSubmitInteraction,
-  TextChannel,
 } from 'discord.js';
 import {
   ApplicationCommandType,
@@ -25,7 +24,6 @@ export const mTimeout: MessageCommand = {
   async execute(interaction) {
     const actor = interaction.member as GuildMember;
     const target = interaction.targetMessage.member as GuildMember;
-    const channel = interaction.channel as TextChannel;
     const message = interaction.targetMessage.cleanContent;
     const messageUrl = interaction.targetMessage.url;
 
@@ -71,8 +69,7 @@ export const mTimeout: MessageCommand = {
           actor,
           'timeout',
           target,
-          channel,
-          undefined,
+          null,
           privReason,
           interaction.fields.getTextInputValue('pubReason'),
           duration,

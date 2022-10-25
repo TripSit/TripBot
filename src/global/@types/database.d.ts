@@ -22,10 +22,9 @@ export type modActionDict = {
     actor: string;
     command: string;
     target: string;
-    channel?: string;
-    duration?: number;
-    pubReason?: string;
-    privReason?: string;
+    duration: number | null;
+    pubReason: string | null;
+    privReason: string | null;
   };
 };
 

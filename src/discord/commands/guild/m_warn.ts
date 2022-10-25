@@ -5,7 +5,6 @@ import {
   ContextMenuCommandBuilder,
   GuildMember,
   ModalSubmitInteraction,
-  TextChannel,
 } from 'discord.js';
 import {
   ApplicationCommandType,
@@ -25,7 +24,6 @@ export const mWarn: MessageCommand = {
   async execute(interaction) {
     const actor = interaction.member as GuildMember;
     const target = interaction.targetMessage.member as GuildMember;
-    const channel = interaction.channel as TextChannel;
     const message = interaction.targetMessage.cleanContent;
     const messageUrl = interaction.targetMessage.url;
 
@@ -52,7 +50,7 @@ export const mWarn: MessageCommand = {
     interaction.awaitModalSubmit({filter, time: 0})
       .then(async (interaction) => {
         const privReason = stripIndents`
-        > ${interaction.fields.getTextInputValue('privReason')}
+        ${interaction.fields.getTextInputValue('privReason')}
     
         [The offending message:](${messageUrl})
         > ${message}
@@ -63,11 +61,10 @@ export const mWarn: MessageCommand = {
           actor,
           'warn',
           target,
-          channel,
-          undefined,
+          null,
           privReason,
           interaction.fields.getTextInputValue('pubReason'),
-          undefined,
+          null,
           interaction);
         logger.debug(`[${PREFIX}] Result: ${result}`);
         interaction.reply(result);
