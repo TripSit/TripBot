@@ -10,6 +10,7 @@ import {
   ApplicationCommandType,
   TextInputStyle,
 } from 'discord-api-types/v10';
+import {parseDuration} from '../../../global/utils/parseDuration';
 import {UserCommand} from '../../@types/commandDef';
 import logger from '../../../global/utils/logger';
 import {moderate} from '../../../global/commands/g.moderate';
@@ -39,10 +40,17 @@ export const uBan: UserCommand = {
       .setPlaceholder('This will be sent to the user!')
       .setRequired(true)
       .setCustomId('pubReason');
+    const deleteMessages = new TextInputBuilder()
+      .setLabel('How many days of msg to remove?')
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder('Between 0 and 7 days (Default 0)')
+      .setCustomId('duration')
+      .setRequired(true);
 
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
     const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
-    modal.addComponents(firstActionRow, secondActionRow);
+    const thirdActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(deleteMessages);
+    modal.addComponents(firstActionRow, secondActionRow, thirdActionRow);
     await interaction.showModal(modal);
 
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`banModal`);
@@ -50,6 +58,20 @@ export const uBan: UserCommand = {
       .then(async (interaction) => {
         const privReason = interaction.fields.getTextInputValue('privReason');
         const pubReason = interaction.fields.getTextInputValue('pubReason');
+        const durationInput = interaction.fields.getTextInputValue('duration');
+
+        let duration = 0;
+        // Check if the given duration is a number between 0 and 7
+        const days = parseInt(durationInput);
+        if (isNaN(days) || days < 0 || days > 7) {
+          interaction.reply({content: 'Invalid number of days given', ephemeral: true});
+          return;
+        } else {
+          duration = duration ?
+            await parseDuration(`${durationInput} days`) :
+            0;
+          logger.debug(`[${PREFIX}] duration: ${duration}`);
+        }
 
         const result = await moderate(
           actor,
@@ -57,7 +79,7 @@ export const uBan: UserCommand = {
           target,
           privReason,
           pubReason,
-          null,
+          duration,
           interaction);
 
         logger.debug(`[${PREFIX}] Result: ${result}`);

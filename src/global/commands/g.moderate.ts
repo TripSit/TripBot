@@ -16,7 +16,6 @@ import {
 } from 'discord-api-types/v10';
 import {modActionDict} from '../@types/database.d';
 import {stripIndents} from 'common-tags';
-import {parseDuration} from '../utils/parseDuration';
 import {embedTemplate} from '../../discord/utils/embedTemplate';
 
 import ms from 'ms';
@@ -116,7 +115,7 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
  * @param {GuildMember} target
  * @param {string | null} privReason
  * @param {string | null} pubReason
- * @param {string | null} duration
+ * @param {number | null} duration
  * @param {ChatInputCommandInteraction} interaction
  */
 export async function moderate(
@@ -125,7 +124,7 @@ export async function moderate(
   target: GuildMember,
   privReason: string | null,
   pubReason: string | null,
-  duration: string | null,
+  duration: number | null,
   interaction:ChatInputCommandInteraction | ModalSubmitInteraction | UserContextMenuCommandInteraction | undefined,
 ):Promise<any> {
   logger.debug(stripIndents`[${PREFIX}]
@@ -136,8 +135,6 @@ export async function moderate(
       PubReason: ${pubReason}
       PrivReason: ${privReason}
     `);
-
-  let minutes = 604800000;
 
   // Determine if the actor is on the team
   if (actor.roles) {
@@ -164,14 +161,6 @@ export async function moderate(
     });
   }
 
-  // Get duration
-  if (duration) {
-    minutes = duration ?
-      await parseDuration(duration) :
-      604800000;
-    logger.debug(`[${PREFIX}] minutes: ${minutes}`);
-  }
-
   // Send a message to the user
   /* eslint-disable max-len */
   if (command !== 'report' && command !== 'note' && command !== 'info') {
@@ -179,7 +168,7 @@ export async function moderate(
       .setColor(embedVariables[command as keyof typeof embedVariables].embedColor)
       .setTitle(embedVariables[command as keyof typeof embedVariables].embedTitle)
       .setDescription(stripIndents`
-    Hey ${target}, you have been ${embedVariables[command as keyof typeof embedVariables].verb}${duration ? ` for ${ms(minutes, {long: true})}` : ''} by Team TripSit:
+    Hey ${target}, you have been ${embedVariables[command as keyof typeof embedVariables].verb}${duration && command === 'timeout' ? ` for ${ms(duration, {long: true})}` : ''} by Team TripSit:
 
     ${pubReason}
 
@@ -202,7 +191,7 @@ export async function moderate(
   // Perform actions
   if (command === 'timeout') {
     try {
-      target.timeout(minutes, privReason ?? 'No reason provided');
+      target.timeout(duration, privReason ?? 'No reason provided');
     } catch (err) {
       logger.error(`[${PREFIX}] Error: ${err}`);
     }
@@ -222,7 +211,9 @@ export async function moderate(
   } else if (command === 'ban') {
     try {
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-      targetGuild.members.ban(target, {reason: privReason ?? 'No reason provided'});
+      const deleteMessageValue = duration ?? 0;
+      logger.debug(`[${PREFIX}] Days to delete: ${deleteMessageValue}`);
+      targetGuild.members.ban(target, {deleteMessageSeconds: deleteMessageValue, reason: privReason ?? 'No reason provided'});
     } catch (err) {
       logger.error(`[${PREFIX}] Error: ${err}`);
     }
@@ -274,7 +265,7 @@ export async function moderate(
     actor: actor.id,
     command: command,
     target: target.id,
-    duration: duration ? minutes : null,
+    duration: duration,
     privReason: privReason,
     pubReason: pubReason,
   };
@@ -315,7 +306,7 @@ export async function moderate(
 
   const modlogEmbed = embedTemplate()
     // eslint-disable-next-line
-    .setTitle(`${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} (${target.user.tag})${duration ? ` for ${ms(minutes, {long: true})}` : ''}`)
+    .setTitle(`${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} (${target.user.tag})${duration ? ` for ${ms(duration, {long: true})}` : ''}`)
     .setDescription(stripIndents`
     **PrivReason:** ${privReason ?? 'No reason provided'}
     ${pubReason ? `**PubReason:** ${pubReason}` : ''}
@@ -340,7 +331,7 @@ export async function moderate(
     );
 
   // Send the message to the mod channel
-  if (command !== 'note' && command !== 'info') {
+  if (command !== 'info') {
     const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
     // We must send the mention outside of the embed, cuz mentions dont work in embeds
     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
@@ -381,9 +372,9 @@ export async function moderate(
   }
 
   // Return a message to the user confirming the user was acted on
-  logger.debug(`[${PREFIX}] ${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}ed!`);
+  logger.debug(`[${PREFIX}] ${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
   const response = embedTemplate()
     .setColor(Colors.Yellow)
-    .setDescription(`${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}ed!`);
+    .setDescription(`${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
   return {embeds: [response], ephemeral: true};
 };

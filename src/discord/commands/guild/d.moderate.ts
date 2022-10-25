@@ -13,6 +13,7 @@ import {
 } from 'discord-api-types/v10';
 import {SlashCommand} from '../../@types/commandDef';
 // import {embedTemplate} from '../../utils/embedTemplate';
+import {parseDuration} from '../../../global/utils/parseDuration';
 import {moderate} from '../../../global/commands/g.moderate';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
@@ -162,15 +163,17 @@ export const mod: SlashCommand = {
       .setRequired(true)
       .setCustomId('pubReason');
     const timeoutDuration = new TextInputBuilder()
-      .setLabel('Timeout for how long? (Max/default 7 days)')
+      .setLabel('Timeout for how long?')
       .setStyle(TextInputStyle.Short)
-      .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
-      .setCustomId('duration');
+      .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max/default 7 days)')
+      .setCustomId('duration')
+      .setRequired(true);
     const deleteMessages = new TextInputBuilder()
-      .setLabel('How many msgs to remove? (Max/def 7 days)')
+      .setLabel('How many days of msg to remove?')
       .setStyle(TextInputStyle.Short)
-      .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
-      .setCustomId('duration');
+      .setPlaceholder('Between 0 and 7 days (Default 0)')
+      .setCustomId('duration')
+      .setRequired(true);
 
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
     modal.addComponents(firstActionRow);
@@ -183,7 +186,7 @@ export const mod: SlashCommand = {
       const timeoutDurationText = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutDuration);
       modal.addComponents(timeoutDurationText);
     }
-    if (command === 'ban' || command === 'underban') {
+    if (command === 'ban') {
       const deleteMessagesText = new ActionRowBuilder<TextInputBuilder>().addComponents(deleteMessages);
       modal.addComponents(deleteMessagesText);
     }
@@ -194,10 +197,34 @@ export const mod: SlashCommand = {
     interaction.awaitModalSubmit({filter, time: 0})
       .then(async (interaction) => {
         const privReason = interaction.fields.getTextInputValue('privReason');
-        const pubReason = interaction.fields.getTextInputValue('pubReason');
-        let duration = null;
+        let pubReason = '';
         try {
-          duration = interaction.fields.getTextInputValue('duration');
+          pubReason = interaction.fields.getTextInputValue('pubReason');
+        } catch (e) {
+          // ignore
+        }
+        let duration = null as number | null;
+        try {
+          const durationInput = interaction.fields.getTextInputValue('duration');
+          if (command === 'ban' || command === 'underban') {
+            // Check if the given duration is a number between 0 and 7
+            const days = parseInt(durationInput);
+            if (isNaN(days) || days < 0 || days > 7) {
+              interaction.reply({content: 'Invalid number of days given', ephemeral: true});
+              return;
+            } else {
+              duration = duration ?
+                await parseDuration(`${durationInput} days`) :
+                604800;
+              logger.debug(`[${PREFIX}] duration: ${duration}`);
+            }
+          } else if (command === 'timeout') {
+            // Get duration
+            duration = duration ?
+              await parseDuration(durationInput) :
+              604800000;
+            logger.debug(`[${PREFIX}] duration: ${duration}`);
+          }
         } catch (e) {
           // logger.error(`[${PREFIX}] ${e}`);
         }

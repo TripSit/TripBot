@@ -11,6 +11,7 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import {MessageCommand} from '../../@types/commandDef';
+import {parseDuration} from '../../../global/utils/parseDuration';
 import {stripIndents} from 'common-tags';
 import logger from '../../../global/utils/logger';
 import {moderate} from '../../../global/commands/g.moderate';
@@ -65,13 +66,23 @@ export const mTimeout: MessageCommand = {
         `;
 
         const duration = interaction.fields.getTextInputValue('timeoutDuration');
+
+        // Get duration
+        let minutes = 604800000;
+        if (duration) {
+          minutes = duration ?
+            await parseDuration(duration) :
+            604800000;
+          logger.debug(`[${PREFIX}] minutes: ${minutes}`);
+        }
+
         const result = await moderate(
           actor,
           'timeout',
           target,
           privReason,
           interaction.fields.getTextInputValue('pubReason'),
-          duration,
+          minutes,
           interaction,
         );
         logger.debug(`[${PREFIX}] Result: ${result}`);
