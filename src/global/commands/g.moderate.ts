@@ -344,8 +344,7 @@ export async function moderate(
 
   // If this is the info command then return with info
   if (command === 'info') {
-    let infoString = 'Squeaky clean!';
-    infoString = stripIndents`
+    let infoString = stripIndents`
       ${targetActionList.ban.length > 0 ? `**Bans**\n${targetActionList.ban.join('\n')}` : ''}
       ${targetActionList.underban.length > 0 ? `**Underbans**\n${targetActionList.underban.join('\n')}` : ''}
       ${targetActionList.kick.length > 0 ? `**Kicks**\n${targetActionList.kick.join('\n')}` : ''}
@@ -354,6 +353,9 @@ export async function moderate(
       ${targetActionList.report.length > 0 ? `**Reports**\n${targetActionList.report.join('\n')}` : ''}
       ${targetActionList.note.length > 0 ? `**Notes**\n${targetActionList.note.join('\n')}` : ''}
     `;
+    if (infoString.length === 0) {
+      infoString = 'Squeaky clean!';
+    }
     logger.debug(`[${PREFIX}] infoString: ${infoString}`);
     modlogEmbed.setDescription(infoString);
     try {
