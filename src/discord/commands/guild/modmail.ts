@@ -389,7 +389,7 @@ export async function modmailCreate(
 
       // Send a message to the thread
       let threadFirstResponse = stripIndents`
-        Hey ${isDev ? pingRole.toString() : pingRole}! ${actor} has submitted a new ticket:
+        Hey ${isDev ? pingRole.toString() : pingRole}! ${actor.tag} has submitted a new ticket:
 
         ${modmailVars[issueType].labelA}
         > ${modalInputA}
@@ -397,22 +397,23 @@ export async function modmailCreate(
         > ${modalInputB}
         ` : ''}
 
-        Please look into it and respond to them in this thread!
+        **You can respond to them in this thread!**
       `;
       if (issueType === 'tripsit') {
         threadFirstResponse = stripIndents`
-          Hey ${isDev ? pingRole.toString() : pingRole}! ${actor} has submitted a new ticket:
+          Hey ${isDev ? pingRole.toString() : pingRole}! ${actor.tag} has submitted a new ticket:
 
           ${modmailVars[issueType].labelA}
           > ${modalInputA}
           ${modalInputB !== '' ? `${modmailVars[issueType].labelB}
           > ${modalInputB}
           ` : ''}
-          Please look into it and respond to them in this thread!
 
           If this is a medical emergency they need to initiate EMS: we do not call EMS on behalf of anyone.
           When they're feeling better you can use the "I'm Good" button to let the team know they're okay.
-          If you they would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
+          If they they would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
+
+          **You can respond to them in this thread!**
         `;
       }
 
@@ -529,27 +530,27 @@ export async function modmailDMInteraction(message:Message) {
   }
 
   if (Object.keys(ticketData).length !== 0 && ticketData.issueStatus !== 'closed') {
-    const guild = await message.client.guilds.fetch(env.DISCORD_GUILD_ID);
-    let member = {} as GuildMember;
-    try {
-      member = await guild.members.fetch(message.author.id);
-    } catch (error) {
-      // This just means the user is not on the TripSit guild
-    }
+    // const guild = await message.client.guilds.fetch(env.DISCORD_GUILD_ID);
+    // let member = {} as GuildMember;
+    // try {
+    //   member = await guild.members.fetch(message.author.id);
+    // } catch (error) {
+    //   // This just means the user is not on the TripSit guild
+    // }
 
     // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
 
     // If the user is on the guild, direct them to the existing ticket
-    if (member.user) {
-      const channel = await message.client.channels.fetch(env.CHANNEL_HELPDESK) as TextChannel;
-      const issueThread = await channel.threads.fetch(ticketData.issueThread) as ThreadChannel;
-      const embed = embedTemplate();
-      embed.setDescription(stripIndents`You already have an open issue here ${issueThread.toString()}!`);
-      message.reply({embeds: [embed]});
-      return;
-    }
+    // if (member.user) {
+    //   const channel = await message.client.channels.fetch(env.CHANNEL_HELPDESK) as TextChannel;
+    //   const issueThread = await channel.threads.fetch(ticketData.issueThread) as ThreadChannel;
+    //   const embed = embedTemplate();
+    //   embed.setDescription(stripIndents`You already have an open issue here ${issueThread.toString()}!`);
+    //   message.reply({embeds: [embed]});
+    //   return;
+    // }
 
-    // Otherwise send a message to the thread
+    // Send a message to the thread
     const channel = message.client.channels.cache.get(env.CHANNEL_HELPDESK) as TextChannel;
     let thread = {} as ThreadChannel;
     try {
@@ -580,10 +581,10 @@ export async function modmailDMInteraction(message:Message) {
  * @param {Message} message The message sent to the bot
  */
 export async function modmailThreadInteraction(message:Message) {
-  const threadMessage = message.channel.type === ChannelType.PublicThread ||
-  message.channel.type === ChannelType.PrivateThread;
-  logger.debug(`[${PREFIX}] threadMessage: ${threadMessage}!`);
   if (message.member) {
+    const threadMessage = message.channel.type === ChannelType.PublicThread ||
+    message.channel.type === ChannelType.PrivateThread;
+    logger.debug(`[${PREFIX}] threadMessage: ${threadMessage}!`);
     if (threadMessage) {
       logger.debug(`[${PREFIX}] message.channel.parentId: ${message.channel.parentId}!`);
       if (
