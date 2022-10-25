@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+/* eslint-disable max-len */
 
 export type userDbEntry = {
   karma?: {
@@ -20,13 +21,16 @@ export type userDbEntry = {
 export type modActionDict = {
   [key: string]: {
     actor: string;
-    command: string;
+    command: modAction;
     target: string;
     duration: number | null;
     pubReason: string | null;
     privReason: string | null;
   };
 };
+
+export type modAction = 'ban' | 'unban' | 'underban' | 'ununderban' | 'warn' | 'note' | 'timeout' | 'untimeout' | 'kick' | 'info' | 'note' | 'report';
+
 
 export type expDict = {
   total: expEntry,

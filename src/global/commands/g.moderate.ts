@@ -1,3 +1,5 @@
+/* eslint-disable max-len */
+
 import {
   time,
   Colors,
@@ -120,7 +122,7 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
  */
 export async function moderate(
   actor: GuildMember,
-  command:string,
+  command:'ban' | 'unban' | 'underban' | 'ununderban' | 'warn' | 'note' | 'timeout' | 'untimeout' | 'kick' | 'info' | 'note' | 'report',
   target: GuildMember,
   privReason: string | null,
   pubReason: string | null,

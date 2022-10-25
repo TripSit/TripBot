@@ -18,6 +18,7 @@ import {moderate} from '../../../global/commands/g.moderate';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
+import {modAction} from '../../../global/@types/database';
 const PREFIX = path.parse(__filename).name;
 
 export const mod: SlashCommand = {
@@ -228,7 +229,7 @@ export const mod: SlashCommand = {
         } catch (e) {
           // logger.error(`[${PREFIX}] ${e}`);
         }
-        const modalCommand = interaction.customId.split('~')[1];
+        const modalCommand = interaction.customId.split('~')[1] as modAction;
         const result = await moderate(
           actor as GuildMember,
           modalCommand,
