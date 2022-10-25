@@ -24,20 +24,20 @@ import logger from '../utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-const teamRoles = [
-  env.ROLE_DIRECTOR,
-  env.ROLE_SUCCESSOR,
-  env.ROLE_SYSADMIN,
-  env.ROLE_LEADDEV,
-  env.ROLE_DISCORDADMIN,
-  env.ROLE_MODERATOR,
-  env.ROLE_TRIPSITTER,
-  env.ROLE_TEAMTRIPSIT,
-  env.ROLE_TRIPBOT2,
-  env.ROLE_TRIPBOT,
-  env.ROLE_BOT,
-  env.ROLE_DEVELOPER,
-];
+// const teamRoles = [
+//   env.ROLE_DIRECTOR,
+//   env.ROLE_SUCCESSOR,
+//   env.ROLE_SYSADMIN,
+//   env.ROLE_LEADDEV,
+//   env.ROLE_DISCORDADMIN,
+//   env.ROLE_MODERATOR,
+//   env.ROLE_TRIPSITTER,
+//   env.ROLE_TEAMTRIPSIT,
+//   env.ROLE_TRIPBOT2,
+//   env.ROLE_TRIPBOT,
+//   env.ROLE_BOT,
+//   env.ROLE_DEVELOPER,
+// ];
 
 const embedVariables = {
   timeout: {
@@ -137,29 +137,29 @@ export async function moderate(
     `);
 
   // Determine if the actor is on the team
-  if (actor.roles) {
-    // If you're unbanning a actor they wont have roles
-    actor.roles.cache.forEach(async (role) => {
-      if (teamRoles.includes(role.id)) {
-        // Actor Team check - Only team members can use mod actions (except report)
-        if (command !== 'report') {
-          // logger.debug(`[${PREFIX}] actor is NOT a team member!`);
-          return {content: stripIndents`Hey ${actor}, you need to be a team member to ${command}!`, ephemeral: true};
-        }
-      }
-    });
-  }
+  // if (actor.roles) {
+  //   // If you're unbanning a actor they wont have roles
+  //   actor.roles.cache.forEach(async (role) => {
+  //     if (teamRoles.includes(role.id)) {
+  //       // Actor Team check - Only team members can use mod actions (except report)
+  //       if (command !== 'report') {
+  //         // logger.debug(`[${PREFIX}] actor is NOT a team member!`);
+  //         return {content: stripIndents`Hey ${actor}, you need to be a team member to ${command}!`, ephemeral: true};
+  //       }
+  //     }
+  //   });
+  // }
 
   // Determine if the target is on the team
-  if (target.roles) {
-    target.roles.cache.forEach(async (role) => {
-      if (teamRoles.includes(role.id)) {
-        // Target Team check - Only NON team members can be targeted by mod actions
-        logger.debug(`[${PREFIX}] Target is a team member111!`);
-        return {content: stripIndents`Hey ${actor}, you cannot ${command} a team member!`, ephemeral: true};
-      }
-    });
-  }
+  // if (target.roles) {
+  //   target.roles.cache.forEach(async (role) => {
+  //     if (teamRoles.includes(role.id)) {
+  //       // Target Team check - Only NON team members can be targeted by mod actions
+  //       logger.debug(`[${PREFIX}] Target is a team member111!`);
+  //       return {content: stripIndents`Hey ${actor}, you cannot ${command} a team member!`, ephemeral: true};
+  //     }
+  //   });
+  // }
 
   // Send a message to the user
   /* eslint-disable max-len */
@@ -296,12 +296,14 @@ export async function moderate(
           targetActionList[actionCommand as keyof typeof targetActionList].push(actionString);
         }
       });
-      ref.set(actions);
+    } else {
+      actions[Date.now().valueOf().toString()] = actionData;
     }
+    ref.set(actions);
   });
 
   // logger.debug(`[${PREFIX}] actions: ${JSON.stringify(actions)}`);
-  // logger.debug(`[${PREFIX}] targetActionCount: ${JSON.stringify(targetActionCount)}`);
+  logger.debug(`[${PREFIX}] targetActionCount: ${JSON.stringify(targetActionCount)}`);
   // logger.debug(`[${PREFIX}] targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
 
   const modlogEmbed = embedTemplate()
@@ -343,17 +345,15 @@ export async function moderate(
   // If this is the info command then return with info
   if (command === 'info') {
     let infoString = 'Squeaky clean!';
-    if (targetActionCount.report > 0) {
-      infoString += stripIndents`
-        ${targetActionList.ban.length > 0 ? `**Bans**\n${targetActionList.ban.join('\n')}` : ''}
-        ${targetActionList.underban.length > 0 ? `**Underbans**\n${targetActionList.underban.join('\n')}` : ''}
-        ${targetActionList.kick.length > 0 ? `**Kicks**\n${targetActionList.kick.join('\n')}` : ''}
-        ${targetActionList.timeout.length > 0 ? `**Timeouts**\n${targetActionList.timeout.join('\n')}` : ''}
-        ${targetActionList.warn.length > 0 ? `**Warns**\n${targetActionList.warn.join('\n')}` : ''}
-        ${targetActionList.report.length > 0 ? `**Reports**\n${targetActionList.report.join('\n')}` : ''}
-        ${targetActionList.note.length > 0 ? `**Notes**\n${targetActionList.report.join('\n')}` : ''}
-      `;
-    }
+    infoString = stripIndents`
+      ${targetActionList.ban.length > 0 ? `**Bans**\n${targetActionList.ban.join('\n')}` : ''}
+      ${targetActionList.underban.length > 0 ? `**Underbans**\n${targetActionList.underban.join('\n')}` : ''}
+      ${targetActionList.kick.length > 0 ? `**Kicks**\n${targetActionList.kick.join('\n')}` : ''}
+      ${targetActionList.timeout.length > 0 ? `**Timeouts**\n${targetActionList.timeout.join('\n')}` : ''}
+      ${targetActionList.warn.length > 0 ? `**Warns**\n${targetActionList.warn.join('\n')}` : ''}
+      ${targetActionList.report.length > 0 ? `**Reports**\n${targetActionList.report.join('\n')}` : ''}
+      ${targetActionList.note.length > 0 ? `**Notes**\n${targetActionList.note.join('\n')}` : ''}
+    `;
     logger.debug(`[${PREFIX}] infoString: ${infoString}`);
     modlogEmbed.setDescription(infoString);
     try {
