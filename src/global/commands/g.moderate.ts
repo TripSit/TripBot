@@ -6,7 +6,6 @@ import {
   GuildMember,
   TextChannel,
   ChatInputCommandInteraction,
-  User,
   Role,
   Guild,
   ModalSubmitInteraction,
@@ -15,77 +14,22 @@ import {
 import {
   ButtonStyle,
 } from 'discord-api-types/v10';
+import {modActionDict} from '../@types/database.d';
 import {stripIndents} from 'common-tags';
-import {parseDuration} from '../utils/parseDuration';
 import {embedTemplate} from '../../discord/utils/embedTemplate';
+
 import ms from 'ms';
 import env from '../utils/env.config';
 import logger from '../utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-let generalChannels = [];
-let hrChannels = [] as string[];
-let allChannels = [] as string[];
-
-if (env.NODE_ENV === 'production') {
-  generalChannels = [
-    '#tripsitters',
-    '#music',
-    '#science',
-    '#gaming',
-    '#cooking',
-    '#pets',
-    '#creative',
-    '#movies',
-    '#opiates',
-    '#depressants',
-    '#dissociatives',
-    '#psychedelics',
-    '#stimulants',
-    '#lounge',
-    '#tripsitvip',
-    '#gold-lounge',
-    '#psychonaut',
-    '#dissonaut',
-    '#minecraft',
-    '#recovery',
-    '#compsci',
-    '#tripsit-dev',
-    '#content',
-    '#teamtripsit',
-    '#moderators',
-    '#tripsit.me',
-    '#modhaven',
-    '#operations',
-    '#emergency',
-    '#meeting-room',
-    '#drugs',
-  ];
-  hrChannels = [
-    '#sanctuary',
-    '#tripsit',
-    '#tripsit1',
-    '#tripsit2',
-    '#tripsit3',
-  ];
-  allChannels = generalChannels.concat(hrChannels);
-} else {
-  generalChannels = [
-    '#sandbox-dev',
-  ];
-  hrChannels = [];
-  allChannels = generalChannels.concat(hrChannels);
-}
-
 const teamRoles = [
   env.ROLE_DIRECTOR,
   env.ROLE_SUCCESSOR,
   env.ROLE_SYSADMIN,
   env.ROLE_LEADDEV,
-  env.ROLE_IRCADMIN,
   env.ROLE_DISCORDADMIN,
-  env.ROLE_IRCOP,
   env.ROLE_MODERATOR,
   env.ROLE_TRIPSITTER,
   env.ROLE_TEAMTRIPSIT,
@@ -95,25 +39,63 @@ const teamRoles = [
   env.ROLE_DEVELOPER,
 ];
 
-// const modButtons = new ActionRowBuilder()
-//     .addComponents(
-//         new ButtonBuilder()
-//             .setCustomId('warnbtn')
-//             .setLabel('Warn')
-//             .setStyle(ButtonStyle.Primary),
-//         new ButtonBuilder()
-//             .setCustomId('timeoutbtn')
-//             .setLabel('Timeout')
-//             .setStyle(ButtonStyle.Secondary),
-//         new ButtonBuilder()
-//             .setCustomId('kickbtn')
-//             .setLabel('Kick')
-//             .setStyle(ButtonStyle.Secondary),
-//         new ButtonBuilder()
-//             .setCustomId('banbtn')
-//             .setLabel('Ban')
-//             .setStyle(ButtonStyle.Danger),
-//     );
+const embedVariables = {
+  timeout: {
+    embedColor: Colors.Yellow,
+    embedTitle: 'Timeout!',
+    verb: 'timed out',
+  },
+  untimeout: {
+    embedColor: Colors.Green,
+    embedTitle: 'Untimeout!',
+    verb: 'removed from time-out',
+  },
+  kick: {
+    embedColor: Colors.Orange,
+    embedTitle: 'Kicked!',
+    verb: 'kicked',
+  },
+  ban: {
+    embedColor: Colors.Red,
+    embedTitle: 'Banned!',
+    verb: 'banned',
+  },
+  unban: {
+    embedColor: Colors.Green,
+    embedTitle: 'Un-banned!',
+    verb: 'un-banned',
+  },
+  underban: {
+    embedColor: Colors.Blue,
+    embedTitle: 'Underbanned!',
+    verb: 'underbanned',
+  },
+  ununderban: {
+    embedColor: Colors.Green,
+    embedTitle: 'Un-Underbanned!',
+    verb: 'un-underbanned',
+  },
+  warn: {
+    embedColor: Colors.Yellow,
+    embedTitle: 'Warned!',
+    verb: 'warned',
+  },
+  note: {
+    embedColor: Colors.Yellow,
+    embedTitle: 'Note!',
+    verb: 'noted',
+  },
+  report: {
+    embedColor: Colors.Orange,
+    embedTitle: 'Report!',
+    verb: 'reported',
+  },
+  info: {
+    embedColor: Colors.Green,
+    embedTitle: 'Info!',
+    verb: 'got info on',
+  },
+};
 
 const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
   new ButtonBuilder()
@@ -127,695 +109,272 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
 );
 
 /**
- * Takes a user and returns information on them
- * @param {string | GuildMember} actor
+ * Takes a user and performs a moderation action on them
+ * @param {GuildMember} actor
  * @param {string} command
- * @param {string} target
- * @param {string} channel
- * @param {string} toggle
- * @param {string} reason
- * @param {string} duration
+ * @param {GuildMember} target
+ * @param {string | null} privReason
+ * @param {string | null} pubReason
+ * @param {number | null} duration
  * @param {ChatInputCommandInteraction} interaction
  */
 export async function moderate(
-  actor:string | GuildMember,
+  actor: GuildMember,
   command:string,
-  target:string | GuildMember,
-  channel:unknown,
-  toggle:string | undefined,
-  reason:string | undefined,
-  duration:string | undefined,
+  target: GuildMember,
+  privReason: string | null,
+  pubReason: string | null,
+  duration: number | null,
   interaction:ChatInputCommandInteraction | ModalSubmitInteraction | UserContextMenuCommandInteraction | undefined,
 ):Promise<any> {
   logger.debug(stripIndents`[${PREFIX}]
       Actor: ${actor}
       Command: ${command}
-      Toggle: ${toggle}
       Target: ${target}
-      Channel: ${channel}
       Duration: ${duration}
-      Reason: ${reason}
+      PubReason: ${pubReason}
+      PrivReason: ${privReason}
     `);
 
-  let minutes = 604800000;
-
-  // Get actor object
-
-  const [
-    actorUser, // eslint-disable-line
-    actorNickname,
-    actorUsername, // eslint-disable-line
-    actorId,
-    actorPlatform,
-    actorIsTeamMember,
-  ] = await determineUserInfo(actor);
-
-  // logger.debug(`[${PREFIX}] actorUser: ${JSON.stringify(actorUser, null, 2)}`);
-  logger.debug(`[${PREFIX}] actorNickname: ${actorNickname}`);
-  logger.debug(`[${PREFIX}] actorId: ${actorId}`);
-  logger.debug(`[${PREFIX}] actorPlatform: ${actorPlatform}`);
-  // logger.debug(`[${PREFIX}] actorUsername: ${actorUsername}`);
-  logger.debug(`[${PREFIX}] actorIsTeamMember: ${actorIsTeamMember}`);
-
-  // Actor Team check - Only team members can use mod actions (except report)
-  if (!actorIsTeamMember && command !== 'report') {
-    logger.debug(`[${PREFIX}] actor is NOT a team member!`);
-    return stripIndents`Hey ${actor}, you need to be a team member to ${command}!`;
-  }
-
-  // Get target object
-  const [
-    targetUser,
-    targetNickname,
-    targetUsername,
-    targetId,
-    targetPlatform,
-    targetIsTeamMember,
-  ] = await determineUserInfo(target);
-
-  // logger.debug(`[${PREFIX}] targetUser: ${JSON.stringify(targetUser, null, 2)}`);
-
-  if (!targetUser) {
-    return `[${PREFIX}] Target not found!`;
-  }
-
-  // Target Team check - Cannot be run on team members
-  if (targetIsTeamMember && command !== 'report') {
-    logger.debug(`[${PREFIX}] Target is a team member!`);
-    return stripIndents`Hey ${actor}, you cannot ${command} a team member!`;
-  }
-  logger.debug(`[${PREFIX}] targetPlatform: ${targetPlatform}`);
-  logger.debug(`[${PREFIX}] targetUsername: ${targetUsername}`);
-  logger.debug(`[${PREFIX}] targetIsTeamMember: ${targetIsTeamMember}`);
-
-  // Get channel object
-  let targetChannel = {} as TextChannel;
-  if (channel) {
-    if ((channel as TextChannel).guild) {
-      // If the query is an object and has the userId property, it's a discord user
-      logger.debug(`[${PREFIX}] Channel given is already channel object!`);
-      targetChannel = channel as TextChannel;
-    } else if ((channel as string).startsWith('<#') && (channel as string).endsWith('>')) {
-      // Discord channel mentions start with <#
-      const targetGuild = await interaction!.client.guilds.fetch(env.DISCORD_GUILD_ID);
-      targetChannel = await targetGuild.channels.fetch((channel as string).slice(2, -1)) as TextChannel;
-    }
-    logger.debug(`[${PREFIX}] targetChannel: ${JSON.stringify(targetChannel, null, 2)}`);
-    logger.debug(`[${PREFIX}] targetChannel: ${targetChannel.name}`);
-  }
-
-  // Get duration
-  if (duration) {
-    minutes = duration ?
-      await parseDuration(duration) :
-      604800000;
-    logger.debug(`[${PREFIX}] minutes: ${minutes}`);
-  }
-
-  logger.debug(`[${PREFIX}] command: ${command}`);
-  logger.debug(`[${PREFIX}] targetPlatform: ${targetPlatform}`);
-  logger.debug(`[${PREFIX}] duration: ${duration}`);
-  if (command === 'warn') {
-    if (targetPlatform === 'discord') {
-      const warnEmbed = embedTemplate()
-        .setColor(Colors.Yellow)
-        .setTitle('Warning!')
-        .setDescription(stripIndents`
-        You have been warned by Team TripSit:
-
-        ${reason}
-
-        Please read the rules and be respectful of them.
-
-        Contact a TripSit Team Member if you have any questions!`);
-      try {
-        await (targetUser as User).send({embeds: [warnEmbed], components: [warnButtons]});
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error: ${err}`);
-      }
-    }
-    if (targetPlatform === 'irc') {
-      logger.debug(`[${PREFIX}] Warning on IRC!`);
-      const warnMessage = stripIndents`
-          You have warned by Team TripSit:
-
-          ${reason}
-
-          Please read the rules and be respectful of them.
-
-          Contact a TripSit Team Member if you have any questions!`;
-      logger.debug(`[${PREFIX}] warnMessage: ${warnMessage}`);
-      logger.debug(`[${PREFIX}] targetNickname: ${targetNickname}`);
-      try {
-        global.ircClient.say(targetNickname, warnMessage);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error: ${err}`);
-      }
-    }
-  } else if (command === 'timeout') {
-    if (targetPlatform === 'discord') {
-      if (toggle === 'on' || toggle === null) {
-        try {
-          // The length of the timout defaults to 1 week if no time is given
-
-          logger.debug(`[${PREFIX}] timeout minutes: ${minutes}`);
-          targetUser.timeout(minutes, reason);
-          await targetUser.send(
-            `You have been quieted for ${ms(minutes, {long: true})}${reason ? ` because:\n ${reason}` : ''} `);
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error: ${err}`);
-        }
-      } else {
-        try {
-          await targetUser.send(`You have been unquieted because:\n${reason}`);
-          targetUser.timeout(0, reason);
-          logger.debug(`[${PREFIX}] I untimeouted ${targetNickname} because\n '${reason}'!`);
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error: ${err}`);
+  // Determine if the actor is on the team
+  if (actor.roles) {
+    // If you're unbanning a actor they wont have roles
+    actor.roles.cache.forEach(async (role) => {
+      if (teamRoles.includes(role.id)) {
+        // Actor Team check - Only team members can use mod actions (except report)
+        if (command !== 'report') {
+          // logger.debug(`[${PREFIX}] actor is NOT a team member!`);
+          return {content: stripIndents`Hey ${actor}, you need to be a team member to ${command}!`, ephemeral: true};
         }
       }
-    }
-    if (targetPlatform === 'irc') {
-      if (toggle === 'on' || toggle === null) {
-        // eslint-disable-next-line no-restricted-syntax
-        for (const ircChannel of allChannels) {
-          try {
-            global.ircClient.send('MODE', ircChannel, '+q', `*@${targetId}`);
-          } catch (err) {
-            logger.error(`[${PREFIX}] ${err}`);
-          }
-        }
-        try {
-          global.ircClient.say(targetNickname,
-            `You have been quieted for ${ms(minutes, {long: true})}${reason ? ` because:\n ${reason}` : ''} `);
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error: ${err}`);
-        }
-      } else {
-        // eslint-disable-next-line no-restricted-syntax
-        for (const ircChannel of allChannels) {
-          try {
-            global.ircClient.send('MODE', ircChannel, '-q', `*@${targetId}`);
-          } catch (err) {
-            logger.error(`[${PREFIX}] ${err}`);
-          }
-        }
-        try {
-          global.ircClient.say(targetNickname, `You have been unquieted because:\n${reason}`);
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error: ${err}`);
-        }
+    });
+  }
+
+  // Determine if the target is on the team
+  if (target.roles) {
+    target.roles.cache.forEach(async (role) => {
+      if (teamRoles.includes(role.id)) {
+        // Target Team check - Only NON team members can be targeted by mod actions
+        logger.debug(`[${PREFIX}] Target is a team member!`);
+        return {content: stripIndents`Hey ${actor}, you cannot ${command} a team member!`, ephemeral: true};
       }
+    });
+  }
+
+  // Send a message to the user
+  /* eslint-disable max-len */
+  if (command !== 'report' && command !== 'note' && command !== 'info') {
+    const warnEmbed = embedTemplate()
+      .setColor(embedVariables[command as keyof typeof embedVariables].embedColor)
+      .setTitle(embedVariables[command as keyof typeof embedVariables].embedTitle)
+      .setDescription(stripIndents`
+    Hey ${target}, you have been ${embedVariables[command as keyof typeof embedVariables].verb}${duration && command === 'timeout' ? ` for ${ms(duration, {long: true})}` : ''} by Team TripSit:
+
+    ${pubReason}
+
+    **Do not message a moderator to talk about this!**
+    
+    ${command !== 'ban' && command !== 'underban' && command !== 'kick'?
+    `You can respond to this bot and it will allow you to talk to the team privately!` :
+    `You can send an email to appeals@tripsit.me to appeal this ban!`}
+    Please read the rules and be respectful of them.
+
+    https://tripsit.me/rules 
+    `);
+    if (command !== 'ban' && command !== 'underban' && command !== 'kick') {
+      await target.user.send({embeds: [warnEmbed], components: [warnButtons]});
+    } else {
+      await target.user.send({embeds: [warnEmbed]});
+    }
+  }
+
+  // Perform actions
+  if (command === 'timeout') {
+    try {
+      target.timeout(duration, privReason ?? 'No reason provided');
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error: ${err}`);
+    }
+  } else if (command === 'untimeout') {
+    try {
+      target.timeout(0, privReason ?? 'No reason provided');
+      logger.debug(`[${PREFIX}] I untimeouted ${target.displayName} because\n '${privReason}'!`);
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error: ${err}`);
     }
   } else if (command === 'kick') {
-    if (targetPlatform === 'discord') {
-      try {
-        // await targetUser.send(`You have been kicked from the TripSit guild because\n ${reason}`);
-        targetUser.kick();
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error: ${err}`);
-      }
-    }
-    if (targetPlatform === 'irc') {
-      // eslint-disable-next-line no-restricted-syntax
-      for (const ircChannel of allChannels) {
-        try {
-          if (reason !== undefined) {
-            global.ircClient.send('KICK', ircChannel, targetNickname, reason);
-          }
-        } catch (err) {
-          logger.error(`[${PREFIX}] ${err}`);
-        }
-      }
-      try {
-        global.ircClient.say(targetNickname, `You have been kicked because:\n${reason}`);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error: ${err}`);
-      }
+    try {
+      target.kick();
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error: ${err}`);
     }
   } else if (command === 'ban') {
-    // IRCCloud
-    // if you do that: its basically only an sqline + a kill
-    if (targetPlatform === 'discord') {
-      if (toggle === 'on' || toggle === null) {
-        try {
-          // The length of the timout defaults to forever if no time is given
-          minutes = duration ?
-            await parseDuration(duration) :
-            0;
-          logger.debug(`[${PREFIX}] minutes: ${minutes}`);
-          const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-          targetGuild.members.ban(targetUser, {deleteMessageDays: 7, reason});
-          // await targetUser.send(
-          //     `You have been banned ${minutes ? `for ${ms(minutes, {long: true})}` : ''}\
-          //   ${reason ? ` because\n ${reason}` : ''} `);
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error: ${err}`);
-        }
-      } else {
-        try {
-          logger.debug(`[${PREFIX}] targetUser.id: ${targetUser.id}`);
-          const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-          const bans = await targetGuild.bans.fetch();
-          logger.debug(`[${PREFIX}] targetGuild.bans.fetch(): ${bans}`);
-          await targetGuild.bans.remove(targetUser, reason);
-          logger.debug(`[${PREFIX}] I unbanned ${targetNickname}!`);
-          targetUser.send(`You have been unbanned for ${reason}`);
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error: ${err}`);
-        }
-      }
-    }
-    if (targetPlatform === 'irc') {
-      if (toggle === 'on' || toggle === null) {
-        // Just go straight for the akill
-        global.ircClient.say(targetNickname,
-          `You have been banned for ${ms(minutes, {long: true})}${reason ? ` because:\n ${reason}` : ''} `);
-
-        const ircCommand = `akill add ${targetId} !P ${reason}`;
-        global.ircClient.say('operserv', ircCommand);
-        global.ircClient.say('#sandbox-dev', ircCommand);
-
-        // Kickban just in case
-        // eslint-disable-next-line no-restricted-syntax
-        for (const banChannel of allChannels) {
-          try {
-            global.ircClient.send('KICK', banChannel, targetNickname);
-            global.ircClient.send('MODE', banChannel, '+b', `*@${targetId}`);
-          } catch (err) {
-            logger.error(`[${PREFIX}] ${err}`);
-          }
-        }
-      } else {
-        try {
-          global.ircClient.say(targetNickname, `You have been unbanned ${reason ? ` because:\n ${reason}` : ''} `);
-        } catch (err) {
-          logger.error(`[${PREFIX}] User may not be in the irc`);
-        }
-
-        const ircCommand = `akill del ${targetId}`;
-        global.ircClient.say('operserv', ircCommand);
-        global.ircClient.say('#sandbox-dev', ircCommand);
-
-        // Unban just in case
-        // eslint-disable-next-line no-restricted-syntax
-        for (const unbanChannel of allChannels) {
-          try {
-            global.ircClient.send('MODE', unbanChannel, '-b', `*@${targetId}`);
-          } catch (err) {
-            logger.error(`[${PREFIX}] ${err}`);
-          }
-        }
-      }
-    }
-  }
-  // else if (command === 'underban') {
-  //   if (targetPlatform === 'discord') {
-  //     if (toggle === 'on' || toggle === null) {
-  //       try {
-  //         logger.debug(`[${PREFIX}] I would underban on discord`);
-  //         await targetUser.send(`You have been underbanned for
-  // ${ms(minutes, { long: true })}${reason ? ` because:\n ${reason}` : ''} `);
-  //       } catch (err) {
-  //         logger.error(`[${PREFIX}] Error: ${err}`);
-  //       }
-  //     } else {
-  //       try {
-  //         logger.debug(`[${PREFIX}] I would remove underban on discord`);
-  //         await targetUser.send(`The underban has been removed because:\n${reason}`);
-  //       } catch (err) {
-  //         logger.error(`[${PREFIX}] Error: ${err}`);
-  //       }
-  //     }
-  //   }
-  //   if (targetPlatform === 'irc') {
-  //     if (toggle === 'on' || toggle === null) {
-  //       // eslint-disable-next-line no-restricted-syntax
-  //       for (const ircChannel of allChannels) {
-  //         try {
-  //           logger.debug(`[${PREFIX}] I would underban on irc`);
-  //         } catch (err) {
-  //           logger.error(`[${PREFIX}] ${err}`);
-  //         }
-  //       }
-  //       global.ircClient.say(targetNickname, `You have been underbanned
-  // for ${ms(minutes, { long: true })}${reason ? ` because:\n ${reason}` : ''} `);
-  //     } else {
-  //       // eslint-disable-next-line no-restricted-syntax
-  //       for (const ircChannel of allChannels) {
-  //         try {
-  //           global.ircClient.send('MODE', ircChannel, '-q', `*@${targetId}`);
-  //         } catch (err) {
-  //           logger.error(`[${PREFIX}] ${err}`);
-  //         }
-  //       }
-  //       try {
-  //         global.ircClient.say(targetNickname, `You have been unquieted because:\n${reason}`);
-  //       } catch (err) {
-  //         logger.error(`[${PREFIX}] Error: ${err}`);
-  //       }
-  //     }
-  //   }
-  //   logger.debug(`[${PREFIX}] underban`);
-  //   // eslint-disable-next-line no-restricted-syntax
-  //   for (const channel of hrChannels) {
-  //     global.ircClient.send('KICK', channel, target);
-  //     global.ircClient.send('MODE', channel, '+b', `*@${target.host}`);
-  //   }
-  // } else if (command === 'say') {
-  //   logger.debug(`[${PREFIX}] say`);
-  //   // async function say(target, quote) {
-  //   //   logger.debug(`[${PREFIX}] Saying ${quote} to ${target}`);
-  //   //   global.ircClient.say(target, quote);
-  //   // }
-  // } else if (command === 'invite') {
-  //   logger.debug(`[${PREFIX}] say`);
-  //   async function invite(target, channel) {
-  //     global.ircClient.send('INVITE', target.nick, channel);
-  //     // global.ircClient.say('#sandbox-dev', `'INVITE', ${channel}, ${target.host}`);
-  //   }
-  // } else if (command === 'shadowquiet') {
-  //   async function shadowquiet(target) {
-  //     // eslint-disable-next-line no-restricted-syntax
-  //     for (const channel of allChannels) {
-  //       global.ircClient.send('MODE', channel, '+q', `*@${target.host}`);
-  //       global.ircClient.send('MODE', channel, '+z', `*@${target.host}`);
-  //     }
-  //   }
-  //   logger.debug(`[${PREFIX}] say`);
-  // } else if (command === 'rename') {
-  //   logger.debug(`[${PREFIX}] rename`);
-  //   // Needs operator privileges
-  //   // async function rename(target, newNick) {
-  //   //   const command = `SVSNICK ${target.nick} ${newNick}`;
-  //   //   global.ircClient.say('operserv', command);
-  //   //   global.ircClient.say('#sandbox-dev', command);
-  //   // }
-  // } else if (command === 'announce') {
-  //   logger.debug(`[${PREFIX}] announce`);
-  //   // async function announce(quote) {
-  //   //   // eslint-disable-next-line no-restricted-syntax
-  //   //   for (const channel of allChannels) {
-  //   //     global.ircClient.say(channel, '<><><> Global message from Team TripSit! <><><>');
-  //   //     global.ircClient.say(channel, quote);
-  //   //   }
-  //   // }
-  // }
-
-  // Get the moderator role
-  const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
-  const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
-
-  const targetEmbed = embedTemplate()
-    .setColor(Colors.Blue)
-  // .setImage(targetUser.displayAvatarURL)
-  // .setThumbnail(targetUser.displayAvatarURL)
-    .setDescription(`${actor} ${command}ed ${targetNickname}\
-      ${targetChannel.name ? ` in ${targetChannel.name}` : ''}\
-      ${duration ? ` for ${ms(minutes, {long: true})}` : ''}\
-      ${reason ? ` because\n ${reason}` : ''}`)
-    .addFields(
-      {name: 'Displayname', value: `${targetNickname !== null ? targetNickname : 'None'}`, inline: true},
-      {name: 'Username', value: `${targetUsername}`, inline: true},
-      {name: 'ID', value: `${targetId}`, inline: true},
-    );
-  if (targetPlatform === 'discord') {
-    targetEmbed.addFields(
-      {
-        name: 'Created',
-        value: `${(targetUser as GuildMember).user ? time(targetUser.user.createdAt, 'R') :
-          time(targetUser.createdAt, 'R')}`, inline: true},
-      {name: 'Joined', value: `${time(targetUser.joinedAt, 'R')}`, inline: true},
-      // { name: 'Timeout until', value: `${targetUser.communicationDisabledUntil
-      // ? time(targetUser.communicationDisabledUntil, 'R') : 'Not Timeouted'}`, inline: true },
-    );
-  }
-  // .addFields(
-  //   { name: '# of Reports', value: `${targetModActions.received_report
-  // ? targetModActions.received_report.length : 0}`, inline: true },
-  //   { name: '# of Timeouts', value: `${targetModActions.received_timeout
-  // ? targetModActions.received_timeout.length : 0}`, inline: true },
-  //   { name: '# of Warns', value: `${targetModActions.received_warn
-  // ? targetModActions.received_warn.length : 0}`, inline: true },
-  // )
-  // .addFields(
-  //   { name: '# of Kicks', value: `${targetModActions.received_kick
-  // ? targetModActions.received_kick.length : 0}`, inline: true },
-  //   { name: '# of Bans', value: `${targetModActions.received_ban
-  // ? targetModActions.received_ban.length : 0}`, inline: true },
-  //   { name: '# of Notes', value: `${targetModActions.received_note
-  // ? targetModActions.received_note.length : 0}`, inline: true },
-  // )
-  // .addFields(
-  //   { name: '# of Tripsitmes', value: `${targetModActions.received_tripsitme
-  // ? targetModActions.received_tripsitme : 0}`, inline: true },
-  //   { name: '# of I\'m Good', value: `${targetModActions.received_imgood
-  // ? targetModActions.received_imgood : 0}`, inline: true },
-  //   { name: '# of Fucks to Give', value: '0', inline: true },
-  // );
-
-  if (command === 'info') {
-    if (targetPlatform === 'discord') {
-      try {
-        // const reply = {embeds: [targetEmbed], ephemeral: true, components: [modButtons]};
-        const reply = {embeds: [targetEmbed], ephemeral: true};
-        logger.debug(`[${PREFIX}] returned info about ${targetUser}`);
-        logger.debug(`[${PREFIX}] finished!`);
-        return reply;
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error: ${err}`);
-      }
-    }
-    if (targetPlatform === 'irc') {
-      try {
-        global.ircClient.say('tripbot', `${env.IRC_BOTPREFIX}${command} ${targetUsername}`);
-        global.ircClient.say('#sandbox', `Sent: ${env.IRC_BOTPREFIX}${command} ${targetUsername}`);
-        return;
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error: ${err}`);
-      }
-    }
-  }
-
-  logger.debug(`[${PREFIX}] CHANNEL_MODERATORS: ${env.CHANNEL_MODERATORS}`);
-  const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
-  // We must send the mention outside of the embed, cuz mentions dont work in embeds
-  if (command !== 'note') {
-    modChan.send(`Hey <@&${roleModerator.id}>!`);
-  }
-  modChan.send({embeds: [targetEmbed]});
-  logger.debug(`[${PREFIX}] sent a message to the moderators room`);
-
-  const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
-  modlog.send({embeds: [targetEmbed]});
-  logger.debug(`[${PREFIX}] sent a message to the modlog room`);
-
-  // const now = new Date().toString();
-  // const targetModAction = {
-  //   [now]: {
-  //     actor: (actor as GuildMember).id,
-  //     target: targetUser.id,
-  //     command,
-  //   },
-  // };
-  // if (reason) {
-  //   targetModAction[now].reason = reason;
-  // }
-  // if (duration) {
-  //   targetModAction[now].duration = duration;
-  // }
-  // if (targetChannel) {
-  //   targetModAction[now].targetChannel = targetChannel.toString();
-  // }
-
-  // logger.debug(`[${PREFIX}] targetModAction: ${JSON.stringify(targetModAction, null, 2)}`);
-  // logger.debug(`[${PREFIX}] targetAction: ${targetAction}`);
-  // if ('modActions' in targetData) {
-  //   if (targetAction in targetData.modActions) {
-  //     logger.debug(`[${PREFIX}] targetAction in targetData.modActions`);
-  //     targetData.modActions[targetAction].push(targetModAction);
-  //   } else {
-  //     logger.debug(`[${PREFIX}] targetAction not in targetData.modActions`);
-  //     targetData.modActions[targetAction] = [targetModAction];
-  //   }
-  // } else {
-  //   logger.debug(`[${PREFIX}] modActions not in targetData`);
-  //   targetData.modActions = {
-  //     [targetAction]: [targetModAction],
-  //   };
-  // }
-
-  // // Load targetUser data
-  // await setUserInfo(targetFbid, targetData);
-
-  // // // Extract actor data
-  // const actorAction = `${command}_received`;
-
-  // const actorModAction = {
-  //   [now]: {
-  //     actor: actor.id,
-  //     target: targetUser.id,
-  //   },
-  // };
-  // if (reason) {
-  //   actorModAction[now].reason = reason;
-  // }
-  // if (duration) {
-  //   actorModAction[now].duration = duration;
-  // }
-  // if (targetChannel) {
-  //   actorModAction[now].targetChannel = targetChannel.id;
-  // }
-
-  // // Extract actorData data
-  // const [actorData, actorFbid] = await getUserInfo(actorUser);
-
-  // if ('modActions' in actorData) {
-  //   if (actorAction in actorData.modActions) {
-  //     logger.debug(`[${PREFIX}] actorAction in actorData.modActions`);
-  //     actorData.modActions[actorAction].push(actorModAction);
-  //   } else {
-  //     logger.debug(`[${PREFIX}] actorAction not in actorData.modActions`);
-  //     actorData.modActions[actorAction] = [actorModAction];
-  //   }
-  // } else {
-  //   logger.debug(`[${PREFIX}] modActions not in actorData`);
-  //   actorData.modActions = {
-  //     [actorAction]: [actorModAction],
-  //   };
-  // }
-
-  // // // Load actor data
-  // await setUserInfo(actorFbid, actorData);
-
-  // logger.debug(`[${PREFIX}] finished!`);
-
-  logger.debug(`[${PREFIX}] ${targetNickname} has been ${command}ed!`);
-  const response = embedTemplate()
-    .setColor(Colors.Yellow)
-    .setDescription(`${targetNickname} has been ${command}ed!`);
-  return {embeds: [response], ephemeral: true};
-};
-
-/**
- * Takes a user and returns information on them
- * @param {any} query A user object or a string of a user's ID
- * @return {string[]} A list of properties about this user
- */
-async function determineUserInfo(
-  query:GuildMember | string,
-):Promise<any[]> {
-  let userInfo:GuildMember | User | string = '';
-  let userPlatform = null;
-  let userNickname = null;
-  let userUsername = null;
-  let userId = null;
-  let userIsTeamMember = false;
-  // logger.debug(`[${PREFIX}] Query: ${typeof query}`);
-  // logger.debug(`[${PREFIX}] Query: ${query}`);
-  // logger.debug(`[${PREFIX}] Query: ${JSON.stringify(query, null, 2)}`);
-
-  if (query === 'The community') {
-    logger.debug(`[${PREFIX}] Community!`);
-    userInfo = 'The community';
-    userUsername = 'The community';
-    userPlatform = 'discord';
-    userNickname = 'The community';
-    userId = 'The community';
-    userIsTeamMember = true;
-    return [userInfo, userNickname, userUsername, userId, userPlatform, userIsTeamMember.toString()];
-  }
-
-  // logger.debug(`[${PREFIX}] Query.userId: ${query.guildId}`);
-
-  if ((query as GuildMember).guild) {
-    // If the query is an object and has the userId property, it's a discord user
-    logger.debug(`[${PREFIX}] Query is already discord member object`);
-    userPlatform = 'discord';
-    userInfo = query as GuildMember;
-    userNickname = userInfo.displayName;
-    userUsername = `${userInfo.user.username}#${userInfo.user.discriminator}`;
-    userId = userInfo.user.id;
-  } else if ((query as string).startsWith('<@') && (query as string).endsWith('>')) {
-    // If the query string starts with a <@ and ends with > then it's likely a discord user
-    logger.debug(`[${PREFIX}] Query is a discord mention`);
-    logger.debug(`[${PREFIX}] Query userId: ${(query as string).slice(2, -1)}`);
     try {
-      const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-      userInfo = await tripsitGuild.members.fetch((query as string).slice(2, -1)) as GuildMember;
-      userPlatform = 'discord';
-      userNickname = userInfo.displayName;
-      userUsername = `${userInfo.user.username}#${userInfo.user.discriminator}`;
-      userId = userInfo.id;
+      const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+      const deleteMessageValue = duration ?? 0;
+      logger.debug(`[${PREFIX}] Days to delete: ${deleteMessageValue}`);
+      targetGuild.members.ban(target, {deleteMessageSeconds: deleteMessageValue, reason: privReason ?? 'No reason provided'});
     } catch (err) {
-      logger.error(`[${PREFIX}] Error fetching discord user: ${err}`);
-      userInfo = await global.client.users.fetch((query as string).slice(2, -1)) as User;
-      userPlatform = 'discord';
-      userNickname = userInfo.username;
-      userUsername = `${userInfo.username}#${userInfo.discriminator}`;
-      userId = userInfo.id;
+      logger.error(`[${PREFIX}] Error: ${err}`);
+    }
+  } else if (command === 'unban') {
+    try {
+      const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+      await targetGuild.bans.fetch();
+      await targetGuild.bans.remove(target.user, privReason ?? 'No reason provided');
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error: ${err}`);
+    }
+  } else if (command === 'underban') {
+    try {
+      const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+      targetGuild.members.ban(target, {reason: privReason ?? 'No reason provided'});
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error: ${err}`);
+    }
+  } else if (command === 'ununderban') {
+    try {
+      const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+      await targetGuild.bans.fetch();
+      await targetGuild.bans.remove(target.user, privReason ?? 'No reason provided');
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error: ${err}`);
     }
   }
-  // else {
-  //   // Do a whois lookup to the user
-  //   let data = null;
-  //   await global.ircClient.whois(query, async (resp) => {
-  //     data = resp;
-  //   });
 
-  //   // This is a hack substanc3 helped create to get around the fact that the whois command
-  //   // is asyncronous by default, so we need to make this syncronous
-  //   while (data === null) {
-  //       await new Promise(resolve => setTimeout(resolve, 100)); // eslint-disable-line
-  //   }
-  //   // logger.debug(`[${PREFIX}] data ${JSON.stringify(data, null, 2)}`);
-  //   if (!data.host) {
-  //     const embed = template.embedTemplate();
-  //     logger.debug(`[${PREFIX}] ${query} not found on IRC`);
-  //     embed.setDescription(stripIndents`
-  // ${query} is not found on IRC, did you spell that right?`);
-  //     const reply = {embeds: [embed], ephemeral: true};
-  //     return reply;
-  //   }
-  //   userInfo = data;
-  //   userPlatform = 'irc';
-  //   userNickname = data.user;
-  //   userUsername = data.nick;
-  //   userId = data.host;
-  // }
-  // logger.debug(`[${PREFIX}] userInfo: ${JSON.stringify(userInfo, null, 2)}`);
-  // logger.debug(`[${PREFIX}] userPlatform: ${userPlatform}`);
+  const targetActionCount = {
+    timeout: 0,
+    kick: 0,
+    ban: 0,
+    underban: 0,
+    warn: 0,
+    note: 0,
+    report: 0,
+  };
+  const targetActionList = {
+    timeout: [] as string[],
+    kick: [] as string[],
+    ban: [] as string[],
+    underban: [] as string[],
+    warn: [] as string[],
+    note: [] as string[],
+    report: [] as string[],
+  };
 
-  // Determine if the user is on the team
-  if (userPlatform === 'discord') {
-    // If you're unbanning a user they wont have roles
-    if ((userInfo as GuildMember).roles) {
-      (userInfo as GuildMember).roles.cache.forEach(async (role) => {
-        if (teamRoles.includes(role.id)) {
-          userIsTeamMember = true;
+  const actionData = {
+    actor: actor.id,
+    command: command,
+    target: target.id,
+    duration: duration,
+    privReason: privReason,
+    pubReason: pubReason,
+  };
+  let actions = {} as modActionDict;
+  const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}/modActions/`);
+  await ref.once('value', (data) => {
+    if (data.val() !== null) {
+      actions = data.val();
+      actions[Date.now().valueOf().toString()] = actionData;
+      Object.keys(actions).forEach(async (actionDate) => {
+        const actionValue = actions[actionDate];
+        const actionCommand = actionValue.command;
+        if (actionCommand in targetActionCount) {
+          targetActionCount[actionCommand as keyof typeof targetActionCount] += 1;
+        }
+        if (actionCommand in targetActionList) {
+          // turn actionDate into a date object
+          const actionDateObj = new Date(parseInt(actionDate));
+          // Format the date into a short format
+          const actionDateFormatted = actionDateObj.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          });
+          const actionString = stripIndents`
+            ${actionDateFormatted} by <@${actionValue.actor}>: ${actionValue.privReason} ${actionValue.pubReason ? `**PubReason: ${actionValue.pubReason}**` : ''}
+          `;
+          targetActionList[actionCommand as keyof typeof targetActionList].push(actionString);
         }
       });
+      ref.set(actions);
+    }
+  });
+
+  // logger.debug(`[${PREFIX}] actions: ${JSON.stringify(actions)}`);
+  // logger.debug(`[${PREFIX}] targetActionCount: ${JSON.stringify(targetActionCount)}`);
+  // logger.debug(`[${PREFIX}] targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
+
+  const modlogEmbed = embedTemplate()
+    // eslint-disable-next-line
+    .setTitle(`${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} (${target.user.tag})${duration ? ` for ${ms(duration, {long: true})}` : ''}`)
+    .setDescription(stripIndents`
+    **PrivReason:** ${privReason ?? 'No reason provided'}
+    ${pubReason ? `**PubReason:** ${pubReason}` : ''}
+    `)
+    .setColor(Colors.Blue)
+    .addFields(
+      {name: 'Created', value: `${time(target.user.createdAt, 'R')}`, inline: true},
+      {name: 'Joined', value: `${target.joinedAt ? time(target.joinedAt!, 'R') : 'Unknown'}`, inline: true},
+      {name: 'ID', value: `${target.id}`, inline: true},
+      {name: '# of Reports', value: `${targetActionCount.report}`, inline: true},
+      {name: '# of Warns', value: `${targetActionCount.warn}`, inline: true},
+      {name: '# of Timeouts', value: `${targetActionCount.timeout}`, inline: true},
+      // {name: '# of Kicks', value: `${targetActionCount.kick}`, inline: true},
+      // {name: '# of Bans', value: `${targetActionCount.ban}`, inline: true},
+      {name: '# of Notes', value: `${targetActionCount.note}`, inline: true},
+      {name: '# of Tripsitmes', value: `TBD`, inline: true},
+      // {name: '# of I\'m Good', value: `TBD`, inline: true},
+      {name: '# of Fucks to Give', value: '0', inline: true},
+      // {name: '\u200B', value: '\u200B', inline: true},
+      // {name: 'Displayname', value: `${target.displayName}`, inline: true},
+      // {name: 'Tag', value: `${target.user.tag}`, inline: true},
+    );
+
+  // Send the message to the mod channel
+  if (command !== 'info') {
+    const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
+    // We must send the mention outside of the embed, cuz mentions dont work in embeds
+    const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
+    const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
+    modChan.send({content: stripIndents`Hey ${roleModerator}!`, embeds: [modlogEmbed]});
+    logger.debug(`[${PREFIX}] sent a message to the moderators room`);
+  }
+
+  // If this is the info command then return with info
+  if (command === 'info') {
+    let infoString = '';
+    if (targetActionCount.report > 0) {
+      infoString += stripIndents`
+        ${targetActionList.ban.length > 0 ? `**Bans**\n${targetActionList.ban.join('\n')}` : ''}
+        ${targetActionList.underban.length > 0 ? `**Underbans**\n${targetActionList.underban.join('\n')}` : ''}
+        ${targetActionList.kick.length > 0 ? `**Kicks**\n${targetActionList.kick.join('\n')}` : ''}
+        ${targetActionList.timeout.length > 0 ? `**Timeouts**\n${targetActionList.timeout.join('\n')}` : ''}
+        ${targetActionList.warn.length > 0 ? `**Warns**\n${targetActionList.warn.join('\n')}` : ''}
+        ${targetActionList.report.length > 0 ? `**Reports**\n${targetActionList.report.join('\n')}` : ''}
+        ${targetActionList.note.length > 0 ? `**Notes**\n${targetActionList.report.join('\n')}` : ''}
+      `;
+    }
+    logger.debug(`[${PREFIX}] infoString: ${infoString}`);
+    modlogEmbed.setDescription(infoString);
+    try {
+      logger.debug(`[${PREFIX}] returned info about ${target.displayName}`);
+      return {embeds: [modlogEmbed], ephemeral: true};
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error: ${err}`);
     }
   }
-  // if (userPlatform === 'irc') {
-  //   logger.debug(`[${PREFIX}] userPlatform: ${userPlatform}`);
-  //   if (userInfo.host) {
-  //     const role = userInfo.host.split('/')[1];
-  //     logger.debug(`[${PREFIX}] role: ${role}`);
-  //     const ircTeamRoles = [
-  //       'founder',
-  //       'operator',
-  //       'admin',
-  //       'sysop',
-  //       'moderator',
-  //       'tripsitter',
-  //       'helper',
-  //       'guardian',
-  //     ];
-  //     if (ircTeamRoles.includes(role)) {
-  //       userIsTeamMember = true;
-  //     }
-  //   }
-  // }
-  return [userInfo, userNickname, userUsername, userId, userPlatform, userIsTeamMember];
-}
+
+  // Send a message to the modlog room
+  if (command !== 'info') {
+    const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+    modlog.send({embeds: [modlogEmbed]});
+    logger.debug(`[${PREFIX}] sent a message to the modlog room`);
+  }
+
+  // Return a message to the user confirming the user was acted on
+  logger.debug(`[${PREFIX}] ${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
+  const response = embedTemplate()
+    .setColor(Colors.Yellow)
+    .setDescription(`${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
+  return {embeds: [response], ephemeral: true};
+};

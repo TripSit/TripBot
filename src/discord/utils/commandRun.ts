@@ -4,8 +4,10 @@ import {
   MessageContextMenuCommandInteraction,
   UserContextMenuCommandInteraction,
   TextChannel,
+  Colors,
 } from 'discord.js';
 // import {SlashCommand} from './commandDef';
+import {embedTemplate} from './embedTemplate';
 import logger from '../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -112,10 +114,17 @@ export async function commandRun(
       // logger.error(`[${PREFIX}] error.name: ${error.name}`);
       // logger.error(`[${PREFIX}] error.message: ${error.message}`);
       logger.error(`[${PREFIX}] ERROR: ${error.stack}`);
-      interaction.reply({
-        content: 'There was an error while executing this command!',
-        ephemeral: true,
-      });
+      if (!interaction.replied) {
+        interaction.reply({
+          content: 'There was an error while executing this command0!',
+          ephemeral: true,
+        });
+      } else {
+        const embed = embedTemplate()
+          .setColor(Colors.Red)
+          .setDescription('There was an error while executing this command!');
+        await interaction.editReply({embeds: [embed]});
+      }
       if (env.NODE_ENV === 'production') {
         const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
         const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;

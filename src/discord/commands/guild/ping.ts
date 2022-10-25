@@ -22,6 +22,12 @@ export const ping: SlashCommand = {
   async execute(interaction) {
     const role = interaction.guild!.roles.cache.find((r) => r.name === 'TripBot');
 
+    const user = interaction.client.users.cache.get('332687787172167680');
+
+    logger.debug(`[${PREFIX}] user: ${user}`);
+
+    user!.send('Hello!');
+
     const embed1 = new EmbedBuilder()
       .setTitle('First Page')
       .setDescription(`

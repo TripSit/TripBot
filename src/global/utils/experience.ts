@@ -13,7 +13,6 @@ import logger from './logger';
 import fs from 'fs';
 // import {stripIndents} from 'common-tags';
 import {stripIndents} from 'common-tags';
-import {ircMessage} from '../../irc/@types/irc';
 import mee6data from '../assets/config/mee6-leaderboard.json';
 
 import * as path from 'path';
