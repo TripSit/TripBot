@@ -1,4 +1,5 @@
 import {
+  ChannelType,
   Message,
   // GuildTextBasedChannel,
   Role,
@@ -59,7 +60,9 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       '🤨',
     ];
     message.channel.send(faces[Math.floor(Math.random() * faces.length)]);
-  } else if (message.mentions.has(message.client.user) || message.cleanContent.toLowerCase().includes('tripbot')) {
+  } else if (
+    (message.mentions.has(message.client.user) || message.cleanContent.toLowerCase().includes('tripbot')) &&
+    message.channel.type !== ChannelType.DM) {
     const responses = [
       `*boops quietly*`,
       `*beeps quietly*`,

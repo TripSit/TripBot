@@ -1,12 +1,10 @@
 import {
-  MessageContextMenuCommandInteraction,
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
   ContextMenuCommandBuilder,
-  ModalSubmitInteraction,
   GuildMember,
-  TextChannel,
+  ModalSubmitInteraction,
 } from 'discord.js';
 import {
   ApplicationCommandType,
@@ -19,87 +17,53 @@ import {moderate} from '../../../global/commands/g.moderate';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-let actor = {} as GuildMember;
-let target = {} as GuildMember | string;
-let message = {};
-let channel = {} as TextChannel;
-let messageUrl = '';
-const command = 'report';
-
-export const report: MessageCommand = {
+export const mReport: MessageCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Report')
     .setType(ApplicationCommandType.Message),
-  async execute(interaction:MessageContextMenuCommandInteraction) {
-    // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction
-    actor = interaction.member as GuildMember;
-    // logger.debug(`[${PREFIX}] actor.username: ${actor.user.username}`);
-    // logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
+  async execute(interaction) {
+    const actor = interaction.member as GuildMember;
+    const target = interaction.targetMessage.member as GuildMember;
+    const message = interaction.targetMessage.cleanContent;
+    const messageUrl = interaction.targetMessage.url;
 
-    message = interaction.targetMessage.cleanContent;
-    // logger.debug(`[${PREFIX}] message: ${message}`);
-
-    messageUrl = interaction.targetMessage.url;
-
-    const authorObj = interaction.targetMessage.author;
-    logger.debug(`[${PREFIX}] authorObj: ${JSON.stringify(authorObj, null, 2)}`);
-
-    if (interaction.targetMessage.author.discriminator === '0000') {
-      // This is a bot, so we need to get the username of the user
-      target = interaction.targetMessage.author.username;
-      logger.debug(`[${PREFIX}] target: ${target}`);
-    } else {
-      const targetId = interaction.targetMessage.author.id;
-      logger.debug(`[${PREFIX}] targetId: ${targetId}`);
-
-      target = await interaction.guild!.members.fetch(targetId) as GuildMember;
-      // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
-      logger.debug(`[${PREFIX}] target.user.username: ${target.user.username}`);
-    }
-
-    // Create the modal
     const modal = new ModalBuilder()
       .setCustomId('reportModal')
       .setTitle('Tripbot Report');
-    const reportReason = new TextInputBuilder()
+    const privReason = new TextInputBuilder()
       .setLabel('Why are you reporting this?')
       .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder('Please be descriptive!')
-      .setCustomId('reportReason')
-      .setRequired(true);
-    // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(reportReason);
+      .setRequired(true)
+      .setCustomId('privReason');
 
-    // Add inputs to the modal
+    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
     modal.addComponents(firstActionRow);
-    // Show the modal to the user
     await interaction.showModal(modal);
-  },
-  async submit(interaction:ModalSubmitInteraction) {
-    logger.debug(`[${PREFIX}] started!`);
-    // await interaction.deferReply({ ephemeral: true });
-    channel = interaction.channel as TextChannel;
-    actor = interaction.member as GuildMember;
-    logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor.displayName, null, 2)}`);
-    logger.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
-    logger.debug(`[${PREFIX}] target: ${JSON.stringify((target as GuildMember).displayName ?
-      (target as GuildMember).displayName : target, null, 2)}`);
-    logger.debug(`[${PREFIX}] channel: ${JSON.stringify(channel.name, null, 2)}`);
-    const reason = stripIndents`
-    > ${interaction.fields.getTextInputValue('reportReason')}
+    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`reportModal`);
+    interaction.awaitModalSubmit({filter, time: 0})
+      .then(async (interaction) => {
+        const privReason = stripIndents`
+        ${interaction.fields.getTextInputValue('privReason')}
+    
+        [The offending message:](${messageUrl})
+        > ${message}
+    
+        `;
 
-    [The offending message:](${messageUrl})
-    > ${message}
+        const result = await moderate(
+          actor,
+          'report',
+          target,
+          privReason,
+          null,
+          null,
+          interaction,
+        );
+        logger.debug(`[${PREFIX}] Result: ${result}`);
+        interaction.reply(result);
 
-    `;
-
-    const toggle = undefined;
-    const duration = undefined;
-    const result = await moderate(actor, command, target, channel, toggle, reason, duration, interaction);
-    logger.debug(`[${PREFIX}] Result: ${result}`);
-
-    interaction.reply(result);
-
-    logger.debug(`[${PREFIX}] finished!`);
+        logger.debug(`[${PREFIX}] finished!`);
+      });
   },
 };

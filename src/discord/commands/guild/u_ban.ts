@@ -1,75 +1,91 @@
 import {
-  UserContextMenuCommandInteraction,
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
   ContextMenuCommandBuilder,
   GuildMember,
+  ModalSubmitInteraction,
 } from 'discord.js';
 import {
   ApplicationCommandType,
   TextInputStyle,
 } from 'discord-api-types/v10';
+import {parseDuration} from '../../../global/utils/parseDuration';
 import {UserCommand} from '../../@types/commandDef';
 import logger from '../../../global/utils/logger';
 import {moderate} from '../../../global/commands/g.moderate';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-
-let actor = {} as GuildMember;
-let target = {} as GuildMember | string;
-const command = 'ban';
-let reason = 'Why are you banning this person?';
-let duration = '4 days 3hrs 2 mins 30 seconds';
-
 export const uBan: UserCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Ban')
     .setType(ApplicationCommandType.User),
-  async execute(interaction:UserContextMenuCommandInteraction) {
-    // https://discord.js.org/#/docs/discord.js/stable/class/ContextMenuInteraction
-    actor = interaction.member as GuildMember;
-    // logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
-    target = interaction.targetMember as GuildMember;
-    // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+  async execute(interaction) {
+    const actor = interaction.member as GuildMember;
+    const target = interaction.targetMember as GuildMember;
 
-    // Create the modal
     const modal = new ModalBuilder()
       .setCustomId('banModal')
       .setTitle('Tripbot Ban');
-    const banReason = new TextInputBuilder()
-      .setLabel('Why are you banning this person?')
+    const privReason = new TextInputBuilder()
+      .setLabel('Why are you banning this user?')
       .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder(reason)
-      .setCustomId('banReason')
-      .setRequired(true);
-    const banDuration = new TextInputBuilder()
-      .setLabel('How long should this ban last?')
+      .setPlaceholder('Tell the team why you are banning this user.')
+      .setRequired(true)
+      .setCustomId('privReason');
+    const pubReason = new TextInputBuilder()
+      .setLabel('What should we tell the user?')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder('This will be sent to the user!')
+      .setRequired(true)
+      .setCustomId('pubReason');
+    const deleteMessages = new TextInputBuilder()
+      .setLabel('How many days of msg to remove?')
       .setStyle(TextInputStyle.Short)
-      .setPlaceholder(duration)
-      .setCustomId('banDuration');
-    // An action row only holds one text input, so you need one action row per text input.
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(banReason);
-    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(banDuration);
+      .setPlaceholder('Between 0 and 7 days (Default 0)')
+      .setCustomId('duration')
+      .setRequired(true);
 
-    // Add inputs to the modal
-    modal.addComponents(firstActionRow, secondActionRow);
-    // Show the modal to the user
+    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
+    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
+    const thirdActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(deleteMessages);
+    modal.addComponents(firstActionRow, secondActionRow, thirdActionRow);
     await interaction.showModal(modal);
-  },
-  async submit(interaction) {
-    // logger.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
-    // logger.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
-    duration = interaction.fields.getTextInputValue('banDuration');
-    logger.debug(`[${PREFIX}] duration: ${duration}`);
-    reason = interaction.fields.getTextInputValue('banReason');
-    logger.debug(`[${PREFIX}] reason: ${reason}`);
-    const result = await moderate(actor, command, target, undefined, 'on', reason, duration, interaction);
-    logger.debug(`[${PREFIX}] Result: ${result}`);
 
-    interaction.reply(result);
+    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`banModal`);
+    interaction.awaitModalSubmit({filter, time: 0})
+      .then(async (interaction) => {
+        const privReason = interaction.fields.getTextInputValue('privReason');
+        const pubReason = interaction.fields.getTextInputValue('pubReason');
+        const durationInput = interaction.fields.getTextInputValue('duration');
 
-    logger.debug(`[${PREFIX}] finished!`);
+        let duration = 0;
+        // Check if the given duration is a number between 0 and 7
+        const days = parseInt(durationInput);
+        if (isNaN(days) || days < 0 || days > 7) {
+          interaction.reply({content: 'Invalid number of days given', ephemeral: true});
+          return;
+        } else {
+          duration = duration ?
+            await parseDuration(`${durationInput} days`) :
+            0;
+          logger.debug(`[${PREFIX}] duration: ${duration}`);
+        }
+
+        const result = await moderate(
+          actor,
+          'ban',
+          target,
+          privReason,
+          pubReason,
+          duration,
+          interaction);
+
+        logger.debug(`[${PREFIX}] Result: ${result}`);
+        interaction.reply(result);
+
+        logger.debug(`[${PREFIX}] finished!`);
+      });
   },
 };

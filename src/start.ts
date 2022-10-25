@@ -1,12 +1,9 @@
-// Bad things happen if this is not at the start.
 import {discordConnect} from './discord/discordAPI';
-// import {ircConnect} from './irc/ircAPI';
 import {validateEnv} from './global/utils/env.validate';
 import {runTimer} from './discord/utils/timerAPI';
 import {firebaseConnect} from './global/utils/firebaseAPI';
 import {webserverConnect} from './webserver/webserverAPI';
 import db from './global/utils/database';
-// import { telegramConnect } from './telegram/telegramAPI';
 
 import env from './global/utils/env.config';
 
@@ -25,16 +22,7 @@ async function start() {
   if (!validateEnv()) return;
   if (env.NODE_ENV === 'production') {
     webserverConnect();
-    // if (env.IRC_PASSWORD) {
-    //   ircConnect();
-    // }
-    // if (env.TELEGRAM_TOKEN) {
-    //   // Telegram breaks on connect =/
-    //   await telegramConnect();
-    // }
   }
-
-  // ircConnect();
 
   if (env.DISCORD_CLIENT_TOKEN) {
     discordConnect();

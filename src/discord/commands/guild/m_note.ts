@@ -17,9 +17,9 @@ import {moderate} from '../../../global/commands/g.moderate';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const mWarn: MessageCommand = {
+export const mNote: MessageCommand = {
   data: new ContextMenuCommandBuilder()
-    .setName('Warn')
+    .setName('Note')
     .setType(ApplicationCommandType.Message),
   async execute(interaction) {
     const actor = interaction.member as GuildMember;
@@ -27,26 +27,22 @@ export const mWarn: MessageCommand = {
     const message = interaction.targetMessage.cleanContent;
     const messageUrl = interaction.targetMessage.url;
 
+    logger.debug(`${PREFIX} target: ${target}`);
+
     const modal = new ModalBuilder()
-      .setCustomId('warnModal')
-      .setTitle('Tripbot Warn');
+      .setCustomId('noteModal')
+      .setTitle('Tripbot Note');
     const privReason = new TextInputBuilder()
-      .setLabel('Why are you warning this person?')
+      .setLabel('What are you noting about this person?')
       .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('Tell the team why you are warning this user.')
+      .setPlaceholder('Tell the team why you are noting this user.')
       .setRequired(true)
       .setCustomId('privReason');
-    const pubReason = new TextInputBuilder()
-      .setLabel('What should we tell the user?')
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('This will be sent to the user!')
-      .setRequired(true)
-      .setCustomId('pubReason');
+
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
-    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
-    modal.addComponents(firstActionRow, secondActionRow);
+    modal.addComponents(firstActionRow);
     await interaction.showModal(modal);
-    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`warnModal`);
+    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`noteModal`);
     interaction.awaitModalSubmit({filter, time: 0})
       .then(async (interaction) => {
         const privReason = stripIndents`
@@ -59,14 +55,17 @@ export const mWarn: MessageCommand = {
 
         const result = await moderate(
           actor,
-          'warn',
+          'note',
           target,
           privReason,
-          interaction.fields.getTextInputValue('pubReason'),
           null,
-          interaction);
+          null,
+          interaction,
+        );
         logger.debug(`[${PREFIX}] Result: ${result}`);
         interaction.reply(result);
+
+        logger.debug(`[${PREFIX}] finished!`);
       });
   },
 };
