@@ -66,7 +66,6 @@ export const report: SlashCommand = {
           interaction.member as GuildMember,
           'report',
           targetMember,
-          null,
           privReason,
           null,
           null,

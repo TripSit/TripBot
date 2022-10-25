@@ -88,12 +88,16 @@ export const mod: SlashCommand = {
     // await interaction.editReply({embeds: [embed]});
 
     const actor = interaction.member;
-    const command = interaction.options.getSubcommand();
+    let command = interaction.options.getSubcommand();
     const target = interaction.options.getString('target');
     let toggle = interaction.options.getString('toggle') as 'on' | 'off' | null;
 
     if (toggle === null) {
       toggle = 'on';
+    }
+
+    if (toggle === 'off') {
+      command = 'un' + command;
     }
 
     // logger.debug(`[${PREFIX}] toggle: ${toggle}`);
@@ -106,27 +110,21 @@ export const mod: SlashCommand = {
 
     let verb = '';
     if (command === 'ban') {
-      if (toggle === 'on') {
-        verb = 'banning';
-      } else {
-        verb = 'unbanning';
-      }
+      verb = 'banning';
+    } else if (command === 'unban') {
+      verb = 'unbanning';
     } else if (command === 'underban') {
-      if (toggle === 'on') {
-        verb = 'underbanning';
-      } else {
-        verb = 'un-underbanning';
-      }
+      verb = 'underbanning';
+    } else if (command === 'ununderban') {
+      verb = 'un-underbanning';
     } else if (command === 'warn') {
       verb = 'warning';
     } else if (command === 'note') {
       verb = 'noting';
     } else if (command === 'timeout') {
-      if (toggle === 'on') {
-        verb = 'timing out';
-      } else {
-        verb = 'untiming out';
-      }
+      verb = 'timing out';
+    } else if (command === 'untimeout') {
+      verb = 'untiming out';
     } else if (command === 'kick') {
       verb = 'kicking';
     } else if (command === 'info') {
@@ -138,7 +136,6 @@ export const mod: SlashCommand = {
         actor as GuildMember,
         'info',
         targetMember,
-        toggle,
         null,
         null,
         null,
@@ -169,17 +166,26 @@ export const mod: SlashCommand = {
       .setStyle(TextInputStyle.Short)
       .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
       .setCustomId('duration');
+    const deleteMessages = new TextInputBuilder()
+      .setLabel('How many msgs to remove? (Max/def 7 days)')
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
+      .setCustomId('duration');
 
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
     modal.addComponents(firstActionRow);
 
-    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
-    if (['warn', 'timeout', 'kick', 'ban', 'underban'].includes(command)) {
-      modal.addComponents(secondActionRow);
+    if (['warn', 'kick', 'timeout', 'untimeout', 'ban', 'unban', 'underban', 'ununderban'].includes(command)) {
+      const pubReasonText = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
+      modal.addComponents(pubReasonText);
     }
     if (command === 'timeout') {
-      const thirdActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutDuration);
-      modal.addComponents(thirdActionRow);
+      const timeoutDurationText = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutDuration);
+      modal.addComponents(timeoutDurationText);
+    }
+    if (command === 'ban' || command === 'underban') {
+      const deleteMessagesText = new ActionRowBuilder<TextInputBuilder>().addComponents(deleteMessages);
+      modal.addComponents(deleteMessagesText);
     }
 
     await interaction.showModal(modal);
@@ -200,7 +206,6 @@ export const mod: SlashCommand = {
           actor as GuildMember,
           modalCommand,
           targetMember,
-          toggle,
           privReason,
           pubReason,
           duration,

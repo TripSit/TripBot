@@ -61,7 +61,6 @@ export const mWarn: MessageCommand = {
           actor,
           'warn',
           target,
-          null,
           privReason,
           interaction.fields.getTextInputValue('pubReason'),
           null,

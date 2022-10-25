@@ -55,7 +55,6 @@ export const mReport: MessageCommand = {
           actor,
           'report',
           target,
-          null,
           privReason,
           null,
           null,

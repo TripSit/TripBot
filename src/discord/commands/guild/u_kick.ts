@@ -54,7 +54,6 @@ export const uKick: UserCommand = {
           actor,
           'kick',
           target,
-          'on',
           privReason,
           pubReason,
           null,

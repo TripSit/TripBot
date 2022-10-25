@@ -55,7 +55,6 @@ export const uBan: UserCommand = {
           actor,
           'ban',
           target,
-          'on',
           privReason,
           pubReason,
           null,

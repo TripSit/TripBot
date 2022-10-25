@@ -23,7 +23,6 @@ export const info: UserCommand = {
       actor,
       'info',
       target,
-      'on',
       null,
       null,
       null,

@@ -69,7 +69,6 @@ export const mTimeout: MessageCommand = {
           actor,
           'timeout',
           target,
-          null,
           privReason,
           interaction.fields.getTextInputValue('pubReason'),
           duration,

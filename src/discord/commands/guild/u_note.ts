@@ -46,7 +46,6 @@ export const uNote: UserCommand = {
           actor,
           'note',
           target,
-          'on',
           privReason,
           null,
           null,

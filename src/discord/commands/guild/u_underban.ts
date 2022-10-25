@@ -54,7 +54,6 @@ export const uUnderban: UserCommand = {
           actor,
           'underban',
           target,
-          'on',
           privReason,
           pubReason,
           null,

@@ -114,7 +114,6 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
  * @param {GuildMember} actor
  * @param {string} command
  * @param {GuildMember} target
- * @param {string | null} toggle
  * @param {string | null} privReason
  * @param {string | null} pubReason
  * @param {string | null} duration
@@ -124,7 +123,6 @@ export async function moderate(
   actor: GuildMember,
   command:string,
   target: GuildMember,
-  toggle: 'on' | 'off' | null,
   privReason: string | null,
   pubReason: string | null,
   duration: string | null,
@@ -133,7 +131,6 @@ export async function moderate(
   logger.debug(stripIndents`[${PREFIX}]
       Actor: ${actor}
       Command: ${command}
-      Toggle: ${toggle}
       Target: ${target}
       Duration: ${duration}
       PubReason: ${pubReason}
@@ -204,19 +201,17 @@ export async function moderate(
 
   // Perform actions
   if (command === 'timeout') {
-    if (toggle === 'on' || toggle === null) {
-      try {
-        target.timeout(minutes, privReason ?? 'No reason provided');
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error: ${err}`);
-      }
-    } else {
-      try {
-        target.timeout(0, privReason ?? 'No reason provided');
-        logger.debug(`[${PREFIX}] I untimeouted ${target.displayName} because\n '${privReason}'!`);
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error: ${err}`);
-      }
+    try {
+      target.timeout(minutes, privReason ?? 'No reason provided');
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error: ${err}`);
+    }
+  } else if (command === 'untimeout') {
+    try {
+      target.timeout(0, privReason ?? 'No reason provided');
+      logger.debug(`[${PREFIX}] I untimeouted ${target.displayName} because\n '${privReason}'!`);
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error: ${err}`);
     }
   } else if (command === 'kick') {
     try {
@@ -225,42 +220,38 @@ export async function moderate(
       logger.error(`[${PREFIX}] Error: ${err}`);
     }
   } else if (command === 'ban') {
-    if (toggle === 'on' || toggle === null) {
-      try {
-        const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-        targetGuild.members.ban(target, {reason: privReason ?? 'No reason provided'});
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error: ${err}`);
-      }
-    } else {
-      try {
-        const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-        await targetGuild.bans.fetch();
-        await targetGuild.bans.remove(target.user, privReason ?? 'No reason provided');
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error: ${err}`);
-      }
+    try {
+      const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+      targetGuild.members.ban(target, {reason: privReason ?? 'No reason provided'});
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error: ${err}`);
+    }
+  } else if (command === 'unban') {
+    try {
+      const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+      await targetGuild.bans.fetch();
+      await targetGuild.bans.remove(target.user, privReason ?? 'No reason provided');
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error: ${err}`);
     }
   } else if (command === 'underban') {
-    if (toggle === 'on' || toggle === null) {
-      try {
-        const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-        targetGuild.members.ban(target, {reason: privReason ?? 'No reason provided'});
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error: ${err}`);
-      }
-    } else {
-      try {
-        const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-        await targetGuild.bans.fetch();
-        await targetGuild.bans.remove(target.user, privReason ?? 'No reason provided');
-      } catch (err) {
-        logger.error(`[${PREFIX}] Error: ${err}`);
-      }
+    try {
+      const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+      targetGuild.members.ban(target, {reason: privReason ?? 'No reason provided'});
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error: ${err}`);
+    }
+  } else if (command === 'ununderban') {
+    try {
+      const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+      await targetGuild.bans.fetch();
+      await targetGuild.bans.remove(target.user, privReason ?? 'No reason provided');
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error: ${err}`);
     }
   }
 
-  const targetActionDict = {
+  const targetActionCount = {
     timeout: 0,
     kick: 0,
     ban: 0,
@@ -269,57 +260,15 @@ export async function moderate(
     note: 0,
     report: 0,
   };
-  /**
-   * Get the count of times this action has been performed on this user from targetModActions and Update the database
-  */
-  // async function populateActionDict() {
-  //   if (global.db) {
-  //     const actionData = {
-  //       actor: actor.id,
-  //       command: command,
-  //       target: target.id,
-  //       duration: duration ? minutes : null,
-  //       privReason: privReason,
-  //       pubReason: pubReason,
-  //     };
-
-  //     const participants = [actor.id, target.id];
-  //     participants.forEach(async (participant, index) => {
-  //       const ref = db.ref(`${env.FIREBASE_DB_USERS}/${participant}/modActions/`);
-  //       await ref.once('value', (data) => {
-  //         let actions = {} as modActionDict;
-  //         if (data.val() !== null) {
-  //           actions = data.val();
-  //         }
-  //         actions[Date.now().valueOf().toString()] = actionData;
-  //         Object.keys(actions).forEach(async (actionDate) => {
-  //           const actionValue = actions[actionDate];
-  //           const actionCommand = actionValue.command;
-  //           // logger.debug(`[${PREFIX}] actionCommand: ${actionCommand}`);
-  //           if (index === 0) {
-  //             // logger.debug(`[${PREFIX}] index: ${index}`);
-  //             if (actionCommand in actorActionDict) {
-  //               // logger.debug(`[${PREFIX}] incrementing: ${actionCommand}`);
-  //               actorActionDict[actionCommand as keyof typeof actorActionDict] += 1;
-  //             }
-  //           }
-  //           if (index === 1) {
-  //             // logger.debug(`[${PREFIX}] index: ${index}`);
-  //             if (actionCommand in targetActionDict) {
-  //               // logger.debug(`[${PREFIX}] incrementing: ${actionCommand}`);
-  //               targetActionDict[actionCommand as keyof typeof targetActionDict] += 1;
-  //             }
-  //           }
-  //         });
-  //         // logger.debug(`[${PREFIX}] actions: ${JSON.stringify(actions, null, 2)}`);
-  //         ref.set(actions);
-  //       });
-  //     });
-  //   }
-  //   logger.debug(`[${PREFIX}] targetActionDict: ${JSON.stringify(targetActionDict)}`);
-  //   logger.debug(`[${PREFIX}] actorActionDict: ${JSON.stringify(actorActionDict)}`);
-  // }
-  // await populateActionDict();
+  const targetActionList = {
+    timeout: [] as string[],
+    kick: [] as string[],
+    ban: [] as string[],
+    underban: [] as string[],
+    warn: [] as string[],
+    note: [] as string[],
+    report: [] as string[],
+  };
 
   const actionData = {
     actor: actor.id,
@@ -338,8 +287,22 @@ export async function moderate(
       Object.keys(actions).forEach(async (actionDate) => {
         const actionValue = actions[actionDate];
         const actionCommand = actionValue.command;
-        if (actionCommand in targetActionDict) {
-          targetActionDict[actionCommand as keyof typeof targetActionDict] += 1;
+        if (actionCommand in targetActionCount) {
+          targetActionCount[actionCommand as keyof typeof targetActionCount] += 1;
+        }
+        if (actionCommand in targetActionList) {
+          // turn actionDate into a date object
+          const actionDateObj = new Date(parseInt(actionDate));
+          // Format the date into a short format
+          const actionDateFormatted = actionDateObj.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          });
+          const actionString = stripIndents`
+            ${actionDateFormatted} by <@${actionValue.actor}>: ${actionValue.privReason} ${actionValue.pubReason ? `**PubReason: ${actionValue.pubReason}**` : ''}
+          `;
+          targetActionList[actionCommand as keyof typeof targetActionList].push(actionString);
         }
       });
       ref.set(actions);
@@ -347,8 +310,8 @@ export async function moderate(
   });
 
   // logger.debug(`[${PREFIX}] actions: ${JSON.stringify(actions)}`);
-  // logger.debug(`[${PREFIX}] targetActionDict: ${JSON.stringify(targetActionDict)}`);
-
+  // logger.debug(`[${PREFIX}] targetActionCount: ${JSON.stringify(targetActionCount)}`);
+  // logger.debug(`[${PREFIX}] targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
 
   const modlogEmbed = embedTemplate()
     // eslint-disable-next-line
@@ -362,12 +325,12 @@ export async function moderate(
       {name: 'Created', value: `${time(target.user.createdAt, 'R')}`, inline: true},
       {name: 'Joined', value: `${target.joinedAt ? time(target.joinedAt!, 'R') : 'Unknown'}`, inline: true},
       {name: 'ID', value: `${target.id}`, inline: true},
-      {name: '# of Reports', value: `${targetActionDict.report}`, inline: true},
-      {name: '# of Warns', value: `${targetActionDict.warn}`, inline: true},
-      {name: '# of Timeouts', value: `${targetActionDict.timeout}`, inline: true},
-      // {name: '# of Kicks', value: `${targetActionDict.kick}`, inline: true},
-      // {name: '# of Bans', value: `${targetActionDict.ban}`, inline: true},
-      {name: '# of Notes', value: `${targetActionDict.note}`, inline: true},
+      {name: '# of Reports', value: `${targetActionCount.report}`, inline: true},
+      {name: '# of Warns', value: `${targetActionCount.warn}`, inline: true},
+      {name: '# of Timeouts', value: `${targetActionCount.timeout}`, inline: true},
+      // {name: '# of Kicks', value: `${targetActionCount.kick}`, inline: true},
+      // {name: '# of Bans', value: `${targetActionCount.ban}`, inline: true},
+      {name: '# of Notes', value: `${targetActionCount.note}`, inline: true},
       {name: '# of Tripsitmes', value: `TBD`, inline: true},
       // {name: '# of I\'m Good', value: `TBD`, inline: true},
       {name: '# of Fucks to Give', value: '0', inline: true},
@@ -388,6 +351,20 @@ export async function moderate(
 
   // If this is the info command then return with info
   if (command === 'info') {
+    let infoString = '';
+    if (targetActionCount.report > 0) {
+      infoString += stripIndents`
+        ${targetActionList.ban.length > 0 ? `**Bans**\n${targetActionList.ban.join('\n')}` : ''}
+        ${targetActionList.underban.length > 0 ? `**Underbans**\n${targetActionList.underban.join('\n')}` : ''}
+        ${targetActionList.kick.length > 0 ? `**Kicks**\n${targetActionList.kick.join('\n')}` : ''}
+        ${targetActionList.timeout.length > 0 ? `**Timeouts**\n${targetActionList.timeout.join('\n')}` : ''}
+        ${targetActionList.warn.length > 0 ? `**Warns**\n${targetActionList.warn.join('\n')}` : ''}
+        ${targetActionList.report.length > 0 ? `**Reports**\n${targetActionList.report.join('\n')}` : ''}
+        ${targetActionList.note.length > 0 ? `**Notes**\n${targetActionList.report.join('\n')}` : ''}
+      `;
+    }
+    logger.debug(`[${PREFIX}] infoString: ${infoString}`);
+    modlogEmbed.setDescription(infoString);
     try {
       logger.debug(`[${PREFIX}] returned info about ${target.displayName}`);
       return {embeds: [modlogEmbed], ephemeral: true};
