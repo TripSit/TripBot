@@ -204,7 +204,7 @@ export async function modmailCreate(
   const channel = interaction.client.channels.cache.get(modmailVars[issueType].channelId) as TextChannel;
 
   // Check if an open thread already exists, and if so, update that thread
-  if (Object.keys(ticketData).length !== 0 && ticketData.issueStatus !== 'closed') {
+  if (Object.keys(ticketData).length !== 0 && ticketData.issueStatus !== 'closed' && ticketData.issueStatus !== 'resolved') {
     // const issueType = ticketInfo.issueType;
     let issueThread = {} as ThreadChannel;
     try {
@@ -369,7 +369,7 @@ export async function modmailCreate(
         const finishedButton = new ActionRowBuilder<ButtonBuilder>()
           .addComponents(
             new ButtonBuilder()
-              .setCustomId(`issueFinish`)
+              .setCustomId(`modmailIssue~resolve`)
               .setLabel(`I'm good now!`)
               .setStyle(ButtonStyle.Success),
           );
@@ -386,10 +386,11 @@ export async function modmailCreate(
       const roleDeveloper = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER)!;
       const isDev = roleDeveloper.members.map((m) => m.user.id === interaction.user.id);
       const pingRole = tripsitGuild.roles.cache.find((role) => role.id === modmailVars[issueType].pingRole)!;
+      const tripsitterRole = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER)!;
 
       // Send a message to the thread
       let threadFirstResponse = stripIndents`
-        Hey ${isDev ? pingRole.toString() : pingRole}! ${actor} has submitted a new ticket:
+        Hey ${isDev ? pingRole.toString() : pingRole}! ${actor.tag} has submitted a new ticket:
 
         ${modmailVars[issueType].labelA}
         > ${modalInputA}
@@ -397,22 +398,23 @@ export async function modmailCreate(
         > ${modalInputB}
         ` : ''}
 
-        Please look into it and respond to them in this thread!
+        **You can respond to them in this thread!**
       `;
       if (issueType === 'tripsit') {
         threadFirstResponse = stripIndents`
-          Hey ${isDev ? pingRole.toString() : pingRole}! ${actor} has submitted a new ticket:
+          Hey ${isDev ? pingRole.toString() : pingRole} and ${isDev ? tripsitterRole.toString() : tripsitterRole}! ${actor.tag} has submitted a new ticket:
 
           ${modmailVars[issueType].labelA}
           > ${modalInputA}
           ${modalInputB !== '' ? `${modmailVars[issueType].labelB}
           > ${modalInputB}
           ` : ''}
-          Please look into it and respond to them in this thread!
 
           If this is a medical emergency they need to initiate EMS: we do not call EMS on behalf of anyone.
           When they're feeling better you can use the "I'm Good" button to let the team know they're okay.
-          If you they would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
+          If they they would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
+
+          **You can respond to them in this thread!**
         `;
       }
 
@@ -516,7 +518,7 @@ export async function modmailDMInteraction(message:Message) {
       }
     });
   }
-  // logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+  logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
   if (ticketData.issueStatus === 'blocked') {
     message.author.send('*beeps sadly*');
@@ -528,28 +530,8 @@ export async function modmailDMInteraction(message:Message) {
     return;
   }
 
-  if (Object.keys(ticketData).length !== 0 && ticketData.issueStatus !== 'closed') {
-    const guild = await message.client.guilds.fetch(env.DISCORD_GUILD_ID);
-    let member = {} as GuildMember;
-    try {
-      member = await guild.members.fetch(message.author.id);
-    } catch (error) {
-      // This just means the user is not on the TripSit guild
-    }
-
-    // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
-
-    // If the user is on the guild, direct them to the existing ticket
-    if (member.user) {
-      const channel = await message.client.channels.fetch(env.CHANNEL_HELPDESK) as TextChannel;
-      const issueThread = await channel.threads.fetch(ticketData.issueThread) as ThreadChannel;
-      const embed = embedTemplate();
-      embed.setDescription(stripIndents`You already have an open issue here ${issueThread.toString()}!`);
-      message.reply({embeds: [embed]});
-      return;
-    }
-
-    // Otherwise send a message to the thread
+  if (Object.keys(ticketData).length !== 0 && ticketData.issueStatus !== 'closed' && ticketData.issueStatus !== 'resolved') {
+    // Send a message to the thread
     const channel = message.client.channels.cache.get(env.CHANNEL_HELPDESK) as TextChannel;
     let thread = {} as ThreadChannel;
     try {
@@ -580,10 +562,10 @@ export async function modmailDMInteraction(message:Message) {
  * @param {Message} message The message sent to the bot
  */
 export async function modmailThreadInteraction(message:Message) {
-  const threadMessage = message.channel.type === ChannelType.PublicThread ||
-  message.channel.type === ChannelType.PrivateThread;
-  logger.debug(`[${PREFIX}] threadMessage: ${threadMessage}!`);
   if (message.member) {
+    const threadMessage = message.channel.type === ChannelType.PublicThread ||
+    message.channel.type === ChannelType.PrivateThread;
+    logger.debug(`[${PREFIX}] threadMessage: ${threadMessage}!`);
     if (threadMessage) {
       logger.debug(`[${PREFIX}] message.channel.parentId: ${message.channel.parentId}!`);
       if (
@@ -658,15 +640,24 @@ export async function modmailActions(
       if (data.val() !== null) {
         const allTickets = data.val();
         Object.keys(allTickets).forEach((key) => {
-          if (allTickets[key].issueThread === interaction.channel!.id) {
-            ticketData = allTickets[key];
-            path = `${env.FIREBASE_DB_TICKETS}/${key}`;
+          if (interaction.channel) {
+            if (interaction.channel.type === ChannelType.DM) {
+              if (key === interaction.user.id) {
+                ticketData = allTickets[key];
+                path = `${env.FIREBASE_DB_TICKETS}/${key}`;
+              }
+            } else {
+              if (allTickets[key].issueThread === interaction.channel.id) {
+                ticketData = allTickets[key];
+                path = `${env.FIREBASE_DB_TICKETS}/${key}`;
+              }
+            }
           }
         });
       }
     });
   }
-  // logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+  logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
   const ticketChannel = interaction.client.channels.cache.get(ticketData.issueThread) as ThreadChannel;
 
@@ -687,46 +678,47 @@ export async function modmailActions(
     verb = 'CLOSED';
     target.send(`It looks like we're good here! We've closed this ticket, but if you need anything else, feel free to open a new one!`);
     channel.setName(`💚${channel.name.substring(1)}`);
-    //   let message:Message;
-    //   await threadHelpUser.send(stripIndents`
+    // let message:Message;
+    // await channel.send(stripIndents`
     //       ${env.EMOJI_INVISIBLE}
     //       > **If you have a minute, your feedback is important to us!**
-    //       > Please rate your experience with ${interaction.guild.name}'s service by reacting below.
+    //       > Please rate your experience with ${channel.guild.name}'s service by reacting below.
     //       > Thank you!
     //       ${env.EMOJI_INVISIBLE}
     //       `)
-    //     .then(async (msg) => {
-    //       message = msg;
-    //       await msg.react('🙁');
-    //       await msg.react('😕');
-    //       await msg.react('😐');
-    //       await msg.react('🙂');
-    //       await msg.react('😁');
+    //   .then(async (msg) => {
+    //     message = msg;
+    //     await msg.react('🙁');
+    //     await msg.react('😕');
+    //     await msg.react('😐');
+    //     await msg.react('🙂');
+    //     await msg.react('😁');
 
-    //       // Setup the reaction collector
-    //       const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
-    //       const collector = message.createReactionCollector({filter, time: 1000 * 60 * 60 * 24});
-    //       collector.on('collect', async (reaction, user) => {
-    //         threadHelpUser.send(stripIndents`
+    //     // Setup the reaction collector
+    //     const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
+    //     const collector = message.createReactionCollector({filter, time: 1000 * 60 * 60 * 24});
+    //     collector.on('collect', async (reaction, user) => {
+    //       channel.send(stripIndents`
     //           ${env.EMOJI_INVISIBLE}
     //           > Thank you for your feedback, here's a cookie! 🍪
     //           ${env.EMOJI_INVISIBLE}
     //           `);
-    //         logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
-    //         const finalEmbed = embedTemplate()
-    //           .setColor(Colors.Blue)
-    //           .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
-    //         try {
-    //           const channelTripsitMeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
-    //           await channelTripsitMeta.send({embeds: [finalEmbed]});
-    //         } catch (err) {
-    //           logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
-    //         }
-    //         msg.delete();
-    //         collector.stop();
-    //       });
+    //       logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
+    //       const finalEmbed = embedTemplate()
+    //         .setColor(Colors.Blue)
+    //         .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
+    //       try {
+    //         const channelTripsitMeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
+    //         await channelTripsitMeta.send({embeds: [finalEmbed]});
+    //       } catch (err) {
+    //         logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
+    //       }
+    //       msg.delete();
+    //       collector.stop();
     //     });
+    //   });
     // ticketChannel.setArchived(true, 'Archiving after close');
+
     // Update modmail buttons
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
@@ -900,40 +892,121 @@ export async function modmailActions(
           .setLabel('Close')
           .setStyle(ButtonStyle.Danger),
       );
+  } else if (command === 'resolve') {
+    logger.debug(`[${PREFIX}] Resolving ticket!`);
+    ticketData.issueStatus = 'resolved';
+    noun = 'Ticket';
+    verb = 'RESOLVED';
+    interaction.reply(stripIndents`Hey ${target}, we're glad your issue is resolved!
+    This ticket has been marked as resolved, but if you need anything else feel free to open a new one!`);
+    channel.setName(`💚${channel.name.substring(1)}`);
+    channel.send(stripIndents`Hey team! ${target.toString()} has indicated that they no longer need help!`);
+
+    // let message:Message;
+    // await target.send(stripIndents`
+    //       ${env.EMOJI_INVISIBLE}
+    //       > **If you have a minute, your feedback is important to us!**
+    //       > Please rate your experience with ${channel.guild.name}'s service by reacting below.
+    //       > Thank you!
+    //       ${env.EMOJI_INVISIBLE}
+    //       `)
+    //   .then(async (msg) => {
+    //     message = msg;
+    //     await msg.react('🙁');
+    //     await msg.react('😕');
+    //     await msg.react('😐');
+    //     await msg.react('🙂');
+    //     await msg.react('😁');
+
+    //     // Setup the reaction collector
+    //     const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
+    //     const collector = message.createReactionCollector({filter, time: 1000 * 60 * 60 * 24});
+    //     collector.on('collect', async (reaction, user) => {
+    //       channel.send(stripIndents`
+    //           ${env.EMOJI_INVISIBLE}
+    //           > Thank you for your feedback, here's a cookie! 🍪
+    //           ${env.EMOJI_INVISIBLE}
+    //           `);
+    //       logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
+    //       const finalEmbed = embedTemplate()
+    //         .setColor(Colors.Blue)
+    //         .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
+    //       try {
+    //         const channelTripsitMeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
+    //         await channelTripsitMeta.send({embeds: [finalEmbed]});
+    //       } catch (err) {
+    //         logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
+    //       }
+    //       msg.delete();
+    //       collector.stop();
+    //     });
+    //   });
+    // ticketChannel.setArchived(true, 'Archiving after close');
+
+    // Update modmail buttons
+    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId('modmailIssue~own')
+          .setLabel('Own')
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId('modmailIssue~pause')
+          .setLabel('Pause')
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId('modmailIssue~block')
+          .setLabel('Block')
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId('modmailIssue~reopen')
+          .setLabel('Reopen')
+          .setStyle(ButtonStyle.Danger),
+      );
   }
-  await interaction.reply(`${noun} has been ${verb} by ${actor}! (The user cannot see this)`);
+
+  if (interaction.channel) {
+    if (interaction.channel.type !== ChannelType.DM) {
+      await interaction.reply(`${noun} has been ${verb} by ${actor}! (The user cannot see this)`);
+    }
+  }
 
   if (global.db) {
     const ref = db.ref(path);
-    // logger.debug(`[${PREFIX}] ticketData update: ${JSON.stringify(ticketData, null, 2)}!`);
+    logger.debug(`[${PREFIX}] ticketData update: ${JSON.stringify(ticketData, null, 2)}!`);
     await ref.set(ticketData);
   }
 
-  const channelModlog = interaction.guild!.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
+  const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+  const channelModlog = tripsitGuild.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
   // Transform actor data
   const modlogEmbed = embedTemplate()
     .setColor(Colors.Blue)
     .setDescription(`${actor} ${command}ed ${target.tag} in ${ticketChannel}`);
   channelModlog.send({embeds: [modlogEmbed]});
 
+  if (interaction.channel) {
+    let initialMessage = {} as Message;
+    let content = '';
+    if (interaction.channel.type !== ChannelType.DM) {
+      if (interaction.isButton()) {
+        initialMessage = interaction.message;
+        content = interaction.message.content;
+      }
+      if (interaction.isCommand()) {
+        if (interaction.channel) {
+          initialMessage = await interaction.channel.messages.fetch(ticketData.issueFirstMessage) as Message;
+          content = initialMessage.content;
+        }
+      }
 
-  let initialMessage = {} as Message;
-  let content = '';
-  if (interaction.isButton()) {
-    initialMessage = interaction.message;
-    content = interaction.message.content;
+      initialMessage.edit({
+        content: content,
+        components: [updatedModmailButtons],
+        flags: ['SuppressEmbeds'],
+      });
+    }
   }
-  if (interaction.isCommand()) {
-    initialMessage = await interaction.channel!.messages.fetch(ticketData.issueFirstMessage) as Message;
-    content = initialMessage.content;
-  }
-
-  initialMessage.edit({
-    content: content,
-    components: [updatedModmailButtons],
-    flags: ['SuppressEmbeds'],
-  });
-
 
   logger.debug(`[${PREFIX}] finished!`);
 };
