@@ -53,13 +53,13 @@ export type userModHistoryEntry = {
 };
 
 export type userDrugHistoryEntry = {
-  id: string;
-  userUid: string;
+  id: uuid;
+  user_uid: uuid;
   route: 'ORAL' | 'INSUFFLATED' | 'INHALED' | 'TOPICAL' | 'SUBLINGUAL' | 'BUCCAL' | 'RECTAL' | 'INTRAMUSCULAR' | 'INTRAVENOUS' | 'SUBCUTANIOUS' | 'TRANSDERMAL';
   dose: float;
   units: 'MG' | 'ML' | 'µG' | 'G' | 'OZ' | 'FLOZ' | 'TABS' | 'CAPS' | 'DROPS' | 'PILLS' | 'PATCHES' | 'SPRAYS';
-  substance: string;
-  doseDate: Date;
+  drug_uid: uuid;
+  dose_date: Date;
 };
 
 export type guildEntry = {
@@ -79,4 +79,12 @@ export type reactionRoleEntry = {
   messageId: string;
   reactionId: string;
   roleId: string;
+}
+
+export type drugNameEntry = {
+  id: uuid;
+  drug_uid: uuid;
+  name: string;
+  is_default: boolean;
+  type: 'COMMON' | 'SUBSTITUTUVE' | 'SYSTEMATIC';
 }
