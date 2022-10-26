@@ -1,4 +1,4 @@
-import {discordConnect} from './discord/discordAPI';
+import {discordConnect} from './discord/dscrd';
 import {validateEnv} from './global/utils/env.validate';
 // import {runTimer} from './discord/utils/timerAPI';
 // import {firebaseConnect} from './global/utils/firebaseAPI';
