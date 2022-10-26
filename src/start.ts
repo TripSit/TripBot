@@ -1,7 +1,7 @@
 import {discordConnect} from './discord/discordAPI';
 import {validateEnv} from './global/utils/env.validate';
-import {runTimer} from './discord/utils/timerAPI';
-import {firebaseConnect} from './global/utils/firebaseAPI';
+// import {runTimer} from './discord/utils/timerAPI';
+// import {firebaseConnect} from './global/utils/firebaseAPI';
 import {webserverConnect} from './webserver/webserverAPI';
 import db from './global/utils/database';
 
@@ -28,10 +28,10 @@ async function start() {
     discordConnect();
   }
 
-  if (env.FIREBASE_PRIVATE_KEY_ID) {
-    firebaseConnect();
-    runTimer();
-  }
+  // if (env.FIREBASE_PRIVATE_KEY_ID) {
+  //   firebaseConnect();
+  //   runTimer();
+  // }
 }
 
 start();

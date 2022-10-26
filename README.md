@@ -34,7 +34,7 @@ Firebase realtime database support
 Feel free to join our discord guild under https://discord.gg/tripsit 
 
 ## Postgres stuff
-Okay so moonbear is using this section to take notes on how to use postgres, cuz i have no clue what im doing
+Okay so moonbear is using this section to take notes on how to use postgres, cuz i have litle clue what im doing
 
 ### Setup desktop programs
 1) Install/run pgAdmin4

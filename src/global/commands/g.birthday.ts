@@ -2,8 +2,12 @@
 import {
   GuildMember,
 } from 'discord.js';
+// import db, {sql} from '../utils/database';
+import {DateTime} from 'luxon';
+import {db} from '../utils/knex';
+import {userEntry} from '../@types/pgdb.d';
 import logger from '../utils/logger';
-import env from '../utils/env.config';
+// import env from '../utils/env.config';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -34,35 +38,56 @@ export async function birthday(
       if (month === 'February' && day > 28) {
         return 'February only has 28 days!';
       }
-    }
-    const birthday = {
-      month: month,
-      day: day,
-    };
+      const monthDict = {
+        'January': 0,
+        'February': 1,
+        'March': 2,
+        'April': 3,
+        'May': 4,
+        'June': 5,
+        'July': 6,
+        'August': 7,
+        'September': 8,
+        'October': 9,
+        'November': 10,
+        'December': 11,
+      };
 
-    // logger.debug(`[${PREFIX}] Setting ${userId}/birthday = ${birthday}`);
-    if (global.db) {
-      const ref = db.ref(`${env.FIREBASE_DB_USERS}/${member.id}/birthday`);
-      ref.set(birthday);
+      const birthday = new Date(2000, monthDict[month as keyof typeof monthDict], day);
+
+      logger.debug(`[${PREFIX}] Setting birthday for ${member.user.username} to ${birthday}`);
+
+
+      const [user] = await db('users')
+        .insert({
+          discord_id: member.id,
+          birthday: birthday,
+        })
+        .onConflict('discord_id')
+        .merge()
+        .returning('*');
+
+      logger.debug(`[${PREFIX}] Inserted user: ${JSON.stringify(user, null, 2)}`);
+
+      return `${month} ${day} is your new birthday!`;
     }
-    return `${month} ${day} is your new birthday!`;
   } else if (command === 'get') {
-    type birthdayEntry = {
-      'month': string,
-      'day': number,
-    }
+    const data = await db
+      .select(db.ref('birthday').as('birthday'))
+      .from<userEntry>('users')
+      .where('discord_id', member.id);
+
     let resp = '';
-    const ref = db.ref(`${env.FIREBASE_DB_USERS}/${member.id}/birthday`);
-    await ref.once('value', (data) => {
-      if (data.val() !== null) {
-        const birthday = data.val() as birthdayEntry;
-        logger.debug(`[${PREFIX}] birthday: ${JSON.stringify(birthday)}`);
-        resp = `${member.displayName} was born on ${birthday.month} ${birthday.day}`;
-      } else {
-        logger.debug(`[${PREFIX}] data is NULL`);
-        resp = `${member.displayName} is immortal <3 (and has not set a birthday)`;
-      }
-    });
+    if (data[0].birthday) {
+      const birthDate = data[0].birthday.toISOString();
+      logger.debug(`[${PREFIX}] Birthdate: ${birthDate}`);
+      const birthday = DateTime.fromISO(birthDate);
+      logger.debug(`[${PREFIX}] birthday: ${birthday}`);
+      resp = `${member.displayName} was born on ${birthday.monthLong} ${birthday.day}`;
+    } else {
+      logger.debug(`[${PREFIX}] data is NULL`);
+      resp = `${member.displayName} is immortal <3 (and has not set a birthday)`;
+    }
     return resp;
   }
 };

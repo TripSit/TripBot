@@ -47,12 +47,12 @@ async function deleteUser(email: string) {
 
 /**
  * Controls connections to the database
- * @param {string} email
+ * @param {string} id
  */
-async function getUser(email: string) {
+async function getUser(id: string) {
   const users = await db.query(sql`
     SELECT * FROM users
-    WHERE email=${email}
+    WHERE discordId=${id}
   `);
   if (users.length === 0) {
     return null;
