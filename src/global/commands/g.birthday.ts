@@ -1,18 +1,15 @@
-/* eslint-disable max-len */
 import {
   GuildMember,
 } from 'discord.js';
-// import db, {sql} from '../utils/database';
 import {DateTime} from 'luxon';
 import {db} from '../utils/knex';
 import {userEntry} from '../@types/pgdb.d';
 import logger from '../utils/logger';
-// import env from '../utils/env.config';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
 /**
- * Information about the bot!
+ * Birthday information of a user
  * @param {'get' | 'set'} command
  * @param {GuildMember} member
  * @param {string} month The birthday month
@@ -25,7 +22,6 @@ export async function birthday(
   month?: string,
   day?: number):Promise<any> {
   if (command === 'set') {
-    // TODO: Use luxon
     const month30 = ['April', 'June', 'September', 'November'];
     const month31 = ['January', 'March', 'May', 'July', 'August', 'October', 'December'];
     if (month !== undefined && day !== undefined) {
@@ -56,7 +52,6 @@ export async function birthday(
       const birthday = new Date(2000, monthDict[month as keyof typeof monthDict], day);
 
       logger.debug(`[${PREFIX}] Setting birthday for ${member.user.username} to ${birthday}`);
-
 
       const [user] = await db('users')
         .insert({

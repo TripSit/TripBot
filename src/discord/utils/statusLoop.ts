@@ -5,10 +5,10 @@ import {
   ActivityType,
 } from 'discord-api-types/v10';
 import env from '../../global/utils/env.config';
-import logger from '../../global/utils/logger';
+// import logger from '../../global/utils/logger';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 // https://discord.js.org/#/docs/discord.js/stable/typedef/ActivityType
 // https://discord.com/developers/docs/game-sdk/activities#data-models-activitytype-enum
@@ -49,7 +49,7 @@ const delay = env.NODE_ENV === 'production' ? 5 * 60 * 1000 : 5 * 1000;
  * @param {Client} client The client running the bot
  */
 export async function startStatusLoop(client:Client) {
-  logger.info(`[${PREFIX}] Starting status loop...`);
+  // logger.info(`[${PREFIX}] Starting status loop...`);
 
   let state = 0;
   let presence = activities[state];

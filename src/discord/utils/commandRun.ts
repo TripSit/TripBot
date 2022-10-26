@@ -109,6 +109,7 @@ export async function commandRun(
   try {
     await command.execute(interaction);
   } catch (error) {
+    Error.stackTraceLimit = 25;
     if (error instanceof Error) {
       // logger.error(`[${PREFIX}] Client error ${JSON.stringify(error, null, 2)}`);
       // logger.error(`[${PREFIX}] error.name: ${error.name}`);
