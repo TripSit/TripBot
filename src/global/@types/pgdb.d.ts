@@ -19,7 +19,7 @@ export type userEntry = {
 
 export type userTicketEntry = {
   id: string;
-  userId: string;
+  userUid: string;
   description: string;
   threadId: string;
   type: 'appeal' | 'tripsit' | 'tech' | 'feedback';
@@ -31,7 +31,7 @@ export type userTicketEntry = {
 
 export type userExperienceEntry = {
   id: string;
-  userId: string;
+  userUid: string;
   type: 'general' | 'tripsitter' | 'developer' | 'team' | 'ignored';
   level: number,
   levelPoints: number,
@@ -41,15 +41,25 @@ export type userExperienceEntry = {
   mee6converted?: boolean
 }
 
-export type userHistoryEntry = {
+export type userModHistoryEntry = {
   id: string;
-  actorId: string;
+  actorUid: string;
   command: 'ban' | 'unban' | 'underban' | 'ununderban' | 'warn' | 'note' | 'timeout' | 'untimeout' | 'kick' | 'info' | 'note' | 'report';
-  targetId: string;
+  targetUid: string;
   duration: number | null;
   pubReason: string | null;
   privReason: string | null;
   createdAt: Date;
+};
+
+export type userDrugHistoryEntry = {
+  id: string;
+  userUid: string;
+  route: 'ORAL' | 'INSUFFLATED' | 'INHALED' | 'TOPICAL' | 'SUBLINGUAL' | 'BUCCAL' | 'RECTAL' | 'INTRAMUSCULAR' | 'INTRAVENOUS' | 'SUBCUTANIOUS' | 'TRANSDERMAL';
+  dose: float;
+  units: 'MG' | 'ML' | 'µG' | 'G' | 'OZ' | 'FLOZ' | 'TABS' | 'CAPS' | 'DROPS' | 'PILLS' | 'PATCHES' | 'SPRAYS';
+  substance: string;
+  doseDate: Date;
 };
 
 export type guildEntry = {
@@ -57,11 +67,13 @@ export type guildEntry = {
   discordId: string;
   joinedAt: Date;
   discordBotBan: boolean;
+  drama_date: Date | null;
+  drama_reason: string | null;
 }
 
 export type reactionRoleEntry = {
   id: string;
-  guildId: string;
+  guildUid: string;
   name: string;
   channelId: string;
   messageId: string;
