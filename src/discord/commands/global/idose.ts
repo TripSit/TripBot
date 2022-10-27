@@ -14,7 +14,7 @@ import {db} from '../../../global/utils/knex';
 import {DateTime} from 'luxon';
 import {
   userEntry,
-  userDrugHistoryEntry,
+  userDoseEntry,
   drugNameEntry,
 } from '../../../global/@types/pgdb.d';
 import {SlashCommand} from '../../@types/commandDef';
@@ -39,7 +39,7 @@ type doseEntry = {
   }
 }
 
-export const didose: SlashCommand = {
+export const idose: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('idose')
     .setDescription('Your personal dosage information!')
@@ -107,7 +107,7 @@ export const didose: SlashCommand = {
 
       logger.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
 
-      const userUid = (await db
+      const userId = (await db
         .select(db.ref('id'))
         .from<userEntry>('users')
         .where('discord_id', interaction.user.id))[0].id;
@@ -115,15 +115,15 @@ export const didose: SlashCommand = {
       const unsorteddata = await db
         .select(
           db.ref('id').as('id'),
-          db.ref('user_uid').as('user_uid'),
+          db.ref('user_id').as('user_id'),
           db.ref('route').as('route'),
           db.ref('dose').as('dose'),
           db.ref('units').as('units'),
-          db.ref('drug_uid').as('drug_uid'),
+          db.ref('drug_id').as('drug_id'),
           db.ref('dose_date').as('dose_date'),
         )
-        .from<userDrugHistoryEntry>('user_drug_history')
-        .where('user_uid', userUid);
+        .from<userDoseEntry>('user_dose_history')
+        .where('user_id', userId);
 
       // Sort data based on the dose_date property
       const data = unsorteddata.sort((a, b) => {
@@ -141,11 +141,11 @@ export const didose: SlashCommand = {
       const doseDate = data[recordNumber].dose_date.toISOString();
       // logger.debug(`[${PREFIX}] doseDate: ${doseDate}`);
       const timeVal = DateTime.fromISO(doseDate);
-      const drugUid = record.drug_uid;
+      const drugId = record.drug_id;
       const drugName = (await db
         .select(db.ref('name').as('name'))
         .from<drugNameEntry>('drug_names')
-        .where('drug_uid', drugUid)
+        .where('drug_id', drugId)
         .andWhere('is_default', true))[0].name;
       const route = record.route.charAt(0).toUpperCase() + record.route.slice(1).toLowerCase();
 
@@ -155,7 +155,7 @@ export const didose: SlashCommand = {
       `);
 
       await db
-        .from<userDrugHistoryEntry>('user_drug_history')
+        .from<userDoseEntry>('user_dose_history')
         .where('id', recordId)
         .del();
 
@@ -166,7 +166,7 @@ export const didose: SlashCommand = {
       return;
     }
     if (command === 'get') {
-      const userUid = (await db
+      const userId = (await db
         .select(db.ref('id'))
         .from<userEntry>('users')
         .where('discord_id', interaction.user.id))[0].id;
@@ -174,15 +174,15 @@ export const didose: SlashCommand = {
       const unsorteddata = await db
         .select(
           db.ref('id').as('id'),
-          db.ref('user_uid').as('user_uid'),
+          db.ref('user_id').as('user_id'),
           db.ref('route').as('route'),
           db.ref('dose').as('dose'),
           db.ref('units').as('units'),
-          db.ref('drug_uid').as('drug_uid'),
+          db.ref('drug_id').as('drug_id'),
           db.ref('dose_date').as('dose_date'),
         )
-        .from<userDrugHistoryEntry>('user_drug_history')
-        .where('user_uid', userUid);
+        .from<userDoseEntry>('user_dose_history')
+        .where('user_id', userId);
 
       // logger.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);
 
@@ -210,11 +210,11 @@ export const didose: SlashCommand = {
             const doseDate = data[i].dose_date.toISOString();
             // logger.debug(`[${PREFIX}] doseDate: ${doseDate}`);
             const timeVal = DateTime.fromISO(doseDate);
-            const drugUid = dose.drug_uid;
+            const drugId = dose.drug_id;
             const drugName = (await db
               .select(db.ref('name').as('name'))
               .from<drugNameEntry>('drug_names')
-              .where('drug_uid', drugUid)
+              .where('drug_id', drugId)
               .andWhere('is_default', true))[0].name;
 
             // Lowercase everything but the first letter
@@ -254,11 +254,11 @@ export const didose: SlashCommand = {
             const doseDate = data[i].dose_date.toISOString();
             // logger.debug(`[${PREFIX}] doseDate: ${doseDate}`);
             const timeVal = DateTime.fromISO(doseDate);
-            const drugUid = dose.drug_uid;
+            const drugId = dose.drug_id;
             const drugName = (await db
               .select(db.ref('name').as('name'))
               .from<drugNameEntry>('drug_names')
-              .where('drug_uid', drugUid)
+              .where('drug_id', drugId)
               .andWhere('is_default', true))[0].name;
 
             // Lowercase everything but the first letter
@@ -329,45 +329,45 @@ export const didose: SlashCommand = {
       embed.setTitle('New iDose entry:');
       embed.addFields(embedField);
 
-      let userUid = (await db
+      let userId = (await db
         .select(db.ref('id'))
         .from<userEntry>('users')
         .where('discord_id', interaction.user.id))[0].id;
 
-      if (userUid.length === 0) {
+      if (userId.length === 0) {
         logger.debug(`[${PREFIX}] discord_id = ${interaction.user.id} not found in 'users', creating new`);
         await db('users')
           .insert({
             discord_id: interaction.user.id,
           });
-        userUid = (await db
+        userId = (await db
           .select(db.ref('id'))
           .from<userEntry>('users')
           .where('discord_id', interaction.user.id))[0].id;
       }
 
-      logger.debug(`[${PREFIX}] userUid: ${userUid}`);
+      logger.debug(`[${PREFIX}] userId: ${userId}`);
 
-      const drugUid = (await db
-        .select(db.ref('drug_uid'))
+      const drugId = (await db
+        .select(db.ref('drug_id'))
         .from<userEntry>('drug_names')
         .where('name', substance)
         .orWhere('name', substance.toLowerCase())
-        .orWhere('name', substance.toUpperCase()))[0].drug_uid;
+        .orWhere('name', substance.toUpperCase()))[0].drug_id;
 
-      if (drugUid.length === 0) {
+      if (drugId.length === 0) {
         logger.debug(`name = ${substance} not found in 'drugNames'`);
       }
 
-      logger.debug(`[${PREFIX}] drugUid: ${drugUid}`);
+      logger.debug(`[${PREFIX}] drugId: ${drugId}`);
 
-      await db('user_drug_history')
+      await db('user_dose_history')
         .insert({
-          user_uid: userUid,
+          user_id: userId,
           dose: volume,
           route: roa,
           units: units,
-          drug_uid: drugUid,
+          drug_id: drugId,
           dose_date: date,
         });
     }

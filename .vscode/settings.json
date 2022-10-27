@@ -6,13 +6,7 @@
   "editor.rulers": [120],
   "editor.tabSize": 2,
   "search.exclude": {
-    "env.js": true,
-    "bootstrap.min.css": true,
-    "babel.config.js": true,
-    "package-lock.json": true,
-    "config.json": true,
+    "**/*.css": true,
     "**/*.json": true
   },
-  "npm.exclude": "**/node_modules_bak/**"
-
 }

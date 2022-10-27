@@ -1,6 +1,6 @@
 {
   "name": "tripsit-tripbot",
-  "version": "5.0.16",
+  "version": "6.0.0",
   "description": "A bot for TripSit (and maybe the world)",
   "main": "start.ts",
   "scripts": {
@@ -27,7 +27,8 @@
   "contributors": [
     "SevenCats",
     "Change",
-    "Ajar"
+    "Ajar",
+    "Hipperooni"
   ],
   "license": "MIT",
   "bugs": {

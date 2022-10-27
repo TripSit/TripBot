@@ -29,7 +29,7 @@ export type userTicketEntry = {
   createdAt: Date;
 }
 
-export type userExperienceEntry = {
+export type userExpEntry = {
   id: string;
   userUid: string;
   type: 'general' | 'tripsitter' | 'developer' | 'team' | 'ignored';
@@ -41,7 +41,7 @@ export type userExperienceEntry = {
   mee6converted?: boolean
 }
 
-export type userModHistoryEntry = {
+export type userModEntry = {
   id: string;
   actorUid: string;
   command: 'ban' | 'unban' | 'underban' | 'ununderban' | 'warn' | 'note' | 'timeout' | 'untimeout' | 'kick' | 'info' | 'note' | 'report';
@@ -52,7 +52,7 @@ export type userModHistoryEntry = {
   createdAt: Date;
 };
 
-export type userDrugHistoryEntry = {
+export type userDoseEntry = {
   id: uuid;
   user_uid: uuid;
   route: 'ORAL' | 'INSUFFLATED' | 'INHALED' | 'TOPICAL' | 'SUBLINGUAL' | 'BUCCAL' | 'RECTAL' | 'INTRAMUSCULAR' | 'INTRAVENOUS' | 'SUBCUTANIOUS' | 'TRANSDERMAL';
