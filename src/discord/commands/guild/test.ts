@@ -79,7 +79,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // 'report',
     // 'say',
     // 'test',
-    // 'timezone',
+    'timezone', /* updatedPostgres */
     // 'topic',
     // 'youtube',
     // 'donate',
@@ -88,7 +88,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // 'help',
     // 'helpline',
     // 'hydrate',
-    'idose',
+    // 'idose', /* updatedPostgres */
     // 'joke',
     // 'kipp',
     // 'lovebomb',
@@ -639,10 +639,85 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // if (name == 'test') {
     //   await testReply(interaction, name, 'this would create a black hole!');
     // }
-    // if (name == 'time') {
-    //   await testReply(interaction, name, 'i havnt set up the test code yet!');
-    //   await command.execute(interaction, '1');
-    // }
+    if (name == 'timezone') {
+      // Test getting a blank timezone
+      await interaction.channel!.send(`> **${name}** - Getting existing record`);
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'timezone') return '(GMT-09:00) Alaska Time';
+        },
+        getMember: (name:string) => {
+          if (name === 'user') return interaction.member;
+        },
+        getSubcommand: () => {
+          return 'get';
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+
+      // Set the record
+      await interaction.channel!.send(`> **${name}** - Setting new timezone to 'America/Chicago'`);
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'timezone') return '(GMT-09:00) Alaska Time';
+        },
+        getMember: (name:string) => {
+          if (name === 'user') return interaction.member;
+        },
+        getSubcommand: () => {
+          return 'set';
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+
+      // Get the new record
+      await interaction.channel!.send(`> **${name}** - Getting new record (Should be same as above)`);
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'timezone') return '(GMT-09:00) Alaska Time';
+        },
+        getMember: (name:string) => {
+          if (name === 'user') return interaction.member;
+        },
+        getSubcommand: () => {
+          return 'get';
+        },
+      };
+      await command.execute(testInteraction);
+
+      // Set the record
+      await interaction.channel!.send(`> **${name}** - Setting new timezone to 'America/New_York'`);
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'timezone') return '(GMT-08:00) Pacific Time';
+        },
+        getMember: (name:string) => {
+          if (name === 'user') return interaction.member;
+        },
+        getSubcommand: () => {
+          return 'set';
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+
+      // Get the new record
+      await interaction.channel!.send(`> **${name}** - Getting new record (Should be same as above)`);
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'timezone') return '(GMT-08:00) Pacific Time';
+        },
+        getMember: (name:string) => {
+          if (name === 'user') return interaction.member;
+        },
+        getSubcommand: () => {
+          return 'get';
+        },
+      };
+      return await command.execute(testInteraction);
+    }
     // if (name == 'tripsit') {
     //   await testReply(interaction, name, 'this should be tested manually!');
     // }

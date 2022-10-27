@@ -54,9 +54,10 @@ Remember that postgres is a database that runs as a webserver, so you can access
 -- Commands finished:
 birthday
 dramacounter
+idose
+timezone
 
 -- Commands in progress:
-idose
 remindme
 profile
 h2flow
@@ -72,6 +73,5 @@ sparklePoints
 timers
 tripsitme
 karma
-timezone
 experience
 

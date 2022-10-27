@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import {DateTime} from 'luxon';
 import {db} from '../utils/knex';
-import {userEntry} from '../@types/pgdbbackup';
+import {Users} from '../@types/pgdb';
 import logger from '../utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -70,7 +70,7 @@ export async function birthday(
   } else if (command === 'get') {
     const data = await db
       .select(db.ref('birthday').as('birthday'))
-      .from<userEntry>('users')
+      .from<Users>('users')
       .where('discord_id', member.id);
 
     let resp = '';
