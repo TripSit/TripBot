@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import {DateTime} from 'luxon';
 import {db} from '../utils/knex';
-import {userEntry} from '../@types/pgdb.d';
+import {userEntry} from '../@types/pgdbbackup';
 import logger from '../utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -22,6 +22,7 @@ export async function birthday(
   month?: string,
   day?: number):Promise<any> {
   if (command === 'set') {
+    logger.debug(`[${PREFIX}] ${command} ${member} ${month} ${day}`);
     const month30 = ['April', 'June', 'September', 'November'];
     const month31 = ['January', 'March', 'May', 'July', 'August', 'October', 'December'];
     if (month !== undefined && day !== undefined) {
@@ -35,21 +36,21 @@ export async function birthday(
         return 'February only has 28 days!';
       }
       const monthDict = {
-        'January': 0,
-        'February': 1,
-        'March': 2,
-        'April': 3,
-        'May': 4,
-        'June': 5,
-        'July': 6,
-        'August': 7,
-        'September': 8,
-        'October': 9,
-        'November': 10,
-        'December': 11,
+        'january': 0,
+        'february': 1,
+        'march': 2,
+        'april': 3,
+        'may': 4,
+        'june': 5,
+        'july': 6,
+        'august': 7,
+        'september': 8,
+        'october': 9,
+        'november': 10,
+        'december': 11,
       };
 
-      const birthday = new Date(2000, monthDict[month as keyof typeof monthDict], day);
+      const birthday = new Date(2000, monthDict[month.toLowerCase() as keyof typeof monthDict], day);
 
       logger.debug(`[${PREFIX}] Setting birthday for ${member.user.username} to ${birthday}`);
 
@@ -73,12 +74,14 @@ export async function birthday(
       .where('discord_id', member.id);
 
     let resp = '';
-    if (data[0].birthday) {
-      const birthDate = data[0].birthday.toISOString();
-      logger.debug(`[${PREFIX}] Birthdate: ${birthDate}`);
-      const birthday = DateTime.fromISO(birthDate);
-      logger.debug(`[${PREFIX}] birthday: ${birthday}`);
-      resp = `${member.displayName} was born on ${birthday.monthLong} ${birthday.day}`;
+    if (data[0]) {
+      if (data[0].birthday) {
+        const birthDate = data[0].birthday.toISOString();
+        logger.debug(`[${PREFIX}] Birthdate: ${birthDate}`);
+        const birthday = DateTime.fromISO(birthDate);
+        logger.debug(`[${PREFIX}] birthday: ${birthday}`);
+        resp = `${member.displayName} was born on ${birthday.monthLong} ${birthday.day}`;
+      }
     } else {
       logger.debug(`[${PREFIX}] data is NULL`);
       resp = `${member.displayName} is immortal <3 (and has not set a birthday)`;

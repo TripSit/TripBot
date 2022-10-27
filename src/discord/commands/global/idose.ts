@@ -13,9 +13,9 @@ import {
 import {db} from '../../../global/utils/knex';
 import {DateTime} from 'luxon';
 import {
-  userEntry,
-  userDoseEntry,
-  drugNameEntry,
+  Users,
+  UserDoseHistory,
+  DrugNames,
 } from '../../../global/@types/pgdb.d';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
@@ -109,7 +109,7 @@ export const idose: SlashCommand = {
 
       const userId = (await db
         .select(db.ref('id'))
-        .from<userEntry>('users')
+        .from<Users>('users')
         .where('discord_id', interaction.user.id))[0].id;
 
       const unsorteddata = await db
@@ -122,7 +122,7 @@ export const idose: SlashCommand = {
           db.ref('drug_id').as('drug_id'),
           db.ref('dose_date').as('dose_date'),
         )
-        .from<userDoseEntry>('user_dose_history')
+        .from<UserDoseHistory>('user_dose_history')
         .where('user_id', userId);
 
       // Sort data based on the dose_date property
@@ -144,7 +144,7 @@ export const idose: SlashCommand = {
       const drugId = record.drug_id;
       const drugName = (await db
         .select(db.ref('name').as('name'))
-        .from<drugNameEntry>('drug_names')
+        .from<DrugNames>('drug_names')
         .where('drug_id', drugId)
         .andWhere('is_default', true))[0].name;
       const route = record.route.charAt(0).toUpperCase() + record.route.slice(1).toLowerCase();
@@ -155,7 +155,7 @@ export const idose: SlashCommand = {
       `);
 
       await db
-        .from<userDoseEntry>('user_dose_history')
+        .from<UserDoseHistory>('user_dose_history')
         .where('id', recordId)
         .del();
 
@@ -168,7 +168,7 @@ export const idose: SlashCommand = {
     if (command === 'get') {
       const userId = (await db
         .select(db.ref('id'))
-        .from<userEntry>('users')
+        .from<Users>('users')
         .where('discord_id', interaction.user.id))[0].id;
 
       const unsorteddata = await db
@@ -181,7 +181,7 @@ export const idose: SlashCommand = {
           db.ref('drug_id').as('drug_id'),
           db.ref('dose_date').as('dose_date'),
         )
-        .from<userDoseEntry>('user_dose_history')
+        .from<UserDoseHistory>('user_dose_history')
         .where('user_id', userId);
 
       // logger.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);
@@ -213,7 +213,7 @@ export const idose: SlashCommand = {
             const drugId = dose.drug_id;
             const drugName = (await db
               .select(db.ref('name').as('name'))
-              .from<drugNameEntry>('drug_names')
+              .from<DrugNames>('drug_names')
               .where('drug_id', drugId)
               .andWhere('is_default', true))[0].name;
 
@@ -257,7 +257,7 @@ export const idose: SlashCommand = {
             const drugId = dose.drug_id;
             const drugName = (await db
               .select(db.ref('name').as('name'))
-              .from<drugNameEntry>('drug_names')
+              .from<DrugNames>('drug_names')
               .where('drug_id', drugId)
               .andWhere('is_default', true))[0].name;
 
@@ -331,7 +331,7 @@ export const idose: SlashCommand = {
 
       let userId = (await db
         .select(db.ref('id'))
-        .from<userEntry>('users')
+        .from<Users>('users')
         .where('discord_id', interaction.user.id))[0].id;
 
       if (userId.length === 0) {
@@ -342,7 +342,7 @@ export const idose: SlashCommand = {
           });
         userId = (await db
           .select(db.ref('id'))
-          .from<userEntry>('users')
+          .from<Users>('users')
           .where('discord_id', interaction.user.id))[0].id;
       }
 
@@ -350,7 +350,7 @@ export const idose: SlashCommand = {
 
       const drugId = (await db
         .select(db.ref('drug_id'))
-        .from<userEntry>('drug_names')
+        .from<DrugNames>('drug_names')
         .where('name', substance)
         .orWhere('name', substance.toLowerCase())
         .orWhere('name', substance.toUpperCase()))[0].drug_id;

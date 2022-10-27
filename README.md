@@ -48,3 +48,30 @@ Remember that postgres is a database that runs as a webserver, so you can access
 1) Install the project (npm install)
 - There is a database file called global/utils/database.ts that is used for all connections to the database
 2) Run the postgres-test file to make sure everything is working! (npm run postgres-test)
+
+## Postgres notes
+
+-- Commands finished:
+birthday
+dramacounter
+
+-- Commands in progress:
+idose
+remindme
+profile
+h2flow
+leaderboard
+modmail
+guildCreate
+guildMemberAdd
+guildMemberRemove
+guildMemberUpdate
+chitragupta
+handleReactionRoles
+sparklePoints
+timers
+tripsitme
+karma
+timezone
+experience
+

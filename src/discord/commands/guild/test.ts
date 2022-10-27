@@ -39,6 +39,7 @@ function sleep(ms:number):Promise<void> {
 async function runCommand(interaction:ChatInputCommandInteraction, name:string) {
   const testInteraction = {
     options: {},
+    guild: interaction.guild,
     reply: (content:string) => {
       return interaction.followUp(content);
     },
@@ -46,9 +47,9 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
 
   const testableCommands = [
     // 'about', /* updated */
-    // 'birthday', /* updated */
+    'birthday', /* updatedPostgres */
     // 'breathe', /* updated */
-    'bug',
+    // 'bug',
     // 'calc_dxm', /* updated */
     // 'calc_ketamine', /* updated */
     // 'calc_psychedelics', /* updated */
@@ -80,7 +81,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // 'topic',
     // 'youtube',
     // 'donate',
-    // 'dramacounter',
+    'dramacounter', /* updatedPostgres */
     // 'ems',
     // 'help',
     // 'helpline',
@@ -111,7 +112,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     return false;
   }
 
-  await interaction.channel!.send(`**${name}** - Starting test!`);
+  await interaction.channel!.send(`> **${name}** - Starting test!`);
 
   await sleep(1000);
 
@@ -138,12 +139,53 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
       return await command.execute(testInteraction);
     }
     if (name == 'birthday') {
+      // Test getting a blank birthday
+      await interaction.channel!.send(`> **${name}** - Getting existing record`);
       testInteraction.options = {
         getString: (name:string) => {
-          if (name === 'month') return 'june';
+          if (name === 'month') return 'June';
         },
         getInteger: (name:string) => {
           if (name === 'day') return 3;
+        },
+        getMember: (name:string) => {
+          if (name === 'user') return interaction.member;
+        },
+        getSubcommand: () => {
+          return 'get';
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+
+      // Initialize a variable with a random month and day
+
+      const monthDict = {
+        0: 'january',
+        1: 'february',
+        2: 'march',
+        3: 'april',
+        4: 'may',
+        5: 'june',
+        6: 'july',
+        7: 'august',
+        8: 'september',
+        9: 'october',
+        10: 'november',
+        11: 'december',
+      };
+      const monthInt = Math.floor(Math.random() * 12) + 1;
+      const monthName = monthDict[monthInt as keyof typeof monthDict];
+      const day = Math.floor(Math.random() * 28) + 1;
+
+      // Set the birthday
+      await interaction.channel!.send(`> **${name}** - Setting new birthdate to ${monthName} ${day}`);
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'month') return monthName;
+        },
+        getInteger: (name:string) => {
+          if (name === 'day') return day;
         },
         getMember: (name:string) => {
           if (name === 'user') return interaction.member;
@@ -154,6 +196,9 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
       };
       await command.execute(testInteraction);
       await sleep(1000);
+
+      // Get the new birthday
+      await interaction.channel!.send(`> **${name}** - Getting new birthdate (Should be ${monthName} ${day})`);
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'month') return 'june';
@@ -344,7 +389,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
           return 'lsd';
         },
       };
-      return command.execute(testInteraction);
+      return await command.execute(testInteraction);
     }
     // if (name == 'chitragupta') {
     //   await testReply(interaction, name, 'this does not need to be tested!');
@@ -361,6 +406,51 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // if (name == 'dose') {
     //   await command.execute(interaction, ['DXM', '10', 'g (grams)']);
     // }
+    if (name == 'dramacounter') {
+      // Test getting the existing drama
+      await interaction.channel!.send(`> **${name}** - Getting existing record`);
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'dramatime') return ``;
+          if (name === 'dramaissue') return ``;
+        },
+        getSubcommand: () => {
+          return 'get';
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+
+      // Get random value 1-10
+      const randomValue = Math.floor(Math.random() * 10) + 1;
+      // Test getting the existing drama
+      await interaction.channel!.send(
+        `> **${name}** - Setting new value: 'Testing ${randomValue} - ${randomValue} hours ago`);
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'dramatime') return `${randomValue} hours ago`;
+          if (name === 'dramaissue') return `Testing ${randomValue}`;
+        },
+        getSubcommand: () => {
+          return 'set';
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+
+      // Test getting the existing drama
+      await interaction.channel!.send(`> **${name}** - Get new record, should be the same as above`);
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'dramatime') return ``;
+          if (name === 'dramaissue') return ``;
+        },
+        getSubcommand: () => {
+          return 'get';
+        },
+      };
+      return await command.execute(testInteraction);
+    }
     // if (name == 'how-to-tripsit') {
     //   await testReply(interaction, name, 'this should be tested manually!');
     // }
@@ -485,7 +575,7 @@ async function testGlobal(interaction:ChatInputCommandInteraction):Promise<resul
     await client.application?.commands.fetch({force: true})
       .then(async (globalCommands) => {
         results.total = globalCommands.size;
-        await interaction.followUp(`Testing ${globalCommands.size} global commands!`);
+        await interaction.followUp(`> Testing ${globalCommands.size} global commands!`);
         for (const command of globalCommands) {
           // logger.debug(`[${PREFIX}] Testing global command ${command[1].name}`);
           await runCommand(interaction, command[1].name)
@@ -518,7 +608,7 @@ async function testGuild(interaction:ChatInputCommandInteraction):Promise<result
     await interaction.guild!.commands.fetch({force: true})
       .then(async (guildCommands) => {
         results.total = guildCommands.size;
-        await interaction.followUp(`Testing ${guildCommands.size} guild commands!`);
+        await interaction.followUp(`> Testing ${guildCommands.size} guild commands!`);
         for (const command of guildCommands) {
           // logger.debug(`[${PREFIX}] Testing guild command ${command[1].name}`);
           await runCommand(interaction, command[1].name)
