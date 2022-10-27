@@ -58,8 +58,9 @@ idose
 timezone
 
 -- Commands in progress:
-remindme
 profile
+
+remindme
 h2flow
 leaderboard
 modmail

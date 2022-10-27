@@ -74,12 +74,12 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // 'moderate',
     // 'modmail',
     // 'ping',
-    // 'profile',
+    'profile',
     // 'recovery',
     // 'report',
     // 'say',
     // 'test',
-    'timezone', /* updatedPostgres */
+    // 'timezone', /* updatedPostgres */
     // 'topic',
     // 'youtube',
     // 'donate',
@@ -622,6 +622,9 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     //   await testReply(interaction, name, 'i havnt set up the test code yet!');
     //   await command.execute(interaction, '1');
     // }
+    if (name == 'profile') {
+      await command.execute(interaction);
+    }
     // if (name == 'remindme') {
     //   await testReply(interaction, name, 'i havnt set up the test code yet!');
     //   await command.execute(interaction, '1');
