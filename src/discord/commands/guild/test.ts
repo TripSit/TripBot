@@ -40,6 +40,8 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
   const testInteraction = {
     options: {},
     guild: interaction.guild,
+    user: interaction.user,
+    channel: interaction.channel,
     reply: (content:string) => {
       return interaction.followUp(content);
     },
@@ -47,7 +49,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
 
   const testableCommands = [
     // 'about', /* updated */
-    'birthday', /* updatedPostgres */
+    // 'birthday', /* updatedPostgres */
     // 'breathe', /* updated */
     // 'bug',
     // 'calc_dxm', /* updated */
@@ -81,12 +83,12 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // 'topic',
     // 'youtube',
     // 'donate',
-    'dramacounter', /* updatedPostgres */
+    // 'dramacounter', /* updatedPostgres */
     // 'ems',
     // 'help',
     // 'helpline',
     // 'hydrate',
-    // 'idose',
+    'idose',
     // 'joke',
     // 'kipp',
     // 'lovebomb',
@@ -403,9 +405,116 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // if (name == 'combo') {
     //   await command.execute(interaction, ['DXM', 'MDMA']);
     // }
-    // if (name == 'dose') {
-    //   await command.execute(interaction, ['DXM', '10', 'g (grams)']);
-    // }
+    if (name == 'idose') {
+      // Test getting a record
+      await interaction.channel!.send(`> **${name}** - Getting existing record`);
+      testInteraction.options = {
+        get: (name:string) => {
+          if (name === 'units') return {value: 'G'};
+          if (name === 'roa') return {value: 'RECTAL'};
+          if (name === 'offset') return {value: '23 mins ago'};
+        },
+        getString: (name:string) => {
+          if (name === 'substance') return 'Cannabis';
+        },
+        getNumber: (name:string) => {
+          if (name === 'volume') return 10;
+          if (name === 'record') return 0;
+        },
+        getSubcommand: () => {
+          return 'get';
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+
+      // Set a dose
+      await interaction.channel!.send(`> **${name}** - Setting record`);
+      testInteraction.options = {
+        get: (name:string) => {
+          if (name === 'units') return {value: 'G'};
+          if (name === 'roa') return {value: 'RECTAL'};
+          if (name === 'offset') return {value: '23 mins ago'};
+        },
+        getString: (name:string) => {
+          if (name === 'substance') return 'Cannabis';
+        },
+        getNumber: (name:string) => {
+          if (name === 'volume') return 10;
+          if (name === 'record') return 0;
+        },
+        getSubcommand: () => {
+          return 'set';
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+
+      // Get history
+      await interaction.channel!.send(`> **${name}** - Get records`);
+      testInteraction.options = {
+        get: (name:string) => {
+          if (name === 'units') return {value: 'G'};
+          if (name === 'roa') return {value: 'RECTAL'};
+          if (name === 'offset') return {value: '23 mins ago'};
+        },
+        getString: (name:string) => {
+          if (name === 'substance') return 'Cannabis';
+        },
+        getNumber: (name:string) => {
+          if (name === 'volume') return 10;
+          if (name === 'record') return 0;
+        },
+        getSubcommand: () => {
+          return 'get';
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+
+      // Delete record
+      await interaction.channel!.send(`> **${name}** - Deleting record`);
+      testInteraction.options = {
+        get: (name:string) => {
+          if (name === 'units') return {value: 'G'};
+          if (name === 'roa') return {value: 'RECTAL'};
+          if (name === 'offset') return {value: '23 mins ago'};
+        },
+        getString: (name:string) => {
+          if (name === 'substance') return 'Cannabis';
+        },
+        getNumber: (name:string) => {
+          if (name === 'volume') return 10;
+          if (name === 'record') return 0;
+        },
+        getSubcommand: () => {
+          return 'delete';
+        },
+      };
+      await command.execute(testInteraction);
+      await sleep(1000);
+
+      // Get history
+      await interaction.channel!.send(`> **${name}** - Get records`);
+      testInteraction.options = {
+        get: (name:string) => {
+          if (name === 'units') return {value: 'G'};
+          if (name === 'roa') return {value: 'RECTAL'};
+          if (name === 'offset') return {value: '23 mins ago'};
+        },
+        getString: (name:string) => {
+          if (name === 'substance') return 'Cannabis';
+        },
+        getNumber: (name:string) => {
+          if (name === 'volume') return 10;
+          if (name === 'record') return 0;
+        },
+        getSubcommand: () => {
+          return 'get';
+        },
+      };
+      return await command.execute(testInteraction);
+    }
     if (name == 'dramacounter') {
       // Test getting the existing drama
       await interaction.channel!.send(`> **${name}** - Getting existing record`);
