@@ -321,15 +321,20 @@ export async function tripsitmeClick(
       }
       logger.debug(`[${PREFIX}] Target is not a team member!`);
 
+      const myMember = await interaction.guild?.members.fetch(interaction.client.user!.id)!;
+      const myRole = myMember.roles.highest;
+
       // Remove all roles, except team and vanity, from the target
       target.roles.cache.forEach((role) => {
         logger.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
         if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone') && !role.name.includes('NeedsHelp')) {
-          logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.displayName}`);
-          try {
-            target.roles.remove(role);
-          } catch (err) {
-            logger.debug(`[${PREFIX}] There was an error removing the role ${role.name} from ${target.displayName}\n${err}`);
+          if (role.comparePositionTo(myRole) < 0) {
+            logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.displayName}`);
+            try {
+              target.roles.remove(role);
+            } catch (err) {
+              logger.debug(`[${PREFIX}] There was an error removing the role ${role.name} from ${target.displayName}\n${err}`);
+            }
           }
         }
       });
@@ -707,31 +712,38 @@ export async function tripsitmeFinish(
   //   }
   // }
 
+  const myMember = await interaction.guild?.members.fetch(interaction.client.user!.id)!;
+  const myRole = myMember.roles.highest;
+
   // For each role in targetRoles2, add it to the target
   if (targetRoles) {
-    targetRoles.forEach((roleId) => {
+    targetRoles.forEach(async (roleId) => {
       logger.debug(`[${PREFIX}] Re-adding roleId: ${roleId}`);
       const roleObj = interaction.guild!.roles.cache.find((r) => r.id === roleId) as Role;
       if (!ignoredRoles.includes(roleObj.id) &&
       roleObj.name !== '@everyone' &&
       roleObj.id !== roleNeedshelp!.id) {
-        logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.displayName}`);
-        try {
-          target.roles.add(roleObj);
-        } catch (err) {
-          logger.error(`[${PREFIX}] Error adding role ${roleObj.name} to ${target.displayName}`);
-          logger.error(err);
+        if (roleObj.comparePositionTo(myRole) < 0) {
+          logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.displayName}`);
+          try {
+            target.roles.add(roleObj);
+          } catch (err) {
+            logger.error(`[${PREFIX}] Error adding role ${roleObj.name} to ${target.displayName}`);
+            logger.error(err);
+          }
         }
       }
     });
   }
 
-  try {
-    target.roles.remove(roleNeedshelp!);
-    logger.debug(`[${PREFIX}] Removed ${roleNeedshelp!.name} from ${target.displayName}`);
-  } catch (err) {
-    logger.error(`[${PREFIX}] Error removing ${roleNeedshelp!.name} from ${target.displayName}`);
-    logger.error(err);
+  if (roleNeedshelp!.comparePositionTo(myRole) < 0) {
+    try {
+      logger.debug(`[${PREFIX}] Removing ${roleNeedshelp!.name} from ${target.displayName}`);
+      target.roles.remove(roleNeedshelp!);
+    } catch (err) {
+      logger.error(`[${PREFIX}] Error removing ${roleNeedshelp!.name} from ${target.displayName}`);
+      logger.error(err);
+    }
   }
 
   const endHelpMessage = stripIndents`Hey ${target}, we're glad you're doing better!
