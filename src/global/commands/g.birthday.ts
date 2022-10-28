@@ -54,16 +54,13 @@ export async function birthday(
 
       logger.debug(`[${PREFIX}] Setting birthday for ${member.user.username} to ${birthday}`);
 
-      const [user] = await db('users')
+      await db('users')
         .insert({
           discord_id: member.id,
           birthday: birthday,
         })
         .onConflict('discord_id')
-        .merge()
-        .returning('*');
-
-      logger.debug(`[${PREFIX}] Inserted user: ${JSON.stringify(user, null, 2)}`);
+        .merge();
 
       return `${month} ${day} is your new birthday!`;
     }
@@ -73,14 +70,19 @@ export async function birthday(
       .from<Users>('users')
       .where('discord_id', member.id);
 
+    logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
+
     let resp = '';
-    if (data[0]) {
-      if (data[0].birthday) {
+    if (data.length > 0) {
+      if (data[0].birthday !== null) {
         const birthDate = data[0].birthday.toISOString();
         logger.debug(`[${PREFIX}] Birthdate: ${birthDate}`);
         const birthday = DateTime.fromISO(birthDate);
         logger.debug(`[${PREFIX}] birthday: ${birthday}`);
         resp = `${member.displayName} was born on ${birthday.monthLong} ${birthday.day}`;
+      } else {
+        logger.debug(`[${PREFIX}] birthday is NULL`);
+        resp = `${member.displayName} is immortal <3 (and has not set a birthday)`;
       }
     } else {
       logger.debug(`[${PREFIX}] data is NULL`);

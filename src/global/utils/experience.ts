@@ -157,12 +157,20 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
     Math.floor(Math.random() * (25 - 15 + 1)) + 15 :
     100;
 
-  const userUniqueId = (await db
+  const userId = message.author.id;
+  let userUniqueId = await db
     .select(db.ref('id'))
     .from<Users>('users')
-    .where('discord_id', message.author.id))[0].id;
+    .where('discord_id', userId);
 
-  logger.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
+  if (userUniqueId.length === 0) {
+    userUniqueId = await db
+      .insert({discord_id: userId})
+      .into('users')
+      .returning('id');
+  }
+
+  logger.debug(`[${PREFIX}] userUniqueId: ${userUniqueId[0].id}`);
 
   const experienceData = {
     user_id: userUniqueId,
@@ -175,37 +183,46 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
     created_at: new Date(),
   };
 
-  const experienceDicts = await db
-    .select(
-      db.ref('id').as('id'),
-      db.ref('user_id').as('user_id'),
-      db.ref('type').as('type'),
-      db.ref('level').as('level'),
-      db.ref('level_points').as('level_points'),
-      db.ref('total_points').as('total_points'),
-      db.ref('last_message_at').as('last_message_at'),
-      db.ref('last_message_channel').as('last_message_channel'),
-      db.ref('created_at').as('created_at'),
-    )
-    .from<UserExperience>('user_experience')
-    .where('user_id', userUniqueId);
+  // const experienceDicts = await db
+  //   .select(
+  //     db.ref('id').as('id'),
+  //     db.ref('user_id').as('user_id'),
+  //     db.ref('type').as('type'),
+  //     db.ref('level').as('level'),
+  //     db.ref('level_points').as('level_points'),
+  //     db.ref('total_points').as('total_points'),
+  //     db.ref('last_message_at').as('last_message_at'),
+  //     db.ref('last_message_channel').as('last_message_channel'),
+  //     db.ref('created_at').as('created_at'),
+  //   )
+  //   .from<UserExperience>('user_experience')
+  //   .where('user_id', userUniqueId);
 
-  logger.debug(`[${PREFIX}] experienceDicts: ${JSON.stringify(experienceDicts)}`);
+  // logger.debug(`[${PREFIX}] experienceDicts: ${JSON.stringify(experienceDicts)}`);
 
   await db('user_experience')
     .insert({
-      user_id: userUniqueId,
+      user_id: userUniqueId[0].id,
       type: experienceType,
-      level: 0,
+      level: 1,
       level_points: expPoints,
       total_points: expPoints,
       last_message_at: new Date(),
       last_message_channel: message.channel.id,
       created_at: new Date(),
     })
-    .onConflict('user_id')
-    .merge()
-    .returning('*');
+    .onConflict(['user_id', 'type'])
+    .merge();
+
+  // await db('users')
+  //   .insert({
+  //     discord_id: '123123',
+  //     birthday: new Date(),
+  //   })
+  //   .onConflict('discord_id')
+  //   .merge();
+
+  // logger.debug(`[${PREFIX}] test: ${JSON.stringify(test)}`);
 
   // await ref.once('value', async (data) => {
   //   if (data.val() !== null) {

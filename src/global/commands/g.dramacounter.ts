@@ -25,13 +25,13 @@ export async function dramacounter(
   if (command === 'get') {
     const data = await db
       .select(
-        db.ref('drama_date').as('drama_date'),
+        db.ref('last_drama_at').as('last_drama_at'),
         db.ref('drama_reason').as('drama_reason'))
       .from<DiscordGuilds>('discord_guilds')
       .where('id', guildId);
 
-    if (data[0]) {
-      const dramaDate = data[0].drama_date as Date;
+    if (data.length > 0) {
+      const dramaDate = data[0].last_drama_at as Date;
       const dramaReason = data[0].drama_reason as string;
       return [dramaReason, dramaDate];
     } else {
@@ -42,7 +42,7 @@ export async function dramacounter(
       .insert({
         id: guildId,
         drama_reason: dramaReason,
-        drama_date: dramaDate,
+        last_drama_at: dramaDate,
       })
       .onConflict('id')
       .merge()

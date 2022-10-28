@@ -1,21 +1,9 @@
 // The TypeScript definitions below are automatically generated.
 // Do not touch them, or risk, your modifications being lost.
-/* eslint-disable */
-export enum CommandType {
-  Ban = 'BAN',
-  Unban = 'UNBAN',
-  Underban = 'UNDERBAN',
-  Ununderban = 'UNUNDERBAN',
-  Warn = 'WARN',
-  Note = 'NOTE',
-  Timeout = 'TIMEOUT',
-  Untimeout = 'UNTIMEOUT',
-  Kick = 'KICK',
-  Info = 'INFO',
-  Report = 'REPORT',
-}
 
+/* eslint-disable */
 export enum DrugNameType {
+  Brand = 'BRAND',
   Common = 'COMMON',
   Substitutive = 'SUBSTITUTIVE',
   Systematic = 'SYSTEMATIC',
@@ -42,12 +30,6 @@ export enum DrugUnit {
   G = 'G',
   Oz = 'OZ',
   Floz = 'FLOZ',
-  Tabs = 'TABS',
-  Caps = 'CAPS',
-  Drops = 'DROPS',
-  Pills = 'PILLS',
-  Patches = 'PATCHES',
-  Sprays = 'SPRAYS',
 }
 
 export enum ExperienceType {
@@ -74,6 +56,19 @@ export enum TicketType {
   Feedback = 'FEEDBACK',
 }
 
+export enum UserActionType {
+  Note = 'NOTE',
+  Warning = 'WARNING',
+  FullBan = 'FULL_BAN',
+  TicketBan = 'TICKET_BAN',
+  DiscordBotBan = 'DISCORD_BOT_BAN',
+  BanEvasion = 'BAN_EVASION',
+  Underban = 'UNDERBAN',
+  Timeout = 'TIMEOUT',
+  Report = 'REPORT',
+  Kick = 'KICK',
+}
+
 export enum Table {
   DiscordGuilds = 'discord_guilds',
   DrugArticles = 'drug_articles',
@@ -84,19 +79,19 @@ export enum Table {
   KnexMigrations = 'knex_migrations',
   KnexMigrationsLock = 'knex_migrations_lock',
   ReactionRoles = 'reaction_roles',
-  UserDoseHistory = 'user_dose_history',
+  UserActions = 'user_actions',
+  UserDrugDoses = 'user_drug_doses',
   UserExperience = 'user_experience',
-  UserModHistory = 'user_mod_history',
   UserTickets = 'user_tickets',
   Users = 'users',
 }
 
 export type DiscordGuilds = {
   id: string;
-  joined_at: Date;
-  discord_bot_ban: boolean;
-  drama_date: Date | null;
+  is_banned: boolean;
+  last_drama_at: Date | null;
   drama_reason: string | null;
+  joined_at: Date;
 };
 
 export type DrugArticles = {
@@ -106,8 +101,9 @@ export type DrugArticles = {
   title: string;
   description: string | null;
   published_at: Date | null;
-  deleted: boolean;
-  posted_by_id: string;
+  last_modified_by: string;
+  last_modified_at: Date;
+  posted_by: string;
   created_at: Date;
 };
 
@@ -149,7 +145,7 @@ export type DrugVariants = {
   name: string | null;
   description: string | null;
   default: boolean;
-  last_updated_by_id: string;
+  last_updated_by: string;
   updated_at: Date;
   created_at: Date;
 };
@@ -159,7 +155,7 @@ export type Drugs = {
   summary: string | null;
   psychonaut_wiki_url: string | null;
   errowid_experiences_url: string | null;
-  last_updated_by_id: string;
+  last_updated_by: string;
   updated_at: Date;
   created_at: Date;
 };
@@ -179,21 +175,36 @@ export type KnexMigrationsLock = {
 export type ReactionRoles = {
   id: string;
   guild_id: string;
-  name: string;
   channel_id: string;
   message_id: string;
   reaction_id: string;
   role_id: string;
+  name: string;
+  created_at: Date;
 };
 
-export type UserDoseHistory = {
+export type UserActions = {
   id: string;
   user_id: string;
+  type: UserActionType | null;
+  ban_evasion_related_user: string | null;
+  description: string;
+  internal_note: string | null;
+  expires_at: Date | null;
+  repealed_by: string | null;
+  repealed_at: Date | null;
+  created_by: string;
+  created_at: Date;
+};
+
+export type UserDrugDoses = {
+  id: string;
+  user_id: string;
+  drug_id: string;
   route: DrugRoa;
   dose: number;
-  drug_id: string;
   units: DrugUnit;
-  dose_date: Date;
+  created_at: Date;
 };
 
 export type UserExperience = {
@@ -205,19 +216,6 @@ export type UserExperience = {
   total_points: number;
   last_message_at: Date | null;
   last_message_channel: string | null;
-  mee6_converted: boolean;
-  created_at: Date;
-};
-
-export type UserModHistory = {
-  id: string;
-  actor_id: string;
-  command: CommandType;
-  target_id: string;
-  duration: number | null;
-  pub_reason: string | null;
-  priv_reason: string | null;
-  closed_at: Date | null;
   created_at: Date;
 };
 
@@ -226,9 +224,10 @@ export type UserTickets = {
   user_id: string;
   description: string;
   thread_id: string;
-  type: TicketType | null;
+  type: TicketType;
   status: TicketStatus;
   first_message_id: string;
+  closed_by: string | null;
   closed_at: Date | null;
   created_at: Date;
 };
@@ -236,8 +235,8 @@ export type UserTickets = {
 export type Users = {
   id: string;
   email: string | null;
+  username: string | null;
   password_hash: string | null;
-  display_name: string | null;
   discord_id: string | null;
   irc_id: string | null;
   matrix_id: string | null;

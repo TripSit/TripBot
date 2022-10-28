@@ -2,7 +2,7 @@ import {db} from '../../global/utils/knex';
 import {DateTime} from 'luxon';
 import {
   Users,
-  UserDoseHistory,
+  UserDrugDoses,
   DrugNames,
 } from '../../global/@types/pgdb.d';
 import logger from '../../global/utils/logger';
@@ -59,66 +59,75 @@ export async function idose(
       .select(
         db.ref('id').as('id'),
         db.ref('user_id').as('user_id'),
+        db.ref('drug_id').as('drug_id'),
         db.ref('route').as('route'),
         db.ref('dose').as('dose'),
         db.ref('units').as('units'),
-        db.ref('drug_id').as('drug_id'),
-        db.ref('dose_date').as('dose_date'),
+        db.ref('created_at').as('created_at'),
       )
-      .from<UserDoseHistory>('user_dose_history')
+      .from<UserDrugDoses>('user_drug_doses')
       .where('user_id', userUniqueId);
 
     if (unsorteddata.length === 0) {
       return 'You have no dose records, you can use /idose to add some!';
     }
 
-    // Sort data based on the dose_date property
+    // Sort data based on the created_at property
     const data = unsorteddata.sort((a, b) => {
-      if (a.dose_date < b.dose_date) {
+      if (a.created_at < b.created_at) {
         return -1;
       }
-      if (a.dose_date > b.dose_date) {
+      if (a.created_at > b.created_at) {
         return 1;
       }
       return 0;
     });
 
     const record = data[recordNumber];
-    if (record === undefined) {
+    if (record === undefined || record === null) {
       return 'That record does not exist!';
-    }
-    const recordId = record.id;
-    const doseDate = data[recordNumber].dose_date.toISOString();
-    // logger.debug(`[${PREFIX}] doseDate: ${doseDate}`);
-    const timeVal = DateTime.fromISO(doseDate);
-    const drugId = record.drug_id;
-    const drugName = (await db
-      .select(db.ref('name').as('name'))
-      .from<DrugNames>('drug_names')
-      .where('drug_id', drugId)
-      .andWhere('is_default', true))[0].name;
-    const route = record.route.charAt(0).toUpperCase() + record.route.slice(1).toLowerCase();
+    } else {
+      const recordId = record.id;
+      const doseDate = data[recordNumber].created_at.toISOString();
+      // logger.debug(`[${PREFIX}] doseDate: ${doseDate}`);
+      const timeVal = DateTime.fromISO(doseDate);
+      const drugId = record.drug_id;
+      const drugName = (await db
+        .select(db.ref('name').as('name'))
+        .from<DrugNames>('drug_names')
+        .where('drug_id', drugId)
+        .andWhere('is_default', true))[0].name;
+      const route = record.route.charAt(0).toUpperCase() + record.route.slice(1).toLowerCase();
 
-    logger.debug(`[${PREFIX}] I deleted:
+      logger.debug(`[${PREFIX}] I deleted:
       (${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}
       ${record.dose} ${record.units} of ${drugName} ${route}
       `);
 
-    await db
-      .from<UserDoseHistory>('user_dose_history')
-      .where('id', recordId)
-      .del();
+      await db
+        .from<UserDrugDoses>('user_drug_doses')
+        .where('id', recordId)
+        .del();
 
-    return `I deleted:
+      return `I deleted:
       > **(${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}**
       > ${record.dose} ${record.units} of ${drugName} ${route}
       `;
+    }
   }
   if (command === 'get') {
-    const userUniqueId = (await db
+    const data = await db
       .select(db.ref('id'))
       .from<Users>('users')
-      .where('discord_id', userId))[0].id;
+      .where('discord_id', userId);
+
+    logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+
+    if (data.length === 0) {
+      return false;
+    }
+
+    const userUniqueId = data[0].id;
 
     logger.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
 
@@ -126,13 +135,13 @@ export async function idose(
       .select(
         db.ref('id').as('id'),
         db.ref('user_id').as('user_id'),
+        db.ref('drug_id').as('drug_id'),
         db.ref('route').as('route'),
         db.ref('dose').as('dose'),
         db.ref('units').as('units'),
-        db.ref('drug_id').as('drug_id'),
-        db.ref('dose_date').as('dose_date'),
+        db.ref('created_at').as('created_at'),
       )
-      .from<UserDoseHistory>('user_dose_history')
+      .from<UserDrugDoses>('user_drug_doses')
       .where('user_id', userUniqueId);
 
     logger.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);
@@ -140,12 +149,12 @@ export async function idose(
     logger.debug(`[${PREFIX}] unsorteddata: ${unsorteddata.length}`);
 
     if (unsorteddata !== null && unsorteddata.length > 0) {
-      // Sort data based on the dose_date property
+      // Sort data based on the created_at property
       const data = unsorteddata.sort((a, b) => {
-        if (a.dose_date < b.dose_date) {
+        if (a.created_at < b.created_at) {
           return -1;
         }
-        if (a.dose_date > b.dose_date) {
+        if (a.created_at > b.created_at) {
           return 1;
         }
         return 0;
@@ -161,7 +170,7 @@ export async function idose(
 
       for (let i = 0; i < data.length; i += 1) {
         const dose = data[i];
-        const doseDate = data[i].dose_date.toISOString();
+        const doseDate = data[i].created_at.toISOString();
         logger.debug(`[${PREFIX}] doseDate: ${doseDate}`);
         const timeVal = DateTime.fromISO(doseDate);
         const drugId = dose.drug_id;
@@ -189,23 +198,16 @@ export async function idose(
     if (substance === null || volume === null || units === null || roa === null) {
       return 'You must provide a substance, volume, units, and route of administration!';
     }
-
-    let userUniqueId = (await db
+    const data = await db
       .select(db.ref('id'))
       .from<Users>('users')
-      .where('discord_id', userId))[0].id;
+      .where('discord_id', userId);
 
-    if (userId.length === 0) {
-      logger.debug(`[${PREFIX}] discord_id = ${userId} not found in 'users', creating new`);
-      await db('users')
-        .insert({
-          discord_id: userId,
-        });
-      userUniqueId = (await db
-        .select(db.ref('id'))
-        .from<Users>('users')
-        .where('discord_id', userId))[0].id;
-    }
+    const userUniqueId = data.length > 0 ? data[0].id : await db('users')
+      .insert({
+        discord_id: userId,
+      })
+      .returning('id'); ;
 
     logger.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
 
@@ -222,14 +224,14 @@ export async function idose(
 
     logger.debug(`[${PREFIX}] drugId: ${drugId}`);
 
-    await db('user_dose_history')
+    await db('user_drug_doses')
       .insert({
         user_id: userUniqueId,
-        dose: volume,
-        route: roa,
-        units: units,
         drug_id: drugId,
-        dose_date: date,
+        route: roa,
+        dose: volume,
+        units: units,
+        created_at: date,
       });
   }
 }
