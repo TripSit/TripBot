@@ -110,7 +110,7 @@ export async function tripsitmeClick(
   // channelTripsittersId: ${channelTripsittersId}`);
 
   const modal = new ModalBuilder()
-    .setCustomId(`tripsitmeSubmit~${roleNeedshelpId}~${roleTripsitterId}~${channelTripsittersId}`)
+    .setCustomId(`tripsitmeSubmit~${roleNeedshelpId}~${roleTripsitterId}~${channelTripsittersId}~${interaction.id}`)
     .setTitle('Tripsitter Help Request');
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
     .setCustomId('triageInput')
@@ -124,7 +124,13 @@ export async function tripsitmeClick(
 
   const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`tripsitmeSubmit`);
   interaction.awaitModalSubmit({filter, time: 0})
-    .then(async (interaction) => {
+    .then(async (i) => {
+      logger.debug(`[${PREFIX}] i.customId.split('~')[4]: ${i.customId.split('~')[4]}`);
+      logger.debug(`[${PREFIX}] interaction.id: ${interaction.id}`);
+      if (i.customId.split('~')[4] !== interaction.id) {
+        return;
+      };
+
       logger.debug(`[${PREFIX}] Submit starting!`);
       logger.debug(`[${PREFIX}] memberInput: ${memberInput}`);
 
@@ -140,9 +146,9 @@ export async function tripsitmeClick(
       }
 
       // logger.debug(`[${PREFIX}] interaction.customId: ${interaction.customId}`);
-      const roleNeedshelpId = interaction.customId.split('~')[1];
-      const roleTripsitterId = interaction.customId.split('~')[2];
-      const channelTripsitters = interaction.customId.split('~')[3];
+      const roleNeedshelpId = i.customId.split('~')[1];
+      const roleTripsitterId = i.customId.split('~')[2];
+      const channelTripsitters = i.customId.split('~')[3];
 
       // logger.debug(`[${PREFIX}] roleNeedshelpId: ${roleNeedshelpId}\n
       // roleTripsitterId: ${roleTripsitterId}\n
@@ -152,9 +158,9 @@ export async function tripsitmeClick(
       let triageInput = triageGiven;
       let introInput = introGiven;
       // Otherwise get the input from the modal, if it was submitted
-      if ((interaction as ModalSubmitInteraction).fields) {
-        triageInput = (interaction as ModalSubmitInteraction).fields.getTextInputValue('triageInput');
-        introInput = (interaction as ModalSubmitInteraction).fields.getTextInputValue('introInput');
+      if (i.fields) {
+        triageInput = i.fields.getTextInputValue('triageInput');
+        introInput = i.fields.getTextInputValue('introInput');
       }
       logger.debug(`[${PREFIX}] triageInput: ${triageInput}`);
       logger.debug(`[${PREFIX}] introInput: ${introInput}`);
@@ -488,7 +494,7 @@ export async function tripsitmeClick(
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription(replyMessage);
-      interaction.reply({embeds: [embed], ephemeral: true});
+      i.reply({embeds: [embed], ephemeral: true});
       logger.debug(`[${PREFIX}] Sent response to user`);
 
       // Send the intro message to the threadHelpUser
