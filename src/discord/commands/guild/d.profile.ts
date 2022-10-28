@@ -364,10 +364,12 @@ export const profile: SlashCommand = {
     // Level Bar Math
     let percentageOfLevel = 0;
     if (targetData.experience) {
-      const levelExpPoints = targetData.experience.total.levelExpPoints;
-      const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
-      percentageOfLevel = (levelExpPoints / expToLevel);
-      logger.debug(`[${PREFIX}] percentageOfLevel: ${percentageOfLevel}`);
+      if (targetData.experience.total) {
+        const levelExpPoints = targetData.experience.total.levelExpPoints;
+        const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
+        percentageOfLevel = (levelExpPoints / expToLevel);
+        logger.debug(`[${PREFIX}] percentageOfLevel: ${percentageOfLevel}`);
+      }
     }
 
     // Circular Level Bar
