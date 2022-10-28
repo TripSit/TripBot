@@ -342,14 +342,16 @@ export const dprofile: SlashCommand = {
     // context.drawImage(avatar, 30, 44, 195, 195);
     // context.restore();
 
-    // // Level Bar Math
-    // let percentageOfLevel = 0;
-    // if (targetData.experience) {
-    //   const levelExpPoints = targetData.experience.total.levelExpPoints;
-    //   const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
-    //   percentageOfLevel = (levelExpPoints / expToLevel);
-    //   logger.debug(`[${PREFIX}] percentageOfLevel: ${percentageOfLevel}`);
-    // }
+    // Level Bar Math
+    let percentageOfLevel = 0;
+    if (targetData.experience) {
+      if (targetData.experience.total) {
+        const levelExpPoints = targetData.experience.total.levelExpPoints;
+        const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
+        percentageOfLevel = (levelExpPoints / expToLevel);
+        logger.debug(`[${PREFIX}] percentageOfLevel: ${percentageOfLevel}`);
+      }
+    }
 
     // // Circular Level Bar
     // context.save();
