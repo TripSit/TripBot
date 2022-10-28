@@ -49,7 +49,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
 
   const testableCommands = [
     // 'about', /* updated */
-    // 'birthday', /* updatedPostgres */
+    'birthday', /* updatedPostgres */
     // 'breathe', /* updated */
     // 'bug',
     // 'calc_dxm', /* updated */
@@ -62,45 +62,44 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // 'convert',
     // 'coinflip',
     // 'combochart',
+    // 'donate',
+    'dramacounter', /* updatedPostgres */
     // 'drug',
+    // 'ems',
     // 'eyeballing',
     // 'grounding',
     // 'h2flow',
-    // 'imdb',
-    // 'imgur',
-    // 'issue',
-    // 'karma',
-    // 'magick8ball',
-    // 'moderate',
-    // 'modmail',
-    // 'ping',
-    'profile',
-    // 'recovery',
-    // 'report',
-    // 'say',
-    // 'test',
-    // 'timezone', /* updatedPostgres */
-    // 'topic',
-    // 'youtube',
-    // 'donate',
-    // 'dramacounter', /* updatedPostgres */
-    // 'ems',
     // 'help',
     // 'helpline',
     // 'hydrate',
-    // 'idose', /* updatedPostgres */
+    'idose', /* updatedPostgres */
+    // 'imdb',
+    // 'imgur',
+    // 'issue',
     // 'joke',
+    // 'karma',
     // 'kipp',
     // 'lovebomb',
     // 'm_report',
     // 'm_timeout',
     // 'm_warn',
+    // 'magick8ball',
+    // 'moderate',
+    // 'modmail',
+    // 'ping',
     // 'poll',
+    // 'profile',
     // 'reagents',
+    // 'recovery',
+    // 'report',
     // 'remindme',
+    // 'say',
     // 'setup',
+    // 'test',
     // 'testkits',
     // 'triptoys',
+    'timezone', /* updatedPostgres */
+    // 'topic',
     // 'u_ban',
     // 'u_info',
     // 'u_kick',
@@ -108,6 +107,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // 'u_underban',
     // 'urbanDefine',
     // 'warmline',
+    // 'youtube',
   ];
 
   if (!testableCommands.includes(name)) {
