@@ -7,7 +7,9 @@ import {
   TextChannel,
   User,
 } from 'discord.js';
-import {expEntry, expDict} from '../../global/@types/database';
+import {DateTime} from 'luxon';
+import {db} from '../utils/knex';
+import {Users, UserExperience} from '../@types/pgdb';
 import env from './env.config';
 import logger from './logger';
 import fs from 'fs';
@@ -99,272 +101,206 @@ const teamChannels = Object.values({
  * @param {Message} message The message object to check
  */
 export async function experience(
-  // message:Message | ircMessage,
   message:Message,
 ) {
-  // let actor = {} as User | any;
-  let actor = {} as User;
-  let messageChannelId = '';
-  let experienceType = 'general';
-
-  // Determine the channel that was spoken in and type of experience to give
-  if (message instanceof Message) {
-    // If the message didnt come from a guild member, or inside of a channel, ignore it
-    if (!message.member || !message.channel) {
-      return;
-    }
-
-    logger.debug(stripIndents`[${PREFIX}] Message sent by ${message.author.username} \
-in ${(message.channel as TextChannel).name} on ${message.guild}`);
-
-    // Check if the user has an ignored role
-    if (ignoredRoles.some((role) => message.member!.roles.cache.has(role))) {
-      logger.debug(`[${PREFIX}] Message sent by a user with an ignored role`);
-      return;
-    }
-
-    actor = message.author;
-    const channel = message.channel as TextChannel;
-
-    // logger.debug(`[${PREFIX}] channel: ${JSON.stringify(channel, null, 2)}`);
-    // logger.debug(`[${PREFIX}] channel: ${channel.name} ${channel.id}`);
-
-    // Determine what kind of experience to give
-    if (channel.parent) {
-      // logger.debug(`[${PREFIX}] parent: ${channel.parent.name} ${channel.parent.id}`);
-
-      if (channel.parent.parent) {
-        // logger.debug(`[${PREFIX}] parent-parent: ${channel.parent.parent.name} ${channel.parent.parent.id}`);
-        if (channel.parent.parent.id === env.CATEGORY_TEAMTRIPSIT) {
-          experienceType = 'team';
-        } else if (channel.parent.parent.id === env.CATEGORY_DEVELOPMENT) {
-          experienceType = 'developer';
-        } else if (channel.parent.parent.id === env.CATEGROY_HARMREDUCTIONCENTRE) {
-          experienceType = 'tripsitter';
-        } else if (channel.parent.parent.id === env.CATEGORY_GATEWAY) {
-          experienceType = 'ignored';
-        } else {
-          experienceType = 'general';
-        }
-      } else if (channel.parent.id === env.CATEGORY_TEAMTRIPSIT) {
-        experienceType = 'team';
-      } else if (channel.parent.id === env.CATEGORY_DEVELOPMENT) {
-        experienceType = 'developer';
-      } else if (channel.parent.id === env.CATEGROY_HARMREDUCTIONCENTRE) {
-        experienceType = 'tripsitter';
-      } else if (channel.parent.id === env.CATEGORY_GATEWAY) {
-        experienceType = 'ignored';
-      } else {
-        experienceType = 'general';
-      }
-    } else {
-      experienceType = 'ignored';
-    }
-    messageChannelId = channel.id;
+  // If the message didnt come from a guild member, or inside of a channel, ignore it
+  if (!message.member || !message.channel) {
+    return;
   }
 
-  // logger.debug(`[${PREFIX}] Message sent in ${experienceType} channel`);
+  logger.debug(stripIndents`[${PREFIX}] Message sent by ${message.author.username} \
+in ${(message.channel as TextChannel).name} on ${message.guild}`);
 
-  // if (!(message instanceof Message)) {
-  //   // If the user is not a member of the guild, then this probably came from IRC
-  //   // If the user isnt registered then don't give them experience
-  //   // if (!message.host.startsWith('tripsit')) { return; }
+  // Check if the user has an ignored role
+  if (ignoredRoles.some((role) => message.member!.roles.cache.has(role))) {
+    logger.debug(`[${PREFIX}] Message sent by a user with an ignored role`);
+    return;
+  }
 
-  //   if (botNicknames.includes(message.nick)) {
-  //     // logger.debug(`[${PREFIX}] ${message.nick} is a bot!`);
-  //     return;
-  //   }
 
-  //   const memberHost = message.host.split('/')[1];
-  //   logger.debug(`[${PREFIX}] ${message.nick}${memberHost ?
-  //     ` (${memberHost}) ` :
-  //     ' '}said ${message.args[1]} in ${message.args[0]}`);
-  //   actor = message;
-
-  //   // Determine what kind of experience to give
-  //   if (tripsitterIrcChannels.includes(message.args[0])) {
-  //     logger.debug(`[${PREFIX}] Message sent in a tripsitter channel from IRC`);
-  //     experienceType = 'tripsitter';
-  //   } else {
-  //     logger.debug(`[${PREFIX}] Message sent in a non-tripsitter channel from IRC`);
-  //     experienceType = 'general';
-  //   }
-  //   messageChannelId = message.args[0].replace(/(\.|\$|#|\[|\]|\/)/g, '');
-  // }
-
-  // logger.debug(`[${PREFIX}] messageChannelId: ${messageChannelId} | experienceType: ${experienceType}`);
+  // Determine what kind of experience to give
+  const channel = message.channel as TextChannel;
+  let experienceType = 'GENERAL';
+  if ((channel).parent) {
+    // logger.debug(`[${PREFIX}] parent: ${channel.parent.name} ${channel.parent.id}`);
+    if (channel.parent.parent) {
+      // logger.debug(`[${PREFIX}] parent-parent: ${channel.parent.parent.name} ${channel.parent.parent.id}`);
+      if (channel.parent.parent.id === env.CATEGORY_TEAMTRIPSIT) {
+        experienceType = 'TEAM';
+      } else if (channel.parent.parent.id === env.CATEGORY_DEVELOPMENT) {
+        experienceType = 'DEVELOPER';
+      } else if (channel.parent.parent.id === env.CATEGROY_HARMREDUCTIONCENTRE) {
+        experienceType = 'TRIPSITTER';
+      } else if (channel.parent.parent.id === env.CATEGORY_GATEWAY) {
+        experienceType = 'IGNORED';
+      } else {
+        experienceType = 'GENERAL';
+      }
+    } else if (channel.parent.id === env.CATEGORY_TEAMTRIPSIT) {
+      experienceType = 'TEAM';
+    } else if (channel.parent.id === env.CATEGORY_DEVELOPMENT) {
+      experienceType = 'DEVELOPER';
+    } else if (channel.parent.id === env.CATEGROY_HARMREDUCTIONCENTRE) {
+      experienceType = 'TRIPSITTER';
+    } else if (channel.parent.id === env.CATEGORY_GATEWAY) {
+      experienceType = 'IGNORED';
+    } else {
+      experienceType = 'GENERAL';
+    }
+  } else {
+    experienceType = 'IGNORED';
+  }
+  logger.debug(`[${PREFIX}] experienceType: ${experienceType}`);
 
   // Get random value between 15 and 25
   const expPoints = env.NODE_ENV === 'production' ?
     Math.floor(Math.random() * (25 - 15 + 1)) + 15 :
     100;
 
-  const currMessageDate = new Date();
+  const userUniqueId = (await db
+    .select(db.ref('id'))
+    .from<Users>('users')
+    .where('discord_id', message.author.id))[0].id;
 
-  let experienceDict = {
-    total: {
+  logger.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
+
+  const experienceData = {
+    user_id: userUniqueId,
+    type: experienceType,
+    level: 0,
+    level_points: expPoints,
+    total_points: expPoints,
+    last_message_at: new Date(),
+    last_message_channel: message.channel.id,
+    created_at: new Date(),
+  };
+
+  const experienceDicts = await db
+    .select(
+      db.ref('id').as('id'),
+      db.ref('user_id').as('user_id'),
+      db.ref('type').as('type'),
+      db.ref('level').as('level'),
+      db.ref('level_points').as('level_points'),
+      db.ref('total_points').as('total_points'),
+      db.ref('last_message_at').as('last_message_at'),
+      db.ref('last_message_channel').as('last_message_channel'),
+      db.ref('created_at').as('created_at'),
+    )
+    .from<UserExperience>('user_experience')
+    .where('user_id', userUniqueId);
+
+  logger.debug(`[${PREFIX}] experienceDicts: ${JSON.stringify(experienceDicts)}`);
+
+  await db('user_experience')
+    .insert({
+      user_id: userUniqueId,
+      type: experienceType,
       level: 0,
-      levelExpPoints: expPoints,
-      totalExpPoints: expPoints,
-      lastMessageDate: currMessageDate.valueOf(),
-      lastMessageChannel: messageChannelId,
-    },
-  } as expDict;
+      level_points: expPoints,
+      total_points: expPoints,
+      last_message_at: new Date(),
+      last_message_channel: message.channel.id,
+      created_at: new Date(),
+    })
+    .onConflict('user_id')
+    .merge()
+    .returning('*');
 
-  if (global.db) {
-    let userRef = '';
+  // await ref.once('value', async (data) => {
+  //   if (data.val() !== null) {
+  //     experienceDict = data.val();
 
-    if (message instanceof Message) {
-      if (env.NODE_ENV === 'production') {
-        userRef = `${env.FIREBASE_DB_USERS}/${actor.id}/experience`;
-      } else {
-        userRef = `users_dev/${actor.id}/experience`;
-      }
-    }
-    // else {
-    //   const accountName = message.host.split('/')[2] ?? message.host.replace(/(\.|\$|#|\[|\]|\/)/g, '-');
-    //   userRef = `${env.FIREBASE_DB_USERS}/${accountName}/experience`;
-    // }
-    // logger.debug(`[${PREFIX}] userRef: ${userRef}`);
+  //     // logger.debug(`[${PREFIX}] experienceDictStart: ${JSON.stringify(experienceDict, null, 2)}`);
 
-    const ref = db.ref(userRef);
-    await ref.once('value', async (data) => {
-      if (data.val() !== null) {
-        experienceDict = data.val();
+  //     /**
+  //        * Processes experience points for a user
+  //        * @param {expDict} expDict - all exp data
+  //        * @param {string} expType - the type of exp to process
+  //        * @return {expDict} - the processed exp data
+  //        */
+  //     async function processExp(
+  //       expDict:expDict,
+  //       expType:string,
+  //     ):Promise<expDict> {
+  //       const expData = expDict[expType as keyof typeof expDict];
+  //       if (expData) {
+  //         // logger.debug(`[${PREFIX}] ${expType} exp found!`);
+  //         // logger.debug(`[${PREFIX}] expData.lastMessageDate: ${expData.lastMessageDate}`);
+  //         const lastMessageDate = new Date(expData.lastMessageDate);
+  //         // logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
+  //         // logger.debug(`[${PREFIX}] currMessageDate.valueOf(): ${currMessageDate.valueOf()}`);
+  //         // logger.debug(`[${PREFIX}] lastMessageDate.valueOf(): ${lastMessageDate.valueOf()}`);
+  //         const timeDiff = currMessageDate.valueOf() - lastMessageDate.valueOf();
+  //         // logger.debug(`[${PREFIX}] timeDiff: ${timeDiff}`);
+  //         // logger.debug(`[${PREFIX}] bufferTime: ${bufferTime}`);
+  //         if (timeDiff > bufferTime) {
+  //           // If the time diff is over one bufferTime, increase the experience points
+  //           let levelExpPoints = expData.levelExpPoints + expPoints;
+  //           const totalExpPoints = expData.totalExpPoints + expPoints;
 
-        // logger.debug(`[${PREFIX}] experienceDictStart: ${JSON.stringify(experienceDict, null, 2)}`);
+  //           let level = expData.level;
+  //           const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
 
-        if (experienceDict.total) {
-          if (!experienceDict.total.mee6converted) {
-            logger.debug(`[${PREFIX}] Mee6 conversion not yet complete`);
-            // const dbFilename = `./backups/mee6-leaderboard.csv`;
-            // const data = fs.readFileSync(dbFilename, 'utf8');
-            // const dataarray = data.split('\r\n');
-            const dataarray = Object.keys(mee6data);
-            logger.debug(`[${PREFIX}] dataarray: ${dataarray.length}`);
-            logger.debug(`[${PREFIX}] searching for actor.tag: ${actor.tag}`);
-            const userInfo = dataarray.find((line) => {
-              const linearray = line.split(',');
-              const tag = `${linearray[0]}${linearray[1]}`;
-              if (tag === actor.tag) {
-                return true;
-              }
-            });
-            logger.debug(`[${PREFIX}] userInfo: ${userInfo}`);
-            if (userInfo) {
-              const bonusPoints = parseInt(userInfo.split(',')[2], 10);
-              logger.debug(`[${PREFIX}] Giving ${actor} ${bonusPoints} experience points`);
-              experienceDict.total.levelExpPoints += bonusPoints;
-              experienceDict.total.totalExpPoints += bonusPoints;
-              if (experienceDict.general) {
-                experienceDict.general.levelExpPoints += bonusPoints;
-                experienceDict.general.totalExpPoints += bonusPoints;
-              } else {
-                experienceDict.general = {
-                  level: 0,
-                  levelExpPoints: bonusPoints,
-                  totalExpPoints: bonusPoints,
-                  lastMessageDate: currMessageDate.valueOf(),
-                  lastMessageChannel: messageChannelId,
-                };
-              }
-              experienceDict.total.mee6converted = true;
-              logger.debug(`[${PREFIX}] Mee6 conversion complete`);
-              logger.debug(`[${PREFIX}] ${actor} now has ${experienceDict.total.totalExpPoints} experience points`);
-              logger.debug(`[${PREFIX}] ${JSON.stringify(experienceDict, null, 2)}`);
-            }
-          }
-        }
+  //           // eslint-disable-next-line max-len
+  //           logger.debug(stripIndents`[${PREFIX}] ${actor.username } (lv${level}) +${expPoints} ${expType} exp | TotalExp: ${totalExpPoints}, LevelExp: ${levelExpPoints}, ExpNeededForLevel ${level + 1}: ${expToLevel}`);
+  //           if (expToLevel < levelExpPoints) {
+  //             level += 1;
+  //             logger.debug(stripIndents`[${PREFIX}] ${actor.username} has leveled up to ${expType} level ${level}!`);
 
-        /**
-         * Processes experience points for a user
-         * @param {expDict} expDict - all exp data
-         * @param {string} expType - the type of exp to process
-         * @return {expDict} - the processed exp data
-         */
-        async function processExp(
-          expDict:expDict,
-          expType:string,
-        ):Promise<expDict> {
-          const expData = expDict[expType as keyof typeof expDict];
-          if (expData) {
-            // logger.debug(`[${PREFIX}] ${expType} exp found!`);
-            // logger.debug(`[${PREFIX}] expData.lastMessageDate: ${expData.lastMessageDate}`);
-            const lastMessageDate = new Date(expData.lastMessageDate);
-            // logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
-            // logger.debug(`[${PREFIX}] currMessageDate.valueOf(): ${currMessageDate.valueOf()}`);
-            // logger.debug(`[${PREFIX}] lastMessageDate.valueOf(): ${lastMessageDate.valueOf()}`);
-            const timeDiff = currMessageDate.valueOf() - lastMessageDate.valueOf();
-            // logger.debug(`[${PREFIX}] timeDiff: ${timeDiff}`);
-            // logger.debug(`[${PREFIX}] bufferTime: ${bufferTime}`);
-            if (timeDiff > bufferTime) {
-              // If the time diff is over one bufferTime, increase the experience points
-              let levelExpPoints = expData.levelExpPoints + expPoints;
-              const totalExpPoints = expData.totalExpPoints + expPoints;
+  //             if (level % 5 === 0) {
+  //               const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+  //               channelTripbotlogs.send(stripIndents`${actor.username} has leveled up to ${expType} level ${level}!`);
+  //             }
+  //             // channelTripbotlogs.send({embeds: [embed]});
+  //             levelExpPoints -= expToLevel;
+  //           }
+  //           expData.level = level;
+  //           expData.levelExpPoints = levelExpPoints;
+  //           expData.totalExpPoints = totalExpPoints;
+  //           expData.lastMessageDate = currMessageDate.valueOf();
+  //           expData.lastMessageChannel = messageChannelId;
+  //           // logger.debug(`[${PREFIX}] categoryExperienceData: ${JSON.stringify(expData, null, 2)}`);
+  //           // logger.debug(`[${PREFIX}] experienceType: ${expType}`);
 
-              let level = expData.level;
-              const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
+  //           experienceDict[expType as keyof typeof experienceDict] = expData;
+  //           // logger.debug(`[${PREFIX}] experienceDictA: ${JSON.stringify(experienceDict, null, 2)}`);
+  //           // logger.debug(`[${PREFIX}] experienceDataC: ${JSON.stringify(experienceData, null, 2)}`);
+  //         }
+  //       } else {
+  //         experienceDict[expType as keyof typeof expDict] = {
+  //           level: 0,
+  //           levelExpPoints: expPoints,
+  //           totalExpPoints: expPoints,
+  //           lastMessageDate: currMessageDate.valueOf(),
+  //           lastMessageChannel: messageChannelId,
+  //         };
+  //       }
+  //       // logger.debug(`[${PREFIX}] experienceDictB: ${JSON.stringify(experienceDict, null, 2)}`);
+  //       return experienceDict;
+  //     };
 
-              // eslint-disable-next-line max-len
-              logger.debug(stripIndents`[${PREFIX}] ${actor.username } (lv${level}) +${expPoints} ${expType} exp | TotalExp: ${totalExpPoints}, LevelExp: ${levelExpPoints}, ExpNeededForLevel ${level + 1}: ${expToLevel}`);
-              if (expToLevel < levelExpPoints) {
-                level += 1;
-                logger.debug(stripIndents`[${PREFIX}] ${actor.username} has leveled up to ${expType} level ${level}!`);
-
-                if (level % 5 === 0) {
-                  const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-                  channelTripbotlogs.send(stripIndents`${actor.username} has leveled up to ${expType} level ${level}!`);
-                }
-                // channelTripbotlogs.send({embeds: [embed]});
-                levelExpPoints -= expToLevel;
-              }
-              expData.level = level;
-              expData.levelExpPoints = levelExpPoints;
-              expData.totalExpPoints = totalExpPoints;
-              expData.lastMessageDate = currMessageDate.valueOf();
-              expData.lastMessageChannel = messageChannelId;
-              // logger.debug(`[${PREFIX}] categoryExperienceData: ${JSON.stringify(expData, null, 2)}`);
-              // logger.debug(`[${PREFIX}] experienceType: ${expType}`);
-
-              experienceDict[expType as keyof typeof experienceDict] = expData;
-              // logger.debug(`[${PREFIX}] experienceDictA: ${JSON.stringify(experienceDict, null, 2)}`);
-              // logger.debug(`[${PREFIX}] experienceDataC: ${JSON.stringify(experienceData, null, 2)}`);
-            }
-          } else {
-            experienceDict[expType as keyof typeof expDict] = {
-              level: 0,
-              levelExpPoints: expPoints,
-              totalExpPoints: expPoints,
-              lastMessageDate: currMessageDate.valueOf(),
-              lastMessageChannel: messageChannelId,
-            };
-          }
-          // logger.debug(`[${PREFIX}] experienceDictB: ${JSON.stringify(experienceDict, null, 2)}`);
-          return experienceDict;
-        };
-
-        // logger.debug(`[${PREFIX}] experienceDict1: ${JSON.stringify(experienceDict, null, 2)}`);
-        await processExp(experienceDict, 'total')
-          .then(async (expDictA) => {
-            // logger.debug(`[${PREFIX}] experienceDict2: ${JSON.stringify(expDictA, null, 2)}`);
-            await processExp(expDictA, experienceType)
-              .then(async (expDictB) => {
-                // logger.debug(`[${PREFIX}] experienceDict3: ${JSON.stringify(expDictB, null, 2)}`);
-                ref.update(expDictB);
-              });
-          });
-      } else {
-        // logger.debug(`[${PREFIX}] experienceDictB: ${JSON.stringify(experienceDict, null, 2)}`);
-        experienceDict[experienceType as keyof typeof experienceDict] = {
-          level: 0,
-          levelExpPoints: expPoints,
-          totalExpPoints: expPoints,
-          lastMessageDate: currMessageDate.valueOf(),
-          lastMessageChannel: messageChannelId,
-        };
-        logger.debug(`[${PREFIX}] settin new EXP}`);
-        ref.set(experienceDict);
-      }
-    });
-  }
+  //     // logger.debug(`[${PREFIX}] experienceDict1: ${JSON.stringify(experienceDict, null, 2)}`);
+  //     await processExp(experienceDict, 'total')
+  //       .then(async (expDictA) => {
+  //         // logger.debug(`[${PREFIX}] experienceDict2: ${JSON.stringify(expDictA, null, 2)}`);
+  //         await processExp(expDictA, experienceType)
+  //           .then(async (expDictB) => {
+  //             // logger.debug(`[${PREFIX}] experienceDict3: ${JSON.stringify(expDictB, null, 2)}`);
+  //             ref.update(expDictB);
+  //           });
+  //       });
+  //   } else {
+  //     // logger.debug(`[${PREFIX}] experienceDictB: ${JSON.stringify(experienceDict, null, 2)}`);
+  //     experienceDict[experienceType as keyof typeof experienceDict] = {
+  //       level: 0,
+  //       levelExpPoints: expPoints,
+  //       totalExpPoints: expPoints,
+  //       lastMessageDate: currMessageDate.valueOf(),
+  //       lastMessageChannel: messageChannelId,
+  //     };
+  //     logger.debug(`[${PREFIX}] settin new EXP}`);
+  //     ref.set(experienceDict);
+  //   }
+  // });
 };

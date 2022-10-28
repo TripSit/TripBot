@@ -58,21 +58,22 @@ idose
 timezone
 
 -- Commands in progress:
+karma
+experience
+h2flow
+chitragupta
+sparklePoints
+
 profile
 
-remindme
-h2flow
 leaderboard
 modmail
+timers
+remindme
+
+tripsitme
 guildCreate
 guildMemberAdd
 guildMemberRemove
 guildMemberUpdate
-chitragupta
 handleReactionRoles
-sparklePoints
-timers
-tripsitme
-karma
-experience
-
