@@ -59,6 +59,7 @@
     "node-fetch": "^3.2.10",
     "npm-check-updates": "^16.3.11",
     "octokit": "^2.0.9",
+    "pg": "^8.8.0",
     "ts-node": "^10.9.1",
     "winston": "^3.8.2",
     "youtube-search": "^1.1.6",

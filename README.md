@@ -57,9 +57,9 @@ idose
 timezone
 experience
 chitragupta
+karma
 
 -- Commands in progress:
-karma
 h2flow
 sparklePoints
 

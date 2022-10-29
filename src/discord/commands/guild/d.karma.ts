@@ -49,7 +49,7 @@ export const birthday: SlashCommand = {
   async execute(interaction) {
     logger.debug(`[${PREFIX}] started!`);
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
-    let user = interaction.options.getMember('user')!;
+    let member = interaction.options.getMember('user')! as GuildMember;
     const value = interaction.options.getNumber('value')!;
     const type = interaction.options.getString('type')!;
 
@@ -58,18 +58,18 @@ export const birthday: SlashCommand = {
       command = 'get';
     }
 
-    if (user === null) {
-      user = interaction.member as GuildMember;
+    if (member === null) {
+      member = interaction.member as GuildMember;
     }
 
-    const response = await karma(command, (user as GuildMember), value, type);
+    const response = await karma(command, member.id, value, type);
 
     logger.debug(`[${PREFIX}] response: ${response}`);
 
     if (command === 'get') {
-      interaction.reply(response);
+      interaction.reply(`${member.displayName} ${response}`);
     } else {
-      interaction.reply({content: response, ephemeral: true});
+      interaction.reply({content: `${member.displayName} ${response}`, ephemeral: true});
     }
 
     logger.debug(`[${PREFIX}] finished!`);
