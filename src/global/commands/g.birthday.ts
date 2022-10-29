@@ -54,11 +54,12 @@ export async function birthday(
 
       logger.debug(`[${PREFIX}] Setting birthday for ${member.user.username} to ${birthday}`);
 
-      await db('users')
+      await db
         .insert({
           discord_id: member.id,
           birthday: birthday,
         })
+        .into('users')
         .onConflict('discord_id')
         .merge();
 

@@ -110,7 +110,7 @@ export const dprofile: SlashCommand = {
         textColor = '#626262';
       }
     }
-    logger.debug(`[${PREFIX}] cardColor: ${cardColor} | textColor: ${textColor} | coloredCard: ${coloredCard}`);
+    // logger.debug(`[${PREFIX}] cardColor: ${cardColor} | textColor: ${textColor} | coloredCard: ${coloredCard}`);
 
     // Backround Image
     try {
@@ -197,7 +197,7 @@ export const dprofile: SlashCommand = {
       totalExp: number;
     };
 
-    logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
+    // logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
 
     // User Info Text
     context.font = `30px futura`;
@@ -268,17 +268,17 @@ export const dprofile: SlashCommand = {
     let level = 0;
     let levelPoints = targetData.totalExp;
     let expToLevel = 0;
-    let i = 0;
+    // let i = 0;
     while (levelPoints > expToLevel) {
       expToLevel = 5 * (level ** 2) + (50 * level) + 100;
-      console.log(`(${i}) Level: ${level}, Level Points: ${levelPoints}, Exp to Level: ${expToLevel}`);
+      // logger.debug(`[${PREFIX}] (${i}) Level: ${level}, Level Points: ${levelPoints}, Exp to Level: ${expToLevel}`);
+      // i++;
       level++;
-      i++;
       levelPoints -= expToLevel;
-      console.log(`Leftover: ${levelPoints}`);
+      // logger.debug(`[${PREFIX}]Leftover: ${levelPoints}`);
     }
 
-    console.log(level);
+    // logger.debug(`[${PREFIX}] ${level}`);
 
     if (level < 6) {
       // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIP.png';
@@ -304,7 +304,7 @@ export const dprofile: SlashCommand = {
     }
 
     try {
-      logger.debug(`[${PREFIX}] starImagePath: ${starImagePath}`);
+      // logger.debug(`[${PREFIX}] starImagePath: ${starImagePath}`);
       const starImage = await Canvas.loadImage(starImagePath);
       context.drawImage(starImage, 727, 61, 162, 162);
     } catch (err) {
@@ -343,7 +343,7 @@ export const dprofile: SlashCommand = {
     let percentageOfLevel = 0;
     const expToNextLevel = 5 * (level ** 2) + (50 * level) + 100;
     percentageOfLevel = (levelPoints / expToNextLevel);
-    logger.debug(`[${PREFIX}] percentageOfLevel: ${percentageOfLevel}`);
+    // logger.debug(`[${PREFIX}] percentageOfLevel: ${percentageOfLevel}`);
 
     // Circular Level Bar
     context.save();

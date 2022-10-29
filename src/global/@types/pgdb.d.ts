@@ -91,6 +91,7 @@ export type DiscordGuilds = {
   last_drama_at: Date | null;
   drama_reason: string | null;
   joined_at: Date;
+  removed_at: Date | null;
 };
 
 export type DrugArticles = {
@@ -248,6 +249,8 @@ export type Users = {
   empathy_points: number;
   discord_bot_ban: boolean;
   ticket_ban: boolean;
-  last_seen: Date;
+  last_seen_at: Date;
+  last_seen_in: Date | null;
   joined_at: Date;
+  removed_at: Date | null;
 };

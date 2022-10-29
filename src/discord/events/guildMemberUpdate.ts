@@ -121,7 +121,6 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
           //   // mindsetRemovalTime.setTime(mindsetRemovalTime.getTime() + fiveSec);
           //   // logger.debug(`[${PREFIX}] reminderDatetime: ${mindsetRemovalTime}`);
 
-          //   // if (global.db) {
           //   //   const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${newMember.user.id}`);
           //   //   ref.update({
           //   //     [mindsetRemovalTime.valueOf()]: {
@@ -129,7 +128,6 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
           //   //       value: differenceId,
           //   //     },
           //   //   });
-          //   // }
           // }
           // if (action === 'removed' ) {
           //   const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${newMember.guild.id}/reactionRoles/`);

@@ -5,6 +5,7 @@ import {
 import {
   guildMemberEvent,
 } from '../@types/eventDef';
+import {db} from '../../global/utils/knex';
 import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
 import {embedTemplate} from '../utils/embedTemplate';
@@ -57,6 +58,15 @@ export const guildMemberRemove: guildMemberEvent = {
     if (channelBotlog) {
       channelBotlog.send({embeds: [embed]});
     }
+
+    await db
+      .insert({
+        discord_id: member.id,
+        removed_at: new Date(),
+      })
+      .into('users')
+      .onConflict('discord_id')
+      .merge();
 
     if (global.db) {
       const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${member!.user.id}`);

@@ -60,19 +60,19 @@ chitragupta
 karma
 sparklePoints
 h2flow
+profile
+guildCreate
+guildUpdate
+guildRemove
+guildMemberUpdate
 
 -- Commands in progress:
-profile
+leaderboard
+modmail
+handleReactionRoles
 
 timers
-remindme
-
-leaderboard
-
-modmail
-tripsitme
-guildCreate
-guildMemberAdd
-guildMemberRemove
-guildMemberUpdate
-handleReactionRoles
+  remindme
+  tripsitme
+    guildMemberAdd
+    guildMemberRemove

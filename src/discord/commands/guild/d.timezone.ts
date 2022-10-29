@@ -55,7 +55,7 @@ export const time: SlashCommand1 = {
     } else {
       interaction.reply({content: response, ephemeral: true});
     }
-    logger.debug(`[${PREFIX}] finished!`);
+    // logger.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

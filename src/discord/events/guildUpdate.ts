@@ -7,12 +7,11 @@ import {DiscordGuilds} from '../../global/@types/pgdb';
 import logger from '../../global/utils/logger';
 const PREFIX = require('path').parse(__filename).name;
 
-export const guildCreate: guildEvent = {
-  name: 'guildCreate',
+export const guildUpdate: guildEvent = {
+  name: 'guildUpdate',
 
   async execute(guild: Guild) {
-    logger.debug(`[${PREFIX}] starting!`);
-    logger.info(`[${PREFIX}] Joined guild: ${guild.name} (id: ${guild.id})`);
+    // logger.debug(`[${PREFIX}] starting!`);
 
     const data = await db
       .select(db.ref('is_banned').as('is_banned'))
@@ -24,26 +23,24 @@ export const guildCreate: guildEvent = {
         logger.info(`[${PREFIX}] I'm banned from ${guild.name}, leaving!`);
         guild.leave();
         return;
-      } else {
-        await db('discord_guilds')
-          .insert({
-            id: guild.id,
-            joined_at: new Date(),
-          })
-          .onConflict('discord_id')
-          .merge();
       }
+      // else {
+      //   await db('discord_guilds')
+      //     .insert({
+      //       id: guild.id,
+      //     })
+      //     .onConflict('discord_id')
+      //     .merge();
+      // }
     } else {
       await db('discord_guilds')
         .insert({
           id: guild.id,
-          is_banned: false,
-          joined_at: new Date(),
         })
         .onConflict('discord_id')
         .merge();
     }
 
-    logger.debug(`[${PREFIX}] finished!`);
+    // logger.debug(`[${PREFIX}] finished!`);
   },
 };
