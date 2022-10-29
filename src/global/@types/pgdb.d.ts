@@ -1,7 +1,7 @@
 // The TypeScript definitions below are automatically generated.
 // Do not touch them, or risk, your modifications being lost.
-/* eslint-disable */
 
+/* eslint-disable */
 export enum DrugNameType {
   Brand = 'BRAND',
   Common = 'COMMON',
@@ -250,4 +250,3 @@ export type Users = {
   last_seen: Date;
   joined_at: Date;
 };
-
