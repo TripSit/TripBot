@@ -172,152 +172,89 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
 
   logger.debug(`[${PREFIX}] userUniqueId: ${userUniqueId[0].id}`);
 
-  const experienceData = {
-    user_id: userUniqueId,
-    type: experienceType,
-    level: 0,
-    level_points: expPoints,
-    total_points: expPoints,
-    last_message_at: new Date(),
-    last_message_channel: message.channel.id,
-    created_at: new Date(),
-  };
-
-  // const experienceDicts = await db
-  //   .select(
-  //     db.ref('id').as('id'),
-  //     db.ref('user_id').as('user_id'),
-  //     db.ref('type').as('type'),
-  //     db.ref('level').as('level'),
-  //     db.ref('level_points').as('level_points'),
-  //     db.ref('total_points').as('total_points'),
-  //     db.ref('last_message_at').as('last_message_at'),
-  //     db.ref('last_message_channel').as('last_message_channel'),
-  //     db.ref('created_at').as('created_at'),
-  //   )
-  //   .from<UserExperience>('user_experience')
-  //   .where('user_id', userUniqueId);
-
-  // logger.debug(`[${PREFIX}] experienceDicts: ${JSON.stringify(experienceDicts)}`);
-
-  await db('user_experience')
-    .insert({
+  const experienceData = [
+    {
       user_id: userUniqueId[0].id,
       type: experienceType,
-      level: 1,
+      level: 0,
       level_points: expPoints,
       total_points: expPoints,
       last_message_at: new Date(),
       last_message_channel: message.channel.id,
       created_at: new Date(),
-    })
-    .onConflict(['user_id', 'type'])
-    .merge();
+    },
+  ];
 
-  // await db('users')
-  //   .insert({
-  //     discord_id: '123123',
-  //     birthday: new Date(),
-  //   })
-  //   .onConflict('discord_id')
-  //   .merge();
+  const experienceDict = await db
+    .select(
+      db.ref('id').as('id'),
+      db.ref('user_id').as('user_id'),
+      db.ref('type').as('type'),
+      db.ref('level').as('level'),
+      db.ref('level_points').as('level_points'),
+      db.ref('total_points').as('total_points'),
+      db.ref('last_message_at').as('last_message_at'),
+      db.ref('last_message_channel').as('last_message_channel'),
+      db.ref('created_at').as('created_at'),
+    )
+    .from<UserExperience>('user_experience')
+    .where('user_id', userUniqueId[0].id)
+    .andWhere('type', experienceType);
 
-  // logger.debug(`[${PREFIX}] test: ${JSON.stringify(test)}`);
+  logger.debug(`[${PREFIX}] experienceDict: ${JSON.stringify(experienceDict)}`);
 
-  // await ref.once('value', async (data) => {
-  //   if (data.val() !== null) {
-  //     experienceDict = data.val();
+  // If the user has no experience, insert it
+  if (experienceDict.length === 0) {
+    await db
+      .insert(experienceData)
+      .into('user_experience');
+    return;
+  }
 
-  //     // logger.debug(`[${PREFIX}] experienceDictStart: ${JSON.stringify(experienceDict, null, 2)}`);
+  const expData = experienceDict[0];
 
-  //     /**
-  //        * Processes experience points for a user
-  //        * @param {expDict} expDict - all exp data
-  //        * @param {string} expType - the type of exp to process
-  //        * @return {expDict} - the processed exp data
-  //        */
-  //     async function processExp(
-  //       expDict:expDict,
-  //       expType:string,
-  //     ):Promise<expDict> {
-  //       const expData = expDict[expType as keyof typeof expDict];
-  //       if (expData) {
-  //         // logger.debug(`[${PREFIX}] ${expType} exp found!`);
-  //         // logger.debug(`[${PREFIX}] expData.lastMessageDate: ${expData.lastMessageDate}`);
-  //         const lastMessageDate = new Date(expData.lastMessageDate);
-  //         // logger.debug(`[${PREFIX}] lastMessageDate: ${lastMessageDate}`);
-  //         // logger.debug(`[${PREFIX}] currMessageDate.valueOf(): ${currMessageDate.valueOf()}`);
-  //         // logger.debug(`[${PREFIX}] lastMessageDate.valueOf(): ${lastMessageDate.valueOf()}`);
-  //         const timeDiff = currMessageDate.valueOf() - lastMessageDate.valueOf();
-  //         // logger.debug(`[${PREFIX}] timeDiff: ${timeDiff}`);
-  //         // logger.debug(`[${PREFIX}] bufferTime: ${bufferTime}`);
-  //         if (timeDiff > bufferTime) {
-  //           // If the time diff is over one bufferTime, increase the experience points
-  //           let levelExpPoints = expData.levelExpPoints + expPoints;
-  //           const totalExpPoints = expData.totalExpPoints + expPoints;
+  // Check if the message happened in the last minute
+  const lastMessageDate = DateTime.fromJSDate(expData.last_message_at);
+  const currentDate = DateTime.now();
+  const diff = currentDate.diff(lastMessageDate).toObject();
+  logger.debug(`[${PREFIX}] diff: ${JSON.stringify(diff)}`);
 
-  //           let level = expData.level;
-  //           const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
+  // If the message happened in the last minute, ignore it
+  if (diff.milliseconds! < bufferTime) {
+    logger.debug(`[${PREFIX}] Message sent by a user in the last minute`);
+    return;
+  }
 
-  //           // eslint-disable-next-line max-len
-  //           logger.debug(stripIndents`[${PREFIX}] ${actor.username } (lv${level}) +${expPoints} ${expType} exp | TotalExp: ${totalExpPoints}, LevelExp: ${levelExpPoints}, ExpNeededForLevel ${level + 1}: ${expToLevel}`);
-  //           if (expToLevel < levelExpPoints) {
-  //             level += 1;
-  //             logger.debug(stripIndents`[${PREFIX}] ${actor.username} has leveled up to ${expType} level ${level}!`);
+  // Check if the user has leveled up
 
-  //             if (level % 5 === 0) {
-  //               const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-  //               channelTripbotlogs.send(stripIndents`${actor.username} has leveled up to ${expType} level ${level}!`);
-  //             }
-  //             // channelTripbotlogs.send({embeds: [embed]});
-  //             levelExpPoints -= expToLevel;
-  //           }
-  //           expData.level = level;
-  //           expData.levelExpPoints = levelExpPoints;
-  //           expData.totalExpPoints = totalExpPoints;
-  //           expData.lastMessageDate = currMessageDate.valueOf();
-  //           expData.lastMessageChannel = messageChannelId;
-  //           // logger.debug(`[${PREFIX}] categoryExperienceData: ${JSON.stringify(expData, null, 2)}`);
-  //           // logger.debug(`[${PREFIX}] experienceType: ${expType}`);
+  // If the time diff is over one bufferTime, increase the experience points
+  let levelExpPoints = expData.level_points + expPoints;
+  const totalExpPoints = expData.total_points + expPoints;
 
-  //           experienceDict[expType as keyof typeof experienceDict] = expData;
-  //           // logger.debug(`[${PREFIX}] experienceDictA: ${JSON.stringify(experienceDict, null, 2)}`);
-  //           // logger.debug(`[${PREFIX}] experienceDataC: ${JSON.stringify(experienceData, null, 2)}`);
-  //         }
-  //       } else {
-  //         experienceDict[expType as keyof typeof expDict] = {
-  //           level: 0,
-  //           levelExpPoints: expPoints,
-  //           totalExpPoints: expPoints,
-  //           lastMessageDate: currMessageDate.valueOf(),
-  //           lastMessageChannel: messageChannelId,
-  //         };
-  //       }
-  //       // logger.debug(`[${PREFIX}] experienceDictB: ${JSON.stringify(experienceDict, null, 2)}`);
-  //       return experienceDict;
-  //     };
+  let level = expData.level;
+  const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
 
-  //     // logger.debug(`[${PREFIX}] experienceDict1: ${JSON.stringify(experienceDict, null, 2)}`);
-  //     await processExp(experienceDict, 'total')
-  //       .then(async (expDictA) => {
-  //         // logger.debug(`[${PREFIX}] experienceDict2: ${JSON.stringify(expDictA, null, 2)}`);
-  //         await processExp(expDictA, experienceType)
-  //           .then(async (expDictB) => {
-  //             // logger.debug(`[${PREFIX}] experienceDict3: ${JSON.stringify(expDictB, null, 2)}`);
-  //             ref.update(expDictB);
-  //           });
-  //       });
-  //   } else {
-  //     // logger.debug(`[${PREFIX}] experienceDictB: ${JSON.stringify(experienceDict, null, 2)}`);
-  //     experienceDict[experienceType as keyof typeof experienceDict] = {
-  //       level: 0,
-  //       levelExpPoints: expPoints,
-  //       totalExpPoints: expPoints,
-  //       lastMessageDate: currMessageDate.valueOf(),
-  //       lastMessageChannel: messageChannelId,
-  //     };
-  //     logger.debug(`[${PREFIX}] settin new EXP}`);
-  //     ref.set(experienceDict);
-  //   }
-  // });
+  // eslint-disable-next-line max-len
+  logger.debug(stripIndents`[${PREFIX}] ${message.author.username } (lv${level}) +${expPoints} ${experienceType} exp | TotalExp: ${totalExpPoints}, LevelExp: ${levelExpPoints}, ExpNeededForLevel ${level + 1}: ${expToLevel}`);
+  if (expToLevel < levelExpPoints) {
+    level += 1;
+    logger.debug(stripIndents`[${PREFIX}] ${message.author.username} has leveled up to ${experienceType} level ${level}!`);
+
+    if (level % 5 === 0) {
+      const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+      channelTripbotlogs.send(stripIndents`${message.author.username} has leveled up to ${experienceType} level ${level}!`);
+    }
+    // channelTripbotlogs.send({embeds: [embed]});
+    levelExpPoints -= expToLevel;
+  }
+  expData.level = level;
+  expData.level_points = levelExpPoints;
+  expData.total_points = totalExpPoints;
+  expData.last_message_at = new Date();
+  expData.last_message_channel = message.channel.id;
+  // logger.debug(`[${PREFIX}] categoryExperienceData: ${JSON.stringify(expData, null, 2)}`);
+  // logger.debug(`[${PREFIX}] experienceType: ${experienceType}`);
+
+  await db('user_experience')
+    .update(expData);
 };

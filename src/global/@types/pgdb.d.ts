@@ -1,7 +1,7 @@
 // The TypeScript definitions below are automatically generated.
 // Do not touch them, or risk, your modifications being lost.
-
 /* eslint-disable */
+
 export enum DrugNameType {
   Brand = 'BRAND',
   Common = 'COMMON',
@@ -214,8 +214,8 @@ export type UserExperience = {
   level: number;
   level_points: number;
   total_points: number;
-  last_message_at: Date | null;
-  last_message_channel: string | null;
+  last_message_at: Date;
+  last_message_channel: string;
   created_at: Date;
 };
 
