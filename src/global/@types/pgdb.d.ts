@@ -245,7 +245,7 @@ export type Users = {
   karma_received: number;
   sparkle_points: number;
   move_points: number;
-  love_points: number;
+  empathy_points: number;
   discord_bot_ban: boolean;
   ticket_ban: boolean;
   last_seen: Date;

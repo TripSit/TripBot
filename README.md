@@ -58,14 +58,15 @@ timezone
 experience
 chitragupta
 karma
+sparklePoints
+h2flow
 
 -- Commands in progress:
-h2flow
-sparklePoints
 profile
-leaderboard
 timers
 remindme
+
+leaderboard
 
 modmail
 tripsitme
