@@ -15,7 +15,7 @@ const PREFIX = path.parse(__filename).name;
 export const messageReactionRemove: reactionEvent = {
   name: 'messageReactionRemove',
   async execute(reaction: MessageReaction, user: User) {
-    logger.debug(`[${PREFIX}] starting!`);
+    // logger.debug(`[${PREFIX}] starting!`);
     // Only run on Tripsit
     if (reaction.message.guild?.id !== env.DISCORD_GUILD_ID) {
       return;
@@ -50,6 +50,6 @@ export const messageReactionRemove: reactionEvent = {
     //   return;
     // }
     chitragupta(reaction, user, -1);
-    logger.debug(`[${PREFIX}] finished!`);
+    // logger.debug(`[${PREFIX}] finished!`);
   },
 };

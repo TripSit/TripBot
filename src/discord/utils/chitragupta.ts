@@ -45,7 +45,7 @@ export async function chitragupta(
 
   // logger.debug(`[${PREFIX}] actor: ${actor}`);
   if (!reaction.emoji.name!.includes('upvote')) {
-    logger.debug(`[${PREFIX}] Invalid emoji: ${emoji.toString()}`);
+    // logger.debug(`[${PREFIX}] Invalid emoji: ${emoji.toString()}`);
     return;
   }
 

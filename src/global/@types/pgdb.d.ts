@@ -1,7 +1,6 @@
 // The TypeScript definitions below are automatically generated.
 // Do not touch them, or risk, your modifications being lost.
 
-/* eslint-disable */
 export enum DrugNameType {
   Brand = 'BRAND',
   Common = 'COMMON',
@@ -245,6 +244,8 @@ export type Users = {
   karma_given: number;
   karma_received: number;
   sparkle_points: number;
+  move_points: number;
+  love_points: number;
   discord_bot_ban: boolean;
   ticket_ban: boolean;
   last_seen: Date;

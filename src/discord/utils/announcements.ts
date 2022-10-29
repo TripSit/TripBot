@@ -1,31 +1,37 @@
 /* eslint-disable max-len */
 import {
   Message,
+  MessageReaction,
   TextChannel,
+  User,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
 import {embedTemplate} from './embedTemplate';
 import {stripIndents} from 'common-tags';
+import {db} from '../../global/utils/knex';
+// import {Users} from '../../global/@types/pgdb';
 import logger from '../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-const frequency = env.NODE_ENV === 'production' ? 50 : 5;
-const bigFrequency = env.NODE_ENV === 'production' ? 250 : 10;
+const frequency = env.NODE_ENV === 'production' ? 50 : 2;
+const bigFrequency = env.NODE_ENV === 'production' ? 250 : 3;
 const messageCounter = {} as messageCounterType;
 let bigFrequencyCounter = 0;
 
 const waterAndTeaEmojis = [
-  '🏊', '🏊🏻', '🏊🏼', '🏊🏽', '🏊🏾', '🏊🏿',
-  '🏄', '🏄🏻', '🏄🏼', '🏄🏽', '🏄🏾', '🏄🏿',
-  '🚣', '🚣🏻', '🚣🏼', '🚣🏽', '🚣🏾', '🚣🏿',
-  '🤽', '🤽🏻', '🤽🏼', '🤽🏽', '🤽🏾', '🤽🏿',
-  '🛀', '🛀🏻', '🛀🏼', '🛀🏽', '🛀🏾', '🛀🏿',
-  '💧', '🌊', '💦', '🐃', '🧊', '⛲',
+  // '🏊', '🏊🏻', '🏊🏼', '🏊🏽', '🏊🏾', '🏊🏿',
+  // '🏄', '🏄🏻', '🏄🏼', '🏄🏽', '🏄🏾', '🏄🏿',
+  // '🚣', '🚣🏻', '🚣🏼', '🚣🏽', '🚣🏾', '🚣🏿',
+  // '🤽', '🤽🏻', '🤽🏼', '🤽🏽', '🤽🏾', '🤽🏿',
+  // '🛀', '🛀🏻', '🛀🏼', '🛀🏽', '🛀🏾', '🛀🏿',
+  '💧', '🌊', '💦', '🧊',
+  '💧', '🌊', '💦', '🧊',
   // '🧖‍♂️', '🧖🏻‍♂️', '🧖🏼‍♂️', '🧖🏽‍♂️', '🧖🏾‍♂️', '🧖🏿‍♂️',
   // '🧖‍♀️', '🧖🏻‍♀️', '🧖🏼‍♀️', '🧖🏽‍♀️', '🧖🏾‍♀️', '🧖🏿‍♀️',
-  '🍼', '🥛', '☕', '🍵', '🥤', '🧃', '🧉',
-  '🚤', '🛳', '⛴', '🚢',
+  '🥛', '☕', '🍵', '🥤', '🧃', '🧉',
+  '🥛', '☕', '🍵', '🥤', '🧃', '🧉',
+  // '🚤', '🛳', '⛴', '🚢', '🍼',
 ];
 
 const movingEmojis = [
@@ -34,17 +40,14 @@ const movingEmojis = [
   '🚵', '🚵🏻', '🚵🏼', '🚵🏽', '🚵🏾', '🚵🏿',
   '⛹', '⛹🏻', '⛹🏼', '⛹🏽', '⛹🏾', '⛹🏿',
   '🤸', '🤸🏻', '🤸🏼', '🤸🏽', '🤸🏾', '🤸🏿',
-  '🤼',
   '🤾', '🤾🏻', '🤾🏼', '🤾🏽', '🤾🏾', '🤾🏿',
   '🤹', '🤹🏻', '🤹🏼', '🤹🏽', '🤹🏾', '🤹🏿',
   '🧘', '🧘🏻', '🧘🏼', '🧘🏽', '🧘🏾', '🧘🏿',
   '🏌', '🏌️‍♂️', '🏌️‍♀️', '🏌🏽', '🏌🏾', '🏌🏿',
   '🤾', '🤾🏻', '🤾🏼', '🤾🏽', '🤾🏾', '🤾🏿',
-  '🚶‍♂️', '🚶‍♀️', '🚶🏽', '🚶🏾', '🚶🏿',
-  '🏇', '⛷', '🏂', '🤺',
-  '🏋', '🏋‍♂️', '🏋‍♀️',
-  '🧎', '🧎‍♂️', '🧎‍♀️',
-  '💃', '🕺', '🕴',
+  '🚶‍♂️', '🚶‍♀️', '🚶🏽', '🚶🏾', '🚶🏿', '🤼',
+  '🏇', '🏂', '🤺', '🏋', '🏋‍♂️', '🏋‍♀️',
+  '🧎', '🧎‍♂️', '🧎‍♀️', '💃', '🕺', '🕴',
 ];
 
 const happyEmojis = [
@@ -53,10 +56,6 @@ const happyEmojis = [
   '😎', '😺', '😸', '😹', '😻', '🐵', '👍', '✌',
 ];
 
-const heartEmojis = [
-  '❤', '🧡', '💛', '💚', '💙', '💜',
-  '💝', '💖', '💗', '💘', '💕', '💞', '💓', '💟', '❣',
-];
 
 type messageCounterType = {
   [key: string]: number;
@@ -67,7 +66,7 @@ type messageCounterType = {
  * @param {Message} message
  */
 export async function announcements(message:Message) {
-  logger.debug(`[${PREFIX}] starting!`);
+  // logger.debug(`[${PREFIX}] starting!`);
 
   const channelStart = await message.client.channels.fetch(env.CHANNEL_START);
   const channelAnnouncements = await message.client.channels.fetch(env.CHANNEL_ANNOUNCEMENTS)!;
@@ -240,40 +239,46 @@ export async function announcements(message:Message) {
           messageCounter[message.channel.id] + 1 :
           1;
 
-        logger.debug(`[${PREFIX}] messageCounter[message.channel.id]: ${messageCounter[message.channel.id]}`);
-        logger.debug(`[${PREFIX}] bigFrequency: ${bigFrequency}`);
-        logger.debug(`[${PREFIX}] ${messageCounter[message.channel.id] % bigFrequency === 0}`);
-        logger.debug(`[${PREFIX}] frequency: ${frequency}`);
-        logger.debug(`[${PREFIX}] ${messageCounter[message.channel.id] % frequency === 0}`);
+        // logger.debug(`[${PREFIX}] messageCounter[message.channel.id]: ${messageCounter[message.channel.id]}`);
+        // logger.debug(`[${PREFIX}] bigFrequency: ${bigFrequency}`);
+        // logger.debug(`[${PREFIX}] ${messageCounter[message.channel.id] % bigFrequency === 0}`);
+        // logger.debug(`[${PREFIX}] frequency: ${frequency}`);
+        // logger.debug(`[${PREFIX}] ${messageCounter[message.channel.id] % frequency === 0}`);
         if (messageCounter[message.channel.id] % bigFrequency === 0) {
           const bigAnnouncementDict = {
             0: {
               message: stripIndents`
-                ${happyEmojis.sort(() => 0.5 - Math.random()).slice(0, 9).join(' ')}
-                ${heartEmojis[Math.floor(Math.random() * heartEmojis.length)]}\
-                Keep It Positive Please!\
-                ${heartEmojis[Math.floor(Math.random() * heartEmojis.length)]}
-                ${happyEmojis.sort(() => 0.5 - Math.random()).slice(0, 9).join(' ')}`,
-              footer: 'React to get points for the /h2flow club!',
+                ${happyEmojis.sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}
+                **Please remember to KIPP - Keep It Positive Please!**
+                We're all here to help each other and have fun!
+                ${happyEmojis.sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}`,
+              footer: 'Send a ❤ to someone and react to get /h2flow points!',
               emoji: '❤',
             },
             1: {
               message: stripIndents`
               ${movingEmojis.sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}
               **It's good to get up and move every hour!**
+              Take a break, stretch, and get some fresh air!
               ${movingEmojis.sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}`,
-              footer: 'React to get points for the /h2flow club!',
+              footer: 'Get up, move around and react to get /h2flow points!',
               emoji: '🕴',
             },
             2: {
               message: stripIndents`
-              ${waterAndTeaEmojis.sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}
-              ⚠️ ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ ⚠️
-              ${waterAndTeaEmojis.sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}`,
-              footer: 'React to get points for the /h2flow club!',
+              ${waterAndTeaEmojis.sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}
+              ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ
+              Doesn't some water sound great right now?
+              ${waterAndTeaEmojis.sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}`,
+              footer: 'Take a sip of something and react to get /h2flow points!',
               emoji: '💧',
             },
           };
+
+          bigFrequencyCounter += 1;
+          if (bigFrequencyCounter > 2) {
+            bigFrequencyCounter = 0;
+          }
 
           embed.setAuthor(null);
           embed.setFooter({text: bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].footer});
@@ -281,12 +286,42 @@ export async function announcements(message:Message) {
           await (message.channel as TextChannel).send({embeds: [embed]})
             .then(async (msg) => {
               await msg.react(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji);
-            });
+              const filter = (reaction:MessageReaction, user:User) => {
+                return reaction.emoji.name === bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji;
+                // return true;
+              };
+              const collector = msg.createReactionCollector({filter, time: 0, dispose: true});
 
-          bigFrequencyCounter += 1;
-          if (bigFrequencyCounter > 2) {
-            bigFrequencyCounter = 0;
-          }
+              const pointDict = {
+                '❤': 'love_points',
+                '🕴': 'move_points',
+                '💧': 'sparkle_points',
+              };
+
+              collector.on('collect', async (reaction, user) => {
+                const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
+                // Increment the users's pointType
+                const value = await db('users')
+                  .where('discord_id', user.id)
+                  .increment(pointType, 1)
+                  .returning(pointType);
+                if (value[0]) {
+                  logger.debug(`[${PREFIX}] ${user.tag} ${pointType} incremented to ${value[0][pointType]}`);
+                } else {
+                  logger.debug(`[${PREFIX}] ${user.tag} ${pointType} added as 1`);
+                }
+              });
+
+              collector.on('remove', async (reaction, user) => {
+                const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
+                // Increment the users's pointType
+                const value = await db('users')
+                  .where('discord_id', user.id)
+                  .increment(pointType, -1)
+                  .returning(pointType);
+                logger.debug(`[${PREFIX}] ${user.tag} ${pointType} decremented to ${value[0][pointType]}`);
+              });
+            });
         } else if (messageCounter[message.channel.id] % frequency === 0) {
           // If the number of messages sent in the channel / by (frequency) has no remainder..
 
