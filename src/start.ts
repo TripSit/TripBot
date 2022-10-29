@@ -3,7 +3,6 @@ import {validateEnv} from './global/utils/env.validate';
 // import {runTimer} from './discord/utils/timerAPI';
 // import {firebaseConnect} from './global/utils/firebaseAPI';
 import {webserverConnect} from './webserver/webserverAPI';
-import db from './global/utils/database';
 
 import env from './global/utils/env.config';
 
@@ -58,9 +57,6 @@ const destroy = () => {
   //   logger.error(`[${PREFIX}] ${err}`);
   // }
   logger.debug(`[${PREFIX}] Gracefully stopping the bot (CTRL + C pressed)`);
-  db.dispose().catch((ex) => {
-    console.error(ex);
-  });
   process.exit(0);
 };
 process.on('SIGINT', destroy);
