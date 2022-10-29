@@ -56,10 +56,10 @@ birthday
 dramacounter
 idose
 timezone
+experience
 
 -- Commands in progress:
 karma
-experience
 h2flow
 chitragupta
 sparklePoints

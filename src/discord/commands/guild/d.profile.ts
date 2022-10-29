@@ -322,6 +322,22 @@ export const dprofile: SlashCommand = {
     //   return context.font;
     // };
 
+    // let level = 0;
+    // let totalPoints = 10000;
+    // let expToLevel = 0;
+    // let i = 0;
+
+    // while (totalPoints > expToLevel) {
+    //   expToLevel = 5 * (level ** 2) + (50 * level) + 100;
+    //   console.log(`(${i}) Level: ${level}, Total Points: ${totalPoints}, Exp to Level: ${expToLevel}`);
+    //   level++;
+    //   i++;
+    //   totalPoints -= expToLevel;
+    //   console.log(`Leftover: ${totalPoints}`);
+    // }
+
+    // console.log(level);
+
 
     // // VIP Level Text
     // if (targetData.experience) {

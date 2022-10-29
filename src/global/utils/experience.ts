@@ -150,7 +150,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
   } else {
     experienceType = 'IGNORED';
   }
-  logger.debug(`[${PREFIX}] experienceType: ${experienceType}`);
+  // logger.debug(`[${PREFIX}] experienceType: ${experienceType}`);
 
   // Get random value between 15 and 25
   const expPoints = env.NODE_ENV === 'production' ?
@@ -170,7 +170,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
       .returning('id');
   }
 
-  logger.debug(`[${PREFIX}] userUniqueId: ${userUniqueId[0].id}`);
+  // logger.debug(`[${PREFIX}] userUniqueId: ${userUniqueId[0].id}`);
 
   const experienceData = [
     {
@@ -201,7 +201,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
     .where('user_id', userUniqueId[0].id)
     .andWhere('type', experienceType);
 
-  logger.debug(`[${PREFIX}] experienceDict: ${JSON.stringify(experienceDict)}`);
+  // logger.debug(`[${PREFIX}] experienceDict: ${JSON.stringify(experienceDict)}`);
 
   // If the user has no experience, insert it
   if (experienceDict.length === 0) {
@@ -217,11 +217,11 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
   const lastMessageDate = DateTime.fromJSDate(expData.last_message_at);
   const currentDate = DateTime.now();
   const diff = currentDate.diff(lastMessageDate).toObject();
-  logger.debug(`[${PREFIX}] diff: ${JSON.stringify(diff)}`);
+  // logger.debug(`[${PREFIX}] diff: ${JSON.stringify(diff)}`);
 
   // If the message happened in the last minute, ignore it
   if (diff.milliseconds! < bufferTime) {
-    logger.debug(`[${PREFIX}] Message sent by a user in the last minute`);
+    // logger.debug(`[${PREFIX}] Message sent by a user in the last minute`);
     return;
   }
 
@@ -235,7 +235,8 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
   const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
 
   // eslint-disable-next-line max-len
-  logger.debug(stripIndents`[${PREFIX}] ${message.author.username } (lv${level}) +${expPoints} ${experienceType} exp | TotalExp: ${totalExpPoints}, LevelExp: ${levelExpPoints}, ExpNeededForLevel ${level + 1}: ${expToLevel}`);
+  logger.debug(stripIndents`[${PREFIX}] ${message.author.username } (lv${level}) +${expPoints} ${experienceType} exp | Total: ${totalExpPoints}, Level: ${levelExpPoints}, Needed to level up: ${expToLevel-levelExpPoints}`);
+
   if (expToLevel < levelExpPoints) {
     level += 1;
     logger.debug(stripIndents`[${PREFIX}] ${message.author.username} has leveled up to ${experienceType} level ${level}!`);
