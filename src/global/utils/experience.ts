@@ -150,7 +150,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
   } else {
     experienceType = 'IGNORED';
   }
-  logger.debug(`[${PREFIX}] experienceType: ${experienceType}`);
+  // logger.debug(`[${PREFIX}] experienceType: ${experienceType}`);
 
   // Get random value between 15 and 25
   const expPoints = env.NODE_ENV === 'production' ?
@@ -170,7 +170,7 @@ in ${(message.channel as TextChannel).name} on ${message.guild}`);
       .returning('id');
   }
 
-  logger.debug(`[${PREFIX}] userUniqueId: ${userUniqueId[0].id}`);
+  // logger.debug(`[${PREFIX}] userUniqueId: ${userUniqueId[0].id}`);
 
   let experienceData = {
     user_id: userUniqueId[0].id as string,
