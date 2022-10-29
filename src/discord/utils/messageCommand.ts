@@ -63,6 +63,10 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
   } else if (
     (message.mentions.has(message.client.user) || message.cleanContent.toLowerCase().includes('tripbot')) &&
     message.channel.type !== ChannelType.DM) {
+    if (message.author.bot) {
+      // logger.debug(`[${PREFIX}] Ignoring bot interaction`);
+      return;
+    }
     const responses = [
       `*boops quietly*`,
       `*beeps quietly*`,

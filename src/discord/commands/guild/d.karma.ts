@@ -4,9 +4,9 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {karma} from '../../../global/commands/g.karma';
-import logger from '../../../global/utils/logger';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+// import logger from '../../../global/utils/logger';
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 // const karmaQuotes = require('../../../global/assets/data/karma_quotes.json');
 
@@ -47,7 +47,7 @@ export const birthday: SlashCommand = {
   //     ),
   // ),
   async execute(interaction) {
-    logger.debug(`[${PREFIX}] started!`);
+    // logger.debug(`[${PREFIX}] started!`);
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     let member = interaction.options.getMember('user')! as GuildMember;
     const value = interaction.options.getNumber('value')!;
@@ -64,7 +64,7 @@ export const birthday: SlashCommand = {
 
     const response = await karma(command, member.id, value, type);
 
-    logger.debug(`[${PREFIX}] response: ${response}`);
+    // logger.debug(`[${PREFIX}] response: ${response}`);
 
     if (command === 'get') {
       interaction.reply(`${member.displayName} ${response}`);
@@ -72,6 +72,6 @@ export const birthday: SlashCommand = {
       interaction.reply({content: `${member.displayName} ${response}`, ephemeral: true});
     }
 
-    logger.debug(`[${PREFIX}] finished!`);
+    // logger.debug(`[${PREFIX}] finished!`);
   },
 };
