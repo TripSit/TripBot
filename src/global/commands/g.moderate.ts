@@ -182,9 +182,17 @@ export async function moderate(
     https://tripsit.me/rules 
     `);
     if (command !== 'ban' && command !== 'underban' && command !== 'kick') {
-      await target.user.send({embeds: [warnEmbed], components: [warnButtons]});
+      try {
+        await target.user.send({embeds: [warnEmbed], components: [warnButtons]});
+      } catch (error) {
+        // Ignore
+      }
     } else {
-      await target.user.send({embeds: [warnEmbed]});
+      try {
+        await target.user.send({embeds: [warnEmbed]});
+      } catch (error) {
+        // Ignore
+      }
     }
   }
 
