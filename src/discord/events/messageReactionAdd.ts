@@ -8,7 +8,6 @@ import {
 import env from '../../global/utils/env.config';
 import {chitragupta} from '../utils/chitragupta';
 import {handleReactionRoles} from '../utils/handleReactionRoles';
-import {sparklePoints} from '../utils/sparklePoints';
 import {bestOf} from '../utils/bestOfTripsit';
 // import logger from '../../global/utils/logger';
 // import * as path from 'path';
@@ -34,26 +33,13 @@ export const messageReactionAdd: reactionEvent = {
 
     // logger.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction.emoji.name, null, 2)}`);
     // logger.debug(`[${PREFIX}] users: ${JSON.stringify(reaction.users, null, 2)}`);
-    // {
-    //   "messageId": "1001828599172702218",
-    //   "me": false,
-    //   "users": [
-    //     "177537158419054592"
-    //   ],
-    //   "count": 1,
-    //   "emojiId": "958721361587630210"
-    // }
 
     // if (reaction.message.author?.bot) {
     //   logger.debug(`[${PREFIX}] Ignoring bot interaction`);
     //   return;
     // }
 
-    // This can run on bots
-    sparklePoints(reaction, user);
-
     handleReactionRoles(reaction, user, true);
-
     chitragupta(reaction, user, 1);
     bestOf(reaction, user);
     // await communityMod(reaction, user);

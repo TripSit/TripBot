@@ -199,15 +199,16 @@ export async function idose(
       return 'You must provide a substance, volume, units, and route of administration!';
     }
     const data = await db
-      .select(db.ref('id'))
+      .select(db.ref('id').as('id'))
       .from<Users>('users')
       .where('discord_id', userId);
 
-    const userUniqueId = data.length > 0 ? data[0].id : await db('users')
+    const userUniqueId = data.length > 0 ? data[0].id : (await db
       .insert({
         discord_id: userId,
       })
-      .returning('id'); ;
+      .into<Users>('users')
+      .returning(db.ref('id').as('id')))[0].id;
 
     logger.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
 

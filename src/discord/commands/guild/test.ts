@@ -48,14 +48,14 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
   };
 
   const testableCommands = [
-    // 'about', /* updated */
+    'about', /* updated */
     'birthday', /* updatedPostgres */
-    // 'breathe', /* updated */
+    'breathe', /* updated */
     // 'bug',
-    // 'calc_dxm', /* updated */
-    // 'calc_ketamine', /* updated */
-    // 'calc_psychedelics', /* updated */
-    // 'calc_benzo', /* updated */
+    'calc_dxm', /* updated */
+    'calc_ketamine', /* updated */
+    'calc_psychedelics', /* updated */
+    'calc_benzo', /* updated */
     // 'clearchat',
     // 'combo',
     // 'contact',
