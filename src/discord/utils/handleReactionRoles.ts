@@ -3,11 +3,10 @@ import {
   User,
   Role,
 } from 'discord.js';
-import logger from '../../global/utils/logger';
 import env from '../../global/utils/env.config';
-
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+// import logger from '../../global/utils/logger';
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 /**
  * This runs on every reaction to see if it's a reaction
@@ -21,7 +20,7 @@ export async function handleReactionRoles(
   user:User,
   add:boolean,
 ): Promise<void> {
-  logger.debug(`[${PREFIX}] started!`);
+  // logger.debug(`[${PREFIX}] started!`);
   // logger.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction, null, 2)}`);
   // logger.debug(`[${PREFIX}] user: ${JSON.stringify(user, null, 2)}`);
   // logger.debug(`[${PREFIX}] reaction.emoji.name: ${JSON.stringify(reaction.emoji.name, null, 2)}`);
@@ -38,18 +37,17 @@ export async function handleReactionRoles(
   };
 
   const guildId = reaction.message.guild!.id;
-  logger.debug(`[${PREFIX}] guildId: ${JSON.stringify(guildId, null, 2)}`);
   const channelId = reaction.message.channel.id;
-  logger.debug(`[${PREFIX}] channelId: ${JSON.stringify(channelId, null, 2)}`);
   const messageId = reaction.message.id;
-  logger.debug(`[${PREFIX}] messageId: ${JSON.stringify(messageId, null, 2)}`);
-
-  logger.debug(`[${PREFIX}] reaction.emoji.id: ${reaction.emoji.id}`);
-  logger.debug(`[${PREFIX}] reaction.emoji.name: ${reaction.emoji.name}`);
+  // logger.debug(`[${PREFIX}] guildId: ${JSON.stringify(guildId, null, 2)}`);
+  // logger.debug(`[${PREFIX}] channelId: ${JSON.stringify(channelId, null, 2)}`);
+  // logger.debug(`[${PREFIX}] messageId: ${JSON.stringify(messageId, null, 2)}`);
+  // logger.debug(`[${PREFIX}] reaction.emoji.id: ${reaction.emoji.id}`);
+  // logger.debug(`[${PREFIX}] reaction.emoji.name: ${reaction.emoji.name}`);
 
 
   const refUrl = `${env.FIREBASE_DB_GUILDS}/${guildId}/reactionRoles/${channelId}/${messageId}`;
-  logger.debug(`[${PREFIX}] refUrl: ${refUrl}`);
+  // logger.debug(`[${PREFIX}] refUrl: ${refUrl}`);
 
   if (global.db) {
     const ref = db.ref(refUrl);
@@ -64,15 +62,15 @@ export async function handleReactionRoles(
 
         // const otherRoles:string[] = [];
         if (member) {
-          logger.debug(`[${PREFIX}] add: ${add}`);
+          // logger.debug(`[${PREFIX}] add: ${add}`);
           let selectedRole = '';
 
           // logger.debug(`[${PREFIX}] data.val(): ${JSON.stringify(data.val(), null, 2)}`);
           reactionRoles.forEach((value:ReactionRole) => {
-            logger.debug(`[${PREFIX}] value.reaction: ${JSON.stringify(value.reaction, null, 2)}`);
+            // logger.debug(`[${PREFIX}] value.reaction: ${JSON.stringify(value.reaction, null, 2)}`);
             if (value.reaction === reaction.emoji.name ||
               value.reaction === reaction.emoji.id) {
-              logger.debug(`[${PREFIX}] Found a match!`);
+              // logger.debug(`[${PREFIX}] Found a match!`);
               selectedRole = value.roleId;
             }
             //  else {
@@ -122,5 +120,5 @@ export async function handleReactionRoles(
       }
     });
   }
-  logger.debug(`[${PREFIX}] finished!`);
+  // logger.debug(`[${PREFIX}] finished!`);
 };

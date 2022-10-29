@@ -59,18 +59,17 @@ timezone
 experience
 
 -- Commands in progress:
+chitragupta
 karma
 h2flow
-chitragupta
 sparklePoints
 
 profile
-
 leaderboard
-modmail
 timers
 remindme
 
+modmail
 tripsitme
 guildCreate
 guildMemberAdd

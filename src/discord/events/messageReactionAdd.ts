@@ -6,18 +6,18 @@ import {
   reactionEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
-import logger from '../../global/utils/logger';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
 import {chitragupta} from '../utils/chitragupta';
 import {handleReactionRoles} from '../utils/handleReactionRoles';
 import {sparklePoints} from '../utils/sparklePoints';
 import {bestOf} from '../utils/bestOfTripsit';
+// import logger from '../../global/utils/logger';
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 export const messageReactionAdd: reactionEvent = {
   name: 'messageReactionAdd',
   async execute(reaction: MessageReaction, user: User) {
-    logger.debug(`[${PREFIX}] starting!`);
+    // logger.debug(`[${PREFIX}] starting!`);
     // Only run on Tripsit
     if (reaction.message.guild?.id !== env.DISCORD_GUILD_ID.toString()) {
       return;

@@ -3,6 +3,7 @@
 
 import {
   MessageReaction,
+  TextChannel,
   User,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
@@ -25,14 +26,17 @@ export async function chitragupta(
   user:User,
   action: 1 | -1,
 ) {
-  logger.debug(`[${PREFIX}] start!`);
+  // logger.debug(`[${PREFIX}] starting!`);
+  const verb = action === 1 ? 'upvoted' : 'downvoted';
   const actor = user;
   const emoji = reaction.emoji.toString();
-  const target = reaction.message.author!;
+  if (reaction.message.author === null) {
+    logger.debug(`[${PREFIX}] Ignoring bot interaction`);
+    return;
+  }
+  const target = reaction.message.author;
 
   // logger.debug(`[${PREFIX}] ${actor} ${action} ${emoji} ${target}!`);
-
-  // logger.debug(`[${PREFIX}] emoji: ${JSON.stringify(reaction.emoji, null, 2)}`);
 
   // Can't give karma to yourself!
   if (actor === target) {
@@ -45,34 +49,50 @@ export async function chitragupta(
     return;
   }
 
-  logger.debug(stripIndents`[${PREFIX}] ${user.username} gave ${reaction.emoji.name} to \
-  ${target.username} in ${reaction.message.guild}!`);
+  // Increment karma of the actor
+  let actorKarma = await db('users')
+    .where('discord_id', actor.id)
+    .increment('karma_given', action)
+    .returning(['karma_received', 'karma_given']);
 
-  // if (global.db) {
-  //   const actorRef = db.ref(`${env.FIREBASE_DB_USERS}/${actor.id}/karma/karma_given`);
-  //   await actorRef.once('value', (data) => {
-  //     let points = action;
-  //     if (data.val() !== null) {
-  //       logger.debug(`[${PREFIX}] data.val(): ${JSON.stringify(data.val(), null, 2)}`);
-  //       points = data.val() + action;
-  //     }
-  //     actorRef.set(points);
-  //     logger.debug(`[${PREFIX}] ${env.FIREBASE_DB_USERS}/${actor.id}/karma/karma_given set to ${points}`);
-  //   });
-  // }
+  if (actorKarma.length === 0) {
+    // User doesn't exist in the database
+    logger.debug(`[${PREFIX}] User doesn't exist in the database: ${actor.id}`);
+    // Create new user
+    const newUser = {
+      discord_id: actor.id,
+      karma_given: action,
+      karma_received: 0,
+    };
+    actorKarma = await db('users')
+      .insert(newUser)
+      .returning(['karma_received', 'karma_given']);
+  }
 
-  // if (global.db) {
-  //   const targetRef = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}/karma/karma_received`);
-  //   await targetRef.once('value', (data) => {
-  //     let points = action;
-  //     if (data.val() !== null) {
-  //       logger.debug(`[${PREFIX}] data.val(): ${JSON.stringify(data.val(), null, 2)}`);
-  //       points = data.val() + action;
-  //     }
-  //     targetRef.set(points);
-  //     logger.debug(`[${PREFIX}] ${env.FIREBASE_DB_USERS}/${target.id}/karma/karma_received set to ${points}`);
-  //   });
-  // }
+  // Increment the karma of the target
+  let targetKarma = await db('users')
+    .where('discord_id', target.id)
+    .increment('karma_received', action)
+    .returning(['karma_received', 'karma_given']);
 
-  return logger.debug(`[${PREFIX}] finished!`);
+  if (targetKarma.length === 0) {
+    // User doesn't exist in the database
+    logger.debug(`[${PREFIX}] User doesn't exist in the database: ${actor.id}`);
+    // Create new user
+    const newUser = {
+      discord_id: target.id,
+      karma_given: 0,
+      karma_received: action,
+    };
+    targetKarma = await db('users')
+      .insert(newUser)
+      .returning(['karma_received', 'karma_given']);
+  }
+  // logger.debug(`[${PREFIX}] actorKarma ${JSON.stringify(actorKarma)}!`);
+  // logger.debug(`[${PREFIX}] targetKarma ${JSON.stringify(targetKarma)}!`);
+  logger.debug(`[${PREFIX}] ${user.username} (R:${actorKarma[0].karma_received}|G:${actorKarma[0].karma_given}) ${verb} ${target.username} (R:${targetKarma[0].karma_received}|G:${targetKarma[0].karma_given}) in ${(reaction.message.channel as TextChannel).name}!`);
+
+  // logger.debug(`[${PREFIX}] ${actor.username} has received (${actorKarma[0].karma_received}) and given (${actorKarma[0].karma_given})!`);
+  // logger.debug(`[${PREFIX}] ${target.username} has received (${targetKarma[0].karma_received}) and given (${targetKarma[0].karma_given})!`);
+  // return logger.debug(`[${PREFIX}] finished!`);
 };
