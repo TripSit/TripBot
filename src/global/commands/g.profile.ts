@@ -4,40 +4,63 @@ import {
   Users,
   UserExperience,
 } from '../../global/@types/pgdb.d';
-// import timezones from '../../global/assets/data/timezones.json';
-import Canvas from '@napi-rs/canvas';
-import * as path from 'path';
-import logger from '../../global/utils/logger';
-const PREFIX = path.parse(__filename).name;
+// import * as path from 'path';
+// import logger from '../../global/utils/logger';
+// const PREFIX = path.parse(__filename).name;
 
-Canvas.GlobalFonts.registerFromPath(
-  path.resolve(__dirname, '../../assets/img/Futura.otf'),
-  'futura',
-);
 
 /**
- * Get and set someone's timezone!
+ * Get profile info
  * @param {string} memberId The user to either set or get the timezone!
  * @return {any[]} an object with information about the bot
  */
 export async function profile(
   memberId: string,
 ):Promise<any> {
-  logger.debug(`[${PREFIX}] memberId: ${memberId}`);
-  const data = await db
-    .select('*')
-    .from<Users>('users')
-    // .join<UserExperience>('user_experience', {'user_experience.user_id': 'users.id'})
-    .where('users.discord_id', memberId);
+  // logger.debug(`[${PREFIX}] memberId: ${memberId}`);
+  let userData = await db<Users>('users')
+    .select(
+      db.ref('id').as('id'),
+      db.ref('birthday').as('birthday'),
+      db.ref('timezone').as('timezone'),
+      db.ref('karma_given').as('karma_given'),
+      db.ref('karma_received').as('karma_received'),
+    )
+    .where('discord_id', memberId);
 
-  logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+  if (!userData[0]) {
+    userData = await db
+      .insert({discord_id: memberId})
+      .into('users')
+      .returning('*');
+  }
 
-  const data2 = await db
-    .select('*')
+  // logger.debug(`[${PREFIX}] data: ${JSON.stringify(userData, null, 2)}`);
+
+  const profileData = {
+    birthday: userData[0].birthday,
+    timezone: userData[0].timezone,
+    karma_given: userData[0].karma_given,
+    karma_received: userData[0].karma_received,
+    totalExp: 0,
+  };
+
+  const currentExp = await db
+    .select(
+      db.ref('type').as('type'),
+      db.ref('total_points').as('total_points'),
+    )
     .from<UserExperience>('user_experience')
-    .where('user_id', data[0].id);
+    .where('user_id', userData[0].id);
 
-  logger.debug(`[${PREFIX}] data2: ${JSON.stringify(data2)}`);
+  // logger.debug(`[${PREFIX}] currentExp: ${JSON.stringify(currentExp, null, 2)}`);
 
-  return data;
+  // Go through currentExp and add up the total points
+  for (const exp of currentExp) {
+    if (exp.type !== 'IGNORED') {
+      profileData.totalExp += exp.total_points;
+    }
+  }
+
+  return profileData;
 }
