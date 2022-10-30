@@ -10,7 +10,7 @@ import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const template: SlashCommand1 = {
+export const dAbout: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('about')
     .setDescription('Shows information about this bot!'),

@@ -47,70 +47,81 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     },
   };
 
-  const testableCommands = [
+  // These commands are not meant to be tested
+  const notTestableCommands = [ // eslint-disable-line
+    'bug', // This is a simple API that will submit a message to the dev room in production
+    'clearchat', // This would wipe out the results of the test
+    'issue', // This is a simple API that will submit a github issue to production
+    'ping', // This is a test command that is not meant to be tested
+    'say', // This is a flavor command and doesn't need to be tested
+    'setup', // This needs to be manually tested
+    'test', // This would start recursion
+  ];
+
+  // These commands are simple replies and CANNOT take input
+  const replyCommands = [ // eslint-disable-line
     'about', /* updated */
-    'birthday', /* updatedPostgres */
+    'contact', /* updated */
+    'combochart', /* updated */
+    'donate',
+    'ems',
+    'grounding',
+    'h2flow',
+    'help',
+    'helpline',
+    'hydrate',
+    'joke',
+    'kipp',
+    'lovebomb',
+    'reagents',
+    'recovery',
+    'testkits',
+    'triptoys',
+    'topic',
+    'warmline',
+  ];
+
+  // These commands are simple replies and can OPTIONALLY take input
+  const simpleCommands = [ // eslint-disable-line
     'breathe', /* updated */
-    // 'bug',
-    'calc_dxm', /* updated */
-    'calc_ketamine', /* updated */
-    'calc_psychedelics', /* updated */
-    'calc_benzo', /* updated */
-    // 'clearchat',
+    'coinflip',
+    'magick8ball',
+    'profile',
+  ];
+
+  const testableCommands = [ // eslint-disable-line
+    // 'birthday', /* updatedPostgres */
+    // 'calc_dxm', /* updated */
+    // 'calc_ketamine', /* updated */
+    // 'calc_psychedelics', /* updated */
+    // 'calc_benzo', /* updated */
     // 'combo',
-    // 'contact',
     // 'convert',
-    // 'coinflip',
-    // 'combochart',
-    // 'donate',
     'dramacounter', /* updatedPostgres */
     // 'drug',
-    // 'ems',
-    // 'eyeballing',
-    // 'grounding',
-    // 'h2flow',
-    // 'help',
-    // 'helpline',
-    // 'hydrate',
     'idose', /* updatedPostgres */
     // 'imdb',
     // 'imgur',
-    // 'issue',
-    // 'joke',
     // 'karma',
-    // 'kipp',
-    // 'lovebomb',
     // 'm_report',
     // 'm_timeout',
     // 'm_warn',
-    // 'magick8ball',
     // 'moderate',
     // 'modmail',
-    // 'ping',
     // 'poll',
-    // 'profile',
-    // 'reagents',
-    // 'recovery',
     // 'report',
     // 'remindme',
-    // 'say',
-    // 'setup',
-    // 'test',
-    // 'testkits',
-    // 'triptoys',
     'timezone', /* updatedPostgres */
-    // 'topic',
     // 'u_ban',
     // 'u_info',
     // 'u_kick',
     // 'u_note',
     // 'u_underban',
     // 'urbanDefine',
-    // 'warmline',
     // 'youtube',
   ];
 
-  if (!testableCommands.includes(name)) {
+  if (!replyCommands.includes(name)) {
     return false;
   }
 
@@ -137,9 +148,6 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     //   };
     //   return await command.execute(testInteraction);
     // }
-    if (name == 'about') {
-      return await command.execute(testInteraction);
-    }
     if (name == 'birthday') {
       // Test getting a blank birthday
       await interaction.channel!.send(`> **${name}** - Getting existing record`);
