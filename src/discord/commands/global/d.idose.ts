@@ -105,16 +105,6 @@ export const didose: SlashCommand1 = {
       logger.debug(`[${PREFIX}] out: ${out}`);
       date.setTime(date.getTime() - out);
     }
-    // logger.debug(`[${PREFIX}]
-    //   command: ${command}
-    //   recordNumber: ${recordNumber}
-    //   userId: ${userId}
-    //   volume: ${volume}
-    //   units: ${units}
-    //   substance: ${substance}
-    //   roa: ${roa}
-    //   date: ${date}
-    // `);
 
     const response = await idose(
       command,

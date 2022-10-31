@@ -113,21 +113,21 @@ export const guildMemberAdd: guildMemberEvent = {
       channelBotlog.send({embeds: [embed]});
     }
 
-    if (global.db) {
-      const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${member!.user.id}`);
-      await ref.once('value', (data) => {
-        if (data.val() !== null) {
-          Object.keys(data.val()).forEach(async (key) => {
-            const timer = data.val()[key];
-            if (timer.type === 'helpthread') {
-              const helpChannel = await member.client.channels.fetch(
-                timer.value.lastHelpedThreadId) as TextChannel;
-              helpChannel.send(`${member.user} has rejoined the guild!`);
-            }
-          });
-        }
-      });
-    }
+    // if (global.db) {
+    //   const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${member!.user.id}`);
+    //   await ref.once('value', (data) => {
+    //     if (data.val() !== null) {
+    //       Object.keys(data.val()).forEach(async (key) => {
+    //         const timer = data.val()[key];
+    //         if (timer.type === 'helpthread') {
+    //           const helpChannel = await member.client.channels.fetch(
+    //             timer.value.lastHelpedThreadId) as TextChannel;
+    //           helpChannel.send(`${member.user} has rejoined the guild!`);
+    //         }
+    //       });
+    //     }
+    //   });
+    // }
     logger.debug(`[${PREFIX}] finished!`);
   },
 };

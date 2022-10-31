@@ -14,6 +14,7 @@ import {
 import {
   ButtonStyle, TextInputStyle,
 } from 'discord-api-types/v10';
+import {db} from '../../../global/utils/knex';
 import env from '../../../global/utils/env.config';
 import {SlashCommand} from '../../@types/commandDef';
 import {stripIndent, stripIndents} from 'common-tags';
@@ -156,13 +157,18 @@ export const prompt: SlashCommand = {
     .addSubcommand((subcommand) => subcommand
       .setDescription('starthere info!')
       .setName('starthere'))
-
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('mindset reaction roles!')
+      .setName('mindset'))
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('color reaction roles')
+      .setName('color'))
     .addSubcommand((subcommand) => subcommand
       .setDescription('ticketbooth info!')
       .setName('ticketbooth')),
   async execute(interaction:ChatInputCommandInteraction) {
-    logger.debug(`[${PREFIX}] Starting!`);
-    // await interaction.deferReply({ephemeral: true});
+    // logger.debug(`[${PREFIX}] Starting!`);
+    await interaction.deferReply({ephemeral: true});
     const command = interaction.options.getSubcommand();
     if (command === 'applications') {
       await applications(interaction);
@@ -172,16 +178,20 @@ export const prompt: SlashCommand = {
       await rules(interaction);
     } else if (command === 'starthere') {
       await starthere(interaction);
+    } else if (command === 'mindset') {
+      await mindsets(interaction);
+    } else if (command === 'color') {
+      await colors(interaction);
     } else if (command === 'tripsit') {
       await tripsit(interaction);
     } else if (command === 'ticketbooth') {
       await ticketbooth(interaction);
     }
-    // await interaction.editReply('Donezo!');
-    if (!interaction.replied) {
-      await interaction.reply({content: 'Donezo!', ephemeral: true});
-    }
-    logger.debug(`[${PREFIX}] finished!`);
+    await interaction.editReply('Donezo!');
+    // if (!interaction.replied) {
+    //   await interaction.reply({content: 'Donezo!', ephemeral: true});
+    // }
+    // logger.debug(`[${PREFIX}] finished!`);
   },
 };
 
@@ -546,221 +556,6 @@ export async function rules(interaction:ChatInputCommandInteraction) {
 }
 
 /**
- * The starthere prompt
- * @param {Interaction} interaction The interaction that triggered this
- */
-export async function starthere(interaction:ChatInputCommandInteraction) {
-  logger.debug(`[${PREFIX}] Starting!`);
-  if (!(interaction.channel as TextChannel)) {
-    logger.error(`${PREFIX} how to tripsit: no channel`);
-    interaction.reply('You must run this in the channel you want the prompt to be in!');
-    return;
-  }
-  // const channelIrc = interaction.member.client.channels.cache.get(CHANNEL_HELPDESK);
-  // const channelQuestions = interaction.client.channels.cache.get(CHANNEL_DRUGQUESTIONS);
-  const channelBotspam = interaction.client.channels.cache.get(env.CHANNEL_BOTSPAM);
-  // const channelSanctuary = interaction.client.channels.cache.get(CHANNEL_SANCTUARY);
-  // const channelGeneral = interaction.client.channels.cache.get(CHANNEL_GENERAL);
-  const channelTripsit = interaction.client.channels.cache.get(env.CHANNEL_TRIPSIT);
-  const channelRules = interaction.client.channels.cache.get(env.CHANNEL_RULES);
-
-  // **If someone has the "bot" tag they are talking from IRC!**
-  // > IRC is an older chat system where TripSit started: chat.tripsit.me
-  // > The 🔗 icon in the channel name means the channel is linked with IRC.
-  // > Users on IRC cannot see when you Reply to their message, or any custom emojis.
-
-  const message = stripIndents`
-    **Welcome to the TripSit Discord!**
-    > TripSit has always been a bit...different.
-    > Our discord is no exception: Even if you've been using discord for years please take a moment to read the info here.
-    > The information on this page can help you understand some of the intricaces of this guild!
-    > **This guild is under active development and may make changes at any time!**
-
-    **Remember: If you need help, join the ${channelTripsit} room and click the "I need assistance" button**
-    > This will create a new thread for you to talk with people who want to help you =)
-
-    **By chatting here you agree to abide the ${channelRules}**
-    > Many of our users are currently on a substance and appreciate a more gentle chat.
-    > We want this place to be inclusive and welcoming, if there is anything disrupting your stay here:
-    ***1*** Use the /report interface to report someone to the mod team! Also use Right Click > Apps > Report!
-    ***2*** Mention the @moderators to get attention from the mod team!
-    ***3*** Message TripBot and click the "I have a discord issue" button to start a thread with the team!
-
-    **We have our own custom bot!**
-    > Go crazy in ${channelBotspam} exploring the bot commands!
-    `;
-
-  await (interaction.channel as TextChannel).send(message);
-
-  const mindsetEmbed = embedTemplate()
-    .setDescription(stripIndents`
-      ${env.EMOJI_DRUNK} - Drunk
-      ${env.EMOJI_HIGH} - High
-      ${env.EMOJI_ROLLING} - Rolling
-      ${env.EMOJI_TRIPPING} - Tripping
-      ${env.EMOJI_DISSOCIATING} - Dissociating
-      ${env.EMOJI_STIMMING} - Stimming
-      ${env.EMOJI_SEDATED} - Nodding
-      ${env.EMOJI_TALKATIVE} - I'm just happy to chat!
-      ${env.EMOJI_WORKING} - I'm busy and may be slow to respond!
-    `)
-    .setAuthor({
-      name: 'React to this to show your mindset!',
-      iconURL: undefined,
-      url: undefined,
-    })
-  // .setFooter({text: 'These roles reset after 8 hours to accurately show your mindset!'})
-    .setColor(Colors.Purple);
-  let reactionRoleInfo = {} as ReactionRoleCollection;
-  type ReactionRoleCollection = {
-    [key: number]: ReactionRole[];
-  };
-  type ReactionRole = {
-    /** The name of the reaction role, just for humans*/
-    name: string;
-    /** Paste the reaction here, or the string name. NOT the numeric ID*/
-    reaction: string;
-    /** The ID of the role to give to users with this reaction*/
-    roleId: string;
-  };
-
-  await (interaction.channel as TextChannel).send({embeds: [mindsetEmbed]})
-    .then(async (msg) => {
-      await msg.react(`${env.EMOJI_DRUNK}`);
-      await msg.react(`${env.EMOJI_HIGH}`);
-      await msg.react(`${env.EMOJI_ROLLING}`);
-      await msg.react(`${env.EMOJI_TRIPPING}`);
-      await msg.react(`${env.EMOJI_DISSOCIATING}`);
-      await msg.react(`${env.EMOJI_STIMMING}`);
-      await msg.react(`${env.EMOJI_SEDATED}`);
-      // await msg.react(`${env.EMOJI_SOBER}`);
-      await msg.react(`${env.EMOJI_TALKATIVE}`);
-      await msg.react(`${env.EMOJI_WORKING}`);
-      reactionRoleInfo = {
-        [msg.id]: [
-          {
-            name: 'Drunk',
-            reaction: env.EMOJI_DRUNK.slice(env.EMOJI_DRUNK.indexOf(':', 3)+1, env.EMOJI_DRUNK.indexOf('>')),
-            roleId: env.ROLE_DRUNK,
-          },
-          {
-            name: 'High',
-            reaction: env.EMOJI_HIGH.slice(env.EMOJI_HIGH.indexOf(':', 3)+1, env.EMOJI_HIGH.indexOf('>')),
-            roleId: env.ROLE_HIGH,
-          },
-          {
-            name: 'Rolling',
-            reaction: env.EMOJI_ROLLING.slice(env.EMOJI_ROLLING.indexOf(':', 3)+1, env.EMOJI_ROLLING.indexOf('>')),
-            roleId: env.ROLE_ROLLING,
-          },
-          {
-            name: 'Tripping',
-            reaction: env.EMOJI_TRIPPING.slice(env.EMOJI_TRIPPING.indexOf(':', 3)+1, env.EMOJI_TRIPPING.indexOf('>')),
-            roleId: env.ROLE_TRIPPING,
-          },
-          {
-            name: 'Dissociating',
-            reaction: env.EMOJI_DISSOCIATING.slice(env.EMOJI_DISSOCIATING.indexOf(':', 3)+1, env.EMOJI_DISSOCIATING.indexOf('>')),
-            roleId: env.ROLE_DISSOCIATING,
-          },
-          {
-            name: 'Stimming',
-            reaction: env.EMOJI_STIMMING.slice(env.EMOJI_STIMMING.indexOf(':', 3)+1, env.EMOJI_STIMMING.indexOf('>')),
-            roleId: env.ROLE_STIMMING,
-          },
-          {
-            name: 'Sedated',
-            reaction: env.EMOJI_SEDATED.slice(env.EMOJI_SEDATED.indexOf(':', 3)+1, env.EMOJI_SEDATED.indexOf('>')),
-            roleId: env.ROLE_NODDING,
-          },
-          {
-            name: 'Talkative',
-            reaction: env.EMOJI_TALKATIVE.slice(env.EMOJI_TALKATIVE.indexOf(':', 3)+1, env.EMOJI_TALKATIVE.indexOf('>')),
-            roleId: env.ROLE_TALKATIVE,
-          },
-          {
-            name: 'Working',
-            reaction: env.EMOJI_WORKING.slice(env.EMOJI_WORKING.indexOf(':', 3)+1, env.EMOJI_WORKING.indexOf('>')),
-            roleId: env.ROLE_WORKING,
-          },
-        ],
-      };
-    });
-
-  logger.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoleInfo)}`);
-  const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${interaction.guild!.id}/reactionRoles/${interaction.channel!.id}`);
-
-  const colorEmbed = embedTemplate()
-    .setAuthor({name: 'React to this message to set the color of your nickname!', iconURL: undefined, url: undefined})
-    .setFooter(null)
-    .setColor(Colors.Blue);
-
-  await (interaction.channel as TextChannel).send({embeds: [colorEmbed]})
-    .then(async (msg) => {
-      await msg.react('❤');
-      await msg.react('🧡');
-      await msg.react('💛');
-      await msg.react('💚');
-      await msg.react('💙');
-      await msg.react('💜');
-      await msg.react(env.EMOJI_PINKHEART);
-      await msg.react('🖤');
-      await msg.react('🤍');
-      reactionRoleInfo[msg.id as any] = [
-        {
-          name: 'Red',
-          reaction: `❤`,
-          roleId: env.ROLE_RED,
-        },
-        {
-          name: 'Orange',
-          reaction: `🧡`,
-          roleId: env.ROLE_ORANGE,
-        },
-        {
-          name: 'Yellow',
-          reaction: `💛`,
-          roleId: env.ROLE_YELLOW,
-        },
-        {
-          name: 'Green',
-          reaction: `💚`,
-          roleId: env.ROLE_GREEN,
-        },
-        {
-          name: 'Blue',
-          reaction: `💙`,
-          roleId: env.ROLE_BLUE,
-        },
-        {
-          name: 'Purple',
-          reaction: `💜`,
-          roleId: env.ROLE_PURPLE,
-        },
-        {
-          name: 'Pink',
-          reaction: env.EMOJI_PINKHEART.slice(env.EMOJI_PINKHEART.indexOf(':', 3)+1, env.EMOJI_PINKHEART.indexOf('>')),
-          roleId: env.ROLE_PINK,
-        },
-        {
-          name: 'Black',
-          reaction: `🖤`,
-          roleId: env.ROLE_BLACK,
-        },
-        {
-          name: 'White',
-          reaction: `🤍`,
-          roleId: env.ROLE_WHITE,
-        },
-      ];
-    });
-
-  ref.set(reactionRoleInfo);
-
-  logger.debug(`[${PREFIX}] finished!`);
-}
-
-/**
  * The ticketbooth prompt
  * @param {Interaction} interaction The interaction that triggered this
  */
@@ -808,4 +603,290 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
   await (interaction.channel as TextChannel).send({content: buttonText, components: [row]});
 
   logger.debug(`[${PREFIX}] finished!`);
+}
+
+/**
+ * The starthere prompt
+ * @param {Interaction} interaction The interaction that triggered this
+ */
+export async function starthere(interaction:ChatInputCommandInteraction) {
+  logger.debug(`[${PREFIX}] Starting!`);
+  if (!(interaction.channel as TextChannel)) {
+    logger.error(`${PREFIX} how to tripsit: no channel`);
+    interaction.reply('You must run this in the channel you want the prompt to be in!');
+    return;
+  }
+  // const channelIrc = interaction.member.client.channels.cache.get(CHANNEL_HELPDESK);
+  // const channelQuestions = interaction.client.channels.cache.get(CHANNEL_DRUGQUESTIONS);
+  const channelBotspam = interaction.client.channels.cache.get(env.CHANNEL_BOTSPAM);
+  // const channelSanctuary = interaction.client.channels.cache.get(CHANNEL_SANCTUARY);
+  // const channelGeneral = interaction.client.channels.cache.get(CHANNEL_GENERAL);
+  const channelTripsit = interaction.client.channels.cache.get(env.CHANNEL_TRIPSIT);
+  const channelRules = interaction.client.channels.cache.get(env.CHANNEL_RULES);
+
+  // **If someone has the "bot" tag they are talking from IRC!**
+  // > IRC is an older chat system where TripSit started: chat.tripsit.me
+  // > The 🔗 icon in the channel name means the channel is linked with IRC.
+  // > Users on IRC cannot see when you Reply to their message, or any custom emojis.
+
+  const message = stripIndents`
+    **Welcome to the TripSit Discord!**
+    > TripSit has always been a bit...different.
+    > Our discord is no exception: Even if you've been using discord for years please take a moment to read the info here.
+    > The information on this page can help you understand some of the intricaces of this guild!
+    > **This guild is under active development and may make changes at any time!**
+
+    **Remember: If you need help, join the ${channelTripsit} room and click the "I need assistance" button**
+    > This will create a new thread for you to talk with people who want to help you =)
+
+    **By chatting here you agree to abide the ${channelRules}**
+    > Many of our users are currently on a substance and appreciate a more gentle chat.
+    > We want this place to be inclusive and welcoming, if there is anything disrupting your stay here:
+    ***1*** Use the /report interface to report someone to the mod team! Also use Right Click > Apps > Report!
+    ***2*** Mention the @moderators to get attention from the mod team!
+    ***3*** Message TripBot and click the "I have a discord issue" button to start a thread with the team!
+
+    **We have our own custom bot!**
+    > Go crazy in ${channelBotspam} exploring the bot commands!
+    `;
+
+  await (interaction.channel as TextChannel).send(message);
+}
+
+/**
+ * The mindset prompt
+ * @param {Interaction} interaction The interaction that triggered this
+ */
+export async function mindsets(interaction:ChatInputCommandInteraction) {
+  // logger.debug(`[${PREFIX}] Starting!`);
+  if (!(interaction.channel as TextChannel)) {
+    logger.error(`${PREFIX} how to tripsit: no channel`);
+    interaction.reply('You must run this in the channel you want the prompt to be in!');
+    return;
+  }
+
+  const mindsetEmbed = embedTemplate()
+    .setDescription(stripIndents`
+      **React to this message to show your mindset!**
+
+      ${env.EMOJI_DRUNK} - Drunk
+      ${env.EMOJI_HIGH} - High
+      ${env.EMOJI_ROLLING} - Rolling
+      ${env.EMOJI_TRIPPING} - Tripping
+      ${env.EMOJI_DISSOCIATING} - Dissociating
+      ${env.EMOJI_STIMMING} - Stimming
+      ${env.EMOJI_SEDATED} - Sedated
+      ${env.EMOJI_TALKATIVE} - I'm just happy to chat!
+      ${env.EMOJI_WORKING} - I'm busy and may be slow to respond!
+
+      *You may have more than one mindset, please pick the main one!*
+    `)
+    .setFooter({text: 'These roles reset after 8 hours to (somewhat) accurately show your mindset!'})
+    .setColor(Colors.Purple);
+  let reactionRoleInfo = [] as {
+    guild_id: string;
+    channel_id: string;
+    message_id: string;
+    reaction_id: string;
+    role_id: string;
+  }[];
+
+  await (interaction.channel as TextChannel).send({embeds: [mindsetEmbed]})
+    .then(async (msg) => {
+      await msg.react(`${env.EMOJI_DRUNK}`);
+      await msg.react(`${env.EMOJI_HIGH}`);
+      await msg.react(`${env.EMOJI_ROLLING}`);
+      await msg.react(`${env.EMOJI_TRIPPING}`);
+      await msg.react(`${env.EMOJI_DISSOCIATING}`);
+      await msg.react(`${env.EMOJI_STIMMING}`);
+      await msg.react(`${env.EMOJI_SEDATED}`);
+      // await msg.react(`${env.EMOJI_SOBER}`);
+      await msg.react(`${env.EMOJI_TALKATIVE}`);
+      await msg.react(`${env.EMOJI_WORKING}`);
+      reactionRoleInfo = [
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: env.EMOJI_DRUNK.slice(env.EMOJI_DRUNK.indexOf(':', 3)+1, env.EMOJI_DRUNK.indexOf('>')),
+          role_id: env.ROLE_DRUNK,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: env.EMOJI_HIGH.slice(env.EMOJI_HIGH.indexOf(':', 3)+1, env.EMOJI_HIGH.indexOf('>')),
+          role_id: env.ROLE_HIGH,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: env.EMOJI_ROLLING.slice(env.EMOJI_ROLLING.indexOf(':', 3)+1, env.EMOJI_ROLLING.indexOf('>')),
+          role_id: env.ROLE_ROLLING,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: env.EMOJI_TRIPPING.slice(env.EMOJI_TRIPPING.indexOf(':', 3)+1, env.EMOJI_TRIPPING.indexOf('>')),
+          role_id: env.ROLE_TRIPPING,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: env.EMOJI_DISSOCIATING.slice(env.EMOJI_DISSOCIATING.indexOf(':', 3)+1, env.EMOJI_DISSOCIATING.indexOf('>')),
+          role_id: env.ROLE_DISSOCIATING,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: env.EMOJI_STIMMING.slice(env.EMOJI_STIMMING.indexOf(':', 3)+1, env.EMOJI_STIMMING.indexOf('>')),
+          role_id: env.ROLE_STIMMING,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: env.EMOJI_SEDATED.slice(env.EMOJI_SEDATED.indexOf(':', 3)+1, env.EMOJI_SEDATED.indexOf('>')),
+          role_id: env.ROLE_NODDING,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: env.EMOJI_TALKATIVE.slice(env.EMOJI_TALKATIVE.indexOf(':', 3)+1, env.EMOJI_TALKATIVE.indexOf('>')),
+          role_id: env.ROLE_TALKATIVE,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: env.EMOJI_WORKING.slice(env.EMOJI_WORKING.indexOf(':', 3)+1, env.EMOJI_WORKING.indexOf('>')),
+          role_id: env.ROLE_WORKING,
+        },
+      ];
+
+      // Update the database
+      await db('reaction_roles')
+        .insert(reactionRoleInfo)
+        .onConflict(['role_id', 'reaction_id'])
+        .merge();
+    });
+  // logger.debug(`[${PREFIX}] finished!`);
+}
+
+/**
+ * The colors prompt
+ * @param {Interaction} interaction The interaction that triggered this
+ */
+export async function colors(interaction:ChatInputCommandInteraction) {
+  // logger.debug(`[${PREFIX}] Starting!`);
+  if (!(interaction.channel as TextChannel)) {
+    logger.error(`${PREFIX} how to tripsit: no channel`);
+    interaction.reply('You must run this in the channel you want the prompt to be in!');
+    return;
+  }
+
+  let reactionRoleInfo = [] as {
+    guild_id: string;
+    channel_id: string;
+    message_id: string;
+    reaction_id: string;
+    role_id: string;
+  }[];
+
+  const colorEmbed = embedTemplate()
+    .setDescription('React to this message to set the color of your nickname!')
+    .setFooter({text: 'You can only pick one color at a time!'})
+    .setColor(Colors.Blue);
+
+  await (interaction.channel as TextChannel).send({embeds: [colorEmbed]})
+    .then(async (msg) => {
+      await msg.react('❤');
+      await msg.react('🧡');
+      await msg.react('💛');
+      await msg.react('💚');
+      await msg.react('💙');
+      await msg.react('💜');
+      await msg.react(env.EMOJI_PINKHEART);
+      await msg.react('🖤');
+      await msg.react('🤍');
+      reactionRoleInfo = [
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: `❤`,
+          role_id: env.ROLE_RED,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: `🧡`,
+          role_id: env.ROLE_ORANGE,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: `💛`,
+          role_id: env.ROLE_YELLOW,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: `💚`,
+          role_id: env.ROLE_GREEN,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: `💙`,
+          role_id: env.ROLE_BLUE,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: `💜`,
+          role_id: env.ROLE_PURPLE,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: env.EMOJI_PINKHEART.slice(env.EMOJI_PINKHEART.indexOf(':', 3)+1, env.EMOJI_PINKHEART.indexOf('>')),
+          role_id: env.ROLE_PINK,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: `🖤`,
+          role_id: env.ROLE_BLACK,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: `🤍`,
+          role_id: env.ROLE_WHITE,
+        },
+      ];
+
+      // Update the database
+      await db
+        .insert(reactionRoleInfo)
+        .into('reaction_roles')
+        .onConflict(['role_id', 'reaction_id'])
+        .merge();
+    });
+
+  // logger.debug(`[${PREFIX}] finished!`);
 }

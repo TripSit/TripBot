@@ -1,6 +1,6 @@
 import {discordConnect} from './discord/dscrd';
 import {validateEnv} from './global/utils/env.validate';
-// import {runTimer} from './discord/utils/timerAPI';
+import {runTimer} from './global/utils/timer';
 // import {firebaseConnect} from './global/utils/firebaseAPI';
 import {webserverConnect} from './webserver/webserverAPI';
 
@@ -26,6 +26,8 @@ async function start() {
   if (env.DISCORD_CLIENT_TOKEN) {
     discordConnect();
   }
+
+  runTimer();
 
   // if (env.FIREBASE_PRIVATE_KEY_ID) {
   //   firebaseConnect();

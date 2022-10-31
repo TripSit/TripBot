@@ -116,10 +116,15 @@ export async function commandRun(
       // logger.error(`[${PREFIX}] error.message: ${error.message}`);
       logger.error(`[${PREFIX}] ERROR: ${error.stack}`);
       if (!interaction.replied) {
-        interaction.reply({
-          content: 'There was an error while executing this command0!',
-          ephemeral: true,
-        });
+        if (interaction.deferred) {
+          // logger.error(`[${PREFIX}] ERROR: ${error.stack}`);
+          interaction.editReply('There was an error while executing this command!');
+        } else {
+          interaction.reply({
+            content: 'There was an error while executing this command!',
+            ephemeral: true,
+          });
+        }
       } else {
         const embed = embedTemplate()
           .setColor(Colors.Red)

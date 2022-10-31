@@ -25,34 +25,10 @@ const mindsetRoles = [
   env.ROLE_SOBER,
 ];
 
-// {
-//   "guildId": "960606557622657026",
-//   "joinedTimestamp": 1649096850692,
-//   "premiumSinceTimestamp": null,
-//   "nickname": null,
-//   "pending": false,
-//   "communicationDisabledUntilTimestamp": null,
-//   "userId": "177537158419054592",
-//   "avatar": null,
-//   "displayName": "MoonBear",
-//   "roles": [
-//     "960606558071435314",
-//     "960606558134362217",
-//     "960606558050480151",
-//     "960606558134362215",
-//     "960606558109188097",
-//     "960606558134362216",
-//     "960606558134362214",
-//     "960606557622657026"
-//   ],
-//   "avatarURL": null,
-//   "displayAvatarURL": "https://cdn.discordapp.com/avatars/177537158419054592/6be89e31c477b7809a4b3351a060da61.webp"
-// }
-
 export const guildMemberUpdate: guildMemberUpdateEvent = {
   name: 'guildMemberUpdate',
   async execute(oldMember: GuildMember, newMember: GuildMember) {
-    logger.debug(`[${PREFIX}] starting!`);
+    logger.debug(`[${PREFIX}] started on ${newMember.user.username}`);
     // logger.debug(`[${PREFIX}] guildMemberUpdate`);
     // logger.debug(`${PREFIX} Member.guildId: ${newMember.guild.id}`);
     // logger.debug(`${PREFIX} discordGuildId: ${discordGuildId}`);
@@ -68,7 +44,7 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
 
       // If the oldRoles don't match the new roles
       if (oldRoles.toString() !== newRoles.toString()) {
-        logger.debug(`[${PREFIX}] roles changed on ${newMember.displayName}!`);
+        // logger.debug(`[${PREFIX}] roles changed on ${newMember.displayName}!`);
         // logger.debug(`[${PREFIX}] oldRoles: ${oldRoles}`);
         // logger.debug(`[${PREFIX}] newRoles: ${newRoles}`);
 

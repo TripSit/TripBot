@@ -13,7 +13,7 @@ declare global {
       TS_ICON_URL?: string;
       FLAME_ICON_URL?: string;
       DISCLAIMER?: string;
-      DISCORD_CLIENT_ID: number;
+      DISCORD_CLIENT_ID: string;
       DISCORD_CLIENT_SECRET: string;
       DISCORD_CLIENT_REDIRECT_URI: string;
       DISCORD_CLIENT_TOKEN: string;

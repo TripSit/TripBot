@@ -63,7 +63,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     'about', /* updated */
     'contact', /* updated */
     'combochart', /* updated */
-    'donate',
+    'donate', /* updated */
     'ems',
     'grounding',
     'h2flow',
@@ -89,6 +89,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     'profile',
   ];
 
+  // The commands REQUIRE input of some sort
   const testableCommands = [ // eslint-disable-line
     // 'birthday', /* updatedPostgres */
     // 'calc_dxm', /* updated */
@@ -117,7 +118,6 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // 'u_kick',
     // 'u_note',
     // 'u_underban',
-    // 'urbanDefine',
     // 'youtube',
   ];
 

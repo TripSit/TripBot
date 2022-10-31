@@ -42,10 +42,13 @@ export enum ExperienceType {
 
 export enum TicketStatus {
   Open = 'OPEN',
-  Closed = 'CLOSED',
+  Owned = 'OWNED',
   Blocked = 'BLOCKED',
   Paused = 'PAUSED',
+  Closed = 'CLOSED',
   Resolved = 'RESOLVED',
+  Archived = 'ARCHIVED',
+  Deleted = 'DELETED',
 }
 
 export enum TicketType {
@@ -81,6 +84,7 @@ export enum Table {
   UserActions = 'user_actions',
   UserDrugDoses = 'user_drug_doses',
   UserExperience = 'user_experience',
+  UserReminders = 'user_reminders',
   UserTickets = 'user_tickets',
   Users = 'users',
 }
@@ -179,7 +183,6 @@ export type ReactionRoles = {
   message_id: string;
   reaction_id: string;
   role_id: string;
-  name: string;
   created_at: Date;
 };
 
@@ -219,6 +222,14 @@ export type UserExperience = {
   created_at: Date;
 };
 
+export type UserReminders = {
+  id: string;
+  user_id: string;
+  reminder_text: string | null;
+  trigger_at: Date;
+  created_at: Date;
+};
+
 export type UserTickets = {
   id: string;
   user_id: string;
@@ -229,6 +240,8 @@ export type UserTickets = {
   first_message_id: string;
   closed_by: string | null;
   closed_at: Date | null;
+  archived_at: Date;
+  deleted_at: Date;
   created_at: Date;
 };
 
@@ -242,6 +255,9 @@ export type Users = {
   matrix_id: string | null;
   timezone: string | null;
   birthday: Date | null;
+  roles: string | null;
+  mindset_role: string | null;
+  mindset_role_expires_at: Date | null;
   karma_given: number;
   karma_received: number;
   sparkle_points: number;

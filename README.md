@@ -65,14 +65,15 @@ guildCreate
 guildUpdate
 guildRemove
 guildMemberUpdate
+timers
+remindme
+setup
+handleReactionRoles
 
 -- Commands in progress:
 leaderboard
-modmail
-handleReactionRoles
 
-timers
-  remindme
-  tripsitme
-    guildMemberAdd
-    guildMemberRemove
+modmail
+tripsitme
+  guildMemberAdd
+  guildMemberRemove
