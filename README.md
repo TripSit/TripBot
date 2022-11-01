@@ -69,10 +69,9 @@ timers
 remindme
 setup
 handleReactionRoles
-
--- Commands in progress:
 leaderboard
 
+-- Commands in progress:
 modmail
 tripsitme
   guildMemberAdd

@@ -23,16 +23,22 @@ import {
   ButtonStyle,
   TextInputStyle,
 } from 'discord-api-types/v10';
-import {SlashCommand} from '../../@types/commandDef';
+import {db} from '../../../global/utils/knex';
+import {
+  Users,
+  TicketStatus,
+  TicketType,
+  UserTickets,
+} from '../../../global/@types/pgdb.d';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
-import {ticketDbEntry} from '../../../global/@types/database';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const modmail: SlashCommand = {
+export const modmail: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('modmail')
     .setDescription('Modmail actions!')
@@ -59,6 +65,7 @@ export const modmail: SlashCommand = {
       .setName('pause')),
   async execute(interaction:ChatInputCommandInteraction) {
     await modmailActions(interaction);
+    return true;
   },
 };
 
@@ -119,6 +126,13 @@ export async function modmailCreate(
   interaction:ButtonInteraction,
   issueType:'appeal' | 'tripsit' | 'tech' | 'feedback') {
   // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
+
+  const issueTypeDict = {
+    appeal: TicketType.Appeal,
+    tripsit: TicketType.Tripsit,
+    tech: TicketType.Tech,
+    feedback: TicketType.Feedback,
+  };
 
   // Get the actor
   const actor = interaction.user;
@@ -189,35 +203,54 @@ export async function modmailCreate(
   };
 
   // Get the ticket info, if it exists
-  let ticketData = {} as ticketDbEntry;
-  if (global.db) {
-    const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member ? member.user.id : interaction.user.id}/`);
-    await ref.once('value', (data) => {
-      if (data.val() !== null) {
-        ticketData = data.val();
-      }
-    });
-  }
-  // logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+  const userUniqueId = await db
+    .select(db.ref('id'))
+    .from<Users>('users')
+    .where('discord_id', actor.id)
+    .first();
+
+  const ticketData = await db
+    .select(
+      db.ref('id').as('id'),
+      db.ref('user_id').as('user_id'),
+      db.ref('description').as('description'),
+      db.ref('thread_id').as('thread_id'),
+      db.ref('type').as('type'),
+      db.ref('status').as('status'),
+      db.ref('first_message_id').as('first_message_id'),
+      db.ref('closed_by').as('closed_by'),
+      db.ref('closed_at').as('closed_at'),
+      db.ref('archived_at').as('archived_at'),
+      db.ref('deleted_at').as('deleted_at'),
+      db.ref('created_at').as('created_at'),
+    )
+    .from<UserTickets>('user-Tickets')
+    .where('user_id', userUniqueId?.id)
+    .andWhereNot('status', 'closed')
+    .andWhereNot('status', 'resolved')
+    .first();
 
   // Get the parent channel to be used
   const channel = interaction.client.channels.cache.get(modmailVars[issueType].channelId) as TextChannel;
 
   // Check if an open thread already exists, and if so, update that thread
-  if (Object.keys(ticketData).length !== 0 && ticketData.issueStatus !== 'closed' && ticketData.issueStatus !== 'resolved') {
+  if (ticketData) {
     // const issueType = ticketInfo.issueType;
     let issueThread = {} as ThreadChannel;
     try {
-      issueThread = await channel.threads.fetch(ticketData.issueThread) as ThreadChannel;
+      issueThread = await channel.threads.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
       logger.debug(`[${PREFIX}] The thread has likely been deleted!`);
-      ticketData.issueStatus = 'closed';
-      if (global.db) {
-        const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${member ? member.user.id : interaction.user.id}/`);
-        await ref.update(ticketData);
-      }
+      await db
+        .insert({
+          id: ticketData.id,
+          status: TicketStatus.Closed,
+        })
+        .into('users')
+        .onConflict('id')
+        .merge();
     }
-    // logger.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
+    // logger.debug(`[${PREFIX}] thread_id: ${JSON.stringify(thread_id, null, 2)}!`);
     if (issueThread.id) {
       const embed = embedTemplate();
       if (member instanceof GuildMember) {
@@ -446,23 +479,6 @@ export async function modmailCreate(
       });
       logger.debug(`[${PREFIX}] Sent intro message to thread ${ticketThread.id}`);
 
-      // Set ticket information
-      const newTicketData = {
-        issueThread: ticketThread.id,
-        issueFirstMessage: firstResponseMessage.id,
-        issueUser: actor.id,
-        issueUsername: actor.username,
-        issueUserIsbanned: false,
-        issueType,
-        issueStatus: 'open',
-        issueDesc: `${modmailVars[issueType].labelA}
-        > ${modalInputA}
-    
-        ${modalInputB !== '' ? `${modmailVars[issueType].labelB}
-        > ${modalInputB}
-        ` : ''}`,
-      };
-
       // Determine when the thread should be archived
       const threadArchiveTime = new Date();
       const archiveTime = env.NODE_ENV === 'production' ?
@@ -471,29 +487,41 @@ export async function modmailCreate(
       threadArchiveTime.setTime(archiveTime);
       logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
 
+      // Set ticket information
+      const newTicketData = {
+        user_id: userUniqueId!.id,
+        description: `${modmailVars[issueType].labelA}
+        > ${modalInputA}
+    
+        ${modalInputB !== '' ? `${modmailVars[issueType].labelB}
+        > ${modalInputB}
+        ` : ''}`,
+        thread_id: ticketThread.id,
+        type: issueTypeDict[issueType],
+        status: TicketStatus.Open,
+        first_message_id: firstResponseMessage.id,
+        archived_at: threadArchiveTime,
+        deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
+      } as UserTickets;
+
       // Update thet ticket in the DB
-      if (global.db) {
-        const ticketRef = db.ref(`${env.FIREBASE_DB_TICKETS}/${member ? member.user.id : interaction.user.id}/`);
-        await ticketRef.update(newTicketData);
+      await db
+        .insert(newTicketData)
+        .into('user_tickets');
 
-        let actorRoles = [] as string[];
-        if (member) {
-          actorRoles = (member.roles as GuildMemberRoleManager).cache.map((role) => role.name);
-        }
-
-        const timerRef = db.ref(`${env.FIREBASE_DB_TIMERS}/${member ? member.user.id : interaction.user.id}/`);
-        timerRef.set({
-          [threadArchiveTime.valueOf()]: {
-            type: 'helpthread',
-            value: {
-              lastHelpedThreadId: ticketThread.id,
-              // lastHelpedMetaThreadId: threadDiscussUser.id,
-              roles: actorRoles,
-              status: 'open',
-            },
-          },
-        });
+      // Save the user's roles in the db
+      let actorRoles = [] as string[];
+      if (member) {
+        actorRoles = (member.roles as GuildMemberRoleManager).cache.map((role) => role.name);
       }
+      await db
+        .insert({
+          id: userUniqueId!.id,
+          roles: actorRoles,
+        })
+        .into('users')
+        .onConflict('id')
+        .merge();
     });
 }
 
@@ -508,34 +536,51 @@ export async function modmailDMInteraction(message:Message) {
     return;
   }
 
-  // Get the ticket info
-  let ticketData = {} as ticketDbEntry;
-  if (global.db) {
-    const ref = db.ref(`${env.FIREBASE_DB_TICKETS}/${message.author.id}/`);
-    await ref.once('value', (data) => {
-      if (data.val() !== null) {
-        ticketData = data.val();
-      }
-    });
-  }
+  // Get the ticket info, if it exists
+  const userUniqueId = await db
+    .select(db.ref('id'))
+    .from<Users>('users')
+    .where('discord_id', message.author.id)
+    .first();
+
+  const ticketData = await db
+    .select(
+      db.ref('id').as('id'),
+      db.ref('description').as('description'),
+      db.ref('thread_id').as('thread_id'),
+      db.ref('type').as('type'),
+      db.ref('status').as('status'),
+      db.ref('first_message_id').as('first_message_id'),
+      db.ref('closed_by').as('closed_by'),
+      db.ref('closed_at').as('closed_at'),
+      db.ref('archived_at').as('archived_at'),
+      db.ref('deleted_at').as('deleted_at'),
+      db.ref('created_at').as('created_at'),
+    )
+    .from<UserTickets>('user-Tickets')
+    .where('user_id', userUniqueId)
+    .andWhereNot('status', 'closed')
+    .andWhereNot('status', 'resolved')
+    .first();
+
   logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
-  if (ticketData.issueStatus === 'blocked') {
-    message.author.send('*beeps sadly*');
-    return;
-  }
+  if (ticketData) {
+    if (ticketData.status === TicketStatus.Blocked) {
+      message.author.send('*beeps sadly*');
+      return;
+    }
 
-  if (ticketData.issueStatus === 'paused') {
-    message.author.send('Hey there! This ticket is currently on hold, please wait for a moderator to respond before sending another message.');
-    return;
-  }
+    if (ticketData.status === TicketStatus.Paused) {
+      message.author.send('Hey there! This ticket is currently on hold, please wait for a moderator to respond before sending another message.');
+      return;
+    }
 
-  if (Object.keys(ticketData).length !== 0 && ticketData.issueStatus !== 'closed' && ticketData.issueStatus !== 'resolved') {
     // Send a message to the thread
     const channel = message.client.channels.cache.get(env.CHANNEL_HELPDESK) as TextChannel;
     let thread = {} as ThreadChannel;
     try {
-      thread = await channel.threads.fetch(ticketData.issueThread) as ThreadChannel;
+      thread = await channel.threads.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (error) {
       // This just means the thread is deleted
     }
@@ -551,8 +596,10 @@ export async function modmailDMInteraction(message:Message) {
       thread.send({embeds: [embed]});
       return;
     }
+    logger.debug(`[${PREFIX}] User not member of guild`);
   }
-  logger.debug(`[${PREFIX}] User not member of guild`);
+
+
   modmailInitialResponse(message);
   return;
 }
@@ -574,26 +621,30 @@ export async function modmailThreadInteraction(message:Message) {
         message.channel.parentId === env.CHANNEL_TRIPSIT) {
         logger.debug(`[${PREFIX}] message sent in a thread in a helpdesk channel!`);
         // Get the ticket info
-        let ticketData = {} as ticketDbEntry;
-        if (global.db) {
-          const ref = db.ref(`${env.FIREBASE_DB_TICKETS}`);
-          await ref.once('value', (data) => {
-            if (data.val() !== null) {
-              const allTickets = data.val();
-              Object.keys(allTickets).forEach((key) => {
-                if (allTickets[key].issueThread === message.channel.id) {
-                  ticketData = allTickets[key];
-                }
-              });
-            }
-          });
-        }
+        const ticketData = await db
+          .select(
+            db.ref('id').as('id'),
+            db.ref('user_id').as('user_id'),
+            db.ref('description').as('description'),
+            // db.ref('thread_id').as('thread_id'),
+            db.ref('type').as('type'),
+            db.ref('status').as('status'),
+            db.ref('first_message_id').as('first_message_id'),
+            db.ref('closed_by').as('closed_by'),
+            db.ref('closed_at').as('closed_at'),
+            db.ref('archived_at').as('archived_at'),
+            db.ref('deleted_at').as('deleted_at'),
+            db.ref('created_at').as('created_at'),
+          )
+          .from<UserTickets>('user-Tickets')
+          .where('thread_id', message.channel.id)
+          .andWhereNot('status', 'closed')
+          .andWhereNot('status', 'resolved')
+          .first();
 
-        // logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
-
-        if (Object.keys(ticketData).length !== 0) {
+        if (ticketData) {
           // Get the user from the ticketData
-          const user = await message.client.users.fetch(ticketData.issueUser);
+          const user = await message.client.users.fetch(ticketData.user_id);
           // logger.debug(`[${PREFIX}] user: ${JSON.stringify(user, null, 2)}!`);
           const embed = embedTemplate();
           embed.setDescription(message.content);
@@ -632,48 +683,89 @@ export async function modmailActions(
   const actor = interaction.member as GuildMember;
 
   // Get the ticket info
-  let ticketData = {} as ticketDbEntry;
-  let path = `${env.FIREBASE_DB_TICKETS}`;
-  if (global.db) {
-    const ref = db.ref(path);
-    await ref.once('value', (data) => {
-      if (data.val() !== null) {
-        const allTickets = data.val();
-        Object.keys(allTickets).forEach((key) => {
-          if (interaction.channel) {
-            if (interaction.channel.type === ChannelType.DM) {
-              if (key === interaction.user.id) {
-                ticketData = allTickets[key];
-                path = `${env.FIREBASE_DB_TICKETS}/${key}`;
-              }
-            } else {
-              if (allTickets[key].issueThread === interaction.channel.id) {
-                ticketData = allTickets[key];
-                path = `${env.FIREBASE_DB_TICKETS}/${key}`;
-              }
-            }
-          }
-        });
+  let ticketData = {} as UserTickets;
+  if (interaction.channel) {
+    if (interaction.channel.type === ChannelType.DM) {
+      const userUniqueId = await db
+        .select(db.ref('id'))
+        .from<Users>('users')
+        .where('discord_id', actor.id)
+        .first();
+
+      const data = await db
+        .select(
+          db.ref('id').as('id'),
+          db.ref('user_id').as('user_id'),
+          db.ref('description').as('description'),
+          db.ref('thread_id').as('thread_id'),
+          db.ref('type').as('type'),
+          db.ref('status').as('status'),
+          db.ref('first_message_id').as('first_message_id'),
+          db.ref('closed_by').as('closed_by'),
+          db.ref('closed_at').as('closed_at'),
+          db.ref('archived_at').as('archived_at'),
+          db.ref('deleted_at').as('deleted_at'),
+          db.ref('created_at').as('created_at'),
+        )
+        .from<UserTickets>('user-Tickets')
+        .where('user_id', userUniqueId?.id)
+        .andWhereNot('status', 'closed')
+        .andWhereNot('status', 'resolved')
+        .first();
+      if (data) {
+        ticketData = data;
+      } else {
+        interaction.reply({content: 'This user\'s ticket thread does not exist!', ephemeral: true});
+        return;
       }
-    });
+    } else if (interaction.channel.type === ChannelType.PublicThread ||
+      interaction.channel.type === ChannelType.PrivateThread) {
+      const data = await db
+        .select(
+          db.ref('id').as('id'),
+          db.ref('user_id').as('user_id'),
+          db.ref('description').as('description'),
+          db.ref('thread_id').as('thread_id'),
+          db.ref('type').as('type'),
+          db.ref('status').as('status'),
+          db.ref('first_message_id').as('first_message_id'),
+          db.ref('closed_by').as('closed_by'),
+          db.ref('closed_at').as('closed_at'),
+          db.ref('archived_at').as('archived_at'),
+          db.ref('deleted_at').as('deleted_at'),
+          db.ref('created_at').as('created_at'),
+        )
+        .from<UserTickets>('user-Tickets')
+        .where('thread_id', interaction.channel.id)
+        .andWhereNot('status', 'closed')
+        .andWhereNot('status', 'resolved')
+        .first();
+      if (data) {
+        ticketData = data;
+      } else {
+        interaction.reply({content: 'This ticket thread does not exist!', ephemeral: true});
+        return;
+      }
+    }
   }
+
   logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
-  const ticketChannel = interaction.client.channels.cache.get(ticketData.issueThread) as ThreadChannel;
+  const ticketChannel = interaction.client.channels.cache.get(ticketData.thread_id) as ThreadChannel;
 
   if (!ticketChannel) {
     interaction.reply({content: 'This user\'s ticket thread does not exist!', ephemeral: true});
     return;
   }
 
-  const target = interaction.client.users.cache.get(ticketData.issueUser) as User;
-  const channel = interaction.client.channels.cache.get(ticketData.issueThread) as ThreadChannel;
+  const target = interaction.client.users.cache.get(ticketData.user_id) as User;
+  const channel = interaction.client.channels.cache.get(ticketData.thread_id) as ThreadChannel;
   let verb = '';
   let noun = '';
   let updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>();
   if (command === 'close') {
     logger.debug(`[${PREFIX}] Closing ticket!`);
-    ticketData.issueStatus = 'closed';
+    ticketData.status = TicketStatus.Closed;
     noun = 'Ticket';
     verb = 'CLOSED';
     target.send(`It looks like we're good here! We've closed this ticket, but if you need anything else, feel free to open a new one!`);
@@ -741,7 +833,7 @@ export async function modmailActions(
       );
   } else if (command === 'reopen') {
     logger.debug(`[${PREFIX}] Reopening ticket!`);
-    ticketData.issueStatus = 'open';
+    ticketData.status = TicketStatus.Open;
     noun = 'Ticket';
     verb = 'REOPENED';
     target.send('This ticket has been reopened! Feel free to continue the conversation here.');
@@ -768,7 +860,7 @@ export async function modmailActions(
       );
   } else if (command === 'block') {
     logger.debug(`[${PREFIX}] Blocking user!`);
-    ticketData.issueStatus = 'blocked';
+    ticketData.status = TicketStatus.Blocked;
     noun = 'User';
     verb = 'BLOCKED';
     target.send('You have been blocked from using modmail. Please email us at appeals@tripsit.me if you feel this was an error!');
@@ -794,7 +886,7 @@ export async function modmailActions(
           .setStyle(ButtonStyle.Danger),
       );
   } else if (command === 'unblock') {
-    ticketData.issueStatus = 'open';
+    ticketData.status = TicketStatus.Open;
     noun = 'User';
     verb = 'UNBLOCKED';
     target.send('You have been unblocked from using modmail!');
@@ -819,7 +911,7 @@ export async function modmailActions(
           .setStyle(ButtonStyle.Danger),
       );
   } else if (command === 'unpause') {
-    ticketData.issueStatus = 'open';
+    ticketData.status = TicketStatus.Open;
     noun = 'Ticket';
     verb = 'UNPAUSED';
     target.send('This ticket has been taken off hold, thank you for your patience!');
@@ -844,7 +936,7 @@ export async function modmailActions(
           .setStyle(ButtonStyle.Danger),
       );
   } else if (command === 'pause') {
-    ticketData.issueStatus = 'paused';
+    ticketData.status = TicketStatus.Paused;
     noun = 'Ticket';
     verb = 'PAUSED';
     target.send('This ticket has been paused while we look into this, thank you for your patience!');
@@ -894,7 +986,7 @@ export async function modmailActions(
       );
   } else if (command === 'resolve') {
     logger.debug(`[${PREFIX}] Resolving ticket!`);
-    ticketData.issueStatus = 'resolved';
+    ticketData.status = TicketStatus.Resolved;
     noun = 'Ticket';
     verb = 'RESOLVED';
     interaction.reply(stripIndents`Hey ${target}, we're glad your issue is resolved!
@@ -971,11 +1063,11 @@ export async function modmailActions(
     }
   }
 
-  if (global.db) {
-    const ref = db.ref(path);
-    logger.debug(`[${PREFIX}] ticketData update: ${JSON.stringify(ticketData, null, 2)}!`);
-    await ref.set(ticketData);
-  }
+  await db
+    .insert(ticketData)
+    .into('users')
+    .onConflict('id')
+    .merge();
 
   const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
   const channelModlog = tripsitGuild.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
@@ -995,7 +1087,7 @@ export async function modmailActions(
       }
       if (interaction.isCommand()) {
         if (interaction.channel) {
-          initialMessage = await interaction.channel.messages.fetch(ticketData.issueFirstMessage) as Message;
+          initialMessage = await interaction.channel.messages.fetch(ticketData.first_message_id) as Message;
           content = initialMessage.content;
         }
       }
