@@ -28,8 +28,12 @@ const PREFIX = path.parse(__filename).name;
  * @return {Promise<void>}
  */
 export async function buttonClick(interaction:ButtonInteraction, client:Client) {
+  logger.debug(stripIndents`[${PREFIX}] started | \
+user: ${interaction.user.tag} (${interaction.user.id}) \
+guild: ${interaction.guild?.name} (${interaction.guild?.id}) \
+customId: ${interaction.customId}
+  `);
   const buttonID = interaction.customId;
-  logger.debug(`[${PREFIX}] buttonID: ${buttonID}`);
   const command = client.commands.get(interaction.customId);
   if (command) {
     logger.debug(`[${PREFIX}] command: ${command}`);
@@ -65,19 +69,19 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     return;
   };
   if (buttonID === 'modmailTripsitter') {
-    modmailCreate(interaction, 'tripsit');
+    modmailCreate(interaction, 'TRIPSIT');
     return;
   }
   if (buttonID === 'modmailFeedback') {
-    modmailCreate(interaction, 'feedback');
+    modmailCreate(interaction, 'FEEDBACK');
     return;
   }
   if (buttonID === 'modmailTechIssue') {
-    modmailCreate(interaction, 'tech');
+    modmailCreate(interaction, 'TECH');
     return;
   }
   if (buttonID === 'modmailBanAppeal') {
-    modmailCreate(interaction, 'appeal');
+    modmailCreate(interaction, 'APPEAL');
     return;
   }
   if (buttonID === 'memberbutton') {

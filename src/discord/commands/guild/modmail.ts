@@ -26,9 +26,9 @@ import {
 import {db} from '../../../global/utils/knex';
 import {
   Users,
-  TicketStatus,
-  TicketType,
   UserTickets,
+  TicketStatus,
+  // TicketType,
 } from '../../../global/@types/pgdb.d';
 import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
@@ -120,19 +120,19 @@ export async function modmailInitialResponse(message:Message) {
 /**
  *
  * @param {ButtonInteraction} interaction
- * @param {'appeal' | 'tripsit' | 'tech'} issueType
+ * @param {'APPEAL' | 'TRIPSIT' | 'TECH' | 'FEEDBACK'} issueType
  */
 export async function modmailCreate(
   interaction:ButtonInteraction,
-  issueType:'appeal' | 'tripsit' | 'tech' | 'feedback') {
+  issueType:'APPEAL' | 'TRIPSIT' | 'TECH' | 'FEEDBACK') {
   // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
 
-  const issueTypeDict = {
-    appeal: TicketType.Appeal,
-    tripsit: TicketType.Tripsit,
-    tech: TicketType.Tech,
-    feedback: TicketType.Feedback,
-  };
+  // const issueTypeDict = {
+  //   appeal: TicketType.Appeal,
+  //   tripsit: TicketType.Tripsit,
+  //   tech: TicketType.Tech,
+  //   feedback: TicketType.Feedback,
+  // };
 
   // Get the actor
   const actor = interaction.user;
@@ -144,7 +144,7 @@ export async function modmailCreate(
 
   // Create a dict of variables to be used based on the type of request
   const modmailVars = {
-    appeal: {
+    APPEAL: {
       customId: `ModmailIssueModal~${issueType}`,
       title: 'Ban Appeal',
       description: 'Please be patient and do not PM moderators directly.',
@@ -158,7 +158,7 @@ export async function modmailCreate(
       pingRole: env.ROLE_MODERATOR,
       firstResponse: 'thank you for using the bot to appeal your ban!',
     },
-    tripsit: {
+    TRIPSIT: {
       customId: `ModmailIssueModal~${issueType}`,
       title: 'Tripsit Me!',
       description: 'You can also join our Discord server and ask for help there!',
@@ -172,7 +172,7 @@ export async function modmailCreate(
       pingRole: env.ROLE_HELPER,
       firstResponse: 'thank you for asking for assistance!',
     },
-    tech: {
+    TECH: {
       customId: `ModmailIssueModal~${issueType}`,
       title: 'Technical Issues',
       description: 'Please be detailed with your problem so we can try to help!',
@@ -186,7 +186,7 @@ export async function modmailCreate(
       pingRole: env.ROLE_MODERATOR,
       firstResponse: 'thank you for asking for assistance!',
     },
-    feedback: {
+    FEEDBACK: {
       customId: `ModmailIssueModal~${issueType}`,
       title: 'Give Feedback',
       description: 'Can be a suggestion, feedback, or issue. Please be detailed!',
@@ -224,10 +224,10 @@ export async function modmailCreate(
       db.ref('deleted_at').as('deleted_at'),
       db.ref('created_at').as('created_at'),
     )
-    .from<UserTickets>('user-Tickets')
+    .from<UserTickets>('user_tickets')
     .where('user_id', userUniqueId?.id)
-    .andWhereNot('status', 'closed')
-    .andWhereNot('status', 'resolved')
+    .andWhereNot('status', 'CLOSED')
+    .andWhereNot('status', 'RESOLVED')
     .first();
 
   // Get the parent channel to be used
@@ -244,9 +244,9 @@ export async function modmailCreate(
       await db
         .insert({
           id: ticketData.id,
-          status: TicketStatus.Closed,
+          status: 'CLOSED',
         })
-        .into('users')
+        .into<UserTickets>('user_tickets')
         .onConflict('id')
         .merge();
     }
@@ -342,7 +342,7 @@ export async function modmailCreate(
 
           You can also click in your channel list to see your private room!
         `;
-        if (issueType === 'tripsit') {
+        if (issueType === 'TRIPSIT') {
           firstResponse = stripIndents`
           Hey ${actor}, ${modmailVars[issueType].firstResponse}
 
@@ -373,7 +373,7 @@ export async function modmailCreate(
           ` : ''}
           **We will respond to right here when we can!**
         `;
-        if (issueType === 'tripsit') {
+        if (issueType === 'TRIPSIT') {
           firstResponse = stripIndents`
           Hey ${actor}, thank you for asking for assistance!
   
@@ -433,7 +433,7 @@ export async function modmailCreate(
 
         **You can respond to them in this thread!**
       `;
-      if (issueType === 'tripsit') {
+      if (issueType === 'TRIPSIT') {
         threadFirstResponse = stripIndents`
           Hey ${isDev ? pingRole.toString() : pingRole} and ${isDev ? tripsitterRole.toString() : tripsitterRole}! ${actor.tag} has submitted a new ticket:
 
@@ -497,8 +497,8 @@ export async function modmailCreate(
         > ${modalInputB}
         ` : ''}`,
         thread_id: ticketThread.id,
-        type: issueTypeDict[issueType],
-        status: TicketStatus.Open,
+        type: issueType,
+        status: 'OPEN',
         first_message_id: firstResponseMessage.id,
         archived_at: threadArchiveTime,
         deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
@@ -507,7 +507,7 @@ export async function modmailCreate(
       // Update thet ticket in the DB
       await db
         .insert(newTicketData)
-        .into('user_tickets');
+        .into<UserTickets>('user_tickets');
 
       // Save the user's roles in the db
       let actorRoles = [] as string[];
@@ -519,7 +519,7 @@ export async function modmailCreate(
           id: userUniqueId!.id,
           roles: actorRoles,
         })
-        .into('users')
+        .into<Users>('users')
         .onConflict('id')
         .merge();
     });
@@ -557,21 +557,21 @@ export async function modmailDMInteraction(message:Message) {
       db.ref('deleted_at').as('deleted_at'),
       db.ref('created_at').as('created_at'),
     )
-    .from<UserTickets>('user-Tickets')
-    .where('user_id', userUniqueId)
-    .andWhereNot('status', 'closed')
-    .andWhereNot('status', 'resolved')
+    .from<UserTickets>('user_tickets')
+    .where('user_id', userUniqueId?.id)
+    .andWhereNot('status', 'CLOSED')
+    .andWhereNot('status', 'RESOLVED')
     .first();
 
-  logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+  // logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
   if (ticketData) {
-    if (ticketData.status === TicketStatus.Blocked) {
+    if (ticketData.status === 'BLOCKED') {
       message.author.send('*beeps sadly*');
       return;
     }
 
-    if (ticketData.status === TicketStatus.Paused) {
+    if (ticketData.status === 'PAUSED') {
       message.author.send('Hey there! This ticket is currently on hold, please wait for a moderator to respond before sending another message.');
       return;
     }
@@ -594,11 +594,28 @@ export async function modmailDMInteraction(message:Message) {
       });
       embed.setFooter(null);
       thread.send({embeds: [embed]});
-      return;
     }
-    logger.debug(`[${PREFIX}] User not member of guild`);
-  }
 
+    // Reset the archived_at time
+    // Determine when the thread should be archived
+    const threadArchiveTime = new Date();
+    const archiveTime = env.NODE_ENV === 'production' ?
+      threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 :
+      threadArchiveTime.getTime() + 1000 * 60 * 10;
+    threadArchiveTime.setTime(archiveTime);
+    logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
+    logger.debug(`[${PREFIX}] User not member of guild`);
+
+    // Update the ticket in the DB
+    await db
+      .update({
+        archived_at: threadArchiveTime,
+        deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
+      })
+      .from<UserTickets>('user_tickets')
+      .where('id', ticketData.id);
+    return;
+  }
 
   modmailInitialResponse(message);
   return;
@@ -636,15 +653,21 @@ export async function modmailThreadInteraction(message:Message) {
             db.ref('deleted_at').as('deleted_at'),
             db.ref('created_at').as('created_at'),
           )
-          .from<UserTickets>('user-Tickets')
+          .from<UserTickets>('user_tickets')
           .where('thread_id', message.channel.id)
-          .andWhereNot('status', 'closed')
-          .andWhereNot('status', 'resolved')
+          .andWhereNot('status', 'CLOSED')
+          .andWhereNot('status', 'RESOLVED')
           .first();
 
         if (ticketData) {
+          const data = await db
+            .select(db.ref('discord_id'))
+            .from<Users>('users')
+            .where('id', ticketData.user_id)
+            .first();
+
           // Get the user from the ticketData
-          const user = await message.client.users.fetch(ticketData.user_id);
+          const user = await message.client.users.fetch(data?.discord_id!);
           // logger.debug(`[${PREFIX}] user: ${JSON.stringify(user, null, 2)}!`);
           const embed = embedTemplate();
           embed.setDescription(message.content);
@@ -655,6 +678,25 @@ export async function modmailThreadInteraction(message:Message) {
           embed.setFooter(null);
           user.send({embeds: [embed]});
           // user.send(`<${message.member.nickname}> ${message.content}`);
+
+          // Reset the archived_at time
+          // Determine when the thread should be archived
+          const threadArchiveTime = new Date();
+          const archiveTime = env.NODE_ENV === 'production' ?
+            threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 :
+            threadArchiveTime.getTime() + 1000 * 60 * 10;
+          threadArchiveTime.setTime(archiveTime);
+          logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
+          logger.debug(`[${PREFIX}] User not member of guild`);
+
+          // Update the ticket in the DB
+          await db
+            .update({
+              archived_at: threadArchiveTime,
+              deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
+            })
+            .from<UserTickets>('user_tickets')
+            .where('id', ticketData.id);
           return;
         }
       }
@@ -669,18 +711,20 @@ export async function modmailThreadInteraction(message:Message) {
 export async function modmailActions(
   interaction:ButtonInteraction | ChatInputCommandInteraction,
 ) {
-  logger.debug(`[${PREFIX}] starting!`);
-
   let command = '';
   if (interaction.isButton()) {
     command = interaction.customId.split('~')[1];
   } else if (interaction.isCommand()) {
     command = interaction.options.getSubcommand();
   }
+  logger.debug(stripIndents`[${PREFIX}] started | \
+user: ${interaction.user.tag} (${interaction.user.id}) \
+guild: ${interaction.guild?.name} (${interaction.guild?.id}) \
+command: ${command} \
+dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
+`);
 
-  // logger.debug(`[${PREFIX}] Command: ${command}`);
-
-  const actor = interaction.member as GuildMember;
+  const actor = interaction.user as User;
 
   // Get the ticket info
   let ticketData = {} as UserTickets;
@@ -707,10 +751,10 @@ export async function modmailActions(
           db.ref('deleted_at').as('deleted_at'),
           db.ref('created_at').as('created_at'),
         )
-        .from<UserTickets>('user-Tickets')
+        .from<UserTickets>('user_tickets')
         .where('user_id', userUniqueId?.id)
-        .andWhereNot('status', 'closed')
-        .andWhereNot('status', 'resolved')
+        .andWhereNot('status', 'CLOSED')
+        .andWhereNot('status', 'RESOLVED')
         .first();
       if (data) {
         ticketData = data;
@@ -735,12 +779,12 @@ export async function modmailActions(
           db.ref('deleted_at').as('deleted_at'),
           db.ref('created_at').as('created_at'),
         )
-        .from<UserTickets>('user-Tickets')
+        .from<UserTickets>('user_tickets')
         .where('thread_id', interaction.channel.id)
-        .andWhereNot('status', 'closed')
-        .andWhereNot('status', 'resolved')
+        .andWhereNot('status', 'CLOSED')
+        .andWhereNot('status', 'RESOLVED')
         .first();
-      if (data) {
+      if (data !== undefined) {
         ticketData = data;
       } else {
         interaction.reply({content: 'This ticket thread does not exist!', ephemeral: true});
@@ -749,23 +793,30 @@ export async function modmailActions(
     }
   }
 
-  logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+  // logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
-  const ticketChannel = interaction.client.channels.cache.get(ticketData.thread_id) as ThreadChannel;
+  const ticketChannel = await interaction.client.channels.fetch(ticketData.thread_id) as ThreadChannel;
 
   if (!ticketChannel) {
+    logger.debug(`[${PREFIX}] ticketChannel not found!`);
     interaction.reply({content: 'This user\'s ticket thread does not exist!', ephemeral: true});
     return;
   }
 
-  const target = interaction.client.users.cache.get(ticketData.user_id) as User;
+  const userData = await db
+    .select(db.ref('discord_id'))
+    .from<Users>('users')
+    .where('id', ticketData.user_id)
+    .first();
+
+  const target = interaction.client.users.cache.get(userData?.discord_id!) as User;
   const channel = interaction.client.channels.cache.get(ticketData.thread_id) as ThreadChannel;
   let verb = '';
   let noun = '';
   let updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>();
   if (command === 'close') {
     logger.debug(`[${PREFIX}] Closing ticket!`);
-    ticketData.status = TicketStatus.Closed;
+    ticketData.status = 'CLOSED' as TicketStatus;
     noun = 'Ticket';
     verb = 'CLOSED';
     target.send(`It looks like we're good here! We've closed this ticket, but if you need anything else, feel free to open a new one!`);
@@ -833,7 +884,7 @@ export async function modmailActions(
       );
   } else if (command === 'reopen') {
     logger.debug(`[${PREFIX}] Reopening ticket!`);
-    ticketData.status = TicketStatus.Open;
+    ticketData.status = 'OPEN' as TicketStatus;
     noun = 'Ticket';
     verb = 'REOPENED';
     target.send('This ticket has been reopened! Feel free to continue the conversation here.');
@@ -860,7 +911,7 @@ export async function modmailActions(
       );
   } else if (command === 'block') {
     logger.debug(`[${PREFIX}] Blocking user!`);
-    ticketData.status = TicketStatus.Blocked;
+    ticketData.status = 'BLOCKED' as TicketStatus;
     noun = 'User';
     verb = 'BLOCKED';
     target.send('You have been blocked from using modmail. Please email us at appeals@tripsit.me if you feel this was an error!');
@@ -886,7 +937,7 @@ export async function modmailActions(
           .setStyle(ButtonStyle.Danger),
       );
   } else if (command === 'unblock') {
-    ticketData.status = TicketStatus.Open;
+    ticketData.status = 'OPEN' as TicketStatus;
     noun = 'User';
     verb = 'UNBLOCKED';
     target.send('You have been unblocked from using modmail!');
@@ -911,7 +962,7 @@ export async function modmailActions(
           .setStyle(ButtonStyle.Danger),
       );
   } else if (command === 'unpause') {
-    ticketData.status = TicketStatus.Open;
+    ticketData.status = 'OPEN' as TicketStatus;
     noun = 'Ticket';
     verb = 'UNPAUSED';
     target.send('This ticket has been taken off hold, thank you for your patience!');
@@ -936,7 +987,7 @@ export async function modmailActions(
           .setStyle(ButtonStyle.Danger),
       );
   } else if (command === 'pause') {
-    ticketData.status = TicketStatus.Paused;
+    ticketData.status = 'PAUSED' as TicketStatus;
     noun = 'Ticket';
     verb = 'PAUSED';
     target.send('This ticket has been paused while we look into this, thank you for your patience!');
@@ -986,7 +1037,7 @@ export async function modmailActions(
       );
   } else if (command === 'resolve') {
     logger.debug(`[${PREFIX}] Resolving ticket!`);
-    ticketData.status = TicketStatus.Resolved;
+    ticketData.status = 'RESOLVED' as TicketStatus;
     noun = 'Ticket';
     verb = 'RESOLVED';
     interaction.reply(stripIndents`Hey ${target}, we're glad your issue is resolved!
@@ -1059,13 +1110,14 @@ export async function modmailActions(
 
   if (interaction.channel) {
     if (interaction.channel.type !== ChannelType.DM) {
+      logger.debug(`[${PREFIX}] Updating channel internally`);
       await interaction.reply(`${noun} has been ${verb} by ${actor}! (The user cannot see this)`);
     }
   }
 
   await db
     .insert(ticketData)
-    .into('users')
+    .into<UserTickets>('user_tickets')
     .onConflict('id')
     .merge();
 
