@@ -659,18 +659,33 @@ export async function modmailThreadInteraction(message:Message) {
           .andWhereNot('status', 'RESOLVED')
           .first();
         if (ticketData) {
-          if (ticketData.first_message_id !== '') {
-            return;
+          logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+
+          if (ticketData) {
+            if (ticketData.status === 'BLOCKED') {
+              message.channel.send(`Hey ${message.author.username}, this user is currently blocked. Please '/modmail block off', or click the button at the top, before conversation can resume.`);
+              return;
+            }
+            if (ticketData.status === 'PAUSED') {
+              message.channel.send(`Hey ${message.author.username}, this ticket is currently paused. Please '/modmail pause off', or click the button at the top, before conversation can resume.`);
+              return;
+            }
           }
+
+
           const data = await db
             .select(db.ref('discord_id'))
             .from<Users>('users')
             .where('id', ticketData.user_id)
             .first();
 
+          logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}!`);
+
           // Get the user from the ticketData
           const user = await message.client.users.fetch(data?.discord_id!);
-          // logger.debug(`[${PREFIX}] user: ${JSON.stringify(user, null, 2)}!`);
+          logger.debug(`[${PREFIX}] user: ${JSON.stringify(user, null, 2)}!`);
+
+          // Send the message to the user
           const embed = embedTemplate();
           embed.setDescription(message.content);
           embed.setAuthor({
@@ -679,6 +694,7 @@ export async function modmailThreadInteraction(message:Message) {
           });
           embed.setFooter(null);
           user.send({embeds: [embed]});
+          logger.debug(`[${PREFIX}] message sent to user!`);
           // user.send(`<${message.member.nickname}> ${message.content}`);
 
           // Reset the archived_at time
@@ -688,7 +704,7 @@ export async function modmailThreadInteraction(message:Message) {
             threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 :
             threadArchiveTime.getTime() + 1000 * 60 * 10;
           threadArchiveTime.setTime(archiveTime);
-          logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
+          logger.debug(`[${PREFIX}] threadArchiveTime reset: ${threadArchiveTime}`);
 
           // Update the ticket in the DB
           await db
@@ -698,6 +714,7 @@ export async function modmailThreadInteraction(message:Message) {
             })
             .from<UserTickets>('user_tickets')
             .where('id', ticketData.id);
+          logger.debug(`[${PREFIX}] ticket updated in DB!`);
           return;
         }
       }
