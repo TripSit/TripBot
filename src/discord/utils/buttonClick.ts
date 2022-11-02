@@ -1,3 +1,4 @@
+import env from '../../global/utils/env.config';
 import {
   Colors,
   ButtonInteraction,
@@ -6,13 +7,30 @@ import {
   TextChannel,
   GuildMemberRoleManager,
   User,
+  ModalBuilder,
+  ActionRowBuilder,
+  ModalSubmitInteraction,
+  TextInputBuilder,
+  GuildMember,
+  // GuildMember,
+  ThreadChannel,
+  PermissionsBitField,
+  MessageMentionTypes,
 } from 'discord.js';
+import {
+  TextInputStyle,
+} from 'discord-api-types/v10';
+import {db} from '../../global/utils/knex';
+import {
+  Users,
+  UserTickets,
+  // TicketStatus,
+} from '../../global/@types/pgdb.d';
 import logger from '../../global/utils/logger';
-import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../utils/embedTemplate';
 import {applicationApprove} from '../utils/application';
-import {tripsitmeClick, tripsitmeFinish} from '../utils/tripsitme';
+import {tripSitMe, needsHelpmode, tripsitmeFinish} from '../utils/tripsitme';
 import {techHelpClick, techHelpClose, techHelpOwn} from '../utils/techHelp';
 import {
   modmailCreate, modmailActions,
@@ -20,6 +38,23 @@ import {
 
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
+
+const teamRoles = [
+  env.ROLE_DIRECTOR,
+  env.ROLE_SUCCESSOR,
+  env.ROLE_SYSADMIN,
+  env.ROLE_LEADDEV,
+  env.ROLE_IRCADMIN,
+  env.ROLE_DISCORDADMIN,
+  env.ROLE_IRCOP,
+  env.ROLE_MODERATOR,
+  env.ROLE_TRIPSITTER,
+  env.ROLE_TEAMTRIPSIT,
+  env.ROLE_TRIPBOT2,
+  env.ROLE_TRIPBOT,
+  env.ROLE_BOT,
+  env.ROLE_DEVELOPER,
+];
 
 /**
  * This runs whenever a buttion is clicked
@@ -44,8 +79,148 @@ customId: ${interaction.customId}
   }
 
   if (buttonID.startsWith('tripsitmeClick')) {
-    tripsitmeClick(interaction);
-    return;
+    if (!interaction.guild) {
+      logger.debug(`[${PREFIX}] no guild!`);
+      interaction.reply('This must be performed in a guild!');
+      return;
+    }
+    if (!interaction.member) {
+      logger.debug(`[${PREFIX}] no member!`);
+      interaction.reply('This must be performed by a member of a guild!');
+      return;
+    }
+    const target = interaction.member as GuildMember;
+    const actorIsAdmin = (target as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
+    const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
+
+    // Team check - Cannot be run on team members
+    // If this user is a developer then this is a test run and ignore this check,
+    // but we'll change the output down below to make it clear this is a test.
+    let targetIsTeamMember = false;
+    if (!actorIsAdmin) {
+      target.roles.cache.forEach(async (role) => {
+        if (teamRoles.includes(role.id)) {
+          targetIsTeamMember = true;
+        }
+      });
+      if (targetIsTeamMember) {
+        logger.debug(`[${PREFIX}] Target is a team member!`);
+        const teamMessage = stripIndents`You are a member of the team and cannot be publicly helped!`;
+        const embed = embedTemplate()
+          .setColor(Colors.DarkBlue)
+          .setDescription(teamMessage);
+        if (!interaction.replied) {
+          await interaction.reply({embeds: [embed], ephemeral: true});
+        }
+        return;
+      }
+    }
+    logger.debug(`[${PREFIX}] Target is not a team member!`);
+
+    // Get the target's ticket data
+    const userUniqueId = await db
+      .select(db.ref('id'))
+      .from<Users>('users')
+      .where('discord_id', target.id)
+      .first();
+
+    const ticketData = await db
+      .select(
+        db.ref('id').as('id'),
+        db.ref('user_id').as('user_id'),
+        db.ref('description').as('description'),
+        db.ref('thread_id').as('thread_id'),
+        db.ref('type').as('type'),
+        db.ref('status').as('status'),
+        db.ref('first_message_id').as('first_message_id'),
+        db.ref('closed_by').as('closed_by'),
+        db.ref('closed_at').as('closed_at'),
+        db.ref('archived_at').as('archived_at'),
+        db.ref('deleted_at').as('deleted_at'),
+        db.ref('created_at').as('created_at'),
+      )
+      .from<UserTickets>('user_tickets')
+      .where('user_id', userUniqueId?.id)
+      .where('type', 'TRIPSIT')
+      .andWhereNot('status', 'CLOSED')
+      .andWhereNot('status', 'RESOLVED')
+      .first();
+
+    if (ticketData !== undefined) {
+      logger.debug(`[${PREFIX}] Target has open ticket!`);
+      logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+      await needsHelpmode(interaction, interaction.member as GuildMember);
+      let threadHelpUser = {} as ThreadChannel;
+      try {
+        threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
+      } catch (err) {
+        logger.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted:\n ${err}`);
+      }
+
+      if (threadHelpUser.id) {
+        logger.debug(`[${PREFIX}] threadHelpUser: ${threadHelpUser.name} = 💚│${target.displayName}'s channel!`);
+        threadHelpUser.setName(`💚│${target.displayName}'s channel!`);
+
+        // Remind the user that they have a channel open
+
+        const message = stripIndents`Hey ${interaction.member}, you have an open session!
+  
+        Check your channel list or click > '${threadHelpUser.toString()} to get help!`;
+
+        const embed = embedTemplate()
+          .setColor(Colors.DarkBlue)
+          .setDescription(message);
+        interaction.reply({embeds: [embed], ephemeral: true});
+        logger.debug(`[${PREFIX}] Rejected need for help`);
+
+        // Send the update message to the thread
+        const helpMessage = stripIndents`Hey ${target}, you already have an open session, what's the update?`;
+
+        if (threadHelpUser) {
+          threadHelpUser.send({
+            content: helpMessage,
+            allowedMentions: {
+              'parse': showMentions,
+            },
+          });
+        }
+        logger.debug(`[${PREFIX}] Pinged user in help thread`);
+        return;
+      }
+    }
+
+    const roleNeedshelpId = interaction.customId.split('~')[1];
+    const roleTripsitterId = interaction.customId.split('~')[2];
+    const channelTripsittersId = interaction.customId.split('~')[3];
+
+    const modal = new ModalBuilder()
+      .setCustomId(`tripsitmeSubmit~${roleNeedshelpId}~${roleTripsitterId}~${channelTripsittersId}~${interaction.id}`)
+      .setTitle('Tripsitter Help Request');
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+      .setCustomId('triageInput')
+      .setLabel('What substance? How much taken? What time?')
+      .setStyle(TextInputStyle.Short)));
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+      .setCustomId('introInput')
+      .setLabel('What\'s going on? Give us the details!')
+      .setStyle(TextInputStyle.Paragraph)));
+    await interaction.showModal(modal);
+
+    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`tripsitmeSubmit`);
+    interaction.awaitModalSubmit({filter, time: 0})
+      .then(async (i) => {
+        logger.debug(`[${PREFIX}] i.customId.split('~')[4]: ${i.customId.split('~')[4]}`);
+        logger.debug(`[${PREFIX}] interaction.id: ${interaction.id}`);
+        if (i.customId.split('~')[4] !== interaction.id) {
+          return;
+        };
+
+        // Otherwise get the input from the modal, if it was submitted
+        const triage = i.fields.getTextInputValue('triageInput');
+        const intro = i.fields.getTextInputValue('introInput');
+
+        tripSitMe(i, null, triage, intro);
+      });
   }
   if (buttonID.startsWith('tripsitmeFinish')) {
     tripsitmeFinish(interaction);

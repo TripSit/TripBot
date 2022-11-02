@@ -28,7 +28,6 @@ import {
   Users,
   UserTickets,
   TicketStatus,
-  // TicketType,
 } from '../../../global/@types/pgdb.d';
 import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
@@ -629,14 +628,14 @@ export async function modmailThreadInteraction(message:Message) {
   if (message.member) {
     const threadMessage = message.channel.type === ChannelType.PublicThread ||
     message.channel.type === ChannelType.PrivateThread;
-    logger.debug(`[${PREFIX}] threadMessage: ${threadMessage}!`);
+    // logger.debug(`[${PREFIX}] threadMessage: ${threadMessage}!`);
     if (threadMessage) {
-      logger.debug(`[${PREFIX}] message.channel.parentId: ${message.channel.parentId}!`);
+      // logger.debug(`[${PREFIX}] message.channel.parentId: ${message.channel.parentId}!`);
       if (
         message.channel.parentId === env.CHANNEL_HELPDESK ||
         message.channel.parentId === env.CHANNEL_TALKTOTS ||
         message.channel.parentId === env.CHANNEL_TRIPSIT) {
-        logger.debug(`[${PREFIX}] message sent in a thread in a helpdesk channel!`);
+        // logger.debug(`[${PREFIX}] message sent in a thread in a helpdesk channel!`);
         // Get the ticket info
         const ticketData = await db
           .select(
@@ -655,11 +654,14 @@ export async function modmailThreadInteraction(message:Message) {
           )
           .from<UserTickets>('user_tickets')
           .where('thread_id', message.channel.id)
+          .andWhereNot('first_message_id', '')
           .andWhereNot('status', 'CLOSED')
           .andWhereNot('status', 'RESOLVED')
           .first();
-
         if (ticketData) {
+          if (ticketData.first_message_id !== '') {
+            return;
+          }
           const data = await db
             .select(db.ref('discord_id'))
             .from<Users>('users')
@@ -687,7 +689,6 @@ export async function modmailThreadInteraction(message:Message) {
             threadArchiveTime.getTime() + 1000 * 60 * 10;
           threadArchiveTime.setTime(archiveTime);
           logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
-          logger.debug(`[${PREFIX}] User not member of guild`);
 
           // Update the ticket in the DB
           await db
