@@ -760,11 +760,14 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
           db.ref('user_id').as('user_id'),
           db.ref('description').as('description'),
           db.ref('thread_id').as('thread_id'),
+          db.ref('meta_thread_id').as('meta_thread_id'),
           db.ref('type').as('type'),
           db.ref('status').as('status'),
           db.ref('first_message_id').as('first_message_id'),
-          db.ref('closed_by').as('closed_by'),
           db.ref('closed_at').as('closed_at'),
+          db.ref('closed_by').as('closed_by'),
+          db.ref('reopened_at').as('reopened_at'),
+          db.ref('reopened_by').as('reopened_by'),
           db.ref('archived_at').as('archived_at'),
           db.ref('deleted_at').as('deleted_at'),
           db.ref('created_at').as('created_at'),
@@ -782,22 +785,24 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
       }
     } else if (interaction.channel.type === ChannelType.PublicThread ||
       interaction.channel.type === ChannelType.PrivateThread) {
-      const data = await db
+      const data = await db<UserTickets>('user_tickets')
         .select(
           db.ref('id').as('id'),
           db.ref('user_id').as('user_id'),
           db.ref('description').as('description'),
           db.ref('thread_id').as('thread_id'),
+          db.ref('meta_thread_id').as('meta_thread_id'),
           db.ref('type').as('type'),
           db.ref('status').as('status'),
           db.ref('first_message_id').as('first_message_id'),
-          db.ref('closed_by').as('closed_by'),
           db.ref('closed_at').as('closed_at'),
+          db.ref('closed_by').as('closed_by'),
+          db.ref('reopened_at').as('reopened_at'),
+          db.ref('reopened_by').as('reopened_by'),
           db.ref('archived_at').as('archived_at'),
           db.ref('deleted_at').as('deleted_at'),
           db.ref('created_at').as('created_at'),
         )
-        .from<UserTickets>('user_tickets')
         .where('thread_id', interaction.channel.id)
         .andWhereNot('status', 'CLOSED')
         .andWhereNot('status', 'RESOLVED')

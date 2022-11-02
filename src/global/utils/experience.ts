@@ -108,15 +108,14 @@ export async function experience(
     return;
   }
 
-  logger.debug(stripIndents`[${PREFIX}] Message sent by ${message.author.username} \
-in ${(message.channel as TextChannel).name} on ${message.guild}`);
-
   // Check if the user has an ignored role
   if (ignoredRoles.some((role) => message.member!.roles.cache.has(role))) {
-    logger.debug(`[${PREFIX}] Message sent by a user with an ignored role`);
+    // logger.debug(`[${PREFIX}] Message sent by a user with an ignored role`);
     return;
   }
 
+  logger.debug(stripIndents`[${PREFIX}] Message sent by ${message.author.username} \
+  in ${(message.channel as TextChannel).name} on ${message.guild}`);
 
   // Determine what kind of experience to give
   const channel = message.channel as TextChannel;

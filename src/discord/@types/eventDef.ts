@@ -8,7 +8,20 @@ import {
   MessageReaction,
   User,
   VoiceState,
+  DMChannel,
+  GuildChannel,
+  ThreadChannel,
 } from 'discord.js';
+
+export interface channelEvent {
+  name: string;
+  execute: (channel: DMChannel | GuildChannel) => Promise<void>;
+}
+
+export interface threadEvent {
+  name: string;
+  execute: (channel: ThreadChannel) => Promise<void>;
+}
 
 export interface voiceEvent {
   name: string;

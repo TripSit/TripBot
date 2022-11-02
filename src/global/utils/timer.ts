@@ -202,24 +202,26 @@ export async function runTimer() {
                           const myMember = await guild.members.fetch(env.DISCORD_CLIENT_ID)!;
                           const myRole = myMember.roles.highest;
 
-                          // Remove the needshelp role
-                          const needshelpRole = await guild.roles.fetch(env.ROLE_NEEDSHELP);
-                          if (needshelpRole) {
-                            if (needshelpRole.comparePositionTo(myRole) < 0) {
-                              await member.roles.remove(needshelpRole);
-                            }
-                          }
-
                           // Restore the old roles
                           if (user.roles) {
+                            logger.debug(`[${PREFIX}] Restoring ${user.discord_id}'s roles: ${user.roles}`);
                             const roles = user.roles.split(',');
                             for (const role of roles) {
                               const roleObj = await guild.roles.fetch(role);
-                              if (roleObj) {
+                              if (roleObj && roleObj.name !== '@everyone' && roleObj.id !== env.ROLE_NEEDSHELP) {
                                 // Check if the bot has permission to add the role
                                 if (roleObj.comparePositionTo(myRole) < 0) {
+                                  logger.debug(`[${PREFIX}] Adding ${user.discord_id}'s ${role} role`);
                                   await member.roles.add(roleObj);
                                 }
+                              }
+                            }
+
+                            // Remove the needshelp role
+                            const needshelpRole = await guild.roles.fetch(env.ROLE_NEEDSHELP);
+                            if (needshelpRole) {
+                              if (needshelpRole.comparePositionTo(myRole) < 0) {
+                                await member.roles.remove(needshelpRole);
                               }
                             }
                           }
