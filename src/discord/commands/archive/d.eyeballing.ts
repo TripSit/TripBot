@@ -3,7 +3,7 @@ import {
   ChatInputCommandInteraction,
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
-import {eyeballing} from '../../../global/commands/g.eyeballing';
+import {eyeballing} from '../../../global/commands/archive/g.eyeballing';
 // import logger from '../../../global/utils/logger';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;

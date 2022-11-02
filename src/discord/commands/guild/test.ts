@@ -64,11 +64,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     'contact', /* updated */
     'combochart', /* updated */
     'donate', /* updated */
-    'ems',
-    'grounding',
-    'h2flow',
-    'help',
-    'helpline',
+    'ems', /* updated */
+    'grounding', /* updated */
+    'h2flow', /* updated */
+    'help', /* updated */
     'hydrate',
     'joke',
     'kipp',
