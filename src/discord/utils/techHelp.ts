@@ -26,20 +26,23 @@ const PREFIX = path.parse(__filename).name;
  */
 export async function techHelpClick(interaction:ButtonInteraction) {
   // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
+  if (!interaction.guild) return;
 
   const issueType = interaction.customId.split('~')[1];
   const roleId = interaction.customId.split('~')[2];
 
-  const role = await interaction.guild?.roles.fetch(roleId)!;
+  const role = await interaction.guild?.roles.fetch(roleId);
+
+  if (!role) return;
 
   logger.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
-  logger.debug(`[${PREFIX} - techHelpClick] role: ${role!.id}`);
+  logger.debug(`[${PREFIX} - techHelpClick] role: ${role.id}`);
 
   let placeholder = '';
   if (issueType === 'discord') {
-    placeholder = `I have an issue with ${interaction.guild!.name}'s discord, can you please help?`;
+    placeholder = `I have an issue with ${interaction.guild.name}'s discord, can you please help?`;
   } else if (issueType === 'other') {
-    placeholder = `I just wanted to say that ${interaction.guild!.name} is super cool and I love it!`;
+    placeholder = `I just wanted to say that ${interaction.guild.name} is super cool and I love it!`;
   }
   // else if (issueType === 'ircConnect') {
   //   placeholder = 'I\'ve been banned on IRC and I dont know why.\nMy nickname is
@@ -49,7 +52,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   // }
   // Create the modal
   const modal = new ModalBuilder()
-    .setCustomId(`techHelpSubmit~${issueType}~${role!.id}`)
+    .setCustomId(`techHelpSubmit~${issueType}~${role.id}`)
     .setTitle('TripSit Feedback');
   const timeoutReason = new TextInputBuilder()
     .setLabel('What is your issue? Be super detailed!')
@@ -70,18 +73,21 @@ export async function techHelpClick(interaction:ButtonInteraction) {
  * @param {ModalSubmitInteraction} interaction The modal that submitted this
  */
 export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
+  if (!interaction.guild) return;
   // logger.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}!`);
 
   const issueType = interaction.customId.split('~')[1];
   const roleId = interaction.customId.split('~')[2];
 
-  const roleModerator = await interaction.guild?.roles.fetch(roleId)!;
+  const roleModerator = await interaction.guild?.roles.fetch(roleId);
+
+  if (!roleModerator) return;
 
   logger.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
-  logger.debug(`[${PREFIX} - techHelpClick] role: ${roleModerator!.id}`);
+  logger.debug(`[${PREFIX} - techHelpClick] role: ${roleModerator.id}`);
 
   // Respond right away cuz the rest of this doesn't matter
-  const member = await interaction.guild!.members.fetch(interaction.user.id);
+  const member = await interaction.guild.members.fetch(interaction.user.id);
   // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
   if (member) {
     // Dont run if the user is on timeout
@@ -109,7 +115,7 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
   const ticketThread = await (interaction.channel as TextChannel).threads.create({
     name: `🧡│${actor.username}'s ${issueType} issue!`,
     autoArchiveDuration: 1440,
-    type: interaction.guild!.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
+    type: interaction.guild.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
     reason: `${actor.username} submitted a(n) ${issueType} issue`,
   });
   logger.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);
@@ -146,13 +152,14 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
  * @param {ButtonInteraction} interaction The button that submitted this
  */
 export async function techHelpOwn(interaction:ButtonInteraction) {
+  if (!interaction.guild) return;
   const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
-  const target = await interaction.guild!.members.fetch(targetId) as GuildMember;
+  const target = await interaction.guild.members.fetch(targetId) as GuildMember;
 
-  interaction.reply({content: stripIndents`${(interaction.member! as GuildMember).displayName} has claimed this \
+  interaction.reply({content: stripIndents`${(interaction.member as GuildMember).displayName} has claimed this \
 issue and will either help you or figure out how to get you help!`});
-  (interaction.channel as ThreadChannel)!.setName(`💛│${target.displayName}'s ${issueType} issue!`);
+  (interaction.channel as ThreadChannel).setName(`💛│${target.displayName}'s ${issueType} issue!`);
 };
 
 /**
@@ -160,12 +167,13 @@ issue and will either help you or figure out how to get you help!`});
  * @param {ButtonInteraction} interaction The button that submitted this
  */
 export async function techHelpClose(interaction:ButtonInteraction) {
+  if (!interaction.guild) return;
   const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
-  const target = await interaction.guild!.members.fetch(targetId) as GuildMember;
+  const target = await interaction.guild.members.fetch(targetId) as GuildMember;
 
-  interaction.reply({content: stripIndents`${(interaction.member! as GuildMember).displayName} has indicated that \
+  interaction.reply({content: stripIndents`${(interaction.member as GuildMember).displayName} has indicated that \
 this issue has been resolved!`});
-  (interaction.channel as ThreadChannel)!.setName(`💚│${target.displayName}'s ${issueType} issue!`);
+  (interaction.channel as ThreadChannel).setName(`💚│${target.displayName}'s ${issueType} issue!`);
 };
 

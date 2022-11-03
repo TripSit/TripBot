@@ -23,7 +23,11 @@ import {
   ButtonStyle,
   TextInputStyle,
 } from 'discord-api-types/v10';
-import {db} from '../../../global/utils/knex';
+import {
+  db,
+  getOpenTicket,
+  getUser,
+} from '../../../global/utils/knex';
 import {
   Users,
   UserTickets,
@@ -201,33 +205,9 @@ export async function modmailCreate(
     },
   };
 
-  // Get the ticket info, if it exists
-  const userUniqueId = await db
-    .select(db.ref('id'))
-    .from<Users>('users')
-    .where('discord_id', actor.id)
-    .first();
-
-  const ticketData = await db
-    .select(
-      db.ref('id').as('id'),
-      db.ref('user_id').as('user_id'),
-      db.ref('description').as('description'),
-      db.ref('thread_id').as('thread_id'),
-      db.ref('type').as('type'),
-      db.ref('status').as('status'),
-      db.ref('first_message_id').as('first_message_id'),
-      db.ref('closed_by').as('closed_by'),
-      db.ref('closed_at').as('closed_at'),
-      db.ref('archived_at').as('archived_at'),
-      db.ref('deleted_at').as('deleted_at'),
-      db.ref('created_at').as('created_at'),
-    )
-    .from<UserTickets>('user_tickets')
-    .where('user_id', userUniqueId?.id)
-    .andWhereNot('status', 'CLOSED')
-    .andWhereNot('status', 'RESOLVED')
-    .first();
+  const userData = await getUser(actor.id, null);
+  if (!userData) return;
+  const ticketData = await getOpenTicket(userData.id, null);
 
   // Get the parent channel to be used
   const channel = interaction.client.channels.cache.get(modmailVars[issueType].channelId) as TextChannel;
@@ -324,7 +304,8 @@ export async function modmailCreate(
       logger.debug(`[${PREFIX}] Created thread ${ticketThread.id}`);
 
       // Get the tripsit guild
-      const tripsitGuild = i.client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+      const tripsitGuild = i.client.guilds.cache.get(env.DISCORD_GUILD_ID);
+      if (!tripsitGuild) return;
       // Get the helper and TS roles
       const roleHelper = await tripsitGuild.roles.fetch(env.ROLE_TRIPSITTER) as Role;
       logger.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
@@ -416,10 +397,13 @@ export async function modmailCreate(
       }
 
       // Determine if this command was started by a Developer
-      const roleDeveloper = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER)!;
+      const roleDeveloper = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER);
+      if (!roleDeveloper) return;
       const isDev = roleDeveloper.members.map((m) => m.user.id === i.user.id);
-      const pingRole = tripsitGuild.roles.cache.find((role) => role.id === modmailVars[issueType].pingRole)!;
-      const tripsitterRole = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER)!;
+      const pingRole = tripsitGuild.roles.cache.find((role) => role.id === modmailVars[issueType].pingRole);
+      if (!pingRole) return;
+      const tripsitterRole = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER);
+      if (!tripsitterRole) return;
 
       // Send a message to the thread
       let threadFirstResponse = stripIndents`
@@ -489,7 +473,7 @@ export async function modmailCreate(
 
       // Set ticket information
       const newTicketData = {
-        user_id: userUniqueId!.id,
+        user_id: userData.id,
         description: `${modmailVars[issueType].labelA}
         > ${modalInputA}
     
@@ -516,7 +500,7 @@ export async function modmailCreate(
       }
       await db
         .insert({
-          id: userUniqueId!.id,
+          id: userData.id,
           roles: actorRoles,
         })
         .into<Users>('users')
@@ -638,27 +622,7 @@ export async function modmailThreadInteraction(message:Message) {
         message.channel.parentId === env.CHANNEL_TRIPSIT) {
         // logger.debug(`[${PREFIX}] message sent in a thread in a helpdesk channel!`);
         // Get the ticket info
-        const ticketData = await db
-          .select(
-            db.ref('id').as('id'),
-            db.ref('user_id').as('user_id'),
-            db.ref('description').as('description'),
-            // db.ref('thread_id').as('thread_id'),
-            db.ref('type').as('type'),
-            db.ref('status').as('status'),
-            db.ref('first_message_id').as('first_message_id'),
-            db.ref('closed_by').as('closed_by'),
-            db.ref('closed_at').as('closed_at'),
-            db.ref('archived_at').as('archived_at'),
-            db.ref('deleted_at').as('deleted_at'),
-            db.ref('created_at').as('created_at'),
-          )
-          .from<UserTickets>('user_tickets')
-          .where('thread_id', message.channel.id)
-          .andWhereNot('first_message_id', '')
-          .andWhereNot('status', 'CLOSED')
-          .andWhereNot('status', 'RESOLVED')
-          .first();
+        const ticketData = await getOpenTicket(null, message.channel.id);
         if (ticketData) {
           logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
@@ -673,17 +637,12 @@ export async function modmailThreadInteraction(message:Message) {
             }
           }
 
-
-          const data = await db
-            .select(db.ref('discord_id'))
-            .from<Users>('users')
-            .where('id', ticketData.user_id)
-            .first();
-
-          logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}!`);
+          const userData = await getUser(null, ticketData.user_id);
+          if (!userData) return;
+          if (!userData.discord_id) return;
 
           // Get the user from the ticketData
-          const user = await message.client.users.fetch(data?.discord_id!);
+          const user = await message.client.users.fetch(userData.discord_id);
           logger.debug(`[${PREFIX}] user: ${JSON.stringify(user, null, 2)}!`);
 
           // Send the message to the user
@@ -827,13 +786,11 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
     return;
   }
 
-  const userData = await db
-    .select(db.ref('discord_id'))
-    .from<Users>('users')
-    .where('id', ticketData.user_id)
-    .first();
+  const userData = await getUser(null, ticketData.user_id);
+  if (!userData) return;
+  if (!userData.discord_id) return;
 
-  const target = interaction.client.users.cache.get(userData?.discord_id!) as User;
+  const target = interaction.client.users.cache.get(userData.discord_id) as User;
   const channel = interaction.client.channels.cache.get(ticketData.thread_id) as ThreadChannel;
   let verb = '';
   let noun = '';
@@ -1145,7 +1102,8 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
     .onConflict('id')
     .merge();
 
-  const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+  const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID);
+  if (!tripsitGuild) return;
   const channelModlog = tripsitGuild.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
   // Transform actor data
   const modlogEmbed = embedTemplate()
