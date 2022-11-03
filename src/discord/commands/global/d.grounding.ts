@@ -2,19 +2,18 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {grounding} from '../../../global/commands/g.grounding';
 // import logger from '../../../global/utils/logger';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 
-export const dgrounding: SlashCommand = {
+export const dgrounding: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('grounding')
     .setDescription('Send an image with the 5-senses grounding exercise'),
   async execute(interaction:ChatInputCommandInteraction) {
-    // logger.debug(`[${PREFIX}] starting!`);
     interaction.reply(await grounding());
-    // logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };

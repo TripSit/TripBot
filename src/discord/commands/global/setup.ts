@@ -16,7 +16,7 @@ import {
 } from 'discord-api-types/v10';
 import {db} from '../../../global/utils/knex';
 import env from '../../../global/utils/env.config';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {stripIndent, stripIndents} from 'common-tags';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
@@ -39,7 +39,7 @@ const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
  * That modal will also have a customID, which is in-turn parsed by modalSubmit.ts, etc
  * @param {Interaction} interaction The interaction that triggered this
  */
-export const prompt: SlashCommand = {
+export const prompt: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('setup')
     .setDescription('Set up various channels and prompts!')
@@ -188,10 +188,7 @@ export const prompt: SlashCommand = {
       await ticketbooth(interaction);
     }
     await interaction.editReply('Donezo!');
-    // if (!interaction.replied) {
-    //   await interaction.reply({content: 'Donezo!', ephemeral: true});
-    // }
-    // logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };
 

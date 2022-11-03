@@ -2,13 +2,13 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const dtriptoys: SlashCommand = {
+export const dtriptoys: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('triptoys')
     .setDescription('Fun toys to play with!')
@@ -75,7 +75,6 @@ export const dtriptoys: SlashCommand = {
     const embed = embedTemplate();
 
     if (toyId < 24) {
-      embed.setTitle(`${toys[toyId as keyof typeof toys].name}`);
       embed.addFields(toys[toyId as keyof typeof toys]);
     }
 
@@ -129,6 +128,6 @@ export const dtriptoys: SlashCommand = {
       });
     }
 
-    logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };

@@ -2,14 +2,14 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
-import {youtubeSearch} from '../../../global/commands/archive/g.openyoutube';
+import {youtube} from '../../../global/commands/g.youtube';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const dyoutube: SlashCommand = {
+export const dYoutube: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('youtube')
     .setDescription('Search YouTube')
@@ -22,38 +22,26 @@ export const dyoutube: SlashCommand = {
     const query = interaction.options.getString('search')!;
     logger.debug(`[${PREFIX}] - query: ${query}`);
 
-    youtubeSearch(query)
-      .then((result) => {
-        logger.debug(`[${PREFIX}] result: ${JSON.stringify(result.length, null, 2)}`);
-        let topIndex = 0;
-        let topViews = 0;
-        result.forEach((item, index) => {
-          // logger.debug(`${PREFIX} item: ${JSON.stringify(item, null, 2)}`);
-          if (item.views > topViews) {
-            topViews = item.views;
-            topIndex = index;
-            // logger.debug(`[${PREFIX}] New Top Index: ${topIndex}`);
-            // logger.debug(`[${PREFIX}] item.title: ${item.title}`);
-            // logger.debug(`[${PREFIX}] item.views: ${item.views}`);
-          }
-        });
+    const result = await youtube(query);
 
-        logger.debug(`${PREFIX} ${result[topIndex].title} has the most views (${result[topIndex].views})`);
+    if (!result) {
+      interaction.reply({content: `No results for ${query}, make sure you're exact!`, ephemeral: true});
+      return true;
+    }
 
-        const embed = embedTemplate()
-          .setTitle(`${result[topIndex].title}`)
-          .setURL(result[topIndex].url)
-          .setThumbnail(result[topIndex].snippet.thumbnails.high.url)
-        // .setDescription(result[topIndex].description)
-          .setColor(0xFF0000);
-        interaction.reply({embeds: [embed], ephemeral: false});
+    logger.debug(`[${PREFIX}] - result: ${JSON.stringify(result, null, 2)}`);
+
+    const embed = embedTemplate()
+      .setColor(0xFF0000)
+      .setTitle(`${result.title}`)
+      .setAuthor({
+        name: result.channelTitle,
+        url: result.link,
       })
-
-      .catch((err) => {
-        interaction.reply(
-          `Sorry, there was an ${err}`,
-        );
-        logger.debug(`[${PREFIX}] failed! ${err} `);
-      });
+      .setThumbnail(result.thumbnails.default?.url)
+      .setURL(result.link)
+      .setDescription(result.description.substring(0, 200));
+    interaction.reply({embeds: [embed], ephemeral: false});
+    return true;
   },
 };

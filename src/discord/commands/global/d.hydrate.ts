@@ -2,13 +2,13 @@ import {
   Colors,
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
-import logger from '../../../global/utils/logger';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+// import logger from '../../../global/utils/logger';
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
-export const dhydrate: SlashCommand = {
+export const dhydrate: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('hydrate')
     .setDescription('Remember to hydrate!'),
@@ -23,18 +23,7 @@ export const dhydrate: SlashCommand = {
       .setAuthor(null)
       .setFooter(null);
 
-    if (!interaction.replied) {
-      interaction.reply({
-        embeds: [embed],
-        ephemeral: false,
-      });
-    } else {
-      interaction.followUp({
-        embeds: [embed],
-        ephemeral: false,
-      });
-    }
-
-    logger.debug(`[${PREFIX}] finished!`);
+    interaction.reply({embeds: [embed], ephemeral: false});
+    return true;
   },
 };

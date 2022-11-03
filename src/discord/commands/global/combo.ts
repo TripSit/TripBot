@@ -11,46 +11,6 @@ const PREFIX = path.parse(__filename).name;
 import drugDataAll from '../../../global/assets/data/drug_db_combined.json';
 import comboDefs from '../../../global/assets/data/combo_definitions.json';
 
-// type drugRoas = {
-//   name: string,
-//   dosage: {
-//     name: string,
-//     value: string,
-//   }[],
-//   duration: {
-//     name: string,
-//     value: string,
-//   }[],
-// }
-
-// type drugDataType = {
-//   url: string,
-//   experiencesUrl: string,
-//   name: string,
-//   aliases: string[],
-//   asiasesStr: string,
-//   summary: string,
-//   reagents: string,
-//   classes: {
-//     chemical: string[]
-//     psychoactive: string[]
-//   },
-//   toxicity: string[],
-//   addictionPotential: string,
-//   tolerance: {
-//     full: string,
-//     half: string,
-//     zero: string,
-//   }
-//   crossTolerances: string[],
-//   roas: drugRoas[],
-//   interactions: {
-//     status: string,
-//     note?: string,
-//     name: string,
-//   },
-// }[];
-
 export const combo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('combo')

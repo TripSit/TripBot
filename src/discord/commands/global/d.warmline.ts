@@ -3,18 +3,20 @@ import {
 } from 'discord.js';
 import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
-import {ems} from '../../../global/commands/g.ems';
+import {warmline} from '../../../global/commands/g.warmline';
 // import logger from '../../../global/utils/logger';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 
-export const dEms: SlashCommand1 = {
+export const dWarmline: SlashCommand1 = {
   data: new SlashCommandBuilder()
-    .setName('ems')
-    .setDescription('Information that may be helpful in a serious situation.'),
+    .setName('warmline')
+    .setDescription('(USA only) Need someone to talk to, but don\'t need a "hotline"?'),
+
   async execute(interaction) {
-    const emsInfo = await ems();
-    const embed = embedTemplate();
+    const emsInfo = await warmline();
+    const embed = embedTemplate()
+      .setTitle(`Need someone to talk to, but don\'t need a "hotline"?`);
 
     embed.setTitle('EMS Information');
     for (const entry of emsInfo) {

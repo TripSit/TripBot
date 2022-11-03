@@ -1,13 +1,13 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const dkipp: SlashCommand = {
+export const dkipp: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('kipp')
     .setDescription('Keep it positive please!'),
@@ -32,19 +32,7 @@ export const dkipp: SlashCommand = {
       .setDescription(output)
       .setAuthor(null)
       .setFooter(null);
-
-    if (!interaction.replied) {
-      interaction.reply({
-        embeds: [embed],
-        ephemeral: false,
-      });
-    } else {
-      interaction.followUp({
-        embeds: [embed],
-        ephemeral: false,
-      });
-    }
-
-    logger.debug(`[${PREFIX}] finished!`);
+    interaction.reply({embeds: [embed], ephemeral: false});
+    return true;
   },
 };

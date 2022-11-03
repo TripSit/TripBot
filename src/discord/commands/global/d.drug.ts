@@ -2,19 +2,16 @@ import {
   SlashCommandBuilder,
   Colors,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
+import {drug} from '../../../global/commands/g.drug';
 import {stripIndents} from 'common-tags';
 import {CbSubstance} from '../../../global/@types/combined.d';
-
 import logger from '../../../global/utils/logger';
-
-import drugDataAll from '../../../global/assets/data/drug_db_combined.json';
-
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const drug: SlashCommand = {
+export const dDrug: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('drug')
     .setDescription('Check substance information')
@@ -24,31 +21,20 @@ export const drug: SlashCommand = {
       .setAutocomplete(true)),
 
   async execute(interaction) {
-    const substance = interaction.options.getString('substance')!;
-    logger.debug(`[${PREFIX}] starting getDrugInfo with parameter: ${substance}`);
-
     const embed = embedTemplate();
+    const drugName = interaction.options.getString('substance')!;
+    logger.debug(`[${PREFIX}] started | drugName: ${drugName}`);
 
-    if (drugDataAll === null || drugDataAll === undefined) {
-      logger.error(`[${PREFIX}] drugDataAll is null or undefined`);
-      embed.setTitle(`Drug data was not found`);
-      embed.setDescription(
-        '...this shouldn\'t have happened, please tell the developer!');
-      // If this happens then something happened to the data files
-      interaction.reply({embeds: [embed]});
-      return;
-    }
+    const drugData = await drug(drugName) as CbSubstance;
+    logger.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
 
-    const drugData = (drugDataAll as CbSubstance[]).find((drug) => drug.name === substance);
-    // logger.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
-
-    if (!drugData) {
-      embed.setTitle(`${substance} was not found`);
+    if (drugData === null) {
+      embed.setTitle(`${drugName} was not found`);
       embed.setDescription(
         '...this shouldn\'t have happened, please tell the developer!');
       // If this happens then something went wrong with the auto-complete
       interaction.reply({embeds: [embed]});
-      return;
+      return false;
     }
 
     if (drugData.summary) {
@@ -57,7 +43,7 @@ export const drug: SlashCommand = {
 
     embed.setColor(Colors.Purple);
     embed.setTitle(`🌐 ${drugData.name} Information`);
-    embed.setURL(`https://wiki.tripsit.me/wiki/${substance}`);
+    embed.setURL(`https://wiki.tripsit.me/wiki/${drugName}`);
 
     if (drugData.aliases) {
       const aliases = `Aliases: ${drugData.aliases.join(', ')}\n\n`;
@@ -349,6 +335,6 @@ export const drug: SlashCommand = {
 
     interaction.reply({embeds: [embed], ephemeral: false});
     logger.debug(`[${PREFIX}] finished!`);
-    return;
+    return true;
   },
 };

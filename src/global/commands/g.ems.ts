@@ -1,25 +1,3 @@
-/* eslint-disable max-len */
-
-type helpResource = {
-  name: string;
-  country: string;
-  website: string;
-  phone: string;
-  text: string;
-  webchat: string;
-}
-
-const template = // eslint-disable-line
-{
-  name: '',
-  country: '',
-  website: '',
-  phone: '',
-  text: '',
-  webchat: '',
-}
-;
-
 /**
  * Information about contacting the team!
  * @return {any} an object with information about the bot
@@ -109,3 +87,23 @@ export async function ems():Promise<helpResource[]> {
     },
   ];
 };
+
+type helpResource = {
+  name: string;
+  country: string;
+  website: string;
+  phone: string;
+  text: string;
+  webchat: string;
+}
+
+const template = // eslint-disable-line
+{
+  name: '',
+  country: '',
+  website: '',
+  phone: '',
+  text: '',
+  webchat: '',
+}
+;

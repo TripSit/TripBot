@@ -1,13 +1,13 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {imgurSearch} from '../../../global/commands/g.imgur';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const imgur: SlashCommand = {
+export const imgur: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('imgur')
     .setDescription('Search Imgur')
@@ -51,7 +51,7 @@ export const imgur: SlashCommand = {
 
     logger.debug(`[${PREFIX}] url: ${url}`);
 
-    if (!interaction.replied) interaction.reply(url);
-    else interaction.editReply(url);
+    interaction.reply(url);
+    return true;
   },
 };

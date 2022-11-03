@@ -48,7 +48,7 @@ export const dbirthday: SlashCommand1 = {
     ),
   execute: async (interaction) => {
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
-    let user = interaction.options.getMember('user');
+    let member = interaction.options.getMember('user') as GuildMember;
     const month = interaction.options.getString('month')!;
     const day = interaction.options.getInteger('day')!;
 
@@ -56,16 +56,16 @@ export const dbirthday: SlashCommand1 = {
       command = 'get';
     }
 
-    if (user === null) {
-      user = interaction.member;
+    if (member === null) {
+      member = interaction.member as GuildMember;
     }
 
-    const response = await birthday(command, (user as GuildMember), month, day);
+    const response = await birthday(command, (member as GuildMember).id, month, day);
 
     if (command === 'get') {
-      await interaction.reply(response);
+      await interaction.reply(`${member.displayName} ${response}`);
     } else {
-      await interaction.reply({content: response, ephemeral: true});
+      await interaction.reply({content: `${member.displayName} ${response}`, ephemeral: true});
     }
     return true;
   },

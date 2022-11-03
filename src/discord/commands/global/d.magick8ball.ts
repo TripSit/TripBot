@@ -1,23 +1,15 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {eightball} from '../../../global/commands/g.eightball';
+import {SlashCommand1} from '../../@types/commandDef';
+import {magick8Ball} from '../../../global/commands/g.magick8Ball';
 
-export const magick8ball: SlashCommand = {
+export const magick8ball: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('magick8ball')
-    .setDescription('Ask the magick 8-ball a question!')
-    .addStringOption((option) => option.setName('question')
-      .setDescription('What is your question?')),
+    .setDescription('Ask the magick 8-ball a question!'),
   async execute(interaction) {
-    const question = interaction.options.getString('question');
-    // Get a random answer from the list
-    let response = await eightball();
-    if (question) {
-      response = `${interaction.member} asks: ${question} \n\n ${response}`;
-    }
-    if (interaction.replied) interaction.followUp(response);
-    else interaction.reply(response);
+    interaction.reply(await magick8Ball());
+    return true;
   },
 };

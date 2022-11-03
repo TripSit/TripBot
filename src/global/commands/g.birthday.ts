@@ -1,6 +1,3 @@
-import {
-  GuildMember,
-} from 'discord.js';
 import {DateTime} from 'luxon';
 import {db} from '../utils/knex';
 import {Users} from '../@types/pgdb';
@@ -11,18 +8,18 @@ const PREFIX = path.parse(__filename).name;
 /**
  * Birthday information of a user
  * @param {'get' | 'set'} command
- * @param {GuildMember} member
+ * @param {GuildMember} memberId
  * @param {string} month The birthday month
  * @param {number} day The birthday day
  * @return {any} an object with information about the bot
  */
 export async function birthday(
   command: 'get' | 'set',
-  member: GuildMember,
+  memberId: string,
   month?: string,
   day?: number):Promise<any> {
   if (command === 'set') {
-    logger.debug(`[${PREFIX}] ${command} ${member} ${month} ${day}`);
+    logger.debug(`[${PREFIX}] ${command} ${memberId} ${month} ${day}`);
     const month30 = ['April', 'June', 'September', 'November'];
     const month31 = ['January', 'March', 'May', 'July', 'August', 'October', 'December'];
     if (month !== undefined && day !== undefined) {
@@ -52,11 +49,11 @@ export async function birthday(
 
       const birthday = new Date(2000, monthDict[month.toLowerCase() as keyof typeof monthDict], day);
 
-      logger.debug(`[${PREFIX}] Setting birthday for ${member.user.username} to ${birthday}`);
+      logger.debug(`[${PREFIX}] Setting birthday for ${memberId} to ${birthday}`);
 
       await db
         .insert({
-          discord_id: member.id,
+          discord_id: memberId,
           birthday: birthday,
         })
         .into('users')
@@ -69,7 +66,7 @@ export async function birthday(
     const data = await db
       .select(db.ref('birthday').as('birthday'))
       .from<Users>('users')
-      .where('discord_id', member.id);
+      .where('discord_id', memberId);
 
     logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
 
@@ -80,14 +77,14 @@ export async function birthday(
         logger.debug(`[${PREFIX}] Birthdate: ${birthDate}`);
         const birthday = DateTime.fromISO(birthDate);
         logger.debug(`[${PREFIX}] birthday: ${birthday}`);
-        resp = `${member.displayName} was born on ${birthday.monthLong} ${birthday.day}`;
+        resp = `was born on ${birthday.monthLong} ${birthday.day}`;
       } else {
         logger.debug(`[${PREFIX}] birthday is NULL`);
-        resp = `${member.displayName} is immortal <3 (and has not set a birthday)`;
+        resp = `is immortal <3 (and has not set a birthday)`;
       }
     } else {
       logger.debug(`[${PREFIX}] data is NULL`);
-      resp = `${member.displayName} is immortal <3 (and has not set a birthday)`;
+      resp = `is immortal <3 (and has not set a birthday)`;
     }
     return resp;
   }

@@ -2,7 +2,7 @@
  *
  * @return {string} What the 8ball says
  */
-export async function eightball():Promise<any> {
+export async function magick8Ball():Promise<any> {
   const answers = [
     'It is certain',
     'It is decidedly so',

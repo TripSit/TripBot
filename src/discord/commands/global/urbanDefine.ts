@@ -1,7 +1,7 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import env from '../../../global/utils/env.config';
 import axios from 'axios';
@@ -9,7 +9,7 @@ import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const durbandefine: SlashCommand = {
+export const durbandefine: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('urban_define')
     .setDescription('Define a word on Urban Dictionary')
@@ -65,11 +65,7 @@ export const durbandefine: SlashCommand = {
       .setDescription(`**Definition for *${term}* ** (+${upvotes}/-${downvotes})
         ${definition}
         Example: ${example}`);
-    if (interaction.replied) {
-      interaction.followUp({embeds: [embed], ephemeral: false});
-    } else {
-      interaction.reply({embeds: [embed], ephemeral: false});
-    }
-    logger.debug(`[${PREFIX}] finished!`);
+    interaction.reply({embeds: [embed], ephemeral: false});
+    return true;
   },
 };

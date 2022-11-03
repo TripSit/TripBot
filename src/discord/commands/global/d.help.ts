@@ -6,7 +6,7 @@ import {
 import {
   ButtonStyle,
 } from 'discord-api-types/v10';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
@@ -30,7 +30,7 @@ const buttonList = [
   button2,
 ];
 
-export const help: SlashCommand = {
+export const help: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('help')
     .setDescription('Information bout TripBot Commands'),
@@ -105,6 +105,6 @@ export const help: SlashCommand = {
       tripsitEmbed,
     ];
     paginationEmbed(interaction, book, buttonList, 120000);
-    logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };

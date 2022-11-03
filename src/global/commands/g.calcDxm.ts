@@ -1,7 +1,3 @@
-/* eslint-disable no-unused-vars */
-
-import {stripIndents} from 'common-tags';
-import env from '../utils/env.config';
 import logger from '../utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;

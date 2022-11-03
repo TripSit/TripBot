@@ -4,7 +4,7 @@ import {
   TextChannel,
   Message,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import logger from '../../../global/utils/logger';
@@ -23,7 +23,7 @@ const emojiDict = {
   9: '9️⃣',
 };
 
-export const dpoll: SlashCommand = {
+export const dpoll: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('poll')
     .setDescription('Creates a poll!')
@@ -43,7 +43,7 @@ export const dpoll: SlashCommand = {
 
     if (optionsArray.length > 9) {
       await interaction.editReply('You can only have 9 options max!');
-      return;
+      return false;
     }
 
     let body = '';
@@ -66,6 +66,6 @@ export const dpoll: SlashCommand = {
       });
 
     await interaction.editReply('Done!');
-    logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };

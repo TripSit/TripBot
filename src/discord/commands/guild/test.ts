@@ -61,6 +61,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
   // These commands are simple replies and CANNOT take input
   const replyCommands = [ // eslint-disable-line
     'about', /* updated */
+    'coinflip', /* updated */
     'contact', /* updated */
     'combochart', /* updated */
     'donate', /* updated */
@@ -68,24 +69,23 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     'grounding', /* updated */
     'h2flow', /* updated */
     'help', /* updated */
-    'hydrate',
-    'joke',
-    'kipp',
-    'lovebomb',
-    'reagents',
-    'recovery',
-    'testkits',
-    'triptoys',
-    'topic',
-    'warmline',
+    'hydrate', /* updated */
+    'joke', /* updated */
+    'kipp', /* updated */
+    'lovebomb', /* updated */
+    'magick8ball', /* updated */
+    'reagents', /* updated */
+    'recovery', /* updated */
+    'testkits', /* updated */
+    'triptoys', /* updated */
+    'topic', /* updated */
+    'warmline', /* updated */
   ];
 
   // These commands are simple replies and can OPTIONALLY take input
   const simpleCommands = [ // eslint-disable-line
     'breathe', /* updated */
-    'coinflip',
-    'magick8ball',
-    'profile',
+    'profile', /* updated */
   ];
 
   // The commands REQUIRE input of some sort
@@ -746,7 +746,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // }
     // // No-parameter commands fall down here, including:
     // // - button, joke, kipp, motivate, ping, topic
-    // await command.execute(interaction);
+    await command.execute(interaction);
   } else {
     interaction.channel!.send(`**${name}** - command not found!`);
   }
