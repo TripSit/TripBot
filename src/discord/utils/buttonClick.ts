@@ -13,7 +13,13 @@ import logger from '../../global/utils/logger';
 import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../utils/embedTemplate';
 import {applicationApprove} from '../utils/application';
-import {tripsitmeFinish, tripsitmeButton, tripsitmeHelped} from '../utils/tripsitme';
+import {
+  tripsitmeButton,
+  tripsitmeOwned,
+  tripsitmeMeta,
+  tripsitmeBackup,
+  tripsitmeFinish,
+} from '../utils/tripsitme';
 import {techHelpClick, techHelpClose, techHelpOwn} from '../utils/techHelp';
 import {
   modmailCreate, modmailActions,
@@ -41,13 +47,13 @@ customId: ${interaction.customId}
     logger.debug(`[${PREFIX}] command: ${command}`);
   }
 
-  if (buttonID.startsWith('modmailIssue')) {
-    await modmailActions(interaction);
+  if (buttonID.startsWith('tripsitmeClick')) {
+    await tripsitmeButton(interaction);
     return;
   }
 
-  if (buttonID.startsWith('tripsitmeClick')) {
-    await tripsitmeButton(interaction);
+  if (buttonID.startsWith('tripsitmeOwned')) {
+    await tripsitmeOwned(interaction);
     return;
   }
 
@@ -56,8 +62,18 @@ customId: ${interaction.customId}
     return;
   }
 
-  if (buttonID.startsWith('tripsitmeHelped')) {
-    tripsitmeHelped(interaction);
+  if (buttonID.startsWith('tripsitmeMeta')) {
+    tripsitmeMeta(interaction);
+    return;
+  }
+
+  if (buttonID.startsWith('tripsitmeBackup')) {
+    tripsitmeBackup(interaction);
+    return;
+  }
+
+  if (buttonID.startsWith('modmailIssue')) {
+    await modmailActions(interaction);
     return;
   }
 

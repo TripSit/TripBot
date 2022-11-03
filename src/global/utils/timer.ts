@@ -182,7 +182,7 @@ export async function runTimer() {
                   const thread = await global.client.channels.fetch(ticket.thread_id) as ThreadChannel;
                   await thread.setArchived(true);
                 } catch (error) {
-                  logger.error(`There was an error archiving the thread, it was likely deleted:`);
+                  logger.debug(`[${PREFIX}] There was an error archiving the thread, it was likely deleted`);
                 }
 
 

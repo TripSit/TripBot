@@ -15,6 +15,10 @@ import {
   ButtonStyle, TextInputStyle,
 } from 'discord-api-types/v10';
 import {db} from '../../../global/utils/knex';
+import {
+  DiscordGuilds,
+  ReactionRoles,
+} from '../../../global/@types/pgdb.d';
 import env from '../../../global/utils/env.config';
 import {SlashCommand1} from '../../@types/commandDef';
 import {stripIndent, stripIndents} from 'common-tags';
@@ -250,7 +254,7 @@ export async function hasPermissions(
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function tripsit(interaction:ChatInputCommandInteraction) {
-  if (!(interaction.channel as TextChannel)) {
+  if (!interaction.channel) {
     logger.error(`${PREFIX} how to tripsit: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');
     return;
@@ -283,6 +287,20 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
   const roleTripsitter = interaction.options.getRole('tripsitter')!;
   const channelTripsitMeta = interaction.options.getChannel('tripsitters')!;
 
+  // Save this info to the DB
+  await db<DiscordGuilds>('guilds')
+    .insert({
+      id: interaction.channel.id,
+      channel_sanctuary: channelSanctuary.id,
+      channel_general: channelGeneral.id,
+      channel_tripsit_meta: channelTripsitMeta.id,
+      channel_tripsit: (interaction.channel as TextChannel).id,
+      role_needshelp: roleNeedshelp.id,
+      role_tripsitter: roleTripsitter.id,
+    })
+    .onConflict('guild_id')
+    .merge();
+
   if (channelSanctuary) {
     buttonText += `\n\nDon't need immediate help but want a peaceful chat? Come to ${channelSanctuary.toString()}!`;
   }
@@ -291,13 +309,14 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
     buttonText += `\n\nAll other topics of conversation are welcome in ${channelGeneral.toString()}!`;
   }
 
+
   buttonText += `\n\nStay safe!\n\n`;
 
   // Create a new button embed
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId(`tripsitmeClick~${roleNeedshelp.id}~${roleTripsitter.id}~${channelTripsitMeta.id}`)
+        .setCustomId(`tripsitmeClick`)
         .setLabel('I need assistance!')
         .setStyle(ButtonStyle.Primary),
     );
@@ -768,7 +787,7 @@ export async function mindsets(interaction:ChatInputCommandInteraction) {
       ];
 
       // Update the database
-      await db('reaction_roles')
+      await db<ReactionRoles>('reaction_roles')
         .insert(reactionRoleInfo)
         .onConflict(['role_id', 'reaction_id'])
         .merge();

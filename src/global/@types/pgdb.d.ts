@@ -95,6 +95,12 @@ export type DiscordGuilds = {
   last_drama_at: Date | null;
   drama_reason: string | null;
   joined_at: Date;
+  channel_sanctuary: string | null;
+  channel_general: string | null;
+  channel_tripsit: string | null;
+  channel_tripsit_meta: string | null;
+  role_needshelp: string | null;
+  role_tripsitter: string | null;
   removed_at: Date | null;
 };
 

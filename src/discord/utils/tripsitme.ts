@@ -34,6 +34,7 @@ import {
   Users,
   UserTickets,
   TicketStatus,
+  DiscordGuilds,
 } from '../../global/@types/pgdb.d';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
@@ -42,57 +43,6 @@ import {embedTemplate} from './embedTemplate';
 
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
-
-const teamRoles = [
-  env.ROLE_DIRECTOR,
-  env.ROLE_SUCCESSOR,
-  env.ROLE_SYSADMIN,
-  env.ROLE_LEADDEV,
-  env.ROLE_IRCADMIN,
-  env.ROLE_DISCORDADMIN,
-  env.ROLE_IRCOP,
-  env.ROLE_MODERATOR,
-  env.ROLE_TRIPSITTER,
-  env.ROLE_TEAMTRIPSIT,
-  env.ROLE_TRIPBOT2,
-  env.ROLE_TRIPBOT,
-  env.ROLE_BOT,
-  env.ROLE_DEVELOPER,
-];
-
-const colorRoles = [
-  env.ROLE_TREE,
-  env.ROLE_SPROUT,
-  env.ROLE_SEEDLING,
-  env.ROLE_BOOSTER,
-  env.ROLE_RED,
-  env.ROLE_ORANGE,
-  env.ROLE_YELLOW,
-  env.ROLE_GREEN,
-  env.ROLE_BLUE,
-  env.ROLE_PURPLE,
-  env.ROLE_PINK,
-  // env.ROLE_BROWN,
-  env.ROLE_BLACK,
-  env.ROLE_WHITE,
-];
-
-const mindsetRoles = [
-  env.ROLE_DRUNK,
-  env.ROLE_HIGH,
-  env.ROLE_ROLLING,
-  env.ROLE_TRIPPING,
-  env.ROLE_DISSOCIATING,
-  env.ROLE_STIMMING,
-  env.ROLE_NODDING,
-  env.ROLE_SOBER,
-];
-
-const otherRoles = [
-  env.ROLE_VERIFIED,
-];
-
-const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles},${otherRoles}`;
 
 /**
  * Handles the tripsit button
@@ -116,9 +66,34 @@ export async function tripsitmeButton(
   const actorIsAdmin = (target as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
   const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
 
-  const roleNeedshelpId = interaction.customId.split('~')[1];
-  const roleTripsitterId = interaction.customId.split('~')[2];
-  const channelTripsittersId = interaction.customId.split('~')[3];
+  // Lookup guild information for variables
+  const guildId = interaction.guild.id;
+  const guildData = await db<DiscordGuilds>('discord_guilds')
+    .select(
+      db.ref('role_tripsitter').as('role_tripsitter'),
+      db.ref('role_helper').as('role_helper'),
+      db.ref('channel_tripsit_meta').as('channel_tripsit_meta'),
+    )
+    .where('id', guildId)
+    .first();
+  if (!guildData) {
+    interaction.reply('Could not find this guild in the DB!');
+    return;
+  }
+
+  let backupMessage = 'Hey ';
+  // Get the roles we'll be referencing
+  let roleTripsitter = {} as Role;
+  let roleHelper = {} as Role;
+  if (guildData.role_tripsitter) {
+    roleTripsitter = await interaction.guild.roles.fetch(guildData.role_tripsitter) as Role;
+    backupMessage += `<@&${roleTripsitter.id}> `;
+  }
+  if (guildData.role_helper) {
+    roleHelper = await interaction.guild.roles.fetch(guildData.role_helper) as Role;
+    backupMessage += `<@&${roleHelper.id}> `;
+  }
+
 
   // Team check - Cannot be run on team members
   // If this user is a developer then this is a test run and ignore this check,
@@ -142,107 +117,146 @@ export async function tripsitmeButton(
       return;
     }
   }
-  // logger.debug(`[${PREFIX}] Target is not a team member!`);
 
-  // Get the target's ticket data
-  const userUniqueId = await db
+  // Get the target's userId
+  const userId = target.id;
+  let userUniqueId = await db
     .select(db.ref('id'))
     .from<Users>('users')
-    .where('discord_id', target.id)
+    .where('discord_id', userId)
+    .first();
+  if (!userUniqueId) {
+    userUniqueId = (await db
+      .insert({discord_id: userId})
+      .into('users')
+      .returning('id'))[0];
+  }
+
+  if (!userUniqueId) return;
+
+  // Get the target's existing ticket
+  const ticketData = await db<UserTickets>('user_tickets')
+    .select(
+      db.ref('id').as('id'),
+      db.ref('user_id').as('user_id'),
+      db.ref('description').as('description'),
+      db.ref('thread_id').as('thread_id'),
+      db.ref('meta_thread_id').as('meta_thread_id'),
+      db.ref('type').as('type'),
+      db.ref('status').as('status'),
+      db.ref('first_message_id').as('first_message_id'),
+      db.ref('closed_at').as('closed_at'),
+      db.ref('closed_by').as('closed_by'),
+      db.ref('reopened_at').as('reopened_at'),
+      db.ref('reopened_by').as('reopened_by'),
+      db.ref('archived_at').as('archived_at'),
+      db.ref('deleted_at').as('deleted_at'),
+      db.ref('created_at').as('created_at'),
+    )
+    .where('user_id', userUniqueId.id)
+    .where('type', 'TRIPSIT')
+    .andWhereNot('status', 'CLOSED')
+    .andWhereNot('status', 'RESOLVED')
     .first();
 
-  if (userUniqueId) {
-    const ticketData = await db<UserTickets>('user_tickets')
-      .select(
-        db.ref('id').as('id'),
-        db.ref('user_id').as('user_id'),
-        db.ref('description').as('description'),
-        db.ref('thread_id').as('thread_id'),
-        db.ref('meta_thread_id').as('meta_thread_id'),
-        db.ref('type').as('type'),
-        db.ref('status').as('status'),
-        db.ref('first_message_id').as('first_message_id'),
-        db.ref('closed_at').as('closed_at'),
-        db.ref('closed_by').as('closed_by'),
-        db.ref('reopened_at').as('reopened_at'),
-        db.ref('reopened_by').as('reopened_by'),
-        db.ref('archived_at').as('archived_at'),
-        db.ref('deleted_at').as('deleted_at'),
-        db.ref('created_at').as('created_at'),
-      )
-      .where('user_id', userUniqueId.id)
-      .where('type', 'TRIPSIT')
-      .andWhereNot('status', 'CLOSED')
-      .andWhereNot('status', 'RESOLVED')
-      .first();
+  if (ticketData) {
+    logger.debug(`[${PREFIX}] Target has open ticket: ${JSON.stringify(ticketData, null, 2)}`);
 
-    if (ticketData !== undefined) {
-      logger.debug(`[${PREFIX}] Target has open ticket: ${JSON.stringify(ticketData, null, 2)}`);
-
-      await needsHelpmode(interaction, target);
+    await needsHelpmode(interaction, target);
 
 
-      let threadHelpUser = {} as ThreadChannel;
-      try {
-        threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
-      } catch (err) {
-        logger.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted:\n ${err}`);
+    let threadHelpUser = {} as ThreadChannel;
+    try {
+      threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
+    } catch (err) {
+      logger.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted:\n ${err}`);
 
-        // Update the ticket status to closed
-        ticketData.status = 'CLOSED' as TicketStatus;
-        await db<UserTickets>('user_tickets')
-          .insert(ticketData)
-          .onConflict('id')
-          .merge();
-      }
+      // Update the ticket status to closed
+      ticketData.status = 'CLOSED' as TicketStatus;
+      await db<UserTickets>('user_tickets')
+        .insert(ticketData)
+        .onConflict('id')
+        .merge();
+    }
 
-      if (threadHelpUser.id) {
-        // Remind the user that they have a channel open
-        const message = stripIndents`Hey ${interaction.member}, you have an open session!
-  
-        Check your channel list or click '${threadHelpUser.toString()} to get help!`;
-
-        const embed = embedTemplate()
-          .setColor(Colors.DarkBlue)
-          .setDescription(message);
-        interaction.reply({embeds: [embed], ephemeral: true});
-        logger.debug(`[${PREFIX}] Rejected need for help`);
-
-        // Get the roles we'll be referencing
-        const roleHelper = await interaction.guild.roles.fetch(roleTripsitterId) as Role;
-        // logger.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
-        const roleTripsitter = interaction.guild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
-
-        // Check if the created_by is in the last 5 minutes
-        const createdDate = new Date(ticketData.reopened_at ?? ticketData.created_at);
-        const now = new Date();
-        const diff = now.getTime() - createdDate.getTime();
-        const minutes = Math.floor(diff / 1000 / 60);
-
-        // Send the update message to the thread
-        let helpMessage = stripIndents`Hey ${target}, thanks for asking for help, we can continue talking here! What's up?`;
-        if (minutes > 5) {
-          logger.debug(`[${PREFIX}] Target has open ticket, and it was created over 5 minutes ago!`);
-          helpMessage += `\n\n${roleHelper} and ${roleTripsitter} will be with you as soon as they're available!`;
-        }
-
-        if (threadHelpUser) {
-          threadHelpUser.setName(`💛│${target.displayName}'s channel!`);
-          threadHelpUser.send({
-            content: helpMessage,
-            allowedMentions: {
-              'parse': showMentions,
-            },
-          });
-        }
-        logger.debug(`[${PREFIX}] Pinged user in help thread`);
+    if (threadHelpUser.id) {
+      // Lookup guild information for variables
+      const guildId = await interaction.guild.id;
+      const guildData = await db<DiscordGuilds>('discord_guilds')
+        .select(
+          db.ref('role_tripsitter').as('role_tripsitter'),
+          db.ref('role_helper').as('role_helper'),
+          db.ref('channel_tripsit_meta').as('channel_tripsit_meta'),
+        )
+        .where('id', guildId)
+        .first();
+      if (!guildData) {
+        interaction.reply('Could not find this guild in the DB!');
         return;
       }
+
+      let roleTripsitter = {} as Role;
+      let roleHelper = {} as Role;
+      if (guildData.role_tripsitter) {
+        roleTripsitter = await interaction.guild.roles.fetch(guildData.role_tripsitter) as Role;
+      }
+      if (guildData.role_helper) {
+        roleHelper = await interaction.guild.roles.fetch(guildData.role_helper) as Role;
+      }
+
+      // Remind the user that they have a channel open
+      const embed = embedTemplate()
+        .setColor(Colors.DarkBlue)
+        .setDescription(stripIndents`Hey ${interaction.member}, you have an open session!
+  
+        Check your channel list or click '${threadHelpUser.toString()} to get help!`);
+      interaction.reply({embeds: [embed], ephemeral: true});
+      logger.debug(`[${PREFIX}] Rejected need for help`);
+
+      // Check if the created_by is in the last 5 minutes
+      const createdDate = new Date(ticketData.reopened_at ?? ticketData.created_at);
+      const now = new Date();
+      const diff = now.getTime() - createdDate.getTime();
+      const minutes = Math.floor(diff / 1000 / 60);
+
+      // Send the update message to the thread
+      let helpMessage = stripIndents`Hey ${target}, thanks for asking for help, we can continue talking here! What's up?`;
+      if (minutes > 5) {
+        logger.debug(`[${PREFIX}] Target has open ticket, and it was created over 5 minutes ago!`);
+        helpMessage += `\n\n${roleHelper} and ${roleTripsitter} will be with you as soon as they're available!`;
+      }
+      threadHelpUser.setName(`💛│${target.displayName}'s channel!`);
+      threadHelpUser.send({
+        content: helpMessage,
+        allowedMentions: {
+          'parse': showMentions,
+        },
+      });
+      logger.debug(`[${PREFIX}] Pinged user in help thread`);
+
+      if (ticketData.meta_thread_id) {
+        let metaMessage = '';
+        if (minutes > 5) {
+          metaMessage = `Hey ${roleHelper} and ${roleTripsitter}, ${target.toString()} has indicated they need assistance!`;
+        } else {
+          metaMessage = `${target.toString()} has indicated they need assistance!`;
+        }
+        const metaThread = await interaction.guild.channels.fetch(ticketData.meta_thread_id) as ThreadChannel;
+        metaThread.setName(`💛│${target.displayName}'s discussion!`);
+        metaThread.send({
+          content: metaMessage,
+          allowedMentions: {
+            'parse': showMentions,
+          },
+        });
+        logger.debug(`[${PREFIX}] Pinged team in meta thread!`);
+      }
+      return;
     }
   }
 
   const modal = new ModalBuilder()
-    .setCustomId(`tripsitmeSubmit~${roleNeedshelpId}~${roleTripsitterId}~${channelTripsittersId}~${interaction.id}`)
+    .setCustomId(`tripsitmeSubmit~${interaction.id}`)
     .setTitle('Tripsitter Help Request');
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
     .setCustomId('triageInput')
@@ -257,10 +271,7 @@ export async function tripsitmeButton(
   const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`tripsitmeSubmit`);
   interaction.awaitModalSubmit({filter, time: 0})
     .then(async (i) => {
-      // logger.debug(`[${PREFIX}] i.customId.split('~')[4]: ${i.customId.split('~')[4]}`);
-      // logger.debug(`[${PREFIX}] interaction.id: ${interaction.id}`);
-      if (i.customId.split('~')[4] !== interaction.id) return;
-      // Otherwise get the input from the modal, if it was submitted
+      if (i.customId.split('~')[1] !== interaction.id) return;
       const triage = i.fields.getTextInputValue('triageInput');
       const intro = i.fields.getTextInputValue('introInput');
 
@@ -281,9 +292,39 @@ export async function tripSitMe(
   triage:string,
   intro:string,
 ) {
-  const roleNeedshelpId = interaction.customId.split('~')[1];
-  const roleTripsitterId = interaction.customId.split('~')[2];
-  const channelTripsittersId = interaction.customId.split('~')[3];
+  // Lookup guild information for variables
+  if (!interaction.guild) return;
+  const actor = interaction.member;
+  const guildId = interaction.guild.id;
+  const guildData = await db<DiscordGuilds>('discord_guilds')
+    .select(
+      db.ref('role_tripsitter').as('role_tripsitter'),
+      db.ref('role_helper').as('role_helper'),
+      db.ref('channel_tripsit_meta').as('channel_tripsit_meta'),
+    )
+    .where('id', guildId)
+    .first();
+  if (!guildData) {
+    interaction.reply('Could not find this guild in the DB!');
+    return;
+  }
+
+  let backupMessage = 'Hey ';
+  // Get the roles we'll be referencing
+  let roleTripsitter = {} as Role;
+  let roleHelper = {} as Role;
+  let channelTripsitMeta = {} as TextChannel;
+  if (guildData.role_tripsitter) {
+    roleTripsitter = await interaction.guild.roles.fetch(guildData.role_tripsitter) as Role;
+    backupMessage += `<@&${roleTripsitter.id}> `;
+  }
+  if (guildData.role_helper) {
+    roleHelper = await interaction.guild.roles.fetch(guildData.role_helper) as Role;
+    backupMessage += `<@&${roleHelper.id}> `;
+  }
+  if (guildData.channel_tripsit_meta) {
+    channelTripsitMeta = await interaction.guild.channels.fetch(guildData.channel_tripsit_meta) as TextChannel;
+  }
 
   if (!interaction.guild) {
     logger.debug(`[${PREFIX}] no guild!`);
@@ -300,21 +341,11 @@ export async function tripSitMe(
     user: ${interaction.user.tag} (${interaction.user.id})
     guild: ${interaction.guild.name} (${interaction.guild.id})
     memberInput: ${memberInput}
-    roleTripsitterId: ${roleTripsitterId}
-    channelTripsittersId: ${channelTripsittersId}
+    roleTripsitterId: ${roleTripsitter.id}
+    channelTripsittersId: ${channelTripsitMeta.id}
     triage: ${triage}
     intro: ${intro}
   `);
-
-  // Get the roles we'll be referencing
-  const roleHelper = await interaction.guild.roles.fetch(roleTripsitterId) as Role;
-  // logger.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
-  const roleTripsitter = interaction.guild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
-  // logger.debug(`[${PREFIX}] roleTripsitter: ${roleTripsitter}`);
-
-  // Determine the actor.
-  const actor = interaction.member;
-  // logger.debug(`[${PREFIX}] actor: ${actor.user.username}#${actor.user.discriminator}`);
 
   // Determine if this command was started by an Admin (for testing)
   const actorIsAdmin = (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
@@ -393,7 +424,7 @@ export async function tripSitMe(
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId(`tripsitmeFinish~me~${target.id}~${roleNeedshelpId}~${channelTripsittersId}`)
+        .setCustomId(`tripsitmeFinish~me~${target.id}`)
         .setLabel('I\'m good now!')
         .setStyle(ButtonStyle.Success),
     );
@@ -433,15 +464,15 @@ export async function tripSitMe(
   const endSession = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId(`tripsitmeHelped~${target.id}`)
+        .setCustomId(`tripsitmeOwned~${target.id}`)
         .setLabel('Owned')
-        .setStyle(ButtonStyle.Success),
+        .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setCustomId(`tripsitmeFinish~them~${target.id}~${threadHelpUser.id}~${roleNeedshelpId}`)
+        .setCustomId(`tripsitmeFinish~them~${target.id}`)
         .setLabel('They\'re good now!')
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
-        .setCustomId(`tripsitmeMetaThread~${target.id}`)
+        .setCustomId(`tripsitmeMeta~${target.id}`)
         .setLabel('Create thread')
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
@@ -450,7 +481,6 @@ export async function tripSitMe(
         .setStyle(ButtonStyle.Danger),
     );
 
-  const channelTripsitMeta = await interaction.client.channels.fetch(channelTripsittersId) as TextChannel;
   await channelTripsitMeta.send({
     embeds: [embedTripsitter],
     components: [endSession],
@@ -526,9 +556,23 @@ export async function needsHelpmode(
     return;
   }
 
-  const roleNeedshelpId = interaction.customId.split('~')[1];
-  const roleNeedshelp = await interaction.guild.roles.fetch(roleNeedshelpId) as Role;
-  // logger.debug(`[${PREFIX}] roleNeedshelp: ${roleNeedshelp}`);
+  // Lookup guild information for variables
+  const guildId = interaction.guild.id;
+  const guildData = await db<DiscordGuilds>('discord_guilds')
+    .select(
+      db.ref('role_needshelp').as('role_needshelp'),
+    )
+    .where('id', guildId)
+    .first();
+  if (!guildData) {
+    interaction.reply('Could not find this guild in the DB!');
+    return;
+  }
+
+  let roleNeedshelp = {} as Role;
+  if (guildData.role_needshelp) {
+    roleNeedshelp = await interaction.guild.roles.fetch(guildData.role_needshelp) as Role;
+  }
 
   // Check if the target already has the needshelp role
   const targetHasRoleNeedshelp = (target.roles as GuildMemberRoleManager).cache.find(
@@ -553,7 +597,7 @@ export async function needsHelpmode(
   // Remove all roles, except team and vanity, from the target
   target.roles.cache.forEach((role) => {
     // logger.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
-    if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone') && role.id !== roleNeedshelpId) {
+    if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone') && role.id !== roleNeedshelp.id) {
       if (role.comparePositionTo(myRole) < 0) {
         logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.displayName}`);
         try {
@@ -580,10 +624,249 @@ export async function needsHelpmode(
  * Handles the Own button
  * @param {ButtonInteraction} interaction
  **/
-export async function tripsitmeHelped(
+export async function tripsitmeOwned(
   interaction:ButtonInteraction,
 ) {
-  logger.debug(`[${PREFIX}] tripsitmeHelped`);
+  logger.debug(`[${PREFIX}] tripsitmeOwned`);
+  const userId = interaction.customId.split('~')[1];
+  const actor = interaction.member as GuildMember;
+  const target = await interaction.guild?.members.fetch(userId) as GuildMember;
+
+  // Reply to the user
+  interaction.reply({content: stripIndents`
+    ${actor.displayName} has indicated that ${target.toString()} is receiving help!
+  `});
+
+  // Get the user's ID
+  const userUniqueId = await db
+    .select(db.ref('id'))
+    .from<Users>('users')
+    .where('discord_id', userId)
+    .first();
+  if (!userUniqueId) {
+    interaction.reply('Could not find this user in the DB!');
+    return;
+  }
+
+  // Get user's ticket from DB
+  const userTicket = await db<UserTickets>('user_tickets')
+    .select(
+      db.ref('id'),
+      db.ref('thread_id'),
+      db.ref('meta_thread_id'),
+      db.ref('type'),
+      db.ref('status'),
+    )
+    .where('user_id', userUniqueId.id)
+    .andWhereNot('status', 'CLOSED')
+    .andWhereNot('status', 'RESOLVED')
+    .first();
+  if (!userTicket) {
+    interaction.reply('This user does not have an open ticket!');
+    return;
+  }
+
+  // Update the ticket's name
+  const channel = await interaction.guild?.channels.fetch(userTicket.thread_id) as TextChannel;
+  channel.setName(`💛│${target.displayName}'s channel!`);
+
+  // Update the ticket's status in the DB
+  await db<UserTickets>('user_tickets')
+    .update({
+      status: 'OWNED' as TicketStatus,
+    })
+    .where('id', userTicket.id);
+};
+
+/**
+ * Handles the Meta Thread button
+ * @param {ButtonInteraction} interaction
+ **/
+export async function tripsitmeMeta(
+  interaction:ButtonInteraction,
+) {
+  logger.debug(`[${PREFIX}] tripsitmeMeta`);
+  const userId = interaction.customId.split('~')[1];
+  const actor = interaction.member as GuildMember;
+  const target = await interaction.guild?.members.fetch(userId) as GuildMember;
+
+  if (!interaction.guild) return;
+  if (!interaction.channel) return;
+  if (!interaction.member) return;
+
+  // Get the user's ID
+  const userUniqueId = await db
+    .select(db.ref('id'))
+    .from<Users>('users')
+    .where('discord_id', userId)
+    .first();
+  if (!userUniqueId) {
+    interaction.reply('Could not find this user in the DB!');
+    return;
+  }
+
+  // Get user's ticket from DB
+  const userTicket = await db<UserTickets>('user_tickets')
+    .select(
+      db.ref('id').as('id'),
+      db.ref('user_id').as('user_id'),
+      db.ref('description').as('description'),
+      db.ref('thread_id').as('thread_id'),
+      db.ref('type').as('type'),
+      db.ref('status').as('status'),
+      db.ref('first_message_id').as('first_message_id'),
+      db.ref('closed_by').as('closed_by'),
+      db.ref('closed_at').as('closed_at'),
+      db.ref('archived_at').as('archived_at'),
+      db.ref('deleted_at').as('deleted_at'),
+      db.ref('created_at').as('created_at'),
+    )
+    .where('user_id', userUniqueId.id)
+    .andWhereNot('status', 'CLOSED')
+    .andWhereNot('status', 'RESOLVED')
+    .first();
+  if (!userTicket) {
+    interaction.reply('This user does not have an open ticket!');
+    return;
+  }
+
+
+  const channel = interaction.channel as TextChannel;
+  const metaChannel = await channel.threads.create(
+    {
+      name: `💛│${target.displayName}'s discussion!`,
+      autoArchiveDuration: 1440,
+      type: interaction.guild.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread,
+      reason: `${actor.displayName} created meta thread for ${target.displayName}`,
+    },
+  );
+
+  // Send an embed to the tripsitter room
+  const embedTripsitter = embedTemplate()
+    .setColor(Colors.DarkBlue)
+    .setDescription(stripIndents`
+      ${actor.toString()} has created a meta thread for ${target.toString()}!
+
+      ${userTicket.description}
+
+      **Read the log before interacting**
+      Use this channel coordinate efforts.
+
+      **No one is qualified to handle suicidal users here**
+      If the user is considering / talking about suicide, direct them to the suicide hotline!
+
+      **Do not engage in DM**
+      Keep things in the open where you have the team's support!
+      `)
+    .setFooter({text: 'If you need help click the Backup button to summon Helpers and Tripsitters'});
+
+  const endSession = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId(`tripsitmeOwned~${target.id}`)
+        .setLabel('Owned')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId(`tripsitmeFinish~them~${target.id}`)
+        .setLabel('They\'re good now!')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(`tripsitmeMeta~${target.id}`)
+        .setLabel('Create thread')
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId(`tripsitmeBackup~${target.id}`)
+        .setLabel('I need backup')
+        .setStyle(ButtonStyle.Danger),
+    );
+
+  await metaChannel.send({
+    embeds: [embedTripsitter],
+    components: [endSession],
+    allowedMentions: {},
+  });
+};
+
+/**
+ * Handles the Backup button
+ * @param {ButtonInteraction} interaction
+ **/
+export async function tripsitmeBackup(
+  interaction:ButtonInteraction,
+) {
+  logger.debug(`[${PREFIX}] tripsitmeBackup`);
+  if (!interaction.guild) return;
+  const userId = interaction.customId.split('~')[1];
+  const actor = interaction.member as GuildMember;
+  const target = await interaction.guild?.members.fetch(userId) as GuildMember;
+
+  // Get the user's ID
+  const userUniqueId = await db
+    .select(db.ref('id'))
+    .from<Users>('users')
+    .where('discord_id', userId)
+    .first();
+  if (!userUniqueId) {
+    interaction.reply('Could not find this user in the DB!');
+    return;
+  }
+
+  // Get user's ticket from DB
+  const ticketData = await db<UserTickets>('user_tickets')
+    .select(
+      db.ref('id'),
+      db.ref('thread_id'),
+      db.ref('meta_thread_id'),
+      db.ref('type'),
+      db.ref('status'),
+    )
+    .where('user_id', userUniqueId.id)
+    .andWhereNot('status', 'CLOSED')
+    .andWhereNot('status', 'RESOLVED')
+    .first();
+  if (!ticketData) {
+    interaction.reply('This user does not have an open ticket!');
+    return;
+  }
+
+  // Lookup guild information for variables
+  const guildId = interaction.guild.id;
+  const guildData = await db<DiscordGuilds>('discord_guilds')
+    .select(
+      db.ref('role_tripsitter').as('role_tripsitter'),
+      db.ref('role_helper').as('role_helper'),
+      db.ref('channel_tripsit_meta').as('channel_tripsit_meta'),
+    )
+    .where('id', guildId)
+    .first();
+  if (!guildData) {
+    interaction.reply('Could not find this guild in the DB!');
+    return;
+  }
+
+  let backupMessage = 'Hey ';
+  // Get the roles we'll be referencing
+  let roleTripsitter = {} as Role;
+  let roleHelper = {} as Role;
+  if (guildData.role_tripsitter) {
+    roleTripsitter = await interaction.guild.roles.fetch(guildData.role_tripsitter) as Role;
+    backupMessage += `<@&${roleTripsitter.id}> `;
+  }
+  if (guildData.role_helper) {
+    roleHelper = await interaction.guild.roles.fetch(guildData.role_helper) as Role;
+    backupMessage += `<@&${roleHelper.id}> `;
+  }
+
+  backupMessage += stripIndents`${actor} has inidicated they could use some backup!
+    
+  Be sure to read the log so you have the context!`;
+
+  if (ticketData.meta_thread_id) {
+    const metaThread = await interaction.guild.channels.fetch(ticketData.meta_thread_id) as ThreadChannel;
+    await metaThread.send(backupMessage);
+  } else {
+    await interaction.channel?.send(backupMessage);
+  }
 };
 
 /**
@@ -607,8 +890,28 @@ export async function tripsitmeFinish(
 
   const meOrThem = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
-  const roleNeedshelpId = interaction.customId.split('~')[3];
-  const channelTripsittersId = interaction.customId.split('~')[4];
+
+  const guildId = interaction.guild.id;
+  const guildData = await db<DiscordGuilds>('discord_guilds')
+    .select(
+      db.ref('role_needshelp').as('role_needshelp'),
+      db.ref('channel_tripsit_meta').as('channel_tripsit_meta'),
+    )
+    .where('id', guildId)
+    .first();
+  if (!guildData) {
+    interaction.reply('Could not find this guild in the DB!');
+    return;
+  }
+
+  let roleNeedshelp = {} as Role;
+  let channelTripsitMeta = {} as TextChannel;
+  if (guildData.role_needshelp) {
+    roleNeedshelp = await interaction.guild.roles.fetch(guildData.role_needshelp) as Role;
+  }
+  if (guildData.channel_tripsit_meta) {
+    channelTripsitMeta = await interaction.guild.channels.fetch(guildData.channel_tripsit_meta) as TextChannel;
+  }
 
   const target = await interaction.guild.members.fetch(targetId);
   const actor = interaction.member as GuildMember;
@@ -616,8 +919,8 @@ export async function tripsitmeFinish(
   logger.debug(stripIndents`[${PREFIX}] finish started:
     meOrThem: ${meOrThem}
     targetId: ${targetId}
-    roleNeedshelpId: ${roleNeedshelpId}
-    channelTripsittersId: ${channelTripsittersId}
+    roleNeedshelpId: ${roleNeedshelp.id}
+    channelTripsittersId: ${channelTripsitMeta.id}
     actor: ${actor.displayName}
     target: ${target.displayName}
   `);
@@ -689,7 +992,6 @@ export async function tripsitmeFinish(
     const myRole = myMember.roles.highest;
     const targetRoles:string[] = userData.roles.split(',') || [];
 
-    const roleNeedshelp = await interaction.guild.roles.fetch(roleNeedshelpId);
     if (roleNeedshelp) {
       // const targetHasNeedsHelpRole = (target.roles as GuildMemberRoleManager).cache.find(
       //   (role:Role) => role === roleNeedshelp,
@@ -716,7 +1018,7 @@ export async function tripsitmeFinish(
         const roleObj = await interaction.guild.roles.cache.find((r) => r.id === roleId) as Role;
         if (!ignoredRoles.includes(roleObj.id) &&
           roleObj.name !== '@everyone' &&
-          roleObj.id !== roleNeedshelpId) {
+          roleObj.id !== roleNeedshelp.id) {
           if (roleObj.comparePositionTo(myRole) < 0) {
             logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.displayName}`);
             try {
@@ -784,7 +1086,6 @@ export async function tripsitmeFinish(
           .setColor(Colors.Blue)
           .setDescription(`Collected ${reaction.emoji.name} from ${threadHelpUser}`);
         try {
-          const channelTripsitMeta = interaction.client.channels.cache.get(channelTripsittersId) as TextChannel;
           await channelTripsitMeta.send({embeds: [finalEmbed]});
         } catch (err) {
           logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
@@ -797,3 +1098,55 @@ export async function tripsitmeFinish(
   logger.debug(`[${PREFIX}] ${target.user.tag} (${target.user.id}) is no longer being helped!`);
   await interaction.editReply({content: 'Done!'});
 };
+
+
+const teamRoles = [
+  env.ROLE_DIRECTOR,
+  env.ROLE_SUCCESSOR,
+  env.ROLE_SYSADMIN,
+  env.ROLE_LEADDEV,
+  env.ROLE_IRCADMIN,
+  env.ROLE_DISCORDADMIN,
+  env.ROLE_IRCOP,
+  env.ROLE_MODERATOR,
+  env.ROLE_TRIPSITTER,
+  env.ROLE_TEAMTRIPSIT,
+  env.ROLE_TRIPBOT2,
+  env.ROLE_TRIPBOT,
+  env.ROLE_BOT,
+  env.ROLE_DEVELOPER,
+];
+
+const colorRoles = [
+  env.ROLE_TREE,
+  env.ROLE_SPROUT,
+  env.ROLE_SEEDLING,
+  env.ROLE_BOOSTER,
+  env.ROLE_RED,
+  env.ROLE_ORANGE,
+  env.ROLE_YELLOW,
+  env.ROLE_GREEN,
+  env.ROLE_BLUE,
+  env.ROLE_PURPLE,
+  env.ROLE_PINK,
+  // env.ROLE_BROWN,
+  env.ROLE_BLACK,
+  env.ROLE_WHITE,
+];
+
+const mindsetRoles = [
+  env.ROLE_DRUNK,
+  env.ROLE_HIGH,
+  env.ROLE_ROLLING,
+  env.ROLE_TRIPPING,
+  env.ROLE_DISSOCIATING,
+  env.ROLE_STIMMING,
+  env.ROLE_NODDING,
+  env.ROLE_SOBER,
+];
+
+const otherRoles = [
+  env.ROLE_VERIFIED,
+];
+
+const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles},${otherRoles}`;
