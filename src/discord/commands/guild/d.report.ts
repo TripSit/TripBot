@@ -44,7 +44,7 @@ export const report: SlashCommand = {
     logger.debug(`[${PREFIX}] targetMember: ${targetMember}`);
 
     const modal = new ModalBuilder()
-      .setCustomId(`modModal~report`)
+      .setCustomId(`modModal~report~${interaction.id}`)
       .setTitle(`Tripbot report`);
     const privReason = new TextInputBuilder()
       .setLabel(`Why are you reporting this user?`)
@@ -60,19 +60,20 @@ export const report: SlashCommand = {
 
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`modModal`);
     interaction.awaitModalSubmit({filter, time: 0})
-      .then(async (interaction) => {
-        const privReason = interaction.fields.getTextInputValue('privReason');
+      .then(async (i) => {
+        if (i.customId.split('~')[2] !== interaction.id) return;
+        const privReason = i.fields.getTextInputValue('privReason');
         const result = await moderate(
-          interaction.member as GuildMember,
+          i.member as GuildMember,
           'report',
           targetMember,
           privReason,
           null,
           null,
-          interaction,
+          i,
         );
         logger.debug(`[${PREFIX}] Result: ${result}`);
-        interaction.reply(result);
+        i.reply(result);
         logger.debug(`[${PREFIX}] finished!`);
       });
   },

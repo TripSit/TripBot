@@ -25,7 +25,7 @@ export const uUnderban: UserCommand = {
     const target = interaction.targetMember as GuildMember;
 
     const modal = new ModalBuilder()
-      .setCustomId('underbanModal')
+      .setCustomId(`underbanModal~${interaction.id}`)
       .setTitle('Tripbot Ban');
     const privReason = new TextInputBuilder()
       .setLabel('Why are you underbanning this user?')
@@ -47,9 +47,10 @@ export const uUnderban: UserCommand = {
 
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`underbanModal`);
     interaction.awaitModalSubmit({filter, time: 0})
-      .then(async (interaction) => {
-        const privReason = interaction.fields.getTextInputValue('privReason');
-        const pubReason = interaction.fields.getTextInputValue('pubReason');
+      .then(async (i) => {
+        if (i.customId.split('~')[1] !== interaction.id) return;
+        const privReason = i.fields.getTextInputValue('privReason');
+        const pubReason = i.fields.getTextInputValue('pubReason');
         const result = await moderate(
           actor,
           'underban',
@@ -57,11 +58,11 @@ export const uUnderban: UserCommand = {
           privReason,
           pubReason,
           null,
-          interaction,
+          i,
         );
 
         logger.debug(`[${PREFIX}] Result: ${result}`);
-        interaction.reply(result);
+        i.reply(result);
 
         logger.debug(`[${PREFIX}] finished!`);
       });

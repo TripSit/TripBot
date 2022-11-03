@@ -25,7 +25,7 @@ export const uKick: UserCommand = {
     const target = interaction.targetMember as GuildMember;
 
     const modal = new ModalBuilder()
-      .setCustomId('kickModal')
+      .setCustomId(`kickModal~${interaction.id}`)
       .setTitle('Tripbot Kick');
     const privReason = new TextInputBuilder()
       .setLabel('Why are you kicking this person?')
@@ -47,9 +47,10 @@ export const uKick: UserCommand = {
 
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`kickModal`);
     interaction.awaitModalSubmit({filter, time: 0})
-      .then(async (interaction) => {
-        const privReason = interaction.fields.getTextInputValue('privReason');
-        const pubReason = interaction.fields.getTextInputValue('pubReason');
+      .then(async (i) => {
+        if (i.customId.split('~')[1] !== interaction.id) return;
+        const privReason = i.fields.getTextInputValue('privReason');
+        const pubReason = i.fields.getTextInputValue('pubReason');
         const result = await moderate(
           actor,
           'kick',
@@ -57,11 +58,11 @@ export const uKick: UserCommand = {
           privReason,
           pubReason,
           null,
-          interaction,
+          i,
         );
 
         logger.debug(`[${PREFIX}] Result: ${result}`);
-        interaction.reply(result);
+        i.reply(result);
 
         logger.debug(`[${PREFIX}] finished!`);
       });

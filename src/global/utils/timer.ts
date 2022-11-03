@@ -178,10 +178,13 @@ export async function runTimer() {
                   .where('id', ticket.id);
 
                 // Archive the thread on discord
-                const thread = await global.client.channels.fetch(ticket.thread_id) as ThreadChannel;
-                if (thread) {
+                try {
+                  const thread = await global.client.channels.fetch(ticket.thread_id) as ThreadChannel;
                   await thread.setArchived(true);
+                } catch (error) {
+                  logger.error(`There was an error archiving the thread, it was likely deleted:`);
                 }
+
 
                 const user = await db
                   .select(

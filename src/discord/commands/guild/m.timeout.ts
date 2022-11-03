@@ -29,7 +29,7 @@ export const mTimeout: MessageCommand = {
     const messageUrl = interaction.targetMessage.url;
 
     const modal = new ModalBuilder()
-      .setCustomId('timeoutModal')
+      .setCustomId(`timeoutModal~${interaction.id}`)
       .setTitle('Tripbot Timeout');
     const privReason = new TextInputBuilder()
       .setLabel('Why are you timouting this person?')
@@ -56,16 +56,17 @@ export const mTimeout: MessageCommand = {
     await interaction.showModal(modal);
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`timeoutModal`);
     interaction.awaitModalSubmit({filter, time: 0})
-      .then(async (interaction) => {
+      .then(async (i) => {
+        if (i.customId.split('~')[1] !== interaction.id) return;
         const privReason = stripIndents`
-        > ${interaction.fields.getTextInputValue('privReason')}
+        > ${i.fields.getTextInputValue('privReason')}
     
         [The offending message:](${messageUrl})
         > ${message}
     
         `;
 
-        const duration = interaction.fields.getTextInputValue('timeoutDuration');
+        const duration = i.fields.getTextInputValue('timeoutDuration');
 
         // Get duration
         let minutes = 604800000;
@@ -81,12 +82,12 @@ export const mTimeout: MessageCommand = {
           'timeout',
           target,
           privReason,
-          interaction.fields.getTextInputValue('pubReason'),
+          i.fields.getTextInputValue('pubReason'),
           minutes,
-          interaction,
+          i,
         );
         logger.debug(`[${PREFIX}] Result: ${result}`);
-        interaction.reply(result);
+        i.reply(result);
       });
   },
 };

@@ -259,10 +259,7 @@ export async function tripsitmeButton(
     .then(async (i) => {
       // logger.debug(`[${PREFIX}] i.customId.split('~')[4]: ${i.customId.split('~')[4]}`);
       // logger.debug(`[${PREFIX}] interaction.id: ${interaction.id}`);
-      if (i.customId.split('~')[4] !== interaction.id) {
-        return;
-      };
-
+      if (i.customId.split('~')[4] !== interaction.id) return;
       // Otherwise get the input from the modal, if it was submitted
       const triage = i.fields.getTextInputValue('triageInput');
       const intro = i.fields.getTextInputValue('introInput');

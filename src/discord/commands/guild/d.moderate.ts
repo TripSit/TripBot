@@ -149,7 +149,7 @@ export const mod: SlashCommand = {
     }
 
     const modal = new ModalBuilder()
-      .setCustomId(`modModal~${command}`)
+      .setCustomId(`modModal~${command}~${interaction.id}`)
       .setTitle(`Tripbot ${command}`);
     const privReason = new TextInputBuilder()
       .setLabel(`Why are you ${verb} this user?`)
@@ -196,22 +196,23 @@ export const mod: SlashCommand = {
 
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`modModal`);
     interaction.awaitModalSubmit({filter, time: 0})
-      .then(async (interaction) => {
-        const privReason = interaction.fields.getTextInputValue('privReason');
+      .then(async (i) => {
+        if (i.customId.split('~')[2] !== interaction.id) return;
+        const privReason = i.fields.getTextInputValue('privReason');
         let pubReason = '';
         try {
-          pubReason = interaction.fields.getTextInputValue('pubReason');
+          pubReason = i.fields.getTextInputValue('pubReason');
         } catch (e) {
           // ignore
         }
         let duration = null as number | null;
         try {
-          const durationInput = interaction.fields.getTextInputValue('duration');
+          const durationInput = i.fields.getTextInputValue('duration');
           if (command === 'ban' || command === 'underban') {
             // Check if the given duration is a number between 0 and 7
             const days = parseInt(durationInput);
             if (isNaN(days) || days < 0 || days > 7) {
-              interaction.reply({content: 'Invalid number of days given', ephemeral: true});
+              i.reply({content: 'Invalid number of days given', ephemeral: true});
               return;
             } else {
               duration = duration ?
@@ -229,7 +230,7 @@ export const mod: SlashCommand = {
         } catch (e) {
           // logger.error(`[${PREFIX}] ${e}`);
         }
-        const modalCommand = interaction.customId.split('~')[1] as modAction;
+        const modalCommand = i.customId.split('~')[1] as modAction;
         const result = await moderate(
           actor as GuildMember,
           modalCommand,
@@ -237,9 +238,9 @@ export const mod: SlashCommand = {
           privReason,
           pubReason,
           duration,
-          interaction);
+          i);
         logger.debug(`[${PREFIX}] Result: ${result}`);
-        interaction.reply(result);
+        i.reply(result);
         logger.debug(`[${PREFIX}] finished!`);
       });
   },
