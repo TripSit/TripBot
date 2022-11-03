@@ -5,21 +5,21 @@ import {
   TextInputBuilder,
   ActionRowBuilder,
   ModalSubmitInteraction,
+  GuildMember,
 } from 'discord.js';
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
+import env from '../../../global/utils/env.config';
 import {SlashCommand} from '../../@types/commandDef';
-import logger from '../../../global/utils/logger';
+import {issue} from '../../../global/commands/g.issue';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
-import env from '../../../global/utils/env.config';
-import {Octokit} from 'octokit';
-
+import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const issue: SlashCommand = {
+export const dIssue: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('issue')
     .setDescription('Create issue on github')
@@ -56,7 +56,7 @@ export const issue: SlashCommand = {
     logger.debug(`[${PREFIX}] starting!`);
     // Create the modal
     const modal = new ModalBuilder()
-      .setCustomId('issueModal')
+      .setCustomId(`issueModal~${interaction.id}`)
       .setTitle('TripBot Issue Creation');
     // An action row only holds one text input, so you need one action row per text input.
     const title = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
@@ -82,56 +82,50 @@ export const issue: SlashCommand = {
     // Collect a modal submit interaction
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`issueModal`);
     interaction.awaitModalSubmit({filter, time: 0})
-      .then(async (interaction) => {
+      .then(async (i) => {
+        if (i.customId.split('~')[1] !== interaction.id) return;
         logger.debug(`[${PREFIX}] submitted!`);
-        const sentByOwner = interaction.user === interaction.client.application!.owner;
-        // @ts-ignore
-        let issueBody = interaction.components[1].components[0].value;
-        if (sentByOwner) {
-          issueBody += `This issue was submitted by ${interaction.member} in ${interaction.guild}`;
-        }
-        logger.debug(`[${PREFIX}] issueBody: ${JSON.stringify(issueBody, null, 2)}`);
 
-        // @ts-ignore
-        const labels = interaction.components[1].components[0].customId.split(',');
+        // @ts-ignore https://discord.js.org/#/docs/discord.js/14.6.0/typedef/ModalData
+        let issueBody = i.components[1].components[0].value;
+
+        logger.debug(`[${PREFIX}] i.user: ${i.user.id}`);
+        logger.debug(`[${PREFIX}] env.DISCORD_OWNER_ID: ${env.DISCORD_OWNER_ID}`);
+        const sentByOwner = i.user.id === env.DISCORD_OWNER_ID;
+        if (!sentByOwner) {
+          issueBody += `This issue was submitted by ${(i.member as GuildMember).displayName} in ${i.guild}`;
+        }
+
+        // logger.debug(`[${PREFIX}] issueBody: ${JSON.stringify(issueBody, null, 2)}`);
+
+        // @ts-ignore https://discord.js.org/#/docs/discord.js/14.6.0/typedef/ModalData
+        const labels = i.components[1].components[0].customId.split(',');
         const filteredLabels = labels.filter((label:string) => label !== 'null');
 
-        // Use octokit to create an issue
-        const owner = 'TripSit';
-        const repo = 'tripsit-discord-bot';
-        const octokit = new Octokit({auth: env.GITHUB_TOKEN});
-        await octokit.rest.issues.create({
-          owner,
-          repo,
-          title: interaction.fields.getTextInputValue('issueTitle'),
-          body: issueBody,
-        })
-          .then(async (response) => {
-            const issueNumber = response.data.number;
-            octokit.rest.issues.addLabels({
-              owner,
-              repo,
-              issue_number: issueNumber,
-              labels: filteredLabels,
-            });
-            const issueUrl = response.data.html_url;
-            const embed = embedTemplate()
-              .setColor(0x0099ff)
-              .setTitle('Issue created!')
-              .setDescription(stripIndents`\
-              Issue #${issueNumber} created on ${owner}/${repo}
-              Click here to view: ${issueUrl}`);
-            interaction.reply({embeds: [embed], ephemeral: true});
-          })
-          .catch((error:Error) => {
-            logger.error(`[${PREFIX}] Failed to create issue on ${owner}/${repo}\n\n${error}`);
-            const embed = embedTemplate()
-              .setColor(0xff0000)
-              .setTitle('Issue creation failed!')
-              .setDescription(`Your issue could not be created on ${owner}/${repo}\n\n${error}`);
-            interaction.reply({embeds: [embed], ephemeral: false});
-            return Promise.reject(error);
-          });
+        const results = await issue(
+          i.fields.getTextInputValue('issueTitle'),
+          issueBody,
+          filteredLabels,
+        );
+
+        logger.debug(`[${PREFIX}] results: ${JSON.stringify(results, null, 2)}`);
+
+        if (results) {
+          const embed = embedTemplate()
+            .setColor(0x0099ff)
+            .setTitle('Issue created!')
+            .setDescription(stripIndents`\
+                  Issue #${results.number} created on TripSit/tripsit-discord-bot
+                  Click here to view: ${results.html_url}`);
+          i.reply({embeds: [embed], ephemeral: true});
+        } else {
+          const embed = embedTemplate()
+            .setColor(0xff0000)
+            .setTitle('Issue creation failed!')
+            .setDescription(`Your issue could not be created on TripSit/tripsit-discord-bot`);
+          i.reply({embeds: [embed], ephemeral: false});
+        }
+
         logger.debug(`[${PREFIX}] finished!`);
       });
   },

@@ -10,7 +10,7 @@ import {
 import {
 // TextInputStyle,
 } from 'discord-api-types/v10';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 // import env from '../../../global/utils/env.config';
 // import fs from 'fs/promises';
@@ -825,9 +825,9 @@ async function testGuild(interaction:ChatInputCommandInteraction):Promise<result
   return results;
 }
 
-export const test: SlashCommand = {
+export const testSuite: SlashCommand1 = {
   data: new SlashCommandBuilder()
-    .setName('test')
+    .setName('bottest')
     .setDescription('This will test the bot and show all functionality!')
     .addStringOption((option) => option.setName('scope')
       .setDescription('Global, guild, or all?')
@@ -859,5 +859,6 @@ export const test: SlashCommand = {
             await interaction.channel!.send({embeds: [embed]});
           });
       });
+    return true;
   },
 };

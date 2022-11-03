@@ -26,7 +26,7 @@ export const bug: SlashCommand = {
 
     // Create the modal
     const modal = new ModalBuilder()
-      .setCustomId('bugReportModal')
+      .setCustomId(`bugReportModal~${interaction.id}`)
       .setTitle('Tripbot Bug Report');
     const bugReport = new TextInputBuilder()
       .setCustomId('bugReport')
@@ -37,21 +37,22 @@ export const bug: SlashCommand = {
     await interaction.showModal(modal);
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`bugReportModal`);
     interaction.awaitModalSubmit({filter, time: 0})
-      .then(async (interaction) => {
-        const username = `${interaction.user.username}#${interaction.user.discriminator}`;
-        const guildMessage = `${interaction.guild ? ` in ${interaction.guild.name}` : 'DM'}`;
+      .then(async (i) => {
+        if (i.customId.split('~')[1] !== interaction.id) return;
+        const username = `${i.user.username}#${i.user.discriminator}`;
+        const guildMessage = `${i.guild ? ` in ${i.guild.name}` : 'DM'}`;
 
-        const bugReport = interaction.fields.getTextInputValue('bugReport');
+        const bugReport = i.fields.getTextInputValue('bugReport');
 
-        const botOwner = await interaction.client.users.fetch(env.DISCORD_OWNER_ID)!;
+        const botOwner = await i.client.users.fetch(env.DISCORD_OWNER_ID)!;
         const botOwnerEmbed = embedTemplate()
           .setColor(Colors.Purple)
           .setDescription(`Hey ${botOwner.toString()},\n${username}${guildMessage} reports:\n${bugReport}`);
         botOwner.send({embeds: [botOwnerEmbed]});
 
-        const tripsitGuild = await interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+        const tripsitGuild = await i.client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
         const developerRole = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER)!;
-        const devChan = interaction.client.channels.cache.get(env.CHANNEL_TRIPBOT)! as TextChannel;
+        const devChan = i.client.channels.cache.get(env.CHANNEL_TRIPBOT)! as TextChannel;
         devChan.send(`Hey ${developerRole.toString()}, a user submitted a bug report:\n${bugReport}`);
 
         const embed = embedTemplate()
@@ -59,7 +60,7 @@ export const bug: SlashCommand = {
           .setTitle('Thank you!')
         // eslint-disable-next-line max-len
           .setDescription('I\'ve submitted this feedback to the bot owner. \n\n\You\'re more than welcome to join the TripSit server and speak to Moonbear directly if you want! Check the /contact command for more info.');
-        interaction.reply({embeds: [embed], ephemeral: true});
+        i.reply({embeds: [embed], ephemeral: true});
       });
   },
 };
