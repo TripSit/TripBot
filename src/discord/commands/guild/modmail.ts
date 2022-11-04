@@ -510,7 +510,7 @@ export async function modmailCreate(
  * What happens when someone DM's the bot
  * @param {Message} message The message sent to the bot
  */
-export async function modmailDMi(message:Message) {
+export async function modmailDMInteraction(message:Message) {
   // Dont run if the user mentions @everyone or @here.
   if (message.content.includes('@everyone') || message.content.includes('@here')) {
     message.author.send('You\'re not allowed to use those mentions.');
