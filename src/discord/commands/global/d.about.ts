@@ -3,14 +3,14 @@ import {
   ChatInputCommandInteraction,
   Colors,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {about} from '../../../global/commands/g.about';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const dAbout: SlashCommand1 = {
+export const dAbout: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('about')
     .setDescription('Shows information about this bot!'),

@@ -3,7 +3,7 @@ import {
   ChatInputCommandInteraction,
   Colors,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {donate} from '../../../global/commands/g.donate';
 import {stripIndents} from 'common-tags';
@@ -11,7 +11,7 @@ import {stripIndents} from 'common-tags';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 
-export const dDonate: SlashCommand1 = {
+export const dDonate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('donate')
     .setDescription('Shows different ways to support TripSit!'),

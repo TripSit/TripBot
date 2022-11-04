@@ -34,7 +34,7 @@ export const dprofile: SlashCommand = {
 
     if (!interaction.guild) {
       interaction.reply('You can only use this command in a guild!');
-      return;
+      return false;
     }
 
     // Create Canvas and Context
@@ -409,5 +409,6 @@ export const dprofile: SlashCommand = {
     // Process The Entire Card and Send it to Discord
     const attachment = new AttachmentBuilder(await canvas.encode('png'), {name: 'tripsit-profile-image.png'});
     interaction.reply({files: [attachment]});
+    return true;
   },
 };

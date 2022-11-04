@@ -10,7 +10,7 @@ import {
   ButtonStyle,
 } from 'discord-api-types/v10';
 import {idose} from '../../../global/commands/g.idose';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import {paginationEmbed} from '../../utils/pagination';
@@ -23,7 +23,7 @@ const buttonList = [
   new ButtonBuilder().setCustomId('nextbtn').setLabel('Next').setStyle(ButtonStyle.Success),
 ];
 
-export const didose: SlashCommand1 = {
+export const didose: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('idose')
     .setDescription('Your personal dosage information!')

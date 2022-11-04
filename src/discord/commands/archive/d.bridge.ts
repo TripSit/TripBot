@@ -13,10 +13,11 @@ export const bridge: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('bridge')
     .setDescription('Information on the bridge!'),
-  execute: async (interaction: ChatInputCommandInteraction) => {
+  async execute(interaction) {
     // logger.debug(`[${PREFIX}] starting!`);
     const response = await bridgeWording();
     interaction.reply(stripIndents`${response}`);
     // logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };

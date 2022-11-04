@@ -1,7 +1,7 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {testkits} from '../../../global/commands/g.testkits';
 import {stripIndents} from 'common-tags';
@@ -9,7 +9,7 @@ import {stripIndents} from 'common-tags';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 
-export const dTestkits: SlashCommand1 = {
+export const dTestkits: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('testkits')
     .setDescription('Information on how to get a test kit'),

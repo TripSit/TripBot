@@ -1,7 +1,7 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcKetamine} from '../../../global/commands/g.calcKetamine';
 import logger from '../../../global/utils/logger';
@@ -9,7 +9,7 @@ import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
 // Calculate insufflated dosages
-export const dCalcKetamine: SlashCommand1 = {
+export const dCalcKetamine: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_ketamine')
     .setDescription('Get ketamine dosage information')

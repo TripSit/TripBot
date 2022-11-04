@@ -5,7 +5,7 @@ import {
   GuildMember,
   Colors,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
@@ -47,7 +47,7 @@ const reminderDict = {
   ],
 };
 
-export const reminder: SlashCommand1 = {
+export const reminder: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('reminder')
     .setDescription('Sends a reminder on what the channel is for!'),

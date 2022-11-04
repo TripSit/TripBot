@@ -11,14 +11,14 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const bug: SlashCommand1 = {
+export const bug: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('say')
     .setDescription('Say something like a real person!')

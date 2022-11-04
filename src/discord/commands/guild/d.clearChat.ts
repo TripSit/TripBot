@@ -24,7 +24,8 @@ export const clearChat: SlashCommand = {
   async execute(interaction:ChatInputCommandInteraction) {
     logger.debug(`[${PREFIX}] started!`);
     if (!interaction.channel) {
-      return;
+      interaction.reply({content: 'This command can only be used in a server!', ephemeral: true});
+      return false;
     }
 
     const count = interaction.options.getInteger('count') || 99;
@@ -75,5 +76,6 @@ export const clearChat: SlashCommand = {
         }
       });
     }
+    return true;
   },
 };

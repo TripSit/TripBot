@@ -11,7 +11,7 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 // import {embedTemplate} from '../../utils/embedTemplate';
 import {moderate} from '../../../global/commands/g.moderate';
 import logger from '../../../global/utils/logger';
@@ -20,7 +20,7 @@ import {env} from 'process';
 const PREFIX = path.parse(__filename).name;
 
 
-export const report: SlashCommand1 = {
+export const report: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('report')
     .setDescription('Report a user')

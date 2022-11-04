@@ -9,7 +9,7 @@ import {
   ButtonStyle,
 } from 'discord-api-types/v10';
 import {remindme} from '../../../global/commands/g.remindme';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import {paginationEmbed} from '../../utils/pagination';
@@ -22,7 +22,7 @@ const buttonList = [
   new ButtonBuilder().setCustomId('nextbtn').setLabel('Next').setStyle(ButtonStyle.Success),
 ];
 
-export const dremindme: SlashCommand1 = {
+export const dremindme: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('remindme')
     .setDescription('Handle reminders!')

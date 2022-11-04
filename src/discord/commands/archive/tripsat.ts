@@ -295,8 +295,4 @@ If they still need help it's okay to leave them with that role.`;
   logger.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
   logger.debug(`[${PREFIX}] finished!`);
   await interaction.editReply({content: 'Done!'});
-  // async submit(interaction) {
-  //   const feedback = interaction.fields.getTextInputValue('feedbackReport');
-  //   logger.debug(feedback);
-  // },
 };

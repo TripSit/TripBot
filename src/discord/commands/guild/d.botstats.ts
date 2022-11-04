@@ -1,7 +1,7 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import ms from 'ms';
 import logger from '../../../global/utils/logger';
@@ -9,7 +9,7 @@ import * as path from 'path';
 import {stripIndents} from 'common-tags';
 const PREFIX = path.parse(__filename).name;
 
-export const botstats: SlashCommand1 = {
+export const botstats: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('botstats')
     .setDescription('Get stats about the bot!'),

@@ -43,6 +43,11 @@ export const ping: SlashCommand = {
   async execute(interaction) {
     logger.debug(`[${PREFIX}] started!`);
 
+    if (!interaction.guild) {
+      interaction.reply({content: 'This command can only be used in a server', ephemeral: true});
+      return false;
+    };
+
     const command = 'modal' as string;
 
     if (command === 'modal') {
@@ -70,10 +75,6 @@ export const ping: SlashCommand = {
     }
 
     if (command === 'role check') {
-      if (!interaction.guild) {
-        interaction.reply({content: 'This command can only be used in a server', ephemeral: true});
-        return;
-      };
       const role = interaction.guild.roles.cache.find((r) => r.name === 'TripBot');
 
       const user = interaction.client.users.cache.get(env.DISCORD_CLIENT_ID) as User;
@@ -127,5 +128,6 @@ export const ping: SlashCommand = {
     }
 
     logger.debug(`[${PREFIX}] finished!`);
+    return false;
   },
 };

@@ -5,14 +5,14 @@ import {
 import {dramacounter} from '../../../global/commands/g.dramacounter';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {DateTime} from 'luxon';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 import {stripIndents} from 'common-tags';
 const PREFIX = path.parse(__filename).name;
 
-export const bug: SlashCommand1 = {
+export const bug: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('dramacounter')
     .setDescription('How long since the last drama incident?!')

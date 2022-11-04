@@ -1,7 +1,7 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 // import logger from '../../../global/utils/logger';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
@@ -11,7 +11,7 @@ const heartEmojis = [
   '💝', '💖', '💗', '💘', '💕', '💞', '💓', '💟', '❣',
 ];
 
-export const dlovebomb: SlashCommand1 = {
+export const dlovebomb: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('lovebomb')
     .setDescription('Spread some love'),

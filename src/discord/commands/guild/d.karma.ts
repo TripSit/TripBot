@@ -2,7 +2,7 @@ import {
   SlashCommandBuilder,
   GuildMember,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {karma} from '../../../global/commands/g.karma';
 // import logger from '../../../global/utils/logger';
 // import * as path from 'path';
@@ -10,7 +10,7 @@ import {karma} from '../../../global/commands/g.karma';
 
 // const karmaQuotes = require('../../../global/assets/data/karma_quotes.json');
 
-export const birthday: SlashCommand1 = {
+export const birthday: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('karma')
     .setDescription('Keep it positive please!')

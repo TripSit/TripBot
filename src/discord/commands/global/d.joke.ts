@@ -1,14 +1,14 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {joke} from '../../../global/commands/g.joke';
 // import logger from '../../../global/utils/logger';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 
-export const dJoke: SlashCommand1 = {
+export const dJoke: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('joke')
     .setDescription('Random jokes'),

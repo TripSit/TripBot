@@ -6,6 +6,7 @@ import {
   Colors,
   SlashCommandBuilder,
   TextChannel,
+  ModalSubmitInteraction,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -23,10 +24,9 @@ export const bug: SlashCommand = {
     .setDescription('Example!'),
   async execute(interaction) {
     logger.debug(`[${PREFIX}] starting!`);
-
     // Create the modal
     const modal = new ModalBuilder()
-      .setCustomId('modal')
+      .setCustomId(`modal~${interaction.id}`)
       .setTitle('Modal');
     const modalInput = new TextInputBuilder()
       .setCustomId('modalInput')
@@ -36,14 +36,13 @@ export const bug: SlashCommand = {
     modal.addComponents(firstActionRow);
     await interaction.showModal(modal);
     logger.debug(`[${PREFIX}] displayed modal!`);
-  },
-  async submit(interaction) {
-    const modalOutput = interaction.fields.getTextInputValue('modalInput');
-
-    const embed = embedTemplate()
-      .setColor(Colors.Purple)
-      .setTitle('Title')
-      .setDescription(modalOutput);
-    interaction.reply({embeds: [embed], ephemeral: true});
+    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`feedbackReportModal`);
+    const submitted = await interaction.awaitModalSubmit({filter, time: 0});
+    if (submitted) {
+      if (submitted.customId.split('~')[1] !== interaction.id) return true;
+      const input = submitted.fields.getTextInputValue('modalInput');
+      logger.debug(`[${PREFIX}] input: ${input}`);
+    }
+    return true;
   },
 };

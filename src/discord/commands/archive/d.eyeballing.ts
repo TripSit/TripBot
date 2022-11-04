@@ -16,5 +16,6 @@ export const deyeballing: SlashCommand = {
     // logger.debug(`[${PREFIX}] starting!`);
     interaction.reply(await eyeballing());
     // logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };

@@ -2,13 +2,13 @@ import {
   Colors,
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 // import logger from '../../../global/utils/logger';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 
-export const dhydrate: SlashCommand1 = {
+export const dhydrate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('hydrate')
     .setDescription('Remember to hydrate!'),

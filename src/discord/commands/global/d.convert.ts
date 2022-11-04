@@ -26,20 +26,15 @@ export const convertUnits: SlashCommand = {
       .setAutocomplete(true)),
 
   async execute(interaction) {
-    const value = interaction.options.getString('value');
-    if (!value) {
-      if (interaction.replied) interaction.followUp('You must enter a number.');
-      else interaction.reply('You must enter a number.');
-      return;
-    }
+    const value = interaction.options.getString('value', true);
     const valueInt = parseFloat(value);
-    const units = interaction.options.getString('units');
-    const intoUnits = interaction.options.getString('into_units');
+    const units = interaction.options.getString('units', true);
+    const intoUnits = interaction.options.getString('into_units', true);
 
     if (Number.isNaN(valueInt)) {
       if (interaction.replied) interaction.followUp('You must enter a number.');
       else interaction.reply('You must enter a number.');
-      return;
+      return false;
     }
 
     logger.debug(`${PREFIX}: ${valueInt} ${units} into ${intoUnits}`);
@@ -51,5 +46,6 @@ export const convertUnits: SlashCommand = {
     if (interaction.replied) interaction.followUp({embeds: [embed]});
     else interaction.reply({embeds: [embed]});
     logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };

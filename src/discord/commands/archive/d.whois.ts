@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
-import {whoisIRC} from '../../../global/commands/archive/g.whois';
+// import {whoisIRC} from '../../../global/commands/archive/g.whois';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -20,33 +20,34 @@ export const discordTemplate: SlashCommand = {
 
   async execute(interaction:ChatInputCommandInteraction) {
     logger.debug(`[${PREFIX}] started!`);
-    const target = interaction.options.getString('target');
+    // const target = interaction.options.getString('target');
 
-    let body;
+    // let body;
 
-    try {
-      body = await whoisIRC(target!);
-    } catch (err:any) {
-      const embed = embedTemplate()
-        .setDescription(err.message)
-        .setTitle(`Whois for ${target}`)
-        .setColor(0x00FF00);
-      interaction.reply({
-        embeds: [embed],
-        ephemeral: true,
-      });
-      return;
-    }
+    // try {
+    //   body = await whoisIRC(target!);
+    // } catch (err:any) {
+    //   const embed = embedTemplate()
+    //     .setDescription(err.message)
+    //     .setTitle(`Whois for ${target}`)
+    //     .setColor(0x00FF00);
+    //   interaction.reply({
+    //     embeds: [embed],
+    //     ephemeral: true,
+    //   });
+    //   return;
+    // }
 
-    const embed = embedTemplate()
-      .setDescription(body)
-      .setTitle(`Whois for ${target}`)
-      .setColor(0x00FF00);
-    interaction.reply({
-      embeds: [embed],
-      ephemeral: true,
-    });
+    // const embed = embedTemplate()
+    //   .setDescription(body)
+    //   .setTitle(`Whois for ${target}`)
+    //   .setColor(0x00FF00);
+    // interaction.reply({
+    //   embeds: [embed],
+    //   ephemeral: true,
+    // });
 
     logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };

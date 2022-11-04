@@ -47,6 +47,7 @@ export const database: SlashCommand = {
     // }
     interaction.reply({embeds: [embedTemplate().setTitle('Done!')], ephemeral: false});
     logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };
 

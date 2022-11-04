@@ -2,7 +2,7 @@ import {
   SlashCommandBuilder,
   Colors,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {drug} from '../../../global/commands/g.drug';
 import {stripIndents} from 'common-tags';
@@ -11,7 +11,7 @@ import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const dDrug: SlashCommand1 = {
+export const dDrug: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('drug')
     .setDescription('Check substance information')

@@ -10,7 +10,7 @@ import {
 import {
 // TextInputStyle,
 } from 'discord-api-types/v10';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 // import env from '../../../global/utils/env.config';
 // import fs from 'fs/promises';
@@ -834,7 +834,7 @@ async function testGuild(interaction:ChatInputCommandInteraction):Promise<result
   return results;
 }
 
-export const testSuite: SlashCommand1 = {
+export const testSuite: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('bottest')
     .setDescription('This will test the bot and show all functionality!')

@@ -1,10 +1,10 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {magick8Ball} from '../../../global/commands/g.magick8Ball';
 
-export const magick8ball: SlashCommand1 = {
+export const magick8ball: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('magick8ball')
     .setDescription('Ask the magick 8-ball a question!'),

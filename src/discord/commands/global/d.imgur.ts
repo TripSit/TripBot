@@ -1,13 +1,13 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {imgurSearch} from '../../../global/commands/g.imgur';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const imgur: SlashCommand1 = {
+export const imgur: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('imgur')
     .setDescription('Search Imgur')

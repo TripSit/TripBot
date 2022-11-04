@@ -128,5 +128,7 @@ export const dIssue: SlashCommand = {
 
         logger.debug(`[${PREFIX}] finished!`);
       });
+
+    return false;
   },
 };

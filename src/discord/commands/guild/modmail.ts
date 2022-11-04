@@ -34,7 +34,7 @@ import {
   UserTickets,
   TicketStatus,
 } from '../../../global/@types/pgdb.d';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import env from '../../../global/utils/env.config';
@@ -42,7 +42,7 @@ import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const modmail: SlashCommand1 = {
+export const modmail: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('modmail')
     .setDescription('Modmail actions!')

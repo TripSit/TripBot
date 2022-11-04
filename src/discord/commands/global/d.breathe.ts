@@ -1,13 +1,13 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {breathe} from '../../../global/commands/g.breathe';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const dbreathe: SlashCommand1 = {
+export const dbreathe: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('breathe')
     .setDescription('Remember to breathe')

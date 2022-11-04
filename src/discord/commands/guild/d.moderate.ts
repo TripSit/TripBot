@@ -146,7 +146,7 @@ export const mod: SlashCommand = {
       logger.debug(`[${PREFIX}] Result: ${result}`);
       interaction.reply(result);
       logger.debug(`[${PREFIX}] finished!`);
-      return;
+      return true;
     }
 
     const modal = new ModalBuilder()
@@ -244,5 +244,7 @@ export const mod: SlashCommand = {
         i.reply(result);
         logger.debug(`[${PREFIX}] finished!`);
       });
+
+    return false;
   },
 };

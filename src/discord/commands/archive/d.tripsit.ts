@@ -59,5 +59,6 @@ export const tripsit: SlashCommand = {
     // if (enable === 'off') {
     //   tripsat(interaction, target);
     // }
+    return true;
   },
 };

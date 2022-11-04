@@ -4,7 +4,7 @@ import {
   TextChannel,
   Message,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import logger from '../../../global/utils/logger';
@@ -23,7 +23,7 @@ const emojiDict = {
   9: '9️⃣',
 };
 
-export const dpoll: SlashCommand1 = {
+export const dpoll: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('poll')
     .setDescription('Creates a poll!')

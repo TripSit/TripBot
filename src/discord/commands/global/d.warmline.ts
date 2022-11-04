@@ -1,14 +1,14 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {warmline} from '../../../global/commands/g.warmline';
 // import logger from '../../../global/utils/logger';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 
-export const dWarmline: SlashCommand1 = {
+export const dWarmline: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('warmline')
     .setDescription('(USA only) Need someone to talk to, but don\'t need a "hotline"?'),

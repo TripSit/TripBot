@@ -21,9 +21,9 @@ import {db} from '../../../global/utils/knex';
 import {
   DiscordGuilds,
   ReactionRoles,
-} from '../../../global/@types/pgdb.d';
+} from '../../../global/@types/pgdb';
 import env from '../../../global/utils/env.config';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {stripIndent, stripIndents} from 'common-tags';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
@@ -46,7 +46,7 @@ const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
  * That modal will also have a customID, which is in-turn parsed by modalSubmit.ts, etc
  * @param {Interaction} interaction The interaction that triggered this
  */
-export const prompt: SlashCommand1 = {
+export const prompt: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('setup')
     .setDescription('Set up various channels and prompts!')

@@ -2,13 +2,13 @@ import {
   SlashCommandBuilder,
   GuildMember,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {birthday} from '../../../global/commands/g.birthday';
 // import logger from '../../../global/utils/logger';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 
-export const dbirthday: SlashCommand1 = {
+export const dbirthday: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('birthday')
     .setDescription('Birthday info!')
@@ -46,7 +46,7 @@ export const dbirthday: SlashCommand1 = {
         .setDescription('Day value')
         .setName('day')),
     ),
-  execute: async (interaction) => {
+  async execute(interaction) {
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     let member = interaction.options.getMember('user') as GuildMember;
     const month = interaction.options.getString('month');

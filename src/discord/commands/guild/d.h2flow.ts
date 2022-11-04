@@ -83,5 +83,6 @@ export const dH2flow: SlashCommand = {
     interaction.reply({embeds: [embed], ephemeral: false});
 
     logger.debug(`[${PREFIX}] finished!`);
+    return false;
   },
 };

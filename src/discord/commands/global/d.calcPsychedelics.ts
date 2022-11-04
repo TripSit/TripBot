@@ -2,14 +2,14 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcPsychedelics} from '../../../global/commands/g.calcPsychedelics';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const dcalcPsychedelics: SlashCommand1 = {
+export const dcalcPsychedelics: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_psychedelics')
     .setDescription('Check psychedelic tolerance information')

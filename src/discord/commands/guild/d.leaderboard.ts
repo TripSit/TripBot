@@ -3,7 +3,7 @@ import {
   Guild,
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {leaderboard} from '../../../global/commands/g.leaderboard';
 import {embedTemplate} from '../../utils/embedTemplate';
 import logger from '../../../global/utils/logger';
@@ -16,7 +16,7 @@ type leaderboardType = {
   [key: string]: rankType[],
 };
 
-export const dLeaderboard: SlashCommand1 = {
+export const dLeaderboard: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('leaderboard')
     .setDescription('Show the experience leaderboard')

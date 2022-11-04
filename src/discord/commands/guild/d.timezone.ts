@@ -2,13 +2,13 @@ import {
   SlashCommandBuilder,
   GuildMember,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {timezone} from '../../../global/commands/g.timezone';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const time: SlashCommand1 = {
+export const time: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('timezone')
     .setDescription('Get or set timezones!')
@@ -29,7 +29,7 @@ export const time: SlashCommand1 = {
         .setRequired(true)
         .setAutocomplete(true)),
     ),
-  execute: async (interaction) => {
+  async execute(interaction) {
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     const tzValue = interaction.options.getString('timezone');
     let member = interaction.options.getMember('user') as GuildMember | null;
