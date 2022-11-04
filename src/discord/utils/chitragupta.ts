@@ -11,9 +11,9 @@ import {DateTime} from 'luxon';
 import {db} from '../../global/utils/knex';
 import {Users, UserExperience} from '../../global/@types/pgdb';
 import log from '../../global/utils/log';
-import * as path from 'path';
+import {parse} from 'path';
 import {stripIndents} from 'common-tags';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 /**
  *
@@ -92,5 +92,4 @@ export async function chitragupta(
 
   // log.debug(`[${PREFIX}] ${actor.username} has received (${actorKarma[0].karma_received}) and given (${actorKarma[0].karma_given})!`);
   // log.debug(`[${PREFIX}] ${target.username} has received (${targetKarma[0].karma_received}) and given (${targetKarma[0].karma_given})!`);
-  // return log.debug(`[${PREFIX}] finished!`);
 };

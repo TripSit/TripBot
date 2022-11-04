@@ -23,8 +23,8 @@ import {embedTemplate} from '../../discord/utils/embedTemplate';
 import ms from 'ms';
 import env from '../utils/env.config';
 import log from '../utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 // const teamRoles = [
 //   env.ROLE_DIRECTOR,
@@ -369,7 +369,7 @@ export async function moderate(
     log.debug(`[${PREFIX}] infoString: ${infoString}`);
     modlogEmbed.setDescription(infoString);
     try {
-      log.debug(`[${PREFIX}] returned info about ${target.displayName}`);
+      log.info(`[${PREFIX}] response: ${JSON.stringify(infoString, null, 2)}`);
       return {embeds: [modlogEmbed], ephemeral: true};
     } catch (err) {
       log.error(`[${PREFIX}] Error: ${err}`);
@@ -385,8 +385,10 @@ export async function moderate(
 
   // Return a message to the user confirming the user was acted on
   log.debug(`[${PREFIX}] ${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
+  const desc = `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`;
   const response = embedTemplate()
     .setColor(Colors.Yellow)
-    .setDescription(`${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
+    .setDescription(desc);
+  log.info(`[${PREFIX}] response: ${JSON.stringify(desc, null, 2)}`);
   return {embeds: [response], ephemeral: true};
 };

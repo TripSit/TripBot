@@ -8,6 +8,7 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {profile} from '../../../global/commands/g.profile';
+import {startLog} from '../../utils/startLog';
 import Canvas from '@napi-rs/canvas';
 import env from '../../../global/utils/env.config';
 import log from '../../../global/utils/log';
@@ -28,6 +29,7 @@ export const dprofile: SlashCommand = {
       .setDescription('User to get info on!')),
   async execute(
     interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction) {
+    startLog(PREFIX, interaction);
     const target = interaction.options.getMember('target') ?
       interaction.options.getMember('target') as GuildMember :
       interaction.member as GuildMember;

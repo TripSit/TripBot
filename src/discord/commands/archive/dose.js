@@ -9,7 +9,7 @@ const {
 const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
 
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 module.exports = {
   data: new SlashCommandBuilder()

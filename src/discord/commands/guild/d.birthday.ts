@@ -4,9 +4,10 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {birthday} from '../../../global/commands/g.birthday';
+import {startLog} from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dbirthday: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -47,6 +48,7 @@ export const dbirthday: SlashCommand = {
         .setName('day')),
     ),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     let member = interaction.options.getMember('user') as GuildMember;
     const month = interaction.options.getString('month');

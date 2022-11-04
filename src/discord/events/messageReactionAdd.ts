@@ -10,8 +10,8 @@ import {chitragupta} from '../utils/chitragupta';
 import {handleReactionRoles} from '../utils/handleReactionRoles';
 import {bestOf} from '../utils/bestOfTripsit';
 // import log from '../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 export const messageReactionAdd: reactionEvent = {
   name: 'messageReactionAdd',
@@ -43,6 +43,5 @@ export const messageReactionAdd: reactionEvent = {
     chitragupta(reaction, user, 1);
     bestOf(reaction, user);
     // await communityMod(reaction, user);
-    // log.debug(`[${PREFIX}] finished!`);
   },
 };

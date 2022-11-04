@@ -8,8 +8,8 @@ const {
 const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name; // eslint-disable-line
+import {parse} from 'path';
+const PREFIX = parse(__filename).name; // eslint-disable-line
 
 const { CHANNEL_MODERATORS } = require('../../../../env');
 
@@ -258,7 +258,6 @@ module.exports = {
       // interaction.reply({ embeds: [target_embed], ephemeral: true, components: [mod_buttons] });
       interaction.reply({ embeds: [targetEmbed], ephemeral: true });
       log.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${target.user.name}`);
-      log.debug(`[${PREFIX}] finished!`);
       return;
     }
     log.debug(`${PREFIX} CHANNEL_MODERATORS: ${CHANNEL_MODERATORS}`);
@@ -266,6 +265,5 @@ module.exports = {
     // mod_chan.send({ embeds: [target_embed], components: [mod_buttons] });
     modChan.send({ embeds: [targetEmbed] });
     log.debug(`${PREFIX} send a message to the moderators room`);
-    log.debug(`[${PREFIX}] finished!`);
   },
 };

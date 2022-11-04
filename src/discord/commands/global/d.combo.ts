@@ -5,9 +5,10 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {combo} from '../../../global/commands/g.combo';
+import {startLog} from '../../utils/startLog';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dCombo: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -22,6 +23,7 @@ export const dCombo: SlashCommand = {
       .setRequired(true)
       .setAutocomplete(true)),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const drugA = interaction.options.getString('first_drug', true);
     const drugB = interaction.options.getString('second_drug', true);
     log.debug(`[${PREFIX}] drug_a: ${drugA} | drug_b: ${drugB}`);

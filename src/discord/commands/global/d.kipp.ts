@@ -4,8 +4,9 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {startLog} from '../../utils/startLog';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dkipp: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -13,6 +14,7 @@ export const dkipp: SlashCommand = {
     .setDescription('Keep it positive please!'),
 
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const happyEmojis = [
       '😀', '😃', '😄', '😊', '😁', '🥰', '😇', '😍', '😂', '🤣',
       '🙂', '😆', '😋', '😛', '🙃', '😜', '🤪', '😝', '🤗', '🤭',

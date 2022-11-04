@@ -1,9 +1,9 @@
 import {db, getUser} from '../utils/knex';
 import {UserExperience} from '../@types/pgdb';
 import log from '../utils/log';
-import * as path from 'path';
+import {parse} from 'path';
 import {stripIndents} from 'common-tags';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 type rankType = {'rank': number, 'id': string, 'level': number}
 type leaderboardType = {
@@ -199,9 +199,12 @@ export async function leaderboard(
     };
   }
 
-  return {
+  const response = {
     title,
     description,
     results,
   };
+  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+
+  return response;
 };

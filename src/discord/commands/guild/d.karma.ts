@@ -4,9 +4,10 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {karma} from '../../../global/commands/g.karma';
+import {startLog} from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 // const karmaQuotes = require('../../../global/assets/data/karma_quotes.json');
 
@@ -47,7 +48,7 @@ export const birthday: SlashCommand = {
   //     ),
   // ),
   async execute(interaction) {
-    // log.debug(`[${PREFIX}] started!`);
+    startLog(PREFIX, interaction);
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     let member = interaction.options.getMember('user') as GuildMember;
     // const value = interaction.options.getNumber('value') as number;
@@ -71,8 +72,6 @@ export const birthday: SlashCommand = {
     } else {
       interaction.reply({content: `${member.displayName} ${response}`, ephemeral: true});
     }
-
-    // log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

@@ -2,9 +2,9 @@
 import log from '../utils/log';
 import timezones from '../assets/data/timezones.json';
 import {db, getUser} from '../utils/knex';
-import * as path from 'path';
+import {parse} from 'path';
 import {Users} from '../@types/pgdb';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 /**
  * Get and set someone's timezone!
@@ -56,11 +56,14 @@ export async function timezone(
       }
       // get the user's timezone from the database
       const timestring = new Date().toLocaleTimeString('en-US', {timeZone: tzCode});
-      return `It is likely ${timestring} (GMT${gmtValue})`;
+      const response = `It is likely ${timestring} (GMT${gmtValue})`;
+      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      return response;
     } else {
       log.debug(`[${PREFIX}] tzCode is empty!`);
       response = ``;
     }
   }
+  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
   return response;
 };

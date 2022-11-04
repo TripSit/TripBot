@@ -1,8 +1,8 @@
 import {db, getGuild} from '../utils/knex';
 import {DiscordGuilds} from '../@types/pgdb';
 import log from '../utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 /**
  * Birthday information of a user
@@ -22,13 +22,17 @@ export async function dramacounter(
 
   // log.debug(`[${PREFIX}] interaction.guild: ${JSON.stringify(interaction.guild, null, 2)}`);
 
+  let response = {} as {
+    dramaReason: string;
+    dramaDate: Date;
+  };
   if (command === 'get') {
     const guildData = await getGuild(guildId);
 
     if (guildData.last_drama_at) {
       const dramaDate = guildData.last_drama_at as Date;
       const dramaReason = guildData.drama_reason as string;
-      return [dramaReason, dramaDate];
+      response = {dramaReason, dramaDate};
     } else {
       return 'No drama has been reported yet! Be thankful while it lasts...';
     }
@@ -42,6 +46,9 @@ export async function dramacounter(
       .onConflict('id')
       .merge()
       .returning('*');
-    return [dramaReason, dramaDate];
+    response = {dramaReason, dramaDate};
   }
+
+  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  return response;
 }

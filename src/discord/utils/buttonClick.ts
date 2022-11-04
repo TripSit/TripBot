@@ -11,6 +11,7 @@ import {
 } from 'discord.js';
 import log from '../../global/utils/log';
 import {stripIndents} from 'common-tags';
+import {startLog} from './startLog';
 import {embedTemplate} from '../utils/embedTemplate';
 import {applicationApprove} from '../utils/application';
 import {
@@ -25,21 +26,17 @@ import {
   modmailCreate, modmailActions,
 } from '../commands/guild/modmail';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 /**
  * This runs whenever a buttion is clicked
- * @param {ButtonInteraction} interaction The interaction that started this
+ * @param {ButtonInteraction} interaction The interaction that initialized this
  * @param {Client} client The client that manages it
  * @return {Promise<void>}
  */
 export async function buttonClick(interaction:ButtonInteraction, client:Client) {
-  log.debug(stripIndents`[${PREFIX}] started |
-user: ${interaction.user.tag} (${interaction.user.id})
-guild: ${interaction.guild ? `${interaction.guild.name} (${interaction.guild.id})` : 'DM'}
-customId: ${interaction.customId}
-  `);
+  startLog(PREFIX, interaction);
   const buttonID = interaction.customId;
   const command = client.commands.get(interaction.customId);
 
@@ -267,5 +264,4 @@ customId: ${interaction.customId}
     log.error(error);
     interaction.reply({content: 'There was an error while executing this command!', ephemeral: true});
   }
-  log.debug(`[${PREFIX}] finished!`);
 };

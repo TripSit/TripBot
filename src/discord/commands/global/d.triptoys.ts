@@ -3,10 +3,11 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
+import {startLog} from '../../utils/startLog';
 import {embedTemplate} from '../../utils/embedTemplate';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dtriptoys: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -42,6 +43,7 @@ export const dtriptoys: SlashCommand = {
         {name: 'Balls demo', value: '23'},
       )),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const toyName = interaction.options.getString('toy') || '25';
     const toyId = parseInt(toyName, 10);
     log.debug(`[${PREFIX}] toy_name: ${toyName}`);

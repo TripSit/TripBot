@@ -5,9 +5,9 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcPsychedelics} from '../../../global/commands/g.calcPsychedelics';
-import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {startLog} from '../../utils/startLog';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dcalcPsychedelics: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -36,25 +36,16 @@ export const dcalcPsychedelics: SlashCommand = {
       .addIntegerOption((option) => option.setName('desired_dose')
         .setDescription('g of mushrooms'))),
   async execute(interaction) {
-    const lastDose = interaction.options.getInteger('last_dose');
+    startLog(PREFIX, interaction);
+    const lastDose = interaction.options.getInteger('last_dose', true);
     const desiredDose = interaction.options.getInteger('desired_dose');
-    const days = interaction.options.getInteger('days');
+    const days = interaction.options.getInteger('days', true);
 
     const command = interaction.options.getSubcommand();
 
-    if (!lastDose || !days || !command || !desiredDose) {
-      interaction.reply({
-        content: 'Something went wrong. Please try again.',
-        ephemeral: true,
-      });
-      log.error(`[${PREFIX}] Something went wrong. Please try again.`);
-      return false;
-    }
-
-
     // Code here inspired by https://codepen.io/cyberoxide/pen/BaNarGd
     // Seems like the original source is offline (https://psychedeliccalc.herokuapp.com)
-    const result = await calcPsychedelics(lastDose, desiredDose, days);
+    const result = await calcPsychedelics(lastDose, days, desiredDose);
 
     const drug = (command === 'lsd') ? 'LSD' : 'Mushrooms';
     const units = (command === 'lsd') ? 'ug' : 'g';
@@ -75,7 +66,6 @@ export const dcalcPsychedelics: SlashCommand = {
       `);
     interaction.reply({embeds: [embed], ephemeral: false});
 
-    // log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

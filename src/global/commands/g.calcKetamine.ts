@@ -1,6 +1,6 @@
 import log from '../utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 /**
  * Calculates ketamine dosages
@@ -16,8 +16,7 @@ export async function calcKetamine(weight:number, unit:'lbs' | 'kg'):Promise<any
     rectal: await generateRectalDosages(calcWeight),
   };
 
-  log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
-
+  log.info(`[${PREFIX}] response: ${JSON.stringify(data, null, 2)}`);
   return data;
 };
 
@@ -27,7 +26,6 @@ export async function calcKetamine(weight:number, unit:'lbs' | 'kg'):Promise<any
  * @return {any} Something
  */
 export async function generateInsufflatedDosages(weightInLbs:number):Promise<any> {
-  log.debug(`[${PREFIX}] generateInsufflatedDosages started with weightInLbs: ${weightInLbs}`);
   // log.debug(`[${PREFIX}] **Threshold**: ${Math.round(weightInLbs * 0.1)}mg`);
   return [
     `**Threshold**: ${Math.round(weightInLbs * 0.1)}mg`,
@@ -45,7 +43,6 @@ export async function generateInsufflatedDosages(weightInLbs:number):Promise<any
  * @return {any} Something
  */
 export async function generateRectalDosages(weightInLbs:number):Promise<any> {
-  // log.debug(`[${PREFIX}] generateRectalDosages started with weightInLbs: ${weightInLbs}`);
   return [
     `**Threshold**: ${Math.round(weightInLbs * 0.3)}mg`,
     `**Light**: ${Math.round(weightInLbs * 0.6)}mg`,

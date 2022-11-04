@@ -6,16 +6,18 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {donate} from '../../../global/commands/g.donate';
+import {startLog} from '../../utils/startLog';
 import {stripIndents} from 'common-tags';
 // import log from '../../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dDonate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('donate')
     .setDescription('Shows different ways to support TripSit!'),
   async execute(interaction:ChatInputCommandInteraction) {
+    startLog(PREFIX, interaction);
     const donateInfo = await donate();
     const embed = embedTemplate()
       .setColor(Colors.DarkBlue)

@@ -14,14 +14,16 @@ import {parseDuration} from '../../../global/utils/parseDuration';
 import {UserCommand} from '../../@types/commandDef';
 import log from '../../../global/utils/log';
 import {moderate} from '../../../global/commands/g.moderate';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {startLog} from '../../utils/startLog';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const uBan: UserCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Ban')
     .setType(ApplicationCommandType.User),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const actor = interaction.member as GuildMember;
     const target = interaction.targetMember as GuildMember;
 
@@ -85,8 +87,6 @@ export const uBan: UserCommand = {
 
         log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
-
-        log.debug(`[${PREFIX}] finished!`);
       });
     return true;
   },

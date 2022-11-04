@@ -1,9 +1,9 @@
 
 // import {stripIndents} from 'common-tags';
 // import log from '../../utils/log';
-// import * as path from 'path';
+// import {parse} from 'path';
 // import {WhoisResponse} from 'matrix-org-irc';
-// const PREFIX = path.parse(__filename).name;
+// const PREFIX = parse(__filename).name;
 
 /**
  * Does something

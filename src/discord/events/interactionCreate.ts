@@ -14,8 +14,8 @@ import {buttonClick} from '../utils/buttonClick';
 import {selectMenu} from '../utils/selectMenu';
 import {autocomplete} from '../utils/autocomplete';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const interactionCreate: interactionEvent = {
   name: 'interactionCreate',

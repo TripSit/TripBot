@@ -30,7 +30,5 @@ export const channelDelete: threadEvent = {
         })
         .where('id', ticketData.id);
     }
-
-    // log.debug(`[${PREFIX}] finished!`);
   },
 };

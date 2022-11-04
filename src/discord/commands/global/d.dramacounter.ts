@@ -3,14 +3,15 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import {dramacounter} from '../../../global/commands/g.dramacounter';
+import {startLog} from '../../utils/startLog';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {DateTime} from 'luxon';
 import {SlashCommand} from '../../@types/commandDef';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import log from '../../../global/utils/log';
-import * as path from 'path';
+import {parse} from 'path';
 import {stripIndents} from 'common-tags';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 export const bug: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -35,6 +36,7 @@ export const bug: SlashCommand = {
       ),
     ),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     log.debug(`[${PREFIX}] starting!`);
     const command = interaction.options.getSubcommand() as 'get' | 'set';
 

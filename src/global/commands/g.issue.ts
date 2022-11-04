@@ -1,8 +1,8 @@
 import {Octokit} from 'octokit';
 import env from '../utils/env.config';
-// import log from '../utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import log from '../utils/log';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 /**
  * Submit github issue
@@ -45,6 +45,7 @@ export async function issue(
   }
 
   const results = await getResults();
+  log.info(`[${PREFIX}] response: ${JSON.stringify(results, null, 2)}`);
 
   return results;
 };

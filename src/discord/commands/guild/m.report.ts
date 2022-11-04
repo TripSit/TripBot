@@ -14,14 +14,16 @@ import {MessageCommand} from '../../@types/commandDef';
 import {stripIndents} from 'common-tags';
 import log from '../../../global/utils/log';
 import {moderate} from '../../../global/commands/g.moderate';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {startLog} from '../../utils/startLog';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const mReport: MessageCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Report')
     .setType(ApplicationCommandType.Message),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const actor = interaction.member as GuildMember;
     const target = interaction.targetMessage.member as GuildMember;
     const message = interaction.targetMessage.cleanContent;
@@ -63,8 +65,6 @@ export const mReport: MessageCommand = {
         );
         log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
-
-        log.debug(`[${PREFIX}] finished!`);
       });
     return true;
   },

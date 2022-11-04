@@ -5,11 +5,12 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {leaderboard} from '../../../global/commands/g.leaderboard';
+import {startLog} from '../../utils/startLog';
 import {embedTemplate} from '../../utils/embedTemplate';
 import log from '../../../global/utils/log';
 import env from '../../../global/utils/env.config';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 type rankType = {'rank': number, 'id': string, 'level': number}
 type leaderboardType = {
@@ -32,6 +33,7 @@ export const dLeaderboard: SlashCommand = {
         {name: 'Ignored', value: 'IGNORED'},
       )),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const categoryOption = interaction.options.get('category');
     const categoryName = categoryOption ? categoryOption.value as string : 'OVERALL';
     log.debug(`[${PREFIX}] starting | category: ${categoryName}`);

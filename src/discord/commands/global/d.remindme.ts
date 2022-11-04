@@ -9,13 +9,14 @@ import {
   ButtonStyle,
 } from 'discord-api-types/v10';
 import {remindme} from '../../../global/commands/g.remindme';
+import {startLog} from '../../utils/startLog';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import {paginationEmbed} from '../../utils/pagination';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 const buttonList = [
   new ButtonBuilder().setCustomId('previousbtn').setLabel('Previous').setStyle(ButtonStyle.Danger),
@@ -45,6 +46,7 @@ export const dremindme: SlashCommand = {
         .setRequired(true))
       .setName('delete')),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const offset = interaction.options.getString('offset');
     const reminder = interaction.options.getString('reminder');

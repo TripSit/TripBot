@@ -3,9 +3,10 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {breathe} from '../../../global/commands/g.breathe';
-import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {startLog} from '../../utils/startLog';
+// import log from '../../../global/utils/log';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dbreathe: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -20,9 +21,9 @@ export const dbreathe: SlashCommand = {
         {name: '4', value: '4'},
       )),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const choice = interaction.options.getString('exercise');
     const data = await breathe(choice);
-    log.debug(`[${PREFIX}] choice: ${choice} = ${data}`);
     interaction.reply(data);
     return true;
   },

@@ -10,8 +10,8 @@ import {SlashCommand} from '../../@types/commandDef';
 import log from '../../../global/utils/log';
 // import {tripsat} from '../../utils/tripsat';
 // import {tripsitme} from '../../utils/tripsitme';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const tripsit: SlashCommand = {
   data: new SlashCommandBuilder()

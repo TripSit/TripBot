@@ -6,8 +6,8 @@ import {stripIndents} from 'common-tags';
 import {SlashCommand} from '../../@types/commandDef';
 import env from '../../../global/utils/env.config';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 const bridgeMap = {
   [env.CATEGORY_GATEWAY]: null,
@@ -119,7 +119,6 @@ export const dinvite: SlashCommand = {
         ephemeral: true});
     }
 
-    log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

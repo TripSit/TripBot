@@ -29,19 +29,20 @@ import {
   PermissionFlagsBits,
 } from 'discord-api-types/v10';
 import env from '../../../global/utils/env.config';
+import {startLog} from '../../utils/startLog';
 import {SlashCommand} from '../../@types/commandDef';
 import log from '../../../global/utils/log';
 import {paginationEmbed} from '../../utils/pagination';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const ping: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('ping')
     .setDescription('Health check'),
   async execute(interaction) {
-    log.debug(`[${PREFIX}] started!`);
+    startLog(PREFIX, interaction);
 
     if (!interaction.guild) {
       interaction.reply({content: 'This command can only be used in a server', ephemeral: true});
@@ -126,8 +127,6 @@ export const ping: SlashCommand = {
       paginationEmbed(interaction, pages, buttonList, 120000);
       // There you go, now you have paged embeds
     }
-
-    log.debug(`[${PREFIX}] finished!`);
     return false;
   },
 };

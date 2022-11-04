@@ -3,9 +3,10 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {imgurSearch} from '../../../global/commands/g.imgur';
+import {startLog} from '../../utils/startLog';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const imgur: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -34,6 +35,7 @@ export const imgur: SlashCommand = {
         {name: 'Year', value: 'year'},
       )),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     // Sometimes the API takes a few seconds to respond.
     await interaction.reply('Searching Imgur...');
     const search = interaction.options.getString('search');

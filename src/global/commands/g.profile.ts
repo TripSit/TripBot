@@ -3,9 +3,9 @@ import {db, getUser} from '../../global/utils/knex';
 import {
   UserExperience,
 } from '../../global/@types/pgdb.d';
-// import * as path from 'path';
-// import log from '../../global/utils/log';
-// const PREFIX = path.parse(__filename).name;
+import log from '../utils/log';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 
 /**
@@ -40,6 +40,6 @@ export async function profile(
       profileData.totalExp += exp.total_points;
     }
   }
-
+  log.info(`[${PREFIX}] response: ${JSON.stringify(profileData, null, 2)}`);
   return profileData;
 }

@@ -7,8 +7,8 @@ import {
 import env from '../../global/utils/env.config';
 // import log from '../../global/utils/log';
 
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 // https://discord.js.org/#/docs/discord.js/stable/typedef/ActivityType
 // https://discord.com/developers/docs/game-sdk/activities#data-models-activitytype-enum

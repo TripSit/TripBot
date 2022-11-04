@@ -4,9 +4,10 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcKetamine} from '../../../global/commands/g.calcKetamine';
+import {startLog} from '../../utils/startLog';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 // Calculate insufflated dosages
 export const dCalcKetamine: SlashCommand = {
@@ -24,6 +25,7 @@ export const dCalcKetamine: SlashCommand = {
         {name: 'lbs', value: 'lbs'},
       )),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const givenWeight = interaction.options.getInteger('weight');
     if (!givenWeight) {
       interaction.reply({
@@ -85,7 +87,6 @@ export const dCalcKetamine: SlashCommand = {
     );
 
     interaction.reply({embeds: [embed], ephemeral: false});
-    log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

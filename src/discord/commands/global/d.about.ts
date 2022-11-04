@@ -1,20 +1,20 @@
 import {
   SlashCommandBuilder,
-  ChatInputCommandInteraction,
   Colors,
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {about} from '../../../global/commands/g.about';
-import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {startLog} from '../../utils/startLog';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dAbout: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('about')
     .setDescription('Shows information about this bot!'),
-  async execute(interaction:ChatInputCommandInteraction) {
+  async execute(interaction) {
+    startLog(PREFIX, interaction);
     const tripsitInfo = await about();
     const embed = embedTemplate()
       .setColor(Colors.DarkBlue)
@@ -40,7 +40,6 @@ export const dAbout: SlashCommand = {
         },
       );
     interaction.reply({embeds: [embed]});
-    log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

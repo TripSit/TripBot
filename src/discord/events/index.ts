@@ -2,14 +2,13 @@ import {Client} from 'discord.js';
 import fs from 'fs/promises';
 import path from 'path';
 // import log from '../../global/utils/log';
-// const PREFIX = path.parse(__filename).name;
+// const PREFIX = parse(__filename).name;
 
 /**
  * @param {client} client The discord client
  * @return {Promise<Command[]>} The list of commands
  */
 export async function registerEvents(client: Client): Promise<void> {
-  // log.debug(`[${PREFIX}] events started!`);
   const eventDir = path.join(__dirname, '../events');
   // log.debug(`[${PREFIX}] eventDir: ${eventDir}`);
   const eventFiles = await fs.readdir(eventDir);

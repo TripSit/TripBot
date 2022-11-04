@@ -4,15 +4,17 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {ems} from '../../../global/commands/g.ems';
+import {startLog} from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dEms: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('ems')
     .setDescription('Information that may be helpful in a serious situation.'),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const emsInfo = await ems();
     const embed = embedTemplate();
 

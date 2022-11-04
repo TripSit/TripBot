@@ -12,8 +12,8 @@ import log from '../../global/utils/log';
 
 import {startStatusLoop} from '../utils/statusLoop';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 // Initialize the invite cache
 global.guildInvites = new Collection();

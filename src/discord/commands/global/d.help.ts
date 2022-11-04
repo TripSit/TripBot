@@ -8,12 +8,13 @@ import {
 } from 'discord-api-types/v10';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
+import {startLog} from '../../utils/startLog';
 import env from '../../../global/utils/env.config';
 import log from '../../../global/utils/log';
 import {paginationEmbed} from '../../utils/pagination';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 const button1 = new ButtonBuilder()
   .setCustomId('previousbtn')
@@ -35,6 +36,7 @@ export const help: SlashCommand = {
     .setName('help')
     .setDescription('Information bout TripBot Commands'),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     log.debug(`[${PREFIX}] starting!`);
 
     const globalCommands = await interaction.client.application?.commands.fetch();

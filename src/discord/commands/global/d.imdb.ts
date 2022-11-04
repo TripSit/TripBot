@@ -5,9 +5,10 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {imdb} from '../../../global/commands/g.imdb';
+import {startLog} from '../../utils/startLog';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const imdbSearch: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -19,6 +20,7 @@ export const imdbSearch: SlashCommand = {
       .setRequired(true)),
 
   async execute(interaction:ChatInputCommandInteraction) {
+    startLog(PREFIX, interaction);
     log.debug(`[${PREFIX}] starting!`);
 
     const title = interaction.options.getString('title');

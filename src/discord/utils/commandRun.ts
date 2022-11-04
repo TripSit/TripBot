@@ -10,8 +10,8 @@ import {
 // import {SlashCommand} from './commandDef';
 import {embedTemplate} from './embedTemplate';
 import log from '../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 import env from '../../global/utils/env.config';
 
@@ -24,101 +24,20 @@ import env from '../../global/utils/env.config';
 export async function commandRun(
   interaction: ChatInputCommandInteraction| MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction,
   client: Client) {
-  // log.debug(`[${PREFIX}] starting!`);
-  // const blacklistUsers = [];
-  // if (global.guild_db) {
-  //   global.guild_db.forEach((doc) => {
-  //     if (doc.value.isBanned) {
-  //       blacklistUsers.push(doc.value.guild_id);
-  //     }
-  //   });
-  // }
-
-  // Check if the user is in blacklist_users and if so, ignore it
-  // if (blacklistUsers.includes(interaction.user.id)) {
-  //   log.debug(`[${PREFIX}] ${interaction.user.username}#${interaction.user.discriminator}
-  // (${interaction.user.id}) is banned from using commands.`);
-  //   return interaction.reply('You are banned from using commands.');
-  // }
-  // log.debug(`[${PREFIX}] ${interaction.user.username} is not banned!`);
-
-  // // Cooldown logic
-  // if (interaction.user.id !== DISCORD_OWNER_ID) {
-  //     if (cooldown.has(interaction.user.id)) {
-  //     // / If the cooldown did not end
-  //         interaction.reply({ content: 'Don\'t be a coconut ( ͡° ͜ʖ ͡°)', ephemeral: true });
-  //         return;
-  //     }
-  //     else {
-  //     // Set cooldown
-  //         cooldown.add(interaction.user.id);
-  //         setTimeout(() => {
-  //         // Removes the user from the set after 1 minute
-  //             cooldown.delete(interaction.user.id);
-  //         }, cooldownTime);
-  //     }
-  // }
-
   const {commandName} = interaction;
 
   const command = client.commands.get(commandName);
 
   if (!command) return;
 
-  const commandsAdmin = [
-    'update-guilds',
-    'vip-welcome',
-    'clearChat',
-    'start-here',
-    'clean-db',
-    'rules',
-    'how-to-tripsit',
-    'invite',
-    'button',
-    'gban',
-    'gunban',
-    'uban',
-    'uunban',
-    'test',
-    'ping',
-  ];
-
-  // Check if the command is in commands_admin list and then check to see if the user is moonbear
-  if (commandsAdmin.includes(commandName) && interaction.user.id !== env.DISCORD_OWNER_ID.toString()) {
-    // log.debug(`[${PREFIX}] commandName: ${commandName}`);
-    // log.debug(`[${PREFIX}] commandsAdmin.includes(commandName): ${commandsAdmin.includes(commandName)}`);
-    // log.debug(`[${PREFIX}] interaction.user.id : ${interaction.user.id}`);
-    // log.debug(`[${PREFIX}] interaction.user.id : ${typeof interaction.user.id}`);
-    // log.debug(`[${PREFIX}] env.DISCORD_OWNER_ID: ${env.DISCORD_OWNER_ID}`);
-    // log.debug(`[${PREFIX}] env.DISCORD_OWNER_ID: ${typeof env.DISCORD_OWNER_ID}`);
-    interaction.reply({
-      content: 'You do not have permission to use this command.',
-      ephemeral: true,
-    });
-    return;
-  }
-
-  // // Check if the command is in the commands_pm list and check if the command came in from a DM
-  // if (commands_pm.includes(commandName)) {
-  //     if (interaction.inGuild() && interaction.user.id !== DISCORD_OWNER_ID) {
-  // eslint-disable-next-line
-    //         interaction.reply({ content: 'This command is only available in DMs.', ephemeral: true });
-  //         return;
-  //     }
-  // }
-
   try {
     await command.execute(interaction);
   } catch (error) {
     Error.stackTraceLimit = 25;
     if (error instanceof Error) {
-      // log.error(`[${PREFIX}] Client error ${JSON.stringify(error, null, 2)}`);
-      // log.error(`[${PREFIX}] error.name: ${error.name}`);
-      // log.error(`[${PREFIX}] error.message: ${error.message}`);
       log.error(`[${PREFIX}] ERROR: ${error.stack}`);
       if (!interaction.replied) {
         if (interaction.deferred) {
-          // log.error(`[${PREFIX}] ERROR: ${error.stack}`);
           interaction.editReply('There was an error while executing this command!');
         } else {
           interaction.reply({
@@ -156,5 +75,4 @@ export async function commandRun(
       }
     }
   }
-  // log.debug(`[${PREFIX}] finished!`);
 };

@@ -4,9 +4,10 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {warmline} from '../../../global/commands/g.warmline';
+import {startLog} from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dWarmline: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -14,6 +15,7 @@ export const dWarmline: SlashCommand = {
     .setDescription('(USA only) Need someone to talk to, but don\'t need a "hotline"?'),
 
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const emsInfo = await warmline();
     const embed = embedTemplate()
       .setTitle(`Need someone to talk to, but don\'t need a "hotline"?`);

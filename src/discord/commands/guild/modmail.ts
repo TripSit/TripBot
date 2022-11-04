@@ -39,8 +39,9 @@ import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import env from '../../../global/utils/env.config';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+import {startLog} from '../../utils/startLog';
+const PREFIX = parse(__filename).name;
 
 export const modmail: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -68,6 +69,7 @@ export const modmail: SlashCommand = {
       .setDescription('Put the ticket on hold')
       .setName('pause')),
   async execute(interaction:ChatInputCommandInteraction) {
+    startLog(PREFIX, interaction);
     await modmailActions(interaction);
     return true;
   },
@@ -395,7 +397,7 @@ export async function modmailCreate(
         });
       }
 
-      // Determine if this command was started by a Developer
+      // Determine if this command was initialized by a Developer
       const roleDeveloper = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER) as Role;
       const isDev = roleDeveloper.members.map((m) => m.user.id === i.user.id);
       const pingRole = tripsitGuild.roles.cache.find((role) => role.id === modmailVars[issueType].pingRole) as Role;
@@ -659,18 +661,13 @@ export async function modmailThreadInteraction(message:Message) {
 export async function modmailActions(
   interaction:ButtonInteraction | ChatInputCommandInteraction,
 ) {
+  startLog(PREFIX, interaction);
   let command = '';
   if (interaction.isButton()) {
     command = interaction.customId.split('~')[1];
   } else if (interaction.isCommand()) {
     command = interaction.options.getSubcommand();
   }
-  log.debug(stripIndents`[${PREFIX}] started | \
-user: ${interaction.user.tag} (${interaction.user.id}) \
-guild: ${interaction.guild?.name} (${interaction.guild?.id}) \
-command: ${command} \
-dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
-`);
 
   const actor = interaction.user as User;
 
@@ -1057,6 +1054,4 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
       });
     }
   }
-
-  log.debug(`[${PREFIX}] finished!`);
 };

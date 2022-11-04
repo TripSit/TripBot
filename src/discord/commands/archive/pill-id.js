@@ -10,7 +10,7 @@ const template = require('../../utils/embed-template');
 const pillColors = require('../../../global/assets/data/pill_colors.json');
 const pillShapes = require('../../../global/assets/data/pill_shapes.json');
 
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 const {
   imgurId,

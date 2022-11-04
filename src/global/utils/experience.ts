@@ -11,8 +11,8 @@ import env from './env.config';
 import log from './log';
 import {stripIndents} from 'common-tags';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 // Define the time in between messages where exp will count
 const bufferTime = env.NODE_ENV === 'production' ? 60 * 1000 : 1 * 1000;

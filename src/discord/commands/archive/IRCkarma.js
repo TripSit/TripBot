@@ -4,7 +4,7 @@ const path = require('path');
 const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
 
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 const {
   DISCORD_GUILD_ID,

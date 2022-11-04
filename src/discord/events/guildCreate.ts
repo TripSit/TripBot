@@ -29,8 +29,5 @@ export const guildCreate: guildEvent = {
         .onConflict('discord_id')
         .merge();
     }
-
-
-    log.debug(`[${PREFIX}] finished!`);
   },
 };

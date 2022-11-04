@@ -12,8 +12,8 @@ import {embedTemplate} from '../../utils/embedTemplate';
 import log from '../../../global/utils/log';
 import env from '../../../global/utils/env.config';
 import {userDbEntry} from '../../../global/@types/database';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 let actor = {} as GuildMember;
 let target = {} as GuildMember;

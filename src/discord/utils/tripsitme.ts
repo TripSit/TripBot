@@ -41,13 +41,14 @@ import {
   TicketStatus,
   DiscordGuilds,
 } from '../../global/@types/pgdb.d';
+import {startLog} from './startLog';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
 import log from '../../global/utils/log';
 import {embedTemplate} from './embedTemplate';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 /**
  * Handles the tripsit button
@@ -217,7 +218,7 @@ export async function tripsitmeButton(
 
 /**
  * Creates the tripsit modal
- * @param {ButtonInteraction} interaction The interaction that started this
+ * @param {ButtonInteraction} interaction The interaction that initialized this
  * @param {GuildMember} memberInput The member being aced upon
  * @param {string} triage Given triage information
  * @param {string} intro Given intro information
@@ -274,14 +275,14 @@ export async function tripSitMe(
     intro: ${intro}
   `);
 
-  // Determine if this command was started by an Admin (for testing)
+  // Determine if this command was initialized by an Admin (for testing)
   const actorIsAdmin = (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
   const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
   // log.debug(`[${PREFIX}] actorIsAdmin: ${actorIsAdmin}`);
   // log.debug(`[${PREFIX}] showMentions: ${showMentions}`);
 
   // Determine the target.
-  // If the user clicked the button, the target is whoever started the interaction.
+  // If the user clicked the button, the target is whoever initialized the interaction.
   // Otherwise, the target is the user mentioned in the /tripsit command.
   const target = (memberInput ?? interaction.member) as GuildMember;
   // log.debug(`[${PREFIX}] target: ${target}`);
@@ -721,6 +722,7 @@ export async function tripsitmeBackup(
 export async function tripsitmeFinish(
   interaction:ButtonInteraction,
 ) {
+  startLog(PREFIX, interaction);
   await interaction.deferReply({ephemeral: true});
   if (!interaction.guild) {
     log.debug(`[${PREFIX}] no guild!`);
@@ -750,14 +752,14 @@ export async function tripsitmeFinish(
   const target = await interaction.guild.members.fetch(targetId);
   const actor = interaction.member as GuildMember;
 
-  log.debug(stripIndents`[${PREFIX}] finish started:
-    meOrThem: ${meOrThem}
-    targetId: ${targetId}
-    roleNeedshelpId: ${roleNeedshelp.id}
-    channelTripsittersId: ${channelTripsitMeta.id}
-    actor: ${actor.displayName}
-    target: ${target.displayName}
-  `);
+  // log.debug(stripIndents`[${PREFIX}]:
+  //   meOrThem: ${meOrThem}
+  //   targetId: ${targetId}
+  //   roleNeedshelpId: ${roleNeedshelp.id}
+  //   channelTripsittersId: ${channelTripsitMeta.id}
+  //   actor: ${actor.displayName}
+  //   target: ${target.displayName}
+  // `);
 
   if (meOrThem === 'me' && targetId !== actor.id) {
     log.debug(`[${PREFIX}] not the target!`);
@@ -777,7 +779,6 @@ export async function tripsitmeFinish(
     embed.setDescription(rejectMessage);
     log.debug(`[${PREFIX}] target ${target} does not need help!`);
     interaction.editReply({embeds: [embed]});
-    log.debug(`[${PREFIX}] finished!`);
     return;
   }
 

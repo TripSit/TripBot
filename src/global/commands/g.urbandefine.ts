@@ -1,9 +1,9 @@
 import env from '../utils/env.config';
 import axios from 'axios';
 import log from '../utils/log';
-import * as path from 'path';
+import {parse} from 'path';
 import {stripIndents} from 'common-tags';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 /**
  * Birthday information of a user
@@ -52,7 +52,9 @@ export async function urbandefine(term:string) {
     const upvotes = `${data.list[0].thumbs_up}`;
     const downvotes = `${data.list[0].thumbs_down}`;
 
-    return stripIndents`**Definition for *${term}* ** (+${upvotes}/-${downvotes})
+    const response = stripIndents`**Definition for *${term}* ** (+${upvotes}/-${downvotes})
     ${definition}
     Example: ${example}`;
+    log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+    return response;
 };

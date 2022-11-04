@@ -1,7 +1,7 @@
 // import env from './env.config';
 // import log from './logger';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 const _ = {
   A: '[a|A|🅰|4|@]+',
@@ -140,7 +140,6 @@ const memes = [
  * @return {Promise<void>}
  */
 export async function bigBrother(messageContent:string): Promise<string> {
-  // log.debug(`[${PREFIX}] started!`);
   // log.debug(`[${PREFIX}] messageContent: ${JSON.stringify(messageContent, null, 2)}!`);
 
   // Check for most offensive stuff first

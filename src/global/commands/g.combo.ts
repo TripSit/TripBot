@@ -1,6 +1,6 @@
-// import log from '../utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import log from '../utils/log';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 import drugDataAll from '../assets/data/drug_db_combined.json';
 import comboDefs from '../assets/data/combo_definitions.json';
@@ -89,11 +89,16 @@ export async function combo(
     thumbnail,
   } = intDef;
   const output = `${emoji} ${status} ${emoji}`;
-  return {
+
+  const response = {
     success: true,
     title: `Mixing **${drugA}** and **${drugB}**: ${output}`,
     description: definition,
     thumbnail: thumbnail,
     color: color,
   };
+
+  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+
+  return response;
 };

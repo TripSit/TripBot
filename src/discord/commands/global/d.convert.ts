@@ -2,12 +2,13 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
+import {startLog} from '../../utils/startLog';
 import {embedTemplate} from '../../utils/embedTemplate';
 import log from '../../../global/utils/log';
 import convert from 'convert-units';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const convertUnits: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -26,6 +27,7 @@ export const convertUnits: SlashCommand = {
       .setAutocomplete(true)),
 
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const value = interaction.options.getString('value', true);
     const valueInt = parseFloat(value);
     const units = interaction.options.getString('units', true);
@@ -45,7 +47,6 @@ export const convertUnits: SlashCommand = {
       // .setDescription(`${value} ${units} is ${result} ${intoUnits}`);
     if (interaction.replied) interaction.followUp({embeds: [embed]});
     else interaction.reply({embeds: [embed]});
-    log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

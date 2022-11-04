@@ -16,11 +16,12 @@ import {SlashCommand} from '../../@types/commandDef';
 // import {embedTemplate} from '../../utils/embedTemplate';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import {moderate} from '../../../global/commands/g.moderate';
+import {startLog} from '../../utils/startLog';
 import env from '../../../global/utils/env.config';
 import log from '../../../global/utils/log';
-import * as path from 'path';
+import {parse} from 'path';
 import {modAction} from '../../../global/@types/database';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 export const mod: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -83,12 +84,7 @@ export const mod: SlashCommand = {
         .setRequired(true))
       .setName('kick')),
   async execute(interaction:ChatInputCommandInteraction) {
-    // log.debug(`[${PREFIX}] started!`);
-    // await interaction.deferReply({ephemeral: true});
-    // const embed = embedTemplate()
-    //   .setColor(Colors.DarkBlue)
-    //   .setDescription('Moderating...');
-    // await interaction.editReply({embeds: [embed]});
+    startLog(PREFIX, interaction);
 
     const actor = interaction.member;
     let command = interaction.options.getSubcommand();
@@ -145,7 +141,6 @@ export const mod: SlashCommand = {
         interaction);
       log.debug(`[${PREFIX}] Result: ${result}`);
       interaction.reply(result);
-      log.debug(`[${PREFIX}] finished!`);
       return true;
     }
 
@@ -242,7 +237,6 @@ export const mod: SlashCommand = {
           i);
         log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
-        log.debug(`[${PREFIX}] finished!`);
       });
 
     return false;

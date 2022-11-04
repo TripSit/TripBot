@@ -5,9 +5,10 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {youtube} from '../../../global/commands/g.youtube';
+import {startLog} from '../../utils/startLog';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dYoutube: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -19,6 +20,7 @@ export const dYoutube: SlashCommand = {
       .setName('search')),
 
   async execute(interaction:ChatInputCommandInteraction) {
+    startLog(PREFIX, interaction);
     const query = interaction.options.getString('search');
     log.debug(`[${PREFIX}] - query: ${query}`);
     if (!query) {

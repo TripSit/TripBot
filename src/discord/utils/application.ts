@@ -29,9 +29,9 @@ import {
 import {embedTemplate} from '../utils/embedTemplate';
 import env from '../../global/utils/env.config';
 import log from '../../global/utils/log';
-import * as path from 'path';
+import {parse} from 'path';
 import {stripIndents} from 'common-tags';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 // "your application was denied because..."
 const rejectionMessages = {
@@ -264,11 +264,8 @@ export async function applicationStart(
         .setColor(Colors.DarkBlue)
         .setDescription('Thank you for your interest! We will try to get back to you as soon as possible!');
       i.reply({embeds: [embed], ephemeral: true});
-      log.debug(`[${PREFIX}] finished!`);
     })
     .catch(console.error);
-
-  log.debug(`[${PREFIX}] finished!`);
 };
 
 /**
@@ -308,7 +305,6 @@ export async function applicationReject(
   } else {
     interaction.reply({content: 'You do not have permission to do that!', ephemeral: true});
   }
-  // log.debug(`[${PREFIX} - applicationReject] finished!`);
 };
 
 /**
@@ -392,7 +388,7 @@ export async function applicationApprove(
       If you have an idea or feedback, make a new thread: we're happy to hear all sorts of input and ideas!
 
       ${channelTripcord}
-      > While this discord has existed for years, TS has only started focusing on it relatively recently.
+      > While this discord has existed for years, TS has only begun to focus on it relatively recently.
       > It is still an ongoing WIP, and this channel is where we coordinate changes to the discord server!
       > Ideas and suggestions are always welcome, and we're always looking to improve the experience!
       > No coding experience is necessary to help make the discord an awesome place to be =)
@@ -417,5 +413,4 @@ export async function applicationApprove(
   } else {
     interaction.reply({content: 'You do not have permission to modify roles!', ephemeral: true});
   }
-  // log.debug(`[${PREFIX} - applicationAccept] finished!`);
 };

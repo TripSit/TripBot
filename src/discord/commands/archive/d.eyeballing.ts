@@ -5,8 +5,8 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {eyeballing} from '../../../global/commands/archive/g.eyeballing';
 // import log from '../../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 export const deyeballing: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -15,7 +15,6 @@ export const deyeballing: SlashCommand = {
   async execute(interaction:ChatInputCommandInteraction) {
     // log.debug(`[${PREFIX}] starting!`);
     interaction.reply(await eyeballing());
-    // log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

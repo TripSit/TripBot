@@ -5,8 +5,8 @@ import {
 // import {embedTemplate} from '../../discord/utils/embedTemplate';
 // import {stripIndents} from 'common-tags';
 import log from './log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 /**
  * Template

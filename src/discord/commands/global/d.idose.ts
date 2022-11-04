@@ -15,10 +15,11 @@ import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import {paginationEmbed} from '../../utils/pagination';
+import {startLog} from '../../utils/startLog';
 import log from '../../../global/utils/log';
-import * as path from 'path';
+import {parse} from 'path';
 import {DrugRoa, DrugUnit} from '../../../global/@types/pgdb';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 const buttonList = [
   new ButtonBuilder().setCustomId('previousbtn').setLabel('Previous').setStyle(ButtonStyle.Danger),
@@ -84,6 +85,7 @@ export const didose: SlashCommand = {
         .setDescription('Which record? (0, 1, 2, etc)')
         .setRequired(true))),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     log.debug(`[${PREFIX}] Starting!`);
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const embed = embedTemplate();

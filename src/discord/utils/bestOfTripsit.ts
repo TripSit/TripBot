@@ -10,8 +10,8 @@ import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 const tripsitterChannels = [
   env.CHANNEL_TRIPSIT,
@@ -101,6 +101,4 @@ export async function bestOf(reaction:MessageReaction, user:User) {
       channel.send({embeds: [embed]});
     }
   }
-
-  // log.debug(`[${PREFIX}] finished!`);
 };

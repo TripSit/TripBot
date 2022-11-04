@@ -9,7 +9,7 @@ import fs from 'fs/promises';
 import env from '../../global/utils/env.config';
 import path from 'path';
 import log from '../../global/utils/log';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 log.debug(`[${PREFIX}] discordClientId: ${env.DISCORD_CLIENT_ID}`);
 // log.debug(`[${PREFIX}] discordToken: ${env.DISCORD_CLIENT_TOKEN}`);

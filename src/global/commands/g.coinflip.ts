@@ -1,3 +1,7 @@
+import log from '../utils/log';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
+
 /**
  *
  * @return {string}
@@ -36,6 +40,8 @@ export async function coinflip():Promise<string> {
   } else if (random === 100) {
     side = 'Due to inflation the coin kept floating away!';
   }
+  log.info(`[${PREFIX}] response: ${JSON.stringify(side, null, 2)}`);
+
   return side;
 };
 

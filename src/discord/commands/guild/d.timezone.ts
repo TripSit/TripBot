@@ -4,9 +4,10 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {timezone} from '../../../global/commands/g.timezone';
+import {startLog} from '../../utils/startLog';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const time: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -30,6 +31,7 @@ export const time: SlashCommand = {
         .setAutocomplete(true)),
     ),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     const tzValue = interaction.options.getString('timezone');
     let member = interaction.options.getMember('user') as GuildMember | null;
@@ -55,7 +57,6 @@ export const time: SlashCommand = {
     } else {
       interaction.reply({content: response, ephemeral: true});
     }
-    // log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

@@ -5,17 +5,16 @@ import {
 import log from '../../global/utils/log';
 import {applicationStart} from '../utils/application';
 import {applicationReject} from './application';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 /**
  * This runs whenever a buttion is clicked
- * @param {SelectMenuInteraction} interaction The interaction that started this
+ * @param {SelectMenuInteraction} interaction The interaction that initialized this
  * @param {Client} client The client that manages it
  * @return {Promise<void>}
  */
 export async function selectMenu(interaction:SelectMenuInteraction, client:Client): Promise<void> {
-  log.debug(`[${PREFIX}] started!`);
   const customId = interaction.customId;
   log.debug(`[${PREFIX}] customId: ${customId}`);
 
@@ -25,6 +24,4 @@ export async function selectMenu(interaction:SelectMenuInteraction, client:Clien
   if (customId.startsWith('applicationRoleSelectMenu')) {
     await applicationStart(interaction);
   }
-
-  log.debug(`[${PREFIX}] finished!`);
 };

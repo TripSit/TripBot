@@ -1,16 +1,14 @@
 import {CbSubstance} from '../@types/combined.d';
 import drugDataAll from '../assets/data/drug_db_combined.json';
 import log from '../utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 /**
  * @param {string} drugName
  * @return {CbSubstance | null}
  */
 export async function drug(drugName:string):Promise<CbSubstance | null> {
-  log.debug(`[${PREFIX}] started | drugName: ${drugName}`);
-
   if (drugDataAll === null || drugDataAll === undefined) {
     return null;
   }
@@ -29,6 +27,6 @@ export async function drug(drugName:string):Promise<CbSubstance | null> {
     }
   }
 
-  // log.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
+  log.info(`[${PREFIX}] response: ${JSON.stringify(drugData, null, 2)}`);
   return drugData;
 };

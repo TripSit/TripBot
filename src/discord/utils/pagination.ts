@@ -9,8 +9,8 @@ import {
   ButtonStyle,
 } from 'discord-api-types/v10';
 import log from '../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 /**
  * Creates a pagination embed

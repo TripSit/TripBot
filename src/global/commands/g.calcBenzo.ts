@@ -1,6 +1,6 @@
 import log from '../utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 import drugDataTripsit from '../assets/data/drug_db_tripsit.json';
 
@@ -16,7 +16,7 @@ export async function calcBenzo(
   drugA:string,
   drugB:string,
 ):Promise<any> {
-  log.debug(`[${PREFIX}] dosage: ${dosage} | drug_a: ${drugA} | drug_b: ${drugB}`);
+  // log.debug(`[${PREFIX}] dosage: ${dosage} | drug_a: ${drugA} | drug_b: ${drugB}`);
 
   if (drugDataTripsit === null || drugDataTripsit === undefined) {
     log.error(`[${PREFIX}] drugDataAll is null or undefined`);
@@ -72,6 +72,6 @@ export async function calcBenzo(
   }
 
   const result = (dosage / parseFloat(convertedDoseA.toString())) * parseFloat(convertedDoseB.toString());
-  log.debug(`[${PREFIX}] result: ${result}`);
+  log.info(`[${PREFIX}] response: ${JSON.stringify(result, null, 2)}`);
   return result;
 };

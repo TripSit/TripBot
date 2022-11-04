@@ -5,8 +5,8 @@ import {
 import log from '../../global/utils/log';
 import Fuse from 'fuse.js';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 import pillColors from '../../global/assets/data/pill_colors.json';
 import pillShapes from '../../global/assets/data/pill_shapes.json';
@@ -46,7 +46,7 @@ const defaultShapes = pillShapeNames.slice(0, 25);
  * @return {Promise<void>}
  */
 export async function autocomplete(interaction:AutocompleteInteraction, client:Client):Promise<void> {
-  log.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
+  // log.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
   if (interaction.commandName === 'pill-id') {
     const focusedOption = interaction.options.getFocused(true).name;
     const options = {
@@ -81,7 +81,7 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
       }
     }
   } else if (interaction.commandName === 'calc_benzo') {
-    log.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
+    // log.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
     const options = {
       shouldSort: true,
       threshold: 0.2,
@@ -255,5 +255,4 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
       interaction.respond(TOP_DRUGS.map((choice) => ({name: choice, value: choice})));
     }
   }
-  log.debug(`[${PREFIX}] finished!`);
 };

@@ -5,7 +5,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const axios = require('axios');
 const logger = require('../../../global/utils/log');
 
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 const {
   rapidApiKey,
@@ -61,7 +61,6 @@ module.exports = {
     // else {
     //     interaction.followUp({ embeds: [embed], ephemeral: false });
     // }
-    // log.debug(`[${PREFIX}] finished!`);
     // return;
   },
 };

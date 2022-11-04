@@ -11,8 +11,8 @@ import {
 // } from '../../global/@types/database';
 import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 const mindsetRoles = [
   env.ROLE_DRUNK,
@@ -28,7 +28,6 @@ const mindsetRoles = [
 export const guildMemberUpdate: guildMemberUpdateEvent = {
   name: 'guildMemberUpdate',
   async execute(oldMember: GuildMember, newMember: GuildMember) {
-    log.debug(`[${PREFIX}] started on ${newMember.user.username}`);
     // log.debug(`[${PREFIX}] guildMemberUpdate`);
     // log.debug(`${PREFIX} Member.guildId: ${newMember.guild.id}`);
     // log.debug(`${PREFIX} discordGuildId: ${discordGuildId}`);

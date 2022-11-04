@@ -3,7 +3,7 @@ import {Collection} from 'discord.js';
 import fs from 'fs/promises';
 import path from 'path';
 // import log from '../../global/utils/log';
-// const PREFIX = path.parse(__filename).name;
+// const PREFIX = parse(__filename).name;
 
 /**
  * @param {client} client The discord client

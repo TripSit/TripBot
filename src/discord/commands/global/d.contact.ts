@@ -5,10 +5,11 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {contact} from '../../../global/commands/g.contact';
+import {startLog} from '../../utils/startLog';
 import {stripIndents} from 'common-tags';
 // import log from '../../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dContact: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -16,6 +17,7 @@ export const dContact: SlashCommand = {
     .setDescription('How to contact TripSit!'),
 
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const contactInfo = await contact();
     const embed = embedTemplate()
       .setColor(Colors.DarkBlue)
@@ -33,7 +35,6 @@ export const dContact: SlashCommand = {
       )
       .setFooter({text: 'Thanks for asking!'});
     interaction.reply({embeds: [embed], ephemeral: false});
-    // log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

@@ -5,7 +5,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
 
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 const { CHANNEL_GENERAL } = require('../../../../env');
 
@@ -57,6 +57,5 @@ module.exports = {
         .setDescription('Make sure you entered a channel!');
       interaction.reply({ embeds: [embed], ephemeral: false });
     }
-    log.debug(`[${PREFIX}] finished!`);
   },
 };

@@ -1,7 +1,7 @@
 'use strict';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 const { SlashCommandBuilder } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
 const logger = require('../../../global/utils/log');
@@ -123,7 +123,7 @@ module.exports = {
 
           If this is not expected, please contact Moonbear#1024 on discord, but don't worry: your account is safe!`);
 
-          return log.debug(`[${PREFIX}] finished!`);
+          return;
         });
       } else {
         embed.setDescription(stripIndents`

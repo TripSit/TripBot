@@ -12,11 +12,12 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import {SlashCommand} from '../../@types/commandDef';
+import {startLog} from '../../utils/startLog';
 import {embedTemplate} from '../../utils/embedTemplate';
 import env from '../../../global/utils/env.config';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const bug: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -30,6 +31,7 @@ export const bug: SlashCommand = {
       .setName('channel'),
     ),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     log.debug(`[${PREFIX}] starting!`);
     if (!interaction.guild) {
       interaction.reply({
@@ -60,7 +62,6 @@ export const bug: SlashCommand = {
 in ${channel ? channel.toString() : interaction.channel?.toString()}`);
     }
 
-    log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

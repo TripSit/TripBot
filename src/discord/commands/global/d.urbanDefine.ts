@@ -4,9 +4,10 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {urbandefine} from '../../../global/commands/g.urbandefine';
+import {startLog} from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const durbandefine: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -18,6 +19,7 @@ export const durbandefine: SlashCommand = {
       .setRequired(true)),
 
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const term = interaction.options.getString('define');
     if (!term) {
       interaction.reply({content: 'You must enter a search query.', ephemeral: true});

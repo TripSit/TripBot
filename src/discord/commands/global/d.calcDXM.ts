@@ -5,10 +5,11 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {calcDxm} from '../../../global/commands/g.calcDxm';
+import {startLog} from '../../utils/startLog';
 import {embedTemplate} from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 type DxmDataType = {
   First: {min: number, max: number};
@@ -45,6 +46,7 @@ export const calxDXM: SlashCommand = {
         {name: '30mg Gelcaps (30 mg caps)', value: '30mg Gelcaps (30 mg caps)'},
       )),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     // Calculate each plat min/max value
     const givenWeight = interaction.options.getInteger('calc_weight');
     const weightUnits = interaction.options.getString('units');
@@ -76,7 +78,6 @@ export const calxDXM: SlashCommand = {
       header = false;
     });
     interaction.reply({embeds: [embed], ephemeral: false});
-    // log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

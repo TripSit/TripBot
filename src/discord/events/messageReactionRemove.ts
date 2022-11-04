@@ -9,8 +9,8 @@ import env from '../../global/utils/env.config';
 import {handleReactionRoles} from '../utils/handleReactionRoles';
 import {chitragupta} from '../utils/chitragupta';
 import log from '../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const messageReactionRemove: reactionEvent = {
   name: 'messageReactionRemove',
@@ -50,6 +50,5 @@ export const messageReactionRemove: reactionEvent = {
     //   return;
     // }
     chitragupta(reaction, user, -1);
-    // log.debug(`[${PREFIX}] finished!`);
   },
 };

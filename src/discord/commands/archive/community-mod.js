@@ -1,7 +1,7 @@
 'use strict';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 const { stripIndents } = require('common-tags');
 const logger = require('../../../global/utils/log');
 const { moderate } = require('../../../global/utils/moderate');
@@ -262,6 +262,5 @@ module.exports = {
 
       **They will stay in the ${ROLE_NEWBIE.toString()} role until a moderator changes it!**`);
     }
-    log.debug(`[${PREFIX}] finished!`);
   },
 };

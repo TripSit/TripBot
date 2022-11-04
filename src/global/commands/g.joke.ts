@@ -1,5 +1,8 @@
 import axios from 'axios';
 import env from '../utils/env.config';
+import log from '../utils/log';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 /**
  *
@@ -17,6 +20,8 @@ export async function joke():Promise<any> {
       'X-RapidAPI-Key': env.RAPID_TOKEN,
     },
   });
+
+  log.info(`[${PREFIX}] response: ${JSON.stringify(data, null, 2)}`);
 
   return data;
 };

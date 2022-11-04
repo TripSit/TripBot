@@ -13,11 +13,12 @@ import {
 import env from '../../../global/utils/env.config';
 import {SlashCommand} from '../../@types/commandDef';
 import {issue} from '../../../global/commands/g.issue';
+import {startLog} from '../../utils/startLog';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dIssue: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -53,6 +54,7 @@ export const dIssue: SlashCommand = {
       )
       .setName('effort')),
   async execute(interaction:ChatInputCommandInteraction) {
+    startLog(PREFIX, interaction);
     log.debug(`[${PREFIX}] starting!`);
     // Create the modal
     const modal = new ModalBuilder()
@@ -125,8 +127,6 @@ export const dIssue: SlashCommand = {
             .setDescription(`Your issue could not be created on TripSit/tripsit-discord-bot`);
           i.reply({embeds: [embed], ephemeral: false});
         }
-
-        log.debug(`[${PREFIX}] finished!`);
       });
 
     return false;

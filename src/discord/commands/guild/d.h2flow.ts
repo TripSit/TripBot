@@ -5,12 +5,13 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
+import {startLog} from '../../utils/startLog';
 import {stripIndents} from 'common-tags';
 import {h2flow} from '../../../global/commands/g.h2flow';
 
-import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+// import log from '../../../global/utils/log';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dH2flow: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -18,6 +19,7 @@ export const dH2flow: SlashCommand = {
     .setDescription('Welcome to the H2Flow Club!'),
 
   async execute(interaction:ChatInputCommandInteraction) {
+    startLog(PREFIX, interaction);
     const data = await h2flow(interaction.user.id);
 
     const sparklePoints = data.sparkle_points;
@@ -82,7 +84,6 @@ export const dH2flow: SlashCommand = {
 
     interaction.reply({embeds: [embed], ephemeral: false});
 
-    log.debug(`[${PREFIX}] finished!`);
     return false;
   },
 };

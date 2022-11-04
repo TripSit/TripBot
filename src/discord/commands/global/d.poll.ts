@@ -5,11 +5,12 @@ import {
   Message,
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
+import {startLog} from '../../utils/startLog';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 const emojiDict = {
   1: '1️⃣',
@@ -36,6 +37,7 @@ export const dpoll: SlashCommand = {
       .setDescription('CSV of options, EG: "Red, Blue, Green"')
       .setRequired(true)),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     log.debug(`[${PREFIX}] Starting!`);
     await interaction.deferReply({ephemeral: true});
     const question = interaction.options.getString('question');

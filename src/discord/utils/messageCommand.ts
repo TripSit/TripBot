@@ -6,9 +6,9 @@ import {
 } from 'discord.js';
 import env from '../../global/utils/env.config';
 import log from '../../global/utils/log';
-import * as path from 'path';
+import {parse} from 'path';
 import {stripIndents} from 'common-tags';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 const helpCounter = new Map<string, number>();
 

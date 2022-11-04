@@ -6,8 +6,8 @@ import {
 } from '../@types/eventDef';
 import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const inviteDelete: inviteEvent = {
   name: 'inviteDelete',

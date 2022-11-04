@@ -12,12 +12,13 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import {SlashCommand} from '../../@types/commandDef';
+import {startLog} from '../../utils/startLog';
 // import {embedTemplate} from '../../utils/embedTemplate';
 import {moderate} from '../../../global/commands/g.moderate';
 import log from '../../../global/utils/log';
-import * as path from 'path';
+import {parse} from 'path';
 import {env} from 'process';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 
 export const report: SlashCommand = {
@@ -30,7 +31,7 @@ export const report: SlashCommand = {
       .setName('target')),
 
   async execute(interaction: ChatInputCommandInteraction) {
-    log.debug(`[${PREFIX}] started!`);
+    startLog(PREFIX, interaction);
     // Only run on tripsit
     if (!interaction.guild) {
       await interaction.reply({content: 'This command can only be used in a server!', ephemeral: true});
@@ -86,7 +87,6 @@ export const report: SlashCommand = {
         );
         log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
-        log.debug(`[${PREFIX}] finished!`);
       });
     return true;
   },

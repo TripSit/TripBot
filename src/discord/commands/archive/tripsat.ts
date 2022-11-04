@@ -17,8 +17,8 @@ import {stripIndents} from 'common-tags';
 import log from '../../../global/utils/log';
 import {embedTemplate} from '../../utils/embedTemplate';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 const teamRoles = [
   env.ROLE_DIRECTOR,
@@ -146,7 +146,6 @@ export async function tripsat(
     embed.setDescription(rejectMessage);
     log.debug(`[${PREFIX}] target ${target} does not need help!`);
     interaction.editReply({embeds: [embed]});
-    log.debug(`[${PREFIX}] finished!`);
     return;
   }
 
@@ -178,8 +177,6 @@ If they still need help it's okay to leave them with that role.`;
         }
         threadDiscussUser.send(metaUpdate);
       }
-
-      log.debug(`[${PREFIX}] finished!`);
 
       log.debug(`[${PREFIX}] Rejected the "im good" button`);
       return;
@@ -275,6 +272,5 @@ If they still need help it's okay to leave them with that role.`;
   threadDiscussUser.send(endMetaHelpMessage);
 
   log.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
-  log.debug(`[${PREFIX}] finished!`);
   await interaction.editReply({content: 'Done!'});
 };

@@ -9,8 +9,8 @@ import {stripIndents} from 'common-tags';
 import {bigBrother} from '../../global/utils/thoughtPolice';
 
 // import log from '../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 /**
  * This runs on every message to determine if a badword is used
@@ -18,7 +18,6 @@ import {bigBrother} from '../../global/utils/thoughtPolice';
  * @return {Promise<void>}
  */
 export async function thoughtPolice(message:Message): Promise<void> {
-  // log.debug(`[${PREFIX}] started!`);
   // log.debug(`[${PREFIX}] ${message.member!.displayName} said "${message.cleanContent}"`);
   const channelModlog = message.client.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
   // const roleModerators = message.guild?.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR);
@@ -77,5 +76,4 @@ export async function thoughtPolice(message:Message): Promise<void> {
         break;
     }
   }
-  // log.debug(`[${PREFIX}] finished!`);
 };

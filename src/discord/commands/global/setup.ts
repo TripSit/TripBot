@@ -23,13 +23,14 @@ import {
   ReactionRoles,
 } from '../../../global/@types/pgdb';
 import env from '../../../global/utils/env.config';
+import {startLog} from '../../utils/startLog';
 import {SlashCommand} from '../../@types/commandDef';
 import {stripIndent, stripIndents} from 'common-tags';
 import {embedTemplate} from '../../utils/embedTemplate';
 import log from '../../../global/utils/log';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
 
@@ -171,6 +172,7 @@ export const prompt: SlashCommand = {
       .setDescription('ticketbooth info!')
       .setName('ticketbooth')),
   async execute(interaction:ChatInputCommandInteraction) {
+    startLog(PREFIX, interaction);
     // log.debug(`[${PREFIX}] Starting!`);
     await interaction.deferReply({ephemeral: true});
     const command = interaction.options.getSubcommand();
@@ -332,7 +334,6 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
 
   // Create a new button
   await (interaction.channel as TextChannel).send({content: buttonText, components: [row]});
-  log.debug(`[${PREFIX}] finished!`);
 }
 
 /**
@@ -587,8 +588,6 @@ export async function rules(interaction:ChatInputCommandInteraction) {
     > **-** Don't post content that is unnecessarily inflammatory, provocative, or controversial. Read the atmosphere, and recognize when you've gone too far.
     ${env.EMOJI_INVISIBLE}
     `);
-
-  log.debug(`[${PREFIX}] finished!`);
 }
 
 /**
@@ -637,8 +636,6 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
 
   // Create a new button
   await (interaction.channel as TextChannel).send({content: buttonText, components: [row]});
-
-  log.debug(`[${PREFIX}] finished!`);
 }
 
 /**
@@ -661,7 +658,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
   const channelRules = interaction.client.channels.cache.get(env.CHANNEL_RULES);
 
   // **If someone has the "bot" tag they are talking from IRC!**
-  // > IRC is an older chat system where TripSit started: chat.tripsit.me
+  // > IRC is an older chat system where TripSit began: chat.tripsit.me
   // > The 🔗 icon in the channel name means the channel is linked with IRC.
   // > Users on IRC cannot see when you Reply to their message, or any custom emojis.
 
@@ -811,7 +808,6 @@ export async function mindsets(interaction:ChatInputCommandInteraction) {
         .onConflict(['role_id', 'reaction_id'])
         .merge();
     });
-  // log.debug(`[${PREFIX}] finished!`);
 }
 
 /**
@@ -922,6 +918,4 @@ export async function colors(interaction:ChatInputCommandInteraction) {
         .onConflict(['role_id', 'reaction_id'])
         .merge();
     });
-
-  // log.debug(`[${PREFIX}] finished!`);
 }

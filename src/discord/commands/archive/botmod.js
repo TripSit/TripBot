@@ -11,7 +11,7 @@ const { ActionRowBuilder, ButtonBuilder } = require('discord.js');
 const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
 
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 const warnButtons = new ActionRowBuilder()
   .addComponents(new ButtonBuilder()
@@ -262,7 +262,6 @@ module.exports = {
       if (command === 'info') {
         interaction.reply({ embeds: [targetEmbed], ephemeral: true });
         log.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${targetData.guild_name}`);
-        log.debug(`[${PREFIX}] finished!`);
         return;
       }
 
@@ -271,7 +270,6 @@ module.exports = {
       // // mod_chan.send({ embeds: [target_embed], components: [mod_buttons] });
       // mod_chan.send({ embeds: [target_embed] });
       // log.debug(`${PREFIX} send a message to the moderators room`);
-      log.debug(`[${PREFIX}] finished!`);
     }
   },
 };

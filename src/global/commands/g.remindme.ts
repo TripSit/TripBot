@@ -5,8 +5,8 @@ import {
   UserReminders,
 } from '../@types/pgdb';
 import log from '../utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 /**
  *
@@ -36,7 +36,9 @@ export async function remindme(
 
   if (command === 'delete') {
     if (recordNumber === null) {
-      return 'You must provide a record number to delete!';
+      const response = 'You must provide a record number to delete!';
+      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      return response;
     }
     log.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
 
@@ -47,7 +49,9 @@ export async function remindme(
       .where('user_id', userData.id);
 
     if (unsorteddata.length === 0) {
-      return 'You have no dose records, you can use /idose to add some!';
+      const response = 'You have no reminder records, you can use /remindme to add some!';
+      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      return response;
     }
 
     // Sort data based on the created_at property
@@ -63,7 +67,9 @@ export async function remindme(
 
     const record = data[recordNumber];
     if (record === undefined || record === null) {
-      return 'That record does not exist!';
+      const response = 'That record does not exist!';
+      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      return response;
     } else {
       const recordId = record.id;
       const reminderDate = data[recordNumber].created_at.toISOString();
@@ -79,10 +85,12 @@ export async function remindme(
         .where('id', recordId)
         .del();
 
-      return `I deleted:
+      const response = `I deleted:
       > **(${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}**
       > ${record.reminder_text}
       `;
+      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      return response;
     }
   }
   if (command === 'get') {
@@ -128,6 +136,7 @@ export async function remindme(
         };
         reminders.push(field);
       }
+      log.info(`[${PREFIX}] response: ${JSON.stringify(reminders, null, 2)}`);
       return reminders;
     } else {
       return false;
@@ -135,7 +144,9 @@ export async function remindme(
   }
   if (command === 'set') {
     if (!triggerAt) {
-      return 'You must provide a date and time for the reminder!';
+      const response = 'You must provide a date and time for the reminder!';
+      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      return response;
     }
     const userData = await getUser(userId, null);
     await db<UserReminders>('user_reminders')
@@ -144,5 +155,8 @@ export async function remindme(
         reminder_text: reminderText,
         trigger_at: triggerAt,
       });
+    const response = `I will remind you to ${reminderText} at ${triggerAt}!`;
+    log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+    return response;
   }
 }

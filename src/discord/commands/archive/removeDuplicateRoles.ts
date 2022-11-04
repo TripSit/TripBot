@@ -5,8 +5,8 @@ import {
 import log from '../../../global/utils/log';
 import env from '../../../global/utils/env.config';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 /**
  * This function removes duplicate roles from the role pickers
@@ -40,5 +40,4 @@ export async function removeDuplicates(reaction:MessageReaction, user:User) {
       }
     });
   }
-  log.debug(`[${PREFIX}] finished!`);
 };

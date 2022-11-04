@@ -5,8 +5,9 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {startLog} from '../../utils/startLog';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const clearChat: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -22,7 +23,7 @@ export const clearChat: SlashCommand = {
       .setDescription('Delete threads? (default: true)')
       .setName('delete-archived-threads')),
   async execute(interaction:ChatInputCommandInteraction) {
-    log.debug(`[${PREFIX}] started!`);
+    startLog(PREFIX, interaction);
     if (!interaction.channel) {
       interaction.reply({content: 'This command can only be used in a server!', ephemeral: true});
       return false;

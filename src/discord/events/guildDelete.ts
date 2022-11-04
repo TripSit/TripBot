@@ -5,8 +5,8 @@ import {
 import {db} from '../../global/utils/knex';
 import {DiscordGuilds} from '../../global/@types/pgdb';
 import log from '../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const guildDelete: guildEvent = {
   name: 'guildDelete',
@@ -21,6 +21,5 @@ export const guildDelete: guildEvent = {
       })
       .onConflict('discord_id')
       .merge();
-  // log.debug(`[${PREFIX}] finished!`);
   },
 };

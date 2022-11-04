@@ -15,15 +15,16 @@ import {SlashCommand} from '../@types/commandDef';
 import {embedTemplate} from '../utils/embedTemplate';
 import env from '../../global/utils/env.config';
 import log from '../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {startLog} from '../utils/startLog';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const bug: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('template')
     .setDescription('Example!'),
   async execute(interaction) {
-    log.debug(`[${PREFIX}] starting!`);
+    startLog(PREFIX, interaction);
     // Create the modal
     const modal = new ModalBuilder()
       .setCustomId(`modal~${interaction.id}`)

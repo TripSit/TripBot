@@ -1,6 +1,6 @@
 Welcome to TripSit's bot website!
 
-This started because Digital ocean needs a webserver to show that the app is "ready".
+This began because Digital ocean needs a webserver to show that the app is "ready".
 
 So we already have a webserver running, it doesn't hurt to run some static pages
 

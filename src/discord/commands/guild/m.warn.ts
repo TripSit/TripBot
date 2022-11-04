@@ -14,14 +14,16 @@ import {MessageCommand} from '../../@types/commandDef';
 import {stripIndents} from 'common-tags';
 import log from '../../../global/utils/log';
 import {moderate} from '../../../global/commands/g.moderate';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {startLog} from '../../utils/startLog';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const mWarn: MessageCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Warn')
     .setType(ApplicationCommandType.Message),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const actor = interaction.member as GuildMember;
     const target = interaction.targetMessage.member as GuildMember;
     const message = interaction.targetMessage.cleanContent;

@@ -9,8 +9,8 @@ import env from '../global/utils/env.config';
 import log from '../global/utils/log';
 import {registerCommands} from './commands';
 import {registerEvents} from './events';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 // eslint-disable-next-line
 // https://discord.com/api/oauth2/authorize?client_id=977945272359452713&permissions=378225575936&scope=bot%20applications.commands

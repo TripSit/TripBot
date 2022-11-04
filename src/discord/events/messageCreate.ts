@@ -14,8 +14,8 @@ import {announcements} from '../utils/announcements';
 import {messageCommand} from '../utils/messageCommand';
 import {modmailDMInteraction, modmailThreadInteraction} from '../commands/guild/modmail';
 // import log from '../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 export const messageCreate: messageEvent = {
   name: 'messageCreate',

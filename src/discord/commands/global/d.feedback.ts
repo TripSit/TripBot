@@ -11,17 +11,19 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import {SlashCommand} from '../../@types/commandDef';
+import {startLog} from '../../utils/startLog';
 import {embedTemplate} from '../../utils/embedTemplate';
 import env from '../../../global/utils/env.config';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dFeedback: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('feedback')
     .setDescription('Report a bug or other feedback to the bot dev team!'),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     // Create the modal
     const modal = new ModalBuilder()
       .setCustomId(`feedbackReportModal~${interaction.id}`)

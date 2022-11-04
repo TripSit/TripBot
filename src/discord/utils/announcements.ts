@@ -11,8 +11,8 @@ import {stripIndents} from 'common-tags';
 import {db} from '../../global/utils/knex';
 import {Users} from '../../global/@types/pgdb';
 import log from '../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 const frequency = env.NODE_ENV === 'production' ? 50 : 2;
 const bigFrequency = env.NODE_ENV === 'production' ? 250 : 3;
@@ -336,5 +336,4 @@ export async function announcements(message:Message) {
       }
     }
   }
-  // log.debug(`[${PREFIX}] finished!`);
 };

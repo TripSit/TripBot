@@ -3,17 +3,19 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
+import {startLog} from '../../utils/startLog';
 import ms from 'ms';
 import log from '../../../global/utils/log';
-import * as path from 'path';
+import {parse} from 'path';
 import {stripIndents} from 'common-tags';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 export const botstats: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('botstats')
     .setDescription('Get stats about the bot!'),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     log.debug(`[${PREFIX}] starting!`);
     // Get the number of guilds the bot is in
     const guildCount = interaction.client.guilds.cache.size;
@@ -42,7 +44,6 @@ export const botstats: SlashCommand = {
       Commands: ${commandCount.toString()}
       Uptime: ${ms(uptime)}
     `);
-    log.debug(`[${PREFIX}] finished!`);
     interaction.reply({embeds: [embed]});
     return true;
   },

@@ -4,10 +4,11 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {testkits} from '../../../global/commands/g.testkits';
+import {startLog} from '../../utils/startLog';
 import {stripIndents} from 'common-tags';
 // import log from '../../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dTestkits: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -15,6 +16,7 @@ export const dTestkits: SlashCommand = {
     .setDescription('Information on how to get a test kit'),
 
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const emsInfo = await testkits();
     const embed = embedTemplate();
 

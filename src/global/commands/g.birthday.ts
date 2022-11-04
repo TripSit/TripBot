@@ -2,8 +2,8 @@ import {DateTime} from 'luxon';
 import {db, getUser} from '../utils/knex';
 import {Users} from '../@types/pgdb';
 import log from '../utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 /**
  * Birthday information of a user
@@ -21,19 +21,27 @@ export async function birthday(
   if (command === 'set') {
     log.debug(`[${PREFIX}] ${command} ${memberId} ${month} ${day}`);
     if (month === null || day === null) {
-      return 'You need to specify a month and day!';
+      const response = 'You need to specify a month and day!';
+      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      return response;
     }
     const month30 = ['April', 'June', 'September', 'November'];
     const month31 = ['January', 'March', 'May', 'July', 'August', 'October', 'December'];
     if (month !== undefined && day !== undefined) {
       if (month30.includes(month) && day > 30) {
-        return `${month} only has 30 days!`;
+        const response = `${month} only has 30 days!`;
+        log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+        return response;
       }
       if (month31.includes(month) && day > 31) {
-        return `${month} only has 31 days!`;
+        const response = `${month} only has 31 days!`;
+        log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+        return response;
       }
       if (month === 'February' && day > 28) {
-        return 'February only has 28 days!';
+        const response = 'February only has 28 days!';
+        log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+        return response;
       }
       const monthDict = {
         'january': 0,
@@ -61,8 +69,9 @@ export async function birthday(
         })
         .onConflict('discord_id')
         .merge();
-
-      return `${month} ${day} is your new birthday!`;
+      const response = `${month} ${day} is your new birthday!`;
+      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      return response;
     }
   } else if (command === 'get') {
     const userData = await getUser(memberId, null);
@@ -78,7 +87,7 @@ export async function birthday(
       log.debug(`[${PREFIX}] birthday is NULL`);
       resp = `is immortal <3 (and has not set a birthday)`;
     }
-
+    log.info(`[${PREFIX}] response: ${JSON.stringify(resp, null, 2)}`);
     return resp;
   }
 };

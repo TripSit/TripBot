@@ -18,8 +18,8 @@ import {
 import env from './env.config';
 import log from './log';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 // Value in miliseconds (1000 * 60 = 1 minute)
 const interval = env.NODE_ENV === 'production' ? 1000 * 60 : 1000 * 10;
@@ -28,8 +28,6 @@ const interval = env.NODE_ENV === 'production' ? 1000 * 60 : 1000 * 10;
  * This function is called on start.ts and runs the timers
  */
 export async function runTimer() {
-  log.info(`[${PREFIX}] Started!`);
-
   /**
    * This timer runs every (INTERVAL) to determine if there are any tasks to perform
    * This function uses setTimeout so that it can finish runing before the next loop

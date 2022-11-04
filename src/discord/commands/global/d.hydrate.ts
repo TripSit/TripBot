@@ -4,9 +4,10 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
+import {startLog} from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dhydrate: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -14,6 +15,7 @@ export const dhydrate: SlashCommand = {
     .setDescription('Remember to hydrate!'),
 
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const output = '💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊\n\n' +
         '⚠️ ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ ⚠️\n\n' +
         '💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊';

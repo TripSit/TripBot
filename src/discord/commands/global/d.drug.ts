@@ -5,11 +5,12 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {drug} from '../../../global/commands/g.drug';
+import {startLog} from '../../utils/startLog';
 import {stripIndents} from 'common-tags';
 import {CbSubstance} from '../../../global/@types/combined.d';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dDrug: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -21,9 +22,9 @@ export const dDrug: SlashCommand = {
       .setAutocomplete(true)),
 
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const embed = embedTemplate();
     const drugName = interaction.options.getString('substance');
-    log.debug(`[${PREFIX}] started | drugName: ${drugName}`);
     if (!drugName) {
       embed.setTitle(`No drug name was provided`);
       interaction.reply({embeds: [embed]});
@@ -342,7 +343,6 @@ export const dDrug: SlashCommand = {
     }
 
     interaction.reply({embeds: [embed], ephemeral: false});
-    log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

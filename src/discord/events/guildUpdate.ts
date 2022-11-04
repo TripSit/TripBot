@@ -19,8 +19,5 @@ export const guildUpdate: guildEvent = {
       guild.leave();
       return;
     }
-
-
-    // log.debug(`[${PREFIX}] finished!`);
   },
 };

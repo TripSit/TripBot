@@ -1,6 +1,6 @@
 import log from '../utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 type DxmDataType = {
   First: {min: number, max: number};
@@ -16,7 +16,6 @@ type DxmDataType = {
  * @return {any}
  */
 export async function calcDxm(givenWeight:number, weightUnits:string, taking:string):Promise<any> {
-  // log.debug(`[${PREFIX}] started!`);
   let calcWeight = weightUnits === 'lbs' ? givenWeight * 0.453592 : givenWeight;
   // log.debug(`[${PREFIX}] calc_weight: ${calcWeight}`);
 
@@ -77,6 +76,6 @@ export async function calcDxm(givenWeight:number, weightUnits:string, taking:str
     };
   });
 
-  log.debug(`[${PREFIX}] returnData: ${JSON.stringify(returnData)}`);
+  log.info(`[${PREFIX}] response: ${JSON.stringify(returnData, null, 2)}`);
   return [returnData, units];
 };

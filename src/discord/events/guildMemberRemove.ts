@@ -9,9 +9,9 @@ import {db} from '../../global/utils/knex';
 import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
 import {embedTemplate} from '../utils/embedTemplate';
-import * as path from 'path';
+import {parse} from 'path';
 import {Users} from '../../global/@types/pgdb';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 export const guildMemberRemove: guildMemberEvent = {
   name: 'guildMemberRemove',
@@ -68,7 +68,5 @@ export const guildMemberRemove: guildMemberEvent = {
       .into('users')
       .onConflict('discord_id')
       .merge();
-
-    log.debug(`[${PREFIX}] finished!`);
   },
 };

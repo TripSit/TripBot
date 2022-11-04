@@ -16,9 +16,9 @@ import env from '../../global/utils/env.config';
 import {embedTemplate} from '../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 
-import * as path from 'path';
+import {parse} from 'path';
 import {Users} from '../../global/@types/pgdb';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 export const guildMemberAdd: guildMemberEvent = {
   name: 'guildMemberAdd',
@@ -112,7 +112,5 @@ export const guildMemberAdd: guildMemberEvent = {
     if (channelBotlog) {
       channelBotlog.send({embeds: [embed]});
     }
-
-    log.debug(`[${PREFIX}] finished!`);
   },
 };

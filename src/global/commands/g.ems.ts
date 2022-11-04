@@ -1,9 +1,13 @@
+import log from '../utils/log';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
+
 /**
  * Information about contacting the team!
  * @return {any} an object with information about the bot
  */
 export async function ems():Promise<helpResource[]> {
-  return [
+  const response = [
     {
       name: 'Poison Control',
       country: 'USA',
@@ -86,6 +90,8 @@ export async function ems():Promise<helpResource[]> {
       webchat: 'https://blog.opencounseling.com/suicide-hotlines/',
     },
   ];
+  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  return response;
 };
 
 type helpResource = {

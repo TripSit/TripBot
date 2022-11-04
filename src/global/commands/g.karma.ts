@@ -1,8 +1,8 @@
 import {stripIndents} from 'common-tags';
 import {getUser} from '../utils/knex';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
-// import log from '../utils/log';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
+import log from '../utils/log';
 
 /**
  *
@@ -20,6 +20,7 @@ export async function karma(
   // log.debug(`[${PREFIX}] starting!`);
 
   const userData = await getUser(memberId, null);
-  // log.debug(`[${PREFIX}] finished!`);
-  return stripIndents`has received ${userData.karma_received} karma and given ${userData.karma_given} karma`;
+  const response = stripIndents`has received ${userData.karma_received} karma and given ${userData.karma_given} karma`;
+  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  return response;
 };

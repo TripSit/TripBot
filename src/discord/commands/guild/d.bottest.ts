@@ -12,14 +12,62 @@ import {
 } from 'discord-api-types/v10';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
+import {startLog} from '../../utils/startLog';
 // import env from '../../../global/utils/env.config';
 // import fs from 'fs/promises';
 import log from '../../../global/utils/log';
-import * as path from 'path';
+import {parse} from 'path';
 // import convert from 'convert-units';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 // import drugDataAll from '../../../global/assets/data/drug_db_combined.json';
 // const drugNames = drugDataAll.map((d) => d.name);
+
+export const testSuite: SlashCommand = {
+  data: new SlashCommandBuilder()
+    .setName('bottest')
+    .setDescription('This will test the bot and show all functionality!')
+    .addStringOption((option) => option.setName('scope')
+      .setDescription('Global, guild, or all?')
+      .addChoices(
+        {name: 'All', value: 'All'},
+        {name: 'Guild', value: 'Guild'},
+        {name: 'Global', value: 'Global'},
+      )),
+  async execute(interaction) {
+    startLog(PREFIX, interaction);
+    if (!interaction.channel) {
+      await interaction.reply('This command must be used in a channel!');
+      return false;
+    };
+    const scope = interaction.options.getString('scope') || 'All';
+    await interaction.reply(`Testing ${scope} commands!`);
+
+    await testGlobal(interaction)
+      .then(async (globalResults) => {
+        log.debug(`[${PREFIX}] Global results: ${JSON.stringify(globalResults)}`);
+        await testGuild(interaction)
+          .then(async (guildResults) => {
+            if (!interaction.channel) {
+              await interaction.reply('This command must be used in a channel!');
+              return false;
+            };
+            log.debug(`[${PREFIX}] Guild results: ${JSON.stringify(guildResults)}`);
+            const embed = embedTemplate()
+              .setTitle('Testing Results')
+              .addFields(
+                {name: 'Global Tested', value: `${globalResults.total}`, inline: true},
+                {name: 'Global Success', value: `${globalResults.passed}`, inline: true},
+                {name: 'Global Failed', value: `${globalResults.failed}`, inline: true},
+                {name: 'Guild Tested', value: `${guildResults.total}`, inline: true},
+                {name: 'Guild Success', value: `${guildResults.passed}`, inline: true},
+                {name: 'Guild Failed', value: `${guildResults.failed}`, inline: true},
+              );
+            await interaction.channel.send({embeds: [embed]});
+          });
+      });
+    return true;
+  },
+};
 
 /**
  * @param {number} ms
@@ -826,56 +874,8 @@ async function testGuild(interaction:ChatInputCommandInteraction):Promise<result
             });
         };
       });
-    // .finally(() => {
-    //   // log.debug(`[${PREFIX}] Guild commands finished!`);
-    //   // log.debug(`[${PREFIX}] Guild commands results: ${JSON.stringify(results)}`);
-    // });
   }
   return results;
 }
 
-export const testSuite: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('bottest')
-    .setDescription('This will test the bot and show all functionality!')
-    .addStringOption((option) => option.setName('scope')
-      .setDescription('Global, guild, or all?')
-      .addChoices(
-        {name: 'All', value: 'All'},
-        {name: 'Guild', value: 'Guild'},
-        {name: 'Global', value: 'Global'},
-      )),
-  async execute(interaction) {
-    if (!interaction.channel) {
-      await interaction.reply('This command must be used in a channel!');
-      return false;
-    };
-    const scope = interaction.options.getString('scope') || 'All';
-    await interaction.reply(`Testing ${scope} commands!`);
 
-    await testGlobal(interaction)
-      .then(async (globalResults) => {
-        log.debug(`[${PREFIX}] Global results: ${JSON.stringify(globalResults)}`);
-        await testGuild(interaction)
-          .then(async (guildResults) => {
-            if (!interaction.channel) {
-              await interaction.reply('This command must be used in a channel!');
-              return false;
-            };
-            log.debug(`[${PREFIX}] Guild results: ${JSON.stringify(guildResults)}`);
-            const embed = embedTemplate()
-              .setTitle('Testing Results')
-              .addFields(
-                {name: 'Global Tested', value: `${globalResults.total}`, inline: true},
-                {name: 'Global Success', value: `${globalResults.passed}`, inline: true},
-                {name: 'Global Failed', value: `${globalResults.failed}`, inline: true},
-                {name: 'Guild Tested', value: `${guildResults.total}`, inline: true},
-                {name: 'Guild Success', value: `${guildResults.passed}`, inline: true},
-                {name: 'Guild Failed', value: `${guildResults.failed}`, inline: true},
-              );
-            await interaction.channel.send({embeds: [embed]});
-          });
-      });
-    return true;
-  },
-};

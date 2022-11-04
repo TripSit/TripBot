@@ -1,14 +1,14 @@
 import {getUser} from '../utils/knex';
-// import {Users} from '../@types/pgdb';
-// import log from '../utils/log';
-// import * as path from 'path';
-// import {stripIndents} from 'common-tags';
-// const PREFIX = path.parse(__filename).name;
+import log from '../utils/log';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 /**
  * @param {string} userId
  * @return {any}
  */
 export async function h2flow(userId:string):Promise<any> {
-  return await getUser(userId, null);
+  const response = await getUser(userId, null);
+  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  return response;
 };

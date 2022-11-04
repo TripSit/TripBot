@@ -7,8 +7,8 @@ import {
   DrugUnit,
 } from '../../global/@types/pgdb.d';
 import log from '../utils/log';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 /**
  *
@@ -48,6 +48,10 @@ export async function idose(
     date: ${date}
   `);
 
+  let response = {} as {
+    name: string,
+    value: string,
+  }[];
   if (command === 'delete') {
     if (recordNumber === null) {
       return [{
@@ -108,14 +112,13 @@ export async function idose(
         .where('id', recordId)
         .del();
 
-      return [{
+      response = [{
         name: 'Success',
         value: `I deleted:
         > **(${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}**
         > ${record.dose} ${record.units} of ${drugName} ${route}
         `,
       }];
-      ;
     }
   }
   if (command === 'get') {
@@ -169,7 +172,7 @@ export async function idose(
         };
         doses.push(field);
       }
-      return doses;
+      response = doses;
     } else {
       return [{
         name: 'Error',
@@ -214,9 +217,11 @@ export async function idose(
         units: units,
         created_at: date,
       });
+    response = [{
+      name: 'Success',
+      value: 'I added a new value for you!',
+    }];
   }
-  return [{
-    name: 'Error',
-    value: 'End of function i guess?',
-  }];
+  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  return response;
 }
