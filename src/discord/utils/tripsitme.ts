@@ -127,9 +127,7 @@ export async function tripsitmeClick(
     .then(async (i) => {
       logger.debug(`[${PREFIX}] i.customId.split('~')[4]: ${i.customId.split('~')[4]}`);
       logger.debug(`[${PREFIX}] interaction.id: ${interaction.id}`);
-      if (i.customId.split('~')[4] !== interaction.id) {
-        return;
-      };
+      if (i.customId.split('~')[4] !== interaction.id) return;
 
       logger.debug(`[${PREFIX}] Submit starting!`);
       logger.debug(`[${PREFIX}] memberInput: ${memberInput}`);

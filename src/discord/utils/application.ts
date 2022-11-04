@@ -79,7 +79,7 @@ export async function applicationStart(
 
   // Create the modal
   const modal = new ModalBuilder()
-    .setCustomId(`applicationSubmit~${channelId}~${roleRequestedId}~${roleReviewerId}`)
+    .setCustomId(`applicationSubmit~${channelId}~${roleRequestedId}~${roleReviewerId}~${interaction.id}`)
     .setTitle(`${roleRequested!.name} Application`);
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
     .setCustomId('reason')
@@ -100,41 +100,42 @@ export async function applicationStart(
   // Collect a modal submit interaction
   const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`applicationSubmit`);
   interaction.awaitModalSubmit({filter, time: 0})
-    .then(async (interaction) => {
-      if (!interaction.guild) {
+    .then(async (i) => {
+      if (i.customId.split('~')[4] !== interaction.id) return;
+      if (!i.guild) {
         logger.debug(`[${PREFIX}] no guild!`);
-        interaction.reply('This must be performed in a guild!');
+        i.reply('This must be performed in a guild!');
         return;
       }
-      if (!interaction.member) {
+      if (!i.member) {
         logger.debug(`[${PREFIX}] no member!`);
-        interaction.reply('This must be performed by a member of a guild!');
+        i.reply('This must be performed by a member of a guild!');
         return;
       }
 
-      const channelId = interaction.customId.split('~')[1];
-      const roleRequestedId = interaction.customId.split('~')[2];
-      const roleReviewerId = interaction.customId.split('~')[3];
+      const channelId = i.customId.split('~')[1];
+      const roleRequestedId = i.customId.split('~')[2];
+      const roleReviewerId = i.customId.split('~')[3];
 
       logger.debug(`[${PREFIX} - applicationSubmit] channelId: ${channelId}`);
       logger.debug(`[${PREFIX} - applicationSubmit] roleRequestedId: ${roleRequestedId}`);
       logger.debug(`[${PREFIX} - applicationSubmit] roleReviewerId: ${roleReviewerId}`);
 
-      const roleRequested = await interaction.guild?.roles.fetch(roleRequestedId) as Role;
-      const roleReviewer = await interaction.guild?.roles.fetch(roleReviewerId) as Role;
+      const roleRequested = await i.guild?.roles.fetch(roleRequestedId) as Role;
+      const roleReviewer = await i.guild?.roles.fetch(roleReviewerId) as Role;
 
       const channel = channelId !== '' ?
-        await interaction.guild.channels.fetch(channelId) as TextChannel :
-        interaction.channel as TextChannel;
+        await i.guild.channels.fetch(channelId) as TextChannel :
+        i.channel as TextChannel;
 
-      const reason = (interaction as ModalSubmitInteraction).fields.getTextInputValue('reason');
-      const skills = (interaction as ModalSubmitInteraction).fields.getTextInputValue('skills');
+      const reason = i.fields.getTextInputValue('reason');
+      const skills = i.fields.getTextInputValue('skills');
 
       const applicationThread = await channel.threads.create({
-        name: `💛│${(interaction.member as GuildMember).displayName}'s ${roleRequested.name} application!`,
+        name: `💛│${(i.member as GuildMember).displayName}'s ${roleRequested.name} application!`,
         autoArchiveDuration: 1440,
-        type: interaction.guild?.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
-        reason: `${(interaction.member as GuildMember).displayName} submitted an application!`,
+        type: i.guild?.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
+        reason: `${(i.member as GuildMember).displayName} submitted an application!`,
         invitable: env.NODE_ENV === 'production' ? false : undefined,
       }) as ThreadChannel;
 
@@ -144,43 +145,43 @@ export async function applicationStart(
         .addFields(
           {
             name: 'Displayname',
-            value: `${(interaction.member as GuildMember).displayName}`,
+            value: `${(i.member as GuildMember).displayName}`,
             inline: true},
           {
             name: 'Username',
-            value: `${interaction.member.user.username}#${interaction.member.user.discriminator}`,
+            value: `${i.member.user.username}#${i.member.user.discriminator}`,
             inline: true},
           {
             name: 'ID',
-            value: `${interaction.member.user.id}`,
+            value: `${i.member.user.id}`,
             inline: true,
           },
         )
         .addFields(
           {
             name: 'Created',
-            value: `${time((interaction.member.user as User).createdAt, 'R')}`,
+            value: `${time((i.member.user as User).createdAt, 'R')}`,
             inline: true},
         );
-      if ((interaction.member as GuildMember).joinedAt) {
+      if ((i.member as GuildMember).joinedAt) {
         appEmbed.addFields(
           {
             name: 'Joined',
-            value: `${time((interaction.member as GuildMember).joinedAt!, 'R')}`,
+            value: `${time((i.member as GuildMember).joinedAt!, 'R')}`,
             inline: true},
         );
       }
 
       const approveButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
-          .setCustomId(`applicationApprove~${(interaction.member as GuildMember).id}~${roleRequestedId}`)
+          .setCustomId(`applicationApprove~${(i.member as GuildMember).id}~${roleRequestedId}`)
           .setLabel('Approve')
           .setStyle(ButtonStyle.Primary),
       );
 
       const rejectMenu = new ActionRowBuilder<SelectMenuBuilder>().addComponents(
         new SelectMenuBuilder()
-          .setCustomId(`applicationReject~${(interaction.member as GuildMember).id}~${roleRequestedId}`)
+          .setCustomId(`applicationReject~${(i.member as GuildMember).id}~${roleRequestedId}`)
           .addOptions(
             {
               label: 'Generic Rejection',
@@ -245,7 +246,7 @@ export async function applicationStart(
           ),
       );
 
-      const actorHasRoleDeveloper = (interaction.member as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
+      const actorHasRoleDeveloper = (i.member as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
       logger.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
 
       applicationThread.send(`Hey ${actorHasRoleDeveloper ? 'team!' : roleReviewer} there is a new application!`);
@@ -261,7 +262,7 @@ export async function applicationStart(
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription('Thank you for your interest! We will try to get back to you as soon as possible!');
-      interaction.reply({embeds: [embed], ephemeral: true});
+      i.reply({embeds: [embed], ephemeral: true});
       logger.debug(`[${PREFIX}] finished!`);
     })
     .catch(console.error);

@@ -56,7 +56,7 @@ export const issue: SlashCommand = {
     logger.debug(`[${PREFIX}] starting!`);
     // Create the modal
     const modal = new ModalBuilder()
-      .setCustomId('issueModal')
+      .setCustomId(`issueModal~${interaction.id}`)
       .setTitle('TripBot Issue Creation');
     // An action row only holds one text input, so you need one action row per text input.
     const title = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
@@ -82,18 +82,19 @@ export const issue: SlashCommand = {
     // Collect a modal submit interaction
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`issueModal`);
     interaction.awaitModalSubmit({filter, time: 0})
-      .then(async (interaction) => {
+      .then(async (i) => {
+        if (i.customId.split('~')[1] !== interaction.id) return;
         logger.debug(`[${PREFIX}] submitted!`);
-        const sentByOwner = interaction.user === interaction.client.application!.owner;
+        const sentByOwner = i.user === i.client.application!.owner;
         // @ts-ignore
-        let issueBody = interaction.components[1].components[0].value;
+        let issueBody = i.components[1].components[0].value;
         if (sentByOwner) {
-          issueBody += `This issue was submitted by ${interaction.member} in ${interaction.guild}`;
+          issueBody += `This issue was submitted by ${i.member} in ${i.guild}`;
         }
         logger.debug(`[${PREFIX}] issueBody: ${JSON.stringify(issueBody, null, 2)}`);
 
         // @ts-ignore
-        const labels = interaction.components[1].components[0].customId.split(',');
+        const labels = i.components[1].components[0].customId.split(',');
         const filteredLabels = labels.filter((label:string) => label !== 'null');
 
         // Use octokit to create an issue
@@ -103,7 +104,7 @@ export const issue: SlashCommand = {
         await octokit.rest.issues.create({
           owner,
           repo,
-          title: interaction.fields.getTextInputValue('issueTitle'),
+          title: i.fields.getTextInputValue('issueTitle'),
           body: issueBody,
         })
           .then(async (response) => {
@@ -121,7 +122,7 @@ export const issue: SlashCommand = {
               .setDescription(stripIndents`\
               Issue #${issueNumber} created on ${owner}/${repo}
               Click here to view: ${issueUrl}`);
-            interaction.reply({embeds: [embed], ephemeral: true});
+            i.reply({embeds: [embed], ephemeral: true});
           })
           .catch((error:Error) => {
             logger.error(`[${PREFIX}] Failed to create issue on ${owner}/${repo}\n\n${error}`);
@@ -129,7 +130,7 @@ export const issue: SlashCommand = {
               .setColor(0xff0000)
               .setTitle('Issue creation failed!')
               .setDescription(`Your issue could not be created on ${owner}/${repo}\n\n${error}`);
-            interaction.reply({embeds: [embed], ephemeral: false});
+            i.reply({embeds: [embed], ephemeral: false});
             return Promise.reject(error);
           });
         logger.debug(`[${PREFIX}] finished!`);

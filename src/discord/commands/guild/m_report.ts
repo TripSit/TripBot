@@ -28,7 +28,7 @@ export const mReport: MessageCommand = {
     const messageUrl = interaction.targetMessage.url;
 
     const modal = new ModalBuilder()
-      .setCustomId('reportModal')
+      .setCustomId(`reportModal~${interaction.id}`)
       .setTitle('Tripbot Report');
     const privReason = new TextInputBuilder()
       .setLabel('Why are you reporting this?')
@@ -42,9 +42,10 @@ export const mReport: MessageCommand = {
     await interaction.showModal(modal);
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`reportModal`);
     interaction.awaitModalSubmit({filter, time: 0})
-      .then(async (interaction) => {
+      .then(async (i) => {
+        if (i.customId.split('~')[1] !== interaction.id) return;
         const privReason = stripIndents`
-        ${interaction.fields.getTextInputValue('privReason')}
+        ${i.fields.getTextInputValue('privReason')}
     
         [The offending message:](${messageUrl})
         > ${message}
@@ -58,10 +59,10 @@ export const mReport: MessageCommand = {
           privReason,
           null,
           null,
-          interaction,
+          i,
         );
         logger.debug(`[${PREFIX}] Result: ${result}`);
-        interaction.reply(result);
+        i.reply(result);
 
         logger.debug(`[${PREFIX}] finished!`);
       });

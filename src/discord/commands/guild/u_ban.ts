@@ -26,7 +26,7 @@ export const uBan: UserCommand = {
     const target = interaction.targetMember as GuildMember;
 
     const modal = new ModalBuilder()
-      .setCustomId('banModal')
+      .setCustomId(`banModal~${interaction.id}`)
       .setTitle('Tripbot Ban');
     const privReason = new TextInputBuilder()
       .setLabel('Why are you banning this user?')
@@ -55,16 +55,17 @@ export const uBan: UserCommand = {
 
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`banModal`);
     interaction.awaitModalSubmit({filter, time: 0})
-      .then(async (interaction) => {
-        const privReason = interaction.fields.getTextInputValue('privReason');
-        const pubReason = interaction.fields.getTextInputValue('pubReason');
-        const durationInput = interaction.fields.getTextInputValue('duration');
+      .then(async (i) => {
+        if (i.customId.split('~')[1] !== interaction.id) return;
+        const privReason = i.fields.getTextInputValue('privReason');
+        const pubReason = i.fields.getTextInputValue('pubReason');
+        const durationInput = i.fields.getTextInputValue('duration');
 
         let duration = 0;
         // Check if the given duration is a number between 0 and 7
         const days = parseInt(durationInput);
         if (isNaN(days) || days < 0 || days > 7) {
-          interaction.reply({content: 'Invalid number of days given', ephemeral: true});
+          i.reply({content: 'Invalid number of days given', ephemeral: true});
           return;
         } else {
           duration = duration ?
@@ -80,10 +81,10 @@ export const uBan: UserCommand = {
           privReason,
           pubReason,
           duration,
-          interaction);
+          i);
 
         logger.debug(`[${PREFIX}] Result: ${result}`);
-        interaction.reply(result);
+        i.reply(result);
 
         logger.debug(`[${PREFIX}] finished!`);
       });

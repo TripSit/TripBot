@@ -236,7 +236,7 @@ export async function modmailCreate(
 
   // Create the modal
   const modal = new ModalBuilder()
-    .setCustomId(modmailVars[issueType].customId)
+    .setCustomId(`${modmailVars[issueType].customId}~${interaction.id}`)
     .setTitle(modmailVars[issueType].title);
 
   // An action row only holds one text input, so you need one action row per text input.
@@ -270,13 +270,14 @@ export async function modmailCreate(
   // Collect a modal submit interaction
   const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`ModmailIssueModal`);
   interaction.awaitModalSubmit({filter, time: 0})
-    .then(async (interaction) => {
+    .then(async (i) => {
+      if (i.customId.split('~')[2] !== interaction.id) return;
       // Get whatever they sent in the modal
-      const modalInputA = interaction.fields.getTextInputValue(`inputA`);
+      const modalInputA = i.fields.getTextInputValue(`inputA`);
       logger.debug(`[${PREFIX}] modalInputA: ${modalInputA}!`);
       let modalInputB = '';
       try {
-        modalInputB = interaction.fields.getTextInputValue(`inputB`);
+        modalInputB = i.fields.getTextInputValue(`inputB`);
         logger.debug(`[${PREFIX}] modalInputB: ${modalInputB}!`);
       } catch (e) {}
 
@@ -291,7 +292,7 @@ export async function modmailCreate(
       logger.debug(`[${PREFIX}] Created thread ${ticketThread.id}`);
 
       // Get the tripsit guild
-      const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+      const tripsitGuild = i.client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
       // Get the helper and TS roles
       const roleHelper = await tripsitGuild.roles.fetch(env.ROLE_TRIPSITTER) as Role;
       logger.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
@@ -323,7 +324,7 @@ export async function modmailCreate(
           If you just would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
         `;
         }
-        interaction.reply({
+        i.reply({
           embeds: [embed],
           flags: ['SuppressEmbeds'],
         });
@@ -374,7 +375,7 @@ export async function modmailCreate(
               .setStyle(ButtonStyle.Success),
           );
 
-        interaction.reply({
+        i.reply({
           embeds: [embedDM],
           components: [finishedButton],
           ephemeral: false,
@@ -384,7 +385,7 @@ export async function modmailCreate(
 
       // Determine if this command was started by a Developer
       const roleDeveloper = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER)!;
-      const isDev = roleDeveloper.members.map((m) => m.user.id === interaction.user.id);
+      const isDev = roleDeveloper.members.map((m) => m.user.id === i.user.id);
       const pingRole = tripsitGuild.roles.cache.find((role) => role.id === modmailVars[issueType].pingRole)!;
       const tripsitterRole = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER)!;
 
@@ -473,7 +474,7 @@ export async function modmailCreate(
 
       // Update thet ticket in the DB
       if (global.db) {
-        const ticketRef = db.ref(`${env.FIREBASE_DB_TICKETS}/${member ? member.user.id : interaction.user.id}/`);
+        const ticketRef = db.ref(`${env.FIREBASE_DB_TICKETS}/${member ? member.user.id : i.user.id}/`);
         await ticketRef.update(newTicketData);
 
         let actorRoles = [] as string[];
@@ -481,7 +482,7 @@ export async function modmailCreate(
           actorRoles = (member.roles as GuildMemberRoleManager).cache.map((role) => role.name);
         }
 
-        const timerRef = db.ref(`${env.FIREBASE_DB_TIMERS}/${member ? member.user.id : interaction.user.id}/`);
+        const timerRef = db.ref(`${env.FIREBASE_DB_TIMERS}/${member ? member.user.id : i.user.id}/`);
         timerRef.set({
           [threadArchiveTime.valueOf()]: {
             type: 'helpthread',
@@ -501,7 +502,7 @@ export async function modmailCreate(
  * What happens when someone DM's the bot
  * @param {Message} message The message sent to the bot
  */
-export async function modmailDMInteraction(message:Message) {
+export async function modmailDMi(message:Message) {
   // Dont run if the user mentions @everyone or @here.
   if (message.content.includes('@everyone') || message.content.includes('@here')) {
     message.author.send('You\'re not allowed to use those mentions.');

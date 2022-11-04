@@ -339,7 +339,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
   ];
 
   const modal = new ModalBuilder()
-    .setCustomId(`appModal`)
+    .setCustomId(`appModal~${interaction.id}`)
     .setTitle('Tripsitter Help Request');
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
     .setCustomId('appliationText')
@@ -379,7 +379,8 @@ export async function applications(interaction:ChatInputCommandInteraction) {
   // Collect a modal submit interaction
   const filter = (interaction:any) => interaction.customId === 'appModal';
   interaction.awaitModalSubmit({filter, time: 150000})
-    .then(async (interaction) => {
+    .then(async (i) => {
+      if (i.customId.split('~')[1] !== interaction.id) return;
       const selectMenu = new SelectMenuBuilder()
         .setCustomId('applicationRoleSelectMenu')
         .setPlaceholder('Select role here!')
@@ -396,24 +397,24 @@ export async function applications(interaction:ChatInputCommandInteraction) {
             selectMenu.addOptions(
               {
                 label: role[0].name,
-                value: `${interaction.channel!.id}~${role[0].id}~${role[1].id}`,
+                value: `${i.channel!.id}~${role[0].id}~${role[1].id}`,
               },
             );
           } else {
-            interaction.reply('Error: You must provide both a role and a reviewer role!');
+            i.reply('Error: You must provide both a role and a reviewer role!');
           }
         }
       });
 
       // Send the initial message
-      await (interaction.channel as TextChannel).send(
+      await (i.channel as TextChannel).send(
         {
-          content: stripIndents`${interaction.fields.getTextInputValue('appliationText')}`,
+          content: stripIndents`${i.fields.getTextInputValue('appliationText')}`,
           components: [new ActionRowBuilder<SelectMenuBuilder>()
             .addComponents(selectMenu)],
         },
       );
-      interaction.reply({content: 'Donezo!', ephemeral: true});
+      i.reply({content: 'Donezo!', ephemeral: true});
     })
     .catch(console.error);
 }

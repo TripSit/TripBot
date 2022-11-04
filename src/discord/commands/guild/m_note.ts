@@ -30,7 +30,7 @@ export const mNote: MessageCommand = {
     logger.debug(`${PREFIX} target: ${target}`);
 
     const modal = new ModalBuilder()
-      .setCustomId('noteModal')
+      .setCustomId(`noteModal~${interaction.id}`)
       .setTitle('Tripbot Note');
     const privReason = new TextInputBuilder()
       .setLabel('What are you noting about this person?')
@@ -44,9 +44,10 @@ export const mNote: MessageCommand = {
     await interaction.showModal(modal);
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`noteModal`);
     interaction.awaitModalSubmit({filter, time: 0})
-      .then(async (interaction) => {
+      .then(async (i) => {
+        if (i.customId.split('~')[1] !== interaction.id) return;
         const privReason = stripIndents`
-        ${interaction.fields.getTextInputValue('privReason')}
+        ${i.fields.getTextInputValue('privReason')}
     
         [The offending message:](${messageUrl})
         > ${message}
@@ -60,10 +61,10 @@ export const mNote: MessageCommand = {
           privReason,
           null,
           null,
-          interaction,
+          i,
         );
         logger.debug(`[${PREFIX}] Result: ${result}`);
-        interaction.reply(result);
+        i.reply(result);
 
         logger.debug(`[${PREFIX}] finished!`);
       });
