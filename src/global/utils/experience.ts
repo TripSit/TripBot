@@ -5,8 +5,8 @@ import {
   TextChannel,
 } from 'discord.js';
 import {DateTime} from 'luxon';
-import {db} from '../utils/knex';
-import {Users, UserExperience} from '../@types/pgdb';
+import {db, getUser} from '../utils/knex';
+import {UserExperience} from '../@types/pgdb';
 import env from './env.config';
 import log from './log';
 import {stripIndents} from 'common-tags';
@@ -85,62 +85,30 @@ export async function experience(
     Math.floor(Math.random() * (25 - 15 + 1)) + 15 :
     100;
 
-  const userId = message.author.id;
-  let userUniqueId = await db
-    .select(db.ref('id'))
-    .from<Users>('users')
-    .where('discord_id', userId);
+  const userData = await getUser(message.author.id, null);
 
-  if (userUniqueId.length === 0) {
-    userUniqueId = await db
-      .insert({discord_id: userId})
-      .into('users')
-      .returning('id');
-  }
-
-  // log.debug(`[${PREFIX}] userUniqueId: ${userUniqueId[0].id}`);
-
-  let experienceData = {
-    user_id: userUniqueId[0].id as string,
-    type: experienceType as string | null,
-    level: 0 as number,
-    level_points: 0 as number,
-    total_points: 0 as number,
-    last_message_at: new Date() as Date,
-    last_message_channel: message.channel.id as string,
-    created_at: new Date() as Date,
-  };
-
-  const currentExp = await db
-    .select(
-      db.ref('id').as('id'),
-      db.ref('user_id').as('user_id'),
-      db.ref('type').as('type'),
-      db.ref('level').as('level'),
-      db.ref('level_points').as('level_points'),
-      db.ref('total_points').as('total_points'),
-      db.ref('last_message_at').as('last_message_at'),
-      db.ref('last_message_channel').as('last_message_channel'),
-      db.ref('created_at').as('created_at'),
-    )
-    .from<UserExperience>('user_experience')
-    .where('user_id', userUniqueId[0].id)
-    .andWhere('type', experienceType);
+  const experienceData = await db<UserExperience>('user_experience')
+    .select('*')
+    .where('user_id', userData.id)
+    .andWhere('type', experienceType)
+    .first();
   // log.debug(`[${PREFIX}] currentExp: ${JSON.stringify(currentExp, null, 2)}`);
 
   // If the user has no experience, insert it
-  if (!currentExp[0]) {
+  if (!experienceData) {
     log.debug(`[${PREFIX}] Inserting new experience`);
-    experienceData.level_points = expPoints;
-    experienceData.total_points = expPoints;
     // log.debug(`[${PREFIX}] experienceDataInsert: ${JSON.stringify(experienceData, null, 2)}`);
-    await db('user_experience')
-      .insert(experienceData);
+    await db<UserExperience>('user_experience')
+      .insert({
+        level_points: expPoints,
+        total_points: expPoints,
+      });
     return;
   } else {
     // If the user has experience, update it
     log.debug(`[${PREFIX}] Updating existing experience`);
-    experienceData = currentExp[0];
+    experienceData.level_points += expPoints;
+    experienceData.total_points += expPoints;
   }
 
   // log.debug(`[${PREFIX}] experienceDataUpdate: ${JSON.stringify(experienceData, null, 2)}`);
@@ -192,7 +160,7 @@ export async function experience(
 
   // log.debug(`[${PREFIX}] experienceDataMerge: ${JSON.stringify(experienceData, null, 2)}`);
 
-  await db('user_experience')
+  await db<UserExperience>('user_experience')
     .insert(experienceData)
     .onConflict(['id', 'user_id', 'type'])
     .merge();

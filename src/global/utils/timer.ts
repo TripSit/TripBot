@@ -12,6 +12,8 @@ import {
   DrugNames,
   UserReminders,
   UserTickets,
+  ReactionRoles,
+  TicketStatus,
 } from '../../global/@types/pgdb.d';
 import env from './env.config';
 import log from './log';
@@ -37,26 +39,24 @@ export async function runTimer() {
       async () => {
         // log.info(`[${PREFIX}] Checking timers...`);
         // Process reminders
-        const reminderData = await db
+        const reminderData = await db<UserReminders>('user_reminders')
           .select(
             db.ref('id').as('id'),
             db.ref('user_id').as('user_id'),
             db.ref('reminder_text').as('reminder_text'),
             db.ref('trigger_at').as('trigger_at'),
             db.ref('created_at').as('created_at'),
-          )
-          .from<UserReminders>('user_reminders');
+          );
         if (reminderData.length > 0) {
           // Loop through each reminder
           for (const reminder of reminderData) {
             // Check if the reminder is ready to be triggered
             if (DateTime.fromJSDate(reminder.trigger_at) <= DateTime.local()) {
               // Get the user's discord id
-              const userData = await db
+              const userData = await db<Users>('users')
                 .select(
                   db.ref('discord_id').as('discord_id'),
                 )
-                .from<Users>('users')
                 .where('id', reminder.user_id)
                 .first();
 
@@ -71,23 +71,21 @@ export async function runTimer() {
               }
 
               // Delete the reminder from the database
-              await db
+              await db<UserReminders>('user_reminders')
                 .delete()
-                .from<UserReminders>('user_reminders')
                 .where('id', reminder.id);
             }
           }
         }
 
         // Process mindset roles
-        const mindsetRoleData = await db
+        const mindsetRoleData = await db<Users>('users')
           .select(
             db.ref('id').as('id'),
             db.ref('discord_id').as('discord_id'),
             db.ref('mindset_role').as('mindset_role'),
             db.ref('mindset_role_expires_at').as('mindset_role_expires_at'),
           )
-          .from<Users>('users')
           .whereNotNull('mindset_role_expires_at');
         if (mindsetRoleData.length > 0) {
           // Loop through each user
@@ -115,27 +113,25 @@ export async function runTimer() {
                         const role = await guild.roles.fetch(user.mindset_role);
                         if (role) {
                           // Get the reaction role info from the db
-                          const reactionRoleData = await db
+                          const reactionRoleData = await db<ReactionRoles>('reaction_roles')
                             .select(
                               db.ref('message_id').as('message_id'),
                               db.ref('message_id').as('message_id'),
                               db.ref('message_id').as('message_id'),
                             )
-                            .first()
-                            .from('reaction_roles')
-                            .where('role_id', user.mindset_role);
+                            .where('role_id', user.mindset_role)
+                            .first();
 
                           // Remove the reaction from the role message
                           await member.roles.remove(role);
                           log.debug(`[${PREFIX}] Removed ${user.discord_id}'s ${user.mindset_role} role`);
                           // Update the user's mindset role in the database
-                          await db
+                          await db<Users>('users')
                             .insert({
                               discord_id: user.discord_id,
                               mindset_role: null,
                               mindset_role_expires_at: null,
                             })
-                            .into('users')
                             .onConflict('discord_id')
                             .merge();
                         }
@@ -149,7 +145,7 @@ export async function runTimer() {
         }
 
         // Process tickets
-        const ticketData = await db
+        const ticketData = await db<UserTickets>('user_tickets')
           .select(
             db.ref('id').as('id'),
             db.ref('user_id').as('user_id'),
@@ -160,7 +156,6 @@ export async function runTimer() {
             db.ref('archived_at').as('archived_at'),
             db.ref('deleted_at').as('deleted_at'),
           )
-          .from<UserTickets>('user_tickets')
           .whereNot('status', 'DELETED');
         if (ticketData.length > 0) {
           // Loop through each ticket
@@ -169,12 +164,11 @@ export async function runTimer() {
             if (ticket.archived_at && ticket.status !== 'ARCHIVED') {
               if (DateTime.fromJSDate(ticket.archived_at) <= DateTime.local()) {
                 // Archive the ticket set the deleted time to 1 week from now
-                await db
+                await db<UserTickets>('user_tickets')
                   .update({
-                    status: 'ARCHIVED',
+                    status: 'ARCHIVED' as TicketStatus,
                     deleted_at: DateTime.local().plus({days: 7}).toJSDate(),
                   })
-                  .from<UserTickets>('user_tickets')
                   .where('id', ticket.id);
 
                 // Archive the thread on discord
@@ -186,12 +180,11 @@ export async function runTimer() {
                 }
 
 
-                const user = await db
+                const user = await db<Users>('users')
                   .select(
                     db.ref('discord_id').as('discord_id'),
                     db.ref('roles').as('roles'),
                   )
-                  .from<Users>('users')
                   .where('id', ticket.user_id)
                   .first();
                 if (user) {
@@ -239,9 +232,8 @@ export async function runTimer() {
             if (ticket.deleted_at && ticket.status === 'ARCHIVED') {
               if (DateTime.fromJSDate(ticket.deleted_at) <= DateTime.local()) {
                 // Delete the ticket
-                await db
+                await db<UserTickets>('user_tickets')
                   .delete()
-                  .from<UserTickets>('user_tickets')
                   .where('id', ticket.id);
 
                 // Delete the thread on discord

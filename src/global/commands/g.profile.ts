@@ -29,9 +29,8 @@ export async function profile(
     .where('discord_id', memberId);
 
   if (!userData[0]) {
-    userData = await db
+    userData = await db<Users>('users')
       .insert({discord_id: memberId})
-      .into('users')
       .returning('*');
   }
 
@@ -45,12 +44,11 @@ export async function profile(
     totalExp: 0,
   };
 
-  const currentExp = await db
+  const currentExp = await db<UserExperience>('user_experience')
     .select(
       db.ref('type').as('type'),
       db.ref('total_points').as('total_points'),
     )
-    .from<UserExperience>('user_experience')
     .where('user_id', userData[0].id);
 
   // log.debug(`[${PREFIX}] currentExp: ${JSON.stringify(currentExp, null, 2)}`);

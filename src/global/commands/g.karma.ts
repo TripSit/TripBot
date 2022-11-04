@@ -23,12 +23,11 @@ export async function karma(
   // log.debug(`[${PREFIX}] karma: ${command} ${memberId} ${value} ${type}`);
   let response = 'If you can see this, something went terribly wrong, tell Moonbear';
   if (command === 'get') {
-    const data = await db
+    const data = await db<Users>('users')
       .select(
         db.ref('karma_received').as('karma_received'),
         db.ref('karma_given').as('karma_given'),
       )
-      .from<Users>('users')
       .where('discord_id', memberId);
 
     if (data.length === 0) {

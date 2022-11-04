@@ -17,12 +17,6 @@ export default {
   RAPID_TOKEN: process.env.RAPID_TOKEN,
   IMDB_TOKEN: process.env.IMDB_TOKEN,
 
-  FIREBASE_DB_URL: process.env.FIREBASE_DB_URL,
-  FIREBASE_PRIVATE_KEY_ID: process.env.FIREBASE_PRIVATE_KEY_ID,
-  FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY,
-  FIREBASE_CLIENT_ID: process.env.FIREBASE_CLIENT_ID,
-  FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL,
-  FIREBASE_REALTIME_KEY: process.env.FIREBASE_REALTIME_KEY,
   IRC_PASSWORD: process.env.IRC_PASSWORD,
 
   PORT: '8080',
@@ -31,10 +25,6 @@ export default {
   DISCLAIMER: 'Dose responsibly!',
   DISCORD_OWNER_ID: '177537158419054592',
   DISCORD_GUILD_ID: isProd ? '179641883222474752' : '960606557622657026',
-  FIREBASE_DB_TICKETS: isProd ? 'tickets_v5' : 'tickets_dev',
-  FIREBASE_DB_GUILDS: isProd ? 'guilds_v5' : 'guilds_dev',
-  FIREBASE_DB_USERS: isProd ? 'users_v5' : 'users_dev',
-  FIREBASE_DB_TIMERS: isProd ? 'timers_v5' : 'timers_dev',
   IRC_SERVER: 'innsbruck.tripsit.me',
   IRC_USERNAME: isProd ? 'TSModRelay' : 'TSDev',
   IRC_BOTPREFIX: '!',

@@ -17,6 +17,7 @@ import {embedTemplate} from '../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 
 import * as path from 'path';
+import {Users} from '../../global/@types/pgdb';
 const PREFIX = path.parse(__filename).name;
 
 export const guildMemberAdd: guildMemberEvent = {
@@ -48,12 +49,11 @@ export const guildMemberAdd: guildMemberEvent = {
       new Collection(newInvites.map((invite) => [invite.code, invite.uses])),
     );
 
-    await db
+    await db<Users>('users')
       .insert({
         discord_id: member.id,
-        joined_at: member.joinedAt,
+        joined_at: member.joinedAt ?? new Date(),
       })
-      .into('users')
       .onConflict('discord_id')
       .merge();
 

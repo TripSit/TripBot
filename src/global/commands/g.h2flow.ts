@@ -22,7 +22,7 @@ export async function h2flow(userId:string):Promise<any> {
   // User doesn't exist in the database
     log.debug(`[${PREFIX}] User doesn't exist in the database: ${userId}`);
     // Create new user
-    data = await db('users')
+    data = await db<Users>('users')
       .insert({
         discord_id: userId,
         sparkle_points: 0,

@@ -4,7 +4,6 @@ import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 const { stripIndents } = require('common-tags');
 const logger = require('../../../global/utils/log');
-const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
 const { moderate } = require('../../../global/utils/moderate');
 
 const {

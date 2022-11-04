@@ -16,7 +16,7 @@ import {
 import {
   ButtonStyle,
 } from 'discord-api-types/v10';
-import {modActionDict} from '../@types/database.d';
+// import {modActionDict} from '../@types/database.d';
 import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../../discord/utils/embedTemplate';
 
@@ -271,46 +271,46 @@ export async function moderate(
     report: [] as string[],
   };
 
-  const actionData = {
-    actor: actor.id,
-    command: command,
-    target: target.id,
-    duration: duration,
-    privReason: privReason,
-    pubReason: pubReason,
-  };
-  let actions = {} as modActionDict;
-  const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}/modActions/`);
-  await ref.once('value', (data) => {
-    if (data.val() !== null) {
-      actions = data.val();
-      actions[Date.now().valueOf().toString()] = actionData;
-      Object.keys(actions).forEach(async (actionDate) => {
-        const actionValue = actions[actionDate];
-        const actionCommand = actionValue.command;
-        if (actionCommand in targetActionCount) {
-          targetActionCount[actionCommand as keyof typeof targetActionCount] += 1;
-        }
-        if (actionCommand in targetActionList) {
-          // turn actionDate into a date object
-          const actionDateObj = new Date(parseInt(actionDate));
-          // Format the date into a short format
-          const actionDateFormatted = actionDateObj.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-          });
-          const actionString = stripIndents`
-            ${actionDateFormatted} by <@${actionValue.actor}>: ${actionValue.privReason} ${actionValue.pubReason ? `**PubReason: ${actionValue.pubReason}**` : ''}
-          `;
-          targetActionList[actionCommand as keyof typeof targetActionList].push(actionString);
-        }
-      });
-    } else {
-      actions[Date.now().valueOf().toString()] = actionData;
-    }
-    ref.set(actions);
-  });
+  // const actionData = {
+  //   actor: actor.id,
+  //   command: command,
+  //   target: target.id,
+  //   duration: duration,
+  //   privReason: privReason,
+  //   pubReason: pubReason,
+  // };
+  // let actions = {} as modActionDict;
+  // const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}/modActions/`);
+  // await ref.once('value', (data) => {
+  //   if (data.val() !== null) {
+  //     actions = data.val();
+  //     actions[Date.now().valueOf().toString()] = actionData;
+  //     Object.keys(actions).forEach(async (actionDate) => {
+  //       const actionValue = actions[actionDate];
+  //       const actionCommand = actionValue.command;
+  //       if (actionCommand in targetActionCount) {
+  //         targetActionCount[actionCommand as keyof typeof targetActionCount] += 1;
+  //       }
+  //       if (actionCommand in targetActionList) {
+  //         // turn actionDate into a date object
+  //         const actionDateObj = new Date(parseInt(actionDate));
+  //         // Format the date into a short format
+  //         const actionDateFormatted = actionDateObj.toLocaleDateString('en-US', {
+  //           year: 'numeric',
+  //           month: 'short',
+  //           day: 'numeric',
+  //         });
+  //         const actionString = stripIndents`
+  //           ${actionDateFormatted} by <@${actionValue.actor}>: ${actionValue.privReason} ${actionValue.pubReason ? `**PubReason: ${actionValue.pubReason}**` : ''}
+  //         `;
+  //         targetActionList[actionCommand as keyof typeof targetActionList].push(actionString);
+  //       }
+  //     });
+  //   } else {
+  //     actions[Date.now().valueOf().toString()] = actionData;
+  //   }
+  //   ref.set(actions);
+  // });
 
   // log.debug(`[${PREFIX}] actions: ${JSON.stringify(actions)}`);
   log.debug(`[${PREFIX}] targetActionCount: ${JSON.stringify(targetActionCount)}`);

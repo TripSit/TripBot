@@ -3,6 +3,7 @@ import {
   guildEvent,
 } from '../@types/eventDef';
 import {db} from '../../global/utils/knex';
+import {DiscordGuilds} from '../../global/@types/pgdb';
 import log from '../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -13,7 +14,7 @@ export const guildDelete: guildEvent = {
   async execute(guild: Guild) {
   // log.debug(`[${PREFIX}] starting!`);
     log.info(`[${PREFIX}] Left guild: ${guild.name} (id: ${guild.id})`);
-    await db('discord_guilds')
+    await db<DiscordGuilds>('discord_guilds')
       .insert({
         id: guild.id,
         removed_at: new Date(),

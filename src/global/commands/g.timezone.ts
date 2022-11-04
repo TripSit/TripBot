@@ -31,7 +31,7 @@ export async function timezone(
     }
     // log.debug(`[${PREFIX}] actor.id: ${actor.id}`);
 
-    await db('users')
+    await db<Users>('users')
       .insert({
         discord_id: memberId,
         timezone: tzCode,
@@ -45,9 +45,8 @@ export async function timezone(
     let tzCode = '';
     let gmtValue = '';
 
-    const data = (await db
+    const data = (await db<Users>('users')
       .select(db.ref('timezone').as('timezone'))
-      .from<Users>('users')
       .where('discord_id', memberId))[0].timezone;
 
     if (data !== null) {

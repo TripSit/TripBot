@@ -9,7 +9,7 @@ import env from '../../global/utils/env.config';
 import {embedTemplate} from './embedTemplate';
 import {stripIndents} from 'common-tags';
 import {db} from '../../global/utils/knex';
-// import {Users} from '../../global/@types/pgdb';
+import {Users} from '../../global/@types/pgdb';
 import log from '../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -301,12 +301,12 @@ export async function announcements(message:Message) {
               collector.on('collect', async (reaction, user) => {
                 const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
                 // Increment the users's pointType
-                const value = await db('users')
+                const value = await db<Users>('users')
                   .where('discord_id', user.id)
                   .increment(pointType, 1)
-                  .returning(pointType);
+                  .returning('*');
                 if (value[0]) {
-                  log.debug(`[${PREFIX}] ${user.tag} ${pointType} incremented to ${value[0][pointType]}`);
+                  log.debug(`[${PREFIX}] ${user.tag} ${pointType} incremented to ${value[0][pointType as keyof typeof value[0]]}`);
                 } else {
                   log.debug(`[${PREFIX}] ${user.tag} ${pointType} added as 1`);
                 }
@@ -315,11 +315,11 @@ export async function announcements(message:Message) {
               collector.on('remove', async (reaction, user) => {
                 const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
                 // Increment the users's pointType
-                const value = await db('users')
+                const value = await db<Users>('users')
                   .where('discord_id', user.id)
                   .increment(pointType, -1)
                   .returning(pointType);
-                log.debug(`[${PREFIX}] ${user.tag} ${pointType} decremented to ${value[0][pointType]}`);
+                log.debug(`[${PREFIX}] ${user.tag} ${pointType} decremented to ${value[0][pointType as keyof typeof value[0]]}`);
               });
             });
         } else if (messageCounter[message.channel.id] % frequency === 0) {

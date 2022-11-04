@@ -48,7 +48,7 @@ export async function chitragupta(
   if (!reaction.emoji.name.includes('upvote')) return;
 
   // Increment karma of the actor
-  let actorKarma = await db('users')
+  let actorKarma = await db<Users>('users')
     .where('discord_id', actor.id)
     .increment('karma_given', action)
     .returning(['karma_received', 'karma_given']);
@@ -62,13 +62,13 @@ export async function chitragupta(
       karma_given: action,
       karma_received: 0,
     };
-    actorKarma = await db('users')
+    actorKarma = await db<Users>('users')
       .insert(newUser)
       .returning(['karma_received', 'karma_given']);
   }
 
   // Increment the karma of the target
-  let targetKarma = await db('users')
+  let targetKarma = await db<Users>('users')
     .where('discord_id', target.id)
     .increment('karma_received', action)
     .returning(['karma_received', 'karma_given']);
@@ -82,7 +82,7 @@ export async function chitragupta(
       karma_given: 0,
       karma_received: action,
     };
-    targetKarma = await db('users')
+    targetKarma = await db<Users>('users')
       .insert(newUser)
       .returning(['karma_received', 'karma_given']);
   }

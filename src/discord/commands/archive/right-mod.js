@@ -7,7 +7,6 @@ const {
 } = require('discord.js');
 const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
-const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
 
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name; // eslint-disable-line

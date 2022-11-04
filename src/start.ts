@@ -1,7 +1,6 @@
 import {discordConnect} from './discord/dscrd';
 import {validateEnv} from './global/utils/env.validate';
 import {runTimer} from './global/utils/timer';
-// import {firebaseConnect} from './global/utils/firebaseAPI';
 import {webserverConnect} from './webserver/webserverAPI';
 
 import env from './global/utils/env.config';
@@ -28,11 +27,6 @@ async function start() {
   }
 
   runTimer();
-
-  // if (env.FIREBASE_PRIVATE_KEY_ID) {
-  //   firebaseConnect();
-  //   runTimer();
-  // }
 }
 
 start();

@@ -3,7 +3,6 @@
 const path = require('path');
 const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
-const {getGuildInfo, setGuildInfo} = require('../../../global/services/firebaseAPI');
 
 const PREFIX = path.parse(__filename).name;
 

@@ -19,10 +19,9 @@ export const channelDelete: threadEvent = {
     log.debug(stripIndents`[${PREFIX}] ${thread.name}`);
 
     // Find if the channel is used as a thread_id in any tickets
-    const ticket = await db
+    const ticket = await db<UserTickets>('user_tickets')
       .select(
         db.ref('id'))
-      .from<UserTickets>('user_tickets')
       .where('thread_id', thread.id)
       .andWhere('status', 'OPEN')
       .first();

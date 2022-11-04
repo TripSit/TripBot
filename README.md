@@ -11,7 +11,7 @@ The goals with this bot are:
 
 ## Features
 Full Typescript support
-Firebase realtime database support
+Postgres database support
 
 ## Installation
 1) Clone the repo

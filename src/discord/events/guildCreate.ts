@@ -14,18 +14,18 @@ export const guildCreate: guildEvent = {
     log.debug(`[${PREFIX}] starting!`);
     log.info(`[${PREFIX}] Joined guild: ${guild.name} (id: ${guild.id})`);
 
-    const data = await db
-      .select(db.ref('is_banned').as('is_banned'))
-      .from<DiscordGuilds>('users')
-      .where('discord_id', guild.id);
+    const data = await db<DiscordGuilds>('discord_guilds')
+      .select('*')
+      .where('discord_id', guild.id)
+      .first();
 
-    if (data[0]) {
-      if (data[0].is_banned) {
+    if (data) {
+      if (data.is_banned) {
         log.info(`[${PREFIX}] I'm banned from ${guild.name}, leaving!`);
         guild.leave();
         return;
       } else {
-        await db('discord_guilds')
+        await db<DiscordGuilds>('discord_guilds')
           .insert({
             id: guild.id,
             joined_at: new Date(),
@@ -34,10 +34,9 @@ export const guildCreate: guildEvent = {
           .merge();
       }
     } else {
-      await db('discord_guilds')
+      await db<DiscordGuilds>('discord_guilds')
         .insert({
           id: guild.id,
-          is_banned: false,
           joined_at: new Date(),
         })
         .onConflict('discord_id')

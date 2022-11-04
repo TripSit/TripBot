@@ -54,21 +54,19 @@ export async function birthday(
 
       log.debug(`[${PREFIX}] Setting birthday for ${memberId} to ${birthday}`);
 
-      await db
+      await db<Users>('users')
         .insert({
           discord_id: memberId,
           birthday: birthday,
         })
-        .into('users')
         .onConflict('discord_id')
         .merge();
 
       return `${month} ${day} is your new birthday!`;
     }
   } else if (command === 'get') {
-    const data = await db
+    const data = await db<Users>('users')
       .select(db.ref('birthday').as('birthday'))
-      .from<Users>('users')
       .where('discord_id', memberId);
 
     log.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);

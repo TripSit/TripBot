@@ -1,4 +1,4 @@
-import {db} from '../utils/knex';
+import {db, getUser} from '../utils/knex';
 import {DateTime} from 'luxon';
 import {
   Users,
@@ -41,12 +41,11 @@ export async function remindme(
     }
     log.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
 
-    const userUniqueId = (await db
+    const userUniqueId = (await db<Users>('users')
       .select(db.ref('id'))
-      .from<Users>('users')
       .where('discord_id', userId))[0].id;
 
-    const unsorteddata = await db
+    const unsorteddata = await db<UserReminders>('user_reminders')
       .select(
         db.ref('id').as('id'),
         db.ref('user_id').as('user_id'),
@@ -54,7 +53,6 @@ export async function remindme(
         db.ref('trigger_at').as('trigger_at'),
         db.ref('created_at').as('created_at'),
       )
-      .from<UserReminders>('user_reminders')
       .where('user_id', userUniqueId);
 
     if (unsorteddata.length === 0) {
@@ -86,8 +84,7 @@ export async function remindme(
       ${record.reminder_text}
       `);
 
-      await db
-        .from<UserDrugDoses>('user_drug_doses')
+      await db<UserDrugDoses>('user_drug_doses')
         .where('id', recordId)
         .del();
 
@@ -98,9 +95,8 @@ export async function remindme(
     }
   }
   if (command === 'get') {
-    const data = await db
+    const data = await db<Users>('users')
       .select(db.ref('id'))
-      .from<Users>('users')
       .where('discord_id', userId);
 
     log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
@@ -113,7 +109,7 @@ export async function remindme(
 
     log.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
 
-    const unsorteddata = await db
+    const unsorteddata = await db<UserReminders>('user_reminders')
       .select(
         db.ref('id').as('id'),
         db.ref('user_id').as('user_id'),
@@ -121,7 +117,6 @@ export async function remindme(
         db.ref('trigger_at').as('trigger_at'),
         db.ref('created_at').as('created_at'),
       )
-      .from<UserReminders>('user_reminders')
       .where('user_id', userUniqueId);
 
     log.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);
@@ -166,23 +161,13 @@ export async function remindme(
     }
   }
   if (command === 'set') {
-    const data = await db
-      .select(db.ref('id').as('id'))
-      .from<Users>('users')
-      .where('discord_id', userId);
-
-    const userUniqueId = data.length > 0 ? data[0].id : (await db
+    if (!triggerAt) {
+      return 'You must provide a date and time for the reminder!';
+    }
+    const userData = await getUser(userId, null);
+    await db<UserReminders>('user_reminders')
       .insert({
-        discord_id: userId,
-      })
-      .into<Users>('users')
-      .returning(db.ref('id').as('id')))[0].id;
-
-    log.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
-
-    await db('user_reminders')
-      .insert({
-        user_id: userUniqueId,
+        user_id: userData.id,
         reminder_text: reminderText,
         trigger_at: triggerAt,
       });

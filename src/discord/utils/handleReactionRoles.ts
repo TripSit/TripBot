@@ -11,6 +11,7 @@ import env from '../../global/utils/env.config';
 import log from '../../global/utils/log';
 import * as path from 'path';
 import {stripIndents} from 'common-tags';
+import {Users, ReactionRoles} from '../../global/@types/pgdb';
 const PREFIX = path.parse(__filename).name;
 
 const mindsetRemovalTime = env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 8 : 1000 * 30;
@@ -35,9 +36,8 @@ add: ${add}\
   const messageId = reaction.message.id;
   const reactionId = reaction.emoji.id ?? reaction.emoji.name;
   // log.debug(`[${PREFIX}] messageId: ${messageId} | reactionId: ${reactionId}`);
-  const reactionRole = await db
+  const reactionRole = await db<ReactionRoles>('reaction_roles')
     .select(db.ref('role_id').as('role_id'))
-    .from('reaction_roles')
     .where('message_id', messageId)
     .andWhere('reaction_id', reactionId)
     .first();
@@ -79,13 +79,12 @@ add: ${add}\
         // log.debug(`[${PREFIX}] identifier: <:${reaction.emoji.identifier}>`);
         if (mindsetEmojis.includes(`<:${reaction.emoji.identifier}>`)) {
           // Update the database
-          await db
+          await db<Users>('users')
             .insert({
               discord_id: user.id,
               mindset_role: role.id,
               mindset_role_expires_at: new Date(Date.now() + mindsetRemovalTime),
             })
-            .into('users')
             .onConflict('discord_id')
             .merge();
           // log.debug(`[${PREFIX}] Updated mindest DB ${user.username}`);

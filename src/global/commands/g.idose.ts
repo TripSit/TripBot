@@ -1,9 +1,11 @@
-import {db} from '../../global/utils/knex';
+import {db, getUser} from '../../global/utils/knex';
 import {DateTime} from 'luxon';
 import {
   Users,
   UserDrugDoses,
   DrugNames,
+  DrugRoa,
+  DrugUnit,
 } from '../../global/@types/pgdb.d';
 import log from '../utils/log';
 import * as path from 'path';
@@ -16,8 +18,8 @@ const PREFIX = path.parse(__filename).name;
  * @param {string} userId
  * @param {string | null} substance
  * @param {number | null} volume
- * @param {string | null} units
- * @param {string | null} roa
+ * @param {DrugUnit | null} units
+ * @param {DrugRoa | null} roa
  * @param {Date | null} date
  * @return {any}
  */
@@ -27,10 +29,13 @@ export async function idose(
   userId: string,
   substance: string | null,
   volume: number | null,
-  units: string | null,
-  roa: string | null,
+  units: DrugUnit | null,
+  roa: DrugRoa | null,
   date: Date | null,
-):Promise<any> {
+):Promise<{
+    name: string,
+    value: string,
+  }[]> {
   log.debug(`[${PREFIX}] Starting!`);
 
   log.debug(`[${PREFIX}] 
@@ -46,16 +51,18 @@ export async function idose(
 
   if (command === 'delete') {
     if (recordNumber === null) {
-      return 'You must provide a record number to delete!';
+      return [{
+        name: 'Error',
+        value: 'You must provide a record number to delete!',
+      }];
     }
     log.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
 
-    const userUniqueId = (await db
+    const userUniqueId = (await db<Users>('users')
       .select(db.ref('id'))
-      .from<Users>('users')
       .where('discord_id', userId))[0].id;
 
-    const unsorteddata = await db
+    const unsorteddata = await db<UserDrugDoses>('user_drug_doses')
       .select(
         db.ref('id').as('id'),
         db.ref('user_id').as('user_id'),
@@ -65,11 +72,13 @@ export async function idose(
         db.ref('units').as('units'),
         db.ref('created_at').as('created_at'),
       )
-      .from<UserDrugDoses>('user_drug_doses')
       .where('user_id', userUniqueId);
 
     if (unsorteddata.length === 0) {
-      return 'You have no dose records, you can use /idose to add some!';
+      return [{
+        name: 'Error',
+        value: 'You have no dose records, you can use /idose to add some!',
+      }];
     }
 
     // Sort data based on the created_at property
@@ -85,16 +94,18 @@ export async function idose(
 
     const record = data[recordNumber];
     if (record === undefined || record === null) {
-      return 'That record does not exist!';
+      return [{
+        name: 'Error',
+        value: `That record does not exist!`,
+      }];
     } else {
       const recordId = record.id;
       const doseDate = data[recordNumber].created_at.toISOString();
       // log.debug(`[${PREFIX}] doseDate: ${doseDate}`);
       const timeVal = DateTime.fromISO(doseDate);
       const drugId = record.drug_id;
-      const drugName = (await db
+      const drugName = (await db<DrugNames>('drug_names')
         .select(db.ref('name').as('name'))
-        .from<DrugNames>('drug_names')
         .where('drug_id', drugId)
         .andWhere('is_default', true))[0].name;
       const route = record.route.charAt(0).toUpperCase() + record.route.slice(1).toLowerCase();
@@ -104,45 +115,26 @@ export async function idose(
       ${record.dose} ${record.units} of ${drugName} ${route}
       `);
 
-      await db
-        .from<UserDrugDoses>('user_drug_doses')
+      await db<UserDrugDoses>('user_drug_doses')
         .where('id', recordId)
         .del();
 
-      return `I deleted:
-      > **(${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}**
-      > ${record.dose} ${record.units} of ${drugName} ${route}
-      `;
+      return [{
+        name: 'Success',
+        value: `I deleted:
+        > **(${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}**
+        > ${record.dose} ${record.units} of ${drugName} ${route}
+        `,
+      }];
+      ;
     }
   }
   if (command === 'get') {
-    const data = await db
-      .select(db.ref('id'))
-      .from<Users>('users')
-      .where('discord_id', userId);
+    const userData = await getUser(userId, null);
 
-    log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
-
-    if (data.length === 0) {
-      return false;
-    }
-
-    const userUniqueId = data[0].id;
-
-    log.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
-
-    const unsorteddata = await db
-      .select(
-        db.ref('id').as('id'),
-        db.ref('user_id').as('user_id'),
-        db.ref('drug_id').as('drug_id'),
-        db.ref('route').as('route'),
-        db.ref('dose').as('dose'),
-        db.ref('units').as('units'),
-        db.ref('created_at').as('created_at'),
-      )
-      .from<UserDrugDoses>('user_drug_doses')
-      .where('user_id', userUniqueId);
+    const unsorteddata = await db<UserDrugDoses>('user_drug_doses')
+      .select('*')
+      .where('user_id', userData);
 
     log.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);
 
@@ -174,9 +166,8 @@ export async function idose(
         log.debug(`[${PREFIX}] doseDate: ${doseDate}`);
         const timeVal = DateTime.fromISO(doseDate);
         const drugId = dose.drug_id;
-        const drugName = (await db
+        const drugName = (await db<DrugNames>('drug_names')
           .select(db.ref('name').as('name'))
-          .from<DrugNames>('drug_names')
           .where('drug_id', drugId)
           .andWhere('is_default', true))[0].name;
 
@@ -191,30 +182,39 @@ export async function idose(
       }
       return doses;
     } else {
-      return false;
+      return [{
+        name: 'Error',
+        value: 'You have no dose records, you can use /idose to add some!',
+      }];
     }
   }
   if (command === 'set') {
     if (substance === null || volume === null || units === null || roa === null) {
-      return 'You must provide a substance, volume, units, and route of administration!';
+      return [{
+        name: 'Error',
+        value: 'You must provide a substance, volume, units, and route of administration!',
+      }];
     }
-    const data = await db
+    if (!date) {
+      return [{
+        name: 'Error',
+        value: 'You must provide a date!',
+      }];
+    }
+    const data = await db<Users>('users')
       .select(db.ref('id').as('id'))
-      .from<Users>('users')
       .where('discord_id', userId);
 
-    const userUniqueId = data.length > 0 ? data[0].id : (await db
+    const userUniqueId = data.length > 0 ? data[0].id : (await db<Users>('users')
       .insert({
         discord_id: userId,
       })
-      .into<Users>('users')
       .returning(db.ref('id').as('id')))[0].id;
 
     log.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
 
-    const drugId = (await db
+    const drugId = (await db<DrugNames>('drug_names')
       .select(db.ref('drug_id'))
-      .from<DrugNames>('drug_names')
       .where('name', substance)
       .orWhere('name', substance.toLowerCase())
       .orWhere('name', substance.toUpperCase()))[0].drug_id;
@@ -225,7 +225,7 @@ export async function idose(
 
     log.debug(`[${PREFIX}] drugId: ${drugId}`);
 
-    await db('user_drug_doses')
+    await db<UserDrugDoses>('user_drug_doses')
       .insert({
         user_id: userUniqueId,
         drug_id: drugId,
@@ -235,4 +235,8 @@ export async function idose(
         created_at: date,
       });
   }
+  return [{
+    name: 'Error',
+    value: 'End of function i guess?',
+  }];
 }

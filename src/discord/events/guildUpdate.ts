@@ -13,27 +13,19 @@ export const guildUpdate: guildEvent = {
   async execute(guild: Guild) {
     // log.debug(`[${PREFIX}] starting!`);
 
-    const data = await db
-      .select(db.ref('is_banned').as('is_banned'))
-      .from<DiscordGuilds>('users')
-      .where('discord_id', guild.id);
+    const data = await db<DiscordGuilds>('discord_guilds')
+      .select('*')
+      .where('discord_id', guild.id)
+      .first();
 
-    if (data[0]) {
-      if (data[0].is_banned) {
+    if (data) {
+      if (data.is_banned) {
         log.info(`[${PREFIX}] I'm banned from ${guild.name}, leaving!`);
         guild.leave();
         return;
       }
-      // else {
-      //   await db('discord_guilds')
-      //     .insert({
-      //       id: guild.id,
-      //     })
-      //     .onConflict('discord_id')
-      //     .merge();
-      // }
     } else {
-      await db('discord_guilds')
+      await db<DiscordGuilds>('discord_guilds')
         .insert({
           id: guild.id,
         })

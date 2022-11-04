@@ -4,6 +4,7 @@ import {
   Colors,
   ButtonBuilder,
   EmbedBuilder,
+  EmbedField,
 } from 'discord.js';
 import {
   ChannelType,
@@ -16,6 +17,7 @@ import {parseDuration} from '../../../global/utils/parseDuration';
 import {paginationEmbed} from '../../utils/pagination';
 import log from '../../../global/utils/log';
 import * as path from 'path';
+import {DrugRoa, DrugUnit} from '../../../global/@types/pgdb';
 const PREFIX = path.parse(__filename).name;
 
 const buttonList = [
@@ -93,9 +95,9 @@ export const didose: SlashCommand = {
     const substance = interaction.options.getString('substance');
     const volume = interaction.options.getNumber('volume');
     const unitsOption = interaction.options.get('units');
-    const units = unitsOption ? unitsOption.value as string : null;
+    const units = unitsOption ? unitsOption.value as DrugUnit : null;
     const roaOption = interaction.options.get('roa');
-    const roa = roaOption ? roaOption.value as string : null;
+    const roa = roaOption ? roaOption.value as DrugRoa : null;
     const offsetOption = interaction.options.get('offset');
     const offset = offsetOption ? offsetOption.value as string : null;
     // Make a new variable that is the current time minus the out variable
@@ -119,17 +121,16 @@ export const didose: SlashCommand = {
 
     log.debug(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
 
+    if (response[0].name === 'Error') {
+      await interaction.reply({content: response[0].value, ephemeral: true});
+      return false;
+    }
+
     if (command === 'delete') {
-      await interaction.reply({content: response, ephemeral: true});
+      await interaction.reply({content: response[0].value, ephemeral: true});
     }
     if (command === 'get') {
       if (response !== null) {
-        if (response === false) {
-          embed.setTitle('Your dosage history');
-          embed.setDescription('You have no dose records, you can use /idose to add some!');
-          interaction.reply({embeds: [embed], ephemeral: true});
-          return true;
-        }
         // Sort data based on the dose_date property
         embed.setTitle('Your dosage history');
 
@@ -137,10 +138,10 @@ export const didose: SlashCommand = {
           let pageEmbed = embedTemplate();
           pageEmbed.setTitle('Your dosage history');
           // Add fields to the pageEmbed until there are 24 fields
-          let pageFields = [];
+          let pageFields = [] as EmbedField[];
           let pageFieldsCount = 0;
           for (let i = 0; i < response.length; i += 1) {
-            pageFields.push(response[i]);
+            pageFields.push({name: response[i].name, value: response[i].value, inline: true});
             // log.debug(`[${PREFIX}] Adding field ${field.name}`);
             pageFieldsCount += 1;
             // log.debug(`[${PREFIX}] pageFieldsCount: ${pageFieldsCount}`);
@@ -164,9 +165,9 @@ export const didose: SlashCommand = {
         }
         if (response.length <= 24) {
           // Add fields to the embed
-          const fields = [];
+          const fields = [] as EmbedField[];
           for (let i = 0; i < response.length; i += 1) {
-            fields.push(response[i]);
+            fields.push({name: response[i].name, value: response[i].value, inline: true});
           }
           embed.setFields(fields);
         }

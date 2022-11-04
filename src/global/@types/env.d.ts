@@ -19,16 +19,6 @@ declare global {
       DISCORD_CLIENT_TOKEN: string;
       DISCORD_OWNER_ID: string;
       DISCORD_GUILD_ID: string;
-      FIREBASE_DB_URL: string;
-      FIREBASE_DB_TICKETS: string;
-      FIREBASE_DB_GUILDS: string;
-      FIREBASE_DB_USERS: string;
-      FIREBASE_DB_TIMERS: string;
-      FIREBASE_PRIVATE_KEY_ID: string;
-      FIREBASE_PRIVATE_KEY: string;
-      FIREBASE_CLIENT_ID: number;
-      FIREBASE_CLIENT_EMAIL: string;
-      FIREBASE_REALTIME_KEY: string;
       IRC_SERVER: string;
       IRC_USERNAME: string;
       IRC_PASSWORD: string;

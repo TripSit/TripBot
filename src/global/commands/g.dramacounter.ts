@@ -23,11 +23,10 @@ export async function dramacounter(
   // log.debug(`[${PREFIX}] interaction.guild: ${JSON.stringify(interaction.guild, null, 2)}`);
 
   if (command === 'get') {
-    const data = await db
+    const data = await db<DiscordGuilds>('discord_guilds')
       .select(
         db.ref('last_drama_at').as('last_drama_at'),
         db.ref('drama_reason').as('drama_reason'))
-      .from<DiscordGuilds>('discord_guilds')
       .where('id', guildId);
 
     if (data.length > 0) {
@@ -38,7 +37,7 @@ export async function dramacounter(
       return 'No drama has been reported yet! Be thankful while it lasts...';
     }
   } else if (command === 'set') {
-    await db('discord_guilds')
+    await db<DiscordGuilds>('discord_guilds')
       .insert({
         id: guildId,
         drama_reason: dramaReason,

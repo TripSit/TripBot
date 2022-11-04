@@ -88,69 +88,8 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
           if (channelBotlog) {
             channelBotlog.send(`${newMember.displayName} ${action} ${roleName}`);
           }
-
-          // if (action === 'added') {
-          //   // const mindsetRemovalTime = new Date();
-          //   // // define one week in milliseconds
-          //   // const fiveSec = 1000 * 5;
-          //   // // const oneWeek = 1000 * 60 * 60 * 24 * 7;
-          //   // mindsetRemovalTime.setTime(mindsetRemovalTime.getTime() + fiveSec);
-          //   // log.debug(`[${PREFIX}] reminderDatetime: ${mindsetRemovalTime}`);
-
-          //   //   const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${newMember.user.id}`);
-          //   //   ref.update({
-          //   //     [mindsetRemovalTime.valueOf()]: {
-          //   //       type: 'mindset',
-          //   //       value: differenceId,
-          //   //     },
-          //   //   });
-          // }
-          // if (action === 'removed' ) {
-          //   const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${newMember.guild.id}/reactionRoles/`);
-          //   await ref.once('value', async (data) => {
-          //     if (data.val() !== null) {
-          //       const allReactionRoles = data.val() as reactionRoleList;
-          //       // log.debug(`[${PREFIX}] differenceId: ${differenceId}`);
-          //       Object.keys(allReactionRoles).forEach(async (channelId) => {
-          //         const channelMessages = allReactionRoles[channelId];
-          //         Object.keys(channelMessages).forEach(async (messageId) => {
-          //           // log.debug(`[${PREFIX}] messageId: ${messageId}`);
-          //           const reactionRoles = allReactionRoles[channelId][messageId];
-          //           // log.debug(`[${PREFIX}] reactionRoles: ${JSON.stringify(reactionRoles, null, 2)}`);
-          //           reactionRoles.forEach(async (reactionRole) => {
-          //             if (reactionRole.roleId === differenceId) {
-          //               log.debug(`[${PREFIX}] reactionRole: ${reactionRole.name}`);
-          //               const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-          //               log.debug(`[${PREFIX}] channelId: ${channelId}`);
-          //               const channel = await tripsitGuild.channels.fetch(channelId) as TextChannel;
-          //               log.debug(`[${PREFIX}] messageId: ${messageId}`);
-          //               const message = await channel.messages.fetch(messageId) as Message;
-
-          //               for (let i = 0; i < message.reactions.cache.size; i++) {
-          //                 log.debug(`[${PREFIX}] key: ${message.reactions.cache.keyAt(i)}`);
-          //                 const mreaction = message.reactions.resolve(
-          //                   message.reactions.cache.keyAt(i)!);
-          //                 mreaction?.users.remove(newMember.id);
-          //                 // if (message.reactions.cache.keyAt(i) !== reaction.emoji.name &&
-          //                 //     message.reactions.cache.keyAt(i) !== reaction.emoji.id) {
-          //                 //   const mreaction = message.reactions.resolve(
-          //                 //     message.reactions.cache.keyAt(i)!);
-          //                 //   mreaction?.users.remove(user);
-          //                 //   continue;
-          //                 // } else {
-          //                 //   log.debug(`[${PREFIX}] skipping ${message.reactions.cache.keyAt(i)}`);
-          //                 // }
-          //               }
-          //             }
-          //           });
-          //         });
-          //       });
-          //     }
-          //   });
-          // }
         }
       }
     }
-    // log.debug(`[${PREFIX}] Done!`);
   },
 };

@@ -917,9 +917,8 @@ export async function colors(interaction:ChatInputCommandInteraction) {
       ];
 
       // Update the database
-      await db
+      await db<ReactionRoles>('reaction_roles')
         .insert(reactionRoleInfo)
-        .into('reaction_roles')
         .onConflict(['role_id', 'reaction_id'])
         .merge();
     });

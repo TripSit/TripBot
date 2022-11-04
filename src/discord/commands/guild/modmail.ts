@@ -221,12 +221,11 @@ export async function modmailCreate(
       issueThread = await channel.threads.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
       log.debug(`[${PREFIX}] The thread has likely been deleted!`);
-      await db
+      await db<UserTickets>('user_tickets')
         .insert({
           id: ticketData.id,
-          status: 'CLOSED',
+          status: 'CLOSED' as TicketStatus,
         })
-        .into<UserTickets>('user_tickets')
         .onConflict('id')
         .merge();
     }
@@ -486,21 +485,19 @@ export async function modmailCreate(
       } as UserTickets;
 
       // Update thet ticket in the DB
-      await db
-        .insert(newTicketData)
-        .into<UserTickets>('user_tickets');
+      await db<UserTickets>('user_tickets')
+        .insert(newTicketData);
 
       // Save the user's roles in the db
       let actorRoles = [] as string[];
       if (member) {
         actorRoles = (member.roles as GuildMemberRoleManager).cache.map((role) => role.name);
       }
-      await db
+      await db<Users>('users')
         .insert({
           id: userData.id,
-          roles: actorRoles,
+          roles: actorRoles.toString(),
         })
-        .into<Users>('users')
         .onConflict('id')
         .merge();
     });
@@ -518,13 +515,12 @@ export async function modmailDMInteraction(message:Message) {
   }
 
   // Get the ticket info, if it exists
-  const userUniqueId = await db
+  const userUniqueId = await db<Users>('users')
     .select(db.ref('id'))
-    .from<Users>('users')
     .where('discord_id', message.author.id)
     .first();
 
-  const ticketData = await db
+  const ticketData = await db<UserTickets>('user_tickets')
     .select(
       db.ref('id').as('id'),
       db.ref('description').as('description'),
@@ -538,7 +534,6 @@ export async function modmailDMInteraction(message:Message) {
       db.ref('deleted_at').as('deleted_at'),
       db.ref('created_at').as('created_at'),
     )
-    .from<UserTickets>('user_tickets')
     .where('user_id', userUniqueId?.id)
     .andWhereNot('status', 'CLOSED')
     .andWhereNot('status', 'RESOLVED')
@@ -588,12 +583,11 @@ export async function modmailDMInteraction(message:Message) {
     log.debug(`[${PREFIX}] User not member of guild`);
 
     // Update the ticket in the DB
-    await db
+    await db<UserTickets>('user_tickets')
       .update({
         archived_at: threadArchiveTime,
         deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
       })
-      .from<UserTickets>('user_tickets')
       .where('id', ticketData.id);
     return;
   }
@@ -666,12 +660,11 @@ export async function modmailThreadInteraction(message:Message) {
           log.debug(`[${PREFIX}] threadArchiveTime reset: ${threadArchiveTime}`);
 
           // Update the ticket in the DB
-          await db
+          await db<UserTickets>('user_tickets')
             .update({
               archived_at: threadArchiveTime,
               deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
             })
-            .from<UserTickets>('user_tickets')
             .where('id', ticketData.id);
           log.debug(`[${PREFIX}] ticket updated in DB!`);
           return;
@@ -707,13 +700,12 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
   let ticketData = {} as UserTickets;
   if (interaction.channel) {
     if (interaction.channel.type === ChannelType.DM) {
-      const userUniqueId = await db
+      const userUniqueId = await db<Users>('users')
         .select(db.ref('id'))
-        .from<Users>('users')
         .where('discord_id', actor.id)
         .first();
 
-      const data = await db
+      const data = await db<UserTickets>('user_tickets')
         .select(
           db.ref('id').as('id'),
           db.ref('user_id').as('user_id'),
@@ -731,7 +723,6 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
           db.ref('deleted_at').as('deleted_at'),
           db.ref('created_at').as('created_at'),
         )
-        .from<UserTickets>('user_tickets')
         .where('user_id', userUniqueId?.id)
         .andWhereNot('status', 'CLOSED')
         .andWhereNot('status', 'RESOLVED')
@@ -1097,9 +1088,8 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
     }
   }
 
-  await db
+  await db<UserTickets>('user_tickets')
     .insert(ticketData)
-    .into<UserTickets>('user_tickets')
     .onConflict('id')
     .merge();
 

@@ -4,7 +4,6 @@ import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 const {SlashCommandBuilder} = require('discord.js');
 const logger = require('../../../global/utils/log');
-const {getUserInfo, setUserInfo} = require('../../../global/services/firebaseAPI');
 const parseDuration = require('../../../global/utils/parseDuration');
 
 const {
