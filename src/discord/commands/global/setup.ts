@@ -37,13 +37,6 @@ const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
  * This command populates various channels with static prompts
  * This is actually kind of complicated, but not really, let me explain:
  * Each prompt generally allows a response from the user, like giving a role or sending a message
- * To customize the action based on the guild, we need to dynamically create the command's >>>> customID <<<<
- * This customID is then parsed to determine the specifics of that command
- * For example, in the /setup tripsit command we create a button with the following customID:
- *     .setCustomId(`tripsitme~${roleNeedshelp.id}~${roleTripsitter.id}~${channelTripsitters.id}`)
- * As you can see:   command  ~ role              ~  role              ~  channel
- * In the buttonClick.ts script we parse the customID and determine what to do, usually create a modal
- * That modal will also have a customID, which is in-turn parsed by modalSubmit.ts, etc
  * @param {Interaction} interaction The interaction that triggered this
  */
 export const prompt: SlashCommand = {
