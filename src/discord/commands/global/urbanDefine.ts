@@ -19,7 +19,12 @@ export const durbandefine: SlashCommand1 = {
       .setRequired(true)),
 
   async execute(interaction) {
-    const term = interaction.options.getString('define')!;
+    const term = interaction.options.getString('define');
+    if (!term) {
+      interaction.reply({content: 'You must enter a search query.', ephemeral: true});
+      return false;
+    }
+
     logger.debug(`[${PREFIX}] UrbanDefine looking for ${term}`);
     const {data} = await axios.get(
       'https://mashape-community-urban-dictionary.p.rapidapi.com/define',

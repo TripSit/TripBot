@@ -19,8 +19,12 @@ export const dYoutube: SlashCommand1 = {
       .setName('search')),
 
   async execute(interaction:ChatInputCommandInteraction) {
-    const query = interaction.options.getString('search')!;
+    const query = interaction.options.getString('search');
     logger.debug(`[${PREFIX}] - query: ${query}`);
+    if (!query) {
+      interaction.reply({content: 'You must enter a search query.', ephemeral: true});
+      return false;
+    }
 
     const result = await youtube(query);
 

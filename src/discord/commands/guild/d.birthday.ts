@@ -49,8 +49,13 @@ export const dbirthday: SlashCommand1 = {
   execute: async (interaction) => {
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     let member = interaction.options.getMember('user') as GuildMember;
-    const month = interaction.options.getString('month')!;
-    const day = interaction.options.getInteger('day')!;
+    const month = interaction.options.getString('month');
+    const day = interaction.options.getInteger('day');
+
+    if (command === 'set' && (month === null || day === null)) {
+      await interaction.reply({content: 'You need to specify a month and day!', ephemeral: true});
+      return false;
+    }
 
     if (command === undefined) {
       command = 'get';

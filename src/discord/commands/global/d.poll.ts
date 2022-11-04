@@ -39,7 +39,12 @@ export const dpoll: SlashCommand1 = {
     logger.debug(`[${PREFIX}] Starting!`);
     await interaction.deferReply({ephemeral: true});
     const question = interaction.options.getString('question');
-    const optionsArray = interaction.options.getString('options')!.split(',');
+    const optionsString = interaction.options.getString('options');
+    if (!question || !optionsString) {
+      await interaction.editReply('You need to provide a question and options!');
+      return false;
+    }
+    const optionsArray = optionsString.split(',');
 
     if (optionsArray.length > 9) {
       await interaction.editReply('You can only have 9 options max!');

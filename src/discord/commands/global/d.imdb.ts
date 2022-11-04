@@ -21,7 +21,11 @@ export const imdbSearch: SlashCommand1 = {
   async execute(interaction:ChatInputCommandInteraction) {
     logger.debug(`[${PREFIX}] starting!`);
 
-    const title = interaction.options.getString('title')!;
+    const title = interaction.options.getString('title');
+    if (!title) {
+      interaction.reply({content: 'You must enter a title.', ephemeral: true});
+      return false;
+    }
 
     const result = await imdb(title);
 

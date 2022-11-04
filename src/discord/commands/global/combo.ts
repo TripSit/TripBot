@@ -75,9 +75,14 @@ export const combo: SlashCommand = {
 
     // logger.debug(`[${PREFIX}] drugInteraction: ${drugInteraction}`);
 
-    const intDef = comboDefs.find((def) => def.status === drugInteraction.status)!;
+    const intDef = comboDefs.find((def) => def.status === drugInteraction.status);
 
     // logger.debug(`[${PREFIX}] intDef: ${JSON.stringify(intDef)}`);
+
+    if (!intDef) {
+      logger.error(`[${PREFIX}] intDef is null or undefined`);
+      return;
+    }
 
     const {
       status,

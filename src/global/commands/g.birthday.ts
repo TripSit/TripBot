@@ -16,10 +16,13 @@ const PREFIX = path.parse(__filename).name;
 export async function birthday(
   command: 'get' | 'set',
   memberId: string,
-  month?: string,
-  day?: number):Promise<any> {
+  month?: string | null,
+  day?: number | null):Promise<any> {
   if (command === 'set') {
     logger.debug(`[${PREFIX}] ${command} ${memberId} ${month} ${day}`);
+    if (month === null || day === null) {
+      return 'You need to specify a month and day!';
+    }
     const month30 = ['April', 'June', 'September', 'November'];
     const month31 = ['January', 'March', 'May', 'July', 'August', 'October', 'December'];
     if (month !== undefined && day !== undefined) {

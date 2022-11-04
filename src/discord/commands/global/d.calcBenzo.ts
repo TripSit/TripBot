@@ -6,10 +6,10 @@ import {
 import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcBenzo} from '../../../global/commands/g.calcBenzo';
-// import logger from '../../../global/utils/logger';
 import {stripIndents} from 'common-tags';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import logger from '../../../global/utils/logger';
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 export const dcalcBenzo: SlashCommand1 = {
   data: new SlashCommandBuilder()
@@ -28,9 +28,15 @@ export const dcalcBenzo: SlashCommand1 = {
       .setAutocomplete(true)),
 
   async execute(interaction) {
-    const dosage = interaction.options.getInteger('i_have')!;
-    const drugA = interaction.options.getString('mg_of')!;
-    const drugB = interaction.options.getString('and_i_want_the_dose_of')!;
+    const dosage = interaction.options.getInteger('i_have');
+    const drugA = interaction.options.getString('mg_of');
+    const drugB = interaction.options.getString('and_i_want_the_dose_of');
+
+    if (!dosage || !drugA || !drugB) {
+      interaction.reply({content: 'Something went wrong, please try again.', ephemeral: true});
+      logger.error(`[${PREFIX}] dosage: ${dosage} | drugA: ${drugA} | drugB: ${drugB}`);
+      return false;
+    }
 
     const data = await calcBenzo(dosage, drugA, drugB);
 

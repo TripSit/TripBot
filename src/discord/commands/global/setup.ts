@@ -10,6 +10,8 @@ import {
   ModalBuilder,
   TextInputBuilder,
   SelectMenuBuilder,
+  GuildMember,
+  ModalSubmitInteraction,
 } from 'discord.js';
 import {
   ButtonStyle, TextInputStyle,
@@ -62,7 +64,7 @@ export const prompt: SlashCommand1 = {
       )
       .addChannelOption((option) => option
         .setDescription('What is your Meta-tripsit channel?')
-        .setName('tripsitters')
+        .setName('metatripsit')
         .setRequired(true),
       )
       .addChannelOption((option) => option
@@ -72,6 +74,10 @@ export const prompt: SlashCommand1 = {
       .addChannelOption((option) => option
         .setDescription('Do you have a general room?')
         .setName('general'),
+      )
+      .addRoleOption((option) => option
+        .setDescription('What is your Helper role?')
+        .setName('helper'),
       ),
     )
     .addSubcommand((subcommand) => subcommand
@@ -206,7 +212,8 @@ export async function hasPermissions(
   interaction: ChatInputCommandInteraction,
   channel: TextChannel) {
   logger.debug(`[${PREFIX}] Checking permissions`);
-  const me = interaction.guild!.members.me!;
+  if (!interaction.guild) return;
+  const me = interaction.guild.members.me as GuildMember;
   const channelPerms = channel.permissionsFor(me);
   // logger.debug(`[${PREFIX}] channelPerms: ${channelPerms?.toArray()}`);
 
@@ -265,7 +272,7 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  if (!await hasPermissions(interaction, (interaction.options.getChannel('tripsitters') as TextChannel))) {
+  if (!await hasPermissions(interaction, (interaction.options.getChannel('metatripsit') as TextChannel))) {
     logger.debug(`${PREFIX} bot does NOT has permission to post!`);
     return;
   }
@@ -281,22 +288,25 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
     🛑 Please do not message helpers or tripsitters directly! 🛑
   `;
 
-  const channelSanctuary = interaction.options.getChannel('sanctuary')!;
-  const channelGeneral = interaction.options.getChannel('general')!;
-  const roleNeedshelp = interaction.options.getRole('needshelp')!;
-  const roleTripsitter = interaction.options.getRole('tripsitter')!;
-  const channelTripsitMeta = interaction.options.getChannel('tripsitters')!;
+  const channelSanctuary = interaction.options.getChannel('sanctuary');
+  const channelGeneral = interaction.options.getChannel('general');
+  const roleNeedshelp = interaction.options.getRole('needshelp');
+  const roleTripsitter = interaction.options.getRole('tripsitter');
+  const roleHelper = interaction.options.getRole('helper');
+  const channelTripsitMeta = interaction.options.getChannel('metatripsit');
+  const channelTripsit = interaction.channel as TextChannel;
 
   // Save this info to the DB
   await db<DiscordGuilds>('guilds')
     .insert({
       id: interaction.channel.id,
-      channel_sanctuary: channelSanctuary.id,
-      channel_general: channelGeneral.id,
-      channel_tripsit_meta: channelTripsitMeta.id,
-      channel_tripsit: (interaction.channel as TextChannel).id,
-      role_needshelp: roleNeedshelp.id,
-      role_tripsitter: roleTripsitter.id,
+      channel_sanctuary: channelSanctuary ? channelSanctuary.id : null,
+      channel_general: channelGeneral ? channelGeneral.id : null,
+      channel_tripsit_meta: channelTripsitMeta ? channelTripsitMeta.id : null,
+      channel_tripsit: channelTripsit.id,
+      role_needshelp: roleNeedshelp ? roleNeedshelp.id : null,
+      role_tripsitter: roleTripsitter ? roleTripsitter.id : null,
+      role_helper: roleHelper ? roleHelper.id : null,
     })
     .onConflict('guild_id')
     .merge();
@@ -332,11 +342,13 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
  */
 export async function applications(interaction:ChatInputCommandInteraction) {
   logger.debug(`[${PREFIX}] Setting up applications!`);
-  if (!(interaction.channel as TextChannel)) {
+  if (!interaction.channel) {
     logger.error(`${PREFIX} applications: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');
     return;
   }
+
+  if (!interaction.guild) return;
 
   const hasPermission = await hasPermissions(interaction, (interaction.channel as TextChannel));
   if (!hasPermission) {
@@ -345,8 +357,8 @@ export async function applications(interaction:ChatInputCommandInteraction) {
   }
 
   /* eslint-disable no-unused-vars */
-  const roleRequestdA = interaction.options.getRole('application_role_a')!;
-  const roleReviewerA = interaction.options.getRole('application_reviewer_a')!;
+  const roleRequestdA = interaction.options.getRole('application_role_a');
+  const roleReviewerA = interaction.options.getRole('application_reviewer_a');
   const roleRequestdB = interaction.options.getRole('application_role_b');
   const roleReviewerB = interaction.options.getRole('application_reviewer_b');
   const roleRequestdC = interaction.options.getRole('application_role_c');
@@ -374,9 +386,9 @@ export async function applications(interaction:ChatInputCommandInteraction) {
     .setValue(stripIndent`
     **Interested in helping out?**
 
-    Welcome to ${interaction.channel}! This channel allows you to apply for intern positions here at ${interaction.guild!.name}!
+    Welcome to ${interaction.channel}! This channel allows you to apply for intern positions here at ${interaction.guild.name}!
 
-    We want people who love ${interaction.guild!.name}, want to contribute to its growth, and be part of our success!
+    We want people who love ${interaction.guild.name}, want to contribute to its growth, and be part of our success!
 
     We currently have two positions open:
 
@@ -397,13 +409,13 @@ export async function applications(interaction:ChatInputCommandInteraction) {
     You don't need to code, but you should have some experience with the org and be able to contribute to the org in some way.
     We appreciate all types of help: Not just coders, but anyone who wants to give input or test out new features!
   
-    If you want to help out with ${interaction.guild!.name}, please click the button below to fill out the application form.
+    If you want to help out with ${interaction.guild.name}, please click the button below to fill out the application form.
     `)),
   );
   await interaction.showModal(modal);
 
   // Collect a modal submit interaction
-  const filter = (interaction:any) => interaction.customId === 'appModal';
+  const filter = (interaction:ModalSubmitInteraction) => interaction.customId === 'appModal';
   interaction.awaitModalSubmit({filter, time: 150000})
     .then(async (i) => {
       if (i.customId.split('~')[1] !== i.id) return;
@@ -417,13 +429,14 @@ export async function applications(interaction:ChatInputCommandInteraction) {
           value: `none`,
         });
       roleArray.forEach((role) => {
+        if (!i.channel) return;
         if (role[0]) {
           if (role[1]) {
             // logger.debug(`[${PREFIX}] role: ${role[0].name}`);
             selectMenu.addOptions(
               {
                 label: role[0].name,
-                value: `${i.channel!.id}~${role[0].id}~${role[1].id}`,
+                value: `${i.channel.id}~${role[0].id}~${role[1].id}`,
               },
             );
           } else {
@@ -457,17 +470,19 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
     return;
   }
 
+  if (!interaction.guild) return;
+
   if (!await hasPermissions(interaction, (interaction.channel as TextChannel))) {
     logger.debug(`${PREFIX} bot does NOT has permission to post in !`);
     return;
   }
 
   let text = stripIndents`
-    Welcome to ${interaction.guild!.name}'s technical help channel!
+    Welcome to ${interaction.guild.name}'s technical help channel!
 
-    This channel can be used to get in contact with the ${interaction.guild!.name}'s team for **technical** assistance/feedback!`;
+    This channel can be used to get in contact with the ${interaction.guild.name}'s team for **technical** assistance/feedback!`;
 
-  const channelTripsit = interaction.options.getChannel('tripsit')!;
+  const channelTripsit = interaction.options.getChannel('tripsit');
   if (channelTripsit) {
     text += `\n\n**If you need psychological help try ${channelTripsit.toString()}!**`;
   }
@@ -481,7 +496,8 @@ Thanks for reading, stay safe!
   `;
 
   // Get the moderator role
-  const roleModerator = interaction.options.getRole('moderator')!;
+  const roleModerator = interaction.options.getRole('moderator');
+  if (!roleModerator) return;
 
   // Create buttons
   const row = new ActionRowBuilder<ButtonBuilder>()
@@ -583,10 +599,14 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
     return;
   }
   logger.debug(`[${PREFIX}] Starting!`);
-  const channelTripsit = interaction.client.channels.cache.get(env.CHANNEL_TRIPSIT);
-  const channelSanctuary = interaction.client.channels.cache.get(env.CHANNEL_SANCTUARY);
-  const channelOpentripsit = interaction.client.channels.cache.get(env.CHANNEL_OPENTRIPSIT1);
-  const channelRules = interaction.client.channels.cache.get(env.CHANNEL_RULES);
+  const channelTripsit = await interaction.client.channels.fetch(env.CHANNEL_TRIPSIT);
+  if (!channelTripsit) return;
+  const channelSanctuary = await interaction.client.channels.fetch(env.CHANNEL_SANCTUARY);
+  if (!channelSanctuary) return;
+  const channelOpentripsit = await interaction.client.channels.fetch(env.CHANNEL_OPENTRIPSIT1);
+  if (!channelOpentripsit) return;
+  const channelRules = await interaction.client.channels.fetch(env.CHANNEL_RULES);
+  if (!channelRules) return;
 
   // **3)** I understand that every room with a :link: is bridged to IRC and there may be lower quality chat in those rooms.
 
@@ -594,17 +614,17 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
   Welcome to TripSit!
 
   **If you need help**
-  **1** Go to ${channelTripsit!.toString()} and click the "I need assistance button"!
+  **1** Go to ${channelTripsit.toString()} and click the "I need assistance button"!
   **-** This will create a private thread for you, and we're happy to help :grin:
-  **2** If no one responds, you can chat as a group in the ${channelOpentripsit!.toString()} rooms
+  **2** If no one responds, you can chat as a group in the ${channelOpentripsit.toString()} rooms
   **-** Try to pick one that's not busy so we can pay attention to you :heart:
-  **3** If you don't need help but would appreciate a quiet chat, come to ${channelSanctuary!.toString()}
+  **3** If you don't need help but would appreciate a quiet chat, come to ${channelSanctuary.toString()}
 
   **If you want to social chat please agree to the following:**
 
-  **1)** I do not currently need help and understand I can go to ${channelTripsit!.toString()} to get help if I need it.
-  **2)** I understand if no one responds in ${channelTripsit!.toString()} I can talk in the "open" tripsit rooms.
-  **3)** I have read the ${channelRules!.toString()}: I will not buy/sell anything and I will try to keep a positive atmosphere!
+  **1)** I do not currently need help and understand I can go to ${channelTripsit.toString()} to get help if I need it.
+  **2)** I understand if no one responds in ${channelTripsit.toString()} I can talk in the "open" tripsit rooms.
+  **3)** I have read the ${channelRules.toString()}: I will not buy/sell anything and I will try to keep a positive atmosphere!
   `;
 
   // Create a new button embed

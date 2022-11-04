@@ -111,13 +111,9 @@ export async function tripsitmeButton(
   if (!userData) return;
 
   const ticketData = await getOpenTicket(userData.id, null);
-  if (!ticketData) return;
 
-  if (ticketData) {
+  if (ticketData !== undefined) {
     logger.debug(`[${PREFIX}] Target has open ticket: ${JSON.stringify(ticketData, null, 2)}`);
-
-    await needsHelpmode(interaction, target);
-
 
     let threadHelpUser = {} as ThreadChannel;
     try {
@@ -134,6 +130,7 @@ export async function tripsitmeButton(
     }
 
     if (threadHelpUser.id) {
+      await needsHelpmode(interaction, target);
       const guildData = await getGuild(interaction.guild.id);
       if (!guildData) return;
 
@@ -543,7 +540,7 @@ export async function tripsitmeOwned(
   const userData = await getUser(userId, null);
   if (!userData) return;
   const ticketData = await getOpenTicket(userData.id, null);
-  if (!ticketData) return;
+
 
   if (!ticketData) {
     interaction.reply('This user does not have an open ticket!');
@@ -581,7 +578,7 @@ export async function tripsitmeMeta(
   const userData = await getUser(userId, null);
   if (!userData) return;
   const ticketData = await getOpenTicket(userData.id, null);
-  if (!ticketData) return;
+
 
   if (!ticketData) {
     interaction.reply('This user does not have an open ticket!');
@@ -661,7 +658,7 @@ export async function tripsitmeBackup(
   const userData = await getUser(userId, null);
   if (!userData) return;
   const ticketData = await getOpenTicket(userData.id, null);
-  if (!ticketData) return;
+
 
   if (!ticketData) {
     interaction.reply('This user does not have an open ticket!');
@@ -751,7 +748,7 @@ export async function tripsitmeFinish(
   const userData = await getUser(target.id, null);
   if (!userData) return;
   const ticketData = await getOpenTicket(userData.id, null);
-  if (!ticketData) return;
+
 
   logger.debug(`[${PREFIX}] userData: ${JSON.stringify(userData, null, 2)}`);
 

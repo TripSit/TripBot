@@ -29,10 +29,9 @@ export async function getUser(
       .where('discord_id', discordId)
       .first();
     if (!data) {
-      data = await db<Users>('users')
+      data = (await db<Users>('users')
         .insert({discord_id: discordId})
-        .returning('*')
-        .first();
+        .returning('*'))[0];
     }
   }
   if (userId) {
@@ -55,10 +54,9 @@ export async function getGuild(guildId:string) {
     .where('id', guildId)
     .first();
   if (!data) {
-    data = await db<DiscordGuilds>('discord_guilds')
+    data = (await db<DiscordGuilds>('discord_guilds')
       .insert({id: guildId})
-      .returning('*')
-      .first();
+      .returning('*'))[0];
   }
   return data;
 }

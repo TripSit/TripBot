@@ -5,9 +5,9 @@ import {
 import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcPsychedelics} from '../../../global/commands/g.calcPsychedelics';
-// import logger from '../../../global/utils/logger';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import logger from '../../../global/utils/logger';
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 export const dcalcPsychedelics: SlashCommand1 = {
   data: new SlashCommandBuilder()
@@ -36,11 +36,20 @@ export const dcalcPsychedelics: SlashCommand1 = {
       .addIntegerOption((option) => option.setName('desired_dose')
         .setDescription('g of mushrooms'))),
   async execute(interaction) {
-    const lastDose = interaction.options.getInteger('last_dose')!;
+    const lastDose = interaction.options.getInteger('last_dose');
     const desiredDose = interaction.options.getInteger('desired_dose');
-    const days = interaction.options.getInteger('days')!;
+    const days = interaction.options.getInteger('days');
 
     const command = interaction.options.getSubcommand();
+
+    if (!lastDose || !days || !command || !desiredDose) {
+      interaction.reply({
+        content: 'Something went wrong. Please try again.',
+        ephemeral: true,
+      });
+      logger.error(`[${PREFIX}] Something went wrong. Please try again.`);
+      return false;
+    }
 
 
     // Code here inspired by https://codepen.io/cyberoxide/pen/BaNarGd

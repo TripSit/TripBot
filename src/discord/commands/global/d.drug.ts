@@ -22,9 +22,13 @@ export const dDrug: SlashCommand1 = {
 
   async execute(interaction) {
     const embed = embedTemplate();
-    const drugName = interaction.options.getString('substance')!;
+    const drugName = interaction.options.getString('substance');
     logger.debug(`[${PREFIX}] started | drugName: ${drugName}`);
-
+    if (!drugName) {
+      embed.setTitle(`No drug name was provided`);
+      interaction.reply({embeds: [embed]});
+      return false;
+    }
     const drugData = await drug(drugName) as CbSubstance;
     logger.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
 
@@ -173,7 +177,8 @@ export const dDrug: SlashCommand1 = {
         let dosageColumns = 0;
         roaNames.forEach((roaName) => {
           if (dosageColumns < 3) {
-            const roaInfo = (drugData.roas as roaType[]).find((r:roaType) => r.name === roaName)!;
+            const roaInfo = (drugData.roas as roaType[]).find((r:roaType) => r.name === roaName);
+            if (!roaInfo) return;
             if (roaInfo.dosage) {
               let dosageString = '';
               roaInfo.dosage.forEach((d) => {

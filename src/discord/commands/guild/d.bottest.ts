@@ -124,7 +124,12 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     return false;
   }
 
-  await interaction.channel!.send(`> **${name}** - Starting test!`);
+  if (!interaction.channel) {
+    interaction.reply('This command can only be used in a server channel');
+    return false;
+  }
+
+  await interaction.channel.send(`> **${name}** - Starting test!`);
 
   await sleep(1000);
 
@@ -149,7 +154,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // }
     if (name == 'birthday') {
       // Test getting a blank birthday
-      await interaction.channel!.send(`> **${name}** - Getting existing record`);
+      await interaction.channel.send(`> **${name}** - Getting existing record`);
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'month') return 'June';
@@ -188,7 +193,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
       const day = Math.floor(Math.random() * 28) + 1;
 
       // Set the birthday
-      await interaction.channel!.send(`> **${name}** - Setting new birthdate to ${monthName} ${day}`);
+      await interaction.channel.send(`> **${name}** - Setting new birthdate to ${monthName} ${day}`);
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'month') return monthName;
@@ -207,7 +212,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
       await sleep(1000);
 
       // Get the new birthday
-      await interaction.channel!.send(`> **${name}** - Getting new birthdate (Should be ${monthName} ${day})`);
+      await interaction.channel.send(`> **${name}** - Getting new birthdate (Should be ${monthName} ${day})`);
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'month') return 'june';
@@ -414,7 +419,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // }
     if (name == 'idose') {
       // Test getting a record
-      await interaction.channel!.send(`> **${name}** - Getting existing record`);
+      await interaction.channel.send(`> **${name}** - Getting existing record`);
       testInteraction.options = {
         get: (name:string) => {
           if (name === 'units') return {value: 'G'};
@@ -436,7 +441,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
       await sleep(1000);
 
       // Set a dose
-      await interaction.channel!.send(`> **${name}** - Setting record`);
+      await interaction.channel.send(`> **${name}** - Setting record`);
       testInteraction.options = {
         get: (name:string) => {
           if (name === 'units') return {value: 'G'};
@@ -458,7 +463,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
       await sleep(1000);
 
       // Get history
-      await interaction.channel!.send(`> **${name}** - Get records`);
+      await interaction.channel.send(`> **${name}** - Get records`);
       testInteraction.options = {
         get: (name:string) => {
           if (name === 'units') return {value: 'G'};
@@ -480,7 +485,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
       await sleep(1000);
 
       // Delete record
-      await interaction.channel!.send(`> **${name}** - Deleting record`);
+      await interaction.channel.send(`> **${name}** - Deleting record`);
       testInteraction.options = {
         get: (name:string) => {
           if (name === 'units') return {value: 'G'};
@@ -502,7 +507,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
       await sleep(1000);
 
       // Get history
-      await interaction.channel!.send(`> **${name}** - Get records`);
+      await interaction.channel.send(`> **${name}** - Get records`);
       testInteraction.options = {
         get: (name:string) => {
           if (name === 'units') return {value: 'G'};
@@ -524,7 +529,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     }
     if (name == 'dramacounter') {
       // Test getting the existing drama
-      await interaction.channel!.send(`> **${name}** - Getting existing record`);
+      await interaction.channel.send(`> **${name}** - Getting existing record`);
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'dramatime') return ``;
@@ -540,7 +545,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
       // Get random value 1-10
       const randomValue = Math.floor(Math.random() * 10) + 1;
       // Test getting the existing drama
-      await interaction.channel!.send(
+      await interaction.channel.send(
         `> **${name}** - Setting new value: 'Testing ${randomValue} - ${randomValue} hours ago`);
       testInteraction.options = {
         getString: (name:string) => {
@@ -555,7 +560,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
       await sleep(1000);
 
       // Test getting the existing drama
-      await interaction.channel!.send(`> **${name}** - Get new record, should be the same as above`);
+      await interaction.channel.send(`> **${name}** - Get new record, should be the same as above`);
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'dramatime') return ``;
@@ -651,7 +656,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // }
     if (name == 'timezone') {
       // Test getting a blank timezone
-      await interaction.channel!.send(`> **${name}** - Getting existing record`);
+      await interaction.channel.send(`> **${name}** - Getting existing record`);
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'timezone') return '(GMT-09:00) Alaska Time';
@@ -667,7 +672,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
       await sleep(1000);
 
       // Set the record
-      await interaction.channel!.send(`> **${name}** - Setting new timezone to 'America/Chicago'`);
+      await interaction.channel.send(`> **${name}** - Setting new timezone to 'America/Chicago'`);
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'timezone') return '(GMT-09:00) Alaska Time';
@@ -683,7 +688,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
       await sleep(1000);
 
       // Get the new record
-      await interaction.channel!.send(`> **${name}** - Getting new record (Should be same as above)`);
+      await interaction.channel.send(`> **${name}** - Getting new record (Should be same as above)`);
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'timezone') return '(GMT-09:00) Alaska Time';
@@ -698,7 +703,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
       await command.execute(testInteraction);
 
       // Set the record
-      await interaction.channel!.send(`> **${name}** - Setting new timezone to 'America/New_York'`);
+      await interaction.channel.send(`> **${name}** - Setting new timezone to 'America/New_York'`);
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'timezone') return '(GMT-08:00) Pacific Time';
@@ -714,7 +719,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
       await sleep(1000);
 
       // Get the new record
-      await interaction.channel!.send(`> **${name}** - Getting new record (Should be same as above)`);
+      await interaction.channel.send(`> **${name}** - Getting new record (Should be same as above)`);
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'timezone') return '(GMT-08:00) Pacific Time';
@@ -748,7 +753,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // // - button, joke, kipp, motivate, ping, topic
     await command.execute(interaction);
   } else {
-    interaction.channel!.send(`**${name}** - command not found!`);
+    interaction.channel.send(`**${name}** - command not found!`);
   }
 };
 
@@ -798,8 +803,12 @@ async function testGlobal(interaction:ChatInputCommandInteraction):Promise<resul
 async function testGuild(interaction:ChatInputCommandInteraction):Promise<resultsObject> {
   const scope = interaction.options.getString('scope') || 'All';
   const results = {total: 0, passed: 0, failed: 0};
+  if (!interaction.guild) {
+    await interaction.followUp(`> You must be in a guild to test guild commands!`);
+    return results;
+  }
   if (scope === 'All' || scope === 'Guild') {
-    await interaction.guild!.commands.fetch({force: true})
+    await interaction.guild.commands.fetch({force: true})
       .then(async (guildCommands) => {
         results.total = guildCommands.size;
         await interaction.followUp(`> Testing ${guildCommands.size} guild commands!`);
@@ -845,6 +854,7 @@ export const testSuite: SlashCommand1 = {
         logger.debug(`[${PREFIX}] Global results: ${JSON.stringify(globalResults)}`);
         await testGuild(interaction)
           .then(async (guildResults) => {
+            if (!interaction.channel) return;
             logger.debug(`[${PREFIX}] Guild results: ${JSON.stringify(guildResults)}`);
             const embed = embedTemplate()
               .setTitle('Testing Results')
@@ -856,7 +866,7 @@ export const testSuite: SlashCommand1 = {
                 {name: 'Guild Success', value: `${guildResults.passed}`, inline: true},
                 {name: 'Guild Failed', value: `${guildResults.failed}`, inline: true},
               );
-            await interaction.channel!.send({embeds: [embed]});
+            await interaction.channel.send({embeds: [embed]});
           });
       });
     return true;

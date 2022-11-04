@@ -178,7 +178,9 @@ export const didose: SlashCommand1 = {
       if (book.length > 1) {
         paginationEmbed(interaction, book, buttonList);
       } else {
-        if (interaction.channel!.type === ChannelType.DM) {
+        if (!interaction.channel) {
+          interaction.reply({embeds: [embed], ephemeral: true});
+        } else if (interaction.channel.type === ChannelType.DM) {
           interaction.reply({embeds: [embed], ephemeral: false});
         // interaction.user.send({embeds: [embed]});
         } else {

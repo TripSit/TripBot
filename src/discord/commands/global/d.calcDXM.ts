@@ -46,10 +46,17 @@ export const calxDXM: SlashCommand1 = {
       )),
   async execute(interaction) {
     // Calculate each plat min/max value
-    const givenWeight = interaction.options.getInteger('calc_weight')!;
-    const weightUnits = interaction.options.getString('units')!;
-    const taking = interaction.options.getString('taking')!;
+    const givenWeight = interaction.options.getInteger('calc_weight');
+    const weightUnits = interaction.options.getString('units');
+    const taking = interaction.options.getString('taking');
 
+    if (!givenWeight || !weightUnits || !taking) {
+      interaction.reply({
+        content: 'Something went wrong. Please try again.',
+        ephemeral: true,
+      });
+      return false;
+    }
 
     const results = await calcDxm(givenWeight, weightUnits, taking);
     const dosageData = results[0] as DxmDataType;

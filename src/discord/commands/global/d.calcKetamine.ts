@@ -24,10 +24,27 @@ export const dCalcKetamine: SlashCommand1 = {
         {name: 'lbs', value: 'lbs'},
       )),
   async execute(interaction) {
-    const givenWeight = interaction.options.getInteger('weight')!;
+    const givenWeight = interaction.options.getInteger('weight');
+    if (!givenWeight) {
+      interaction.reply({
+        content: 'Something went wrong. Please try again.',
+        ephemeral: true,
+      });
+      logger.debug(`[${PREFIX}] weight: ${givenWeight}`);
+      return false;
+    }
     // logger.debug(`[${PREFIX}] weight: ${givenWeight}`);
 
-    const weightUnits = interaction.options.getString('units')! as 'kg' | 'lbs';
+    const weightUnits = interaction.options.getString('units') as 'kg' | 'lbs';
+    if (!weightUnits) {
+      interaction.reply({
+        content: 'Something went wrong. Please try again.',
+        ephemeral: true,
+      });
+      logger.debug(`[${PREFIX}] weightUnits: ${weightUnits}`);
+      return false;
+    }
+
     // logger.debug(`[${PREFIX}] weightUnits: ${weightUnits}`);
 
     // const calcWeight = weightUnits === 'kg' ? givenWeight * 2.20462 : givenWeight;

@@ -44,15 +44,23 @@ export const bug: SlashCommand = {
 
         const bugReport = i.fields.getTextInputValue('bugReport');
 
-        const botOwner = await i.client.users.fetch(env.DISCORD_OWNER_ID)!;
+        const botOwner = await i.client.users.fetch(env.DISCORD_OWNER_ID);
         const botOwnerEmbed = embedTemplate()
           .setColor(Colors.Purple)
           .setDescription(`Hey ${botOwner.toString()},\n${username}${guildMessage} reports:\n${bugReport}`);
         botOwner.send({embeds: [botOwnerEmbed]});
 
-        const tripsitGuild = await i.client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
-        const developerRole = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER)!;
-        const devChan = i.client.channels.cache.get(env.CHANNEL_TRIPBOT)! as TextChannel;
+        const tripsitGuild = await i.client.guilds.fetch(env.DISCORD_GUILD_ID);
+        const developerRole = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER);
+        if (!developerRole) {
+          logger.error(`[${PREFIX}]Developer role not found!`);
+          return;
+        }
+        const devChan = i.client.channels.cache.get(env.CHANNEL_TRIPBOT) as TextChannel;
+        if (!devChan) {
+          logger.error(`[${PREFIX}]Developer channel not found!`);
+          return;
+        }
         devChan.send(`Hey ${developerRole.toString()}, a user submitted a bug report:\n${bugReport}`);
 
         const embed = embedTemplate()
