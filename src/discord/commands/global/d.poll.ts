@@ -7,7 +7,7 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -36,7 +36,7 @@ export const dpoll: SlashCommand = {
       .setDescription('CSV of options, EG: "Red, Blue, Green"')
       .setRequired(true)),
   async execute(interaction) {
-    logger.debug(`[${PREFIX}] Starting!`);
+    log.debug(`[${PREFIX}] Starting!`);
     await interaction.deferReply({ephemeral: true});
     const question = interaction.options.getString('question');
     const optionsString = interaction.options.getString('options');

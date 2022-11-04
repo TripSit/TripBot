@@ -1,4 +1,4 @@
-import logger from '../global/utils/logger';
+import log from '../global/utils/log';
 import env from '../global/utils/env.config';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -64,24 +64,24 @@ export async function webserverConnect(): Promise<void> {
 
     httpsServer.listen(httpsPort);
     httpServer.listen(httpPort);
-    logger.info(`[${PREFIX}] Webserver running at: https://${host}:${httpsPort}/`);
+    log.info(`[${PREFIX}] Webserver running at: https://${host}:${httpsPort}/`);
     // httpsServer.listen(httpsPort, () => {
-    //   logger.info(`[${PREFIX}] HTTPS Server running at: ${httpsUrl}`);
+    //   log.info(`[${PREFIX}] HTTPS Server running at: ${httpsUrl}`);
     // });
 
     // httpServer.listen(httpPort, () => {
-    //   logger.info(`[${PREFIX}] HTTP Server running at: ${httpUrl}`);
+    //   log.info(`[${PREFIX}] HTTP Server running at: ${httpUrl}`);
     // });
   } else {
     app.listen(httpsPort);
     app.listen(httpPort);
-    logger.info(`[${PREFIX}] Webserver running at: https://${host}:${httpsPort}/`);
+    log.info(`[${PREFIX}] Webserver running at: https://${host}:${httpsPort}/`);
     // app.listen(httpsPort, () => {
-    //   logger.info(`[${PREFIX}] HTTPS Server running at: ${httpsUrl}`);
+    //   log.info(`[${PREFIX}] HTTPS Server running at: ${httpsUrl}`);
     // });
 
     // app.listen(httpPort, () => {
-    //   logger.info(`[${PREFIX}] HTTP Server running at: ${httpUrl}`);
+    //   log.info(`[${PREFIX}] HTTP Server running at: ${httpUrl}`);
     // });
   }
 
@@ -107,8 +107,8 @@ export async function webserverConnect(): Promise<void> {
   app.post('/user', (req, res) => {
     const codeValue = req.body;
     const redirectUrl = `https://${host}/`;
-    logger.debug(`[${PREFIX}] codeValue: ${codeValue}`);
-    logger.debug(`[${PREFIX}] url: ${redirectUrl}`);
+    log.debug(`[${PREFIX}] codeValue: ${codeValue}`);
+    log.debug(`[${PREFIX}] url: ${redirectUrl}`);
 
     /* Create our Form Data */
     const data1 = new URLSearchParams(); // Create a new formData object with the constructor
@@ -129,14 +129,14 @@ export async function webserverConnect(): Promise<void> {
       response.json()).then((data:any) => {
       // Make a request to the Discord API with the form data, convert the response to JSON,
       // then take it and run the following code.
-      logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+      log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
       axios.get('https://discord.com/api/users/@me', makeConfig(data.access_token)).then((response) => {
         // Make a request yet again to the Discord API with the token from previously.
-        // logger.debug(`[${PREFIX}] response: ${JSON.stringify(response)}`);
+        // log.debug(`[${PREFIX}] response: ${JSON.stringify(response)}`);
         res.status(200).send(response.data.username); // Send the username with a status code 200.
       }).catch((err:Error) => { // Handle any errors in the request (such as 401 errors).
-        logger.error(err); // Log the error in the console
-        logger.error(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+        log.error(err); // Log the error in the console
+        log.error(`[${PREFIX}] data: ${JSON.stringify(data)}`);
         res.sendStatus(500); // Send a 500 error.
       });
     });

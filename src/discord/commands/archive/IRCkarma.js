@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const logger = require('../../../global/utils/logger');
+const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
 const {getGuildInfo, setGuildInfo} = require('../../../global/services/firebaseAPI');
 
@@ -15,10 +15,10 @@ module.exports = {
   async karma(message) {
     // Check if '++' is in the message
     if (message.cleanContent.includes('++')) {
-      logger.debug(`[${PREFIX}] Found ++ in message`);
+      log.debug(`[${PREFIX}] Found ++ in message`);
       // Find the word directly before the ++
       const wordBeforePlus = message.cleanContent.split('++')[0];
-      logger.debug(`[${PREFIX}] Word before ++: ${wordBeforePlus}`);
+      log.debug(`[${PREFIX}] Word before ++: ${wordBeforePlus}`);
 
       // If the word is blank, ignore it
       if (wordBeforePlus === null ||
@@ -56,10 +56,10 @@ module.exports = {
     }
 
     if (message.cleanContent.includes('--')) {
-      logger.debug(`[${PREFIX}] Found -- in message`);
+      log.debug(`[${PREFIX}] Found -- in message`);
       // Find the word directly before the --
       const wordBeforePlus = message.cleanContent.split('--')[0];
-      logger.debug(`[${PREFIX}] Word before --: ${wordBeforePlus}`);
+      log.debug(`[${PREFIX}] Word before --: ${wordBeforePlus}`);
 
       // Extract guild data
       const tripsitGuild = message.client.guilds.resolve(DISCORD_GUILD_ID);

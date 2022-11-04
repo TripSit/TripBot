@@ -5,7 +5,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const axios = require('axios');
 const { JSDOM } = require('jsdom');
 const { ImgurClient } = require('imgur');
-const logger = require('../../../global/utils/logger');
+const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
 const pillColors = require('../../../global/assets/data/pill_colors.json');
 const pillShapes = require('../../../global/assets/data/pill_shapes.json');
@@ -44,7 +44,7 @@ module.exports = {
     const inputColor = interaction.options.getString('color');
     const inputShape = interaction.options.getString('shape');
 
-    logger.info(`[${PREFIX}] starting getPill with parameters: Imprint: ${inputImprint} Color: ${inputColor} Shape: ${inputShape}`);
+    log.info(`[${PREFIX}] starting getPill with parameters: Imprint: ${inputImprint} Color: ${inputColor} Shape: ${inputShape}`);
 
     // Loop through pill_colors to find the color
     let pillColorId = 0;
@@ -68,7 +68,7 @@ module.exports = {
       .then(dom => dom.window.document);
 
     if (!document.querySelector('.pid-box-1')) {
-      logger.debug(`[${PREFIX}] No results found for ${inputImprint} ${inputColor} ${inputShape}`);
+      log.debug(`[${PREFIX}] No results found for ${inputImprint} ${inputColor} ${inputShape}`);
       return;
     }
     const firstResult = document.querySelector('.pid-box-1');
@@ -80,15 +80,15 @@ module.exports = {
     const shaperegex = /(<li><b>Shape:<\/b> )(.*)(<\/li>)/;
 
     const drug = firstResult.getElementsByClassName('imprintdruglink')[0].innerHTML;
-    // logger.debug(`[${PREFIX}] drug: ${drug}`);
+    // log.debug(`[${PREFIX}] drug: ${drug}`);
     const details = firstResult.getElementsByClassName('ddc-pid-details')[0].innerHTML;
     const strengthmatched = details.match(strengthregex);
     const strength = strengthmatched[2];
-    logger.debug(`[${PREFIX}] strength: ${strength}`);
+    log.debug(`[${PREFIX}] strength: ${strength}`);
 
     const imprintmatched = details.match(imprintregex);
     const imprint = imprintmatched[2].toUpperCase();
-    logger.debug(`[${PREFIX}] imprint: ${imprint}`);
+    log.debug(`[${PREFIX}] imprint: ${imprint}`);
 
     const colormatched = details.match(colorregex);
     let color = 'Null';
@@ -96,11 +96,11 @@ module.exports = {
       color = colormatched.at(2);
       color = color.replace('&amp;', '&');
     }
-    logger.debug(`[${PREFIX}] color: ${color}`);
+    log.debug(`[${PREFIX}] color: ${color}`);
 
     const shapematched = details.match(shaperegex);
     const shape = shapematched[2];
-    logger.debug(`[${PREFIX}] shape: ${shape}`);
+    log.debug(`[${PREFIX}] shape: ${shape}`);
 
     const embed = template.embedTemplate()
       .setAuthor({
@@ -124,24 +124,24 @@ module.exports = {
       .then(dom => dom.window.document);
 
     if (!doc.querySelector('.pid-list')) {
-      logger.debug(`[${PREFIX}] No results found for ${inputImprint} ${inputColor} ${inputShape}`);
+      log.debug(`[${PREFIX}] No results found for ${inputImprint} ${inputColor} ${inputShape}`);
       return;
     }
     const details2 = doc.querySelector('.pid-list').innerHTML;
-    // logger.debug(`[${PREFIX}] details2: ${details2}`);
+    // log.debug(`[${PREFIX}] details2: ${details2}`);
 
     const availmatched = details2.match(/(<dt>Availability<\/dt>\n.*>)(.*)(<\/dd>)/);
-    // logger.debug(`[${PREFIX}] availmatched: ${availmatched[2]}`);
+    // log.debug(`[${PREFIX}] availmatched: ${availmatched[2]}`);
 
     const classMatched = details2.match(/(<dt>Drug Class<\/dt>\s.*\s.*">)(.*)(<\/a)/);
-    // logger.debug(`[${PREFIX}] class_matched: ${class_matched[2]}`);
+    // log.debug(`[${PREFIX}] class_matched: ${class_matched[2]}`);
 
     const desc = doc.querySelector('meta[name="twitter:description"]').content;
     // const desc = document.querySelector('meta[property=\'og:description\']');
-    // logger.debug(`[${PREFIX}] desc: ${desc}`);
+    // log.debug(`[${PREFIX}] desc: ${desc}`);
     embed.setDescription(desc);
 
-    // logger.debug(`[${PREFIX}] first_result: ${first_result}`);
+    // log.debug(`[${PREFIX}] first_result: ${first_result}`);
     embed.addFields(
       { name: 'Availability', value: availmatched[2], inline: true },
       { name: 'Class', value: classMatched[2], inline: true },
@@ -149,7 +149,7 @@ module.exports = {
     // eslint-disable-next-line
     // It seems like drugs.com has some weird image handling, so we need to download the image and upload the image to imgur
     // I will eventually cache these images so we don't need to download/upload every time
-    logger.debug(`[${PREFIX}] Starting axios image request`);
+    log.debug(`[${PREFIX}] Starting axios image request`);
 
     const imgurUrl = await axios.get(imageURL, {
       responseType: 'stream',
@@ -160,7 +160,7 @@ module.exports = {
       }))
       .then(imgurRes => imgurRes.data.link)
       .catch(ex => {
-        logger.error(`[${PREFIX}]`, ex);
+        log.error(`[${PREFIX}]`, ex);
         interaction.reply({
           embeds: [embed],
           ephemeral: false,

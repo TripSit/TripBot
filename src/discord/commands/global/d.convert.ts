@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import convert from 'convert-units';
 
 import * as path from 'path';
@@ -37,7 +37,7 @@ export const convertUnits: SlashCommand = {
       return false;
     }
 
-    logger.debug(`${PREFIX}: ${valueInt} ${units} into ${intoUnits}`);
+    log.debug(`${PREFIX}: ${valueInt} ${units} into ${intoUnits}`);
     const result = convert(valueInt).from(units as convert.Unit).to(intoUnits as convert.Unit);
 
     const embed = embedTemplate()
@@ -45,7 +45,7 @@ export const convertUnits: SlashCommand = {
       // .setDescription(`${value} ${units} is ${result} ${intoUnits}`);
     if (interaction.replied) interaction.followUp({embeds: [embed]});
     else interaction.reply({embeds: [embed]});
-    logger.debug(`[${PREFIX}] finished!`);
+    log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

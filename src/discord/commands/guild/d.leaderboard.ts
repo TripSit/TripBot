@@ -6,7 +6,7 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {leaderboard} from '../../../global/commands/g.leaderboard';
 import {embedTemplate} from '../../utils/embedTemplate';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import env from '../../../global/utils/env.config';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -34,7 +34,7 @@ export const dLeaderboard: SlashCommand = {
   async execute(interaction) {
     const categoryOption = interaction.options.get('category');
     const categoryName = categoryOption ? categoryOption.value as string : 'OVERALL';
-    logger.debug(`[${PREFIX}] starting | category: ${categoryName}`);
+    log.debug(`[${PREFIX}] starting | category: ${categoryName}`);
 
     // Get the tripsit guild
     const guild = client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
@@ -42,7 +42,7 @@ export const dLeaderboard: SlashCommand = {
     const response = await leaderboard(categoryName);
     const leaderboardVals = response.results as leaderboardType;
 
-    // logger.debug(`[${PREFIX}] response: ${JSON.stringify(leaderboardVals, null, 2)}`);
+    // log.debug(`[${PREFIX}] response: ${JSON.stringify(leaderboardVals, null, 2)}`);
 
     const embed = embedTemplate()
       .setTitle(response.title)
@@ -60,15 +60,15 @@ export const dLeaderboard: SlashCommand = {
     };
 
     for (const [category, value] of Object.entries(leaderboardVals)) {
-      // logger.debug(`[${PREFIX}] Category name: ${category}`);
+      // log.debug(`[${PREFIX}] Category name: ${category}`);
       // Capitalize the first letter in user.rank
       const categoryName = rankDict[category as keyof typeof rankDict];
       const catNameCapitalized = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
-      // logger.debug(`[${PREFIX}] Proper name: ${catNameCapitalized}`);
+      // log.debug(`[${PREFIX}] Proper name: ${catNameCapitalized}`);
       value.forEach((user) => {
         // Get the user's discord username from the discord API
         const discordUsername = guild.members.cache.get(user.id);
-        // logger.debug(`[${PREFIX}] discordUsername: ${discordUsername}`);
+        // log.debug(`[${PREFIX}] discordUsername: ${discordUsername}`);
         embed.addFields({
           name: `#${user.rank} ${catNameCapitalized}`,
           value: `L.${user.level} ${discordUsername?.toString()}`,

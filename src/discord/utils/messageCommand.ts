@@ -5,7 +5,7 @@ import {
   Role,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import * as path from 'path';
 import {stripIndents} from 'common-tags';
 const PREFIX = path.parse(__filename).name;
@@ -20,16 +20,16 @@ const helpCounter = new Map<string, number>();
 export async function messageCommand(message: Message): Promise<void> {
   if (!message.guild) return; // If not in a guild then ignore all messages
   if (message.guild.id !== env.DISCORD_GUILD_ID) return; // If not in tripsit ignore all messages
-  // logger.debug(`[${PREFIX}] starting!`);
+  // log.debug(`[${PREFIX}] starting!`);
   const displayName = message.member ? message.member.displayName : message.author.username;
 
-  // logger.debug(stripIndents`[${PREFIX}] ${displayName} said\
+  // log.debug(stripIndents`[${PREFIX}] ${displayName} said\
   // ${message.content} in ${(message.channel as GuildTextBasedChannel).name}!`);
 
   if (message.content.startsWith('~')) {
     // Find the word that appears after ~
     const command = message.content.split(' ')[0].slice(1);
-    logger.debug(`[${PREFIX}] command: ${command}`);
+    log.debug(`[${PREFIX}] command: ${command}`);
 
 
     if (command === 'tripsit') {
@@ -37,7 +37,7 @@ export async function messageCommand(message: Message): Promise<void> {
       if (helpCounter.has(message.author.id)) {
         const lastTime = helpCounter.get(message.author.id);
         if (!lastTime) {
-          // logger.debug(`[${PREFIX}] lastTime is undefined!`);
+          // log.debug(`[${PREFIX}] lastTime is undefined!`);
           return;
         };
         if (now - lastTime < 1000 * 60 * 5) {
@@ -70,7 +70,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
     (message.mentions.has(message.client.user) || message.cleanContent.toLowerCase().includes('tripbot')) &&
     message.channel.type !== ChannelType.DM) {
     if (message.author.bot) {
-      // logger.debug(`[${PREFIX}] Ignoring bot interaction`);
+      // log.debug(`[${PREFIX}] Ignoring bot interaction`);
       return;
     }
     const responses = [

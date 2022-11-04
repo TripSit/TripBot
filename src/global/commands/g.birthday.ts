@@ -1,7 +1,7 @@
 import {DateTime} from 'luxon';
 import {db} from '../utils/knex';
 import {Users} from '../@types/pgdb';
-import logger from '../utils/logger';
+import log from '../utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -19,7 +19,7 @@ export async function birthday(
   month?: string | null,
   day?: number | null):Promise<any> {
   if (command === 'set') {
-    logger.debug(`[${PREFIX}] ${command} ${memberId} ${month} ${day}`);
+    log.debug(`[${PREFIX}] ${command} ${memberId} ${month} ${day}`);
     if (month === null || day === null) {
       return 'You need to specify a month and day!';
     }
@@ -52,7 +52,7 @@ export async function birthday(
 
       const birthday = new Date(2000, monthDict[month.toLowerCase() as keyof typeof monthDict], day);
 
-      logger.debug(`[${PREFIX}] Setting birthday for ${memberId} to ${birthday}`);
+      log.debug(`[${PREFIX}] Setting birthday for ${memberId} to ${birthday}`);
 
       await db
         .insert({
@@ -71,22 +71,22 @@ export async function birthday(
       .from<Users>('users')
       .where('discord_id', memberId);
 
-    logger.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
+    log.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
 
     let resp = '';
     if (data.length > 0) {
       if (data[0].birthday !== null) {
         const birthDate = data[0].birthday.toISOString();
-        logger.debug(`[${PREFIX}] Birthdate: ${birthDate}`);
+        log.debug(`[${PREFIX}] Birthdate: ${birthDate}`);
         const birthday = DateTime.fromISO(birthDate);
-        logger.debug(`[${PREFIX}] birthday: ${birthday}`);
+        log.debug(`[${PREFIX}] birthday: ${birthday}`);
         resp = `was born on ${birthday.monthLong} ${birthday.day}`;
       } else {
-        logger.debug(`[${PREFIX}] birthday is NULL`);
+        log.debug(`[${PREFIX}] birthday is NULL`);
         resp = `is immortal <3 (and has not set a birthday)`;
       }
     } else {
-      logger.debug(`[${PREFIX}] data is NULL`);
+      log.debug(`[${PREFIX}] data is NULL`);
       resp = `is immortal <3 (and has not set a birthday)`;
     }
     return resp;

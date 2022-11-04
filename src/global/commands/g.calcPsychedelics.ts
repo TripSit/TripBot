@@ -1,4 +1,4 @@
-import logger from '../utils/logger';
+import log from '../utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -13,7 +13,7 @@ export async function calcPsychedelics(
   desiredDose:number | null,
   days:number,
 ):Promise<number> {
-  logger.debug(`[${PREFIX}] lastDose: ${lastDose} | desiredDose: ${desiredDose} | days: ${days}`);
+  log.debug(`[${PREFIX}] lastDose: ${lastDose} | desiredDose: ${desiredDose} | days: ${days}`);
   let estimatedDosage = (lastDose / 100) * 280.059565 * (days ** -0.412565956);
   let newAmount = 0;
   if (desiredDose) {
@@ -26,7 +26,7 @@ export async function calcPsychedelics(
 
   const result = Math.round(newAmount * 10) / 10;
 
-  logger.debug(`[${PREFIX}] result: ${result}!`);
+  log.debug(`[${PREFIX}] result: ${result}!`);
 
   return result;
 };

@@ -6,7 +6,7 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {calcDxm} from '../../../global/commands/g.calcDxm';
 import {embedTemplate} from '../../utils/embedTemplate';
-// import logger from '../../../global/utils/logger';
+// import log from '../../../global/utils/log';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 
@@ -76,7 +76,7 @@ export const calxDXM: SlashCommand = {
       header = false;
     });
     interaction.reply({embeds: [embed], ephemeral: false});
-    // logger.debug(`[${PREFIX}] finished!`);
+    // log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

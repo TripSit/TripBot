@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {timezone} from '../../../global/commands/g.timezone';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -44,7 +44,7 @@ export const time: SlashCommand = {
 
     const response = await timezone(command, member.id, tzValue);
 
-    logger.debug(`[${PREFIX}] response: ${response}`);
+    log.debug(`[${PREFIX}] response: ${response}`);
 
     if (command === 'get') {
       if (response.length === 0) {
@@ -55,7 +55,7 @@ export const time: SlashCommand = {
     } else {
       interaction.reply({content: response, ephemeral: true});
     }
-    // logger.debug(`[${PREFIX}] finished!`);
+    // log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

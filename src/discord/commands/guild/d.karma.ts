@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {karma} from '../../../global/commands/g.karma';
-// import logger from '../../../global/utils/logger';
+// import log from '../../../global/utils/log';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 
@@ -47,7 +47,7 @@ export const birthday: SlashCommand = {
   //     ),
   // ),
   async execute(interaction) {
-    // logger.debug(`[${PREFIX}] started!`);
+    // log.debug(`[${PREFIX}] started!`);
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     let member = interaction.options.getMember('user') as GuildMember;
     // const value = interaction.options.getNumber('value') as number;
@@ -64,7 +64,7 @@ export const birthday: SlashCommand = {
 
     const response = await karma(command, member.id, null, null);
 
-    // logger.debug(`[${PREFIX}] response: ${response}`);
+    // log.debug(`[${PREFIX}] response: ${response}`);
 
     if (command === 'get') {
       interaction.reply(`${member.displayName} ${response}`);
@@ -72,7 +72,7 @@ export const birthday: SlashCommand = {
       interaction.reply({content: `${member.displayName} ${response}`, ephemeral: true});
     }
 
-    // logger.debug(`[${PREFIX}] finished!`);
+    // log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

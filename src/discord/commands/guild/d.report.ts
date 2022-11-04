@@ -14,7 +14,7 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 // import {embedTemplate} from '../../utils/embedTemplate';
 import {moderate} from '../../../global/commands/g.moderate';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 import {env} from 'process';
 const PREFIX = path.parse(__filename).name;
@@ -30,7 +30,7 @@ export const report: SlashCommand = {
       .setName('target')),
 
   async execute(interaction: ChatInputCommandInteraction) {
-    logger.debug(`[${PREFIX}] started!`);
+    log.debug(`[${PREFIX}] started!`);
     // Only run on tripsit
     if (!interaction.guild) {
       await interaction.reply({content: 'This command can only be used in a server!', ephemeral: true});
@@ -49,11 +49,11 @@ export const report: SlashCommand = {
     // await interaction.editReply({embeds: [embed]});
 
     const target = interaction.options.getString('target') as string;
-    logger.debug(`[${PREFIX}] target: ${target}`);
+    log.debug(`[${PREFIX}] target: ${target}`);
     const targetId = target.replace(/[<@!>]/g, '');
-    logger.debug(`[${PREFIX}] targetId: ${targetId}`);
+    log.debug(`[${PREFIX}] targetId: ${targetId}`);
     const targetMember = await interaction.guild.members.fetch(targetId) as GuildMember;
-    logger.debug(`[${PREFIX}] targetMember: ${targetMember}`);
+    log.debug(`[${PREFIX}] targetMember: ${targetMember}`);
 
     const modal = new ModalBuilder()
       .setCustomId(`modModal~report~${interaction.id}`)
@@ -84,9 +84,9 @@ export const report: SlashCommand = {
           null,
           i,
         );
-        logger.debug(`[${PREFIX}] Result: ${result}`);
+        log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
-        logger.debug(`[${PREFIX}] finished!`);
+        log.debug(`[${PREFIX}] finished!`);
       });
     return true;
   },

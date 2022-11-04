@@ -5,7 +5,7 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 // import {whoisIRC} from '../../../global/commands/archive/g.whois';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -19,7 +19,7 @@ export const discordTemplate: SlashCommand = {
       .setName('target')),
 
   async execute(interaction:ChatInputCommandInteraction) {
-    logger.debug(`[${PREFIX}] started!`);
+    log.debug(`[${PREFIX}] started!`);
     // const target = interaction.options.getString('target');
 
     // let body;
@@ -47,7 +47,7 @@ export const discordTemplate: SlashCommand = {
     //   ephemeral: true,
     // });
 
-    logger.debug(`[${PREFIX}] finished!`);
+    log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

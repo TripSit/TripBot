@@ -16,7 +16,7 @@ import {
 } from 'discord-api-types/v10';
 import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../utils/embedTemplate';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -25,7 +25,7 @@ const PREFIX = path.parse(__filename).name;
  * @param {ButtonInteraction} interaction The interaction that triggered this
  */
 export async function techHelpClick(interaction:ButtonInteraction) {
-  // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
+  // log.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
   if (!interaction.guild) {
     interaction.reply({
       content: 'This command can only be used in a server!',
@@ -40,7 +40,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   const role = await interaction.guild?.roles.fetch(roleId);
 
   if (!role) {
-    logger.error(`[${PREFIX} - techHelpClick] role not found: ${roleId}`);
+    log.error(`[${PREFIX} - techHelpClick] role not found: ${roleId}`);
     interaction.reply({
       content: 'The role provided could not be found!',
       ephemeral: true,
@@ -48,8 +48,8 @@ export async function techHelpClick(interaction:ButtonInteraction) {
     return;
   }
 
-  logger.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
-  logger.debug(`[${PREFIX} - techHelpClick] role: ${role.id}`);
+  log.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
+  log.debug(`[${PREFIX} - techHelpClick] role: ${role.id}`);
 
   let placeholder = '';
   if (issueType === 'discord') {
@@ -93,7 +93,7 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
     });
     return;
   };
-  // logger.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}!`);
+  // log.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}!`);
 
   const issueType = interaction.customId.split('~')[1];
   const roleId = interaction.customId.split('~')[2];
@@ -101,7 +101,7 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
   const roleModerator = await interaction.guild?.roles.fetch(roleId);
 
   if (!roleModerator) {
-    logger.error(`[${PREFIX} - techHelpClick] role not found: ${roleId}`);
+    log.error(`[${PREFIX} - techHelpClick] role not found: ${roleId}`);
     interaction.reply({
       content: 'The role provided could not be found!',
       ephemeral: true,
@@ -109,12 +109,12 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
     return;
   };
 
-  logger.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
-  logger.debug(`[${PREFIX} - techHelpClick] role: ${roleModerator.id}`);
+  log.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
+  log.debug(`[${PREFIX} - techHelpClick] role: ${roleModerator.id}`);
 
   // Respond right away cuz the rest of this doesn't matter
   const member = await interaction.guild.members.fetch(interaction.user.id);
-  // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
+  // log.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
   if (member) {
     // Dont run if the user is on timeout
     if (member.communicationDisabledUntilTimestamp !== null) {
@@ -132,7 +132,7 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
 
   // Get whatever they sent in the modal
   const modalInput = interaction.fields.getTextInputValue(`${issueType}IssueInput`);
-  logger.debug(`[${PREFIX}] modalInput: ${modalInput}!`);
+  log.debug(`[${PREFIX}] modalInput: ${modalInput}!`);
 
   // // Get the actor
   const actor = interaction.user;
@@ -144,7 +144,7 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
     type: interaction.guild.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
     reason: `${actor.username} submitted a(n) ${issueType} issue`,
   });
-  logger.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);
+  log.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);
 
   const embed = embedTemplate();
   embed.setDescription(stripIndents`Thank you, check out ${ticketThread} to talk with a team member about your issue!`);
@@ -170,7 +170,7 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
     );
 
   await ticketThread.send({content: message, components: [techHelpButtons]});
-  logger.debug(`[${PREFIX}] Sent intro message to meta-thread ${ticketThread.id}`);
+  log.debug(`[${PREFIX}] Sent intro message to meta-thread ${ticketThread.id}`);
 };
 
 /**

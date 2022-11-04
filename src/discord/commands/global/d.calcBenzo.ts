@@ -7,7 +7,7 @@ import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcBenzo} from '../../../global/commands/g.calcBenzo';
 import {stripIndents} from 'common-tags';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -34,7 +34,7 @@ export const dcalcBenzo: SlashCommand = {
 
     if (!dosage || !drugA || !drugB) {
       interaction.reply({content: 'Something went wrong, please try again.', ephemeral: true});
-      logger.error(`[${PREFIX}] dosage: ${dosage} | drugA: ${drugA} | drugB: ${drugB}`);
+      log.error(`[${PREFIX}] dosage: ${dosage} | drugA: ${drugA} | drugB: ${drugB}`);
       return false;
     }
 
@@ -48,7 +48,7 @@ export const dcalcBenzo: SlashCommand = {
         It's a good idea to start with a lower dose than the calculator shows, since everybody can react differently to different substances.
         `);
     interaction.reply({embeds: [embed], ephemeral: false});
-    // logger.debug(`[${PREFIX}] finished!`);
+    // log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

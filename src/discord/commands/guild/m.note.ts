@@ -12,7 +12,7 @@ import {
 } from 'discord-api-types/v10';
 import {MessageCommand} from '../../@types/commandDef';
 import {stripIndents} from 'common-tags';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import {moderate} from '../../../global/commands/g.moderate';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -27,7 +27,7 @@ export const mNote: MessageCommand = {
     const message = interaction.targetMessage.cleanContent;
     const messageUrl = interaction.targetMessage.url;
 
-    logger.debug(`${PREFIX} target: ${target}`);
+    log.debug(`${PREFIX} target: ${target}`);
 
     const modal = new ModalBuilder()
       .setCustomId(`noteModal~${interaction.id}`)
@@ -63,10 +63,11 @@ export const mNote: MessageCommand = {
           null,
           i,
         );
-        logger.debug(`[${PREFIX}] Result: ${result}`);
+        log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
 
-        logger.debug(`[${PREFIX}] finished!`);
+        log.debug(`[${PREFIX}] finished!`);
       });
+    return true;
   },
 };

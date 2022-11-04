@@ -6,9 +6,9 @@ import {
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
 
-import {bigBrother} from '../../global/utils/g.thoughtPolice';
+import {bigBrother} from '../../global/utils/thoughtPolice';
 
-// import logger from '../../global/utils/logger';
+// import log from '../../global/utils/log';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 
@@ -18,14 +18,14 @@ import {bigBrother} from '../../global/utils/g.thoughtPolice';
  * @return {Promise<void>}
  */
 export async function thoughtPolice(message:Message): Promise<void> {
-  // logger.debug(`[${PREFIX}] started!`);
-  // logger.debug(`[${PREFIX}] ${message.member!.displayName} said "${message.cleanContent}"`);
+  // log.debug(`[${PREFIX}] started!`);
+  // log.debug(`[${PREFIX}] ${message.member!.displayName} said "${message.cleanContent}"`);
   const channelModlog = message.client.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
   // const roleModerators = message.guild?.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR);
 
   const result = await bigBrother(message.cleanContent.toLowerCase());
 
-  // logger.debug(`[${PREFIX}] result: ${result}`);
+  // log.debug(`[${PREFIX}] result: ${result}`);
 
   if (result) {
     switch (result) {
@@ -77,5 +77,5 @@ export async function thoughtPolice(message:Message): Promise<void> {
         break;
     }
   }
-  // logger.debug(`[${PREFIX}] finished!`);
+  // log.debug(`[${PREFIX}] finished!`);
 };

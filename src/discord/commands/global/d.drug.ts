@@ -7,7 +7,7 @@ import {embedTemplate} from '../../utils/embedTemplate';
 import {drug} from '../../../global/commands/g.drug';
 import {stripIndents} from 'common-tags';
 import {CbSubstance} from '../../../global/@types/combined.d';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -23,14 +23,14 @@ export const dDrug: SlashCommand = {
   async execute(interaction) {
     const embed = embedTemplate();
     const drugName = interaction.options.getString('substance');
-    logger.debug(`[${PREFIX}] started | drugName: ${drugName}`);
+    log.debug(`[${PREFIX}] started | drugName: ${drugName}`);
     if (!drugName) {
       embed.setTitle(`No drug name was provided`);
       interaction.reply({embeds: [embed]});
       return false;
     }
     const drugData = await drug(drugName) as CbSubstance;
-    logger.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
+    log.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
 
     if (drugData === null) {
       embed.setTitle(`${drugName} was not found`);
@@ -124,7 +124,7 @@ export const dDrug: SlashCommand = {
           });
           const toxicityString = toxicityMap.join(', ');
           embed.addFields({name: '☣ Toxicity', value: toxicityString, inline: true});
-          logger.debug(`[${PREFIX}] Added toxicity`);
+          log.debug(`[${PREFIX}] Added toxicity`);
           toxicityAdded = true;
           firstRowColumns++;
         }
@@ -172,14 +172,14 @@ export const dDrug: SlashCommand = {
           }[],
         };
 
-        logger.debug(`[${PREFIX}] roaNames: ${roaNames}`);
+        log.debug(`[${PREFIX}] roaNames: ${roaNames}`);
 
         let dosageColumns = 0;
         roaNames.forEach((roaName) => {
           if (dosageColumns < 3) {
             const roaInfo = (drugData.roas as roaType[]).find((r:roaType) => r.name === roaName);
             if (!roaInfo) {
-              logger.error(`[${PREFIX}] Could not find roaInfo for ${roaName}`);
+              log.error(`[${PREFIX}] Could not find roaInfo for ${roaName}`);
               return;
             };
             if (roaInfo.dosage) {
@@ -224,7 +224,7 @@ export const dDrug: SlashCommand = {
                 });
                 const toxicityString = toxicityMap.join(', ');
                 embed.addFields({name: '☣ Toxicity', value: toxicityString, inline: true});
-                logger.debug(`[${PREFIX}] Added toxicity A`);
+                log.debug(`[${PREFIX}] Added toxicity A`);
                 toxicityAdded = true;
                 dosageColumns++;
               }
@@ -278,9 +278,9 @@ export const dDrug: SlashCommand = {
               durationColumns++;
             }
           }
-          // logger.debug(`[${PREFIX}] toxicityAdded: ${toxicityAdded}`);
+          // log.debug(`[${PREFIX}] toxicityAdded: ${toxicityAdded}`);
           if (!toxicityAdded) {
-            // logger.debug(`[${PREFIX}] toxicityAdded: ${toxicityAdded}`);
+            // log.debug(`[${PREFIX}] toxicityAdded: ${toxicityAdded}`);
             if (durationColumns < 3) {
               if (drugData.toxicity) {
                 const toxicityMap = drugData.toxicity.map((toxicity) => {
@@ -288,7 +288,7 @@ export const dDrug: SlashCommand = {
                 });
                 const toxicityString = toxicityMap.join(', ');
                 embed.addFields({name: '☣ Toxicity', value: toxicityString, inline: true});
-                // logger.debug(`[${PREFIX}] Added toxicity B`);
+                // log.debug(`[${PREFIX}] Added toxicity B`);
                 toxicityAdded = true;
                 durationColumns++;
               }
@@ -332,7 +332,7 @@ export const dDrug: SlashCommand = {
         });
         const toxicityString = toxicityMap.join(', ');
         embed.addFields({name: '☣ Toxicity', value: toxicityString, inline: true});
-        logger.debug('Added toxicity C');
+        log.debug('Added toxicity C');
       }
     }
 
@@ -342,7 +342,7 @@ export const dDrug: SlashCommand = {
     }
 
     interaction.reply({embeds: [embed], ephemeral: false});
-    logger.debug(`[${PREFIX}] finished!`);
+    log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

@@ -2,7 +2,7 @@ import {
   SelectMenuInteraction,
   Client,
 } from 'discord.js';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import {applicationStart} from '../utils/application';
 import {applicationReject} from './application';
 import * as path from 'path';
@@ -15,9 +15,9 @@ const PREFIX = path.parse(__filename).name;
  * @return {Promise<void>}
  */
 export async function selectMenu(interaction:SelectMenuInteraction, client:Client): Promise<void> {
-  logger.debug(`[${PREFIX}] started!`);
+  log.debug(`[${PREFIX}] started!`);
   const customId = interaction.customId;
-  logger.debug(`[${PREFIX}] customId: ${customId}`);
+  log.debug(`[${PREFIX}] customId: ${customId}`);
 
   if (customId.startsWith('applicationReject')) {
     await applicationReject(interaction);
@@ -26,5 +26,5 @@ export async function selectMenu(interaction:SelectMenuInteraction, client:Clien
     await applicationStart(interaction);
   }
 
-  logger.debug(`[${PREFIX}] finished!`);
+  log.debug(`[${PREFIX}] finished!`);
 };

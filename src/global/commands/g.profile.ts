@@ -5,7 +5,7 @@ import {
   UserExperience,
 } from '../../global/@types/pgdb.d';
 // import * as path from 'path';
-// import logger from '../../global/utils/logger';
+// import log from '../../global/utils/log';
 // const PREFIX = path.parse(__filename).name;
 
 
@@ -17,7 +17,7 @@ import {
 export async function profile(
   memberId: string,
 ):Promise<any> {
-  // logger.debug(`[${PREFIX}] memberId: ${memberId}`);
+  // log.debug(`[${PREFIX}] memberId: ${memberId}`);
   let userData = await db<Users>('users')
     .select(
       db.ref('id').as('id'),
@@ -35,7 +35,7 @@ export async function profile(
       .returning('*');
   }
 
-  // logger.debug(`[${PREFIX}] data: ${JSON.stringify(userData, null, 2)}`);
+  // log.debug(`[${PREFIX}] data: ${JSON.stringify(userData, null, 2)}`);
 
   const profileData = {
     birthday: userData[0].birthday,
@@ -53,7 +53,7 @@ export async function profile(
     .from<UserExperience>('user_experience')
     .where('user_id', userData[0].id);
 
-  // logger.debug(`[${PREFIX}] currentExp: ${JSON.stringify(currentExp, null, 2)}`);
+  // log.debug(`[${PREFIX}] currentExp: ${JSON.stringify(currentExp, null, 2)}`);
 
   // Go through currentExp and add up the total points
   for (const exp of currentExp) {

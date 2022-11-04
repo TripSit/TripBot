@@ -4,7 +4,7 @@ import {
   CategoryChannel,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import * as path from 'path';
 import {voiceEvent} from '../@types/eventDef';
 const PREFIX = path.parse(__filename).name;
@@ -12,14 +12,14 @@ const PREFIX = path.parse(__filename).name;
 export const voiceStateUpdate: voiceEvent = {
   name: 'voiceStateUpdate',
   async execute(Old: VoiceState, New: VoiceState) {
-    // logger.debug(`[${PREFIX}] starting!`);
+    // log.debug(`[${PREFIX}] starting!`);
     if (New.guild.id !== env.DISCORD_GUILD_ID) return;
     if (New.member?.user?.bot) return;
     if (Old.member?.user?.bot) return;
 
-    logger.debug(`[${PREFIX}] Tempvoice channel is is ${env.CHANNEL_CAMPFIRE}`);
+    log.debug(`[${PREFIX}] Tempvoice channel is is ${env.CHANNEL_CAMPFIRE}`);
 
-    logger.debug(`[${PREFIX}] ${New.member?.displayName} ${New.channelId ?
+    log.debug(`[${PREFIX}] ${New.member?.displayName} ${New.channelId ?
       `joined channel ${New.channel?.name} (${New.channelId})` :
       `left channel ${Old.channel?.name} (${Old.channelId})`} `);
 
@@ -30,9 +30,9 @@ export const voiceStateUpdate: voiceEvent = {
         type: ChannelType.GuildVoice,
         parent: env.CATEGORY_CAMPFIRE,
       }).then((result) => {
-        logger.debug(`[${PREFIX}] created a temporary voice channel for ${New.member?.displayName}`);
+        log.debug(`[${PREFIX}] created a temporary voice channel for ${New.member?.displayName}`);
         New.member?.voice.setChannel(result.id);
-        logger.debug(`[${PREFIX}] Moved ${New.member?.displayName} to the newly created voice channel`);
+        log.debug(`[${PREFIX}] Moved ${New.member?.displayName} to the newly created voice channel`);
       });
     }
 
@@ -44,14 +44,14 @@ export const voiceStateUpdate: voiceEvent = {
             if (channel.id !== env.CHANNEL_CAMPFIRE) {
               if (channel.members.size < 1) {
                 channel.delete('beep boop, i love to clean up');
-                logger.debug(`[${PREFIX}] deleted an empty temporary voice channel`);
+                log.debug(`[${PREFIX}] deleted an empty temporary voice channel`);
               }
             }
           }
         });
       }
     } catch (err) {
-      logger.debug(`[${PREFIX}] ${err}`);
+      log.debug(`[${PREFIX}] ${err}`);
     }
   },
 };

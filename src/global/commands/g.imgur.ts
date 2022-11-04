@@ -1,5 +1,5 @@
 import env from '../utils/env.config';
-import logger from '../utils/logger';
+import log from '../utils/log';
 import axios from 'axios';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -33,11 +33,11 @@ export async function imgurSearch(query:string):Promise<any> {
           imageLink = res.data.data[0].link;
         }
       } else {
-        logger.debug(`[${PREFIX}] No results found!`);
+        log.debug(`[${PREFIX}] No results found!`);
         imageLink = `No results found for ${query}!`;
       }
 
-      logger.debug(`[${PREFIX}] imageLink: ${imageLink}`);
+      log.debug(`[${PREFIX}] imageLink: ${imageLink}`);
 
       resolve(imageLink);
     }).catch((err:Error) => {

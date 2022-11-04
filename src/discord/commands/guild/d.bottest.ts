@@ -14,7 +14,7 @@ import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 // import env from '../../../global/utils/env.config';
 // import fs from 'fs/promises';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 // import convert from 'convert-units';
 const PREFIX = path.parse(__filename).name;
@@ -601,7 +601,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     //   const timeValue = Math.floor(Math.random() * 10) + 1;
     //   // Make the offset string
     //   const offset = `${timeValue} week, ${timeValue} days, ${timeValue} hrs ${timeValue} mins`;
-    //   logger.debug(`[${PREFIX}] Testing ${name} with ${drug} ${doseValue} ${doseUnit} in ${offset}`);
+    //   log.debug(`[${PREFIX}] Testing ${name} with ${drug} ${doseValue} ${doseUnit} in ${offset}`);
     //   await command.execute(interaction, ['set', drug, doseValue, doseUnit, offset]);
     //   // await sleep(1000);
     //   // await command.execute(interaction, ['get']);
@@ -776,21 +776,21 @@ async function testGlobal(interaction:ChatInputCommandInteraction):Promise<resul
         results.total = globalCommands.size;
         await interaction.followUp(`> Testing ${globalCommands.size} global commands!`);
         for (const command of globalCommands) {
-          // logger.debug(`[${PREFIX}] Testing global command ${command[1].name}`);
+          // log.debug(`[${PREFIX}] Testing global command ${command[1].name}`);
           await runCommand(interaction, command[1].name)
             .then((result) => {
               if (result) {
-                // logger.debug(`[${PREFIX}] Global command ${command[1].name} passed!`);
+                // log.debug(`[${PREFIX}] Global command ${command[1].name} passed!`);
                 results.passed++;
               } else {
-                // logger.debug(`[${PREFIX}] Global command ${command[1].name} failed!`);
+                // log.debug(`[${PREFIX}] Global command ${command[1].name} failed!`);
                 results.failed++;
               }
             });
         };
       });
     // .finally(() => {
-    //   // logger.debug(`[${PREFIX}] Global commands results: ${JSON.stringify(results)}`);
+    //   // log.debug(`[${PREFIX}] Global commands results: ${JSON.stringify(results)}`);
     // });
   }
   return results;
@@ -813,22 +813,22 @@ async function testGuild(interaction:ChatInputCommandInteraction):Promise<result
         results.total = guildCommands.size;
         await interaction.followUp(`> Testing ${guildCommands.size} guild commands!`);
         for (const command of guildCommands) {
-          // logger.debug(`[${PREFIX}] Testing guild command ${command[1].name}`);
+          // log.debug(`[${PREFIX}] Testing guild command ${command[1].name}`);
           await runCommand(interaction, command[1].name)
             .then((result) => {
               if (result) {
-                // logger.debug(`[${PREFIX}] Global command ${command[1].name} passed!`);
+                // log.debug(`[${PREFIX}] Global command ${command[1].name} passed!`);
                 results.passed++;
               } else {
-                // logger.debug(`[${PREFIX}] Global command ${command[1].name} failed!`);
+                // log.debug(`[${PREFIX}] Global command ${command[1].name} failed!`);
                 results.failed++;
               }
             });
         };
       });
     // .finally(() => {
-    //   // logger.debug(`[${PREFIX}] Guild commands finished!`);
-    //   // logger.debug(`[${PREFIX}] Guild commands results: ${JSON.stringify(results)}`);
+    //   // log.debug(`[${PREFIX}] Guild commands finished!`);
+    //   // log.debug(`[${PREFIX}] Guild commands results: ${JSON.stringify(results)}`);
     // });
   }
   return results;
@@ -855,14 +855,14 @@ export const testSuite: SlashCommand = {
 
     await testGlobal(interaction)
       .then(async (globalResults) => {
-        logger.debug(`[${PREFIX}] Global results: ${JSON.stringify(globalResults)}`);
+        log.debug(`[${PREFIX}] Global results: ${JSON.stringify(globalResults)}`);
         await testGuild(interaction)
           .then(async (guildResults) => {
             if (!interaction.channel) {
               await interaction.reply('This command must be used in a channel!');
               return false;
             };
-            logger.debug(`[${PREFIX}] Guild results: ${JSON.stringify(guildResults)}`);
+            log.debug(`[${PREFIX}] Guild results: ${JSON.stringify(guildResults)}`);
             const embed = embedTemplate()
               .setTitle('Testing Results')
               .addFields(

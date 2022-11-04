@@ -3,7 +3,7 @@
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 const { stripIndents } = require('common-tags');
-const logger = require('../../../global/utils/logger');
+const logger = require('../../../global/utils/log');
 const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
 const { moderate } = require('../../../global/utils/moderate');
 
@@ -109,11 +109,11 @@ const voteDownvoteThreshold = NODE_ENV === 'production' ? 3 : 1;
 
 module.exports = {
   async communityMod(reaction/* , user */) {
-    logger.debug(`[${PREFIX}] starting!`);
+    log.debug(`[${PREFIX}] starting!`);
 
     let target = {};
     if (!target) {
-      // logger.debug(`[${PREFIX}] target is null, pulling fresh member data`);
+      // log.debug(`[${PREFIX}] target is null, pulling fresh member data`);
       target = await reaction.message.guild.members.fetch(reaction.message.author.id);
     }
 
@@ -125,15 +125,15 @@ module.exports = {
       // If the user is already in timeout then ignore this
       // if (target.isCommunicationDisabled()) { return; }
     }
-    // logger.debug(`[${PREFIX}] target: ${target}`);
+    // log.debug(`[${PREFIX}] target: ${target}`);
 
     const moderatorRole = reaction.message.guild.roles.cache
       .find(role => role.id === ROLE_MODERATOR);
 
-    logger.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction, null, 2)}`);
-    logger.debug(`[${PREFIX}] reaction.message: ${JSON.stringify(reaction.message, null, 2)}`);
+    log.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction, null, 2)}`);
+    log.debug(`[${PREFIX}] reaction.message: ${JSON.stringify(reaction.message, null, 2)}`);
     if (reaction.count === voteDownvoteThreshold && (reaction.emoji.name === 'karma_downvote' || reaction.emoji.name === 'ts_votedown')) {
-      logger.debug(`[${PREFIX}] ${target} has been downvoted three times, muting!`);
+      log.debug(`[${PREFIX}] ${target} has been downvoted three times, muting!`);
       const actor = 'The community';
       const command = 'timeout';
       const channel = reaction.message.channel;
@@ -147,10 +147,10 @@ module.exports = {
       const duration = null;
 
       const result = await moderate(actor, command, target, channel, toggle, reason, duration);
-      logger.debug(`[${PREFIX}] Result: ${result}`);
+      log.debug(`[${PREFIX}] Result: ${result}`);
 
       if (result.includes('you cannot timeout a team member')) {
-        logger.debug(`[${PREFIX}] ${target} is a team member, not muting!`);
+        log.debug(`[${PREFIX}] ${target} is a team member, not muting!`);
         return;
       }
 
@@ -162,7 +162,7 @@ module.exports = {
 
     // Process vote ban
     if (reaction.count === voteBanThreshold && reaction.emoji.name === 'vote_ban') {
-      logger.debug(`[${PREFIX}] ${target} has been ${reaction.emoji.name} ${voteBanThreshold} times!`);
+      log.debug(`[${PREFIX}] ${target} has been ${reaction.emoji.name} ${voteBanThreshold} times!`);
       target.timeout(604800000, `Was community banned for saying "${reaction.message}"`);
       const roleVotebanned = reaction.message.guild.roles.cache
         .find(role => role.id === roleVotebannedId);
@@ -197,7 +197,7 @@ module.exports = {
 
     // Process vote kick
     if (reaction.count === voteKickThreshold && reaction.emoji.name === 'vote_kick') {
-      logger.debug(`[${PREFIX}] ${target} has been ${reaction.emoji.name} ${voteKickThreshold} times!`);
+      log.debug(`[${PREFIX}] ${target} has been ${reaction.emoji.name} ${voteKickThreshold} times!`);
       target.timeout(604800000, `Was community kicked for saying "${reaction.message}"`);
       const roleVotekicked = reaction.message.guild.roles.cache
         .find(role => role.id === roleVotekickedId);
@@ -210,7 +210,7 @@ module.exports = {
 
     // Process vote timeout
     if (reaction.count === voteTimeoutThreshold && reaction.emoji.name === 'vote_timeout') {
-      logger.debug(`[${PREFIX}] ${target} has been ${reaction.emoji.name} ${voteKickThreshold} times!`);
+      log.debug(`[${PREFIX}] ${target} has been ${reaction.emoji.name} ${voteKickThreshold} times!`);
       target.timeout(3600000, `Was community quieted for saying "${reaction.message}"`);
       const roleVotetimeout = reaction.message.guild.roles.cache
         .find(role => role.id === roleVotetimeoutId);
@@ -227,7 +227,7 @@ module.exports = {
         role => role.id === ROLE_NEWBIEId,
       ) !== undefined;
       if (isNewbie) { return; }
-      logger.debug(`[${PREFIX}] ${target} has been ${reaction.emoji.name} ${voteUnderbanThreshold} times!`);
+      log.debug(`[${PREFIX}] ${target} has been ${reaction.emoji.name} ${voteUnderbanThreshold} times!`);
       const roleVoteunderban = reaction.message.guild.roles.cache
         .find(role => role.id === roleVoteunderbanId);
       const ROLE_NEWBIE = reaction.message.guild.roles.cache
@@ -235,25 +235,25 @@ module.exports = {
 
       // Remove all roles, except team and vanity, from the target
       target.roles.cache.forEach(role => {
-        logger.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
+        log.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
         if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone') && !role.name.includes('NeedsHelp')) {
-          logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.nickname || target.user.username}`);
+          log.debug(`[${PREFIX}] Removing role ${role.name} from ${target.nickname || target.user.username}`);
           try {
             target.roles.remove(role);
           } catch (err) {
-            logger.debug(`[${PREFIX}] There was an error removing the role ${role.name} from ${target.nickname || target.user.username}\n${err}`);
+            log.debug(`[${PREFIX}] There was an error removing the role ${role.name} from ${target.nickname || target.user.username}\n${err}`);
           }
         }
       });
 
       // Add the ROLE_NEWBIE and roleVoteunderban role to the target
       try {
-        logger.debug(`[${PREFIX}] Adding role ${roleVoteunderban.name} to ${target.nickname || target.user.username}`);
+        log.debug(`[${PREFIX}] Adding role ${roleVoteunderban.name} to ${target.nickname || target.user.username}`);
         await target.roles.add(roleVoteunderban);
-        logger.debug(`[${PREFIX}] Adding role ${ROLE_NEWBIE.name} to ${target.nickname || target.user.username}`);
+        log.debug(`[${PREFIX}] Adding role ${ROLE_NEWBIE.name} to ${target.nickname || target.user.username}`);
         await target.roles.add(ROLE_NEWBIE);
       } catch (err) {
-        logger.error(`[${PREFIX}] Error adding role to target: ${err}`);
+        log.error(`[${PREFIX}] Error adding role to target: ${err}`);
         return reaction.message.reply(stripIndents`There was an error adding the NeedsHelp role!
           Make sure the bot's role is higher than NeedsHelp in the Role list!`);
       }
@@ -263,6 +263,6 @@ module.exports = {
 
       **They will stay in the ${ROLE_NEWBIE.toString()} role until a moderator changes it!**`);
     }
-    logger.debug(`[${PREFIX}] finished!`);
+    log.debug(`[${PREFIX}] finished!`);
   },
 };

@@ -2,7 +2,7 @@
 
 const path = require('path');
 const {SlashCommandBuilder} = require('discord.js');
-const logger = require('../../../global/utils/logger');
+const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
 const {getGuildInfo, setGuildInfo} = require('../../../global/services/firebaseAPI');
 
@@ -13,18 +13,18 @@ module.exports = {
       .setName('update-guilds')
       .setDescription('This will update the guild information in the db!'),
   async execute(interaction) {
-    logger.debug(`[${PREFIX}] Updating guilds...`);
+    log.debug(`[${PREFIX}] Updating guilds...`);
     // Using discord.js find the guilds this bot is in
     const guilds = interaction.client.guilds.cache;
     let guildCount = 0;
-    // logger.debug(`[${PREFIX}] guilds: ${JSON.stringify(guilds, null, 2)}`);
+    // log.debug(`[${PREFIX}] guilds: ${JSON.stringify(guilds, null, 2)}`);
     await guilds.forEach(async (guild) => {
       guildCount += 1;
       const targetResults = await getGuildInfo(guild);
       let targetData = targetResults[0];
       const targetFbid = targetResults[1];
-      // logger.debug(`[${PREFIX}] Guild data: ${JSON.stringify(targetData, null, 2)}`);
-      // logger.debug(`[${PREFIX}] Guild fbid: ${targetFbid}`);
+      // log.debug(`[${PREFIX}] Guild data: ${JSON.stringify(targetData, null, 2)}`);
+      // log.debug(`[${PREFIX}] Guild fbid: ${targetFbid}`);
       targetData = {
         guild_name: guild.name,
         guild_id: guild.id,
@@ -42,7 +42,7 @@ module.exports = {
         guild_region: `${guild.region ? guild.region : 'No region'}`,
         modActions: targetData.discord.modActions ? targetData.discord.modActions : {},
       };
-      // logger.debug(`[${PREFIX}] Guild data: ${JSON.stringify(targetData, null, 2)}`);
+      // log.debug(`[${PREFIX}] Guild data: ${JSON.stringify(targetData, null, 2)}`);
       await setGuildInfo(targetFbid, targetData);
     });
     // get length of guilds
@@ -53,6 +53,6 @@ module.exports = {
       embeds: [embed],
       ephemeral: false,
     });
-    logger.debug(`[${PREFIX}] Guilds updated!`);
+    log.debug(`[${PREFIX}] Guilds updated!`);
   },
 };

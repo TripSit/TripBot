@@ -10,7 +10,7 @@ import {SlashCommand} from '../../@types/commandDef';
 import {profile} from '../../../global/commands/g.profile';
 import Canvas from '@napi-rs/canvas';
 import env from '../../../global/utils/env.config';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -51,7 +51,7 @@ export const dprofile: SlashCommand = {
     let textColor = '#ffffff';
 
     const colorRole = target.roles.color;
-    // logger.debug(`[${PREFIX}] colorRole: ${colorRole?.id}`);
+    // log.debug(`[${PREFIX}] colorRole: ${colorRole?.id}`);
     if (colorRole) {
       if (colorRole.id === env.ROLE_PURPLE) {
         // const purpleCard = path.resolve(__dirname, '../../assets/img/cards/profilecardPurple.png')
@@ -110,60 +110,60 @@ export const dprofile: SlashCommand = {
         textColor = '#626262';
       }
     }
-    // logger.debug(`[${PREFIX}] cardColor: ${cardColor} | textColor: ${textColor} | coloredCard: ${coloredCard}`);
+    // log.debug(`[${PREFIX}] cardColor: ${cardColor} | textColor: ${textColor} | coloredCard: ${coloredCard}`);
 
     // Backround Image
     try {
       // Doesn't work on windows
       // TypeError [ERR_INVALID_PROTOCOL]: Protocol "c:" not supported. Expected "http:"
       // const tryA = `C:\Projects\TS\tripsit-discord-bot\src\discord\assets\img\cards\profilecardDefault.png`;
-      // logger.debug(`[${PREFIX}] tryA: ${tryA}`);
+      // log.debug(`[${PREFIX}] tryA: ${tryA}`);
       // Doesnt work on Linux
       // tryB: /workspace/src/discord/assets/img/cards/profilecardDefault.png
       // const tryB = path.resolve(__dirname, '../../assets/img/cards/profilecardDefault.png');
       // /workspace/src/discord/assets/img/cards/profilecardDefault.png
-      // logger.debug(`[${PREFIX}] tryB: ${tryB}`);
+      // log.debug(`[${PREFIX}] tryB: ${tryB}`);
       // const tryC = path.join(__dirname, '../../assets/img/cards/profilecardDefault.png');
       // /workspace/src/discord/assets/img/cards/profilecardDefault.png
-      // logger.debug(`[${PREFIX}] tryC: ${tryC}`);
+      // log.debug(`[${PREFIX}] tryC: ${tryC}`);
       // const tryD = path.resolve('src/discord/assets/img/cards/profilecardDefault.png');
       // /workspace/src/discord/assets/img/cards/profilecardDefault.png
-      // logger.debug(`[${PREFIX}] tryD: ${tryD}`);
+      // log.debug(`[${PREFIX}] tryD: ${tryD}`);
       // const tryE = path.resolve('./src/discord/assets/img/cards/profilecardDefault.png');
       // /workspace/src/discord/assets/img/cards/profilecardDefault.png
-      // logger.debug(`[${PREFIX}] tryE: ${tryE}`);
+      // log.debug(`[${PREFIX}] tryE: ${tryE}`);
       // Doesnt work on windows
       // Error loading background image: TypeError [ERR_INVALID_PROTOCOL]: Protocol "c:" not supported. Expected "http:"
       // const tryF = path.resolve('~/src/discord/assets/img/cards/profilecardDefault.png');
-      // logger.debug(`[${PREFIX}] tryF: ${tryF}`);
+      // log.debug(`[${PREFIX}] tryF: ${tryF}`);
       // Doesnt work on windows
       // Error loading background image: TypeError [ERR_INVALID_URL]: Invalid URL
       // const tryG = '~/src/discord/assets/img/cards/profilecardDefault.png';
-      // logger.debug(`[${PREFIX}] tryG: ${tryG}`);
+      // log.debug(`[${PREFIX}] tryG: ${tryG}`);
       // const tryH = './src/discord/assets/img/cards/profilecardDefault.png';
-      // logger.debug(`[${PREFIX}] tryH: ${tryH}`);
+      // log.debug(`[${PREFIX}] tryH: ${tryH}`);
       // Doesnt work on windows
       // Error loading background image: TypeError [ERR_INVALID_URL]: Invalid URL
       // const tryI = '../../assets/img/cards/profilecardDefault.png';
-      // logger.debug(`[${PREFIX}] tryI: ${tryI}`);
+      // log.debug(`[${PREFIX}] tryI: ${tryI}`);
       // const tryJ = '.\\src\\discord\\assets\\img\\cards\\profilecardDefault.png';
-      // logger.debug(`[${PREFIX}] tryJ: ${tryJ}`);
+      // log.debug(`[${PREFIX}] tryJ: ${tryJ}`);
       // const tryK = '~\\src\\discord\\assets\\img\\cards\\profilecardDefault.png';
-      // logger.debug(`[${PREFIX}] tryK: ${tryK}`);
+      // log.debug(`[${PREFIX}] tryK: ${tryK}`);
       // const tryL = './src/discord/assets/img/cards/profilecardDefault.png';
-      // logger.debug(`[${PREFIX}] tryL: ${tryL}`);
+      // log.debug(`[${PREFIX}] tryL: ${tryL}`);
       // const tryM = '~/src/discord/assets/img/cards/profilecardDefault.png';
-      // logger.debug(`[${PREFIX}] tryM: ${tryM}`);
+      // log.debug(`[${PREFIX}] tryM: ${tryM}`);
 
       const background = await Canvas.loadImage(coloredCard);
       // const background = await Canvas.loadImage('https://i.imgur.com/uFp3u7j.png');
 
-      // logger.debug(`[${PREFIX}] image loaded`);
-      // logger.debug(`[${PREFIX}] background: ${background}`);
+      // log.debug(`[${PREFIX}] image loaded`);
+      // log.debug(`[${PREFIX}] background: ${background}`);
       context.drawImage(background, 0, 0, canvas.width, canvas.height);
-      // logger.debug(`[${PREFIX}] image drawn`);
+      // log.debug(`[${PREFIX}] image drawn`);
     } catch (err) {
-      logger.error(`[${PREFIX}] Error loading background image: ${err}`);
+      log.error(`[${PREFIX}] Error loading background image: ${err}`);
     }
 
     // Username Text Resize to fit
@@ -176,7 +176,7 @@ export const dprofile: SlashCommand = {
       return context.font;
     };
 
-    // logger.debug(`[${PREFIX}] username resize`);
+    // log.debug(`[${PREFIX}] username resize`);
 
     // Username Text
     context.font = applyUsername(canvas, `${target.user.tag}`);
@@ -186,7 +186,7 @@ export const dprofile: SlashCommand = {
     // context.fillStyle = textColor;
     // context.fillText(`${target.displayName}`, 245, 124);
 
-    // logger.debug(`[${PREFIX}] username`);
+    // log.debug(`[${PREFIX}] username`);
 
     // Get User Data
     const targetData = await profile(target.id) as {
@@ -197,7 +197,7 @@ export const dprofile: SlashCommand = {
       totalExp: number;
     };
 
-    // logger.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
+    // log.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
 
     // User Info Text
     context.font = `30px futura`;
@@ -226,7 +226,7 @@ export const dprofile: SlashCommand = {
 
       const today = new Date();
       if (today.getMonth() === targetBirthday.getMonth() && today.getDate() === targetBirthday.getDate()) {
-        logger.debug(`[${PREFIX}] Birthday Match!`);
+        log.debug(`[${PREFIX}] Birthday Match!`);
         // itIsYourBirthday = true;
       }
       if (targetBirthday.getDate() < 10) {
@@ -271,14 +271,14 @@ export const dprofile: SlashCommand = {
     // let i = 0;
     while (levelPoints > expToLevel) {
       expToLevel = 5 * (level ** 2) + (50 * level) + 100;
-      // logger.debug(`[${PREFIX}] (${i}) Level: ${level}, Level Points: ${levelPoints}, Exp to Level: ${expToLevel}`);
+      // log.debug(`[${PREFIX}] (${i}) Level: ${level}, Level Points: ${levelPoints}, Exp to Level: ${expToLevel}`);
       // i++;
       level++;
       levelPoints -= expToLevel;
-      // logger.debug(`[${PREFIX}]Leftover: ${levelPoints}`);
+      // log.debug(`[${PREFIX}]Leftover: ${levelPoints}`);
     }
 
-    // logger.debug(`[${PREFIX}] ${level}`);
+    // log.debug(`[${PREFIX}] ${level}`);
 
     if (level < 6) {
       // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIP.png';
@@ -304,11 +304,11 @@ export const dprofile: SlashCommand = {
     }
 
     try {
-      // logger.debug(`[${PREFIX}] starImagePath: ${starImagePath}`);
+      // log.debug(`[${PREFIX}] starImagePath: ${starImagePath}`);
       const starImage = await Canvas.loadImage(starImagePath);
       context.drawImage(starImage, 727, 61, 162, 162);
     } catch (err) {
-      logger.error(`[${PREFIX}] Error loading star image: ${err}`);
+      log.error(`[${PREFIX}] Error loading star image: ${err}`);
     }
 
 
@@ -343,7 +343,7 @@ export const dprofile: SlashCommand = {
     let percentageOfLevel = 0;
     const expToNextLevel = 5 * (level ** 2) + (50 * level) + 100;
     percentageOfLevel = (levelPoints / expToNextLevel);
-    // logger.debug(`[${PREFIX}] percentageOfLevel: ${percentageOfLevel}`);
+    // log.debug(`[${PREFIX}] percentageOfLevel: ${percentageOfLevel}`);
 
     // Circular Level Bar
     context.save();
@@ -390,12 +390,12 @@ export const dprofile: SlashCommand = {
       const status = await Canvas.loadImage(statusIcon);
       context.drawImage(status, 160, 180, 62, 62);
     } catch (err) {
-      logger.error(`[${PREFIX}] Error loading status icon: ${err}`);
+      log.error(`[${PREFIX}] Error loading status icon: ${err}`);
     }
 
     // Birthday Mode
     if (itIsYourBirthday) {
-      logger.debug(`[${PREFIX}] Birthday Match!`);
+      log.debug(`[${PREFIX}] Birthday Match!`);
       context.font = '45px futura';
       context.textAlign = 'center';
       context.fillStyle = textColor;

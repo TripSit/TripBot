@@ -1,6 +1,6 @@
 
 // import {stripIndents} from 'common-tags';
-// import logger from '../../utils/logger';
+// import log from '../../utils/log';
 // import * as path from 'path';
 // import {WhoisResponse} from 'matrix-org-irc';
 // const PREFIX = path.parse(__filename).name;
@@ -20,7 +20,7 @@
 //     }
 //   });
 // } else {
-//   logger.debug(`[${PREFIX}] Failed! IRC Client not running`);
+//   log.debug(`[${PREFIX}] Failed! IRC Client not running`);
 //   throw new Error('IRC Client not running!');
 // }
 
@@ -31,7 +31,7 @@
 // }
 
 // if (!data.host) {
-//   logger.debug(`[${PREFIX}] Failed! ${target} not found on IRC.`);
+//   log.debug(`[${PREFIX}] Failed! ${target} not found on IRC.`);
 //   throw new Error('User not found on IRC!');
 // }
 

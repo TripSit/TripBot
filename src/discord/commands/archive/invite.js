@@ -2,7 +2,7 @@
 
 const path = require('path');
 const { SlashCommandBuilder } = require('discord.js');
-const logger = require('../../../global/utils/logger');
+const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
@@ -47,7 +47,7 @@ module.exports = {
           .setDescription(`Created an invite to ${channel} with a code of ${invite.code}`);
         interaction.reply({ embeds: [embed], ephemeral: false });
       }).catch(err => {
-        logger.error(`${PREFIX}/invite: ${err}`);
+        log.error(`${PREFIX}/invite: ${err}`);
         const embed = template.embedTemplate()
           .setDescription(err);
         interaction.reply({ embeds: [embed], ephemeral: false });
@@ -57,6 +57,6 @@ module.exports = {
         .setDescription('Make sure you entered a channel!');
       interaction.reply({ embeds: [embed], ephemeral: false });
     }
-    logger.debug(`[${PREFIX}] finished!`);
+    log.debug(`[${PREFIX}] finished!`);
   },
 };

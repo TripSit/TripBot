@@ -13,7 +13,7 @@ import {experience} from '../../global/utils/experience';
 import {announcements} from '../utils/announcements';
 import {messageCommand} from '../utils/messageCommand';
 import {modmailDMInteraction, modmailThreadInteraction} from '../commands/guild/modmail';
-// import logger from '../../global/utils/logger';
+// import log from '../../global/utils/log';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 
@@ -27,7 +27,7 @@ export const messageCreate: messageEvent = {
       }
     }
 
-    // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
+    // log.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
 
     // Disabled for testing
     // thoughtPolice(message);

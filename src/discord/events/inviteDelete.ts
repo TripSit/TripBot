@@ -4,7 +4,7 @@ import {
 import {
   inviteEvent,
 } from '../@types/eventDef';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -17,7 +17,7 @@ export const inviteDelete: inviteEvent = {
     if (invite.guild?.id !== env.DISCORD_GUILD_ID.toString()) {
       return;
     }
-    logger.info(`[${PREFIX}] Invite deleted: ${invite}`);
+    log.info(`[${PREFIX}] Invite deleted: ${invite}`);
     // Delete the Invite from Cache
     global.guildInvites.get(invite.guild.id).delete(invite.code);
   },

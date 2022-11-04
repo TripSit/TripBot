@@ -4,7 +4,7 @@ import {
 // import env from './env.config';
 // import {embedTemplate} from '../../discord/utils/embedTemplate';
 // import {stripIndents} from 'common-tags';
-import logger from './logger';
+import log from './log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -13,6 +13,6 @@ const PREFIX = path.parse(__filename).name;
  * @param {Client} client Template
  */
 export async function template(client:Client) {
-  logger.debug(`[${PREFIX}] Starting`);
-  logger.debug(`[${PREFIX}] Finished`);
+  log.debug(`[${PREFIX}] Starting`);
+  log.debug(`[${PREFIX}] Finished`);
 };

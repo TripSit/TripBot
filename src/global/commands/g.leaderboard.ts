@@ -1,6 +1,6 @@
 import {db, getUser} from '../utils/knex';
 import {UserExperience} from '../@types/pgdb';
-import logger from '../utils/logger';
+import log from '../utils/log';
 import * as path from 'path';
 import {stripIndents} from 'common-tags';
 const PREFIX = path.parse(__filename).name;
@@ -26,7 +26,7 @@ const rankDict = {
 export async function leaderboard(
   categoryName: string,
 ):Promise<{results: leaderboardType, title: string, description: string|null}> {
-  logger.debug(`[${PREFIX}] starting | category: ${categoryName}`);
+  log.debug(`[${PREFIX}] starting | category: ${categoryName}`);
 
   let title = `Top 15 ${rankDict[categoryName as keyof typeof rankDict]}:`;
   let description = null;
@@ -60,11 +60,11 @@ export async function leaderboard(
 
       const userData = await getUser(null, user.user_id);
       if (!userData) {
-        logger.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
+        log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
         continue;
       };
       if (!userData.discord_id) {
-        logger.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
+        log.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
         continue;
       }
 
@@ -105,11 +105,11 @@ export async function leaderboard(
       for (const user of userExperience) {
         const userData = await getUser(null, user.user_id);
         if (!userData) {
-          logger.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
+          log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
           continue;
         };
         if (!userData.discord_id) {
-          logger.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
+          log.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
           continue;
         }
 
@@ -139,21 +139,21 @@ export async function leaderboard(
       .orderBy('total_points', 'desc')
       .limit(3);
 
-    logger.debug(`[${PREFIX}] userExperience: ${JSON.stringify(userExperience, null, 2)}`);
+    log.debug(`[${PREFIX}] userExperience: ${JSON.stringify(userExperience, null, 2)}`);
 
     let rank = 1;
     for (const user of userExperience) {
       const userData = await getUser(null, user.user_id);
       if (!userData) {
-        logger.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
+        log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
         continue;
       };
       if (!userData.discord_id) {
-        logger.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
+        log.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
         continue;
       }
       if (!user.total_points) {
-        logger.error(`[${PREFIX}] User ${user.user_id} has no total points`);
+        log.error(`[${PREFIX}] User ${user.user_id} has no total points`);
         continue;
       }
 
@@ -167,7 +167,7 @@ export async function leaderboard(
         levelPoints -= expToLevel;
       }
 
-      logger.debug(`[${PREFIX}] discordUser: ${JSON.stringify(userData)} is level ${level}`);
+      log.debug(`[${PREFIX}] discordUser: ${JSON.stringify(userData)} is level ${level}`);
 
       if (!results['TOTAL']) {
         results['TOTAL'] = [];
@@ -197,11 +197,11 @@ export async function leaderboard(
     for (const user of userExperience) {
       const userData = await getUser(null, user.user_id);
       if (!userData) {
-        logger.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
+        log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
         continue;
       };
       if (!userData.discord_id) {
-        logger.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
+        log.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
         continue;
       }
 

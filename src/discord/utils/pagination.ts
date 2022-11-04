@@ -8,7 +8,7 @@ import {
 import {
   ButtonStyle,
 } from 'discord-api-types/v10';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -42,7 +42,7 @@ export async function paginationEmbed(
   if (interaction.deferred === false) {
     await interaction.deferReply();
   }
-  logger.debug(`${PREFIX} - Paginating ${pages.length} pages.`);
+  log.debug(`${PREFIX} - Paginating ${pages.length} pages.`);
 
   let page = 0;
 

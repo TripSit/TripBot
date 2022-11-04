@@ -17,7 +17,7 @@ import {SlashCommand} from '../../@types/commandDef';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import {moderate} from '../../../global/commands/g.moderate';
 import env from '../../../global/utils/env.config';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 import {modAction} from '../../../global/@types/database';
 const PREFIX = path.parse(__filename).name;
@@ -83,7 +83,7 @@ export const mod: SlashCommand = {
         .setRequired(true))
       .setName('kick')),
   async execute(interaction:ChatInputCommandInteraction) {
-    // logger.debug(`[${PREFIX}] started!`);
+    // log.debug(`[${PREFIX}] started!`);
     // await interaction.deferReply({ephemeral: true});
     // const embed = embedTemplate()
     //   .setColor(Colors.DarkBlue)
@@ -103,13 +103,13 @@ export const mod: SlashCommand = {
       command = 'un' + command;
     }
 
-    // logger.debug(`[${PREFIX}] toggle: ${toggle}`);
+    // log.debug(`[${PREFIX}] toggle: ${toggle}`);
 
     const targetGuild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
 
-    // logger.debug(`[${PREFIX}] target: ${target}`);
+    // log.debug(`[${PREFIX}] target: ${target}`);
     const targetMember = await targetGuild.members.fetch((target as string).slice(2, -1)) as GuildMember;
-    // logger.debug(`[${PREFIX}] targetMember: ${targetMember}`);
+    // log.debug(`[${PREFIX}] targetMember: ${targetMember}`);
 
     let verb = '';
     if (command === 'ban') {
@@ -143,9 +143,9 @@ export const mod: SlashCommand = {
         null,
         null,
         interaction);
-      logger.debug(`[${PREFIX}] Result: ${result}`);
+      log.debug(`[${PREFIX}] Result: ${result}`);
       interaction.reply(result);
-      logger.debug(`[${PREFIX}] finished!`);
+      log.debug(`[${PREFIX}] finished!`);
       return true;
     }
 
@@ -219,17 +219,17 @@ export const mod: SlashCommand = {
               duration = duration ?
                 await parseDuration(`${durationInput} days`) :
                 604800;
-              logger.debug(`[${PREFIX}] duration: ${duration}`);
+              log.debug(`[${PREFIX}] duration: ${duration}`);
             }
           } else if (command === 'timeout') {
             // Get duration
             duration = duration ?
               await parseDuration(durationInput) :
               604800000;
-            logger.debug(`[${PREFIX}] duration: ${duration}`);
+            log.debug(`[${PREFIX}] duration: ${duration}`);
           }
         } catch (e) {
-          // logger.error(`[${PREFIX}] ${e}`);
+          // log.error(`[${PREFIX}] ${e}`);
         }
         const modalCommand = i.customId.split('~')[1] as modAction;
         const result = await moderate(
@@ -240,9 +240,9 @@ export const mod: SlashCommand = {
           pubReason,
           duration,
           i);
-        logger.debug(`[${PREFIX}] Result: ${result}`);
+        log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
-        logger.debug(`[${PREFIX}] finished!`);
+        log.debug(`[${PREFIX}] finished!`);
       });
 
     return false;

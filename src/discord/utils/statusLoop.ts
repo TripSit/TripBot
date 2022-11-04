@@ -5,7 +5,7 @@ import {
   ActivityType,
 } from 'discord-api-types/v10';
 import env from '../../global/utils/env.config';
-// import logger from '../../global/utils/logger';
+// import log from '../../global/utils/log';
 
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
@@ -49,19 +49,19 @@ const delay = env.NODE_ENV === 'production' ? 5 * 60 * 1000 : 5 * 1000;
  * @param {Client} client The client running the bot
  */
 export async function startStatusLoop(client:Client) {
-  // logger.info(`[${PREFIX}] Starting status loop...`);
+  // log.info(`[${PREFIX}] Starting status loop...`);
 
   let state = 0;
   let presence = activities[state];
-  // logger.debug(`[${PREFIX}] Setting presence to ${presence.message}`);
-  // logger.debug(`[${PREFIX}] Setting presence type to ${presence.type}`);
+  // log.debug(`[${PREFIX}] Setting presence to ${presence.message}`);
+  // log.debug(`[${PREFIX}] Setting presence type to ${presence.type}`);
   // @ts-ignore
   client.user?.setActivity(presence.message, {type: presence.type});
 
   setInterval(() => {
     state = (state + 1) % activities.length;
     presence = activities[state];
-    // logger.debug(`[${PREFIX}] Setting activity to ${presence.type} ${presence.message}`);
+    // log.debug(`[${PREFIX}] Setting activity to ${presence.type} ${presence.message}`);
     // @ts-ignore
     client.user?.setActivity(presence.message, {type: presence.type});
   }, delay);

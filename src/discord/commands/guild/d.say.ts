@@ -14,7 +14,7 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import env from '../../../global/utils/env.config';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -30,7 +30,7 @@ export const bug: SlashCommand = {
       .setName('channel'),
     ),
   async execute(interaction) {
-    logger.debug(`[${PREFIX}] starting!`);
+    log.debug(`[${PREFIX}] starting!`);
     if (!interaction.guild) {
       interaction.reply({
         content: 'This command can only be used in a server!',
@@ -60,7 +60,7 @@ export const bug: SlashCommand = {
 in ${channel ? channel.toString() : interaction.channel?.toString()}`);
     }
 
-    logger.debug(`[${PREFIX}] finished!`);
+    log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

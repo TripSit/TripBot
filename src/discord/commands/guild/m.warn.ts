@@ -12,7 +12,7 @@ import {
 } from 'discord-api-types/v10';
 import {MessageCommand} from '../../@types/commandDef';
 import {stripIndents} from 'common-tags';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import {moderate} from '../../../global/commands/g.moderate';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -66,8 +66,9 @@ export const mWarn: MessageCommand = {
           i.fields.getTextInputValue('pubReason'),
           null,
           i);
-        logger.debug(`[${PREFIX}] Result: ${result}`);
+        log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
       });
+    return true;
   },
 };

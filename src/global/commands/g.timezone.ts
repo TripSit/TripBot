@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import logger from '../utils/logger';
+import log from '../utils/log';
 import timezones from '../assets/data/timezones.json';
 import {db} from '../utils/knex';
 import * as path from 'path';
@@ -17,7 +17,7 @@ export async function timezone(
   command: 'get' | 'set',
   memberId: string,
   timezone?:string | null):Promise<string> {
-  logger.debug(`[${PREFIX}] timezone: ${command} ${memberId} ${timezone}`);
+  log.debug(`[${PREFIX}] timezone: ${command} ${memberId} ${timezone}`);
 
   let response = '';
   if (command === 'set') {
@@ -26,10 +26,10 @@ export async function timezone(
     for (let i = 0; i < timezones.length; i += 1) {
       if (timezones[i].label === timezone) {
         tzCode = timezones[i].tzCode;
-        logger.debug(`[${PREFIX}] tzCode: ${tzCode}`);
+        log.debug(`[${PREFIX}] tzCode: ${tzCode}`);
       }
     }
-    // logger.debug(`[${PREFIX}] actor.id: ${actor.id}`);
+    // log.debug(`[${PREFIX}] actor.id: ${actor.id}`);
 
     await db('users')
       .insert({
@@ -51,24 +51,24 @@ export async function timezone(
       .where('discord_id', memberId))[0].timezone;
 
     if (data !== null) {
-      logger.debug(`[${PREFIX}] data: ${data}`);
+      log.debug(`[${PREFIX}] data: ${data}`);
       tzCode = data;
     } else {
-      logger.debug(`[${PREFIX}] data is null!`);
+      log.debug(`[${PREFIX}] data is null!`);
     }
 
     if (tzCode !== '') {
       for (let i = 0; i < timezones.length; i += 1) {
         if (timezones[i].tzCode === tzCode) {
           gmtValue = timezones[i].offset;
-          logger.debug(`[${PREFIX}] gmtValue: ${gmtValue}`);
+          log.debug(`[${PREFIX}] gmtValue: ${gmtValue}`);
         }
       }
       // get the user's timezone from the database
       const timestring = new Date().toLocaleTimeString('en-US', {timeZone: tzCode});
       return `It is likely ${timestring} (GMT${gmtValue})`;
     } else {
-      logger.debug(`[${PREFIX}] tzCode is empty!`);
+      log.debug(`[${PREFIX}] tzCode is empty!`);
       response = ``;
     }
   }

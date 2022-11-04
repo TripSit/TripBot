@@ -1,4 +1,4 @@
-// import logger from '../utils/logger';
+// import log from '../utils/log';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 
@@ -36,7 +36,7 @@ export async function combo(
 
   const drugData = drugDataAll.find((drug) => drug.name === drugA);
 
-  // logger.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
+  // log.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
 
   if (!drugData) {
     return {
@@ -55,7 +55,7 @@ export async function combo(
     };
   }
 
-  // logger.debug(`[${PREFIX}] interactions: ${drugData.interactions.length}`);
+  // log.debug(`[${PREFIX}] interactions: ${drugData.interactions.length}`);
 
   const drugInteraction = drugData.interactions.find((interaction) => interaction.name === drugB);
 
@@ -67,11 +67,11 @@ export async function combo(
     };
   }
 
-  // logger.debug(`[${PREFIX}] drugInteraction: ${drugInteraction}`);
+  // log.debug(`[${PREFIX}] drugInteraction: ${drugInteraction}`);
 
   const intDef = comboDefs.find((def) => def.status === drugInteraction.status);
 
-  // logger.debug(`[${PREFIX}] intDef: ${JSON.stringify(intDef)}`);
+  // log.debug(`[${PREFIX}] intDef: ${JSON.stringify(intDef)}`);
 
   if (!intDef) {
     return {

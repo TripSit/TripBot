@@ -8,7 +8,7 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import env from '../../../global/utils/env.config';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -60,7 +60,7 @@ export const reminder: SlashCommand = {
       return false;
     }
 
-    logger.debug(`[${PREFIX}] starting!`);
+    log.debug(`[${PREFIX}] starting!`);
 
     const reminder = embedTemplate()
       .setColor(Colors.Red)

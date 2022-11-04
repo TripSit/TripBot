@@ -8,7 +8,7 @@ import {
 import env from '../../global/utils/env.config';
 import {clientEvent} from '../@types/eventDef';
 import {setTimeout} from 'timers/promises';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 
 import {startStatusLoop} from '../utils/statusLoop';
 
@@ -43,7 +43,7 @@ export const ready: clientEvent = {
     Promise.all([getInvites(client)])
       .then(() => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
-        logger.info(`[${PREFIX}] Discord finished booting in ${bootDuration}s!`);
+        log.info(`[${PREFIX}] Discord finished booting in ${bootDuration}s!`);
         if (env.NODE_ENV === 'production') {
           const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
           const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;

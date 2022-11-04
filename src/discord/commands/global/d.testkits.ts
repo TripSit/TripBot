@@ -5,7 +5,7 @@ import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {testkits} from '../../../global/commands/g.testkits';
 import {stripIndents} from 'common-tags';
-// import logger from '../../../global/utils/logger';
+// import log from '../../../global/utils/log';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 

@@ -22,7 +22,7 @@ import {embedTemplate} from '../../discord/utils/embedTemplate';
 
 import ms from 'ms';
 import env from '../utils/env.config';
-import logger from '../utils/logger';
+import log from '../utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -129,7 +129,7 @@ export async function moderate(
   duration: number | null,
   interaction:ChatInputCommandInteraction | ModalSubmitInteraction | UserContextMenuCommandInteraction | undefined,
 ):Promise<any> {
-  logger.debug(stripIndents`[${PREFIX}]
+  log.debug(stripIndents`[${PREFIX}]
       Actor: ${actor}
       Command: ${command}
       Target: ${target}
@@ -145,7 +145,7 @@ export async function moderate(
   //     if (teamRoles.includes(role.id)) {
   //       // Actor Team check - Only team members can use mod actions (except report)
   //       if (command !== 'report') {
-  //         // logger.debug(`[${PREFIX}] actor is NOT a team member!`);
+  //         // log.debug(`[${PREFIX}] actor is NOT a team member!`);
   //         return {content: stripIndents`Hey ${actor}, you need to be a team member to ${command}!`, ephemeral: true};
   //       }
   //     }
@@ -157,7 +157,7 @@ export async function moderate(
   //   target.roles.cache.forEach(async (role) => {
   //     if (teamRoles.includes(role.id)) {
   //       // Target Team check - Only NON team members can be targeted by mod actions
-  //       logger.debug(`[${PREFIX}] Target is a team member111!`);
+  //       log.debug(`[${PREFIX}] Target is a team member111!`);
   //       return {content: stripIndents`Hey ${actor}, you cannot ${command} a team member!`, ephemeral: true};
   //     }
   //   });
@@ -203,29 +203,29 @@ export async function moderate(
     try {
       target.timeout(duration, privReason ?? 'No reason provided');
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
   } else if (command === 'untimeout') {
     try {
       target.timeout(0, privReason ?? 'No reason provided');
-      logger.debug(`[${PREFIX}] I untimeouted ${target.displayName} because\n '${privReason}'!`);
+      log.debug(`[${PREFIX}] I untimeouted ${target.displayName} because\n '${privReason}'!`);
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
   } else if (command === 'kick') {
     try {
       target.kick();
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
   } else if (command === 'ban') {
     try {
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       const deleteMessageValue = duration ?? 0;
-      logger.debug(`[${PREFIX}] Days to delete: ${deleteMessageValue}`);
+      log.debug(`[${PREFIX}] Days to delete: ${deleteMessageValue}`);
       targetGuild.members.ban(target, {deleteMessageSeconds: deleteMessageValue, reason: privReason ?? 'No reason provided'});
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
   } else if (command === 'unban') {
     try {
@@ -233,14 +233,14 @@ export async function moderate(
       await targetGuild.bans.fetch();
       await targetGuild.bans.remove(target.user, privReason ?? 'No reason provided');
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
   } else if (command === 'underban') {
     try {
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       targetGuild.members.ban(target, {reason: privReason ?? 'No reason provided'});
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
   } else if (command === 'ununderban') {
     try {
@@ -248,7 +248,7 @@ export async function moderate(
       await targetGuild.bans.fetch();
       await targetGuild.bans.remove(target.user, privReason ?? 'No reason provided');
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
   }
 
@@ -312,9 +312,9 @@ export async function moderate(
     ref.set(actions);
   });
 
-  // logger.debug(`[${PREFIX}] actions: ${JSON.stringify(actions)}`);
-  logger.debug(`[${PREFIX}] targetActionCount: ${JSON.stringify(targetActionCount)}`);
-  // logger.debug(`[${PREFIX}] targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
+  // log.debug(`[${PREFIX}] actions: ${JSON.stringify(actions)}`);
+  log.debug(`[${PREFIX}] targetActionCount: ${JSON.stringify(targetActionCount)}`);
+  // log.debug(`[${PREFIX}] targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
 
   const modlogEmbed = embedTemplate()
     // eslint-disable-next-line
@@ -349,7 +349,7 @@ export async function moderate(
     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
     const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
     modChan.send({content: `${command !== 'note' ? `Hey ${roleModerator}` : ``}`, embeds: [modlogEmbed]});
-    logger.debug(`[${PREFIX}] sent a message to the moderators room`);
+    log.debug(`[${PREFIX}] sent a message to the moderators room`);
   }
 
   // If this is the info command then return with info
@@ -366,13 +366,13 @@ export async function moderate(
     if (infoString.length === 0) {
       infoString = 'Squeaky clean!';
     }
-    logger.debug(`[${PREFIX}] infoString: ${infoString}`);
+    log.debug(`[${PREFIX}] infoString: ${infoString}`);
     modlogEmbed.setDescription(infoString);
     try {
-      logger.debug(`[${PREFIX}] returned info about ${target.displayName}`);
+      log.debug(`[${PREFIX}] returned info about ${target.displayName}`);
       return {embeds: [modlogEmbed], ephemeral: true};
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
   }
 
@@ -380,11 +380,11 @@ export async function moderate(
   if (command !== 'info') {
     const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
     modlog.send({embeds: [modlogEmbed]});
-    logger.debug(`[${PREFIX}] sent a message to the modlog room`);
+    log.debug(`[${PREFIX}] sent a message to the modlog room`);
   }
 
   // Return a message to the user confirming the user was acted on
-  logger.debug(`[${PREFIX}] ${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
+  log.debug(`[${PREFIX}] ${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
   const response = embedTemplate()
     .setColor(Colors.Yellow)
     .setDescription(`${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);

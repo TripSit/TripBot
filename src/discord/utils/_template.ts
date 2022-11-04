@@ -1,7 +1,7 @@
 import {
   Client,
 } from 'discord.js';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -12,7 +12,7 @@ const PREFIX = path.parse(__filename).name;
  * @return {Promise<void>}
 **/
 export async function bestOf(client: Client): Promise<void> {
-  logger.debug(`[${PREFIX}] starting!`);
-  logger.debug(`[${PREFIX}] guildId: ${env.DISCORD_GUILD_ID}`);
-  logger.debug(`[${PREFIX}] finished!`);
+  log.debug(`[${PREFIX}] starting!`);
+  log.debug(`[${PREFIX}] guildId: ${env.DISCORD_GUILD_ID}`);
+  log.debug(`[${PREFIX}] finished!`);
 };

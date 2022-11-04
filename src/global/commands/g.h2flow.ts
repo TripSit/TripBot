@@ -1,6 +1,6 @@
 import {db} from '../utils/knex';
 import {Users} from '../@types/pgdb';
-import logger from '../utils/logger';
+import log from '../utils/log';
 import * as path from 'path';
 // import {stripIndents} from 'common-tags';
 const PREFIX = path.parse(__filename).name;
@@ -20,7 +20,7 @@ export async function h2flow(userId:string):Promise<any> {
 
   if (data.length === 0) {
   // User doesn't exist in the database
-    logger.debug(`[${PREFIX}] User doesn't exist in the database: ${userId}`);
+    log.debug(`[${PREFIX}] User doesn't exist in the database: ${userId}`);
     // Create new user
     data = await db('users')
       .insert({

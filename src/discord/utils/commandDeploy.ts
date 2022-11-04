@@ -8,12 +8,12 @@ import {
 import fs from 'fs/promises';
 import env from '../../global/utils/env.config';
 import path from 'path';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 const PREFIX = path.parse(__filename).name;
 
-logger.debug(`[${PREFIX}] discordClientId: ${env.DISCORD_CLIENT_ID}`);
-// logger.debug(`[${PREFIX}] discordToken: ${env.DISCORD_CLIENT_TOKEN}`);
-logger.debug(`[${PREFIX}] discordGuildId: ${env.DISCORD_GUILD_ID}`);
+log.debug(`[${PREFIX}] discordClientId: ${env.DISCORD_CLIENT_ID}`);
+// log.debug(`[${PREFIX}] discordToken: ${env.DISCORD_CLIENT_TOKEN}`);
+log.debug(`[${PREFIX}] discordGuildId: ${env.DISCORD_GUILD_ID}`);
 
 
 /**

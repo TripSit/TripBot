@@ -14,7 +14,7 @@ import {
   UserTickets,
 } from '../../global/@types/pgdb.d';
 import env from './env.config';
-import logger from './logger';
+import log from './log';
 
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -26,7 +26,7 @@ const interval = env.NODE_ENV === 'production' ? 1000 * 60 : 1000 * 10;
  * This function is called on start.ts and runs the timers
  */
 export async function runTimer() {
-  logger.info(`[${PREFIX}] Started!`);
+  log.info(`[${PREFIX}] Started!`);
 
   /**
    * This timer runs every (INTERVAL) to determine if there are any tasks to perform
@@ -35,7 +35,7 @@ export async function runTimer() {
   function checkTimers() {
     setTimeout(
       async () => {
-        // logger.info(`[${PREFIX}] Checking timers...`);
+        // log.info(`[${PREFIX}] Checking timers...`);
         // Process reminders
         const reminderData = await db
           .select(
@@ -95,7 +95,7 @@ export async function runTimer() {
             // Check if the user has a mindset role
             if (user.mindset_role && user.mindset_role_expires_at) {
               const expires = DateTime.fromJSDate(user.mindset_role_expires_at);
-              logger.debug(
+              log.debug(
                 `[${PREFIX}] ${user.discord_id}'s ${user.mindset_role} ${expires.toLocaleString(DateTime.DATETIME_MED)}`, // eslint-disable-line max-len
               );
               // Check if the user's mindset role has expired
@@ -127,7 +127,7 @@ export async function runTimer() {
 
                           // Remove the reaction from the role message
                           await member.roles.remove(role);
-                          logger.debug(`[${PREFIX}] Removed ${user.discord_id}'s ${user.mindset_role} role`);
+                          log.debug(`[${PREFIX}] Removed ${user.discord_id}'s ${user.mindset_role} role`);
                           // Update the user's mindset role in the database
                           await db
                             .insert({
@@ -182,7 +182,7 @@ export async function runTimer() {
                   const thread = await global.client.channels.fetch(ticket.thread_id) as ThreadChannel;
                   await thread.setArchived(true);
                 } catch (error) {
-                  logger.debug(`[${PREFIX}] There was an error archiving the thread, it was likely deleted`);
+                  log.debug(`[${PREFIX}] There was an error archiving the thread, it was likely deleted`);
                 }
 
 
@@ -207,14 +207,14 @@ export async function runTimer() {
 
                           // Restore the old roles
                           if (user.roles) {
-                            logger.debug(`[${PREFIX}] Restoring ${user.discord_id}'s roles: ${user.roles}`);
+                            log.debug(`[${PREFIX}] Restoring ${user.discord_id}'s roles: ${user.roles}`);
                             const roles = user.roles.split(',');
                             for (const role of roles) {
                               const roleObj = await guild.roles.fetch(role);
                               if (roleObj && roleObj.name !== '@everyone' && roleObj.id !== env.ROLE_NEEDSHELP) {
                                 // Check if the bot has permission to add the role
                                 if (roleObj.comparePositionTo(myRole) < 0) {
-                                  logger.debug(`[${PREFIX}] Adding ${user.discord_id}'s ${role} role`);
+                                  log.debug(`[${PREFIX}] Adding ${user.discord_id}'s ${role} role`);
                                   await member.roles.add(roleObj);
                                 }
                               }

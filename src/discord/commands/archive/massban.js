@@ -3,7 +3,7 @@
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 const { SlashCommandBuilder } = require('discord.js');
-const logger = require('../../../global/utils/logger');
+const logger = require('../../../global/utils/log');
 
 const list = [
   // 'Shiverhoods',
@@ -170,10 +170,10 @@ module.exports = {
       // eslint-disable-next-line no-await-in-loop
       const member = await interaction.guild.members.fetch({ query: name, limit: 1 });
       const target = member.first();
-      logger.debug(`[${PREFIX}] member: ${target.toString()}`);
+      log.debug(`[${PREFIX}] member: ${target.toString()}`);
 
       target.ban(member, { days: 7, reason: 'Raid account?' });
-      logger.debug(`[${PREFIX}] Banned ${name}!`);
+      log.debug(`[${PREFIX}] Banned ${name}!`);
     }
   },
 };

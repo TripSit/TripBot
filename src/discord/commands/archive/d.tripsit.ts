@@ -7,7 +7,7 @@ import {SlashCommand} from '../../@types/commandDef';
 // import {embedTemplate} from '../../utils/embedTemplate';
 // import {stripIndents} from 'common-tags';
 // import env from '../../../global/utils/env.config';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 // import {tripsat} from '../../utils/tripsat';
 // import {tripsitme} from '../../utils/tripsitme';
 import * as path from 'path';
@@ -48,10 +48,10 @@ export const tripsit: SlashCommand = {
     const triage = interaction.options.getString('their_dosage') || 'No info given';
     const input = interaction.options.getString('their_issue') || 'No info given';
 
-    logger.debug(`[${PREFIX}] target: ${target}`);
-    logger.debug(`[${PREFIX}] triage: ${triage}`);
-    logger.debug(`[${PREFIX}] input: ${input}`);
-    logger.debug(`[${PREFIX}] enable: ${enable}`);
+    log.debug(`[${PREFIX}] target: ${target}`);
+    log.debug(`[${PREFIX}] triage: ${triage}`);
+    log.debug(`[${PREFIX}] input: ${input}`);
+    log.debug(`[${PREFIX}] enable: ${enable}`);
 
     // if (enable === 'on') {
     //   tripsitme(interaction, target, triage, input);

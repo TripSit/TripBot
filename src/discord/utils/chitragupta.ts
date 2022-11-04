@@ -10,7 +10,7 @@ import env from '../../global/utils/env.config';
 import {DateTime} from 'luxon';
 import {db} from '../../global/utils/knex';
 import {Users, UserExperience} from '../../global/@types/pgdb';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import * as path from 'path';
 import {stripIndents} from 'common-tags';
 const PREFIX = path.parse(__filename).name;
@@ -26,24 +26,24 @@ export async function chitragupta(
   user:User,
   action: 1 | -1,
 ) {
-  // logger.debug(`[${PREFIX}] starting!`);
+  // log.debug(`[${PREFIX}] starting!`);
   const verb = action === 1 ? 'upvoted' : 'downvoted';
   const actor = user;
   const emoji = reaction.emoji.toString();
   if (reaction.message.author === null) {
-    logger.debug(`[${PREFIX}] Ignoring bot interaction`);
+    log.debug(`[${PREFIX}] Ignoring bot interaction`);
     return;
   }
   const target = reaction.message.author;
 
-  // logger.debug(`[${PREFIX}] ${actor} ${action} ${emoji} ${target}!`);
+  // log.debug(`[${PREFIX}] ${actor} ${action} ${emoji} ${target}!`);
 
   // Can't give karma to yourself!
   if (actor === target) {
     return;
   }
 
-  // logger.debug(`[${PREFIX}] actor: ${actor}`);
+  // log.debug(`[${PREFIX}] actor: ${actor}`);
   if (!reaction.emoji.name) return;
   if (!reaction.emoji.name.includes('upvote')) return;
 
@@ -55,7 +55,7 @@ export async function chitragupta(
 
   if (actorKarma.length === 0) {
     // User doesn't exist in the database
-    logger.debug(`[${PREFIX}] User doesn't exist in the database: ${actor.id}`);
+    log.debug(`[${PREFIX}] User doesn't exist in the database: ${actor.id}`);
     // Create new user
     const newUser = {
       discord_id: actor.id,
@@ -75,7 +75,7 @@ export async function chitragupta(
 
   if (targetKarma.length === 0) {
     // User doesn't exist in the database
-    logger.debug(`[${PREFIX}] User doesn't exist in the database: ${actor.id}`);
+    log.debug(`[${PREFIX}] User doesn't exist in the database: ${actor.id}`);
     // Create new user
     const newUser = {
       discord_id: target.id,
@@ -86,11 +86,11 @@ export async function chitragupta(
       .insert(newUser)
       .returning(['karma_received', 'karma_given']);
   }
-  // logger.debug(`[${PREFIX}] actorKarma ${JSON.stringify(actorKarma)}!`);
-  // logger.debug(`[${PREFIX}] targetKarma ${JSON.stringify(targetKarma)}!`);
-  logger.debug(`[${PREFIX}] ${user.username} (R:${actorKarma[0].karma_received}|G:${actorKarma[0].karma_given}) ${verb} ${target.username} (R:${targetKarma[0].karma_received}|G:${targetKarma[0].karma_given}) in ${(reaction.message.channel as TextChannel).name}!`);
+  // log.debug(`[${PREFIX}] actorKarma ${JSON.stringify(actorKarma)}!`);
+  // log.debug(`[${PREFIX}] targetKarma ${JSON.stringify(targetKarma)}!`);
+  log.debug(`[${PREFIX}] ${user.username} (R:${actorKarma[0].karma_received}|G:${actorKarma[0].karma_given}) ${verb} ${target.username} (R:${targetKarma[0].karma_received}|G:${targetKarma[0].karma_given}) in ${(reaction.message.channel as TextChannel).name}!`);
 
-  // logger.debug(`[${PREFIX}] ${actor.username} has received (${actorKarma[0].karma_received}) and given (${actorKarma[0].karma_given})!`);
-  // logger.debug(`[${PREFIX}] ${target.username} has received (${targetKarma[0].karma_received}) and given (${targetKarma[0].karma_given})!`);
-  // return logger.debug(`[${PREFIX}] finished!`);
+  // log.debug(`[${PREFIX}] ${actor.username} has received (${actorKarma[0].karma_received}) and given (${actorKarma[0].karma_given})!`);
+  // log.debug(`[${PREFIX}] ${target.username} has received (${targetKarma[0].karma_received}) and given (${targetKarma[0].karma_given})!`);
+  // return log.debug(`[${PREFIX}] finished!`);
 };

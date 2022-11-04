@@ -3,7 +3,7 @@ import {db} from '../utils/knex';
 import {Users} from '../@types/pgdb';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
-// import logger from '../utils/logger';
+// import log from '../utils/log';
 
 /**
  *
@@ -18,9 +18,9 @@ export async function karma(
   memberId: string,
   value?: number | null,
   type?: string | null):Promise<string> {
-  // logger.debug(`[${PREFIX}] starting!`);
+  // log.debug(`[${PREFIX}] starting!`);
 
-  // logger.debug(`[${PREFIX}] karma: ${command} ${memberId} ${value} ${type}`);
+  // log.debug(`[${PREFIX}] karma: ${command} ${memberId} ${value} ${type}`);
   let response = 'If you can see this, something went terribly wrong, tell Moonbear';
   if (command === 'get') {
     const data = await db
@@ -37,6 +37,6 @@ export async function karma(
       response = stripIndents`has received ${data[0].karma_received} karma and given ${data[0].karma_given} karma`;
     }
   }
-  // logger.debug(`[${PREFIX}] finished!`);
+  // log.debug(`[${PREFIX}] finished!`);
   return response;
 };

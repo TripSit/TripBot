@@ -5,7 +5,7 @@ import {
   UserDrugDoses,
   UserReminders,
 } from '../@types/pgdb';
-import logger from '../utils/logger';
+import log from '../utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -25,9 +25,9 @@ export async function remindme(
   reminderText: string | null,
   triggerAt: Date | null,
 ):Promise<any> {
-  logger.debug(`[${PREFIX}] Starting!`);
+  log.debug(`[${PREFIX}] Starting!`);
 
-  logger.debug(`[${PREFIX}] 
+  log.debug(`[${PREFIX}] 
     command: ${command}
     userId: ${userId}
     recordNumber: ${recordNumber}
@@ -39,7 +39,7 @@ export async function remindme(
     if (recordNumber === null) {
       return 'You must provide a record number to delete!';
     }
-    logger.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
+    log.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
 
     const userUniqueId = (await db
       .select(db.ref('id'))
@@ -78,10 +78,10 @@ export async function remindme(
     } else {
       const recordId = record.id;
       const reminderDate = data[recordNumber].created_at.toISOString();
-      // logger.debug(`[${PREFIX}] reminderDate: ${reminderDate}`);
+      // log.debug(`[${PREFIX}] reminderDate: ${reminderDate}`);
       const timeVal = DateTime.fromISO(reminderDate);
 
-      logger.debug(`[${PREFIX}] I deleted:
+      log.debug(`[${PREFIX}] I deleted:
       (${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}
       ${record.reminder_text}
       `);
@@ -103,7 +103,7 @@ export async function remindme(
       .from<Users>('users')
       .where('discord_id', userId);
 
-    logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+    log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
 
     if (data.length === 0) {
       return false;
@@ -111,7 +111,7 @@ export async function remindme(
 
     const userUniqueId = data[0].id;
 
-    logger.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
+    log.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
 
     const unsorteddata = await db
       .select(
@@ -124,9 +124,9 @@ export async function remindme(
       .from<UserReminders>('user_reminders')
       .where('user_id', userUniqueId);
 
-    logger.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);
+    log.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);
 
-    logger.debug(`[${PREFIX}] unsorteddata: ${unsorteddata.length}`);
+    log.debug(`[${PREFIX}] unsorteddata: ${unsorteddata.length}`);
 
     if (unsorteddata !== null && unsorteddata.length > 0) {
       // Sort data based on the trigger_at property
@@ -140,7 +140,7 @@ export async function remindme(
         return 0;
       });
 
-      logger.debug(`[${PREFIX}] Sorted ${data.length} items!`);
+      log.debug(`[${PREFIX}] Sorted ${data.length} items!`);
 
       const reminders = [] as {
         index: number,
@@ -178,7 +178,7 @@ export async function remindme(
       .into<Users>('users')
       .returning(db.ref('id').as('id')))[0].id;
 
-    logger.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
+    log.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
 
     await db('user_reminders')
       .insert({

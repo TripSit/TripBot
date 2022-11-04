@@ -6,7 +6,7 @@ import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {contact} from '../../../global/commands/g.contact';
 import {stripIndents} from 'common-tags';
-// import logger from '../../../global/utils/logger';
+// import log from '../../../global/utils/log';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 
@@ -33,7 +33,7 @@ export const dContact: SlashCommand = {
       )
       .setFooter({text: 'Thanks for asking!'});
     interaction.reply({embeds: [embed], ephemeral: false});
-    // logger.debug(`[${PREFIX}] finished!`);
+    // log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

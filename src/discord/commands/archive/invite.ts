@@ -5,7 +5,7 @@ import {
 import {stripIndents} from 'common-tags';
 import {SlashCommand} from '../../@types/commandDef';
 import env from '../../../global/utils/env.config';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -102,7 +102,7 @@ export const dinvite: SlashCommand = {
       .setName('channel')),
 
   async execute(interaction:ChatInputCommandInteraction) {
-    logger.debug(`[${PREFIX}] starting!`);
+    log.debug(`[${PREFIX}] starting!`);
 
     const discordChannel = interaction.options.getChannel('channel')!;
 
@@ -119,7 +119,7 @@ export const dinvite: SlashCommand = {
         ephemeral: true});
     }
 
-    logger.debug(`[${PREFIX}] finished!`);
+    log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

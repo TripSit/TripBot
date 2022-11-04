@@ -5,7 +5,7 @@ import {
   UserDrugDoses,
   DrugNames,
 } from '../../global/@types/pgdb.d';
-import logger from '../../global/utils/logger';
+import log from '../utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -31,9 +31,9 @@ export async function idose(
   roa: string | null,
   date: Date | null,
 ):Promise<any> {
-  logger.debug(`[${PREFIX}] Starting!`);
+  log.debug(`[${PREFIX}] Starting!`);
 
-  logger.debug(`[${PREFIX}] 
+  log.debug(`[${PREFIX}] 
     command: ${command}
     recordNumber: ${recordNumber}
     userId: ${userId}
@@ -48,7 +48,7 @@ export async function idose(
     if (recordNumber === null) {
       return 'You must provide a record number to delete!';
     }
-    logger.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
+    log.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
 
     const userUniqueId = (await db
       .select(db.ref('id'))
@@ -89,7 +89,7 @@ export async function idose(
     } else {
       const recordId = record.id;
       const doseDate = data[recordNumber].created_at.toISOString();
-      // logger.debug(`[${PREFIX}] doseDate: ${doseDate}`);
+      // log.debug(`[${PREFIX}] doseDate: ${doseDate}`);
       const timeVal = DateTime.fromISO(doseDate);
       const drugId = record.drug_id;
       const drugName = (await db
@@ -99,7 +99,7 @@ export async function idose(
         .andWhere('is_default', true))[0].name;
       const route = record.route.charAt(0).toUpperCase() + record.route.slice(1).toLowerCase();
 
-      logger.debug(`[${PREFIX}] I deleted:
+      log.debug(`[${PREFIX}] I deleted:
       (${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}
       ${record.dose} ${record.units} of ${drugName} ${route}
       `);
@@ -121,7 +121,7 @@ export async function idose(
       .from<Users>('users')
       .where('discord_id', userId);
 
-    logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+    log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
 
     if (data.length === 0) {
       return false;
@@ -129,7 +129,7 @@ export async function idose(
 
     const userUniqueId = data[0].id;
 
-    logger.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
+    log.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
 
     const unsorteddata = await db
       .select(
@@ -144,9 +144,9 @@ export async function idose(
       .from<UserDrugDoses>('user_drug_doses')
       .where('user_id', userUniqueId);
 
-    logger.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);
+    log.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);
 
-    logger.debug(`[${PREFIX}] unsorteddata: ${unsorteddata.length}`);
+    log.debug(`[${PREFIX}] unsorteddata: ${unsorteddata.length}`);
 
     if (unsorteddata !== null && unsorteddata.length > 0) {
       // Sort data based on the created_at property
@@ -160,7 +160,7 @@ export async function idose(
         return 0;
       });
 
-      logger.debug(`[${PREFIX}] Sorted ${data.length} items!`);
+      log.debug(`[${PREFIX}] Sorted ${data.length} items!`);
 
       const doses = [] as {
         name: string,
@@ -171,7 +171,7 @@ export async function idose(
       for (let i = 0; i < data.length; i += 1) {
         const dose = data[i];
         const doseDate = data[i].created_at.toISOString();
-        logger.debug(`[${PREFIX}] doseDate: ${doseDate}`);
+        log.debug(`[${PREFIX}] doseDate: ${doseDate}`);
         const timeVal = DateTime.fromISO(doseDate);
         const drugId = dose.drug_id;
         const drugName = (await db
@@ -210,7 +210,7 @@ export async function idose(
       .into<Users>('users')
       .returning(db.ref('id').as('id')))[0].id;
 
-    logger.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
+    log.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
 
     const drugId = (await db
       .select(db.ref('drug_id'))
@@ -220,10 +220,10 @@ export async function idose(
       .orWhere('name', substance.toUpperCase()))[0].drug_id;
 
     if (drugId.length === 0) {
-      logger.debug(`name = ${substance} not found in 'drugNames'`);
+      log.debug(`name = ${substance} not found in 'drugNames'`);
     }
 
-    logger.debug(`[${PREFIX}] drugId: ${drugId}`);
+    log.debug(`[${PREFIX}] drugId: ${drugId}`);
 
     await db('user_drug_doses')
       .insert({

@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {birthday} from '../../../global/commands/g.birthday';
-// import logger from '../../../global/utils/logger';
+// import log from '../../../global/utils/log';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 

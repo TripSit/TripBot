@@ -5,7 +5,7 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcPsychedelics} from '../../../global/commands/g.calcPsychedelics';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -47,7 +47,7 @@ export const dcalcPsychedelics: SlashCommand = {
         content: 'Something went wrong. Please try again.',
         ephemeral: true,
       });
-      logger.error(`[${PREFIX}] Something went wrong. Please try again.`);
+      log.error(`[${PREFIX}] Something went wrong. Please try again.`);
       return false;
     }
 
@@ -75,7 +75,7 @@ export const dcalcPsychedelics: SlashCommand = {
       `);
     interaction.reply({embeds: [embed], ephemeral: false});
 
-    // logger.debug(`[${PREFIX}] finished!`);
+    // log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

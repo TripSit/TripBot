@@ -5,7 +5,7 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {stripIndents} from 'common-tags';
 import {bridgeWording} from '../../../global/commands/archive/g.bridge';
-// import logger from '../../../global/utils/logger';
+// import log from '../../../global/utils/log';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 
@@ -14,10 +14,10 @@ export const bridge: SlashCommand = {
     .setName('bridge')
     .setDescription('Information on the bridge!'),
   async execute(interaction) {
-    // logger.debug(`[${PREFIX}] starting!`);
+    // log.debug(`[${PREFIX}] starting!`);
     const response = await bridgeWording();
     interaction.reply(stripIndents`${response}`);
-    // logger.debug(`[${PREFIX}] finished!`);
+    // log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };

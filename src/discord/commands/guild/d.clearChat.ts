@@ -4,7 +4,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -22,7 +22,7 @@ export const clearChat: SlashCommand = {
       .setDescription('Delete threads? (default: true)')
       .setName('delete-archived-threads')),
   async execute(interaction:ChatInputCommandInteraction) {
-    logger.debug(`[${PREFIX}] started!`);
+    log.debug(`[${PREFIX}] started!`);
     if (!interaction.channel) {
       interaction.reply({content: 'This command can only be used in a server!', ephemeral: true});
       return false;
@@ -47,19 +47,19 @@ export const clearChat: SlashCommand = {
     //   try {
     //     message.delete();
     //   } catch (err) {
-    //     logger.error(`[${PREFIX}] ${err}`);
+    //     log.error(`[${PREFIX}] ${err}`);
     //   }
     // }
 
     if (deleteThreads) {
       // Delete every thread in the channel
       const fetchedThreads = await (interaction.channel as TextChannel).threads.fetch();
-      // logger.debug(`[${PREFIX}] fetchedThreads: ${JSON.stringify(fetchedThreads, null, 2)}`);
+      // log.debug(`[${PREFIX}] fetchedThreads: ${JSON.stringify(fetchedThreads, null, 2)}`);
       fetchedThreads.threads.forEach(async (thread) => {
         try {
           thread.delete();
         } catch (err) {
-          logger.error(`[${PREFIX}] ${err}`);
+          log.error(`[${PREFIX}] ${err}`);
         }
       });
     }
@@ -67,12 +67,12 @@ export const clearChat: SlashCommand = {
     if (deleteArchived) {
       // Delete every archived thread in the channel
       const archivedThreads = await (interaction.channel as TextChannel).threads.fetchArchived();
-      // logger.debug(`[${PREFIX}] fetchedThreads: ${JSON.stringify(archivedThreads, null, 2)}`);
+      // log.debug(`[${PREFIX}] fetchedThreads: ${JSON.stringify(archivedThreads, null, 2)}`);
       archivedThreads.threads.forEach(async (thread) => {
         try {
           thread.delete();
         } catch (err) {
-          logger.error(`[${PREFIX}] ${err}`);
+          log.error(`[${PREFIX}] ${err}`);
         }
       });
     }

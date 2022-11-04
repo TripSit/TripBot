@@ -3,7 +3,7 @@ import {
   guildEvent,
 } from '../@types/eventDef';
 import {db} from '../../global/utils/knex';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -11,8 +11,8 @@ export const guildDelete: guildEvent = {
   name: 'guildDelete',
 
   async execute(guild: Guild) {
-  // logger.debug(`[${PREFIX}] starting!`);
-    logger.info(`[${PREFIX}] Left guild: ${guild.name} (id: ${guild.id})`);
+  // log.debug(`[${PREFIX}] starting!`);
+    log.info(`[${PREFIX}] Left guild: ${guild.name} (id: ${guild.id})`);
     await db('discord_guilds')
       .insert({
         id: guild.id,
@@ -20,6 +20,6 @@ export const guildDelete: guildEvent = {
       })
       .onConflict('discord_id')
       .merge();
-  // logger.debug(`[${PREFIX}] finished!`);
+  // log.debug(`[${PREFIX}] finished!`);
   },
 };

@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {imgurSearch} from '../../../global/commands/g.imgur';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -39,17 +39,17 @@ export const imgur: SlashCommand = {
     const search = interaction.options.getString('search');
     const sort = interaction.options.getString('sort') || 'top';
     const window = interaction.options.getString('window') || 'all';
-    logger.debug(`[${PREFIX}] query: ${search}`);
-    logger.debug(`[${PREFIX}] sort: ${sort}`);
-    logger.debug(`[${PREFIX}] window: ${window}`);
+    log.debug(`[${PREFIX}] query: ${search}`);
+    log.debug(`[${PREFIX}] sort: ${sort}`);
+    log.debug(`[${PREFIX}] window: ${window}`);
 
     // eslint-disable-next-line max-len
     const query = `https://api.imgur.com/3/gallery/search/${sort !== null ? `${sort}/` : ''}${window !== null ? `${window}/` : ''}?q=${search}`;
-    logger.debug(`[${PREFIX}] query: ${query}`);
+    log.debug(`[${PREFIX}] query: ${query}`);
 
     const url = await imgurSearch(query);
 
-    logger.debug(`[${PREFIX}] url: ${url}`);
+    log.debug(`[${PREFIX}] url: ${url}`);
 
     interaction.reply(url);
     return true;

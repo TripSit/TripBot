@@ -11,7 +11,7 @@ import {
   guildMemberEvent,
 } from '../@types/eventDef';
 import {db} from '../../global/utils/knex';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
 import {embedTemplate} from '../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
@@ -26,9 +26,9 @@ export const guildMemberAdd: guildMemberEvent = {
     if (member.guild.id !== env.DISCORD_GUILD_ID.toString()) {
       return;
     }
-    logger.info(`[${PREFIX}] ${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
+    log.info(`[${PREFIX}] ${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
 
-    logger.debug(`[${PREFIX}] Starting!`);
+    log.debug(`[${PREFIX}] Starting!`);
     // const roleUnverfied = member.guild.roles.cache.find(role => role.id === roleUnverifiedId);
     // member.roles.add(roleUnverfied);
 
@@ -42,7 +42,7 @@ export const guildMemberAdd: guildMemberEvent = {
         `Joined via ${inviter.tag}'s invite to ${invite.channel?.name} (${invite.code}-${invite.uses})` :
         `Joined via the vanity url`;
     }
-    logger.debug(`[${PREFIX}] inviteInfo: ${inviteInfo}`);
+    log.debug(`[${PREFIX}] inviteInfo: ${inviteInfo}`);
     global.guildInvites.set(
       member.guild.id,
       new Collection(newInvites.map((invite) => [invite.code, invite.uses])),
@@ -57,11 +57,11 @@ export const guildMemberAdd: guildMemberEvent = {
       .onConflict('discord_id')
       .merge();
 
-    logger.debug(`[${PREFIX}] Date.now(): ${Date.now()}`);
-    logger.debug(`[${PREFIX}] member.user.createdAt: ${member.user.createdAt.toString()}`);
+    log.debug(`[${PREFIX}] Date.now(): ${Date.now()}`);
+    log.debug(`[${PREFIX}] member.user.createdAt: ${member.user.createdAt.toString()}`);
 
     const diff = Math.abs(Date.now() - Date.parse(member.user.createdAt.toString()));
-    logger.debug(`[${PREFIX}] diff: ${diff}`);
+    log.debug(`[${PREFIX}] diff: ${diff}`);
     const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
     const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
     const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
@@ -113,21 +113,6 @@ export const guildMemberAdd: guildMemberEvent = {
       channelBotlog.send({embeds: [embed]});
     }
 
-    // if (global.db) {
-    //   const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${member!.user.id}`);
-    //   await ref.once('value', (data) => {
-    //     if (data.val() !== null) {
-    //       Object.keys(data.val()).forEach(async (key) => {
-    //         const timer = data.val()[key];
-    //         if (timer.type === 'helpthread') {
-    //           const helpChannel = await member.client.channels.fetch(
-    //             timer.value.lastHelpedThreadId) as TextChannel;
-    //           helpChannel.send(`${member.user} has rejoined the guild!`);
-    //         }
-    //       });
-    //     }
-    //   });
-    // }
-    logger.debug(`[${PREFIX}] finished!`);
+    log.debug(`[${PREFIX}] finished!`);
   },
 };

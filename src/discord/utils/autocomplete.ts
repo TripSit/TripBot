@@ -2,7 +2,7 @@ import {
   Client,
   AutocompleteInteraction,
 } from 'discord.js';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import Fuse from 'fuse.js';
 
 import * as path from 'path';
@@ -30,14 +30,14 @@ for (let i = 0; i < pillColors.length; i += 1) {
   pillColorNames.push(Object.keys(pillColors[i])[0]);
 }
 const defaultColors = pillColorNames.slice(0, 25);
-// logger.debug(`[${PREFIX}] pill_color_names: ${pill_color_names}`);
+// log.debug(`[${PREFIX}] pill_color_names: ${pill_color_names}`);
 
 const pillShapeNames:string[] = [];
 for (let i = 0; i < pillShapes.length; i += 1) {
   pillShapeNames.push(Object.keys(pillShapes[i])[0]);
 }
 const defaultShapes = pillShapeNames.slice(0, 25);
-// logger.debug(`[${PREFIX}] pill_shape_names: ${pill_shape_names}`);
+// log.debug(`[${PREFIX}] pill_shape_names: ${pill_shape_names}`);
 
 /**
  * Handles autocomplete information
@@ -46,7 +46,7 @@ const defaultShapes = pillShapeNames.slice(0, 25);
  * @return {Promise<void>}
  */
 export async function autocomplete(interaction:AutocompleteInteraction, client:Client):Promise<void> {
-  logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
+  log.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
   if (interaction.commandName === 'pill-id') {
     const focusedOption = interaction.options.getFocused(true).name;
     const options = {
@@ -81,7 +81,7 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
       }
     }
   } else if (interaction.commandName === 'calc_benzo') {
-    logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
+    log.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
     const options = {
       shouldSort: true,
       threshold: 0.2,
@@ -96,7 +96,7 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
     };
 
     if (drugDataTripsit === null || drugDataTripsit === undefined) {
-      logger.error(`[${PREFIX}] drugDataAll is null or undefined`);
+      log.error(`[${PREFIX}] drugDataAll is null or undefined`);
       return;
     }
 
@@ -105,7 +105,7 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
       return drugDataTripsit[drugName as keyof typeof drugDataTripsit].properties.hasOwnProperty('dose_to_diazepam');
     });
 
-    // logger.debug(`[${PREFIX}] benzoNames: ${benzoNames}`);
+    // log.debug(`[${PREFIX}] benzoNames: ${benzoNames}`);
 
     const benzoCache = benzoNames.map((drugName) => {
       const drugObj = {
@@ -119,13 +119,13 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
       return drugObj;
     });
 
-    // logger.debug(`[${PREFIX}] benzoCache: ${JSON.stringify(benzoCache, null, 2)}`);
+    // log.debug(`[${PREFIX}] benzoCache: ${JSON.stringify(benzoCache, null, 2)}`);
 
     const fuse = new Fuse(benzoCache, options);
     const focusedValue = interaction.options.getFocused();
-    // logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
+    // log.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
     const results = fuse.search(focusedValue);
-    // logger.debug(`[${PREFIX}] results: ${JSON.stringify(results, null, 2)}`);
+    // log.debug(`[${PREFIX}] results: ${JSON.stringify(results, null, 2)}`);
     if (results.length > 0) {
       const top25 = results.slice(0, 25);
       interaction.respond(top25.map((choice) => ({name: choice.item.name, value: choice.item.name})));
@@ -143,21 +143,21 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
 
     const fuse = new Fuse(timezones, options);
     const focusedValue = interaction.options.getFocused();
-    // logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
+    // log.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
     const results = fuse.search(focusedValue);
-    // logger.debug(`[${PREFIX}] Autocomplete results: ${results}`);
+    // log.debug(`[${PREFIX}] Autocomplete results: ${results}`);
     if (results.length > 0) {
       const top25 = results.slice(0, 25);
       const listResults = top25.map((choice) => ({
         name: choice.item.label,
         value: choice.item.label,
       }));
-        // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
+        // log.debug(`[${PREFIX}] list_results: ${listResults}`);
       interaction.respond(listResults);
     } else {
       const defaultTimezones = timezoneNames.slice(0, 25);
       const listResults = defaultTimezones.map((choice) => ({name: choice, value: choice}));
-      // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
+      // log.debug(`[${PREFIX}] list_results: ${listResults}`);
       interaction.respond(listResults);
     }
   } else if (interaction.commandName === 'convert') {
@@ -167,19 +167,19 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
     let displayUnits = [];
     let measure = '';
     if (firstUnit !== '' && !focusedOption) {
-      logger.debug(`[${PREFIX}] firstUnit: ${firstUnit}`);
+      log.debug(`[${PREFIX}] firstUnit: ${firstUnit}`);
       // eslint-disable-next-line
         for (const i in unitsOfMeasurement) {
         if (unitsOfMeasurement[i].abbr.toLowerCase() === (firstUnit as string).toLowerCase()) {
           measure = unitsOfMeasurement[i].measure;
-          logger.debug(`[${PREFIX}] First unit measure: ${measure}`);
+          log.debug(`[${PREFIX}] First unit measure: ${measure}`);
         }
       }
       // eslint-disable-next-line
         for (const i in unitsOfMeasurement) {
         if (unitsOfMeasurement[i].measure.toLowerCase() === measure.toLowerCase()) {
           displayUnits.push(unitsOfMeasurement[i]);
-          logger.debug(`[${PREFIX}] Added: ${unitsOfMeasurement[i].plural}`);
+          log.debug(`[${PREFIX}] Added: ${unitsOfMeasurement[i].plural}`);
         }
       }
     } else {
@@ -197,16 +197,16 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
 
     const fuse = new Fuse(displayUnits, options);
     const focusedValue = interaction.options.getFocused();
-    // logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
+    // log.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
     const results = fuse.search(focusedValue);
-    // logger.debug(`[${PREFIX}] Autocomplete results: ${results}`);
+    // log.debug(`[${PREFIX}] Autocomplete results: ${results}`);
     if (results.length > 0) {
       const top25 = results.slice(0, 25);
       const listResults = top25.map((choice) => ({
         name: choice.item.abbr,
         value: choice.item.abbr,
       }));
-        // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
+        // log.debug(`[${PREFIX}] list_results: ${listResults}`);
       interaction.respond(listResults);
     } else {
       if (measure !== '') {
@@ -215,12 +215,12 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
           name: choice.abbr,
           value: choice.abbr,
         }));
-          // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
+          // log.debug(`[${PREFIX}] list_results: ${listResults}`);
         interaction.respond(listResults);
       } else {
         const defaultMeasurements = measurementNames.slice(0, 25);
         const listResults = defaultMeasurements.map((choice) => ({name: choice, value: choice}));
-        // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
+        // log.debug(`[${PREFIX}] list_results: ${listResults}`);
         interaction.respond(listResults);
       }
     }
@@ -255,5 +255,5 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
       interaction.respond(TOP_DRUGS.map((choice) => ({name: choice, value: choice})));
     }
   }
-  logger.debug(`[${PREFIX}] finished!`);
+  log.debug(`[${PREFIX}] finished!`);
 };

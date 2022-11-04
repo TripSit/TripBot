@@ -65,7 +65,7 @@ if (env.NODE_ENV === 'production') {
   ];
 }
 
-const Logger = createLogger({
+const log = createLogger({
   level: 'debug',
   format: combine(
     format.colorize({all: true}),
@@ -76,4 +76,4 @@ const Logger = createLogger({
   transports: transportOptions,
 });
 
-export default Logger;
+export default log;

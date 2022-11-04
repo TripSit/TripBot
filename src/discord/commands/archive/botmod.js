@@ -8,7 +8,7 @@ const {
   Colors,
 } = require('discord.js');
 const { ActionRowBuilder, ButtonBuilder } = require('discord.js');
-const logger = require('../../../global/utils/logger');
+const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
 const { getGuildInfo, setGuildInfo } = require('../../../global/services/firebaseAPI');
 
@@ -120,17 +120,17 @@ module.exports = {
 
   async execute(interaction) {
     const actor = interaction.member;
-    logger.debug(`[${PREFIX}] Actor: ${actor}`);
+    log.debug(`[${PREFIX}] Actor: ${actor}`);
     const command = interaction.options.getSubcommand();
-    logger.debug(`[${PREFIX}] Command: ${command}`);
+    log.debug(`[${PREFIX}] Command: ${command}`);
     const group = interaction.options.getSubcommandGroup();
-    logger.debug(`[${PREFIX}] Group: ${group}`);
+    log.debug(`[${PREFIX}] Group: ${group}`);
     const targetId = interaction.options.getString('target');
-    logger.debug(`[${PREFIX}] target: ${targetId}`);
+    log.debug(`[${PREFIX}] target: ${targetId}`);
     const toggle = interaction.options.getString('toggle');
-    logger.debug(`[${PREFIX}] toggle: ${toggle}`);
+    log.debug(`[${PREFIX}] toggle: ${toggle}`);
     const reason = interaction.options.getString('reason');
-    logger.debug(`[${PREFIX}] reason: ${reason}`);
+    log.debug(`[${PREFIX}] reason: ${reason}`);
 
     let color = '';
     if (group === 'guild') {
@@ -156,7 +156,7 @@ module.exports = {
       } else {
         targetData.discord.modActions = { [targetAction]: 1 };
       }
-      logger.debug(`[${PREFIX}] target_data: ${JSON.stringify(targetData)}`);
+      log.debug(`[${PREFIX}] target_data: ${JSON.stringify(targetData)}`);
 
       if (command === 'warn') {
         color = 'YELLOW';
@@ -165,7 +165,7 @@ module.exports = {
           .setTitle('Warned!')
           .setDescription(`Your guild has warned by Team TripSit for ${reason}.\n\nPlease read the rules and be respectful of them.\n\nContact Moonbear if you have any questions!`);
         targetGuildOwner.send({ embeds: [warnEmbed], components: [warnButtons] });
-        logger.debug(`[${PREFIX}] I warned ${targetGuild}'s owner ${targetGuildOwner}!`);
+        log.debug(`[${PREFIX}] I warned ${targetGuild}'s owner ${targetGuildOwner}!`);
       } else if (command === 'kick') {
         targetGuild.leave();
         color = 'ORANGE';
@@ -174,7 +174,7 @@ module.exports = {
           .setTitle('Kicked!')
           .setDescription(`I have left your guild because ${reason}.\n\nYou have the option to re-add me, but please read the rules and be respectful of them.\n\nContact Moonbear if you have any questions!`);
         targetGuildOwner.send({ embeds: [warnEmbed], components: [warnButtons] });
-        logger.debug(`[${PREFIX}] I left ${targetGuild}!`);
+        log.debug(`[${PREFIX}] I left ${targetGuild}!`);
       } else if (command === 'ban') {
         if (toggle === 'on') {
           if (targetData.isBanned) {
@@ -195,7 +195,7 @@ module.exports = {
             .setTitle('Banned!')
             .setDescription(`I have left your guild permenantly because ${reason}.\n\nContact Moonbear if you have any questions!`);
           targetGuildOwner.send({ embeds: [warnEmbed] });
-          logger.debug(`[${PREFIX}] I banned ${targetGuild}!`);
+          log.debug(`[${PREFIX}] I banned ${targetGuild}!`);
         } else if (toggle === 'off') {
           if (!targetData.isBanned) {
             const embed = template.embedTemplate()
@@ -214,7 +214,7 @@ module.exports = {
             .setTitle('Unbanned!')
             .setDescription(`I have unbanned your guild because ${reason}.\n\nContact Moonbear if you have any questions!`);
           targetGuildOwner.send({ embeds: [warnEmbed] });
-          logger.debug(`[${PREFIX}] I unbanned ${targetGuild}!`);
+          log.debug(`[${PREFIX}] I unbanned ${targetGuild}!`);
         }
       }
 
@@ -226,7 +226,7 @@ module.exports = {
         const title = `I have ${command}ed ${targetGuild} ${reason ? `because ${reason}` : ''}`;
         const embed = template.embedTemplate().setColor(color).setDescription(title);
         interaction.reply({ embeds: [embed], ephemeral: true });
-        logger.debug(`[${PREFIX}] I replied to ${interaction.member}!`);
+        log.debug(`[${PREFIX}] I replied to ${interaction.member}!`);
         return;
       }
 
@@ -262,17 +262,17 @@ module.exports = {
 
       if (command === 'info') {
         interaction.reply({ embeds: [targetEmbed], ephemeral: true });
-        logger.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${targetData.guild_name}`);
-        logger.debug(`[${PREFIX}] finished!`);
+        log.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${targetData.guild_name}`);
+        log.debug(`[${PREFIX}] finished!`);
         return;
       }
 
-      // logger.debug(`${PREFIX} channel_moderators_id: ${channel_moderators_id}`);
+      // log.debug(`${PREFIX} channel_moderators_id: ${channel_moderators_id}`);
       // const mod_chan = interaction.client.channels.cache.get(channel_moderators_id);
       // // mod_chan.send({ embeds: [target_embed], components: [mod_buttons] });
       // mod_chan.send({ embeds: [target_embed] });
-      // logger.debug(`${PREFIX} send a message to the moderators room`);
-      logger.debug(`[${PREFIX}] finished!`);
+      // log.debug(`${PREFIX} send a message to the moderators room`);
+      log.debug(`[${PREFIX}] finished!`);
     }
   },
 };

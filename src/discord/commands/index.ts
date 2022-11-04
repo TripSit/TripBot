@@ -2,7 +2,7 @@ import {Client} from 'discord.js';
 import {Collection} from 'discord.js';
 import fs from 'fs/promises';
 import path from 'path';
-// import logger from '../../global/utils/logger';
+// import log from '../../global/utils/log';
 // const PREFIX = path.parse(__filename).name;
 
 /**
@@ -10,7 +10,7 @@ import path from 'path';
  * @return {Promise<Command[]>} The list of commands
  */
 export async function registerCommands(client: Client): Promise<void> {
-  // logger.debug(`[${PREFIX}] command start!`);
+  // log.debug(`[${PREFIX}] command start!`);
   /**
      *
      * @param {string} commandType The type of command either global or guild
@@ -24,12 +24,12 @@ export async function registerCommands(client: Client): Promise<void> {
       .filter((file) => file.endsWith('.ts') && !file.endsWith('index.ts'))
       .map((file) => require(`${commandDir}/${commandType}/${file}`))
       .forEach((command) => {
-        // logger.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
+        // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
         const fileName = Object.keys(command)[0];
         const functionName = command[fileName].data.name;
         client.commands.set(functionName, command[fileName]);
       });
   }
   Promise.all([registerType('global'), registerType('guild')]);
-  // .then(() => logger.debug(`[${PREFIX}] command loaded!`));
+  // .then(() => log.debug(`[${PREFIX}] command loaded!`));
 };

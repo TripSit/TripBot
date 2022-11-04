@@ -13,7 +13,7 @@ import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import {paginationEmbed} from '../../utils/pagination';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -53,10 +53,10 @@ export const dremindme: SlashCommand = {
     const reminderDatetime = new Date();
     if (offset) {
       const out = await parseDuration(offset);
-      // logger.debug(`[${PREFIX}] out: ${out}`);
+      // log.debug(`[${PREFIX}] out: ${out}`);
       reminderDatetime.setTime(reminderDatetime.getTime() + out);
     }
-    logger.debug(`[${PREFIX}] reminderDatetime: ${reminderDatetime}`);
+    log.debug(`[${PREFIX}] reminderDatetime: ${reminderDatetime}`);
 
     const response = await remindme(
       command,
@@ -92,14 +92,14 @@ export const dremindme: SlashCommand = {
               value: response[i].value,
               inline: true,
             });
-            // logger.debug(`[${PREFIX}] Adding field ${field.name}`);
+            // log.debug(`[${PREFIX}] Adding field ${field.name}`);
             pageFieldsCount += 1;
-            // logger.debug(`[${PREFIX}] pageFieldsCount: ${pageFieldsCount}`);
+            // log.debug(`[${PREFIX}] pageFieldsCount: ${pageFieldsCount}`);
             if (pageFieldsCount === 24) {
               pageEmbed.setFields(pageFields);
-              // logger.debug(`[${PREFIX}] pageEmbed: ${JSON.stringify(pageEmbed)}`);
+              // log.debug(`[${PREFIX}] pageEmbed: ${JSON.stringify(pageEmbed)}`);
               book.push(pageEmbed);
-              // logger.debug(`[${PREFIX}] book.length: ${book.length}`);
+              // log.debug(`[${PREFIX}] book.length: ${book.length}`);
               pageFields = [];
               pageFieldsCount = 0;
               pageEmbed = embedTemplate();
@@ -108,9 +108,9 @@ export const dremindme: SlashCommand = {
           // Add the last pageEmbed
           if (pageFieldsCount > 0) {
             pageEmbed.setFields(pageFields);
-            // logger.debug(`[${PREFIX}] pageEmbed: ${JSON.stringify(pageEmbed)}`);
+            // log.debug(`[${PREFIX}] pageEmbed: ${JSON.stringify(pageEmbed)}`);
             book.push(pageEmbed);
-            // logger.debug(`[${PREFIX}] book.length: ${book.length}`);
+            // log.debug(`[${PREFIX}] book.length: ${book.length}`);
           }
         }
         if (response.length <= 24) {
@@ -133,7 +133,7 @@ export const dremindme: SlashCommand = {
         embed.setTitle('No reminders!');
         embed.setDescription('You have no reminders! Use /remindme to add some!');
       }
-      // logger.debug(`[${PREFIX}] book.length: ${book.length}`);
+      // log.debug(`[${PREFIX}] book.length: ${book.length}`);
       if (book.length > 1) {
         paginationEmbed(interaction, book, buttonList);
       } else {
@@ -155,15 +155,15 @@ export const dremindme: SlashCommand = {
       }
 
       const timeString = time(reminderDatetime).valueOf().toString();
-      logger.debug(`[${PREFIX}] timeString: ${timeString}`);
+      log.debug(`[${PREFIX}] timeString: ${timeString}`);
       const relative = time(reminderDatetime, 'R');
-      logger.debug(`[${PREFIX}] relative: ${relative}`);
+      log.debug(`[${PREFIX}] relative: ${relative}`);
 
       const embed = embedTemplate()
         .setDescription(`${relative} I will remind you: ${reminder}`);
       interaction.reply({embeds: [embed], ephemeral: true});
     }
-    logger.debug(`[${PREFIX}] Finsihed!`);
+    log.debug(`[${PREFIX}] Finsihed!`);
     return true;
   },
 };

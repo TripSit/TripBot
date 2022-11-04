@@ -6,7 +6,7 @@ import {
   guildMemberEvent,
 } from '../@types/eventDef';
 import {db} from '../../global/utils/knex';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
 import {embedTemplate} from '../utils/embedTemplate';
 import * as path from 'path';
@@ -19,22 +19,22 @@ export const guildMemberRemove: guildMemberEvent = {
     if (member.guild.id !== env.DISCORD_GUILD_ID) {
       return;
     };
-    logger.debug(`[${PREFIX}] starting!`);
+    log.debug(`[${PREFIX}] starting!`);
 
-    // logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
+    // log.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
 
     const joinedTimestamp = member.joinedTimestamp;
 
-    logger.debug(`[${PREFIX}] joinedTimestamp: ${joinedTimestamp}`);
+    log.debug(`[${PREFIX}] joinedTimestamp: ${joinedTimestamp}`);
     const embed = embedTemplate()
       .setColor(Colors.Red);
 
     if (joinedTimestamp) {
-      logger.debug(`[${PREFIX}] Date.now(): ${Date.now()}`);
+      log.debug(`[${PREFIX}] Date.now(): ${Date.now()}`);
       // display the difference between the two dates
       // NOTE: Can simplify with luxon
       const diff = Math.abs(Date.now() - joinedTimestamp);
-      logger.debug(`[${PREFIX}] diff: ${diff}`);
+      log.debug(`[${PREFIX}] diff: ${diff}`);
       const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
       const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
       const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
@@ -68,25 +68,6 @@ export const guildMemberRemove: guildMemberEvent = {
       .onConflict('discord_id')
       .merge();
 
-    // if (global.db) {
-    //   const ref = db.ref(`${env.FIREBASE_DB_TIMERS}/${member!.user.id}`);
-    //   await ref.once('value', (data) => {
-    //     if (data.val() !== null) {
-    //       Object.keys(data.val()).forEach(async (key) => {
-    //         const timer = data.val()[key];
-    //         if (timer.type === 'helpthread') {
-    //           const helpChannel = await member.client.channels.fetch(
-    //             timer.value.lastHelpedThreadId) as TextChannel;
-    //           helpChannel.send(`${member.user} has left the guild!`);
-    //         }
-    //         if (timer.type === 'reminder') {
-    //           logger.debug(`[${PREFIX}] delete reminder ${key}`);
-    //         }
-    //       });
-    //     }
-    //   });
-    // }
-
-    logger.debug(`[${PREFIX}] finished!`);
+    log.debug(`[${PREFIX}] finished!`);
   },
 };

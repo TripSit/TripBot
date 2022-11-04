@@ -3,7 +3,7 @@
 const path = require('path');
 const { SlashCommandBuilder } = require('discord.js');
 const axios = require('axios');
-const logger = require('../../../global/utils/logger');
+const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
 
 const PREFIX = path.parse(__filename).name;
@@ -31,10 +31,10 @@ module.exports = {
           key2: 'value',
         }),
       });
-      logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+      log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
       embed.setDescription(data);
     } catch (error) {
-      logger.error(`[${PREFIX}] ${error}`);
+      log.error(`[${PREFIX}] ${error}`);
       embed.setDescription(`Error with this API! This is not an error with the bot!\n\n${error}`);
     }
 

@@ -9,7 +9,7 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import env from '../../../global/utils/env.config';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import {paginationEmbed} from '../../utils/pagination';
 
 import * as path from 'path';
@@ -35,10 +35,10 @@ export const help: SlashCommand = {
     .setName('help')
     .setDescription('Information bout TripBot Commands'),
   async execute(interaction) {
-    logger.debug(`[${PREFIX}] starting!`);
+    log.debug(`[${PREFIX}] starting!`);
 
-    const globalCommands = await client.application?.commands.fetch();
-    const guildCommands = await client.application?.commands.fetch({guildId: env.DISCORD_GUILD_ID});
+    const globalCommands = await interaction.client.application?.commands.fetch();
+    const guildCommands = await interaction.client.application?.commands.fetch({guildId: env.DISCORD_GUILD_ID});
 
     /**
      * Gets the description of a command
@@ -46,16 +46,16 @@ export const help: SlashCommand = {
      * @return {string}
      */
     function getDesc(commandName:string):string|undefined {
-      logger.debug(`[${PREFIX}] getDesc: ${commandName}`);
+      log.debug(`[${PREFIX}] getDesc: ${commandName}`);
       if (!globalCommands || !guildCommands) return undefined;
       const desc = globalCommands.filter((command) => command.name === commandName).at(0)?.description ??
       guildCommands.filter((command) => command.name === commandName).at(0)?.description;
-      logger.debug(`[${PREFIX}] getDesc: ${desc}`);
+      log.debug(`[${PREFIX}] getDesc: ${desc}`);
       return desc;
     }
 
     if (getDesc('drug') === undefined) {
-      logger.error(`[${PREFIX}] getDesc('drug') is undefined`);
+      log.error(`[${PREFIX}] getDesc('drug') is undefined`);
       return false;
     }
 
@@ -81,7 +81,7 @@ export const help: SlashCommand = {
     funEmbed.setTitle('Other Modules');
     funEmbed.addFields({name: 'About', value: getDesc('about') ?? '', inline: true});
     funEmbed.addFields({name: 'Contact', value: getDesc('contact') ?? '', inline: true});
-    funEmbed.addFields({name: 'Bug', value: getDesc('bug') ?? '', inline: true});
+    // funEmbed.addFields({name: 'Feedback', value: getDesc('feedback') ?? '', inline: true});
     funEmbed.addFields({name: 'Triptoys', value: getDesc('triptoys') ?? '', inline: true});
     funEmbed.addFields({name: 'Imgur', value: getDesc('imgur') ?? '', inline: true});
     funEmbed.addFields({name: 'Magick8Ball', value: getDesc('magick8ball') ?? '', inline: true});

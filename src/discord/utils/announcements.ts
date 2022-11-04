@@ -10,7 +10,7 @@ import {embedTemplate} from './embedTemplate';
 import {stripIndents} from 'common-tags';
 import {db} from '../../global/utils/knex';
 // import {Users} from '../../global/@types/pgdb';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -66,7 +66,7 @@ type messageCounterType = {
  * @param {Message} message
  */
 export async function announcements(message:Message) {
-  // logger.debug(`[${PREFIX}] starting!`);
+  // log.debug(`[${PREFIX}] starting!`);
 
   const channelStart = await message.client.channels.fetch(env.CHANNEL_START) as TextChannel;
   const channelAnnouncements = await message.client.channels.fetch(env.CHANNEL_ANNOUNCEMENTS) as TextChannel;
@@ -228,22 +228,22 @@ export async function announcements(message:Message) {
     env.CATEGORY_CAMPGROUND,
   ];
 
-  // logger.debug(`[${PREFIX}] instance of TextChannel: ${message.channel instanceof TextChannel}`);
+  // log.debug(`[${PREFIX}] instance of TextChannel: ${message.channel instanceof TextChannel}`);
   if (message.channel instanceof TextChannel) {
-    // logger.debug(`[${PREFIX}] message.channel.parentId: ${message.channel.parentId}`);
+    // log.debug(`[${PREFIX}] message.channel.parentId: ${message.channel.parentId}`);
     if (message.channel.parentId) {
-      // logger.debug(`[${PREFIX}] generalChatCategories: ${generalChatCategories}`);
-      // logger.debug(`[${PREFIX}] generalChatCategories.includes(message.channel.parentId): ${generalChatCategories.includes(message.channel.parentId)}`);
+      // log.debug(`[${PREFIX}] generalChatCategories: ${generalChatCategories}`);
+      // log.debug(`[${PREFIX}] generalChatCategories.includes(message.channel.parentId): ${generalChatCategories.includes(message.channel.parentId)}`);
       if (generalChatCategories.includes(message.channel.parentId)) {
         messageCounter[message.channel.id] = messageCounter[message.channel.id] ?
           messageCounter[message.channel.id] + 1 :
           1;
 
-        // logger.debug(`[${PREFIX}] messageCounter[message.channel.id]: ${messageCounter[message.channel.id]}`);
-        // logger.debug(`[${PREFIX}] bigFrequency: ${bigFrequency}`);
-        // logger.debug(`[${PREFIX}] ${messageCounter[message.channel.id] % bigFrequency === 0}`);
-        // logger.debug(`[${PREFIX}] frequency: ${frequency}`);
-        // logger.debug(`[${PREFIX}] ${messageCounter[message.channel.id] % frequency === 0}`);
+        // log.debug(`[${PREFIX}] messageCounter[message.channel.id]: ${messageCounter[message.channel.id]}`);
+        // log.debug(`[${PREFIX}] bigFrequency: ${bigFrequency}`);
+        // log.debug(`[${PREFIX}] ${messageCounter[message.channel.id] % bigFrequency === 0}`);
+        // log.debug(`[${PREFIX}] frequency: ${frequency}`);
+        // log.debug(`[${PREFIX}] ${messageCounter[message.channel.id] % frequency === 0}`);
         if (messageCounter[message.channel.id] % bigFrequency === 0) {
           const bigAnnouncementDict = {
             0: {
@@ -306,9 +306,9 @@ export async function announcements(message:Message) {
                   .increment(pointType, 1)
                   .returning(pointType);
                 if (value[0]) {
-                  logger.debug(`[${PREFIX}] ${user.tag} ${pointType} incremented to ${value[0][pointType]}`);
+                  log.debug(`[${PREFIX}] ${user.tag} ${pointType} incremented to ${value[0][pointType]}`);
                 } else {
-                  logger.debug(`[${PREFIX}] ${user.tag} ${pointType} added as 1`);
+                  log.debug(`[${PREFIX}] ${user.tag} ${pointType} added as 1`);
                 }
               });
 
@@ -319,7 +319,7 @@ export async function announcements(message:Message) {
                   .where('discord_id', user.id)
                   .increment(pointType, -1)
                   .returning(pointType);
-                logger.debug(`[${PREFIX}] ${user.tag} ${pointType} decremented to ${value[0][pointType]}`);
+                log.debug(`[${PREFIX}] ${user.tag} ${pointType} decremented to ${value[0][pointType]}`);
               });
             });
         } else if (messageCounter[message.channel.id] % frequency === 0) {
@@ -329,12 +329,12 @@ export async function announcements(message:Message) {
 
           const randomGenAnnouncement = genAnnouncements[randomGenNumber];
 
-          // logger.debug(`[${PREFIX}] randomGenAnnouncement: ${randomGenAnnouncement}`);
+          // log.debug(`[${PREFIX}] randomGenAnnouncement: ${randomGenAnnouncement}`);
           embed.setDescription(randomGenAnnouncement);
           await (message.channel as TextChannel).send({embeds: [embed]});
         }
       }
     }
   }
-  // logger.debug(`[${PREFIX}] finished!`);
+  // log.debug(`[${PREFIX}] finished!`);
 };

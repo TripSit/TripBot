@@ -4,14 +4,14 @@ import {
 } from '../@types/eventDef';
 import {db} from '../../global/utils/knex';
 import {DiscordGuilds} from '../../global/@types/pgdb';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 const PREFIX = require('path').parse(__filename).name;
 
 export const guildUpdate: guildEvent = {
   name: 'guildUpdate',
 
   async execute(guild: Guild) {
-    // logger.debug(`[${PREFIX}] starting!`);
+    // log.debug(`[${PREFIX}] starting!`);
 
     const data = await db
       .select(db.ref('is_banned').as('is_banned'))
@@ -20,7 +20,7 @@ export const guildUpdate: guildEvent = {
 
     if (data[0]) {
       if (data[0].is_banned) {
-        logger.info(`[${PREFIX}] I'm banned from ${guild.name}, leaving!`);
+        log.info(`[${PREFIX}] I'm banned from ${guild.name}, leaving!`);
         guild.leave();
         return;
       }
@@ -41,6 +41,6 @@ export const guildUpdate: guildEvent = {
         .merge();
     }
 
-    // logger.debug(`[${PREFIX}] finished!`);
+    // log.debug(`[${PREFIX}] finished!`);
   },
 };

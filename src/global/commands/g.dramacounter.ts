@@ -1,6 +1,6 @@
 import {db} from '../utils/knex';
 import {DiscordGuilds} from '../@types/pgdb';
-import logger from '../../global/utils/logger';
+import log from '../utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -18,9 +18,9 @@ export async function dramacounter(
   dramaDate: Date,
   dramaReason: string,
 ):Promise<any> {
-  logger.debug(`[${PREFIX}] starting!`);
+  log.debug(`[${PREFIX}] starting!`);
 
-  // logger.debug(`[${PREFIX}] interaction.guild: ${JSON.stringify(interaction.guild, null, 2)}`);
+  // log.debug(`[${PREFIX}] interaction.guild: ${JSON.stringify(interaction.guild, null, 2)}`);
 
   if (command === 'get') {
     const data = await db

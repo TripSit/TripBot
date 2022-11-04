@@ -9,7 +9,7 @@ import {
   User,
   // GuildMember,
 } from 'discord.js';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../utils/embedTemplate';
 import {applicationApprove} from '../utils/application';
@@ -35,7 +35,7 @@ const PREFIX = path.parse(__filename).name;
  * @return {Promise<void>}
  */
 export async function buttonClick(interaction:ButtonInteraction, client:Client) {
-  logger.debug(stripIndents`[${PREFIX}] started |
+  log.debug(stripIndents`[${PREFIX}] started |
 user: ${interaction.user.tag} (${interaction.user.id})
 guild: ${interaction.guild ? `${interaction.guild.name} (${interaction.guild.id})` : 'DM'}
 customId: ${interaction.customId}
@@ -44,7 +44,7 @@ customId: ${interaction.customId}
   const command = client.commands.get(interaction.customId);
 
   if (command) {
-    logger.debug(`[${PREFIX}] command: ${command}`);
+    log.debug(`[${PREFIX}] command: ${command}`);
   }
 
   if (buttonID.startsWith('tripsitmeClick')) {
@@ -121,10 +121,10 @@ customId: ${interaction.customId}
       const memberRole = interaction.guild.roles.cache.find((role:Role) => role.id === env.ROLE_MEMBER);
       let colorValue = 1;
 
-      logger.debug(`[${PREFIX}] member: ${member.roles.cache}`);
+      log.debug(`[${PREFIX}] member: ${member.roles.cache}`);
 
 
-      logger.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
+      log.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
       const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
       channelTripbotlogs.send({
         content: `Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`});
@@ -141,14 +141,14 @@ customId: ${interaction.customId}
         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        // logger.debug(`[${PREFIX}] diff: ${diff}`);
-        // logger.debug(`[${PREFIX}] years: ${years}`);
-        // logger.debug(`[${PREFIX}] months: ${months}`);
-        // logger.debug(`[${PREFIX}] weeks: ${weeks}`);
-        // logger.debug(`[${PREFIX}] days: ${days}`);
-        // logger.debug(`[${PREFIX}] hours: ${hours}`);
-        // logger.debug(`[${PREFIX}] minutes: ${minutes}`);
-        // logger.debug(`[${PREFIX}] seconds: ${seconds}`);
+        // log.debug(`[${PREFIX}] diff: ${diff}`);
+        // log.debug(`[${PREFIX}] years: ${years}`);
+        // log.debug(`[${PREFIX}] months: ${months}`);
+        // log.debug(`[${PREFIX}] weeks: ${weeks}`);
+        // log.debug(`[${PREFIX}] days: ${days}`);
+        // log.debug(`[${PREFIX}] hours: ${hours}`);
+        // log.debug(`[${PREFIX}] minutes: ${minutes}`);
+        // log.debug(`[${PREFIX}] seconds: ${seconds}`);
         if (years > 0) {
           colorValue = Colors.White;
         } else if (years === 0 && months > 0) {
@@ -164,7 +164,7 @@ customId: ${interaction.customId}
         } else if (minutes === 0 && seconds > 0) {
           colorValue = Colors.Red;
         }
-        // logger.debug(`[${PREFIX}] coloValue: ${colorValue}`);
+        // log.debug(`[${PREFIX}] coloValue: ${colorValue}`);
         const channelStart = member.client.channels.cache.get(env.CHANNEL_START.toString());
         const channelTechhelp = member.client.channels.cache.get(env.CHANNEL_HELPDESK);
         const channelBotspam = interaction.client.channels.cache.get(env.CHANNEL_BOTSPAM);
@@ -194,7 +194,7 @@ customId: ${interaction.customId}
             ephemeral: true,
           });
           if (member.roles.cache.has(memberRole.id as string)) {
-            logger.debug(`[${PREFIX}] Member already has role!`);
+            log.debug(`[${PREFIX}] Member already has role!`);
             return;
           }
           channelGeneral.send({embeds: [embed]});
@@ -224,7 +224,7 @@ customId: ${interaction.customId}
   }
   if (buttonID === 'refusalbtn') {
     const guild = interaction.client.guilds.resolve(env.DISCORD_GUILD_ID.toString());
-    logger.debug(guild);
+    log.debug(guild);
     if (guild) {
       guild.members.ban(interaction.user, {deleteMessageDays: 7, reason: 'Refused warning'});
     }
@@ -239,7 +239,7 @@ customId: ${interaction.customId}
     // Get the owner of the client
     await interaction.client.application.fetch();
     const botOwner = interaction.client.application.owner as User;
-    logger.debug(`[${PREFIX}] bot_owner: ${botOwner}`);
+    log.debug(`[${PREFIX}] bot_owner: ${botOwner}`);
     const embed = embedTemplate()
       .setColor(Colors.Green)
       .setDescription(`${interaction.user.username} has acknowledged their warning.`);
@@ -261,11 +261,11 @@ customId: ${interaction.customId}
   if (!command) return;
 
   try {
-    logger.debug(`[${PREFIX}] Executing command: ${command.name}`);
+    log.debug(`[${PREFIX}] Executing command: ${command.name}`);
     command.execute(interaction);
   } catch (error) {
-    logger.error(error);
+    log.error(error);
     interaction.reply({content: 'There was an error while executing this command!', ephemeral: true});
   }
-  logger.debug(`[${PREFIX}] finished!`);
+  log.debug(`[${PREFIX}] finished!`);
 };

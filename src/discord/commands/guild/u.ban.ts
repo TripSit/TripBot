@@ -12,7 +12,7 @@ import {
 } from 'discord-api-types/v10';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import {UserCommand} from '../../@types/commandDef';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import {moderate} from '../../../global/commands/g.moderate';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -71,7 +71,7 @@ export const uBan: UserCommand = {
           duration = duration ?
             await parseDuration(`${durationInput} days`) :
             0;
-          logger.debug(`[${PREFIX}] duration: ${duration}`);
+          log.debug(`[${PREFIX}] duration: ${duration}`);
         }
 
         const result = await moderate(
@@ -83,10 +83,11 @@ export const uBan: UserCommand = {
           duration,
           i);
 
-        logger.debug(`[${PREFIX}] Result: ${result}`);
+        log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
 
-        logger.debug(`[${PREFIX}] finished!`);
+        log.debug(`[${PREFIX}] finished!`);
       });
+    return true;
   },
 };

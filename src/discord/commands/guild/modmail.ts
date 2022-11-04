@@ -38,7 +38,7 @@ import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import env from '../../../global/utils/env.config';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -78,14 +78,14 @@ export const modmail: SlashCommand = {
  * @param {Message} message The message sent to the bot
  */
 export async function modmailInitialResponse(message:Message) {
-  // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
+  // log.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
 
   const embed = embedTemplate()
     .setColor(Colors.Blue);
 
   const author = message.author;
   const guild = await message.client.guilds.fetch(env.DISCORD_GUILD_ID);
-  logger.debug(`[${PREFIX}] Message sent in DM by ${message.author.username}!`);
+  log.debug(`[${PREFIX}] Message sent in DM by ${message.author.username}!`);
   const description = stripIndents`Hey there ${author}! I'm a helper bot for ${guild} =)
 
   💚 Trip Sit Me! - This starts a thread with Team TripSit! You can also join our Discord server and ask for help there!
@@ -129,7 +129,7 @@ export async function modmailInitialResponse(message:Message) {
 export async function modmailCreate(
   interaction:ButtonInteraction,
   issueType:'APPEAL' | 'TRIPSIT' | 'TECH' | 'FEEDBACK') {
-  // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
+  // log.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
 
   // const issueTypeDict = {
   //   appeal: TicketType.Appeal,
@@ -144,7 +144,7 @@ export async function modmailCreate(
   // Get the member object, if it exists
   // This is used later on to check if the user is part of the guild or not
   const member = interaction.member as GuildMember;
-  logger.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
+  log.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
 
   // Create a dict of variables to be used based on the type of request
   const modmailVars = {
@@ -220,7 +220,7 @@ export async function modmailCreate(
     try {
       issueThread = await channel.threads.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
-      logger.debug(`[${PREFIX}] The thread has likely been deleted!`);
+      log.debug(`[${PREFIX}] The thread has likely been deleted!`);
       await db
         .insert({
           id: ticketData.id,
@@ -230,7 +230,7 @@ export async function modmailCreate(
         .onConflict('id')
         .merge();
     }
-    // logger.debug(`[${PREFIX}] thread_id: ${JSON.stringify(thread_id, null, 2)}!`);
+    // log.debug(`[${PREFIX}] thread_id: ${JSON.stringify(thread_id, null, 2)}!`);
     if (issueThread.id) {
       const embed = embedTemplate();
       if (member instanceof GuildMember) {
@@ -287,11 +287,11 @@ export async function modmailCreate(
       if (i.customId.split('~')[2] !== interaction.id) return;
       // Get whatever they sent in the modal
       const modalInputA = i.fields.getTextInputValue(`inputA`);
-      logger.debug(`[${PREFIX}] modalInputA: ${modalInputA}!`);
+      log.debug(`[${PREFIX}] modalInputA: ${modalInputA}!`);
       let modalInputB = '';
       try {
         modalInputB = i.fields.getTextInputValue(`inputB`);
-        logger.debug(`[${PREFIX}] modalInputB: ${modalInputB}!`);
+        log.debug(`[${PREFIX}] modalInputB: ${modalInputB}!`);
       } catch (e) {}
 
       // Create the thread
@@ -302,15 +302,15 @@ export async function modmailCreate(
         type: threadtype,
         reason: `${actor.username} submitted a(n) ${issueType} ticket!`,
       });
-      logger.debug(`[${PREFIX}] Created thread ${ticketThread.id}`);
+      log.debug(`[${PREFIX}] Created thread ${ticketThread.id}`);
 
       // Get the tripsit guild
       const tripsitGuild = i.client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
       // Get the helper and TS roles
       const roleHelper = await tripsitGuild.roles.fetch(env.ROLE_TRIPSITTER) as Role;
-      logger.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
+      log.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
       const roleTripsitter = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
-      logger.debug(`[${PREFIX}] roleTripsitter: ${roleTripsitter}`);
+      log.debug(`[${PREFIX}] roleTripsitter: ${roleTripsitter}`);
 
       // Respond to the user
       const embed = embedTemplate();
@@ -376,7 +376,7 @@ export async function modmailCreate(
           ;
         }
 
-        logger.debug(`[${PREFIX}] firstResponse: ${firstResponse}`);
+        log.debug(`[${PREFIX}] firstResponse: ${firstResponse}`);
         const embedDM = embedTemplate();
         embedDM.setDescription(firstResponse);
 
@@ -458,7 +458,7 @@ export async function modmailCreate(
         components: [modmailButtons],
         flags: ['SuppressEmbeds'],
       });
-      logger.debug(`[${PREFIX}] Sent intro message to thread ${ticketThread.id}`);
+      log.debug(`[${PREFIX}] Sent intro message to thread ${ticketThread.id}`);
 
       // Determine when the thread should be archived
       const threadArchiveTime = new Date();
@@ -466,7 +466,7 @@ export async function modmailCreate(
         threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 :
         threadArchiveTime.getTime() + 1000 * 60 * 10;
       threadArchiveTime.setTime(archiveTime);
-      logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
+      log.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
 
       // Set ticket information
       const newTicketData = {
@@ -544,7 +544,7 @@ export async function modmailDMInteraction(message:Message) {
     .andWhereNot('status', 'RESOLVED')
     .first();
 
-  // logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+  // log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
   if (ticketData) {
     if (ticketData.status === 'BLOCKED') {
@@ -565,7 +565,7 @@ export async function modmailDMInteraction(message:Message) {
     } catch (error) {
       // This just means the thread is deleted
     }
-    // logger.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
+    // log.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
     if (thread.id) {
       const embed = embedTemplate();
       embed.setDescription(message.content);
@@ -584,8 +584,8 @@ export async function modmailDMInteraction(message:Message) {
       threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 :
       threadArchiveTime.getTime() + 1000 * 60 * 10;
     threadArchiveTime.setTime(archiveTime);
-    logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
-    logger.debug(`[${PREFIX}] User not member of guild`);
+    log.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
+    log.debug(`[${PREFIX}] User not member of guild`);
 
     // Update the ticket in the DB
     await db
@@ -610,18 +610,18 @@ export async function modmailThreadInteraction(message:Message) {
   if (message.member) {
     const threadMessage = message.channel.type === ChannelType.PublicThread ||
     message.channel.type === ChannelType.PrivateThread;
-    // logger.debug(`[${PREFIX}] threadMessage: ${threadMessage}!`);
+    // log.debug(`[${PREFIX}] threadMessage: ${threadMessage}!`);
     if (threadMessage) {
-      // logger.debug(`[${PREFIX}] message.channel.parentId: ${message.channel.parentId}!`);
+      // log.debug(`[${PREFIX}] message.channel.parentId: ${message.channel.parentId}!`);
       if (
         message.channel.parentId === env.CHANNEL_HELPDESK ||
         message.channel.parentId === env.CHANNEL_TALKTOTS ||
         message.channel.parentId === env.CHANNEL_TRIPSIT) {
-        // logger.debug(`[${PREFIX}] message sent in a thread in a helpdesk channel!`);
+        // log.debug(`[${PREFIX}] message sent in a thread in a helpdesk channel!`);
         // Get the ticket info
         const ticketData = await getOpenTicket(null, message.channel.id);
         if (ticketData) {
-          logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+          log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
           if (ticketData) {
             if (ticketData.status === 'BLOCKED') {
@@ -636,13 +636,13 @@ export async function modmailThreadInteraction(message:Message) {
 
           const userData = await getUser(null, ticketData.user_id) as Users;
           if (!userData.discord_id) {
-            logger.error(`[${PREFIX}] No discord_id found for user ${ticketData.user_id}!`);
+            log.error(`[${PREFIX}] No discord_id found for user ${ticketData.user_id}!`);
             return;
           };
 
           // Get the user from the ticketData
           const user = await message.client.users.fetch(userData.discord_id);
-          logger.debug(`[${PREFIX}] user: ${JSON.stringify(user, null, 2)}!`);
+          log.debug(`[${PREFIX}] user: ${JSON.stringify(user, null, 2)}!`);
 
           // Send the message to the user
           const embed = embedTemplate();
@@ -653,7 +653,7 @@ export async function modmailThreadInteraction(message:Message) {
           });
           embed.setFooter(null);
           user.send({embeds: [embed]});
-          logger.debug(`[${PREFIX}] message sent to user!`);
+          log.debug(`[${PREFIX}] message sent to user!`);
           // user.send(`<${message.member.nickname}> ${message.content}`);
 
           // Reset the archived_at time
@@ -663,7 +663,7 @@ export async function modmailThreadInteraction(message:Message) {
             threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 :
             threadArchiveTime.getTime() + 1000 * 60 * 10;
           threadArchiveTime.setTime(archiveTime);
-          logger.debug(`[${PREFIX}] threadArchiveTime reset: ${threadArchiveTime}`);
+          log.debug(`[${PREFIX}] threadArchiveTime reset: ${threadArchiveTime}`);
 
           // Update the ticket in the DB
           await db
@@ -673,7 +673,7 @@ export async function modmailThreadInteraction(message:Message) {
             })
             .from<UserTickets>('user_tickets')
             .where('id', ticketData.id);
-          logger.debug(`[${PREFIX}] ticket updated in DB!`);
+          log.debug(`[${PREFIX}] ticket updated in DB!`);
           return;
         }
       }
@@ -694,7 +694,7 @@ export async function modmailActions(
   } else if (interaction.isCommand()) {
     command = interaction.options.getSubcommand();
   }
-  logger.debug(stripIndents`[${PREFIX}] started | \
+  log.debug(stripIndents`[${PREFIX}] started | \
 user: ${interaction.user.tag} (${interaction.user.id}) \
 guild: ${interaction.guild?.name} (${interaction.guild?.id}) \
 command: ${command} \
@@ -775,19 +775,19 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
     }
   }
 
-  // logger.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+  // log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
   const ticketChannel = await interaction.client.channels.fetch(ticketData.thread_id) as ThreadChannel;
 
   if (!ticketChannel) {
-    logger.debug(`[${PREFIX}] ticketChannel not found!`);
+    log.debug(`[${PREFIX}] ticketChannel not found!`);
     interaction.reply({content: 'This user\'s ticket thread does not exist!', ephemeral: true});
     return;
   }
 
   const userData = await getUser(null, ticketData.user_id) as Users;
   if (!userData.discord_id) {
-    logger.error(`[${PREFIX}] No discord_id found for user ${ticketData.user_id}!`);
+    log.error(`[${PREFIX}] No discord_id found for user ${ticketData.user_id}!`);
     return;
   };
 
@@ -797,7 +797,7 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
   let noun = '';
   let updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>();
   if (command === 'close') {
-    logger.debug(`[${PREFIX}] Closing ticket!`);
+    log.debug(`[${PREFIX}] Closing ticket!`);
     ticketData.status = 'CLOSED' as TicketStatus;
     noun = 'Ticket';
     verb = 'CLOSED';
@@ -828,7 +828,7 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
     //           > Thank you for your feedback, here's a cookie! 🍪
     //           ${env.EMOJI_INVISIBLE}
     //           `);
-    //       logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
+    //       log.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
     //       const finalEmbed = embedTemplate()
     //         .setColor(Colors.Blue)
     //         .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
@@ -836,7 +836,7 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
     //         const channelTripsitMeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
     //         await channelTripsitMeta.send({embeds: [finalEmbed]});
     //       } catch (err) {
-    //         logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
+    //         log.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
     //       }
     //       msg.delete();
     //       collector.stop();
@@ -865,7 +865,7 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
           .setStyle(ButtonStyle.Danger),
       );
   } else if (command === 'reopen') {
-    logger.debug(`[${PREFIX}] Reopening ticket!`);
+    log.debug(`[${PREFIX}] Reopening ticket!`);
     ticketData.status = 'OPEN' as TicketStatus;
     noun = 'Ticket';
     verb = 'REOPENED';
@@ -892,7 +892,7 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
           .setStyle(ButtonStyle.Danger),
       );
   } else if (command === 'block') {
-    logger.debug(`[${PREFIX}] Blocking user!`);
+    log.debug(`[${PREFIX}] Blocking user!`);
     ticketData.status = 'BLOCKED' as TicketStatus;
     noun = 'User';
     verb = 'BLOCKED';
@@ -1018,7 +1018,7 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
           .setStyle(ButtonStyle.Danger),
       );
   } else if (command === 'resolve') {
-    logger.debug(`[${PREFIX}] Resolving ticket!`);
+    log.debug(`[${PREFIX}] Resolving ticket!`);
     ticketData.status = 'RESOLVED' as TicketStatus;
     noun = 'Ticket';
     verb = 'RESOLVED';
@@ -1052,7 +1052,7 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
     //           > Thank you for your feedback, here's a cookie! 🍪
     //           ${env.EMOJI_INVISIBLE}
     //           `);
-    //       logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
+    //       log.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
     //       const finalEmbed = embedTemplate()
     //         .setColor(Colors.Blue)
     //         .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
@@ -1060,7 +1060,7 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
     //         const channelTripsitMeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
     //         await channelTripsitMeta.send({embeds: [finalEmbed]});
     //       } catch (err) {
-    //         logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
+    //         log.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
     //       }
     //       msg.delete();
     //       collector.stop();
@@ -1092,7 +1092,7 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
 
   if (interaction.channel) {
     if (interaction.channel.type !== ChannelType.DM) {
-      logger.debug(`[${PREFIX}] Updating channel internally`);
+      log.debug(`[${PREFIX}] Updating channel internally`);
       await interaction.reply(`${noun} has been ${verb} by ${actor}! (The user cannot see this)`);
     }
   }
@@ -1134,5 +1134,5 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
     }
   }
 
-  logger.debug(`[${PREFIX}] finished!`);
+  log.debug(`[${PREFIX}] finished!`);
 };

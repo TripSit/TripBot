@@ -1,4 +1,4 @@
-import logger from '../utils/logger';
+import log from '../utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -16,11 +16,11 @@ type DxmDataType = {
  * @return {any}
  */
 export async function calcDxm(givenWeight:number, weightUnits:string, taking:string):Promise<any> {
-  // logger.debug(`[${PREFIX}] started!`);
+  // log.debug(`[${PREFIX}] started!`);
   let calcWeight = weightUnits === 'lbs' ? givenWeight * 0.453592 : givenWeight;
-  // logger.debug(`[${PREFIX}] calc_weight: ${calcWeight}`);
+  // log.debug(`[${PREFIX}] calc_weight: ${calcWeight}`);
 
-  logger.debug(`[${PREFIX}] givenWeight: ${givenWeight} | weightUnits: ${weightUnits} | taking:  ${taking}`);
+  log.debug(`[${PREFIX}] givenWeight: ${givenWeight} | weightUnits: ${weightUnits} | taking:  ${taking}`);
 
   let roaValue = 0;
   let units = '';
@@ -47,11 +47,11 @@ export async function calcDxm(givenWeight:number, weightUnits:string, taking:str
     units = '(30 mg tablets)';
   }
 
-  // logger.debug(`[${PREFIX}] roaValue:  ${roaValue}`);
-  // logger.debug(`[${PREFIX}] units: ${units}`);
+  // log.debug(`[${PREFIX}] roaValue:  ${roaValue}`);
+  // log.debug(`[${PREFIX}] units: ${units}`);
 
   calcWeight /= roaValue;
-  // logger.debug(`[${PREFIX}] calcWeight: ${calcWeight}`);
+  // log.debug(`[${PREFIX}] calcWeight: ${calcWeight}`);
 
 
   const dxmData:DxmDataType = {
@@ -77,6 +77,6 @@ export async function calcDxm(givenWeight:number, weightUnits:string, taking:str
     };
   });
 
-  logger.debug(`[${PREFIX}] returnData: ${JSON.stringify(returnData)}`);
+  log.debug(`[${PREFIX}] returnData: ${JSON.stringify(returnData)}`);
   return [returnData, units];
 };

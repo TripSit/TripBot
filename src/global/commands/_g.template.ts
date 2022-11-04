@@ -2,7 +2,7 @@
 
 import {stripIndents} from 'common-tags';
 import env from '../utils/env.config';
-import logger from '../utils/logger';
+import log from '../utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -11,6 +11,6 @@ const PREFIX = path.parse(__filename).name;
  * @return {any}
  */
 export async function globalTemplate():Promise<any> {
-  logger.debug(`${PREFIX} started!`);
-  logger.debug(`${PREFIX} finished!`);
+  log.debug(`${PREFIX} started!`);
+  log.debug(`${PREFIX} finished!`);
 };

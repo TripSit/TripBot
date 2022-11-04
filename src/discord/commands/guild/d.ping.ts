@@ -30,7 +30,7 @@ import {
 } from 'discord-api-types/v10';
 import env from '../../../global/utils/env.config';
 import {SlashCommand} from '../../@types/commandDef';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import {paginationEmbed} from '../../utils/pagination';
 
 import * as path from 'path';
@@ -41,7 +41,7 @@ export const ping: SlashCommand = {
     .setName('ping')
     .setDescription('Health check'),
   async execute(interaction) {
-    logger.debug(`[${PREFIX}] started!`);
+    log.debug(`[${PREFIX}] started!`);
 
     if (!interaction.guild) {
       interaction.reply({content: 'This command can only be used in a server', ephemeral: true});
@@ -67,8 +67,8 @@ export const ping: SlashCommand = {
       interaction.awaitModalSubmit({filter, time: 0, dispose: true})
         .then(async (i) => {
           if (i.customId.split('~')[1] !== interaction.id) return;
-          logger.debug(`[${PREFIX}] i.customId.split('~')[4]: ${i.customId.split('~')[4]}`);
-          logger.debug(`[${PREFIX}] interaction.id: ${interaction.id}`);
+          log.debug(`[${PREFIX}] i.customId.split('~')[4]: ${i.customId.split('~')[4]}`);
+          log.debug(`[${PREFIX}] interaction.id: ${interaction.id}`);
           const test = i.fields.getTextInputValue('test');
           interaction.reply({content: test, ephemeral: true});
         });
@@ -79,7 +79,7 @@ export const ping: SlashCommand = {
 
       const user = interaction.client.users.cache.get(env.DISCORD_CLIENT_ID) as User;
 
-      logger.debug(`[${PREFIX}] user: ${user}`);
+      log.debug(`[${PREFIX}] user: ${user}`);
 
       user.send('Hello!');
 
@@ -127,7 +127,7 @@ export const ping: SlashCommand = {
       // There you go, now you have paged embeds
     }
 
-    logger.debug(`[${PREFIX}] finished!`);
+    log.debug(`[${PREFIX}] finished!`);
     return false;
   },
 };

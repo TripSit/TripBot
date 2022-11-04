@@ -8,7 +8,7 @@ import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
 import {h2flow} from '../../../global/commands/g.h2flow';
 
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -82,7 +82,7 @@ export const dH2flow: SlashCommand = {
 
     interaction.reply({embeds: [embed], ephemeral: false});
 
-    logger.debug(`[${PREFIX}] finished!`);
+    log.debug(`[${PREFIX}] finished!`);
     return false;
   },
 };

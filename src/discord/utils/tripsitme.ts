@@ -43,7 +43,7 @@ import {
 } from '../../global/@types/pgdb.d';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import {embedTemplate} from './embedTemplate';
 
 import * as path from 'path';
@@ -56,14 +56,14 @@ const PREFIX = path.parse(__filename).name;
 export async function tripsitmeButton(
   interaction:ButtonInteraction,
 ) {
-  logger.debug(`[${PREFIX}] button starting!`);
+  log.debug(`[${PREFIX}] button starting!`);
   if (!interaction.guild) {
-    logger.debug(`[${PREFIX}] no guild!`);
+    log.debug(`[${PREFIX}] no guild!`);
     interaction.reply('This must be performed in a guild!');
     return;
   }
   if (!interaction.member) {
-    logger.debug(`[${PREFIX}] no member!`);
+    log.debug(`[${PREFIX}] no member!`);
     interaction.reply('This must be performed by a member of a guild!');
     return;
   }
@@ -94,7 +94,7 @@ export async function tripsitmeButton(
       }
     });
     if (targetIsTeamMember) {
-      logger.debug(`[${PREFIX}] Target is a team member!`);
+      log.debug(`[${PREFIX}] Target is a team member!`);
       const teamMessage = stripIndents`You are a member of the team and cannot be publicly helped!`;
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
@@ -111,13 +111,13 @@ export async function tripsitmeButton(
   const ticketData = await getOpenTicket(userData.id, null);
 
   if (ticketData !== undefined) {
-    logger.debug(`[${PREFIX}] Target has open ticket: ${JSON.stringify(ticketData, null, 2)}`);
+    log.debug(`[${PREFIX}] Target has open ticket: ${JSON.stringify(ticketData, null, 2)}`);
 
     let threadHelpUser = {} as ThreadChannel;
     try {
       threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
-      logger.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted:\n ${err}`);
+      log.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted:\n ${err}`);
 
       // Update the ticket status to closed
       ticketData.status = 'CLOSED' as TicketStatus;
@@ -147,7 +147,7 @@ export async function tripsitmeButton(
   
         Check your channel list or click '${threadHelpUser.toString()} to get help!`);
       interaction.reply({embeds: [embed], ephemeral: true});
-      logger.debug(`[${PREFIX}] Rejected need for help`);
+      log.debug(`[${PREFIX}] Rejected need for help`);
 
       // Check if the created_by is in the last 5 minutes
       const createdDate = new Date(ticketData.reopened_at ?? ticketData.created_at);
@@ -158,7 +158,7 @@ export async function tripsitmeButton(
       // Send the update message to the thread
       let helpMessage = stripIndents`Hey ${target}, thanks for asking for help, we can continue talking here! What's up?`;
       if (minutes > 5) {
-        logger.debug(`[${PREFIX}] Target has open ticket, and it was created over 5 minutes ago!`);
+        log.debug(`[${PREFIX}] Target has open ticket, and it was created over 5 minutes ago!`);
         helpMessage += `\n\n${roleHelper} and ${roleTripsitter} will be with you as soon as they're available!`;
       }
       threadHelpUser.setName(`💛│${target.displayName}'s channel!`);
@@ -168,7 +168,7 @@ export async function tripsitmeButton(
           'parse': showMentions,
         },
       });
-      logger.debug(`[${PREFIX}] Pinged user in help thread`);
+      log.debug(`[${PREFIX}] Pinged user in help thread`);
 
       if (ticketData.meta_thread_id) {
         let metaMessage = '';
@@ -185,7 +185,7 @@ export async function tripsitmeButton(
             'parse': showMentions,
           },
         });
-        logger.debug(`[${PREFIX}] Pinged team in meta thread!`);
+        log.debug(`[${PREFIX}] Pinged team in meta thread!`);
       }
       return;
     }
@@ -254,17 +254,17 @@ export async function tripSitMe(
   }
 
   if (!interaction.guild) {
-    logger.debug(`[${PREFIX}] no guild!`);
+    log.debug(`[${PREFIX}] no guild!`);
     interaction.reply('This must be performed in a guild!');
     return;
   }
   if (!interaction.member) {
-    logger.debug(`[${PREFIX}] no member!`);
+    log.debug(`[${PREFIX}] no member!`);
     interaction.reply('This must be performed by a member of a guild!');
     return;
   }
 
-  logger.debug(`[${PREFIX}] submitted with |
+  log.debug(`[${PREFIX}] submitted with |
     user: ${interaction.user.tag} (${interaction.user.id})
     guild: ${interaction.guild.name} (${interaction.guild.id})
     memberInput: ${memberInput}
@@ -277,14 +277,14 @@ export async function tripSitMe(
   // Determine if this command was started by an Admin (for testing)
   const actorIsAdmin = (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
   const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
-  // logger.debug(`[${PREFIX}] actorIsAdmin: ${actorIsAdmin}`);
-  // logger.debug(`[${PREFIX}] showMentions: ${showMentions}`);
+  // log.debug(`[${PREFIX}] actorIsAdmin: ${actorIsAdmin}`);
+  // log.debug(`[${PREFIX}] showMentions: ${showMentions}`);
 
   // Determine the target.
   // If the user clicked the button, the target is whoever started the interaction.
   // Otherwise, the target is the user mentioned in the /tripsit command.
   const target = (memberInput ?? interaction.member) as GuildMember;
-  // logger.debug(`[${PREFIX}] target: ${target}`);
+  // log.debug(`[${PREFIX}] target: ${target}`);
 
   await needsHelpmode(interaction, target as GuildMember);
 
@@ -299,7 +299,7 @@ export async function tripSitMe(
     type: interaction.guild.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread,
     reason: `${target.displayName} requested help`,
   }) as ThreadChannel;
-  logger.debug(`[${PREFIX}] Created ${threadHelpUser.name} ${threadHelpUser.id}`);
+  log.debug(`[${PREFIX}] Created ${threadHelpUser.name} ${threadHelpUser.id}`);
 
   // Send the triage info to the thread
   const replyMessage = memberInput ?
@@ -320,7 +320,7 @@ export async function tripSitMe(
     .setColor(Colors.DarkBlue)
     .setDescription(replyMessage);
   interaction.reply({embeds: [embed], ephemeral: true});
-  logger.debug(`[${PREFIX}] Sent response to ${target.user.tag}`);
+  log.debug(`[${PREFIX}] Sent response to ${target.user.tag}`);
 
   // Send the intro message to the threadHelpUser
   const firstMessage = memberInput ?
@@ -358,7 +358,7 @@ export async function tripSitMe(
     flags: ['SuppressEmbeds'],
   });
 
-  logger.debug(`[${PREFIX}] Sent intro message to ${threadHelpUser.name} ${threadHelpUser.id}`);
+  log.debug(`[${PREFIX}] Sent intro message to ${threadHelpUser.name} ${threadHelpUser.id}`);
 
   // Send an embed to the tripsitter room
   const embedTripsitter = embedTemplate()
@@ -406,7 +406,7 @@ export async function tripSitMe(
     components: [endSession],
     allowedMentions: {},
   });
-  logger.debug(`[${PREFIX}] Sent message to ${channelTripsitMeta.name} (${channelTripsitMeta.id})`);
+  log.debug(`[${PREFIX}] Sent message to ${channelTripsitMeta.name} (${channelTripsitMeta.id})`);
 
   const threadArchiveTime = new Date();
   // define one week in milliseconds
@@ -417,7 +417,7 @@ export async function tripSitMe(
     threadArchiveTime.getTime() + oneDay :
     threadArchiveTime.getTime() + thirtySec;
   threadArchiveTime.setTime(archiveTime);
-  // logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
+  // log.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
 
   const userData = await getUser(target.id, null);
 
@@ -436,7 +436,7 @@ export async function tripSitMe(
     deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
   } as UserTickets;
 
-  logger.debug(`[${PREFIX}] newTicketData: ${JSON.stringify(newTicketData, null, 2)}`);
+  log.debug(`[${PREFIX}] newTicketData: ${JSON.stringify(newTicketData, null, 2)}`);
 
   // Update thet ticket in the DB
   await db<UserTickets>('user_tickets')
@@ -453,12 +453,12 @@ export async function needsHelpmode(
   target: GuildMember,
 ) {
   if (!interaction.guild) {
-    logger.debug(`[${PREFIX}] no guild!`);
+    log.debug(`[${PREFIX}] no guild!`);
     interaction.reply('This must be performed in a guild!');
     return;
   }
   if (!interaction.member) {
-    logger.debug(`[${PREFIX}] no member!`);
+    log.debug(`[${PREFIX}] no member!`);
     interaction.reply('This must be performed by a member of a guild!');
     return;
   }
@@ -474,11 +474,11 @@ export async function needsHelpmode(
   const targetHasRoleNeedshelp = target.roles.cache.find(
     (role) => role === roleNeedshelp,
   ) !== undefined;
-  // logger.debug(`[${PREFIX}] targetHasRoleNeedshelp: ${targetHasRoleNeedshelp}`);
+  // log.debug(`[${PREFIX}] targetHasRoleNeedshelp: ${targetHasRoleNeedshelp}`);
 
   // Save the user's roles to the DB
   const targetRoleIds = target.roles.cache.map((role) => role.id);
-  // logger.debug(`[${PREFIX}] targetRoleIds: ${targetRoleIds}`);
+  // log.debug(`[${PREFIX}] targetRoleIds: ${targetRoleIds}`);
   await db<Users>('users')
     .insert({
       discord_id: target.id,
@@ -491,14 +491,14 @@ export async function needsHelpmode(
   const myRole = myMember.roles.highest;
   // Remove all roles, except team and vanity, from the target
   target.roles.cache.forEach((role) => {
-    // logger.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
+    // log.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
     if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone') && role.id !== roleNeedshelp.id) {
       if (role.comparePositionTo(myRole) < 0) {
-        logger.debug(`[${PREFIX}] Removing role ${role.name} from ${target.displayName}`);
+        log.debug(`[${PREFIX}] Removing role ${role.name} from ${target.displayName}`);
         try {
           target.roles.remove(role);
         } catch (err) {
-          logger.debug(`[${PREFIX}] There was an error removing the role ${role.name} from ${target.displayName}\n${err}`);
+          log.debug(`[${PREFIX}] There was an error removing the role ${role.name} from ${target.displayName}\n${err}`);
         }
       }
     }
@@ -506,10 +506,10 @@ export async function needsHelpmode(
 
   // Add the needsHelp role to the target
   try {
-    logger.debug(`[${PREFIX}] Adding role ${roleNeedshelp.name} to ${target.displayName}`);
+    log.debug(`[${PREFIX}] Adding role ${roleNeedshelp.name} to ${target.displayName}`);
     await target.roles.add(roleNeedshelp);
   } catch (err) {
-    logger.error(`[${PREFIX}] Error adding role to target: ${err}`);
+    log.error(`[${PREFIX}] Error adding role to target: ${err}`);
     return interaction.reply(stripIndents`There was an error adding the NeedsHelp role!
       Make sure the bot's role is higher than NeedsHelp in the Role list!`);
   }
@@ -523,11 +523,11 @@ export async function tripsitmeOwned(
   interaction:ButtonInteraction,
 ) {
   if (!interaction.guild) {
-    logger.debug(`[${PREFIX}] no guild!`);
+    log.debug(`[${PREFIX}] no guild!`);
     interaction.reply('This must be performed in a guild!');
     return;
   };
-  logger.debug(`[${PREFIX}] tripsitmeOwned`);
+  log.debug(`[${PREFIX}] tripsitmeOwned`);
   const userId = interaction.customId.split('~')[1];
   const actor = interaction.member as GuildMember;
 
@@ -566,27 +566,27 @@ export async function tripsitmeMeta(
   interaction:ButtonInteraction,
 ) {
   if (!interaction.guild) {
-    logger.debug(`[${PREFIX}] no guild!`);
+    log.debug(`[${PREFIX}] no guild!`);
     interaction.reply('This must be performed in a guild!');
     return;
   };
-  logger.debug(`[${PREFIX}] tripsitmeMeta`);
+  log.debug(`[${PREFIX}] tripsitmeMeta`);
   const userId = interaction.customId.split('~')[1];
   const actor = interaction.member as GuildMember;
   const target = await interaction.guild.members.fetch(userId) as GuildMember;
 
   if (!interaction.guild) {
-    logger.debug(`[${PREFIX}] no guild!`);
+    log.debug(`[${PREFIX}] no guild!`);
     interaction.reply('This must be performed in a guild!');
     return;
   };
   if (!interaction.channel) {
-    logger.debug(`[${PREFIX}] no channel!`);
+    log.debug(`[${PREFIX}] no channel!`);
     interaction.reply('This must be performed in a channel!');
     return;
   };
   if (!interaction.member) {
-    logger.debug(`[${PREFIX}] no member!`);
+    log.debug(`[${PREFIX}] no member!`);
     interaction.reply('This must be performed by a member!');
     return;
   };
@@ -663,14 +663,14 @@ export async function tripsitmeMeta(
 export async function tripsitmeBackup(
   interaction:ButtonInteraction,
 ) {
-  logger.debug(`[${PREFIX}] tripsitmeBackup`);
+  log.debug(`[${PREFIX}] tripsitmeBackup`);
   if (!interaction.guild) {
-    logger.debug(`[${PREFIX}] no guild!`);
+    log.debug(`[${PREFIX}] no guild!`);
     interaction.reply('This must be performed in a guild!');
     return;
   };
   if (!interaction.channel) {
-    logger.debug(`[${PREFIX}] no channel!`);
+    log.debug(`[${PREFIX}] no channel!`);
     interaction.reply('This must be performed in a channel!');
     return;
   };
@@ -723,12 +723,12 @@ export async function tripsitmeFinish(
 ) {
   await interaction.deferReply({ephemeral: true});
   if (!interaction.guild) {
-    logger.debug(`[${PREFIX}] no guild!`);
+    log.debug(`[${PREFIX}] no guild!`);
     interaction.editReply('This must be performed in a guild!');
     return;
   }
   if (!interaction.member) {
-    logger.debug(`[${PREFIX}] no member!`);
+    log.debug(`[${PREFIX}] no member!`);
     interaction.editReply('This must be performed by a member of a guild!');
     return;
   }
@@ -750,7 +750,7 @@ export async function tripsitmeFinish(
   const target = await interaction.guild.members.fetch(targetId);
   const actor = interaction.member as GuildMember;
 
-  logger.debug(stripIndents`[${PREFIX}] finish started:
+  log.debug(stripIndents`[${PREFIX}] finish started:
     meOrThem: ${meOrThem}
     targetId: ${targetId}
     roleNeedshelpId: ${roleNeedshelp.id}
@@ -760,7 +760,7 @@ export async function tripsitmeFinish(
   `);
 
   if (meOrThem === 'me' && targetId !== actor.id) {
-    logger.debug(`[${PREFIX}] not the target!`);
+    log.debug(`[${PREFIX}] not the target!`);
     interaction.editReply({content: 'Only the user receiving help can click this button!'});
     return;
   }
@@ -769,15 +769,15 @@ export async function tripsitmeFinish(
   const ticketData = await getOpenTicket(userData.id, null);
 
 
-  logger.debug(`[${PREFIX}] userData: ${JSON.stringify(userData, null, 2)}`);
+  log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData, null, 2)}`);
 
   if (!ticketData) {
     const rejectMessage = `Hey need help${interaction.member}, ${meOrThem === 'me' ? 'you do' : `${target} does`} not have an open session!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
-    logger.debug(`[${PREFIX}] target ${target} does not need help!`);
+    log.debug(`[${PREFIX}] target ${target} does not need help!`);
     interaction.editReply({embeds: [embed]});
-    logger.debug(`[${PREFIX}] finished!`);
+    log.debug(`[${PREFIX}] finished!`);
     return;
   }
 
@@ -789,11 +789,11 @@ export async function tripsitmeFinish(
     if (roleNeedshelp) {
       if (roleNeedshelp.comparePositionTo(myRole) < 0) {
         try {
-          logger.debug(`[${PREFIX}] Removing ${roleNeedshelp.name} from ${target.displayName}`);
+          log.debug(`[${PREFIX}] Removing ${roleNeedshelp.name} from ${target.displayName}`);
           target.roles.remove(roleNeedshelp);
         } catch (err) {
-          logger.error(`[${PREFIX}] Error removing ${roleNeedshelp.name} from ${target.displayName}`);
-          logger.error(err);
+          log.error(`[${PREFIX}] Error removing ${roleNeedshelp.name} from ${target.displayName}`);
+          log.error(err);
         }
       }
     }
@@ -803,9 +803,9 @@ export async function tripsitmeFinish(
     // readd each role to the target
     if (targetRoles) {
       targetRoles.forEach(async (roleId) => {
-        // logger.debug(`[${PREFIX}] Re-adding roleId: ${roleId}`);
+        // log.debug(`[${PREFIX}] Re-adding roleId: ${roleId}`);
         if (!interaction.guild) {
-          logger.error(`[${PREFIX}] no guild!`);
+          log.error(`[${PREFIX}] no guild!`);
           return;
         };
         const roleObj = await interaction.guild.roles.fetch(roleId) as Role;
@@ -813,12 +813,12 @@ export async function tripsitmeFinish(
           roleObj.name !== '@everyone' &&
           roleObj.id !== roleNeedshelp.id) {
           if (roleObj.comparePositionTo(myRole) < 0) {
-            logger.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.displayName}`);
+            log.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.displayName}`);
             try {
               target.roles.add(roleObj);
             } catch (err) {
-              logger.error(`[${PREFIX}] Error adding role ${roleObj.name} to ${target.displayName}`);
-              logger.error(err);
+              log.error(`[${PREFIX}] Error adding role ${roleObj.name} to ${target.displayName}`);
+              log.error(err);
             }
           }
         }
@@ -826,7 +826,7 @@ export async function tripsitmeFinish(
     }
   }
 
-  // logger.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
+  // log.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
 
   // Get the channel objects for the help thread
   let threadHelpUser = {} as ThreadChannel;
@@ -834,7 +834,7 @@ export async function tripsitmeFinish(
     threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
     threadHelpUser.setName(`💚│${target.displayName}'s channel!`);
   } catch (err) {
-    logger.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted:\n ${err}`);
+    log.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted:\n ${err}`);
   }
 
   const endHelpMessage = stripIndents`Hey ${target}, we're glad you're doing better!
@@ -845,8 +845,8 @@ export async function tripsitmeFinish(
   try {
     threadHelpUser.send(endHelpMessage);
   } catch (err) {
-    logger.error(`[${PREFIX}] Error sending end help message to ${threadHelpUser}`);
-    logger.error(err);
+    log.error(`[${PREFIX}] Error sending end help message to ${threadHelpUser}`);
+    log.error(err);
   }
 
   let message:Message;
@@ -874,21 +874,21 @@ export async function tripsitmeFinish(
           > Thank you for your feedback, here's a cookie! 🍪
           ${env.EMOJI_INVISIBLE}
           `);
-        logger.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${threadHelpUser}`);
+        log.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${threadHelpUser}`);
         const finalEmbed = embedTemplate()
           .setColor(Colors.Blue)
           .setDescription(`Collected ${reaction.emoji.name} from ${threadHelpUser}`);
         try {
           await channelTripsitMeta.send({embeds: [finalEmbed]});
         } catch (err) {
-          logger.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
+          log.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
         }
         msg.delete();
         collector.stop();
       });
     });
 
-  logger.debug(`[${PREFIX}] ${target.user.tag} (${target.user.id}) is no longer being helped!`);
+  log.debug(`[${PREFIX}] ${target.user.tag} (${target.user.id}) is no longer being helped!`);
   await interaction.editReply({content: 'Done!'});
 };
 

@@ -3,7 +3,7 @@
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 const {SlashCommandBuilder} = require('discord.js');
-const logger = require('../../../global/utils/logger');
+const logger = require('../../../global/utils/log');
 const {getUserInfo, setUserInfo} = require('../../../global/services/firebaseAPI');
 const parseDuration = require('../../../global/utils/parseDuration');
 
@@ -98,19 +98,19 @@ module.exports = {
           .setName('ban')),
   async execute(interaction) {
     const actor = interaction.member;
-    logger.debug(`[${PREFIX}] Actor: ${actor}`);
+    log.debug(`[${PREFIX}] Actor: ${actor}`);
     const command = interaction.options.getSubcommand();
-    logger.debug(`[${PREFIX}] Command: ${command}`);
+    log.debug(`[${PREFIX}] Command: ${command}`);
     const target = interaction.options.getString('target');
-    logger.debug(`[${PREFIX}] target: ${target}`);
+    log.debug(`[${PREFIX}] target: ${target}`);
     const toggle = interaction.options.getString('toggle');
-    logger.debug(`[${PREFIX}] toggle: ${toggle}`);
+    log.debug(`[${PREFIX}] toggle: ${toggle}`);
     const reason = interaction.options.getString('reason');
-    logger.debug(`[${PREFIX}] reason: ${reason}`);
+    log.debug(`[${PREFIX}] reason: ${reason}`);
     const channel = interaction.options.getString('channel');
-    logger.debug(`[${PREFIX}] channel: ${channel}`);
+    log.debug(`[${PREFIX}] channel: ${channel}`);
     const duration = interaction.options.getString('duration');
-    logger.debug(`[${PREFIX}] duration: ${duration}`);
+    log.debug(`[${PREFIX}] duration: ${duration}`);
 
     const minutes = duration ? (await parseDuration.execute(duration) / 1000) / 60 : 0;
 
@@ -144,7 +144,7 @@ module.exports = {
         global.ircClient.say('#sandbox', `Sent: ${botPrefix}${command} ${target}`);
       }
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
 
     interaction.reply(`I ${command}ed ${target} ${channel ? `in ${channel}` : ''}${minutes ? ` for ${minutes} minutes` : ''} because '${reason}'`);
@@ -183,6 +183,6 @@ module.exports = {
     //   // Load target data
     //   await setUserInfo(targetResults[1], targetData);
     // }
-    logger.debug(`[${PREFIX}] finished!`);
+    log.debug(`[${PREFIX}] finished!`);
   },
 };

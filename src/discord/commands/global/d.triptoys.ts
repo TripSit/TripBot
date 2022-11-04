@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -44,7 +44,7 @@ export const dtriptoys: SlashCommand = {
   async execute(interaction) {
     const toyName = interaction.options.getString('toy') || '25';
     const toyId = parseInt(toyName, 10);
-    logger.debug(`[${PREFIX}] toy_name: ${toyName}`);
+    log.debug(`[${PREFIX}] toy_name: ${toyName}`);
 
     const toys = {
       1: {name: 'Weavesilk', value: '[Generate art](http://weavesilk.com/)', inline: true},
@@ -83,7 +83,7 @@ export const dtriptoys: SlashCommand = {
       const randomIndex = Math.floor(Math.random() * Object.keys(toys).length);
       // Get a random toy
       const randomToy = toys[randomIndex as keyof typeof toys];
-      logger.debug(`[${PREFIX}] random_toy: ${JSON.stringify(randomToy, null, 2)}`);
+      log.debug(`[${PREFIX}] random_toy: ${JSON.stringify(randomToy, null, 2)}`);
       embed.addFields(randomToy);
     }
 

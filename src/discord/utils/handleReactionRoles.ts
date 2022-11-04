@@ -8,7 +8,7 @@ import {db} from '../../global/utils/knex';
 //   Users,
 // } from '../../global/@types/pgdb.d';
 import env from '../../global/utils/env.config';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
 import * as path from 'path';
 import {stripIndents} from 'common-tags';
 const PREFIX = path.parse(__filename).name;
@@ -27,14 +27,14 @@ export async function handleReactionRoles(
   user:User,
   add:boolean,
 ): Promise<void> {
-  logger.debug(stripIndents`[${PREFIX}] started with params: \
+  log.debug(stripIndents`[${PREFIX}] started with params: \
 reaction: ${reaction.emoji.name} (${reaction.emoji.id}) {${reaction.emoji.identifier}} | \
 user: ${user.username} | \
 add: ${add}\
 `);
   const messageId = reaction.message.id;
   const reactionId = reaction.emoji.id ?? reaction.emoji.name;
-  // logger.debug(`[${PREFIX}] messageId: ${messageId} | reactionId: ${reactionId}`);
+  // log.debug(`[${PREFIX}] messageId: ${messageId} | reactionId: ${reactionId}`);
   const reactionRole = await db
     .select(db.ref('role_id').as('role_id'))
     .from('reaction_roles')
@@ -43,21 +43,21 @@ add: ${add}\
     .first();
 
   if (reactionRole === undefined) {
-    logger.debug(`[${PREFIX}] No reaction role found!`);
+    log.debug(`[${PREFIX}] No reaction role found!`);
     return;
   }
 
   if (reaction.message.guild) {
     const role = await reaction.message.guild.roles.fetch(reactionRole.role_id);
     if (role === null) {
-      logger.debug(`[${PREFIX}] No role found!`);
+      log.debug(`[${PREFIX}] No role found!`);
       return;
     } else {
-      // logger.debug(`[${PREFIX}] role: ${role.name}`);
+      // log.debug(`[${PREFIX}] role: ${role.name}`);
       if (add) {
         // Add the role
         (await reaction.message.guild.members.fetch(user.id)).roles.add(role);
-        logger.debug(`[${PREFIX}] Added role ${role.name} to ${user.username}`);
+        log.debug(`[${PREFIX}] Added role ${role.name} to ${user.username}`);
         reaction.message.reactions.cache.each((r) => {
           if (r.emoji.name !== reaction.emoji.name) {
             r.users.remove(user);
@@ -75,8 +75,8 @@ add: ${add}\
           `${env.EMOJI_TALKATIVE}`,
           `${env.EMOJI_WORKING}`,
         ];
-        // logger.debug(`[${PREFIX}] mindsetEmojis: ${mindsetEmojis}`);
-        // logger.debug(`[${PREFIX}] identifier: <:${reaction.emoji.identifier}>`);
+        // log.debug(`[${PREFIX}] mindsetEmojis: ${mindsetEmojis}`);
+        // log.debug(`[${PREFIX}] identifier: <:${reaction.emoji.identifier}>`);
         if (mindsetEmojis.includes(`<:${reaction.emoji.identifier}>`)) {
           // Update the database
           await db
@@ -88,16 +88,16 @@ add: ${add}\
             .into('users')
             .onConflict('discord_id')
             .merge();
-          // logger.debug(`[${PREFIX}] Updated mindest DB ${user.username}`);
+          // log.debug(`[${PREFIX}] Updated mindest DB ${user.username}`);
         };
       } else {
         // Remove the role
         (await reaction.message.guild.members.fetch(user.id)).roles.remove(role);
-        logger.debug(`[${PREFIX}] Removed role ${role.name} from ${user.username}`);
+        log.debug(`[${PREFIX}] Removed role ${role.name} from ${user.username}`);
       }
     }
   } else {
-    logger.debug(`[${PREFIX}] No guild found!`);
+    log.debug(`[${PREFIX}] No guild found!`);
     return;
   }
 };

@@ -1,6 +1,6 @@
 import {Octokit} from 'octokit';
 import env from '../utils/env.config';
-// import logger from '../utils/logger';
+// import log from '../utils/log';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
 

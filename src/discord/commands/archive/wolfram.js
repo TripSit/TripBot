@@ -3,7 +3,7 @@
 const path = require('path');
 const { SlashCommandBuilder } = require('discord.js');
 const axios = require('axios');
-const logger = require('../../../global/utils/logger');
+const logger = require('../../../global/utils/log');
 
 const PREFIX = path.parse(__filename).name;
 
@@ -23,7 +23,7 @@ module.exports = {
 
   async execute(interaction) {
     const question = interaction.options.getString('question');
-    logger.debug(`[${PREFIX}] question: ${question}`);
+    log.debug(`[${PREFIX}] question: ${question}`);
 
     const requestPayload = new URLSearchParams();
     requestPayload.append('input', question);
@@ -41,7 +41,7 @@ module.exports = {
       },
     );
 
-    logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+    log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
     // const embed = template.embedTemplate()
     //     .setTitle(`Definition for: ${word}`)
     //     .addFields(
@@ -61,7 +61,7 @@ module.exports = {
     // else {
     //     interaction.followUp({ embeds: [embed], ephemeral: false });
     // }
-    // logger.debug(`[${PREFIX}] finished!`);
+    // log.debug(`[${PREFIX}] finished!`);
     // return;
   },
 };

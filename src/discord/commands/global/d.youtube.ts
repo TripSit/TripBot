@@ -5,7 +5,7 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {youtube} from '../../../global/commands/g.youtube';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -20,7 +20,7 @@ export const dYoutube: SlashCommand = {
 
   async execute(interaction:ChatInputCommandInteraction) {
     const query = interaction.options.getString('search');
-    logger.debug(`[${PREFIX}] - query: ${query}`);
+    log.debug(`[${PREFIX}] - query: ${query}`);
     if (!query) {
       interaction.reply({content: 'You must enter a search query.', ephemeral: true});
       return false;
@@ -33,7 +33,7 @@ export const dYoutube: SlashCommand = {
       return true;
     }
 
-    logger.debug(`[${PREFIX}] - result: ${JSON.stringify(result, null, 2)}`);
+    log.debug(`[${PREFIX}] - result: ${JSON.stringify(result, null, 2)}`);
 
     const embed = embedTemplate()
       .setColor(0xFF0000)

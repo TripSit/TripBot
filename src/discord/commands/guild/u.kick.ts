@@ -11,7 +11,7 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import {UserCommand} from '../../@types/commandDef';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import {moderate} from '../../../global/commands/g.moderate';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -61,10 +61,11 @@ export const uKick: UserCommand = {
           i,
         );
 
-        logger.debug(`[${PREFIX}] Result: ${result}`);
+        log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
 
-        logger.debug(`[${PREFIX}] finished!`);
+        log.debug(`[${PREFIX}] finished!`);
       });
+    return true;
   },
 };

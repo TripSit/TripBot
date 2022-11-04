@@ -5,7 +5,7 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 // import env from '../../../global/utils/env.config';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -16,7 +16,7 @@ try {
   // eslint-disable-next-line
   currentExperience = require('../../../backups/exp.json');
 } catch (e) {
-  // logger.info(`[${PREFIX}] We are likely in production and cant load this file!`);
+  // log.info(`[${PREFIX}] We are likely in production and cant load this file!`);
 }
 
 export const database: SlashCommand = {
@@ -34,7 +34,7 @@ export const database: SlashCommand = {
       .setName('convert')),
   async execute(interaction) {
     const command = interaction.options.getSubcommand();
-    logger.debug(`[${PREFIX}] Command: ${command}`);
+    log.debug(`[${PREFIX}] Command: ${command}`);
 
     // if (command === 'remove_events') {
     //   await removeEvents(interaction);
@@ -46,7 +46,7 @@ export const database: SlashCommand = {
     //   await convert();
     // }
     interaction.reply({embeds: [embedTemplate().setTitle('Done!')], ephemeral: false});
-    logger.debug(`[${PREFIX}] finished!`);
+    log.debug(`[${PREFIX}] finished!`);
     return true;
   },
 };
@@ -61,7 +61,7 @@ export const database: SlashCommand = {
 //   // eslint-disable-next-line
 //   for (const doc of global.userDb) {
 //     const discordData = doc.value.discord;
-//     // logger.debug(`[${PREFIX}] member: ${member.username}`);
+//     // log.debug(`[${PREFIX}] member: ${member.username}`);
 //     // if (doc.value.reminders) {
 //     //   if (Object.keys(doc.value.reminders).length > 0) {
 //     //     // eslint-disable-next-line
@@ -78,30 +78,30 @@ export const database: SlashCommand = {
 //     // }
 //     if (discordData) {
 //       if (discordData.lastHelpedThreadId) {
-//         logger.debug(
+//         log.debug(
 //             `[${PREFIX}] Deleting ${discordData.username}'s lastHelpedThreadId ${discordData.lastHelpedThreadId}`);
 //         let member = {};
 //         try {
 //           // eslint-disable-next-line
-//           // logger.debug(`[${PREFIX}] Getting member ${discordData.id} from guild ${guildTripsit.name}`);
+//           // log.debug(`[${PREFIX}] Getting member ${discordData.id} from guild ${guildTripsit.name}`);
 //           // eslint-disable-next-line
 //           member = await guildTripsit.members.fetch(discordData.id);
 //         } catch (err) {
 //           // eslint-disable-next-line
-//           // logger.info(`[${PREFIX}] Error getting member ${discordData.id}
+//           // log.info(`[${PREFIX}] Error getting member ${discordData.id}
 // from guild ${guildTripsit.name}, did they quit?`);
-//           // logger.debug(err);
+//           // log.debug(err);
 //           try {
-//             // logger.debug(`[${PREFIX}] Getting user ${discordData.id} object`);
+//             // log.debug(`[${PREFIX}] Getting user ${discordData.id} object`);
 //             // eslint-disable-next-line
 //             member = await interaction.client.users.fetch(discordData.id);
 //           } catch (err2) {
-//             // logger.debug(`[${PREFIX}] Error getting user ${discordData.id} object`);
-//             logger.debug(err2);
+//             // log.debug(`[${PREFIX}] Error getting user ${discordData.id} object`);
+//             log.debug(err2);
 //             return;
 //           }
 //         }
-//         logger.debug(`[${PREFIX}] member: ${member.username}`);
+//         log.debug(`[${PREFIX}] member: ${member.username}`);
 
 //         // Extract actor data
 //         // eslint-disable-next-line
@@ -115,30 +115,30 @@ export const database: SlashCommand = {
 //         setUserInfo(actorFbid, actorData);
 //       }
 //       if (discordData.lastSetMindsetDate) {
-//         logger.debug(`[${PREFIX}] Deleting ${discordData.username}'s lastHelpedThreadId
+//         log.debug(`[${PREFIX}] Deleting ${discordData.username}'s lastHelpedThreadId
 // ${discordData.lastHelpedThreadId}`);
 //         let member = {};
 //         try {
 //           // eslint-disable-next-line
-//           // logger.debug(`[${PREFIX}] Getting member ${discordData.id} from guild ${guildTripsit.name}`);
+//           // log.debug(`[${PREFIX}] Getting member ${discordData.id} from guild ${guildTripsit.name}`);
 //           // eslint-disable-next-line
 //           member = await guildTripsit.members.fetch(discordData.id);
 //         } catch (err) {
 //           // eslint-disable-next-line
-//           // logger.info(`[${PREFIX}] Error getting member
+//           // log.info(`[${PREFIX}] Error getting member
 // ${discordData.id} from guild ${guildTripsit.name}, did they quit?`);
-//           // logger.debug(err);
+//           // log.debug(err);
 //           try {
-//             // logger.debug(`[${PREFIX}] Getting user ${discordData.id} object`);
+//             // log.debug(`[${PREFIX}] Getting user ${discordData.id} object`);
 //             // eslint-disable-next-line
 //             member = await interaction.client.users.fetch(discordData.id);
 //           } catch (err2) {
-//             // logger.debug(`[${PREFIX}] Error getting user ${discordData.id} object`);
-//             logger.debug(err2);
+//             // log.debug(`[${PREFIX}] Error getting user ${discordData.id} object`);
+//             log.debug(err2);
 //             return;
 //           }
 //         }
-//         logger.debug(`[${PREFIX}] member: ${member.username}`);
+//         log.debug(`[${PREFIX}] member: ${member.username}`);
 //         // Extract actor data
 //         // eslint-disable-next-line
 //         const [actorData, actorFbid] = await getUserInfo(member);
@@ -171,14 +171,14 @@ export const database: SlashCommand = {
  * remove events
  */
 // async function convert() {
-//   logger.debug(`[${PREFIX}] Converting firestore to RTDB`);
+//   log.debug(`[${PREFIX}] Converting firestore to RTDB`);
 //   const users = await global.firestore.collection(firebaseProdUserDbName).get();
 //   // users.forEach(async doc => {
 //   // eslint-disable-next-line
 //   for (let i = 0; i < users.size; i += 1) {
 //     const doc = users.docs[i];
 //     const oldData = doc.data();
-//     // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(oldData, null, 2)}`);
+//     // log.debug(`[${PREFIX}] doc: ${JSON.stringify(oldData, null, 2)}`);
 
 //     let newData = {} as any;
 //     let memberKey = '';
@@ -193,15 +193,15 @@ export const database: SlashCommand = {
 //         memberKey = `${oldData.discord.username.replace(/(\.|\$|#|\[|\]|\/)/g, '_')}
 // ${oldData.discord.discriminator}`;
 //       } catch (err) {
-//         // logger.error(`[${PREFIX}] Error converting ${JSON.stringify(oldData, null, 2)}`);
-//         // logger.error(err);
+//         // log.error(`[${PREFIX}] Error converting ${JSON.stringify(oldData, null, 2)}`);
+//         // log.error(err);
 //       }
 //     }
 
 //     memberKey = memberKey.replace(/(\.|\$|#|\[|\]|\/)/g, '_');
 
 //     const ref = db.ref(`${env.FIREBASE_DB_USERS}/${memberKey}`);
-//     logger.debug(`[${PREFIX}] ref: ${ref}`);
+//     log.debug(`[${PREFIX}] ref: ${ref}`);
 //     // eslint-disable-next-line
 //       await ref.once('value', data => {
 //       if (data.val() !== null) {
@@ -224,29 +224,29 @@ export const database: SlashCommand = {
 //       try {
 //         newData.discord = oldData.discord;
 //       } catch (err) {
-//         // logger.error(`[${PREFIX}] Error converting ${JSON.stringify(oldData, null, 2)}`);
-//         // logger.error(err);
+//         // log.error(`[${PREFIX}] Error converting ${JSON.stringify(oldData, null, 2)}`);
+//         // log.error(err);
 //       }
 //     }
 
 //     if (oldData.experience) {
-//       // logger.debug(`[${PREFIX}] old experience found!`);
+//       // log.debug(`[${PREFIX}] old experience found!`);
 //       if (oldData.experience.general) {
-//         // logger.debug(`[${PREFIX}] old general experience found!`);
+//         // log.debug(`[${PREFIX}] old general experience found!`);
 //         if (newData.experience) {
-//           // logger.debug(`[${PREFIX}] new experience found!`);
+//           // log.debug(`[${PREFIX}] new experience found!`);
 //           if (newData.experience.general) {
-//             // logger.debug(`[${PREFIX}] new general experience found!`);
+//             // log.debug(`[${PREFIX}] new general experience found!`);
 //             newData.experience.general.levelExpPoints +=
 //                 oldData.experience.general.totalExpPoints;
 //             newData.experience.general.totalExpPoints +=
 //                 oldData.experience.general.totalExpPoints;
 //           } else {
-//             // logger.debug(`[${PREFIX}] new general experience NOT found!`);
+//             // log.debug(`[${PREFIX}] new general experience NOT found!`);
 //             newData.experience.general = oldData.experience.general;
 //           }
 //         } else {
-//           // logger.debug(`[${PREFIX}] new experience NOT found!`);
+//           // log.debug(`[${PREFIX}] new experience NOT found!`);
 //           newData.experience = {
 //             general: oldData.experience.general,
 //           };
@@ -270,29 +270,29 @@ export const database: SlashCommand = {
 //       }
 //     }
 
-//     // logger.debug(`[${PREFIX}] newData: ${JSON.stringify(newData, null, 2)}`);
+//     // log.debug(`[${PREFIX}] newData: ${JSON.stringify(newData, null, 2)}`);
 //     db.ref('users').update({[memberKey]: newData});
 //     // }
 //   }
-//   logger.debug(`[${PREFIX}] Done backing up!`);
+//   log.debug(`[${PREFIX}] Done backing up!`);
 // }
 
 /**
  * remove events
  */
 // async function experience() {
-//   logger.debug(`[${PREFIX}] Converting experience!`);
+//   log.debug(`[${PREFIX}] Converting experience!`);
 
 //   // Loop through everything in currentExperience and print the name
 //   // eslint-disable-next-line
 //   const users = await db.collection(env.FIREBASE_DB_USERS).get();
-//   logger.debug(`[${PREFIX}] Found ${users.size} users!`);
+//   log.debug(`[${PREFIX}] Found ${users.size} users!`);
 
 //   for (let i = 0; i < users.size; i += 1) {
 //     const doc = users.docs[i];
 //     const userData = doc.data();
 //     if (userData.discord) {
-//       logger.debug(`[${PREFIX}] Importing ${userData.discord.username}`);
+//       log.debug(`[${PREFIX}] Importing ${userData.discord.username}`);
 //       for (let j = 0; j < currentExperience.length; j += 1) {
 //         const record = currentExperience[j];
 //         const recordName = record.Name;
@@ -300,12 +300,12 @@ export const database: SlashCommand = {
 //         const recordExp = parseInt(record.Experience.replace(/,/g, ''), 10);
 //         const recordLevel = parseInt(record.Level, 10);
 //         if (userData.discord.username === recordName) {
-//           logger.debug(`[${PREFIX}] ${recordName} - Lv
+//           log.debug(`[${PREFIX}] ${recordName} - Lv
 // ${recordLevel} sent ${recordMessages} messages for ${recordExp} exp`);
 //           // eslint-disable-next-line
 //           if (userData.discord.username !== 'MoonBear') { continue; }
-//           logger.debug(`[${PREFIX}] Updating user ${userData.discord.username}!`);
-//           // logger.debug(`[${PREFIX}] doc: ${JSON.stringify(userData, null, 2)}`);
+//           log.debug(`[${PREFIX}] Updating user ${userData.discord.username}!`);
+//           // log.debug(`[${PREFIX}] doc: ${JSON.stringify(userData, null, 2)}`);
 //           if (userData.discord.messages) {
 //             userData.discord.messages['0'] = {
 //               count: recordMessages,
@@ -332,7 +332,7 @@ export const database: SlashCommand = {
 //         }
 //       }
 //     } else {
-//       logger.debug(`[${PREFIX}] doc: ${JSON.stringify(userData, null, 2)}`);
+//       log.debug(`[${PREFIX}] doc: ${JSON.stringify(userData, null, 2)}`);
 //     }
 //   }
 // }

@@ -6,7 +6,7 @@ import {
   ApplicationCommandType,
 } from 'discord-api-types/v10';
 import {UserCommand} from '../../@types/commandDef';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import {moderate} from '../../../global/commands/g.moderate';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
@@ -29,9 +29,10 @@ export const info: UserCommand = {
       interaction,
     );
 
-    logger.debug(`[${PREFIX}] Result: ${result}`);
+    log.debug(`[${PREFIX}] Result: ${result}`);
     interaction.reply(result);
 
-    logger.debug(`[${PREFIX}] finished!`);
+    log.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };

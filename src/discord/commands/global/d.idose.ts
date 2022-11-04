@@ -14,7 +14,7 @@ import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import {paginationEmbed} from '../../utils/pagination';
-import logger from '../../../global/utils/logger';
+import log from '../../../global/utils/log';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
@@ -82,7 +82,7 @@ export const didose: SlashCommand = {
         .setDescription('Which record? (0, 1, 2, etc)')
         .setRequired(true))),
   async execute(interaction) {
-    logger.debug(`[${PREFIX}] Starting!`);
+    log.debug(`[${PREFIX}] Starting!`);
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const embed = embedTemplate();
     const book = [] as EmbedBuilder[];
@@ -102,7 +102,7 @@ export const didose: SlashCommand = {
     const date = offset ? new Date() : null;
     if (date && offset) {
       const out = await parseDuration(offset);
-      logger.debug(`[${PREFIX}] out: ${out}`);
+      log.debug(`[${PREFIX}] out: ${out}`);
       date.setTime(date.getTime() - out);
     }
 
@@ -117,7 +117,7 @@ export const didose: SlashCommand = {
       date,
     );
 
-    logger.debug(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+    log.debug(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
 
     if (command === 'delete') {
       await interaction.reply({content: response, ephemeral: true});
@@ -141,14 +141,14 @@ export const didose: SlashCommand = {
           let pageFieldsCount = 0;
           for (let i = 0; i < response.length; i += 1) {
             pageFields.push(response[i]);
-            // logger.debug(`[${PREFIX}] Adding field ${field.name}`);
+            // log.debug(`[${PREFIX}] Adding field ${field.name}`);
             pageFieldsCount += 1;
-            // logger.debug(`[${PREFIX}] pageFieldsCount: ${pageFieldsCount}`);
+            // log.debug(`[${PREFIX}] pageFieldsCount: ${pageFieldsCount}`);
             if (pageFieldsCount === 24) {
               pageEmbed.setFields(pageFields);
-              // logger.debug(`[${PREFIX}] pageEmbed: ${JSON.stringify(pageEmbed)}`);
+              // log.debug(`[${PREFIX}] pageEmbed: ${JSON.stringify(pageEmbed)}`);
               book.push(pageEmbed);
-              // logger.debug(`[${PREFIX}] book.length: ${book.length}`);
+              // log.debug(`[${PREFIX}] book.length: ${book.length}`);
               pageFields = [];
               pageFieldsCount = 0;
               pageEmbed = embedTemplate();
@@ -157,9 +157,9 @@ export const didose: SlashCommand = {
           // Add the last pageEmbed
           if (pageFieldsCount > 0) {
             pageEmbed.setFields(pageFields);
-            // logger.debug(`[${PREFIX}] pageEmbed: ${JSON.stringify(pageEmbed)}`);
+            // log.debug(`[${PREFIX}] pageEmbed: ${JSON.stringify(pageEmbed)}`);
             book.push(pageEmbed);
-            // logger.debug(`[${PREFIX}] book.length: ${book.length}`);
+            // log.debug(`[${PREFIX}] book.length: ${book.length}`);
           }
         }
         if (response.length <= 24) {
@@ -174,7 +174,7 @@ export const didose: SlashCommand = {
         embed.setTitle('No dose records!');
         embed.setDescription('You have no dose records, use /idose to add some!');
       }
-      // logger.debug(`[${PREFIX}] book.length: ${book.length}`);
+      // log.debug(`[${PREFIX}] book.length: ${book.length}`);
       if (book.length > 1) {
         paginationEmbed(interaction, book, buttonList);
       } else {
@@ -196,9 +196,9 @@ export const didose: SlashCommand = {
       }
 
       const timeString = time(date).valueOf().toString();
-      logger.debug(`[${PREFIX}] timeString: ${timeString}`);
+      log.debug(`[${PREFIX}] timeString: ${timeString}`);
       const relative = time(date, 'R');
-      logger.debug(`[${PREFIX}] relative: ${relative}`);
+      log.debug(`[${PREFIX}] relative: ${relative}`);
 
       const embedField = {
         name: `You dosed ${volume} ${units} of ${substance} ${roa}`,
@@ -209,7 +209,7 @@ export const didose: SlashCommand = {
       embed.addFields(embedField);
       interaction.reply({embeds: [embed], ephemeral: true});
     }
-    logger.debug(`[${PREFIX}] Finsihed!`);
+    log.debug(`[${PREFIX}] Finsihed!`);
     return true;
   },
 };
