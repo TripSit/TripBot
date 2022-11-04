@@ -37,7 +37,7 @@ add: ${add}\
   const reactionId = reaction.emoji.id ?? reaction.emoji.name;
   // log.debug(`[${PREFIX}] messageId: ${messageId} | reactionId: ${reactionId}`);
   const reactionRole = await db<ReactionRoles>('reaction_roles')
-    .select(db.ref('role_id').as('role_id'))
+    .select('*')
     .where('message_id', messageId)
     .andWhere('reaction_id', reactionId)
     .first();

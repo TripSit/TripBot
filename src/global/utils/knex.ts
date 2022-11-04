@@ -91,3 +91,34 @@ export async function getOpenTicket(
   }
   return ticketData;
 }
+
+/**
+ *  Get reaction roles
+ * @param {string | null} userId
+ * @param {string | null} threadId
+ */
+export async function getReactionRoles(
+  userId: string | null,
+  threadId: string | null,
+) {
+  let ticketData = {} as UserTickets | undefined;
+  if (threadId) {
+    ticketData = await db<UserTickets>('user_tickets')
+      .select('*')
+      .where('thread_id', threadId)
+      .where('type', 'TRIPSIT')
+      .andWhereNot('status', 'CLOSED')
+      .andWhereNot('status', 'RESOLVED')
+      .first();
+  }
+  if (userId) {
+    ticketData = await db<UserTickets>('user_tickets')
+      .select('*')
+      .where('user_id', userId)
+      .where('type', 'TRIPSIT')
+      .andWhereNot('status', 'CLOSED')
+      .andWhereNot('status', 'RESOLVED')
+      .first();
+  }
+  return ticketData;
+}

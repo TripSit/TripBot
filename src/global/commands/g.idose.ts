@@ -1,7 +1,6 @@
 import {db, getUser} from '../../global/utils/knex';
 import {DateTime} from 'luxon';
 import {
-  Users,
   UserDrugDoses,
   DrugNames,
   DrugRoa,
@@ -58,21 +57,11 @@ export async function idose(
     }
     log.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
 
-    const userUniqueId = (await db<Users>('users')
-      .select(db.ref('id'))
-      .where('discord_id', userId))[0].id;
+    const userData = await getUser(userId, null);
 
     const unsorteddata = await db<UserDrugDoses>('user_drug_doses')
-      .select(
-        db.ref('id').as('id'),
-        db.ref('user_id').as('user_id'),
-        db.ref('drug_id').as('drug_id'),
-        db.ref('route').as('route'),
-        db.ref('dose').as('dose'),
-        db.ref('units').as('units'),
-        db.ref('created_at').as('created_at'),
-      )
-      .where('user_id', userUniqueId);
+      .select('*')
+      .where('user_id', userData.id);
 
     if (unsorteddata.length === 0) {
       return [{
@@ -105,7 +94,7 @@ export async function idose(
       const timeVal = DateTime.fromISO(doseDate);
       const drugId = record.drug_id;
       const drugName = (await db<DrugNames>('drug_names')
-        .select(db.ref('name').as('name'))
+        .select('*')
         .where('drug_id', drugId)
         .andWhere('is_default', true))[0].name;
       const route = record.route.charAt(0).toUpperCase() + record.route.slice(1).toLowerCase();
@@ -167,7 +156,7 @@ export async function idose(
         const timeVal = DateTime.fromISO(doseDate);
         const drugId = dose.drug_id;
         const drugName = (await db<DrugNames>('drug_names')
-          .select(db.ref('name').as('name'))
+          .select('*')
           .where('drug_id', drugId)
           .andWhere('is_default', true))[0].name;
 
@@ -201,20 +190,11 @@ export async function idose(
         value: 'You must provide a date!',
       }];
     }
-    const data = await db<Users>('users')
-      .select(db.ref('id').as('id'))
-      .where('discord_id', userId);
 
-    const userUniqueId = data.length > 0 ? data[0].id : (await db<Users>('users')
-      .insert({
-        discord_id: userId,
-      })
-      .returning(db.ref('id').as('id')))[0].id;
-
-    log.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
+    const userData = await getUser(userId, null);
 
     const drugId = (await db<DrugNames>('drug_names')
-      .select(db.ref('drug_id'))
+      .select('*')
       .where('name', substance)
       .orWhere('name', substance.toLowerCase())
       .orWhere('name', substance.toUpperCase()))[0].drug_id;
@@ -227,7 +207,7 @@ export async function idose(
 
     await db<UserDrugDoses>('user_drug_doses')
       .insert({
-        user_id: userUniqueId,
+        user_id: userData.id,
         drug_id: drugId,
         route: roa,
         dose: volume,

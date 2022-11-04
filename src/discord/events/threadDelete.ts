@@ -7,7 +7,7 @@ import {
 import {
   threadEvent,
 } from '../@types/eventDef';
-import {db} from '../../global/utils/knex';
+import {db, getOpenTicket} from '../../global/utils/knex';
 import {DiscordGuilds, TicketStatus, UserTickets} from '../../global/@types/pgdb';
 import log from '../../global/utils/log';
 import {stripIndents} from 'common-tags';
@@ -19,21 +19,16 @@ export const channelDelete: threadEvent = {
     log.debug(stripIndents`[${PREFIX}] ${thread.name}`);
 
     // Find if the channel is used as a thread_id in any tickets
-    const ticket = await db<UserTickets>('user_tickets')
-      .select(
-        db.ref('id'))
-      .where('thread_id', thread.id)
-      .andWhere('status', 'OPEN')
-      .first();
+    const ticketData = await getOpenTicket(null, thread.id);
 
-    if (ticket) {
-      log.debug(`[${PREFIX}] closing ticket: ${JSON.stringify(ticket, null, 2)}`);
+    if (ticketData) {
+      log.debug(`[${PREFIX}] closing ticket: ${JSON.stringify(ticketData, null, 2)}`);
       // If it is, close the ticket
       await db<UserTickets>('user_tickets')
         .update({
           status: 'CLOSED' as TicketStatus,
         })
-        .where('id', ticket.id);
+        .where('id', ticketData.id);
     }
 
     // log.debug(`[${PREFIX}] finished!`);

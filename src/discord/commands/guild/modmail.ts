@@ -484,7 +484,7 @@ export async function modmailCreate(
         deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
       } as UserTickets;
 
-      // Update thet ticket in the DB
+      // Insert that ticket in the DB
       await db<UserTickets>('user_tickets')
         .insert(newTicketData);
 
@@ -514,30 +514,8 @@ export async function modmailDMInteraction(message:Message) {
     return;
   }
 
-  // Get the ticket info, if it exists
-  const userUniqueId = await db<Users>('users')
-    .select(db.ref('id'))
-    .where('discord_id', message.author.id)
-    .first();
-
-  const ticketData = await db<UserTickets>('user_tickets')
-    .select(
-      db.ref('id').as('id'),
-      db.ref('description').as('description'),
-      db.ref('thread_id').as('thread_id'),
-      db.ref('type').as('type'),
-      db.ref('status').as('status'),
-      db.ref('first_message_id').as('first_message_id'),
-      db.ref('closed_by').as('closed_by'),
-      db.ref('closed_at').as('closed_at'),
-      db.ref('archived_at').as('archived_at'),
-      db.ref('deleted_at').as('deleted_at'),
-      db.ref('created_at').as('created_at'),
-    )
-    .where('user_id', userUniqueId?.id)
-    .andWhereNot('status', 'CLOSED')
-    .andWhereNot('status', 'RESOLVED')
-    .first();
+  const userData = await getUser(message.author.id, null);
+  const ticketData = await getOpenTicket(userData.id, null);
 
   // log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
@@ -700,68 +678,24 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
   let ticketData = {} as UserTickets;
   if (interaction.channel) {
     if (interaction.channel.type === ChannelType.DM) {
-      const userUniqueId = await db<Users>('users')
-        .select(db.ref('id'))
-        .where('discord_id', actor.id)
-        .first();
+      const userData = await getUser(null, actor.id);
+      const ticketDataRaw = await getOpenTicket(userData.id, null);
 
-      const data = await db<UserTickets>('user_tickets')
-        .select(
-          db.ref('id').as('id'),
-          db.ref('user_id').as('user_id'),
-          db.ref('description').as('description'),
-          db.ref('thread_id').as('thread_id'),
-          db.ref('meta_thread_id').as('meta_thread_id'),
-          db.ref('type').as('type'),
-          db.ref('status').as('status'),
-          db.ref('first_message_id').as('first_message_id'),
-          db.ref('closed_at').as('closed_at'),
-          db.ref('closed_by').as('closed_by'),
-          db.ref('reopened_at').as('reopened_at'),
-          db.ref('reopened_by').as('reopened_by'),
-          db.ref('archived_at').as('archived_at'),
-          db.ref('deleted_at').as('deleted_at'),
-          db.ref('created_at').as('created_at'),
-        )
-        .where('user_id', userUniqueId?.id)
-        .andWhereNot('status', 'CLOSED')
-        .andWhereNot('status', 'RESOLVED')
-        .first();
-      if (data) {
-        ticketData = data;
-      } else {
+      if (!ticketDataRaw) {
         interaction.reply({content: 'This user\'s ticket thread does not exist!', ephemeral: true});
         return;
+      } else {
+        ticketData = ticketDataRaw;
       }
     } else if (interaction.channel.type === ChannelType.PublicThread ||
       interaction.channel.type === ChannelType.PrivateThread) {
-      const data = await db<UserTickets>('user_tickets')
-        .select(
-          db.ref('id').as('id'),
-          db.ref('user_id').as('user_id'),
-          db.ref('description').as('description'),
-          db.ref('thread_id').as('thread_id'),
-          db.ref('meta_thread_id').as('meta_thread_id'),
-          db.ref('type').as('type'),
-          db.ref('status').as('status'),
-          db.ref('first_message_id').as('first_message_id'),
-          db.ref('closed_at').as('closed_at'),
-          db.ref('closed_by').as('closed_by'),
-          db.ref('reopened_at').as('reopened_at'),
-          db.ref('reopened_by').as('reopened_by'),
-          db.ref('archived_at').as('archived_at'),
-          db.ref('deleted_at').as('deleted_at'),
-          db.ref('created_at').as('created_at'),
-        )
-        .where('thread_id', interaction.channel.id)
-        .andWhereNot('status', 'CLOSED')
-        .andWhereNot('status', 'RESOLVED')
-        .first();
-      if (data !== undefined) {
-        ticketData = data;
-      } else {
+      const ticketDataRaw = await getOpenTicket(null, interaction.channel.id);
+
+      if (!ticketDataRaw) {
         interaction.reply({content: 'This ticket thread does not exist!', ephemeral: true});
         return;
+      } else {
+        ticketData = ticketDataRaw;
       }
     }
   }

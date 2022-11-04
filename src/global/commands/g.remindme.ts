@@ -1,7 +1,6 @@
 import {db, getUser} from '../utils/knex';
 import {DateTime} from 'luxon';
 import {
-  Users,
   UserDrugDoses,
   UserReminders,
 } from '../@types/pgdb';
@@ -41,19 +40,11 @@ export async function remindme(
     }
     log.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
 
-    const userUniqueId = (await db<Users>('users')
-      .select(db.ref('id'))
-      .where('discord_id', userId))[0].id;
+    const userData = await getUser(userId, null);
 
     const unsorteddata = await db<UserReminders>('user_reminders')
-      .select(
-        db.ref('id').as('id'),
-        db.ref('user_id').as('user_id'),
-        db.ref('reminder_text').as('reminder_text'),
-        db.ref('trigger_at').as('trigger_at'),
-        db.ref('created_at').as('created_at'),
-      )
-      .where('user_id', userUniqueId);
+      .select('*')
+      .where('user_id', userData.id);
 
     if (unsorteddata.length === 0) {
       return 'You have no dose records, you can use /idose to add some!';
@@ -95,29 +86,11 @@ export async function remindme(
     }
   }
   if (command === 'get') {
-    const data = await db<Users>('users')
-      .select(db.ref('id'))
-      .where('discord_id', userId);
-
-    log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
-
-    if (data.length === 0) {
-      return false;
-    }
-
-    const userUniqueId = data[0].id;
-
-    log.debug(`[${PREFIX}] userUniqueId: ${userUniqueId}`);
+    const userData = await getUser(userId, null);
 
     const unsorteddata = await db<UserReminders>('user_reminders')
-      .select(
-        db.ref('id').as('id'),
-        db.ref('user_id').as('user_id'),
-        db.ref('reminder_text').as('reminder_text'),
-        db.ref('trigger_at').as('trigger_at'),
-        db.ref('created_at').as('created_at'),
-      )
-      .where('user_id', userUniqueId);
+      .select('*')
+      .where('user_id', userData.id);
 
     log.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);
 

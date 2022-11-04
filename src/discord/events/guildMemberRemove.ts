@@ -10,6 +10,7 @@ import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
 import {embedTemplate} from '../utils/embedTemplate';
 import * as path from 'path';
+import {Users} from '../../global/@types/pgdb';
 const PREFIX = path.parse(__filename).name;
 
 export const guildMemberRemove: guildMemberEvent = {
@@ -59,7 +60,7 @@ export const guildMemberRemove: guildMemberEvent = {
       channelBotlog.send({embeds: [embed]});
     }
 
-    await db
+    await db<Users>('users')
       .insert({
         discord_id: member.id,
         removed_at: new Date(),

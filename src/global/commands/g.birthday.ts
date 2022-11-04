@@ -1,5 +1,5 @@
 import {DateTime} from 'luxon';
-import {db} from '../utils/knex';
+import {db, getUser} from '../utils/knex';
 import {Users} from '../@types/pgdb';
 import log from '../utils/log';
 import * as path from 'path';
@@ -65,28 +65,20 @@ export async function birthday(
       return `${month} ${day} is your new birthday!`;
     }
   } else if (command === 'get') {
-    const data = await db<Users>('users')
-      .select(db.ref('birthday').as('birthday'))
-      .where('discord_id', memberId);
-
-    log.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
+    const userData = await getUser(memberId, null);
 
     let resp = '';
-    if (data.length > 0) {
-      if (data[0].birthday !== null) {
-        const birthDate = data[0].birthday.toISOString();
-        log.debug(`[${PREFIX}] Birthdate: ${birthDate}`);
-        const birthday = DateTime.fromISO(birthDate);
-        log.debug(`[${PREFIX}] birthday: ${birthday}`);
-        resp = `was born on ${birthday.monthLong} ${birthday.day}`;
-      } else {
-        log.debug(`[${PREFIX}] birthday is NULL`);
-        resp = `is immortal <3 (and has not set a birthday)`;
-      }
+    if (userData.birthday !== null) {
+      const birthDate = userData.birthday.toISOString();
+      log.debug(`[${PREFIX}] Birthdate: ${birthDate}`);
+      const birthday = DateTime.fromISO(birthDate);
+      log.debug(`[${PREFIX}] birthday: ${birthday}`);
+      resp = `was born on ${birthday.monthLong} ${birthday.day}`;
     } else {
-      log.debug(`[${PREFIX}] data is NULL`);
+      log.debug(`[${PREFIX}] birthday is NULL`);
       resp = `is immortal <3 (and has not set a birthday)`;
     }
+
     return resp;
   }
 };

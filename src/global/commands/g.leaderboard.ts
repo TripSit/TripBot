@@ -45,9 +45,7 @@ export async function leaderboard(
 
     // Grab all the user experience from the database
     const userExperience = await db<UserExperience>('user_experience')
-      .select(
-        db.ref('user_id').as('user_id'),
-      )
+      .select('*')
       .groupBy(['user_id'])
       .sum({total_points: 'total_points'})
       .orderBy('total_points', 'desc')
@@ -91,10 +89,7 @@ export async function leaderboard(
     // Grab all the user experience from the database
     for (const category of ['TRIPSITTER', 'GENERAL', 'DEVELOPER', 'TEAM', 'IGNORED']) {
       const userExperience = await db<UserExperience>('user_experience')
-        .select(
-          db.ref('user_id').as('user_id'),
-          db.ref('level').as('level'),
-        )
+        .select('*')
         .where('type', category)
         .orderBy('total_points', 'desc')
         .limit(3);
@@ -128,9 +123,7 @@ export async function leaderboard(
 
     // Grab all the user experience from the database
     const userExperience = await db<UserExperience>('user_experience')
-      .select(
-        db.ref('user_id').as('user_id'),
-      )
+      .select('*')
       .groupBy(['user_id'])
       .sum({total_points: 'total_points'})
       .orderBy('total_points', 'desc')
@@ -180,10 +173,7 @@ export async function leaderboard(
   } else {
     // Grab all the user experience from the database
     const userExperience = await db<UserExperience>('user_experience')
-      .select(
-        db.ref('user_id').as('user_id'),
-        db.ref('level').as('level'),
-      )
+      .select('*')
       .where('type', categoryName)
       .orderBy('total_points', 'desc')
       .limit(15);

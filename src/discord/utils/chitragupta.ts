@@ -49,8 +49,8 @@ export async function chitragupta(
 
   // Increment karma of the actor
   let actorKarma = await db<Users>('users')
-    .where('discord_id', actor.id)
     .increment('karma_given', action)
+    .where('discord_id', actor.id)
     .returning(['karma_received', 'karma_given']);
 
   if (actorKarma.length === 0) {
@@ -69,8 +69,8 @@ export async function chitragupta(
 
   // Increment the karma of the target
   let targetKarma = await db<Users>('users')
-    .where('discord_id', target.id)
     .increment('karma_received', action)
+    .where('discord_id', target.id)
     .returning(['karma_received', 'karma_given']);
 
   if (targetKarma.length === 0) {

@@ -1,4 +1,4 @@
-import {db} from '../utils/knex';
+import {db, getGuild} from '../utils/knex';
 import {DiscordGuilds} from '../@types/pgdb';
 import log from '../utils/log';
 import * as path from 'path';
@@ -23,15 +23,11 @@ export async function dramacounter(
   // log.debug(`[${PREFIX}] interaction.guild: ${JSON.stringify(interaction.guild, null, 2)}`);
 
   if (command === 'get') {
-    const data = await db<DiscordGuilds>('discord_guilds')
-      .select(
-        db.ref('last_drama_at').as('last_drama_at'),
-        db.ref('drama_reason').as('drama_reason'))
-      .where('id', guildId);
+    const guildData = await getGuild(guildId);
 
-    if (data.length > 0) {
-      const dramaDate = data[0].last_drama_at as Date;
-      const dramaReason = data[0].drama_reason as string;
+    if (guildData.last_drama_at) {
+      const dramaDate = guildData.last_drama_at as Date;
+      const dramaReason = guildData.drama_reason as string;
       return [dramaReason, dramaDate];
     } else {
       return 'No drama has been reported yet! Be thankful while it lasts...';

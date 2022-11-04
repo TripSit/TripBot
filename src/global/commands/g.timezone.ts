@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 import log from '../utils/log';
 import timezones from '../assets/data/timezones.json';
-import {db} from '../utils/knex';
+import {db, getUser} from '../utils/knex';
 import * as path from 'path';
 import {Users} from '../@types/pgdb';
 const PREFIX = path.parse(__filename).name;
@@ -42,21 +42,12 @@ export async function timezone(
 
     return `I updated your timezone to ${timezone}`;
   } else if (command === 'get') {
-    let tzCode = '';
+    const tzCode = '';
     let gmtValue = '';
 
-    const data = (await db<Users>('users')
-      .select(db.ref('timezone').as('timezone'))
-      .where('discord_id', memberId))[0].timezone;
+    const userData = await getUser(memberId, null);
 
-    if (data !== null) {
-      log.debug(`[${PREFIX}] data: ${data}`);
-      tzCode = data;
-    } else {
-      log.debug(`[${PREFIX}] data is null!`);
-    }
-
-    if (tzCode !== '') {
+    if (userData.timezone) {
       for (let i = 0; i < timezones.length; i += 1) {
         if (timezones[i].tzCode === tzCode) {
           gmtValue = timezones[i].offset;

@@ -302,8 +302,8 @@ export async function announcements(message:Message) {
                 const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
                 // Increment the users's pointType
                 const value = await db<Users>('users')
-                  .where('discord_id', user.id)
                   .increment(pointType, 1)
+                  .where('discord_id', user.id)
                   .returning('*');
                 if (value[0]) {
                   log.debug(`[${PREFIX}] ${user.tag} ${pointType} incremented to ${value[0][pointType as keyof typeof value[0]]}`);
@@ -316,8 +316,8 @@ export async function announcements(message:Message) {
                 const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
                 // Increment the users's pointType
                 const value = await db<Users>('users')
-                  .where('discord_id', user.id)
                   .increment(pointType, -1)
+                  .where('discord_id', user.id)
                   .returning(pointType);
                 log.debug(`[${PREFIX}] ${user.tag} ${pointType} decremented to ${value[0][pointType as keyof typeof value[0]]}`);
               });

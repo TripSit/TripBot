@@ -4,7 +4,7 @@ import {
   Role,
   ThreadChannel,
 } from 'discord.js';
-import {db} from '../../global/utils/knex';
+import {db, getUser} from '../../global/utils/knex';
 import {DateTime} from 'luxon';
 import {
   Users,
@@ -40,25 +40,14 @@ export async function runTimer() {
         // log.info(`[${PREFIX}] Checking timers...`);
         // Process reminders
         const reminderData = await db<UserReminders>('user_reminders')
-          .select(
-            db.ref('id').as('id'),
-            db.ref('user_id').as('user_id'),
-            db.ref('reminder_text').as('reminder_text'),
-            db.ref('trigger_at').as('trigger_at'),
-            db.ref('created_at').as('created_at'),
-          );
+          .select('*');
         if (reminderData.length > 0) {
           // Loop through each reminder
           for (const reminder of reminderData) {
             // Check if the reminder is ready to be triggered
             if (DateTime.fromJSDate(reminder.trigger_at) <= DateTime.local()) {
               // Get the user's discord id
-              const userData = await db<Users>('users')
-                .select(
-                  db.ref('discord_id').as('discord_id'),
-                )
-                .where('id', reminder.user_id)
-                .first();
+              const userData = await getUser(null, reminder.user_id);
 
               // Send the user a message
               if (userData) {
@@ -80,12 +69,7 @@ export async function runTimer() {
 
         // Process mindset roles
         const mindsetRoleData = await db<Users>('users')
-          .select(
-            db.ref('id').as('id'),
-            db.ref('discord_id').as('discord_id'),
-            db.ref('mindset_role').as('mindset_role'),
-            db.ref('mindset_role_expires_at').as('mindset_role_expires_at'),
-          )
+          .select('*')
           .whereNotNull('mindset_role_expires_at');
         if (mindsetRoleData.length > 0) {
           // Loop through each user
@@ -114,11 +98,7 @@ export async function runTimer() {
                         if (role) {
                           // Get the reaction role info from the db
                           const reactionRoleData = await db<ReactionRoles>('reaction_roles')
-                            .select(
-                              db.ref('message_id').as('message_id'),
-                              db.ref('message_id').as('message_id'),
-                              db.ref('message_id').as('message_id'),
-                            )
+                            .select('*')
                             .where('role_id', user.mindset_role)
                             .first();
 
@@ -146,16 +126,7 @@ export async function runTimer() {
 
         // Process tickets
         const ticketData = await db<UserTickets>('user_tickets')
-          .select(
-            db.ref('id').as('id'),
-            db.ref('user_id').as('user_id'),
-            db.ref('thread_id').as('thread_id'),
-            db.ref('type').as('type'),
-            db.ref('status').as('status'),
-            db.ref('first_message_id').as('first_message_id'),
-            db.ref('archived_at').as('archived_at'),
-            db.ref('deleted_at').as('deleted_at'),
-          )
+          .select('*')
           .whereNot('status', 'DELETED');
         if (ticketData.length > 0) {
           // Loop through each ticket
@@ -179,46 +150,37 @@ export async function runTimer() {
                   log.debug(`[${PREFIX}] There was an error archiving the thread, it was likely deleted`);
                 }
 
+                const userData = await getUser(null, ticket.user_id);
+                if (userData.discord_id) {
+                  const discordUser = await global.client.users.fetch(userData.discord_id);
+                  if (discordUser) {
+                    const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+                    if (guild) {
+                      const member = await guild.members.fetch(discordUser);
+                      if (member) {
+                        const myMember = await guild.members.fetch(env.DISCORD_CLIENT_ID);
+                        const myRole = myMember.roles.highest;
 
-                const user = await db<Users>('users')
-                  .select(
-                    db.ref('discord_id').as('discord_id'),
-                    db.ref('roles').as('roles'),
-                  )
-                  .where('id', ticket.user_id)
-                  .first();
-                if (user) {
-                  if (user.discord_id) {
-                    const discordUser = await global.client.users.fetch(user.discord_id);
-                    if (discordUser) {
-                      const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-                      if (guild) {
-                        const member = await guild.members.fetch(discordUser);
-                        if (member) {
-                          const myMember = await guild.members.fetch(env.DISCORD_CLIENT_ID);
-                          const myRole = myMember.roles.highest;
-
-                          // Restore the old roles
-                          if (user.roles) {
-                            log.debug(`[${PREFIX}] Restoring ${user.discord_id}'s roles: ${user.roles}`);
-                            const roles = user.roles.split(',');
-                            for (const role of roles) {
-                              const roleObj = await guild.roles.fetch(role);
-                              if (roleObj && roleObj.name !== '@everyone' && roleObj.id !== env.ROLE_NEEDSHELP) {
-                                // Check if the bot has permission to add the role
-                                if (roleObj.comparePositionTo(myRole) < 0) {
-                                  log.debug(`[${PREFIX}] Adding ${user.discord_id}'s ${role} role`);
-                                  await member.roles.add(roleObj);
-                                }
+                        // Restore the old roles
+                        if (userData.roles) {
+                          log.debug(`[${PREFIX}] Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
+                          const roles = userData.roles.split(',');
+                          for (const role of roles) {
+                            const roleObj = await guild.roles.fetch(role);
+                            if (roleObj && roleObj.name !== '@everyone' && roleObj.id !== env.ROLE_NEEDSHELP) {
+                              // Check if the bot has permission to add the role
+                              if (roleObj.comparePositionTo(myRole) < 0) {
+                                log.debug(`[${PREFIX}] Adding ${userData.discord_id}'s ${role} role`);
+                                await member.roles.add(roleObj);
                               }
                             }
+                          }
 
-                            // Remove the needshelp role
-                            const needshelpRole = await guild.roles.fetch(env.ROLE_NEEDSHELP);
-                            if (needshelpRole) {
-                              if (needshelpRole.comparePositionTo(myRole) < 0) {
-                                await member.roles.remove(needshelpRole);
-                              }
+                          // Remove the needshelp role
+                          const needshelpRole = await guild.roles.fetch(env.ROLE_NEEDSHELP);
+                          if (needshelpRole) {
+                            if (needshelpRole.comparePositionTo(myRole) < 0) {
+                              await member.roles.remove(needshelpRole);
                             }
                           }
                         }
