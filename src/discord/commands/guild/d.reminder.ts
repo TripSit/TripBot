@@ -5,7 +5,7 @@ import {
   GuildMember,
   Colors,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
@@ -47,11 +47,19 @@ const reminderDict = {
   ],
 };
 
-export const reminder: SlashCommand = {
+export const reminder: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('reminder')
     .setDescription('Sends a reminder on what the channel is for!'),
   async execute(interaction) {
+    if (!interaction.guild) {
+      interaction.reply({
+        content: 'This command can only be used in a server!',
+        ephemeral: true,
+      });
+      return false;
+    }
+
     logger.debug(`[${PREFIX}] starting!`);
 
     const reminder = embedTemplate()
@@ -63,9 +71,10 @@ export const reminder: SlashCommand = {
 
     interaction.reply({content: 'Reminder sent!', ephemeral: true});
 
-    const channelBotlog = interaction.guild!.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    const channelBotlog = interaction.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
       channelBotlog.send(`${(interaction.member as GuildMember).displayName} sent a reminder to ${(interaction.channel as TextChannel).name}`);
     }
+    return true;
   },
 };

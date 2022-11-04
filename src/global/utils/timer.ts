@@ -63,7 +63,7 @@ export async function runTimer() {
               // Send the user a message
               if (userData) {
                 if (userData.discord_id) {
-                  const user = await global.client.users.fetch(userData.discord_id!);
+                  const user = await global.client.users.fetch(userData.discord_id);
                   if (user) {
                     user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
                   }
@@ -93,13 +93,13 @@ export async function runTimer() {
           // Loop through each user
           for (const user of mindsetRoleData) {
             // Check if the user has a mindset role
-            if (user.mindset_role) {
-              const expires = DateTime.fromJSDate(user.mindset_role_expires_at!);
+            if (user.mindset_role && user.mindset_role_expires_at) {
+              const expires = DateTime.fromJSDate(user.mindset_role_expires_at);
               logger.debug(
                 `[${PREFIX}] ${user.discord_id}'s ${user.mindset_role} ${expires.toLocaleString(DateTime.DATETIME_MED)}`, // eslint-disable-line max-len
               );
               // Check if the user's mindset role has expired
-              if (DateTime.fromJSDate(user.mindset_role_expires_at!) <= DateTime.local()) {
+              if (DateTime.fromJSDate(user.mindset_role_expires_at) <= DateTime.local()) {
                 // Get the user's discord id
                 if (user.discord_id) {
                   // Get the user's discord object
@@ -202,7 +202,7 @@ export async function runTimer() {
                       if (guild) {
                         const member = await guild.members.fetch(discordUser);
                         if (member) {
-                          const myMember = await guild.members.fetch(env.DISCORD_CLIENT_ID)!;
+                          const myMember = await guild.members.fetch(env.DISCORD_CLIENT_ID);
                           const myRole = myMember.roles.highest;
 
                           // Restore the old roles

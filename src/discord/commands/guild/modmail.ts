@@ -17,6 +17,7 @@ import {
   GuildMemberRoleManager,
   // MessageReaction,
   User,
+  Guild,
 } from 'discord.js';
 import {
   ChannelType,
@@ -205,8 +206,8 @@ export async function modmailCreate(
     },
   };
 
-  const userData = await getUser(actor.id, null);
-  if (!userData) return;
+  const userData = await getUser(actor.id, null) as Users;
+
   const ticketData = await getOpenTicket(userData.id, null);
 
   // Get the parent channel to be used
@@ -304,8 +305,7 @@ export async function modmailCreate(
       logger.debug(`[${PREFIX}] Created thread ${ticketThread.id}`);
 
       // Get the tripsit guild
-      const tripsitGuild = i.client.guilds.cache.get(env.DISCORD_GUILD_ID);
-      if (!tripsitGuild) return;
+      const tripsitGuild = i.client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
       // Get the helper and TS roles
       const roleHelper = await tripsitGuild.roles.fetch(env.ROLE_TRIPSITTER) as Role;
       logger.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
@@ -397,13 +397,10 @@ export async function modmailCreate(
       }
 
       // Determine if this command was started by a Developer
-      const roleDeveloper = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER);
-      if (!roleDeveloper) return;
+      const roleDeveloper = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER) as Role;
       const isDev = roleDeveloper.members.map((m) => m.user.id === i.user.id);
-      const pingRole = tripsitGuild.roles.cache.find((role) => role.id === modmailVars[issueType].pingRole);
-      if (!pingRole) return;
-      const tripsitterRole = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER);
-      if (!tripsitterRole) return;
+      const pingRole = tripsitGuild.roles.cache.find((role) => role.id === modmailVars[issueType].pingRole) as Role;
+      const tripsitterRole = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
 
       // Send a message to the thread
       let threadFirstResponse = stripIndents`
@@ -637,9 +634,11 @@ export async function modmailThreadInteraction(message:Message) {
             }
           }
 
-          const userData = await getUser(null, ticketData.user_id);
-          if (!userData) return;
-          if (!userData.discord_id) return;
+          const userData = await getUser(null, ticketData.user_id) as Users;
+          if (!userData.discord_id) {
+            logger.error(`[${PREFIX}] No discord_id found for user ${ticketData.user_id}!`);
+            return;
+          };
 
           // Get the user from the ticketData
           const user = await message.client.users.fetch(userData.discord_id);
@@ -786,9 +785,11 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
     return;
   }
 
-  const userData = await getUser(null, ticketData.user_id);
-  if (!userData) return;
-  if (!userData.discord_id) return;
+  const userData = await getUser(null, ticketData.user_id) as Users;
+  if (!userData.discord_id) {
+    logger.error(`[${PREFIX}] No discord_id found for user ${ticketData.user_id}!`);
+    return;
+  };
 
   const target = interaction.client.users.cache.get(userData.discord_id) as User;
   const channel = interaction.client.channels.cache.get(ticketData.thread_id) as ThreadChannel;
@@ -1102,8 +1103,7 @@ dm/channel: ${interaction.channel?.type === ChannelType.DM ? 'dm' : 'channel'}
     .onConflict('id')
     .merge();
 
-  const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID);
-  if (!tripsitGuild) return;
+  const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
   const channelModlog = tripsitGuild.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
   // Transform actor data
   const modlogEmbed = embedTemplate()

@@ -1,5 +1,6 @@
 import {
   Colors,
+  Guild,
   SlashCommandBuilder,
 } from 'discord.js';
 import {SlashCommand1} from '../../@types/commandDef';
@@ -36,7 +37,7 @@ export const dLeaderboard: SlashCommand1 = {
     logger.debug(`[${PREFIX}] starting | category: ${categoryName}`);
 
     // Get the tripsit guild
-    const guild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+    const guild = client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
 
     const response = await leaderboard(categoryName);
     const leaderboardVals = response.results as leaderboardType;

@@ -28,7 +28,7 @@ import {
   ButtonStyle,
   PermissionFlagsBits,
 } from 'discord-api-types/v10';
-// import env from '../../../global/utils/env.config';
+import env from '../../../global/utils/env.config';
 import {SlashCommand} from '../../@types/commandDef';
 import logger from '../../../global/utils/logger';
 import {paginationEmbed} from '../../utils/pagination';
@@ -70,13 +70,17 @@ export const ping: SlashCommand = {
     }
 
     if (command === 'role check') {
-      const role = interaction.guild!.roles.cache.find((r) => r.name === 'TripBot');
+      if (!interaction.guild) {
+        interaction.reply({content: 'This command can only be used in a server', ephemeral: true});
+        return;
+      };
+      const role = interaction.guild.roles.cache.find((r) => r.name === 'TripBot');
 
-      const user = interaction.client.users.cache.get('332687787172167680');
+      const user = interaction.client.users.cache.get(env.DISCORD_CLIENT_ID) as User;
 
       logger.debug(`[${PREFIX}] user: ${user}`);
 
-      user!.send('Hello!');
+      user.send('Hello!');
 
       const embed1 = new EmbedBuilder()
         .setTitle('First Page')

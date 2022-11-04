@@ -71,8 +71,7 @@ export async function tripsitmeButton(
   const actorIsAdmin = (target as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
   const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
 
-  const guildData = await getGuild(interaction.guild.id);
-  if (!guildData) return;
+  const guildData = await getGuild(interaction.guild.id) as DiscordGuilds;
 
   // Get the roles we'll be referencing
   let roleTripsitter = {} as Role;
@@ -108,7 +107,6 @@ export async function tripsitmeButton(
   }
 
   const userData = await getUser(target.id, null);
-  if (!userData) return;
 
   const ticketData = await getOpenTicket(userData.id, null);
 
@@ -132,7 +130,6 @@ export async function tripsitmeButton(
     if (threadHelpUser.id) {
       await needsHelpmode(interaction, target);
       const guildData = await getGuild(interaction.guild.id);
-      if (!guildData) return;
 
       let roleTripsitter = {} as Role;
       let roleHelper = {} as Role;
@@ -232,10 +229,12 @@ export async function tripSitMe(
   intro:string,
 ) {
   // Lookup guild information for variables
-  if (!interaction.guild) return;
+  if (!interaction.guild) {
+    interaction.reply({content: 'This command can only be used in a server!', ephemeral: true});
+    return;
+  };
   const actor = interaction.member;
   const guildData = await getGuild(interaction.guild.id);
-  if (!guildData) return;
 
   let backupMessage = 'Hey ';
   // Get the roles we'll be referencing
@@ -421,7 +420,6 @@ export async function tripSitMe(
   // logger.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
 
   const userData = await getUser(target.id, null);
-  if (!userData) return;
 
   // Set ticket information
   const newTicketData = {
@@ -466,7 +464,6 @@ export async function needsHelpmode(
   }
 
   const guildData = await getGuild(interaction.guild.id);
-  if (!guildData) return;
 
   let roleNeedshelp = {} as Role;
   if (guildData.role_needshelp) {
@@ -525,7 +522,11 @@ export async function needsHelpmode(
 export async function tripsitmeOwned(
   interaction:ButtonInteraction,
 ) {
-  if (!interaction.guild) return;
+  if (!interaction.guild) {
+    logger.debug(`[${PREFIX}] no guild!`);
+    interaction.reply('This must be performed in a guild!');
+    return;
+  };
   logger.debug(`[${PREFIX}] tripsitmeOwned`);
   const userId = interaction.customId.split('~')[1];
   const actor = interaction.member as GuildMember;
@@ -538,7 +539,6 @@ export async function tripsitmeOwned(
   `});
 
   const userData = await getUser(userId, null);
-  if (!userData) return;
   const ticketData = await getOpenTicket(userData.id, null);
 
 
@@ -565,18 +565,33 @@ export async function tripsitmeOwned(
 export async function tripsitmeMeta(
   interaction:ButtonInteraction,
 ) {
-  if (!interaction.guild) return;
+  if (!interaction.guild) {
+    logger.debug(`[${PREFIX}] no guild!`);
+    interaction.reply('This must be performed in a guild!');
+    return;
+  };
   logger.debug(`[${PREFIX}] tripsitmeMeta`);
   const userId = interaction.customId.split('~')[1];
   const actor = interaction.member as GuildMember;
   const target = await interaction.guild.members.fetch(userId) as GuildMember;
 
-  if (!interaction.guild) return;
-  if (!interaction.channel) return;
-  if (!interaction.member) return;
+  if (!interaction.guild) {
+    logger.debug(`[${PREFIX}] no guild!`);
+    interaction.reply('This must be performed in a guild!');
+    return;
+  };
+  if (!interaction.channel) {
+    logger.debug(`[${PREFIX}] no channel!`);
+    interaction.reply('This must be performed in a channel!');
+    return;
+  };
+  if (!interaction.member) {
+    logger.debug(`[${PREFIX}] no member!`);
+    interaction.reply('This must be performed by a member!');
+    return;
+  };
 
   const userData = await getUser(userId, null);
-  if (!userData) return;
   const ticketData = await getOpenTicket(userData.id, null);
 
 
@@ -649,14 +664,21 @@ export async function tripsitmeBackup(
   interaction:ButtonInteraction,
 ) {
   logger.debug(`[${PREFIX}] tripsitmeBackup`);
-  if (!interaction.guild) return;
-  if (!interaction.channel) return;
+  if (!interaction.guild) {
+    logger.debug(`[${PREFIX}] no guild!`);
+    interaction.reply('This must be performed in a guild!');
+    return;
+  };
+  if (!interaction.channel) {
+    logger.debug(`[${PREFIX}] no channel!`);
+    interaction.reply('This must be performed in a channel!');
+    return;
+  };
   const userId = interaction.customId.split('~')[1];
   const actor = interaction.member as GuildMember;
   const target = await interaction.guild.members.fetch(userId) as GuildMember;
 
   const userData = await getUser(userId, null);
-  if (!userData) return;
   const ticketData = await getOpenTicket(userData.id, null);
 
 
@@ -666,7 +688,6 @@ export async function tripsitmeBackup(
   }
 
   const guildData = await getGuild(interaction.guild.id);
-  if (!guildData) return;
 
   let backupMessage = 'Hey ';
   // Get the roles we'll be referencing
@@ -716,7 +737,6 @@ export async function tripsitmeFinish(
   const targetId = interaction.customId.split('~')[2];
 
   const guildData = await getGuild(interaction.guild.id);
-  if (!guildData) return;
 
   let roleNeedshelp = {} as Role;
   let channelTripsitMeta = {} as TextChannel;
@@ -746,7 +766,6 @@ export async function tripsitmeFinish(
   }
 
   const userData = await getUser(target.id, null);
-  if (!userData) return;
   const ticketData = await getOpenTicket(userData.id, null);
 
 
@@ -785,7 +804,10 @@ export async function tripsitmeFinish(
     if (targetRoles) {
       targetRoles.forEach(async (roleId) => {
         // logger.debug(`[${PREFIX}] Re-adding roleId: ${roleId}`);
-        if (!interaction.guild) return;
+        if (!interaction.guild) {
+          logger.error(`[${PREFIX}] no guild!`);
+          return;
+        };
         const roleObj = await interaction.guild.roles.fetch(roleId) as Role;
         if (!ignoredRoles.includes(roleObj.id) &&
           roleObj.name !== '@everyone' &&

@@ -170,7 +170,7 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
       logger.debug(`[${PREFIX}] firstUnit: ${firstUnit}`);
       // eslint-disable-next-line
         for (const i in unitsOfMeasurement) {
-        if (unitsOfMeasurement[i].abbr.toLowerCase() === (firstUnit! as string).toLowerCase()) {
+        if (unitsOfMeasurement[i].abbr.toLowerCase() === (firstUnit as string).toLowerCase()) {
           measure = unitsOfMeasurement[i].measure;
           logger.debug(`[${PREFIX}] First unit measure: ${measure}`);
         }

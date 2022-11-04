@@ -372,13 +372,13 @@ export const dprofile: SlashCommand = {
       if (target.presence.status === 'online') {
         // statusIcon = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
         statusIcon = `https://i.imgur.com/pJZGATd.png`;
-      } else if (target.presence!.status === 'idle') {
+      } else if (target.presence.status === 'idle') {
         // statusIcon = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
         statusIcon = 'https://i.imgur.com/3ZtlfpR.png';
-      } else if (target.presence!.status === 'dnd') {
+      } else if (target.presence.status === 'dnd') {
         // statusIcon = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
         statusIcon = 'https://i.imgur.com/2ZVC480.png';
-      } else if (target.presence!.status === 'offline') {
+      } else if (target.presence.status === 'offline') {
         // statusIcon = '.\\src\\discord\\assets\\img\\icons\\offline.png';
         statusIcon = 'https://i.imgur.com/eICJIwe.png';
       } else {

@@ -11,14 +11,14 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import env from '../../../global/utils/env.config';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const bug: SlashCommand = {
+export const bug: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('say')
     .setDescription('Say something like a real person!')
@@ -31,8 +31,17 @@ export const bug: SlashCommand = {
     ),
   async execute(interaction) {
     logger.debug(`[${PREFIX}] starting!`);
+    if (!interaction.guild) {
+      interaction.reply({
+        content: 'This command can only be used in a server!',
+        ephemeral: true,
+      });
+      return false;
+    }
+
     const channel = interaction.options.getChannel('channel') as TextChannel;
     const say = interaction.options.getString('say', true);
+
 
     if (channel) {
       channel.send(say);
@@ -45,12 +54,13 @@ export const bug: SlashCommand = {
       ephemeral: true},
     );
 
-    const channelBotlog = interaction.guild!.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    const channelBotlog = interaction.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
       channelBotlog.send(`${(interaction.member as GuildMember).displayName} made me say '${say}' \
 in ${channel ? channel.toString() : interaction.channel?.toString()}`);
     }
 
     logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };

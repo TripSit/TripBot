@@ -72,7 +72,7 @@ export async function applicationStart(
   logger.debug(`[${PREFIX} - applicationStart] roleRequestedId: ${roleRequestedId}`);
   logger.debug(`[${PREFIX} - applicationStart] roleReviewerId: ${roleReviewerId}`);
 
-  const roleRequested = await interaction.guild?.roles.fetch(roleRequestedId);
+  const roleRequested = await interaction.guild?.roles.fetch(roleRequestedId) as Role;
   // const roleReviewer = await interaction.guild?.roles.fetch(roleReviewerId);
   // const channel = await interaction.guild?.channels.fetch(channelId);
 
@@ -80,7 +80,7 @@ export async function applicationStart(
   // Create the modal
   const modal = new ModalBuilder()
     .setCustomId(`applicationSubmit~${channelId}~${roleRequestedId}~${roleReviewerId}~${interaction.id}`)
-    .setTitle(`${roleRequested!.name} Application`);
+    .setTitle(`${roleRequested.name} Application`);
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
     .setCustomId('reason')
     .setRequired(true)
@@ -92,7 +92,7 @@ export async function applicationStart(
     .setCustomId('skills')
     .setRequired(true)
     .setLabel('What skills can you bring to the team?')
-    .setPlaceholder(`What makes you qualified to be a ${roleRequested!.name}? What can you bring to the team?`)
+    .setPlaceholder(`What makes you qualified to be a ${roleRequested.name}? What can you bring to the team?`)
     .setMaxLength(2000)
     .setStyle(TextInputStyle.Paragraph)));
   await interaction.showModal(modal);
@@ -116,6 +116,7 @@ export async function applicationStart(
       const channelId = i.customId.split('~')[1];
       const roleRequestedId = i.customId.split('~')[2];
       const roleReviewerId = i.customId.split('~')[3];
+      const actor = i.member as GuildMember;
 
       logger.debug(`[${PREFIX} - applicationSubmit] channelId: ${channelId}`);
       logger.debug(`[${PREFIX} - applicationSubmit] roleRequestedId: ${roleRequestedId}`);
@@ -132,10 +133,10 @@ export async function applicationStart(
       const skills = i.fields.getTextInputValue('skills');
 
       const applicationThread = await channel.threads.create({
-        name: `💛│${(i.member as GuildMember).displayName}'s ${roleRequested.name} application!`,
+        name: `💛│${actor.displayName}'s ${roleRequested.name} application!`,
         autoArchiveDuration: 1440,
         type: i.guild?.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
-        reason: `${(i.member as GuildMember).displayName} submitted an application!`,
+        reason: `${actor.displayName} submitted an application!`,
         invitable: env.NODE_ENV === 'production' ? false : undefined,
       }) as ThreadChannel;
 
@@ -145,7 +146,7 @@ export async function applicationStart(
         .addFields(
           {
             name: 'Displayname',
-            value: `${(i.member as GuildMember).displayName}`,
+            value: `${actor.displayName}`,
             inline: true},
           {
             name: 'Username',
@@ -163,25 +164,25 @@ export async function applicationStart(
             value: `${time((i.member.user as User).createdAt, 'R')}`,
             inline: true},
         );
-      if ((i.member as GuildMember).joinedAt) {
+      if (actor.joinedAt) {
         appEmbed.addFields(
           {
             name: 'Joined',
-            value: `${time((i.member as GuildMember).joinedAt!, 'R')}`,
+            value: `${time(actor.joinedAt, 'R')}`,
             inline: true},
         );
       }
 
       const approveButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
-          .setCustomId(`applicationApprove~${(i.member as GuildMember).id}~${roleRequestedId}`)
+          .setCustomId(`applicationApprove~${actor.id}~${roleRequestedId}`)
           .setLabel('Approve')
           .setStyle(ButtonStyle.Primary),
       );
 
       const rejectMenu = new ActionRowBuilder<SelectMenuBuilder>().addComponents(
         new SelectMenuBuilder()
-          .setCustomId(`applicationReject~${(i.member as GuildMember).id}~${roleRequestedId}`)
+          .setCustomId(`applicationReject~${actor.id}~${roleRequestedId}`)
           .addOptions(
             {
               label: 'Generic Rejection',
@@ -246,7 +247,7 @@ export async function applicationStart(
           ),
       );
 
-      const actorHasRoleDeveloper = (i.member as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
+      const actorHasRoleDeveloper = actor.permissions.has(PermissionsBitField.Flags.Administrator);
       logger.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
 
       applicationThread.send(`Hey ${actorHasRoleDeveloper ? 'team!' : roleReviewer} there is a new application!`);
@@ -279,6 +280,10 @@ export async function applicationReject(
   interaction: SelectMenuInteraction,
 ): Promise<void> {
   // logger.debug(`[${PREFIX} - applicationReject] starting!`);
+  if (!interaction.guild) {
+    interaction.reply('This command can only be used in a server!');
+    return;
+  }
   const actor = (interaction.member as GuildMember);
   if (actor.permissions.has(PermissionFlagsBits.ManageRoles)) {
     const memberId = interaction.customId.split('~')[1];
@@ -292,14 +297,14 @@ export async function applicationReject(
     // interaction.channel!.send(`${(interaction.member as GuildMember).displayName} rejected this application with reason code '${rejectionReason}'`);
     interaction.reply(`${actor.displayName} rejected this application with reason code '${rejectionReason}'`);
 
-    const message = stripIndents`Thank you so much for your interest in helping out here at ${interaction.guild!.name}. We review all applications with rigor and deep consideration, and the same was true for yours.
+    const message = stripIndents`Thank you so much for your interest in helping out here at ${interaction.guild.name}. We review all applications with rigor and deep consideration, and the same was true for yours.
     At this time, the team has decided not to move forward, though your application has been saved and will be pulled as needed in the future unless rescinded.
     
     As we feel you have a right to know, your application was denied because ${rejectionWording}`;
 
     target.send(stripIndents`${message}`);
     logger.debug(`[${PREFIX} - applicationReject] rejectionReason: ${rejectionWording}`);
-    (interaction.channel! as ThreadChannel).setName(`🖤│${target.displayName}'s ${role.name} application!`);
+    (interaction.channel as ThreadChannel).setName(`🖤│${target.displayName}'s ${role.name} application!`);
   } else {
     interaction.reply({content: 'You do not have permission to do that!', ephemeral: true});
   }
@@ -329,7 +334,7 @@ export async function applicationApprove(
     const target = await interaction.guild?.members.fetch(memberId) as GuildMember;
     const role = await interaction.guild?.roles.fetch(roleId) as Role;
 
-    (interaction.channel! as ThreadChannel).setName(`💚│${target.displayName}'s ${role.name} application1!`);
+    (interaction.channel as ThreadChannel).setName(`💚│${target.displayName}'s ${role.name} application1!`);
 
     logger.debug(`[${PREFIX} - applicationAccept] Giving ${target.displayName} ${role.name} role!`);
     target.roles.add(role);

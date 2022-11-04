@@ -178,7 +178,10 @@ export const dDrug: SlashCommand1 = {
         roaNames.forEach((roaName) => {
           if (dosageColumns < 3) {
             const roaInfo = (drugData.roas as roaType[]).find((r:roaType) => r.name === roaName);
-            if (!roaInfo) return;
+            if (!roaInfo) {
+              logger.error(`[${PREFIX}] Could not find roaInfo for ${roaName}`);
+              return;
+            };
             if (roaInfo.dosage) {
               let dosageString = '';
               roaInfo.dosage.forEach((d) => {

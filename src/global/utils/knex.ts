@@ -41,7 +41,7 @@ export async function getUser(
       .first();
   }
 
-  return data;
+  return data as Users;
 }
 
 /**
@@ -58,7 +58,7 @@ export async function getGuild(guildId:string) {
       .insert({id: guildId})
       .returning('*'))[0];
   }
-  return data;
+  return data as DiscordGuilds;
 }
 
 /**

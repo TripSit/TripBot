@@ -846,6 +846,10 @@ export const testSuite: SlashCommand1 = {
         {name: 'Global', value: 'Global'},
       )),
   async execute(interaction) {
+    if (!interaction.channel) {
+      await interaction.reply('This command must be used in a channel!');
+      return false;
+    };
     const scope = interaction.options.getString('scope') || 'All';
     await interaction.reply(`Testing ${scope} commands!`);
 
@@ -854,7 +858,10 @@ export const testSuite: SlashCommand1 = {
         logger.debug(`[${PREFIX}] Global results: ${JSON.stringify(globalResults)}`);
         await testGuild(interaction)
           .then(async (guildResults) => {
-            if (!interaction.channel) return;
+            if (!interaction.channel) {
+              await interaction.reply('This command must be used in a channel!');
+              return false;
+            };
             logger.debug(`[${PREFIX}] Guild results: ${JSON.stringify(guildResults)}`);
             const embed = embedTemplate()
               .setTitle('Testing Results')

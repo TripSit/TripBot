@@ -31,7 +31,7 @@ export const time: SlashCommand1 = {
     ),
   execute: async (interaction) => {
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
-    const tzValue = interaction.options.getString('timezone')!;
+    const tzValue = interaction.options.getString('timezone');
     let member = interaction.options.getMember('user') as GuildMember | null;
 
     if (command === undefined) {

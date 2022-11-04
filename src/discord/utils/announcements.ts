@@ -68,11 +68,11 @@ type messageCounterType = {
 export async function announcements(message:Message) {
   // logger.debug(`[${PREFIX}] starting!`);
 
-  const channelStart = await message.client.channels.fetch(env.CHANNEL_START);
-  const channelAnnouncements = await message.client.channels.fetch(env.CHANNEL_ANNOUNCEMENTS)!;
-  const channelRules = await message.client.channels.fetch(env.CHANNEL_RULES)!;
-  const channelBotspam = await message.client.channels.fetch(env.CHANNEL_BOTSPAM)!;
-  const channelTechhelp = await message.client.channels.fetch(env.CHANNEL_HELPDESK)!;
+  const channelStart = await message.client.channels.fetch(env.CHANNEL_START) as TextChannel;
+  const channelAnnouncements = await message.client.channels.fetch(env.CHANNEL_ANNOUNCEMENTS) as TextChannel;
+  const channelRules = await message.client.channels.fetch(env.CHANNEL_RULES) as TextChannel;
+  const channelBotspam = await message.client.channels.fetch(env.CHANNEL_BOTSPAM) as TextChannel;
+  const channelTechhelp = await message.client.channels.fetch(env.CHANNEL_HELPDESK) as TextChannel;
   // const channelHowToTripsit = await message.client.channels.fetch(env.CHANNEL_HOWTOTRIPSIT)!;
   // const channelTripsit = await message.client.channels.fetch(env.CHANNEL_TRIPSIT)!;
   // const channelRTripsit = await message.client.channels.fetch(env.CHANNEL_TRIPSIT)!;
@@ -121,11 +121,11 @@ export async function announcements(message:Message) {
   ];
 
   const channelAnnouncments = [
-    `You can change your color and mindset in the ${channelStart!.toString()}`,
-    `Stay up to date with TripSit news in ${channelAnnouncements!.toString()}`,
-    `Make sure to follow the ${channelRules!.toString()}!`,
-    `Test out bot commands in ${channelBotspam!.toString()}!`,
-    `Have an issue and need to talk with the team? Use ${channelTechhelp!.toString()}!`,
+    `You can change your color and mindset in the ${channelStart.toString()}`,
+    `Stay up to date with TripSit news in ${channelAnnouncements.toString()}`,
+    `Make sure to follow the ${channelRules.toString()}!`,
+    `Test out bot commands in ${channelBotspam.toString()}!`,
+    `Have an issue and need to talk with the team? Use ${channelTechhelp.toString()}`,
   //   `Need help from a tripsitter? Use ${channelTripsit!.toString()}!`,
   //   `${channelOpenTripsit1!.toString()}, and ${channelOpenTripsit2!.toString()} are "communal" tripsit rooms!`,
   //   `Slowmode is enabled in ${channelSanctuary!.toString()} to let people have a chill experience!`,

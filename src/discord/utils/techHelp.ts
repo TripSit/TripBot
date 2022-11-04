@@ -26,14 +26,27 @@ const PREFIX = path.parse(__filename).name;
  */
 export async function techHelpClick(interaction:ButtonInteraction) {
   // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
-  if (!interaction.guild) return;
+  if (!interaction.guild) {
+    interaction.reply({
+      content: 'This command can only be used in a server!',
+      ephemeral: true,
+    });
+    return;
+  };
 
   const issueType = interaction.customId.split('~')[1];
   const roleId = interaction.customId.split('~')[2];
 
   const role = await interaction.guild?.roles.fetch(roleId);
 
-  if (!role) return;
+  if (!role) {
+    logger.error(`[${PREFIX} - techHelpClick] role not found: ${roleId}`);
+    interaction.reply({
+      content: 'The role provided could not be found!',
+      ephemeral: true,
+    });
+    return;
+  }
 
   logger.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
   logger.debug(`[${PREFIX} - techHelpClick] role: ${role.id}`);
@@ -73,7 +86,13 @@ export async function techHelpClick(interaction:ButtonInteraction) {
  * @param {ModalSubmitInteraction} interaction The modal that submitted this
  */
 export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
-  if (!interaction.guild) return;
+  if (!interaction.guild) {
+    interaction.reply({
+      content: 'This command can only be used in a server!',
+      ephemeral: true,
+    });
+    return;
+  };
   // logger.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}!`);
 
   const issueType = interaction.customId.split('~')[1];
@@ -81,7 +100,14 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
 
   const roleModerator = await interaction.guild?.roles.fetch(roleId);
 
-  if (!roleModerator) return;
+  if (!roleModerator) {
+    logger.error(`[${PREFIX} - techHelpClick] role not found: ${roleId}`);
+    interaction.reply({
+      content: 'The role provided could not be found!',
+      ephemeral: true,
+    });
+    return;
+  };
 
   logger.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
   logger.debug(`[${PREFIX} - techHelpClick] role: ${roleModerator.id}`);
@@ -152,7 +178,13 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
  * @param {ButtonInteraction} interaction The button that submitted this
  */
 export async function techHelpOwn(interaction:ButtonInteraction) {
-  if (!interaction.guild) return;
+  if (!interaction.guild) {
+    interaction.reply({
+      content: 'This command can only be used in a server!',
+      ephemeral: true,
+    });
+    return;
+  };
   const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
   const target = await interaction.guild.members.fetch(targetId) as GuildMember;
@@ -167,7 +199,13 @@ issue and will either help you or figure out how to get you help!`});
  * @param {ButtonInteraction} interaction The button that submitted this
  */
 export async function techHelpClose(interaction:ButtonInteraction) {
-  if (!interaction.guild) return;
+  if (!interaction.guild) {
+    interaction.reply({
+      content: 'This command can only be used in a server!',
+      ephemeral: true,
+    });
+    return;
+  };
   const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
   const target = await interaction.guild.members.fetch(targetId) as GuildMember;

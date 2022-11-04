@@ -1,5 +1,5 @@
-import {db} from '../utils/knex';
-import {Users, UserExperience} from '../@types/pgdb';
+import {db, getUser} from '../utils/knex';
+import {UserExperience} from '../@types/pgdb';
 import logger from '../utils/logger';
 import * as path from 'path';
 import {stripIndents} from 'common-tags';
@@ -56,14 +56,20 @@ export async function leaderboard(
 
     let rank = 1;
     for (const user of userExperience) {
-      const discordUser = await db
-        .select(db.ref('discord_id').as('discord_id'))
-        .from<Users>('users')
-        .where('id', user.user_id)
-        .first();
+      if (!user.total_points) continue;
+
+      const userData = await getUser(null, user.user_id);
+      if (!userData) {
+        logger.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
+        continue;
+      };
+      if (!userData.discord_id) {
+        logger.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
+        continue;
+      }
 
       let level = 0;
-      let levelPoints = user.total_points!;
+      let levelPoints = user.total_points;
       let expToLevel = 0;
       while (levelPoints > expToLevel) {
         level++;
@@ -77,7 +83,7 @@ export async function leaderboard(
 
       results['TOTAL'].push({
         rank: rank,
-        id: discordUser?.discord_id!,
+        id: userData.discord_id,
         level: level,
       });
       rank++;
@@ -97,19 +103,22 @@ export async function leaderboard(
 
       let rank = 1;
       for (const user of userExperience) {
-        const discordUser = await db
-          .select(
-            db.ref('discord_id').as('discord_id'),
-          )
-          .from<Users>('users')
-          .where('id', user.user_id)
-          .first();
+        const userData = await getUser(null, user.user_id);
+        if (!userData) {
+          logger.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
+          continue;
+        };
+        if (!userData.discord_id) {
+          logger.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
+          continue;
+        }
+
         if (!results[category]) {
           results[category] = [];
         }
         results[category].push({
           rank: rank,
-          id: discordUser?.discord_id!,
+          id: userData.discord_id,
           level: user.level,
         });
         rank++;
@@ -134,17 +143,22 @@ export async function leaderboard(
 
     let rank = 1;
     for (const user of userExperience) {
-      const discordUser = await db
-        .select(
-          db.ref('discord_id').as('discord_id'),
-        )
-        .from<Users>('users')
-        .where('id', user.user_id)
-        .first();
-
+      const userData = await getUser(null, user.user_id);
+      if (!userData) {
+        logger.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
+        continue;
+      };
+      if (!userData.discord_id) {
+        logger.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
+        continue;
+      }
+      if (!user.total_points) {
+        logger.error(`[${PREFIX}] User ${user.user_id} has no total points`);
+        continue;
+      }
 
       let level = 0;
-      let levelPoints = user.total_points!;
+      let levelPoints = user.total_points;
       let expToLevel = 0;
       // let i = 0;
       while (levelPoints > expToLevel) {
@@ -153,7 +167,7 @@ export async function leaderboard(
         levelPoints -= expToLevel;
       }
 
-      logger.debug(`[${PREFIX}] discordUser: ${JSON.stringify(discordUser)} is level ${level}`);
+      logger.debug(`[${PREFIX}] discordUser: ${JSON.stringify(userData)} is level ${level}`);
 
       if (!results['TOTAL']) {
         results['TOTAL'] = [];
@@ -161,7 +175,7 @@ export async function leaderboard(
 
       results['TOTAL'].push({
         rank: rank,
-        id: discordUser?.discord_id!,
+        id: userData.discord_id,
         level: level,
       });
       rank++;
@@ -181,15 +195,17 @@ export async function leaderboard(
     const rankList = [] as rankType[];
     let i = 1;
     for (const user of userExperience) {
-      const discordUser = await db
-        .select(
-          db.ref('discord_id').as('discord_id'),
-        )
-        .from<Users>('users')
-        .where('id', user.user_id)
-        .first();
+      const userData = await getUser(null, user.user_id);
+      if (!userData) {
+        logger.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
+        continue;
+      };
+      if (!userData.discord_id) {
+        logger.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
+        continue;
+      }
 
-      rankList.push({'rank': i, 'id': discordUser?.discord_id!, 'level': user.level});
+      rankList.push({'rank': i, 'id': userData.discord_id, 'level': user.level});
       i++;
     };
     results = {

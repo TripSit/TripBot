@@ -44,10 +44,8 @@ export async function chitragupta(
   }
 
   // logger.debug(`[${PREFIX}] actor: ${actor}`);
-  if (!reaction.emoji.name!.includes('upvote')) {
-    // logger.debug(`[${PREFIX}] Invalid emoji: ${emoji.toString()}`);
-    return;
-  }
+  if (!reaction.emoji.name) return;
+  if (!reaction.emoji.name.includes('upvote')) return;
 
   // Increment karma of the actor
   let actorKarma = await db('users')

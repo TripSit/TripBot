@@ -18,6 +18,8 @@ const helpCounter = new Map<string, number>();
  * @return {Promise<void>}
 **/
 export async function messageCommand(message: Message): Promise<void> {
+  if (!message.guild) return; // If not in a guild then ignore all messages
+  if (message.guild.id !== env.DISCORD_GUILD_ID) return; // If not in tripsit ignore all messages
   // logger.debug(`[${PREFIX}] starting!`);
   const displayName = message.member ? message.member.displayName : message.author.username;
 
@@ -34,14 +36,18 @@ export async function messageCommand(message: Message): Promise<void> {
       const now = Date.now().valueOf();
       if (helpCounter.has(message.author.id)) {
         const lastTime = helpCounter.get(message.author.id);
-        if (now - lastTime! < 1000 * 60 * 5) {
+        if (!lastTime) {
+          // logger.debug(`[${PREFIX}] lastTime is undefined!`);
+          return;
+        };
+        if (now - lastTime < 1000 * 60 * 5) {
           message.channel.send(stripIndents`Hey ${displayName}, you just used that command, \
 give people a chance to answer 😄 If no one answers in 5 minutes you can try again.`);
           return;
         }
       }
-      const roleTripsitter = message.guild!.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
-      const roleHelper = message.guild!.roles.cache.find((role) => role.id === env.ROLE_HELPER) as Role;
+      const roleTripsitter = message.guild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
+      const roleHelper = message.guild.roles.cache.find((role) => role.id === env.ROLE_HELPER) as Role;
       message.channel.send(
         `Hey ${displayName}, thank you for asking for help! We've notified our ${roleTripsitter} and\
 ${roleHelper}. Can you start off by telling us how much you took and the details of your problem?`);

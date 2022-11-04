@@ -36,7 +36,11 @@ export async function calcBenzo(
   }
 
   const regex = /[0-9]+\.?[0-9]?/;
-  const convertedDoseA = regex.exec(drugDataA.properties['dose_to_diazepam' as keyof typeof drugDataA.properties])!;
+  const convertedDoseA = regex.exec(drugDataA.properties['dose_to_diazepam' as keyof typeof drugDataA.properties]);
+  if (!convertedDoseA) {
+    logger.error(`[${PREFIX}] ${drugA} dose_to_diazepam property is not a number`);
+    return;
+  }
 
   const drugDataB = drugDataTripsit[drugB as keyof typeof drugDataTripsit];
 
@@ -50,7 +54,7 @@ export async function calcBenzo(
     return;
   }
 
-  const convertedDoseB = regex.exec(drugDataB.properties['dose_to_diazepam' as keyof typeof drugDataB.properties])!;
+  const convertedDoseB = regex.exec(drugDataB.properties['dose_to_diazepam' as keyof typeof drugDataB.properties]);
   // logger.debug(`[${PREFIX}] convertedDoseA: ${convertedDoseA}`);
   // logger.debug(`[${PREFIX}] convertedDoseA: ${convertedDoseA.toString()}`);
   // logger.debug(`[${PREFIX}] convertedDoseA: ${parseFloat(convertedDoseA.toString())}`);
@@ -61,6 +65,11 @@ export async function calcBenzo(
   // logger.debug(`[${PREFIX}] dosage1: ${dosage / parseFloat(convertedDoseA.toString())}`);
   // logger.debug(`[${PREFIX}] dosage2: ${parseFloat(convertedDoseA.toString()) *
   // parseFloat(convertedDoseB.toString())}`);
+
+  if (!convertedDoseB) {
+    logger.error(`[${PREFIX}] ${drugB} dose_to_diazepam property is not a number`);
+    return;
+  }
 
   const result = (dosage / parseFloat(convertedDoseA.toString())) * parseFloat(convertedDoseB.toString());
   logger.debug(`[${PREFIX}] result: ${result}`);

@@ -12,6 +12,7 @@ import {
   SelectMenuBuilder,
   GuildMember,
   ModalSubmitInteraction,
+  Role,
 } from 'discord.js';
 import {
   ButtonStyle, TextInputStyle,
@@ -212,7 +213,12 @@ export async function hasPermissions(
   interaction: ChatInputCommandInteraction,
   channel: TextChannel) {
   logger.debug(`[${PREFIX}] Checking permissions`);
-  if (!interaction.guild) return;
+  if (!interaction.guild) {
+    const embed = embedTemplate()
+      .setTitle('This command can only be used in a server!');
+    interaction.editReply({embeds: [embed]});
+    return false;
+  };
   const me = interaction.guild.members.me as GuildMember;
   const channelPerms = channel.permissionsFor(me);
   // logger.debug(`[${PREFIX}] channelPerms: ${channelPerms?.toArray()}`);
@@ -348,7 +354,10 @@ export async function applications(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  if (!interaction.guild) return;
+  if (!interaction.guild) {
+    interaction.reply('You must run this in a guild!');
+    return;
+  };
 
   const hasPermission = await hasPermissions(interaction, (interaction.channel as TextChannel));
   if (!hasPermission) {
@@ -429,14 +438,13 @@ export async function applications(interaction:ChatInputCommandInteraction) {
           value: `none`,
         });
       roleArray.forEach((role) => {
-        if (!i.channel) return;
         if (role[0]) {
           if (role[1]) {
             // logger.debug(`[${PREFIX}] role: ${role[0].name}`);
             selectMenu.addOptions(
               {
                 label: role[0].name,
-                value: `${i.channel.id}~${role[0].id}~${role[1].id}`,
+                value: `${i.channel?.id}~${role[0].id}~${role[1].id}`,
               },
             );
           } else {
@@ -470,7 +478,10 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  if (!interaction.guild) return;
+  if (!interaction.guild) {
+    interaction.reply('You must run this in a server!');
+    return;
+  };
 
   if (!await hasPermissions(interaction, (interaction.channel as TextChannel))) {
     logger.debug(`${PREFIX} bot does NOT has permission to post in !`);
@@ -496,8 +507,7 @@ Thanks for reading, stay safe!
   `;
 
   // Get the moderator role
-  const roleModerator = interaction.options.getRole('moderator');
-  if (!roleModerator) return;
+  const roleModerator = interaction.options.getRole('moderator') as Role;
 
   // Create buttons
   const row = new ActionRowBuilder<ButtonBuilder>()
@@ -599,14 +609,10 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
     return;
   }
   logger.debug(`[${PREFIX}] Starting!`);
-  const channelTripsit = await interaction.client.channels.fetch(env.CHANNEL_TRIPSIT);
-  if (!channelTripsit) return;
-  const channelSanctuary = await interaction.client.channels.fetch(env.CHANNEL_SANCTUARY);
-  if (!channelSanctuary) return;
-  const channelOpentripsit = await interaction.client.channels.fetch(env.CHANNEL_OPENTRIPSIT1);
-  if (!channelOpentripsit) return;
-  const channelRules = await interaction.client.channels.fetch(env.CHANNEL_RULES);
-  if (!channelRules) return;
+  const channelTripsit = await interaction.client.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
+  const channelSanctuary = await interaction.client.channels.fetch(env.CHANNEL_SANCTUARY) as TextChannel;
+  const channelOpentripsit = await interaction.client.channels.fetch(env.CHANNEL_OPENTRIPSIT1) as TextChannel;
+  const channelRules = await interaction.client.channels.fetch(env.CHANNEL_RULES) as TextChannel;
 
   // **3)** I understand that every room with a :link: is bridged to IRC and there may be lower quality chat in those rooms.
 

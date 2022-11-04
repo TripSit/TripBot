@@ -326,7 +326,7 @@ export async function moderate(
     .setColor(Colors.Blue)
     .addFields(
       {name: 'Created', value: `${time(target.user.createdAt, 'R')}`, inline: true},
-      {name: 'Joined', value: `${target.joinedAt ? time(target.joinedAt!, 'R') : 'Unknown'}`, inline: true},
+      {name: 'Joined', value: `${target.joinedAt ? time(target.joinedAt, 'R') : 'Unknown'}`, inline: true},
       {name: 'ID', value: `${target.id}`, inline: true},
       {name: '# of Reports', value: `${targetActionCount.report}`, inline: true},
       {name: '# of Warns', value: `${targetActionCount.warn}`, inline: true},

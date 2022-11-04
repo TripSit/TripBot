@@ -109,7 +109,7 @@ export async function experience(
   }
 
   // Check if the user has an ignored role
-  if (ignoredRoles.some((role) => message.member!.roles.cache.has(role))) {
+  if (ignoredRoles.some((role) => message.member?.roles.cache.has(role))) {
     // logger.debug(`[${PREFIX}] Message sent by a user with an ignored role`);
     return;
   }
@@ -225,7 +225,11 @@ export async function experience(
   // logger.debug(`[${PREFIX}] diff: ${JSON.stringify(diff)}`);
 
   // If the message happened in the last minute, ignore it
-  if (diff.milliseconds! < bufferTime) {
+  if (!diff.milliseconds) {
+    logger.error(`[${PREFIX}] Error converting ${lastMessageDate}`);
+    return;
+  }
+  if (diff.milliseconds < bufferTime) {
     logger.debug(`[${PREFIX}] Message sent by a user in the last minute`);
     return;
   }

@@ -7,6 +7,7 @@ import {
   TextInputBuilder,
   ActionRowBuilder,
   ModalSubmitInteraction,
+  Guild,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -104,7 +105,7 @@ export const mod: SlashCommand = {
 
     // logger.debug(`[${PREFIX}] toggle: ${toggle}`);
 
-    const targetGuild = await interaction!.client.guilds.fetch(env.DISCORD_GUILD_ID);
+    const targetGuild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
 
     // logger.debug(`[${PREFIX}] target: ${target}`);
     const targetMember = await targetGuild.members.fetch((target as string).slice(2, -1)) as GuildMember;

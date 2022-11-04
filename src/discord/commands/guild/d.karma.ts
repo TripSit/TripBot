@@ -2,7 +2,7 @@ import {
   SlashCommandBuilder,
   GuildMember,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import {SlashCommand1} from '../../@types/commandDef';
 import {karma} from '../../../global/commands/g.karma';
 // import logger from '../../../global/utils/logger';
 // import * as path from 'path';
@@ -10,7 +10,7 @@ import {karma} from '../../../global/commands/g.karma';
 
 // const karmaQuotes = require('../../../global/assets/data/karma_quotes.json');
 
-export const birthday: SlashCommand = {
+export const birthday: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('karma')
     .setDescription('Keep it positive please!')
@@ -49,9 +49,9 @@ export const birthday: SlashCommand = {
   async execute(interaction) {
     // logger.debug(`[${PREFIX}] started!`);
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
-    let member = interaction.options.getMember('user')! as GuildMember;
-    const value = interaction.options.getNumber('value')!;
-    const type = interaction.options.getString('type')!;
+    let member = interaction.options.getMember('user') as GuildMember;
+    // const value = interaction.options.getNumber('value') as number;
+    // const type = interaction.options.getString('type') as 'karma_given' | 'karma_received';
 
 
     if (command === undefined) {
@@ -62,7 +62,7 @@ export const birthday: SlashCommand = {
       member = interaction.member as GuildMember;
     }
 
-    const response = await karma(command, member.id, value, type);
+    const response = await karma(command, member.id, null, null);
 
     // logger.debug(`[${PREFIX}] response: ${response}`);
 
@@ -73,5 +73,6 @@ export const birthday: SlashCommand = {
     }
 
     // logger.debug(`[${PREFIX}] finished!`);
+    return true;
   },
 };
