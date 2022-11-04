@@ -283,7 +283,7 @@ export async function modmailCreate(
   const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`ModmailIssueModal`);
   interaction.awaitModalSubmit({filter, time: 0})
     .then(async (i) => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
+      if (i.customId.split('~')[2] !== interaction.id) return;
       // Get whatever they sent in the modal
       const modalInputA = i.fields.getTextInputValue(`inputA`);
       logger.debug(`[${PREFIX}] modalInputA: ${modalInputA}!`);
@@ -513,7 +513,7 @@ export async function modmailCreate(
  * What happens when someone DM's the bot
  * @param {Message} message The message sent to the bot
  */
-export async function modmailDMInteraction(message:Message) {
+export async function modmailDMi(message:Message) {
   // Dont run if the user mentions @everyone or @here.
   if (message.content.includes('@everyone') || message.content.includes('@here')) {
     message.author.send('You\'re not allowed to use those mentions.');

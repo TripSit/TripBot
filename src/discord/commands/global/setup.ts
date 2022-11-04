@@ -418,7 +418,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
   const filter = (interaction:ModalSubmitInteraction) => interaction.customId === 'appModal';
   interaction.awaitModalSubmit({filter, time: 150000})
     .then(async (i) => {
-      if (i.customId.split('~')[1] !== i.id) return;
+      if (i.customId.split('~')[1] !== interaction.id) return;
       const selectMenu = new SelectMenuBuilder()
         .setCustomId('applicationRoleSelectMenu')
         .setPlaceholder('Select role here!')
