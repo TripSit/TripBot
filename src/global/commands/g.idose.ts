@@ -35,19 +35,6 @@ export async function idose(
     name: string,
     value: string,
   }[]> {
-  log.debug(`[${PREFIX}] Starting!`);
-
-  log.debug(`[${PREFIX}] 
-    command: ${command}
-    recordNumber: ${recordNumber}
-    userId: ${userId}
-    volume: ${volume} 
-    units: ${units} 
-    substance: ${substance} 
-    roa: ${roa} 
-    date: ${date}
-  `);
-
   let response = {} as {
     name: string,
     value: string,

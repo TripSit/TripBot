@@ -11,6 +11,7 @@ import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
 
 import {parse} from 'path';
+// import {startLog} from './startLog';
 const PREFIX = parse(__filename).name;
 
 const tripsitterChannels = [
@@ -32,11 +33,6 @@ const votePinThreshold = env.NODE_ENV === 'production' ? 5 : 2;
  * @return {Promise<void>}
  */
 export async function bestOf(reaction:MessageReaction, user:User) {
-  // log.debug(`[${PREFIX}] starting!`);
-
-  // log.debug(`[${PREFIX}] reaction.count: ${reaction.count}`);
-  // log.debug(`[${PREFIX}] reaction.emoji.name: ${reaction.emoji.name}`);
-
   if (reaction.count === votePinThreshold && reaction.emoji.name?.includes('upvote')) {
     log.debug(`[${PREFIX}] Message has reached pin threshold!`);
     // Check if the message.channe.id is in the list of tripsitter channels

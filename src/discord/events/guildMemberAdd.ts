@@ -29,10 +29,6 @@ export const guildMemberAdd: guildMemberEvent = {
     }
     log.info(`[${PREFIX}] ${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
 
-    log.debug(`[${PREFIX}] Starting!`);
-    // const roleUnverfied = member.guild.roles.cache.find(role => role.id === roleUnverifiedId);
-    // member.roles.add(roleUnverfied);
-
     const newInvites = await member.guild.invites.fetch();
     const cachedInvites = global.guildInvites.get(member.guild.id);
     const invite = newInvites.find((i) => <number>i.uses > cachedInvites.get(i.code));

@@ -13,6 +13,5 @@ const PREFIX = parse(__filename).name;
  * @param {Client} client Template
  */
 export async function template(client:Client) {
-  log.debug(`[${PREFIX}] Starting`);
-  log.debug(`[${PREFIX}] Finished`);
+  log.debug(`[${PREFIX}] Initialized!`);
 };

@@ -16,9 +16,8 @@ export async function karma(
   command: 'get' | 'set',
   memberId: string,
   value?: number | null,
-  type?: string | null):Promise<string> {
-  // log.debug(`[${PREFIX}] starting!`);
-
+  type?: string | null,
+):Promise<string> {
   const userData = await getUser(memberId, null);
   const response = stripIndents`has received ${userData.karma_received} karma and given ${userData.karma_given} karma`;
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);

@@ -37,7 +37,6 @@ export const help: SlashCommand = {
     .setDescription('Information bout TripBot Commands'),
   async execute(interaction) {
     startLog(PREFIX, interaction);
-    log.debug(`[${PREFIX}] starting!`);
 
     const globalCommands = await interaction.client.application?.commands.fetch();
     const guildCommands = await interaction.client.application?.commands.fetch({guildId: env.DISCORD_GUILD_ID});

@@ -9,49 +9,54 @@ import drugDataTripsit from '../assets/data/drug_db_tripsit.json';
  * @param {number} dosage
  * @param {string} drugA
  * @param {string} drugB
- * @return {Promise<any>}
+ * @return {Promise<string | number>}
  */
 export async function calcBenzo(
   dosage:number,
   drugA:string,
   drugB:string,
-):Promise<any> {
+):Promise<string | number> {
   // log.debug(`[${PREFIX}] dosage: ${dosage} | drug_a: ${drugA} | drug_b: ${drugB}`);
 
-  if (drugDataTripsit === null || drugDataTripsit === undefined) {
-    log.error(`[${PREFIX}] drugDataAll is null or undefined`);
-    return;
-  }
+  // if (drugDataTripsit === null || drugDataTripsit === undefined) {
+  //   log.error(`[${PREFIX}] drugDataAll is null or undefined`);
+  //   return;
+  // }
 
   const drugDataA = drugDataTripsit[drugA as keyof typeof drugDataTripsit];
 
   if (!drugDataA) {
-    log.error(`[${PREFIX}] ${drugA} was not found in drugDataTripsit`);
-    return;
+    const response = `${drugA} was not found in db, did you spell that right?`;
+    log.error(`[${PREFIX}] ${response}`);
+    return response;
   }
 
   if (!drugDataA.properties.hasOwnProperty('dose_to_diazepam')) {
-    log.error(`[${PREFIX}] ${drugA} does not have a dose_to_diazepam property`);
-    return;
+    const response = `${drugA} does not have a conversion property, you should not have been able to select this!`;
+    log.error(`[${PREFIX}] ${response}`);
+    return response;
   }
 
   const regex = /[0-9]+\.?[0-9]?/;
   const convertedDoseA = regex.exec(drugDataA.properties['dose_to_diazepam' as keyof typeof drugDataA.properties]);
   if (!convertedDoseA) {
-    log.error(`[${PREFIX}] ${drugA} dose_to_diazepam property is not a number`);
-    return;
+    const response = `${drugA} dose_to_diazepam property is not a number, this should not have happened!`;
+    log.error(`[${PREFIX}] ${response}`);
+    return response;
   }
 
   const drugDataB = drugDataTripsit[drugB as keyof typeof drugDataTripsit];
 
   if (!drugDataB) {
-    log.error(`[${PREFIX}] ${drugB} was not found in drugDataTripsit`);
-    return;
+    const response = `${drugB} was not found in db, did you spell that right?`;
+    log.error(`[${PREFIX}] ${response}`);
+    return response;
   }
 
   if (!drugDataB.properties.hasOwnProperty('dose_to_diazepam')) {
-    log.error(`[${PREFIX}] ${drugB} does not have a dose_to_diazepam property`);
-    return;
+    const response = `${drugB} does not have a conversion property, you should not have been able to select this!`;
+    log.error(`[${PREFIX}] ${response}`);
+    return response;
   }
 
   const convertedDoseB = regex.exec(drugDataB.properties['dose_to_diazepam' as keyof typeof drugDataB.properties]);
@@ -67,8 +72,9 @@ export async function calcBenzo(
   // parseFloat(convertedDoseB.toString())}`);
 
   if (!convertedDoseB) {
-    log.error(`[${PREFIX}] ${drugB} dose_to_diazepam property is not a number`);
-    return;
+    const response = `${drugB} dose_to_diazepam property is not a number, this should not have happened!`;
+    log.error(`[${PREFIX}] ${response}`);
+    return response;
   }
 
   const result = (dosage / parseFloat(convertedDoseA.toString())) * parseFloat(convertedDoseB.toString());

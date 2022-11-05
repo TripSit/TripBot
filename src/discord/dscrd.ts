@@ -19,7 +19,6 @@ const PREFIX = parse(__filename).name;
  * eslint disable-next-line
  */
 export async function discordConnect(): Promise<void> {
-  // log.info(`[${PREFIX}] Starting discord bot!`);
   const client = new Client({
     intents: [
       GatewayIntentBits.MessageContent,

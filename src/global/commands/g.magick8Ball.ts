@@ -6,7 +6,7 @@ const PREFIX = parse(__filename).name;
  *
  * @return {string} What the 8ball says
  */
-export async function magick8Ball():Promise<any> {
+export async function magick8Ball():Promise<string> {
   const response = answers[Math.floor(Math.random() * answers.length)];
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
   return response;

@@ -108,8 +108,6 @@ const voteDownvoteThreshold = NODE_ENV === 'production' ? 3 : 1;
 
 module.exports = {
   async communityMod(reaction/* , user */) {
-    log.debug(`[${PREFIX}] starting!`);
-
     let target = {};
     if (!target) {
       // log.debug(`[${PREFIX}] target is null, pulling fresh member data`);

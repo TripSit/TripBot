@@ -39,14 +39,16 @@ export const convertUnits: SlashCommand = {
       return false;
     }
 
-    log.debug(`${PREFIX}: ${valueInt} ${units} into ${intoUnits}`);
     const result = convert(valueInt).from(units as convert.Unit).to(intoUnits as convert.Unit);
 
+    const response = `${value} ${units} is ${result} ${intoUnits}`;
+
+    log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+
     const embed = embedTemplate()
-      .setTitle(`${value} ${units} is ${result} ${intoUnits}`);
-      // .setDescription(`${value} ${units} is ${result} ${intoUnits}`);
-    if (interaction.replied) interaction.followUp({embeds: [embed]});
-    else interaction.reply({embeds: [embed]});
+      .setTitle(response);
+
+    interaction.reply({embeds: [embed]});
     return true;
   },
 };

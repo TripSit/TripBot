@@ -61,8 +61,8 @@ export const calxDXM: SlashCommand = {
     }
 
     const results = await calcDxm(givenWeight, weightUnits, taking);
-    const dosageData = results[0] as DxmDataType;
-    const units = results[1] as string;
+    const dosageData = results.data as DxmDataType;
+    const units = results.units as string;
 
     const embed = embedTemplate()
       .setColor(Colors.Purple)

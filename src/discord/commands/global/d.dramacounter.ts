@@ -37,7 +37,6 @@ export const bug: SlashCommand = {
     ),
   async execute(interaction) {
     startLog(PREFIX, interaction);
-    log.debug(`[${PREFIX}] starting!`);
     const command = interaction.options.getSubcommand() as 'get' | 'set';
 
     if (!interaction.guild) {
@@ -49,29 +48,33 @@ export const bug: SlashCommand = {
     }
     // log.debug(`[${PREFIX}] interaction.guild: ${JSON.stringify(interaction.guild, null, 2)}`);
 
-    const dramaVal = interaction.options.getString('dramatime');
-    log.debug(`[${PREFIX}] dramaVal: ${JSON.stringify(dramaVal, null, 2)}`);
-    if (!dramaVal) {
-      interaction.reply({
-        content: 'You need to specify a time for the drama to have happened.',
-        ephemeral: true,
-      });
-      return false;
+    let dramaDate = {} as Date;
+    let dramaReason = '' as string;
+    if (command === 'set') {
+      const dramaVal = interaction.options.getString('dramatime');
+      log.debug(`[${PREFIX}] dramaVal: ${JSON.stringify(dramaVal, null, 2)}`);
+      if (!dramaVal) {
+        interaction.reply({
+          content: 'You need to specify a time for the drama to have happened.',
+          ephemeral: true,
+        });
+        return false;
+      }
+      const dramatimeValue = await parseDuration(dramaVal);
+      log.debug(`[${PREFIX}] dramatimeValue: ${JSON.stringify(dramatimeValue, null, 2)}`);
+      const dramaIssue = interaction.options.getString('dramaissue');
+      log.debug(`[${PREFIX}] dramaIssue: ${JSON.stringify(dramaIssue, null, 2)}`);
+      if (!dramaIssue) {
+        interaction.reply({
+          content: 'You need to specify what the drama was.',
+          ephemeral: true,
+        });
+        return false;
+      }
+      dramaReason = dramaIssue;
+      dramaDate = DateTime.now().minus(dramatimeValue).toJSDate();
+      log.debug(`[${PREFIX}] dramaTime: ${JSON.stringify(dramaDate, null, 2)}`);
     }
-    const dramatimeValue = await parseDuration(dramaVal);
-    log.debug(`[${PREFIX}] dramatimeValue: ${JSON.stringify(dramatimeValue, null, 2)}`);
-    const dramaReason = interaction.options.getString('dramaissue');
-    log.debug(`[${PREFIX}] dramaIssue: ${JSON.stringify(dramaReason, null, 2)}`);
-    if (!dramaReason) {
-      interaction.reply({
-        content: 'You need to specify what the drama was.',
-        ephemeral: true,
-      });
-      return false;
-    }
-
-    const dramaDate = DateTime.now().minus(dramatimeValue).toJSDate();
-    log.debug(`[${PREFIX}] dramaTime: ${JSON.stringify(dramaDate, null, 2)}`);
 
     const response = await dramacounter(command, interaction.guild.id, dramaDate, dramaReason);
 
@@ -79,12 +82,21 @@ export const bug: SlashCommand = {
       .setTitle('Drama Counter');
 
     if (command === 'get') {
+      if (!response.dramaDate) {
+        embed.setDescription('There has been no drama yet!');
+        await interaction.reply({embeds: [embed]});
+        return true;
+      }
       embed.setDescription(
-        `The last drama was ${time(new Date(response[1]), 'R')}: ${response[0]}`);
+        `The last drama was ${time(new Date(response.dramaDate), 'R')}: ${response.dramaReason}`);
       await interaction.reply({embeds: [embed]});
     } else {
-      embed.setDescription(stripIndents`The drama counter has been reset to ${time(new Date(response[1]), 'R')} ago, \
-      and the issue was: ${response[0]}`);
+      if (!response.dramaDate) {
+        return false;
+      }
+      embed.setDescription(
+        stripIndents`The drama counter has been reset to ${time(new Date(response.dramaDate), 'R')} ago, \
+      and the issue was: ${response.dramaReason}`);
       await interaction.reply({embeds: [embed], ephemeral: true});
     }
     return true;

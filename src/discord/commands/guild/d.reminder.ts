@@ -9,7 +9,6 @@ import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {startLog} from '../../utils/startLog';
 import env from '../../../global/utils/env.config';
-import log from '../../../global/utils/log';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
@@ -27,8 +26,6 @@ export const reminder: SlashCommand = {
       });
       return false;
     }
-
-    log.debug(`[${PREFIX}] starting!`);
 
     const reminder = embedTemplate()
       .setColor(Colors.Red)

@@ -3,11 +3,12 @@ import {stripIndents} from 'common-tags';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 import log from '../../global/utils/log';
+
 /**
  * Information about the bot!
- * @return {any} an object with information about the bot
+ * @return {aboutInfo} an object with information about the bot
  */
-export async function about():Promise<any> {
+export async function about():Promise<aboutInfo> {
   const aboutInfo ={
     name: 'TripSit',
     url: 'https://tripsit.me/',
@@ -49,3 +50,13 @@ export async function about():Promise<any> {
   log.info(`[${PREFIX}] response: ${JSON.stringify(aboutInfo, null, 2)}`);
   return aboutInfo;
 };
+
+type aboutInfo = {
+  name: string;
+  url: string;
+  description: string;
+  disclaimer: string;
+  support: string;
+  feedback: string;
+  credits: string;
+}

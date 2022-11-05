@@ -10,8 +10,6 @@ export const guildUpdate: guildEvent = {
   name: 'guildUpdate',
 
   async execute(guild: Guild) {
-    // log.debug(`[${PREFIX}] starting!`);
-
     const guildData = await getGuild(guild.id);
 
     if (guildData.is_banned) {

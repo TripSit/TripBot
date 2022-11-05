@@ -20,9 +20,8 @@ export const guildMemberRemove: guildMemberEvent = {
     if (member.guild.id !== env.DISCORD_GUILD_ID) {
       return;
     };
-    log.debug(`[${PREFIX}] starting!`);
 
-    // log.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}`);
+    log.info(`[${PREFIX}] ${member} left guild: ${member.guild.name} (id: ${member.guild.id})`);
 
     const joinedTimestamp = member.joinedTimestamp;
 

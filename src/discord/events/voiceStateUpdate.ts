@@ -12,16 +12,14 @@ const PREFIX = parse(__filename).name;
 export const voiceStateUpdate: voiceEvent = {
   name: 'voiceStateUpdate',
   async execute(Old: VoiceState, New: VoiceState) {
-    // log.debug(`[${PREFIX}] starting!`);
     if (New.guild.id !== env.DISCORD_GUILD_ID) return;
     if (New.member?.user?.bot) return;
     if (Old.member?.user?.bot) return;
-
-    log.debug(`[${PREFIX}] Tempvoice channel is is ${env.CHANNEL_CAMPFIRE}`);
-
     log.debug(`[${PREFIX}] ${New.member?.displayName} ${New.channelId ?
       `joined channel ${New.channel?.name} (${New.channelId})` :
       `left channel ${Old.channel?.name} (${Old.channelId})`} `);
+
+    // log.debug(`[${PREFIX}] Tempvoice channel is is ${env.CHANNEL_CAMPFIRE}`);
 
     if (New.channelId === env.CHANNEL_CAMPFIRE) {
       console.log('user joinded tempvoice');

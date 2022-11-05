@@ -11,7 +11,6 @@ export const guildCreate: guildEvent = {
   name: 'guildCreate',
 
   async execute(guild: Guild) {
-    log.debug(`[${PREFIX}] starting!`);
     log.info(`[${PREFIX}] Joined guild: ${guild.name} (id: ${guild.id})`);
 
     const guildData = await getGuild(guild.id);

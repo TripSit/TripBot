@@ -9,18 +9,19 @@ type DxmDataType = {
   Fourth: {min: number, max: number};
 };
 
+type returnType = {
+  data: DxmDataType;
+  units: string;
+};
+
 /**
  * @param {number} givenWeight
  * @param {string} weightUnits
  * @param {string} taking
  * @return {any}
  */
-export async function calcDxm(givenWeight:number, weightUnits:string, taking:string):Promise<any> {
+export async function calcDxm(givenWeight:number, weightUnits:string, taking:string):Promise<returnType> {
   let calcWeight = weightUnits === 'lbs' ? givenWeight * 0.453592 : givenWeight;
-  // log.debug(`[${PREFIX}] calc_weight: ${calcWeight}`);
-
-  log.debug(`[${PREFIX}] givenWeight: ${givenWeight} | weightUnits: ${weightUnits} | taking:  ${taking}`);
-
   let roaValue = 0;
   let units = '';
   if (taking === 'RoboCough (ml)') {
@@ -60,7 +61,7 @@ export async function calcDxm(givenWeight:number, weightUnits:string, taking:str
     Fourth: {min: 15, max: 20},
   };
 
-  const returnData = {
+  const data = {
     First: {min: 0, max: 0},
     Second: {min: 0, max: 0},
     Third: {min: 0, max: 0},
@@ -70,12 +71,12 @@ export async function calcDxm(givenWeight:number, weightUnits:string, taking:str
   Object.keys(dxmData).forEach((key) => {
     const min = Math.round((dxmData[key as keyof DxmDataType].min * calcWeight) * 100) / 100;
     const max = Math.round((dxmData[key as keyof DxmDataType].max * calcWeight) * 100) / 100;
-    returnData[key as keyof DxmDataType] = {
+    data[key as keyof DxmDataType] = {
       min: min,
       max: max,
     };
   });
 
-  log.info(`[${PREFIX}] response: ${JSON.stringify(returnData, null, 2)}`);
-  return [returnData, units];
+  log.info(`[${PREFIX}] response: ${JSON.stringify(data, null, 2)}`);
+  return {data, units};
 };

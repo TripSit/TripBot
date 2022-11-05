@@ -177,7 +177,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     return false;
   }
 
-  await interaction.channel.send(`> **${name}** - Starting test!`);
+  await interaction.channel.send(`> **${name}** - Initializing test!`);
 
   await sleep(1000);
 

@@ -23,16 +23,16 @@ export async function remindme(
   recordNumber: number | null,
   reminderText: string | null,
   triggerAt: Date | null,
-):Promise<any> {
-  log.debug(`[${PREFIX}] Starting!`);
+):Promise<string | reminder[]> {
+  // log.debug(`[${PREFIX}]
+  //   command: ${command}
+  //   userId: ${userId}
+  //   recordNumber: ${recordNumber}
+  //   reminderText: ${reminderText}
+  //   triggerAt: ${triggerAt}
+  // `);
 
-  log.debug(`[${PREFIX}] 
-    command: ${command}
-    userId: ${userId}
-    recordNumber: ${recordNumber}
-    reminderText: ${reminderText}
-    triggerAt: ${triggerAt} 
-  `);
+  let response = '' as string | reminder[];
 
   if (command === 'delete') {
     if (recordNumber === null) {
@@ -89,12 +89,11 @@ export async function remindme(
         .where('id', recordId)
         .del();
 
-      const response = `I deleted:
+      response = `I deleted:
       > **(${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}**
       > ${record.reminder_text}
       `;
       log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
-      return response;
     }
   }
   if (command === 'get') {
@@ -111,43 +110,41 @@ export async function remindme(
 
     log.debug(`[${PREFIX}] unsorteddata: ${unsorteddata.length}`);
 
-    if (unsorteddata !== null && unsorteddata.length > 0) {
-      // Sort data based on the trigger_at property
-      const data = unsorteddata.sort((a, b) => {
-        if (a.trigger_at < b.trigger_at) {
-          return -1;
-        }
-        if (a.trigger_at > b.trigger_at) {
-          return 1;
-        }
-        return 0;
-      });
-
-      log.debug(`[${PREFIX}] Sorted ${data.length} items!`);
-
-      const reminders = [] as {
-        index: number,
-        date: Date,
-        value: string,
-      }[];
-
-      for (let i = 0; i < data.length; i += 1) {
-        const reminder = data[i];
-        const reminderDate = data[i].trigger_at;
-
-        // Lowercase everything but the first letter
-        const field = {
-          index: i,
-          date: reminderDate,
-          value: `${reminder.reminder_text}`,
-        };
-        reminders.push(field);
-      }
-      log.info(`[${PREFIX}] response: ${JSON.stringify(reminders, null, 2)}`);
-      return reminders;
-    } else {
-      return false;
+    if (!unsorteddata || unsorteddata.length === 0) {
+      const response = 'You have no reminder records, you can use /remindme to add some!';
+      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      return response;
     }
+
+    // Sort data based on the trigger_at property
+    const data = unsorteddata.sort((a, b) => {
+      if (a.trigger_at < b.trigger_at) {
+        return -1;
+      }
+      if (a.trigger_at > b.trigger_at) {
+        return 1;
+      }
+      return 0;
+    });
+
+    log.debug(`[${PREFIX}] Sorted ${data.length} items!`);
+
+    const reminders = [] as reminder[];
+
+    for (let i = 0; i < data.length; i += 1) {
+      const reminder = data[i];
+      const reminderDate = data[i].trigger_at;
+
+      // Lowercase everything but the first letter
+      const field = {
+        index: i,
+        date: reminderDate,
+        value: `${reminder.reminder_text}`,
+      };
+      reminders.push(field);
+    }
+    log.info(`[${PREFIX}] response: ${JSON.stringify(reminders, null, 2)}`);
+    response = reminders;
   }
   if (command === 'set') {
     if (!triggerAt) {
@@ -162,8 +159,14 @@ export async function remindme(
         reminder_text: reminderText,
         trigger_at: triggerAt,
       });
-    const response = `I will remind you to ${reminderText} at ${triggerAt}!`;
+    response = `I will remind you to ${reminderText} at ${triggerAt}!`;
     log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
-    return response;
   }
+  return response;
 }
+
+type reminder = {
+  index: number,
+  date: Date,
+  value: string,
+};

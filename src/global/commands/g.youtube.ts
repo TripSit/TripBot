@@ -10,7 +10,7 @@ const PREFIX = parse(__filename).name;
  * @param {string} query What video do you want?
  * @return {any} Something
  */
-export async function youtube(query:string):Promise<any> {
+export async function youtube(query:string):Promise<YouTubeSearchResults> {
   /**
    * This needs to be in a separate function cuz it's not async
    * @param {string} query What video do you want?
@@ -37,7 +37,7 @@ export async function youtube(query:string):Promise<any> {
     });
   }
 
-  const results = await getResults(query) as YouTubeSearchResults[];
+  const results = await getResults(query) as YouTubeSearchResults[][0];
   log.info(`[${PREFIX}] response: ${JSON.stringify(results, null, 2)}`);
-  return results[0];
+  return results;
 };

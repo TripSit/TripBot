@@ -3,6 +3,7 @@ import {
   time,
   ButtonBuilder,
   EmbedBuilder,
+  EmbedField,
 } from 'discord.js';
 import {
   ChannelType,
@@ -71,12 +72,12 @@ export const dremindme: SlashCommand = {
     const embed = embedTemplate();
     const book = [] as EmbedBuilder[];
     if (command === 'delete') {
-      await interaction.reply({content: response, ephemeral: true});
+      await interaction.reply({content: response as string, ephemeral: true});
     }
     if (command === 'get') {
       if (response !== null) {
         embed.setTitle('Your reminders');
-        if (response === false) {
+        if (typeof response === 'string') {
           embed.setDescription('You have no reminders! You can use /remindme to add some!');
           interaction.reply({embeds: [embed], ephemeral: true});
           return true;
@@ -86,7 +87,7 @@ export const dremindme: SlashCommand = {
           let pageEmbed = embedTemplate();
           pageEmbed.setTitle('Your reminders');
           // Add fields to the pageEmbed until there are 24 fields
-          let pageFields = [];
+          let pageFields = [] as EmbedField[];
           let pageFieldsCount = 0;
           for (let i = 0; i < response.length; i += 1) {
             pageFields.push({

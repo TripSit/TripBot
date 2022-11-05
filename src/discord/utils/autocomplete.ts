@@ -167,19 +167,19 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
     let displayUnits = [];
     let measure = '';
     if (firstUnit !== '' && !focusedOption) {
-      log.debug(`[${PREFIX}] firstUnit: ${firstUnit}`);
+      // log.debug(`[${PREFIX}] firstUnit: ${firstUnit}`);
       // eslint-disable-next-line
         for (const i in unitsOfMeasurement) {
         if (unitsOfMeasurement[i].abbr.toLowerCase() === (firstUnit as string).toLowerCase()) {
           measure = unitsOfMeasurement[i].measure;
-          log.debug(`[${PREFIX}] First unit measure: ${measure}`);
+          // log.debug(`[${PREFIX}] First unit measure: ${measure}`);
         }
       }
       // eslint-disable-next-line
         for (const i in unitsOfMeasurement) {
         if (unitsOfMeasurement[i].measure.toLowerCase() === measure.toLowerCase()) {
           displayUnits.push(unitsOfMeasurement[i]);
-          log.debug(`[${PREFIX}] Added: ${unitsOfMeasurement[i].plural}`);
+          // log.debug(`[${PREFIX}] Added: ${unitsOfMeasurement[i].plural}`);
         }
       }
     } else {

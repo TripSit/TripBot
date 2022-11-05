@@ -16,7 +16,6 @@ import {bestOf} from '../utils/bestOfTripsit';
 export const messageReactionAdd: reactionEvent = {
   name: 'messageReactionAdd',
   async execute(reaction: MessageReaction, user: User) {
-    // log.debug(`[${PREFIX}] starting!`);
     // Only run on Tripsit
     if (reaction.message.guild?.id !== env.DISCORD_GUILD_ID.toString()) {
       return;
@@ -30,6 +29,8 @@ export const messageReactionAdd: reactionEvent = {
 
     // When a reaction is received, check if the structure is partial
     if (reaction.partial) await reaction.fetch();
+
+    // log.info(`[${PREFIX}] ${user.username} (${user.id}) added ${reaction.emoji.name}`);
 
     // log.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction.emoji.name, null, 2)}`);
     // log.debug(`[${PREFIX}] users: ${JSON.stringify(reaction.users, null, 2)}`);

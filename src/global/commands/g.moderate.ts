@@ -12,6 +12,7 @@ import {
   Guild,
   ModalSubmitInteraction,
   UserContextMenuCommandInteraction,
+  InteractionReplyOptions,
 } from 'discord.js';
 import {
   ButtonStyle,
@@ -128,7 +129,7 @@ export async function moderate(
   pubReason: string | null,
   duration: number | null,
   interaction:ChatInputCommandInteraction | ModalSubmitInteraction | UserContextMenuCommandInteraction | undefined,
-):Promise<any> {
+):Promise<InteractionReplyOptions> {
   log.debug(stripIndents`[${PREFIX}]
       Actor: ${actor}
       Command: ${command}

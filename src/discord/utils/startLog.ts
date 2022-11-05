@@ -4,12 +4,14 @@ import {
   UserContextMenuCommandInteraction,
   MessageContextMenuCommandInteraction,
   ButtonInteraction,
-  // CommandInteractionOption,
-  // SelectMenuInteraction,
+  // CommandInteractionOption,`
+  SelectMenuInteraction,
   // ModalSubmitInteraction,
 } from 'discord.js';
 import log from '../../global/utils/log';
 import {stripIndents} from 'common-tags';
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 /**
  * @param {string} prefix
@@ -18,18 +20,26 @@ import {stripIndents} from 'common-tags';
 **/
 export async function startLog(
   prefix: string,
-  interaction: ChatInputCommandInteraction | UserContextMenuCommandInteraction | MessageContextMenuCommandInteraction | ButtonInteraction,
+  interaction: ChatInputCommandInteraction | UserContextMenuCommandInteraction | MessageContextMenuCommandInteraction | ButtonInteraction | SelectMenuInteraction,
 ): Promise<void> {
   let message = `[${prefix}] via ${interaction.user.tag} (${interaction.user.id}) \
 ${interaction.guild ? `in ${interaction.guild.name} (${interaction.guild?.id})` : `in DM`}`;
   if (Object.hasOwn(interaction, 'options')) {
     if ((interaction as ChatInputCommandInteraction).options.data.length > 0) {
-      message += ` with params: ${(interaction as ChatInputCommandInteraction).options.data[0].options?.map((o) => `${o.name}: ${o.value}`).join(', ')}`;
-    } else {
-      message += ` with params: ${(interaction as ChatInputCommandInteraction).options.data.map((o) => `${o.name}: ${o.value}`).join(', ')}`;
+      // log.debug(`[${PREFIX}] ${JSON.stringify((interaction as ChatInputCommandInteraction).options, null, 2)}`);
+      if ((interaction as ChatInputCommandInteraction).options.data[0].options) {
+        // log.debug(`[${prefix}] param1`);
+        message += ` with params: ${(interaction as ChatInputCommandInteraction).options.data[0].options?.map((o) => `${o.name}: ${o.value}`).join(', ')}`;
+      } else {
+        // log.debug(`[${prefix}] param2`);
+        message += ` with params: ${(interaction as ChatInputCommandInteraction).options.data.map((o) => `${o.name}: ${o.value}`).join(', ')}`;
+      }
     }
   }
   if ((interaction as ButtonInteraction).customId) {
+    message += ` with customId: ${(interaction as ButtonInteraction).customId}`;
+  }
+  if ((interaction as SelectMenuInteraction).customId) {
     message += ` with customId: ${(interaction as ButtonInteraction).customId}`;
   }
   log.info(stripIndents`${message}`);

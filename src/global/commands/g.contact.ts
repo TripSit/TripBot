@@ -6,7 +6,7 @@ const PREFIX = parse(__filename).name;
  * Information about contacting the team!
  * @return {any} an object with information about the bot
  */
-export async function contact():Promise<any> {
+export async function contact():Promise<contact> {
   const response = {
     name: 'TripSit',
     url: 'https://tripsit.me/contact-us/',
@@ -18,4 +18,14 @@ export async function contact():Promise<any> {
   };
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
   return response;
+};
+
+type contact = {
+  name: string;
+  url: string;
+  discord: string;
+  botOwner: string;
+  webchat: string;
+  botEmail: string;
+  contentEmail: string;
 };

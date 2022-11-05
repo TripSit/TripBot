@@ -8,7 +8,6 @@ import {SlashCommand} from '../../@types/commandDef';
 import {startLog} from '../../utils/startLog';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
-import log from '../../../global/utils/log';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
@@ -38,7 +37,6 @@ export const dpoll: SlashCommand = {
       .setRequired(true)),
   async execute(interaction) {
     startLog(PREFIX, interaction);
-    log.debug(`[${PREFIX}] Starting!`);
     await interaction.deferReply({ephemeral: true});
     const question = interaction.options.getString('question');
     const optionsString = interaction.options.getString('options');

@@ -15,7 +15,6 @@ const PREFIX = parse(__filename).name;
 export const messageReactionRemove: reactionEvent = {
   name: 'messageReactionRemove',
   async execute(reaction: MessageReaction, user: User) {
-    // log.debug(`[${PREFIX}] starting!`);
     // Only run on Tripsit
     if (reaction.message.guild?.id !== env.DISCORD_GUILD_ID) {
       return;
@@ -42,6 +41,8 @@ export const messageReactionRemove: reactionEvent = {
         log.error(`[${PREFIX}] reaction3: ${JSON.stringify(ex, null, 4)}`);
       });
     }
+
+    // log.info(`[${PREFIX}] ${user.username} (${user.id}) removed ${reaction.emoji.name}`);
 
     await handleReactionRoles(reaction, user, false);
 

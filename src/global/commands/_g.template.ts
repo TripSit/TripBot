@@ -4,9 +4,9 @@ const PREFIX = parse(__filename).name;
 
 /**
  *
- * @return {any}
+ * @return {string}
  */
-export async function globalTemplate():Promise<any> {
+export async function globalTemplate():Promise<string> {
   const response = `I did thing!`;
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
   return response;

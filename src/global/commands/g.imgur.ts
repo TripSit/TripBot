@@ -8,11 +8,11 @@ const PREFIX = parse(__filename).name;
  *
  * @param {string} query
  */
-export async function imgurSearch(query:string):Promise<any> {
+export async function imgurSearch(query:string):Promise<string> {
   /**
    * This needs to be in a separate function cuz it's not async
    */
-  async function searchImgur() {
+  async function searchImgur():Promise<string> {
     return new Promise((resolve, reject) => {
       axios.get(query, {
         headers: {

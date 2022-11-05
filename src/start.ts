@@ -16,7 +16,7 @@ global.bootTime = new Date();
 * Starts everything in the bot.
 */
 async function start() {
-  log.info(`[${PREFIX}] Starting service!`);
+  log.info(`[${PREFIX}] Initializing service!`);
   if (!validateEnv()) return;
   if (env.NODE_ENV === 'production') {
     webserverConnect();

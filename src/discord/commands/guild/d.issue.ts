@@ -55,7 +55,6 @@ export const dIssue: SlashCommand = {
       .setName('effort')),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(PREFIX, interaction);
-    log.debug(`[${PREFIX}] starting!`);
     // Create the modal
     const modal = new ModalBuilder()
       .setCustomId(`issueModal~${interaction.id}`)
@@ -117,8 +116,8 @@ export const dIssue: SlashCommand = {
             .setColor(0x0099ff)
             .setTitle('Issue created!')
             .setDescription(stripIndents`\
-                  Issue #${results.number} created on TripSit/tripsit-discord-bot
-                  Click here to view: ${results.html_url}`);
+                  Issue #${results.data.number} created on TripSit/tripsit-discord-bot
+                  Click here to view: ${results.data.html_url}`);
           i.reply({embeds: [embed], ephemeral: true});
         } else {
           const embed = embedTemplate()

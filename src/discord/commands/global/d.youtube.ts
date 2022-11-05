@@ -44,9 +44,14 @@ export const dYoutube: SlashCommand = {
         name: result.channelTitle,
         url: result.link,
       })
-      .setThumbnail(result.thumbnails.default?.url)
       .setURL(result.link)
       .setDescription(result.description.substring(0, 200));
+    if (result.thumbnails) {
+      if (result.thumbnails.high) embed.setThumbnail(result.thumbnails.high.url);
+      else if (result.thumbnails.medium) embed.setThumbnail(result.thumbnails.medium.url);
+      else if (result.thumbnails.default) embed.setThumbnail(result.thumbnails.default.url);
+    }
+
     interaction.reply({embeds: [embed], ephemeral: false});
     return true;
   },

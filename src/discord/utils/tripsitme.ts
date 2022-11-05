@@ -57,7 +57,7 @@ const PREFIX = parse(__filename).name;
 export async function tripsitmeButton(
   interaction:ButtonInteraction,
 ) {
-  log.debug(`[${PREFIX}] button starting!`);
+  startLog(PREFIX, interaction);
   if (!interaction.guild) {
     log.debug(`[${PREFIX}] no guild!`);
     interaction.reply('This must be performed in a guild!');

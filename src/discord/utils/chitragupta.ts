@@ -26,7 +26,6 @@ export async function chitragupta(
   user:User,
   action: 1 | -1,
 ) {
-  // log.debug(`[${PREFIX}] starting!`);
   const verb = action === 1 ? 'upvoted' : 'downvoted';
   const actor = user;
   const emoji = reaction.emoji.toString();

@@ -34,6 +34,11 @@ export const dcalcBenzo: SlashCommand = {
     const drugB = interaction.options.getString('and_i_want_the_dose_of', true);
     const data = await calcBenzo(dosage, drugA, drugB);
 
+    if (typeof data === 'string') {
+      interaction.reply({content: data, ephemeral: true});
+      return false;
+    }
+
     const embed = embedTemplate()
       .setColor(Colors.Purple)
       .setTitle(`${dosage} mg of ${drugA} about equal to ${data} mg of ${drugB}`)

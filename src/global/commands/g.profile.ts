@@ -15,7 +15,7 @@ const PREFIX = parse(__filename).name;
  */
 export async function profile(
   memberId: string,
-):Promise<any> {
+):Promise<profileData> {
   // log.debug(`[${PREFIX}] memberId: ${memberId}`);
 
   const userData = await getUser(memberId, null);
@@ -46,3 +46,11 @@ export async function profile(
   log.info(`[${PREFIX}] response: ${JSON.stringify(profileData, null, 2)}`);
   return profileData;
 }
+
+type profileData = {
+  birthday: Date | null,
+  timezone: string | null,
+  karma_given: number,
+  karma_received: number,
+  totalExp: number,
+};

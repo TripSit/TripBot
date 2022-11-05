@@ -6,7 +6,6 @@ import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {combo} from '../../../global/commands/g.combo';
 import {startLog} from '../../utils/startLog';
-import log from '../../../global/utils/log';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
@@ -26,7 +25,6 @@ export const dCombo: SlashCommand = {
     startLog(PREFIX, interaction);
     const drugA = interaction.options.getString('first_drug', true);
     const drugB = interaction.options.getString('second_drug', true);
-    log.debug(`[${PREFIX}] drug_a: ${drugA} | drug_b: ${drugB}`);
 
     const results = await combo(drugA, drugB);
 

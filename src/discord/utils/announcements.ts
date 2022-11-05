@@ -66,8 +66,6 @@ type messageCounterType = {
  * @param {Message} message
  */
 export async function announcements(message:Message) {
-  // log.debug(`[${PREFIX}] starting!`);
-
   const channelStart = await message.client.channels.fetch(env.CHANNEL_START) as TextChannel;
   const channelAnnouncements = await message.client.channels.fetch(env.CHANNEL_ANNOUNCEMENTS) as TextChannel;
   const channelRules = await message.client.channels.fetch(env.CHANNEL_RULES) as TextChannel;

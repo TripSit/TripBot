@@ -75,12 +75,12 @@ export const dCalcKetamine: SlashCommand = {
 
     embed.addFields(
       {
-        name: 'Insufflated Dosages',
+        name: 'Insufflated',
         value: data.insufflated,
         inline: true,
       },
       {
-        name: 'Rectal Dosages',
+        name: 'Rectal',
         value: data.rectal,
         inline: true,
       },

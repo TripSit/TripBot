@@ -7,7 +7,6 @@ import {SlashCommand} from '../../@types/commandDef';
 import {leaderboard} from '../../../global/commands/g.leaderboard';
 import {startLog} from '../../utils/startLog';
 import {embedTemplate} from '../../utils/embedTemplate';
-import log from '../../../global/utils/log';
 import env from '../../../global/utils/env.config';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
@@ -36,10 +35,9 @@ export const dLeaderboard: SlashCommand = {
     startLog(PREFIX, interaction);
     const categoryOption = interaction.options.get('category');
     const categoryName = categoryOption ? categoryOption.value as string : 'OVERALL';
-    log.debug(`[${PREFIX}] starting | category: ${categoryName}`);
 
     // Get the tripsit guild
-    const guild = client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
+    const guild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
 
     const response = await leaderboard(categoryName);
     const leaderboardVals = response.results as leaderboardType;

@@ -1,4 +1,6 @@
 import {Octokit} from 'octokit';
+import {OctokitResponse} from '@octokit/types';
+import {Issue} from '@octokit/webhooks-types';
 import env from '../utils/env.config';
 import log from '../utils/log';
 import {parse} from 'path';
@@ -14,11 +16,11 @@ export async function issue(
   title: string,
   body: string,
   labels: string[],
-):Promise<any> {
+):Promise<OctokitResponse<Issue>> {
   /**
    * This needs to be in a separate function cuz it's not async
    */
-  async function getResults() {
+  async function getResults():Promise<OctokitResponse<Issue>> {
     return new Promise(async (resolve, reject) => {
       // Use octokit to create an issue
       const octokit = new Octokit({auth: env.GITHUB_TOKEN});
@@ -36,7 +38,7 @@ export async function issue(
             issue_number: issueNumber,
             labels: labels,
           });
-          resolve(response.data);
+          resolve(response as OctokitResponse<Issue>);
         })
         .catch((error:Error) => {
           reject(error);
@@ -44,7 +46,7 @@ export async function issue(
     });
   }
 
-  const results = await getResults();
+  const results = await getResults() as OctokitResponse<Issue>;
   log.info(`[${PREFIX}] response: ${JSON.stringify(results, null, 2)}`);
 
   return results;

@@ -7,7 +7,7 @@ const PREFIX = parse(__filename).name;
  *
  * @return {string}
  */
-export async function topic():Promise<any> {
+export async function topic():Promise<string> {
   const response = topics[Math.floor(Math.random() * Object.keys(topics).length).toString() as keyof typeof topics];
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
   return response;

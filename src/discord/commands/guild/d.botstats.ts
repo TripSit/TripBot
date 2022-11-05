@@ -16,7 +16,6 @@ export const botstats: SlashCommand = {
     .setDescription('Get stats about the bot!'),
   async execute(interaction) {
     startLog(PREFIX, interaction);
-    log.debug(`[${PREFIX}] starting!`);
     // Get the number of guilds the bot is in
     const guildCount = interaction.client.guilds.cache.size;
     log.debug(`[${PREFIX}] guildCount: ${guildCount}`);
@@ -27,6 +26,7 @@ export const botstats: SlashCommand = {
     const channelCount = interaction.client.channels.cache.size;
     log.debug(`[${PREFIX}] channelCount: ${channelCount}`);
     // Get the number of commands the bot has
+    // @ts-ignore - This works so idk why it's complaining
     const commandCount = interaction.client.commands.size;
     log.debug(`[${PREFIX}] commandCount: ${commandCount}`);
     const uptime = (new Date().getTime() - global.bootTime.getTime());

@@ -32,7 +32,6 @@ export const bug: SlashCommand = {
     ),
   async execute(interaction) {
     startLog(PREFIX, interaction);
-    log.debug(`[${PREFIX}] starting!`);
     if (!interaction.guild) {
       interaction.reply({
         content: 'This command can only be used in a server!',

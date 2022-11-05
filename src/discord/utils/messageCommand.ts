@@ -20,7 +20,6 @@ const helpCounter = new Map<string, number>();
 export async function messageCommand(message: Message): Promise<void> {
   if (!message.guild) return; // If not in a guild then ignore all messages
   if (message.guild.id !== env.DISCORD_GUILD_ID) return; // If not in tripsit ignore all messages
-  // log.debug(`[${PREFIX}] starting!`);
   const displayName = message.member ? message.member.displayName : message.author.username;
 
   // log.debug(stripIndents`[${PREFIX}] ${displayName} said\

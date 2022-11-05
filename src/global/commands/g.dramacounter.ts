@@ -17,11 +17,7 @@ export async function dramacounter(
   guildId: string,
   dramaDate: Date,
   dramaReason: string,
-):Promise<any> {
-  log.debug(`[${PREFIX}] starting!`);
-
-  // log.debug(`[${PREFIX}] interaction.guild: ${JSON.stringify(interaction.guild, null, 2)}`);
-
+):Promise<drama> {
   let response = {} as {
     dramaReason: string;
     dramaDate: Date;
@@ -34,7 +30,7 @@ export async function dramacounter(
       const dramaReason = guildData.drama_reason as string;
       response = {dramaReason, dramaDate};
     } else {
-      return 'No drama has been reported yet! Be thankful while it lasts...';
+      return {dramaReason: null, dramaDate: null};
     }
   } else if (command === 'set') {
     await db<DiscordGuilds>('discord_guilds')
@@ -51,4 +47,9 @@ export async function dramacounter(
 
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
   return response;
+}
+
+type drama = {
+  dramaReason: string | null;
+  dramaDate: Date | null;
 }

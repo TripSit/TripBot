@@ -31,6 +31,7 @@ import env from '../../global/utils/env.config';
 import log from '../../global/utils/log';
 import {parse} from 'path';
 import {stripIndents} from 'common-tags';
+import {startLog} from './startLog';
 const PREFIX = parse(__filename).name;
 
 // "your application was denied because..."
@@ -56,14 +57,12 @@ const rejectionMessages = {
 export async function applicationStart(
   interaction: SelectMenuInteraction,
 ): Promise<void> {
-  log.debug(`[${PREFIX} - applicationStart] starting!`);
-  log.debug(`[${PREFIX} - applicationStart] customId: ${interaction.customId}`);
-  log.debug(`[${PREFIX} - applicationStart] values: ${interaction.values}`);
-
   if (interaction.values[0] === 'none') {
     interaction.reply({content: 'No application selected.', ephemeral: true});
     return;
   };
+
+  startLog(PREFIX, interaction);
 
   const channelId = interaction.values[0].split('~')[0];
   const roleRequestedId = interaction.values[0].split('~')[1];
@@ -276,11 +275,13 @@ export async function applicationStart(
 export async function applicationReject(
   interaction: SelectMenuInteraction,
 ): Promise<void> {
-  // log.debug(`[${PREFIX} - applicationReject] starting!`);
   if (!interaction.guild) {
     interaction.reply('This command can only be used in a server!');
     return;
   }
+
+  startLog(PREFIX, interaction);
+
   const actor = (interaction.member as GuildMember);
   if (actor.permissions.has(PermissionFlagsBits.ManageRoles)) {
     const memberId = interaction.customId.split('~')[1];
@@ -315,10 +316,7 @@ export async function applicationReject(
 export async function applicationApprove(
   interaction: ButtonInteraction,
 ): Promise<void> {
-  // let message = stripIndents`
-
-  // `;
-  // log.debug(`[${PREFIX} - applicationAccept] starting!`);
+  startLog(PREFIX, interaction);
   const actor = (interaction.member as GuildMember);
   if (actor.permissions.has(PermissionFlagsBits.ManageRoles)) {
     // interaction.channel!.send(`${(interaction.member as GuildMember).displayName} accepted this application!`);

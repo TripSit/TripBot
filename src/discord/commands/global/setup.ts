@@ -173,7 +173,6 @@ export const prompt: SlashCommand = {
       .setName('ticketbooth')),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(PREFIX, interaction);
-    // log.debug(`[${PREFIX}] Starting!`);
     await interaction.deferReply({ephemeral: true});
     const command = interaction.options.getSubcommand();
     if (command === 'applications') {
@@ -202,11 +201,11 @@ export const prompt: SlashCommand = {
  * Checks to see if the bot has the right permissions
  * @param {ChatInputCommandInteraction} interaction The guild to check
  * @param {TextChannel} channel
- * @return {Promise<any>}
+ * @return {Promise<boolean>}
  */
 export async function hasPermissions(
   interaction: ChatInputCommandInteraction,
-  channel: TextChannel) {
+  channel: TextChannel):Promise<boolean> {
   log.debug(`[${PREFIX}] Checking permissions`);
   if (!interaction.guild) {
     const embed = embedTemplate()
@@ -600,7 +599,7 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
     interaction.reply('You must run this in the channel you want the prompt to be in!');
     return;
   }
-  log.debug(`[${PREFIX}] Starting!`);
+  startLog(PREFIX, interaction);
   const channelTripsit = await interaction.client.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
   const channelSanctuary = await interaction.client.channels.fetch(env.CHANNEL_SANCTUARY) as TextChannel;
   const channelOpentripsit = await interaction.client.channels.fetch(env.CHANNEL_OPENTRIPSIT1) as TextChannel;
@@ -643,7 +642,7 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function starthere(interaction:ChatInputCommandInteraction) {
-  log.debug(`[${PREFIX}] Starting!`);
+  startLog(PREFIX, interaction);
   if (!(interaction.channel as TextChannel)) {
     log.error(`${PREFIX} how to tripsit: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');
@@ -691,7 +690,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function mindsets(interaction:ChatInputCommandInteraction) {
-  // log.debug(`[${PREFIX}] Starting!`);
+  startLog(PREFIX, interaction);
   if (!(interaction.channel as TextChannel)) {
     log.error(`${PREFIX} how to tripsit: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');
@@ -815,7 +814,7 @@ export async function mindsets(interaction:ChatInputCommandInteraction) {
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function colors(interaction:ChatInputCommandInteraction) {
-  // log.debug(`[${PREFIX}] Starting!`);
+  startLog(PREFIX, interaction);
   if (!(interaction.channel as TextChannel)) {
     log.error(`${PREFIX} how to tripsit: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');

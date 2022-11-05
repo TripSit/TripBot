@@ -86,7 +86,6 @@ export const didose: SlashCommand = {
         .setRequired(true))),
   async execute(interaction) {
     startLog(PREFIX, interaction);
-    log.debug(`[${PREFIX}] Starting!`);
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const embed = embedTemplate();
     const book = [] as EmbedBuilder[];

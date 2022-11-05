@@ -27,7 +27,7 @@ export const discordTemplate: SlashCommand = {
 
     // try {
     //   body = await whoisIRC(target!);
-    // } catch (err:any) {
+    // } catch (err) {
     //   const embed = embedTemplate()
     //     .setDescription(err.message)
     //     .setTitle(`Whois for ${target}`)

@@ -26,8 +26,6 @@ const rankDict = {
 export async function leaderboard(
   categoryName: string,
 ):Promise<{results: leaderboardType, title: string, description: string|null}> {
-  log.debug(`[${PREFIX}] starting | category: ${categoryName}`);
-
   let title = `Top 15 ${rankDict[categoryName as keyof typeof rankDict]}:`;
   let description = null;
   let results = {} as leaderboardType;
