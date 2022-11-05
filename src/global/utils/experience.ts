@@ -1,6 +1,7 @@
 /* eslint-disable max-len*/
 
 import {
+  GuildMember,
   Message,
   TextChannel,
 } from 'discord.js';
@@ -138,25 +139,103 @@ export async function experience(
   let level = experienceData.level;
   const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
 
+  const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+  const channelTripbotlogs = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+  const member = await guild.members.fetch(actor.id);
+
+  // Give the proper VIP role
+  if (expType === 'total') {
+    // VIP only cares about total
+    if (level >= 5) {
+      // Ensure the member has the base VIP role if they're over level 5
+      let role = await guild.roles.fetch(env.ROLE_VIP) as Role;
+      if (!member.roles.cache.has(env.ROLE_VIP)) {
+        member.roles.add(role);
+        channelTripbotlogs.send(stripIndents`${actor.username} was given ${role.name}`);
+      }
+
+      role = await guild.roles.fetch(env.ROLE_VIP_5) as Role;
+      if (level >= 10) {
+        // Check if the member already has the previous role, and if so, remove it
+        member.roles.remove(role);
+        role = await guild.roles.fetch(env.ROLE_VIP_10) as Role;
+        if (level >= 20) {
+          member.roles.remove(role);
+          role = await guild.roles.fetch(env.ROLE_VIP_20) as Role;
+          if (level >= 30) {
+            member.roles.remove(role);
+            role = await guild.roles.fetch(env.ROLE_VIP_30) as Role;
+            if (level >= 40) {
+              member.roles.remove(role);
+              role = await guild.roles.fetch(env.ROLE_VIP_40) as Role;
+              if (level >= 50) {
+                member.roles.remove(role);
+                role = await guild.roles.fetch(env.ROLE_VIP_50) as Role;
+                if (level >= 60) {
+                  member.roles.remove(role);
+                  role = await guild.roles.fetch(env.ROLE_VIP_60) as Role;
+                  // Beyond level 70 is not supported yet
+                  // if (level >= 70) {
+                  //   if (!member.roles.cache.has(role.id)) {
+                  //     member.roles.remove(role);
+                  //     channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
+                  //   }
+                  //   role = await guild.roles.fetch(env.ROLE_VIP_70) as Role;
+                  //   if (level >= 80) {
+                  //     if (!member.roles.cache.has(role.id)) {
+                  //       member.roles.remove(role);
+                  //       channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
+                  //     }
+                  //     role = await guild.roles.fetch(env.ROLE_VIP_80) as Role;
+                  //     if (level >= 90) {
+                  //       if (!member.roles.cache.has(role.id)) {
+                  //         member.roles.remove(role);
+                  //         channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
+                  //       }
+                  //       role = await guild.roles.fetch(env.ROLE_VIP_90) as Role;
+                  //       if (level >= 100) {
+                  //         if (!member.roles.cache.has(role.id)) {
+                  //           member.roles.remove(role);
+                  //           channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
+                  //         }
+                  //         role = await guild.roles.fetch(env.ROLE_VIP_100) as Role;
+                  //       }
+                  //     }
+                  //   }
+                  // }
+                }
+              }
+            }
+          }
+        }
+      }
+      // Check if the member already has the resulting role, and if not, add it
+      if (!member.roles.cache.has(role.id)) {
+        member.roles.add(role);
+        channelTripbotlogs.send(stripIndents`${actor.username} was given ${role.name}`);
+      }
+    }
+  }
+
   // eslint-disable-next-line max-len
-  log.debug(stripIndents`[${PREFIX}] ${message.author.username } (lv${level}) +${expPoints} ${experienceType} exp | Total: ${totalExpPoints}, Level: ${levelExpPoints}, Needed to level up: ${expToLevel-levelExpPoints}`);
+  logger.debug(stripIndents`[${PREFIX}] ${actor.username } (lv${level}) +${expPoints} ${expType} exp | TotalExp: ${totalExpPoints}, LevelExp: ${levelExpPoints}, ExpNeededForLevel ${level + 1}: ${expToLevel}`);
   if (expToLevel < levelExpPoints) {
     level += 1;
-    log.debug(stripIndents`[${PREFIX}] ${message.author.username} has leveled up to ${experienceType} level ${level}!`);
+    logger.debug(stripIndents`[${PREFIX}] ${actor.username} has leveled up to ${expType} level ${level}!`);
 
     if (level % 5 === 0) {
-      const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-      channelTripbotlogs.send(stripIndents`${message.author.username} has leveled up to ${experienceType} level ${level}!`);
+      channelTripbotlogs.send(stripIndents`${actor.username} has leveled up to ${expType} level ${level}!`);
     }
     // channelTripbotlogs.send({embeds: [embed]});
     levelExpPoints -= expToLevel;
-    experienceData.level = level;
   }
-
-  experienceData.level_points = levelExpPoints;
-  experienceData.total_points = totalExpPoints;
-  experienceData.last_message_at = new Date();
-  experienceData.last_message_channel = message.channel.id;
+  expData.level = level;
+  expData.levelExpPoints = levelExpPoints;
+  expData.totalExpPoints = totalExpPoints;
+  expData.lastMessageDate = currMessageDate.valueOf();
+  expData.lastMessageChannel = messageChannelId;
+  // logger.debug(`[${PREFIX}] categoryExperienceData: ${JSON.stringify(expData, null, 2)}`);
+  // logger.debug(`[${PREFIX}] experienceType: ${expType}`);
 
   // log.debug(`[${PREFIX}] experienceDataMerge: ${JSON.stringify(experienceData, null, 2)}`);
 
