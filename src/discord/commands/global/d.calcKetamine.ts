@@ -5,7 +5,7 @@ import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {calcKetamine} from '../../../global/commands/g.calcKetamine';
 import {startLog} from '../../utils/startLog';
-import log from '../../../global/utils/log';
+// import log from '../../../global/utils/log';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
@@ -32,7 +32,7 @@ export const dCalcKetamine: SlashCommand = {
         content: 'Something went wrong. Please try again.',
         ephemeral: true,
       });
-      log.debug(`[${PREFIX}] weight: ${givenWeight}`);
+      // log.debug(`[${PREFIX}] weight: ${givenWeight}`);
       return false;
     }
     // log.debug(`[${PREFIX}] weight: ${givenWeight}`);
@@ -43,7 +43,7 @@ export const dCalcKetamine: SlashCommand = {
         content: 'Something went wrong. Please try again.',
         ephemeral: true,
       });
-      log.debug(`[${PREFIX}] weightUnits: ${weightUnits}`);
+      // log.debug(`[${PREFIX}] weightUnits: ${weightUnits}`);
       return false;
     }
 

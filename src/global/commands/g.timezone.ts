@@ -17,7 +17,7 @@ export async function timezone(
   command: 'get' | 'set',
   memberId: string,
   timezone?:string | null):Promise<string> {
-  log.debug(`[${PREFIX}] timezone: ${command} ${memberId} ${timezone}`);
+  // log.debug(`[${PREFIX}] timezone: ${command} ${memberId} ${timezone}`);
 
   let response = '';
   if (command === 'set') {
@@ -26,7 +26,7 @@ export async function timezone(
     for (let i = 0; i < timezones.length; i += 1) {
       if (timezones[i].label === timezone) {
         tzCode = timezones[i].tzCode;
-        log.debug(`[${PREFIX}] tzCode: ${tzCode}`);
+        // log.debug(`[${PREFIX}] tzCode: ${tzCode}`);
       }
     }
     // log.debug(`[${PREFIX}] actor.id: ${actor.id}`);
@@ -51,7 +51,7 @@ export async function timezone(
       for (let i = 0; i < timezones.length; i += 1) {
         if (timezones[i].tzCode === tzCode) {
           gmtValue = timezones[i].offset;
-          log.debug(`[${PREFIX}] gmtValue: ${gmtValue}`);
+          // log.debug(`[${PREFIX}] gmtValue: ${gmtValue}`);
         }
       }
       // get the user's timezone from the database
@@ -60,7 +60,7 @@ export async function timezone(
       log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
       return response;
     } else {
-      log.debug(`[${PREFIX}] tzCode is empty!`);
+      // log.debug(`[${PREFIX}] tzCode is empty!`);
       response = ``;
     }
   }

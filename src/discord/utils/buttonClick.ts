@@ -41,7 +41,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   const command = client.commands.get(interaction.customId);
 
   if (command) {
-    log.debug(`[${PREFIX}] command: ${command}`);
+    // log.debug(`[${PREFIX}] command: ${command}`);
   }
 
   if (buttonID.startsWith('tripsitmeClick')) {
@@ -118,10 +118,10 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
       const memberRole = interaction.guild.roles.cache.find((role:Role) => role.id === env.ROLE_MEMBER);
       let colorValue = 1;
 
-      log.debug(`[${PREFIX}] member: ${member.roles.cache}`);
+      // log.debug(`[${PREFIX}] member: ${member.roles.cache}`);
 
 
-      log.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
+      // log.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
       const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
       channelTripbotlogs.send({
         content: `Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`});
@@ -191,7 +191,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
             ephemeral: true,
           });
           if (member.roles.cache.has(memberRole.id as string)) {
-            log.debug(`[${PREFIX}] Member already has role!`);
+            // log.debug(`[${PREFIX}] Member already has role!`);
             return;
           }
           channelGeneral.send({embeds: [embed]});
@@ -221,7 +221,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   }
   if (buttonID === 'refusalbtn') {
     const guild = interaction.client.guilds.resolve(env.DISCORD_GUILD_ID.toString());
-    log.debug(guild);
+    // log.debug(guild);
     if (guild) {
       guild.members.ban(interaction.user, {deleteMessageDays: 7, reason: 'Refused warning'});
     }
@@ -236,7 +236,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     // Get the owner of the client
     await interaction.client.application.fetch();
     const botOwner = interaction.client.application.owner as User;
-    log.debug(`[${PREFIX}] bot_owner: ${botOwner}`);
+    // log.debug(`[${PREFIX}] bot_owner: ${botOwner}`);
     const embed = embedTemplate()
       .setColor(Colors.Green)
       .setDescription(`${interaction.user.username} has acknowledged their warning.`);
@@ -258,7 +258,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   if (!command) return;
 
   try {
-    log.debug(`[${PREFIX}] Executing command: ${command.name}`);
+    // log.debug(`[${PREFIX}] Executing command: ${command.name}`);
     command.execute(interaction);
   } catch (error) {
     log.error(error);

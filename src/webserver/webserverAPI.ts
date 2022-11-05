@@ -107,8 +107,8 @@ export async function webserverConnect(): Promise<void> {
   app.post('/user', (req, res) => {
     const codeValue = req.body;
     const redirectUrl = `https://${host}/`;
-    log.debug(`[${PREFIX}] codeValue: ${codeValue}`);
-    log.debug(`[${PREFIX}] url: ${redirectUrl}`);
+    // log.debug(`[${PREFIX}] codeValue: ${codeValue}`);
+    // log.debug(`[${PREFIX}] url: ${redirectUrl}`);
 
     /* Create our Form Data */
     const data1 = new URLSearchParams(); // Create a new formData object with the constructor
@@ -129,7 +129,7 @@ export async function webserverConnect(): Promise<void> {
       response.json()).then((data:any) => {
       // Make a request to the Discord API with the form data, convert the response to JSON,
       // then take it and run the following code.
-      log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+      // log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
       axios.get('https://discord.com/api/users/@me', makeConfig(data.access_token)).then((response) => {
         // Make a request yet again to the Discord API with the token from previously.
         // log.debug(`[${PREFIX}] response: ${JSON.stringify(response)}`);

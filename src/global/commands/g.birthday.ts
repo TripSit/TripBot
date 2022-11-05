@@ -21,7 +21,7 @@ export async function birthday(
 ):Promise<string> {
   let response = '';
   if (command === 'set') {
-    log.debug(`[${PREFIX}] ${command} ${memberId} ${month} ${day}`);
+    // log.debug(`[${PREFIX}] ${command} ${memberId} ${month} ${day}`);
     if (month === null || day === null) {
       const response = 'You need to specify a month and day!' as string;
       log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
@@ -62,7 +62,7 @@ export async function birthday(
 
       const birthday = new Date(2000, monthDict[month.toLowerCase() as keyof typeof monthDict], day);
 
-      log.debug(`[${PREFIX}] Setting birthday for ${memberId} to ${birthday}`);
+      // log.debug(`[${PREFIX}] Setting birthday for ${memberId} to ${birthday}`);
 
       await db<Users>('users')
         .insert({
@@ -79,12 +79,12 @@ export async function birthday(
 
     if (userData.birthday !== null) {
       const birthDate = userData.birthday.toISOString();
-      log.debug(`[${PREFIX}] Birthdate: ${birthDate}`);
+      // log.debug(`[${PREFIX}] Birthdate: ${birthDate}`);
       const birthday = DateTime.fromISO(birthDate);
-      log.debug(`[${PREFIX}] birthday: ${birthday}`);
+      // log.debug(`[${PREFIX}] birthday: ${birthday}`);
       response = `was born on ${birthday.monthLong} ${birthday.day}`;
     } else {
-      log.debug(`[${PREFIX}] birthday is NULL`);
+      // log.debug(`[${PREFIX}] birthday is NULL`);
       response = `is immortal <3 (and has not set a birthday)` as string;
     }
     log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);

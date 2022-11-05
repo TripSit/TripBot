@@ -15,7 +15,7 @@ import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import {paginationEmbed} from '../../utils/pagination';
-import log from '../../../global/utils/log';
+// import log from '../../../global/utils/log';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
@@ -59,7 +59,7 @@ export const dremindme: SlashCommand = {
       // log.debug(`[${PREFIX}] out: ${out}`);
       reminderDatetime.setTime(reminderDatetime.getTime() + out);
     }
-    log.debug(`[${PREFIX}] reminderDatetime: ${reminderDatetime}`);
+    // log.debug(`[${PREFIX}] reminderDatetime: ${reminderDatetime}`);
 
     const response = await remindme(
       command,
@@ -157,16 +157,16 @@ export const dremindme: SlashCommand = {
         return false;
       }
 
-      const timeString = time(reminderDatetime).valueOf().toString();
-      log.debug(`[${PREFIX}] timeString: ${timeString}`);
+      // const timeString = time(reminderDatetime).valueOf().toString();
+      // log.debug(`[${PREFIX}] timeString: ${timeString}`);
       const relative = time(reminderDatetime, 'R');
-      log.debug(`[${PREFIX}] relative: ${relative}`);
+      // log.debug(`[${PREFIX}] relative: ${relative}`);
 
       const embed = embedTemplate()
         .setDescription(`${relative} I will remind you: ${reminder}`);
       interaction.reply({embeds: [embed], ephemeral: true});
     }
-    log.debug(`[${PREFIX}] Finsihed!`);
+    // log.debug(`[${PREFIX}] Finsihed!`);
     return true;
   },
 };

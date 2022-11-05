@@ -25,16 +25,16 @@ export const guildMemberRemove: guildMemberEvent = {
 
     const joinedTimestamp = member.joinedTimestamp;
 
-    log.debug(`[${PREFIX}] joinedTimestamp: ${joinedTimestamp}`);
+    // log.debug(`[${PREFIX}] joinedTimestamp: ${joinedTimestamp}`);
     const embed = embedTemplate()
       .setColor(Colors.Red);
 
     if (joinedTimestamp) {
-      log.debug(`[${PREFIX}] Date.now(): ${Date.now()}`);
+      // log.debug(`[${PREFIX}] Date.now(): ${Date.now()}`);
       // display the difference between the two dates
       // NOTE: Can simplify with luxon
       const diff = Math.abs(Date.now() - joinedTimestamp);
-      log.debug(`[${PREFIX}] diff: ${diff}`);
+      // log.debug(`[${PREFIX}] diff: ${diff}`);
       const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
       const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
       const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));

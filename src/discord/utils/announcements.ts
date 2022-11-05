@@ -304,9 +304,9 @@ export async function announcements(message:Message) {
                   .where('discord_id', user.id)
                   .returning('*');
                 if (value[0]) {
-                  log.debug(`[${PREFIX}] ${user.tag} ${pointType} incremented to ${value[0][pointType as keyof typeof value[0]]}`);
+                  // log.debug(`[${PREFIX}] ${user.tag} ${pointType} incremented to ${value[0][pointType as keyof typeof value[0]]}`);
                 } else {
-                  log.debug(`[${PREFIX}] ${user.tag} ${pointType} added as 1`);
+                  // log.debug(`[${PREFIX}] ${user.tag} ${pointType} added as 1`);
                 }
               });
 
@@ -317,7 +317,7 @@ export async function announcements(message:Message) {
                   .increment(pointType, -1)
                   .where('discord_id', user.id)
                   .returning(pointType);
-                log.debug(`[${PREFIX}] ${user.tag} ${pointType} decremented to ${value[0][pointType as keyof typeof value[0]]}`);
+                // log.debug(`[${PREFIX}] ${user.tag} ${pointType} decremented to ${value[0][pointType as keyof typeof value[0]]}`);
               });
             });
         } else if (messageCounter[message.channel.id] % frequency === 0) {

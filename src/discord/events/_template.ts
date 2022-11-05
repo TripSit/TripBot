@@ -13,6 +13,6 @@ export const template: clientEvent = {
   name: 'template',
   once: false,
   async execute(client: Client) {
-    log.debug(`[${PREFIX}] guildId: ${env.DISCORD_GUILD_ID}`);
+    // log.debug(`[${PREFIX}] guildId: ${env.DISCORD_GUILD_ID}`);
   },
 };

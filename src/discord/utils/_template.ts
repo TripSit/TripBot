@@ -12,5 +12,5 @@ const PREFIX = parse(__filename).name;
  * @return {Promise<void>}
 **/
 export async function bestOf(client: Client): Promise<void> {
-  log.debug(`[${PREFIX}] guildId: ${env.DISCORD_GUILD_ID}`);
+  // log.debug(`[${PREFIX}] guildId: ${env.DISCORD_GUILD_ID}`);
 };

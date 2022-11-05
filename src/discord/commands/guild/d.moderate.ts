@@ -18,7 +18,7 @@ import {parseDuration} from '../../../global/utils/parseDuration';
 import {moderate} from '../../../global/commands/g.moderate';
 import {startLog} from '../../utils/startLog';
 import env from '../../../global/utils/env.config';
-import log from '../../../global/utils/log';
+// import log from '../../../global/utils/log';
 import {parse} from 'path';
 import {modAction} from '../../../global/@types/database';
 const PREFIX = parse(__filename).name;
@@ -139,7 +139,7 @@ export const mod: SlashCommand = {
         null,
         null,
         interaction);
-      log.debug(`[${PREFIX}] Result: ${result}`);
+      // log.debug(`[${PREFIX}] Result: ${result}`);
       interaction.reply(result);
       return true;
     }
@@ -214,14 +214,14 @@ export const mod: SlashCommand = {
               duration = duration ?
                 await parseDuration(`${durationInput} days`) :
                 604800;
-              log.debug(`[${PREFIX}] duration: ${duration}`);
+              // log.debug(`[${PREFIX}] duration: ${duration}`);
             }
           } else if (command === 'timeout') {
             // Get duration
             duration = duration ?
               await parseDuration(durationInput) :
               604800000;
-            log.debug(`[${PREFIX}] duration: ${duration}`);
+            // log.debug(`[${PREFIX}] duration: ${duration}`);
           }
         } catch (e) {
           // log.error(`[${PREFIX}] ${e}`);
@@ -235,7 +235,7 @@ export const mod: SlashCommand = {
           pubReason,
           duration,
           i);
-        log.debug(`[${PREFIX}] Result: ${result}`);
+        // log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
       });
 

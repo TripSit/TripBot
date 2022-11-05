@@ -30,7 +30,7 @@ export async function chitragupta(
   const actor = user;
   const emoji = reaction.emoji.toString();
   if (reaction.message.author === null) {
-    log.debug(`[${PREFIX}] Ignoring bot interaction`);
+    // log.debug(`[${PREFIX}] Ignoring bot interaction`);
     return;
   }
   const target = reaction.message.author;
@@ -54,7 +54,7 @@ export async function chitragupta(
 
   if (actorKarma.length === 0) {
     // User doesn't exist in the database
-    log.debug(`[${PREFIX}] User doesn't exist in the database: ${actor.id}`);
+    // log.debug(`[${PREFIX}] User doesn't exist in the database: ${actor.id}`);
     // Create new user
     const newUser = {
       discord_id: actor.id,
@@ -74,7 +74,7 @@ export async function chitragupta(
 
   if (targetKarma.length === 0) {
     // User doesn't exist in the database
-    log.debug(`[${PREFIX}] User doesn't exist in the database: ${actor.id}`);
+    // log.debug(`[${PREFIX}] User doesn't exist in the database: ${actor.id}`);
     // Create new user
     const newUser = {
       discord_id: target.id,
@@ -87,7 +87,7 @@ export async function chitragupta(
   }
   // log.debug(`[${PREFIX}] actorKarma ${JSON.stringify(actorKarma)}!`);
   // log.debug(`[${PREFIX}] targetKarma ${JSON.stringify(targetKarma)}!`);
-  log.debug(`[${PREFIX}] ${user.username} (R:${actorKarma[0].karma_received}|G:${actorKarma[0].karma_given}) ${verb} ${target.username} (R:${targetKarma[0].karma_received}|G:${targetKarma[0].karma_given}) in ${(reaction.message.channel as TextChannel).name}!`);
+  // log.debug(`[${PREFIX}] ${user.username} (R:${actorKarma[0].karma_received}|G:${actorKarma[0].karma_given}) ${verb} ${target.username} (R:${targetKarma[0].karma_received}|G:${targetKarma[0].karma_given}) in ${(reaction.message.channel as TextChannel).name}!`);
 
   // log.debug(`[${PREFIX}] ${actor.username} has received (${actorKarma[0].karma_received}) and given (${actorKarma[0].karma_given})!`);
   // log.debug(`[${PREFIX}] ${target.username} has received (${targetKarma[0].karma_received}) and given (${targetKarma[0].karma_given})!`);

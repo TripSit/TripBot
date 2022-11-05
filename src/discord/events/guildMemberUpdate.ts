@@ -74,7 +74,7 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
         const differentRole = newMember.guild.roles.cache
           .find((role) => role.id === differenceId);
 
-        log.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${differentRole?.name} (${differentRole?.id})`);
+        // log.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${differentRole?.name} (${differentRole?.id})`);
 
         // The following code only cares if you add a mindset role
         if (mindsetRoles.includes(differenceId)) {

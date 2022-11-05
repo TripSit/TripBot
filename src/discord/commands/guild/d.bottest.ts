@@ -15,7 +15,7 @@ import {embedTemplate} from '../../utils/embedTemplate';
 import {startLog} from '../../utils/startLog';
 // import env from '../../../global/utils/env.config';
 // import fs from 'fs/promises';
-import log from '../../../global/utils/log';
+// import log from '../../../global/utils/log';
 import {parse} from 'path';
 // import convert from 'convert-units';
 const PREFIX = parse(__filename).name;
@@ -44,14 +44,14 @@ export const testSuite: SlashCommand = {
 
     await testGlobal(interaction)
       .then(async (globalResults) => {
-        log.debug(`[${PREFIX}] Global results: ${JSON.stringify(globalResults)}`);
+        // log.debug(`[${PREFIX}] Global results: ${JSON.stringify(globalResults)}`);
         await testGuild(interaction)
           .then(async (guildResults) => {
             if (!interaction.channel) {
               await interaction.reply('This command must be used in a channel!');
               return false;
             };
-            log.debug(`[${PREFIX}] Guild results: ${JSON.stringify(guildResults)}`);
+            // log.debug(`[${PREFIX}] Guild results: ${JSON.stringify(guildResults)}`);
             const embed = embedTemplate()
               .setTitle('Testing Results')
               .addFields(
@@ -649,7 +649,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     //   const timeValue = Math.floor(Math.random() * 10) + 1;
     //   // Make the offset string
     //   const offset = `${timeValue} week, ${timeValue} days, ${timeValue} hrs ${timeValue} mins`;
-    //   log.debug(`[${PREFIX}] Testing ${name} with ${drug} ${doseValue} ${doseUnit} in ${offset}`);
+    //   // log.debug(`[${PREFIX}] Testing ${name} with ${drug} ${doseValue} ${doseUnit} in ${offset}`);
     //   await command.execute(interaction, ['set', drug, doseValue, doseUnit, offset]);
     //   // await sleep(1000);
     //   // await command.execute(interaction, ['get']);

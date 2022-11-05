@@ -31,7 +31,7 @@ export const info: UserCommand = {
       interaction,
     );
 
-    log.debug(`[${PREFIX}] Result: ${result}`);
+    // log.debug(`[${PREFIX}] Result: ${result}`);
     interaction.reply(result);
 
     return true;

@@ -52,7 +52,7 @@ const destroy = () => {
   // } catch (err) {
   //   log.error(`[${PREFIX}] ${err}`);
   // }
-  log.debug(`[${PREFIX}] Gracefully stopping the bot (CTRL + C pressed)`);
+  // log.debug(`[${PREFIX}] Gracefully stopping the bot (CTRL + C pressed)`);
   process.exit(0);
 };
 process.on('SIGINT', destroy);

@@ -206,7 +206,7 @@ export const prompt: SlashCommand = {
 export async function hasPermissions(
   interaction: ChatInputCommandInteraction,
   channel: TextChannel):Promise<boolean> {
-  log.debug(`[${PREFIX}] Checking permissions`);
+  // log.debug(`[${PREFIX}] Checking permissions`);
   if (!interaction.guild) {
     const embed = embedTemplate()
       .setTitle('This command can only be used in a server!');
@@ -268,16 +268,16 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
   }
 
   if (!await hasPermissions(interaction, (interaction.channel as TextChannel))) {
-    log.debug(`${PREFIX} bot does NOT has permission to post in !`);
+    // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
     return;
   }
 
   if (!await hasPermissions(interaction, (interaction.options.getChannel('metatripsit') as TextChannel))) {
-    log.debug(`${PREFIX} bot does NOT has permission to post!`);
+    // log.debug(`${PREFIX} bot does NOT has permission to post!`);
     return;
   }
 
-  log.debug(`${PREFIX} bot has permission to post!`);
+  // log.debug(`${PREFIX} bot has permission to post!`);
 
   let buttonText = stripIndents`
     Welcome to ${(interaction.channel as TextChannel).name}!
@@ -340,7 +340,7 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function applications(interaction:ChatInputCommandInteraction) {
-  log.debug(`[${PREFIX}] Setting up applications!`);
+  // log.debug(`[${PREFIX}] Setting up applications!`);
   if (!interaction.channel) {
     log.error(`${PREFIX} applications: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');
@@ -354,7 +354,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
 
   const hasPermission = await hasPermissions(interaction, (interaction.channel as TextChannel));
   if (!hasPermission) {
-    log.debug(`[${PREFIX}] bot does NOT has permission to post in ${interaction.channel}!`);
+    // log.debug(`[${PREFIX}] bot does NOT has permission to post in ${interaction.channel}!`);
     return;
   }
 
@@ -464,7 +464,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function techhelp(interaction:ChatInputCommandInteraction) {
-  log.debug(`${PREFIX} techhelp!`);
+  // log.debug(`${PREFIX} techhelp!`);
   if (!(interaction.channel as TextChannel)) {
     log.error(`${PREFIX} how to tripsit: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');
@@ -477,7 +477,7 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
   };
 
   if (!await hasPermissions(interaction, (interaction.channel as TextChannel))) {
-    log.debug(`${PREFIX} bot does NOT has permission to post in !`);
+    // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
     return;
   }
 
@@ -524,7 +524,7 @@ Thanks for reading, stay safe!
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function rules(interaction:ChatInputCommandInteraction) {
-  log.debug(`${PREFIX} rules!`);
+  // log.debug(`${PREFIX} rules!`);
   if (!(interaction.channel as TextChannel)) {
     log.error(`${PREFIX} how to tripsit: no channel`);
     interaction.reply('You must run this in the channel you want the prompt to be in!');

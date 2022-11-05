@@ -46,8 +46,8 @@ export async function experience(
     return;
   }
 
-  log.debug(stripIndents`[${PREFIX}] Message sent by ${message.author.username} \
-  in ${(message.channel as TextChannel).name} on ${message.guild}`);
+  // log.debug(stripIndents`[${PREFIX}] Message sent by ${message.author.username} \
+  // in ${(message.channel as TextChannel).name} on ${message.guild}`);
 
   // Determine what kind of experience to give
   const channel = message.channel as TextChannel;
@@ -105,7 +105,7 @@ export async function experience(
 
   // If the user has no experience, insert it
   if (!experienceData) {
-    log.debug(`[${PREFIX}] Inserting new experience`);
+    // log.debug(`[${PREFIX}] Inserting new experience`);
     // log.debug(`[${PREFIX}] experienceDataInsert: ${JSON.stringify(experienceData, null, 2)}`);
     await db<UserExperience>('user_experience')
       .insert({
@@ -115,7 +115,7 @@ export async function experience(
     return;
   } else {
     // If the user has experience, update it
-    log.debug(`[${PREFIX}] Updating existing experience`);
+    // log.debug(`[${PREFIX}] Updating existing experience`);
     experienceData.level_points += expPoints;
     experienceData.total_points += expPoints;
   }
@@ -136,7 +136,7 @@ export async function experience(
     return;
   }
   if (diff.milliseconds < bufferTime) {
-    log.debug(`[${PREFIX}] Message sent by a user in the last minute`);
+    // log.debug(`[${PREFIX}] Message sent by a user in the last minute`);
     return;
   }
 
@@ -227,10 +227,10 @@ export async function experience(
 
 
   // eslint-disable-next-line max-len
-  log.debug(stripIndents`[${PREFIX}] ${message.author.username } (lv${level}) +${expPoints} ${experienceType} exp | Total: ${totalExpPoints}, Level: ${levelExpPoints}, Needed to level up: ${expToLevel-levelExpPoints}`);
+  // log.debug(stripIndents`[${PREFIX}] ${message.author.username } (lv${level}) +${expPoints} ${experienceType} exp | Total: ${totalExpPoints}, Level: ${levelExpPoints}, Needed to level up: ${expToLevel-levelExpPoints}`);
   if (expToLevel < levelExpPoints) {
     level += 1;
-    log.debug(stripIndents`[${PREFIX}] ${message.author.username} has leveled up to ${experienceType} level ${level}!`);
+    // log.debug(stripIndents`[${PREFIX}] ${message.author.username} has leveled up to ${experienceType} level ${level}!`);
 
     if (level % 5 === 0) {
       const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;

@@ -67,9 +67,9 @@ export async function applicationStart(
   const channelId = interaction.values[0].split('~')[0];
   const roleRequestedId = interaction.values[0].split('~')[1];
   const roleReviewerId = interaction.values[0].split('~')[2];
-  log.debug(`[${PREFIX} - applicationStart] channelId: ${channelId}`);
-  log.debug(`[${PREFIX} - applicationStart] roleRequestedId: ${roleRequestedId}`);
-  log.debug(`[${PREFIX} - applicationStart] roleReviewerId: ${roleReviewerId}`);
+  // log.debug(`[${PREFIX} - applicationStart] channelId: ${channelId}`);
+  // log.debug(`[${PREFIX} - applicationStart] roleRequestedId: ${roleRequestedId}`);
+  // log.debug(`[${PREFIX} - applicationStart] roleReviewerId: ${roleReviewerId}`);
 
   const roleRequested = await interaction.guild?.roles.fetch(roleRequestedId) as Role;
   // const roleReviewer = await interaction.guild?.roles.fetch(roleReviewerId);
@@ -102,12 +102,12 @@ export async function applicationStart(
     .then(async (i) => {
       if (i.customId.split('~')[4] !== interaction.id) return;
       if (!i.guild) {
-        log.debug(`[${PREFIX}] no guild!`);
+        // log.debug(`[${PREFIX}] no guild!`);
         i.reply('This must be performed in a guild!');
         return;
       }
       if (!i.member) {
-        log.debug(`[${PREFIX}] no member!`);
+        // log.debug(`[${PREFIX}] no member!`);
         i.reply('This must be performed by a member of a guild!');
         return;
       }
@@ -117,9 +117,9 @@ export async function applicationStart(
       const roleReviewerId = i.customId.split('~')[3];
       const actor = i.member as GuildMember;
 
-      log.debug(`[${PREFIX} - applicationSubmit] channelId: ${channelId}`);
-      log.debug(`[${PREFIX} - applicationSubmit] roleRequestedId: ${roleRequestedId}`);
-      log.debug(`[${PREFIX} - applicationSubmit] roleReviewerId: ${roleReviewerId}`);
+      // log.debug(`[${PREFIX} - applicationSubmit] channelId: ${channelId}`);
+      // log.debug(`[${PREFIX} - applicationSubmit] roleRequestedId: ${roleRequestedId}`);
+      // log.debug(`[${PREFIX} - applicationSubmit] roleReviewerId: ${roleReviewerId}`);
 
       const roleRequested = await i.guild?.roles.fetch(roleRequestedId) as Role;
       const roleReviewer = await i.guild?.roles.fetch(roleReviewerId) as Role;
@@ -247,7 +247,7 @@ export async function applicationStart(
       );
 
       const actorHasRoleDeveloper = actor.permissions.has(PermissionsBitField.Flags.Administrator);
-      log.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
+      // log.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
 
       applicationThread.send(`Hey ${actorHasRoleDeveloper ? 'team!' : roleReviewer} there is a new application!`);
       await applicationThread.send({embeds: [appEmbed], components: [approveButton, rejectMenu]})
@@ -257,8 +257,8 @@ export async function applicationStart(
         });
 
       // Respond to the user
-      log.debug(`[${PREFIX}] reason: ${reason}`);
-      log.debug(`[${PREFIX}] skills: ${skills}`);
+      // log.debug(`[${PREFIX}] reason: ${reason}`);
+      // log.debug(`[${PREFIX}] skills: ${skills}`);
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription('Thank you for your interest! We will try to get back to you as soon as possible!');
@@ -301,7 +301,7 @@ export async function applicationReject(
     As we feel you have a right to know, your application was denied because ${rejectionWording}`;
 
     target.send(stripIndents`${message}`);
-    log.debug(`[${PREFIX} - applicationReject] rejectionReason: ${rejectionWording}`);
+    // log.debug(`[${PREFIX} - applicationReject] rejectionReason: ${rejectionWording}`);
     (interaction.channel as ThreadChannel).setName(`🖤│${target.displayName}'s ${role.name} application!`);
   } else {
     interaction.reply({content: 'You do not have permission to do that!', ephemeral: true});
@@ -330,7 +330,7 @@ export async function applicationApprove(
 
     (interaction.channel as ThreadChannel).setName(`💚│${target.displayName}'s ${role.name} application1!`);
 
-    log.debug(`[${PREFIX} - applicationAccept] Giving ${target.displayName} ${role.name} role!`);
+    // log.debug(`[${PREFIX} - applicationAccept] Giving ${target.displayName} ${role.name} role!`);
     target.roles.add(role);
 
     if (role.id === env.ROLE_HELPER) {

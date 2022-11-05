@@ -130,14 +130,14 @@ export async function moderate(
   duration: number | null,
   interaction:ChatInputCommandInteraction | ModalSubmitInteraction | UserContextMenuCommandInteraction | undefined,
 ):Promise<InteractionReplyOptions> {
-  log.debug(stripIndents`[${PREFIX}]
-      Actor: ${actor}
-      Command: ${command}
-      Target: ${target}
-      Duration: ${duration}
-      PubReason: ${pubReason}
-      PrivReason: ${privReason}
-    `);
+  // log.debug(stripIndents`[${PREFIX}]
+  //   Actor: ${actor}
+  //   Command: ${command}
+  //   Target: ${target}
+  //   Duration: ${duration}
+  //   PubReason: ${pubReason}
+  //   PrivReason: ${privReason}
+  // `);
 
   // Determine if the actor is on the team
   // if (actor.roles) {
@@ -158,7 +158,7 @@ export async function moderate(
   //   target.roles.cache.forEach(async (role) => {
   //     if (teamRoles.includes(role.id)) {
   //       // Target Team check - Only NON team members can be targeted by mod actions
-  //       log.debug(`[${PREFIX}] Target is a team member111!`);
+  //       // log.debug(`[${PREFIX}] Target is a team member111!`);
   //       return {content: stripIndents`Hey ${actor}, you cannot ${command} a team member!`, ephemeral: true};
   //     }
   //   });
@@ -209,7 +209,7 @@ export async function moderate(
   } else if (command === 'untimeout') {
     try {
       target.timeout(0, privReason ?? 'No reason provided');
-      log.debug(`[${PREFIX}] I untimeouted ${target.displayName} because\n '${privReason}'!`);
+      // log.debug(`[${PREFIX}] I untimeouted ${target.displayName} because\n '${privReason}'!`);
     } catch (err) {
       log.error(`[${PREFIX}] Error: ${err}`);
     }
@@ -223,7 +223,7 @@ export async function moderate(
     try {
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       const deleteMessageValue = duration ?? 0;
-      log.debug(`[${PREFIX}] Days to delete: ${deleteMessageValue}`);
+      // log.debug(`[${PREFIX}] Days to delete: ${deleteMessageValue}`);
       targetGuild.members.ban(target, {deleteMessageSeconds: deleteMessageValue, reason: privReason ?? 'No reason provided'});
     } catch (err) {
       log.error(`[${PREFIX}] Error: ${err}`);
@@ -314,7 +314,7 @@ export async function moderate(
   // });
 
   // log.debug(`[${PREFIX}] actions: ${JSON.stringify(actions)}`);
-  log.debug(`[${PREFIX}] targetActionCount: ${JSON.stringify(targetActionCount)}`);
+  // log.debug(`[${PREFIX}] targetActionCount: ${JSON.stringify(targetActionCount)}`);
   // log.debug(`[${PREFIX}] targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
 
   const modlogEmbed = embedTemplate()
@@ -350,7 +350,7 @@ export async function moderate(
     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
     const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
     modChan.send({content: `${command !== 'note' ? `Hey ${roleModerator}` : ``}`, embeds: [modlogEmbed]});
-    log.debug(`[${PREFIX}] sent a message to the moderators room`);
+    // log.debug(`[${PREFIX}] sent a message to the moderators room`);
   }
 
   // If this is the info command then return with info
@@ -367,7 +367,7 @@ export async function moderate(
     if (infoString.length === 0) {
       infoString = 'Squeaky clean!';
     }
-    log.debug(`[${PREFIX}] infoString: ${infoString}`);
+    // log.debug(`[${PREFIX}] infoString: ${infoString}`);
     modlogEmbed.setDescription(infoString);
     try {
       log.info(`[${PREFIX}] response: ${JSON.stringify(infoString, null, 2)}`);
@@ -381,11 +381,11 @@ export async function moderate(
   if (command !== 'info') {
     const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
     modlog.send({embeds: [modlogEmbed]});
-    log.debug(`[${PREFIX}] sent a message to the modlog room`);
+    // log.debug(`[${PREFIX}] sent a message to the modlog room`);
   }
 
   // Return a message to the user confirming the user was acted on
-  log.debug(`[${PREFIX}] ${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
+  // log.debug(`[${PREFIX}] ${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
   const desc = `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`;
   const response = embedTemplate()
     .setColor(Colors.Yellow)

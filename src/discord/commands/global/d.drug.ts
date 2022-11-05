@@ -31,7 +31,7 @@ export const dDrug: SlashCommand = {
       return false;
     }
     const drugData = await drug(drugName) as CbSubstance;
-    log.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
+    // log.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
 
     if (drugData === null) {
       embed.setTitle(`${drugName} was not found`);
@@ -125,7 +125,7 @@ export const dDrug: SlashCommand = {
           });
           const toxicityString = toxicityMap.join(', ');
           embed.addFields({name: '☣ Toxicity', value: toxicityString, inline: true});
-          log.debug(`[${PREFIX}] Added toxicity`);
+          // log.debug(`[${PREFIX}] Added toxicity`);
           toxicityAdded = true;
           firstRowColumns++;
         }
@@ -173,7 +173,7 @@ export const dDrug: SlashCommand = {
           }[],
         };
 
-        log.debug(`[${PREFIX}] roaNames: ${roaNames}`);
+        // log.debug(`[${PREFIX}] roaNames: ${roaNames}`);
 
         let dosageColumns = 0;
         roaNames.forEach((roaName) => {
@@ -225,7 +225,7 @@ export const dDrug: SlashCommand = {
                 });
                 const toxicityString = toxicityMap.join(', ');
                 embed.addFields({name: '☣ Toxicity', value: toxicityString, inline: true});
-                log.debug(`[${PREFIX}] Added toxicity A`);
+                // log.debug(`[${PREFIX}] Added toxicity A`);
                 toxicityAdded = true;
                 dosageColumns++;
               }
@@ -333,7 +333,7 @@ export const dDrug: SlashCommand = {
         });
         const toxicityString = toxicityMap.join(', ');
         embed.addFields({name: '☣ Toxicity', value: toxicityString, inline: true});
-        log.debug('Added toxicity C');
+        // log.debug('Added toxicity C');
       }
     }
 

@@ -228,7 +228,7 @@ export const dprofile: SlashCommand = {
 
       const today = new Date();
       if (today.getMonth() === targetBirthday.getMonth() && today.getDate() === targetBirthday.getDate()) {
-        log.debug(`[${PREFIX}] Birthday Match!`);
+        // log.debug(`[${PREFIX}] Birthday Match!`);
         // itIsYourBirthday = true;
       }
       if (targetBirthday.getDate() < 10) {
@@ -397,7 +397,7 @@ export const dprofile: SlashCommand = {
 
     // Birthday Mode
     if (itIsYourBirthday) {
-      log.debug(`[${PREFIX}] Birthday Match!`);
+      // log.debug(`[${PREFIX}] Birthday Match!`);
       context.font = '45px futura';
       context.textAlign = 'center';
       context.fillStyle = textColor;

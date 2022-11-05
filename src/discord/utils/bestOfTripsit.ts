@@ -34,10 +34,10 @@ const votePinThreshold = env.NODE_ENV === 'production' ? 5 : 2;
  */
 export async function bestOf(reaction:MessageReaction, user:User) {
   if (reaction.count === votePinThreshold && reaction.emoji.name?.includes('upvote')) {
-    log.debug(`[${PREFIX}] Message has reached pin threshold!`);
+    // log.debug(`[${PREFIX}] Message has reached pin threshold!`);
     // Check if the message.channe.id is in the list of tripsitter channels
     if (tripsitterChannels.includes(reaction.message.channel.id)) {
-      log.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
+      // log.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
       return;
     }
 
@@ -45,14 +45,14 @@ export async function bestOf(reaction:MessageReaction, user:User) {
 
     if (channelObj.parentId) {
       if (tripsitterChannels.includes(channelObj.parentId)) {
-        log.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
+        // log.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
         return;
       }
     }
 
     const channel = channelObj.guild.channels.cache.get(env.CHANNEL_BESTOF) as TextChannel;
 
-    log.debug(`[${PREFIX}] Sending message to ${channel.name}`);
+    // log.debug(`[${PREFIX}] Sending message to ${channel.name}`);
 
     if (channel !== undefined) {
       reaction.message.reply(
@@ -73,7 +73,7 @@ export async function bestOf(reaction:MessageReaction, user:User) {
         attachmentUrl = reaction.message.attachments.at(0)?.url;
       }
 
-      log.debug(`[${PREFIX}] attachmentUrl: ${attachmentUrl}`);
+      // log.debug(`[${PREFIX}] attachmentUrl: ${attachmentUrl}`);
 
       const embed = new EmbedBuilder()
         .setAuthor({

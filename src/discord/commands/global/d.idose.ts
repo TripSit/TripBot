@@ -16,7 +16,7 @@ import {embedTemplate} from '../../utils/embedTemplate';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import {paginationEmbed} from '../../utils/pagination';
 import {startLog} from '../../utils/startLog';
-import log from '../../../global/utils/log';
+// import log from '../../../global/utils/log';
 import {parse} from 'path';
 import {DrugRoa, DrugUnit} from '../../../global/@types/pgdb';
 const PREFIX = parse(__filename).name;
@@ -105,7 +105,7 @@ export const didose: SlashCommand = {
     const date = offset ? new Date() : null;
     if (date && offset) {
       const out = await parseDuration(offset);
-      log.debug(`[${PREFIX}] out: ${out}`);
+      // log.debug(`[${PREFIX}] out: ${out}`);
       date.setTime(date.getTime() - out);
     }
 
@@ -120,7 +120,7 @@ export const didose: SlashCommand = {
       date,
     );
 
-    log.debug(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+    // log.debug(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
 
     if (response[0].name === 'Error') {
       await interaction.reply({content: response[0].value, ephemeral: true});
@@ -198,9 +198,9 @@ export const didose: SlashCommand = {
       }
 
       const timeString = time(date).valueOf().toString();
-      log.debug(`[${PREFIX}] timeString: ${timeString}`);
+      // log.debug(`[${PREFIX}] timeString: ${timeString}`);
       const relative = time(date, 'R');
-      log.debug(`[${PREFIX}] relative: ${relative}`);
+      // log.debug(`[${PREFIX}] relative: ${relative}`);
 
       const embedField = {
         name: `You dosed ${volume} ${units} of ${substance} ${roa}`,
@@ -211,7 +211,6 @@ export const didose: SlashCommand = {
       embed.addFields(embedField);
       interaction.reply({embeds: [embed], ephemeral: true});
     }
-    log.debug(`[${PREFIX}] Finsihed!`);
     return true;
   },
 };

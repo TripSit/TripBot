@@ -68,8 +68,8 @@ export const ping: SlashCommand = {
       interaction.awaitModalSubmit({filter, time: 0, dispose: true})
         .then(async (i) => {
           if (i.customId.split('~')[1] !== interaction.id) return;
-          log.debug(`[${PREFIX}] i.customId.split('~')[4]: ${i.customId.split('~')[4]}`);
-          log.debug(`[${PREFIX}] interaction.id: ${interaction.id}`);
+          // log.debug(`[${PREFIX}] i.customId.split('~')[4]: ${i.customId.split('~')[4]}`);
+          // log.debug(`[${PREFIX}] interaction.id: ${interaction.id}`);
           const test = i.fields.getTextInputValue('test');
           interaction.reply({content: test, ephemeral: true});
         });
@@ -78,9 +78,9 @@ export const ping: SlashCommand = {
     if (command === 'role check') {
       const role = interaction.guild.roles.cache.find((r) => r.name === 'TripBot');
 
-      const user = interaction.client.users.cache.get(env.DISCORD_CLIENT_ID) as User;
+      const user = await interaction.client.users.fetch(env.DISCORD_CLIENT_ID) as User;
 
-      log.debug(`[${PREFIX}] user: ${user}`);
+      // log.debug(`[${PREFIX}] user: ${user}`);
 
       user.send('Hello!');
 

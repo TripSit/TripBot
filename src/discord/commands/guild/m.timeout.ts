@@ -14,7 +14,7 @@ import {MessageCommand} from '../../@types/commandDef';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import {startLog} from '../../utils/startLog';
 import {stripIndents} from 'common-tags';
-import log from '../../../global/utils/log';
+// import log from '../../../global/utils/log';
 import {moderate} from '../../../global/commands/g.moderate';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
@@ -76,7 +76,7 @@ export const mTimeout: MessageCommand = {
           minutes = duration ?
             await parseDuration(duration) :
             604800000;
-          log.debug(`[${PREFIX}] minutes: ${minutes}`);
+          // log.debug(`[${PREFIX}] minutes: ${minutes}`);
         }
 
         const result = await moderate(
@@ -88,7 +88,7 @@ export const mTimeout: MessageCommand = {
           minutes,
           i,
         );
-        log.debug(`[${PREFIX}] Result: ${result}`);
+        // log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
       });
     return true;

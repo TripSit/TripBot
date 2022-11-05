@@ -34,7 +34,7 @@ export const messageReactionRemove: reactionEvent = {
     // log.debug(`[${PREFIX}] reaction1: ${JSON.stringify(reaction, null, 4)}`);
     // When a reaction is received, check if the structure is partial
     if (reaction.partial) {
-      log.debug(`[${PREFIX}] reaction is partial!`);
+      // log.debug(`[${PREFIX}] reaction is partial!`);
       // If the message this reaction belongs to was removed,
       // the fetching might result in an API error which should be handled
       await reaction.fetch().catch((ex) => {
@@ -47,7 +47,7 @@ export const messageReactionRemove: reactionEvent = {
     await handleReactionRoles(reaction, user, false);
 
     // if (reaction.message.author?.bot) {
-    //   log.debug(`[${PREFIX}] Ignoring bot interaction`);
+    //   // log.debug(`[${PREFIX}] Ignoring bot interaction`);
     //   return;
     // }
     chitragupta(reaction, user, -1);

@@ -16,7 +16,7 @@ const PREFIX = parse(__filename).name;
  */
 export async function selectMenu(interaction:SelectMenuInteraction, client:Client): Promise<void> {
   const customId = interaction.customId;
-  log.debug(`[${PREFIX}] customId: ${customId}`);
+  // log.debug(`[${PREFIX}] customId: ${customId}`);
 
   if (customId.startsWith('applicationReject')) {
     await applicationReject(interaction);

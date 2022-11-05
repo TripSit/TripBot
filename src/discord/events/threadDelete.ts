@@ -16,13 +16,13 @@ const PREFIX = require('path').parse(__filename).name;
 export const channelDelete: threadEvent = {
   name: 'threadDelete',
   async execute(thread) {
-    log.debug(stripIndents`[${PREFIX}] ${thread.name}`);
+    // log.debug(stripIndents`[${PREFIX}] ${thread.name}`);
 
     // Find if the channel is used as a thread_id in any tickets
     const ticketData = await getOpenTicket(null, thread.id);
 
     if (ticketData) {
-      log.debug(`[${PREFIX}] closing ticket: ${JSON.stringify(ticketData, null, 2)}`);
+      // log.debug(`[${PREFIX}] closing ticket: ${JSON.stringify(ticketData, null, 2)}`);
       // If it is, close the ticket
       await db<UserTickets>('user_tickets')
         .update({

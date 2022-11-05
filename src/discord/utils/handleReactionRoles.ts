@@ -51,14 +51,14 @@ export async function handleReactionRoles(
   if (reaction.message.guild) {
     const role = await reaction.message.guild.roles.fetch(reactionRole.role_id);
     if (role === null) {
-      log.debug(`[${PREFIX}] No role found!`);
+      // log.debug(`[${PREFIX}] No role found!`);
       return;
     } else {
       // log.debug(`[${PREFIX}] role: ${role.name}`);
       if (add) {
         // Add the role
         (await reaction.message.guild.members.fetch(user.id)).roles.add(role);
-        log.debug(`[${PREFIX}] Added role ${role.name} to ${user.username}`);
+        // log.debug(`[${PREFIX}] Added role ${role.name} to ${user.username}`);
         reaction.message.reactions.cache.each((r) => {
           if (r.emoji.name !== reaction.emoji.name) {
             r.users.remove(user);
@@ -93,11 +93,11 @@ export async function handleReactionRoles(
       } else {
         // Remove the role
         (await reaction.message.guild.members.fetch(user.id)).roles.remove(role);
-        log.debug(`[${PREFIX}] Removed role ${role.name} from ${user.username}`);
+        // log.debug(`[${PREFIX}] Removed role ${role.name} from ${user.username}`);
       }
     }
   } else {
-    log.debug(`[${PREFIX}] No guild found!`);
+    // log.debug(`[${PREFIX}] No guild found!`);
     return;
   }
 };

@@ -12,7 +12,7 @@ import {
 } from 'discord-api-types/v10';
 import {MessageCommand} from '../../@types/commandDef';
 import {stripIndents} from 'common-tags';
-import log from '../../../global/utils/log';
+// import log from '../../../global/utils/log';
 import {moderate} from '../../../global/commands/g.moderate';
 import {startLog} from '../../utils/startLog';
 import {parse} from 'path';
@@ -63,7 +63,7 @@ export const mReport: MessageCommand = {
           null,
           i,
         );
-        log.debug(`[${PREFIX}] Result: ${result}`);
+        // log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
       });
     return true;

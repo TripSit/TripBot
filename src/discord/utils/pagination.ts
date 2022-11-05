@@ -42,7 +42,7 @@ export async function paginationEmbed(
   if (interaction.deferred === false) {
     await interaction.deferReply();
   }
-  log.debug(`${PREFIX} - Paginating ${pages.length} pages.`);
+  // log.debug(`${PREFIX} - Paginating ${pages.length} pages.`);
 
   let page = 0;
 

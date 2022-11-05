@@ -88,9 +88,10 @@ export async function runTimer() {
             // Check if the user has a mindset role
             if (user.mindset_role && user.mindset_role_expires_at) {
               const expires = DateTime.fromJSDate(user.mindset_role_expires_at);
-              log.debug(
-                `[${PREFIX}] ${user.discord_id}'s ${user.mindset_role} ${expires.toLocaleString(DateTime.DATETIME_MED)}`, // eslint-disable-line max-len
-              );
+              // log.debug(
+              //   `[${PREFIX}] ${user.discord_id}'s ${user.mindset_role}
+              // ${expires.toLocaleString(DateTime.DATETIME_MED)}`, // eslint-disable-line max-len
+              // );
               // Check if the user's mindset role has expired
               if (DateTime.fromJSDate(user.mindset_role_expires_at) <= DateTime.local()) {
                 // Get the user's discord id
@@ -118,7 +119,7 @@ export async function runTimer() {
 
                           // Remove the reaction from the role message
                           await member.roles.remove(role);
-                          log.debug(`[${PREFIX}] Removed ${user.discord_id}'s ${user.mindset_role} role`);
+                          // log.debug(`[${PREFIX}] Removed ${user.discord_id}'s ${user.mindset_role} role`);
                           // Update the user's mindset role in the database
                           await db<Users>('users')
                             .insert({
@@ -168,7 +169,7 @@ export async function runTimer() {
                   const thread = await global.client.channels.fetch(ticket.thread_id) as ThreadChannel;
                   await thread.setArchived(true);
                 } catch (error) {
-                  log.debug(`[${PREFIX}] There was an error archiving the thread, it was likely deleted`);
+                  // log.debug(`[${PREFIX}] There was an error archiving the thread, it was likely deleted`);
                 }
 
                 const userData = await getUser(null, ticket.user_id);
@@ -184,14 +185,14 @@ export async function runTimer() {
 
                         // Restore the old roles
                         if (userData.roles) {
-                          log.debug(`[${PREFIX}] Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
+                          // log.debug(`[${PREFIX}] Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
                           const roles = userData.roles.split(',');
                           for (const role of roles) {
                             const roleObj = await guild.roles.fetch(role);
                             if (roleObj && roleObj.name !== '@everyone' && roleObj.id !== env.ROLE_NEEDSHELP) {
                               // Check if the bot has permission to add the role
                               if (roleObj.comparePositionTo(myRole) < 0) {
-                                log.debug(`[${PREFIX}] Adding ${userData.discord_id}'s ${role} role`);
+                                // log.debug(`[${PREFIX}] Adding ${userData.discord_id}'s ${role} role`);
                                 await member.roles.add(roleObj);
                               }
                             }

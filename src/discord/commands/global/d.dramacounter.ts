@@ -8,7 +8,7 @@ import {embedTemplate} from '../../utils/embedTemplate';
 import {DateTime} from 'luxon';
 import {SlashCommand} from '../../@types/commandDef';
 import {parseDuration} from '../../../global/utils/parseDuration';
-import log from '../../../global/utils/log';
+// import log from '../../../global/utils/log';
 import {parse} from 'path';
 import {stripIndents} from 'common-tags';
 const PREFIX = parse(__filename).name;
@@ -52,7 +52,7 @@ export const bug: SlashCommand = {
     let dramaReason = '' as string;
     if (command === 'set') {
       const dramaVal = interaction.options.getString('dramatime');
-      log.debug(`[${PREFIX}] dramaVal: ${JSON.stringify(dramaVal, null, 2)}`);
+      // log.debug(`[${PREFIX}] dramaVal: ${JSON.stringify(dramaVal, null, 2)}`);
       if (!dramaVal) {
         interaction.reply({
           content: 'You need to specify a time for the drama to have happened.',
@@ -61,9 +61,9 @@ export const bug: SlashCommand = {
         return false;
       }
       const dramatimeValue = await parseDuration(dramaVal);
-      log.debug(`[${PREFIX}] dramatimeValue: ${JSON.stringify(dramatimeValue, null, 2)}`);
+      // log.debug(`[${PREFIX}] dramatimeValue: ${JSON.stringify(dramatimeValue, null, 2)}`);
       const dramaIssue = interaction.options.getString('dramaissue');
-      log.debug(`[${PREFIX}] dramaIssue: ${JSON.stringify(dramaIssue, null, 2)}`);
+      // log.debug(`[${PREFIX}] dramaIssue: ${JSON.stringify(dramaIssue, null, 2)}`);
       if (!dramaIssue) {
         interaction.reply({
           content: 'You need to specify what the drama was.',
@@ -73,7 +73,7 @@ export const bug: SlashCommand = {
       }
       dramaReason = dramaIssue;
       dramaDate = DateTime.now().minus(dramatimeValue).toJSDate();
-      log.debug(`[${PREFIX}] dramaTime: ${JSON.stringify(dramaDate, null, 2)}`);
+      // log.debug(`[${PREFIX}] dramaTime: ${JSON.stringify(dramaDate, null, 2)}`);
     }
 
     const response = await dramacounter(command, interaction.guild.id, dramaDate, dramaReason);

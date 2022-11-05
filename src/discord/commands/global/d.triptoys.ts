@@ -5,7 +5,7 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {startLog} from '../../utils/startLog';
 import {embedTemplate} from '../../utils/embedTemplate';
-import log from '../../../global/utils/log';
+// import log from '../../../global/utils/log';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
@@ -46,7 +46,7 @@ export const dtriptoys: SlashCommand = {
     startLog(PREFIX, interaction);
     const toyName = interaction.options.getString('toy') || '25';
     const toyId = parseInt(toyName, 10);
-    log.debug(`[${PREFIX}] toy_name: ${toyName}`);
+    // log.debug(`[${PREFIX}] toy_name: ${toyName}`);
 
     const toys = {
       1: {name: 'Weavesilk', value: '[Generate art](http://weavesilk.com/)', inline: true},
@@ -85,7 +85,7 @@ export const dtriptoys: SlashCommand = {
       const randomIndex = Math.floor(Math.random() * Object.keys(toys).length);
       // Get a random toy
       const randomToy = toys[randomIndex as keyof typeof toys];
-      log.debug(`[${PREFIX}] random_toy: ${JSON.stringify(randomToy, null, 2)}`);
+      // log.debug(`[${PREFIX}] random_toy: ${JSON.stringify(randomToy, null, 2)}`);
       embed.addFields(randomToy);
     }
 

@@ -28,7 +28,7 @@ export async function messageCommand(message: Message): Promise<void> {
   if (message.content.startsWith('~')) {
     // Find the word that appears after ~
     const command = message.content.split(' ')[0].slice(1);
-    log.debug(`[${PREFIX}] command: ${command}`);
+    // log.debug(`[${PREFIX}] command: ${command}`);
 
 
     if (command === 'tripsit') {

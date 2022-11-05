@@ -16,7 +16,7 @@ import {issue} from '../../../global/commands/g.issue';
 import {startLog} from '../../utils/startLog';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {stripIndents} from 'common-tags';
-import log from '../../../global/utils/log';
+// import log from '../../../global/utils/log';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
@@ -78,20 +78,20 @@ export const dIssue: SlashCommand = {
     modal.addComponents([title, body]);
     // Show the modal to the user
     await interaction.showModal(modal);
-    log.debug(`[${PREFIX}] displayed modal!`);
+    // log.debug(`[${PREFIX}] displayed modal!`);
 
     // Collect a modal submit interaction
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`issueModal`);
     interaction.awaitModalSubmit({filter, time: 0})
       .then(async (i) => {
         if (i.customId.split('~')[1] !== interaction.id) return;
-        log.debug(`[${PREFIX}] submitted!`);
+        // log.debug(`[${PREFIX}] submitted!`);
 
         // @ts-ignore https://discord.js.org/#/docs/discord.js/14.6.0/typedef/ModalData
         let issueBody = i.components[1].components[0].value;
 
-        log.debug(`[${PREFIX}] i.user: ${i.user.id}`);
-        log.debug(`[${PREFIX}] env.DISCORD_OWNER_ID: ${env.DISCORD_OWNER_ID}`);
+        // log.debug(`[${PREFIX}] i.user: ${i.user.id}`);
+        // log.debug(`[${PREFIX}] env.DISCORD_OWNER_ID: ${env.DISCORD_OWNER_ID}`);
         const sentByOwner = i.user.id === env.DISCORD_OWNER_ID;
         if (!sentByOwner) {
           issueBody += `This issue was submitted by ${(i.member as GuildMember).displayName} in ${i.guild}`;
@@ -109,7 +109,7 @@ export const dIssue: SlashCommand = {
           filteredLabels,
         );
 
-        log.debug(`[${PREFIX}] results: ${JSON.stringify(results, null, 2)}`);
+        // log.debug(`[${PREFIX}] results: ${JSON.stringify(results, null, 2)}`);
 
         if (results) {
           const embed = embedTemplate()

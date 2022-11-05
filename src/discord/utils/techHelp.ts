@@ -48,8 +48,8 @@ export async function techHelpClick(interaction:ButtonInteraction) {
     return;
   }
 
-  log.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
-  log.debug(`[${PREFIX} - techHelpClick] role: ${role.id}`);
+  // log.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
+  // log.debug(`[${PREFIX} - techHelpClick] role: ${role.id}`);
 
   let placeholder = '';
   if (issueType === 'discord') {
@@ -109,8 +109,8 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
     return;
   };
 
-  log.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
-  log.debug(`[${PREFIX} - techHelpClick] role: ${roleModerator.id}`);
+  // log.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
+  // log.debug(`[${PREFIX} - techHelpClick] role: ${roleModerator.id}`);
 
   // Respond right away cuz the rest of this doesn't matter
   const member = await interaction.guild.members.fetch(interaction.user.id);
@@ -132,7 +132,7 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
 
   // Get whatever they sent in the modal
   const modalInput = interaction.fields.getTextInputValue(`${issueType}IssueInput`);
-  log.debug(`[${PREFIX}] modalInput: ${modalInput}!`);
+  // log.debug(`[${PREFIX}] modalInput: ${modalInput}!`);
 
   // // Get the actor
   const actor = interaction.user;
@@ -144,7 +144,7 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
     type: interaction.guild.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
     reason: `${actor.username} submitted a(n) ${issueType} issue`,
   });
-  log.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);
+  // log.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);
 
   const embed = embedTemplate();
   embed.setDescription(stripIndents`Thank you, check out ${ticketThread} to talk with a team member about your issue!`);
@@ -170,7 +170,7 @@ export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
     );
 
   await ticketThread.send({content: message, components: [techHelpButtons]});
-  log.debug(`[${PREFIX}] Sent intro message to meta-thread ${ticketThread.id}`);
+  // log.debug(`[${PREFIX}] Sent intro message to meta-thread ${ticketThread.id}`);
 };
 
 /**

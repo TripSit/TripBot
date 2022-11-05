@@ -63,7 +63,7 @@ export const interactionCreate: interactionEvent = {
         buttonClick(interaction, client);
         return;
       };
-      log.debug(`[${PREFIX}] Unknown interaction!`);
+      // log.debug(`[${PREFIX}] Unknown interaction!`);
     }
   },
 };

@@ -73,7 +73,7 @@ export const uBan: UserCommand = {
           duration = duration ?
             await parseDuration(`${durationInput} days`) :
             0;
-          log.debug(`[${PREFIX}] duration: ${duration}`);
+          // log.debug(`[${PREFIX}] duration: ${duration}`);
         }
 
         const result = await moderate(
@@ -85,7 +85,7 @@ export const uBan: UserCommand = {
           duration,
           i);
 
-        log.debug(`[${PREFIX}] Result: ${result}`);
+        // log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
       });
     return true;

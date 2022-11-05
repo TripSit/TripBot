@@ -40,7 +40,7 @@ export async function remindme(
       log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
       return response;
     }
-    log.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
+    // log.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
 
     const userData = await getUser(userId, null);
 
@@ -80,10 +80,10 @@ export async function remindme(
       // log.debug(`[${PREFIX}] reminderDate: ${reminderDate}`);
       const timeVal = DateTime.fromISO(reminderDate);
 
-      log.debug(`[${PREFIX}] I deleted:
-      (${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}
-      ${record.reminder_text}
-      `);
+      // log.debug(`[${PREFIX}] I deleted:
+      // (${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}
+      // ${record.reminder_text}
+      // `);
 
       await db<UserDrugDoses>('user_drug_doses')
         .where('id', recordId)
@@ -106,9 +106,9 @@ export async function remindme(
       )
       .where('user_id', userData.id);
 
-    log.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);
+    // log.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);
 
-    log.debug(`[${PREFIX}] unsorteddata: ${unsorteddata.length}`);
+    // log.debug(`[${PREFIX}] unsorteddata: ${unsorteddata.length}`);
 
     if (!unsorteddata || unsorteddata.length === 0) {
       const response = 'You have no reminder records, you can use /remindme to add some!';
@@ -127,7 +127,7 @@ export async function remindme(
       return 0;
     });
 
-    log.debug(`[${PREFIX}] Sorted ${data.length} items!`);
+    // log.debug(`[${PREFIX}] Sorted ${data.length} items!`);
 
     const reminders = [] as reminder[];
 

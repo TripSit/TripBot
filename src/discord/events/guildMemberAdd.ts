@@ -39,7 +39,7 @@ export const guildMemberAdd: guildMemberEvent = {
         `Joined via ${inviter.tag}'s invite to ${invite.channel?.name} (${invite.code}-${invite.uses})` :
         `Joined via the vanity url`;
     }
-    log.debug(`[${PREFIX}] inviteInfo: ${inviteInfo}`);
+    // log.debug(`[${PREFIX}] inviteInfo: ${inviteInfo}`);
     global.guildInvites.set(
       member.guild.id,
       new Collection(newInvites.map((invite) => [invite.code, invite.uses])),
@@ -53,11 +53,11 @@ export const guildMemberAdd: guildMemberEvent = {
       .onConflict('discord_id')
       .merge();
 
-    log.debug(`[${PREFIX}] Date.now(): ${Date.now()}`);
-    log.debug(`[${PREFIX}] member.user.createdAt: ${member.user.createdAt.toString()}`);
+    // log.debug(`[${PREFIX}] Date.now(): ${Date.now()}`);
+    // log.debug(`[${PREFIX}] member.user.createdAt: ${member.user.createdAt.toString()}`);
 
     const diff = Math.abs(Date.now() - Date.parse(member.user.createdAt.toString()));
-    log.debug(`[${PREFIX}] diff: ${diff}`);
+    // log.debug(`[${PREFIX}] diff: ${diff}`);
     const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
     const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
     const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));

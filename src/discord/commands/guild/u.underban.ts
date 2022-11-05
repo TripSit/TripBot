@@ -65,7 +65,7 @@ export const uUnderban: UserCommand = {
           i,
         );
 
-        log.debug(`[${PREFIX}] Result: ${result}`);
+        // log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
       });
     return true;

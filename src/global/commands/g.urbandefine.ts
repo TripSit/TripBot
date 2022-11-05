@@ -11,7 +11,7 @@ const PREFIX = parse(__filename).name;
  * @return {string} definition
  */
 export async function urbandefine(term:string) {
-  log.debug(`[${PREFIX}] UrbanDefine looking for ${term}`);
+  // log.debug(`[${PREFIX}] UrbanDefine looking for ${term}`);
   const {data} = await axios.get(
     'https://mashape-community-urban-dictionary.p.rapidapi.com/define',
     {
@@ -38,7 +38,7 @@ export async function urbandefine(term:string) {
       thumbs_down: number
     }
 
-    log.debug(`[${PREFIX}] UrbanDefine found ${data.list.length} results`);
+    // log.debug(`[${PREFIX}] UrbanDefine found ${data.list.length} results`);
 
     // Sort data by the thumbs_up value
     (data.list as urbanDefinition[]).sort((a, b) => b.thumbs_up - a.thumbs_up);

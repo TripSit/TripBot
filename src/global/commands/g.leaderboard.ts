@@ -136,7 +136,7 @@ export async function leaderboard(
       .orderBy('total_points', 'desc')
       .limit(3);
 
-    log.debug(`[${PREFIX}] userExperience: ${JSON.stringify(userExperience, null, 2)}`);
+    // log.debug(`[${PREFIX}] userExperience: ${JSON.stringify(userExperience, null, 2)}`);
 
     let rank = 1;
     for (const user of userExperience) {
@@ -164,7 +164,7 @@ export async function leaderboard(
         levelPoints -= expToLevel;
       }
 
-      log.debug(`[${PREFIX}] discordUser: ${JSON.stringify(userData)} is level ${level}`);
+      // log.debug(`[${PREFIX}] discordUser: ${JSON.stringify(userData)} is level ${level}`);
 
       if (!results['TOTAL']) {
         results['TOTAL'] = [];

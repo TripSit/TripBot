@@ -36,7 +36,7 @@ export const messageReactionAdd: reactionEvent = {
     // log.debug(`[${PREFIX}] users: ${JSON.stringify(reaction.users, null, 2)}`);
 
     // if (reaction.message.author?.bot) {
-    //   log.debug(`[${PREFIX}] Ignoring bot interaction`);
+    //   // log.debug(`[${PREFIX}] Ignoring bot interaction`);
     //   return;
     // }
 

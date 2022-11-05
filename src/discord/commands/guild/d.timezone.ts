@@ -5,7 +5,7 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {timezone} from '../../../global/commands/g.timezone';
 import {startLog} from '../../utils/startLog';
-import log from '../../../global/utils/log';
+// import log from '../../../global/utils/log';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
@@ -46,7 +46,7 @@ export const time: SlashCommand = {
 
     const response = await timezone(command, member.id, tzValue);
 
-    log.debug(`[${PREFIX}] response: ${response}`);
+    // log.debug(`[${PREFIX}] response: ${response}`);
 
     if (command === 'get') {
       if (response.length === 0) {

@@ -46,7 +46,7 @@ export async function idose(
         value: 'You must provide a record number to delete!',
       }];
     }
-    log.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
+    // log.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
 
     const userData = await getUser(userId, null);
 
@@ -97,10 +97,10 @@ export async function idose(
         .andWhere('is_default', true))[0].name;
       const route = record.route.charAt(0).toUpperCase() + record.route.slice(1).toLowerCase();
 
-      log.debug(`[${PREFIX}] I deleted:
-      (${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}
-      ${record.dose} ${record.units} of ${drugName} ${route}
-      `);
+      // log.debug(`[${PREFIX}] I deleted:
+      // (${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}
+      // ${record.dose} ${record.units} of ${drugName} ${route}
+      // `);
 
       await db<UserDrugDoses>('user_drug_doses')
         .where('id', recordId)
@@ -149,7 +149,7 @@ export async function idose(
       return 0;
     });
 
-    log.debug(`[${PREFIX}] Sorted ${data.length} items!`);
+    // log.debug(`[${PREFIX}] Sorted ${data.length} items!`);
 
     const doses = [] as {
       name: string,
@@ -160,7 +160,7 @@ export async function idose(
     for (let i = 0; i < data.length; i += 1) {
       const dose = data[i];
       const doseDate = data[i].created_at.toISOString();
-      log.debug(`[${PREFIX}] doseDate: ${doseDate}`);
+      // log.debug(`[${PREFIX}] doseDate: ${doseDate}`);
       const timeVal = DateTime.fromISO(doseDate);
       const drugId = dose.drug_id;
       const drugName = (await db<DrugNames>('drug_names')
@@ -202,10 +202,10 @@ export async function idose(
       .orWhere('name', substance.toUpperCase()))[0].drug_id;
 
     if (drugId.length === 0) {
-      log.debug(`name = ${substance} not found in 'drugNames'`);
+      // log.debug(`name = ${substance} not found in 'drugNames'`);
     }
 
-    log.debug(`[${PREFIX}] drugId: ${drugId}`);
+    // log.debug(`[${PREFIX}] drugId: ${drugId}`);
 
     await db<UserDrugDoses>('user_drug_doses')
       .insert({

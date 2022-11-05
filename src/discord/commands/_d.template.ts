@@ -36,13 +36,13 @@ export const bug: SlashCommand = {
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(modalInput);
     modal.addComponents(firstActionRow);
     await interaction.showModal(modal);
-    log.debug(`[${PREFIX}] displayed modal!`);
+    // log.debug(`[${PREFIX}] displayed modal!`);
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`feedbackReportModal`);
     const submitted = await interaction.awaitModalSubmit({filter, time: 0});
     if (submitted) {
       if (submitted.customId.split('~')[1] !== interaction.id) return true;
       const input = submitted.fields.getTextInputValue('modalInput');
-      log.debug(`[${PREFIX}] input: ${input}`);
+      // log.debug(`[${PREFIX}] input: ${input}`);
     }
     return true;
   },
