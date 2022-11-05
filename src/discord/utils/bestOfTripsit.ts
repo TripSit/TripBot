@@ -6,13 +6,11 @@ import {
   User,
   TextChannel,
 } from 'discord.js';
-import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
-
-import {parse} from 'path';
-// import {startLog} from './startLog';
-const PREFIX = parse(__filename).name;
+// import log from '../../global/utils/log';
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 const tripsitterChannels = [
   env.CHANNEL_TRIPSIT,

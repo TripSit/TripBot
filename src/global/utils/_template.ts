@@ -4,9 +4,9 @@ import {
 // import env from './env.config';
 // import {embedTemplate} from '../../discord/utils/embedTemplate';
 // import {stripIndents} from 'common-tags';
-import log from './log';
-import {parse} from 'path';
-const PREFIX = parse(__filename).name;
+// import log from './log';
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 /**
  * Template

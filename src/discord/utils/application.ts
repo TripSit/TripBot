@@ -28,10 +28,10 @@ import {
 } from 'discord-api-types/v10';
 import {embedTemplate} from '../utils/embedTemplate';
 import env from '../../global/utils/env.config';
-import log from '../../global/utils/log';
-import {parse} from 'path';
 import {stripIndents} from 'common-tags';
 import {startLog} from './startLog';
+// import log from '../../global/utils/log';
+import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
 // "your application was denied because..."

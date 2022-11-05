@@ -9,10 +9,10 @@ import {
 // import {
 //   reactionRoleList,
 // } from '../../global/@types/database';
-import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
-import {parse} from 'path';
-const PREFIX = parse(__filename).name;
+// import log from '../../global/utils/log';
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 const mindsetRoles = [
   env.ROLE_DRUNK,
@@ -71,8 +71,8 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
         // log.debug(`[${PREFIX}] differenceId: ${differenceId}`);
         // log.debug(`[${PREFIX}] action: ${action}`);
 
-        const differentRole = newMember.guild.roles.cache
-          .find((role) => role.id === differenceId);
+        // const differentRole = newMember.guild.roles.cache
+        //   .find((role) => role.id === differenceId);
 
         // log.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${differentRole?.name} (${differentRole?.id})`);
 

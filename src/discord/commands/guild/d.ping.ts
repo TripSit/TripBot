@@ -78,11 +78,11 @@ export const ping: SlashCommand = {
     if (command === 'role check') {
       const role = interaction.guild.roles.cache.find((r) => r.name === 'TripBot');
 
-      const user = await interaction.client.users.fetch(env.DISCORD_CLIENT_ID) as User;
-
-      // log.debug(`[${PREFIX}] user: ${user}`);
-
-      user.send('Hello!');
+      if (env.DISCORD_CLIENT_ID) {
+        const user = await interaction.client.users.fetch(env.DISCORD_CLIENT_ID) as User;
+        log.debug(`[${PREFIX}] user: ${user}`);
+        user.send('Hello!');
+      }
 
       const embed1 = new EmbedBuilder()
         .setTitle('First Page')

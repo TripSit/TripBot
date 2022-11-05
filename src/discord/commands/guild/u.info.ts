@@ -6,7 +6,7 @@ import {
   ApplicationCommandType,
 } from 'discord-api-types/v10';
 import {UserCommand} from '../../@types/commandDef';
-import log from '../../../global/utils/log';
+// import log from '../../../global/utils/log';
 import {moderate} from '../../../global/commands/g.moderate';
 import {startLog} from '../../utils/startLog';
 import {parse} from 'path';

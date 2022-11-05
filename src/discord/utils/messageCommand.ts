@@ -5,10 +5,10 @@ import {
   Role,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
-import log from '../../global/utils/log';
-import {parse} from 'path';
 import {stripIndents} from 'common-tags';
-const PREFIX = parse(__filename).name;
+// import log from '../../global/utils/log';
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 const helpCounter = new Map<string, number>();
 

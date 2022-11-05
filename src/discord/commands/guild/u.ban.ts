@@ -12,7 +12,7 @@ import {
 } from 'discord-api-types/v10';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import {UserCommand} from '../../@types/commandDef';
-import log from '../../../global/utils/log';
+// import log from '../../../global/utils/log';
 import {moderate} from '../../../global/commands/g.moderate';
 import {startLog} from '../../utils/startLog';
 import {parse} from 'path';

@@ -10,9 +10,9 @@ import {embedTemplate} from './embedTemplate';
 import {stripIndents} from 'common-tags';
 import {db} from '../../global/utils/knex';
 import {Users} from '../../global/@types/pgdb';
-import log from '../../global/utils/log';
-import {parse} from 'path';
-const PREFIX = parse(__filename).name;
+// import log from '../../global/utils/log';
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 const frequency = env.NODE_ENV === 'production' ? 50 : 2;
 const bigFrequency = env.NODE_ENV === 'production' ? 250 : 3;
@@ -313,7 +313,7 @@ export async function announcements(message:Message) {
               collector.on('remove', async (reaction, user) => {
                 const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
                 // Increment the users's pointType
-                const value = await db<Users>('users')
+                await db<Users>('users')
                   .increment(pointType, -1)
                   .where('discord_id', user.id)
                   .returning(pointType);

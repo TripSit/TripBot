@@ -1,10 +1,10 @@
 import {
   Client,
 } from 'discord.js';
-import log from '../../global/utils/log';
-import env from '../../global/utils/env.config';
-import {parse} from 'path';
-const PREFIX = parse(__filename).name;
+// import env from '../../global/utils/env.config';
+// import log from '../../global/utils/log';
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 /**
  * Template

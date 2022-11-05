@@ -9,13 +9,12 @@ import {
   interactionEvent,
 } from '../@types/eventDef';
 import {commandRun} from '../utils/commandRun';
-import log from '../../global/utils/log';
 import {buttonClick} from '../utils/buttonClick';
 import {selectMenu} from '../utils/selectMenu';
 import {autocomplete} from '../utils/autocomplete';
-
-import {parse} from 'path';
-const PREFIX = parse(__filename).name;
+// import log from '../../global/utils/log';
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 export const interactionCreate: interactionEvent = {
   name: 'interactionCreate',

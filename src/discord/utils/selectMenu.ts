@@ -2,11 +2,11 @@ import {
   SelectMenuInteraction,
   Client,
 } from 'discord.js';
-import log from '../../global/utils/log';
 import {applicationStart} from '../utils/application';
 import {applicationReject} from './application';
-import {parse} from 'path';
-const PREFIX = parse(__filename).name;
+// import log from '../../global/utils/log';
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 /**
  * This runs whenever a buttion is clicked
