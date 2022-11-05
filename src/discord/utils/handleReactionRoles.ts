@@ -38,13 +38,13 @@ export async function handleReactionRoles(
   const reactionId = reaction.emoji.id ?? reaction.emoji.name;
   // log.debug(`[${PREFIX}] messageId: ${messageId} | reactionId: ${reactionId}`);
   const reactionRole = await db<ReactionRoles>('reaction_roles')
-    .select('*')
+    .select(db.ref('role_id'))
     .where('message_id', messageId)
     .andWhere('reaction_id', reactionId)
     .first();
 
   if (reactionRole === undefined) {
-    log.debug(`[${PREFIX}] No reaction role found!`);
+    // log.debug(`[${PREFIX}] No reaction role found!`);
     return;
   }
 

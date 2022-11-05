@@ -45,7 +45,11 @@ export async function remindme(
     const userData = await getUser(userId, null);
 
     const unsorteddata = await db<UserReminders>('user_reminders')
-      .select('*')
+      .select(
+        db.ref('id'),
+        db.ref('created_at'),
+        db.ref('reminder_text'),
+      )
       .where('user_id', userData.id);
 
     if (unsorteddata.length === 0) {
@@ -97,7 +101,10 @@ export async function remindme(
     const userData = await getUser(userId, null);
 
     const unsorteddata = await db<UserReminders>('user_reminders')
-      .select('*')
+      .select(
+        db.ref('trigger_at'),
+        db.ref('reminder_text'),
+      )
       .where('user_id', userData.id);
 
     log.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);

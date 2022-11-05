@@ -38,11 +38,20 @@ export async function runTimer() {
         // log.info(`[${PREFIX}] Checking timers...`);
         // Process reminders
         const reminderData = await db<UserReminders>('user_reminders')
-          .select('*');
+          .select(
+            db.ref('id'),
+            db.ref('trigger_at'),
+            db.ref('user_id'),
+            db.ref('reminder_text'),
+          );
         if (reminderData.length > 0) {
           // Loop through each reminder
           for (const reminder of reminderData) {
             // Check if the reminder is ready to be triggered
+            if (!reminder.trigger_at) {
+              log.error(`[${PREFIX}] Reminder ${reminder.id} has no trigger date!`);
+              continue;
+            };
             if (DateTime.fromJSDate(reminder.trigger_at) <= DateTime.local()) {
               // Get the user's discord id
               const userData = await getUser(null, reminder.user_id);
@@ -67,7 +76,11 @@ export async function runTimer() {
 
         // Process mindset roles
         const mindsetRoleData = await db<Users>('users')
-          .select('*')
+          .select(
+            db.ref('mindset_role'),
+            db.ref('mindset_role_expires_at'),
+            db.ref('discord_id'),
+          )
           .whereNotNull('mindset_role_expires_at');
         if (mindsetRoleData.length > 0) {
           // Loop through each user
@@ -96,7 +109,10 @@ export async function runTimer() {
                         if (role) {
                           // Get the reaction role info from the db
                           const reactionRoleData = await db<ReactionRoles>('reaction_roles')
-                            .select('*')
+                            .select(
+                              db.ref('message_id'),
+                              db.ref('emoji'),
+                            )
                             .where('role_id', user.mindset_role)
                             .first();
 
@@ -124,7 +140,14 @@ export async function runTimer() {
 
         // Process tickets
         const ticketData = await db<UserTickets>('user_tickets')
-          .select('*')
+          .select(
+            db.ref('id'),
+            db.ref('archived_at'),
+            db.ref('status'),
+            db.ref('thread_id'),
+            db.ref('user_id'),
+            db.ref('deleted_at'),
+          )
           .whereNot('status', 'DELETED');
         if (ticketData.length > 0) {
           // Loop through each ticket

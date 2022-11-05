@@ -23,7 +23,7 @@ export async function startLog(
   let message = `[${prefix}] via ${interaction.user.tag} (${interaction.user.id}) \
 ${interaction.guild ? `in ${interaction.guild.name} (${interaction.guild?.id})` : `in DM`}`;
   if (Object.hasOwn(interaction, 'options')) {
-    if (JSON.stringify((interaction as ChatInputCommandInteraction).options.data, null, 2).length > 0) {
+    if ((interaction as ChatInputCommandInteraction).options.data.length > 0) {
       message += ` with params: ${(interaction as ChatInputCommandInteraction).options.data[0].options?.map((o) => `${o.name}: ${o.value}`).join(', ')}`;
     } else {
       message += ` with params: ${(interaction as ChatInputCommandInteraction).options.data.map((o) => `${o.name}: ${o.value}`).join(', ')}`;

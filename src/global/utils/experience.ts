@@ -91,7 +91,13 @@ export async function experience(
   const userData = await getUser(message.author.id, null);
 
   const experienceData = await db<UserExperience>('user_experience')
-    .select('*')
+    .select(
+      db.ref('level_points'),
+      db.ref('total_points'),
+      db.ref('last_message_at'),
+      db.ref('level'),
+      db.ref('last_message_channel'),
+    )
     .where('user_id', userData.id)
     .andWhere('type', experienceType)
     .first();

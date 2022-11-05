@@ -109,25 +109,25 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
   // These commands are simple replies and CANNOT take input
   const replyCommands = [ // eslint-disable-line
     'about', /* updated */
-    'coinflip', /* updated */
-    'contact', /* updated */
-    'combochart', /* updated */
-    'donate', /* updated */
-    'ems', /* updated */
-    'grounding', /* updated */
-    'h2flow', /* updated */
-    'help', /* updated */
-    'hydrate', /* updated */
-    'joke', /* updated */
-    'kipp', /* updated */
-    'lovebomb', /* updated */
-    'magick8ball', /* updated */
-    'reagents', /* updated */
-    'recovery', /* updated */
-    'testkits', /* updated */
-    'triptoys', /* updated */
-    'topic', /* updated */
-    'warmline', /* updated */
+    // 'coinflip', /* updated */
+    // 'contact', /* updated */
+    // 'combochart', /* updated */
+    // 'donate', /* updated */
+    // 'ems', /* updated */
+    // 'grounding', /* updated */
+    // 'h2flow', /* updated */
+    // 'help', /* updated */
+    // 'hydrate', /* updated */
+    // 'joke', /* updated */
+    // 'kipp', /* updated */
+    // 'lovebomb', /* updated */
+    // 'magick8ball', /* updated */
+    // 'reagents', /* updated */
+    // 'recovery', /* updated */
+    // 'testkits', /* updated */
+    // 'triptoys', /* updated */
+    // 'topic', /* updated */
+    // 'warmline', /* updated */
   ];
 
   // These commands are simple replies and can OPTIONALLY take input

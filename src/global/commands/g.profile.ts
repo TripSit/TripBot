@@ -29,7 +29,10 @@ export async function profile(
   };
 
   const currentExp = await db<UserExperience>('user_experience')
-    .select('*')
+    .select(
+      db.ref('total_points'),
+      db.ref('type'),
+    )
     .where('user_id', userData.id);
 
   // log.debug(`[${PREFIX}] currentExp: ${JSON.stringify(currentExp, null, 2)}`);
