@@ -10,6 +10,7 @@ import {
   ModalBuilder,
   TextInputBuilder,
   SelectMenuBuilder,
+  ModalSubmitInteraction,
 } from 'discord.js';
 import {
   ButtonStyle, TextInputStyle,
@@ -377,7 +378,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
   await interaction.showModal(modal);
 
   // Collect a modal submit interaction
-  const filter = (interaction:any) => interaction.customId === 'appModal';
+  const filter = (interaction:ModalSubmitInteraction) => interaction.customId === 'appModal';
   interaction.awaitModalSubmit({filter, time: 150000})
     .then(async (i) => {
       if (i.customId.split('~')[1] !== interaction.id) return;
