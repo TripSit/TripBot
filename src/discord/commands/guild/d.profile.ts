@@ -34,6 +34,11 @@ export const dprofile: SlashCommand = {
       interaction.options.getMember('target') as GuildMember :
       interaction.member as GuildMember;
 
+    // log.debug(`[${PREFIX}] target: ${target.id}`);
+
+    // Get User Data
+    const targetData = await profile(target.id);
+
     if (!interaction.guild) {
       interaction.reply('You can only use this command in a guild!');
       return false;
@@ -190,14 +195,6 @@ export const dprofile: SlashCommand = {
 
     // log.debug(`[${PREFIX}] username`);
 
-    // Get User Data
-    const targetData = await profile(target.id) as {
-      birthday: Date;
-      timezone: string;
-      karma_given: number;
-      karma_received: number;
-      totalExp: number;
-    };
 
     // log.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
 

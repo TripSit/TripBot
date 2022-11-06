@@ -7,6 +7,9 @@ import {
   // TicketStatus,
   // DiscordGuilds,
 } from '../../global/@types/pgdb.d';
+// import log from '../../global/utils/log';
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 export const db = knex({
   client: 'pg',
@@ -21,17 +24,21 @@ export const db = knex({
 export async function getUser(
   discordId:string | null,
   userId:string | null,
-) {
+):Promise<Users> {
+  // log.info(`[${PREFIX}] getUser started with: discordId: ${discordId} | userId: ${userId}`);
   let data = {} as Users | undefined;
+
   if (discordId) {
-    let data = await db<Users>('users')
+    data = await db<Users>('users')
       .select('*')
       .where('discord_id', discordId)
       .first();
-    if (!data) {
+    // log.debug(`[${PREFIX}] data1: ${JSON.stringify(data, null, 2)}`);
+    if (data === undefined) {
       data = (await db<Users>('users')
         .insert({discord_id: discordId})
         .returning('*'))[0];
+      // log.debug(`[${PREFIX}] data2: ${JSON.stringify(data, null, 2)}`);
     }
   }
   if (userId) {
@@ -39,7 +46,10 @@ export async function getUser(
       .select('*')
       .where('id', userId)
       .first();
+    // log.debug(`[${PREFIX}] data3: ${JSON.stringify(data, null, 2)}`);
   }
+
+  // log.debug(`[${PREFIX}] data4: ${JSON.stringify(data, null, 2)}`);
 
   return data as Users;
 }

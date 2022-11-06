@@ -37,7 +37,7 @@ export const imgur: SlashCommand = {
   async execute(interaction) {
     startLog(PREFIX, interaction);
     // Sometimes the API takes a few seconds to respond.
-    await interaction.reply('Searching Imgur...');
+    await interaction.deferReply({ephemeral: false});
     const search = interaction.options.getString('search');
     const sort = interaction.options.getString('sort') || 'top';
     const window = interaction.options.getString('window') || 'all';
@@ -53,7 +53,7 @@ export const imgur: SlashCommand = {
 
     // log.debug(`[${PREFIX}] url: ${url}`);
 
-    interaction.reply(url);
+    await interaction.editReply(url);
     return true;
   },
 };

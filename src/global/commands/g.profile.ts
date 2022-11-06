@@ -7,7 +7,6 @@ import log from '../utils/log';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
-
 /**
  * Get profile info
  * @param {string} memberId The user to either set or get the timezone!
@@ -20,6 +19,8 @@ export async function profile(
 
   const userData = await getUser(memberId, null);
 
+  // log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData, null, 2)}`);
+
   const profileData = {
     birthday: userData.birthday,
     timezone: userData.timezone,
@@ -27,6 +28,8 @@ export async function profile(
     karma_received: userData.karma_received,
     totalExp: 0,
   };
+
+  // log.debug(`[${PREFIX}] profileData: ${JSON.stringify(profileData, null, 2)}`);
 
   const currentExp = await db<UserExperience>('user_experience')
     .select(

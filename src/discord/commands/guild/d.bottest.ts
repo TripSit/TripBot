@@ -87,11 +87,15 @@ function sleep(ms:number):Promise<void> {
 async function runCommand(interaction:ChatInputCommandInteraction, name:string) {
   const testInteraction = {
     options: {},
+    client: interaction.client,
     guild: interaction.guild,
     user: interaction.user,
     channel: interaction.channel,
     reply: (content:string) => {
       return interaction.followUp(content);
+    },
+    editReply: (content:string) => {
+      return interaction.editReply(content);
     },
   };
 
@@ -104,67 +108,63 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     'say', // This is a flavor command and doesn't need to be tested
     'setup', // This needs to be manually tested
     'test', // This would start recursion
-  ];
-
-  // These commands are simple replies and CANNOT take input
-  const replyCommands = [ // eslint-disable-line
-    'about', /* updated */
-    // 'coinflip', /* updated */
-    // 'contact', /* updated */
-    // 'combochart', /* updated */
-    // 'donate', /* updated */
-    // 'ems', /* updated */
-    // 'grounding', /* updated */
-    // 'h2flow', /* updated */
-    // 'help', /* updated */
-    // 'hydrate', /* updated */
-    // 'joke', /* updated */
-    // 'kipp', /* updated */
-    // 'lovebomb', /* updated */
-    // 'magick8ball', /* updated */
-    // 'reagents', /* updated */
-    // 'recovery', /* updated */
-    // 'testkits', /* updated */
-    // 'triptoys', /* updated */
-    // 'topic', /* updated */
-    // 'warmline', /* updated */
-  ];
-
-  // These commands are simple replies and can OPTIONALLY take input
-  const simpleCommands = [ // eslint-disable-line
-    'breathe', /* updated */
-    'profile', /* updated */
-  ];
-
-  // The commands REQUIRE input of some sort
-  const testableCommands = [ // eslint-disable-line
-    // 'birthday', /* updatedPostgres */
-    // 'calc_dxm', /* updated */
-    // 'calc_ketamine', /* updated */
-    // 'calc_psychedelics', /* updated */
-    // 'calc_benzo', /* updated */
-    // 'combo',
-    // 'convert',
-    'dramacounter', /* updatedPostgres */
-    // 'drug',
-    'idose', /* updatedPostgres */
-    // 'imdb',
-    // 'imgur',
-    // 'karma',
     // 'm_report',
     // 'm_timeout',
     // 'm_warn',
     // 'moderate',
     // 'modmail',
-    // 'poll',
     // 'report',
-    // 'remindme',
-    'timezone', /* updatedPostgres */
     // 'u_ban',
     // 'u_info',
     // 'u_kick',
     // 'u_note',
     // 'u_underban',
+  ];
+
+  // These commands are simple replies and CANNOT take input
+  const replyCommands = [ // eslint-disable-line
+    'about',
+    'coinflip',
+    'contact',
+    'combochart',
+    'donate',
+    'ems',
+    'grounding',
+    'h2flow',
+    'help',
+    'hydrate',
+    'joke',
+    'kipp',
+    'lovebomb',
+    'magick8ball',
+    'reagents',
+    'recovery',
+    'testkits',
+    'topic',
+    'warmline',
+  ];
+
+  // The commands REQUIRE input of some sort
+  const testableCommands = [ // eslint-disable-line
+    'breathe',
+    // 'birthday',
+    // 'calc_dxm',
+    // 'calc_ketamine',
+    // 'calc_psychedelics',
+    // 'calc_benzo',
+    // 'combo',
+    // 'convert',
+    'dramacounter',
+    // 'drug',
+    'idose',
+    // 'imdb',
+    // 'imgur',
+    // 'karma',
+    // 'poll',
+    'profile',
+    // 'remindme',
+    'timezone',
+    'triptoys',
     // 'youtube',
   ];
 
@@ -177,9 +177,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     return false;
   }
 
+  await sleep(1000);
+
   await interaction.channel.send(`> **${name}** - Initializing test!`);
 
-  await sleep(1000);
 
   const command = await interaction.client.commands.get(name);
   if (command) {
@@ -799,7 +800,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string) 
     // }
     // // No-parameter commands fall down here, including:
     // // - button, joke, kipp, motivate, ping, topic
-    await command.execute(interaction);
+    return await command.execute(testInteraction);
   } else {
     interaction.channel.send(`**${name}** - command not found!`);
   }

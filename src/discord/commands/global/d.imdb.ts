@@ -20,6 +20,7 @@ export const imdbSearch: SlashCommand = {
 
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(PREFIX, interaction);
+    await interaction.deferReply({ephemeral: false});
 
     const title = interaction.options.getString('title');
     if (!title) {
@@ -36,19 +37,23 @@ export const imdbSearch: SlashCommand = {
     const embed = embedTemplate()
       .setTitle(`${result.title} (${result.year}) [${result.rated}]`)
       .setDescription(`||${result.plot}||`)
-      .setThumbnail(result.poster)
       .setURL(result.imdburl)
       .addFields(
         {name: 'Director(s)', value: `${result.director}`, inline: true},
         {name: 'Actor(s)', value: `${result.actors}`, inline: true},
         {name: 'Writer(s)', value: `${result.writer}`, inline: true},
       );
+    if (result.poster !== 'N/A') {
+      embed.setThumbnail(result.poster);
+    }
 
     result.ratings.forEach((rating) => {
       embed.addFields({name: rating.source, value: rating.value, inline: true});
     });
 
-    interaction.reply({embeds: [embed], ephemeral: false});
+    // interaction.followUp({embeds: [embed]});
+    await interaction.editReply({embeds: [embed]});
+    // interaction.reply({embeds: [embed], ephemeral: false});
     return true;
   },
 };

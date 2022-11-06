@@ -38,8 +38,8 @@ export const help: SlashCommand = {
   async execute(interaction) {
     startLog(PREFIX, interaction);
 
-    const globalCommands = await interaction.client.application?.commands.fetch();
-    const guildCommands = await interaction.client.application?.commands.fetch({guildId: env.DISCORD_GUILD_ID});
+    const globalCommands = await interaction.client.application.commands.fetch();
+    const guildCommands = await interaction.client.application.commands.fetch({guildId: env.DISCORD_GUILD_ID});
 
     /**
      * Gets the description of a command

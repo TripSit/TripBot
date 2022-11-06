@@ -36,16 +36,28 @@ export const dYoutube: SlashCommand = {
     }
 
     // log.debug(`[${PREFIX}] - result: ${JSON.stringify(result, null, 2)}`);
+    // log.debug(`[${PREFIX}] - result: ${result.title} (${result.channelTitle}) (${result.link})`);
 
     const embed = embedTemplate()
       .setColor(0xFF0000)
       .setTitle(`${result.title}`)
-      .setAuthor({
-        name: result.channelTitle,
-        url: result.link,
-      })
-      .setURL(result.link)
-      .setDescription(result.description.substring(0, 200));
+
+      .setURL(result.link);
+      // .setDescription(result.description);
+
+    if (result.channelTitle) {
+      if (result.link) {
+        embed.setAuthor({
+          name: result.channelTitle,
+          url: result.link,
+        });
+      } else {
+        embed.setAuthor({
+          name: result.channelTitle,
+        });
+      }
+    };
+
     if (result.thumbnails) {
       if (result.thumbnails.high) embed.setThumbnail(result.thumbnails.high.url);
       else if (result.thumbnails.medium) embed.setThumbnail(result.thumbnails.medium.url);

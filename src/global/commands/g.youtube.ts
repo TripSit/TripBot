@@ -37,7 +37,7 @@ export async function youtube(query:string):Promise<YouTubeSearchResults> {
     });
   }
 
-  const results = await getResults(query) as YouTubeSearchResults[][0];
-  log.info(`[${PREFIX}] response: ${JSON.stringify(results, null, 2)}`);
+  const results = (await getResults(query) as YouTubeSearchResults[])[0];
+  log.info(`[${PREFIX}] response: ${JSON.stringify(results.title, null, 2)}`);
   return results;
 };
