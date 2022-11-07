@@ -16,10 +16,10 @@ const PREFIX = parse(__filename).name;
 export async function timezone(
   command: 'get' | 'set',
   memberId: string,
-  timezone?:string | null):Promise<string> {
+  timezone?:string | null):Promise<string | null> {
   // log.debug(`[${PREFIX}] timezone: ${command} ${memberId} ${timezone}`);
 
-  let response = '';
+  let response = '' as string | null;
   if (command === 'set') {
     // define offset as the value from the timezones array
     let tzCode = '';
@@ -42,12 +42,14 @@ export async function timezone(
 
     return `I updated your timezone to ${timezone}`;
   } else if (command === 'get') {
-    const tzCode = '';
     let gmtValue = '';
 
     const userData = await getUser(memberId, null);
 
-    if (userData.timezone) {
+    log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData, null, 2)}`);
+
+    if (userData.timezone !== null) {
+      const tzCode = userData.timezone;
       for (let i = 0; i < timezones.length; i += 1) {
         if (timezones[i].tzCode === tzCode) {
           gmtValue = timezones[i].offset;
@@ -61,7 +63,7 @@ export async function timezone(
       return response;
     } else {
       // log.debug(`[${PREFIX}] tzCode is empty!`);
-      response = ``;
+      response = null;
     }
   }
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);

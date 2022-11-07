@@ -4,10 +4,12 @@ import {
   TextChannel,
   GuildMember,
   Colors,
+  TextBasedChannel,
 } from 'discord.js';
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {startLog} from '../../utils/startLog';
+import log from '../../../global/utils/log'; // eslint-disable-line no-unused-vars
 import env from '../../../global/utils/env.config';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
@@ -27,10 +29,28 @@ export const reminder: SlashCommand = {
       return false;
     }
 
+    const channelId = interaction.channelId;
+    log.debug(`[${PREFIX}] channelId: ${channelId}`);
+    const chanId = (interaction.channel as TextBasedChannel).id;
+    log.debug(`[${PREFIX}] chanId: ${chanId}`);
+    const reminderData = reminderDict[chanId];
+    log.debug(`[${PREFIX}] reminderData: ${JSON.stringify(reminderData, null, 2)}`);
+    if (!reminderData) {
+      interaction.reply({
+        content: 'This command can only be used in a channel with a reminder!',
+        ephemeral: true,
+      });
+      return false;
+    }
+    const reminderTitle = reminderData[0];
+    log.debug(`[${PREFIX}] reminderTitle: ${reminderTitle}`);
+    const reminderText = reminderData[1];
+    log.debug(`[${PREFIX}] reminderText: ${reminderText}`);
+
     const reminder = embedTemplate()
       .setColor(Colors.Red)
-      .setTitle(`REMINDER: ${reminderDict[interaction.channelId][0]}`)
-      .setDescription(reminderDict[interaction.channelId][1]);
+      .setTitle(`REMINDER: ${reminderTitle}`)
+      .setDescription(reminderText);
 
     interaction.channel?.send({embeds: [reminder]});
 
@@ -46,6 +66,10 @@ export const reminder: SlashCommand = {
 
 const reminderDict = {
   [env.CHANNEL_ANNOUNCEMENTS]: [
+    `EmbedTitle`,
+    `EmbedDescription`,
+  ],
+  [env.CHANNEL_BOTSPAM]: [
     `EmbedTitle`,
     `EmbedDescription`,
   ],

@@ -76,30 +76,29 @@ type resultsObject = {
 
 // The commands REQUIRE input of some sort
   const testableCommands = [ // eslint-disable-line
-  // 'birthday', // ++
-  // 'breathe', // ++
-  // 'calc_benzo', // ++
-  // 'calc_dxm', // ++
-  // 'calc_ketamine', // ++
-  // 'calc_psychedelics', // ++
-  // 'combo', // ++
-  // 'convert', // ++
-  // 'dramacounter', // ++
-  // 'drug', // ++
-
+  'birthday',
+  'breathe',
+  'calc_benzo',
+  'calc_dxm',
+  'calc_ketamine',
+  'calc_psychedelics',
+  'combo',
+  'convert',
+  'dramacounter',
+  'drug',
   'idose',
-  // 'imdb',
-  // 'imgur',
-  // 'karma',
-  // 'leaderboard',
-  // 'poll',
-  // 'profile',
-  // 'remindme',
-  // 'reminder',
-  // 'say',
-  // 'timezone',
-  // 'urban_define',
-  // 'youtube',
+  'imdb',
+  'imgur',
+  'karma',
+  'leaderboard',
+  'poll',
+  'profile',
+  'remindme',
+  'reminder',
+  'say',
+  'timezone',
+  'urban_define',
+  'youtube',
 ];
 
 export const testSuite: SlashCommand = {
@@ -255,22 +254,22 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string):
     client: interaction.client,
     guild: interaction.guild,
     user: interaction.user,
+    member: interaction.member,
     channel: interaction.channel,
     reply: (content:string) => {
       return interaction.followUp(content);
     },
     editReply: (content:string) => {
-      return interaction.editReply(content);
+      return interaction.followUp(content);
     },
     deferReply: () => {
       return;
     },
   };
 
-
   // log.debug(`[${PREFIX}] Running command: ${name}`);
 
-  if (!testableCommands.includes(name)) return null;
+  if (!testableCommands.includes(name) && !replyCommands.includes(name) ) return null;
 
   // log.debug(`[${PREFIX}] in channel: ${(interaction.channel as TextChannel).name}`);
 
@@ -731,7 +730,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string):
     if (name == 'imdb') {
       testInteraction.options = {
         getString: (name:string) => {
-          if (name === 'imdb') return 'Jurrassic Park';
+          if (name === 'title') return 'Jurrassic Park';
         },
       };
       return await command.execute(testInteraction);
@@ -746,8 +745,8 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string):
     }
     if (name == 'karma') {
       testInteraction.options = {
-        getSubcommand: () => {
-          return 'get';
+        getMember: (name:string) => {
+          return interaction.member;
         },
       };
       return await command.execute(testInteraction);
@@ -829,6 +828,13 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string):
       // Get existing reminders
       await interaction.channel.send(`> **${name}** - Getting existing record`);
       testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'offset') return '2 mins';
+          if (name === 'reminder') return 'Test reminder A';
+        },
+        getNumber: (name:string) => {
+          if (name === 'record') return 0;
+        },
         getSubcommand: () => {
           return 'get';
         },
@@ -842,6 +848,9 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string):
         getString: (name:string) => {
           if (name === 'offset') return '2 mins';
           if (name === 'reminder') return 'Test reminder A';
+        },
+        getNumber: (name:string) => {
+          if (name === 'record') return 0;
         },
         getSubcommand: () => {
           return 'set';
@@ -857,6 +866,9 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string):
           if (name === 'offset') return '3 mins';
           if (name === 'reminder') return 'Test reminder B';
         },
+        getNumber: (name:string) => {
+          if (name === 'record') return 0;
+        },
         getSubcommand: () => {
           return 'set';
         },
@@ -867,6 +879,13 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string):
       // Get history
       await interaction.channel.send(`> **${name}** - Get records`);
       testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'offset') return '2 mins';
+          if (name === 'reminder') return 'Test reminder A';
+        },
+        getNumber: (name:string) => {
+          if (name === 'record') return 0;
+        },
         getSubcommand: () => {
           return 'get';
         },
@@ -877,6 +896,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string):
       // Delete record
       await interaction.channel.send(`> **${name}** - Deleting record`);
       testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'offset') return '2 mins';
+          if (name === 'reminder') return 'Test reminder A';
+        },
         getNumber: (name:string) => {
           if (name === 'record') return 0;
         },
@@ -890,6 +913,13 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string):
       // Get history
       await interaction.channel.send(`> **${name}** - Get records`);
       testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'offset') return '2 mins';
+          if (name === 'reminder') return 'Test reminder A';
+        },
+        getNumber: (name:string) => {
+          if (name === 'record') return 0;
+        },
         getSubcommand: () => {
           return 'get';
         },
@@ -910,8 +940,11 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string):
     }
     if (name == 'say') {
       testInteraction.options = {
+        getChannel: (name:string) => {
+          if (name === 'channel') return interaction.channel;
+        },
         getString: (name:string) => {
-          if (name === 'say') return 'Is TripBot Awesome!';
+          if (name === 'say') return 'TripBot Is Awesome!';
         },
       };
       return await command.execute(testInteraction);
@@ -921,7 +954,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string):
       await interaction.channel.send(`> **${name}** - Getting existing record`);
       testInteraction.options = {
         getString: (name:string) => {
-          if (name === 'timezone') return '(GMT-09:00) Alaska Time';
+          if (name === 'timezone') return 'Pacific/Tahiti';
         },
         getMember: (name:string) => {
           if (name === 'user') return interaction.member;
@@ -937,7 +970,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string):
       await interaction.channel.send(`> **${name}** - Setting new timezone to 'America/Chicago'`);
       testInteraction.options = {
         getString: (name:string) => {
-          if (name === 'timezone') return '(GMT-09:00) Alaska Time';
+          if (name === 'timezone') return '(GMT-10:00) Hawaii Time';
         },
         getMember: (name:string) => {
           if (name === 'user') return interaction.member;
@@ -991,6 +1024,14 @@ async function runCommand(interaction:ChatInputCommandInteraction, name:string):
         },
         getSubcommand: () => {
           return 'get';
+        },
+      };
+      return await command.execute(testInteraction);
+    }
+    if (name == 'triptoys') {
+      testInteraction.options = {
+        getString: (name:string) => {
+          if (name === 'toy') return '25';
         },
       };
       return await command.execute(testInteraction);

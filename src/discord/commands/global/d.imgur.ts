@@ -44,7 +44,7 @@ export const imgur: SlashCommand = {
     // log.debug(`[${PREFIX}] sort: ${sort}`);
     // log.debug(`[${PREFIX}] window: ${window}`);
 
-    await interaction.reply(`Searching Imgur for ${search}`);
+    await interaction.deferReply();
 
     // eslint-disable-next-line max-len
     const query = `https://api.imgur.com/3/gallery/search/${sort !== null ? `${sort}/` : ''}${window !== null ? `${window}/` : ''}?q=${search}`;

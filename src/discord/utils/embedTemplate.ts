@@ -19,7 +19,7 @@ export function embedTemplate():EmbedBuilder {
   // .setDescription('DESCRIPTION')
   // .addFields(
   //     {name: 'Regular field title', value: 'Some value here'},
-  //     {name: '\u200B', value: '\u200B'},
+  //     {name: '\u200B', value: '\u200B', inline: true},
   //     {name: 'Inline field title', value: 'Some value here', inline: true},
   //     {name: 'Inline field title', value: 'Some value here', inline: true},
   // )

@@ -49,13 +49,13 @@ export const time: SlashCommand = {
     // log.debug(`[${PREFIX}] response: ${response}`);
 
     if (command === 'get') {
-      if (response.length === 0) {
+      if (response === null) {
         interaction.reply(`${member.displayName} is a timeless treasure <3 (and has not set a time zone)`);
       } else {
         interaction.reply(`${response} wherever ${member.displayName} is located.`);
       }
     } else {
-      interaction.reply({content: response, ephemeral: true});
+      interaction.reply({content: response as string, ephemeral: true});
     }
     return true;
   },

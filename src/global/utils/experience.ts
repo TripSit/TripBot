@@ -7,7 +7,7 @@ import {
 } from 'discord.js';
 import {DateTime} from 'luxon';
 import {db, getUser} from '../utils/knex';
-import {UserExperience} from '../@types/pgdb';
+import {UserExperience, ExperienceType} from '../@types/pgdb';
 import env from './env.config';
 import log from './log';
 import {stripIndents} from 'common-tags';
@@ -90,18 +90,24 @@ export async function experience(
 
   const userData = await getUser(message.author.id, null);
 
+  // log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData, null, 2)}`);
+
   const experienceData = await db<UserExperience>('user_experience')
     .select(
+      db.ref('id'),
+      db.ref('user_id'),
+      db.ref('level'),
+      db.ref('type'),
       db.ref('level_points'),
       db.ref('total_points'),
       db.ref('last_message_at'),
-      db.ref('level'),
       db.ref('last_message_channel'),
     )
     .where('user_id', userData.id)
     .andWhere('type', experienceType)
     .first();
-  // log.debug(`[${PREFIX}] currentExp: ${JSON.stringify(currentExp, null, 2)}`);
+
+  // log.debug(`[${PREFIX}] experienceData: ${JSON.stringify(experienceData, null, 2)}`);
 
   // If the user has no experience, insert it
   if (!experienceData) {
@@ -109,8 +115,13 @@ export async function experience(
     // log.debug(`[${PREFIX}] experienceDataInsert: ${JSON.stringify(experienceData, null, 2)}`);
     await db<UserExperience>('user_experience')
       .insert({
+        user_id: userData.id,
+        type: experienceType as ExperienceType,
         level_points: expPoints,
         total_points: expPoints,
+        last_message_at: new Date(),
+        last_message_channel: message.channel.id,
+        level: 0,
       });
     return;
   } else {

@@ -37,7 +37,8 @@ export const dpoll: SlashCommand = {
       .setRequired(true)),
   async execute(interaction) {
     startLog(PREFIX, interaction);
-    await interaction.deferReply({ephemeral: true});
+    // await interaction.deferReply({ephemeral: true});
+    interaction.reply({content: 'Creating poll...', ephemeral: true});
     const question = interaction.options.getString('question');
     const optionsString = interaction.options.getString('options');
     if (!question || !optionsString) {
@@ -70,7 +71,7 @@ export const dpoll: SlashCommand = {
         }
       });
 
-    await interaction.editReply('Done!');
+    // await interaction.editReply('Done!');
     return true;
   },
 };

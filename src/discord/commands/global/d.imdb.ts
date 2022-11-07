@@ -20,13 +20,14 @@ export const imdbSearch: SlashCommand = {
 
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(PREFIX, interaction);
-    await interaction.deferReply({ephemeral: false});
 
-    const title = interaction.options.getString('title');
+    const title = interaction.options.getString('title', true);
     if (!title) {
       interaction.reply({content: 'You must enter a title.', ephemeral: true});
       return false;
     }
+
+    await interaction.deferReply({ephemeral: false});
 
     const result = await imdb(title);
 
@@ -34,6 +35,7 @@ export const imdbSearch: SlashCommand = {
       interaction.reply({content: `Could not find ${title}, make sure you're exact!`, ephemeral: true});
       return true;
     }
+
     const embed = embedTemplate()
       .setTitle(`${result.title} (${result.year}) [${result.rated}]`)
       .setDescription(`||${result.plot}||`)

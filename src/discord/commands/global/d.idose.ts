@@ -99,16 +99,16 @@ export const didose: SlashCommand = {
     const roa = interaction.options.getString('roa') as DrugRoa | null;
     const offset = interaction.options.getString('offset') as DrugUnit | null;
 
-    log.debug(`[${PREFIX}]
-    command: ${command}
-    recordNumber: ${recordNumber}
-    userId: ${userId}
-    substance: ${substance}
-    volume: ${volume}
-    units: ${JSON.stringify(units)}
-    roa: ${JSON.stringify(roa)}
-    offset: ${JSON.stringify(offset)}
-    `);
+    // log.debug(`[${PREFIX}]
+    // command: ${command}
+    // recordNumber: ${recordNumber}
+    // userId: ${userId}
+    // substance: ${substance}
+    // volume: ${volume}
+    // units: ${JSON.stringify(units)}
+    // roa: ${JSON.stringify(roa)}
+    // offset: ${JSON.stringify(offset)}
+    // `);
     // Make a new variable that is the current time minus the out variable
     let date = new Date();
     if (offset) {

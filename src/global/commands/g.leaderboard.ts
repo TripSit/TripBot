@@ -91,7 +91,6 @@ export async function leaderboard(
       const userExperience = await db<UserExperience>('user_experience')
         .select(
           db.ref('user_id'),
-          db.ref('total_points'),
           db.ref('level'),
         )
         .where('type', category)
@@ -129,7 +128,6 @@ export async function leaderboard(
     const userExperience = await db<UserExperience>('user_experience')
       .select(
         db.ref('user_id'),
-        db.ref('total_points'),
       )
       .groupBy(['user_id'])
       .sum({total_points: 'total_points'})

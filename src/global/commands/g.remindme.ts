@@ -1,7 +1,6 @@
 import {db, getUser} from '../utils/knex';
 import {DateTime} from 'luxon';
 import {
-  UserDrugDoses,
   UserReminders,
 } from '../@types/pgdb';
 import log from '../utils/log';
@@ -85,7 +84,7 @@ export async function remindme(
       // ${record.reminder_text}
       // `);
 
-      await db<UserDrugDoses>('user_drug_doses')
+      await db<UserReminders>('user_reminders')
         .where('id', recordId)
         .del();
 
