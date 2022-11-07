@@ -16,78 +16,39 @@ const PREFIX = parse(__filename).name;
 export async function birthday(
   command: 'get' | 'set',
   memberId: string,
-  month?: string | null,
+  month?: number | null,
   day?: number | null,
-):Promise<string> {
-  let response = '';
+):Promise<DateTime | null> {
+  let response = {} as DateTime | null;
   if (command === 'set') {
     // log.debug(`[${PREFIX}] ${command} ${memberId} ${month} ${day}`);
-    if (month === null || day === null) {
-      const response = 'You need to specify a month and day!' as string;
-      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
-      return response;
-    }
-    const month30 = ['April', 'June', 'September', 'November'];
-    const month31 = ['January', 'March', 'May', 'July', 'August', 'October', 'December'];
-    if (month !== undefined && day !== undefined) {
-      if (month30.includes(month) && day > 30) {
-        const response = `${month} only has 30 days!` as string;
-        log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
-        return response;
-      }
-      if (month31.includes(month) && day > 31) {
-        const response = `${month} only has 31 days!` as string;
-        log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
-        return response;
-      }
-      if (month === 'February' && day > 28) {
-        const response = 'February only has 28 days!' as string;
-        log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
-        return response;
-      }
-      const monthDict = {
-        'january': 0,
-        'february': 1,
-        'march': 2,
-        'april': 3,
-        'may': 4,
-        'june': 5,
-        'july': 6,
-        'august': 7,
-        'september': 8,
-        'october': 9,
-        'november': 10,
-        'december': 11,
-      };
+    const birthday = DateTime.utc(2000, month as number, day as number);
 
-      const birthday = new Date(2000, monthDict[month.toLowerCase() as keyof typeof monthDict], day);
+    // log.debug(`[${PREFIX}] Setting birthday for ${memberId} to ${birthday}`);
 
-      // log.debug(`[${PREFIX}] Setting birthday for ${memberId} to ${birthday}`);
-
-      await db<Users>('users')
-        .insert({
-          discord_id: memberId,
-          birthday: birthday,
-        })
-        .onConflict('discord_id')
-        .merge();
-      const response = `${month} ${day} is your new birthday!` as string;
-      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
-    }
+    await db<Users>('users')
+      .insert({
+        discord_id: memberId,
+        birthday: birthday.toJSDate(),
+      })
+      .onConflict('discord_id')
+      .merge();
+    response = birthday;
   } else if (command === 'get') {
     const userData = await getUser(memberId, null);
-
     if (userData.birthday !== null) {
-      const birthDate = userData.birthday.toISOString();
-      // log.debug(`[${PREFIX}] Birthdate: ${birthDate}`);
-      const birthday = DateTime.fromISO(birthDate);
+      const birthDate = userData.birthday;
+      // log.debug(`[${PREFIX}] birthDate: ${birthDate}`);
+      const birthday = DateTime.fromJSDate(birthDate, {zone: 'utc'});
       // log.debug(`[${PREFIX}] birthday: ${birthday}`);
-      response = `was born on ${birthday.monthLong} ${birthday.day}`;
+      response = birthday;
     } else {
       // log.debug(`[${PREFIX}] birthday is NULL`);
-      response = `is immortal <3 (and has not set a birthday)` as string;
+      response = null;
     }
-    log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
   }
+  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  log.info(`[${PREFIX}] response: ${JSON.stringify(response?.toJSDate().toString(), null, 2)}`);
+
   return response;
 };

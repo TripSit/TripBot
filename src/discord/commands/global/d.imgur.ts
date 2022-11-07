@@ -37,13 +37,14 @@ export const imgur: SlashCommand = {
   async execute(interaction) {
     startLog(PREFIX, interaction);
     // Sometimes the API takes a few seconds to respond.
-    await interaction.deferReply({ephemeral: false});
     const search = interaction.options.getString('search');
     const sort = interaction.options.getString('sort') || 'top';
     const window = interaction.options.getString('window') || 'all';
     // log.debug(`[${PREFIX}] query: ${search}`);
     // log.debug(`[${PREFIX}] sort: ${sort}`);
     // log.debug(`[${PREFIX}] window: ${window}`);
+
+    await interaction.reply(`Searching Imgur for ${search}`);
 
     // eslint-disable-next-line max-len
     const query = `https://api.imgur.com/3/gallery/search/${sort !== null ? `${sort}/` : ''}${window !== null ? `${window}/` : ''}?q=${search}`;

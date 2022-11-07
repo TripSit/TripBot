@@ -16,7 +16,7 @@ import {embedTemplate} from '../../utils/embedTemplate';
 import {parseDuration} from '../../../global/utils/parseDuration';
 import {paginationEmbed} from '../../utils/pagination';
 import {startLog} from '../../utils/startLog';
-// import log from '../../../global/utils/log';
+import log from '../../../global/utils/log'; // eslint-disable-line no-unused-vars
 import {parse} from 'path';
 import {DrugRoa, DrugUnit} from '../../../global/@types/pgdb';
 const PREFIX = parse(__filename).name;
@@ -95,15 +95,23 @@ export const didose: SlashCommand = {
 
     const substance = interaction.options.getString('substance');
     const volume = interaction.options.getNumber('volume');
-    const unitsOption = interaction.options.get('units');
-    const units = unitsOption ? unitsOption.value as DrugUnit : null;
-    const roaOption = interaction.options.get('roa');
-    const roa = roaOption ? roaOption.value as DrugRoa : null;
-    const offsetOption = interaction.options.get('offset');
-    const offset = offsetOption ? offsetOption.value as string : null;
+    const units = interaction.options.getString('units') as DrugUnit | null;
+    const roa = interaction.options.getString('roa') as DrugRoa | null;
+    const offset = interaction.options.getString('offset') as DrugUnit | null;
+
+    log.debug(`[${PREFIX}]
+    command: ${command}
+    recordNumber: ${recordNumber}
+    userId: ${userId}
+    substance: ${substance}
+    volume: ${volume}
+    units: ${JSON.stringify(units)}
+    roa: ${JSON.stringify(roa)}
+    offset: ${JSON.stringify(offset)}
+    `);
     // Make a new variable that is the current time minus the out variable
-    const date = offset ? new Date() : null;
-    if (date && offset) {
+    let date = new Date();
+    if (offset) {
       const out = await parseDuration(offset);
       // log.debug(`[${PREFIX}] out: ${out}`);
       date.setTime(date.getTime() - out);
@@ -122,16 +130,18 @@ export const didose: SlashCommand = {
 
     // log.debug(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
 
-    if (response[0].name === 'Error') {
-      await interaction.reply({content: response[0].value, ephemeral: true});
-      return false;
+    if (response[0]) {
+      if (response[0].name === 'Error') {
+        await interaction.reply({content: response[0].value, ephemeral: true});
+        return false;
+      }
     }
 
     if (command === 'delete') {
       await interaction.reply({content: response[0].value, ephemeral: true});
     }
     if (command === 'get') {
-      if (response !== null) {
+      if (response.length > 0) {
         // Sort data based on the dose_date property
         embed.setTitle('Your dosage history');
 
@@ -193,8 +203,7 @@ export const didose: SlashCommand = {
     }
     if (command === 'set') {
       if (date === null) {
-        interaction.reply({content: 'Invalid date!', ephemeral: true});
-        return false;
+        date = new Date();
       }
 
       const timeString = time(date).valueOf().toString();

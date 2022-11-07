@@ -118,6 +118,8 @@ export async function idose(
   if (command === 'get') {
     const userData = await getUser(userId, null);
 
+    // log.debug(`[${PREFIX}] Getting data for ${userData.id}...`);
+
     const unsorteddata = await db<UserDrugDoses>('user_drug_doses')
       .select(
         db.ref('id'),
@@ -206,6 +208,17 @@ export async function idose(
     }
 
     // log.debug(`[${PREFIX}] drugId: ${drugId}`);
+
+    // log.debug(`[${PREFIX}]
+    // command: ${command}
+    // recordNumber: ${recordNumber}
+    // userId: ${userId}
+    // substance: ${substance}
+    // volume: ${volume}
+    // units: ${JSON.stringify(units)}
+    // roa: ${JSON.stringify(roa)}
+    // created_at: ${JSON.stringify(date)}
+    // `);
 
     await db<UserDrugDoses>('user_drug_doses')
       .insert({
