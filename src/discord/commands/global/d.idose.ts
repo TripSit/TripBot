@@ -18,7 +18,7 @@ import {paginationEmbed} from '../../utils/pagination';
 import {startLog} from '../../utils/startLog';
 import log from '../../../global/utils/log'; // eslint-disable-line no-unused-vars
 import {parse} from 'path';
-import {DrugRoa, DrugUnit} from '../../../global/@types/pgdb';
+import {DrugRoa, DrugMassUnit} from '../../../global/@types/pgdb';
 const PREFIX = parse(__filename).name;
 
 const buttonList = [
@@ -95,9 +95,9 @@ export const didose: SlashCommand = {
 
     const substance = interaction.options.getString('substance');
     const volume = interaction.options.getNumber('volume');
-    const units = interaction.options.getString('units') as DrugUnit | null;
+    const units = interaction.options.getString('units') as DrugMassUnit | null;
     const roa = interaction.options.getString('roa') as DrugRoa | null;
-    const offset = interaction.options.getString('offset') as DrugUnit | null;
+    const offset = interaction.options.getString('offset') as string | null;
 
     // log.debug(`[${PREFIX}]
     // command: ${command}

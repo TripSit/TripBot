@@ -111,6 +111,8 @@ export async function tripsitmeButton(
 
   const ticketData = await getOpenTicket(userData.id, null);
 
+  log.debug(`[${PREFIX}] Target ticket data: ${JSON.stringify(ticketData, null, 2)}`);
+
   if (ticketData !== undefined) {
     // log.debug(`[${PREFIX}] Target has open ticket: ${JSON.stringify(ticketData, null, 2)}`);
 
@@ -118,14 +120,15 @@ export async function tripsitmeButton(
     try {
       threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
-      // log.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted:\n ${err}`);
-
+      log.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted`);
       // Update the ticket status to closed
-      ticketData.status = 'CLOSED' as TicketStatus;
+      ticketData.status = 'DELETED' as TicketStatus;
       await db<UserTickets>('user_tickets')
         .insert(ticketData)
         .onConflict('id')
         .merge();
+      log.debug(`[${PREFIX}] Updated ticket status to DELETED`);
+      log.debug(`[${PREFIX}] Ticket: ${JSON.stringify(ticketData, null, 2)}`);
     }
 
     if (threadHelpUser.id) {
@@ -160,9 +163,8 @@ export async function tripsitmeButton(
       let helpMessage = stripIndents`Hey ${target}, thanks for asking for help, we can continue talking here! What's up?`;
       if (minutes > 5) {
         // log.debug(`[${PREFIX}] Target has open ticket, and it was created over 5 minutes ago!`);
-        helpMessage += `\n\n${roleHelper} and ${roleTripsitter} will be with you as soon as they're available!`;
+        helpMessage += `\n\nSomeone from the ${roleTripsitter} ${guildData.role_helper ? `and/or ${roleHelper}` : ``} team will be with you as soon as they're available!`;
       }
-      threadHelpUser.setName(`💛│${target.displayName}'s channel!`);
       threadHelpUser.send({
         content: helpMessage,
         allowedMentions: {
@@ -174,7 +176,7 @@ export async function tripsitmeButton(
       if (ticketData.meta_thread_id) {
         let metaMessage = '';
         if (minutes > 5) {
-          metaMessage = `Hey ${roleHelper} and ${roleTripsitter}, ${target.toString()} has indicated they need assistance!`;
+          metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ?? `and/or ${roleHelper}`} team, ${target.toString()} has indicated they need assistance!`;
         } else {
           metaMessage = `${target.toString()} has indicated they need assistance!`;
         }
@@ -302,7 +304,7 @@ export async function tripSitMe(
   }) as ThreadChannel;
   // log.debug(`[${PREFIX}] Created ${threadHelpUser.name} ${threadHelpUser.id}`);
 
-  // Send the triage info to the thread
+  // Send reply to the actor
   const replyMessage = memberInput ?
     stripIndents`
         Hey ${interaction.member}, we've activated tripsit mode on ${target.user.username}!
@@ -316,18 +318,17 @@ export async function tripSitMe(
         Click here to be taken to your private room: ${threadHelpUser.toString()}
 
         You can also click in your channel list to see your private room!`;
-
   const embed = embedTemplate()
     .setColor(Colors.DarkBlue)
     .setDescription(replyMessage);
   interaction.reply({embeds: [embed], ephemeral: true});
   // log.debug(`[${PREFIX}] Sent response to ${target.user.tag}`);
 
-  // Send the intro message to the threadHelpUser
+  // Send the intro message to the thread
   const firstMessage = memberInput ?
     stripIndents`
       Hey ${target}, the team thinks you could use assistance!
-      ${roleHelper} and ${roleTripsitter} will be with you as soon as they're available!
+      Someone from the ${roleTripsitter} ${guildData.role_helper ? `and/or ${roleHelper}` : ``} team will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.` :
     stripIndents`
       Hey ${target}, thank you for asking for assistance!
@@ -336,20 +337,18 @@ export async function tripSitMe(
 
       Your issue: ${intro ? `\n${intro}` : '\n*No info given*'}
 
-      ${roleHelper} and ${roleTripsitter} will be with you as soon as they're available!
+      Someone from the ${roleTripsitter} ${guildData.role_helper ? `and/or ${roleHelper}` : ``} team will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
       When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
       If you just would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
       `;
-
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId(`tripsitmeFinish~me~${target.id}`)
+        .setCustomId(`tripsitmeResolve~${target.id}`)
         .setLabel('I\'m good now!')
         .setStyle(ButtonStyle.Success),
     );
-
   await threadHelpUser.send({
     content: firstMessage,
     components: [row],
@@ -389,7 +388,7 @@ export async function tripSitMe(
         .setLabel('Owned')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setCustomId(`tripsitmeFinish~them~${target.id}`)
+        .setCustomId(`tripsitmeClose~${target.id}`)
         .setLabel('They\'re good now!')
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
@@ -416,7 +415,7 @@ export async function tripSitMe(
   const oneDay = 1000 * 60 * 60 * 24;
   const archiveTime = env.NODE_ENV === 'production' ?
     threadArchiveTime.getTime() + oneDay :
-    threadArchiveTime.getTime() + thirtySec;
+    threadArchiveTime.getTime() + tenMins;
   threadArchiveTime.setTime(archiveTime);
   // log.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
 
@@ -437,7 +436,7 @@ export async function tripSitMe(
     deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
   } as UserTickets;
 
-  // log.debug(`[${PREFIX}] newTicketData: ${JSON.stringify(newTicketData, null, 2)}`);
+  log.debug(`[${PREFIX}] newTicketData: ${JSON.stringify(newTicketData, null, 2)}`);
 
   // Update thet ticket in the DB
   await db<UserTickets>('user_tickets')
@@ -534,18 +533,28 @@ export async function tripsitmeOwned(
 
   const target = await interaction.guild.members.fetch(userId) as GuildMember;
 
-  // Reply to the user
-  interaction.reply({content: stripIndents`
-    ${actor.displayName} has indicated that ${target.toString()} is receiving help!
-  `});
 
   const userData = await getUser(userId, null);
   const ticketData = await getOpenTicket(userData.id, null);
 
+  log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
   if (!ticketData) {
-    interaction.reply('This user does not have an open ticket!');
+    const rejectMessage = `Hey ${interaction.member}, ${target.displayName} not have an open session!`;
+    const embed = embedTemplate().setColor(Colors.DarkBlue);
+    embed.setDescription(rejectMessage);
+    // log.debug(`[${PREFIX}] target ${target} does not need help!`);
+    interaction.editReply({embeds: [embed]});
     return;
+  }
+
+  const metaChannelId = ticketData?.meta_thread_id ?? env.CHANNEL_TRIPSITMETA;
+  const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
+  metaChannel.send({
+    content: stripIndents`${actor.displayName} has indicated that ${target.toString()} is receiving help!`,
+  });
+  if (metaChannelId !== env.CHANNEL_TRIPSITMETA) {
+    metaChannel.setName(`💛│${target.displayName}'s discussion!`);
   }
 
   // Update the ticket's name
@@ -557,6 +566,9 @@ export async function tripsitmeOwned(
   await db<UserTickets>('user_tickets')
     .update(ticketData)
     .where('id', ticketData.id);
+
+  // Reply to the user
+  interaction.reply({content: 'Thanks!', ephemeral: true});
 };
 
 /**
@@ -595,9 +607,12 @@ export async function tripsitmeMeta(
   const userData = await getUser(userId, null);
   const ticketData = await getOpenTicket(userData.id, null);
 
-
   if (!ticketData) {
-    interaction.reply('This user does not have an open ticket!');
+    const rejectMessage = `Hey ${interaction.member}, ${target.displayName} not have an open session!`;
+    const embed = embedTemplate().setColor(Colors.DarkBlue);
+    embed.setDescription(rejectMessage);
+    // log.debug(`[${PREFIX}] target ${target} does not need help!`);
+    interaction.editReply({embeds: [embed]});
     return;
   }
 
@@ -611,7 +626,14 @@ export async function tripsitmeMeta(
     },
   );
 
-  // Send an embed to the tripsitter room
+  ticketData.meta_thread_id = metaChannel.id;
+
+  await db<UserTickets>('user_tickets')
+    .insert(ticketData)
+    .onConflict('id')
+    .merge();
+
+  // Send an embed to the meta room
   const embedTripsitter = embedTemplate()
     .setColor(Colors.DarkBlue)
     .setDescription(stripIndents`
@@ -637,13 +659,9 @@ export async function tripsitmeMeta(
         .setLabel('Owned')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setCustomId(`tripsitmeFinish~them~${target.id}`)
+        .setCustomId(`tripsitmeClose~${target.id}`)
         .setLabel('They\'re good now!')
         .setStyle(ButtonStyle.Success),
-      new ButtonBuilder()
-        .setCustomId(`tripsitmeMeta~${target.id}`)
-        .setLabel('Create thread')
-        .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId(`tripsitmeBackup~${target.id}`)
         .setLabel('I need backup')
@@ -655,6 +673,8 @@ export async function tripsitmeMeta(
     components: [endSession],
     allowedMentions: {},
   });
+
+  interaction.reply({content: 'Donezo!', ephemeral: true});
 };
 
 /**
@@ -682,9 +702,12 @@ export async function tripsitmeBackup(
   const userData = await getUser(userId, null);
   const ticketData = await getOpenTicket(userData.id, null);
 
-
   if (!ticketData) {
-    interaction.reply('This user does not have an open ticket!');
+    const rejectMessage = `Hey ${interaction.member}, ${target.displayName} not have an open session!`;
+    const embed = embedTemplate().setColor(Colors.DarkBlue);
+    embed.setDescription(rejectMessage);
+    // log.debug(`[${PREFIX}] target ${target} does not need help!`);
+    interaction.editReply({embeds: [embed]});
     return;
   }
 
@@ -700,10 +723,10 @@ export async function tripsitmeBackup(
   }
   if (guildData.role_helper) {
     roleHelper = await interaction.guild.roles.fetch(guildData.role_helper) as Role;
-    backupMessage += `<@&${roleHelper.id}> `;
+    backupMessage += `and/or <@&${roleHelper.id}> `;
   }
 
-  backupMessage += stripIndents`${actor} has inidicated they could use some backup!
+  backupMessage += stripIndents`team, ${actor} has inidicated they could use some backup!
     
   Be sure to read the log so you have the context!`;
 
@@ -713,13 +736,15 @@ export async function tripsitmeBackup(
   } else {
     await interaction.channel.send(backupMessage);
   }
+
+  interaction.reply({content: 'Backup message sent!', ephemeral: true});
 };
 
 /**
  * Handles removing of the NeedsHelp mode
  * @param {ButtonInteraction} interaction
  */
-export async function tripsitmeFinish(
+export async function tripsitmeClose(
   interaction:ButtonInteraction,
 ) {
   startLog(PREFIX, interaction);
@@ -735,8 +760,119 @@ export async function tripsitmeFinish(
     return;
   }
 
-  const meOrThem = interaction.customId.split('~')[1];
-  const targetId = interaction.customId.split('~')[2];
+  const targetId = interaction.customId.split('~')[1];
+
+  const guildData = await getGuild(interaction.guild.id);
+
+  let roleNeedshelp = {} as Role;
+  let channelTripsitMeta = {} as TextChannel;
+  if (guildData.role_needshelp) {
+    roleNeedshelp = await interaction.guild.roles.fetch(guildData.role_needshelp) as Role;
+  }
+  if (guildData.channel_tripsit_meta) {
+    channelTripsitMeta = await interaction.guild.channels.fetch(guildData.channel_tripsit_meta) as TextChannel;
+  }
+
+  const target = await interaction.guild.members.fetch(targetId);
+  const actor = interaction.member as GuildMember;
+
+  if (targetId === actor.id) {
+    // log.debug(`[${PREFIX}] not the target!`);
+    interaction.editReply({content: 'You should not be able to see this button!'});
+    return;
+  }
+
+  const userData = await getUser(target.id, null);
+  const ticketData = await getOpenTicket(userData.id, null);
+
+  log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+
+  if (!ticketData) {
+    const rejectMessage = `Hey ${interaction.member}, ${target.displayName} not have an open session!`;
+    const embed = embedTemplate().setColor(Colors.DarkBlue);
+    embed.setDescription(rejectMessage);
+    // log.debug(`[${PREFIX}] target ${target} does not need help!`);
+    interaction.editReply({embeds: [embed]});
+    return;
+  }
+
+  // Get the channel objects for the help thread
+  let threadHelpUser = {} as ThreadChannel;
+  try {
+    threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
+    threadHelpUser.setName(`💙│${target.displayName}'s channel!`);
+  } catch (err) {
+    // log.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted:\n ${err}`);
+    // Update the ticket status to closed
+    ticketData.status = 'DELETED' as TicketStatus;
+    await db<UserTickets>('user_tickets')
+      .insert(ticketData)
+      .onConflict('id')
+      .merge();
+    log.debug(`[${PREFIX}] Updated ticket status to DELETED`);
+  }
+
+  const closeMessage = stripIndents`Hey ${target}, it looks like you're doing somewhat better!
+    This thread will remain here for a day if you want to follow up tomorrow.
+    After 7 days, or on request, it will be deleted to preserve your privacy =)
+    If you'd like to go back to social mode, just click the button below!
+    `;
+
+  const row = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId(`tripsitmeResolve~${target.id}`)
+        .setLabel('I\'m good now!')
+        .setStyle(ButtonStyle.Success),
+    );
+
+  await threadHelpUser.send({
+    content: closeMessage,
+    components: [row],
+  });
+
+  const metaChannelId = ticketData?.meta_thread_id ?? env.CHANNEL_TRIPSITMETA;
+  const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
+  metaChannel.send({
+    content: stripIndents`${actor.displayName} has indicated that ${target.toString()} no longer needs help!`,
+  });
+  if (metaChannelId !== env.CHANNEL_TRIPSITMETA) {
+    metaChannel.setName(`💙│${target.displayName}'s discussion!`);
+  }
+
+  // Update the ticket status to closed
+  ticketData.status = 'CLOSED' as TicketStatus;
+  await db<UserTickets>('user_tickets')
+    .insert(ticketData)
+    .onConflict('id')
+    .merge();
+
+  // log.debug(`[${PREFIX}] ${target.user.tag} (${target.user.id}) is no longer being helped!`);
+  await interaction.editReply({content: 'Done!'});
+};
+
+
+/**
+ * Handles removing of the NeedsHelp mode
+ * @param {ButtonInteraction} interaction
+ */
+export async function tripsitmeResolve(
+  interaction:ButtonInteraction,
+) {
+  startLog(PREFIX, interaction);
+  await interaction.deferReply({ephemeral: true});
+  if (!interaction.guild) {
+    // log.debug(`[${PREFIX}] no guild!`);
+    interaction.editReply('This must be performed in a guild!');
+    return;
+  }
+  if (!interaction.member) {
+    // log.debug(`[${PREFIX}] no member!`);
+    interaction.editReply('This must be performed by a member of a guild!');
+    return;
+  }
+
+  const targetId = interaction.customId.split('~')[1];
 
   const guildData = await getGuild(interaction.guild.id);
 
@@ -761,7 +897,7 @@ export async function tripsitmeFinish(
   //   target: ${target.displayName}
   // `);
 
-  if (meOrThem === 'me' && targetId !== actor.id) {
+  if (targetId !== actor.id) {
     // log.debug(`[${PREFIX}] not the target!`);
     interaction.editReply({content: 'Only the user receiving help can click this button!'});
     return;
@@ -770,11 +906,10 @@ export async function tripsitmeFinish(
   const userData = await getUser(target.id, null);
   const ticketData = await getOpenTicket(userData.id, null);
 
+  log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
-  // log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData, null, 2)}`);
-
-  if (!ticketData) {
-    const rejectMessage = `Hey need help${interaction.member}, ${meOrThem === 'me' ? 'you do' : `${target} does`} not have an open session!`;
+  if (ticketData === undefined || Object.entries(ticketData).length === 0) {
+    const rejectMessage = `Hey ${interaction.member}, you do not have an open session!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(`[${PREFIX}] target ${target} does not need help!`);
@@ -798,8 +933,6 @@ export async function tripsitmeFinish(
         }
       }
     }
-
-    const test = interaction.guild.id;
 
     // readd each role to the target
     if (targetRoles) {
@@ -836,6 +969,13 @@ export async function tripsitmeFinish(
     threadHelpUser.setName(`💚│${target.displayName}'s channel!`);
   } catch (err) {
     // log.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted:\n ${err}`);
+    // Update the ticket status to closed
+    ticketData.status = 'DELETED' as TicketStatus;
+    await db<UserTickets>('user_tickets')
+      .insert(ticketData)
+      .onConflict('id')
+      .merge();
+    log.debug(`[${PREFIX}] Updated ticket status to DELETED`);
   }
 
   const endHelpMessage = stripIndents`Hey ${target}, we're glad you're doing better!
@@ -889,10 +1029,25 @@ export async function tripsitmeFinish(
       });
     });
 
+  const metaChannelId = ticketData?.meta_thread_id ?? env.CHANNEL_TRIPSITMETA;
+  const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
+  metaChannel.send({
+    content: stripIndents`${actor.displayName} has indicated that they no longer need help!`,
+  });
+  if (metaChannelId !== env.CHANNEL_TRIPSITMETA) {
+    metaChannel.setName(`💚│${target.displayName}'s discussion!`);
+  }
+
+  // Update the ticket status to resolved
+  ticketData.status = 'RESOLVED' as TicketStatus;
+  await db<UserTickets>('user_tickets')
+    .insert(ticketData)
+    .onConflict('id')
+    .merge();
+
   // log.debug(`[${PREFIX}] ${target.user.tag} (${target.user.id}) is no longer being helped!`);
   await interaction.editReply({content: 'Done!'});
 };
-
 
 const teamRoles = [
   env.ROLE_DIRECTOR,

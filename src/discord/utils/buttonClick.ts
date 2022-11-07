@@ -19,7 +19,8 @@ import {
   tripsitmeOwned,
   tripsitmeMeta,
   tripsitmeBackup,
-  tripsitmeFinish,
+  tripsitmeClose,
+  tripsitmeResolve,
 } from '../utils/tripsitme';
 import {techHelpClick, techHelpClose, techHelpOwn} from '../utils/techHelp';
 import {
@@ -54,8 +55,13 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     return;
   }
 
-  if (buttonID.startsWith('tripsitmeFinish')) {
-    tripsitmeFinish(interaction);
+  if (buttonID.startsWith('tripsitmeClose')) {
+    tripsitmeClose(interaction);
+    return;
+  }
+
+  if (buttonID.startsWith('tripsitmeResolve')) {
+    tripsitmeResolve(interaction);
     return;
   }
 

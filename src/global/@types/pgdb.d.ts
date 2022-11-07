@@ -1,6 +1,15 @@
 // The TypeScript definitions below are automatically generated.
 // Do not touch them, or risk, your modifications being lost.
 
+export enum DrugMassUnit {
+  Mg = 'MG',
+  Ml = 'ML',
+  G = 'µG',
+  G = 'G',
+  Oz = 'OZ',
+  Floz = 'FLOZ',
+}
+
 export enum DrugNameType {
   Brand = 'BRAND',
   Common = 'COMMON',
@@ -196,7 +205,7 @@ export type ReactionRoles = {
 export type UserActions = {
   id: string;
   user_id: string;
-  type: UserActionType | null;
+  type: UserActionType;
   ban_evasion_related_user: string | null;
   description: string;
   internal_note: string | null;
@@ -213,7 +222,7 @@ export type UserDrugDoses = {
   drug_id: string;
   route: DrugRoa;
   dose: number;
-  units: DrugUnit;
+  units: DrugMassUnit;
   created_at: Date;
 };
 

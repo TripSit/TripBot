@@ -4,7 +4,7 @@ import {
   UserDrugDoses,
   DrugNames,
   DrugRoa,
-  DrugUnit,
+  DrugMassUnit,
 } from '../../global/@types/pgdb.d';
 import log from '../utils/log';
 import {parse} from 'path';
@@ -28,7 +28,7 @@ export async function idose(
   userId: string,
   substance: string | null,
   volume: number | null,
-  units: DrugUnit | null,
+  units: DrugMassUnit | null,
   roa: DrugRoa | null,
   date: Date | null,
 ):Promise<{

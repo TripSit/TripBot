@@ -40,9 +40,9 @@ export async function runTimer() {
         const reminderData = await db<UserReminders>('user_reminders')
           .select(
             db.ref('id'),
-            db.ref('trigger_at'),
             db.ref('user_id'),
             db.ref('reminder_text'),
+            db.ref('trigger_at'),
           );
         if (reminderData.length > 0) {
           // Loop through each reminder

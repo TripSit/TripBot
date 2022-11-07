@@ -62,14 +62,14 @@ export const prompt: SlashCommand = {
         .setName('metatripsit')
         .setRequired(true),
       )
-      .addChannelOption((option) => option
-        .setDescription('Do you have a sanctuary room?')
-        .setName('sanctuary'),
-      )
-      .addChannelOption((option) => option
-        .setDescription('Do you have a general room?')
-        .setName('general'),
-      )
+      // .addChannelOption((option) => option
+      //   .setDescription('Do you have a sanctuary room?')
+      //   .setName('sanctuary'),
+      // )
+      // .addChannelOption((option) => option
+      //   .setDescription('Do you have a general room?')
+      //   .setName('general'),
+      // )
       .addRoleOption((option) => option
         .setDescription('What is your Helper role?')
         .setName('helper'),
@@ -267,6 +267,13 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
     return;
   }
 
+  if (!interaction.guild) {
+    log.error(`${PREFIX} how to tripsit: no guild`);
+    interaction.reply('You must run this in the guild you want the prompt to be in!');
+    return;
+  }
+
+
   if (!await hasPermissions(interaction, (interaction.channel as TextChannel))) {
     // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
     return;
@@ -297,9 +304,9 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
   const channelTripsit = interaction.channel as TextChannel;
 
   // Save this info to the DB
-  await db<DiscordGuilds>('guilds')
+  await db<DiscordGuilds>('discord_guilds')
     .insert({
-      id: interaction.channel.id,
+      id: interaction.guild.id,
       channel_sanctuary: channelSanctuary ? channelSanctuary.id : null,
       channel_general: channelGeneral ? channelGeneral.id : null,
       channel_tripsit_meta: channelTripsitMeta ? channelTripsitMeta.id : null,
@@ -308,7 +315,7 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
       role_tripsitter: roleTripsitter ? roleTripsitter.id : null,
       role_helper: roleHelper ? roleHelper.id : null,
     })
-    .onConflict('guild_id')
+    .onConflict('id')
     .merge();
 
   if (channelSanctuary) {
