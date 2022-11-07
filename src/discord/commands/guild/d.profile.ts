@@ -314,7 +314,7 @@ export const profile: SlashCommand = {
           } else if (level < 50) {
             // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL40.png';
             starImagePath = 'https://i.imgur.com/zNB2rtD.png';
-          } else if (level > 50) {
+          } else if (level >= 50) {
             // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL50.png';
             starImagePath = 'https://i.imgur.com/5ElzDZ8.png';
           }
