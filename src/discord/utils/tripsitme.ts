@@ -89,21 +89,16 @@ const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles},${otherRoles}`;
  * Creates the tripsit modal
  * @param {ButtonInteraction} interaction The interaction that started this
  * @param {GuildMember?} memberInput The member being aced upon
- * @param {string} triageGiven Given triage information
- * @param {string} introGiven Given intro information
  */
 export async function tripsitmeClick(
   interaction:ButtonInteraction,
-  memberInput?:GuildMember,
-  triageGiven?:string,
-  introGiven?:string,
 ) {
   // Create the modal
-
   // logger.debug(`[${PREFIX}] interaction.customId: ${interaction.customId}`);
   const roleNeedshelpId = interaction.customId.split('~')[1];
   const roleTripsitterId = interaction.customId.split('~')[2];
   const channelTripsittersId = interaction.customId.split('~')[3];
+  const memberInput = interaction.customId.split('~')[4];
 
   // logger.debug(`[${PREFIX}] roleNeedshelpId: ${roleNeedshelpId}\n
   // roleTripsitterId: ${roleTripsitterId}\n
@@ -128,18 +123,16 @@ export async function tripsitmeClick(
       logger.debug(`[${PREFIX}] i.customId.split('~')[4]: ${i.customId.split('~')[4]}`);
       logger.debug(`[${PREFIX}] interaction.id: ${interaction.id}`);
       if (i.customId.split('~')[4] !== interaction.id) return;
-
       logger.debug(`[${PREFIX}] Submit starting!`);
-      logger.debug(`[${PREFIX}] memberInput: ${memberInput}`);
 
       if (!interaction.guild) {
         logger.debug(`[${PREFIX}] no guild!`);
-        interaction.reply('This must be performed in a guild!');
+        interaction.followUp('This must be performed in a guild!');
         return;
       }
       if (!interaction.member) {
         logger.debug(`[${PREFIX}] no member!`);
-        interaction.reply('This must be performed by a member of a guild!');
+        interaction.followUp('This must be performed by a member of a guild!');
         return;
       }
 
@@ -153,13 +146,8 @@ export async function tripsitmeClick(
       // channelTripsittersId: ${channelTripsittersId}`);
 
       // Get the input from the modal, if it was submitted
-      let triageInput = triageGiven;
-      let introInput = introGiven;
-      // Otherwise get the input from the modal, if it was submitted
-      if (i.fields) {
-        triageInput = i.fields.getTextInputValue('triageInput');
-        introInput = i.fields.getTextInputValue('introInput');
-      }
+      const triageInput = i.fields.getTextInputValue('triageInput');
+      const introInput = i.fields.getTextInputValue('introInput');
       logger.debug(`[${PREFIX}] triageInput: ${triageInput}`);
       logger.debug(`[${PREFIX}] introInput: ${introInput}`);
 
@@ -192,7 +180,8 @@ export async function tripsitmeClick(
       // Determine the target.
       // If the user clicked the button, the target is whoever started the interaction.
       // Otherwise, the target is the user mentioned in the /tripsit command.
-      const target = (interaction.member || memberInput) as GuildMember;
+      const target = memberInput ? await interaction.guild.members.fetch(memberInput) as GuildMember : interaction.member as GuildMember;
+      // const target = (interaction.member || memberInput) as GuildMember;
       logger.debug(`[${PREFIX}] target: ${target}`);
 
       // Get a list of the target's roles
@@ -267,7 +256,7 @@ export async function tripsitmeClick(
           // Send the update message to the thread
           const helpMessage = memberInput ?
             stripIndents`
-          Hey ${target}, the team thinks you could still use assistance!
+          Hey ${target.toString()}, the team thinks you could still use assistance!
           ${roleHelper} and ${roleTripsitter} will be with you as soon as they're available!
           If this is a medical emergency please contact your local /EMS
           We do not call EMS or ambulance on behalf of anyone.` :
@@ -291,7 +280,7 @@ export async function tripsitmeClick(
             });
           }
           logger.debug(`[${PREFIX}] Pinged user in help thread`);
-
+          interaction.reply({content: 'Updated the help thread!', ephemeral: true});
           return;
         } catch (err) {
           logger.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted:\n ${err}`);
@@ -387,7 +376,7 @@ export async function tripsitmeClick(
               .setColor(Colors.DarkBlue)
               .setDescription(message);
 
-            interaction.reply({embeds: [embed], ephemeral: true});
+            i.reply({embeds: [embed], ephemeral: true});
 
             // Send the intro message to the thread
             const firstMessage = memberInput ?
