@@ -25,7 +25,7 @@ export const threadCreate: threadCreateEvent = {
 
     const fetchedLogs = await thread.guild.fetchAuditLogs({
       limit: 1,
-      type: AuditLogEvent.RoleCreate,
+      type: AuditLogEvent.ThreadCreate,
     });
 
     // Since there's only 1 audit log entry in this collection, grab the first one

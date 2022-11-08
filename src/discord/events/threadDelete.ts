@@ -27,7 +27,7 @@ export const threadDelete: threadDeleteEvent = {
 
     const fetchedLogs = await thread.guild.fetchAuditLogs({
       limit: 1,
-      type: AuditLogEvent.RoleCreate,
+      type: AuditLogEvent.ThreadDelete,
     });
 
     // Since there's only 1 audit log entry in this collection, grab the first one

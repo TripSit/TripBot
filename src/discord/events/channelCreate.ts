@@ -2,7 +2,6 @@ import {
   TextChannel,
 } from 'discord.js';
 import {
-  ChannelType,
   AuditLogEvent,
 } from 'discord-api-types/v10';
 import {
@@ -32,15 +31,15 @@ export const channelCreate: channelCreateEvent = {
 
     // Perform a coherence check to make sure that there's *something*
     if (!creationLog) {
-      botlog.send(`${channel.name} was created, but no relevant audit logs were found.`);
+      botlog.send(`Channel ${channel.name} was created, but no relevant audit logs were found.`);
       return;
     }
 
     let response = '' as string;
     if (creationLog.executor) {
-      response = `${channel.name} was created by ${creationLog.executor.tag}.`;
+      response = `Channel ${channel.name} was created by ${creationLog.executor.tag}.`;
     } else {
-      response = `${channel.name} was created, but the audit log was inconclusive.`;
+      response = `Channel ${channel.name} was created, but the audit log was inconclusive.`;
     }
     botlog.send(response);
   },

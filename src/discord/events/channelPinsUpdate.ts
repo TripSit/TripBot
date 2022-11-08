@@ -41,21 +41,21 @@ export const channelPinsUpdate: channelPinsUpdateEvent = {
 
     // Perform a coherence check to make sure that there's *something*
     if (!pinLog) {
-      botlog.send(`${channel.name} pinned a message, but no relevant audit logs were found.`);
+      botlog.send(`Channel ${channel.name} pinned a message, but no relevant audit logs were found.`);
       return;
     }
 
     let response = '' as string;
 
     if (pinLog.executor) {
-      response = `${pinLog.executor.tag} pinned a message in ${channel.name}:`;
+      response = `Channel ${pinLog.executor.tag} pinned a message in ${channel.name}:`;
       // Get the message that was pinned
       const message = await (channel as TextBasedChannel).messages.fetch(pinLog.extra.messageId);
       response += `
         > ${message.content}
       `;
     } else {
-      response = `${channel.name} had a message pinned, but the audit log was inconclusive.`;
+      response = `Channel ${channel.name} had a message pinned, but the audit log was inconclusive.`;
     }
 
     botlog.send(response);

@@ -1,7 +1,5 @@
 import {
   time,
-  Client,
-  GuildMember,
   Colors,
   TextChannel,
   UserResolvable,

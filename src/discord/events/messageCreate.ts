@@ -1,7 +1,4 @@
 import {
-  Message,
-} from 'discord.js';
-import {
   ChannelType,
 } from 'discord-api-types/v10';
 import {

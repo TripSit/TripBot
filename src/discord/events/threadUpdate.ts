@@ -25,28 +25,28 @@ export const threadUpdate: threadUpdateEvent = {
 
     const fetchedLogs = await newThread.guild.fetchAuditLogs({
       limit: 1,
-      type: AuditLogEvent.ChannelUpdate,
+      type: AuditLogEvent.ThreadUpdate,
     });
 
     // Since there's only 1 audit log entry in this collection, grab the first one
-    const creationLog = fetchedLogs.entries.first();
+    const auditLog = fetchedLogs.entries.first();
 
     const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
 
     // Perform a coherence check to make sure that there's *something*
-    if (!creationLog) {
-      botlog.send(`${newThread.name} was updated, but no relevant audit logs were found.`);
+    if (!auditLog) {
+      botlog.send(`Thread ${newThread.name} was updated, but no relevant audit logs were found.`);
       return;
     }
 
     let response = '' as string;
 
-    if (creationLog.executor) {
-      response = `${newThread.name} was updated by ${creationLog.executor.tag}:`;
-      response = `${creationLog.changes.map((change) => `\`${change.key}\` changed from \`${change.old}\` to \`${change.new}\``).join('\n')}`; // eslint-disable-line max-len
+    if (auditLog.executor) {
+      response = `Thread **${newThread.toString()}** was updated by ${auditLog.executor.tag}:`;
+      response += `\n${auditLog.changes.map((change) => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
     } else {
-      response = `${newThread.name} was updated, but the audit log was inconclusive.`;
-      response = `${creationLog.changes.map((change) => `\`${change.key}\` changed from \`${change.old}\` to \`${change.new}\``).join('\n')}`; // eslint-disable-line max-len
+      response = `Thread ${newThread.toString()} was updated, but the audit log was inconclusive.`;
+      response += `\n${auditLog.changes.map((change) => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
     }
 
     botlog.send(response);

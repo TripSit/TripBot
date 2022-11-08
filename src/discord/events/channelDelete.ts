@@ -40,16 +40,16 @@ export const channelDelete: channelDeleteEvent = {
 
     // Perform a coherence check to make sure that there's *something*
     if (!deletionLog) {
-      botlog.send(`${channel.name} was created, but no relevant audit logs were found.`);
+      botlog.send(`Channel ${channel.name} was created, but no relevant audit logs were found.`);
       return;
     }
 
     let response = '' as string;
 
     if (deletionLog.executor) {
-      response = `${channel.name} was deleted by ${deletionLog.executor.tag}.`;
+      response = `Channel ${channel.name} was deleted by ${deletionLog.executor.tag}.`;
     } else {
-      response = `${channel.name} was deleted, but the audit log was inconclusive.`;
+      response = `Channel ${channel.name} was deleted, but the audit log was inconclusive.`;
     }
 
     botlog.send(response);

@@ -1,5 +1,4 @@
 import {
-  GuildMember,
   TextChannel,
   // Message,
 } from 'discord.js';

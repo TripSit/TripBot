@@ -9,14 +9,14 @@ import {
   channelUpdateEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
-// import logger from '../../global/utils/logger';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import log from '../../global/utils/log'; // eslint-disable-line no-unused-vars
+import * as path from 'path'; // eslint-disable-line no-unused-vars
+const PREFIX = path.parse(__filename).name; // eslint-disable-line no-unused-vars
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const channelCreate: channelUpdateEvent = {
-  name: 'channelCreate',
+export const channelUpdate: channelUpdateEvent = {
+  name: 'channelUpdate',
   async execute(oldChannel, newChannel) {
     // Dont run on DMs
     if (newChannel.type === ChannelType.DM) {
@@ -27,11 +27,11 @@ export const channelCreate: channelUpdateEvent = {
       return;
     }
 
-    // logger.debug(`[${PREFIX}] Channel ${JSON.stringify(newChannel, null, 2)} was updated.`);
+    // log.debug(`[${PREFIX}] Channel ${JSON.stringify(newChannel, null, 2)} was updated.`);
     // logger.debug(`[${PREFIX}] Channel ${JSON.stringify(oldChannel.guild, null, 2)} was updated.`);
 
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (oldChannel.guild.id !== env.DISCORD_GUILD_ID) {
+    if (newChannel.guild.id !== env.DISCORD_GUILD_ID) {
       return;
     }
 
@@ -41,24 +41,24 @@ export const channelCreate: channelUpdateEvent = {
     });
 
     // Since there's only 1 audit log entry in this collection, grab the first one
-    const creationLog = fetchedLogs.entries.first();
+    const auditLog = fetchedLogs.entries.first();
 
     const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
 
     // Perform a coherence check to make sure that there's *something*
-    if (!creationLog) {
-      botlog.send(`${oldChannel.name} was updated, but no relevant audit logs were found.`);
+    if (!auditLog) {
+      botlog.send(`Channel ${newChannel.name} was updated, but no relevant audit logs were found.`);
       return;
     }
 
     let response = '' as string;
 
-    if (creationLog.executor) {
-      response = `${oldChannel.name} was updated by ${creationLog.executor.tag}:`;
-      response = `${creationLog.changes.map((change) => `\`${change.key}\` changed from \`${change.old}\` to \`${change.new}\``).join('\n')}`; // eslint-disable-line max-len
+    if (auditLog.executor) {
+      response = `Channel **${newChannel.toString()}** was updated by ${auditLog.executor.tag}:`;
+      response += `\n${auditLog.changes.map((change) => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
     } else {
-      response = `${oldChannel.name} was updated, but the audit log was inconclusive.`;
-      response = `${creationLog.changes.map((change) => `\`${change.key}\` changed from \`${change.old}\` to \`${change.new}\``).join('\n')}`; // eslint-disable-line max-len
+      response = `Channel ${newChannel.toString()} was updated, but the audit log was inconclusive.`;
+      response += `\n${auditLog.changes.map((change) => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
     }
 
     botlog.send(response);

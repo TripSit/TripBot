@@ -25,7 +25,7 @@ export const stickerCreate: stickerCreateEvent = {
 
     const fetchedLogs = await sticker.guild.fetchAuditLogs({
       limit: 1,
-      type: AuditLogEvent.RoleCreate,
+      type: AuditLogEvent.StickerCreate,
     });
 
     // Since there's only 1 audit log entry in this collection, grab the first one

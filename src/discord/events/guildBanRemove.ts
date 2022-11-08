@@ -24,7 +24,7 @@ export const guildBanRemove: guildBanRemoveEvent = {
 
     const fetchedLogs = await ban.guild.fetchAuditLogs({
       limit: 1,
-      type: AuditLogEvent.MemberBanAdd,
+      type: AuditLogEvent.MemberBanRemove,
     });
 
     // Since there's only 1 audit log entry in this collection, grab the first one

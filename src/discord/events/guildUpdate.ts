@@ -1,4 +1,3 @@
-import {Guild} from 'discord.js';
 import {
   guildUpdateEvent,
 } from '../@types/eventDef';

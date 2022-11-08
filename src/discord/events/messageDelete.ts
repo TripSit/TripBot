@@ -1,5 +1,4 @@
 import {
-  Message,
   TextChannel,
 } from 'discord.js';
 import {
@@ -16,12 +15,12 @@ import env from '../../global/utils/env.config';
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const messageCreate: messageDeleteEvent = {
+export const messageDelete: messageDeleteEvent = {
   name: 'messageDelete',
   async execute(message) {
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (message.guild) {
-      if (message.guild.id !== env.DISCORD_GUILD_ID) {
+      if (message.guild.id !== env.DISCORD_GUILD_ID.toString()) {
         return;
       }
     } else {

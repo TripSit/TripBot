@@ -14,8 +14,8 @@ import env from '../../global/utils/env.config';
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const stickerCreate: stickerDeleteEvent = {
-  name: 'stickerCreate',
+export const stickerDelete: stickerDeleteEvent = {
+  name: 'stickerDelete',
   async execute(sticker) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!sticker.guild) return;
@@ -25,7 +25,7 @@ export const stickerCreate: stickerDeleteEvent = {
 
     const fetchedLogs = await sticker.guild.fetchAuditLogs({
       limit: 1,
-      type: AuditLogEvent.RoleCreate,
+      type: AuditLogEvent.StickerDelete,
     });
 
     // Since there's only 1 audit log entry in this collection, grab the first one
