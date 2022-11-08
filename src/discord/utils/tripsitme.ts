@@ -69,6 +69,9 @@ export async function tripsitmeButton(
     return;
   }
   const target = interaction.member as GuildMember;
+
+  log.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+
   const actorIsAdmin = (target as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
   const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
 
@@ -145,6 +148,8 @@ export async function tripsitmeButton(
       }
 
       // Remind the user that they have a channel open
+      const recipient = '' as string;
+
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription(stripIndents`Hey ${interaction.member}, you have an open session!
@@ -214,7 +219,7 @@ export async function tripsitmeButton(
       const triage = i.fields.getTextInputValue('triageInput');
       const intro = i.fields.getTextInputValue('introInput');
 
-      tripSitMe(i, null, triage, intro);
+      tripSitMe(i, target, triage, intro);
     });
 };
 
@@ -286,6 +291,8 @@ export async function tripSitMe(
   // Determine the target.
   // If the user clicked the button, the target is whoever initialized the interaction.
   // Otherwise, the target is the user mentioned in the /tripsit command.
+  log.debug(`[${PREFIX}] memberInput: ${JSON.stringify(memberInput, null, 2)}`);
+  log.debug(`[${PREFIX}] interaction.member: ${JSON.stringify(interaction.member, null, 2)}`);
   const target = (memberInput ?? interaction.member) as GuildMember;
   // log.debug(`[${PREFIX}] target: ${target}`);
 

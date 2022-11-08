@@ -37,7 +37,7 @@ export const messageDelete: messageDeleteEvent = {
 
     // Perform a coherence check to make sure that there's *something*
     if (!deletionLog) {
-      const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+      const botlog = message.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
       botlog.send(`A message by ${message.author.tag} was deleted, but no relevant audit logs were found.`);
       return;
     }
@@ -46,19 +46,19 @@ export const messageDelete: messageDeleteEvent = {
     // Also grab the target of this action to double-check things
     const {executor, target} = deletionLog;
 
-    const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    const botlog = message.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     let response = '' as string;
     // Update the output with a bit more information
     // Also run a check to make sure that the log returned was for the same author's message
     if (message.author) {
       if (target.id === message.author.id) {
         if (executor) {
-          response = `${executor.tag} deleted a message by ${message.author.tag} in ${message.channel} saying \n>${message.content}`; // eslint-disable-line max-len
+          response = `${executor.tag} deleted a message by ${message.author.tag} in ${message.channel} saying \n> ${message.content}`; // eslint-disable-line max-len
         } else {
-          response = `Someone deleted a message by ${message.author.tag} in ${message.channel} saying \n>${message.content}`; // eslint-disable-line max-len
+          response = `Someone deleted a message by ${message.author.tag} in ${message.channel} saying \n> ${message.content}`; // eslint-disable-line max-len
         }
       } else {
-        response = `Someone deleted a message by ${message.author.tag} in ${message.channel} saying \n>${message.content}`; // eslint-disable-line max-len
+        response = `Someone deleted a message by ${message.author.tag} in ${message.channel} saying \n> ${message.content}`; // eslint-disable-line max-len
       }
     } else {
       response = `A message with no author was deleted!`;

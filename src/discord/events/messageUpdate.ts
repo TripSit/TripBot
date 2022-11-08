@@ -5,9 +5,9 @@ import {
   messageUpdateEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
-// import logger from '../../global/utils/logger';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import log from '../../global/utils/log'; // eslint-disable-line no-unused-vars
+import * as path from 'path'; // eslint-disable-line no-unused-vars
+const PREFIX = path.parse(__filename).name; // eslint-disable-line no-unused-vars
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -20,11 +20,15 @@ export const messageUpdate: messageUpdateEvent = {
       return;
     }
 
+    // log.debug(`[${PREFIX}] oldMessage: ${JSON.stringify(oldMessage, null, 2)}`);
+    // log.debug(`[${PREFIX}] newMessage: ${JSON.stringify(newMessage, null, 2)}`);
+
     // Don't run when bots update messages
+    if (!newMessage.author) return;
     if (newMessage.author.bot) return;
 
     const response = `Message ${newMessage.id} was edited by ${newMessage.author.tag} in ${(newMessage.channel as TextChannel).name} from ${oldMessage.content} to ${newMessage.content}.`; // eslint-disable-line max-len
-    const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    const botlog = newMessage.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     botlog.send(response);
   },
 };
