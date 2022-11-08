@@ -6,7 +6,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
-import {clientEvent} from '../@types/eventDef';
+import {readyEvent} from '../@types/eventDef';
 import {setTimeout} from 'timers/promises';
 import log from '../../global/utils/log';
 
@@ -26,7 +26,7 @@ global.guildInvites = new Collection();
 async function getInvites(client: Client) {
   // Loop over all the guilds
   client.guilds.cache.forEach(async (guild:Guild) => {
-    if (guild.id !== env.DISCORD_GUILD_ID.toString()) return;
+    if (guild.id !== env.DISCORD_GUILD_ID) return;
     // Fetch all Guild Invites
     const firstInvites = await guild.invites.fetch();
     // Set the key as Guild ID, and create a map which has the invite code, and the number of uses
@@ -34,10 +34,10 @@ async function getInvites(client: Client) {
   });
 }
 
-export const ready: clientEvent = {
+export const ready: readyEvent = {
   name: 'ready',
   once: true,
-  async execute(client: Client):Promise<void> {
+  async execute(client) {
     await setTimeout(1000);
     startStatusLoop(client);
     Promise.all([getInvites(client)])

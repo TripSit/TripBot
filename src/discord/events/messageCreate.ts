@@ -5,7 +5,7 @@ import {
   ChannelType,
 } from 'discord-api-types/v10';
 import {
-  messageEvent,
+  messageCreateEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 // import {thoughtPolice} from '../utils/d.thoughtPolice';
@@ -17,12 +17,12 @@ import {modmailDMInteraction, modmailThreadInteraction} from '../commands/guild/
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
 
-export const messageCreate: messageEvent = {
+export const messageCreate: messageCreateEvent = {
   name: 'messageCreate',
-  async execute(message: Message):Promise<void> {
+  async execute(message) {
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (message.guild) {
-      if (message.guild.id !== env.DISCORD_GUILD_ID.toString()) {
+      if (message.guild.id !== env.DISCORD_GUILD_ID) {
         return;
       }
     }

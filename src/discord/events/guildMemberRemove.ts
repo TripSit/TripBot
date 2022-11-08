@@ -3,7 +3,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import {
-  guildMemberEvent,
+  guildMemberRemoveEvent,
 } from '../@types/eventDef';
 import {db} from '../../global/utils/knex';
 import log from '../../global/utils/log';
@@ -13,7 +13,7 @@ import {parse} from 'path';
 import {Users} from '../../global/@types/pgdb';
 const PREFIX = parse(__filename).name;
 
-export const guildMemberRemove: guildMemberEvent = {
+export const guildMemberRemove: guildMemberRemoveEvent = {
   name: 'guildMemberRemove',
   async execute(member) {
     // Only run on the tripsit guild

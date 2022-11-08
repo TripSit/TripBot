@@ -1,12 +1,12 @@
-import {
-  Client,
-  Interaction,
-} from 'discord.js';
+// import {
+//   Client,
+//   Interaction,
+// } from 'discord.js';
 import {
   InteractionType,
 } from 'discord-api-types/v10';
 import {
-  interactionEvent,
+  interactionCreateEvent,
 } from '../@types/eventDef';
 import {commandRun} from '../utils/commandRun';
 import {buttonClick} from '../utils/buttonClick';
@@ -16,9 +16,9 @@ import {autocomplete} from '../utils/autocomplete';
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
 
-export const interactionCreate: interactionEvent = {
+export const interactionCreate: interactionCreateEvent = {
   name: 'interactionCreate',
-  async execute(interaction: Interaction, client: Client) {
+  async execute(interaction) {
     // log.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}`);
     // log.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction)}`);
     // log.debug(`[${PREFIX}] interaction: ${interaction}`);

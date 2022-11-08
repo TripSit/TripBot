@@ -1,9 +1,9 @@
+// import {
+//   MessageReaction,
+//   User,
+// } from 'discord.js';
 import {
-  MessageReaction,
-  User,
-} from 'discord.js';
-import {
-  reactionEvent,
+  messageReactionRemoveEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 import {handleReactionRoles} from '../utils/handleReactionRoles';
@@ -12,9 +12,9 @@ import log from '../../global/utils/log';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
-export const messageReactionRemove: reactionEvent = {
+export const messageReactionRemove: messageReactionRemoveEvent = {
   name: 'messageReactionRemove',
-  async execute(reaction: MessageReaction, user: User) {
+  async execute(reaction, user) {
     // Only run on Tripsit
     if (reaction.message.guild?.id !== env.DISCORD_GUILD_ID) {
       return;

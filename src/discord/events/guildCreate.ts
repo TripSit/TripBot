@@ -1,16 +1,18 @@
-import {Guild} from 'discord.js';
 import {
-  guildEvent,
+  TextChannel,
+} from 'discord.js';
+import {
+  guildCreateEvent,
 } from '../@types/eventDef';
 import {db, getGuild} from '../../global/utils/knex';
 import {DiscordGuilds} from '../../global/@types/pgdb';
+import env from '../../global/utils/env.config';
 import log from '../../global/utils/log';
 const PREFIX = require('path').parse(__filename).name;
 
-export const guildCreate: guildEvent = {
+export const guildCreate: guildCreateEvent = {
   name: 'guildCreate',
-
-  async execute(guild: Guild) {
+  async execute(guild) {
     log.info(`[${PREFIX}] Joined guild: ${guild.name} (id: ${guild.id})`);
 
     const guildData = await getGuild(guild.id);
@@ -28,5 +30,15 @@ export const guildCreate: guildEvent = {
         .onConflict('discord_id')
         .merge();
     }
+
+    const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    botlog.send(`I just joined a guild! I am now in ${client.guilds.cache.size} guilds!
+    ${guild.name} (id: ${guild.id})
+    Created at: ${guild.createdAt}
+    Member count: ${guild.memberCount}
+    Description: ${guild.description ? guild.description : 'No description'}
+    `);
+
+    log.debug(`[${PREFIX}] finished!`);
   },
 };

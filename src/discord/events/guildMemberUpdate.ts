@@ -27,12 +27,12 @@ const mindsetRoles = [
 
 export const guildMemberUpdate: guildMemberUpdateEvent = {
   name: 'guildMemberUpdate',
-  async execute(oldMember: GuildMember, newMember: GuildMember) {
+  async execute(oldMember, newMember) {
     // log.debug(`[${PREFIX}] guildMemberUpdate`);
     // log.debug(`${PREFIX} Member.guildId: ${newMember.guild.id}`);
     // log.debug(`${PREFIX} discordGuildId: ${discordGuildId}`);
     // Only run this on TripSit
-    if (newMember.guild.id.toString() === env.DISCORD_GUILD_ID.toString()) {
+    if (newMember.guild.id.toString() === env.DISCORD_GUILD_ID) {
       // log.debug(`[${PREFIX}] Running on TripSit`);
       // log.debug(`[${PREFIX}] oldMember: ${JSON.stringify(oldMember, null, 2)}`);
       // log.debug(`[${PREFIX}] newMember: ${JSON.stringify(newMember, null, 2)}`);

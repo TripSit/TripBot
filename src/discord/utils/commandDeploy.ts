@@ -40,7 +40,7 @@ Promise.all([
     {body: commands},
   )),
   getCommands('guild').then((commands) => rest.put(
-    Routes.applicationGuildCommands(env.DISCORD_CLIENT_ID.toString(), env.DISCORD_GUILD_ID.toString()),
+    Routes.applicationGuildCommands(env.DISCORD_CLIENT_ID.toString(), env.DISCORD_GUILD_ID),
     {body: commands},
   )),
 ])

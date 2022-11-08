@@ -10,8 +10,7 @@ const PREFIX = parse(__filename).name;
 
 export const error: errorEvent = {
   name: 'error',
-  once: false,
-  async execute(error: Error):Promise<void> {
+  async execute(error) {
     log.error(`[${PREFIX}] Client error ${JSON.stringify(error, null, 2)}`);
     // log.error(`[${PREFIX}] error.name: ${error.name}`);
     // log.error(`[${PREFIX}] error.message: ${error.message}`);

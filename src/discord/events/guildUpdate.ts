@@ -1,15 +1,14 @@
 import {Guild} from 'discord.js';
 import {
-  guildEvent,
+  guildUpdateEvent,
 } from '../@types/eventDef';
 import {getGuild} from '../../global/utils/knex';
 import log from '../../global/utils/log';
 const PREFIX = require('path').parse(__filename).name;
 
-export const guildUpdate: guildEvent = {
+export const guildUpdate: guildUpdateEvent = {
   name: 'guildUpdate',
-
-  async execute(guild: Guild) {
+  async execute(guild) {
     const guildData = await getGuild(guild.id);
 
     if (guildData.is_banned) {

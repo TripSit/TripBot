@@ -8,7 +8,7 @@ import {
   Collection,
 } from 'discord.js';
 import {
-  guildMemberEvent,
+  guildMemberAddEvent,
 } from '../@types/eventDef';
 import {db} from '../../global/utils/knex';
 import log from '../../global/utils/log';
@@ -20,11 +20,11 @@ import {parse} from 'path';
 import {Users} from '../../global/@types/pgdb';
 const PREFIX = parse(__filename).name;
 
-export const guildMemberAdd: guildMemberEvent = {
+export const guildMemberAdd: guildMemberAddEvent = {
   name: 'guildMemberAdd',
-  async execute(member: GuildMember, client: Client) {
+  async execute(member) {
     // Only run on Tripsit
-    if (member.guild.id !== env.DISCORD_GUILD_ID.toString()) {
+    if (member.guild.id !== env.DISCORD_GUILD_ID) {
       return;
     }
     log.info(`[${PREFIX}] ${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);

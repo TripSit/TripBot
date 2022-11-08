@@ -226,7 +226,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     return;
   }
   if (buttonID === 'refusalbtn') {
-    const guild = interaction.client.guilds.resolve(env.DISCORD_GUILD_ID.toString());
+    const guild = interaction.client.guilds.resolve(env.DISCORD_GUILD_ID);
     // log.debug(guild);
     if (guild) {
       guild.members.ban(interaction.user, {deleteMessageDays: 7, reason: 'Refused warning'});

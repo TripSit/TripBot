@@ -1,9 +1,9 @@
+// import {
+//   MessageReaction,
+//   User,
+// } from 'discord.js';
 import {
-  MessageReaction,
-  User,
-} from 'discord.js';
-import {
-  reactionEvent,
+  messageReactionAddEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 import {chitragupta} from '../utils/chitragupta';
@@ -13,11 +13,11 @@ import {bestOf} from '../utils/bestOfTripsit';
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
 
-export const messageReactionAdd: reactionEvent = {
+export const messageReactionAdd: messageReactionAddEvent = {
   name: 'messageReactionAdd',
-  async execute(reaction: MessageReaction, user: User) {
+  async execute(messageReaction, user) {
     // Only run on Tripsit
-    if (reaction.message.guild?.id !== env.DISCORD_GUILD_ID.toString()) {
+    if (messageReaction.message.guild?.id !== env.DISCORD_GUILD_ID) {
       return;
     }
 
@@ -28,7 +28,7 @@ export const messageReactionAdd: reactionEvent = {
     }
 
     // When a reaction is received, check if the structure is partial
-    if (reaction.partial) await reaction.fetch();
+    if (messageReaction.partial) await messageReaction.fetch();
 
     // log.info(`[${PREFIX}] ${user.username} (${user.id}) added ${reaction.emoji.name}`);
 
@@ -40,9 +40,9 @@ export const messageReactionAdd: reactionEvent = {
     //   return;
     // }
 
-    handleReactionRoles(reaction, user, true);
-    chitragupta(reaction, user, 1);
-    bestOf(reaction, user);
+    handleReactionRoles(messageReaction, user, true);
+    chitragupta(messageReaction, user, 1);
+    bestOf(messageReaction, user);
     // await communityMod(reaction, user);
   },
 };
