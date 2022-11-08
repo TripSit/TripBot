@@ -17,6 +17,7 @@ import {stripIndents} from 'common-tags';
 // import log from '../../../global/utils/log';
 import {moderate} from '../../../global/commands/g.moderate';
 import {parse} from 'path';
+import {UserActionType} from '../../../global/@types/pgdb';
 const PREFIX = parse(__filename).name;
 
 export const mTimeout: MessageCommand = {
@@ -81,12 +82,11 @@ export const mTimeout: MessageCommand = {
 
         const result = await moderate(
           actor,
-          'timeout',
+          'TIMEOUT' as UserActionType,
           target,
           privReason,
           i.fields.getTextInputValue('pubReason'),
           minutes,
-          i,
         );
         // log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);

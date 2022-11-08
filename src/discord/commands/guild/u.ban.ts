@@ -16,6 +16,7 @@ import {UserCommand} from '../../@types/commandDef';
 import {moderate} from '../../../global/commands/g.moderate';
 import {startLog} from '../../utils/startLog';
 import {parse} from 'path';
+import {UserActionType} from '../../../global/@types/pgdb';
 const PREFIX = parse(__filename).name;
 
 export const uBan: UserCommand = {
@@ -78,12 +79,11 @@ export const uBan: UserCommand = {
 
         const result = await moderate(
           actor,
-          'ban',
+          'BAN' as UserActionType,
           target,
           privReason,
           pubReason,
-          duration,
-          i);
+          duration);
 
         // log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);

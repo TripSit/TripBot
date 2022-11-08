@@ -23,12 +23,11 @@ export const info: UserCommand = {
 
     const result = await moderate(
       actor,
-      'info',
+      'INFO',
       target,
       null,
       null,
       null,
-      interaction,
     );
 
     // log.debug(`[${PREFIX}] Result: ${result}`);

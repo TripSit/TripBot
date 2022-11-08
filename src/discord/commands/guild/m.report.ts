@@ -16,6 +16,7 @@ import {stripIndents} from 'common-tags';
 import {moderate} from '../../../global/commands/g.moderate';
 import {startLog} from '../../utils/startLog';
 import {parse} from 'path';
+import {UserActionType} from '../../../global/@types/pgdb';
 const PREFIX = parse(__filename).name;
 
 export const mReport: MessageCommand = {
@@ -56,12 +57,11 @@ export const mReport: MessageCommand = {
 
         const result = await moderate(
           actor,
-          'report',
+          'REPORT' as UserActionType,
           target,
           privReason,
           null,
           null,
-          i,
         );
         // log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);

@@ -18,6 +18,7 @@ import {moderate} from '../../../global/commands/g.moderate';
 // import log from '../../../global/utils/log';
 import {parse} from 'path';
 import {env} from 'process';
+import {UserActionType} from '../../../global/@types/pgdb';
 const PREFIX = parse(__filename).name;
 
 
@@ -78,12 +79,11 @@ export const report: SlashCommand = {
         const privReason = i.fields.getTextInputValue('privReason');
         const result = await moderate(
           i.member as GuildMember,
-          'report',
+          'REPORT' as UserActionType,
           targetMember,
           privReason,
           null,
           null,
-          i,
         );
         // log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);

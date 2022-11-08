@@ -21,6 +21,7 @@ import env from '../../../global/utils/env.config';
 // import log from '../../../global/utils/log';
 import {parse} from 'path';
 import {modAction} from '../../../global/@types/database';
+import {UserActionType} from '../../../global/@types/pgdb';
 const PREFIX = parse(__filename).name;
 
 export const mod: SlashCommand = {
@@ -54,7 +55,7 @@ export const mod: SlashCommand = {
         .setName('target')
         .setDescription('User to warn!')
         .setRequired(true))
-      .setName('warn'))
+      .setName('warning'))
     .addSubcommand((subcommand) => subcommand
       .setDescription('Create a note about a user')
       .addStringOption((option) => option
@@ -87,7 +88,7 @@ export const mod: SlashCommand = {
     startLog(PREFIX, interaction);
 
     const actor = interaction.member;
-    let command = interaction.options.getSubcommand();
+    let command = interaction.options.getSubcommand().toUpperCase();
     const target = interaction.options.getString('target');
     let toggle = interaction.options.getString('toggle') as 'on' | 'off' | null;
 
@@ -96,7 +97,7 @@ export const mod: SlashCommand = {
     }
 
     if (toggle === 'off') {
-      command = 'un' + command;
+      command = 'UN' + command;
     }
 
     // log.debug(`[${PREFIX}] toggle: ${toggle}`);
@@ -108,37 +109,36 @@ export const mod: SlashCommand = {
     // log.debug(`[${PREFIX}] targetMember: ${targetMember}`);
 
     let verb = '';
-    if (command === 'ban') {
+    if (command === 'BAN') {
       verb = 'banning';
-    } else if (command === 'unban') {
+    } else if (command === 'UNBAN') {
       verb = 'unbanning';
-    } else if (command === 'underban') {
+    } else if (command === 'UNDERBAN') {
       verb = 'underbanning';
-    } else if (command === 'ununderban') {
+    } else if (command === 'UNUNDERBAN') {
       verb = 'un-underbanning';
-    } else if (command === 'warn') {
+    } else if (command === 'WARNING') {
       verb = 'warning';
-    } else if (command === 'note') {
+    } else if (command === 'NOTE') {
       verb = 'noting';
-    } else if (command === 'timeout') {
+    } else if (command === 'TIMEOUT') {
       verb = 'timing out';
-    } else if (command === 'untimeout') {
+    } else if (command === 'UNTIMEOUT') {
       verb = 'untiming out';
-    } else if (command === 'kick') {
+    } else if (command === 'KICK') {
       verb = 'kicking';
-    } else if (command === 'info') {
+    } else if (command === 'INFO') {
       verb = 'getting info on';
     }
 
-    if (command === 'info') {
+    if (command === 'INFO') {
       const result = await moderate(
         actor as GuildMember,
-        'info',
+        'INFO',
         targetMember,
         null,
         null,
-        null,
-        interaction);
+        null);
       // log.debug(`[${PREFIX}] Result: ${result}`);
       interaction.reply(result);
       return true;
@@ -175,15 +175,15 @@ export const mod: SlashCommand = {
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
     modal.addComponents(firstActionRow);
 
-    if (['warn', 'kick', 'timeout', 'untimeout', 'ban', 'unban', 'underban', 'ununderban'].includes(command)) {
+    if (['WARNING', 'KICK', 'TIMEOUT', 'UNTIMEOUT', 'BAN', 'UNBAN', 'UNDERBAN', 'UNUNDERBAN'].includes(command)) {
       const pubReasonText = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
       modal.addComponents(pubReasonText);
     }
-    if (command === 'timeout') {
+    if (command === 'TIMEOUT') {
       const timeoutDurationText = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutDuration);
       modal.addComponents(timeoutDurationText);
     }
-    if (command === 'ban') {
+    if (command === 'BAN') {
       const deleteMessagesText = new ActionRowBuilder<TextInputBuilder>().addComponents(deleteMessages);
       modal.addComponents(deleteMessagesText);
     }
@@ -204,7 +204,7 @@ export const mod: SlashCommand = {
         let duration = null as number | null;
         try {
           const durationInput = i.fields.getTextInputValue('duration');
-          if (command === 'ban' || command === 'underban') {
+          if (command === 'BAN' || command === 'UNDERBAN') {
             // Check if the given duration is a number between 0 and 7
             const days = parseInt(durationInput);
             if (isNaN(days) || days < 0 || days > 7) {
@@ -216,7 +216,7 @@ export const mod: SlashCommand = {
                 604800;
               // log.debug(`[${PREFIX}] duration: ${duration}`);
             }
-          } else if (command === 'timeout') {
+          } else if (command === 'TIMEOUT') {
             // Get duration
             duration = duration ?
               await parseDuration(durationInput) :
@@ -229,12 +229,11 @@ export const mod: SlashCommand = {
         const modalCommand = i.customId.split('~')[1] as modAction;
         const result = await moderate(
           actor as GuildMember,
-          modalCommand,
+          modalCommand as UserActionType,
           targetMember,
           privReason,
           pubReason,
-          duration,
-          i);
+          duration);
         // log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
       });

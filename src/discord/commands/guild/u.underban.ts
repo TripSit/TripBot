@@ -16,6 +16,7 @@ import {moderate} from '../../../global/commands/g.moderate';
 import {startLog} from '../../utils/startLog';
 // import {startLog} from '../../utils/startLog';
 import {parse} from 'path';
+import {UserActionType} from '../../../global/@types/pgdb';
 const PREFIX = parse(__filename).name;
 
 export const uUnderban: UserCommand = {
@@ -57,12 +58,11 @@ export const uUnderban: UserCommand = {
         const pubReason = i.fields.getTextInputValue('pubReason');
         const result = await moderate(
           actor,
-          'underban',
+          'UNDERBAN' as UserActionType,
           target,
           privReason,
           pubReason,
           null,
-          i,
         );
 
         // log.debug(`[${PREFIX}] Result: ${result}`);

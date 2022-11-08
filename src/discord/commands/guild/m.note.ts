@@ -16,6 +16,7 @@ import {stripIndents} from 'common-tags';
 // import log from '../../../global/utils/log';
 import {moderate} from '../../../global/commands/g.moderate';
 import {parse} from 'path';
+import {UserActionType} from '../../../global/@types/pgdb';
 const PREFIX = parse(__filename).name;
 
 export const mNote: MessageCommand = {
@@ -58,12 +59,11 @@ export const mNote: MessageCommand = {
 
         const result = await moderate(
           actor,
-          'note',
+          'NOTE' as UserActionType,
           target,
           privReason,
           null,
           null,
-          i,
         );
         // log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
