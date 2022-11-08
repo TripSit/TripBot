@@ -76,30 +76,13 @@ export const prompt: SlashCommand = {
       ),
     )
     .addSubcommand((subcommand) => subcommand
-      .setDescription('Tripsitter info!')
-      .setName('tripsitter')
-      .addChannelOption((option) => option
-        .setDescription('What is the tripsit room?')
-        .setName('tripsit')
-        .setRequired(true),
-      )
-      .addRoleOption((option) => option
-        .setDescription('What is your Tripsitter role?')
-        .setName('role_tripsitter')
-        .setRequired(true),
-      )
-      .addChannelOption((option) => option
-        .setDescription('Do you have an applications room?')
-        .setName('applications'),
-      )
-      .addRoleOption((option) => option
-        .setDescription('Who will review these applications?')
-        .setName('role_reviewer'),
-      ),
-    )
-    .addSubcommand((subcommand) => subcommand
       .setDescription('Set up the application page. 5 roles max!')
       .setName('applications')
+      .addChannelOption((option) => option
+        .setDescription('What channel stores applications?')
+        .setName('applications_channel')
+        .setRequired(true),
+      )
       .addRoleOption((option) => option
         .setDescription('What role are people applying for?')
         .setName('application_role_a')
@@ -148,7 +131,7 @@ export const prompt: SlashCommand = {
       .setName('techhelp')
       .addRoleOption((option) => option
         .setDescription('What role responds to tickets here?')
-        .setName('moderator')
+        .setName('roletechreviewer')
         .setRequired(true),
       )
       .addChannelOption((option) => option
@@ -389,6 +372,16 @@ export async function applications(interaction:ChatInputCommandInteraction) {
     return;
   }
 
+  // Save the application channel to the DB
+  const channelApplications = interaction.options.getChannel('applications_channel', true);
+  await db<DiscordGuilds>('discord_guilds')
+    .insert({
+      id: interaction.guild.id,
+      channel_applications: channelApplications.id,
+    })
+    .onConflict('id')
+    .merge();
+
   /* eslint-disable no-unused-vars */
   const roleRequestdA = interaction.options.getRole('application_role_a');
   const roleReviewerA = interaction.options.getRole('application_reviewer_a');
@@ -448,7 +441,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
   await interaction.showModal(modal);
 
   // Collect a modal submit interaction
-  const filter = (interaction:ModalSubmitInteraction) => interaction.customId === 'appModal';
+  const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith('appModal');
   interaction.awaitModalSubmit({filter, time: 150000})
     .then(async (i) => {
       if (i.customId.split('~')[1] !== interaction.id) return;
@@ -464,11 +457,11 @@ export async function applications(interaction:ChatInputCommandInteraction) {
       roleArray.forEach((role) => {
         if (role[0]) {
           if (role[1]) {
-            // log.debug(`[${PREFIX}] role: ${role[0].name}`);
+            log.debug(`[${PREFIX}] role: ${role[0].name}`);
             selectMenu.addOptions(
               {
                 label: role[0].name,
-                value: `${i.channel?.id}~${role[0].id}~${role[1].id}`,
+                value: `${role[0].id}~${role[1].id}`,
               },
             );
           } else {
@@ -477,7 +470,6 @@ export async function applications(interaction:ChatInputCommandInteraction) {
         }
       });
 
-      // Send the initial message
       await (i.channel as TextChannel).send(
         {
           content: stripIndents`${i.fields.getTextInputValue('appliationText')}`,
@@ -512,6 +504,16 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
     return;
   }
 
+  // Save the tech help reviewer role to the db
+  await db<DiscordGuilds>('discord_guilds')
+    .insert({
+      id: interaction.guild.id,
+      role_techhelp: interaction.options.getRole('roletechreviewer', true).id,
+    })
+    .onConflict('id')
+    .merge();
+
+
   let text = stripIndents`
     Welcome to ${interaction.guild.name}'s technical help channel!
 
@@ -537,17 +539,18 @@ Thanks for reading, stay safe!
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId(`techHelpClick~discord~${roleModerator.id}`)
+        .setCustomId(`techHelpClick~discord`)
         .setLabel('Discord issue/feedback!')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setCustomId(`techHelpClick~other~${roleModerator.id}`)
+        .setCustomId(`techHelpClick~other`)
         .setLabel('I have something else!')
         .setStyle(ButtonStyle.Secondary),
     );
 
   // Create a new button
   await (interaction.channel as TextChannel).send({content: text, components: [row]});
+  interaction.reply({content: 'Donezo!', ephemeral: true});
 }
 
 /**

@@ -18,6 +18,7 @@ import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../utils/embedTemplate';
 import log from '../../global/utils/log';
 import {parse} from 'path';
+import {getGuild} from '../../global/utils/knex';
 const PREFIX = parse(__filename).name;
 
 /**
@@ -35,12 +36,31 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   };
 
   const issueType = interaction.customId.split('~')[1];
-  const roleId = interaction.customId.split('~')[2];
 
-  const role = await interaction.guild?.roles.fetch(roleId);
+  const guildData = await getGuild(interaction.guild.id);
 
-  if (!role) {
-    log.error(`[${PREFIX} - techHelpClick] role not found: ${roleId}`);
+  if (!guildData) {
+    log.error(`[${PREFIX} - techHelpClick] guild not found: ${interaction.guild.id}`);
+    interaction.reply({
+      content: 'The Guild provided could not be found!',
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (!guildData.role_techhelp) {
+    log.error(`[${PREFIX} - techHelpClick] techhelp role not found: ${interaction.guild.id}`);
+    interaction.reply({
+      content: 'The role provided could not be found!',
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const roleTechreview = interaction.guild.roles.cache.get(guildData.role_techhelp);
+
+  if (!roleTechreview) {
+    log.error(`[${PREFIX} - techHelpClick] roleTechreview not found: ${interaction.guild.id}`);
     interaction.reply({
       content: 'The role provided could not be found!',
       ephemeral: true,
@@ -65,7 +85,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   // }
   // Create the modal
   const modal = new ModalBuilder()
-    .setCustomId(`techHelpSubmit~${issueType}~${role.id}~${interaction.id}`)
+    .setCustomId(`techHelpSubmit~${interaction.id}`)
     .setTitle('TripSit Feedback');
   const timeoutReason = new TextInputBuilder()
     .setLabel('What is your issue? Be super detailed!')
@@ -83,7 +103,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`techHelpSubmit`);
   interaction.awaitModalSubmit({filter, time: 150000})
     .then(async (i) => {
-      if (i.customId.split('~')[3] !== interaction.id) return;
+      if (i.customId.split('~')[1] !== interaction.id) return;
 
       if (!i.guild) {
         interaction.reply({
@@ -92,23 +112,6 @@ export async function techHelpClick(interaction:ButtonInteraction) {
         });
         return;
       };
-
-      const issueType = i.customId.split('~')[1];
-      const roleId = i.customId.split('~')[2];
-
-      const roleModerator = await i.guild?.roles.fetch(roleId);
-
-      if (!roleModerator) {
-        log.error(`[${PREFIX} - techHelpClick] role not found: ${roleId}`);
-        interaction.reply({
-          content: 'The role provided could not be found!',
-          ephemeral: true,
-        });
-        return;
-      };
-
-      // log.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
-      // log.debug(`[${PREFIX} - techHelpClick] role: ${roleModerator.id}`);
 
       // Respond right away cuz the rest of this doesn't matter
       const member = await i.guild.members.fetch(i.user.id);
@@ -150,7 +153,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       i.reply({embeds: [embed], ephemeral: true});
 
       const message = stripIndents`
-        Hey ${roleModerator}! ${actor} has submitted a new issue:
+        Hey ${roleTechreview}! ${actor} has submitted a new issue:
     
         > ${modalInput}
     

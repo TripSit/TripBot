@@ -30,8 +30,9 @@ import {embedTemplate} from '../utils/embedTemplate';
 import env from '../../global/utils/env.config';
 import {stripIndents} from 'common-tags';
 import {startLog} from './startLog';
-// import log from '../../global/utils/log';
+import log from '../../global/utils/log'; // eslint-disable-line no-unused-vars
 import {parse} from 'path';
+import {getGuild} from '../../global/utils/knex';
 const PREFIX = parse(__filename).name;
 
 // "your application was denied because..."
@@ -64,21 +65,13 @@ export async function applicationStart(
 
   startLog(PREFIX, interaction);
 
-  const channelId = interaction.values[0].split('~')[0];
-  const roleRequestedId = interaction.values[0].split('~')[1];
-  const roleReviewerId = interaction.values[0].split('~')[2];
-  // log.debug(`[${PREFIX} - applicationStart] channelId: ${channelId}`);
-  // log.debug(`[${PREFIX} - applicationStart] roleRequestedId: ${roleRequestedId}`);
-  // log.debug(`[${PREFIX} - applicationStart] roleReviewerId: ${roleReviewerId}`);
-
+  const roleRequestedId = interaction.values[0].split('~')[0];
+  const roleReviewerId = interaction.values[0].split('~')[1];
   const roleRequested = await interaction.guild?.roles.fetch(roleRequestedId) as Role;
-  // const roleReviewer = await interaction.guild?.roles.fetch(roleReviewerId);
-  // const channel = await interaction.guild?.channels.fetch(channelId);
+  const roleReviewer = await interaction.guild?.roles.fetch(roleReviewerId) as Role;
 
-
-  // Create the modal
   const modal = new ModalBuilder()
-    .setCustomId(`applicationSubmit~${channelId}~${roleRequestedId}~${roleReviewerId}~${interaction.id}`)
+    .setCustomId(`applicationSubmit~${interaction.id}`)
     .setTitle(`${roleRequested.name} Application`);
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
     .setCustomId('reason')
@@ -100,7 +93,7 @@ export async function applicationStart(
   const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`applicationSubmit`);
   interaction.awaitModalSubmit({filter, time: 0})
     .then(async (i) => {
-      if (i.customId.split('~')[4] !== interaction.id) return;
+      if (i.customId.split('~')[1] !== interaction.id) return;
       if (!i.guild) {
         // log.debug(`[${PREFIX}] no guild!`);
         i.reply('This must be performed in a guild!');
@@ -112,29 +105,23 @@ export async function applicationStart(
         return;
       }
 
-      const channelId = i.customId.split('~')[1];
-      const roleRequestedId = i.customId.split('~')[2];
-      const roleReviewerId = i.customId.split('~')[3];
       const actor = i.member as GuildMember;
-
-      // log.debug(`[${PREFIX} - applicationSubmit] channelId: ${channelId}`);
-      // log.debug(`[${PREFIX} - applicationSubmit] roleRequestedId: ${roleRequestedId}`);
-      // log.debug(`[${PREFIX} - applicationSubmit] roleReviewerId: ${roleReviewerId}`);
-
-      const roleRequested = await i.guild?.roles.fetch(roleRequestedId) as Role;
-      const roleReviewer = await i.guild?.roles.fetch(roleReviewerId) as Role;
-
-      const channel = channelId !== '' ?
-        await i.guild.channels.fetch(channelId) as TextChannel :
-        i.channel as TextChannel;
 
       const reason = i.fields.getTextInputValue('reason');
       const skills = i.fields.getTextInputValue('skills');
 
-      const applicationThread = await channel.threads.create({
+      // Get the application channel from the db
+      const channelApplicationsId = (await getGuild(i.guild.id)).channel_applications;
+      if (!channelApplicationsId) {
+        i.reply('The applications channel has not been set up yet!');
+        return;
+      }
+
+      const channelApplications = await i.guild.channels.fetch(channelApplicationsId) as TextChannel;
+      const applicationThread = await channelApplications.threads.create({
         name: `💛│${actor.displayName}'s ${roleRequested.name} application!`,
         autoArchiveDuration: 1440,
-        type: i.guild?.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
+        type: i.guild?.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread,
         reason: `${actor.displayName} submitted an application!`,
         invitable: env.NODE_ENV === 'production' ? false : undefined,
       }) as ThreadChannel;
@@ -282,6 +269,14 @@ export async function applicationReject(
 
   startLog(PREFIX, interaction);
 
+  const threadCreated = interaction.channel?.createdAt;
+  // Check if the thread was created in the last 24 hours
+  if (threadCreated && threadCreated.getTime() > Date.now() - 86400000) {
+    // log.debug(`[${PREFIX}] Thread created in the last 24 hours!`);
+    interaction.reply({content: 'Woah there, please give the team at least 24 until the next day to act on this application!', ephemeral: true});
+    return;
+  }
+
   const actor = (interaction.member as GuildMember);
   if (actor.permissions.has(PermissionFlagsBits.ManageRoles)) {
     const memberId = interaction.customId.split('~')[1];
@@ -317,10 +312,19 @@ export async function applicationApprove(
   interaction: ButtonInteraction,
 ): Promise<void> {
   startLog(PREFIX, interaction);
+  if (!interaction.guild) return;
   const actor = (interaction.member as GuildMember);
+
+  const threadCreated = interaction.channel?.createdAt;
+  // Check if the thread was created in the last 24 hours
+  if (threadCreated && threadCreated.getTime() > Date.now() - 86400000) {
+    // log.debug(`[${PREFIX}] Thread created in the last 24 hours!`);
+    interaction.reply({content: 'Woah there, please give the team at least 24 until the next day to act on this application!', ephemeral: true});
+    return;
+  }
+
   if (actor.permissions.has(PermissionFlagsBits.ManageRoles)) {
     // interaction.channel!.send(`${(interaction.member as GuildMember).displayName} accepted this application!`);
-    interaction.reply(`${actor.displayName} accepted this application!`);
 
     const memberId = interaction.customId.split('~')[1];
     const roleId = interaction.customId.split('~')[2];
@@ -331,7 +335,17 @@ export async function applicationApprove(
     (interaction.channel as ThreadChannel).setName(`💚│${target.displayName}'s ${role.name} application1!`);
 
     // log.debug(`[${PREFIX} - applicationAccept] Giving ${target.displayName} ${role.name} role!`);
-    target.roles.add(role);
+
+    const myMember = interaction.guild.members.me as GuildMember;
+    const myRole = myMember.roles.highest;
+
+    if (role.comparePositionTo(myRole) < 0) {
+      log.debug(`[${PREFIX}] Adding role ${role.name} to ${target.displayName}`);
+      target.roles.add(role);
+    } else {
+      interaction.reply(`I do not have permission to add the ${role.name} role to ${target.displayName}!`);
+      return;
+    }
 
     if (role.id === env.ROLE_HELPER) {
       const channelTripsitMeta = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSITMETA) as TextChannel;
@@ -408,6 +422,7 @@ export async function applicationApprove(
       > *Changes to the wiki will only be made after given a credible source!*
     `);
     }
+    interaction.reply(`${actor.displayName} accepted this application!`);
   } else {
     interaction.reply({content: 'You do not have permission to modify roles!', ephemeral: true});
   }

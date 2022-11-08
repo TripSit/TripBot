@@ -108,9 +108,11 @@ export type DiscordGuilds = {
   channel_general: string | null;
   channel_tripsit: string | null;
   channel_tripsit_meta: string | null;
+  channel_applications: string | null;
   role_needshelp: string | null;
   role_tripsitter: string | null;
   role_helper: string | null;
+  role_techhelp: string | null;
   removed_at: Date | null;
 };
 

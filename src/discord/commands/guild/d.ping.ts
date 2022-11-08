@@ -68,8 +68,6 @@ export const ping: SlashCommand = {
       interaction.awaitModalSubmit({filter, time: 0, dispose: true})
         .then(async (i) => {
           if (i.customId.split('~')[1] !== interaction.id) return;
-          // log.debug(`[${PREFIX}] i.customId.split('~')[4]: ${i.customId.split('~')[4]}`);
-          // log.debug(`[${PREFIX}] interaction.id: ${interaction.id}`);
           const test = i.fields.getTextInputValue('test');
           interaction.reply({content: test, ephemeral: true});
         });

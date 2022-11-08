@@ -74,37 +74,35 @@ export const tripsitmode: SlashCommand = {
       tripsitmeButton(testInteraction);
     }
     if (enable === 'off') {
-      // const testInteraction = {
-      //   client: interaction.client,
-      //   id: interaction.id,
-      //   customId: `tripsitmodeOff~them~${targetUser.id}~${roleNeedshelp.id}~${channelMetaTripsit?.id}`,
-      //   guild: interaction.guild,
-      //   member: interaction.member,
-      //   channel: interaction.channel,
-      //   deferReply: () => {
-      //     return interaction.deferReply();
-      //   },
-      //   editReply: (content) => {
-      //     return interaction.editReply(content);
-      //   },
-      //   reply: (content) => {
-      //     if (interaction.deferred || interaction.replied) {
-      //       return interaction.followUp(content);
-      //     } else {
-      //       return interaction.reply(content);
-      //     }
-      //   },
-      //   followUp: (content) => {
-      //     return interaction.followUp(content);
-      //   },
-      //   showModal: (modal) => {
-      //     return interaction.showModal(modal);
-      //   },
-      //   awaitModalSubmit: (params) => {
-      //     return interaction.awaitModalSubmit(params);
-      //   },
-      // } as ButtonInteraction;
-      // tripsitmeFinish(testInteraction);
+      const testInteraction = {
+        client: interaction.client,
+        id: interaction.id,
+        customId: `tripsitmodeOn~${targetMember}`,
+        guild: interaction.guild,
+        member: targetMember,
+        user: interaction.user,
+        channel: interaction.channel,
+        deferReply: () => {
+          return interaction.deferReply();
+        },
+        reply: (content) => {
+          if (interaction.deferred || interaction.replied) {
+            return interaction.followUp(content);
+          } else {
+            return interaction.reply(content);
+          }
+        },
+        followUp: (content) => {
+          return interaction.followUp(content);
+        },
+        showModal: (modal) => {
+          return interaction.showModal(modal);
+        },
+        awaitModalSubmit: (params) => {
+          return interaction.awaitModalSubmit(params);
+        },
+      } as ButtonInteraction;
+      tripsitmeClose(testInteraction);
     }
     return true;
   },
