@@ -3,11 +3,11 @@ import {
   TextInputBuilder,
   ModalBuilder,
   ButtonInteraction,
-  ModalSubmitInteraction,
   TextChannel,
   ButtonBuilder,
   GuildMember,
   ThreadChannel,
+  ModalSubmitInteraction,
 } from 'discord.js';
 import {
   ChannelType,
@@ -65,7 +65,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   // }
   // Create the modal
   const modal = new ModalBuilder()
-    .setCustomId(`techHelpSubmit~${issueType}~${role.id}`)
+    .setCustomId(`techHelpSubmit~${issueType}~${role.id}~${interaction.id}`)
     .setTitle('TripSit Feedback');
   const timeoutReason = new TextInputBuilder()
     .setLabel('What is your issue? Be super detailed!')
@@ -79,99 +79,82 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   modal.addComponents(firstActionRow);
   // Show the modal to the user
   await interaction.showModal(modal);
+
+  const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`techHelpSubmit`);
+  interaction.awaitModalSubmit({filter, time: 150000})
+    .then(async (i) => {
+      if (i.customId.split('~')[3] !== interaction.id) return;
+
+      const issueType = i.customId.split('~')[1];
+      const roleId = i.customId.split('~')[2];
+
+      const roleModerator = await i.guild?.roles.fetch(roleId);
+
+      log.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
+      log.debug(`[${PREFIX} - techHelpClick] role: ${roleModerator.id}`);
+
+      // Respond right away cuz the rest of this doesn't matter
+      const member = await i.guild.members.fetch(i.user.id);
+      // log.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
+      if (member) {
+        // Dont run if the user is on timeout
+        if (member.communicationDisabledUntilTimestamp !== null) {
+          return member.send(stripIndents`
+          Hey!
+    
+          Looks like you're on timeout =/
+    
+          You can't use the modmail while on timeout.`);
+        }
+      } else {
+        i.reply('Thank you, we will respond to right here when we can!');
+      }
+
+      // Get whatever they sent in the modal
+      const modalInput = i.fields.getTextInputValue(`${issueType}IssueInput`);
+      log.debug(`[${PREFIX}] modalInput: ${modalInput}!`);
+
+      // // Get the actor
+      const actor = i.user;
+
+      // Create a new thread in channel
+      const ticketThread = await (i.channel as TextChannel).threads.create({
+        name: `🧡│${actor.username}'s ${issueType} issue!`,
+        autoArchiveDuration: 1440,
+        type: i.guild.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
+        reason: `${actor.username} submitted a(n) ${issueType} issue`,
+      });
+      log.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);
+
+      const embed = embedTemplate();
+      embed.setDescription(
+        stripIndents`Thank you, check out ${ticketThread} to talk with a team member about your issue!`,
+      );
+      i.reply({embeds: [embed], ephemeral: true});
+
+      const message = stripIndents`
+        Hey ${roleModerator}! ${actor} has submitted a new issue:
+    
+        > ${modalInput}
+    
+        Please look into it and respond to them in this thread!`;
+
+      const techHelpButtons = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          new ButtonBuilder()
+            .setCustomId(`techHelpOwn~${issueType}~${actor.id}`)
+            .setLabel('Own this issue!')
+            .setStyle(ButtonStyle.Primary),
+          new ButtonBuilder()
+            .setCustomId(`techHelpClose~${issueType}~${actor.id}`)
+            .setLabel('Close this issue!')
+            .setStyle(ButtonStyle.Success),
+        );
+
+      await ticketThread.send({content: message, components: [techHelpButtons]});
+      log.debug(`[${PREFIX}] Sent intro message to meta-thread ${ticketThread.id}`);
+    });
 }
-
-/**
- *
- * @param {ModalSubmitInteraction} interaction The modal that submitted this
- */
-export async function techHelpSubmit(interaction:ModalSubmitInteraction) {
-  if (!interaction.guild) {
-    interaction.reply({
-      content: 'This command can only be used in a server!',
-      ephemeral: true,
-    });
-    return;
-  };
-  // log.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}!`);
-
-  const issueType = interaction.customId.split('~')[1];
-  const roleId = interaction.customId.split('~')[2];
-
-  const roleModerator = await interaction.guild?.roles.fetch(roleId);
-
-  if (!roleModerator) {
-    log.error(`[${PREFIX} - techHelpClick] role not found: ${roleId}`);
-    interaction.reply({
-      content: 'The role provided could not be found!',
-      ephemeral: true,
-    });
-    return;
-  };
-
-  // log.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
-  // log.debug(`[${PREFIX} - techHelpClick] role: ${roleModerator.id}`);
-
-  // Respond right away cuz the rest of this doesn't matter
-  const member = await interaction.guild.members.fetch(interaction.user.id);
-  // log.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
-  if (member) {
-    // Dont run if the user is on timeout
-    if (member.communicationDisabledUntilTimestamp !== null) {
-      return member.send(stripIndents`
-      Hey!
-
-      Looks like you're on timeout =/
-
-      You can't use the modmail while on timeout.`);
-    }
-  } else {
-    interaction.reply('Thank you, we will respond to right here when we can!');
-  }
-
-
-  // Get whatever they sent in the modal
-  const modalInput = interaction.fields.getTextInputValue(`${issueType}IssueInput`);
-  // log.debug(`[${PREFIX}] modalInput: ${modalInput}!`);
-
-  // // Get the actor
-  const actor = interaction.user;
-
-  // Create a new thread in channel
-  const ticketThread = await (interaction.channel as TextChannel).threads.create({
-    name: `🧡│${actor.username}'s ${issueType} issue!`,
-    autoArchiveDuration: 1440,
-    type: interaction.guild.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
-    reason: `${actor.username} submitted a(n) ${issueType} issue`,
-  });
-  // log.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);
-
-  const embed = embedTemplate();
-  embed.setDescription(stripIndents`Thank you, check out ${ticketThread} to talk with a team member about your issue!`);
-  interaction.reply({embeds: [embed], ephemeral: true});
-
-  const message = stripIndents`
-    Hey ${roleModerator}! ${actor} has submitted a new issue:
-
-    > ${modalInput}
-
-    Please look into it and respond to them in this thread!`;
-
-  const techHelpButtons = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      new ButtonBuilder()
-        .setCustomId(`techHelpOwn~${issueType}~${actor.id}`)
-        .setLabel('Own this issue!')
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId(`techHelpClose~${issueType}~${actor.id}`)
-        .setLabel('Close this issue!')
-        .setStyle(ButtonStyle.Success),
-    );
-
-  await ticketThread.send({content: message, components: [techHelpButtons]});
-  // log.debug(`[${PREFIX}] Sent intro message to meta-thread ${ticketThread.id}`);
-};
 
 /**
  *
