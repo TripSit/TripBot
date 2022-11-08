@@ -20,6 +20,9 @@ export const messageUpdate: messageUpdateEvent = {
       return;
     }
 
+    // Don't run when bots update messages
+    if (newMessage.author.bot) return;
+
     const response = `Message ${newMessage.id} was edited by ${newMessage.author.tag} in ${(newMessage.channel as TextChannel).name} from ${oldMessage.content} to ${newMessage.content}.`; // eslint-disable-line max-len
     const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     botlog.send(response);

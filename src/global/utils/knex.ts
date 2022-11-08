@@ -88,6 +88,7 @@ export async function getOpenTicket(
       .where('type', 'TRIPSIT')
       // .andWhereNot('status', 'CLOSED')
       .andWhereNot('status', 'RESOLVED')
+      .andWhereNot('status', 'DELETED')
       .first();
   }
   if (userId) {
@@ -97,6 +98,7 @@ export async function getOpenTicket(
       .where('type', 'TRIPSIT')
       // .andWhereNot('status', 'CLOSED')
       .andWhereNot('status', 'RESOLVED')
+      .andWhereNot('status', 'DELETED')
       .first();
   }
   return ticketData;

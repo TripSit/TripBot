@@ -173,7 +173,7 @@ export const prompt: SlashCommand = {
       .setName('ticketbooth')),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(PREFIX, interaction);
-    await interaction.deferReply({ephemeral: true});
+    // await interaction.deferReply({ephemeral: true});
     const command = interaction.options.getSubcommand();
     if (command === 'applications') {
       await applications(interaction);
@@ -192,7 +192,7 @@ export const prompt: SlashCommand = {
     } else if (command === 'ticketbooth') {
       await ticketbooth(interaction);
     }
-    await interaction.editReply('Donezo!');
+    // await interaction.editReply('Donezo!');
     return true;
   },
 };
@@ -286,15 +286,6 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
 
   // log.debug(`${PREFIX} bot has permission to post!`);
 
-  let buttonText = stripIndents`
-    Welcome to ${(interaction.channel as TextChannel).name}!
-
-    **Need to talk with a tripsitter? Click the buttom below!**
-    Share what substance you're asking about, time and size of dose, and any other relevant info.
-    This will create a new thread and alert the community that you need assistance!
-    🛑 Please do not message helpers or tripsitters directly! 🛑
-  `;
-
   const channelSanctuary = interaction.options.getChannel('sanctuary');
   const channelGeneral = interaction.options.getChannel('general');
   const roleNeedshelp = interaction.options.getRole('needshelp');
@@ -318,28 +309,61 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
     .onConflict('id')
     .merge();
 
+  let modalText = stripIndents`
+    Welcome to ${(interaction.channel as TextChannel).name}!
+
+    **Need to talk with a tripsitter? Click the buttom below!**
+    Share what substance you're asking about, time and size of dose, and any other relevant info.
+    This will create a new thread and alert the community that you need assistance!
+    🛑 Please do not message helpers or tripsitters directly! 🛑
+  `;
+
   if (channelSanctuary) {
-    buttonText += `\n\nDon't need immediate help but want a peaceful chat? Come to ${channelSanctuary.toString()}!`;
+    modalText += `\n\nDon't need immediate help but want a peaceful chat? Come to ${channelSanctuary.toString()}!`;
   }
 
   if (channelGeneral) {
-    buttonText += `\n\nAll other topics of conversation are welcome in ${channelGeneral.toString()}!`;
+    modalText += `\n\nAll other topics of conversation are welcome in ${channelGeneral.toString()}!`;
   }
 
+  modalText += `\n\nStay safe!\n\n`;
 
-  buttonText += `\n\nStay safe!\n\n`;
+  // Create the modal
+  const modal = new ModalBuilder()
+    .setCustomId(`tripsitmeModal~${interaction.id}`)
+    .setTitle('Setup your TripSit room!');
 
-  // Create a new button embed
-  const row = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      new ButtonBuilder()
-        .setCustomId(`tripsitmeClick`)
-        .setLabel('I need assistance!')
-        .setStyle(ButtonStyle.Primary),
-    );
+  const body = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+    .setLabel('Intro Message')
+    .setValue(stripIndents`${modalText}`)
+    .setStyle(TextInputStyle.Paragraph)
+    .setRequired(true)
+    .setCustomId('introMessage'));
+  modal.addComponents([body]);
+  await interaction.showModal(modal);
 
-  // Create a new button
-  await (interaction.channel as TextChannel).send({content: buttonText, components: [row]});
+  // Collect a modal submit interaction
+  const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`tripsitmeModal`);
+  interaction.awaitModalSubmit({filter, time: 0})
+    .then(async (i) => {
+      if (i.customId.split('~')[1] !== interaction.id) return;
+      if (!i.guild) return;
+
+      const introMessage = i.fields.getTextInputValue('introMessage');
+
+      // Create a new button embed
+      const row = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          new ButtonBuilder()
+            .setCustomId(`tripsitmeClick`)
+            .setLabel('I need assistance!')
+            .setStyle(ButtonStyle.Primary),
+        );
+
+      // Create a new button
+      await (i.channel as TextChannel).send({content: introMessage, components: [row]});
+      i.reply({content: 'Donezo!', ephemeral: true});
+    });
 }
 
 /**

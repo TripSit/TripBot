@@ -10,20 +10,24 @@ import {
 import env from '../../global/utils/env.config';
 import {db, getOpenTicket} from '../../global/utils/knex';
 import {TicketStatus, UserTickets} from '../../global/@types/pgdb';
-// import logger from '../../global/utils/logger';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import log from '../../global/utils/log';
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
 export const threadDelete: threadDeleteEvent = {
   name: 'threadDelete',
   async execute(thread) {
+    log.debug(`[${PREFIX}] threadDelete: ${thread.name} (${thread.id})`);
+
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!thread.guild) return;
     if (thread.guild.id !== env.DISCORD_GUILD_ID) {
       return;
     }
+
+    log.debug(`[${PREFIX}] threadDelete: ${thread.name} (${thread.id})`);
 
     const fetchedLogs = await thread.guild.fetchAuditLogs({
       limit: 1,

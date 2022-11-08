@@ -50,14 +50,19 @@ export const messageDelete: messageDeleteEvent = {
     let response = '' as string;
     // Update the output with a bit more information
     // Also run a check to make sure that the log returned was for the same author's message
-    if (target.id === message.author.id) {
-      if (executor) {
-        response = `A message by ${message.author.tag} was deleted by ${executor.tag}.`;
+    if (message.author) {
+      if (target.id === message.author.id) {
+        if (executor) {
+          response = `${executor.tag} deleted a message by ${message.author.tag} in ${message.channel} saying \n>${message.content}`; // eslint-disable-line max-len
+        } else {
+          response = `Someone deleted a message by ${message.author.tag} in ${message.channel} saying \n>${message.content}`; // eslint-disable-line max-len
+        }
       } else {
-        response = `A message by ${message.author.tag} was deleted, but the audit log was inconclusive.`;
+        response = `Someone deleted a message by ${message.author.tag} in ${message.channel} saying \n>${message.content}`; // eslint-disable-line max-len
       }
     } else {
-      response = `A message by ${message.author.tag} was deleted, but we don't know by who.`;
+      response = `A message with no author was deleted!`;
+      return;
     }
 
     botlog.send(response);
