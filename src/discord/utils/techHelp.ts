@@ -85,13 +85,30 @@ export async function techHelpClick(interaction:ButtonInteraction) {
     .then(async (i) => {
       if (i.customId.split('~')[3] !== interaction.id) return;
 
+      if (!i.guild) {
+        interaction.reply({
+          content: 'This command can only be used in a server!',
+          ephemeral: true,
+        });
+        return;
+      };
+
       const issueType = i.customId.split('~')[1];
       const roleId = i.customId.split('~')[2];
 
       const roleModerator = await i.guild?.roles.fetch(roleId);
 
-      log.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
-      log.debug(`[${PREFIX} - techHelpClick] role: ${roleModerator.id}`);
+      if (!roleModerator) {
+        log.error(`[${PREFIX} - techHelpClick] role not found: ${roleId}`);
+        interaction.reply({
+          content: 'The role provided could not be found!',
+          ephemeral: true,
+        });
+        return;
+      };
+
+      // log.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
+      // log.debug(`[${PREFIX} - techHelpClick] role: ${roleModerator.id}`);
 
       // Respond right away cuz the rest of this doesn't matter
       const member = await i.guild.members.fetch(i.user.id);
