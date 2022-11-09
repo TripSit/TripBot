@@ -2,6 +2,7 @@
 import {
   Guild,
   Role,
+  TextChannel,
   ThreadChannel,
 } from 'discord.js';
 import {db, getGuild, getUser} from '../../global/utils/knex';
@@ -20,6 +21,7 @@ import env from './env.config';
 import log from './log';
 
 import {parse} from 'path';
+import {embedTemplate} from '../../discord/utils/embedTemplate';
 const PREFIX = parse(__filename).name;
 
 // Value in miliseconds (1000 * 60 = 1 minute)
@@ -47,25 +49,34 @@ export async function runTimer() {
             if (currentCount !== memberCount) {
               channelTotal.setName(`Total Members: ${memberCount}`);
               log.debug(`[${PREFIX}] Updated total members to ${memberCount}!`);
+              // Check if the total members is divisible by 100
+              if (memberCount % 100 === 0) {
+                const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
+                if (channelGeneral) {
+                  const embed = embedTemplate()
+                    .setTitle('🎈🎉🎊New Record🎊🎉🎈')
+                    .setDescription(`We have reached ${memberCount} total members!`);
+                  channelGeneral.send({embeds: [embed]});
+                }
+              }
+            } else {
+              // log.debug(`[${PREFIX}] Total members is already ${memberCount}!`);
             }
           }
-
-          // Current online count
-          // const onlineCount = tripsitGuild.members.cache.filter((member) => {
-          //   member.presence?.status !== undefined && member.presence?.status !== 'offline';
-          // }).size;
 
           // Determine the number of users currently online
           const onlineCount = tripsitGuild.members.cache.filter((member) => {
             return member.presence?.status !== undefined && member.presence?.status !== 'offline';
           }).size;
-
+          // const onlineCount = 10;
           const channelOnline = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_ONLINE);
           if (channelOnline) {
             const currentCount = parseInt(channelOnline.name.split(': ')[1]);
             if (currentCount !== onlineCount) {
               channelOnline.setName(`Online Members: ${onlineCount}`);
-              log.debug(`[${PREFIX}] Updated online members to ${onlineCount}!`);
+              // log.debug(`[${PREFIX}] Updated online members to ${onlineCount}!`);
+            } else {
+              // log.debug(`[${PREFIX}] Online members is already ${onlineCount}!`);
             }
           }
 
@@ -81,6 +92,13 @@ export async function runTimer() {
                     max_online_members: onlineCount,
                   })
                   .where('id', env.DISCORD_GUILD_ID);
+                const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
+                if (channelGeneral) {
+                  const embed = embedTemplate()
+                    .setTitle('🎈🎉🎊New Record🎊🎉🎈')
+                    .setDescription(`We have reached ${maxCount} online members!`);
+                  channelGeneral.send({embeds: [embed]});
+                }
               } else {
                 maxCount = guildData.max_online_members;
               }
@@ -98,6 +116,8 @@ export async function runTimer() {
             if (currentCount !== maxCount) {
               channelMax.setName(`Max Online: ${maxCount}`);
               log.debug(`[${PREFIX}] Updated max online members to ${maxCount}!`);
+            } else {
+              // log.debug(`[${PREFIX}] Max members is already ${maxCount}!`);
             }
           }
         }
