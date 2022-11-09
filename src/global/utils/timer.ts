@@ -4,7 +4,7 @@ import {
   Role,
   ThreadChannel,
 } from 'discord.js';
-import {db, getUser} from '../../global/utils/knex';
+import {db, getGuild, getUser} from '../../global/utils/knex';
 import {DateTime} from 'luxon';
 import {
   Users,
@@ -14,6 +14,7 @@ import {
   UserTickets,
   ReactionRoles,
   TicketStatus,
+  DiscordGuilds,
 } from '../../global/@types/pgdb.d';
 import env from './env.config';
 import log from './log';
@@ -35,6 +36,72 @@ export async function runTimer() {
   function checkTimers() {
     setTimeout(
       async () => {
+        // Determine how many people are in the tripsit guild
+        const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+        if (tripsitGuild) {
+          // Total member count
+          const memberCount = tripsitGuild.memberCount;
+          const channelTotal = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_TOTAL);
+          if (channelTotal) {
+            const currentCount = parseInt(channelTotal.name.split(': ')[1]);
+            if (currentCount !== memberCount) {
+              channelTotal.setName(`Total Members: ${memberCount}`);
+              log.debug(`[${PREFIX}] Updated total members to ${memberCount}!`);
+            }
+          }
+
+          // Current online count
+          // const onlineCount = tripsitGuild.members.cache.filter((member) => {
+          //   member.presence?.status !== undefined && member.presence?.status !== 'offline';
+          // }).size;
+
+          // Determine the number of users currently online
+          const onlineCount = tripsitGuild.members.cache.filter((member) => {
+            return member.presence?.status !== undefined && member.presence?.status !== 'offline';
+          }).size;
+
+          const channelOnline = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_ONLINE);
+          if (channelOnline) {
+            const currentCount = parseInt(channelOnline.name.split(': ')[1]);
+            if (currentCount !== onlineCount) {
+              channelOnline.setName(`Online Members: ${onlineCount}`);
+              log.debug(`[${PREFIX}] Updated online members to ${onlineCount}!`);
+            }
+          }
+
+          // Max online count
+          let maxCount = onlineCount;
+          // Update the database's max_online_members if it's higher than the current value
+          const guildData = await getGuild(env.DISCORD_GUILD_ID);
+          if (guildData) {
+            if (guildData.max_online_members) {
+              if (onlineCount > guildData.max_online_members) {
+                await db<DiscordGuilds>('discord_guilds')
+                  .update({
+                    max_online_members: onlineCount,
+                  })
+                  .where('id', env.DISCORD_GUILD_ID);
+              } else {
+                maxCount = guildData.max_online_members;
+              }
+            } else {
+              await db<DiscordGuilds>('discord_guilds')
+                .update({
+                  max_online_members: onlineCount,
+                })
+                .where('id', env.DISCORD_GUILD_ID);
+            }
+          }
+          const channelMax = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_MAX);
+          if (channelMax) {
+            const currentCount = parseInt(channelMax.name.split(': ')[1]);
+            if (currentCount !== maxCount) {
+              channelMax.setName(`Max Online: ${maxCount}`);
+              log.debug(`[${PREFIX}] Updated max online members to ${maxCount}!`);
+            }
+          }
+        }
+
         // log.info(`[${PREFIX}] Checking timers...`);
         // Process reminders
         const reminderData = await db<UserReminders>('user_reminders')

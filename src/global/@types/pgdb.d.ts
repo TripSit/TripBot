@@ -113,6 +113,7 @@ export type DiscordGuilds = {
   role_tripsitter: string | null;
   role_helper: string | null;
   role_techhelp: string | null;
+  max_online_members: number | null;
   removed_at: Date | null;
 };
 
