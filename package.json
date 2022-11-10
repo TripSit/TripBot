@@ -8,15 +8,16 @@
     "npm": "8.19.2"
   },
   "scripts": {
-    "dev": "npm run lint && npm run patch && npm run nodemon",
-    "patch": "npm version patch -git-tag-version false",
-    "nodemon": "nodemon --config ./nodemon.json",
     "start": "npm run deploy && npm run prod",
-    "lint": "eslint --fix --ext ts .",
     "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
     "prod": "ts-node --transpile-only src/start.ts",
-    "DB_backup": "ts-node --transpile-only ./src/global/functions/database-backup.ts",
-    "postgres-test": "ts-node --transpile-only ./src/global/functions/postgres-test.ts"
+    "dev": "npm run lint && npm run patch && npm run nodemon",
+    "lint": "eslint --fix --ext ts .",
+    "patch": "npm version patch -git-tag-version false",
+    "nodemon": "nodemon --config ./nodemon.json",
+    "docker-rebuild": "npm run docker-build && npm run docker-run",
+    "docker-build": "docker-compose build",
+    "docker-run": "docker-compose up -d"
   },
   "repository": {
     "type": "git",

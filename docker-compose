@@ -1,0 +1,10 @@
+version: '3.7'
+services:
+  tripbot:
+    build:
+      dockerfile: Dockerfile
+    container_name: tripbot
+    image: tripbot
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
