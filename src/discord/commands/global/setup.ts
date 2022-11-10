@@ -203,37 +203,37 @@ export async function hasPermissions(
   if (!channelPerms.has('ViewChannel')) {
     const embed = embedTemplate()
       .setTitle(`I need the 'ViewChannel' permissions in ${channel.name} to view the channel!`);
-    interaction.editReply({embeds: [embed]});
+    interaction.followUp({embeds: [embed]});
     return false;
   }
   if (!channelPerms.has('SendMessages')) {
     const embed = embedTemplate()
       .setTitle(`I need the 'SendMessages' permissions in ${channel.name} to send messages!`);
-    interaction.editReply({embeds: [embed]});
+    interaction.followUp({embeds: [embed]});
     return false;
   }
   if (!channelPerms.has('CreatePrivateThreads')) {
     const embed = embedTemplate()
       .setTitle(`I need the 'CreatePrivateThreads' permissions in ${channel.name} to create a private thread!`);
-    interaction.editReply({embeds: [embed]});
+    interaction.followUp({embeds: [embed]});
     return false;
   }
   if (!channelPerms.has('CreatePublicThreads')) {
     const embed = embedTemplate()
       .setTitle(`I need the 'CreatePublicThreads' permissions in ${channel.name} create a public thread!`);
-    interaction.editReply({embeds: [embed]});
+    interaction.followUp({embeds: [embed]});
     return false;
   }
   if (!channelPerms.has('SendMessagesInThreads')) {
     const embed = embedTemplate()
       .setTitle(`I need the 'SendMessagesInThreads' permissions in ${channel.name} send messages in threads!`);
-    interaction.editReply({embeds: [embed]});
+    interaction.followUp({embeds: [embed]});
     return false;
   }
   if (!channelPerms.has('EmbedLinks')) {
     const embed = embedTemplate()
       .setTitle(`I need the 'EmbedLinks' permissions in ${channel.name} send messages in threads!`);
-    interaction.editReply({embeds: [embed]});
+    interaction.followUp({embeds: [embed]});
     return false;
   }
   return true;
