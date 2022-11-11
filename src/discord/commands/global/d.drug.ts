@@ -79,7 +79,7 @@ export const dDrug: SlashCommand = {
     }
 
     // CROSS TOLLERANCE
-    if (drugData.crossTolerances) {
+    if (drugData.crossTolerances && drugData.crossTolerances.length >= 1) {
       const crossToleranceMap = drugData.crossTolerances.map((crossTolerance) => {
         return crossTolerance[0].toUpperCase() + crossTolerance.substring(1);
       });
