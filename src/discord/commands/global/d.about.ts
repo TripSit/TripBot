@@ -3,14 +3,14 @@ import {
   ChatInputCommandInteraction,
   Colors,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
+import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {about} from '../../../global/commands/g.about';
 import logger from '../../../global/utils/logger';
 import * as path from 'path';
 const PREFIX = path.parse(__filename).name;
 
-export const template: SlashCommand1 = {
+export const template: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('about')
     .setDescription('Shows information about this bot!'),
@@ -18,10 +18,14 @@ export const template: SlashCommand1 = {
     const tripsitInfo = await about();
     const embed = embedTemplate()
       .setColor(Colors.DarkBlue)
-      .setTitle('About TripSit')
+      .setTitle('About TripBot')
       .setURL('https://tripsit.me/about/')
       .setDescription(tripsitInfo.description)
       .addFields(
+        {
+          name: 'Invite',
+          value: tripsitInfo.invite,
+        },
         {
           name: 'Disclaimer',
           value: tripsitInfo.disclaimer,
@@ -41,6 +45,5 @@ export const template: SlashCommand1 = {
       );
     interaction.reply({embeds: [embed]});
     logger.debug(`[${PREFIX}] finished!`);
-    return true;
   },
 };
