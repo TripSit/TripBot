@@ -1,6 +1,6 @@
 {
   "name": "tripsit-tripbot",
-  "version": "5.0.18",
+  "version": "5.0.20",
   "description": "A bot for TripSit (and maybe the world)",
   "main": "start.ts",
   "scripts": {

@@ -338,8 +338,8 @@ export async function tripsitmeClick(
         await target.roles.add(roleNeedshelp);
       } catch (err) {
         logger.error(`[${PREFIX}] Error adding role to target: ${err}`);
-        return interaction.reply(stripIndents`There was an error adding the NeedsHelp role!
-      Make sure the bot's role is higher than NeedsHelp in the Role list!`);
+        return interaction.reply({content: stripIndents`There was an error adding the NeedsHelp role!
+      Make sure the bot's role is higher than NeedsHelp in the Role list!`, ephemeral: true});
       }
 
       // ██████╗ ███████╗ ██████╗ ██████╗ ███████╗███╗   ██╗
@@ -664,6 +664,7 @@ export async function tripsitmeFinish(
   // Get the channel objects for the help thread
   const threadHelpUser = interaction.guild.channels.cache
     .find((chan) => chan.id === targetLastHelpedThreadId) as ThreadChannel;
+    console.log(threadHelpUser);
   logger.debug(`[${PREFIX}] threadHelpUser: ${threadHelpUser.name} = 💚│${target.displayName}'s channel!`);
   threadHelpUser.setName(`💚│${target.displayName}'s channel!`);
 
@@ -679,7 +680,7 @@ export async function tripsitmeFinish(
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     logger.debug(`[${PREFIX}] target ${target} does not need help!`);
-    interaction.editReply({embeds: [embed]});
+    interaction.reply({embeds: [embed], ephemeral: true});
     logger.debug(`[${PREFIX}] finished!`);
     return;
   }
@@ -794,7 +795,7 @@ export async function tripsitmeFinish(
 
   logger.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
   logger.debug(`[${PREFIX}] finished!`);
-  await interaction.editReply({content: 'Done!'});
+  await interaction.reply({content: 'Done!', ephemeral: true});
 // async submit(interaction) {
 //   const feedback = interaction.fields.getTextInputValue('feedbackReport');
 //   logger.debug(feedback);
