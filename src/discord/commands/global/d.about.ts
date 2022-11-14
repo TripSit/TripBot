@@ -18,10 +18,14 @@ export const dAbout: SlashCommand = {
     const tripsitInfo = await about();
     const embed = embedTemplate()
       .setColor(Colors.DarkBlue)
-      .setTitle('About TripSit')
+      .setTitle('About TripBot')
       .setURL('https://tripsit.me/about/')
       .setDescription(tripsitInfo.description)
       .addFields(
+        {
+          name: 'Invite',
+          value: tripsitInfo.invite,
+        },
         {
           name: 'Disclaimer',
           value: tripsitInfo.disclaimer,

@@ -15,6 +15,11 @@ export async function about():Promise<aboutInfo> {
     description: stripIndents`
         This app is created by TripSit, an organisation which helps to provide factual information\
         about drugs and how to reduce the harms involved in using them.
+        The official support server is [TripSit discord](https://discord.gg/TripSit). If you have issues/questions, join and talk with Moonbear!
+      `,
+    invite: stripIndents`
+        [Click here to invite TripBot to your own server](https://discord.com/api/oauth2/authorize?client_id=957780726806380545&permissions=18432&scope=bot%20applications.commands).
+        Note: For advanced features you will need to give the bot more permissions at your discression.
       `,
     disclaimer: stripIndents`
         Although we have a team dedicated to keeping the information on this app up to date,\
@@ -24,8 +29,6 @@ export async function about():Promise<aboutInfo> {
         We also strongly advise using a testing kit and scales to ensure you are taking the\
         correct dosage. These can both be bought online for reasonable prices.
       `,
-
-    // [IRC](https://chat.tripsit.me) or the
     support: stripIndents`
         TripSit is a completely free service run by volunteers.
         If you wish to help out, feel free to join the [discord](https://discord.gg/TripSit),\
@@ -54,6 +57,7 @@ export async function about():Promise<aboutInfo> {
 type aboutInfo = {
   name: string;
   url: string;
+  invite: string;
   description: string;
   disclaimer: string;
   support: string;

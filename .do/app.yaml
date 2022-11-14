@@ -1,8 +1,0 @@
-name: tripsit-discord-bot
-services:
-- environment_slug: node-js
-  github:
-    branch: main
-    deploy_on_push: true
-    repo: TripSit/tripsit-discord-bot
-  name: tripsit-discord-bot
