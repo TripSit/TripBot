@@ -664,7 +664,7 @@ export async function tripsitmeFinish(
   // Get the channel objects for the help thread
   const threadHelpUser = interaction.guild.channels.cache
     .find((chan) => chan.id === targetLastHelpedThreadId) as ThreadChannel;
-    console.log(threadHelpUser);
+  console.log(threadHelpUser);
   logger.debug(`[${PREFIX}] threadHelpUser: ${threadHelpUser.name} = 💚│${target.displayName}'s channel!`);
   threadHelpUser.setName(`💚│${target.displayName}'s channel!`);
 
