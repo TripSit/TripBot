@@ -1,8 +1,0 @@
-spec:
-  name: tripsit-discord-bot
-  services:
-  - environment_slug: node-js
-    git:
-      branch: main
-      repo_clone_url: https://github.com/TripSit/tripsit-discord-bot.git
-    name: tripsit-discord-bot
