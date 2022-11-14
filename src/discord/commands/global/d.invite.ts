@@ -7,16 +7,16 @@ import {
 import {SlashCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import {invite} from '../../../global/commands/g.invite';
-// import {startLog} from '../../utils/startLog';
-// import {parse} from 'path';
-// const PREFIX = parse(__filename).name;
+import {startLog} from '../../utils/startLog';
+import {parse} from 'path';
+const PREFIX = parse(__filename).name;
 
 export const dInvite: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('invite')
     .setDescription('Shows an invite link for this bot!'),
   async execute(interaction) {
-    // startLog(PREFIX, interaction);
+    startLog(PREFIX, interaction);
     const inviteInfo = await invite();
     const embed = embedTemplate()
       .setColor(Colors.DarkBlue)
@@ -30,6 +30,6 @@ export const dInvite: SlashCommand = {
         If you have issues/questions, join and talk with Moonbear!
       `);
     interaction.reply({embeds: [embed]});
-    // return true;
+    return true;
   },
 };

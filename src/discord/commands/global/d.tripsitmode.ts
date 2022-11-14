@@ -9,7 +9,7 @@ import {SlashCommand} from '../../@types/commandDef';
 // import env from '../../../global/utils/env.config';
 import log from '../../../global/utils/log';
 import * as path from 'path';
-import { tripsitmeButton, tripsitmeClose } from '../../utils/tripsitme';
+import {tripsitmeButton, tripsitmeClose} from '../../utils/tripsitme';
 const PREFIX = path.parse(__filename).name;
 
 export const tripsitmode: SlashCommand = {

@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
-import log from '../utils/logger';
+import log from '../utils/log';
 
 /**
  *
