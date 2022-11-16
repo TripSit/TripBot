@@ -14,65 +14,26 @@ Full Typescript support
 Postgres database support
 
 ## Installation
-1) Clone the repo
-2) Run `npm install`
-3) Create a file called `.env` in the root directory
-4) Use env.config to create your .env file. You only /need/ the discord stuff
 
-## Usage
+Use the tripsit-dev repo to do all this automatically!
+
+### Setup postgres
+1) Install postgres
+2) Create a database called tripsit
+3) Create a user called tripsit_api with password P@ssw0rd
+- If you don't use these credentials, change the env.config file
+
+### Setup Tripbot
+1) Clone tripsit-discord-bot
+2) Copy env.example to .env and fill in these fields. You only /need/ the discord stuff
+
+### Run production
+1) Run `docker compose up -d`
+
+## Run Development
 1) Run `npm run dev` to start the bot in development mode
-
-## Contributing
-1) Fork it!
-2) Create your feature branch: `git checkout -b my-new-feature`
-2a) Make sure you 'npm run dev' before you commit to lint and increment version number
-3) Commit your changes: `git commit -am 'Add some feature'`
-4) Push to the branch: `git push origin my-new-feature`
-5) Submit a pull request :D 
+- This runs nodemod, which will update on every change
+2) If you need to update the container, use `npm run docker-rebuild`
 
 ## Get in touch 
 Feel free to join our discord guild under https://discord.gg/tripsit 
-
-## Postgres stuff
-Okay so moonbear is using this section to take notes on how to use postgres, cuz i have litle clue what im doing
-
-### Setup desktop programs
-1) Install/run pgAdmin4
-2) Create a database called tripsit
-3) Create a user called tripsit with password TripSitLol123\
-- If you don't use these credentials, change the env.config file
-
-Remember that postgres is a database that runs as a webserver, so you can access it from anywhere. You can also access it from the command line, but I'm not sure how to do that yet.
-
-### Setup project
-1) Install the project (npm install)
-2) Run the postgres-test file to make sure everything is working! (npm run postgres-test)
-
-## Postgres notes
-
--- Commands finished:
-birthday
-dramacounter
-idose
-timezone
-experience
-chitragupta
-karma
-sparklePoints
-h2flow
-profile
-guildCreate
-guildUpdate
-guildRemove
-guildMemberUpdate
-timers
-remindme
-setup
-handleReactionRoles
-leaderboard
-
--- Commands in progress:
-modmail
-tripsitme
-  guildMemberAdd
-  guildMemberRemove
