@@ -16,8 +16,8 @@
     "patch": "npm version patch -git-tag-version false",
     "nodemon": "nodemon --config ./nodemon.json",
     "docker-rebuild": "npm run docker-build && npm run docker-run",
-    "docker-build": "docker-compose build",
-    "docker-run": "docker-compose up -d"
+    "docker-build": "docker compose build",
+    "docker-run": "docker compose up -d"
   },
   "repository": {
     "type": "git",

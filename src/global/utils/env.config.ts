@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 require('dotenv').config();
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -10,6 +11,45 @@ export default {
   DISCORD_CLIENT_TOKEN: process.env.DISCORD_CLIENT_TOKEN,
 
   POSTGRES_DBURL: isProd ? process.env.POSTGRES_DBURL : 'postgres://tripsit_api:P@ssw0rd@localhost:5432/tripsit',
+  // Works without container
+
+  // POSTGRES_DBURL: isProd ? process.env.POSTGRES_DBURL : 'postgres://tripsit_api:P@ssw0rd@localhost:5432/tripsit',
+  // Error: connect ECONNREFUSED 127.0.0.1:5432
+  // at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1247:16)
+
+  // POSTGRES_DBURL: isProd ? process.env.POSTGRES_DBURL : 'postgres://tripsit_api:P@ssw0rd@127.0.0.1:5432/tripsit',
+  // Error: connect ECONNREFUSED 127.0.0.1:5432
+  // at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1247:16)
+
+  // POSTGRES_DBURL: isProd ? process.env.POSTGRES_DBURL : 'postgres://tripsit_api:P@ssw0rd@host.docker.internal:5432/tripsit',
+  // error: password authentication failed for user "tripsit_api"
+  //   at Parser.parseErrorMessage (/usr/src/app/node_modules/pg-protocol/src/parser.ts:369:69)
+  //   at Parser.handlePacket (/usr/src/app/node_modules/pg-protocol/src/parser.ts:188:21)
+  //   at Parser.parse (/usr/src/app/node_modules/pg-protocol/src/parser.ts:103:30)
+  //   at Socket.<anonymous> (/usr/src/app/node_modules/pg-protocol/src/index.ts:7:48)
+  //   at Socket.emit (node:events:513:28)
+  //   at Socket.emit (node:domain:489:12)
+  //   at addChunk (node:internal/streams/readable:315:12)
+  //   at readableAddChunk (node:internal/streams/readable:289:9)
+  //   at Socket.Readable.push (node:internal/streams/readable:228:10)
+  //   at TCP.onStreamRead (node:internal/stream_base_commons:190:23)
+
+  // POSTGRES_DBURL: isProd ? process.env.POSTGRES_DBURL : 'postgres://tripsit_api:P@ssw0rd@172.17.0.1:5432/tripsit',
+  // KnexTimeoutError: Knex: Timeout acquiring a connection. The pool is probably full. Are you missing a .transacting(trx) call?
+  // at Client_PG.acquireConnection (/usr/src/app/node_modules/knex/lib/client.js:307:26)
+  // at async Runner.ensureConnection (/usr/src/app/node_modules/knex/lib/execution/runner.js:287:28)
+  // at async Runner.run (/usr/src/app/node_modules/knex/lib/execution/runner.js:30:19)
+  // at async getGuild (/usr/src/app/src/global/utils/knex.ts:62:14)
+  // at async Timeout._onTimeout (/usr/src/app/src/global/utils/timer.ts:86:29)
+
+  // POSTGRES_DBURL: isProd ? process.env.POSTGRES_DBURL : 'postgres://tripsit_api:P@ssw0rd@172.18.238.125:5432/tripsit',
+  // KnexTimeoutError: Knex: Timeout acquiring a connection. The pool is probably full. Are you missing a .transacting(trx) call?
+  //   at Client_PG.acquireConnection (/usr/src/app/node_modules/knex/lib/client.js:307:26)
+  //   at async Runner.ensureConnection (/usr/src/app/node_modules/knex/lib/execution/runner.js:287:28)
+  //   at async Runner.run (/usr/src/app/node_modules/knex/lib/execution/runner.js:30:19)
+  //   at async getGuild (/usr/src/app/src/global/utils/knex.ts:62:14)
+  //   at async Timeout._onTimeout (/usr/src/app/src/global/utils/timer.ts:86:29)
+
 
   GITHUB_TOKEN: process.env.GITHUB_TOKEN,
   YOUTUBE_TOKEN: process.env.YOUTUBE_TOKEN,
