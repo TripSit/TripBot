@@ -755,8 +755,8 @@ export async function modmailActions(
     //         .setColor(Colors.Blue)
     //         .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
     //       try {
-    //         const channelTripsitMeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
-    //         await channelTripsitMeta.send({embeds: [finalEmbed]});
+    //         const channelTripsitmeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
+    //         await channelTripsitmeta.send({embeds: [finalEmbed]});
     //       } catch (err) {
     //         // log.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
     //       }
@@ -979,8 +979,8 @@ export async function modmailActions(
     //         .setColor(Colors.Blue)
     //         .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
     //       try {
-    //         const channelTripsitMeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
-    //         await channelTripsitMeta.send({embeds: [finalEmbed]});
+    //         const channelTripsitmeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
+    //         await channelTripsitmeta.send({embeds: [finalEmbed]});
     //       } catch (err) {
     //         // log.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
     //       }

@@ -248,7 +248,7 @@ export async function tripSitMe(
   // Get the roles we'll be referencing
   let roleTripsitter = {} as Role;
   let roleHelper = {} as Role;
-  let channelTripsitMeta = {} as TextChannel;
+  let channelTripsitmeta = {} as TextChannel;
   if (guildData.role_tripsitter) {
     roleTripsitter = await interaction.guild.roles.fetch(guildData.role_tripsitter) as Role;
     backupMessage += `<@&${roleTripsitter.id}> `;
@@ -257,8 +257,8 @@ export async function tripSitMe(
     roleHelper = await interaction.guild.roles.fetch(guildData.role_helper) as Role;
     backupMessage += `<@&${roleHelper.id}> `;
   }
-  if (guildData.channel_tripsit_meta) {
-    channelTripsitMeta = await interaction.guild.channels.fetch(guildData.channel_tripsit_meta) as TextChannel;
+  if (guildData.channel_tripsitmeta) {
+    channelTripsitmeta = await interaction.guild.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
   }
 
   if (!interaction.guild) {
@@ -277,7 +277,7 @@ export async function tripSitMe(
   //   guild: ${interaction.guild.name} (${interaction.guild.id})
   //   memberInput: ${memberInput}
   //   roleTripsitterId: ${roleTripsitter.id}
-  //   channelTripsittersId: ${channelTripsitMeta.id}
+  //   channelTripsittersId: ${channelTripsitmeta.id}
   //   triage: ${triage}
   //   intro: ${intro}
   // `);
@@ -408,12 +408,12 @@ export async function tripSitMe(
         .setStyle(ButtonStyle.Danger),
     );
 
-  await channelTripsitMeta.send({
+  await channelTripsitmeta.send({
     embeds: [embedTripsitter],
     components: [endSession],
     allowedMentions: {},
   });
-  // log.debug(`[${PREFIX}] Sent message to ${channelTripsitMeta.name} (${channelTripsitMeta.id})`);
+  // log.debug(`[${PREFIX}] Sent message to ${channelTripsitmeta.name} (${channelTripsitmeta.id})`);
 
   const threadArchiveTime = new Date();
   // define one week in milliseconds
@@ -772,12 +772,12 @@ export async function tripsitmeClose(
   const guildData = await getGuild(interaction.guild.id);
 
   let roleNeedshelp = {} as Role;
-  let channelTripsitMeta = {} as TextChannel;
+  let channelTripsitmeta = {} as TextChannel;
   if (guildData.role_needshelp) {
     roleNeedshelp = await interaction.guild.roles.fetch(guildData.role_needshelp) as Role;
   }
-  if (guildData.channel_tripsit_meta) {
-    channelTripsitMeta = await interaction.guild.channels.fetch(guildData.channel_tripsit_meta) as TextChannel;
+  if (guildData.channel_tripsitmeta) {
+    channelTripsitmeta = await interaction.guild.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
   }
 
   const target = await interaction.guild.members.fetch(targetId);
@@ -884,12 +884,12 @@ export async function tripsitmeResolve(
   const guildData = await getGuild(interaction.guild.id);
 
   let roleNeedshelp = {} as Role;
-  let channelTripsitMeta = {} as TextChannel;
+  let channelTripsitmeta = {} as TextChannel;
   if (guildData.role_needshelp) {
     roleNeedshelp = await interaction.guild.roles.fetch(guildData.role_needshelp) as Role;
   }
-  if (guildData.channel_tripsit_meta) {
-    channelTripsitMeta = await interaction.guild.channels.fetch(guildData.channel_tripsit_meta) as TextChannel;
+  if (guildData.channel_tripsitmeta) {
+    channelTripsitmeta = await interaction.guild.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
   }
 
   const target = await interaction.guild.members.fetch(targetId);
@@ -899,7 +899,7 @@ export async function tripsitmeResolve(
   //   meOrThem: ${meOrThem}
   //   targetId: ${targetId}
   //   roleNeedshelpId: ${roleNeedshelp.id}
-  //   channelTripsittersId: ${channelTripsitMeta.id}
+  //   channelTripsittersId: ${channelTripsitmeta.id}
   //   actor: ${actor.displayName}
   //   target: ${target.displayName}
   // `);
@@ -1027,7 +1027,7 @@ export async function tripsitmeResolve(
           .setColor(Colors.Blue)
           .setDescription(`Collected ${reaction.emoji.name} from ${threadHelpUser}`);
         try {
-          await channelTripsitMeta.send({embeds: [finalEmbed]});
+          await channelTripsitmeta.send({embeds: [finalEmbed]});
         } catch (err) {
           // log.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
         }

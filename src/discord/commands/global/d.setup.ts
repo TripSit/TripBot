@@ -274,7 +274,7 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
   const roleNeedshelp = interaction.options.getRole('needshelp');
   const roleTripsitter = interaction.options.getRole('tripsitter');
   const roleHelper = interaction.options.getRole('helper');
-  const channelTripsitMeta = interaction.options.getChannel('metatripsit');
+  const channelTripsitmeta = interaction.options.getChannel('metatripsit');
   const channelTripsit = interaction.channel as TextChannel;
 
   // Save this info to the DB
@@ -283,7 +283,7 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
       id: interaction.guild.id,
       channel_sanctuary: channelSanctuary ? channelSanctuary.id : null,
       channel_general: channelGeneral ? channelGeneral.id : null,
-      channel_tripsit_meta: channelTripsitMeta ? channelTripsitMeta.id : null,
+      channel_tripsitmeta: channelTripsitmeta ? channelTripsitmeta.id : null,
       channel_tripsit: channelTripsit.id,
       role_needshelp: roleNeedshelp ? roleNeedshelp.id : null,
       role_tripsitter: roleTripsitter ? roleTripsitter.id : null,

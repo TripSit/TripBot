@@ -48,7 +48,7 @@ export const bug: SlashCommand = {
     }
     // log.debug(`[${PREFIX}] interaction.guild: ${JSON.stringify(interaction.guild, null, 2)}`);
 
-    let dramaDate = {} as Date;
+    let lastDramaAt = {} as Date;
     let dramaReason = '' as string;
     if (command === 'set') {
       const dramaVal = interaction.options.getString('dramatime');
@@ -72,30 +72,30 @@ export const bug: SlashCommand = {
         return false;
       }
       dramaReason = dramaIssue;
-      dramaDate = DateTime.now().minus(dramatimeValue).toJSDate();
-      // log.debug(`[${PREFIX}] dramaTime: ${JSON.stringify(dramaDate, null, 2)}`);
+      lastDramaAt = DateTime.now().minus(dramatimeValue).toJSDate();
+      // log.debug(`[${PREFIX}] dramaTime: ${JSON.stringify(lastDramaAt, null, 2)}`);
     }
 
-    const response = await dramacounter(command, interaction.guild.id, dramaDate, dramaReason);
+    const response = await dramacounter(command, interaction.guild.id, lastDramaAt, dramaReason);
 
     const embed = embedTemplate()
       .setTitle('Drama Counter');
 
     if (command === 'get') {
-      if (!response.dramaDate) {
+      if (!response.lastDramaAt) {
         embed.setDescription('There has been no drama yet!');
         await interaction.reply({embeds: [embed]});
         return true;
       }
       embed.setDescription(
-        `The last drama was ${time(new Date(response.dramaDate), 'R')}: ${response.dramaReason}`);
+        `The last drama was ${time(new Date(response.lastDramaAt), 'R')}: ${response.dramaReason}`);
       await interaction.reply({embeds: [embed]});
     } else {
-      if (!response.dramaDate) {
+      if (!response.lastDramaAt) {
         return false;
       }
       embed.setDescription(
-        stripIndents`The drama counter has been reset to ${time(new Date(response.dramaDate), 'R')} ago, \
+        stripIndents`The drama counter has been reset to ${time(new Date(response.lastDramaAt), 'R')} ago, \
       and the issue was: ${response.dramaReason}`);
       await interaction.reply({embeds: [embed], ephemeral: true});
     }

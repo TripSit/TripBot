@@ -1,6 +1,12 @@
 // The TypeScript definitions below are automatically generated.
 // Do not touch them, or risk, your modifications being lost.
 
+export enum DrugCategoryType {
+  Common = 'COMMON',
+  Psychoactive = 'PSYCHOACTIVE',
+  Chemical = 'CHEMICAL',
+}
+
 export enum DrugMassUnit {
   Mg = 'MG',
   Ml = 'ML',
@@ -29,15 +35,6 @@ export enum DrugRoa {
   Intravenous = 'INTRAVENOUS',
   Subcutanious = 'SUBCUTANIOUS',
   Transdermal = 'TRANSDERMAL',
-}
-
-export enum DrugUnit {
-  Mg = 'MG',
-  Ml = 'ML',
-  G = 'µG',
-  G = 'G',
-  Oz = 'OZ',
-  Floz = 'FLOZ',
 }
 
 export enum ExperienceType {
@@ -83,6 +80,8 @@ export enum UserActionType {
 export enum Table {
   DiscordGuilds = 'discord_guilds',
   DrugArticles = 'drug_articles',
+  DrugCategories = 'drug_categories',
+  DrugCategoryDrugs = 'drug_category_drugs',
   DrugNames = 'drug_names',
   DrugVariantRoas = 'drug_variant_roas',
   DrugVariants = 'drug_variants',
@@ -103,18 +102,19 @@ export type DiscordGuilds = {
   is_banned: boolean;
   last_drama_at: Date | null;
   drama_reason: string | null;
-  joined_at: Date;
+  max_online_members: number | null;
   channel_sanctuary: string | null;
   channel_general: string | null;
   channel_tripsit: string | null;
-  channel_tripsit_meta: string | null;
+  channel_tripsitmeta: string | null;
   channel_applications: string | null;
   role_needshelp: string | null;
   role_tripsitter: string | null;
   role_helper: string | null;
   role_techhelp: string | null;
-  max_online_members: number | null;
   removed_at: Date | null;
+  joined_at: Date;
+  created_at: Date;
 };
 
 export type DrugArticles = {
@@ -128,6 +128,18 @@ export type DrugArticles = {
   last_modified_at: Date;
   posted_by: string;
   created_at: Date;
+};
+
+export type DrugCategories = {
+  id: string;
+  name: string;
+  type: DrugCategoryType;
+  created_at: Date;
+};
+
+export type DrugCategoryDrugs = {
+  drug_id: string;
+  drug_category_id: string;
 };
 
 export type DrugNames = {

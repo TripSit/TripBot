@@ -17,7 +17,7 @@ const PREFIX = parse(__filename).name;
  * @param {string} userId
  * @param {string | null} substance
  * @param {number | null} volume
- * @param {DrugUnit | null} units
+ * @param {DrugMassUnit | null} units
  * @param {DrugRoa | null} roa
  * @param {Date | null} date
  * @return {any}
