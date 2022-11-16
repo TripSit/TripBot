@@ -10,10 +10,12 @@ export default {
   DISCORD_CLIENT_REDIRECT_URI: process.env.DISCORD_CLIENT_REDIRECT_URI,
   DISCORD_CLIENT_TOKEN: process.env.DISCORD_CLIENT_TOKEN,
 
-  // POSTGRES_DBURL: isProd ? process.env.POSTGRES_DBURL : 'postgres://tripsit_api:P@ssw0rd@localhost:5432/tripsit',
+  POSTGRES_DBURL: isProd ? process.env.POSTGRES_DBURL : 'postgres://tripsit_api:P@ssw0rd@localhost:5432/tripsit',
+
+  // POSTGRES_DBURL: isProd ? process.env.POSTGRES_DBURL : 'postgres://tripsit_api:P@ssw0rd@172.18.238.125:5432/tripsit',
   // Works without container
 
-  POSTGRES_DBURL: isProd ? process.env.POSTGRES_DBURL : 'postgres://tripsit_api:P@ssw0rd@tripsit_discord_bot:5432/tripsit',
+  // POSTGRES_DBURL: isProd ? process.env.POSTGRES_DBURL : 'postgres://tripsit_api:P@ssw0rd@tripsit_discord_bot:5432/tripsit',
 
   // POSTGRES_DBURL: isProd ? process.env.POSTGRES_DBURL : 'postgres://tripsit_api:P@ssw0rd@localhost:5432/tripsit',
   // Error: connect ECONNREFUSED 127.0.0.1:5432
@@ -51,7 +53,6 @@ export default {
   //   at async Runner.run (/usr/src/app/node_modules/knex/lib/execution/runner.js:30:19)
   //   at async getGuild (/usr/src/app/src/global/utils/knex.ts:62:14)
   //   at async Timeout._onTimeout (/usr/src/app/src/global/utils/timer.ts:86:29)
-
 
   GITHUB_TOKEN: process.env.GITHUB_TOKEN,
   YOUTUBE_TOKEN: process.env.YOUTUBE_TOKEN,
