@@ -82,7 +82,7 @@ export const help: SlashCommand = {
     funEmbed.addFields({name: 'Urban Define', value: getDesc('urban_define'), inline: true});
     funEmbed.addFields({name: 'Topic', value: getDesc('topic'), inline: true});
     funEmbed.addFields({name: 'Joke', value: getDesc('joke'), inline: true});
-    funEmbed.addFields({name: 'Youtube', value: getDesc('youtube'), inline: true});
+    // funEmbed.addFields({name: 'Youtube', value: getDesc('youtube'), inline: true});
     funEmbed.addFields({name: 'Coinflip', value: getDesc('coinflip'), inline: true});
     funEmbed.addFields({name: 'Lovebomb', value: getDesc('lovebomb'), inline: true});
     funEmbed.addFields({name: 'Remindme', value: getDesc('remindme'), inline: true});
