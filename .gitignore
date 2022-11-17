@@ -362,3 +362,4 @@ backups/*.json
 cert/
 built/
 node_modules_bak
+.scannerwork/

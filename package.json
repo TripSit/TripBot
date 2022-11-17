@@ -17,7 +17,8 @@
     "nodemon": "nodemon --config ./nodemon.json",
     "docker-rebuild": "npm run docker-build && npm run docker-run",
     "docker-build": "docker compose build",
-    "docker-run": "docker compose up -d"
+    "docker-run": "docker compose up -d",
+    "sonar-scanner": "sonar-scanner   -Dsonar.projectKey=tripbot   -Dsonar.sources=.   -Dsonar.host.url=https://sonarqube.pantheon.tripsit.me   -Dsonar.login=ec3c544afc5fee1baf64900580ddac40fc3cb97b"
   },
   "repository": {
     "type": "git",
@@ -65,6 +66,7 @@
     "npm-check-updates": "^16.3.11",
     "octokit": "^2.0.9",
     "pg": "^8.8.0",
+    "sonar-scanner": "^3.1.0",
     "ts-node": "^10.9.1",
     "winston": "^3.8.2",
     "youtube-search": "^1.1.6",
