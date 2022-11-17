@@ -95,6 +95,7 @@ export const help: SlashCommand = {
     funEmbed.addFields({name: 'Remindme', value: getDesc('remindme') ?? '', inline: true});
     funEmbed.addFields({name: 'Convert', value: getDesc('convert') ?? '', inline: true});
     funEmbed.addFields({name: 'Poll', value: getDesc('poll') ?? '', inline: true});
+    // funEmbed.addFields({name: 'Youtube', value: getDesc('youtube'), inline: true});
 
     const tripsitEmbed = embedTemplate();
     tripsitEmbed.setTitle('Tripsit-Only Modules');
