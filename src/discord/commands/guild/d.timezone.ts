@@ -13,18 +13,18 @@ export const time: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('timezone')
     .setDescription('Get or set timezones!')
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setName('get')
       .setDescription('Get someone\'s timezone!')
-      .addUserOption((option) => option
+      .addUserOption(option => option
         .setName('user')
         .setDescription('User to lookup'),
       ),
     )
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setName('set')
       .setDescription('Set your timezone!')
-      .addStringOption((option) => option
+      .addStringOption(option => option
         .setName('timezone')
         .setDescription('Timezone value')
         .setRequired(true)

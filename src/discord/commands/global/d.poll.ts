@@ -27,11 +27,11 @@ export const dpoll: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('poll')
     .setDescription('Creates a poll!')
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setName('question')
       .setDescription('What do you want to ask?')
       .setRequired(true))
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setName('options')
       .setDescription('CSV of options, EG: "Red, Blue, Green"')
       .setRequired(true)),

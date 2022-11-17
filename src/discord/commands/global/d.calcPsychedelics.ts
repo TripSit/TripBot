@@ -13,27 +13,27 @@ export const dcalcPsychedelics: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_psychedelics')
     .setDescription('Check psychedelic tolerance information')
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setName('lsd')
       .setDescription('Check LSD tolerance information')
-      .addIntegerOption((option) => option.setName('last_dose')
+      .addIntegerOption(option => option.setName('last_dose')
         .setDescription('ug of LSD')
         .setRequired(true))
-      .addIntegerOption((option) => option.setName('days')
+      .addIntegerOption(option => option.setName('days')
         .setDescription('Number of days since last dose?')
         .setRequired(true))
-      .addIntegerOption((option) => option.setName('desired_dose')
+      .addIntegerOption(option => option.setName('desired_dose')
         .setDescription('ug of LSD')))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setName('mushrooms')
       .setDescription('Check mushroom tolerance information')
-      .addIntegerOption((option) => option.setName('last_dose')
+      .addIntegerOption(option => option.setName('last_dose')
         .setDescription('g of mushrooms')
         .setRequired(true))
-      .addIntegerOption((option) => option.setName('days')
+      .addIntegerOption(option => option.setName('days')
         .setDescription('Number of days since last dose?')
         .setRequired(true))
-      .addIntegerOption((option) => option.setName('desired_dose')
+      .addIntegerOption(option => option.setName('desired_dose')
         .setDescription('g of mushrooms'))),
   async execute(interaction) {
     startLog(PREFIX, interaction);

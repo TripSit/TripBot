@@ -66,7 +66,7 @@ export async function paginationEmbed(
     time: timeout,
   });
 
-  collector.on('collect', async (i) => {
+  collector.on('collect', async i => {
     switch (i.customId) {
       // @ts-ignore
       case buttonList[0].data.custom_id:

@@ -26,7 +26,7 @@ export const report: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('report')
     .setDescription('Report a user')
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setDescription('User to report!')
       .setRequired(true)
       .setName('target')),
@@ -74,7 +74,7 @@ export const report: SlashCommand = {
 
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`modModal`);
     interaction.awaitModalSubmit({filter, time: 0})
-      .then(async (i) => {
+      .then(async i => {
         if (i.customId.split('~')[2] !== interaction.id) return;
         const privReason = i.fields.getTextInputValue('privReason');
         const result = await moderate(

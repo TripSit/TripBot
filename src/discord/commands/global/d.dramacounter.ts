@@ -17,19 +17,19 @@ export const bug: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('dramacounter')
     .setDescription('How long since the last drama incident?!')
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setName('get')
       .setDescription('Get the time since last drama.'),
     )
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setName('set')
       .setDescription('Set the dramacounter >.<')
-      .addStringOption((option) => option
+      .addStringOption(option => option
         .setName('dramatime')
         .setDescription('When did the drama happen? "3 hours (ago)"')
         .setRequired(true),
       )
-      .addStringOption((option) => option
+      .addStringOption(option => option
         .setName('dramaissue')
         .setDescription('What was the drama? Be descriptive, or cryptic.')
         .setRequired(true),

@@ -18,17 +18,17 @@ export const tripsitmode: SlashCommand = {
     .setDescription(
       'This command will apply the NeedsHelp role onto a user, and remove other roles!',
     )
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setName('on')
       .setDescription('Turn on Tripsit Mode')
-      .addUserOption((option) => option
+      .addUserOption(option => option
         .setName('user')
         .setDescription('Member to help')
         .setRequired(true)))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setName('off')
       .setDescription('Turn off Tripsit Mode')
-      .addUserOption((option) => option
+      .addUserOption(option => option
         .setName('user')
         .setDescription('Member to stop helping')
         .setRequired(true))),
@@ -54,20 +54,20 @@ export const tripsitmode: SlashCommand = {
         deferReply: () => {
           return interaction.deferReply();
         },
-        reply: (content) => {
+        reply: content => {
           if (interaction.deferred || interaction.replied) {
             return interaction.followUp(content);
           } else {
             return interaction.reply(content);
           }
         },
-        followUp: (content) => {
+        followUp: content => {
           return interaction.followUp(content);
         },
-        showModal: (modal) => {
+        showModal: modal => {
           return interaction.showModal(modal);
         },
-        awaitModalSubmit: (params) => {
+        awaitModalSubmit: params => {
           return interaction.awaitModalSubmit(params);
         },
       } as ButtonInteraction;
@@ -85,20 +85,20 @@ export const tripsitmode: SlashCommand = {
         deferReply: () => {
           return interaction.deferReply();
         },
-        reply: (content) => {
+        reply: content => {
           if (interaction.deferred || interaction.replied) {
             return interaction.followUp(content);
           } else {
             return interaction.reply(content);
           }
         },
-        followUp: (content) => {
+        followUp: content => {
           return interaction.followUp(content);
         },
-        showModal: (modal) => {
+        showModal: modal => {
           return interaction.showModal(modal);
         },
-        awaitModalSubmit: (params) => {
+        awaitModalSubmit: params => {
           return interaction.awaitModalSubmit(params);
         },
       } as ButtonInteraction;

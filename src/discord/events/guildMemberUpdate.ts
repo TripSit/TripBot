@@ -36,9 +36,9 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
       // log.debug(`[${PREFIX}] oldMember: ${JSON.stringify(oldMember, null, 2)}`);
       // log.debug(`[${PREFIX}] newMember: ${JSON.stringify(newMember, null, 2)}`);
 
-      const oldRoles = oldMember.roles.cache.map((role) => role.id);
+      const oldRoles = oldMember.roles.cache.map(role => role.id);
 
-      const newRoles = newMember.roles.cache.map((role) => role.id);
+      const newRoles = newMember.roles.cache.map(role => role.id);
 
       // If the oldRoles don't match the new roles
       if (oldRoles.toString() !== newRoles.toString()) {
@@ -47,9 +47,9 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
         // log.debug(`[${PREFIX}] newRoles: ${newRoles}`);
 
         // Find the difference between the two arrays
-        const rolesAdded = newRoles.filter((x) => !oldRoles.includes(x));
+        const rolesAdded = newRoles.filter(x => !oldRoles.includes(x));
         // log.debug(`[${PREFIX}] roleAdded: ${rolesAdded}`);
-        const rolesRemoved = oldRoles.filter((x) => !newRoles.includes(x));
+        const rolesRemoved = oldRoles.filter(x => !newRoles.includes(x));
         // log.debug(`[${PREFIX}] roleRemoved: ${rolesRemoved}`);
 
         // If you added/removed more than one role then it wasnt a mindset change, so ignore it
@@ -78,7 +78,7 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
         // The following code only cares if you add a mindset role
         if (mindsetRoles.includes(differenceId)) {
           // Look up the role name
-          const roleName = await newMember.guild.roles.fetch(differenceId).then((role) => role?.name);
+          const roleName = await newMember.guild.roles.fetch(differenceId).then(role => role?.name);
           // log.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${roleName}`);
 
           // const userInfo = await getUserInfo(newMember.id);

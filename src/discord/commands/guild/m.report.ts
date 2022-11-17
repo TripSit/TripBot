@@ -45,7 +45,7 @@ export const mReport: MessageCommand = {
     await interaction.showModal(modal);
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`reportModal`);
     interaction.awaitModalSubmit({filter, time: 0})
-      .then(async (i) => {
+      .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
         const privReason = stripIndents`
         ${i.fields.getTextInputValue('privReason')}

@@ -21,7 +21,7 @@ export const dLeaderboard: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('leaderboard')
     .setDescription('Show the experience leaderboard')
-    .addStringOption((option) => option.setName('category')
+    .addStringOption(option => option.setName('category')
       .setDescription('Which leaderboard? (Default: Overall)')
       .addChoices(
         {name: 'Overall', value: 'OVERALL'},
@@ -71,7 +71,7 @@ export const dLeaderboard: SlashCommand = {
       const categoryName = rankDict[category as keyof typeof rankDict];
       const catNameCapitalized = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
       // log.debug(`[${PREFIX}] Proper name: ${catNameCapitalized}`);
-      value.forEach((user) => {
+      value.forEach(user => {
         // log.debug(`[${PREFIX}] user.id: ${user.id}`);
         // log.debug(`[${PREFIX}] row: ${row}`);
         if (rowName !== catNameCapitalized && rowName !== '') {

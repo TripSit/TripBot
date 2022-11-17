@@ -16,7 +16,7 @@ export const dDrug: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('drug')
     .setDescription('Check substance information')
-    .addStringOption((option) => option.setName('substance')
+    .addStringOption(option => option.setName('substance')
       .setDescription('Pick a substance!')
       .setRequired(true)
       .setAutocomplete(true)),
@@ -56,8 +56,8 @@ export const dDrug: SlashCommand = {
     }
 
     if (drugData.interactions) {
-      const dangerInt = drugData.interactions.filter((i) => i.status === 'Dangerous');
-      const dangerNames = dangerInt.map((i) => i.name);
+      const dangerInt = drugData.interactions.filter(i => i.status === 'Dangerous');
+      const dangerNames = dangerInt.map(i => i.name);
       if (dangerNames.length > 0) {
         embed.addFields({name: '**💀 Dangerous 🛑 Interactions 💀**', value: dangerNames.join(', '), inline: false});
       }
@@ -80,7 +80,7 @@ export const dDrug: SlashCommand = {
 
     // CROSS TOLLERANCE
     if (drugData.crossTolerances && drugData.crossTolerances.length >= 1) {
-      const crossToleranceMap = drugData.crossTolerances.map((crossTolerance) => {
+      const crossToleranceMap = drugData.crossTolerances.map(crossTolerance => {
         return crossTolerance[0].toUpperCase() + crossTolerance.substring(1);
       });
 
@@ -120,7 +120,7 @@ export const dDrug: SlashCommand = {
       }
       if (firstRowColumns < 3) {
         if (drugData.toxicity) {
-          const toxicityMap = drugData.toxicity.map((toxicity) => {
+          const toxicityMap = drugData.toxicity.map(toxicity => {
             return toxicity[0].toUpperCase() + toxicity.substring(1);
           });
           const toxicityString = toxicityMap.join(', ');
@@ -140,7 +140,7 @@ export const dDrug: SlashCommand = {
     // DOSAGE
     if (drugData.roas) {
       // Get a list of drug ROA names
-      const roaNames = drugData.roas.map((roa) => roa.name);
+      const roaNames = drugData.roas.map(roa => roa.name);
 
       // For HR reasons we prefer non-invasive methods
       if (roaNames.indexOf('Insufflated') > 0) {
@@ -176,7 +176,7 @@ export const dDrug: SlashCommand = {
         // log.debug(`[${PREFIX}] roaNames: ${roaNames}`);
 
         let dosageColumns = 0;
-        roaNames.forEach((roaName) => {
+        roaNames.forEach(roaName => {
           if (dosageColumns < 3) {
             const roaInfo = (drugData.roas as roaType[]).find((r:roaType) => r.name === roaName);
             if (!roaInfo) {
@@ -185,7 +185,7 @@ export const dDrug: SlashCommand = {
             };
             if (roaInfo.dosage) {
               let dosageString = '';
-              roaInfo.dosage.forEach((d) => {
+              roaInfo.dosage.forEach(d => {
                 dosageString += `${d.name}: ${d.value}\n`;
               });
               embed.addFields({name: `💊 Dosage (${roaName})`, value: dosageString, inline: true});
@@ -220,7 +220,7 @@ export const dDrug: SlashCommand = {
           if (!toxicityAdded) {
             if (firstRowColumns < 3) {
               if (drugData.toxicity) {
-                const toxicityMap = drugData.toxicity.map((toxicity) => {
+                const toxicityMap = drugData.toxicity.map(toxicity => {
                   return toxicity[0].toUpperCase() + toxicity.substring(1);
                 });
                 const toxicityString = toxicityMap.join(', ');
@@ -240,13 +240,13 @@ export const dDrug: SlashCommand = {
 
         // DURATION
         let durationColumns = 0;
-        roaNames.forEach((roaName) => {
+        roaNames.forEach(roaName => {
           if (durationColumns < 3) {
-            const roaInfo = drugData.roas.find((r) => r.name === roaName);
+            const roaInfo = drugData.roas.find(r => r.name === roaName);
             if (roaInfo) {
               if (roaInfo.duration) {
                 let durationString = '';
-                roaInfo.duration.forEach((d) => {
+                roaInfo.duration.forEach(d => {
                   durationString += `${d.name}: ${d.value}\n`;
                 });
                 embed.addFields({name: `⏳ Duration (${roaName})`, value: durationString, inline: true});
@@ -284,7 +284,7 @@ export const dDrug: SlashCommand = {
             // log.debug(`[${PREFIX}] toxicityAdded: ${toxicityAdded}`);
             if (durationColumns < 3) {
               if (drugData.toxicity) {
-                const toxicityMap = drugData.toxicity.map((toxicity) => {
+                const toxicityMap = drugData.toxicity.map(toxicity => {
                   return toxicity[0].toUpperCase() + toxicity.substring(1);
                 });
                 const toxicityString = toxicityMap.join(', ');
@@ -328,7 +328,7 @@ export const dDrug: SlashCommand = {
 
     if (!toxicityAdded) {
       if (drugData.toxicity) {
-        const toxicityMap = drugData.toxicity.map((toxicity) => {
+        const toxicityMap = drugData.toxicity.map(toxicity => {
           return toxicity[0].toUpperCase() + toxicity.substring(1);
         });
         const toxicityString = toxicityMap.join(', ');

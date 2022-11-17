@@ -65,7 +65,7 @@ export async function runTimer() {
           }
 
           // Determine the number of users currently online
-          const onlineCount = tripsitGuild.members.cache.filter((member) => {
+          const onlineCount = tripsitGuild.members.cache.filter(member => {
             return member.presence?.status !== undefined && member.presence?.status !== 'offline';
           }).size;
           // const onlineCount = 10;

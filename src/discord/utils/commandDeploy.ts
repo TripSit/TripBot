@@ -22,9 +22,9 @@ async function getCommands(commandType: string): Promise<SlashCommand[]> {
   const commandDir = path.join(__dirname, '../commands');
   const files = await fs.readdir(path.join(commandDir, commandType));
   return files
-    .filter((file) => file.endsWith('.ts') && !file.endsWith('index.ts'))
-    .map((file) => require(`${commandDir}/${commandType}/${file}`))
-    .map((command) => command[Object.keys(command)[0]].data.toJSON());
+    .filter(file => file.endsWith('.ts') && !file.endsWith('index.ts'))
+    .map(file => require(`${commandDir}/${commandType}/${file}`))
+    .map(command => command[Object.keys(command)[0]].data.toJSON());
 }
 
 if (validateEnv()) {
@@ -36,11 +36,11 @@ if (validateEnv()) {
   );
 
   Promise.all([
-    getCommands('global').then((commands) => rest.put(
+    getCommands('global').then(commands => rest.put(
       Routes.applicationCommands(env.DISCORD_CLIENT_ID.toString()),
       {body: commands},
     )),
-    getCommands('guild').then((commands) => rest.put(
+    getCommands('guild').then(commands => rest.put(
       Routes.applicationGuildCommands(env.DISCORD_CLIENT_ID.toString(), env.DISCORD_GUILD_ID),
       {body: commands},
     )),
@@ -48,7 +48,7 @@ if (validateEnv()) {
     .then(() => {
       log.info('Commands successfully registered!');
     })
-    .catch((ex) => {
+    .catch(ex => {
       log.error('Error in registering commands:', ex);
       process.exit(1);
     });

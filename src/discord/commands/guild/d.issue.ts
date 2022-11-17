@@ -24,7 +24,7 @@ export const dIssue: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('issue')
     .setDescription('Create issue on github')
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setDescription('What type of issue is this?')
       .addChoices(
         {name: 'Bug/Problem', value: 'Bug'},
@@ -35,7 +35,7 @@ export const dIssue: SlashCommand = {
       )
       .setRequired(true)
       .setName('type'))
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setDescription('How important is this?')
       .addChoices(
         {name: 'Critical', value: 'P0: Critical'},
@@ -44,7 +44,7 @@ export const dIssue: SlashCommand = {
         {name: 'Low', value: 'P3: Low'},
       )
       .setName('priority'))
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setDescription('How much effort will this take?')
       .addChoices(
         {name: 'High', value: 'E0: High'},
@@ -83,7 +83,7 @@ export const dIssue: SlashCommand = {
     // Collect a modal submit interaction
     const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`issueModal`);
     interaction.awaitModalSubmit({filter, time: 0})
-      .then(async (i) => {
+      .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
         // log.debug(`[${PREFIX}] submitted!`);
 

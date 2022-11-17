@@ -23,10 +23,10 @@ export const bug: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('say')
     .setDescription('Say something like a real person!')
-    .addStringOption((option) => option.setName('say')
+    .addStringOption(option => option.setName('say')
       .setDescription('What do you want to say?')
       .setRequired(true))
-    .addChannelOption((option) => option
+    .addChannelOption(option => option
       .setDescription(`Where should I say it? (Default: 'here')`)
       .setName('channel'),
     ),

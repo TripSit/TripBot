@@ -27,7 +27,7 @@ export const voiceStateUpdate: voiceStateUpdateEvent = {
         name: `⛺│${New.member.displayName}'s tent`,
         type: ChannelType.GuildVoice,
         parent: env.CATEGORY_CAMPFIRE,
-      }).then((result) => {
+      }).then(result => {
         // log.debug(`[${PREFIX}] created a temporary voice channel for ${New.member?.displayName}`);
         New.member?.voice.setChannel(result.id);
         // log.debug(`[${PREFIX}] Moved ${New.member?.displayName} to the newly created voice channel`);
@@ -37,7 +37,7 @@ export const voiceStateUpdate: voiceStateUpdateEvent = {
     try {
       if (Old !== undefined) {
         const tempVoiceCategory = Old.guild.channels.cache.get(env.CATEGORY_CAMPFIRE) as CategoryChannel;
-        tempVoiceCategory.children.cache.forEach((channel) => {
+        tempVoiceCategory.children.cache.forEach(channel => {
           if (channel.type === ChannelType.GuildVoice) {
             if (channel.id !== env.CHANNEL_CAMPFIRE) {
               if (channel.members.size < 1) {

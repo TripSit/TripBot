@@ -29,7 +29,7 @@ export const guildMemberAdd: guildMemberAddEvent = {
 
     const newInvites = await member.guild.invites.fetch();
     const cachedInvites = global.guildInvites.get(member.guild.id);
-    const invite = newInvites.find((i) => <number>i.uses > cachedInvites.get(i.code));
+    const invite = newInvites.find(i => <number>i.uses > cachedInvites.get(i.code));
     let inviteInfo = '';
     if (invite) {
       const inviter = await client.users.fetch(invite.inviter?.id as UserResolvable);
@@ -40,7 +40,7 @@ export const guildMemberAdd: guildMemberAddEvent = {
     // log.debug(`[${PREFIX}] inviteInfo: ${inviteInfo}`);
     global.guildInvites.set(
       member.guild.id,
-      new Collection(newInvites.map((invite) => [invite.code, invite.uses])),
+      new Collection(newInvites.map(invite => [invite.code, invite.uses])),
     );
 
     await db<Users>('users')

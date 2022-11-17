@@ -37,7 +37,7 @@ export const messageReactionRemove: messageReactionRemoveEvent = {
       // log.debug(`[${PREFIX}] reaction is partial!`);
       // If the message this reaction belongs to was removed,
       // the fetching might result in an API error which should be handled
-      await reaction.fetch().catch((ex) => {
+      await reaction.fetch().catch(ex => {
         log.error(`[${PREFIX}] reaction3: ${JSON.stringify(ex, null, 4)}`);
       });
     }

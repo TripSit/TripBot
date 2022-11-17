@@ -22,17 +22,17 @@ export const calxDXM: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_dxm')
     .setDescription('Get DXM dosage information')
-    .addIntegerOption((option) => option.setName('calc_weight')
+    .addIntegerOption(option => option.setName('calc_weight')
       .setDescription('How much do you weigh?')
       .setRequired(true))
-    .addStringOption((option) => option.setName('units')
+    .addStringOption(option => option.setName('units')
       .setDescription('In what units?')
       .setRequired(true)
       .addChoices(
         {name: 'kg', value: 'kg'},
         {name: 'lbs', value: 'lbs'},
       ))
-    .addStringOption((option) => option.setName('taking')
+    .addStringOption(option => option.setName('taking')
     // eslint-disable-next-line max-len
       .setDescription('What are you taking? All products listed here contain DXM hBr as the sole active ingredient.')
       .setRequired(true)
@@ -69,7 +69,7 @@ export const calxDXM: SlashCommand = {
       .setTitle(`DXM Dosages`)
       .setDescription(`For a ${givenWeight}${weightUnits} individual taking ${taking}`);
     let header = true;
-    Object.keys(dosageData).forEach((key) => {
+    Object.keys(dosageData).forEach(key => {
       embed.addFields(
         {name: `${header ? 'Plateau' : '\u200B'}`, value: `**${key}**`, inline: true},
         {name: `${header ? 'Minimum' : '\u200B'}`, value: `${dosageData[key as keyof DxmDataType].min} ${units}`, inline: true},

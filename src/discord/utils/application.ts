@@ -92,7 +92,7 @@ export async function applicationStart(
   // Collect a modal submit interaction
   const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`applicationSubmit`);
   interaction.awaitModalSubmit({filter, time: 0})
-    .then(async (i) => {
+    .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       if (!i.guild) {
         // log.debug(`[${PREFIX}] no guild!`);
@@ -238,7 +238,7 @@ export async function applicationStart(
 
       applicationThread.send(`Hey ${actorHasRoleDeveloper ? 'team!' : roleReviewer} there is a new application!`);
       await applicationThread.send({embeds: [appEmbed], components: [approveButton, rejectMenu]})
-        .then(async (message) => {
+        .then(async message => {
           await message.react('👍');
           await message.react('👎');
         });

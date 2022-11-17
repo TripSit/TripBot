@@ -12,7 +12,7 @@ export const dbreathe: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('breathe')
     .setDescription('Remember to breathe')
-    .addStringOption((option) => option.setName('exercise')
+    .addStringOption(option => option.setName('exercise')
       .setDescription('Which exercise?')
       .addChoices(
         {name: '1', value: '1'},

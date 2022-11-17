@@ -66,7 +66,7 @@ export const ping: SlashCommand = {
       // Collect a modal submit interaction
       const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`testModal`);
       interaction.awaitModalSubmit({filter, time: 0, dispose: true})
-        .then(async (i) => {
+        .then(async i => {
           if (i.customId.split('~')[1] !== interaction.id) return;
           const test = i.fields.getTextInputValue('test');
           interaction.reply({content: test, ephemeral: true});
@@ -74,7 +74,7 @@ export const ping: SlashCommand = {
     }
 
     if (command === 'role check') {
-      const role = interaction.guild.roles.cache.find((r) => r.name === 'TripBot');
+      const role = interaction.guild.roles.cache.find(r => r.name === 'TripBot');
 
       if (env.DISCORD_CLIENT_ID) {
         const user = await interaction.client.users.fetch(env.DISCORD_CLIENT_ID) as User;

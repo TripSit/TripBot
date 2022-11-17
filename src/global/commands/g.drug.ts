@@ -13,13 +13,13 @@ export async function drug(drugName:string):Promise<CbSubstance | null> {
     return null;
   }
 
-  let drugData = (drugDataAll as CbSubstance[]).find((drug) => drug.name === drugName);
+  let drugData = (drugDataAll as CbSubstance[]).find(drug => drug.name === drugName);
   // log.debug(`[${PREFIX}] drugData1: ${JSON.stringify(drugData, null, 2)}`);
   if (!drugData) {
-    drugData = (drugDataAll as CbSubstance[]).find((drug) => drug.name === drugName.toLowerCase());
+    drugData = (drugDataAll as CbSubstance[]).find(drug => drug.name === drugName.toLowerCase());
     // log.debug(`[${PREFIX}] drugData2: ${JSON.stringify(drugData, null, 2)}`);
     if (!drugData) {
-      drugData = (drugDataAll as CbSubstance[]).find((drug) => drug.name === drugName.toUpperCase());
+      drugData = (drugDataAll as CbSubstance[]).find(drug => drug.name === drugName.toUpperCase());
       // log.debug(`[${PREFIX}] drugData3: ${JSON.stringify(drugData, null, 2)}`);
       if (!drugData) {
         return null;
