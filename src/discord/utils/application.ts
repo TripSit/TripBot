@@ -250,8 +250,7 @@ export async function applicationStart(
         .setColor(Colors.DarkBlue)
         .setDescription('Thank you for your interest! We will try to get back to you as soon as possible!');
       i.reply({embeds: [embed], ephemeral: true});
-    })
-    .catch(console.error);
+    });
 };
 
 /**

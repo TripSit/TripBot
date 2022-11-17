@@ -1,30 +1,35 @@
-export const validateEnv = () => {
-  if (!process.env.GITHUB_TOKEN) {
-    console.warn(`Missing GITHUB_TOKEN: You wont be able to use /issue`);
-  }
+import log from '../../global/utils/log';
 
-  if (!process.env.RAPID_TOKEN) {
-    console.warn(`Missing RAPID_TOKEN: You wont be able to use /joke`);
+export const validateEnv = () => {
+  if (!process.env.DISCORD_CLIENT_TOKEN) {
+    log.error(`Missing DISCORD_CLIENT_TOKEN: You wont be able to login to discord.`);
+    return false;
   }
 
   if (!process.env.DISCORD_CLIENT_ID) {
-    console.warn(`Missing DISCORD_CLIENT_ID: You wont be able to login to discord.`);
+    log.error(`Missing DISCORD_CLIENT_ID: You wont be able to login to discord.`);
+    return false;
   }
 
   if (!process.env.DISCORD_CLIENT_SECRET) {
-    console.warn(`Missing DISCORD_CLIENT_SECRET: You wont be able to login to discord.`);
+    log.error(`Missing DISCORD_CLIENT_SECRET: You wont be able to login to discord.`);
+    return false;
+  }
+
+  if (!process.env.GITHUB_TOKEN) {
+    log.warn(`Missing GITHUB_TOKEN: You wont be able to use /issue`);
+  }
+
+  if (!process.env.RAPID_TOKEN) {
+    log.warn(`Missing RAPID_TOKEN: You wont be able to use /joke`);
   }
 
   // if (!process.env.DISCORD_CLIENT_REDIRECT_URI) {
-  //   console.warn(`Missing DISCORD_CLIENT_REDIRECT_URI: You wont be able to login to discord.`);
+  //   log.warn(`Missing DISCORD_CLIENT_REDIRECT_URI: You wont be able to login to discord.`);
   // }
 
-  if (!process.env.DISCORD_CLIENT_TOKEN) {
-    console.warn(`Missing DISCORD_CLIENT_TOKEN: You wont be able to login to discord.`);
-  }
-
   // if (!process.env.IRC_PASSWORD) {
-  //   console.warn(`Missing IRC_PASSWORD: You wont be able to login to IRC.`);
+  //   log.warn(`Missing IRC_PASSWORD: You wont be able to login to IRC.`);
   // }
 
   return true;

@@ -7,14 +7,11 @@ import {
 } from 'discord-api-types/v10';
 import fs from 'fs/promises';
 import env from '../../global/utils/env.config';
+import {validateEnv} from '../../global/utils/env.validate';
 import path from 'path';
 import log from '../../global/utils/log';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
-
-log.debug(`[${PREFIX}] discordClientId: ${env.DISCORD_CLIENT_ID}`);
-// log.debug(`[${PREFIX}] discordToken: ${env.DISCORD_CLIENT_TOKEN}`);
-log.debug(`[${PREFIX}] discordGuildId: ${env.DISCORD_GUILD_ID}`);
 
 
 /**
@@ -30,24 +27,30 @@ async function getCommands(commandType: string): Promise<SlashCommand[]> {
     .map((command) => command[Object.keys(command)[0]].data.toJSON());
 }
 
-const rest = new REST({version: '9'}).setToken(
-  env.DISCORD_CLIENT_TOKEN as string,
-);
+if (validateEnv()) {
+  log.debug(`[${PREFIX}] discordClientId: ${env.DISCORD_CLIENT_ID}`);
+  log.debug(`[${PREFIX}] discordGuildId: ${env.DISCORD_GUILD_ID}`);
 
-Promise.all([
-  getCommands('global').then((commands) => rest.put(
-    Routes.applicationCommands(env.DISCORD_CLIENT_ID.toString()),
-    {body: commands},
-  )),
-  getCommands('guild').then((commands) => rest.put(
-    Routes.applicationGuildCommands(env.DISCORD_CLIENT_ID.toString(), env.DISCORD_GUILD_ID),
-    {body: commands},
-  )),
-])
-  .then(() => {
-    console.log('Commands successfully registered!');
-  })
-  .catch((ex) => {
-    console.error('Error in registering commands:', ex);
-    process.exit(1);
-  });
+  const rest = new REST({version: '9'}).setToken(
+    env.DISCORD_CLIENT_TOKEN as string,
+  );
+
+  Promise.all([
+    getCommands('global').then((commands) => rest.put(
+      Routes.applicationCommands(env.DISCORD_CLIENT_ID.toString()),
+      {body: commands},
+    )),
+    getCommands('guild').then((commands) => rest.put(
+      Routes.applicationGuildCommands(env.DISCORD_CLIENT_ID.toString(), env.DISCORD_GUILD_ID),
+      {body: commands},
+    )),
+  ])
+    .then(() => {
+      log.info('Commands successfully registered!');
+    })
+    .catch((ex) => {
+      log.error('Error in registering commands:', ex);
+      process.exit(1);
+    });
+}
+

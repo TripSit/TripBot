@@ -478,8 +478,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
         },
       );
       i.reply({content: 'Donezo!', ephemeral: true});
-    })
-    .catch(console.error);
+    });
 }
 
 /**

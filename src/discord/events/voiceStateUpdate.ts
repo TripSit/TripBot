@@ -22,7 +22,7 @@ export const voiceStateUpdate: voiceStateUpdateEvent = {
     // log.debug(`[${PREFIX}] Tempvoice channel is is ${env.CHANNEL_CAMPFIRE}`);
 
     if (New.channelId === env.CHANNEL_CAMPFIRE) {
-      console.log('user joinded tempvoice');
+      // log.debug('user joinded tempvoice');
       New.member?.guild.channels.create({
         name: `⛺│${New.member.displayName}'s tent`,
         type: ChannelType.GuildVoice,
