@@ -185,22 +185,17 @@ If they still need help it's okay to leave them with that role.`;
 
   // For each role in targetRoles2, add it to the target
   if (targetRoles) {
-    targetRoles.forEach((roleId) => {
+    targetRoles.forEach(async (roleId) => {
       log.debug(`[${PREFIX}] Re-adding roleId: ${roleId}`);
       const roleObj = interaction.guild!.roles.cache.find((r) => r.id === roleId) as Role;
       if (!ignoredRoles.includes(roleObj.id) && roleObj.name !== '@everyone') {
         log.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.nickname || target.user.username}`);
-        try {
-          target.roles.add(roleObj);
-        } catch (err) {
-          log.error(`[${PREFIX}] Error adding role ${roleObj.name} to ${target.nickname || target.user.username}`);
-          log.error(err);
-        }
+        await target.roles.add(roleObj);
       }
     });
   }
 
-  target.roles.remove(roleNeedshelp!);
+  await target.roles.remove(roleNeedshelp!);
   log.debug(`[${PREFIX}] Removed ${roleNeedshelp!.name} from ${target.nickname || target.user.username}`);
 
   let endHelpMessage = stripIndents`Hey ${target}, we're glad you're doing better!
@@ -212,12 +207,7 @@ If they still need help it's okay to leave them with that role.`;
     endHelpMessage = testNotice + endHelpMessage;
   }
 
-  try {
-    threadHelpUser.send(endHelpMessage);
-  } catch (err) {
-    log.error(`[${PREFIX}] Error sending end help message to ${threadHelpUser}`);
-    log.error(err);
-  }
+  await threadHelpUser.send(endHelpMessage);
 
   let message:Message;
   await threadHelpUser.send(stripIndents`

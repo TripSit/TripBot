@@ -22,7 +22,7 @@ export async function removeDuplicates(reaction:MessageReaction, user:User) {
   if (reaction.message.channelId === env.CHANNEL_START.toString() && !user.bot) {
     // This is slow as fuck, but it works
     // If we're in the start-here channel, and the user who reacted is not a bot
-    await reaction.message.reactions.cache.forEach(async (x) => {
+    reaction.message.reactions.cache.forEach(async (x) => {
       // Loop through each reaction in the message
       // log.debug(`[${PREFIX}] x.emoji.name: ${x.emoji.name}`);
       // log.debug(`[${PREFIX}] r.emoji.name: ${reaction.emoji.name}`);
