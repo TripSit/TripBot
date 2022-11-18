@@ -21,7 +21,7 @@ export const calxDXM: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('calc_dxm')
     .setDescription('Get DXM dosage information')
-    .addIntegerOption((option) => option.setName('calc_weight')
+    .addNumberOption((option) => option.setName('calc_weight')
       .setDescription('How much do you weigh?')
       .setRequired(true))
     .addStringOption((option) => option.setName('units')
@@ -46,7 +46,7 @@ export const calxDXM: SlashCommand1 = {
       )),
   async execute(interaction) {
     // Calculate each plat min/max value
-    const givenWeight = interaction.options.getInteger('calc_weight')!;
+    const givenWeight = interaction.options.getNumber('calc_weight')!;
     const weightUnits = interaction.options.getString('units')!;
     const taking = interaction.options.getString('taking')!;
 
