@@ -63,6 +63,7 @@ export const uBan: UserCommand = {
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async (i) => {
         if (i.customId.split('~')[1] !== interaction.id) return;
+        i.deferReply();
         const privReason = i.fields.getTextInputValue('privReason');
         const pubReason = i.fields.getTextInputValue('pubReason');
         const durationInput = i.fields.getTextInputValue('duration');
@@ -73,6 +74,14 @@ export const uBan: UserCommand = {
         if (Number.isNaN(days) || days < 0 || days > 7) {
           i.reply({ content: 'Invalid number of days given', ephemeral: true });
           return;
+<<<<<<< HEAD
+=======
+        } else {
+          duration = durationInput ?
+            await parseDuration(`${days} days`) :
+            0;
+          // log.debug(`[${PREFIX}] duration: ${duration}`);
+>>>>>>> dee4fc26a25e61922ace31369c0451b2b4f1d4ab
         }
         duration = duration
           ? await parseDuration(`${durationInput} days`)
@@ -88,8 +97,7 @@ export const uBan: UserCommand = {
           duration,
         );
 
-        // log.debug(`[${PREFIX}] Result: ${result}`);
-        i.reply(result);
+        i.editReply(result);
       });
     return true;
   },

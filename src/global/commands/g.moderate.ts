@@ -23,6 +23,8 @@ import {
   UserActions,
   UserActionType,
 } from '../@types/pgdb';
+import { last } from './g.last';
+
 import env from '../utils/env.config';
 import log from '../utils/log';
 
@@ -176,6 +178,8 @@ export async function moderate(
   const actorData = await getUser(actor.id, null);
   const targetData = await getUser(target.id, null);
 
+  let extraMessage = '';
+
   let actionData = {
     id: undefined as string | undefined,
     user_id: targetData.id,
@@ -225,8 +229,13 @@ export async function moderate(
   } else if (command === 'FULL_BAN') {
     actionData.type = 'FULL_BAN' as UserActionType;
     try {
-      const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       const deleteMessageValue = duration ?? 0;
+      if (deleteMessageValue > 0) {
+        log.debug(`[${PREFIX}] I am deleting ${deleteMessageValue} days of messages!`);
+        const response = await last(target);
+        extraMessage = `${target.displayName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`;
+      }
+      const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       // log.debug(`[${PREFIX}] Days to delete: ${deleteMessageValue}`);
       targetGuild.members.ban(target, { deleteMessageSeconds: deleteMessageValue, reason: privReason ?? 'No reason provided' });
     } catch (err) {
@@ -345,8 +354,8 @@ export async function moderate(
   log.debug(`[${PREFIX}] targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
 
   const modlogEmbed = embedTemplate()
-  // eslint-disable-next-line
-    .setTitle(`${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} (${target.user.tag})${duration ? ` for ${ms(duration, {long: true})}` : ''}`)
+    // eslint-disable-next-line
+    .setTitle(`${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} (${target.user.tag})${duration && command === 'TIMEOUT' ? ` for ${ms(duration, {long: true})}` : ''}`)
     .setDescription(stripIndents`
     **PrivReason:** ${privReason ?? 'No reason provided'}
     ${pubReason ? `**PubReason:** ${pubReason}` : ''}
@@ -387,6 +396,9 @@ export async function moderate(
     const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
     modChan.send({ content: `${command !== 'NOTE' ? `Hey ${roleModerator}` : ''}`, embeds: [modlogEmbed] });
     // log.debug(`[${PREFIX}] sent a message to the moderators room`);
+    if (extraMessage) {
+      await modChan.send({ content: extraMessage });
+    }
   }
 
   // If this is the info command then return with info
