@@ -24,13 +24,13 @@ addColors({
 });
 
 const myFormat = printf(({
-  level, message, time, stack, ...metadata
+  level, message, timestamp, stack, ...metadata // eslint-disable-line
 }) => {
   let msg = '';
   if (env.NODE_ENV === 'production') {
     msg += '(Prd) ';
   } else {
-    msg += `(Dev) ${time} `;
+    msg += `(Dev) ${timestamp} `;
   }
 
   // This makes it so that the logs look nice and even

@@ -20,10 +20,13 @@ const PREFIX = parse(__filename).name;
 async function getCommands(commandType: string): Promise<SlashCommand[]> {
   const commandDir = path.join(__dirname, '../commands');
   const files = await fs.readdir(path.join(commandDir, commandType));
+  // log.debug(`[${PREFIX}] ${commandType} command files: ${files}`);
   return files
     .filter((file) => file.endsWith('.ts') && !file.endsWith('index.ts'))
-    .map((file) => require(`${commandDir}/${commandType}/${file}`)) // eslint-disable-line
-    .map((command) => command[Object.keys(command)[0]].data.toJSON());
+    .map((file) =>
+      // log.debug(`[${PREFIX}] ${commandType} command file: ${file}`);
+       require(`${commandDir}/${commandType}/${file}`)) // eslint-disable-line
+    .map((command) => command[Object.keys(command).find((key) => command[key].data !== undefined) as string].data.toJSON());
 }
 
 if (validateEnv()) {
