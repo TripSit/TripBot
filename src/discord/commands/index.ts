@@ -1,7 +1,9 @@
 import { Client, Collection } from 'discord.js';
 import fs from 'fs/promises';
 import path from 'path';
+
 // import log from '../../global/utils/log';
+// import { parse } from 'path';
 // const PREFIX = parse(__filename).name;
 
 export default registerCommands;
@@ -26,9 +28,10 @@ export async function registerCommands(client: Client): Promise<void> {
       .map((file) => require(`${commandDir}/${commandType}/${file}`)) // eslint-disable-line global-require, import/no-dynamic-require, max-len
       .forEach((command) => {
         // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
-        const fileName = Object.keys(command)[0];
-        const functionName = command[fileName].data.name;
-        client.commands.set(functionName, command[fileName]);
+        const goodKey = Object.keys(command).find((key) => command[key].data !== undefined) as string;
+        // const fileName = Object.keys(command)[0];
+        const functionName = command[goodKey].data.name;
+        client.commands.set(functionName, command[goodKey]);
       });
   }
   Promise.all([registerType('global'), registerType('guild')]);

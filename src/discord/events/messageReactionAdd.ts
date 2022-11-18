@@ -44,7 +44,7 @@ export const messageReactionAdd: MessageReactionAddEvent = {
 
     handleReactionRoles(messageReaction, user, true);
     chitragupta(messageReaction, user, 1);
-    bestOf(messageReaction, user);
+    bestOf(messageReaction);
     // await communityMod(reaction, user);
   },
 };

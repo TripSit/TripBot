@@ -48,6 +48,7 @@ export async function leaderboard(
     let userExperience = await db<UserExperience>('user_experience')
       .select(
         db.ref('user_id'),
+        db.ref('level'),
       )
       .groupBy(['user_id'])
       .sum({ total_points: 'total_points' })
