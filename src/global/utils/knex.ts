@@ -35,9 +35,9 @@ export async function getUser(
       .first();
     // log.debug(`[${PREFIX}] data1: ${JSON.stringify(data, null, 2)}`);
     if (data === undefined) {
-      data = (await db<Users>('users')
+      [data] = (await db<Users>('users')
         .insert({ discord_id: discordId })
-        .returning('*'))[0];
+        .returning('*'));
       // log.debug(`[${PREFIX}] data2: ${JSON.stringify(data, null, 2)}`);
     }
   }
@@ -64,9 +64,9 @@ export async function getGuild(guildId:string) {
     .where('id', guildId)
     .first();
   if (!data) {
-    data = (await db<DiscordGuilds>('discord_guilds')
+    [data] = (await db<DiscordGuilds>('discord_guilds')
       .insert({ id: guildId })
-      .returning('*'))[0];
+      .returning('*'));
   }
   return data as DiscordGuilds;
 }

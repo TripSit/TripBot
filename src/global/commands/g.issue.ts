@@ -24,7 +24,7 @@ export async function issue(
    * This needs to be in a separate function cuz it's not async
    */
   async function getResults():Promise<OctokitResponse<Issue>> {
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve, reject) => { // eslint-disable-line no-async-promise-executor
       // Use octokit to create an issue
       const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
       await octokit.rest.issues.create({

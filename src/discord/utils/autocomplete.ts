@@ -104,7 +104,7 @@ export async function autocomplete(interaction:AutocompleteInteraction):Promise<
     const drugNames = Object.keys(drugDataTripsit);
     const benzoNames = drugNames.filter((drugName) => {
       const props = drugDataTripsit[drugName as keyof typeof drugDataTripsit].properties;
-      return props.hasOwnProperty('dose_to_diazepam');
+      return Object.prototype.hasOwnProperty.call(props, 'dose_to_diazepam');
     });
 
     // log.debug(`[${PREFIX}] benzoNames: ${benzoNames}`);
@@ -114,7 +114,7 @@ export async function autocomplete(interaction:AutocompleteInteraction):Promise<
         name: drugName,
         aliases: [] as string[],
       };
-      if (drugDataTripsit[drugName as keyof typeof drugDataTripsit].hasOwnProperty('aliases')) {
+      if (Object.prototype.hasOwnProperty.call(drugDataTripsit[drugName as keyof typeof drugDataTripsit], 'aliases')) {
         // @ts-ignore
         drugObj.aliases = drugDataTripsit[drugName as keyof typeof drugDataTripsit].aliases;
       }

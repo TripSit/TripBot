@@ -167,7 +167,7 @@ export async function idose(
       // log.debug(`[${PREFIX}] doseDate: ${doseDate}`);
       const timeVal = DateTime.fromISO(doseDate);
       const drugId = dose.drug_id;
-      const drugName = (await db<DrugNames>('drug_names')
+      const drugName = (await db<DrugNames>('drug_names') // eslint-disable-line no-await-in-loop
         .select(db.ref('name'))
         .where('drug_id', drugId)
         .andWhere('is_default', true))[0].name;

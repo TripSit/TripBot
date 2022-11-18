@@ -62,10 +62,10 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
         let differenceId = '';
         let action = '';
         if (rolesAdded.length > 0) {
-          differenceId = rolesAdded[0];
+          [differenceId] = rolesAdded;
           action = 'added';
         } else if (rolesRemoved.length > 0) {
-          differenceId = rolesRemoved[0];
+          [differenceId] = rolesRemoved;
           action = 'removed';
         }
 

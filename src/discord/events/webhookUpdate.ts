@@ -22,7 +22,7 @@ export const webhookUpdate: WebhookUpdateEvent = {
 
     const fetchedLogs = await channel.guild.fetchAuditLogs({
       limit: 1,
-      type: AuditLogEvent.WebhookUpdate | AuditLogEvent.WebhookCreate | AuditLogEvent.WebhookDelete,
+      type: AuditLogEvent.WebhookUpdate || AuditLogEvent.WebhookCreate || AuditLogEvent.WebhookDelete,
     });
 
     // Since there's only 1 audit log entry in this collection, grab the first one

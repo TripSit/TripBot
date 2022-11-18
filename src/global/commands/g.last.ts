@@ -7,11 +7,14 @@ import {
 import {
   ChannelType,
 } from 'discord-api-types/v10';
-import {stripIndents} from 'common-tags';
+import { stripIndents } from 'common-tags';
 // import env from '../utils/env.config';
-import logger from '../utils/logger';
 import * as path from 'path';
+import log from '../utils/log';
+
 const PREFIX = path.parse(__filename).name;
+
+export default last;
 
 /**
  * {interaction} interaction
@@ -25,14 +28,14 @@ export async function last(
     messageCount: number;
     totalMessages: number;
   }> {
-  // logger.debug(`[${PREFIX}] started!`);
+  // log.debug(`[${PREFIX}] started!`);
   // This function will find all messages sent by the user in all channels
   // and return an array of messages
   const guild = target.guild as Guild;
   let totalMessages = 0;
   const messageInfo = [] as any[];
 
-  return await new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve) => { // eslint-disable-line
     await guild.channels.fetch()
       .then(async (channels) => {
         await Promise.all(
@@ -54,10 +57,10 @@ export async function last(
                   });
                 });
             }
-          },
-          ))
+          }),
+        )
           .then(async () => {
-            logger.debug(`[${PREFIX}] messageInfo: ${JSON.stringify(messageInfo, null, 2)}`);
+            log.debug(`[${PREFIX}] messageInfo: ${JSON.stringify(messageInfo, null, 2)}`);
             if (messageInfo.length === 0) {
               resolve({
                 lastMessage: 'No messages found',
@@ -87,7 +90,7 @@ export async function last(
               // log.debug(`[${PREFIX}] messageStringTemp: ${messageStringTemp}`);
               // log.debug(`[${PREFIX}] size: ${messageString.length + messageStringTemp.length}`);
               if (messageString.length + messageStringTemp.length < 1950) {
-                messageStringIndex++;
+                messageStringIndex += 1;
                 messageString += messageStringTemp;
               }
             });
@@ -100,9 +103,9 @@ export async function last(
               lastMessage: lastMessageText,
               messageList: messageString,
               messageCount: messageStringIndex,
-              totalMessages: totalMessages,
+              totalMessages,
             });
           });
       });
   });
-};
+}
