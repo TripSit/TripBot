@@ -74,17 +74,10 @@ export const uBan: UserCommand = {
         if (Number.isNaN(days) || days < 0 || days > 7) {
           i.reply({ content: 'Invalid number of days given', ephemeral: true });
           return;
-<<<<<<< HEAD
-=======
-        } else {
-          duration = durationInput ?
-            await parseDuration(`${days} days`) :
-            0;
-          // log.debug(`[${PREFIX}] duration: ${duration}`);
->>>>>>> dee4fc26a25e61922ace31369c0451b2b4f1d4ab
         }
-        duration = duration
-          ? await parseDuration(`${durationInput} days`)
+
+        duration = durationInput
+          ? await parseDuration(`${days} days`)
           : 0;
         // log.debug(`[${PREFIX}] duration: ${duration}`);
 
