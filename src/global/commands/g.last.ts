@@ -8,10 +8,10 @@ import {
   ChannelType,
 } from 'discord-api-types/v10';
 import {stripIndents} from 'common-tags';
-// import logger from '../utils/logger';
 // import env from '../utils/env.config';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import logger from '../utils/logger';
+import * as path from 'path';
+const PREFIX = path.parse(__filename).name;
 
 /**
  * {interaction} interaction
@@ -57,20 +57,33 @@ export async function last(
           },
           ))
           .then(async () => {
-          // Sort the messages by timestamp
+            logger.debug(`[${PREFIX}] messageInfo: ${JSON.stringify(messageInfo, null, 2)}`);
+            if (messageInfo.length === 0) {
+              resolve({
+                lastMessage: 'No messages found',
+                messageList: 'No messages found',
+                messageCount: 0,
+                totalMessages: 0,
+              });
+              return;
+            }
+
+            // Sort the messages by timestamp
             messageInfo.sort((a, b) => a.timestamp - b.timestamp);
 
+            // Get the most recent message
             const lastMessage = messageInfo[messageInfo.length - 1];
-
             const lastMessageText = stripIndents`
           **${target.displayName}'s** last message was:
            ${time(lastMessage.timestamp, 'd')} ${lastMessage.channel}: ${lastMessage.content}`;
 
+            // Reverse the order: Display most recent messages first
             messageInfo.reverse();
             let messageString = '';
             let messageStringIndex = 0;
             messageInfo.forEach((message) => {
               const messageStringTemp = `${time(message.timestamp, 'd')} ${message.channel}: ${message.content}\n`;
+              // const messageUrl = `https://discord.com/channels/${guild.id}/${message.channel.id}/${message.id}`;
               // log.debug(`[${PREFIX}] messageStringTemp: ${messageStringTemp}`);
               // log.debug(`[${PREFIX}] size: ${messageString.length + messageStringTemp.length}`);
               if (messageString.length + messageStringTemp.length < 1950) {
