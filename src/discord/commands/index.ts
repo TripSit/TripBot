@@ -4,6 +4,8 @@ import path from 'path';
 // import log from '../../global/utils/log';
 // const PREFIX = parse(__filename).name;
 
+export default registerCommands;
+
 /**
  * @param {client} client The discord client
  * @return {Promise<Command[]>} The list of commands
@@ -32,5 +34,3 @@ export async function registerCommands(client: Client): Promise<void> {
   Promise.all([registerType('global'), registerType('guild')]);
   // .then(() => log.debug(`[${PREFIX}] command loaded!`));
 }
-
-export default registerCommands(client);

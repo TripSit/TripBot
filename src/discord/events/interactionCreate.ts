@@ -47,7 +47,7 @@ export const interactionCreate: InteractionCreateEvent = {
     }
 
     if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
-      autocomplete(interaction, client);
+      autocomplete(interaction);
       return;
     }
 
@@ -57,7 +57,7 @@ export const interactionCreate: InteractionCreateEvent = {
         return;
       }
       if (interaction.isSelectMenu()) {
-        selectMenu(interaction, client);
+        selectMenu(interaction);
         return;
       }
       if (interaction.isButton()) {

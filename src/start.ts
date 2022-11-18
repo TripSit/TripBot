@@ -3,7 +3,6 @@ import { Guild, TextChannel } from 'discord.js';
 import { discordConnect } from './discord/dscrd';
 import { validateEnv } from './global/utils/env.validate';
 import { runTimer } from './global/utils/timer';
-import { webserverConnect } from './webserver/webserverAPI';
 
 import env from './global/utils/env.config';
 
@@ -18,9 +17,6 @@ global.bootTime = new Date();
 async function start() {
   log.info(`[${PREFIX}] Initializing service!`);
   if (!validateEnv()) return;
-  if (env.NODE_ENV === 'production') {
-    webserverConnect();
-  }
 
   if (env.DISCORD_CLIENT_TOKEN) {
     discordConnect();
