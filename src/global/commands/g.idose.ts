@@ -1,14 +1,17 @@
-import {db, getUser} from '../../global/utils/knex';
-import {DateTime} from 'luxon';
+import { DateTime } from 'luxon';
+import { parse } from 'path';
+import { db, getUser } from '../utils/knex';
 import {
   UserDrugDoses,
   DrugNames,
   DrugRoa,
   DrugMassUnit,
-} from '../../global/@types/pgdb.d';
+} from '../@types/pgdb.d';
 import log from '../utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default idose;
 
 /**
  *
@@ -83,37 +86,36 @@ export async function idose(
     if (record === undefined || record === null) {
       return [{
         name: 'Error',
-        value: `That record does not exist!`,
+        value: 'That record does not exist!',
       }];
-    } else {
-      const recordId = record.id;
-      const doseDate = data[recordNumber].created_at.toISOString();
-      // log.debug(`[${PREFIX}] doseDate: ${doseDate}`);
-      const timeVal = DateTime.fromISO(doseDate);
-      const drugId = record.drug_id;
-      const drugName = (await db<DrugNames>('drug_names')
-        .select(db.ref('name'))
-        .where('drug_id', drugId)
-        .andWhere('is_default', true))[0].name;
-      const route = record.route.charAt(0).toUpperCase() + record.route.slice(1).toLowerCase();
+    }
+    const recordId = record.id;
+    const doseDate = data[recordNumber].created_at.toISOString();
+    // log.debug(`[${PREFIX}] doseDate: ${doseDate}`);
+    const timeVal = DateTime.fromISO(doseDate);
+    const drugId = record.drug_id;
+    const drugName = (await db<DrugNames>('drug_names')
+      .select(db.ref('name'))
+      .where('drug_id', drugId)
+      .andWhere('is_default', true))[0].name;
+    const route = record.route.charAt(0).toUpperCase() + record.route.slice(1).toLowerCase();
 
-      // log.debug(`[${PREFIX}] I deleted:
-      // (${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}
-      // ${record.dose} ${record.units} of ${drugName} ${route}
-      // `);
+    // log.debug(`[${PREFIX}] I deleted:
+    // (${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}
+    // ${record.dose} ${record.units} of ${drugName} ${route}
+    // `);
 
-      await db<UserDrugDoses>('user_drug_doses')
-        .where('id', recordId)
-        .del();
+    await db<UserDrugDoses>('user_drug_doses')
+      .where('id', recordId)
+      .del();
 
-      response = [{
-        name: 'Success',
-        value: `I deleted:
+    response = [{
+      name: 'Success',
+      value: `I deleted:
         > **(${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}**
         > ${record.dose} ${record.units} of ${drugName} ${route}
         `,
-      }];
-    }
+    }];
   }
   if (command === 'get') {
     const userData = await getUser(userId, null);
@@ -226,7 +228,7 @@ export async function idose(
         drug_id: drugId,
         route: roa,
         dose: volume,
-        units: units,
+        units,
         created_at: date,
       });
     response = [{

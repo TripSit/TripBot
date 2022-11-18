@@ -7,7 +7,7 @@ import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
 import {
-  channelPinsUpdateEvent,
+  ChannelPinsUpdateEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 // import logger from '../../global/utils/logger';
@@ -16,7 +16,9 @@ import env from '../../global/utils/env.config';
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const channelPinsUpdate: channelPinsUpdateEvent = {
+export default channelPinsUpdate;
+
+export const channelPinsUpdate: ChannelPinsUpdateEvent = {
   name: 'channelPinsUpdate',
   async execute(channel) {
     // Dont run on DMs

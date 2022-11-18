@@ -4,13 +4,15 @@ import {
 import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
-import {webhookUpdateEvent} from '../@types/eventDef';
+import { WebhookUpdateEvent } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
 
-export const webhookUpdate: webhookUpdateEvent = {
+export default webhookUpdate;
+
+export const webhookUpdate: WebhookUpdateEvent = {
   name: 'webhookUpdate',
   async execute(channel) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
@@ -26,7 +28,6 @@ export const webhookUpdate: webhookUpdateEvent = {
     // Since there's only 1 audit log entry in this collection, grab the first one
     const auditLog = fetchedLogs.entries.first();
 
-
     const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
 
     // Perform a coherence check to make sure that there's *something*
@@ -39,10 +40,10 @@ export const webhookUpdate: webhookUpdateEvent = {
 
     if (auditLog.executor) {
       response = `Webhook **${channel.toString()}** was updated by ${auditLog.executor.tag}:`;
-      response += `\n${auditLog.changes.map(change => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
+      response += `\n${auditLog.changes.map((change) => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
     } else {
       response = `Webhook ${channel.toString()} was updated, but the audit log was inconclusive.`;
-      response += `\n${auditLog.changes.map(change => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
+      response += `\n${auditLog.changes.map((change) => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
     }
 
     botlog.send(response);

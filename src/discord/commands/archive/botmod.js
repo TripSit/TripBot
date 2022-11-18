@@ -149,11 +149,11 @@ module.exports = {
       const targetData = targetResults[0];
 
       // Transform target guild info
-      if ('modActions' in targetData) {
-        targetData.discord.modActions[targetAction] = (
-          targetData.discord.modActions[targetAction] || 0) + 1;
+      if ('ModActions' in targetData) {
+        targetData.discord.ModActions[targetAction] = (
+          targetData.discord.ModActions[targetAction] || 0) + 1;
       } else {
-        targetData.discord.modActions = { [targetAction]: 1 };
+        targetData.discord.ModActions = { [targetAction]: 1 };
       }
       log.debug(`[${PREFIX}] target_data: ${JSON.stringify(targetData)}`);
 

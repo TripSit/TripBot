@@ -5,7 +5,7 @@ import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
 import {
-  emojiUpdateEvent,
+  EmojiUpdateEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 // import logger from '../../global/utils/logger';
@@ -14,7 +14,9 @@ import env from '../../global/utils/env.config';
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const emojiUpdate: emojiUpdateEvent = {
+export default emojiUpdate;
+
+export const emojiUpdate: EmojiUpdateEvent = {
   name: 'emojiUpdate',
   async execute(oldEmoji, newEmoji) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
@@ -42,10 +44,10 @@ export const emojiUpdate: emojiUpdateEvent = {
 
     if (auditLog.executor) {
       response = `Emoji **${newEmoji.toString()}** was updated by ${auditLog.executor.tag}:`;
-      response += `\n${auditLog.changes.map(change => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
+      response += `\n${auditLog.changes.map((change) => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
     } else {
       response = `Emoji ${newEmoji.toString()} was updated, but the audit log was inconclusive.`;
-      response += `\n${auditLog.changes.map(change => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
+      response += `\n${auditLog.changes.map((change) => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
     }
 
     botlog.send(response);

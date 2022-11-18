@@ -1,10 +1,13 @@
+import { parse } from 'path';
+import { stripIndents } from 'common-tags';
 import log from '../utils/log';
-import {parse} from 'path';
-const PREFIX = parse(__filename).name;
 
 import drugDataAll from '../assets/data/drug_db_combined.json';
 import comboDefs from '../assets/data/combo_definitions.json';
-import {stripIndents} from 'common-tags';
+
+const PREFIX = parse(__filename).name;
+
+export default combo;
 
 /**
  * combo data
@@ -34,7 +37,7 @@ export async function combo(
     };
   }
 
-  const drugData = drugDataAll.find(drug => drug.name === drugA);
+  const drugData = drugDataAll.find((drug) => drug.name === drugA);
 
   // log.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
 
@@ -57,7 +60,7 @@ export async function combo(
 
   // log.debug(`[${PREFIX}] interactions: ${drugData.interactions.length}`);
 
-  const drugInteraction = drugData.interactions.find(interaction => interaction.name === drugB);
+  const drugInteraction = drugData.interactions.find((interaction) => interaction.name === drugB);
 
   if (!drugInteraction) {
     return {
@@ -69,7 +72,7 @@ export async function combo(
 
   // log.debug(`[${PREFIX}] drugInteraction: ${drugInteraction}`);
 
-  const intDef = comboDefs.find(def => def.status === drugInteraction.status);
+  const intDef = comboDefs.find((def) => def.status === drugInteraction.status);
 
   // log.debug(`[${PREFIX}] intDef: ${JSON.stringify(intDef)}`);
 
@@ -94,11 +97,11 @@ export async function combo(
     success: true,
     title: `Mixing **${drugA}** and **${drugB}**: ${output}`,
     description: definition,
-    thumbnail: thumbnail,
-    color: color,
+    thumbnail,
+    color,
   };
 
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
 
   return response;
-};
+}

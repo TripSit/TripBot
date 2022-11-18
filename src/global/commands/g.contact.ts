@@ -1,12 +1,15 @@
+import { parse } from 'path';
 import log from '../utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default contact;
 
 /**
  * Information about contacting the team!
  * @return {any} an object with information about the bot
  */
-export async function contact():Promise<contact> {
+export async function contact():Promise<Contact> {
   const response = {
     name: 'TripSit',
     url: 'https://tripsit.me/contact-us/',
@@ -18,9 +21,9 @@ export async function contact():Promise<contact> {
   };
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
   return response;
-};
+}
 
-type contact = {
+type Contact = {
   name: string;
   url: string;
   discord: string;

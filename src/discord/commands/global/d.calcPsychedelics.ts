@@ -2,38 +2,41 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
-import {calcPsychedelics} from '../../../global/commands/g.calcPsychedelics';
-import {startLog} from '../../utils/startLog';
-import {parse} from 'path';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
+import { calcPsychedelics } from '../../../global/commands/g.calcPsychedelics';
+import { startLog } from '../../utils/startLog';
+
 const PREFIX = parse(__filename).name;
+
+export default dcalcPsychedelics;
 
 export const dcalcPsychedelics: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_psychedelics')
     .setDescription('Check psychedelic tolerance information')
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand) => subcommand
       .setName('lsd')
       .setDescription('Check LSD tolerance information')
-      .addIntegerOption(option => option.setName('last_dose')
+      .addIntegerOption((option) => option.setName('last_dose')
         .setDescription('ug of LSD')
         .setRequired(true))
-      .addIntegerOption(option => option.setName('days')
+      .addIntegerOption((option) => option.setName('days')
         .setDescription('Number of days since last dose?')
         .setRequired(true))
-      .addIntegerOption(option => option.setName('desired_dose')
+      .addIntegerOption((option) => option.setName('desired_dose')
         .setDescription('ug of LSD')))
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand) => subcommand
       .setName('mushrooms')
       .setDescription('Check mushroom tolerance information')
-      .addIntegerOption(option => option.setName('last_dose')
+      .addIntegerOption((option) => option.setName('last_dose')
         .setDescription('g of mushrooms')
         .setRequired(true))
-      .addIntegerOption(option => option.setName('days')
+      .addIntegerOption((option) => option.setName('days')
         .setDescription('Number of days since last dose?')
         .setRequired(true))
-      .addIntegerOption(option => option.setName('desired_dose')
+      .addIntegerOption((option) => option.setName('desired_dose')
         .setDescription('g of mushrooms'))),
   async execute(interaction) {
     startLog(PREFIX, interaction);
@@ -64,7 +67,7 @@ export const dcalcPsychedelics: SlashCommand = {
         As all bodies and brains are different, results may vary. 
         [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
       `);
-    interaction.reply({embeds: [embed], ephemeral: false});
+    interaction.reply({ embeds: [embed], ephemeral: false });
 
     return true;
   },

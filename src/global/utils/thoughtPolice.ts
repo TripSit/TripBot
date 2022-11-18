@@ -3,7 +3,7 @@
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
 
-const _ = {
+const _ = { // eslint-disable-line
   A: '[a|A|🅰|4|@]+',
   B: '[b|B|🅱]+',
   C: '(c|C|🅲|k|ck|q)+',
@@ -45,7 +45,6 @@ const _ = {
 // const s = env.NODE_ENV === 'production' ? '\\\\W*' : '\\W*';
 
 const s = '\\W*';
-
 
 const offensive = [
   /* beasteality */[_.B, _.E, _.A, _.S, _.T, _.E, _.A, _.L, _.I, _.T, _.Y].join(s),
@@ -134,6 +133,8 @@ const memes = [
   /* swag */[_.S, _.W, _.A, _.G].join(s),
 ];
 
+export default bigBrother;
+
 /**
  * This runs on every message to determine if a badword is used
  * @param {string} messageContent Message to scan
@@ -143,29 +144,29 @@ export async function bigBrother(messageContent:string): Promise<string> {
   // log.debug(`[${PREFIX}] messageContent: ${JSON.stringify(messageContent, null, 2)}!`);
 
   // Check for most offensive stuff first
-  if (offensive.filter(pattern => new RegExp(pattern).test(messageContent)).length > 0) {
+  if (offensive.filter((pattern) => new RegExp(pattern).test(messageContent)).length > 0) {
     return 'offensive';
   }
 
   // Check for HR alerts next
-  if (harmReduction.filter(pattern => new RegExp(pattern).test(messageContent)).length > 0) {
+  if (harmReduction.filter((pattern) => new RegExp(pattern).test(messageContent)).length > 0) {
     return 'harm';
   }
 
   // Check for horny people next
-  if (hornyJail.filter(pattern => new RegExp(pattern).test(messageContent)).length > 0) {
+  if (hornyJail.filter((pattern) => new RegExp(pattern).test(messageContent)).length > 0) {
     return 'horny';
   }
 
   // Check for uncouth language
-  if (pg13.filter(pattern => new RegExp(pattern).test(messageContent)).length > 0) {
+  if (pg13.filter((pattern) => new RegExp(pattern).test(messageContent)).length > 0) {
     return 'pg13';
   }
 
   // Check for memes next
-  if (memes.filter(pattern => new RegExp(pattern).test(messageContent)).length > 0) {
+  if (memes.filter((pattern) => new RegExp(pattern).test(messageContent)).length > 0) {
     return 'meme';
   }
 
   return 'none';
-};
+}

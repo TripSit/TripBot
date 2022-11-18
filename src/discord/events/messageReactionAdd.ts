@@ -3,17 +3,19 @@
 //   User,
 // } from 'discord.js';
 import {
-  messageReactionAddEvent,
+  MessageReactionAddEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
-import {chitragupta} from '../utils/chitragupta';
-import {handleReactionRoles} from '../utils/handleReactionRoles';
-import {bestOf} from '../utils/bestOfTripsit';
+import { chitragupta } from '../utils/chitragupta';
+import { handleReactionRoles } from '../utils/handleReactionRoles';
+import { bestOf } from '../utils/bestOfTripsit';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
 
-export const messageReactionAdd: messageReactionAddEvent = {
+export default messageReactionAdd;
+
+export const messageReactionAdd: MessageReactionAddEvent = {
   name: 'messageReactionAdd',
   async execute(messageReaction, user) {
     // Only run on Tripsit

@@ -5,17 +5,20 @@ import {
   ChannelType,
   AuditLogEvent,
 } from 'discord-api-types/v10';
+// import { parse } from 'path';
 import {
-  channelUpdateEvent,
+  ChannelUpdateEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
-import log from '../../global/utils/log'; // eslint-disable-line no-unused-vars
-import * as path from 'path'; // eslint-disable-line no-unused-vars
-const PREFIX = path.parse(__filename).name; // eslint-disable-line no-unused-vars
+// import log from '../../global/utils/log';
+
+// const PREFIX = parse(__filename).name;
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const channelUpdate: channelUpdateEvent = {
+export default channelUpdate;
+
+export const channelUpdate: ChannelUpdateEvent = {
   name: 'channelUpdate',
   async execute(oldChannel, newChannel) {
     // Dont run on DMs
@@ -55,10 +58,10 @@ export const channelUpdate: channelUpdateEvent = {
 
     if (auditLog.executor) {
       response = `Channel **${newChannel.toString()}** was updated by ${auditLog.executor.tag}:`;
-      response += `\n${auditLog.changes.map(change => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
+      response += `\n${auditLog.changes.map((change) => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
     } else {
       response = `Channel ${newChannel.toString()} was updated, but the audit log was inconclusive.`;
-      response += `\n${auditLog.changes.map(change => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
+      response += `\n${auditLog.changes.map((change) => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
     }
 
     botlog.send(response);

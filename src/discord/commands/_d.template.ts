@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   ActionRowBuilder,
   ModalBuilder,
@@ -11,15 +11,18 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
-import {SlashCommand} from '../@types/commandDef';
-import {embedTemplate} from '../utils/embedTemplate';
+import { parse } from 'path';
+import { SlashCommand } from '../@types/commandDef';
+import { embedTemplate } from '../utils/embedTemplate';
 import env from '../../global/utils/env.config';
 import log from '../../global/utils/log';
-import {startLog} from '../utils/startLog';
-import {parse} from 'path';
+import { startLog } from '../utils/startLog';
+
 const PREFIX = parse(__filename).name;
 
-export const bug: SlashCommand = {
+export default dTemplate;
+
+export const dTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('template')
     .setDescription('Example!'),
@@ -37,8 +40,8 @@ export const bug: SlashCommand = {
     modal.addComponents(firstActionRow);
     await interaction.showModal(modal);
     // log.debug(`[${PREFIX}] displayed modal!`);
-    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`feedbackReportModal`);
-    const submitted = await interaction.awaitModalSubmit({filter, time: 0});
+    const filter = (i:ModalSubmitInteraction) => i.customId.includes('feedbackReportModal');
+    const submitted = await interaction.awaitModalSubmit({ filter, time: 0 });
     if (submitted) {
       if (submitted.customId.split('~')[1] !== interaction.id) return true;
       const input = submitted.fields.getTextInputValue('modalInput');

@@ -6,76 +6,27 @@ import {
   Colors,
   TextBasedChannel,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
-import {startLog} from '../../utils/startLog';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
+import { startLog } from '../../utils/startLog';
 import log from '../../../global/utils/log'; // eslint-disable-line no-unused-vars
 import env from '../../../global/utils/env.config';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
-
-
-export const reminder: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('reminder')
-    .setDescription('Sends a reminder on what the channel is for!'),
-  async execute(interaction) {
-    startLog(PREFIX, interaction);
-    if (!interaction.guild) {
-      interaction.reply({
-        content: 'This command can only be used in a server!',
-        ephemeral: true,
-      });
-      return false;
-    }
-
-    const channelId = interaction.channelId;
-    log.debug(`[${PREFIX}] channelId: ${channelId}`);
-    const chanId = (interaction.channel as TextBasedChannel).id;
-    log.debug(`[${PREFIX}] chanId: ${chanId}`);
-    const reminderData = reminderDict[chanId];
-    log.debug(`[${PREFIX}] reminderData: ${JSON.stringify(reminderData, null, 2)}`);
-    if (!reminderData) {
-      interaction.reply({
-        content: 'This command can only be used in a channel with a reminder!',
-        ephemeral: true,
-      });
-      return false;
-    }
-    const reminderTitle = reminderData[0];
-    log.debug(`[${PREFIX}] reminderTitle: ${reminderTitle}`);
-    const reminderText = reminderData[1];
-    log.debug(`[${PREFIX}] reminderText: ${reminderText}`);
-
-    const reminder = embedTemplate()
-      .setColor(Colors.Red)
-      .setTitle(`REMINDER: ${reminderTitle}`)
-      .setDescription(reminderText);
-
-    interaction.channel?.send({embeds: [reminder]});
-
-    interaction.reply({content: 'Reminder sent!', ephemeral: true});
-
-    const channelBotlog = interaction.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-    if (channelBotlog) {
-      channelBotlog.send(`${(interaction.member as GuildMember).displayName} sent a reminder to ${(interaction.channel as TextChannel).name}`);
-    }
-    return true;
-  },
-};
 
 const reminderDict = {
   [env.CHANNEL_ANNOUNCEMENTS]: [
-    `EmbedTitle`,
-    `EmbedDescription`,
+    'EmbedTitle',
+    'EmbedDescription',
   ],
   [env.CHANNEL_BOTSPAM]: [
-    `EmbedTitle`,
-    `EmbedDescription`,
+    'EmbedTitle',
+    'EmbedDescription',
   ],
   [env.CHANNEL_MODHAVEN]: [
-    `Keep team talk to #teamtripsit!`,
-    `While we love to see people discussing the org, we want to make sure everyone is on the same page. Please keep all team talk to #teamtripsit!`,
+    'Keep team talk to #teamtripsit!',
+    'While we love to see people discussing the org, we want to make sure everyone is on the same page. Please keep all team talk to #teamtripsit!',
   ],
   [env.CHANNEL_TEAMTRIPSIT]: [
     'Keep social talk to #modhaven!',
@@ -101,4 +52,55 @@ const reminderDict = {
     'Keep #web-tripsit clear for people who need help!',
     'Reminder: this channel is for people who need immediate assistance or who have questions about harm reduction and safer drug use. To access our social chat channels, consider joining our discord at https://discord.gg/tripsit. Thank you!,',
   ],
+};
+
+export default dReminder;
+
+export const dReminder: SlashCommand = {
+  data: new SlashCommandBuilder()
+    .setName('reminder')
+    .setDescription('Sends a reminder on what the channel is for!'),
+  async execute(interaction) {
+    startLog(PREFIX, interaction);
+    if (!interaction.guild) {
+      interaction.reply({
+        content: 'This command can only be used in a server!',
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    const { channelId } = interaction;
+    log.debug(`[${PREFIX}] channelId: ${channelId}`);
+    const chanId = (interaction.channel as TextBasedChannel).id;
+    log.debug(`[${PREFIX}] chanId: ${chanId}`);
+    const reminderData = reminderDict[chanId];
+    log.debug(`[${PREFIX}] reminderData: ${JSON.stringify(reminderData, null, 2)}`);
+    if (!reminderData) {
+      interaction.reply({
+        content: 'This command can only be used in a channel with a reminder!',
+        ephemeral: true,
+      });
+      return false;
+    }
+    const reminderTitle = reminderData[0];
+    log.debug(`[${PREFIX}] reminderTitle: ${reminderTitle}`);
+    const reminderText = reminderData[1];
+    log.debug(`[${PREFIX}] reminderText: ${reminderText}`);
+
+    const reminder = embedTemplate()
+      .setColor(Colors.Red)
+      .setTitle(`REMINDER: ${reminderTitle}`)
+      .setDescription(reminderText);
+
+    interaction.channel?.send({ embeds: [reminder] });
+
+    interaction.reply({ content: 'Reminder sent!', ephemeral: true });
+
+    const channelBotlog = interaction.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    if (channelBotlog) {
+      channelBotlog.send(`${(interaction.member as GuildMember).displayName} sent a reminder to ${(interaction.channel as TextChannel).name}`);
+    }
+    return true;
+  },
 };

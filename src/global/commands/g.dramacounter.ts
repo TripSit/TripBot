@@ -1,8 +1,11 @@
-import {db, getGuild} from '../utils/knex';
-import {DiscordGuilds} from '../@types/pgdb';
+import { parse } from 'path';
+import { db, getGuild } from '../utils/knex';
+import { DiscordGuilds } from '../@types/pgdb';
 import log from '../utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default dramacounter;
 
 /**
  * Birthday information of a user
@@ -17,7 +20,7 @@ export async function dramacounter(
   guildId: string,
   lastDramaAt: Date,
   dramaReason: string,
-):Promise<drama> {
+):Promise<Drama> {
   let response = {} as {
     dramaReason: string;
     lastDramaAt: Date;
@@ -26,11 +29,14 @@ export async function dramacounter(
     const guildData = await getGuild(guildId);
 
     if (guildData.last_drama_at) {
-      const lastDramaAt = guildData.last_drama_at as Date;
-      const dramaReason = guildData.drama_reason as string;
-      response = {dramaReason, lastDramaAt};
+      const lastDramaDate = guildData.last_drama_at as Date;
+      const lastDramaReason = guildData.drama_reason as string;
+      response = {
+        dramaReason: lastDramaReason,
+        lastDramaAt: lastDramaDate,
+      };
     } else {
-      return {dramaReason: null, lastDramaAt: null};
+      return { dramaReason: null, lastDramaAt: null };
     }
   } else if (command === 'set') {
     await db<DiscordGuilds>('discord_guilds')
@@ -42,14 +48,14 @@ export async function dramacounter(
       .onConflict('id')
       .merge()
       .returning('*');
-    response = {dramaReason, lastDramaAt};
+    response = { dramaReason, lastDramaAt };
   }
 
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }
 
-type drama = {
+type Drama = {
   dramaReason: string | null;
   lastDramaAt: Date | null;
-}
+};

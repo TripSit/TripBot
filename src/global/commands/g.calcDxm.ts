@@ -1,18 +1,21 @@
+import { parse } from 'path';
 import log from '../utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
 
 type DxmDataType = {
-  First: {min: number, max: number};
-  Second: {min: number, max: number};
-  Third: {min: number, max: number};
-  Fourth: {min: number, max: number};
+  First: { min: number, max: number };
+  Second: { min: number, max: number };
+  Third: { min: number, max: number };
+  Fourth: { min: number, max: number };
 };
 
-type returnType = {
+type ReturnType = {
   data: DxmDataType;
   units: string;
 };
+
+export default calcDxm;
 
 /**
  * @param {number} givenWeight
@@ -20,7 +23,7 @@ type returnType = {
  * @param {string} taking
  * @return {any}
  */
-export async function calcDxm(givenWeight:number, weightUnits:string, taking:string):Promise<returnType> {
+export async function calcDxm(givenWeight:number, weightUnits:string, taking:string):Promise<ReturnType> {
   let calcWeight = weightUnits === 'lbs' ? givenWeight * 0.453592 : givenWeight;
   let roaValue = 0;
   let units = '';
@@ -53,30 +56,29 @@ export async function calcDxm(givenWeight:number, weightUnits:string, taking:str
   calcWeight /= roaValue;
   // log.debug(`[${PREFIX}] calcWeight: ${calcWeight}`);
 
-
   const dxmData:DxmDataType = {
-    First: {min: 1.5, max: 2.5},
-    Second: {min: 2.5, max: 7.5},
-    Third: {min: 7.5, max: 15},
-    Fourth: {min: 15, max: 20},
+    First: { min: 1.5, max: 2.5 },
+    Second: { min: 2.5, max: 7.5 },
+    Third: { min: 7.5, max: 15 },
+    Fourth: { min: 15, max: 20 },
   };
 
   const data = {
-    First: {min: 0, max: 0},
-    Second: {min: 0, max: 0},
-    Third: {min: 0, max: 0},
-    Fourth: {min: 0, max: 0},
+    First: { min: 0, max: 0 },
+    Second: { min: 0, max: 0 },
+    Third: { min: 0, max: 0 },
+    Fourth: { min: 0, max: 0 },
   } as DxmDataType;
 
-  Object.keys(dxmData).forEach(key => {
+  Object.keys(dxmData).forEach((key) => {
     const min = Math.round((dxmData[key as keyof DxmDataType].min * calcWeight) * 100) / 100;
     const max = Math.round((dxmData[key as keyof DxmDataType].max * calcWeight) * 100) / 100;
     data[key as keyof DxmDataType] = {
-      min: min,
-      max: max,
+      min,
+      max,
     };
   });
 
   log.info(`[${PREFIX}] response: ${JSON.stringify(data, null, 2)}`);
-  return {data, units};
-};
+  return { data, units };
+}

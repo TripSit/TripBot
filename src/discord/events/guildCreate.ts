@@ -2,15 +2,18 @@ import {
   TextChannel,
 } from 'discord.js';
 import {
-  guildCreateEvent,
+  GuildCreateEvent,
 } from '../@types/eventDef';
-import {db, getGuild} from '../../global/utils/knex';
-import {DiscordGuilds} from '../../global/@types/pgdb';
+import { db, getGuild } from '../../global/utils/knex';
+import { DiscordGuilds } from '../../global/@types/pgdb';
 import env from '../../global/utils/env.config';
 import log from '../../global/utils/log';
+
 const PREFIX = require('path').parse(__filename).name;
 
-export const guildCreate: guildCreateEvent = {
+export default guildCreate;
+
+export const guildCreate: GuildCreateEvent = {
   name: 'guildCreate',
   async execute(guild) {
     log.info(`[${PREFIX}] Joined guild: ${guild.name} (id: ${guild.id})`);
@@ -21,15 +24,14 @@ export const guildCreate: guildCreateEvent = {
       log.info(`[${PREFIX}] I'm banned from ${guild.name}, leaving!`);
       guild.leave();
       return;
-    } else {
-      await db<DiscordGuilds>('discord_guilds')
-        .insert({
-          id: guild.id,
-          joined_at: new Date(),
-        })
-        .onConflict('discord_id')
-        .merge();
     }
+    await db<DiscordGuilds>('discord_guilds')
+      .insert({
+        id: guild.id,
+        joined_at: new Date(),
+      })
+      .onConflict('discord_id')
+      .merge();
 
     const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     botlog.send(`I just joined a guild! I am now in ${client.guilds.cache.size} guilds!

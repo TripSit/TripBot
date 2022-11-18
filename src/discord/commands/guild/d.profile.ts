@@ -6,13 +6,14 @@ import {
   GuildMember,
   AttachmentBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {profile} from '../../../global/commands/g.profile';
-import {startLog} from '../../utils/startLog';
 import Canvas from '@napi-rs/canvas';
+import * as path from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { profile } from '../../../global/commands/g.profile';
+import { startLog } from '../../utils/startLog';
 import env from '../../../global/utils/env.config';
 import log from '../../../global/utils/log';
-import * as path from 'path';
+
 const PREFIX = path.parse(__filename).name;
 
 Canvas.GlobalFonts.registerFromPath(
@@ -20,19 +21,22 @@ Canvas.GlobalFonts.registerFromPath(
   'futura',
 );
 
-export const dprofile: SlashCommand = {
+export default dProfile;
+
+export const dProfile: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('profile')
     .setDescription('Return the user\'s profile!')
-    .addUserOption(option => option
+    .addUserOption((option) => option
       .setName('target')
       .setDescription('User to get info on!')),
   async execute(
-    interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction) {
+    interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction,
+  ) {
     startLog(PREFIX, interaction);
-    const target = interaction.options.getMember('target') ?
-      interaction.options.getMember('target') as GuildMember :
-      interaction.member as GuildMember;
+    const target = interaction.options.getMember('target')
+      ? interaction.options.getMember('target') as GuildMember
+      : interaction.member as GuildMember;
 
     // log.debug(`[${PREFIX}] target: ${target.id}`);
 
@@ -47,8 +51,8 @@ export const dprofile: SlashCommand = {
     // Create Canvas and Context
     const canvasWidth = 934;
     const canvasHeight = 282;
-    const canvas = Canvas.createCanvas(canvasWidth, canvasHeight);
-    const context = canvas.getContext('2d');
+    const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
+    const context = canvasObj.getContext('2d');
 
     // Choose colour based on user's role
     // const defaultCard = path.resolve(__dirname, '../../assets/img/cards/profilecardDefault.png');
@@ -167,7 +171,7 @@ export const dprofile: SlashCommand = {
 
       // log.debug(`[${PREFIX}] image loaded`);
       // log.debug(`[${PREFIX}] background: ${background}`);
-      context.drawImage(background, 0, 0, canvas.width, canvas.height);
+      context.drawImage(background, 0, 0, canvasObj.width, canvasObj.height);
       // log.debug(`[${PREFIX}] image drawn`);
     } catch (err) {
       log.error(`[${PREFIX}] Error loading background image: ${err}`);
@@ -175,18 +179,18 @@ export const dprofile: SlashCommand = {
 
     // Username Text Resize to fit
     const applyUsername = (canvas:Canvas.Canvas, text:string) => {
-      const context = canvas.getContext('2d');
+      const usernameContext = canvas.getContext('2d');
       let fontSize = 50;
       do {
-        context.font = `${fontSize -= 2}px futura`;
-      } while (context.measureText(text).width > 435);
-      return context.font;
+        usernameContext.font = `${fontSize -= 2}px futura`;
+      } while (usernameContext.measureText(text).width > 435);
+      return usernameContext.font;
     };
 
     // log.debug(`[${PREFIX}] username resize`);
 
     // Username Text
-    context.font = applyUsername(canvas, `${target.user.tag}`);
+    context.font = applyUsername(canvasObj, `${target.user.tag}`);
     context.fillStyle = textColor;
     context.fillText(`${target.user.tag}`, 245, 124);
     // context.font = applyUsername(canvas, `${target.displayName}`);
@@ -195,23 +199,20 @@ export const dprofile: SlashCommand = {
 
     // log.debug(`[${PREFIX}] username`);
 
-
     // log.debug(`[${PREFIX}] targetData: ${JSON.stringify(targetData, null, 2)}`);
 
     // User Info Text
-    context.font = `30px futura`;
+    context.font = '30px futura';
     context.textAlign = 'right';
     context.fillStyle = '#ffffff';
 
     if (targetData.timezone) {
-      const timestring = new Date().toLocaleTimeString(
-        'en-US', {
-          timeZone: targetData.timezone,
-          hour12: true,
-          hour: 'numeric',
-          minute: 'numeric',
-        },
-      );
+      const timestring = new Date().toLocaleTimeString('en-US', {
+        timeZone: targetData.timezone,
+        hour12: true,
+        hour: 'numeric',
+        minute: 'numeric',
+      });
       context.fillText(timestring, 446, 190);
     } else {
       context.fillText('Not set!', 446, 190);
@@ -229,12 +230,12 @@ export const dprofile: SlashCommand = {
         // itIsYourBirthday = true;
       }
       if (targetBirthday.getDate() < 10) {
-        context.fillText(`${targetBirthday.toLocaleString('en-US', {month: 'short'})} 0${targetBirthday.getDate()}`, 446, 253); ;
+        context.fillText(`${targetBirthday.toLocaleString('en-US', { month: 'short' })} 0${targetBirthday.getDate()}`, 446, 253);
       } else {
-        context.fillText(`${targetBirthday.toLocaleString('en-US', {month: 'short'})} ${targetBirthday.getDate()}`, 446, 253);
+        context.fillText(`${targetBirthday.toLocaleString('en-US', { month: 'short' })} ${targetBirthday.getDate()}`, 446, 253);
       }
     } else {
-      context.fillText(`Not set!`, 446, 253); ;
+      context.fillText('Not set!', 446, 253);
     }
 
     /**
@@ -244,12 +245,11 @@ export const dprofile: SlashCommand = {
      */
     function numFormatter(num:number):string {
       if (num > 999 && num < 1000000) {
-        return (num/1000).toFixed(2) + 'K';
-      } else if (num > 1000000) {
-        return (num/1000000).toFixed(2) + 'M';
-      } else {
-        return num.toFixed(0);
+        return `${(num / 1000).toFixed(2)}K`;
+      } if (num > 1000000) {
+        return `${(num / 1000000).toFixed(2)}M`;
       }
+      return num.toFixed(0);
     }
 
     // Messages Sent Text
@@ -272,7 +272,7 @@ export const dprofile: SlashCommand = {
       expToLevel = 5 * (level ** 2) + (50 * level) + 100;
       // log.debug(`[${PREFIX}] (${i}) Level: ${level}, Level Points: ${levelPoints}, Exp to Level: ${expToLevel}`);
       // i++;
-      level++;
+      level += 1;
       levelPoints -= expToLevel;
       // log.debug(`[${PREFIX}]Leftover: ${levelPoints}`);
     }
@@ -310,26 +310,24 @@ export const dprofile: SlashCommand = {
       log.error(`[${PREFIX}] Error loading star image: ${err}`);
     }
 
-
     // VIP Level Text Resize to fit
     const applyLevel = (canvas:Canvas.Canvas, text:string) => {
-      const context = canvas.getContext('2d');
+      const levelContext = canvas.getContext('2d');
       let fontSize = 50;
       do {
-        context.textAlign = 'center';
-        context.font = `${fontSize -= 10}px futura`;
-      } while (context.measureText(text).width > 62);
-      return context.font;
+        levelContext.textAlign = 'center';
+        levelContext.font = `${fontSize -= 10}px futura`;
+      } while (levelContext.measureText(text).width > 62);
+      return levelContext.font;
     };
 
-
     // VIP Level Text
-    context.font = applyLevel(canvas, `${level}`);
+    context.font = applyLevel(canvasObj, `${level}`);
     context.fillStyle = cardColor;
     context.fillText(`${level}`, 807, 154);
 
     // Avatar Image
-    const avatar = await Canvas.loadImage(target.user.displayAvatarURL({extension: 'jpg'}));
+    const avatar = await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' }));
     context.save();
     context.beginPath();
     context.arc(128, 141, 96, 0, Math.PI * 2, true);
@@ -347,7 +345,7 @@ export const dprofile: SlashCommand = {
     // Circular Level Bar
     context.save();
     context.translate(0, 282);
-    context.rotate(270 * Math.PI / 180);
+    context.rotate((270 * Math.PI) / 180);
     context.beginPath();
     context.lineWidth = 21;
     context.lineCap = 'round';
@@ -364,13 +362,13 @@ export const dprofile: SlashCommand = {
     context.fillStyle = cardColor;
     context.fill();
     context.restore();
-    await interaction.guild?.members.fetch({user: target.id, withPresences: true, force: true});
+    await interaction.guild?.members.fetch({ user: target.id, withPresences: true, force: true });
 
     let statusIcon = 'https://i.imgur.com/eICJIwe.png';
     if (target.presence) {
       if (target.presence.status === 'online') {
         // statusIcon = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
-        statusIcon = `https://i.imgur.com/pJZGATd.png`;
+        statusIcon = 'https://i.imgur.com/pJZGATd.png';
       } else if (target.presence.status === 'idle') {
         // statusIcon = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
         statusIcon = 'https://i.imgur.com/3ZtlfpR.png';
@@ -406,8 +404,8 @@ export const dprofile: SlashCommand = {
     }
 
     // Process The Entire Card and Send it to Discord
-    const attachment = new AttachmentBuilder(await canvas.encode('png'), {name: 'tripsit-profile-image.png'});
-    interaction.reply({files: [attachment]});
+    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-profile-image.png' });
+    interaction.reply({ files: [attachment] });
     return true;
   },
 };

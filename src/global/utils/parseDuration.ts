@@ -2,6 +2,8 @@
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
 
+export default parseDuration;
+
 /**
  * This takes a string and converts it into time
  * @param {string} duration A string representing a duration
@@ -83,4 +85,4 @@ export async function parseDuration(duration:string):Promise<number> {
     }
   }
   return timeValue;
-};
+}

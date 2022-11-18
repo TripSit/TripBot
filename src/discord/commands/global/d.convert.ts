@@ -1,27 +1,29 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {startLog} from '../../utils/startLog';
-import {embedTemplate} from '../../utils/embedTemplate';
-import log from '../../../global/utils/log';
 import convert from 'convert-units';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { startLog } from '../../utils/startLog';
+import { embedTemplate } from '../../utils/embedTemplate';
+import log from '../../../global/utils/log';
 
-import {parse} from 'path';
 const PREFIX = parse(__filename).name;
+
+export default convertUnits;
 
 export const convertUnits: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('convert')
     .setDescription('Convert one unit into another')
-    .addNumberOption(option => option.setName('value')
+    .addNumberOption((option) => option.setName('value')
       .setDescription('#')
       .setRequired(true))
-    .addStringOption(option => option.setName('units')
+    .addStringOption((option) => option.setName('units')
       .setDescription('What unit?')
       .setRequired(true)
       .setAutocomplete(true))
-    .addStringOption(option => option.setName('into_units')
+    .addStringOption((option) => option.setName('into_units')
       .setDescription('Convert into?')
       .setRequired(true)
       .setAutocomplete(true)),
@@ -41,7 +43,7 @@ export const convertUnits: SlashCommand = {
     const embed = embedTemplate()
       .setTitle(response);
 
-    interaction.reply({embeds: [embed]});
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

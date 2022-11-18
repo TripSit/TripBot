@@ -5,7 +5,7 @@ import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
 import {
-  emojiCreateEvent,
+  EmojiCreateEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 // import logger from '../../global/utils/logger';
@@ -14,7 +14,9 @@ import env from '../../global/utils/env.config';
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const emojiCreate: emojiCreateEvent = {
+export default emojiCreate;
+
+export const emojiCreate: EmojiCreateEvent = {
   name: 'emojiCreate',
   async execute(emoji) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)

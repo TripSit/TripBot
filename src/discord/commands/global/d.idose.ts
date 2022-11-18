@@ -10,15 +10,16 @@ import {
   ChannelType,
   ButtonStyle,
 } from 'discord-api-types/v10';
-import {idose} from '../../../global/commands/g.idose';
-import {SlashCommand} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
-import {parseDuration} from '../../../global/utils/parseDuration';
-import {paginationEmbed} from '../../utils/pagination';
-import {startLog} from '../../utils/startLog';
-import log from '../../../global/utils/log'; // eslint-disable-line no-unused-vars
-import {parse} from 'path';
-import {DrugRoa, DrugMassUnit} from '../../../global/@types/pgdb';
+import { parse } from 'path';
+import { idose } from '../../../global/commands/g.idose';
+import { SlashCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
+import { parseDuration } from '../../../global/utils/parseDuration';
+import { paginationEmbed } from '../../utils/pagination';
+import { DrugRoa, DrugMassUnit } from '../../../global/@types/pgdb';
+import { startLog } from '../../utils/startLog';
+import log from '../../../global/utils/log'; // eslint-disable-line @typescript-eslint/no-unused-vars
+
 const PREFIX = parse(__filename).name;
 
 const buttonList = [
@@ -26,62 +27,64 @@ const buttonList = [
   new ButtonBuilder().setCustomId('nextbtn').setLabel('Next').setStyle(ButtonStyle.Success),
 ];
 
+export default didose;
+
 export const didose: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('idose')
     .setDescription('Your personal dosage information!')
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand) => subcommand
       .setName('set')
       .setDescription('Record when you dosed something')
-      .addNumberOption(option => option.setName('volume')
+      .addNumberOption((option) => option.setName('volume')
         .setDescription('How much?')
         .setRequired(true))
-      .addStringOption(option => option.setName('units')
+      .addStringOption((option) => option.setName('units')
         .setDescription('What units?')
         .setRequired(true)
         .addChoices(
-          {name: 'mg (milligrams)', value: 'MG'},
-          {name: 'mL (milliliters)', value: 'ML'},
-          {name: 'µg (micrograms/ug/mcg)', value: 'µG'},
-          {name: 'g (grams)', value: 'G'},
-          {name: 'oz (ounces)', value: 'OZ'},
-          {name: 'fl oz (fluid ounces)', value: 'FLOZ'},
-          {name: 'tabs', value: 'TABS'},
-          {name: 'caps', value: 'CAPS'},
-          {name: 'pills', value: 'PILLS'},
-          {name: 'drops', value: 'DROPS'},
-          {name: 'sprays', value: 'SPRAYS'},
-          {name: 'inhales', value: 'INHALES'},
+          { name: 'mg (milligrams)', value: 'MG' },
+          { name: 'mL (milliliters)', value: 'ML' },
+          { name: 'µg (micrograms/ug/mcg)', value: 'µG' },
+          { name: 'g (grams)', value: 'G' },
+          { name: 'oz (ounces)', value: 'OZ' },
+          { name: 'fl oz (fluid ounces)', value: 'FLOZ' },
+          { name: 'tabs', value: 'TABS' },
+          { name: 'caps', value: 'CAPS' },
+          { name: 'pills', value: 'PILLS' },
+          { name: 'drops', value: 'DROPS' },
+          { name: 'sprays', value: 'SPRAYS' },
+          { name: 'inhales', value: 'INHALES' },
         ))
-      .addStringOption(option => option.setName('substance')
+      .addStringOption((option) => option.setName('substance')
         .setDescription('What Substance?')
         .setRequired(true)
         .setAutocomplete(true))
-      .addStringOption(option => option.setName('roa')
+      .addStringOption((option) => option.setName('roa')
         .setDescription('How did you take it?')
         .setRequired(true)
         .addChoices(
-          {name: 'Oral', value: 'ORAL'},
-          {name: 'Insufflated (Snorted)', value: 'INSUFFLATED'},
-          {name: 'Inhaled', value: 'INHALED'},
-          {name: 'Sublingual (Tongue)', value: 'SUBLINGUAL'},
-          {name: 'Buccal (Gums)', value: 'BUCCAL'},
-          {name: 'Recatal (Butt)', value: 'RECTAL'},
-          {name: 'Intramuscular (IM)', value: 'INTRAMUSCULAR'},
-          {name: 'Intravenous (IV)', value: 'INTRAVENOUS'},
-          {name: 'Subcutanious (IM)', value: 'SUBCUTANIOUS'},
-          {name: 'Topical (On Skin)', value: 'TOPICAL'},
-          {name: 'Transdermal (Past Skin)', value: 'TRANSDERMAL'},
+          { name: 'Oral', value: 'ORAL' },
+          { name: 'Insufflated (Snorted)', value: 'INSUFFLATED' },
+          { name: 'Inhaled', value: 'INHALED' },
+          { name: 'Sublingual (Tongue)', value: 'SUBLINGUAL' },
+          { name: 'Buccal (Gums)', value: 'BUCCAL' },
+          { name: 'Recatal (Butt)', value: 'RECTAL' },
+          { name: 'Intramuscular (IM)', value: 'INTRAMUSCULAR' },
+          { name: 'Intravenous (IV)', value: 'INTRAVENOUS' },
+          { name: 'Subcutanious (IM)', value: 'SUBCUTANIOUS' },
+          { name: 'Topical (On Skin)', value: 'TOPICAL' },
+          { name: 'Transdermal (Past Skin)', value: 'TRANSDERMAL' },
         ))
-      .addStringOption(option => option.setName('offset')
+      .addStringOption((option) => option.setName('offset')
         .setDescription('How long ago? EG: 4 hours 32 mins ago')))
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand) => subcommand
       .setName('get')
       .setDescription('Get your dosage records!'))
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand) => subcommand
       .setName('delete')
       .setDescription('Delete a dosage record!')
-      .addNumberOption(option => option.setName('record')
+      .addNumberOption((option) => option.setName('record')
         .setDescription('Which record? (0, 1, 2, etc)')
         .setRequired(true))),
   async execute(interaction) {
@@ -132,13 +135,13 @@ export const didose: SlashCommand = {
 
     if (response[0]) {
       if (response[0].name === 'Error') {
-        await interaction.reply({content: response[0].value, ephemeral: true});
+        await interaction.reply({ content: response[0].value, ephemeral: true });
         return false;
       }
     }
 
     if (command === 'delete') {
-      await interaction.reply({content: response[0].value, ephemeral: true});
+      await interaction.reply({ content: response[0].value, ephemeral: true });
     }
     if (command === 'get') {
       if (response.length > 0) {
@@ -152,7 +155,7 @@ export const didose: SlashCommand = {
           let pageFields = [] as EmbedField[];
           let pageFieldsCount = 0;
           for (let i = 0; i < response.length; i += 1) {
-            pageFields.push({name: response[i].name, value: response[i].value, inline: true});
+            pageFields.push({ name: response[i].name, value: response[i].value, inline: true });
             // log.debug(`[${PREFIX}] Adding field ${field.name}`);
             pageFieldsCount += 1;
             // log.debug(`[${PREFIX}] pageFieldsCount: ${pageFieldsCount}`);
@@ -178,7 +181,7 @@ export const didose: SlashCommand = {
           // Add fields to the embed
           const fields = [] as EmbedField[];
           for (let i = 0; i < response.length; i += 1) {
-            fields.push({name: response[i].name, value: response[i].value, inline: true});
+            fields.push({ name: response[i].name, value: response[i].value, inline: true });
           }
           embed.setFields(fields);
         }
@@ -189,16 +192,14 @@ export const didose: SlashCommand = {
       // log.debug(`[${PREFIX}] book.length: ${book.length}`);
       if (book.length > 1) {
         paginationEmbed(interaction, book, buttonList);
+      } else if (!interaction.channel) {
+        interaction.reply({ embeds: [embed], ephemeral: true });
+      } else if (interaction.channel.type === ChannelType.DM) {
+        interaction.reply({ embeds: [embed], ephemeral: false });
+        // interaction.user.send({embeds: [embed]});
       } else {
-        if (!interaction.channel) {
-          interaction.reply({embeds: [embed], ephemeral: true});
-        } else if (interaction.channel.type === ChannelType.DM) {
-          interaction.reply({embeds: [embed], ephemeral: false});
+        interaction.reply({ embeds: [embed], ephemeral: true });
         // interaction.user.send({embeds: [embed]});
-        } else {
-          interaction.reply({embeds: [embed], ephemeral: true});
-        // interaction.user.send({embeds: [embed]});
-        }
       }
     }
     if (command === 'set') {
@@ -218,7 +219,7 @@ export const didose: SlashCommand = {
       embed.setColor(Colors.DarkBlue);
       embed.setTitle('New iDose entry:');
       embed.addFields(embedField);
-      interaction.reply({embeds: [embed], ephemeral: true});
+      interaction.reply({ embeds: [embed], ephemeral: true });
     }
     return true;
   },

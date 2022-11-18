@@ -5,20 +5,23 @@ import {
   UserResolvable,
   Collection,
 } from 'discord.js';
+import { stripIndents } from 'common-tags';
+import { parse } from 'path';
 import {
-  guildMemberAddEvent,
+  GuildMemberAddEvent,
 } from '../@types/eventDef';
-import {db} from '../../global/utils/knex';
+import { db } from '../../global/utils/knex';
 import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
-import {embedTemplate} from '../utils/embedTemplate';
-import {stripIndents} from 'common-tags';
+import { embedTemplate } from '../utils/embedTemplate';
 
-import {parse} from 'path';
-import {Users} from '../../global/@types/pgdb';
+import { Users } from '../../global/@types/pgdb';
+
 const PREFIX = parse(__filename).name;
 
-export const guildMemberAdd: guildMemberAddEvent = {
+export default guildMemberAdd;
+
+export const guildMemberAdd: GuildMemberAddEvent = {
   name: 'guildMemberAdd',
   async execute(member) {
     // Only run on Tripsit
@@ -29,18 +32,18 @@ export const guildMemberAdd: guildMemberAddEvent = {
 
     const newInvites = await member.guild.invites.fetch();
     const cachedInvites = global.guildInvites.get(member.guild.id);
-    const invite = newInvites.find(i => <number>i.uses > cachedInvites.get(i.code));
+    const invite = newInvites.find((i) => <number > i.uses > cachedInvites.get(i.code));
     let inviteInfo = '';
     if (invite) {
       const inviter = await client.users.fetch(invite.inviter?.id as UserResolvable);
-      inviteInfo = inviter ?
-        `Joined via ${inviter.tag}'s invite to ${invite.channel?.name} (${invite.code}-${invite.uses})` :
-        `Joined via the vanity url`;
+      inviteInfo = inviter
+        ? `Joined via ${inviter.tag}'s invite to ${invite.channel?.name} (${invite.code}-${invite.uses})`
+        : 'Joined via the vanity url';
     }
     // log.debug(`[${PREFIX}] inviteInfo: ${inviteInfo}`);
     global.guildInvites.set(
       member.guild.id,
-      new Collection(newInvites.map(invite => [invite.code, invite.uses])),
+      new Collection(newInvites.map((inviteEntry) => [inviteEntry.code, inviteEntry.uses])),
     );
 
     await db<Users>('users')
@@ -87,24 +90,24 @@ export const guildMemberAdd: guildMemberAddEvent = {
       .setFooter(null)
       .setDescription(stripIndents`**${member} has joined the guild!**`)
       .addFields(
-        {name: 'Nickname', value: `${member.nickname}`, inline: true},
-        {name: 'Tag', value: `${member.user.username}#${member.user.discriminator}`, inline: true},
-        {name: 'ID', value: `${member.user.id}`, inline: true},
+        { name: 'Nickname', value: `${member.nickname}`, inline: true },
+        { name: 'Tag', value: `${member.user.username}#${member.user.discriminator}`, inline: true },
+        { name: 'ID', value: `${member.user.id}`, inline: true },
       )
       .addFields(
-        {name: 'Account created', value: `${time(member.user.createdAt, 'R')}`, inline: true},
+        { name: 'Account created', value: `${time(member.user.createdAt, 'R')}`, inline: true },
       );
     if (member.joinedAt) {
       embed.addFields(
-        {name: 'Joined', value: `${time(member.joinedAt, 'R')}`, inline: true},
+        { name: 'Joined', value: `${time(member.joinedAt, 'R')}`, inline: true },
       );
     }
     if (inviteInfo) {
-      embed.setFooter({text: inviteInfo});
+      embed.setFooter({ text: inviteInfo });
     }
     const channelBotlog = member.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
-      channelBotlog.send({embeds: [embed]});
+      channelBotlog.send({ embeds: [embed] });
     }
   },
 };

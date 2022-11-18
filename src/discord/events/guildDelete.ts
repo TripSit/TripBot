@@ -1,17 +1,20 @@
 import {
   TextChannel,
 } from 'discord.js';
+import { parse } from 'path';
 import {
-  guildDeleteEvent,
+  GuildDeleteEvent,
 } from '../@types/eventDef';
-import {db} from '../../global/utils/knex';
-import {DiscordGuilds} from '../../global/@types/pgdb';
+import { db } from '../../global/utils/knex';
+import { DiscordGuilds } from '../../global/@types/pgdb';
 import env from '../../global/utils/env.config';
 import log from '../../global/utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
 
-export const guildDelete: guildDeleteEvent = {
+export default guildDelete;
+
+export const guildDelete: GuildDeleteEvent = {
   name: 'guildDelete',
   async execute(guild) {
   // logger.debug(`[${PREFIX}] starting!`);

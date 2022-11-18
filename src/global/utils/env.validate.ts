@@ -1,27 +1,29 @@
-import log from '../../global/utils/log';
+import log from './log';
+
+export default validateEnv;
 
 export const validateEnv = () => {
   if (!process.env.DISCORD_CLIENT_TOKEN) {
-    log.error(`Missing DISCORD_CLIENT_TOKEN: You wont be able to login to discord.`);
+    log.error('Missing DISCORD_CLIENT_TOKEN: You wont be able to login to discord.');
     return false;
   }
 
   if (!process.env.DISCORD_CLIENT_ID) {
-    log.error(`Missing DISCORD_CLIENT_ID: You wont be able to login to discord.`);
+    log.error('Missing DISCORD_CLIENT_ID: You wont be able to login to discord.');
     return false;
   }
 
   if (!process.env.DISCORD_CLIENT_SECRET) {
-    log.error(`Missing DISCORD_CLIENT_SECRET: You wont be able to login to discord.`);
+    log.error('Missing DISCORD_CLIENT_SECRET: You wont be able to login to discord.');
     return false;
   }
 
   if (!process.env.GITHUB_TOKEN) {
-    log.warn(`Missing GITHUB_TOKEN: You wont be able to use /issue`);
+    log.warn('Missing GITHUB_TOKEN: You wont be able to use /issue');
   }
 
   if (!process.env.RAPID_TOKEN) {
-    log.warn(`Missing RAPID_TOKEN: You wont be able to use /joke`);
+    log.warn('Missing RAPID_TOKEN: You wont be able to use /joke');
   }
 
   // if (!process.env.DISCORD_CLIENT_REDIRECT_URI) {

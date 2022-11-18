@@ -2,17 +2,20 @@
 //   MessageReaction,
 //   User,
 // } from 'discord.js';
+import { parse } from 'path';
 import {
-  messageReactionRemoveEvent,
+  MessageReactionRemoveEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
-import {handleReactionRoles} from '../utils/handleReactionRoles';
-import {chitragupta} from '../utils/chitragupta';
+import { handleReactionRoles } from '../utils/handleReactionRoles';
+import { chitragupta } from '../utils/chitragupta';
 import log from '../../global/utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
 
-export const messageReactionRemove: messageReactionRemoveEvent = {
+export default messageReactionRemove;
+
+export const messageReactionRemove: MessageReactionRemoveEvent = {
   name: 'messageReactionRemove',
   async execute(reaction, user) {
     // Only run on Tripsit
@@ -37,7 +40,7 @@ export const messageReactionRemove: messageReactionRemoveEvent = {
       // log.debug(`[${PREFIX}] reaction is partial!`);
       // If the message this reaction belongs to was removed,
       // the fetching might result in an API error which should be handled
-      await reaction.fetch().catch(ex => {
+      await reaction.fetch().catch((ex) => {
         log.error(`[${PREFIX}] reaction3: ${JSON.stringify(ex, null, 4)}`);
       });
     }

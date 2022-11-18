@@ -4,11 +4,12 @@ import {
   TextChannel,
   Message,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {startLog} from '../../utils/startLog';
-import {embedTemplate} from '../../utils/embedTemplate';
-import {stripIndents} from 'common-tags';
-import {parse} from 'path';
+import { stripIndents } from 'common-tags';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { startLog } from '../../utils/startLog';
+import { embedTemplate } from '../../utils/embedTemplate';
+
 const PREFIX = parse(__filename).name;
 
 const emojiDict = {
@@ -23,22 +24,24 @@ const emojiDict = {
   9: '9️⃣',
 };
 
+export default dpoll;
+
 export const dpoll: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('poll')
     .setDescription('Creates a poll!')
-    .addStringOption(option => option
+    .addStringOption((option) => option
       .setName('question')
       .setDescription('What do you want to ask?')
       .setRequired(true))
-    .addStringOption(option => option
+    .addStringOption((option) => option
       .setName('options')
       .setDescription('CSV of options, EG: "Red, Blue, Green"')
       .setRequired(true)),
   async execute(interaction) {
     startLog(PREFIX, interaction);
     // await interaction.deferReply({ephemeral: true});
-    interaction.reply({content: 'Creating poll...', ephemeral: true});
+    interaction.reply({ content: 'Creating poll...', ephemeral: true });
     const question = interaction.options.getString('question');
     const optionsString = interaction.options.getString('options');
     if (!question || !optionsString) {
@@ -61,9 +64,9 @@ export const dpoll: SlashCommand = {
       .setAuthor(null)
       .setTitle(`**${question}**`)
       .setDescription(stripIndents`${body}`)
-      .setFooter({text: `*A poll by ${(interaction.member as GuildMember).displayName}*`});
+      .setFooter({ text: `*A poll by ${(interaction.member as GuildMember).displayName}*` });
 
-    await (interaction.channel as TextChannel).send({embeds: [pollEmbed]})
+    await (interaction.channel as TextChannel).send({ embeds: [pollEmbed] })
       .then(async (msg:Message) => {
         for (let i = 0; i < optionsArray.length; i += 1) {
           /* eslint-disable no-await-in-loop */

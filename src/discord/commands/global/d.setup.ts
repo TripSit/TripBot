@@ -12,173 +12,27 @@ import {
   SelectMenuBuilder,
   GuildMember,
   ModalSubmitInteraction,
-  Role,
+  // Role,
 } from 'discord.js';
 import {
   ButtonStyle, TextInputStyle,
 } from 'discord-api-types/v10';
-import {db} from '../../../global/utils/knex';
+import { stripIndent, stripIndents } from 'common-tags';
+import { parse } from 'path';
+import { db } from '../../../global/utils/knex';
 import {
   DiscordGuilds,
   ReactionRoles,
 } from '../../../global/@types/pgdb';
 import env from '../../../global/utils/env.config';
-import {startLog} from '../../utils/startLog';
-import {SlashCommand} from '../../@types/commandDef';
-import {stripIndent, stripIndents} from 'common-tags';
-import {embedTemplate} from '../../utils/embedTemplate';
+import { startLog } from '../../utils/startLog';
+import { SlashCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
 import log from '../../../global/utils/log';
 
-import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
 const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
-
-/**
- * This command populates various channels with static prompts
- * This is actually kind of complicated, but not really, let me explain:
- * Each prompt generally allows a response from the user, like giving a role or sending a message
- * @param {Interaction} interaction The interaction that triggered this
- */
-export const prompt: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('setup')
-    .setDescription('Set up various channels and prompts!')
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Tripsit info!')
-      .setName('tripsit')
-      .addRoleOption(option => option
-        .setDescription('What is your Tripsitter role?')
-        .setName('tripsitter')
-        .setRequired(true),
-      )
-      .addRoleOption(option => option
-        .setDescription('What is your Needshelp role?')
-        .setName('needshelp')
-        .setRequired(true),
-      )
-      .addChannelOption(option => option
-        .setDescription('What is your Meta-tripsit channel?')
-        .setName('metatripsit')
-        .setRequired(true),
-      )
-      // .addChannelOption((option) => option
-      //   .setDescription('Do you have a sanctuary room?')
-      //   .setName('sanctuary'),
-      // )
-      // .addChannelOption((option) => option
-      //   .setDescription('Do you have a general room?')
-      //   .setName('general'),
-      // )
-      .addRoleOption(option => option
-        .setDescription('What is your Helper role?')
-        .setName('helper'),
-      ),
-    )
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Set up the application page. 5 roles max!')
-      .setName('applications')
-      .addChannelOption(option => option
-        .setDescription('What channel stores applications?')
-        .setName('applications_channel')
-        .setRequired(true),
-      )
-      .addRoleOption(option => option
-        .setDescription('What role are people applying for?')
-        .setName('application_role_a')
-        .setRequired(true),
-      )
-      .addRoleOption(option => option
-        .setDescription('What role reviews those applications?')
-        .setName('application_reviewer_a')
-        .setRequired(true),
-      )
-      .addRoleOption(option => option
-        .setDescription('What role are people applying for?')
-        .setName('application_role_b'),
-      )
-      .addRoleOption(option => option
-        .setDescription('What role reviews those applications?')
-        .setName('application_reviewer_b'),
-      )
-      .addRoleOption(option => option
-        .setDescription('What role are people applying for?')
-        .setName('application_role_c'),
-      )
-      .addRoleOption(option => option
-        .setDescription('What role reviews those applications?')
-        .setName('application_reviewer_c'),
-      )
-      .addRoleOption(option => option
-        .setDescription('What role are people applying for?')
-        .setName('application_role_d'),
-      )
-      .addRoleOption(option => option
-        .setDescription('What role reviews those applications?')
-        .setName('application_reviewer_d'),
-      )
-      .addRoleOption(option => option
-        .setDescription('What role are people applying for?')
-        .setName('application_role_e'),
-      )
-      .addRoleOption(option => option
-        .setDescription('What role reviews those applications?')
-        .setName('application_reviewer_e'),
-      ),
-    )
-    .addSubcommand(subcommand => subcommand
-      .setDescription('techhelp info!')
-      .setName('techhelp')
-      .addRoleOption(option => option
-        .setDescription('What role responds to tickets here?')
-        .setName('roletechreviewer')
-        .setRequired(true),
-      )
-      .addChannelOption(option => option
-        .setDescription('Do you have a tripsit room?')
-        .setName('tripsit'),
-      ),
-    )
-    .addSubcommand(subcommand => subcommand
-      .setDescription('rules info!')
-      .setName('rules'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('starthere info!')
-      .setName('starthere'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('mindset reaction roles!')
-      .setName('mindset'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('color reaction roles')
-      .setName('color'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('ticketbooth info!')
-      .setName('ticketbooth')),
-  async execute(interaction:ChatInputCommandInteraction) {
-    startLog(PREFIX, interaction);
-    // await interaction.deferReply({ephemeral: true});
-    const command = interaction.options.getSubcommand();
-    if (command === 'applications') {
-      await applications(interaction);
-    } else if (command === 'techhelp') {
-      await techhelp(interaction);
-    } else if (command === 'rules') {
-      await rules(interaction);
-    } else if (command === 'starthere') {
-      await starthere(interaction);
-    } else if (command === 'mindset') {
-      await mindsets(interaction);
-    } else if (command === 'color') {
-      await colors(interaction);
-    } else if (command === 'tripsit') {
-      await tripsit(interaction);
-    } else if (command === 'ticketbooth') {
-      await ticketbooth(interaction);
-    }
-    // await interaction.editReply('Donezo!');
-    return true;
-  },
-};
 
 /**
  * Checks to see if the bot has the right permissions
@@ -188,14 +42,15 @@ export const prompt: SlashCommand = {
  */
 export async function hasPermissions(
   interaction: ChatInputCommandInteraction,
-  channel: TextChannel):Promise<boolean> {
+  channel: TextChannel,
+):Promise<boolean> {
   // log.debug(`[${PREFIX}] Checking permissions`);
   if (!interaction.guild) {
     const embed = embedTemplate()
       .setTitle('This command can only be used in a server!');
-    interaction.editReply({embeds: [embed]});
+    interaction.editReply({ embeds: [embed] });
     return false;
-  };
+  }
   const me = interaction.guild.members.me as GuildMember;
   const channelPerms = channel.permissionsFor(me);
   // log.debug(`[${PREFIX}] channelPerms: ${channelPerms?.toArray()}`);
@@ -203,37 +58,37 @@ export async function hasPermissions(
   if (!channelPerms.has('ViewChannel')) {
     const embed = embedTemplate()
       .setTitle(`I need the 'ViewChannel' permissions in ${channel.name} to view the channel!`);
-    interaction.followUp({embeds: [embed]});
+    interaction.followUp({ embeds: [embed] });
     return false;
   }
   if (!channelPerms.has('SendMessages')) {
     const embed = embedTemplate()
       .setTitle(`I need the 'SendMessages' permissions in ${channel.name} to send messages!`);
-    interaction.followUp({embeds: [embed]});
+    interaction.followUp({ embeds: [embed] });
     return false;
   }
   if (!channelPerms.has('CreatePrivateThreads')) {
     const embed = embedTemplate()
       .setTitle(`I need the 'CreatePrivateThreads' permissions in ${channel.name} to create a private thread!`);
-    interaction.followUp({embeds: [embed]});
+    interaction.followUp({ embeds: [embed] });
     return false;
   }
   if (!channelPerms.has('CreatePublicThreads')) {
     const embed = embedTemplate()
       .setTitle(`I need the 'CreatePublicThreads' permissions in ${channel.name} create a public thread!`);
-    interaction.followUp({embeds: [embed]});
+    interaction.followUp({ embeds: [embed] });
     return false;
   }
   if (!channelPerms.has('SendMessagesInThreads')) {
     const embed = embedTemplate()
       .setTitle(`I need the 'SendMessagesInThreads' permissions in ${channel.name} send messages in threads!`);
-    interaction.followUp({embeds: [embed]});
+    interaction.followUp({ embeds: [embed] });
     return false;
   }
   if (!channelPerms.has('EmbedLinks')) {
     const embed = embedTemplate()
       .setTitle(`I need the 'EmbedLinks' permissions in ${channel.name} send messages in threads!`);
-    interaction.followUp({embeds: [embed]});
+    interaction.followUp({ embeds: [embed] });
     return false;
   }
   return true;
@@ -255,7 +110,6 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
     interaction.reply('You must run this in the guild you want the prompt to be in!');
     return;
   }
-
 
   if (!await hasPermissions(interaction, (interaction.channel as TextChannel))) {
     // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
@@ -309,7 +163,7 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
     modalText += `\n\nAll other topics of conversation are welcome in ${channelGeneral.toString()}!`;
   }
 
-  modalText += `\n\nStay safe!\n\n`;
+  modalText += '\n\nStay safe!\n\n';
 
   // Create the modal
   const modal = new ModalBuilder()
@@ -326,9 +180,9 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
   await interaction.showModal(modal);
 
   // Collect a modal submit interaction
-  const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`tripsitmeModal`);
-  interaction.awaitModalSubmit({filter, time: 0})
-    .then(async i => {
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeModal');
+  interaction.awaitModalSubmit({ filter, time: 0 })
+    .then(async (i) => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       if (!i.guild) return;
 
@@ -338,14 +192,14 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
       const row = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           new ButtonBuilder()
-            .setCustomId(`tripsitmeClick`)
+            .setCustomId('tripsitmeClick')
             .setLabel('I need assistance!')
             .setStyle(ButtonStyle.Primary),
         );
 
       // Create a new button
-      await (i.channel as TextChannel).send({content: introMessage, components: [row]});
-      i.reply({content: 'Donezo!', ephemeral: true});
+      await (i.channel as TextChannel).send({ content: introMessage, components: [row] });
+      i.reply({ content: 'Donezo!', ephemeral: true });
     });
 }
 
@@ -364,7 +218,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
   if (!interaction.guild) {
     interaction.reply('You must run this in a guild!');
     return;
-  };
+  }
 
   const hasPermission = await hasPermissions(interaction, (interaction.channel as TextChannel));
   if (!hasPermission) {
@@ -436,14 +290,13 @@ export async function applications(interaction:ChatInputCommandInteraction) {
     We appreciate all types of help: Not just coders, but anyone who wants to give input or test out new features!
   
     If you want to help out with ${interaction.guild.name}, please click the button below to fill out the application form.
-    `)),
-  );
+    `)));
   await interaction.showModal(modal);
 
   // Collect a modal submit interaction
-  const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith('appModal');
-  interaction.awaitModalSubmit({filter, time: 150000})
-    .then(async i => {
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('appModal');
+  interaction.awaitModalSubmit({ filter, time: 150000 })
+    .then(async (i) => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       const selectMenu = new SelectMenuBuilder()
         .setCustomId('applicationRoleSelectMenu')
@@ -452,9 +305,10 @@ export async function applications(interaction:ChatInputCommandInteraction) {
       selectMenu.addOptions(
         {
           label: 'Select role here!',
-          value: `none`,
-        });
-      roleArray.forEach(role => {
+          value: 'none',
+        },
+      );
+      roleArray.forEach((role) => {
         if (role[0]) {
           if (role[1]) {
             log.debug(`[${PREFIX}] role: ${role[0].name}`);
@@ -477,7 +331,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
             .addComponents(selectMenu)],
         },
       );
-      i.reply({content: 'Donezo!', ephemeral: true});
+      i.reply({ content: 'Donezo!', ephemeral: true });
     });
 }
 
@@ -496,7 +350,7 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
   if (!interaction.guild) {
     interaction.reply('You must run this in a server!');
     return;
-  };
+  }
 
   if (!await hasPermissions(interaction, (interaction.channel as TextChannel))) {
     // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
@@ -511,7 +365,6 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
     })
     .onConflict('id')
     .merge();
-
 
   let text = stripIndents`
     Welcome to ${interaction.guild.name}'s technical help channel!
@@ -532,24 +385,24 @@ Thanks for reading, stay safe!
   `;
 
   // Get the moderator role
-  const roleModerator = interaction.options.getRole('moderator') as Role;
+  // const roleModerator = interaction.options.getRole('moderator') as Role;
 
   // Create buttons
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId(`techHelpClick~discord`)
+        .setCustomId('techHelpClick~discord')
         .setLabel('Discord issue/feedback!')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setCustomId(`techHelpClick~other`)
+        .setCustomId('techHelpClick~other')
         .setLabel('I have something else!')
         .setStyle(ButtonStyle.Secondary),
     );
 
   // Create a new button
-  await (interaction.channel as TextChannel).send({content: text, components: [row]});
-  interaction.reply({content: 'Donezo!', ephemeral: true});
+  await (interaction.channel as TextChannel).send({ content: text, components: [row] });
+  interaction.reply({ content: 'Donezo!', ephemeral: true });
 }
 
 /**
@@ -575,7 +428,7 @@ export async function rules(interaction:ChatInputCommandInteraction) {
     .setFooter(null)
     .setColor(Colors.Red)
     .setImage('attachment://RULES.png');
-  await (interaction.channel as TextChannel).send({embeds: [embed], files: [file]});
+  await (interaction.channel as TextChannel).send({ embeds: [embed], files: [file] });
 
   await (interaction.channel as TextChannel).send(stripIndents`
     > **-** **You can be banned without warning if you do not follow the rules!**
@@ -667,7 +520,7 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
     );
 
   // Create a new button
-  await (interaction.channel as TextChannel).send({content: buttonText, components: [row]});
+  await (interaction.channel as TextChannel).send({ content: buttonText, components: [row] });
 }
 
 /**
@@ -746,7 +599,7 @@ export async function mindsets(interaction:ChatInputCommandInteraction) {
 
       *You may have more than one mindset, please pick the main one!*
     `)
-    .setFooter({text: 'These roles reset after 8 hours to (somewhat) accurately show your mindset!'})
+    .setFooter({ text: 'These roles reset after 8 hours to (somewhat) accurately show your mindset!' })
     .setColor(Colors.Purple);
   let reactionRoleInfo = [] as {
     guild_id: string;
@@ -756,8 +609,8 @@ export async function mindsets(interaction:ChatInputCommandInteraction) {
     role_id: string;
   }[];
 
-  await (interaction.channel as TextChannel).send({embeds: [mindsetEmbed]})
-    .then(async msg => {
+  await (interaction.channel as TextChannel).send({ embeds: [mindsetEmbed] })
+    .then(async (msg) => {
       await msg.react(`${env.EMOJI_DRUNK}`);
       await msg.react(`${env.EMOJI_HIGH}`);
       await msg.react(`${env.EMOJI_ROLLING}`);
@@ -773,63 +626,63 @@ export async function mindsets(interaction:ChatInputCommandInteraction) {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: env.EMOJI_DRUNK.slice(env.EMOJI_DRUNK.indexOf(':', 3)+1, env.EMOJI_DRUNK.indexOf('>')),
+          reaction_id: env.EMOJI_DRUNK.slice(env.EMOJI_DRUNK.indexOf(':', 3) + 1, env.EMOJI_DRUNK.indexOf('>')),
           role_id: env.ROLE_DRUNK,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: env.EMOJI_HIGH.slice(env.EMOJI_HIGH.indexOf(':', 3)+1, env.EMOJI_HIGH.indexOf('>')),
+          reaction_id: env.EMOJI_HIGH.slice(env.EMOJI_HIGH.indexOf(':', 3) + 1, env.EMOJI_HIGH.indexOf('>')),
           role_id: env.ROLE_HIGH,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: env.EMOJI_ROLLING.slice(env.EMOJI_ROLLING.indexOf(':', 3)+1, env.EMOJI_ROLLING.indexOf('>')),
+          reaction_id: env.EMOJI_ROLLING.slice(env.EMOJI_ROLLING.indexOf(':', 3) + 1, env.EMOJI_ROLLING.indexOf('>')),
           role_id: env.ROLE_ROLLING,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: env.EMOJI_TRIPPING.slice(env.EMOJI_TRIPPING.indexOf(':', 3)+1, env.EMOJI_TRIPPING.indexOf('>')),
+          reaction_id: env.EMOJI_TRIPPING.slice(env.EMOJI_TRIPPING.indexOf(':', 3) + 1, env.EMOJI_TRIPPING.indexOf('>')),
           role_id: env.ROLE_TRIPPING,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: env.EMOJI_DISSOCIATING.slice(env.EMOJI_DISSOCIATING.indexOf(':', 3)+1, env.EMOJI_DISSOCIATING.indexOf('>')),
+          reaction_id: env.EMOJI_DISSOCIATING.slice(env.EMOJI_DISSOCIATING.indexOf(':', 3) + 1, env.EMOJI_DISSOCIATING.indexOf('>')),
           role_id: env.ROLE_DISSOCIATING,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: env.EMOJI_STIMMING.slice(env.EMOJI_STIMMING.indexOf(':', 3)+1, env.EMOJI_STIMMING.indexOf('>')),
+          reaction_id: env.EMOJI_STIMMING.slice(env.EMOJI_STIMMING.indexOf(':', 3) + 1, env.EMOJI_STIMMING.indexOf('>')),
           role_id: env.ROLE_STIMMING,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: env.EMOJI_SEDATED.slice(env.EMOJI_SEDATED.indexOf(':', 3)+1, env.EMOJI_SEDATED.indexOf('>')),
+          reaction_id: env.EMOJI_SEDATED.slice(env.EMOJI_SEDATED.indexOf(':', 3) + 1, env.EMOJI_SEDATED.indexOf('>')),
           role_id: env.ROLE_NODDING,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: env.EMOJI_TALKATIVE.slice(env.EMOJI_TALKATIVE.indexOf(':', 3)+1, env.EMOJI_TALKATIVE.indexOf('>')),
+          reaction_id: env.EMOJI_TALKATIVE.slice(env.EMOJI_TALKATIVE.indexOf(':', 3) + 1, env.EMOJI_TALKATIVE.indexOf('>')),
           role_id: env.ROLE_TALKATIVE,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: env.EMOJI_WORKING.slice(env.EMOJI_WORKING.indexOf(':', 3)+1, env.EMOJI_WORKING.indexOf('>')),
+          reaction_id: env.EMOJI_WORKING.slice(env.EMOJI_WORKING.indexOf(':', 3) + 1, env.EMOJI_WORKING.indexOf('>')),
           role_id: env.ROLE_WORKING,
         },
       ];
@@ -864,11 +717,11 @@ export async function colors(interaction:ChatInputCommandInteraction) {
 
   const colorEmbed = embedTemplate()
     .setDescription('React to this message to set the color of your nickname!')
-    .setFooter({text: 'You can only pick one color at a time!'})
+    .setFooter({ text: 'You can only pick one color at a time!' })
     .setColor(Colors.Blue);
 
-  await (interaction.channel as TextChannel).send({embeds: [colorEmbed]})
-    .then(async msg => {
+  await (interaction.channel as TextChannel).send({ embeds: [colorEmbed] })
+    .then(async (msg) => {
       await msg.react('❤');
       await msg.react('🧡');
       await msg.react('💛');
@@ -883,63 +736,63 @@ export async function colors(interaction:ChatInputCommandInteraction) {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: `❤`,
+          reaction_id: '❤',
           role_id: env.ROLE_RED,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: `🧡`,
+          reaction_id: '🧡',
           role_id: env.ROLE_ORANGE,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: `💛`,
+          reaction_id: '💛',
           role_id: env.ROLE_YELLOW,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: `💚`,
+          reaction_id: '💚',
           role_id: env.ROLE_GREEN,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: `💙`,
+          reaction_id: '💙',
           role_id: env.ROLE_BLUE,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: `💜`,
+          reaction_id: '💜',
           role_id: env.ROLE_PURPLE,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: env.EMOJI_PINKHEART.slice(env.EMOJI_PINKHEART.indexOf(':', 3)+1, env.EMOJI_PINKHEART.indexOf('>')),
+          reaction_id: env.EMOJI_PINKHEART.slice(env.EMOJI_PINKHEART.indexOf(':', 3) + 1, env.EMOJI_PINKHEART.indexOf('>')),
           role_id: env.ROLE_PINK,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: `🖤`,
+          reaction_id: '🖤',
           role_id: env.ROLE_BLACK,
         },
         {
           guild_id: msg.channel.guild.id,
           channel_id: msg.channel.id,
           message_id: msg.id,
-          reaction_id: `🤍`,
+          reaction_id: '🤍',
           role_id: env.ROLE_WHITE,
         },
       ];
@@ -951,3 +804,129 @@ export async function colors(interaction:ChatInputCommandInteraction) {
         .merge();
     });
 }
+
+/**
+ * This command populates various channels with static prompts
+ * This is actually kind of complicated, but not really, let me explain:
+ * Each prompt generally allows a response from the user, like giving a role or sending a message
+ * @param {Interaction} interaction The interaction that triggered this
+ */
+export const prompt: SlashCommand = {
+  data: new SlashCommandBuilder()
+    .setName('setup')
+    .setDescription('Set up various channels and prompts!')
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('Tripsit info!')
+      .setName('tripsit')
+      .addRoleOption((option) => option
+        .setDescription('What is your Tripsitter role?')
+        .setName('tripsitter')
+        .setRequired(true))
+      .addRoleOption((option) => option
+        .setDescription('What is your Needshelp role?')
+        .setName('needshelp')
+        .setRequired(true))
+      .addChannelOption((option) => option
+        .setDescription('What is your Meta-tripsit channel?')
+        .setName('metatripsit')
+        .setRequired(true))
+      // .addChannelOption((option) => option
+      //   .setDescription('Do you have a sanctuary room?')
+      //   .setName('sanctuary'),
+      // )
+      // .addChannelOption((option) => option
+      //   .setDescription('Do you have a general room?')
+      //   .setName('general'),
+      // )
+      .addRoleOption((option) => option
+        .setDescription('What is your Helper role?')
+        .setName('helper')))
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('Set up the application page. 5 roles max!')
+      .setName('applications')
+      .addChannelOption((option) => option
+        .setDescription('What channel stores applications?')
+        .setName('applications_channel')
+        .setRequired(true))
+      .addRoleOption((option) => option
+        .setDescription('What role are people applying for?')
+        .setName('application_role_a')
+        .setRequired(true))
+      .addRoleOption((option) => option
+        .setDescription('What role reviews those applications?')
+        .setName('application_reviewer_a')
+        .setRequired(true))
+      .addRoleOption((option) => option
+        .setDescription('What role are people applying for?')
+        .setName('application_role_b'))
+      .addRoleOption((option) => option
+        .setDescription('What role reviews those applications?')
+        .setName('application_reviewer_b'))
+      .addRoleOption((option) => option
+        .setDescription('What role are people applying for?')
+        .setName('application_role_c'))
+      .addRoleOption((option) => option
+        .setDescription('What role reviews those applications?')
+        .setName('application_reviewer_c'))
+      .addRoleOption((option) => option
+        .setDescription('What role are people applying for?')
+        .setName('application_role_d'))
+      .addRoleOption((option) => option
+        .setDescription('What role reviews those applications?')
+        .setName('application_reviewer_d'))
+      .addRoleOption((option) => option
+        .setDescription('What role are people applying for?')
+        .setName('application_role_e'))
+      .addRoleOption((option) => option
+        .setDescription('What role reviews those applications?')
+        .setName('application_reviewer_e')))
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('techhelp info!')
+      .setName('techhelp')
+      .addRoleOption((option) => option
+        .setDescription('What role responds to tickets here?')
+        .setName('roletechreviewer')
+        .setRequired(true))
+      .addChannelOption((option) => option
+        .setDescription('Do you have a tripsit room?')
+        .setName('tripsit')))
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('rules info!')
+      .setName('rules'))
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('starthere info!')
+      .setName('starthere'))
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('mindset reaction roles!')
+      .setName('mindset'))
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('color reaction roles')
+      .setName('color'))
+    .addSubcommand((subcommand) => subcommand
+      .setDescription('ticketbooth info!')
+      .setName('ticketbooth')),
+  async execute(interaction:ChatInputCommandInteraction) {
+    startLog(PREFIX, interaction);
+    // await interaction.deferReply({ephemeral: true});
+    const command = interaction.options.getSubcommand();
+    if (command === 'applications') {
+      await applications(interaction);
+    } else if (command === 'techhelp') {
+      await techhelp(interaction);
+    } else if (command === 'rules') {
+      await rules(interaction);
+    } else if (command === 'starthere') {
+      await starthere(interaction);
+    } else if (command === 'mindset') {
+      await mindsets(interaction);
+    } else if (command === 'color') {
+      await colors(interaction);
+    } else if (command === 'tripsit') {
+      await tripsit(interaction);
+    } else if (command === 'ticketbooth') {
+      await ticketbooth(interaction);
+    }
+    // await interaction.editReply('Donezo!');
+    return true;
+  },
+};

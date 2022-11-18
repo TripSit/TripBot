@@ -1,30 +1,32 @@
-/* eslint-disable max-len*/
+/* eslint-disable max-len */
 
 import {
   Message,
   TextChannel,
   Role,
 } from 'discord.js';
-import {DateTime} from 'luxon';
-import {db, getUser} from '../utils/knex';
-import {UserExperience, ExperienceType} from '../@types/pgdb';
+import { DateTime } from 'luxon';
+import { stripIndents } from 'common-tags';
+import { parse } from 'path';
+import { db, getUser } from './knex';
+import { UserExperience, ExperienceType } from '../@types/pgdb';
 import env from './env.config';
 import log from './log';
-import {stripIndents} from 'common-tags';
 
-import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
 // Define the time in between messages where exp will count
 const bufferTime = env.NODE_ENV === 'production' ? 60 * 1000 : 1 * 1000;
 
 const ignoredRoles = Object.values({
-  'needshelp': [env.ROLE_NEEDSHELP],
-  'newbie': [env.ROLE_NEWBIE],
-  'underban': [env.ROLE_UNDERBAN],
-  'muted': [env.ROLE_MUTED],
-  'tempvoice': [env.ROLE_TEMPVOICE],
+  needshelp: [env.ROLE_NEEDSHELP],
+  newbie: [env.ROLE_NEWBIE],
+  underban: [env.ROLE_UNDERBAN],
+  muted: [env.ROLE_MUTED],
+  tempvoice: [env.ROLE_TEMPVOICE],
 }).flat();
+
+export default experience;
 
 /**
  * This takes a messsage and gives the user experience
@@ -41,7 +43,7 @@ export async function experience(
   const actor = message.member;
 
   // Check if the user has an ignored role
-  if (ignoredRoles.some(role => message.member?.roles.cache.has(role))) {
+  if (ignoredRoles.some((role) => message.member?.roles.cache.has(role))) {
     // log.debug(`[${PREFIX}] Message sent by a user with an ignored role`);
     return;
   }
@@ -84,9 +86,9 @@ export async function experience(
   // log.debug(`[${PREFIX}] experienceType: ${experienceType}`);
 
   // Get random value between 15 and 25
-  const expPoints = env.NODE_ENV === 'production' ?
-    Math.floor(Math.random() * (25 - 15 + 1)) + 15 :
-    100;
+  const expPoints = env.NODE_ENV === 'production'
+    ? Math.floor(Math.random() * (25 - 15 + 1)) + 15
+    : 100;
 
   const userData = await getUser(message.author.id, null);
 
@@ -124,12 +126,11 @@ export async function experience(
         level: 0,
       });
     return;
-  } else {
-    // If the user has experience, update it
-    // log.debug(`[${PREFIX}] Updating existing experience`);
-    experienceData.level_points += expPoints;
-    experienceData.total_points += expPoints;
   }
+  // If the user has experience, update it
+  // log.debug(`[${PREFIX}] Updating existing experience`);
+  experienceData.level_points += expPoints;
+  experienceData.total_points += expPoints;
 
   // log.debug(`[${PREFIX}] experienceDataUpdate: ${JSON.stringify(experienceData, null, 2)}`);
 
@@ -155,13 +156,12 @@ export async function experience(
   let levelExpPoints = experienceData.level_points + expPoints;
   const totalExpPoints = experienceData.total_points + expPoints;
 
-  let level = experienceData.level;
+  let { level } = experienceData;
   const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
 
   const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
   const channelTripbotlogs = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
   const member = await guild.members.fetch(actor.id);
-
   // Give the proper VIP role
   if (experienceType === 'total') {
     // VIP only cares about total
@@ -236,7 +236,6 @@ export async function experience(
     }
   }
 
-
   // eslint-disable-next-line max-len
   // log.debug(stripIndents`[${PREFIX}] ${message.author.username } (lv${level}) +${expPoints} ${experienceType} exp | Total: ${totalExpPoints}, Level: ${levelExpPoints}, Needed to level up: ${expToLevel-levelExpPoints}`);
   if (expToLevel < levelExpPoints) {
@@ -244,7 +243,6 @@ export async function experience(
     // log.debug(stripIndents`[${PREFIX}] ${message.author.username} has leveled up to ${experienceType} level ${level}!`);
 
     if (level % 5 === 0) {
-      const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
       channelTripbotlogs.send(stripIndents`${message.author.username} has leveled up to ${experienceType} level ${level}!`);
     }
     // channelTripbotlogs.send({embeds: [embed]});
@@ -263,4 +261,4 @@ export async function experience(
     .insert(experienceData)
     .onConflict(['id', 'user_id', 'type'])
     .merge();
-};
+}

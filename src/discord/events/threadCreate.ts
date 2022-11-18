@@ -5,7 +5,7 @@ import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
 import {
-  threadCreateEvent,
+  ThreadCreateEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 // import logger from '../../global/utils/logger';
@@ -14,7 +14,9 @@ import env from '../../global/utils/env.config';
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const threadCreate: threadCreateEvent = {
+export default threadCreate;
+
+export const threadCreate: ThreadCreateEvent = {
   name: 'threadCreate',
   async execute(thread) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)

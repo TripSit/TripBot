@@ -184,14 +184,14 @@ module.exports = {
 
     // Transfor actor data
     if ('discord' in actorData) {
-      if ('modActions' in actorData) {
-        actorData.discord.modActions[actorAction] = (
-          actorData.discord.modActions[actorAction] || 0) + 1;
+      if ('ModActions' in actorData) {
+        actorData.discord.ModActions[actorAction] = (
+          actorData.discord.ModActions[actorAction] || 0) + 1;
       } else {
-        actorData.discord.modActions = { [actorAction]: 1 };
+        actorData.discord.ModActions = { [actorAction]: 1 };
       }
     } else {
-      actorData.discord = { modActions: { [actorAction]: 1 } };
+      actorData.discord = { ModActions: { [actorAction]: 1 } };
     }
 
     // Load actor data
@@ -203,14 +203,14 @@ module.exports = {
 
     // Transform taget data
     if ('discord' in actorData) {
-      if ('modActions' in targetData) {
-        targetData.discord.modActions[targetAction] = (
-          targetData.discord.modActions[targetAction] || 0) + 1;
+      if ('ModActions' in targetData) {
+        targetData.discord.ModActions[targetAction] = (
+          targetData.discord.ModActions[targetAction] || 0) + 1;
       } else {
-        targetData.discord.modActions = { [targetAction]: 1 };
+        targetData.discord.ModActions = { [targetAction]: 1 };
       }
     } else {
-      targetData.discord = { modActions: { [targetAction]: 1 } };
+      targetData.discord = { ModActions: { [targetAction]: 1 } };
     }
 
     // Load target data

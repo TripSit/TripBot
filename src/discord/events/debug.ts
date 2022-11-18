@@ -1,13 +1,16 @@
+import * as path from 'path';
 import {
-  debugEvent,
+  DebugEvent,
 } from '../@types/eventDef';
 import log from '../../global/utils/log';
-import * as path from 'path';
+
 const PREFIX = path.parse(__filename).name;
 
 const enable = false;
 
-export const debug: debugEvent = {
+export default debug;
+
+export const debug: DebugEvent = {
   name: 'debug',
   async execute(info) {
     if (!enable) return;

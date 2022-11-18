@@ -1,17 +1,20 @@
 import {
   TextChannel,
 } from 'discord.js';
+// import { parse } from 'path';
 import {
-  messageUpdateEvent,
+  MessageUpdateEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
-import log from '../../global/utils/log'; // eslint-disable-line no-unused-vars
-import * as path from 'path'; // eslint-disable-line no-unused-vars
-const PREFIX = path.parse(__filename).name; // eslint-disable-line no-unused-vars
+// import log from '../../global/utils/log';
+// eslint-disable-line no-unused-vars
+// const PREFIX = parse(__filename).name;
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const messageUpdate: messageUpdateEvent = {
+export default messageUpdate;
+
+export const messageUpdate: MessageUpdateEvent = {
   name: 'messageUpdate',
   async execute(oldMessage, newMessage) {
     if (!newMessage.guild) return;

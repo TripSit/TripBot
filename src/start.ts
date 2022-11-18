@@ -1,14 +1,14 @@
-import {discordConnect} from './discord/dscrd';
-import {validateEnv} from './global/utils/env.validate';
-import {runTimer} from './global/utils/timer';
-import {webserverConnect} from './webserver/webserverAPI';
+import { parse } from 'path';
+import { Guild, TextChannel } from 'discord.js';
+import { discordConnect } from './discord/dscrd';
+import { validateEnv } from './global/utils/env.validate';
+import { runTimer } from './global/utils/timer';
+import { webserverConnect } from './webserver/webserverAPI';
 
 import env from './global/utils/env.config';
 
 import log from './global/utils/log';
 
-import {parse} from 'path';
-import {Guild, TextChannel} from 'discord.js';
 const PREFIX = parse(__filename).name;
 global.bootTime = new Date();
 

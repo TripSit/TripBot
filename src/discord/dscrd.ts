@@ -5,12 +5,15 @@ import {
 import {
   GatewayIntentBits,
 } from 'discord-api-types/v10';
+import { parse } from 'path';
 import env from '../global/utils/env.config';
 import log from '../global/utils/log';
-import {registerCommands} from './commands';
-import {registerEvents} from './events';
-import {parse} from 'path';
+import { registerCommands } from './commands';
+import { registerEvents } from './events';
+
 const PREFIX = parse(__filename).name;
+
+export default discordConnect;
 
 // eslint-disable-next-line
 // https://discord.com/api/oauth2/authorize?client_id=977945272359452713&permissions=378225575936&scope=bot%20applications.commands

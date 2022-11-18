@@ -3,26 +3,29 @@ import {
   Colors,
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
-import {calcBenzo} from '../../../global/commands/g.calcBenzo';
-import {stripIndents} from 'common-tags';
-import {parse} from 'path';
-import {startLog} from '../../utils/startLog';
+import { stripIndents } from 'common-tags';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
+import { calcBenzo } from '../../../global/commands/g.calcBenzo';
+import { startLog } from '../../utils/startLog';
+
 const PREFIX = parse(__filename).name;
+
+export default dcalcBenzo;
 
 export const dcalcBenzo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_benzo')
     .setDescription('This tool helps figure out how much of a given benzo dose converts into another benzo dose.')
-    .addNumberOption(option => option.setName('i_have')
+    .addNumberOption((option) => option.setName('i_have')
       .setDescription('mg')
       .setRequired(true))
-    .addStringOption(option => option.setName('mg_of')
+    .addStringOption((option) => option.setName('mg_of')
       .setDescription('Pick the first benzo')
       .setAutocomplete(true)
       .setRequired(true))
-    .addStringOption(option => option.setName('and_i_want_the_dose_of')
+    .addStringOption((option) => option.setName('and_i_want_the_dose_of')
       .setDescription('Pick the second drug')
       .setAutocomplete(true)
       .setRequired(true)),
@@ -35,7 +38,7 @@ export const dcalcBenzo: SlashCommand = {
     const data = await calcBenzo(dosage, drugA, drugB);
 
     if (typeof data === 'string') {
-      interaction.reply({content: data, ephemeral: true});
+      interaction.reply({ content: data, ephemeral: true });
       return false;
     }
 
@@ -46,7 +49,7 @@ export const dcalcBenzo: SlashCommand = {
         **Please make sure to research the substances thoroughly before using them.**
         It's a good idea to start with a lower dose than the calculator shows, since everybody can react differently to different substances.
         `);
-    interaction.reply({embeds: [embed], ephemeral: false});
+    interaction.reply({ embeds: [embed], ephemeral: false });
     return true;
   },
 };

@@ -4,15 +4,17 @@ import {
 } from 'discord.js';
 import env from '../../global/utils/env.config';
 
+export default embedTemplate;
+
 /**
  * Creates a template embed that can be used everywhere
  * @return {EmbedBuilder}
  */
 export function embedTemplate():EmbedBuilder {
   return new EmbedBuilder()
-    .setAuthor({name: 'TripSit.Me', iconURL: env.TS_ICON_URL, url: 'http://www.tripsit.me'})
+    .setAuthor({ name: 'TripSit.Me', iconURL: env.TS_ICON_URL, url: 'http://www.tripsit.me' })
     .setColor(Colors.Purple)
-    .setFooter({text: env.DISCLAIMER, iconURL: env.FLAME_ICON_URL});
+    .setFooter({ text: env.DISCLAIMER, iconURL: env.FLAME_ICON_URL });
   // .setThumbnail(tsIconUrl)
   // .setTitle('TITLE)
   // .setURL('https://tripsit.me/')
@@ -25,4 +27,4 @@ export function embedTemplate():EmbedBuilder {
   // )
   // .setImage('https://i.imgur.com/AfFp7pu.png')
   // .setTimestamp();
-};
+}

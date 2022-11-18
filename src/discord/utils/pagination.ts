@@ -12,6 +12,8 @@ import {
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
 
+export default paginationEmbed;
+
 /**
  * Creates a pagination embed
  * @param {BaseCommandInteraction} interaction The interaction to paginate
@@ -30,8 +32,8 @@ export async function paginationEmbed(
   if (!buttonList) throw new Error('Buttons are not given.');
 
   if (
-    buttonList[0].data.style === ButtonStyle.Link ||
-    buttonList[1].data.style === ButtonStyle.Link
+    buttonList[0].data.style === ButtonStyle.Link
+    || buttonList[1].data.style === ButtonStyle.Link
   ) {
     throw new Error(
       'Link buttons are not supported with discordjs-button-pagination',
@@ -48,25 +50,24 @@ export async function paginationEmbed(
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(buttonList);
 
-
   const curPage = await interaction.editReply({
     embeds: [
-      pages[page].setFooter({text: `Page ${page + 1} / ${pages.length}`}),
+      pages[page].setFooter({ text: `Page ${page + 1} / ${pages.length}` }),
     ],
     components: [row],
   });
 
   // There is a bug in the typescript definition of the buttonList[x].data.customId
   // @ts-ignore https://discord.com/channels/222078108977594368/824411059443204127/1013418391584899202
-  const filter = (i:Interaction) => i.customId === buttonList[1].data.custom_id || // @ts-ignore
-    i.customId === buttonList[0].data.custom_id;
+  const filter = (i:Interaction) => i.customId === buttonList[1].data.custom_id // @ts-ignore
+    || i.customId === buttonList[0].data.custom_id;
 
   const collector = await curPage.createMessageComponentCollector({
     filter,
     time: timeout,
   });
 
-  collector.on('collect', async i => {
+  collector.on('collect', async (i) => {
     switch (i.customId) {
       // @ts-ignore
       case buttonList[0].data.custom_id:
@@ -82,7 +83,7 @@ export async function paginationEmbed(
     await i.deferUpdate();
     await i.editReply({
       embeds: [
-        pages[page].setFooter({text: `Page ${page + 1} / ${pages.length}`}),
+        pages[page].setFooter({ text: `Page ${page + 1} / ${pages.length}` }),
       ],
       components: [row],
     });
@@ -97,7 +98,7 @@ export async function paginationEmbed(
       );
       curPage.edit({
         embeds: [
-          pages[page].setFooter({text: `Page ${page + 1} / ${pages.length}`}),
+          pages[page].setFooter({ text: `Page ${page + 1} / ${pages.length}` }),
         ],
         components: [disabledRow],
       });
@@ -105,4 +106,4 @@ export async function paginationEmbed(
   });
 
   return curPage;
-};
+}

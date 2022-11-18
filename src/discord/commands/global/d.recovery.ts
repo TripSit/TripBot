@@ -1,11 +1,14 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {recovery} from '../../../global/commands/g.recovery';
-import {startLog} from '../../utils/startLog';
-import {parse} from 'path';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { recovery } from '../../../global/commands/g.recovery';
+import { startLog } from '../../utils/startLog';
+
 const PREFIX = parse(__filename).name;
+
+export default drecovery;
 
 export const drecovery: SlashCommand = {
   data: new SlashCommandBuilder()

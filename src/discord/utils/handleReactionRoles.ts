@@ -3,18 +3,21 @@ import {
   User,
   // Role,
 } from 'discord.js';
-import {db} from '../../global/utils/knex';
+import { parse } from 'path';
+import { stripIndents } from 'common-tags';
+import { db } from '../../global/utils/knex';
 // import {
 //   Users,
 // } from '../../global/@types/pgdb.d';
 import env from '../../global/utils/env.config';
 import log from '../../global/utils/log';
-import {parse} from 'path';
-import {stripIndents} from 'common-tags';
-import {Users, ReactionRoles} from '../../global/@types/pgdb';
+import { Users, ReactionRoles } from '../../global/@types/pgdb';
+
 const PREFIX = parse(__filename).name;
 
 const mindsetRemovalTime = env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 8 : 1000 * 30;
+
+export default handleReactionRoles;
 
 /**
  * This runs on every reaction to see if it's a reaction role
@@ -37,29 +40,26 @@ export async function handleReactionRoles(
   const messageId = reaction.message.id;
   const reactionId = reaction.emoji.id ?? reaction.emoji.name;
   // log.debug(`[${PREFIX}] messageId: ${messageId} | reactionId: ${reactionId}`);
-  const reactionRole = await db<ReactionRoles>('reaction_roles')
+  const ReactionRole = await db<ReactionRoles>('reaction_roles')
     .select(db.ref('role_id'))
     .where('message_id', messageId)
     .andWhere('reaction_id', reactionId)
     .first();
 
-  if (reactionRole === undefined) {
+  if (ReactionRole === undefined) {
     // log.debug(`[${PREFIX}] No reaction role found!`);
     return;
   }
 
   if (reaction.message.guild) {
-    const role = await reaction.message.guild.roles.fetch(reactionRole.role_id);
-    if (role === null) {
-      // log.debug(`[${PREFIX}] No role found!`);
-      return;
-    } else {
+    const role = await reaction.message.guild.roles.fetch(ReactionRole.role_id);
+    if (role !== null) {
       // log.debug(`[${PREFIX}] role: ${role.name}`);
       if (add) {
         // Add the role
         (await reaction.message.guild.members.fetch(user.id)).roles.add(role);
         // log.debug(`[${PREFIX}] Added role ${role.name} to ${user.username}`);
-        reaction.message.reactions.cache.each(r => {
+        reaction.message.reactions.cache.each((r) => {
           if (r.emoji.name !== reaction.emoji.name) {
             r.users.remove(user);
           }
@@ -89,7 +89,7 @@ export async function handleReactionRoles(
             .onConflict('discord_id')
             .merge();
           // log.debug(`[${PREFIX}] Updated mindest DB ${user.username}`);
-        };
+        }
       } else {
         // Remove the role
         (await reaction.message.guild.members.fetch(user.id)).roles.remove(role);
@@ -98,6 +98,6 @@ export async function handleReactionRoles(
     }
   } else {
     // log.debug(`[${PREFIX}] No guild found!`);
-    return;
+
   }
-};
+}

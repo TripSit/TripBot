@@ -6,7 +6,7 @@ import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
 import {
-  messageDeleteEvent,
+  MessageDeleteEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 // import logger from '../../global/utils/logger';
@@ -15,7 +15,9 @@ import env from '../../global/utils/env.config';
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const messageDelete: messageDeleteEvent = {
+export default messageDelete;
+
+export const messageDelete: MessageDeleteEvent = {
   name: 'messageDelete',
   async execute(message) {
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
@@ -44,7 +46,7 @@ export const messageDelete: messageDeleteEvent = {
 
     // Now grab the user object of the person who deleted the message
     // Also grab the target of this action to double-check things
-    const {executor, target} = deletionLog;
+    const { executor, target } = deletionLog;
 
     const botlog = message.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     let response = '' as string;
@@ -61,7 +63,7 @@ export const messageDelete: messageDeleteEvent = {
         response = `Someone deleted a message by ${message.author.tag} in ${message.channel} saying \n> ${message.content}`; // eslint-disable-line max-len
       }
     } else {
-      response = `A message with no author was deleted!`;
+      response = 'A message with no author was deleted!';
       return;
     }
 

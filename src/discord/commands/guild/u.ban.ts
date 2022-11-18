@@ -10,14 +10,17 @@ import {
   ApplicationCommandType,
   TextInputStyle,
 } from 'discord-api-types/v10';
-import {parseDuration} from '../../../global/utils/parseDuration';
-import {UserCommand} from '../../@types/commandDef';
+import { parse } from 'path';
+import { parseDuration } from '../../../global/utils/parseDuration';
+import { UserCommand } from '../../@types/commandDef';
 // import log from '../../../global/utils/log';
-import {moderate} from '../../../global/commands/g.moderate';
-import {startLog} from '../../utils/startLog';
-import {parse} from 'path';
-import {UserActionType} from '../../../global/@types/pgdb';
+import { moderate } from '../../../global/commands/g.moderate';
+import { startLog } from '../../utils/startLog';
+import { UserActionType } from '../../../global/@types/pgdb';
+
 const PREFIX = parse(__filename).name;
+
+export default uBan;
 
 export const uBan: UserCommand = {
   data: new ContextMenuCommandBuilder()
@@ -31,13 +34,13 @@ export const uBan: UserCommand = {
     const modal = new ModalBuilder()
       .setCustomId(`banModal~${interaction.id}`)
       .setTitle('Tripbot Ban');
-    const privReason = new TextInputBuilder()
+    const privReasonInput = new TextInputBuilder()
       .setLabel('Why are you banning this user?')
       .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder('Tell the team why you are banning this user.')
       .setRequired(true)
       .setCustomId('privReason');
-    const pubReason = new TextInputBuilder()
+    const pubReasonInput = new TextInputBuilder()
       .setLabel('What should we tell the user?')
       .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder('This will be sent to the user!')
@@ -50,15 +53,15 @@ export const uBan: UserCommand = {
       .setCustomId('duration')
       .setRequired(true);
 
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
-    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
+    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReasonInput);
+    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReasonInput);
     const thirdActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(deleteMessages);
     modal.addComponents(firstActionRow, secondActionRow, thirdActionRow);
     await interaction.showModal(modal);
 
-    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`banModal`);
-    interaction.awaitModalSubmit({filter, time: 0})
-      .then(async i => {
+    const filter = (i:ModalSubmitInteraction) => i.customId.includes('banModal');
+    interaction.awaitModalSubmit({ filter, time: 0 })
+      .then(async (i) => {
         if (i.customId.split('~')[1] !== interaction.id) return;
         const privReason = i.fields.getTextInputValue('privReason');
         const pubReason = i.fields.getTextInputValue('pubReason');
@@ -66,16 +69,15 @@ export const uBan: UserCommand = {
 
         let duration = 0;
         // Check if the given duration is a number between 0 and 7
-        const days = parseInt(durationInput);
-        if (isNaN(days) || days < 0 || days > 7) {
-          i.reply({content: 'Invalid number of days given', ephemeral: true});
+        const days = parseInt(durationInput, 10);
+        if (Number.isNaN(days) || days < 0 || days > 7) {
+          i.reply({ content: 'Invalid number of days given', ephemeral: true });
           return;
-        } else {
-          duration = duration ?
-            await parseDuration(`${durationInput} days`) :
-            0;
-          // log.debug(`[${PREFIX}] duration: ${duration}`);
         }
+        duration = duration
+          ? await parseDuration(`${durationInput} days`)
+          : 0;
+        // log.debug(`[${PREFIX}] duration: ${duration}`);
 
         const result = await moderate(
           actor,
@@ -83,7 +85,8 @@ export const uBan: UserCommand = {
           target,
           privReason,
           pubReason,
-          duration);
+          duration,
+        );
 
         // log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);

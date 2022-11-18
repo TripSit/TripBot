@@ -5,7 +5,7 @@ import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
 import {
-  stickerUpdateEvent,
+  StickerUpdateEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 // import logger from '../../global/utils/logger';
@@ -14,7 +14,9 @@ import env from '../../global/utils/env.config';
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const stickerUpdate: stickerUpdateEvent = {
+export default stickerUpdate;
+
+export const stickerUpdate: StickerUpdateEvent = {
   name: 'stickerUpdate',
   async execute(oldSticker, newSticker) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
@@ -43,10 +45,10 @@ export const stickerUpdate: stickerUpdateEvent = {
 
     if (auditLog.executor) {
       response = `Sticker **${newSticker.toString()}** was updated by ${auditLog.executor.tag}:`;
-      response += `\n${auditLog.changes.map(change => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
+      response += `\n${auditLog.changes.map((change) => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
     } else {
       response = `Sticker ${newSticker.toString()} was updated, but the audit log was inconclusive.`;
-      response += `\n${auditLog.changes.map(change => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
+      response += `\n${auditLog.changes.map((change) => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
     }
 
     botlog.send(response);

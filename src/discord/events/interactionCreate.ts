@@ -6,17 +6,19 @@ import {
   InteractionType,
 } from 'discord-api-types/v10';
 import {
-  interactionCreateEvent,
+  InteractionCreateEvent,
 } from '../@types/eventDef';
-import {commandRun} from '../utils/commandRun';
-import {buttonClick} from '../utils/buttonClick';
-import {selectMenu} from '../utils/selectMenu';
-import {autocomplete} from '../utils/autocomplete';
+import { commandRun } from '../utils/commandRun';
+import { buttonClick } from '../utils/buttonClick';
+import { selectMenu } from '../utils/selectMenu';
+import { autocomplete } from '../utils/autocomplete';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
 
-export const interactionCreate: interactionCreateEvent = {
+export default interactionCreate;
+
+export const interactionCreate: InteractionCreateEvent = {
   name: 'interactionCreate',
   async execute(interaction) {
     // log.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}`);
@@ -53,15 +55,14 @@ export const interactionCreate: interactionCreateEvent = {
       if (interaction.isContextMenuCommand()) {
         commandRun(interaction, client);
         return;
-      };
+      }
       if (interaction.isSelectMenu()) {
         selectMenu(interaction, client);
         return;
-      };
+      }
       if (interaction.isButton()) {
         buttonClick(interaction, client);
-        return;
-      };
+      }
       // log.debug(`[${PREFIX}] Unknown interaction!`);
     }
   },

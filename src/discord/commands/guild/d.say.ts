@@ -1,35 +1,28 @@
-/* eslint-disable no-unused-vars */
 import {
-  ActionRowBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  Colors,
   GuildMember,
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
-import {
-  TextInputStyle,
-} from 'discord-api-types/v10';
-import {SlashCommand} from '../../@types/commandDef';
-import {startLog} from '../../utils/startLog';
-import {embedTemplate} from '../../utils/embedTemplate';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { startLog } from '../../utils/startLog';
 import env from '../../../global/utils/env.config';
-import log from '../../../global/utils/log';
-import {parse} from 'path';
+import log from '../../../global/utils/log'; // eslint-disable-line @typescript-eslint/no-unused-vars
+
 const PREFIX = parse(__filename).name;
 
-export const bug: SlashCommand = {
+export default dSay;
+
+export const dSay: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('say')
     .setDescription('Say something like a real person!')
-    .addStringOption(option => option.setName('say')
+    .addStringOption((option) => option.setName('say')
       .setDescription('What do you want to say?')
       .setRequired(true))
-    .addChannelOption(option => option
-      .setDescription(`Where should I say it? (Default: 'here')`)
-      .setName('channel'),
-    ),
+    .addChannelOption((option) => option
+      .setDescription('Where should I say it? (Default: \'here\')')
+      .setName('channel')),
   async execute(interaction) {
     startLog(PREFIX, interaction);
     if (!interaction.guild) {
@@ -43,7 +36,6 @@ export const bug: SlashCommand = {
     const channel = interaction.options.getChannel('channel') as TextChannel;
     const say = interaction.options.getString('say', true);
 
-
     if (channel) {
       channel.send(say);
     } else {
@@ -52,8 +44,8 @@ export const bug: SlashCommand = {
 
     interaction.reply({
       content: `I said '${say}' in ${channel ? channel.toString() : interaction.channel?.toString()}`,
-      ephemeral: true},
-    );
+      ephemeral: true,
+    });
 
     const channelBotlog = interaction.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {

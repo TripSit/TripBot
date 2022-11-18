@@ -1,13 +1,16 @@
 import {
   TextChannel,
 } from 'discord.js';
-import {warnEvent} from '../@types/eventDef';
+import { parse } from 'path';
+import { WarnEvent } from '../@types/eventDef';
 import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
 
-export const warn: warnEvent = {
+export default warn;
+
+export const warn: WarnEvent = {
   name: 'warn',
   async execute(info) {
     const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;

@@ -1,6 +1,24 @@
+import { parse } from 'path';
 import log from '../utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+/**
+ * Calculates insuffilated dosages
+ * @param {number} weightInLbs Weight in lbs
+ * @return {any} Something
+ */
+export async function generateInsufflatedDosages(weightInLbs:number):Promise<Dosage> {
+  return {
+    threshold: `${Math.round(weightInLbs * 0.1)}mg`,
+    light: `${Math.round(weightInLbs * 0.15)}mg`,
+    common: `${Math.round(weightInLbs * 0.3)}mg`,
+    strong: `${Math.round(weightInLbs * 0.5)}mg-${Math.round(weightInLbs * 0.75)}mg`,
+    kHole: `${Math.round(weightInLbs)}mg`,
+  };
+}
+
+export default calcKetamine;
 
 /**
  * Calculates ketamine dosages
@@ -8,25 +26,27 @@ const PREFIX = parse(__filename).name;
  * @param {'lbs' | 'kg'} unit
  * @return {ketaDosage}
  */
-export async function calcKetamine(weight:number, unit:'lbs' | 'kg'):Promise<ketaDosage> {
+export async function calcKetamine(weight:number, unit:'lbs' | 'kg'):Promise<KetaDosage> {
   const calcWeight = unit === 'kg' ? weight * 2.20462 : weight;
 
   const noseDose = await generateInsufflatedDosages(calcWeight);
   let noseDoseString = '' as string;
-  for (const [key, value] of Object.entries(noseDose)) {
+  // for (const [key, value] of Object.entries(noseDose)) {
+  Object.entries(noseDose).forEach((key, value) => {
     // Capitalize the key
     const title = key.charAt(0).toUpperCase() + key.slice(1);
     noseDoseString += `**${title}**: ${value}\n`;
-  }
+  });
   // log.debug(`[${PREFIX}] noseDoseString: ${noseDoseString}`);
 
   const buttDose = await generateInsufflatedDosages(calcWeight);
   let buttDoseString = '' as string;
-  for (const [key, value] of Object.entries(buttDose)) {
+  // for (const [key, value] of Object.entries(buttDose)) {
+  Object.entries(buttDose).forEach((key, value) => {
     // Capitalize the key
     const title = key.charAt(0).toUpperCase() + key.slice(1);
     buttDoseString += `**${title}**: ${value}\n`;
-  }
+  });
   // log.debug(`[${PREFIX}] buttDoseString: ${buttDoseString}`);
 
   const data = {
@@ -36,29 +56,14 @@ export async function calcKetamine(weight:number, unit:'lbs' | 'kg'):Promise<ket
 
   log.info(`[${PREFIX}] response: ${JSON.stringify(data, null, 2)}`);
   return data;
-};
-
-/**
- * Calculates insuffilated dosages
- * @param {number} weightInLbs Weight in lbs
- * @return {any} Something
- */
-export async function generateInsufflatedDosages(weightInLbs:number):Promise<dosage> {
-  return {
-    threshold: `${Math.round(weightInLbs * 0.1)}mg`,
-    light: `${Math.round(weightInLbs * 0.15)}mg`,
-    common: `${Math.round(weightInLbs * 0.3)}mg`,
-    strong: `${Math.round(weightInLbs * .5)}mg-${Math.round(weightInLbs * .75)}mg`,
-    kHole: `${Math.round(weightInLbs)}mg`,
-  };
-};
+}
 
 /**
  * Calculates rectal dosages
  * @param {number} weightInLbs Weight in lbs
  * @return {any} Something
  */
-export async function generateRectalDosages(weightInLbs:number):Promise<dosage> {
+export async function generateRectalDosages(weightInLbs:number):Promise<Dosage> {
   return {
     threshold: `${Math.round(weightInLbs * 0.3)}mg`,
     light: `${Math.round(weightInLbs * 0.5)}mg`,
@@ -68,16 +73,15 @@ export async function generateRectalDosages(weightInLbs:number):Promise<dosage> 
   };
 }
 
-type ketaDosage = {
+type KetaDosage = {
   insufflated: string,
   rectal: string,
-}
+};
 
-type dosage = {
+type Dosage = {
   threshold: string;
   light: string;
   common: string;
   strong: string;
   kHole: string;
-}
-
+};

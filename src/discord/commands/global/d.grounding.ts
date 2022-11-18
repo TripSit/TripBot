@@ -2,12 +2,14 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {grounding} from '../../../global/commands/g.grounding';
-import {startLog} from '../../utils/startLog';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { grounding } from '../../../global/commands/g.grounding';
+import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-import {parse} from 'path';
 const PREFIX = parse(__filename).name;
+
+export default dgrounding;
 
 export const dgrounding: SlashCommand = {
   data: new SlashCommandBuilder()

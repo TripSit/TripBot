@@ -4,12 +4,15 @@ import {
   SlashCommandBuilder,
   Colors,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
-import {invite} from '../../../global/commands/g.invite';
-import {startLog} from '../../utils/startLog';
-import {parse} from 'path';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
+import { invite } from '../../../global/commands/g.invite';
+import { startLog } from '../../utils/startLog';
+
 const PREFIX = parse(__filename).name;
+
+export default dInvite;
 
 export const dInvite: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -29,7 +32,7 @@ export const dInvite: SlashCommand = {
         The official support server is [TripSit discord](${inviteInfo.discord}). 
         If you have issues/questions, join and talk with Moonbear!
       `);
-    interaction.reply({embeds: [embed]});
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

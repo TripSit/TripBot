@@ -12,74 +12,77 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
-import {SlashCommand} from '../../@types/commandDef';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
 // import {embedTemplate} from '../../utils/embedTemplate';
-import {parseDuration} from '../../../global/utils/parseDuration';
-import {moderate} from '../../../global/commands/g.moderate';
-import {startLog} from '../../utils/startLog';
+import { parseDuration } from '../../../global/utils/parseDuration';
+import { moderate } from '../../../global/commands/g.moderate';
+import { startLog } from '../../utils/startLog';
 import env from '../../../global/utils/env.config';
 // import log from '../../../global/utils/log';
-import {parse} from 'path';
-import {modAction} from '../../../global/@types/database';
-import {UserActionType} from '../../../global/@types/pgdb';
+import { ModAction } from '../../../global/@types/database';
+import { UserActionType } from '../../../global/@types/pgdb';
+
 const PREFIX = parse(__filename).name;
+
+export default mod;
 
 export const mod: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('mod')
     .setDescription('Moderation actions!')
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand) => subcommand
       .setDescription('Info on a user')
-      .addStringOption(option => option
+      .addStringOption((option) => option
         .setName('target')
         .setDescription('User to get info on!')
         .setRequired(true))
       .setName('info'))
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand) => subcommand
       .setDescription('Ban a user')
-      .addStringOption(option => option
+      .addStringOption((option) => option
         .setName('target')
         .setDescription('User to ban!')
         .setRequired(true))
       .setName('ban'))
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand) => subcommand
       .setDescription('Underban a user')
-      .addStringOption(option => option
+      .addStringOption((option) => option
         .setName('target')
         .setDescription('User to underban!')
         .setRequired(true))
       .setName('underban'))
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand) => subcommand
       .setDescription('Warn a user')
-      .addStringOption(option => option
+      .addStringOption((option) => option
         .setName('target')
         .setDescription('User to warn!')
         .setRequired(true))
       .setName('warning'))
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand) => subcommand
       .setDescription('Create a note about a user')
-      .addStringOption(option => option
+      .addStringOption((option) => option
         .setName('target')
         .setDescription('User to note about!')
         .setRequired(true))
       .setName('note'))
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand) => subcommand
       .setDescription('Timeout a user')
-      .addStringOption(option => option
+      .addStringOption((option) => option
         .setName('target')
         .setDescription('User to timeout!')
         .setRequired(true))
-      .addStringOption(option => option
+      .addStringOption((option) => option
         .setName('toggle')
         .setDescription('On off?')
         .addChoices(
-          {name: 'On', value: 'on'},
-          {name: 'Off', value: 'off'},
+          { name: 'On', value: 'on' },
+          { name: 'Off', value: 'off' },
         ))
       .setName('timeout'))
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand) => subcommand
       .setDescription('Kick a user')
-      .addStringOption(option => option
+      .addStringOption((option) => option
         .setName('target')
         .setDescription('User to kick!')
         .setRequired(true))
@@ -97,7 +100,7 @@ export const mod: SlashCommand = {
     }
 
     if (toggle === 'off') {
-      command = 'UN' + command;
+      command = `UN${command}`;
     }
 
     // log.debug(`[${PREFIX}] toggle: ${toggle}`);
@@ -138,7 +141,8 @@ export const mod: SlashCommand = {
         targetMember,
         null,
         null,
-        null);
+        null,
+      );
       // log.debug(`[${PREFIX}] Result: ${result}`);
       interaction.reply(result);
       return true;
@@ -147,16 +151,16 @@ export const mod: SlashCommand = {
     const modal = new ModalBuilder()
       .setCustomId(`modModal~${command}~${interaction.id}`)
       .setTitle(`Tripbot ${command}`);
-    const privReason = new TextInputBuilder()
+    const privReasonInput = new TextInputBuilder()
       .setLabel(`Why are you ${verb} this user?`)
       .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder(`Tell the team why you're doing this`)
+      .setPlaceholder('Tell the team why you\'re doing this')
       .setRequired(true)
       .setCustomId('privReason');
-    const pubReason = new TextInputBuilder()
+    const pubReasonInput = new TextInputBuilder()
       .setLabel('What should we tell the user?')
       .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder(`Tell the user why you're doing this`)
+      .setPlaceholder('Tell the user why you\'re doing this')
       .setRequired(true)
       .setCustomId('pubReason');
     const timeoutDuration = new TextInputBuilder()
@@ -172,11 +176,11 @@ export const mod: SlashCommand = {
       .setCustomId('duration')
       .setRequired(true);
 
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
+    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReasonInput);
     modal.addComponents(firstActionRow);
 
     if (['WARNING', 'KICK', 'TIMEOUT', 'UNTIMEOUT', 'BAN', 'UNBAN', 'UNDERBAN', 'UNUNDERBAN'].includes(command)) {
-      const pubReasonText = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
+      const pubReasonText = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReasonInput);
       modal.addComponents(pubReasonText);
     }
     if (command === 'TIMEOUT') {
@@ -190,9 +194,9 @@ export const mod: SlashCommand = {
 
     await interaction.showModal(modal);
 
-    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`modModal`);
-    interaction.awaitModalSubmit({filter, time: 0})
-      .then(async i => {
+    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('modModal');
+    interaction.awaitModalSubmit({ filter, time: 0 })
+      .then(async (i) => {
         if (i.customId.split('~')[2] !== interaction.id) return;
         const privReason = i.fields.getTextInputValue('privReason');
         let pubReason = '';
@@ -206,35 +210,35 @@ export const mod: SlashCommand = {
           const durationInput = i.fields.getTextInputValue('duration');
           if (command === 'BAN' || command === 'UNDERBAN') {
             // Check if the given duration is a number between 0 and 7
-            const days = parseInt(durationInput);
-            if (isNaN(days) || days < 0 || days > 7) {
-              i.reply({content: 'Invalid number of days given', ephemeral: true});
+            const days = parseInt(durationInput, 10);
+            if (Number.isNaN(days) || days < 0 || days > 7) {
+              i.reply({ content: 'Invalid number of days given', ephemeral: true });
               return;
-            } else {
-              duration = duration ?
-                await parseDuration(`${durationInput} days`) :
-                604800;
-              // log.debug(`[${PREFIX}] duration: ${duration}`);
             }
+            duration = duration
+              ? await parseDuration(`${durationInput} days`)
+              : 604800;
+            // log.debug(`[${PREFIX}] duration: ${duration}`);
           } else if (command === 'TIMEOUT') {
             // Get duration
-            duration = duration ?
-              await parseDuration(durationInput) :
-              604800000;
+            duration = duration
+              ? await parseDuration(durationInput)
+              : 604800000;
             // log.debug(`[${PREFIX}] duration: ${duration}`);
           }
         } catch (e) {
           // log.error(`[${PREFIX}] ${e}`);
         }
-        const modalCommand = i.customId.split('~')[1] as modAction;
+        const modalCommand = i.customId.split('~')[1] as ModAction;
         const result = await moderate(
           actor as GuildMember,
           modalCommand as UserActionType,
           targetMember,
           privReason,
           pubReason,
-          duration);
-        // log.debug(`[${PREFIX}] Result: ${result}`);
+          duration,
+        );
+          // log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
       });
 

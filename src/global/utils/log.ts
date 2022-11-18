@@ -4,8 +4,8 @@ import {
   transports,
   addColors,
 } from 'winston';
-import {Logtail} from '@logtail/node';
-import {LogtailTransport} from '@logtail/winston';
+import { Logtail } from '@logtail/node';
+import { LogtailTransport } from '@logtail/winston';
 import env from './env.config';
 
 const {
@@ -23,12 +23,14 @@ addColors({
   debug: 'blue',
 });
 
-const myFormat = printf( ({level, message, timestamp, stack, ...metadata}) => {
-  let msg = ``;
+const myFormat = printf(({
+  level, message, time, stack, ...metadata
+}) => {
+  let msg = '';
   if (env.NODE_ENV === 'production') {
-    msg += `(Prd) `;
+    msg += '(Prd) ';
   } else {
-    msg += `(Dev) ${timestamp} `;
+    msg += `(Dev) ${time} `;
   }
 
   // This makes it so that the logs look nice and even
@@ -42,11 +44,11 @@ const myFormat = printf( ({level, message, timestamp, stack, ...metadata}) => {
   msg += `${message} `;
 
   if (JSON.stringify(metadata) !== '{}') {
-    console.debug(`metadata: ${JSON.stringify(metadata, null, 2)}`);
+    console.debug(`metadata: ${JSON.stringify(metadata, null, 2)}`); // eslint-disable-line no-console
     msg += JSON.stringify(metadata);
   }
   if (stack) {
-    console.debug(`stack: ${stack}`);
+    console.debug(`stack: ${stack}`); // eslint-disable-line no-console
     msg += `\n${stack}`;
   }
   return msg;
@@ -68,9 +70,9 @@ if (env.NODE_ENV === 'production') {
 const log = createLogger({
   level: 'debug',
   format: combine(
-    format.colorize({all: true}),
+    format.colorize({ all: true }),
     splat(),
-    timestamp({format: 'YYYY-MM-DD HH:mm:ss'}),
+    timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     myFormat,
   ),
   transports: transportOptions,

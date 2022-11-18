@@ -3,14 +3,16 @@ import {
   Message,
   TextChannel,
 } from 'discord.js';
+import { stripIndents } from 'common-tags';
 import env from '../../global/utils/env.config';
-import {stripIndents} from 'common-tags';
 
-import {bigBrother} from '../../global/utils/thoughtPolice';
+import { bigBrother } from '../../global/utils/thoughtPolice';
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
+
+export default thoughtPolice;
 
 /**
  * This runs on every message to determine if a badword is used
@@ -76,4 +78,4 @@ export async function thoughtPolice(message:Message): Promise<void> {
         break;
     }
   }
-};
+}

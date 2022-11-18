@@ -1,11 +1,14 @@
 /* eslint-disable max-len */
-import {db, getUser} from '../../global/utils/knex';
+import { parse } from 'path';
+import { db, getUser } from '../utils/knex';
 import {
   UserExperience,
-} from '../../global/@types/pgdb.d';
+} from '../@types/pgdb.d';
 import log from '../utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default profile;
 
 /**
  * Get profile info
@@ -14,7 +17,7 @@ const PREFIX = parse(__filename).name;
  */
 export async function profile(
   memberId: string,
-):Promise<profileData> {
+):Promise<ProfileData> {
   // log.debug(`[${PREFIX}] memberId: ${memberId}`);
 
   const userData = await getUser(memberId, null);
@@ -41,16 +44,17 @@ export async function profile(
   // log.debug(`[${PREFIX}] currentExp: ${JSON.stringify(currentExp, null, 2)}`);
 
   // Go through currentExp and add up the total points
-  for (const exp of currentExp) {
+  // for (const exp of currentExp) {
+  currentExp.forEach((exp) => {
     if (exp.type !== 'IGNORED') {
       profileData.totalExp += exp.total_points;
     }
-  }
+  });
   log.info(`[${PREFIX}] response: ${JSON.stringify(profileData, null, 2)}`);
   return profileData;
 }
 
-type profileData = {
+type ProfileData = {
   birthday: Date | null,
   timezone: string | null,
   karma_given: number,

@@ -1,18 +1,17 @@
 import {
   REST,
 } from 'discord.js';
-import {SlashCommand} from '../@types/commandDef';
 import {
   Routes,
 } from 'discord-api-types/v10';
 import fs from 'fs/promises';
+import path, { parse } from 'path';
+import { SlashCommand } from '../@types/commandDef';
 import env from '../../global/utils/env.config';
-import {validateEnv} from '../../global/utils/env.validate';
-import path from 'path';
+import { validateEnv } from '../../global/utils/env.validate';
 import log from '../../global/utils/log';
-import {parse} from 'path';
-const PREFIX = parse(__filename).name;
 
+const PREFIX = parse(__filename).name;
 
 /**
  * @param {string} commandType Either Global or Guild
@@ -22,35 +21,34 @@ async function getCommands(commandType: string): Promise<SlashCommand[]> {
   const commandDir = path.join(__dirname, '../commands');
   const files = await fs.readdir(path.join(commandDir, commandType));
   return files
-    .filter(file => file.endsWith('.ts') && !file.endsWith('index.ts'))
-    .map(file => require(`${commandDir}/${commandType}/${file}`))
-    .map(command => command[Object.keys(command)[0]].data.toJSON());
+    .filter((file) => file.endsWith('.ts') && !file.endsWith('index.ts'))
+    .map((file) => require(`${commandDir}/${commandType}/${file}`)) // eslint-disable-line
+    .map((command) => command[Object.keys(command)[0]].data.toJSON());
 }
 
 if (validateEnv()) {
   log.debug(`[${PREFIX}] discordClientId: ${env.DISCORD_CLIENT_ID}`);
   log.debug(`[${PREFIX}] discordGuildId: ${env.DISCORD_GUILD_ID}`);
 
-  const rest = new REST({version: '9'}).setToken(
+  const rest = new REST({ version: '9' }).setToken(
     env.DISCORD_CLIENT_TOKEN as string,
   );
 
   Promise.all([
-    getCommands('global').then(commands => rest.put(
+    getCommands('global').then((commands) => rest.put(
       Routes.applicationCommands(env.DISCORD_CLIENT_ID.toString()),
-      {body: commands},
+      { body: commands },
     )),
-    getCommands('guild').then(commands => rest.put(
+    getCommands('guild').then((commands) => rest.put(
       Routes.applicationGuildCommands(env.DISCORD_CLIENT_ID.toString(), env.DISCORD_GUILD_ID),
-      {body: commands},
+      { body: commands },
     )),
   ])
     .then(() => {
       log.info('Commands successfully registered!');
     })
-    .catch(ex => {
+    .catch((ex) => {
       log.error('Error in registering commands:', ex);
       process.exit(1);
     });
 }
-

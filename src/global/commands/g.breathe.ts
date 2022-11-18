@@ -1,6 +1,9 @@
+import { parse } from 'path';
 import log from '../utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default breathe;
 
 /**
  * Returns one of the breaking exercises
@@ -14,4 +17,4 @@ export async function breathe(choice:string | null):Promise<string> {
   if (choice === '4') response = 'https://i.imgur.com/MkUcTPl.gif';
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
   return response;
-};
+}

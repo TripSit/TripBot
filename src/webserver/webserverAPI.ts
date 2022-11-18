@@ -1,20 +1,21 @@
-import log from '../global/utils/log';
-import env from '../global/utils/env.config';
 import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
 
 import Express from 'express';
-import {URLSearchParams} from 'url';
+import { URLSearchParams } from 'url';
 import axios from 'axios';
 // import path from 'path';
 import https from 'https';
 import http from 'http';
 import fs from 'fs';
 import bodyParser from 'body-parser';
+import env from '../global/utils/env.config';
+import log from '../global/utils/log';
+
+const PREFIX = path.parse(__filename).name;
 // Import node-fetch asynchronously;
 // see https://www.npmjs.com/package/node-fetch#installation for more info on why this is done.
 // @ts-ignore
-const fetch = (...args:any[]) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const fetch = (...args:any[]) => import('node-fetch').then(({ default: refetch }) => refetch(...args));
 
 /**
  *
@@ -32,11 +33,10 @@ function makeConfig(authorizationToken:string) {
   return data; // Return the created object
 }
 
-
 /**
  *
  * @return {Promise<void>}
-**/
+* */
 export async function webserverConnect(): Promise<void> {
   /* Define app variables */
   // eslint-disable-next-line new-cap
@@ -125,20 +125,23 @@ export async function webserverConnect(): Promise<void> {
     // This is a key parameter in our upcoming request. It is the code the user got from logging in.
     // This will help us retrieve a token which we can use to get the user's info.
 
-    fetch('https://discord.com/api/oauth2/token', {method: 'POST', body: data1}).then(response =>
-      response.json()).then((data:any) => {
+    fetch('https://discord.com/api/oauth2/token', { method: 'POST', body: data1 })
+      .then((response) => response.json())
+      .then((data:any) => {
       // Make a request to the Discord API with the form data, convert the response to JSON,
       // then take it and run the following code.
       // log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
-      axios.get('https://discord.com/api/users/@me', makeConfig(data.access_token)).then(response => {
+        axios.get('https://discord.com/api/users/@me', makeConfig(data.access_token)).then((response) => {
         // Make a request yet again to the Discord API with the token from previously.
         // log.debug(`[${PREFIX}] response: ${JSON.stringify(response)}`);
-        res.status(200).send(response.data.username); // Send the username with a status code 200.
-      }).catch((err:Error) => { // Handle any errors in the request (such as 401 errors).
-        log.error(err); // Log the error in the console
-        log.error(`[${PREFIX}] data: ${JSON.stringify(data)}`);
-        res.sendStatus(500); // Send a 500 error.
+          res.status(200).send(response.data.username); // Send the username with a status code 200.
+        }).catch((err:Error) => { // Handle any errors in the request (such as 401 errors).
+          log.error(err); // Log the error in the console
+          log.error(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+          res.sendStatus(500); // Send a 500 error.
+        });
       });
-    });
   });
-};
+}
+
+export default webserverConnect();

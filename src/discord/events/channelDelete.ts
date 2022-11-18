@@ -6,7 +6,7 @@ import {
   AuditLogEvent, ChannelType,
 } from 'discord-api-types/v10';
 import {
-  channelDeleteEvent,
+  ChannelDeleteEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 // import logger from '../../global/utils/logger';
@@ -15,7 +15,9 @@ import env from '../../global/utils/env.config';
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const channelDelete: channelDeleteEvent = {
+export default channelDelete;
+
+export const channelDelete: ChannelDeleteEvent = {
   name: 'channelDelete',
   async execute(channel) {
     // Dont run on DMs

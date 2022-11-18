@@ -6,7 +6,7 @@ import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
 import {
-  inviteDeleteEvent,
+  InviteDeleteEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 // import log from '../../global/utils/log';
@@ -15,7 +15,9 @@ import env from '../../global/utils/env.config';
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const inviteDelete: inviteDeleteEvent = {
+export default inviteDelete;
+
+export const inviteDelete: InviteDeleteEvent = {
   name: 'inviteDelete',
   async execute(invite) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)

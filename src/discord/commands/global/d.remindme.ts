@@ -9,14 +9,14 @@ import {
   ChannelType,
   ButtonStyle,
 } from 'discord-api-types/v10';
-import {remindme} from '../../../global/commands/g.remindme';
-import {startLog} from '../../utils/startLog';
-import {SlashCommand} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
-import {parseDuration} from '../../../global/utils/parseDuration';
-import {paginationEmbed} from '../../utils/pagination';
+import { parse } from 'path';
+import { remindme } from '../../../global/commands/g.remindme';
+import { startLog } from '../../utils/startLog';
+import { SlashCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
+import { parseDuration } from '../../../global/utils/parseDuration';
+import { paginationEmbed } from '../../utils/pagination';
 // import log from '../../../global/utils/log';
-import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
 const buttonList = [
@@ -24,25 +24,27 @@ const buttonList = [
   new ButtonBuilder().setCustomId('nextbtn').setLabel('Next').setStyle(ButtonStyle.Success),
 ];
 
+export default dremindme;
+
 export const dremindme: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('remindme')
     .setDescription('Handle reminders!')
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand) => subcommand
       .setDescription('Set a reminder')
-      .addStringOption(option => option.setName('reminder')
+      .addStringOption((option) => option.setName('reminder')
         .setDescription('What do you want to be reminded?')
         .setRequired(true))
-      .addStringOption(option => option.setName('offset')
+      .addStringOption((option) => option.setName('offset')
         .setDescription('When? EG: 4 hours 32 mins')
         .setRequired(true))
       .setName('set'))
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand) => subcommand
       .setDescription('Get your upcoming reminders!')
       .setName('get'))
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand) => subcommand
       .setDescription('Delete a reminder!')
-      .addNumberOption(option => option.setName('record')
+      .addNumberOption((option) => option.setName('record')
         .setDescription('Which record? (0, 1, 2, etc)')
         .setRequired(true))
       .setName('delete')),
@@ -72,14 +74,14 @@ export const dremindme: SlashCommand = {
     const embed = embedTemplate();
     const book = [] as EmbedBuilder[];
     if (command === 'delete') {
-      await interaction.reply({content: response as string, ephemeral: true});
+      await interaction.reply({ content: response as string, ephemeral: true });
     }
     if (command === 'get') {
       if (response !== null) {
         embed.setTitle('Your reminders');
         if (typeof response === 'string') {
           embed.setDescription('You have no reminders! You can use /remindme to add some!');
-          interaction.reply({embeds: [embed], ephemeral: true});
+          interaction.reply({ embeds: [embed], ephemeral: true });
           return true;
         }
 
@@ -139,21 +141,19 @@ export const dremindme: SlashCommand = {
       // log.debug(`[${PREFIX}] book.length: ${book.length}`);
       if (book.length > 1) {
         paginationEmbed(interaction, book, buttonList);
+      } else if (!interaction.channel) {
+        interaction.reply({ embeds: [embed], ephemeral: true });
+      } else if (interaction.channel.type === ChannelType.DM) {
+        interaction.reply({ embeds: [embed], ephemeral: false });
+        // interaction.user.send({embeds: [embed]});
       } else {
-        if (!interaction.channel) {
-          interaction.reply({embeds: [embed], ephemeral: true});
-        } else if (interaction.channel.type === ChannelType.DM) {
-          interaction.reply({embeds: [embed], ephemeral: false});
+        interaction.reply({ embeds: [embed], ephemeral: true });
         // interaction.user.send({embeds: [embed]});
-        } else {
-          interaction.reply({embeds: [embed], ephemeral: true});
-        // interaction.user.send({embeds: [embed]});
-        }
       }
     }
     if (command === 'set') {
       if (reminderDatetime === null) {
-        interaction.reply({content: 'Invalid date!', ephemeral: true});
+        interaction.reply({ content: 'Invalid date!', ephemeral: true });
         return false;
       }
 
@@ -162,9 +162,8 @@ export const dremindme: SlashCommand = {
       const relative = time(reminderDatetime, 'R');
       // log.debug(`[${PREFIX}] relative: ${relative}`);
 
-      const embed = embedTemplate()
-        .setDescription(`${relative} I will remind you: ${reminder}`);
-      interaction.reply({embeds: [embed], ephemeral: true});
+      embed.setDescription(`${relative} I will remind you: ${reminder}`);
+      interaction.reply({ embeds: [embed], ephemeral: true });
     }
     // log.debug(`[${PREFIX}] Finsihed!`);
     return true;
