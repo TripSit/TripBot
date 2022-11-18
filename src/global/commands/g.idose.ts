@@ -197,31 +197,25 @@ export async function idose(
       }];
     }
 
-    const userData = await getUser(userId, null);
+    log.debug(`[${PREFIX}] Substance: ${substance}`);
 
-    const drugId = (await db<DrugNames>('drug_names')
+    const data = await db<DrugNames>('drug_names')
       .select(db.ref('drug_id'))
       .where('name', substance)
       .orWhere('name', substance.toLowerCase())
-      .orWhere('name', substance.toUpperCase()))[0].drug_id;
+      .orWhere('name', substance.toUpperCase());
 
-    if (drugId.length === 0) {
-      // log.debug(`name = ${substance} not found in 'drugNames'`);
+    log.debug(`[${PREFIX}] Data: ${JSON.stringify(data, null, 2)}`);
+
+    if (data.length === 0) {
+      log.debug(`name = ${substance} not found in 'drugNames'`);
     }
+
+    const drugId = data[0].drug_id;
 
     // log.debug(`[${PREFIX}] drugId: ${drugId}`);
 
-    // log.debug(`[${PREFIX}]
-    // command: ${command}
-    // recordNumber: ${recordNumber}
-    // userId: ${userId}
-    // substance: ${substance}
-    // volume: ${volume}
-    // units: ${JSON.stringify(units)}
-    // roa: ${JSON.stringify(roa)}
-    // created_at: ${JSON.stringify(date)}
-    // `);
-
+    const userData = await getUser(userId, null);
     await db<UserDrugDoses>('user_drug_doses')
       .insert({
         user_id: userData.id,

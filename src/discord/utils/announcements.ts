@@ -286,7 +286,7 @@ export async function announcements(message:Message) {
               const collector = msg.createReactionCollector({ filter, time: 0, dispose: true });
 
               const pointDict = {
-                '❤': 'love_points',
+                '❤': 'empathy_points',
                 '🕴': 'move_points',
                 '💧': 'sparkle_points',
               };

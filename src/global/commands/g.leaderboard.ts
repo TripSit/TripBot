@@ -45,10 +45,9 @@ export async function leaderboard(
     `;
 
     // Grab all the user experience from the database
-    let userExperience = await db<UserExperience>('user_experience')
+    const allUserExperience = await db<UserExperience>('user_experience')
       .select(
         db.ref('user_id'),
-        db.ref('level'),
       )
       .groupBy(['user_id'])
       .sum({ total_points: 'total_points' })
@@ -56,9 +55,9 @@ export async function leaderboard(
       .limit(3);
 
     let rank = 1;
-    // for (const user of userExperience) {
-    userExperience.forEach(async (user) => {
-      const userData = await getUser(null, user.user_id);
+    for (const user of allUserExperience) { // eslint-disable-line
+    // allUserExperience.forEach(async (user) => {
+      const userData = await getUser(null, user.user_id); // eslint-disable-line
       if (!userData) {
         log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
       }
@@ -87,16 +86,13 @@ export async function leaderboard(
         });
         rank += 1;
       }
-    });
+    }
 
     // Grab all the user experience from the database
     // for (const category of ['TRIPSITTER', 'GENERAL', 'DEVELOPER', 'TEAM', 'IGNORED']) {
     ['TRIPSITTER', 'GENERAL', 'DEVELOPER', 'TEAM', 'IGNORED'].forEach(async (category) => {
-      userExperience = await db<UserExperience>('user_experience')
-        .select(
-          db.ref('user_id'),
-          db.ref('level'),
-        )
+      const userExperience = await db<UserExperience>('user_experience')
+        .select('*')
         .where('type', category)
         .orderBy('total_points', 'desc')
         .limit(3);

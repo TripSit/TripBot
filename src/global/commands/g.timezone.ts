@@ -44,7 +44,7 @@ export async function timezone(
       .merge()
       .returning('*');
 
-    return `I updated your timezone to ${timezone}`;
+    return `I updated your timezone to ${tzvalue}`;
   } if (command === 'get') {
     let gmtValue = '';
 

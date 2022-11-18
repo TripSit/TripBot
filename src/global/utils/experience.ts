@@ -162,6 +162,7 @@ export async function experience(
   const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
   const channelTripbotlogs = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
   const member = await guild.members.fetch(actor.id);
+
   // Give the proper VIP role
   if (experienceType === 'total') {
     // VIP only cares about total
