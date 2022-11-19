@@ -5,17 +5,20 @@ import {
   ChannelType,
   AuditLogEvent,
 } from 'discord-api-types/v10';
+// import { parse } from 'path';
 import {
-  channelUpdateEvent,
+  ChannelUpdateEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
-import log from '../../global/utils/log'; // eslint-disable-line no-unused-vars
-import * as path from 'path'; // eslint-disable-line no-unused-vars
-const PREFIX = path.parse(__filename).name; // eslint-disable-line no-unused-vars
+// import log from '../../global/utils/log';
+
+// const PREFIX = parse(__filename).name;
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const channelUpdate: channelUpdateEvent = {
+export default channelUpdate;
+
+export const channelUpdate: ChannelUpdateEvent = {
   name: 'channelUpdate',
   async execute(oldChannel, newChannel) {
     // Dont run on DMs

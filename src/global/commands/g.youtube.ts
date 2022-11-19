@@ -1,9 +1,11 @@
+import ytSearch, { YouTubeSearchResults } from 'youtube-search';
+import { parse } from 'path';
+import log from '../utils/log';
 import env from '../utils/env.config';
-import {YouTubeSearchResults} from 'youtube-search';
-import ytSearch from 'youtube-search';
-import log from '../../global/utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default youtube;
 
 /**
  * Looks up youtube videos
@@ -15,10 +17,10 @@ export async function youtube(query:string):Promise<YouTubeSearchResults> {
    * This needs to be in a separate function cuz it's not async
    * @param {string} query What video do you want?
    * @return {Promise<YouTubeSearchResults[]>}
-  **/
-  async function getResults(query:string) {
+  * */
+  async function getResults(search:string) {
     return new Promise((resolve, reject) => {
-      ytSearch(query, {
+      ytSearch(search, {
         key: env.YOUTUBE_TOKEN,
         type: 'video',
         maxResults: 1,
@@ -40,4 +42,4 @@ export async function youtube(query:string):Promise<YouTubeSearchResults> {
   const results = (await getResults(query) as YouTubeSearchResults[])[0];
   log.info(`[${PREFIX}] response: ${JSON.stringify(results.title, null, 2)}`);
   return results;
-};
+}

@@ -1,12 +1,14 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {imgurSearch} from '../../../global/commands/g.imgur';
-import {startLog} from '../../utils/startLog';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { imgurSearch } from '../../../global/commands/g.imgur';
+import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-import {parse} from 'path';
 const PREFIX = parse(__filename).name;
+
+export default imgur;
 
 export const imgur: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -20,19 +22,19 @@ export const imgur: SlashCommand = {
       .setName('sort')
       .setDescription('How should the results be sorted?')
       .addChoices(
-        {name: 'Default: Top', value: 'top'},
-        {name: 'Viral', value: 'viral'},
-        {name: 'Time', value: 'time'},
+        { name: 'Default: Top', value: 'top' },
+        { name: 'Viral', value: 'viral' },
+        { name: 'Time', value: 'time' },
       ))
     .addStringOption((option) => option
       .setName('window')
       .setDescription('How far back should we look?')
       .addChoices(
-        {name: 'Default: All', value: 'all'},
-        {name: 'Day', value: 'day'},
-        {name: 'Week', value: 'week'},
-        {name: 'Month', value: 'month'},
-        {name: 'Year', value: 'year'},
+        { name: 'Default: All', value: 'all' },
+        { name: 'Day', value: 'day' },
+        { name: 'Week', value: 'week' },
+        { name: 'Month', value: 'month' },
+        { name: 'Year', value: 'year' },
       )),
   async execute(interaction) {
     startLog(PREFIX, interaction);

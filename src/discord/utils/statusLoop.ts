@@ -44,12 +44,14 @@ import {
 
 // const delay = env.NODE_ENV === 'production' ? 5 * 60 * 1000 : 5 * 1000;
 
+export default startStatusLoop;
+
 /**
  * This changes the status of the bot every 5 minutes
  * @param {Client} client The client running the bot
  */
 export async function startStatusLoop(client:Client) {
-  client.user?.setActivity('someone in DM 💜', {type: ActivityType.Listening});
+  client.user?.setActivity('someone in DM 💜', { type: ActivityType.Listening });
   // let state = 0;
   // let presence = activities[state];
   // log.debug(`[${PREFIX}] Setting presence to ${presence.message}`);
@@ -63,4 +65,4 @@ export async function startStatusLoop(client:Client) {
   //   // @ts-ignore
   //   client.user?.setActivity(presence.message, {type: presence.type});
   // }, delay);
-};
+}

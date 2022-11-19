@@ -1,8 +1,11 @@
-import {getUser} from '../utils/knex';
-import {parse} from 'path';
-import {Users} from '../@types/pgdb.d';
-const PREFIX = parse(__filename).name;
+import { parse } from 'path';
+import { getUser } from '../utils/knex';
+import { Users } from '../@types/pgdb.d';
 import log from '../utils/log';
+
+const PREFIX = parse(__filename).name;
+
+export default karma;
 
 /**
  *
@@ -15,4 +18,4 @@ export async function karma(
   const userData = await getUser(memberId, null);
   log.info(`[${PREFIX}] userData: ${JSON.stringify(userData, null, 2)}`);
   return userData;
-};
+}

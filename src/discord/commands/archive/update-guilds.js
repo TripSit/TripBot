@@ -39,7 +39,7 @@ module.exports = {
         guild_partner: guild.partnered,
         guild_preferredLocale: `${guild.preferredLocale ? guild.preferredLocale : 'No Locale'}`,
         guild_region: `${guild.region ? guild.region : 'No region'}`,
-        modActions: targetData.discord.modActions ? targetData.discord.modActions : {},
+        ModActions: targetData.discord.ModActions ? targetData.discord.ModActions : {},
       };
       // log.debug(`[${PREFIX}] Guild data: ${JSON.stringify(targetData, null, 2)}`);
       await setGuildInfo(targetFbid, targetData);

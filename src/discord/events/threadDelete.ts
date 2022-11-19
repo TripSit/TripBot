@@ -4,19 +4,22 @@ import {
 import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
+import * as path from 'path';
 import {
-  threadDeleteEvent,
+  ThreadDeleteEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
-import {db, getOpenTicket} from '../../global/utils/knex';
-import {TicketStatus, UserTickets} from '../../global/@types/pgdb';
+import { db, getOpenTicket } from '../../global/utils/knex';
+import { TicketStatus, UserTickets } from '../../global/@types/pgdb';
 import log from '../../global/utils/log';
-import * as path from 'path';
+
 const PREFIX = path.parse(__filename).name;
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const threadDelete: threadDeleteEvent = {
+export default threadDelete;
+
+export const threadDelete: ThreadDeleteEvent = {
   name: 'threadDelete',
   async execute(thread) {
     log.debug(`[${PREFIX}] threadDelete: ${thread.name} (${thread.id})`);

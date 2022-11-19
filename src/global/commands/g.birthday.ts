@@ -1,9 +1,12 @@
-import {DateTime} from 'luxon';
-import {db, getUser} from '../utils/knex';
-import {Users} from '../@types/pgdb';
+import { DateTime } from 'luxon';
+import { parse } from 'path';
+import { db, getUser } from '../utils/knex';
+import { Users } from '../@types/pgdb';
 import log from '../utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default birthday;
 
 /**
  * Birthday information of a user
@@ -22,26 +25,26 @@ export async function birthday(
   let response = {} as DateTime | null;
   if (command === 'set') {
     // log.debug(`[${PREFIX}] ${command} ${memberId} ${month} ${day}`);
-    const birthday = DateTime.utc(2000, month as number, day as number);
+    const birthDate = DateTime.utc(2000, month as number, day as number);
 
-    // log.debug(`[${PREFIX}] Setting birthday for ${memberId} to ${birthday}`);
+    // log.debug(`[${PREFIX}] Setting birthDate for ${memberId} to ${birthDate}`);
 
     await db<Users>('users')
       .insert({
         discord_id: memberId,
-        birthday: birthday.toJSDate(),
+        birthday: birthDate.toJSDate(),
       })
       .onConflict('discord_id')
       .merge();
-    response = birthday;
+    response = birthDate;
   } else if (command === 'get') {
     const userData = await getUser(memberId, null);
     if (userData.birthday !== null) {
-      const birthDate = userData.birthday;
+      const birthDateRaw = userData.birthday;
       // log.debug(`[${PREFIX}] birthDate: ${birthDate}`);
-      const birthday = DateTime.fromJSDate(birthDate, {zone: 'utc'});
+      const birthDate = DateTime.fromJSDate(birthDateRaw, { zone: 'utc' });
       // log.debug(`[${PREFIX}] birthday: ${birthday}`);
-      response = birthday;
+      response = birthDate;
     } else {
       // log.debug(`[${PREFIX}] birthday is NULL`);
       response = null;
@@ -51,4 +54,4 @@ export async function birthday(
   log.info(`[${PREFIX}] response: ${JSON.stringify(response?.toJSDate().toString(), null, 2)}`);
 
   return response;
-};
+}

@@ -3,10 +3,10 @@ import {
   // Message,
 } from 'discord.js';
 import {
-  guildMemberUpdateEvent,
+  GuildMemberUpdateEvent,
 } from '../@types/eventDef';
 // import {
-//   reactionRoleList,
+//   ReactionRoleList,
 // } from '../../global/@types/database';
 import env from '../../global/utils/env.config';
 // import log from '../../global/utils/log';
@@ -24,7 +24,9 @@ const mindsetRoles = [
   env.ROLE_SOBER,
 ];
 
-export const guildMemberUpdate: guildMemberUpdateEvent = {
+export default guildMemberUpdate;
+
+export const guildMemberUpdate: GuildMemberUpdateEvent = {
   name: 'guildMemberUpdate',
   async execute(oldMember, newMember) {
     // log.debug(`[${PREFIX}] guildMemberUpdate`);
@@ -60,10 +62,10 @@ export const guildMemberUpdate: guildMemberUpdateEvent = {
         let differenceId = '';
         let action = '';
         if (rolesAdded.length > 0) {
-          differenceId = rolesAdded[0];
+          [differenceId] = rolesAdded;
           action = 'added';
         } else if (rolesRemoved.length > 0) {
-          differenceId = rolesRemoved[0];
+          [differenceId] = rolesRemoved;
           action = 'removed';
         }
 

@@ -24,20 +24,19 @@ export interface PwSubstance {
 export type SubstanceClass = {
   chemical: [String]
   psychoactive: [String]
-}
+};
 
 export type SubstanceTolerance = {
   full: String
   half: String
   zero: String
-}
+};
 
 export interface RoaRange {
   min: number
   max: number
   units?: string
 }
-
 
 export type SubstanceRoaDose = {
   units: String
@@ -46,7 +45,7 @@ export type SubstanceRoaDose = {
   common: RoaRange
   light: RoaRange
   strong: RoaRange
-}
+};
 
   type SubstanceRoaDuration = {
     afterglow: RoaRange
@@ -56,14 +55,14 @@ export type SubstanceRoaDose = {
     onset: RoaRange
     peak: RoaRange
     total: RoaRange
-  }
+  };
 
   type SubstanceRoa = {
     name: String
     dose: SubstanceRoaDose
     duration: SubstanceRoaDuration
     bioavailability: RoaRange
-  }
+  };
 
   type SubstanceRoaTypes = {
     oral: SubstanceRoa
@@ -76,24 +75,24 @@ export type SubstanceRoaDose = {
     intramuscular: SubstanceRoa
     intravenous: SubstanceRoa
     smoked: SubstanceRoa
-  }
+  };
 
   type SubstanceImage = {
     thumb: String
     image: String
-  }
+  };
 
   type Effect = {
     name: String
     url: String
     substances: [PwSubstance]
     experiences: [Experience]
-  }
+  };
 
   type Experience = {
     substances: [PwSubstance]
     effects: [Experience]
-  }
+  };
 
   type Query = {
     substances(
@@ -119,4 +118,4 @@ export type SubstanceRoaDose = {
       effects_by_substance: String,
       substance: String
     ): [Experience]
-  }
+  };

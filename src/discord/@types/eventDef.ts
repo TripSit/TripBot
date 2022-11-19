@@ -25,213 +25,213 @@ import {
   Collection,
 } from 'discord.js';
 
-export interface channelCreateEvent {
+export interface ChannelCreateEvent {
   name: string;
   execute: (channel: GuildChannel) => Promise<void>;
 }
 
-export interface channelDeleteEvent {
+export interface ChannelDeleteEvent {
   name: string;
   execute: (channel: DMChannel | GuildChannel) => Promise<void>;
 }
 
-export interface channelUpdateEvent {
+export interface ChannelUpdateEvent {
   name: string;
   execute: (oldChannel: DMChannel | GuildChannel, newChannel: DMChannel | GuildChannel) => Promise<void>;
 }
 
-export interface channelPinsUpdateEvent {
+export interface ChannelPinsUpdateEvent {
   name: string;
   execute: (channel: TextBasedChannel, time: Date) => Promise<void>;
 }
 
-export interface readyEvent {
+export interface ReadyEvent {
   name: string;
   once: boolean;
   execute: (client: Client) => Promise<void>;
 }
 
-export interface debugEvent {
+export interface DebugEvent {
   name: string;
   execute: (info: string) => Promise<void>;
 }
 
-export interface emojiCreateEvent {
+export interface EmojiCreateEvent {
   name: string;
   execute: (emoji: GuildEmoji) => Promise<void>;
 }
 
-export interface emojiDeleteEvent {
+export interface EmojiDeleteEvent {
   name: string;
   execute: (emoji: GuildEmoji) => Promise<void>;
 }
 
-export interface emojiUpdateEvent {
+export interface EmojiUpdateEvent {
   name: string;
   execute: (oldEmoji: GuildEmoji, newEmoji: GuildEmoji) => Promise<void>;
 }
 
-export interface errorEvent {
+export interface ErrorEvent {
   name: string;
   execute: (error: Error) => Promise<void>;
 }
 
-export interface guildBanAddEvent {
+export interface GuildBanAddEvent {
   name: string;
   execute: (ban: GuildBan) => Promise<void>;
 }
 
-export interface guildBanRemoveEvent {
+export interface GuildBanRemoveEvent {
   name: string;
   execute: (ban: GuildBan) => Promise<void>;
 }
 
-export interface guildCreateEvent {
+export interface GuildCreateEvent {
   name: string;
   execute: (guild: Guild) => Promise<void>;
 }
 
-export interface guildDeleteEvent {
+export interface GuildDeleteEvent {
   name: string;
   execute: (guild: Guild) => Promise<void>;
 }
 
-export interface guildUpdateEvent {
+export interface GuildUpdateEvent {
   name: string;
   execute: (oldGuild: Guild, newGuild: Guild) => Promise<void>;
 }
 
-export interface guildMemberAddEvent {
+export interface GuildMemberAddEvent {
   name: string;
   execute: (member: GuildMember) => Promise<void>;
 }
 
-export interface guildMemberRemoveEvent {
+export interface GuildMemberRemoveEvent {
   name: string;
   execute: (member: GuildMember) => Promise<void>;
 }
 
-export interface guildMemberUpdateEvent {
+export interface GuildMemberUpdateEvent {
   name: string;
   execute: (oldMember: GuildMember, newMember: GuildMember) => Promise<void>;
 }
 
-export interface guildIntegrationsUpdateEvent {
+export interface GuildIntegrationsUpdateEvent {
   name: string;
   execute: (guild: Guild) => Promise<void>;
 }
 
-export interface interactionCreateEvent {
+export interface InteractionCreateEvent {
   name: string;
   execute: (interaction: Interaction) => Promise<void>;
 }
 
-export interface inviteCreateEvent {
+export interface InviteCreateEvent {
   name: string;
   execute: (invite: Invite) => Promise<void>;
 }
 
-export interface inviteDeleteEvent {
+export interface InviteDeleteEvent {
   name: string;
   execute: (invite: Invite) => Promise<void>;
 }
 
-export interface invalidRequestWarningEvent {
+export interface InvalidRequestWarningEvent {
   name: string;
   execute: (invalidRequestWarningData: InvalidRequestWarningData) => Promise<void>;
 }
 
-export interface messageCreateEvent {
+export interface MessageCreateEvent {
   name: string;
   execute: (message: Message) => Promise<void>;
 }
 
-export interface messageDeleteEvent {
+export interface MessageDeleteEvent {
   name: string;
   execute: (message: Message) => Promise<void>;
 }
 
-export interface messageUpdateEvent {
+export interface MessageUpdateEvent {
   name: string;
   execute: (oldMessage: Message, newMessage: Message) => Promise<void>;
 }
 
-export interface messageDeleteBulkEvent {
+export interface MessageDeleteBulkEvent {
   name: string;
   execute: (messages: Collection <Snowflake, Message>) => Promise<void>;
 }
 
-export interface messageReactionAddEvent {
+export interface MessageReactionAddEvent {
   name: string;
   execute: (messageReaction: MessageReaction, user: User) => Promise<void>;
 }
 
-export interface messageReactionRemoveEvent {
+export interface MessageReactionRemoveEvent {
   name: string;
   execute: (messageReaction: MessageReaction, user: User) => Promise<void>;
 }
 
-export interface rateLimitEvent {
+export interface RateLimitEvent {
   name: string;
   execute: (rateLimitData: RateLimitData) => Promise<void>;
 }
 
-export interface roleCreateEvent {
+export interface RoleCreateEvent {
   name: string;
   execute: (role: Role) => Promise<void>;
 }
 
-export interface roleDeleteEvent {
+export interface RoleDeleteEvent {
   name: string;
   execute: (role: Role) => Promise<void>;
 }
 
-export interface roleUpdateEvent {
+export interface RoleUpdateEvent {
   name: string;
   execute: (oldRole: Role, newRole: Role) => Promise<void>;
 }
 
-export interface stickerCreateEvent {
+export interface StickerCreateEvent {
   name: string;
   execute: (role: Sticker) => Promise<void>;
 }
 
-export interface stickerDeleteEvent {
+export interface StickerDeleteEvent {
   name: string;
   execute: (role: Sticker) => Promise<void>;
 }
 
-export interface stickerUpdateEvent {
+export interface StickerUpdateEvent {
   name: string;
   execute: (oldSticker: Sticker, newSticker: Sticker) => Promise<void>;
 }
 
-export interface threadCreateEvent {
+export interface ThreadCreateEvent {
   name: string;
   execute: (thread: ThreadChannel, newlyCreated: boolean) => Promise<void>;
 }
 
-export interface threadDeleteEvent {
+export interface ThreadDeleteEvent {
   name: string;
   execute: (thread: ThreadChannel) => Promise<void>;
 }
 
-export interface threadUpdateEvent {
+export interface ThreadUpdateEvent {
   name: string;
   execute: (oldThread: ThreadChannel, newThread: ThreadChannel) => Promise<void>;
 }
 
-export interface voiceStateUpdateEvent {
+export interface VoiceStateUpdateEvent {
   name: string;
   execute: (oldState: VoiceState, newState: VoiceState) => Promise<void>;
 }
 
-export interface warnEvent {
+export interface WarnEvent {
   name: string;
   execute: (info: string) => Promise<void>;
 }
 
-export interface webhookUpdateEvent {
+export interface WebhookUpdateEvent {
   name: string;
   execute: (channel: TextChannel | NewsChannel | VoiceChannel) => Promise<void>;
 }

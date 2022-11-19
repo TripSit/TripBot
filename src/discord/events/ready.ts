@@ -5,14 +5,14 @@ import {
   Invite,
   TextChannel,
 } from 'discord.js';
+import { setTimeout } from 'timers/promises';
+import { parse } from 'path';
 import env from '../../global/utils/env.config';
-import {readyEvent} from '../@types/eventDef';
-import {setTimeout} from 'timers/promises';
+import { ReadyEvent } from '../@types/eventDef';
 import log from '../../global/utils/log';
 
-import {startStatusLoop} from '../utils/statusLoop';
+import { startStatusLoop } from '../utils/statusLoop';
 
-import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
 // Initialize the invite cache
@@ -34,7 +34,9 @@ async function getInvites(client: Client) {
   });
 }
 
-export const ready: readyEvent = {
+export default ready;
+
+export const ready: ReadyEvent = {
   name: 'ready',
   once: true,
   async execute(client) {
@@ -50,7 +52,6 @@ export const ready: readyEvent = {
           const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
           botlog.send(`Hey ${tripbotdevrole}, bot has restart! Booted in ${bootDuration} seconds`);
         }
-      })
-    ;
+      });
   },
 };

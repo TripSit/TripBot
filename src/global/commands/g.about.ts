@@ -1,15 +1,18 @@
 /* eslint-disable max-len */
-import {stripIndents} from 'common-tags';
-import {parse} from 'path';
+import { stripIndents } from 'common-tags';
+import { parse } from 'path';
+import log from '../utils/log';
+
 const PREFIX = parse(__filename).name;
-import log from '../../global/utils/log';
+
+export default about;
 
 /**
  * Information about the bot!
  * @return {aboutInfo} an object with information about the bot
  */
-export async function about():Promise<aboutInfo> {
-  const aboutInfo ={
+export async function about():Promise<AboutInfo> {
+  const aboutInfo = {
     name: 'TripSit',
     url: 'https://tripsit.me/',
     description: stripIndents`
@@ -52,9 +55,9 @@ export async function about():Promise<aboutInfo> {
   };
   log.info(`[${PREFIX}] response: ${JSON.stringify(aboutInfo, null, 2)}`);
   return aboutInfo;
-};
+}
 
-type aboutInfo = {
+type AboutInfo = {
   name: string;
   url: string;
   invite: string;
@@ -63,4 +66,4 @@ type aboutInfo = {
   support: string;
   feedback: string;
   credits: string;
-}
+};

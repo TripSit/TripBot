@@ -14,11 +14,12 @@ import {
   TextInputStyle,
   ButtonStyle,
 } from 'discord-api-types/v10';
-import {stripIndents} from 'common-tags';
-import {embedTemplate} from '../utils/embedTemplate';
+import { stripIndents } from 'common-tags';
+import { parse } from 'path';
+import { embedTemplate } from './embedTemplate';
 import log from '../../global/utils/log';
-import {parse} from 'path';
-import {getGuild} from '../../global/utils/knex';
+import { getGuild } from '../../global/utils/knex';
+
 const PREFIX = parse(__filename).name;
 
 /**
@@ -33,7 +34,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       ephemeral: true,
     });
     return;
-  };
+  }
 
   const issueType = interaction.customId.split('~')[1];
 
@@ -100,8 +101,8 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   // Show the modal to the user
   await interaction.showModal(modal);
 
-  const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`techHelpSubmit`);
-  interaction.awaitModalSubmit({filter, time: 150000})
+  const filter = (i:ModalSubmitInteraction) => i.customId.includes('techHelpSubmit');
+  interaction.awaitModalSubmit({ filter, time: 150000 })
     .then(async (i) => {
       if (i.customId.split('~')[1] !== interaction.id) return;
 
@@ -111,7 +112,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
           ephemeral: true,
         });
         return;
-      };
+      }
 
       // Respond right away cuz the rest of this doesn't matter
       const member = await i.guild.members.fetch(i.user.id);
@@ -119,12 +120,13 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       if (member) {
         // Dont run if the user is on timeout
         if (member.communicationDisabledUntilTimestamp !== null) {
-          return member.send(stripIndents`
+          await member.send(stripIndents`
           Hey!
     
           Looks like you're on timeout =/
     
           You can't use the modmail while on timeout.`);
+          return;
         }
       } else {
         i.reply('Thank you, we will respond to right here when we can!');
@@ -150,7 +152,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       embed.setDescription(
         stripIndents`Thank you, check out ${ticketThread} to talk with a team member about your issue!`,
       );
-      i.reply({embeds: [embed], ephemeral: true});
+      i.reply({ embeds: [embed], ephemeral: true });
 
       const message = stripIndents`
         Hey ${roleTechreview}! ${actor} has submitted a new issue:
@@ -171,7 +173,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
             .setStyle(ButtonStyle.Success),
         );
 
-      await ticketThread.send({content: message, components: [techHelpButtons]});
+      await ticketThread.send({ content: message, components: [techHelpButtons] });
       log.debug(`[${PREFIX}] Sent intro message to meta-thread ${ticketThread.id}`);
     });
 }
@@ -187,15 +189,17 @@ export async function techHelpOwn(interaction:ButtonInteraction) {
       ephemeral: true,
     });
     return;
-  };
+  }
   const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
   const target = await interaction.guild.members.fetch(targetId) as GuildMember;
 
-  interaction.reply({content: stripIndents`${(interaction.member as GuildMember).displayName} has claimed this \
-issue and will either help you or figure out how to get you help!`});
+  interaction.reply({
+    content: stripIndents`${(interaction.member as GuildMember).displayName} has claimed this \
+issue and will either help you or figure out how to get you help!`,
+  });
   (interaction.channel as ThreadChannel).setName(`💛│${target.displayName}'s ${issueType} issue!`);
-};
+}
 
 /**
  *
@@ -208,13 +212,14 @@ export async function techHelpClose(interaction:ButtonInteraction) {
       ephemeral: true,
     });
     return;
-  };
+  }
   const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
   const target = await interaction.guild.members.fetch(targetId) as GuildMember;
 
-  interaction.reply({content: stripIndents`${(interaction.member as GuildMember).displayName} has indicated that \
-this issue has been resolved!`});
+  interaction.reply({
+    content: stripIndents`${(interaction.member as GuildMember).displayName} has indicated that \
+this issue has been resolved!`,
+  });
   (interaction.channel as ThreadChannel).setName(`💚│${target.displayName}'s ${issueType} issue!`);
-};
-
+}

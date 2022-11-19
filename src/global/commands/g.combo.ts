@@ -1,10 +1,13 @@
+import { parse } from 'path';
+import { stripIndents } from 'common-tags';
 import log from '../utils/log';
-import {parse} from 'path';
-const PREFIX = parse(__filename).name;
 
 import drugDataAll from '../assets/data/drug_db_combined.json';
 import comboDefs from '../assets/data/combo_definitions.json';
-import {stripIndents} from 'common-tags';
+
+const PREFIX = parse(__filename).name;
+
+export default combo;
 
 /**
  * combo data
@@ -94,11 +97,11 @@ export async function combo(
     success: true,
     title: `Mixing **${drugA}** and **${drugB}**: ${output}`,
     description: definition,
-    thumbnail: thumbnail,
-    color: color,
+    thumbnail,
+    color,
   };
 
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
 
   return response;
-};
+}

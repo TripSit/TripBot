@@ -1,18 +1,21 @@
 import axios from 'axios';
+import { parse } from 'path';
 import env from '../utils/env.config';
 import log from '../utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default joke;
 
 /**
  *
  * @return {any}
  */
 export async function joke():Promise<any> {
-  const {data} = await axios.get('https://jokeapi-v2.p.rapidapi.com/joke/Misc,Pun', {
+  const { data } = await axios.get('https://jokeapi-v2.p.rapidapi.com/joke/Misc,Pun', {
     params: {
-      'format': 'json',
-      'blacklistFlags': 'nsfw,religious,political,racist,sexist,explicit',
+      format: 'json',
+      blacklistFlags: 'nsfw,religious,political,racist,sexist,explicit',
       'safe-mode': 'true',
     },
     headers: {
@@ -24,4 +27,4 @@ export async function joke():Promise<any> {
   log.info(`[${PREFIX}] response: ${JSON.stringify(data, null, 2)}`);
 
   return data;
-};
+}

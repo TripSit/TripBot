@@ -1,19 +1,18 @@
-import env from '../../global/utils/env.config';
 import {
   Colors,
   ButtonInteraction,
   Client,
   Role,
   TextChannel,
-  // GuildMemberRoleManager,
   User,
-  // GuildMember,
 } from 'discord.js';
+import { stripIndents } from 'common-tags';
+import { parse } from 'path';
+import env from '../../global/utils/env.config';
 import log from '../../global/utils/log';
-import {stripIndents} from 'common-tags';
-import {startLog} from './startLog';
-import {embedTemplate} from '../utils/embedTemplate';
-import {applicationApprove} from '../utils/application';
+import { startLog } from './startLog';
+import { embedTemplate } from './embedTemplate';
+import { applicationApprove } from './application';
 import {
   tripsitmeButton,
   tripsitmeOwned,
@@ -21,14 +20,15 @@ import {
   tripsitmeBackup,
   tripsitmeClose,
   tripsitmeResolve,
-} from '../utils/tripsitme';
-import {techHelpClick, techHelpClose, techHelpOwn} from '../utils/techHelp';
+} from './tripsitme';
+import { techHelpClick, techHelpClose, techHelpOwn } from './techHelp';
 import {
   modmailCreate, modmailActions,
 } from '../commands/guild/modmail';
 
-import {parse} from 'path';
 const PREFIX = parse(__filename).name;
+
+export default buttonClick;
 
 /**
  * This runs whenever a buttion is clicked
@@ -87,15 +87,15 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   if (buttonID.startsWith('techHelpOwn')) {
     techHelpOwn(interaction);
     return;
-  };
+  }
   if (buttonID.startsWith('techHelpClose')) {
     techHelpClose(interaction);
     return;
-  };
+  }
   if (buttonID.startsWith('techHelpClick')) {
     techHelpClick(interaction);
     return;
-  };
+  }
   if (buttonID === 'modmailTripsitter') {
     modmailCreate(interaction, 'TRIPSIT');
     return;
@@ -114,7 +114,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   }
   if (buttonID === 'memberbutton') {
     if (!interaction.guild) {
-      interaction.reply({content: 'This command can only be used in a server!', ephemeral: true});
+      interaction.reply({ content: 'This command can only be used in a server!', ephemeral: true });
       return;
     }
 
@@ -126,11 +126,11 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
 
       // log.debug(`[${PREFIX}] member: ${member.roles.cache}`);
 
-
       // log.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
       const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
       channelTripbotlogs.send({
-        content: `Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`});
+        content: `Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`,
+      });
 
       if (memberRole) {
         member.roles.add(memberRole);
@@ -200,7 +200,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
             // log.debug(`[${PREFIX}] Member already has role!`);
             return;
           }
-          channelGeneral.send({embeds: [embed]});
+          channelGeneral.send({ embeds: [embed] });
         }
       }
     }
@@ -220,7 +220,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
       .setColor(Colors.Green)
       .setDescription(`${interaction.user.username} has acknowledged their warning.`);
     if (modChan) {
-      modChan.send({embeds: [embed]});
+      modChan.send({ embeds: [embed] });
     }
     interaction.reply('Thanks for understanding!');
     return;
@@ -229,12 +229,12 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     const guild = interaction.client.guilds.resolve(env.DISCORD_GUILD_ID);
     // log.debug(guild);
     if (guild) {
-      guild.members.ban(interaction.user, {deleteMessageDays: 7, reason: 'Refused warning'});
+      guild.members.ban(interaction.user, { deleteMessageDays: 7, reason: 'Refused warning' });
     }
     const embed = embedTemplate()
       .setColor(Colors.Red)
       .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
-    modChan.send({embeds: [embed]});
+    modChan.send({ embeds: [embed] });
     interaction.reply('Thanks for making this easy!');
     return;
   }
@@ -247,7 +247,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
       .setColor(Colors.Green)
       .setDescription(`${interaction.user.username} has acknowledged their warning.`);
     if (botOwner) {
-      botOwner.send({embeds: [embed]});
+      botOwner.send({ embeds: [embed] });
     }
     interaction.reply('Thanks for understanding!');
     return;
@@ -256,7 +256,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     const embed = embedTemplate()
       .setColor(Colors.Red)
       .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
-    modChan.send({embeds: [embed]});
+    modChan.send({ embeds: [embed] });
     interaction.reply('Thanks for making this easy!');
     return;
   }
@@ -268,6 +268,6 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     command.execute(interaction);
   } catch (error) {
     log.error(error);
-    interaction.reply({content: 'There was an error while executing this command!', ephemeral: true});
+    interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
   }
-};
+}

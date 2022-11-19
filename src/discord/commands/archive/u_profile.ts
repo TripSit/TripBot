@@ -11,7 +11,7 @@ import {UserCommand} from '../../@types/commandDef';
 import {embedTemplate} from '../../utils/embedTemplate';
 import log from '../../../global/utils/log';
 import env from '../../../global/utils/env.config';
-import {userDbEntry} from '../../../global/@types/database';
+import {UserDbEntry} from '../../../global/@types/database';
 import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 

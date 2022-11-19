@@ -2,19 +2,21 @@ import {
   ChannelType,
 } from 'discord-api-types/v10';
 import {
-  messageCreateEvent,
+  MessageCreateEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 // import {thoughtPolice} from '../utils/d.thoughtPolice';
-import {experience} from '../../global/utils/experience';
-import {announcements} from '../utils/announcements';
-import {messageCommand} from '../utils/messageCommand';
-import {modmailDMInteraction, modmailThreadInteraction} from '../commands/guild/modmail';
+import { experience } from '../../global/utils/experience';
+import { announcements } from '../utils/announcements';
+import { messageCommand } from '../utils/messageCommand';
+import { modmailDMInteraction, modmailThreadInteraction } from '../commands/guild/modmail';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
 
-export const messageCreate: messageCreateEvent = {
+export default messageCreate;
+
+export const messageCreate: MessageCreateEvent = {
   name: 'messageCreate',
   async execute(message) {
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)

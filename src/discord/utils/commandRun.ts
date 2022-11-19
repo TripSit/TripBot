@@ -8,12 +8,15 @@ import {
   Guild,
 } from 'discord.js';
 // import {SlashCommand} from './commandDef';
-import {embedTemplate} from './embedTemplate';
+import { parse } from 'path';
+import { embedTemplate } from './embedTemplate';
 import log from '../../global/utils/log';
-import {parse} from 'path';
-const PREFIX = parse(__filename).name;
 
 import env from '../../global/utils/env.config';
+
+const PREFIX = parse(__filename).name;
+
+export default commandRun;
 
 /**
  * Runs a slash command
@@ -22,9 +25,10 @@ import env from '../../global/utils/env.config';
  * @return {Discord.MessageEmbed}
  */
 export async function commandRun(
-  interaction: ChatInputCommandInteraction| MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction,
-  client: Client) {
-  const {commandName} = interaction;
+  interaction: ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction,
+  client: Client,
+) {
+  const { commandName } = interaction;
 
   const command = client.commands.get(commandName);
 
@@ -49,7 +53,7 @@ export async function commandRun(
         const embed = embedTemplate()
           .setColor(Colors.Red)
           .setDescription('There was an error while executing this command!');
-        await interaction.editReply({embeds: [embed]});
+        await interaction.editReply({ embeds: [embed] });
       }
       if (env.NODE_ENV === 'production') {
         const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
@@ -75,4 +79,4 @@ export async function commandRun(
       }
     }
   }
-};
+}

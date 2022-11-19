@@ -1,12 +1,12 @@
-import env from './env.config';
 import knex from 'knex';
+import env from './env.config';
 import {
   DiscordGuilds,
   Users,
   UserTickets,
   // TicketStatus,
   // DiscordGuilds,
-} from '../../global/@types/pgdb.d';
+} from '../@types/pgdb.d';
 // import log from '../../global/utils/log';
 // import * as path from 'path';
 // const PREFIX = path.parse(__filename).name;
@@ -35,9 +35,9 @@ export async function getUser(
       .first();
     // log.debug(`[${PREFIX}] data1: ${JSON.stringify(data, null, 2)}`);
     if (data === undefined) {
-      data = (await db<Users>('users')
-        .insert({discord_id: discordId})
-        .returning('*'))[0];
+      [data] = (await db<Users>('users')
+        .insert({ discord_id: discordId })
+        .returning('*'));
       // log.debug(`[${PREFIX}] data2: ${JSON.stringify(data, null, 2)}`);
     }
   }
@@ -64,9 +64,9 @@ export async function getGuild(guildId:string) {
     .where('id', guildId)
     .first();
   if (!data) {
-    data = (await db<DiscordGuilds>('discord_guilds')
-      .insert({id: guildId})
-      .returning('*'))[0];
+    [data] = (await db<DiscordGuilds>('discord_guilds')
+      .insert({ id: guildId })
+      .returning('*'));
   }
   return data as DiscordGuilds;
 }
@@ -86,7 +86,7 @@ export async function getOpenTicket(
       .select('*')
       .where('thread_id', threadId)
       .where('type', 'TRIPSIT')
-      // .andWhereNot('status', 'CLOSED')
+    // .andWhereNot('status', 'CLOSED')
       .andWhereNot('status', 'RESOLVED')
       .andWhereNot('status', 'DELETED')
       .first();
@@ -96,7 +96,7 @@ export async function getOpenTicket(
       .select('*')
       .where('user_id', userId)
       .where('type', 'TRIPSIT')
-      // .andWhereNot('status', 'CLOSED')
+    // .andWhereNot('status', 'CLOSED')
       .andWhereNot('status', 'RESOLVED')
       .andWhereNot('status', 'DELETED')
       .first();

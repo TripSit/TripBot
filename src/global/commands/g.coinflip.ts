@@ -1,6 +1,16 @@
+import { parse } from 'path';
 import log from '../utils/log';
-import {parse} from 'path';
+
+// Make an array of animal emojis
+const animals = [
+  '🐌', '🐒', '🐔', '🐗', '🐚', '🐛', '🐜', '🐝', '🐞', '🐤', '🐦', '🐧',
+  '🐨', '🐭', '🐮', '🐯', '🐰', '🐱', '🐴', '🐵', '🐶', '🐷', '🐸', '🐹',
+  '🐺', '🐻', '🐼', '🦁', '🦄', '🦅', '🦆', '🦇', '🦉', '🦊', '🦋', '🙊',
+];
+
 const PREFIX = parse(__filename).name;
+
+export default coinflip;
 
 /**
  *
@@ -43,11 +53,4 @@ export async function coinflip():Promise<string> {
   log.info(`[${PREFIX}] response: ${JSON.stringify(side, null, 2)}`);
 
   return side;
-};
-
-// Make an array of animal emojis
-const animals = [
-  '🐌', '🐒', '🐔', '🐗', '🐚', '🐛', '🐜', '🐝', '🐞', '🐤', '🐦', '🐧',
-  '🐨', '🐭', '🐮', '🐯', '🐰', '🐱', '🐴', '🐵', '🐶', '🐷', '🐸', '🐹',
-  '🐺', '🐻', '🐼', '🦁', '🦄', '🦅', '🦆', '🦇', '🦉', '🦊', '🦋', '🙊',
-];
+}

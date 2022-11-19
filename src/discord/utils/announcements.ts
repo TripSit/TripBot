@@ -3,20 +3,19 @@ import {
   Message,
   MessageReaction,
   TextChannel,
-  User,
 } from 'discord.js';
+import { stripIndents } from 'common-tags';
 import env from '../../global/utils/env.config';
-import {embedTemplate} from './embedTemplate';
-import {stripIndents} from 'common-tags';
-import {db} from '../../global/utils/knex';
-import {Users} from '../../global/@types/pgdb';
+import { embedTemplate } from './embedTemplate';
+import { db } from '../../global/utils/knex';
+import { Users } from '../../global/@types/pgdb';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
 
 const frequency = env.NODE_ENV === 'production' ? 50 : 2;
 const bigFrequency = env.NODE_ENV === 'production' ? 250 : 3;
-const messageCounter = {} as messageCounterType;
+const messageCounter = {} as MessageCounterType;
 let bigFrequencyCounter = 0;
 
 const waterAndTeaEmojis = [
@@ -56,10 +55,9 @@ const happyEmojis = [
   '😎', '😺', '😸', '😹', '😻', '🐵', '👍', '✌',
 ];
 
-
-type messageCounterType = {
+type MessageCounterType = {
   [key: string]: number;
-}
+};
 
 /**
  *
@@ -149,7 +147,7 @@ export async function announcements(message:Message) {
   const commandAnnouncements = [
   //   `Learn all </about:960180702333243452> the bot!`,
   //   `Convert between benzo dosages with </benzo_calc:1017060823279087659>!`,
-    `While tripsit does not give free cake, you can set your </birthday:971807342255546378>!`,
+    'While tripsit does not give free cake, you can set your </birthday:971807342255546378>!',
   //   `I will always love </breathe:959196740194537474> 4 uwu`,
   //   // `</bridge:>`,
   //   `Report issues with the bot with </bug:966477926763757628>!`,
@@ -233,9 +231,9 @@ export async function announcements(message:Message) {
       // log.debug(`[${PREFIX}] generalChatCategories: ${generalChatCategories}`);
       // log.debug(`[${PREFIX}] generalChatCategories.includes(message.channel.parentId): ${generalChatCategories.includes(message.channel.parentId)}`);
       if (generalChatCategories.includes(message.channel.parentId)) {
-        messageCounter[message.channel.id] = messageCounter[message.channel.id] ?
-          messageCounter[message.channel.id] + 1 :
-          1;
+        messageCounter[message.channel.id] = messageCounter[message.channel.id]
+          ? messageCounter[message.channel.id] + 1
+          : 1;
 
         // log.debug(`[${PREFIX}] messageCounter[message.channel.id]: ${messageCounter[message.channel.id]}`);
         // log.debug(`[${PREFIX}] bigFrequency: ${bigFrequency}`);
@@ -279,19 +277,16 @@ export async function announcements(message:Message) {
           }
 
           embed.setAuthor(null);
-          embed.setFooter({text: bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].footer});
+          embed.setFooter({ text: bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].footer });
           embed.setDescription(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].message);
-          await (message.channel as TextChannel).send({embeds: [embed]})
+          await (message.channel as TextChannel).send({ embeds: [embed] })
             .then(async (msg) => {
               await msg.react(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji);
-              const filter = (reaction:MessageReaction, user:User) => {
-                return reaction.emoji.name === bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji;
-                // return true;
-              };
-              const collector = msg.createReactionCollector({filter, time: 0, dispose: true});
+              const filter = (reaction:MessageReaction) => reaction.emoji.name === bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji;
+              const collector = msg.createReactionCollector({ filter, time: 0, dispose: true });
 
               const pointDict = {
-                '❤': 'love_points',
+                '❤': 'empathy_points',
                 '🕴': 'move_points',
                 '💧': 'sparkle_points',
               };
@@ -329,9 +324,11 @@ export async function announcements(message:Message) {
 
           // log.debug(`[${PREFIX}] randomGenAnnouncement: ${randomGenAnnouncement}`);
           embed.setDescription(randomGenAnnouncement);
-          await (message.channel as TextChannel).send({embeds: [embed]});
+          await (message.channel as TextChannel).send({ embeds: [embed] });
         }
       }
     }
   }
-};
+}
+
+export default announcements;

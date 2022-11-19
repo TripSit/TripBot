@@ -1,12 +1,15 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
-import {startLog} from '../../utils/startLog';
-import {parse} from 'path';
+import { startLog } from '../../utils/startLog';
+
 const PREFIX = parse(__filename).name;
+
+export default dkipp;
 
 export const dkipp: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -34,7 +37,7 @@ export const dkipp: SlashCommand = {
       .setDescription(output)
       .setAuthor(null)
       .setFooter(null);
-    interaction.reply({embeds: [embed], ephemeral: false});
+    interaction.reply({ embeds: [embed], ephemeral: false });
     return true;
   },
 };

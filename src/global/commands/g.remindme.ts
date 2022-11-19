@@ -1,11 +1,14 @@
-import {db, getUser} from '../utils/knex';
-import {DateTime} from 'luxon';
+import { DateTime } from 'luxon';
+import { parse } from 'path';
+import { db, getUser } from '../utils/knex';
 import {
   UserReminders,
 } from '../@types/pgdb';
 import log from '../utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default remindme;
 
 /**
  *
@@ -22,7 +25,7 @@ export async function remindme(
   recordNumber: number | null,
   reminderText: string | null,
   triggerAt: Date | null,
-):Promise<string | reminder[]> {
+):Promise<string | Reminder[]> {
   // log.debug(`[${PREFIX}]
   //   command: ${command}
   //   userId: ${userId}
@@ -31,11 +34,11 @@ export async function remindme(
   //   triggerAt: ${triggerAt}
   // `);
 
-  let response = '' as string | reminder[];
+  let response = '' as string | Reminder[];
 
   if (command === 'delete') {
     if (recordNumber === null) {
-      const response = 'You must provide a record number to delete!';
+      response = 'You must provide a record number to delete!';
       log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
       return response;
     }
@@ -52,7 +55,7 @@ export async function remindme(
       .where('user_id', userData.id);
 
     if (unsorteddata.length === 0) {
-      const response = 'You have no reminder records, you can use /remindme to add some!';
+      response = 'You have no reminder records, you can use /remindme to add some!';
       log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
       return response;
     }
@@ -70,30 +73,29 @@ export async function remindme(
 
     const record = data[recordNumber];
     if (record === undefined || record === null) {
-      const response = 'That record does not exist!';
+      response = 'That record does not exist!';
       log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
       return response;
-    } else {
-      const recordId = record.id;
-      const reminderDate = data[recordNumber].created_at.toISOString();
-      // log.debug(`[${PREFIX}] reminderDate: ${reminderDate}`);
-      const timeVal = DateTime.fromISO(reminderDate);
+    }
+    const recordId = record.id;
+    const reminderDate = data[recordNumber].created_at.toISOString();
+    // log.debug(`[${PREFIX}] reminderDate: ${reminderDate}`);
+    const timeVal = DateTime.fromISO(reminderDate);
 
-      // log.debug(`[${PREFIX}] I deleted:
-      // (${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}
-      // ${record.reminder_text}
-      // `);
+    // log.debug(`[${PREFIX}] I deleted:
+    // (${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}
+    // ${record.reminder_text}
+    // `);
 
-      await db<UserReminders>('user_reminders')
-        .where('id', recordId)
-        .del();
+    await db<UserReminders>('user_reminders')
+      .where('id', recordId)
+      .del();
 
-      response = `I deleted:
+    response = `I deleted:
       > **(${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}**
       > ${record.reminder_text}
       `;
-      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
-    }
+    log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
   }
   if (command === 'get') {
     const userData = await getUser(userId, null);
@@ -110,7 +112,7 @@ export async function remindme(
     // log.debug(`[${PREFIX}] unsorteddata: ${unsorteddata.length}`);
 
     if (!unsorteddata || unsorteddata.length === 0) {
-      const response = 'You have no reminder records, you can use /remindme to add some!';
+      response = 'You have no reminder records, you can use /remindme to add some!';
       log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
       return response;
     }
@@ -128,7 +130,7 @@ export async function remindme(
 
     // log.debug(`[${PREFIX}] Sorted ${data.length} items!`);
 
-    const reminders = [] as reminder[];
+    const reminders = [] as Reminder[];
 
     for (let i = 0; i < data.length; i += 1) {
       const reminder = data[i];
@@ -147,7 +149,7 @@ export async function remindme(
   }
   if (command === 'set') {
     if (!triggerAt) {
-      const response = 'You must provide a date and time for the reminder!';
+      response = 'You must provide a date and time for the reminder!';
       log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
       return response;
     }
@@ -164,7 +166,7 @@ export async function remindme(
   return response;
 }
 
-type reminder = {
+type Reminder = {
   index: number,
   date: Date,
   value: string,

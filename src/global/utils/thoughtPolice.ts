@@ -3,7 +3,7 @@
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
 
-const _ = {
+const _ = { // eslint-disable-line
   A: '[a|A|🅰|4|@]+',
   B: '[b|B|🅱]+',
   C: '(c|C|🅲|k|ck|q)+',
@@ -45,7 +45,6 @@ const _ = {
 // const s = env.NODE_ENV === 'production' ? '\\\\W*' : '\\W*';
 
 const s = '\\W*';
-
 
 const offensive = [
   /* beasteality */[_.B, _.E, _.A, _.S, _.T, _.E, _.A, _.L, _.I, _.T, _.Y].join(s),
@@ -134,6 +133,8 @@ const memes = [
   /* swag */[_.S, _.W, _.A, _.G].join(s),
 ];
 
+export default bigBrother;
+
 /**
  * This runs on every message to determine if a badword is used
  * @param {string} messageContent Message to scan
@@ -168,4 +169,4 @@ export async function bigBrother(messageContent:string): Promise<string> {
   }
 
   return 'none';
-};
+}

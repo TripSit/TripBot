@@ -3,13 +3,16 @@ import {
   ChatInputCommandInteraction,
   TextChannel,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
 import log from '../../../global/utils/log';
-import {startLog} from '../../utils/startLog';
-import {parse} from 'path';
+import { startLog } from '../../utils/startLog';
+
 const PREFIX = parse(__filename).name;
 
-export const clearChat: SlashCommand = {
+export default dClearchat;
+
+export const dClearchat: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('clear-chat')
     .setDescription('This will delete the last 100 messages!')
@@ -25,7 +28,7 @@ export const clearChat: SlashCommand = {
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(PREFIX, interaction);
     if (!interaction.channel) {
-      interaction.reply({content: 'This command can only be used in a server!', ephemeral: true});
+      interaction.reply({ content: 'This command can only be used in a server!', ephemeral: true });
       return false;
     }
 
@@ -34,7 +37,7 @@ export const clearChat: SlashCommand = {
     const deleteArchived = interaction.options.getBoolean('delete-archived-threads') || true;
 
     // const count = interaction.options.getInteger('count');
-    await interaction.reply({content: 'Clearing chat...', fetchReply: true})
+    await interaction.reply({ content: 'Clearing chat...', fetchReply: true })
       .then(async (msg) => {
         await msg.delete();
       });

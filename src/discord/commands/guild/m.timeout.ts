@@ -10,15 +10,18 @@ import {
   ApplicationCommandType,
   TextInputStyle,
 } from 'discord-api-types/v10';
-import {MessageCommand} from '../../@types/commandDef';
-import {parseDuration} from '../../../global/utils/parseDuration';
-import {startLog} from '../../utils/startLog';
-import {stripIndents} from 'common-tags';
+import { stripIndents } from 'common-tags';
+import { parse } from 'path';
+import { MessageCommand } from '../../@types/commandDef';
+import { parseDuration } from '../../../global/utils/parseDuration';
+import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-import {moderate} from '../../../global/commands/g.moderate';
-import {parse} from 'path';
-import {UserActionType} from '../../../global/@types/pgdb';
+import { moderate } from '../../../global/commands/g.moderate';
+import { UserActionType } from '../../../global/@types/pgdb';
+
 const PREFIX = parse(__filename).name;
+
+export default mTimeout;
 
 export const mTimeout: MessageCommand = {
   data: new ContextMenuCommandBuilder()
@@ -34,13 +37,13 @@ export const mTimeout: MessageCommand = {
     const modal = new ModalBuilder()
       .setCustomId(`timeoutModal~${interaction.id}`)
       .setTitle('Tripbot Timeout');
-    const privReason = new TextInputBuilder()
+    const privReasonInput = new TextInputBuilder()
       .setLabel('Why are you timouting this person?')
       .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder('Tell the team why you are timeouting this user.')
       .setRequired(true)
       .setCustomId('privReason');
-    const pubReason = new TextInputBuilder()
+    const pubReasonInput = new TextInputBuilder()
       .setLabel('What should we tell the user?')
       .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder('This will be sent to the user!')
@@ -52,13 +55,13 @@ export const mTimeout: MessageCommand = {
       .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
       .setCustomId('timeoutDuration');
 
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReason);
-    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReason);
+    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReasonInput);
+    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReasonInput);
     const thirdActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutDuration);
     modal.addComponents(firstActionRow, secondActionRow, thirdActionRow);
     await interaction.showModal(modal);
-    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`timeoutModal`);
-    interaction.awaitModalSubmit({filter, time: 0})
+    const filter = (i:ModalSubmitInteraction) => i.customId.includes('timeoutModal');
+    interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async (i) => {
         if (i.customId.split('~')[1] !== interaction.id) return;
         const privReason = stripIndents`
@@ -74,9 +77,9 @@ export const mTimeout: MessageCommand = {
         // Get duration
         let minutes = 604800000;
         if (duration) {
-          minutes = duration ?
-            await parseDuration(duration) :
-            604800000;
+          minutes = duration
+            ? await parseDuration(duration)
+            : 604800000;
           // log.debug(`[${PREFIX}] minutes: ${minutes}`);
         }
 
@@ -88,7 +91,7 @@ export const mTimeout: MessageCommand = {
           i.fields.getTextInputValue('pubReason'),
           minutes,
         );
-        // log.debug(`[${PREFIX}] Result: ${result}`);
+          // log.debug(`[${PREFIX}] Result: ${result}`);
         i.reply(result);
       });
     return true;

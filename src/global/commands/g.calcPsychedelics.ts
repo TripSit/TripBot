@@ -1,6 +1,9 @@
+import { parse } from 'path';
 import log from '../utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default calcPsychedelics;
 
 /**
  * Does something
@@ -27,4 +30,4 @@ export async function calcPsychedelics(
   log.info(`[${PREFIX}] response: ${JSON.stringify(result, null, 2)}`);
 
   return result;
-};
+}

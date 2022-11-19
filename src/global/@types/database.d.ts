@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable max-len */
 
-export type userDbEntry = {
+export type UserDbEntry = {
   karma?: {
     karma_given: number;
     karma_received: number;
@@ -14,14 +14,14 @@ export type userDbEntry = {
     day: number;
   };
   timezone?: string;
-  experience?: expDict;
-  modActions?: modActionDict;
-}
+  experience?: ExpDict;
+  ModActions?: ModActionDict;
+};
 
-export type modActionDict = {
+export type ModActionDict = {
   [key: string]: {
     actor: string;
-    command: modAction;
+    command: ModAction;
     target: string;
     duration: number | null;
     pubReason: string | null;
@@ -29,27 +29,26 @@ export type modActionDict = {
   };
 };
 
-export type modAction = 'ban' | 'unban' | 'underban' | 'ununderban' | 'warn' | 'note' | 'timeout' | 'untimeout' | 'kick' | 'info' | 'note' | 'report';
+export type ModAction = 'ban' | 'unban' | 'underban' | 'ununderban' | 'warn' | 'note' | 'timeout' | 'untimeout' | 'kick' | 'info' | 'note' | 'report';
 
+export type ExpDict = {
+  total?: ExpEntry,
+  general?: ExpEntry,
+  tripsitter?: ExpEntry,
+  developer?: ExpEntry,
+  team?: ExpEntry,
+};
 
-export type expDict = {
-  total?: expEntry,
-  general?: expEntry,
-  tripsitter?: expEntry,
-  developer?: expEntry,
-  team?: expEntry,
-}
-
-export type expEntry = {
+export type ExpEntry = {
   level: number,
   levelExpPoints: number,
   totalExpPoints: number,
   lastMessageDate: number,
   lastMessageChannel: string,
   mee6converted?: boolean
-}
+};
 
-export type ticketDbEntry = {
+export type TicketDbEntry = {
   issueDesc: string;
   issueStatus: 'open' | 'closed' | 'blocked' | 'paused' | 'resolved';
   issueThread: string;
@@ -57,18 +56,18 @@ export type ticketDbEntry = {
   issueUser: string;
   issueUserIsBanned: boolean;
   issueFirstMessage: string;
-}
+};
 
-export type reactionRoleList = {
+export type ReactionRoleList = {
   [key: string]: {
     channelName?: string;
-    [key:string]: reactionRole[];
+    [key:string]: ReactionRole[];
   }
-}
+};
 
-export type reactionRole = {
+export type ReactionRole = {
   messageId?: string;
   name: string;
   reaction: string;
   roleId: string;
-}
+};

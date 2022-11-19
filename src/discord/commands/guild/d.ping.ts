@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import {
   ButtonInteraction,
@@ -28,14 +28,16 @@ import {
   ButtonStyle,
   PermissionFlagsBits,
 } from 'discord-api-types/v10';
+import { parse } from 'path';
 import env from '../../../global/utils/env.config';
-import {startLog} from '../../utils/startLog';
-import {SlashCommand} from '../../@types/commandDef';
+import { startLog } from '../../utils/startLog';
+import { SlashCommand } from '../../@types/commandDef';
 import log from '../../../global/utils/log';
-import {paginationEmbed} from '../../utils/pagination';
+import { paginationEmbed } from '../../utils/pagination';
 
-import {parse} from 'path';
 const PREFIX = parse(__filename).name;
+
+export default ping;
 
 export const ping: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -45,9 +47,9 @@ export const ping: SlashCommand = {
     startLog(PREFIX, interaction);
 
     if (!interaction.guild) {
-      interaction.reply({content: 'This command can only be used in a server', ephemeral: true});
+      interaction.reply({ content: 'This command can only be used in a server', ephemeral: true });
       return false;
-    };
+    }
 
     const command = 'modal' as string;
 
@@ -55,7 +57,7 @@ export const ping: SlashCommand = {
       // Create the modal
       const modal = new ModalBuilder()
         .setCustomId(`testModal~${interaction.id}`)
-        .setTitle(`testModal`);
+        .setTitle('testModal');
       modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
         .setCustomId('test')
         .setRequired(true)
@@ -64,12 +66,12 @@ export const ping: SlashCommand = {
       await interaction.showModal(modal);
 
       // Collect a modal submit interaction
-      const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`testModal`);
-      interaction.awaitModalSubmit({filter, time: 0, dispose: true})
+      const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('testModal');
+      interaction.awaitModalSubmit({ filter, time: 0, dispose: true })
         .then(async (i) => {
           if (i.customId.split('~')[1] !== interaction.id) return;
           const test = i.fields.getTextInputValue('test');
-          interaction.reply({content: test, ephemeral: true});
+          interaction.reply({ content: test, ephemeral: true });
         });
     }
 
@@ -99,10 +101,9 @@ export const ping: SlashCommand = {
         .setLabel('Previous')
         .setStyle(ButtonStyle.Danger);
 
-
       const button2 = new ButtonBuilder()
         .setCustomId('nextbtn')
-        .setLabel(`Next`)
+        .setLabel('Next')
         .setStyle(ButtonStyle.Success);
 
       // Create an array of embeds

@@ -2,14 +2,16 @@ import {
   SlashCommandBuilder,
   GuildMember,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {timezone} from '../../../global/commands/g.timezone';
-import {startLog} from '../../utils/startLog';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { timezone } from '../../../global/commands/g.timezone';
+import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
-export const time: SlashCommand = {
+export default dTime;
+
+export const dTime: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('timezone')
     .setDescription('Get or set timezones!')
@@ -18,9 +20,7 @@ export const time: SlashCommand = {
       .setDescription('Get someone\'s timezone!')
       .addUserOption((option) => option
         .setName('user')
-        .setDescription('User to lookup'),
-      ),
-    )
+        .setDescription('User to lookup')))
     .addSubcommand((subcommand) => subcommand
       .setName('set')
       .setDescription('Set your timezone!')
@@ -28,8 +28,7 @@ export const time: SlashCommand = {
         .setName('timezone')
         .setDescription('Timezone value')
         .setRequired(true)
-        .setAutocomplete(true)),
-    ),
+        .setAutocomplete(true))),
   async execute(interaction) {
     startLog(PREFIX, interaction);
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
@@ -55,7 +54,7 @@ export const time: SlashCommand = {
         interaction.reply(`${response} wherever ${member.displayName} is located.`);
       }
     } else {
-      interaction.reply({content: response as string, ephemeral: true});
+      interaction.reply({ content: response as string, ephemeral: true });
     }
     return true;
   },

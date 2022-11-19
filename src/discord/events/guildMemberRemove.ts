@@ -2,28 +2,31 @@ import {
   Colors,
   TextChannel,
 } from 'discord.js';
+import { parse } from 'path';
 import {
-  guildMemberRemoveEvent,
+  GuildMemberRemoveEvent,
 } from '../@types/eventDef';
-import {db} from '../../global/utils/knex';
+import { db } from '../../global/utils/knex';
 import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
-import {embedTemplate} from '../utils/embedTemplate';
-import {parse} from 'path';
-import {Users} from '../../global/@types/pgdb';
+import { embedTemplate } from '../utils/embedTemplate';
+import { Users } from '../../global/@types/pgdb';
+
 const PREFIX = parse(__filename).name;
 
-export const guildMemberRemove: guildMemberRemoveEvent = {
+export default guildMemberRemove;
+
+export const guildMemberRemove: GuildMemberRemoveEvent = {
   name: 'guildMemberRemove',
   async execute(member) {
     // Only run on the tripsit guild
     if (member.guild.id !== env.DISCORD_GUILD_ID) {
       return;
-    };
+    }
 
     log.info(`[${PREFIX}] ${member} left guild: ${member.guild.name} (id: ${member.guild.id})`);
 
-    const joinedTimestamp = member.joinedTimestamp;
+    const { joinedTimestamp } = member;
 
     // log.debug(`[${PREFIX}] joinedTimestamp: ${joinedTimestamp}`);
     const embed = embedTemplate()
@@ -56,7 +59,7 @@ export const guildMemberRemove: guildMemberRemoveEvent = {
 
     const channelBotlog = member.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
-      channelBotlog.send({embeds: [embed]});
+      channelBotlog.send({ embeds: [embed] });
     }
 
     await db<Users>('users')

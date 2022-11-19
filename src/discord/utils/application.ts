@@ -26,42 +26,43 @@ import {
   ButtonStyle,
   PermissionFlagsBits,
 } from 'discord-api-types/v10';
-import {embedTemplate} from '../utils/embedTemplate';
+import { stripIndents } from 'common-tags';
+import { parse } from 'path';
+import { embedTemplate } from './embedTemplate';
 import env from '../../global/utils/env.config';
-import {stripIndents} from 'common-tags';
-import {startLog} from './startLog';
+import { startLog } from './startLog';
 import log from '../../global/utils/log'; // eslint-disable-line no-unused-vars
-import {parse} from 'path';
-import {getGuild} from '../../global/utils/knex';
+import { getGuild } from '../../global/utils/knex';
+
 const PREFIX = parse(__filename).name;
 
 // "your application was denied because..."
 const rejectionMessages = {
-  'tooNew': `your Discord account is too new. Let's get to know each other for a while, eh? To be transparent, the minimum account age for our helpers is 1 month(s) (subject to change) for consideration. We will review again in the future.`,
-  'misinformation': `we have noted a few instances of you, perhaps unintinetinally, posting misinformation. Weighing the pros with the cons, we think it would be better to hold off on this pending a better view of how you interact with the primary community. Please ensure that, moving forward, any claims that you present as fact are able to be substantiated with a reputable source of information.`,
-  'discrepancies': `your application contained some discrepancies with regards to your prior volunteer history, age, exaggerations, or fabrications of involvement in activities mentioned in your application.`,
-  'enabling': `we have found in your personal user history where you have directly advocated harmful practices. This is easy to do when you get carried away, and we understand that drug use is fun and not always to be taken seriously, but we have reservations for this reason. This can always change, though, over time!`,
-  'demerits': `in reviewing your file, we found that you have been reprimanded or penalized on the network too many times to consider you for a role that exposes vulnerable users to, at times, no one else but you. Please continue to interact in our network and let us know in a few months if you would like to be reconsidered.`,
-  'blank': `we do not approve requests to gain this role with a blank or otherwise unhelpful applications. Please consider resubmitting an application in a month or so, and please tell us why you would like to join the team of helpers in a manner that is comprehensive and convincing. At this time, we do not have enough to go on.`,
-  'young': `we would like for all of our volunteers to be at least 21 years of age in order to participate in this community. Please return when you are of age and submit your application once more. Thank you!`,
-  'identity': `unfortunately, you did not pass the Stripe identity check. Note that we never get access to your private data when these checks are performed, but the system rarely is wrong and it detected that something was not right about your credentials. Please try again with new documentation that will pass all of the checks required.`,
-  'overstaffed': `we currently have too many resources of that of that current position and we don't want to have a 'too many cooks' situation. We will keep your application and review again in the near future.`,
-  'exposure': `you appear not to be so well exposed to drugs and that is very good to hear! Given that this is a peer support community, peers are expected to at least be familiar with the substances in question. To be clear, you should absolutely not go out and take drugs just so you can relate better to our helpers. We are putting this one away for now. We appreciate your willingness to help, but we feel it is not a good fit. First-hand exposure to drug use as a counselor ro a psychiatrist is excusable. We do not require you to take drugs in order to help; we just need you to be familiar with the realities of them.`,
-  'culture': `we feel, after careful contemplation, that this would be a poor culture fit. Please do not take this personally as we are relatively selective. You may apply again in the near future once we become better acquainted.`,
+  tooNew: 'your Discord account is too new. Let\'s get to know each other for a while, eh? To be transparent, the minimum account age for our helpers is 1 month(s) (subject to change) for consideration. We will review again in the future.',
+  misinformation: 'we have noted a few instances of you, perhaps unintinetinally, posting misinformation. Weighing the pros with the cons, we think it would be better to hold off on this pending a better view of how you interact with the primary community. Please ensure that, moving forward, any claims that you present as fact are able to be substantiated with a reputable source of information.',
+  discrepancies: 'your application contained some discrepancies with regards to your prior volunteer history, age, exaggerations, or fabrications of involvement in activities mentioned in your application.',
+  enabling: 'we have found in your personal user history where you have directly advocated harmful practices. This is easy to do when you get carried away, and we understand that drug use is fun and not always to be taken seriously, but we have reservations for this reason. This can always change, though, over time!',
+  demerits: 'in reviewing your file, we found that you have been reprimanded or penalized on the network too many times to consider you for a role that exposes vulnerable users to, at times, no one else but you. Please continue to interact in our network and let us know in a few months if you would like to be reconsidered.',
+  blank: 'we do not approve requests to gain this role with a blank or otherwise unhelpful applications. Please consider resubmitting an application in a month or so, and please tell us why you would like to join the team of helpers in a manner that is comprehensive and convincing. At this time, we do not have enough to go on.',
+  young: 'we would like for all of our volunteers to be at least 21 years of age in order to participate in this community. Please return when you are of age and submit your application once more. Thank you!',
+  identity: 'unfortunately, you did not pass the Stripe identity check. Note that we never get access to your private data when these checks are performed, but the system rarely is wrong and it detected that something was not right about your credentials. Please try again with new documentation that will pass all of the checks required.',
+  overstaffed: 'we currently have too many resources of that of that current position and we don\'t want to have a \'too many cooks\' situation. We will keep your application and review again in the near future.',
+  exposure: 'you appear not to be so well exposed to drugs and that is very good to hear! Given that this is a peer support community, peers are expected to at least be familiar with the substances in question. To be clear, you should absolutely not go out and take drugs just so you can relate better to our helpers. We are putting this one away for now. We appreciate your willingness to help, but we feel it is not a good fit. First-hand exposure to drug use as a counselor ro a psychiatrist is excusable. We do not require you to take drugs in order to help; we just need you to be familiar with the realities of them.',
+  culture: 'we feel, after careful contemplation, that this would be a poor culture fit. Please do not take this personally as we are relatively selective. You may apply again in the near future once we become better acquainted.',
 };
 
 /**
  *
  * @param {SelectMenuInteraction} interaction The Client that manages this interaction
  * @return {Promise<void>}
-**/
+* */
 export async function applicationStart(
   interaction: SelectMenuInteraction,
 ): Promise<void> {
   if (interaction.values[0] === 'none') {
-    interaction.reply({content: 'No application selected.', ephemeral: true});
+    interaction.reply({ content: 'No application selected.', ephemeral: true });
     return;
-  };
+  }
 
   startLog(PREFIX, interaction);
 
@@ -90,8 +91,8 @@ export async function applicationStart(
   await interaction.showModal(modal);
 
   // Collect a modal submit interaction
-  const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`applicationSubmit`);
-  interaction.awaitModalSubmit({filter, time: 0})
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('applicationSubmit');
+  interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async (i) => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       if (!i.guild) {
@@ -133,11 +134,13 @@ export async function applicationStart(
           {
             name: 'Displayname',
             value: `${actor.displayName}`,
-            inline: true},
+            inline: true,
+          },
           {
             name: 'Username',
             value: `${i.member.user.username}#${i.member.user.discriminator}`,
-            inline: true},
+            inline: true,
+          },
           {
             name: 'ID',
             value: `${i.member.user.id}`,
@@ -148,14 +151,16 @@ export async function applicationStart(
           {
             name: 'Created',
             value: `${time((i.member.user as User).createdAt, 'R')}`,
-            inline: true},
+            inline: true,
+          },
         );
       if (actor.joinedAt) {
         appEmbed.addFields(
           {
             name: 'Joined',
             value: `${time(actor.joinedAt, 'R')}`,
-            inline: true},
+            inline: true,
+          },
         );
       }
 
@@ -237,7 +242,7 @@ export async function applicationStart(
       // log.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
 
       applicationThread.send(`Hey ${actorHasRoleDeveloper ? 'team!' : roleReviewer} there is a new application!`);
-      await applicationThread.send({embeds: [appEmbed], components: [approveButton, rejectMenu]})
+      await applicationThread.send({ embeds: [appEmbed], components: [approveButton, rejectMenu] })
         .then(async (message) => {
           await message.react('👍');
           await message.react('👎');
@@ -249,15 +254,15 @@ export async function applicationStart(
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription('Thank you for your interest! We will try to get back to you as soon as possible!');
-      i.reply({embeds: [embed], ephemeral: true});
+      i.reply({ embeds: [embed], ephemeral: true });
     });
-};
+}
 
 /**
  *
  * @param {SelectMenuInteraction} interaction The Client that manages this interaction
  * @return {Promise<void>}
-**/
+* */
 export async function applicationReject(
   interaction: SelectMenuInteraction,
 ): Promise<void> {
@@ -272,7 +277,7 @@ export async function applicationReject(
   // Check if the thread was created in the last 24 hours
   if (threadCreated && threadCreated.getTime() > Date.now() - 86400000) {
     // log.debug(`[${PREFIX}] Thread created in the last 24 hours!`);
-    interaction.reply({content: 'Woah there, please give the team at least 24 until the next day to act on this application!', ephemeral: true});
+    interaction.reply({ content: 'Woah there, please give the team at least 24 until the next day to act on this application!', ephemeral: true });
     return;
   }
 
@@ -298,15 +303,15 @@ export async function applicationReject(
     // log.debug(`[${PREFIX} - applicationReject] rejectionReason: ${rejectionWording}`);
     (interaction.channel as ThreadChannel).setName(`🖤│${target.displayName}'s ${role.name} application!`);
   } else {
-    interaction.reply({content: 'You do not have permission to do that!', ephemeral: true});
+    interaction.reply({ content: 'You do not have permission to do that!', ephemeral: true });
   }
-};
+}
 
 /**
  *
  * @param {ButtonInteraction} interaction The Client that manages this interaction
  * @return {Promise<void>}
-**/
+* */
 export async function applicationApprove(
   interaction: ButtonInteraction,
 ): Promise<void> {
@@ -318,7 +323,7 @@ export async function applicationApprove(
   // Check if the thread was created in the last 24 hours
   if (threadCreated && threadCreated.getTime() > Date.now() - 86400000) {
     // log.debug(`[${PREFIX}] Thread created in the last 24 hours!`);
-    interaction.reply({content: 'Woah there, please give the team at least 24 until the next day to act on this application!', ephemeral: true});
+    interaction.reply({ content: 'Woah there, please give the team at least 24 until the next day to act on this application!', ephemeral: true });
     return;
   }
 
@@ -423,6 +428,6 @@ export async function applicationApprove(
     }
     interaction.reply(`${actor.displayName} accepted this application!`);
   } else {
-    interaction.reply({content: 'You do not have permission to modify roles!', ephemeral: true});
+    interaction.reply({ content: 'You do not have permission to modify roles!', ephemeral: true });
   }
-};
+}

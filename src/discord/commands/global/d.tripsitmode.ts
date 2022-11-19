@@ -3,14 +3,17 @@ import {
   ChatInputCommandInteraction,
   ButtonInteraction,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
+import * as path from 'path';
+import { SlashCommand } from '../../@types/commandDef';
 // import {embedTemplate} from '../../utils/embedTemplate';
 // import {stripIndents} from 'common-tags';
 // import env from '../../../global/utils/env.config';
 import log from '../../../global/utils/log';
-import * as path from 'path';
-import {tripsitmeButton, tripsitmeClose} from '../../utils/tripsitme';
+import { tripsitmeButton, tripsitmeClose } from '../../utils/tripsitme';
+
 const PREFIX = path.parse(__filename).name;
+
+export default tripsitmode;
 
 export const tripsitmode: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -51,25 +54,16 @@ export const tripsitmode: SlashCommand = {
         member: targetMember,
         user: interaction.user,
         channel: interaction.channel,
-        deferReply: () => {
-          return interaction.deferReply();
-        },
+        deferReply: () => interaction.deferReply(),
         reply: (content) => {
           if (interaction.deferred || interaction.replied) {
             return interaction.followUp(content);
-          } else {
-            return interaction.reply(content);
           }
+          return interaction.reply(content);
         },
-        followUp: (content) => {
-          return interaction.followUp(content);
-        },
-        showModal: (modal) => {
-          return interaction.showModal(modal);
-        },
-        awaitModalSubmit: (params) => {
-          return interaction.awaitModalSubmit(params);
-        },
+        followUp: (content) => interaction.followUp(content),
+        showModal: (modal) => interaction.showModal(modal),
+        awaitModalSubmit: (params) => interaction.awaitModalSubmit(params),
       } as ButtonInteraction;
       tripsitmeButton(testInteraction);
     }
@@ -82,25 +76,16 @@ export const tripsitmode: SlashCommand = {
         member: targetMember,
         user: interaction.user,
         channel: interaction.channel,
-        deferReply: () => {
-          return interaction.deferReply();
-        },
+        deferReply: () => interaction.deferReply(),
         reply: (content) => {
           if (interaction.deferred || interaction.replied) {
             return interaction.followUp(content);
-          } else {
-            return interaction.reply(content);
           }
+          return interaction.reply(content);
         },
-        followUp: (content) => {
-          return interaction.followUp(content);
-        },
-        showModal: (modal) => {
-          return interaction.showModal(modal);
-        },
-        awaitModalSubmit: (params) => {
-          return interaction.awaitModalSubmit(params);
-        },
+        followUp: (content) => interaction.followUp(content),
+        showModal: (modal) => interaction.showModal(modal),
+        awaitModalSubmit: (params) => interaction.awaitModalSubmit(params),
       } as ButtonInteraction;
       tripsitmeClose(testInteraction);
     }

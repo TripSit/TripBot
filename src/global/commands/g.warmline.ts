@@ -1,11 +1,15 @@
+import { parse } from 'path';
 import log from '../utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default warmline;
+
 /**
  * Information about contacting the team!
  * @return {any} an object with information about the bot
  */
-export async function warmline():Promise<helpResource[]> {
+export async function warmline():Promise<HelpResource[]> {
   const resources = [
     {
       name: 'Warmline Directory',
@@ -18,14 +22,13 @@ export async function warmline():Promise<helpResource[]> {
   ];
   log.info(`[${PREFIX}] response: ${JSON.stringify(resources, null, 2)}`);
   return resources;
-};
+}
 
-
-type helpResource = {
+type HelpResource = {
   name: string;
   country: string;
   website: string;
   phone: string;
   text: string;
   webchat: string;
-}
+};

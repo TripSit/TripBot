@@ -1,14 +1,13 @@
-import {discordConnect} from './discord/dscrd';
-import {validateEnv} from './global/utils/env.validate';
-import {runTimer} from './global/utils/timer';
-import {webserverConnect} from './webserver/webserverAPI';
+import { parse } from 'path';
+import { Guild, TextChannel } from 'discord.js';
+import { discordConnect } from './discord/dscrd';
+import { validateEnv } from './global/utils/env.validate';
+import { runTimer } from './global/utils/timer';
 
 import env from './global/utils/env.config';
 
 import log from './global/utils/log';
 
-import {parse} from 'path';
-import {Guild, TextChannel} from 'discord.js';
 const PREFIX = parse(__filename).name;
 global.bootTime = new Date();
 
@@ -18,9 +17,6 @@ global.bootTime = new Date();
 async function start() {
   log.info(`[${PREFIX}] Initializing service!`);
   if (!validateEnv()) return;
-  if (env.NODE_ENV === 'production') {
-    webserverConnect();
-  }
 
   if (env.DISCORD_CLIENT_TOKEN) {
     discordConnect();

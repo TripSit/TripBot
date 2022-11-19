@@ -1,19 +1,24 @@
-/* eslint-disable no-unused-vars*/
-/* eslint-disable max-len*/
+/* eslint-disable max-len */
 
 import {
   MessageReaction,
-  TextChannel,
+  // TextChannel,
   User,
 } from 'discord.js';
-import env from '../../global/utils/env.config';
-import {DateTime} from 'luxon';
-import {db} from '../../global/utils/knex';
-import {Users, UserExperience} from '../../global/@types/pgdb';
-import log from '../../global/utils/log';
-import {parse} from 'path';
-import {stripIndents} from 'common-tags';
-const PREFIX = parse(__filename).name;
+// import { DateTime } from 'luxon';
+// import { parse } from 'path';
+// import { stripIndents } from 'common-tags';
+// import env from '../../global/utils/env.config';
+import { db } from '../../global/utils/knex';
+import {
+  Users,
+  // UserExperience
+} from '../../global/@types/pgdb';
+// import log from '../../global/utils/log';
+
+// const PREFIX = parse(__filename).name;
+
+export default chitragupta;
 
 /**
  *
@@ -26,9 +31,9 @@ export async function chitragupta(
   user:User,
   action: 1 | -1,
 ) {
-  const verb = action === 1 ? 'upvoted' : 'downvoted';
+  // const verb = action === 1 ? 'upvoted' : 'downvoted';
   const actor = user;
-  const emoji = reaction.emoji.toString();
+  // const emoji = reaction.emoji.toString();
   if (reaction.message.author === null) {
     // log.debug(`[${PREFIX}] Ignoring bot interaction`);
     return;
@@ -91,4 +96,4 @@ export async function chitragupta(
 
   // log.debug(`[${PREFIX}] ${actor.username} has received (${actorKarma[0].karma_received}) and given (${actorKarma[0].karma_given})!`);
   // log.debug(`[${PREFIX}] ${target.username} has received (${targetKarma[0].karma_received}) and given (${targetKarma[0].karma_given})!`);
-};
+}

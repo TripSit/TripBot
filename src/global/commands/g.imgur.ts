@@ -1,8 +1,11 @@
+import axios from 'axios';
+import { parse } from 'path';
 import env from '../utils/env.config';
 import log from '../utils/log';
-import axios from 'axios';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default imgurSearch;
 
 /**
  *
@@ -53,4 +56,4 @@ export async function imgurSearch(query:string):Promise<string> {
   const results = await searchImgur();
   log.info(`[${PREFIX}] response: ${JSON.stringify(results, null, 2)}`);
   return results;
-};
+}

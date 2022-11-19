@@ -1,27 +1,22 @@
-/* eslint-disable no-unused-vars */
 import {
-  Guild,
-  Role,
   TextChannel,
   ThreadChannel,
 } from 'discord.js';
-import {db, getGuild, getUser} from '../../global/utils/knex';
-import {DateTime} from 'luxon';
+import { DateTime } from 'luxon';
+import { parse } from 'path';
+import { db, getGuild, getUser } from './knex';
 import {
   Users,
-  UserDrugDoses,
-  DrugNames,
   UserReminders,
   UserTickets,
-  ReactionRoles,
   TicketStatus,
   DiscordGuilds,
-} from '../../global/@types/pgdb.d';
+} from '../@types/pgdb.d';
 import env from './env.config';
 import log from './log';
 
-import {parse} from 'path';
-import {embedTemplate} from '../../discord/utils/embedTemplate';
+import { embedTemplate } from '../../discord/utils/embedTemplate';
+
 const PREFIX = parse(__filename).name;
 
 // Value in miliseconds (1000 * 60 = 1 minute)
@@ -42,10 +37,10 @@ export async function runTimer() {
         const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
         if (tripsitGuild) {
           // Total member count
-          const memberCount = tripsitGuild.memberCount;
+          const { memberCount } = tripsitGuild;
           const channelTotal = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_TOTAL);
           if (channelTotal) {
-            const currentCount = parseInt(channelTotal.name.split(': ')[1]);
+            const currentCount = parseInt(channelTotal.name.split(': ')[1], 10);
             if (currentCount !== memberCount) {
               channelTotal.setName(`Total Members: ${memberCount}`);
               log.debug(`[${PREFIX}] Updated total members to ${memberCount}!`);
@@ -56,7 +51,7 @@ export async function runTimer() {
                   const embed = embedTemplate()
                     .setTitle('🎈🎉🎊New Record🎊🎉🎈')
                     .setDescription(`We have reached ${memberCount} total members!`);
-                  channelGeneral.send({embeds: [embed]});
+                  channelGeneral.send({ embeds: [embed] });
                 }
               }
             } else {
@@ -65,13 +60,13 @@ export async function runTimer() {
           }
 
           // Determine the number of users currently online
-          const onlineCount = tripsitGuild.members.cache.filter((member) => {
-            return member.presence?.status !== undefined && member.presence?.status !== 'offline';
-          }).size;
+          const onlineCount = tripsitGuild.members.cache.filter(
+            (member) => member.presence?.status !== undefined && member.presence?.status !== 'offline',
+          ).size;
           // const onlineCount = 10;
           const channelOnline = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_ONLINE);
           if (channelOnline) {
-            const currentCount = parseInt(channelOnline.name.split(': ')[1]);
+            const currentCount = parseInt(channelOnline.name.split(': ')[1], 10);
             if (currentCount !== onlineCount) {
               channelOnline.setName(`Online Members: ${onlineCount}`);
               // log.debug(`[${PREFIX}] Updated online members to ${onlineCount}!`);
@@ -97,7 +92,7 @@ export async function runTimer() {
                   const embed = embedTemplate()
                     .setTitle('🎈🎉🎊New Record🎊🎉🎈')
                     .setDescription(`We have reached ${maxCount} online members!`);
-                  channelGeneral.send({embeds: [embed]});
+                  channelGeneral.send({ embeds: [embed] });
                 }
               } else {
                 maxCount = guildData.max_online_members;
@@ -112,7 +107,7 @@ export async function runTimer() {
           }
           const channelMax = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_MAX);
           if (channelMax) {
-            const currentCount = parseInt(channelMax.name.split(': ')[1]);
+            const currentCount = parseInt(channelMax.name.split(': ')[1], 10);
             if (currentCount !== maxCount) {
               channelMax.setName(`Max Online: ${maxCount}`);
               log.debug(`[${PREFIX}] Updated max online members to ${maxCount}!`);
@@ -133,32 +128,33 @@ export async function runTimer() {
           );
         if (reminderData.length > 0) {
           // Loop through each reminder
-          for (const reminder of reminderData) {
+          // for (const reminder of reminderData) {
+          reminderData.forEach(async (reminder) => {
             // Check if the reminder is ready to be triggered
-            if (!reminder.trigger_at) {
-              log.error(`[${PREFIX}] Reminder ${reminder.id} has no trigger date!`);
-              continue;
-            };
-            if (DateTime.fromJSDate(reminder.trigger_at) <= DateTime.local()) {
-              // Get the user's discord id
-              const userData = await getUser(null, reminder.user_id);
+            if (reminder.trigger_at) {
+              if (DateTime.fromJSDate(reminder.trigger_at) <= DateTime.local()) {
+                // Get the user's discord id
+                const userData = await getUser(null, reminder.user_id);
 
-              // Send the user a message
-              if (userData) {
-                if (userData.discord_id) {
-                  const user = await global.client.users.fetch(userData.discord_id);
-                  if (user) {
-                    user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
+                // Send the user a message
+                if (userData) {
+                  if (userData.discord_id) {
+                    const user = await global.client.users.fetch(userData.discord_id);
+                    if (user) {
+                      user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
+                    }
                   }
                 }
-              }
 
-              // Delete the reminder from the database
-              await db<UserReminders>('user_reminders')
-                .delete()
-                .where('id', reminder.id);
+                // Delete the reminder from the database
+                await db<UserReminders>('user_reminders')
+                  .delete()
+                  .where('id', reminder.id);
+              }
+            } else {
+              log.error(`[${PREFIX}] Reminder ${reminder.id} has no trigger date!`);
             }
-          }
+          });
         }
 
         // Process mindset roles
@@ -171,10 +167,11 @@ export async function runTimer() {
           .whereNotNull('mindset_role_expires_at');
         if (mindsetRoleData.length > 0) {
           // Loop through each user
-          for (const user of mindsetRoleData) {
+          // for (const user of mindsetRoleData) {
+          mindsetRoleData.forEach(async (user) => {
             // Check if the user has a mindset role
             if (user.mindset_role && user.mindset_role_expires_at) {
-              const expires = DateTime.fromJSDate(user.mindset_role_expires_at);
+              // const expires = DateTime.fromJSDate(user.mindset_role_expires_at);
               // log.debug(
               //   `[${PREFIX}] ${user.discord_id}'s ${user.mindset_role}
               // ${expires.toLocaleString(DateTime.DATETIME_MED)}`, // eslint-disable-line max-len
@@ -196,13 +193,13 @@ export async function runTimer() {
                         const role = await guild.roles.fetch(user.mindset_role);
                         if (role) {
                           // Get the reaction role info from the db
-                          const reactionRoleData = await db<ReactionRoles>('reaction_roles')
-                            .select(
-                              db.ref('message_id'),
-                              db.ref('emoji'),
-                            )
-                            .where('role_id', user.mindset_role)
-                            .first();
+                          // const reactionRoleData = await db<ReactionRoles>('reaction_roles')
+                          //   .select(
+                          //     db.ref('message_id'),
+                          //     db.ref('emoji'),
+                          //   )
+                          //   .where('role_id', user.mindset_role)
+                          //   .first();
 
                           // Remove the reaction from the role message
                           await member.roles.remove(role);
@@ -223,7 +220,7 @@ export async function runTimer() {
                 }
               }
             }
-          }
+          });
         }
 
         // Process tickets
@@ -239,7 +236,8 @@ export async function runTimer() {
           .whereNot('status', 'DELETED');
         if (ticketData.length > 0) {
           // Loop through each ticket
-          for (const ticket of ticketData) {
+          // for (const ticket of ticketData) {
+          ticketData.forEach(async (ticket) => {
             // Check if the ticket is ready to be archived
             if (ticket.archived_at && ticket.status !== 'ARCHIVED') {
               if (DateTime.fromJSDate(ticket.archived_at) <= DateTime.local()) {
@@ -247,7 +245,7 @@ export async function runTimer() {
                 await db<UserTickets>('user_tickets')
                   .update({
                     status: 'ARCHIVED' as TicketStatus,
-                    deleted_at: DateTime.local().plus({days: 7}).toJSDate(),
+                    deleted_at: DateTime.local().plus({ days: 7 }).toJSDate(),
                   })
                   .where('id', ticket.id);
 
@@ -274,7 +272,8 @@ export async function runTimer() {
                         if (userData.roles) {
                           // log.debug(`[${PREFIX}] Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
                           const roles = userData.roles.split(',');
-                          for (const role of roles) {
+                          // for (const role of roles) {
+                          roles.forEach(async (role) => {
                             const roleObj = await guild.roles.fetch(role);
                             if (roleObj && roleObj.name !== '@everyone' && roleObj.id !== env.ROLE_NEEDSHELP) {
                               // Check if the bot has permission to add the role
@@ -283,7 +282,7 @@ export async function runTimer() {
                                 await member.roles.add(roleObj);
                               }
                             }
-                          }
+                          });
 
                           // Remove the needshelp role
                           const needshelpRole = await guild.roles.fetch(env.ROLE_NEEDSHELP);
@@ -314,7 +313,7 @@ export async function runTimer() {
                 }
               }
             }
-          }
+          });
         }
         checkTimers();
       },
@@ -322,4 +321,6 @@ export async function runTimer() {
     );
   }
   checkTimers();
-};
+}
+
+export default runTimer();

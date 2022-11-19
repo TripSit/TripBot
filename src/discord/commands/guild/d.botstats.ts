@@ -1,16 +1,19 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
-import {startLog} from '../../utils/startLog';
 import ms from 'ms';
+import { parse } from 'path';
+import { stripIndents } from 'common-tags';
+import { SlashCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
+import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-import {parse} from 'path';
-import {stripIndents} from 'common-tags';
+
 const PREFIX = parse(__filename).name;
 
-export const botstats: SlashCommand = {
+export default dBotstats;
+
+export const dBotstats: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('botstats')
     .setDescription('Get stats about the bot!'),
@@ -32,7 +35,6 @@ export const botstats: SlashCommand = {
     const uptime = (new Date().getTime() - global.bootTime.getTime());
     // log.debug(`[${PREFIX}] uptime: ${uptime}`);
 
-
     // Create the embed
     const embed = embedTemplate();
     embed.setTitle('Bot Stats');
@@ -44,7 +46,7 @@ export const botstats: SlashCommand = {
       Commands: ${commandCount.toString()}
       Uptime: ${ms(uptime)}
     `);
-    interaction.reply({embeds: [embed]});
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

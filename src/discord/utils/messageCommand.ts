@@ -4,19 +4,21 @@ import {
   // GuildTextBasedChannel,
   Role,
 } from 'discord.js';
+import { stripIndents } from 'common-tags';
 import env from '../../global/utils/env.config';
-import {stripIndents} from 'common-tags';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
 
 const helpCounter = new Map<string, number>();
 
+export default messageCommand;
+
 /**
  * Template
  * @param {Message} message The message that was sent
  * @return {Promise<void>}
-**/
+* */
 export async function messageCommand(message: Message): Promise<void> {
   if (!message.guild) return; // If not in a guild then ignore all messages
   if (message.guild.id !== env.DISCORD_GUILD_ID) return; // If not in tripsit ignore all messages
@@ -30,7 +32,6 @@ export async function messageCommand(message: Message): Promise<void> {
     const command = message.content.split(' ')[0].slice(1);
     // log.debug(`[${PREFIX}] command: ${command}`);
 
-
     if (command === 'tripsit') {
       const now = Date.now().valueOf();
       if (helpCounter.has(message.author.id)) {
@@ -38,7 +39,7 @@ export async function messageCommand(message: Message): Promise<void> {
         if (!lastTime) {
           // log.debug(`[${PREFIX}] lastTime is undefined!`);
           return;
-        };
+        }
         if (now - lastTime < 1000 * 60 * 5) {
           message.channel.send(stripIndents`Hey ${displayName}, you just used that command, \
 give people a chance to answer 😄 If no one answers in 5 minutes you can try again.`);
@@ -49,7 +50,8 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
       const roleHelper = message.guild.roles.cache.find((role) => role.id === env.ROLE_HELPER) as Role;
       message.channel.send(
         `Hey ${displayName}, thank you for asking for help! We've notified our ${roleTripsitter} and\
-${roleHelper}. Can you start off by telling us how much you took and the details of your problem?`);
+${roleHelper}. Can you start off by telling us how much you took and the details of your problem?`,
+      );
       // Update helpCounter with the current date that the user sent this command
       helpCounter.set(message.author.id, Date.now().valueOf());
     } else {
@@ -66,16 +68,16 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
     ];
     message.channel.send(faces[Math.floor(Math.random() * faces.length)]);
   } else if (
-    (message.mentions.has(message.client.user) || message.cleanContent.toLowerCase().includes('tripbot')) &&
-    message.channel.type !== ChannelType.DM) {
+    (message.mentions.has(message.client.user) || message.cleanContent.toLowerCase().includes('tripbot'))
+    && message.channel.type !== ChannelType.DM) {
     if (message.author.bot) {
       // log.debug(`[${PREFIX}] Ignoring bot interaction`);
       return;
     }
     const responses = [
-      `*boops quietly*`,
-      `*beeps quietly*`,
+      '*boops quietly*',
+      '*beeps quietly*',
     ];
     message.channel.send(responses[Math.floor(Math.random() * responses.length)]);
   }
-};
+}

@@ -1,11 +1,14 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {magick8Ball} from '../../../global/commands/g.magick8Ball';
-import {startLog} from '../../utils/startLog';
-import {parse} from 'path';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { magick8Ball } from '../../../global/commands/g.magick8Ball';
+import { startLog } from '../../utils/startLog';
+
 const PREFIX = parse(__filename).name;
+
+export default magick8ball;
 
 export const magick8ball: SlashCommand = {
   data: new SlashCommandBuilder()

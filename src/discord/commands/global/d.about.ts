@@ -2,12 +2,15 @@ import {
   SlashCommandBuilder,
   Colors,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
-import {about} from '../../../global/commands/g.about';
-import {startLog} from '../../utils/startLog';
-import {parse} from 'path';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
+import { about } from '../../../global/commands/g.about';
+import { startLog } from '../../utils/startLog';
+
 const PREFIX = parse(__filename).name;
+
+export default dAbout;
 
 export const dAbout: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -43,7 +46,7 @@ export const dAbout: SlashCommand = {
           value: tripsitInfo.credits,
         },
       );
-    interaction.reply({embeds: [embed]});
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

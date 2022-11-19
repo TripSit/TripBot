@@ -4,12 +4,14 @@ import {
   CategoryChannel,
 } from 'discord.js';
 import env from '../../global/utils/env.config';
-import {voiceStateUpdateEvent} from '../@types/eventDef';
+import { VoiceStateUpdateEvent } from '../@types/eventDef';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
 
-export const voiceStateUpdate: voiceStateUpdateEvent = {
+export default voiceStateUpdate;
+
+export const voiceStateUpdate: VoiceStateUpdateEvent = {
   name: 'voiceStateUpdate',
   async execute(Old: VoiceState, New: VoiceState) {
     if (New.guild.id !== env.DISCORD_GUILD_ID) return;

@@ -1,16 +1,7 @@
+import { parse } from 'path';
 import log from '../utils/log';
-import {parse} from 'path';
-const PREFIX = parse(__filename).name;
 
-/**
- *
- * @return {string} What the 8ball says
- */
-export async function magick8Ball():Promise<string> {
-  const response = answers[Math.floor(Math.random() * answers.length)];
-  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
-  return response;
-};
+const PREFIX = parse(__filename).name;
 
 const answers = [
   'It is certain',
@@ -34,3 +25,15 @@ const answers = [
   'Outlook not so good',
   'Very doubtfull',
 ];
+
+export default magick8Ball;
+
+/**
+ *
+ * @return {string} What the 8ball says
+ */
+export async function magick8Ball():Promise<string> {
+  const response = answers[Math.floor(Math.random() * answers.length)];
+  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  return response;
+}

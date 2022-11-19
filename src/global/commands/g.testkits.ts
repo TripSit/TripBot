@@ -1,13 +1,16 @@
 /* eslint-disable max-len */
+import { parse } from 'path';
 import log from '../utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default testkits;
 
 /**
  * Information about contacting the team!
  * @return {any} an object with information about the bot
  */
-export async function testkits():Promise<helpResource[]> {
+export async function testkits():Promise<HelpResource[]> {
   const response = [
     {
       name: 'Dosetest',
@@ -25,14 +28,14 @@ export async function testkits():Promise<helpResource[]> {
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
 
   return response;
-};
+}
 
-type helpResource = {
+type HelpResource = {
   name: string;
   country: string;
   website: string;
   description: string;
-}
+};
 
 const template = // eslint-disable-line
 {
@@ -40,5 +43,4 @@ const template = // eslint-disable-line
   country: '',
   website: '',
   description: '',
-}
-;
+};

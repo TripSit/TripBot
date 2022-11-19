@@ -2,17 +2,20 @@
 //   MessageReaction,
 //   User,
 // } from 'discord.js';
+import { parse } from 'path';
 import {
-  messageReactionRemoveEvent,
+  MessageReactionRemoveEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
-import {handleReactionRoles} from '../utils/handleReactionRoles';
-import {chitragupta} from '../utils/chitragupta';
+import { handleReactionRoles } from '../utils/handleReactionRoles';
+import { chitragupta } from '../utils/chitragupta';
 import log from '../../global/utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
 
-export const messageReactionRemove: messageReactionRemoveEvent = {
+export default messageReactionRemove;
+
+export const messageReactionRemove: MessageReactionRemoveEvent = {
   name: 'messageReactionRemove',
   async execute(reaction, user) {
     // Only run on Tripsit

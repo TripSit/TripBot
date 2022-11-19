@@ -1,10 +1,13 @@
 /* eslint-disable max-len */
+import { parse } from 'path';
 import log from '../utils/log';
 import timezones from '../assets/data/timezones.json';
-import {db, getUser} from '../utils/knex';
-import {parse} from 'path';
-import {Users} from '../@types/pgdb';
+import { db, getUser } from '../utils/knex';
+import { Users } from '../@types/pgdb';
+
 const PREFIX = parse(__filename).name;
+
+export default timezone;
 
 /**
  * Get and set someone's timezone!
@@ -16,15 +19,16 @@ const PREFIX = parse(__filename).name;
 export async function timezone(
   command: 'get' | 'set',
   memberId: string,
-  timezone?:string | null):Promise<string | null> {
-  // log.debug(`[${PREFIX}] timezone: ${command} ${memberId} ${timezone}`);
+  tzvalue?:string | null,
+):Promise<string | null> {
+  // log.debug(`[${PREFIX}] tzvalue: ${command} ${memberId} ${tzvalue}`);
 
   let response = '' as string | null;
   if (command === 'set') {
     // define offset as the value from the timezones array
     let tzCode = '';
     for (let i = 0; i < timezones.length; i += 1) {
-      if (timezones[i].label === timezone) {
+      if (timezones[i].label === tzvalue) {
         tzCode = timezones[i].tzCode;
         // log.debug(`[${PREFIX}] tzCode: ${tzCode}`);
       }
@@ -40,8 +44,8 @@ export async function timezone(
       .merge()
       .returning('*');
 
-    return `I updated your timezone to ${timezone}`;
-  } else if (command === 'get') {
+    return `I updated your timezone to ${tzvalue}`;
+  } if (command === 'get') {
     let gmtValue = '';
 
     const userData = await getUser(memberId, null);
@@ -57,15 +61,14 @@ export async function timezone(
         }
       }
       // get the user's timezone from the database
-      const timestring = new Date().toLocaleTimeString('en-US', {timeZone: tzCode});
-      const response = `It is likely ${timestring} (GMT${gmtValue})`;
+      const timestring = new Date().toLocaleTimeString('en-US', { timeZone: tzCode });
+      response = `It is likely ${timestring} (GMT${gmtValue})`;
       log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
       return response;
-    } else {
-      // log.debug(`[${PREFIX}] tzCode is empty!`);
-      response = null;
     }
+    // log.debug(`[${PREFIX}] tzCode is empty!`);
+    response = null;
   }
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
   return response;
-};
+}

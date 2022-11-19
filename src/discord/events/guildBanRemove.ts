@@ -5,7 +5,7 @@ import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
 import {
-  guildBanRemoveEvent,
+  GuildBanRemoveEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 // import logger from '../../global/utils/logger';
@@ -14,7 +14,9 @@ import env from '../../global/utils/env.config';
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export const guildBanRemove: guildBanRemoveEvent = {
+export default guildBanRemove;
+
+export const guildBanRemove: GuildBanRemoveEvent = {
   name: 'guildBanRemove',
   async execute(ban) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)

@@ -3,15 +3,18 @@ import {
   ChatInputCommandInteraction,
   Colors,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
-import {startLog} from '../../utils/startLog';
-import {stripIndents} from 'common-tags';
-import {h2flow} from '../../../global/commands/g.h2flow';
+import { stripIndents } from 'common-tags';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
+import { startLog } from '../../utils/startLog';
+import { h2flow } from '../../../global/commands/g.h2flow';
 
 // import log from '../../../global/utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default dH2flow;
 
 export const dH2flow: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -69,20 +72,26 @@ export const dH2flow: SlashCommand = {
       Get enough 🌊🔰, 💖🏆 or 🏃🏅 and you'll level up!
       Level up enoough and we'll welcome you to the fabled
       ☆ﾟ.*･｡ﾟ☆ﾟ.*･｡ﾟ🥇*H2Flow Club*🥇☆ﾟ.*･｡ﾟ☆ﾟ.*･｡ﾟ`)
-      .setFooter({text: `H2Flow Club Status: ${platinumClub}`})
+      .setFooter({ text: `H2Flow Club Status: ${platinumClub}` })
       .addFields(
         {
           name: `**${Math.floor(data.sparkle_points / 10)}** 🌊Aqua Badges🔰`,
-          value: `${data.sparkle_points} sparkle points`, inline: true},
+          value: `${data.sparkle_points} sparkle points`,
+          inline: true,
+        },
         {
           name: `**${Math.floor(data.empathy_points / 10)}** 💖Love Cups🏆`,
-          value: `${data.empathy_points} empathy points`, inline: true},
+          value: `${data.empathy_points} empathy points`,
+          inline: true,
+        },
         {
           name: `**${Math.floor(data.move_points / 10)}** 🏃Move Medals🏅`,
-          value: `${data.move_points} active points`, inline: true},
+          value: `${data.move_points} active points`,
+          inline: true,
+        },
       );
 
-    interaction.reply({embeds: [embed], ephemeral: false});
+    interaction.reply({ embeds: [embed], ephemeral: false });
 
     return false;
   },

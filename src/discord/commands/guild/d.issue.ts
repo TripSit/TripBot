@@ -10,15 +10,18 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
+import { stripIndents } from 'common-tags';
+import { parse } from 'path';
 import env from '../../../global/utils/env.config';
-import {SlashCommand} from '../../@types/commandDef';
-import {issue} from '../../../global/commands/g.issue';
-import {startLog} from '../../utils/startLog';
-import {embedTemplate} from '../../utils/embedTemplate';
-import {stripIndents} from 'common-tags';
+import { SlashCommand } from '../../@types/commandDef';
+import { issue } from '../../../global/commands/g.issue';
+import { startLog } from '../../utils/startLog';
+import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default dIssue;
 
 export const dIssue: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -27,30 +30,30 @@ export const dIssue: SlashCommand = {
     .addStringOption((option) => option
       .setDescription('What type of issue is this?')
       .addChoices(
-        {name: 'Bug/Problem', value: 'Bug'},
-        {name: 'Feature Request', value: 'Feature'},
-        {name: 'Enhancement', value: 'Enhancement'},
-        {name: 'Idea', value: 'Idea'},
-        {name: 'Question', value: 'Question'},
+        { name: 'Bug/Problem', value: 'Bug' },
+        { name: 'Feature Request', value: 'Feature' },
+        { name: 'Enhancement', value: 'Enhancement' },
+        { name: 'Idea', value: 'Idea' },
+        { name: 'Question', value: 'Question' },
       )
       .setRequired(true)
       .setName('type'))
     .addStringOption((option) => option
       .setDescription('How important is this?')
       .addChoices(
-        {name: 'Critical', value: 'P0: Critical'},
-        {name: 'High', value: 'P1: High'},
-        {name: 'Medium', value: 'P2: Medium'},
-        {name: 'Low', value: 'P3: Low'},
+        { name: 'Critical', value: 'P0: Critical' },
+        { name: 'High', value: 'P1: High' },
+        { name: 'Medium', value: 'P2: Medium' },
+        { name: 'Low', value: 'P3: Low' },
       )
       .setName('priority'))
     .addStringOption((option) => option
       .setDescription('How much effort will this take?')
       .addChoices(
-        {name: 'High', value: 'E0: High'},
-        {name: 'Medium', value: 'E1: Medium'},
-        {name: 'Low', value: 'E2: Low'},
-        {name: 'Trivial', value: 'E3: Trivial'},
+        { name: 'High', value: 'E0: High' },
+        { name: 'Medium', value: 'E1: Medium' },
+        { name: 'Low', value: 'E2: Low' },
+        { name: 'Trivial', value: 'E3: Trivial' },
       )
       .setName('effort')),
   async execute(interaction:ChatInputCommandInteraction) {
@@ -69,7 +72,8 @@ export const dIssue: SlashCommand = {
     const body = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
       .setLabel('Issue Body')
       .setPlaceholder(
-        'Please describe the issue in detail! Include steps to reproduce, any specific circumstances, etc.')
+        'Please describe the issue in detail! Include steps to reproduce, any specific circumstances, etc.',
+      )
       .setStyle(TextInputStyle.Paragraph)
       .setRequired(true)
     // eslint-disable-next-line max-len
@@ -81,8 +85,8 @@ export const dIssue: SlashCommand = {
     // log.debug(`[${PREFIX}] displayed modal!`);
 
     // Collect a modal submit interaction
-    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.startsWith(`issueModal`);
-    interaction.awaitModalSubmit({filter, time: 0})
+    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('issueModal');
+    interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async (i) => {
         if (i.customId.split('~')[1] !== interaction.id) return;
         // log.debug(`[${PREFIX}] submitted!`);
@@ -118,13 +122,13 @@ export const dIssue: SlashCommand = {
             .setDescription(stripIndents`\
                   Issue #${results.data.number} created on TripSit/tripsit-discord-bot
                   Click here to view: ${results.data.html_url}`);
-          i.reply({embeds: [embed], ephemeral: true});
+          i.reply({ embeds: [embed], ephemeral: true });
         } else {
           const embed = embedTemplate()
             .setColor(0xff0000)
             .setTitle('Issue creation failed!')
-            .setDescription(`Your issue could not be created on TripSit/tripsit-discord-bot`);
-          i.reply({embeds: [embed], ephemeral: false});
+            .setDescription('Your issue could not be created on TripSit/tripsit-discord-bot');
+          i.reply({ embeds: [embed], ephemeral: false });
         }
       });
 

@@ -1,12 +1,15 @@
+import { parse } from 'path';
 import log from '../utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default ems;
 
 /**
  * Information about contacting the team!
  * @return {any} an object with information about the bot
  */
-export async function ems():Promise<helpResource[]> {
+export async function ems():Promise<HelpResource[]> {
   const response = [
     {
       name: 'Poison Control',
@@ -92,16 +95,16 @@ export async function ems():Promise<helpResource[]> {
   ];
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
   return response;
-};
+}
 
-type helpResource = {
+type HelpResource = {
   name: string;
   country: string;
   website: string;
   phone: string;
   text: string;
   webchat: string;
-}
+};
 
 const template = // eslint-disable-line
 {
@@ -111,5 +114,4 @@ const template = // eslint-disable-line
   phone: '',
   text: '',
   webchat: '',
-}
-;
+};

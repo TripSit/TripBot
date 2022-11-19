@@ -1,8 +1,11 @@
+import { parse } from 'path';
 import log from '../utils/log';
-import {parse} from 'path';
-const PREFIX = parse(__filename).name;
 
 import drugDataTripsit from '../assets/data/drug_db_tripsit.json';
+
+const PREFIX = parse(__filename).name;
+
+export default calcBenzo;
 
 /**
  * Calculate benzo dosages
@@ -31,7 +34,7 @@ export async function calcBenzo(
     return response;
   }
 
-  if (!drugDataA.properties.hasOwnProperty('dose_to_diazepam')) {
+  if (!Object.prototype.hasOwnProperty.call(drugDataA.properties, 'dose_to_diazepam')) {
     const response = `${drugA} does not have a conversion property, you should not have been able to select this!`;
     log.error(`[${PREFIX}] ${response}`);
     return response;
@@ -53,7 +56,7 @@ export async function calcBenzo(
     return response;
   }
 
-  if (!drugDataB.properties.hasOwnProperty('dose_to_diazepam')) {
+  if (!Object.prototype.hasOwnProperty.call(drugDataB.properties, 'dose_to_diazepam')) {
     const response = `${drugB} does not have a conversion property, you should not have been able to select this!`;
     log.error(`[${PREFIX}] ${response}`);
     return response;
@@ -80,4 +83,4 @@ export async function calcBenzo(
   const result = (dosage / parseFloat(convertedDoseA.toString())) * parseFloat(convertedDoseB.toString());
   log.info(`[${PREFIX}] response: ${JSON.stringify(result, null, 2)}`);
   return result;
-};
+}

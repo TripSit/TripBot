@@ -10,13 +10,16 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
-import {SlashCommand} from '../../@types/commandDef';
-import {startLog} from '../../utils/startLog';
-import {embedTemplate} from '../../utils/embedTemplate';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { startLog } from '../../utils/startLog';
+import { embedTemplate } from '../../utils/embedTemplate';
 import env from '../../../global/utils/env.config';
 import log from '../../../global/utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
+
+export default dFeedback;
 
 export const dFeedback: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -28,15 +31,15 @@ export const dFeedback: SlashCommand = {
     const modal = new ModalBuilder()
       .setCustomId(`feedbackReportModal~${interaction.id}`)
       .setTitle('TripBot Feedback Report');
-    const feedbackReport = new TextInputBuilder()
+    const feedbackInput = new TextInputBuilder()
       .setCustomId('feedbackReport')
       .setLabel('What would you like to tell the bot dev team?')
       .setStyle(TextInputStyle.Paragraph);
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(feedbackReport);
+    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(feedbackInput);
     modal.addComponents(firstActionRow);
     await interaction.showModal(modal);
-    const filter = (interaction:ModalSubmitInteraction) => interaction.customId.includes(`feedbackReportModal`);
-    interaction.awaitModalSubmit({filter, time: 0})
+    const filter = (i:ModalSubmitInteraction) => i.customId.includes('feedbackReportModal');
+    interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async (i) => {
         if (i.customId.split('~')[1] !== interaction.id) return;
         const guildMessage = `${i.guild ? ` in ${i.guild.name}` : 'DM'}`;
@@ -47,7 +50,7 @@ export const dFeedback: SlashCommand = {
         const botOwnerEmbed = embedTemplate()
           .setColor(Colors.Purple)
           .setDescription(`Hey ${botOwner.toString()},\n${i.user.tag}${guildMessage} reports:\n${feedbackReport}`);
-        botOwner.send({embeds: [botOwnerEmbed]});
+        botOwner.send({ embeds: [botOwnerEmbed] });
 
         const tripsitGuild = await i.client.guilds.fetch(env.DISCORD_GUILD_ID);
         const developerRole = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER);
@@ -65,9 +68,9 @@ export const dFeedback: SlashCommand = {
         const embed = embedTemplate()
           .setColor(Colors.Purple)
           .setTitle('Thank you!')
-        // eslint-disable-next-line max-len
-          .setDescription('I\'ve submitted this feedback to the bot owner. \n\n\You\'re more than welcome to join the TripSit server and speak to Moonbear directly if you want! Check the /contact command for more info.');
-        i.reply({embeds: [embed], ephemeral: true});
+          // eslint-disable-next-line max-len
+          .setDescription('I\'ve submitted this feedback to the bot owner. \n\nYou\'re more than welcome to join the TripSit server and speak to Moonbear directly if you want! Check the /contact command for more info.');
+        i.reply({ embeds: [embed], ephemeral: true });
       });
     return true;
   },

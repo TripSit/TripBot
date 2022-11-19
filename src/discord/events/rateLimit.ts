@@ -1,13 +1,16 @@
 import {
   TextChannel,
 } from 'discord.js';
-import {rateLimitEvent} from '../@types/eventDef';
+import { parse } from 'path';
+import { RateLimitEvent } from '../@types/eventDef';
 import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
 
-export const rateLimit: rateLimitEvent = {
+export default rateLimit;
+
+export const rateLimit: RateLimitEvent = {
   name: 'rateLimit',
   async execute(rateLimitData) {
     const response = `Rate limit warning!

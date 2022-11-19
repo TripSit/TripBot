@@ -3,11 +3,10 @@ import {
   EmbedBuilder,
   Colors,
   MessageReaction,
-  User,
   TextChannel,
 } from 'discord.js';
+import { stripIndents } from 'common-tags';
 import env from '../../global/utils/env.config';
-import {stripIndents} from 'common-tags';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
@@ -24,13 +23,15 @@ const tripsitterChannels = [
 // How many votes are needed for each action, in production and dev
 const votePinThreshold = env.NODE_ENV === 'production' ? 5 : 2;
 
+export default bestOf;
+
 /**
  * This runs when there are enough upvotes on a message
  * @param {MessageReaction} reaction The reaction that was added
  * @param {User} user The user that added the reaction
  * @return {Promise<void>}
  */
-export async function bestOf(reaction:MessageReaction, user:User) {
+export async function bestOf(reaction:MessageReaction) {
   if (reaction.count === votePinThreshold && reaction.emoji.name?.includes('upvote')) {
     // log.debug(`[${PREFIX}] Message has reached pin threshold!`);
     // Check if the message.channe.id is in the list of tripsitter channels
@@ -81,9 +82,9 @@ export async function bestOf(reaction:MessageReaction, user:User) {
         })
         .setColor(Colors.Purple)
         .addFields(
-          {name: '\u200B', value: `[Go to post!](${reaction.message.url})`, inline: true},
+          { name: '\u200B', value: `[Go to post!](${reaction.message.url})`, inline: true },
         )
-        .setFooter({text: `Sent in #${(reaction.message.channel as TextChannel).name} at ${formattedDate}`});
+        .setFooter({ text: `Sent in #${(reaction.message.channel as TextChannel).name} at ${formattedDate}` });
 
       if (reaction.message.content) {
         embed.setDescription(reaction.message.content);
@@ -92,7 +93,7 @@ export async function bestOf(reaction:MessageReaction, user:User) {
         embed.setImage(`${attachmentUrl}`);
       }
 
-      channel.send({embeds: [embed]});
+      channel.send({ embeds: [embed] });
     }
   }
-};
+}

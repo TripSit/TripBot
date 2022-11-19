@@ -1,12 +1,14 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {coinflip} from '../../../global/commands/g.coinflip';
-import {startLog} from '../../utils/startLog';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { coinflip } from '../../../global/commands/g.coinflip';
+import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-import {parse} from 'path';
 const PREFIX = parse(__filename).name;
+
+export default dcoinflip;
 
 export const dcoinflip: SlashCommand = {
   data: new SlashCommandBuilder()

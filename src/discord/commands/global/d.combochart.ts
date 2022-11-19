@@ -1,11 +1,14 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {combochart} from '../../../global/commands/g.combochart';
-import {startLog} from '../../utils/startLog';
-import {parse} from 'path';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { combochart } from '../../../global/commands/g.combochart';
+import { startLog } from '../../utils/startLog';
+
 const PREFIX = parse(__filename).name;
+
+export default dcombochart;
 
 export const dcombochart: SlashCommand = {
   data: new SlashCommandBuilder()
