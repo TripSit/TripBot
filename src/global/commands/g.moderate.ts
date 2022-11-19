@@ -17,6 +17,7 @@ import {
 import {modActionDict} from '../@types/database.d';
 import {stripIndents} from 'common-tags';
 import {embedTemplate} from '../../discord/utils/embedTemplate';
+import {last} from './g.last';
 
 import ms from 'ms';
 import env from '../utils/env.config';
@@ -161,6 +162,9 @@ export async function moderate(
   //   });
   // }
 
+  const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+  const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
+
   // Send a message to the user
   /* eslint-disable max-len */
   if (command !== 'report' && command !== 'note' && command !== 'info') {
@@ -196,6 +200,7 @@ export async function moderate(
     }
   }
 
+  let extraMessage = '';
   // Perform actions
   if (command === 'timeout') {
     try {
@@ -218,9 +223,14 @@ export async function moderate(
     }
   } else if (command === 'ban') {
     try {
-      const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       const deleteMessageValue = duration ?? 0;
       logger.debug(`[${PREFIX}] Days to delete: ${deleteMessageValue}`);
+      if (deleteMessageValue > 0) {
+        logger.debug(`[${PREFIX}] I am deleting ${deleteMessageValue} days of messages!`);
+        const response = await last(target);
+        extraMessage = `${target.displayName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`;
+      }
+      const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       targetGuild.members.ban(target, {deleteMessageSeconds: deleteMessageValue, reason: privReason ?? 'No reason provided'});
     } catch (err) {
       logger.error(`[${PREFIX}] Error: ${err}`);
@@ -316,7 +326,7 @@ export async function moderate(
 
   const modlogEmbed = embedTemplate()
     // eslint-disable-next-line
-    .setTitle(`${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} (${target.user.tag})${duration ? ` for ${ms(duration, {long: true})}` : ''}`)
+    .setTitle(`${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} (${target.user.tag})${duration && command === 'timeout' ? ` for ${ms(duration, {long: true})}` : ''}`)
     .setDescription(stripIndents`
     **PrivReason:** ${privReason ?? 'No reason provided'}
     ${pubReason ? `**PubReason:** ${pubReason}` : ''}
@@ -342,11 +352,13 @@ export async function moderate(
 
   // Send the message to the mod channel
   if (command !== 'info') {
-    const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
     // We must send the mention outside of the embed, cuz mentions dont work in embeds
     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
     const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
     modChan.send({content: `${command !== 'note' ? `Hey ${roleModerator}` : ``}`, embeds: [modlogEmbed]});
+    if (extraMessage) {
+      await modChan.send({content: extraMessage});
+    }
     logger.debug(`[${PREFIX}] sent a message to the moderators room`);
   }
 
@@ -376,7 +388,6 @@ export async function moderate(
 
   // Send a message to the modlog room
   if (command !== 'info') {
-    const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
     modlog.send({embeds: [modlogEmbed]});
     logger.debug(`[${PREFIX}] sent a message to the modlog room`);
   }
