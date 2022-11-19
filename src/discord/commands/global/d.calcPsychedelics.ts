@@ -16,28 +16,28 @@ export const dcalcPsychedelics: SlashCommand1 = {
     .addSubcommand((subcommand) => subcommand
       .setName('lsd')
       .setDescription('Check LSD tolerance information')
-      .addIntegerOption((option) => option.setName('last_dose')
+      .addNumberOption((option) => option.setName('last_dose')
         .setDescription('ug of LSD')
         .setRequired(true))
       .addIntegerOption((option) => option.setName('days')
         .setDescription('Number of days since last dose?')
         .setRequired(true))
-      .addIntegerOption((option) => option.setName('desired_dose')
+      .addNumberOption((option) => option.setName('desired_dose')
         .setDescription('ug of LSD')))
     .addSubcommand((subcommand) => subcommand
       .setName('mushrooms')
       .setDescription('Check mushroom tolerance information')
-      .addIntegerOption((option) => option.setName('last_dose')
+      .addNumberOption((option) => option.setName('last_dose')
         .setDescription('g of mushrooms')
         .setRequired(true))
-      .addIntegerOption((option) => option.setName('days')
+      .addNumberOption((option) => option.setName('days')
         .setDescription('Number of days since last dose?')
         .setRequired(true))
-      .addIntegerOption((option) => option.setName('desired_dose')
+      .addNumberOption((option) => option.setName('desired_dose')
         .setDescription('g of mushrooms'))),
   async execute(interaction) {
-    const lastDose = interaction.options.getInteger('last_dose')!;
-    const desiredDose = interaction.options.getInteger('desired_dose');
+    const lastDose = interaction.options.getNumber('last_dose')!;
+    const desiredDose = interaction.options.getNumber('desired_dose');
     const days = interaction.options.getInteger('days')!;
 
     const command = interaction.options.getSubcommand();

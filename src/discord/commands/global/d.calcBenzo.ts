@@ -15,7 +15,7 @@ export const dcalcBenzo: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('calc_benzo')
     .setDescription('This tool helps figure out how much of a given benzo dose converts into another benzo dose.')
-    .addIntegerOption((option) => option.setName('i_have')
+    .addNumberOption((option) => option.setName('i_have')
       .setDescription('mg')
       .setRequired(true))
     .addStringOption((option) => option.setName('mg_of')
@@ -28,7 +28,7 @@ export const dcalcBenzo: SlashCommand1 = {
       .setAutocomplete(true)),
 
   async execute(interaction) {
-    const dosage = interaction.options.getInteger('i_have')!;
+    const dosage = interaction.options.getNumber('i_have')!;
     const drugA = interaction.options.getString('mg_of')!;
     const drugB = interaction.options.getString('and_i_want_the_dose_of')!;
 

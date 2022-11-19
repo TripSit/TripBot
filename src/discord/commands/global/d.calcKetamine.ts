@@ -13,7 +13,7 @@ export const dCalcKetamine: SlashCommand1 = {
   data: new SlashCommandBuilder()
     .setName('calc_ketamine')
     .setDescription('Get ketamine dosage information')
-    .addIntegerOption((option) => option.setName('weight')
+    .addNumberOption((option) => option.setName('weight')
       .setDescription('How much do you weigh?')
       .setRequired(true))
     .addStringOption((option) => option.setName('units')
@@ -24,7 +24,7 @@ export const dCalcKetamine: SlashCommand1 = {
         {name: 'lbs', value: 'lbs'},
       )),
   async execute(interaction) {
-    const givenWeight = interaction.options.getInteger('weight')!;
+    const givenWeight = interaction.options.getNumber('weight')!;
     // logger.debug(`[${PREFIX}] weight: ${givenWeight}`);
 
     const weightUnits = interaction.options.getString('units')! as 'kg' | 'lbs';
