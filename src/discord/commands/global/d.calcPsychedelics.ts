@@ -33,7 +33,7 @@ export const dcalcPsychedelics: SlashCommand = {
       .addNumberOption((option) => option.setName('last_dose')
         .setDescription('g of mushrooms')
         .setRequired(true))
-      .addIntegerOption((option) => option.setName('days')
+      .addNumberOption((option) => option.setName('days')
         .setDescription('Number of days since last dose?')
         .setRequired(true))
       .addNumberOption((option) => option.setName('desired_dose')
