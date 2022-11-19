@@ -8,10 +8,10 @@ import {
   ChannelType,
 } from 'discord-api-types/v10';
 import {stripIndents} from 'common-tags';
-// import env from '../utils/env.config';
-import logger from '../utils/logger';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import env from '../utils/env.config';
+// import logger from '../utils/logger';
+// import * as path from 'path';
+// const PREFIX = path.parse(__filename).name;
 
 /**
  * {interaction} interaction
@@ -38,6 +38,8 @@ export async function last(
         await Promise.all(
           channels.map(async (channel) => {
             if (!channel) return;
+            if (channel.parentId === env.CATEGORY_TEAMTRIPSIT) return;
+            if (channel.parentId === env.CATEGORY_DEVELOPMENT) return;
             if (channel.type === ChannelType.GuildText) {
               await channel.messages.fetch()
                 .then(async (messages) => {
@@ -57,7 +59,7 @@ export async function last(
           },
           ))
           .then(async () => {
-            logger.debug(`[${PREFIX}] messageInfo: ${JSON.stringify(messageInfo, null, 2)}`);
+            // logger.debug(`[${PREFIX}] messageInfo: ${JSON.stringify(messageInfo, null, 2)}`);
             if (messageInfo.length === 0) {
               resolve({
                 lastMessage: 'No messages found',
