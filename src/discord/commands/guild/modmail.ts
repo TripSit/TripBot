@@ -452,25 +452,25 @@ export const modmail: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('modmail')
     .setDescription('Modmail actions!')
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Own this ticket')
       .setName('own'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Close this ticket as resolved')
       .setName('close'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Reopen this ticket')
       .setName('reopen'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Block this user from future messages/tickets')
       .setName('block'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Unblock this user')
       .setName('unblock'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Take the ticket off hold')
       .setName('unpause'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Put the ticket on hold')
       .setName('pause')),
   async execute(interaction:ChatInputCommandInteraction) {
@@ -688,7 +688,7 @@ export async function modmailCreate(
   // Collect a modal submit interaction
   const filter = (i:ModalSubmitInteraction) => i.customId.includes('ModmailIssueModal');
   interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async (i) => {
+    .then(async i => {
       if (i.customId.split('~')[2] !== interaction.id) return;
       // Get whatever they sent in the modal
       const modalInputA = i.fields.getTextInputValue('inputA');
@@ -716,7 +716,7 @@ export async function modmailCreate(
       // Get the helper and TS roles
       const roleHelper = await tripsitGuild.roles.fetch(env.ROLE_TRIPSITTER) as Role;
       // log.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
-      const roleTripsitter = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
+      const roleTripsitter = tripsitGuild.roles.cache.find(role => role.id === env.ROLE_TRIPSITTER) as Role;
       // log.debug(`[${PREFIX}] roleTripsitter: ${roleTripsitter}`);
 
       // Respond to the user
@@ -803,10 +803,10 @@ export async function modmailCreate(
       }
 
       // Determine if this command was initialized by a Developer
-      const roleDeveloper = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER) as Role;
-      const isDev = roleDeveloper.members.map((m) => m.user.id === i.user.id);
-      const pingRole = tripsitGuild.roles.cache.find((role) => role.id === modmailVars[issueType].pingRole) as Role;
-      const tripsitterRole = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
+      const roleDeveloper = tripsitGuild.roles.cache.find(role => role.id === env.ROLE_DEVELOPER) as Role;
+      const isDev = roleDeveloper.members.map(m => m.user.id === i.user.id);
+      const pingRole = tripsitGuild.roles.cache.find(role => role.id === modmailVars[issueType].pingRole) as Role;
+      const tripsitterRole = tripsitGuild.roles.cache.find(role => role.id === env.ROLE_TRIPSITTER) as Role;
 
       // Send a message to the thread
       let threadFirstResponse = stripIndents`
@@ -898,7 +898,7 @@ export async function modmailCreate(
       // Save the user's roles in the db
       let actorRoles = [] as string[];
       if (member) {
-        actorRoles = (member.roles as GuildMemberRoleManager).cache.map((role) => role.name);
+        actorRoles = (member.roles as GuildMemberRoleManager).cache.map(role => role.name);
       }
       await db<Users>('users')
         .insert({

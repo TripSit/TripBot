@@ -8,4 +8,4 @@ export async function bridgeWording():Promise<string> {
   The "bot" tag is used to identify messages from the bridge, not robots! TS is used on IRC to identify bridge messages.
   Please note that users on IRC can't see replies or custom emojis from Discord!
   `;
-};
+}

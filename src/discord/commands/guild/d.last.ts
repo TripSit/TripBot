@@ -18,7 +18,7 @@ export const dLast: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('last')
     .setDescription('Get the users last location/messages')
-    .addUserOption((option) => option
+    .addUserOption(option => option
       .setName('user')
       .setDescription('User to look up')
       .setRequired(true)),
@@ -36,7 +36,7 @@ export const dLast: SlashCommand = {
 
     const target = interaction.options.getMember('user') as GuildMember;
     const actor = interaction.member as GuildMember;
-    const roleModerator = interaction.guild?.roles.cache.find((role) => role.id === env.ROLE_MODERATOR) as Role;
+    const roleModerator = interaction.guild?.roles.cache.find(role => role.id === env.ROLE_MODERATOR) as Role;
     const actorIsMod = actor.roles.cache.has(roleModerator.id);
 
     const response = await last(target);

@@ -40,7 +40,7 @@ export const dFeedback: SlashCommand = {
     await interaction.showModal(modal);
     const filter = (i:ModalSubmitInteraction) => i.customId.includes('feedbackReportModal');
     interaction.awaitModalSubmit({ filter, time: 0 })
-      .then(async (i) => {
+      .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
         const guildMessage = `${i.guild ? ` in ${i.guild.name}` : 'DM'}`;
 
@@ -53,7 +53,7 @@ export const dFeedback: SlashCommand = {
         botOwner.send({ embeds: [botOwnerEmbed] });
 
         const tripsitGuild = await i.client.guilds.fetch(env.DISCORD_GUILD_ID);
-        const developerRole = tripsitGuild.roles.cache.find((role) => role.id === env.ROLE_DEVELOPER);
+        const developerRole = tripsitGuild.roles.cache.find(role => role.id === env.ROLE_DEVELOPER);
         if (!developerRole) {
           log.error(`[${PREFIX}]Developer role not found!`);
           return;

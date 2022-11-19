@@ -24,11 +24,11 @@ export async function registerCommands(client: Client): Promise<void> {
     const commandDir = path.join(__dirname, '../commands');
     const files = await fs.readdir(path.join(commandDir, commandType));
     files
-      .filter((file) => file.endsWith('.ts') && !file.endsWith('index.ts'))
-      .map((file) => require(`${commandDir}/${commandType}/${file}`)) // eslint-disable-line global-require, import/no-dynamic-require, max-len
-      .forEach((command) => {
+      .filter(file => file.endsWith('.ts') && !file.endsWith('index.ts'))
+      .map(file => require(`${commandDir}/${commandType}/${file}`)) // eslint-disable-line global-require, import/no-dynamic-require, max-len
+      .forEach(command => {
         // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
-        const goodKey = Object.keys(command).find((key) => command[key].data !== undefined) as string;
+        const goodKey = Object.keys(command).find(key => command[key].data !== undefined) as string;
         // const fileName = Object.keys(command)[0];
         const functionName = command[goodKey].data.name;
         client.commands.set(functionName, command[goodKey]);

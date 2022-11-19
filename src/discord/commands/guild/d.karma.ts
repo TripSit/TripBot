@@ -18,7 +18,7 @@ export const dKarma: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('karma')
     .setDescription('Get someone\'s karma!')
-    .addUserOption((option) => option
+    .addUserOption(option => option
       .setName('user')
       .setDescription('User to lookup')
       .setRequired(true)),

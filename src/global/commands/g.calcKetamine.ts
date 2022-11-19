@@ -31,7 +31,7 @@ export async function calcKetamine(weight:number, unit:'lbs' | 'kg'):Promise<Ket
 
   const noseDose = await generateInsufflatedDosages(calcWeight);
   let noseDoseString = '' as string;
-  Object.keys(noseDose).forEach((key) => {
+  Object.keys(noseDose).forEach(key => {
     const title = key.charAt(0).toUpperCase() + key.slice(1);
     noseDoseString += `**${title}**: ${noseDose[key as keyof typeof noseDose]}\n`;
   });
@@ -40,7 +40,7 @@ export async function calcKetamine(weight:number, unit:'lbs' | 'kg'):Promise<Ket
   const buttDose = await generateInsufflatedDosages(calcWeight);
   let buttDoseString = '' as string;
   // for (const [key, value] of Object.entries(buttDose)) {
-  Object.keys(buttDose).forEach((key) => {
+  Object.keys(buttDose).forEach(key => {
     const title = key.charAt(0).toUpperCase() + key.slice(1);
     buttDoseString += `**${title}**: ${buttDose[key as keyof typeof buttDose]}\n`;
   });

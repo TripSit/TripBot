@@ -280,7 +280,7 @@ export async function announcements(message:Message) {
           embed.setFooter({ text: bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].footer });
           embed.setDescription(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].message);
           await (message.channel as TextChannel).send({ embeds: [embed] })
-            .then(async (msg) => {
+            .then(async msg => {
               await msg.react(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji);
               const filter = (reaction:MessageReaction) => reaction.emoji.name === bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji;
               const collector = msg.createReactionCollector({ filter, time: 0, dispose: true });

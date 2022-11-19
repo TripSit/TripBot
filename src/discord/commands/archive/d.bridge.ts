@@ -2,9 +2,9 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {stripIndents} from 'common-tags';
-import {bridgeWording} from '../../../global/commands/archive/g.bridge';
+import { stripIndents } from 'common-tags';
+import { SlashCommand } from '../../@types/commandDef';
+import { bridgeWording } from '../../../global/commands/archive/g.bridge';
 // import log from '../../../global/utils/log';
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;

@@ -31,48 +31,48 @@ export const mod: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('mod')
     .setDescription('Moderation actions!')
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Info on a user')
-      .addStringOption((option) => option
+      .addStringOption(option => option
         .setName('target')
         .setDescription('User to get info on!')
         .setRequired(true))
       .setName('info'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Ban a user')
-      .addStringOption((option) => option
+      .addStringOption(option => option
         .setName('target')
         .setDescription('User to ban!')
         .setRequired(true))
       .setName('ban'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Underban a user')
-      .addStringOption((option) => option
+      .addStringOption(option => option
         .setName('target')
         .setDescription('User to underban!')
         .setRequired(true))
       .setName('underban'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Warn a user')
-      .addStringOption((option) => option
+      .addStringOption(option => option
         .setName('target')
         .setDescription('User to warn!')
         .setRequired(true))
       .setName('warning'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Create a note about a user')
-      .addStringOption((option) => option
+      .addStringOption(option => option
         .setName('target')
         .setDescription('User to note about!')
         .setRequired(true))
       .setName('note'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Timeout a user')
-      .addStringOption((option) => option
+      .addStringOption(option => option
         .setName('target')
         .setDescription('User to timeout!')
         .setRequired(true))
-      .addStringOption((option) => option
+      .addStringOption(option => option
         .setName('toggle')
         .setDescription('On off?')
         .addChoices(
@@ -80,9 +80,9 @@ export const mod: SlashCommand = {
           { name: 'Off', value: 'off' },
         ))
       .setName('timeout'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Kick a user')
-      .addStringOption((option) => option
+      .addStringOption(option => option
         .setName('target')
         .setDescription('User to kick!')
         .setRequired(true))
@@ -196,7 +196,7 @@ export const mod: SlashCommand = {
 
     const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('modModal');
     interaction.awaitModalSubmit({ filter, time: 0 })
-      .then(async (i) => {
+      .then(async i => {
         if (i.customId.split('~')[2] !== interaction.id) return;
         const privReason = i.fields.getTextInputValue('privReason');
         let pubReason = '';

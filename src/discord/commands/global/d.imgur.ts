@@ -14,11 +14,11 @@ export const imgur: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('imgur')
     .setDescription('Search Imgur')
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setName('search')
       .setDescription('What are you looking for?')
       .setRequired(true))
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setName('sort')
       .setDescription('How should the results be sorted?')
       .addChoices(
@@ -26,7 +26,7 @@ export const imgur: SlashCommand = {
         { name: 'Viral', value: 'viral' },
         { name: 'Time', value: 'time' },
       ))
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setName('window')
       .setDescription('How far back should we look?')
       .addChoices(

@@ -22,7 +22,7 @@ export const dEms: SlashCommand = {
 
     embed.setTitle('EMS Information');
     // for (const entry of emsInfo) {
-    emsInfo.forEach((entry) => {
+    emsInfo.forEach(entry => {
       embed.addFields(
         {
           name: `${entry.name} ${entry.country ? `(${entry.country})` : ''}`,

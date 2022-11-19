@@ -1,3 +1,5 @@
+import { parse } from 'path';
+
 'use strict';
 
 const {
@@ -8,7 +10,6 @@ const {
 const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
 
-import {parse} from 'path';
 const PREFIX = parse(__filename).name; // eslint-disable-line
 
 const { CHANNEL_MODERATORS } = require('../../../../env');

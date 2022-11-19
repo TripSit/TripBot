@@ -61,7 +61,7 @@ export const uBan: UserCommand = {
 
     const filter = (i:ModalSubmitInteraction) => i.customId.includes('banModal');
     interaction.awaitModalSubmit({ filter, time: 0 })
-      .then(async (i) => {
+      .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
         i.deferReply();
         const privReason = i.fields.getTextInputValue('privReason');

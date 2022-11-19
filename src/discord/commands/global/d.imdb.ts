@@ -16,7 +16,7 @@ export const imdbSearch: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('imdb')
     .setDescription('Search imdb')
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setName('title')
       .setDescription('Movie / Series title')
       .setRequired(true)),
@@ -52,7 +52,7 @@ export const imdbSearch: SlashCommand = {
       embed.setThumbnail(result.poster);
     }
 
-    result.ratings.forEach((rating) => {
+    result.ratings.forEach(rating => {
       embed.addFields({ name: rating.source, value: rating.value, inline: true });
     });
 

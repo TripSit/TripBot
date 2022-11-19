@@ -7,12 +7,13 @@ import {
 import {
   ApplicationCommandType,
 } from 'discord-api-types/v10';
-import {UserCommand} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
+import { parse } from 'path';
+import { UserCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
 import log from '../../../global/utils/log';
 import env from '../../../global/utils/env.config';
-import {UserDbEntry} from '../../../global/@types/database';
-import {parse} from 'path';
+import { UserDbEntry } from '../../../global/@types/database';
+
 const PREFIX = parse(__filename).name;
 
 let actor = {} as GuildMember;
@@ -33,9 +34,7 @@ export const info: UserCommand = {
       guild: interaction.guild,
       user: interaction.user,
       channel: interaction.channel,
-      reply: (content:string) => {
-        return interaction.reply(content);
-      },
+      reply: (content:string) => interaction.reply(content),
     };
 
     const command = await interaction.client.commands.get('profile');

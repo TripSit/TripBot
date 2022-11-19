@@ -35,10 +35,10 @@ ${interaction.guild ? `in ${interaction.guild.name} (${interaction.guild?.id})` 
         if (interationOptions.data[0].options !== undefined) {
           message += ` subCommand: ${interationOptions.getSubcommand()}`;
           if (interationOptions.data[0].options.length > 0) {
-            message += ` with params: ${interationOptions.data[0].options?.map((o) => `${o.name}: ${o.value}`).join(', ')}`;
+            message += ` with params: ${interationOptions.data[0].options?.map(o => `${o.name}: ${o.value}`).join(', ')}`;
           }
         } else {
-          message += ` with params: ${interationOptions.data.map((o) => `${o.name}: ${o.value}`).join(', ')}`;
+          message += ` with params: ${interationOptions.data.map(o => `${o.name}: ${o.value}`).join(', ')}`;
         }
       }
     }

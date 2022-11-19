@@ -1,6 +1,7 @@
 'use strict';
 
-import {parse} from 'path';
+import { parse } from 'path';
+
 const PREFIX = parse(__filename).name;
 const { stripIndents } = require('common-tags');
 const logger = require('../../../global/utils/log');
@@ -133,7 +134,7 @@ module.exports = {
       log.debug(`[${PREFIX}] ${target} has been downvoted three times, muting!`);
       const actor = 'The community';
       const command = 'timeout';
-      const channel = reaction.message.channel;
+      const { channel } = reaction.message;
       const toggle = 'on';
       const reason = stripIndents`
       > 'Downvoted multiple times by the community, pending moderator review.'

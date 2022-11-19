@@ -15,7 +15,7 @@ export const durbandefine: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('urban_define')
     .setDescription('Define a word on Urban Dictionary')
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setName('define')
       .setDescription('What do you want to define?')
       .setRequired(true)),

@@ -129,7 +129,7 @@ export async function needsHelpmode(
   // log.debug(`[${PREFIX}] targetHasRoleNeedshelp: ${targetHasRoleNeedshelp}`);
 
   // Save the user's roles to the DB
-  const targetRoleIds = target.roles.cache.map((role) => role.id);
+  const targetRoleIds = target.roles.cache.map(role => role.id);
   // log.debug(`[${PREFIX}] targetRoleIds: ${targetRoleIds}`);
   await db<Users>('users')
     .insert({
@@ -142,7 +142,7 @@ export async function needsHelpmode(
   const myMember = await interaction.guild.members.fetch(interaction.client.user.id);
   const myRole = myMember.roles.highest;
   // Remove all roles, except team and vanity, from the target
-  target.roles.cache.forEach((role) => {
+  target.roles.cache.forEach(role => {
     // log.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
     if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone') && role.id !== roleNeedshelp.id) {
       if (role.comparePositionTo(myRole) < 0) {
@@ -586,7 +586,7 @@ export async function tripsitmeResolve(
 
     // readd each role to the target
     if (targetRoles) {
-      targetRoles.forEach(async (roleId) => {
+      targetRoles.forEach(async roleId => {
         // log.debug(`[${PREFIX}] Re-adding roleId: ${roleId}`);
         if (!interaction.guild) {
           log.error(`[${PREFIX}] no guild!`);
@@ -648,7 +648,7 @@ export async function tripsitmeResolve(
       > Thank you!
       ${env.EMOJI_INVISIBLE}
       `)
-    .then(async (msg) => {
+    .then(async msg => {
       message = msg;
       await msg.react('🙁');
       await msg.react('😕');
@@ -659,7 +659,7 @@ export async function tripsitmeResolve(
       // Setup the reaction collector
       const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
       const collector = message.createReactionCollector({ filter, time: 1000 * 60 * 60 * 24 });
-      collector.on('collect', async (reaction) => {
+      collector.on('collect', async reaction => {
         threadHelpUser.send(stripIndents`
           ${env.EMOJI_INVISIBLE}
           > Thank you for your feedback, here's a cookie! 🍪
@@ -968,7 +968,7 @@ export async function tripsitmeButton(
   // but we'll change the output down below to make it clear this is a test.
   let targetIsTeamMember = false;
   if (!actorIsAdmin) {
-    target.roles.cache.forEach(async (role) => {
+    target.roles.cache.forEach(async role => {
       if (teamRoles.includes(role.id)) {
         targetIsTeamMember = true;
       }
@@ -1090,7 +1090,7 @@ export async function tripsitmeButton(
 
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeSubmit');
   interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async (i) => {
+    .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       const triage = i.fields.getTextInputValue('triageInput');
       const intro = i.fields.getTextInputValue('introInput');

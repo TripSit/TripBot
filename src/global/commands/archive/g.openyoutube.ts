@@ -37,5 +37,5 @@ export async function youtubeSearch(query:string):Promise<{
   // const reponse = await yt.search(query);
   // log.debug(`${PREFIX} reponse: ${JSON.stringify(reponse, null, 2)}`);
   // return reponse;
-  return await yt.search(query);
-};
+  return yt.search(query);
+}

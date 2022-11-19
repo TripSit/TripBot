@@ -16,11 +16,11 @@ export const dCombo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('combo')
     .setDescription('Check combo information')
-    .addStringOption((option) => option.setName('first_drug')
+    .addStringOption(option => option.setName('first_drug')
       .setDescription('Pick the first drug')
       .setRequired(true)
       .setAutocomplete(true))
-    .addStringOption((option) => option.setName('second_drug')
+    .addStringOption(option => option.setName('second_drug')
       .setDescription('Pick the second drug')
       .setRequired(true)
       .setAutocomplete(true)),

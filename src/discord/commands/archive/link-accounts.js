@@ -1,6 +1,7 @@
 'use strict';
 
-import {parse} from 'path';
+import { parse } from 'path';
+
 const PREFIX = parse(__filename).name;
 const { SlashCommandBuilder } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
@@ -122,8 +123,6 @@ module.exports = {
           If this is expected, please respond with the auth token given in discord.
 
           If this is not expected, please contact Moonbear#1024 on discord, but don't worry: your account is safe!`);
-
-          return;
         });
       } else {
         embed.setDescription(stripIndents`

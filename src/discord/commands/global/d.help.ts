@@ -51,8 +51,8 @@ export const help: SlashCommand = {
     function getDesc(commandName:string):string | undefined {
       // log.debug(`[${PREFIX}] getDesc: ${commandName}`);
       if (!globalCommands || !guildCommands) return undefined;
-      const desc = globalCommands.filter((command) => command.name === commandName).at(0)?.description
-      ?? guildCommands.filter((command) => command.name === commandName).at(0)?.description;
+      const desc = globalCommands.filter(command => command.name === commandName).at(0)?.description
+      ?? guildCommands.filter(command => command.name === commandName).at(0)?.description;
       // log.debug(`[${PREFIX}] getDesc: ${desc}`);
       return desc;
     }

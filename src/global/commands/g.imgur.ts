@@ -21,7 +21,7 @@ export async function imgurSearch(query:string):Promise<string> {
         headers: {
           Authorization: `Client-ID ${env.IMGUR_ID}`,
         },
-      }).then((res) => {
+      }).then(res => {
         let imageLink = '';
 
         if (res.data.data.length > 0) {

@@ -20,9 +20,9 @@ module.exports = {
       log.debug(`[${PREFIX}] Word before ++: ${wordBeforePlus}`);
 
       // If the word is blank, ignore it
-      if (wordBeforePlus === null ||
-        wordBeforePlus === undefined ||
-        wordBeforePlus.length === 0
+      if (wordBeforePlus === null
+        || wordBeforePlus === undefined
+        || wordBeforePlus.length === 0
       ) {
         return;
       }
@@ -41,13 +41,13 @@ module.exports = {
         karmaValue = (targetData.karma[wordBeforePlus] || 0) + karmaValue;
         targetData.karma[wordBeforePlus] = karmaValue;
       } else {
-        targetData.karma = {[wordBeforePlus]: karmaValue};
+        targetData.karma = { [wordBeforePlus]: karmaValue };
       }
 
       setGuildInfo(targetFbid, targetData);
       const embed = template
-          .embedTemplate()
-          .setDescription(`'${wordBeforePlus}' karma increased to ${karmaValue}!`);
+        .embedTemplate()
+        .setDescription(`'${wordBeforePlus}' karma increased to ${karmaValue}!`);
       message.channel.send({
         embeds: [embed],
         ephemeral: false,
@@ -71,14 +71,14 @@ module.exports = {
         karmaValue = (targetData.karma[wordBeforePlus] || 0) - karmaValue;
         targetData.karma[wordBeforePlus] = karmaValue;
       } else {
-        targetData.karma = {[wordBeforePlus]: karmaValue};
+        targetData.karma = { [wordBeforePlus]: karmaValue };
       }
 
       setGuildInfo(targetFbid, targetData);
       const embed = template
-          .embedTemplate()
-          .setDescription(`'${wordBeforePlus}' karma decreased to ${karmaValue}!`);
-      message.channel.send({embeds: [embed], ephemeral: false});
+        .embedTemplate()
+        .setDescription(`'${wordBeforePlus}' karma decreased to ${karmaValue}!`);
+      message.channel.send({ embeds: [embed], ephemeral: false });
     }
   },
 };

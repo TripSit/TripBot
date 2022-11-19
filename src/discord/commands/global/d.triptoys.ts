@@ -15,7 +15,7 @@ export const dtriptoys: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('triptoys')
     .setDescription('Fun toys to play with!')
-    .addStringOption((option) => option.setName('toy')
+    .addStringOption(option => option.setName('toy')
       .setDescription('Which toy?')
       .addChoices(
         { name: 'All', value: '25' },

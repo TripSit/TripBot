@@ -90,7 +90,7 @@ export async function leaderboard(
 
     // Grab all the user experience from the database
     // for (const category of ['TRIPSITTER', 'GENERAL', 'DEVELOPER', 'TEAM', 'IGNORED']) {
-    ['TRIPSITTER', 'GENERAL', 'DEVELOPER', 'TEAM', 'IGNORED'].forEach(async (category) => {
+    ['TRIPSITTER', 'GENERAL', 'DEVELOPER', 'TEAM', 'IGNORED'].forEach(async category => {
       const userExperience = await db<UserExperience>('user_experience')
         .select('*')
         .where('type', category)
@@ -99,7 +99,7 @@ export async function leaderboard(
 
       rank = 1;
       // for (const user of userExperience) {
-      userExperience.forEach(async (user) => {
+      userExperience.forEach(async user => {
         const userData = await getUser(null, user.user_id);
         if (!userData) {
           log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
@@ -139,7 +139,7 @@ export async function leaderboard(
 
     let rank = 1;
     // for (const user of userExperience) {
-    userExperience.forEach(async (user) => {
+    userExperience.forEach(async user => {
       const userData = await getUser(null, user.user_id);
       if (!userData) {
         log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
@@ -190,7 +190,7 @@ export async function leaderboard(
     const rankList = [] as RankType[];
     let i = 1;
     // for (const user of userExperience) {
-    userExperience.forEach(async (user) => {
+    userExperience.forEach(async user => {
       const userData = await getUser(null, user.user_id);
       if (!userData) {
         log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);

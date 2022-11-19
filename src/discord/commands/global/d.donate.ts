@@ -33,7 +33,7 @@ export const dDonate: SlashCommand = {
         You can get supporter benefits for as little as $1 a month!`,
       );
     // for (const entry of donateInfo) {
-    donateInfo.forEach((entry) => {
+    donateInfo.forEach(entry => {
       embed.addFields(
         {
           name: entry.name,

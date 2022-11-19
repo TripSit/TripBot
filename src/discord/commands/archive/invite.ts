@@ -2,11 +2,12 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import {stripIndents} from 'common-tags';
-import {SlashCommand} from '../../@types/commandDef';
+import { stripIndents } from 'common-tags';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
 import env from '../../../global/utils/env.config';
 import log from '../../../global/utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
 
 const bridgeMap = {
@@ -96,7 +97,7 @@ export const dinvite: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('invite')
     .setDescription('Display a message to join a bridged channel on both sides')
-    .addChannelOption((option) => option
+    .addChannelOption(option => option
       .setRequired(true)
       .setDescription('Which channel do you want people to join?')
       .setName('channel')),
@@ -116,7 +117,8 @@ export const dinvite: SlashCommand = {
     } else {
       interaction.reply({
         content: `Sorry but ${discordChannel} isn't bridged to IRC, but maybe one day!`,
-        ephemeral: true});
+        ephemeral: true,
+      });
     }
 
     return true;

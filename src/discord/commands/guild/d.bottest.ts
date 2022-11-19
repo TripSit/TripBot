@@ -105,7 +105,7 @@ type ResultsObject = {
  * @return {Promise<void>}
  */
 function sleep(ms:number):Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     setTimeout(resolve, ms);
   });
 }
@@ -923,13 +923,13 @@ async function testGlobal(
   const scope = interaction.options.getString('scope') || 'All';
   if (scope === 'All' || scope === 'Global') {
     await client.application?.commands.fetch({ force: true })
-      .then(async (globalCommands) => {
+      .then(async globalCommands => {
         await interaction.followUp(`> Testing ${globalCommands.size} global commands!`);
         // for (const command of globalCommands) {
-        globalCommands.forEach(async (command) => {
+        globalCommands.forEach(async command => {
           // log.debug(`[${PREFIX}] Testing global command ${command.name}`);
           await runCommand(interaction, command.name)
-            .then((result) => {
+            .then(result => {
               if (result === true) {
                 // log.debug(`[${PREFIX}] Global command ${command.name} passed!`);
                 results.total.push(command.name);
@@ -966,13 +966,13 @@ async function testGuild(
     return results;
   }
   await interaction.guild.commands.fetch({ force: true })
-    .then(async (guildCommands) => {
+    .then(async guildCommands => {
       await interaction.followUp(`> Testing ${guildCommands.size} guild commands!`);
       // for (const command of guildCommands) {
-      guildCommands.forEach(async (command) => {
+      guildCommands.forEach(async command => {
         // log.debug(`[${PREFIX}] Testing guild command ${command.name}`);
         await runCommand(interaction, command.name)
-          .then((result) => {
+          .then(result => {
             if (result === true) {
               // log.debug(`[${PREFIX}] Global command ${command.name} passed!`);
               results.total.push(command.name);
@@ -997,7 +997,7 @@ export const dBottest: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('bottest')
     .setDescription('This will test the bot and show all functionality!')
-    .addStringOption((option) => option.setName('scope')
+    .addStringOption(option => option.setName('scope')
       .setDescription('Global, guild, or all?')
       .addChoices(
         { name: 'All', value: 'All' },
@@ -1020,10 +1020,10 @@ export const dBottest: SlashCommand = {
     };
 
     await testGlobal(interaction, results)
-      .then(async (globalResults) => {
+      .then(async globalResults => {
         // log.debug(`[${PREFIX}] Global results: ${JSON.stringify(globalResults)}`);
         await testGuild(interaction, globalResults)
-          .then(async (guildResults) => {
+          .then(async guildResults => {
             if (!interaction.channel) {
               await interaction.reply('This command must be used in a channel!');
               return false;

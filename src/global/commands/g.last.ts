@@ -37,19 +37,19 @@ export async function last(
 
   return new Promise(async (resolve) => { // eslint-disable-line
     await guild.channels.fetch()
-      .then(async (channels) => {
+      .then(async channels => {
         await Promise.all(
-          channels.map(async (channel) => {
+          channels.map(async channel => {
             if (!channel) return;
             if (channel.parentId === env.CATEGORY_TEAMTRIPSIT) return;
             if (channel.parentId === env.CATEGORY_DEVELOPMENT) return;
             if (channel.type === ChannelType.GuildText) {
               await channel.messages.fetch()
-                .then(async (messages) => {
-                  const memberMessages = messages.filter((message) => message.author.id === target.id);
+                .then(async messages => {
+                  const memberMessages = messages.filter(message => message.author.id === target.id);
                   totalMessages += memberMessages.size;
                   // Get the info for each message and append it to messageInfo
-                  memberMessages.forEach((message) => {
+                  memberMessages.forEach(message => {
                   // log.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}`);
                     messageInfo.push({
                       channel: `<#${message.channelId}>`,
@@ -86,7 +86,7 @@ export async function last(
             messageInfo.reverse();
             let messageString = '';
             let messageStringIndex = 0;
-            messageInfo.forEach((message) => {
+            messageInfo.forEach(message => {
               const messageStringTemp = `${time(message.timestamp, 'd')} ${message.channel}: ${message.content}\n`;
               // const messageUrl = `https://discord.com/channels/${guild.id}/${message.channel.id}/${message.id}`;
               // log.debug(`[${PREFIX}] messageStringTemp: ${messageStringTemp}`);

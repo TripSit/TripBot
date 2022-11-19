@@ -18,16 +18,16 @@ export const dBirthday: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('birthday')
     .setDescription('Birthday info!')
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setName('get')
       .setDescription('Get someone\'s birthday!')
-      .addUserOption((option) => option
+      .addUserOption(option => option
         .setName('user')
         .setDescription('User to lookup')))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setName('set')
       .setDescription('Set your birthday!')
-      .addStringOption((option) => option
+      .addStringOption(option => option
         .setRequired(true)
         .setDescription('Month value')
         .addChoices(
@@ -45,7 +45,7 @@ export const dBirthday: SlashCommand = {
           { name: 'December', value: 'December' },
         )
         .setName('month'))
-      .addIntegerOption((option) => option
+      .addIntegerOption(option => option
         .setRequired(true)
         .setDescription('Day value')
         .setName('day'))),
