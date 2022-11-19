@@ -4,6 +4,7 @@ declare global {
     // eslint-disable-next-line no-unused-vars
     interface ProcessEnv {
       NODE_ENV?: 'development' | 'production';
+      POSTGRES_DBURL: string;
       YOUTUBE_TOKEN: string;
       GITHUB_TOKEN: string;
       IMGUR_ID: string;
