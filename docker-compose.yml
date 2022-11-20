@@ -20,7 +20,8 @@ services:
       - IMGUR_SECRET=${IMGUR_SECRET}
       - YOUTUBE_TOKEN=${YOUTUBE_TOKEN}
       - IMDB_TOKEN=${IMDB_TOKEN}
+    networks:
+      - tripsit
 networks:
-  default:
-    name: http-api_default
+  tripsit:
     external: true
