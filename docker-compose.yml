@@ -20,8 +20,4 @@ services:
       - IMGUR_SECRET=${IMGUR_SECRET}
       - YOUTUBE_TOKEN=${YOUTUBE_TOKEN}
       - IMDB_TOKEN=${IMDB_TOKEN}
-    networks:
-      - tripsit
-networks:
-  tripsit:
-    external: true
+    network_mode: "host"
