@@ -22,6 +22,8 @@ const PREFIX = parse(__filename).name;
 // Value in miliseconds (1000 * 60 = 1 minute)
 const interval = env.NODE_ENV === 'production' ? 1000 * 60 : 1000 * 10;
 
+export default runTimer;
+
 /**
  * This function is called on start.ts and runs the timers
  */
@@ -78,6 +80,7 @@ export async function runTimer() {
           // Max online count
           let maxCount = onlineCount;
           // Update the database's max_online_members if it's higher than the current value
+          // log.debug(`[${PREFIX}] Getting guild data`);
           const guildData = await getGuild(env.DISCORD_GUILD_ID);
           if (guildData) {
             if (guildData.max_online_members) {
@@ -322,5 +325,3 @@ export async function runTimer() {
   }
   checkTimers();
 }
-
-export default runTimer();

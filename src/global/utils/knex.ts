@@ -1,4 +1,5 @@
 import knex from 'knex';
+import { parse } from 'path';
 import env from './env.config';
 import {
   DiscordGuilds,
@@ -7,9 +8,9 @@ import {
   // TicketStatus,
   // DiscordGuilds,
 } from '../@types/pgdb.d';
-// import log from '../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import log from './log'; // eslint-disable-line
+
+const PREFIX = parse(__filename).name; // eslint-disable-line
 
 export const db = knex({
   client: 'pg',
@@ -59,6 +60,7 @@ export async function getUser(
  * @param {string} guildId
  */
 export async function getGuild(guildId:string) {
+  // log.debug(`[${PREFIX}] getGuild started with: guildId: ${guildId}`);
   let data = await db<DiscordGuilds>('discord_guilds')
     .select('*')
     .where('id', guildId)

@@ -2,7 +2,7 @@ import { parse } from 'path';
 import { Guild, TextChannel } from 'discord.js';
 import { discordConnect } from './discord/dscrd';
 import { validateEnv } from './global/utils/env.validate';
-import { runTimer } from './global/utils/timer';
+import { runTimer } from './global/utils/timer'; // eslint-disable-line
 
 import env from './global/utils/env.config';
 
