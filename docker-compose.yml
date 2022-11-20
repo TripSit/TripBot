@@ -7,6 +7,19 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+    environment:
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_GUILD_ID=${DISCORD_GUILD_ID}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
+      - DISCORD_CLIENT_TOKEN=${DISCORD_CLIENT_TOKEN}
+      - DISCORD_CLIENT_REDIRECT_URI=${DISCORD_CLIENT_REDIRECT_URI}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - RAPID_TOKEN=${RAPID_TOKEN}
+      - WOLFRAM_TOKEN=${WOLFRAM_TOKEN}
+      - IMGUR_ID=${IMGUR_ID}
+      - IMGUR_SECRET=${IMGUR_SECRET}
+      - YOUTUBE_TOKEN=${YOUTUBE_TOKEN}
+      - IMDB_TOKEN=${IMDB_TOKEN}
 networks:
   default:
     name: http-api_default
