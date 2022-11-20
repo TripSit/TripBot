@@ -2,12 +2,17 @@ version: '3.7'
 services:
   tripbot:
     build:
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: ./Dockerfile
     container_name: tripsit_discord_bot
     restart: unless-stopped
     ports:
       - "8080:8080"
       - "9229:9229"
+    network_mode: "host"
+    volumes:
+      - ./:/usr/src/app
+    working_dir: /usr/src/app
     env_file:
       - .env
     environment:
@@ -23,6 +28,3 @@ services:
       - IMGUR_SECRET=${IMGUR_SECRET}
       - YOUTUBE_TOKEN=${YOUTUBE_TOKEN}
       - IMDB_TOKEN=${IMDB_TOKEN}
-    network_mode: "host"
-    volumes:
-      - ./:/app
