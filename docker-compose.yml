@@ -7,6 +7,9 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+      - "9229:9229"
+    env_file:
+      - .env
     environment:
       - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
       - DISCORD_GUILD_ID=${DISCORD_GUILD_ID}
@@ -21,3 +24,5 @@ services:
       - YOUTUBE_TOKEN=${YOUTUBE_TOKEN}
       - IMDB_TOKEN=${IMDB_TOKEN}
     network_mode: "host"
+    volumes:
+      - ./:/app

@@ -14,7 +14,7 @@
     "dev": "npm run lint && npm run patch && npm run nodemon",
     "lint": "eslint --fix --ext .ts,.js .",
     "patch": "npm version patch -git-tag-version false",
-    "nodemon": "nodemon --config ./nodemon.json",
+    "nodemon": "nodemon --inspect=0.0.0.0:9229 --config ./nodemon.json",
     "docker-rebuild": "npm run docker-build && npm run docker-run",
     "docker-build": "docker compose build",
     "docker-run": "docker compose up -d",

@@ -1,6 +1,8 @@
 {
+  "verbose": true,
   "watch": ["src"],
   "ext": ".ts",
   "ignore": ["src/assets/*", "backups/*"],
-  "exec": "ts-node src/start.ts"
+  "exec": "ts-node src/start.ts",
+  "legacyWatch": true
 }
