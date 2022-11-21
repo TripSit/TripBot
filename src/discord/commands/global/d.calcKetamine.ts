@@ -16,10 +16,10 @@ export const dCalcKetamine: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_ketamine')
     .setDescription('Get ketamine dosage information')
-    .addNumberOption((option) => option.setName('weight')
+    .addNumberOption(option => option.setName('weight')
       .setDescription('How much do you weigh?')
       .setRequired(true))
-    .addStringOption((option) => option.setName('units')
+    .addStringOption(option => option.setName('units')
       .setDescription('In what unit?')
       .setRequired(true)
       .addChoices(

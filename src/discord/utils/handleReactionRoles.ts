@@ -59,7 +59,7 @@ export async function handleReactionRoles(
         // Add the role
         (await reaction.message.guild.members.fetch(user.id)).roles.add(role);
         // log.debug(`[${PREFIX}] Added role ${role.name} to ${user.username}`);
-        reaction.message.reactions.cache.each((r) => {
+        reaction.message.reactions.cache.each(r => {
           if (r.emoji.name !== reaction.emoji.name) {
             r.users.remove(user);
           }

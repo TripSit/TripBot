@@ -70,7 +70,7 @@ export async function calcDxm(givenWeight:number, weightUnits:string, taking:str
     Fourth: { min: 0, max: 0 },
   } as DxmDataType;
 
-  Object.keys(dxmData).forEach((key) => {
+  Object.keys(dxmData).forEach(key => {
     const min = Math.round((dxmData[key as keyof DxmDataType].min * calcWeight) * 100) / 100;
     const max = Math.round((dxmData[key as keyof DxmDataType].max * calcWeight) * 100) / 100;
     data[key as keyof DxmDataType] = {

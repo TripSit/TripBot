@@ -12,12 +12,12 @@ import {
   PermissionsBitField,
   // TextChannel,
 } from 'discord.js';
+import { stripIndents } from 'common-tags';
+import { parse } from 'path';
 import env from '../../../global/utils/env.config';
-import {stripIndents} from 'common-tags';
 import log from '../../../global/utils/log';
-import {embedTemplate} from '../../utils/embedTemplate';
+import { embedTemplate } from '../../utils/embedTemplate';
 
-import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
 const teamRoles = [
@@ -69,9 +69,9 @@ const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
 
 const testNotice = '🧪THIS IS A TEST PLEASE IGNORE🧪\n\n';
 
-const invisibleEmoji = env.NODE_ENV === 'production' ?
-  '<:invisible:976853930489298984>' :
-  '<:invisible:976824380564852768>';
+const invisibleEmoji = env.NODE_ENV === 'production'
+  ? '<:invisible:976853930489298984>'
+  : '<:invisible:976824380564852768>';
 
 /**
  * Handles removing of the NeedsHelp mode
@@ -81,7 +81,7 @@ export async function tripsat(
   interaction:ButtonInteraction,
 ) {
   log.debug(`[${PREFIX}] starting!`);
-  await interaction.deferReply({ephemeral: true});
+  await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) {
     log.debug(`[${PREFIX}] no guild!`);
     interaction.reply('This must be performed in a guild!');
@@ -103,14 +103,14 @@ export async function tripsat(
 
   if (meOrThem === 'me' && targetId !== actor.id) {
     log.debug(`[${PREFIX}] not the target!`);
-    interaction.reply({content: 'Only the user receiving help can click this button!', ephemeral: true});
+    interaction.reply({ content: 'Only the user receiving help can click this button!', ephemeral: true });
     return;
   }
 
-  let targetLastHelpedDate = new Date();
-  let targetLastHelpedThreadId = '';
-  let targetLastHelpedMetaThreadId = '';
-  let targetRoles:string[] = [];
+  const targetLastHelpedDate = new Date();
+  const targetLastHelpedThreadId = '';
+  const targetLastHelpedMetaThreadId = '';
+  const targetRoles:string[] = [];
 
   log.debug(`[${PREFIX}] targetLastHelpedDate: ${targetLastHelpedDate}`);
   log.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
@@ -120,9 +120,9 @@ export async function tripsat(
   // const channelSanctuary = await interaction.client.channels.cache.get(env.CHANNEL_SANCTUARY);
   // Get the channel objects for the help and meta threads
   const threadHelpUser = interaction.guild.channels.cache
-    .find((chan) => chan.id === targetLastHelpedThreadId) as ThreadChannel;
+    .find(chan => chan.id === targetLastHelpedThreadId) as ThreadChannel;
   const threadDiscussUser = interaction.guild.channels.cache
-    .find((chan) => chan.id === targetLastHelpedMetaThreadId) as ThreadChannel;
+    .find(chan => chan.id === targetLastHelpedMetaThreadId) as ThreadChannel;
 
   const actorHasRoleDeveloper = (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
   log.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
@@ -145,7 +145,7 @@ export async function tripsat(
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     log.debug(`[${PREFIX}] target ${target} does not need help!`);
-    interaction.editReply({embeds: [embed]});
+    interaction.editReply({ embeds: [embed] });
     return;
   }
 
@@ -165,7 +165,7 @@ export async function tripsat(
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription(message);
-      interaction.editReply({embeds: [embed]});
+      interaction.editReply({ embeds: [embed] });
 
       if (threadDiscussUser) {
         let metaUpdate = stripIndents`Hey team, ${target.nickname || target.user.username} said they're good \
@@ -185,9 +185,9 @@ If they still need help it's okay to leave them with that role.`;
 
   // For each role in targetRoles2, add it to the target
   if (targetRoles) {
-    targetRoles.forEach(async (roleId) => {
+    targetRoles.forEach(async roleId => {
       log.debug(`[${PREFIX}] Re-adding roleId: ${roleId}`);
-      const roleObj = interaction.guild!.roles.cache.find((r) => r.id === roleId) as Role;
+      const roleObj = interaction.guild!.roles.cache.find(r => r.id === roleId) as Role;
       if (!ignoredRoles.includes(roleObj.id) && roleObj.name !== '@everyone') {
         log.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.nickname || target.user.username}`);
         await target.roles.add(roleObj);
@@ -217,7 +217,7 @@ If they still need help it's okay to leave them with that role.`;
         > Thank you!
         ${invisibleEmoji}
         `)
-    .then(async (msg) => {
+    .then(async msg => {
       message = msg;
       await msg.react('🙁');
       await msg.react('😕');
@@ -227,7 +227,7 @@ If they still need help it's okay to leave them with that role.`;
 
       // Setup the reaction collector
       const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
-      const collector = message.createReactionCollector({filter, time: 1000 * 60 * 60 * 24});
+      const collector = message.createReactionCollector({ filter, time: 1000 * 60 * 60 * 24 });
       collector.on('collect', async (reaction, user) => {
         threadHelpUser.send(stripIndents`
             ${invisibleEmoji}
@@ -240,7 +240,7 @@ If they still need help it's okay to leave them with that role.`;
           .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
         try {
           if (threadDiscussUser) {
-            await threadDiscussUser.send({embeds: [finalEmbed]});
+            await threadDiscussUser.send({ embeds: [finalEmbed] });
           }
         } catch (err) {
           log.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
@@ -262,5 +262,5 @@ If they still need help it's okay to leave them with that role.`;
   threadDiscussUser.send(endMetaHelpMessage);
 
   log.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
-  await interaction.editReply({content: 'Done!'});
-};
+  await interaction.editReply({ content: 'Done!' });
+}

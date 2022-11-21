@@ -2,19 +2,20 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
-import {startLog} from '../../utils/startLog';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
+import { startLog } from '../../utils/startLog';
 // import {whoisIRC} from '../../../global/commands/archive/g.whois';
 import log from '../../../global/utils/log';
-import {parse} from 'path';
+
 const PREFIX = parse(__filename).name;
 
 export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('whois')
     .setDescription('IRC whois')
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setDescription('User to whois!')
       .setRequired(true)
       .setName('target')),

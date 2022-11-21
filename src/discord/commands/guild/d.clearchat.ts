@@ -16,13 +16,13 @@ export const dClearchat: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('clear-chat')
     .setDescription('This will delete the last 100 messages!')
-    .addIntegerOption((option) => option
+    .addIntegerOption(option => option
       .setDescription('Number of messages to delete (default/max: 99)')
       .setName('count'))
-    .addBooleanOption((option) => option
+    .addBooleanOption(option => option
       .setDescription('Delete threads? (default: true)')
       .setName('delete-threads'))
-    .addBooleanOption((option) => option
+    .addBooleanOption(option => option
       .setDescription('Delete threads? (default: true)')
       .setName('delete-archived-threads')),
   async execute(interaction:ChatInputCommandInteraction) {
@@ -38,7 +38,7 @@ export const dClearchat: SlashCommand = {
 
     // const count = interaction.options.getInteger('count');
     await interaction.reply({ content: 'Clearing chat...', fetchReply: true })
-      .then(async (msg) => {
+      .then(async msg => {
         await msg.delete();
       });
 
@@ -59,7 +59,7 @@ export const dClearchat: SlashCommand = {
       // Delete every thread in the channel
       const fetchedThreads = await (interaction.channel as TextChannel).threads.fetch();
       // log.debug(`[${PREFIX}] fetchedThreads: ${JSON.stringify(fetchedThreads, null, 2)}`);
-      fetchedThreads.threads.forEach(async (thread) => {
+      fetchedThreads.threads.forEach(async thread => {
         try {
           thread.delete();
         } catch (err) {
@@ -72,7 +72,7 @@ export const dClearchat: SlashCommand = {
       // Delete every archived thread in the channel
       const archivedThreads = await (interaction.channel as TextChannel).threads.fetchArchived();
       // log.debug(`[${PREFIX}] fetchedThreads: ${JSON.stringify(archivedThreads, null, 2)}`);
-      archivedThreads.threads.forEach(async (thread) => {
+      archivedThreads.threads.forEach(async thread => {
         try {
           thread.delete();
         } catch (err) {

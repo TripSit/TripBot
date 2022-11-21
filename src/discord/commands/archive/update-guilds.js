@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const {SlashCommandBuilder} = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
 
@@ -9,15 +9,15 @@ const PREFIX = parse(__filename).name;
 
 module.exports = {
   data: new SlashCommandBuilder()
-      .setName('update-guilds')
-      .setDescription('This will update the guild information in the db!'),
+    .setName('update-guilds')
+    .setDescription('This will update the guild information in the db!'),
   async execute(interaction) {
     log.debug(`[${PREFIX}] Updating guilds...`);
     // Using discord.js find the guilds this bot is in
     const guilds = interaction.client.guilds.cache;
     let guildCount = 0;
     // log.debug(`[${PREFIX}] guilds: ${JSON.stringify(guilds, null, 2)}`);
-    await guilds.forEach(async (guild) => {
+    await guilds.forEach(async guild => {
       guildCount += 1;
       const targetResults = await getGuildInfo(guild);
       let targetData = targetResults[0];
@@ -46,8 +46,8 @@ module.exports = {
     });
     // get length of guilds
     const embed = template
-        .embedTemplate()
-        .setDescription(`${guildCount} guilds updated!`);
+      .embedTemplate()
+      .setDescription(`${guildCount} guilds updated!`);
     interaction.reply({
       embeds: [embed],
       ephemeral: false,

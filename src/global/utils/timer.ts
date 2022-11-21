@@ -22,6 +22,8 @@ const PREFIX = parse(__filename).name;
 // Value in miliseconds (1000 * 60 = 1 minute)
 const interval = env.NODE_ENV === 'production' ? 1000 * 60 : 1000 * 10;
 
+export default runTimer;
+
 /**
  * This function is called on start.ts and runs the timers
  */
@@ -61,7 +63,7 @@ export async function runTimer() {
 
           // Determine the number of users currently online
           const onlineCount = tripsitGuild.members.cache.filter(
-            (member) => member.presence?.status !== undefined && member.presence?.status !== 'offline',
+            member => member.presence?.status !== undefined && member.presence?.status !== 'offline',
           ).size;
           // const onlineCount = 10;
           const channelOnline = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_ONLINE);
@@ -78,6 +80,7 @@ export async function runTimer() {
           // Max online count
           let maxCount = onlineCount;
           // Update the database's max_online_members if it's higher than the current value
+          // log.debug(`[${PREFIX}] Getting guild data`);
           const guildData = await getGuild(env.DISCORD_GUILD_ID);
           if (guildData) {
             if (guildData.max_online_members) {
@@ -129,7 +132,7 @@ export async function runTimer() {
         if (reminderData.length > 0) {
           // Loop through each reminder
           // for (const reminder of reminderData) {
-          reminderData.forEach(async (reminder) => {
+          reminderData.forEach(async reminder => {
             // Check if the reminder is ready to be triggered
             if (reminder.trigger_at) {
               if (DateTime.fromJSDate(reminder.trigger_at) <= DateTime.local()) {
@@ -168,7 +171,7 @@ export async function runTimer() {
         if (mindsetRoleData.length > 0) {
           // Loop through each user
           // for (const user of mindsetRoleData) {
-          mindsetRoleData.forEach(async (user) => {
+          mindsetRoleData.forEach(async user => {
             // Check if the user has a mindset role
             if (user.mindset_role && user.mindset_role_expires_at) {
               // const expires = DateTime.fromJSDate(user.mindset_role_expires_at);
@@ -237,7 +240,7 @@ export async function runTimer() {
         if (ticketData.length > 0) {
           // Loop through each ticket
           // for (const ticket of ticketData) {
-          ticketData.forEach(async (ticket) => {
+          ticketData.forEach(async ticket => {
             // Check if the ticket is ready to be archived
             if (ticket.archived_at && ticket.status !== 'ARCHIVED') {
               if (DateTime.fromJSDate(ticket.archived_at) <= DateTime.local()) {
@@ -273,7 +276,7 @@ export async function runTimer() {
                           // log.debug(`[${PREFIX}] Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
                           const roles = userData.roles.split(',');
                           // for (const role of roles) {
-                          roles.forEach(async (role) => {
+                          roles.forEach(async role => {
                             const roleObj = await guild.roles.fetch(role);
                             if (roleObj && roleObj.name !== '@everyone' && roleObj.id !== env.ROLE_NEEDSHELP) {
                               // Check if the bot has permission to add the role
@@ -322,5 +325,3 @@ export async function runTimer() {
   }
   checkTimers();
 }
-
-export default runTimer();

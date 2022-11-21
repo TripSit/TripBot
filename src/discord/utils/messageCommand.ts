@@ -46,8 +46,8 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
           return;
         }
       }
-      const roleTripsitter = message.guild.roles.cache.find((role) => role.id === env.ROLE_TRIPSITTER) as Role;
-      const roleHelper = message.guild.roles.cache.find((role) => role.id === env.ROLE_HELPER) as Role;
+      const roleTripsitter = message.guild.roles.cache.find(role => role.id === env.ROLE_TRIPSITTER) as Role;
+      const roleHelper = message.guild.roles.cache.find(role => role.id === env.ROLE_HELPER) as Role;
       message.channel.send(
         `Hey ${displayName}, thank you for asking for help! We've notified our ${roleTripsitter} and\
 ${roleHelper}. Can you start off by telling us how much you took and the details of your problem?`,

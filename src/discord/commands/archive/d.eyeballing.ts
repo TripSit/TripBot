@@ -2,8 +2,8 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {eyeballing} from '../../../global/commands/archive/g.eyeballing';
+import { SlashCommand } from '../../@types/commandDef';
+import { eyeballing } from '../../../global/commands/archive/g.eyeballing';
 // import log from '../../../global/utils/log';
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;

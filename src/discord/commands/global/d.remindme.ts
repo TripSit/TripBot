@@ -30,21 +30,21 @@ export const dremindme: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('remindme')
     .setDescription('Handle reminders!')
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Set a reminder')
-      .addStringOption((option) => option.setName('reminder')
+      .addStringOption(option => option.setName('reminder')
         .setDescription('What do you want to be reminded?')
         .setRequired(true))
-      .addStringOption((option) => option.setName('offset')
+      .addStringOption(option => option.setName('offset')
         .setDescription('When? EG: 4 hours 32 mins')
         .setRequired(true))
       .setName('set'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Get your upcoming reminders!')
       .setName('get'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Delete a reminder!')
-      .addNumberOption((option) => option.setName('record')
+      .addNumberOption(option => option.setName('record')
         .setDescription('Which record? (0, 1, 2, etc)')
         .setRequired(true))
       .setName('delete')),

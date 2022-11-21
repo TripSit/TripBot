@@ -45,7 +45,7 @@ export async function profile(
 
   // Go through currentExp and add up the total points
   // for (const exp of currentExp) {
-  currentExp.forEach((exp) => {
+  currentExp.forEach(exp => {
     if (exp.type !== 'IGNORED') {
       profileData.totalExp += exp.total_points;
     }

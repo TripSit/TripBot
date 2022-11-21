@@ -33,13 +33,13 @@ export const didose: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('idose')
     .setDescription('Your personal dosage information!')
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setName('set')
       .setDescription('Record when you dosed something')
-      .addNumberOption((option) => option.setName('volume')
+      .addNumberOption(option => option.setName('volume')
         .setDescription('How much?')
         .setRequired(true))
-      .addStringOption((option) => option.setName('units')
+      .addStringOption(option => option.setName('units')
         .setDescription('What units?')
         .setRequired(true)
         .addChoices(
@@ -56,11 +56,11 @@ export const didose: SlashCommand = {
           { name: 'sprays', value: 'SPRAYS' },
           { name: 'inhales', value: 'INHALES' },
         ))
-      .addStringOption((option) => option.setName('substance')
+      .addStringOption(option => option.setName('substance')
         .setDescription('What Substance?')
         .setRequired(true)
         .setAutocomplete(true))
-      .addStringOption((option) => option.setName('roa')
+      .addStringOption(option => option.setName('roa')
         .setDescription('How did you take it?')
         .setRequired(true)
         .addChoices(
@@ -76,15 +76,15 @@ export const didose: SlashCommand = {
           { name: 'Topical (On Skin)', value: 'TOPICAL' },
           { name: 'Transdermal (Past Skin)', value: 'TRANSDERMAL' },
         ))
-      .addStringOption((option) => option.setName('offset')
+      .addStringOption(option => option.setName('offset')
         .setDescription('How long ago? EG: 4 hours 32 mins ago')))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setName('get')
       .setDescription('Get your dosage records!'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setName('delete')
       .setDescription('Delete a dosage record!')
-      .addNumberOption((option) => option.setName('record')
+      .addNumberOption(option => option.setName('record')
         .setDescription('Which record? (0, 1, 2, etc)')
         .setRequired(true))),
   async execute(interaction) {

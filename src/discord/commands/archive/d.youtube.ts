@@ -2,19 +2,19 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
-import {youtube} from '../../../global/commands/g.youtube';
-import {startLog} from '../../utils/startLog';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
+import { youtube } from '../../../global/commands/g.youtube';
+import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-import {parse} from 'path';
 const PREFIX = parse(__filename).name;
 
 export const dYoutube: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('youtube')
     .setDescription('Search YouTube')
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setDescription('What video do you want?')
       .setRequired(true)
       .setName('search')),
@@ -24,14 +24,14 @@ export const dYoutube: SlashCommand = {
     const query = interaction.options.getString('search');
     // log.debug(`[${PREFIX}] - query: ${query}`);
     if (!query) {
-      interaction.reply({content: 'You must enter a search query.', ephemeral: true});
+      interaction.reply({ content: 'You must enter a search query.', ephemeral: true });
       return false;
     }
 
     const result = await youtube(query);
 
     if (!result) {
-      interaction.reply({content: `No results for ${query}, make sure you're exact!`, ephemeral: true});
+      interaction.reply({ content: `No results for ${query}, make sure you're exact!`, ephemeral: true });
       return true;
     }
 
@@ -56,7 +56,7 @@ export const dYoutube: SlashCommand = {
           name: result.channelTitle,
         });
       }
-    };
+    }
 
     if (result.thumbnails) {
       if (result.thumbnails.high) embed.setThumbnail(result.thumbnails.high.url);
@@ -64,7 +64,7 @@ export const dYoutube: SlashCommand = {
       else if (result.thumbnails.default) embed.setThumbnail(result.thumbnails.default.url);
     }
 
-    interaction.reply({embeds: [embed], ephemeral: false});
+    interaction.reply({ embeds: [embed], ephemeral: false });
     return true;
   },
 };

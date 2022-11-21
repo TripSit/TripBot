@@ -25,7 +25,7 @@ export const dTestkits: SlashCommand = {
 
     embed.setTitle('Test Kit Resources and information!');
     // for (const entry of emsInfo) {
-    emsInfo.forEach((entry) => {
+    emsInfo.forEach(entry => {
       embed.addFields(
         {
           name: `${entry.name} (${entry.country})`,

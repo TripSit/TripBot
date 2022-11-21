@@ -43,7 +43,7 @@ export async function experience(
   const actor = message.member;
 
   // Check if the user has an ignored role
-  if (ignoredRoles.some((role) => message.member?.roles.cache.has(role))) {
+  if (ignoredRoles.some(role => message.member?.roles.cache.has(role))) {
     // log.debug(`[${PREFIX}] Message sent by a user with an ignored role`);
     return;
   }

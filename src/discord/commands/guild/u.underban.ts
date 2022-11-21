@@ -55,7 +55,7 @@ export const uUnderban: UserCommand = {
 
     const filter = (i:ModalSubmitInteraction) => i.customId.includes('underbanModal');
     interaction.awaitModalSubmit({ filter, time: 0 })
-      .then(async (i) => {
+      .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
         const privReason = i.fields.getTextInputValue('privReason');
         const pubReason = i.fields.getTextInputValue('pubReason');

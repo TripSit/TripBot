@@ -1,3 +1,2 @@
-src/global/@types/pgdb.d.ts
-src/global/commands/archive
-src/discord/commands/archive
+**/pgdb.d.ts
+**/archive

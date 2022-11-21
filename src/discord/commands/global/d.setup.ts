@@ -182,7 +182,7 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
   // Collect a modal submit interaction
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeModal');
   interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async (i) => {
+    .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       if (!i.guild) return;
 
@@ -296,7 +296,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
   // Collect a modal submit interaction
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('appModal');
   interaction.awaitModalSubmit({ filter, time: 150000 })
-    .then(async (i) => {
+    .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       const selectMenu = new SelectMenuBuilder()
         .setCustomId('applicationRoleSelectMenu')
@@ -308,7 +308,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
           value: 'none',
         },
       );
-      roleArray.forEach((role) => {
+      roleArray.forEach(role => {
         if (role[0]) {
           if (role[1]) {
             log.debug(`[${PREFIX}] role: ${role[0].name}`);
@@ -610,7 +610,7 @@ export async function mindsets(interaction:ChatInputCommandInteraction) {
   }[];
 
   await (interaction.channel as TextChannel).send({ embeds: [mindsetEmbed] })
-    .then(async (msg) => {
+    .then(async msg => {
       await msg.react(`${env.EMOJI_DRUNK}`);
       await msg.react(`${env.EMOJI_HIGH}`);
       await msg.react(`${env.EMOJI_ROLLING}`);
@@ -721,7 +721,7 @@ export async function colors(interaction:ChatInputCommandInteraction) {
     .setColor(Colors.Blue);
 
   await (interaction.channel as TextChannel).send({ embeds: [colorEmbed] })
-    .then(async (msg) => {
+    .then(async msg => {
       await msg.react('❤');
       await msg.react('🧡');
       await msg.react('💛');
@@ -815,18 +815,18 @@ export const prompt: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('setup')
     .setDescription('Set up various channels and prompts!')
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Tripsit info!')
       .setName('tripsit')
-      .addRoleOption((option) => option
+      .addRoleOption(option => option
         .setDescription('What is your Tripsitter role?')
         .setName('tripsitter')
         .setRequired(true))
-      .addRoleOption((option) => option
+      .addRoleOption(option => option
         .setDescription('What is your Needshelp role?')
         .setName('needshelp')
         .setRequired(true))
-      .addChannelOption((option) => option
+      .addChannelOption(option => option
         .setDescription('What is your Meta-tripsit channel?')
         .setName('metatripsit')
         .setRequired(true))
@@ -838,71 +838,71 @@ export const prompt: SlashCommand = {
       //   .setDescription('Do you have a general room?')
       //   .setName('general'),
       // )
-      .addRoleOption((option) => option
+      .addRoleOption(option => option
         .setDescription('What is your Helper role?')
         .setName('helper')))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('Set up the application page. 5 roles max!')
       .setName('applications')
-      .addChannelOption((option) => option
+      .addChannelOption(option => option
         .setDescription('What channel stores applications?')
         .setName('applications_channel')
         .setRequired(true))
-      .addRoleOption((option) => option
+      .addRoleOption(option => option
         .setDescription('What role are people applying for?')
         .setName('application_role_a')
         .setRequired(true))
-      .addRoleOption((option) => option
+      .addRoleOption(option => option
         .setDescription('What role reviews those applications?')
         .setName('application_reviewer_a')
         .setRequired(true))
-      .addRoleOption((option) => option
+      .addRoleOption(option => option
         .setDescription('What role are people applying for?')
         .setName('application_role_b'))
-      .addRoleOption((option) => option
+      .addRoleOption(option => option
         .setDescription('What role reviews those applications?')
         .setName('application_reviewer_b'))
-      .addRoleOption((option) => option
+      .addRoleOption(option => option
         .setDescription('What role are people applying for?')
         .setName('application_role_c'))
-      .addRoleOption((option) => option
+      .addRoleOption(option => option
         .setDescription('What role reviews those applications?')
         .setName('application_reviewer_c'))
-      .addRoleOption((option) => option
+      .addRoleOption(option => option
         .setDescription('What role are people applying for?')
         .setName('application_role_d'))
-      .addRoleOption((option) => option
+      .addRoleOption(option => option
         .setDescription('What role reviews those applications?')
         .setName('application_reviewer_d'))
-      .addRoleOption((option) => option
+      .addRoleOption(option => option
         .setDescription('What role are people applying for?')
         .setName('application_role_e'))
-      .addRoleOption((option) => option
+      .addRoleOption(option => option
         .setDescription('What role reviews those applications?')
         .setName('application_reviewer_e')))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('techhelp info!')
       .setName('techhelp')
-      .addRoleOption((option) => option
+      .addRoleOption(option => option
         .setDescription('What role responds to tickets here?')
         .setName('roletechreviewer')
         .setRequired(true))
-      .addChannelOption((option) => option
+      .addChannelOption(option => option
         .setDescription('Do you have a tripsit room?')
         .setName('tripsit')))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('rules info!')
       .setName('rules'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('starthere info!')
       .setName('starthere'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('mindset reaction roles!')
       .setName('mindset'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('color reaction roles')
       .setName('color'))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setDescription('ticketbooth info!')
       .setName('ticketbooth')),
   async execute(interaction:ChatInputCommandInteraction) {

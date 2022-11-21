@@ -27,7 +27,7 @@ export const dProfile: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('profile')
     .setDescription('Return the user\'s profile!')
-    .addUserOption((option) => option
+    .addUserOption(option => option
       .setName('target')
       .setDescription('User to get info on!')),
   async execute(

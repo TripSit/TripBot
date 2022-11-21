@@ -37,7 +37,7 @@ export async function combo(
     };
   }
 
-  const drugData = drugDataAll.find((drug) => drug.name === drugA);
+  const drugData = drugDataAll.find(drug => drug.name === drugA);
 
   // log.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
 
@@ -60,7 +60,7 @@ export async function combo(
 
   // log.debug(`[${PREFIX}] interactions: ${drugData.interactions.length}`);
 
-  const drugInteraction = drugData.interactions.find((interaction) => interaction.name === drugB);
+  const drugInteraction = drugData.interactions.find(interaction => interaction.name === drugB);
 
   if (!drugInteraction) {
     return {
@@ -72,7 +72,7 @@ export async function combo(
 
   // log.debug(`[${PREFIX}] drugInteraction: ${drugInteraction}`);
 
-  const intDef = comboDefs.find((def) => def.status === drugInteraction.status);
+  const intDef = comboDefs.find(def => def.status === drugInteraction.status);
 
   // log.debug(`[${PREFIX}] intDef: ${JSON.stringify(intDef)}`);
 

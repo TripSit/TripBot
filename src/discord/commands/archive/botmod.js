@@ -262,7 +262,6 @@ module.exports = {
       if (command === 'info') {
         interaction.reply({ embeds: [targetEmbed], ephemeral: true });
         log.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${targetData.guild_name}`);
-        return;
       }
 
       // log.debug(`${PREFIX} channel_moderators_id: ${channel_moderators_id}`);

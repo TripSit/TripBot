@@ -345,7 +345,7 @@ export async function moderate(
   log.debug(`[${PREFIX}] targetActionListRaw: ${JSON.stringify(targetActionListRaw, null, 2)}`);
 
   // for (const action of targetActionListRaw) {
-  targetActionListRaw.forEach((action) => {
+  targetActionListRaw.forEach(action => {
     const actionString = `${action.type} (${time(action.created_at, 'R')}) - ${action.internal_note
       ?? 'No note provided'}}`;
     targetActionList[action.type as keyof typeof targetActionList].push(actionString);

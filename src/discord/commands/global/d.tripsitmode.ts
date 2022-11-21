@@ -21,17 +21,17 @@ export const tripsitmode: SlashCommand = {
     .setDescription(
       'This command will apply the NeedsHelp role onto a user, and remove other roles!',
     )
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setName('on')
       .setDescription('Turn on Tripsit Mode')
-      .addUserOption((option) => option
+      .addUserOption(option => option
         .setName('user')
         .setDescription('Member to help')
         .setRequired(true)))
-    .addSubcommand((subcommand) => subcommand
+    .addSubcommand(subcommand => subcommand
       .setName('off')
       .setDescription('Turn off Tripsit Mode')
-      .addUserOption((option) => option
+      .addUserOption(option => option
         .setName('user')
         .setDescription('Member to stop helping')
         .setRequired(true))),
@@ -55,15 +55,15 @@ export const tripsitmode: SlashCommand = {
         user: interaction.user,
         channel: interaction.channel,
         deferReply: () => interaction.deferReply(),
-        reply: (content) => {
+        reply: content => {
           if (interaction.deferred || interaction.replied) {
             return interaction.followUp(content);
           }
           return interaction.reply(content);
         },
-        followUp: (content) => interaction.followUp(content),
-        showModal: (modal) => interaction.showModal(modal),
-        awaitModalSubmit: (params) => interaction.awaitModalSubmit(params),
+        followUp: content => interaction.followUp(content),
+        showModal: modal => interaction.showModal(modal),
+        awaitModalSubmit: params => interaction.awaitModalSubmit(params),
       } as ButtonInteraction;
       tripsitmeButton(testInteraction);
     }
@@ -77,15 +77,15 @@ export const tripsitmode: SlashCommand = {
         user: interaction.user,
         channel: interaction.channel,
         deferReply: () => interaction.deferReply(),
-        reply: (content) => {
+        reply: content => {
           if (interaction.deferred || interaction.replied) {
             return interaction.followUp(content);
           }
           return interaction.reply(content);
         },
-        followUp: (content) => interaction.followUp(content),
-        showModal: (modal) => interaction.showModal(modal),
-        awaitModalSubmit: (params) => interaction.awaitModalSubmit(params),
+        followUp: content => interaction.followUp(content),
+        showModal: modal => interaction.showModal(modal),
+        awaitModalSubmit: params => interaction.awaitModalSubmit(params),
       } as ButtonInteraction;
       tripsitmeClose(testInteraction);
     }
