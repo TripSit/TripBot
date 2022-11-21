@@ -38,7 +38,7 @@ export const dcalcPsychedelics: SlashCommand1 = {
   async execute(interaction) {
     const lastDose = interaction.options.getNumber('last_dose')!;
     const desiredDose = interaction.options.getNumber('desired_dose');
-    const days = interaction.options.getInteger('days')!;
+    const days = interaction.options.getNumber('days')!;
 
     const command = interaction.options.getSubcommand();
 
