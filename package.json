@@ -8,16 +8,19 @@
     "npm": "8.19.2"
   },
   "scripts": {
-    "start": "npm run deploy && npm run prod",
-    "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
-    "prod": "ts-node --transpile-only src/start.ts",
+    "start": "npm run deploy && ts-node --transpile-only src/start.ts",
     "dev": "npm run lint && npm run patch && npm run nodemon",
+    "setup": "npm run lint && npm run patch && npm run docker-build && npm run docker-run",
+    "test": "npm run lint && npm run jest:unit && npm run jest:integration",
     "lint": "eslint --fix --ext .ts,.js .",
+    "jest:unit": "NODE_ENV=test jest -c ./src/jest/jest.unit.config.ts",
+    "jest:integration": "NODE_ENV=test jest -ic ./src/jest/jest.integration.config.ts",
     "patch": "npm version patch -git-tag-version false",
     "nodemon": "nodemon --inspect=0.0.0.0:9229 --config ./nodemon.json",
     "docker-rebuild": "npm run docker-build && npm run docker-run",
     "docker-build": "docker compose build",
     "docker-run": "docker compose up -d",
+    "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
     "sonar-scanner": "sonar-scanner   -Dsonar.projectKey=tripbot   -Dsonar.sources=.   -Dsonar.host.url=https://sonarqube.pantheon.tripsit.me   -Dsonar.login=ec3c544afc5fee1baf64900580ddac40fc3cb97b"
   },
   "repository": {
@@ -74,6 +77,7 @@
   "devDependencies": {
     "@types/common-tags": "^1.8.1",
     "@types/convert-units": "^2.3.5",
+    "@types/jest": "^29.2.3",
     "@types/luxon": "^3.1.0",
     "@types/ms": "^0.7.31",
     "@types/node": "^18.8.5",
