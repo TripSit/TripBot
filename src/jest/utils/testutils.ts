@@ -1,6 +1,7 @@
 import {
   ChatInputCommandInteraction,
   CommandInteraction,
+  EmbedBuilder,
   Message,
   SlashCommandBuilder,
   // ToAPIApplicationCommandOptions,
@@ -58,10 +59,7 @@ export function getParsedCommand(
   stringCommand: string,
   commandData: Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'> | SlashCommandSubcommandsOnlyBuilder,
 ) {
-  // log.debug(`[${PREFIX}] options1: ${JSON.stringify(commandData.options, null, 2)}`);
   const options = getNestedOptions(commandData.options);
-  // log.debug(`[${PREFIX}] options2: ${JSON.stringify(options, null, 2)}`);
-  // log.debug(`[${PREFIX}] options2 type: ${typeof options}`);
   const optionsIndentifiers = options.map((option:any) => `${option.name}:`);
   const requestedOptions = options.reduce((requestedOptions2:any, option:any) => {
     const identifier = `${option.name}:`;
@@ -100,13 +98,11 @@ export function getParsedCommand(
   };
 }
 
-export function embedContaining(embeds:any) {
-  // return {
-  //   // embeds: expect.arrayContaining([expect.objectContaining(embed)]),
-  //   embeds: [{ embed }],
-  //   fetchReply: true,
-  // };
-  return { embeds, fetchReply: true };
+export function embedContaining(content:any) {
+  return {
+    embeds: expect.arrayContaining([expect.objectContaining(new EmbedBuilder(content))]),
+    // fetchReply: true,
+  };
 }
 
 export function embedContainingWithoutFetchReply(content:any) {
