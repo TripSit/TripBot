@@ -10,6 +10,7 @@ import {
   MessageReaction,
   CommandInteraction,
   BaseGuildTextChannel, // eslint-disable-line
+  BaseChannel,
 } from 'discord.js';
 import { parse } from 'path';
 
@@ -186,7 +187,7 @@ export default class MockDiscord {
   }
 
   private mockChannel(): void {
-    this.channel = Reflect.construct(GuildChannel, [
+    this.channel = Reflect.construct(BaseChannel, [
       this.client,
       {
         id: 'channel-id',
@@ -195,7 +196,7 @@ export default class MockDiscord {
   }
 
   private mockPartyChannel(): void {
-    this.botPartyChannel = Reflect.construct(GuildChannel, [
+    this.botPartyChannel = Reflect.construct(BaseChannel, [
       this.client,
       {
         id: 'party-channel-id',
