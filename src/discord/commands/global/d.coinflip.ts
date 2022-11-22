@@ -8,9 +8,9 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const PREFIX = parse(__filename).name;
 
-export default dcoinflip;
+export default dCoinflip;
 
-export const dcoinflip: SlashCommand = {
+export const dCoinflip: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('coinflip')
     .setDescription('Flip a coin'),

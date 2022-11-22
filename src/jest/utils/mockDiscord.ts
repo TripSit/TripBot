@@ -11,8 +11,15 @@ import {
   CommandInteraction,
   BaseGuildTextChannel, // eslint-disable-line
   BaseChannel,
+  Collection,
+  // ClientApplication,
+  // FetchApplicationCommandOptions,
+  // ApplicationCommandDataResolvable,
 } from 'discord.js';
+// import fs from 'fs';
+// import path, { parse } from 'path';
 import { parse } from 'path';
+// import { SlashCommand } from '../../discord/@types/commandDef';
 
 import log from '../../global/utils/log'; // eslint-disable-line
 
@@ -132,13 +139,13 @@ export default class MockDiscord {
     return this.reactionUser;
   }
 
-  // private mockPrototypes() {
-  //   TextChannel.prototype.send = jest.fn().mockImplementation(() => ({
-  //     react: jest.fn(),
-  //   }));
+  private mockPrototypes() { // eslint-disable-line
+    TextChannel.prototype.send = jest.fn().mockImplementation(() => ({
+      react: jest.fn(),
+    }));
 
-  //   Message.prototype.edit = jest.fn();
-  // }
+    Message.prototype.edit = jest.fn();
+  }
 
   private mockReaction(reactionOptions:any, message:any): void {
     this.reaction = Reflect.construct(MessageReaction, [
@@ -150,8 +157,45 @@ export default class MockDiscord {
 
   private mockClient(): void {
     this.client = new Client({ intents: [] });
-    // log.debug(`[${PREFIX}] command.options: ${JSON.stringify(this.client.options, null, 2)}`);
     this.client.login = jest.fn(() => Promise.resolve('LOGIN_TOKEN'));
+    // My stuff
+    this.client.commands = new Collection();
+    // this.client.application = Reflect.construct(ClientApplication, [
+    //   this.client,
+    //   { id: '1234567890' },
+    // ]);
+
+    // // Register global commands
+    // const globalCommands = path.join(__dirname, '../../discord/commands/global');
+    // const globalFiles = fs.readdirSync(globalCommands);
+    // // log.debug(`[${PREFIX}] Global command files: ${globalFiles}`);
+    // globalFiles.forEach(file => {
+    //   const filePath = path.join(globalCommands, file);
+    //   // log.debug(`[${PREFIX}] Loading global command: ${filePath}`);
+    //   const command = require(filePath); // eslint-disable-line
+    //   // log.debug(`[${PREFIX}] Command: ${JSON.stringify(command, null, 2)}`);
+    //   const commandData = command[Object.keys(command).find(key => command[key].data !== undefined) as string].data.toJSON(); // eslint-disable-line
+    //   // log.debug(`[${PREFIX}] Command data: ${JSON.stringify(commandData, null, 2)}`);
+    //   // log.debug(`[${PREFIX}] Loaded global command: ${commandData.name}`);
+    //   // this.client.commands.set(commandData, command);
+    //   // this.client.application?.commands.create(commandData);
+    // });
+
+    // // Register guild commands
+    // const guildCommands = path.join(__dirname, '../../discord/commands/guild');
+    // const guildFiles = fs.readdirSync(guildCommands);
+    // // log.debug(`[${PREFIX}] Guild command files: ${guildFiles}`);
+    // guildFiles.forEach(file => {
+    //   const filePath = path.join(guildCommands, file);
+    //   // log.debug(`[${PREFIX}] Loading global command: ${filePath}`);
+    //   const command = require(filePath); // eslint-disable-line
+    //   // log.debug(`[${PREFIX}] Command: ${JSON.stringify(command, null, 2)}`);
+    //   const commandData = command[Object.keys(command).find(key => command[key].data !== undefined) as string].data.toJSON();  // eslint-disable-line
+    //   // log.debug(`[${PREFIX}] Command data: ${JSON.stringify(commandData, null, 2)}`);
+    //   // log.debug(`[${PREFIX}] Loaded global command: ${commandData.name}`);
+    //   // this.client.commands.set(commandData, command);
+    //   // this.client.application?.commands.create(commandData);
+    // });
   }
 
   private mockGuild(): void {

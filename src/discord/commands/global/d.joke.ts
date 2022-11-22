@@ -21,10 +21,10 @@ export const dJoke: SlashCommand = {
     const data = await joke();
 
     const embed = embedTemplate();
-    if (data.type === 'twopart') embed.setTitle(data.setup).setDescription(data.delivery);
-    else embed.setTitle(data.joke);
+    if (data.type === 'twopart') embed.setTitle('{data.setup}').setDescription('{data.delivery}');
+    else embed.setTitle('{data.joke}');
 
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { parse } from 'path';
+import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { ems } from '../../../global/commands/g.ems';
@@ -26,15 +27,14 @@ export const dEms: SlashCommand = {
       embed.addFields(
         {
           name: `${entry.name} ${entry.country ? `(${entry.country})` : ''}`,
-          value: `${entry.website ? `
+          value: stripIndents`${entry.website ? `
             [Website](${entry.website})` : ''}\
             ${entry.webchat ? `
             [Webchat](${entry.website})` : ''}\
             ${entry.phone ? `
             Call: ${entry.phone}` : ''}\
             ${entry.text ? `
-            Text: ${entry.text}` : ''}\
-          `,
+            Text: ${entry.text}` : ''}`,
           inline: true,
         },
       );

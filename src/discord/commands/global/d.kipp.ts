@@ -9,9 +9,9 @@ import { startLog } from '../../utils/startLog';
 
 const PREFIX = parse(__filename).name;
 
-export default dkipp;
+export default dKipp;
 
-export const dkipp: SlashCommand = {
+export const dKipp: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('kipp')
     .setDescription('Keep it positive please!'),

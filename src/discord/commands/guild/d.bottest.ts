@@ -27,7 +27,7 @@ type ResultsObject = {
 };
 
 // These commands are not meant to be tested
-  const notTestableCommands = [ // eslint-disable-line
+const notTestableCommands = [ // eslint-disable-line
   'clearchat', // This would wipe out the results of the test
   'issue', // This is a simple API that will submit a github issue to production
   'ping', // This is a test command that is not meant to be tested
@@ -49,7 +49,7 @@ type ResultsObject = {
 ];
 
 // These commands are simple replies and CANNOT take input
-  const replyCommands = [ // eslint-disable-line
+const replyCommands = [ // eslint-disable-line
   'about',
   'botstats',
   'coinflip',
@@ -74,7 +74,7 @@ type ResultsObject = {
 ];
 
 // The commands REQUIRE input of some sort
-  const testableCommands = [ // eslint-disable-line
+const testableCommands = [ // eslint-disable-line
   'birthday',
   'breathe',
   'calc_benzo',

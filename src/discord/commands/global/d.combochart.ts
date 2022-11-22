@@ -8,9 +8,9 @@ import { startLog } from '../../utils/startLog';
 
 const PREFIX = parse(__filename).name;
 
-export default dcombochart;
+export default dCombochart;
 
-export const dcombochart: SlashCommand = {
+export const dCombochart: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('combochart')
     .setDescription('Display TripSit\'s Combo Chart'),

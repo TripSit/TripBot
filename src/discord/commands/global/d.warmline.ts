@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { parse } from 'path';
+import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { warmline } from '../../../global/commands/g.warmline';
@@ -22,13 +23,13 @@ export const dWarmline: SlashCommand = {
     const embed = embedTemplate()
       .setTitle('Need someone to talk to, but don\'t need a "hotline"?');
 
-    embed.setTitle('EMS Information');
+    embed.setTitle('Warmline Information');
     // for (const entry of emsInfo) {
     emsInfo.forEach(entry => {
       embed.addFields(
         {
           name: `${entry.name} ${entry.country ? `(${entry.country})` : ''}`,
-          value: `${entry.website ? `
+          value: stripIndents`${entry.website ? `
             [Website](${entry.website})` : ''}\
             ${entry.webchat ? `
             [Webchat](${entry.website})` : ''}\

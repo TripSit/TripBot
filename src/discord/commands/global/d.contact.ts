@@ -23,7 +23,7 @@ export const dContact: SlashCommand = {
     startLog(PREFIX, interaction);
     const contactInfo = await contact();
     const embed = embedTemplate()
-      .setColor(Colors.DarkBlue)
+      .setColor(Colors.Purple)
       .setTitle('Contact TripSit')
       .setURL(contactInfo.url)
       .setDescription(
@@ -38,7 +38,7 @@ export const dContact: SlashCommand = {
         { name: 'Drug Info Issues Email', value: `${contactInfo.contentEmail}`, inline: true },
       )
       .setFooter({ text: 'Thanks for asking!' });
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

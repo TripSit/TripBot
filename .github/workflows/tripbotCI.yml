@@ -5,7 +5,7 @@ name: Node.js CI
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "development", "postgres" ]
 
 jobs:
   LintBuildTest:
@@ -25,5 +25,10 @@ jobs:
       run: npm install eslint eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import --save-dev && npx eslint --version
     - name: Linting
       run: npx eslint --ext ts .
-    - name: Testing
-      run: echo "I would test now!"
+    - name: Install dependencies
+      run: npm ci
+    - name: Copy env
+      run: cp .env.example .env
+    - name: Test
+      run: npm test
+

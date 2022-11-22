@@ -9,9 +9,9 @@ import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
 const PREFIX = parse(__filename).name;
 
-export default dtriptoys;
+export default dTriptoys;
 
-export const dtriptoys: SlashCommand = {
+export const dTriptoys: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('triptoys')
     .setDescription('Fun toys to play with!')
