@@ -6,6 +6,8 @@ services:
       dockerfile: ./Dockerfile
     container_name: tripsit_discord_bot
     restart: unless-stopped
+    depends_on:
+      - "http-api"
     ports:
       - "8080:8080"
       - "9229:9229"
