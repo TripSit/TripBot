@@ -12,9 +12,9 @@ import { startLog } from '../../utils/startLog';
 
 const PREFIX = parse(__filename).name;
 
-export default dcalcBenzo;
+export default dCalcbenzo;
 
-export const dcalcBenzo: SlashCommand = {
+export const dCalcbenzo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_benzo')
     .setDescription('This tool helps figure out how much of a given benzo dose converts into another benzo dose.')

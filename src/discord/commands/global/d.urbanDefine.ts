@@ -9,9 +9,9 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const PREFIX = parse(__filename).name;
 
-export default durbandefine;
+export default dUrbandefine;
 
-export const durbandefine: SlashCommand = {
+export const dUrbandefine: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('urban_define')
     .setDescription('Define a word on Urban Dictionary')

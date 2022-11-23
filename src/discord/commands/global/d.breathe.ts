@@ -8,9 +8,9 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const PREFIX = parse(__filename).name;
 
-export default dbreathe;
+export default dBreathe;
 
-export const dbreathe: SlashCommand = {
+export const dBreathe: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('breathe')
     .setDescription('Remember to breathe')

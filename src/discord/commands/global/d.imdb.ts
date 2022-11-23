@@ -10,9 +10,9 @@ import { startLog } from '../../utils/startLog';
 
 const PREFIX = parse(__filename).name;
 
-export default imdbSearch;
+export default dImdb;
 
-export const imdbSearch: SlashCommand = {
+export const dImdb: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('imdb')
     .setDescription('Search imdb')

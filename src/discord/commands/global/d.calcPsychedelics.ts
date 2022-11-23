@@ -10,9 +10,9 @@ import { startLog } from '../../utils/startLog';
 
 const PREFIX = parse(__filename).name;
 
-export default dcalcPsychedelics;
+export default dCalcpsychedelics;
 
-export const dcalcPsychedelics: SlashCommand = {
+export const dCalcpsychedelics: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_psychedelics')
     .setDescription('Check psychedelic tolerance information')

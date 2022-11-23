@@ -9,10 +9,10 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const PREFIX = parse(__filename).name;
 
-export default dCalcKetamine;
+export default dCalcketamine;
 
 // Calculate insufflated dosages
-export const dCalcKetamine: SlashCommand = {
+export const dCalcketamine: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_ketamine')
     .setDescription('Get ketamine dosage information')

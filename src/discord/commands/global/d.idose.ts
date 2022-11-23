@@ -27,9 +27,9 @@ const buttonList = [
   new ButtonBuilder().setCustomId('nextbtn').setLabel('Next').setStyle(ButtonStyle.Success),
 ];
 
-export default didose;
+export default dIdose;
 
-export const didose: SlashCommand = {
+export const dIdose: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('idose')
     .setDescription('Your personal dosage information!')

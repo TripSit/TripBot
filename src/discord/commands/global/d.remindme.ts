@@ -24,9 +24,9 @@ const buttonList = [
   new ButtonBuilder().setCustomId('nextbtn').setLabel('Next').setStyle(ButtonStyle.Success),
 ];
 
-export default dremindme;
+export default dRemindme;
 
-export const dremindme: SlashCommand = {
+export const dRemindme: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('remindme')
     .setDescription('Handle reminders!')

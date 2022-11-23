@@ -24,9 +24,9 @@ const emojiDict = {
   9: '9️⃣',
 };
 
-export default dpoll;
+export default dPoll;
 
-export const dpoll: SlashCommand = {
+export const dPoll: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('poll')
     .setDescription('Creates a poll!')

@@ -14,9 +14,9 @@ import { parseDuration } from '../../../global/utils/parseDuration';
 
 const PREFIX = parse(__filename).name;
 
-export default bug;
+export default dDramacounter;
 
-export const bug: SlashCommand = {
+export const dDramacounter: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('dramacounter')
     .setDescription('How long since the last drama incident?!')

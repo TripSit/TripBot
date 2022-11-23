@@ -8,9 +8,9 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const PREFIX = parse(__filename).name;
 
-export default imgur;
+export default dImgur;
 
-export const imgur: SlashCommand = {
+export const dImgur: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('imgur')
     .setDescription('Search Imgur')

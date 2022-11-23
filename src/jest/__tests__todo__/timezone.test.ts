@@ -2,13 +2,14 @@ import {
   Colors,
 } from 'discord.js';
 import { parse } from 'path';
-import { dJoke } from '../../discord/commands/global/d.joke';
+import { stripIndents } from 'common-tags';
+import { dTimezone } from '../../discord/commands/guild/d.timezone';
 import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
 import log from '../../global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line
 
-const slashCommand = dJoke;
+const slashCommand = dTimezone;
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
@@ -28,8 +29,16 @@ describe(slashCommand.data.name, () => {
         iconURL: 'https://imgur.com/b923xK2.png',
         text: 'Dose responsibly!',
       },
-      title: expect.anything(),
-      // description: expect.any(String),
+      title: 'Bot Stats',
+      url: 'https://tripsit.me/about/',
+      description: stripIndents`Description`,
+      fields: [
+        {
+          name: 'Name',
+          value: stripIndents`Value`,
+          inline: true,
+        },
+      ],
     }));
   });
 });

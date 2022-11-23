@@ -10,9 +10,9 @@ import log from '../../../global/utils/log';
 
 const PREFIX = parse(__filename).name;
 
-export default convertUnits;
+export default dConvert;
 
-export const convertUnits: SlashCommand = {
+export const dConvert: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('convert')
     .setDescription('Convert one unit into another')
