@@ -190,7 +190,8 @@ export default class MockDiscord {
     //   // log.debug(`[${PREFIX}] Loading global command: ${filePath}`);
     //   const command = require(filePath); // eslint-disable-line
     //   // log.debug(`[${PREFIX}] Command: ${JSON.stringify(command, null, 2)}`);
-    //   const commandData = command[Object.keys(command).find(key => command[key].data !== undefined) as string].data.toJSON(); // eslint-disable-line
+    //   const commandData = command[Object.keys(command).find(
+    // key => command[key].data !== undefined) as string].data.toJSON();
     //   // log.debug(`[${PREFIX}] Command data: ${JSON.stringify(commandData, null, 2)}`);
     //   // log.debug(`[${PREFIX}] Loaded global command: ${commandData.name}`);
     //   // this.client.commands.set(commandData, command);
@@ -206,7 +207,8 @@ export default class MockDiscord {
     //   // log.debug(`[${PREFIX}] Loading global command: ${filePath}`);
     //   const command = require(filePath); // eslint-disable-line
     //   // log.debug(`[${PREFIX}] Command: ${JSON.stringify(command, null, 2)}`);
-    //   const commandData = command[Object.keys(command).find(key => command[key].data !== undefined) as string].data.toJSON();  // eslint-disable-line
+    //   const commandData = command[Object.keys(command).find(
+    // key => command[key].data !== undefined) as string].data.toJSON();  // eslint-disable-line
     //   // log.debug(`[${PREFIX}] Command data: ${JSON.stringify(commandData, null, 2)}`);
     //   // log.debug(`[${PREFIX}] Loaded global command: ${commandData.name}`);
     //   // this.client.commands.set(commandData, command);
