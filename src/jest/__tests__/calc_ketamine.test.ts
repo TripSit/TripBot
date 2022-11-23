@@ -14,7 +14,7 @@ const slashCommand = dCalcketamine;
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
     const commandData = slashCommand.data;
-    const stringCommand = `/${commandData.name}`;
+    const stringCommand = `/${commandData.name} weight:130.4 units:kg`;
     const command = getParsedCommand(stringCommand, commandData);
     // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
     const spy = await executeCommandAndSpyReply(slashCommand, command);
@@ -29,13 +29,25 @@ describe(slashCommand.data.name, () => {
         iconURL: 'https://imgur.com/b923xK2.png',
         text: 'Dose responsibly!',
       },
-      title: 'Bot Stats',
-      url: 'https://tripsit.me/about/',
-      description: stripIndents`Description`,
       fields: [
         {
-          name: 'Name',
-          value: stripIndents`Value`,
+          name: 'Insufflated',
+          value: stripIndents`
+          **Threshold**: 29mg
+          **Light**: 43mg
+          **Common**: 86mg
+          **Strong**: 144mg-216mg
+          **KHole**: 287mg`,
+          inline: true,
+        },
+        {
+          name: 'Rectal',
+          value: stripIndents`
+          **Threshold**: 29mg
+          **Light**: 43mg
+          **Common**: 86mg
+          **Strong**: 144mg-216mg
+          **KHole**: 287mg`,
           inline: true,
         },
       ],

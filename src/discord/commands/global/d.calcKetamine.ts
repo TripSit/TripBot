@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { parse } from 'path';
+import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcKetamine } from '../../../global/commands/g.calcKetamine';
@@ -77,12 +78,12 @@ export const dCalcketamine: SlashCommand = {
     embed.addFields(
       {
         name: 'Insufflated',
-        value: data.insufflated,
+        value: stripIndents`${data.insufflated}`,
         inline: true,
       },
       {
         name: 'Rectal',
-        value: data.rectal,
+        value: stripIndents`${data.rectal}`,
         inline: true,
       },
     );
