@@ -58,7 +58,7 @@ export const dImdb: SlashCommand = {
 
     // interaction.followUp({embeds: [embed]});
     await interaction.editReply({ embeds: [embed] });
-    // interaction.reply({embeds: [embed], ephemeral: false});
+    // interaction.reply({embeds: [embed]});
     return true;
   },
 };

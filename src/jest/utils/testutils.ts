@@ -66,8 +66,9 @@ export function getParsedCommand(
   commandData: Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'> | SlashCommandSubcommandsOnlyBuilder,
 ) {
   // log.debug(`[${PREFIX}] commandData.options: ${JSON.stringify(commandData.options, null, 2)}`);
+  // log.debug(`[${PREFIX}] stringCommand: ${JSON.stringify(stringCommand, null, 2)}`);
   const options = getNestedOptions(commandData.options); // @ts-ignore
-  // log.debug(`[${PREFIX}] optionsEnd: ${JSON.stringify(options, null, 2)}`); // @ts-ignore
+  // log.debug(`[${PREFIX}] getNestedOptions: ${JSON.stringify(options, null, 2)}`); // @ts-ignore
   const optionsIndentifiers = options.map(option => `${option.name}:`);
   // log.debug(`[${PREFIX}] optionsIndentifiers: ${JSON.stringify(optionsIndentifiers, null, 2)}`);
   const requestedOptions = options.reduce((
@@ -75,19 +76,37 @@ export function getParsedCommand(
     option:ToAPIApplicationCommandOptions,
   ):any[] => {
     const identifier = `${option.toJSON().name}:`;
-    if (!stringCommand.includes(identifier)) return requestedOptions2;
+    // log.debug(`[${PREFIX}] identifier: ${JSON.stringify(identifier, null, 2)}`);
+    const inclused = stringCommand.includes(identifier);
+    // log.debug(`[${PREFIX}] inclused: ${JSON.stringify(inclused, null, 2)}`);
+    if (!inclused) return requestedOptions2;
     const remainder = stringCommand.split(identifier)[1];
+    // log.debug(`[${PREFIX}] remainder: ${JSON.stringify(remainder, null, 2)}`);
 
-    const nextOptionIdentifier = remainder.split(' ').find(word => optionsIndentifiers.includes(word));
+    const nextoptions = remainder.split(' ');
+    // log.debug(`[${PREFIX}] nextoptions: ${JSON.stringify(nextoptions, null, 2)}`);
+
+    const nextOptionIdentifier = nextoptions.find(word => {
+      // log.debug(`[${PREFIX}] word: ${JSON.stringify(word, null, 2)}`);
+      const wordIdentifier = word.split(':')[0];
+      // log.debug(`[${PREFIX}] wordIdentifier: ${JSON.stringify(wordIdentifier, null, 2)}`);
+      return optionsIndentifiers.includes(`${wordIdentifier}:`);
+    });
+    // log.debug(`[${PREFIX}] nextOptionIdentifier: ${JSON.stringify(nextOptionIdentifier, null, 2)}`);
+
     if (nextOptionIdentifier) {
       const value = remainder.split(nextOptionIdentifier)[0].trim();
+      // log.debug(`[${PREFIX}] value: ${JSON.stringify(value, null, 2)}`);
+      const formattedValue = castToType(value, option.toJSON().type);
+      // log.debug(`[${PREFIX}] formattedValue: ${JSON.stringify(formattedValue, null, 2)}`);
       return [...requestedOptions2, {
         name: option.toJSON().name,
-        value: castToType(value, option.toJSON().type),
+        value: formattedValue,
         type: option.toJSON().type,
       }];
     }
 
+    // log.debug(`[${PREFIX}] remainderFinal: ${JSON.stringify(remainder, null, 2)}`);
     return [...requestedOptions2, {
       name: option.toJSON().name,
       value: castToType(remainder.trim(), option.toJSON().type),

@@ -78,7 +78,7 @@ module.exports = {
       const embed = template
         .embedTemplate()
         .setDescription(`'${wordBeforePlus}' karma decreased to ${karmaValue}!`);
-      message.channel.send({ embeds: [embed], ephemeral: false });
+      message.channel.send({ embeds: [embed] });
     }
   },
 };

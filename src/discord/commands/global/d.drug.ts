@@ -335,7 +335,7 @@ export const dDrug: SlashCommand = {
       embed.addFields({ name: 'Links', value: `[Erowid](${drugData.experiencesUrl.toString()})`, inline: false });
     }
 
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

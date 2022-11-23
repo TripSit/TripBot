@@ -32,7 +32,7 @@ export const dUrbandefine: SlashCommand = {
 
     const embed = embedTemplate()
       .setDescription(result);
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

@@ -45,17 +45,17 @@ module.exports = {
       }).then(invite => {
         const embed = template.embedTemplate()
           .setDescription(`Created an invite to ${channel} with a code of ${invite.code}`);
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        interaction.reply({ embeds: [embed] });
       }).catch(err => {
         log.error(`${PREFIX}/invite: ${err}`);
         const embed = template.embedTemplate()
           .setDescription(err);
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        interaction.reply({ embeds: [embed] });
       });
     } catch (err) {
       const embed = template.embedTemplate()
         .setDescription('Make sure you entered a channel!');
-      interaction.reply({ embeds: [embed], ephemeral: false });
+      interaction.reply({ embeds: [embed] });
     }
   },
 };

@@ -87,7 +87,7 @@ export const dCalcketamine: SlashCommand = {
       },
     );
 
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

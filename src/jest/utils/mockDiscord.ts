@@ -70,7 +70,7 @@ export default class MockDiscord {
       }[];
     }
   }) {
-    log.debug(`${PREFIX} - constructor - options: ${JSON.stringify(options, null, 2)}`);
+    // log.debug(`${PREFIX} - constructor - options: ${JSON.stringify(options, null, 2)}`);
     this.mockClient();
     this.mockGuild();
     this.mockChannel();
@@ -447,10 +447,10 @@ export default class MockDiscord {
     (this.interaction.options as CommandInteractionOptionResolver).getString = jest.fn().mockImplementation(
       (name:string) => {
         const options = command.options as ToAPIApplicationCommandOptions[];
-        log.debug(`[${PREFIX}] getString: ${name} - ${JSON.stringify(options, null, 2)}`);
+        // log.debug(`[${PREFIX}] getString: ${name} - ${JSON.stringify(options, null, 2)}`);
         const option = options.find(opt => (opt as any).name === name);
         if (!option) return null;
-        log.debug(`[${PREFIX}] option ${JSON.stringify((option as any).value, null, 2)}`);
+        // log.debug(`[${PREFIX}] option ${JSON.stringify((option as any).value, null, 2)}`);
         return (option as any).value;
       },
     );

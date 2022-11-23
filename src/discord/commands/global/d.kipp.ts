@@ -37,7 +37,7 @@ export const dKipp: SlashCommand = {
       .setDescription(output)
       .setAuthor(null)
       .setFooter(null);
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

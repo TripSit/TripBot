@@ -91,7 +91,7 @@ export const dH2flow: SlashCommand = {
         },
       );
 
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
 
     return false;
   },

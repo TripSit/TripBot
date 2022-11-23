@@ -128,7 +128,7 @@ export const dIssue: SlashCommand = {
             .setColor(0xff0000)
             .setTitle('Issue creation failed!')
             .setDescription('Your issue could not be created on TripSit/tripsit-discord-bot');
-          i.reply({ embeds: [embed], ephemeral: false });
+          i.reply({ embeds: [embed] });
         }
       });
 

@@ -195,7 +195,7 @@ export const dIdose: SlashCommand = {
       } else if (!interaction.channel) {
         interaction.reply({ embeds: [embed], ephemeral: true });
       } else if (interaction.channel.type === ChannelType.DM) {
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        interaction.reply({ embeds: [embed] });
         // interaction.user.send({embeds: [embed]});
       } else {
         interaction.reply({ embeds: [embed], ephemeral: true });
