@@ -4,7 +4,7 @@ import {
   EmbedBuilder,
   Message,
   SlashCommandBuilder,
-  // ToAPIApplicationCommandOptions,
+  ToAPIApplicationCommandOptions,
   SlashCommandSubcommandsOnlyBuilder,
   // ApplicationCommandOptionBase,
   // ApplicationCommandOption,
@@ -42,12 +42,18 @@ export const optionType = {
   10: Number,
 } as any;
 
-function getNestedOptions(options:any) {
-  return options.reduce((allOptions:any, option:any) => {
-    if (!option.options) return [...allOptions, option];
-    const nestedOptions = getNestedOptions(option.options);
+function getNestedOptions(options:ToAPIApplicationCommandOptions[]):ToAPIApplicationCommandOptions[] {
+  // This gets a flat array of options, including nested options
+  const list = options.reduce((
+    allOptions:ToAPIApplicationCommandOptions[],
+    option:ToAPIApplicationCommandOptions,
+  ) => { // @ts-ignore
+    // log.debug(`[${PREFIX}] option: ${JSON.stringify(option, null, 2)}`);
+    if (!option.toJSON().options) return [...allOptions, option]; // @ts-ignore
+    const nestedOptions = getNestedOptions(option.toJSON().options);
     return [option, ...allOptions, ...nestedOptions];
   }, []);
+  return list;
 }
 
 function castToType(value: string, typeId: number) {
@@ -59,10 +65,16 @@ export function getParsedCommand(
   stringCommand: string,
   commandData: Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'> | SlashCommandSubcommandsOnlyBuilder,
 ) {
-  const options = getNestedOptions(commandData.options);
-  const optionsIndentifiers = options.map((option:any) => `${option.name}:`);
-  const requestedOptions = options.reduce((requestedOptions2:any, option:any) => {
-    const identifier = `${option.name}:`;
+  // log.debug(`[${PREFIX}] commandData.options: ${JSON.stringify(commandData.options, null, 2)}`);
+  const options = getNestedOptions(commandData.options); // @ts-ignore
+  // log.debug(`[${PREFIX}] optionsEnd: ${JSON.stringify(options, null, 2)}`); // @ts-ignore
+  const optionsIndentifiers = options.map(option => `${option.name}:`);
+  // log.debug(`[${PREFIX}] optionsIndentifiers: ${JSON.stringify(optionsIndentifiers, null, 2)}`);
+  const requestedOptions = options.reduce((
+    requestedOptions2:ToAPIApplicationCommandOptions[],
+    option:ToAPIApplicationCommandOptions,
+  ):any[] => {
+    const identifier = `${option.toJSON().name}:`;
     if (!stringCommand.includes(identifier)) return requestedOptions2;
     const remainder = stringCommand.split(identifier)[1];
 
@@ -70,23 +82,28 @@ export function getParsedCommand(
     if (nextOptionIdentifier) {
       const value = remainder.split(nextOptionIdentifier)[0].trim();
       return [...requestedOptions2, {
-        name: option.name,
-        value: castToType(value, option.type),
-        type: option.type,
+        name: option.toJSON().name,
+        value: castToType(value, option.toJSON().type),
+        type: option.toJSON().type,
       }];
     }
 
     return [...requestedOptions2, {
-      name: option.name,
-      value: castToType(remainder.trim(), option.type),
-      type: option.type,
+      name: option.toJSON().name,
+      value: castToType(remainder.trim(), option.toJSON().type),
+      type: option.toJSON().type,
     }];
   }, []);
-  const optionNames = options.map((option:any) => option.name);
+  // log.debug(`[${PREFIX}] requestedOptions: ${JSON.stringify(requestedOptions, null, 2)}`);
+  const optionNames = options.map(option => option.toJSON().name);
+  // log.debug(`[${PREFIX}] optionNames: ${JSON.stringify(optionNames, null, 2)}`);
   const splittedCommand = stringCommand.split(' ');
+  // log.debug(`[${PREFIX}] splittedCommand: ${JSON.stringify(splittedCommand, null, 2)}`);
   const name = splittedCommand[0].replace('/', '');
+  // log.debug(`[${PREFIX}] name: ${JSON.stringify(name, null, 2)}`);
   const subcommand = splittedCommand.find(word => optionNames.includes(word));
-  return {
+  // log.debug(`[${PREFIX}] subcommand: ${JSON.stringify(subcommand, null, 2)}`);
+  const retValue = {
     id: name,
     name,
     type: 1,
@@ -96,6 +113,8 @@ export function getParsedCommand(
       options: requestedOptions,
     }] : requestedOptions,
   };
+  // log.debug(`[${PREFIX}] retValue: ${JSON.stringify(retValue, null, 2)}`);
+  return retValue;
 }
 
 export function embedContaining(content:any) {
@@ -124,9 +143,20 @@ export function copy(obj:any) {
 }
 
 /* Spy 'reply' */
-export function mockInteractionAndSpyReply(command:any) {
+export function mockInteractionAndSpyReply(command:{
+  id: string;
+  name: string;
+  type: number;
+  options: ToAPIApplicationCommandOptions[] | {
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[];
+  }[];
+}) {
   const discord = new MockDiscord({ command });
+  // console.log(discord);
   const interaction = discord.getInteraction() as ChatInputCommandInteraction;
+  // console.log(interaction);
   const spy = jest.spyOn(interaction, 'reply');
   return { interaction, spy };
 }
@@ -137,7 +167,11 @@ export async function executeCommandAndSpyReply(
     id: string;
     name: string;
     type: number;
-    options: any;
+    options: ToAPIApplicationCommandOptions[] | {
+      name: string;
+      type: number;
+      options: ToAPIApplicationCommandOptions[];
+    }[];
   },
   // config = {},
 ) {

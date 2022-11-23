@@ -12,6 +12,8 @@ import {
   BaseGuildTextChannel, // eslint-disable-line
   BaseChannel,
   Collection,
+  CommandInteractionOptionResolver, // eslint-disable-line
+  ToAPIApplicationCommandOptions, // eslint-disable-line
   // ClientApplication,
   // FetchApplicationCommandOptions,
   // ApplicationCommandDataResolvable,
@@ -54,7 +56,21 @@ export default class MockDiscord {
 
   private reactionUser!: User;
 
-  constructor(options:any) {
+  constructor(options:{
+    message?: any,
+    reaction?: any,
+    command: {
+      id: string;
+      name: string;
+      type: number;
+      options: ToAPIApplicationCommandOptions[] | {
+        name: string;
+        type: number;
+        options: ToAPIApplicationCommandOptions[];
+      }[];
+    }
+  }) {
+    log.debug(`${PREFIX} - constructor - options: ${JSON.stringify(options, null, 2)}`);
     this.mockClient();
     this.mockGuild();
     this.mockChannel();
@@ -70,11 +86,11 @@ export default class MockDiscord {
     this.mockMessage(options?.message?.content);
     this.mockInteracion(options?.command);
 
-    // this.mockPrototypes();
+    this.mockPrototypes();
 
-    if (options?.partyChannel?.messages) {
-      this.mockPartyMessages(options.partyChannel.messages);
-    }
+    // if (options?.partyChannel?.messages) {
+    //   this.mockPartyMessages(options.partyChannel.messages);
+    // }
 
     if (options?.reaction) {
       const lastPartyMessage = this.botPartyTextChannel.messages.cache.last();
@@ -406,7 +422,16 @@ export default class MockDiscord {
     this.message.react = jest.fn();
   }
 
-  private mockInteracion(command:any): void {
+  private mockInteracion(command:{
+    id: string;
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[] | {
+      name: string;
+      type: number;
+      options: ToAPIApplicationCommandOptions[];
+    }[];
+  }): void {
     if (!command) return;
     this.interaction = Reflect.construct(CommandInteraction, [
       this.client,
@@ -416,6 +441,19 @@ export default class MockDiscord {
         user: this.guildMember,
       },
     ]);
+    this.interaction.options = Reflect.construct(CommandInteractionOptionResolver, [this.client, command.options]);
+
+    // Define the 'getString' method
+    (this.interaction.options as CommandInteractionOptionResolver).getString = jest.fn().mockImplementation(
+      (name:string) => {
+        const options = command.options as ToAPIApplicationCommandOptions[];
+        log.debug(`[${PREFIX}] getString: ${name} - ${JSON.stringify(options, null, 2)}`);
+        const option = options.find(opt => (opt as any).name === name);
+        if (!option) return null;
+        log.debug(`[${PREFIX}] option ${JSON.stringify((option as any).value, null, 2)}`);
+        return (option as any).value;
+      },
+    );
     this.interaction.reply = jest.fn();
     this.interaction.guildId = this.guild.id;
     this.interaction.isCommand = jest.fn(() => true);
