@@ -23,7 +23,7 @@ export const dConvert: SlashCommand = {
       .setDescription('What unit?')
       .setRequired(true)
       .setAutocomplete(true))
-    .addStringOption(option => option.setName('into_units')
+    .addStringOption(option => option.setName('into')
       .setDescription('Convert into?')
       .setRequired(true)
       .setAutocomplete(true)),
@@ -32,7 +32,7 @@ export const dConvert: SlashCommand = {
     startLog(PREFIX, interaction);
     const value = interaction.options.getNumber('value', true);
     const units = interaction.options.getString('units', true);
-    const intoUnits = interaction.options.getString('into_units', true);
+    const intoUnits = interaction.options.getString('into', true);
 
     const result = convert(value).from(units as convert.Unit).to(intoUnits as convert.Unit);
 

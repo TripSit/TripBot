@@ -48,7 +48,8 @@ function getNestedOptions(options:ToAPIApplicationCommandOptions[]):ToAPIApplica
     allOptions:ToAPIApplicationCommandOptions[],
     option:ToAPIApplicationCommandOptions,
   ) => { // @ts-ignore
-    // log.debug(`[${PREFIX}] option: ${JSON.stringify(option, null, 2)}`);
+    // log.debug(`[${PREFIX}] option: ${JSON.stringify(option, null, 2)}`); // @ts-ignore
+    // console.log(option); // @ts-ignore
     if (!option.toJSON().options) return [...allOptions, option]; // @ts-ignore
     const nestedOptions = getNestedOptions(option.toJSON().options);
     return [option, ...allOptions, ...nestedOptions];

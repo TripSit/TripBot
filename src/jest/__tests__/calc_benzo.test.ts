@@ -31,7 +31,7 @@ describe(slashCommand.data.name, () => {
       },
       title: '12.3 mg of bromazepam about equal to 49.2 mg of clobazam',
       description: stripIndents`**Please make sure to research the substances thoroughly before using them.**
-      It's a good idea to start with a lower dose than the calculator shows, since everybody can react differently to different substances.`,
+      It's a good idea to start with a lower dose than the calculator shows, since everybody can react differently to different substances.`, // eslint-disable-line
 
     }));
   });
