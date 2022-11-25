@@ -6,9 +6,11 @@ const isProd = process.env.NODE_ENV === 'production';
 export default {
   NODE_ENV: isProd ? 'production' : 'development',
   DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,
+  DISCORD_GUILD_ID: process.env.DISCORD_GUILD_ID,
   DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
   DISCORD_CLIENT_REDIRECT_URI: process.env.DISCORD_CLIENT_REDIRECT_URI,
   DISCORD_CLIENT_TOKEN: process.env.DISCORD_CLIENT_TOKEN,
+  DISCORD_OWNER_ID: process.env.DISCORD_OWNER_ID,
 
   POSTGRES_DBURL: process.env.POSTGRES_DBURL,
 
@@ -30,8 +32,7 @@ export default {
   TS_ICON_URL: 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png',
   FLAME_ICON_URL: 'https://imgur.com/b923xK2.png',
   DISCLAIMER: 'Dose responsibly!',
-  DISCORD_OWNER_ID: '177537158419054592',
-  DISCORD_GUILD_ID: isProd ? '179641883222474752' : '960606557622657026',
+
   FIREBASE_DB_TICKETS: isProd ? 'tickets_v5' : 'tickets_dev',
   FIREBASE_DB_GUILDS: isProd ? 'guilds_v5' : 'guilds_dev',
   FIREBASE_DB_USERS: isProd ? 'users_v5' : 'users_dev',
