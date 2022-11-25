@@ -12,7 +12,7 @@ export default {
   DISCORD_CLIENT_TOKEN: process.env.DISCORD_CLIENT_TOKEN,
   DISCORD_OWNER_ID: process.env.DISCORD_OWNER_ID,
 
-  POSTGRES_DBURL: isProd ? process.env.POSTGRES_DBURL : 'postgres://tripsit_api:P@ssw0rd@localhost:5432/tripsit',
+  POSTGRES_DBURL: process.env.POSTGRES_DBURL,
 
   GITHUB_TOKEN: process.env.GITHUB_TOKEN,
   YOUTUBE_TOKEN: process.env.YOUTUBE_TOKEN,
