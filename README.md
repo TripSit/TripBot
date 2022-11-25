@@ -37,3 +37,6 @@ Use the tripsit-dev repo to do all this automatically!
 
 ## Get in touch 
 Feel free to join our discord guild under https://discord.gg/tripsit 
+
+
+### REDO IDOSE

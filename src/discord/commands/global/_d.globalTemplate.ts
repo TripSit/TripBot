@@ -12,11 +12,11 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { parse } from 'path';
-import { SlashCommand } from '../@types/commandDef';
-import { embedTemplate } from '../utils/embedTemplate';
-import env from '../../global/utils/env.config';
-import log from '../../global/utils/log';
-import { startLog } from '../utils/startLog';
+import { SlashCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
+import env from '../../../global/utils/env.config';
+import log from '../../../global/utils/log';
+import { startLog } from '../../utils/startLog';
 
 const PREFIX = parse(__filename).name;
 
