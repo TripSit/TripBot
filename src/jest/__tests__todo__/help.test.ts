@@ -10,6 +10,8 @@ const PREFIX = parse(__filename).name; // eslint-disable-line
 
 const slashCommand = dHelp;
 
+// This one requires me to register commands with the application.... yeah idk
+
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
     const commandData = slashCommand.data;

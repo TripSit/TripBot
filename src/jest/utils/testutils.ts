@@ -1,6 +1,6 @@
 import {
   ChatInputCommandInteraction,
-  CommandInteraction,
+  // CommandInteraction,
   EmbedBuilder,
   Message,
   SlashCommandBuilder,
@@ -181,25 +181,6 @@ export function mockInteractionAndSpyReply(command:{
   return { interaction, spy };
 }
 
-/* Spy 'editReply' */
-export function mockInteractionAndSpyEditReply(command:{
-  id: string;
-  name: string;
-  type: number;
-  options: ToAPIApplicationCommandOptions[] | {
-    name: string;
-    type: number;
-    options: ToAPIApplicationCommandOptions[];
-  }[];
-}) {
-  const discord = new MockDiscord({ command });
-  // console.log(discord);
-  const interaction = discord.getInteraction() as ChatInputCommandInteraction;
-  // console.log(interaction);
-  const spy = jest.spyOn(interaction, 'editReply');
-  return { interaction, spy };
-}
-
 export async function executeCommandAndSpyReply(
   Command:SlashCommand,
   content:{
@@ -220,6 +201,25 @@ export async function executeCommandAndSpyReply(
   return spy;
 }
 
+/* Spy 'editReply' */
+export function mockInteractionAndSpyEditReply(command:{
+  id: string;
+  name: string;
+  type: number;
+  options: ToAPIApplicationCommandOptions[] | {
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[];
+  }[];
+}) {
+  const discord = new MockDiscord({ command });
+  // console.log(discord);
+  const interaction = discord.getInteraction() as ChatInputCommandInteraction;
+  // console.log(interaction);
+  const spy = jest.spyOn(interaction, 'editReply');
+  return { interaction, spy };
+}
+
 export async function executeCommandAndSpyEditReply(
   Command:SlashCommand,
   content:{
@@ -234,7 +234,7 @@ export async function executeCommandAndSpyEditReply(
   },
   // config = {},
 ) {
-  const { interaction, spy } = mockInteractionAndSpyEditReply(content);
+  const { interaction, spy } = mockInteractionAndSpyReply(content);
   // const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
   await Command.execute(interaction);
   return spy;
@@ -282,17 +282,30 @@ export async function executeCommandWithMockOptionsAndSpySentMessage(
 /* Spy 'edit' with mock options */
 export function mockMessageWithOptionsAndSpyEdit(options:any) {
   const discord = new MockDiscord(options);
-  const interaction = discord.getInteraction() as CommandInteraction;
+  const interaction = discord.getInteraction() as ChatInputCommandInteraction;
   const channel = discord.getBotPartyTextChannel();
   const lastMessage = channel.messages.cache.last() as Message;
   const spy = jest.spyOn(lastMessage, 'edit');
   return { interaction, spy };
 }
 
-export async function executeCommandWithMockOptionsAndSpyEdit(Command:any, options:any, config = {}) {
+export async function executeCommandWithMockOptionsAndSpyEdit(
+  Command:SlashCommand,
+  options:{
+    id: string;
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[] | {
+      name: string;
+      type: number;
+      options: ToAPIApplicationCommandOptions[];
+    }[];
+  },
+  // config = {},
+) {
   const { interaction, spy } = mockMessageWithOptionsAndSpyEdit(options);
-  const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
-  await commandInstance.execute();
+  // const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
+  await Command.execute(interaction);
   return spy;
 }
 

@@ -1,10 +1,6 @@
-import {
-  Colors,
-} from 'discord.js';
 import { parse } from 'path';
-import { stripIndents } from 'common-tags';
 import { dImgur } from '../../discord/commands/global/d.imgur';
-import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, getParsedCommand } from '../utils/testutils';
 import log from '../../global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line

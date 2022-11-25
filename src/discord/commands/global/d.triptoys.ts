@@ -120,18 +120,7 @@ export const dTriptoys: SlashCommand = {
       );
     }
 
-    if (!interaction.replied) {
-      interaction.reply({
-        embeds: [embed],
-        ephemeral: false,
-      });
-    } else {
-      interaction.followUp({
-        embeds: [embed],
-        ephemeral: false,
-      });
-    }
-
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };
