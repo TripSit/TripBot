@@ -17,5 +17,4 @@ COPY . .
 
 EXPOSE 8080
 
-CMD if [ $ENV = dev ] ; then npm run nodemon ; else npm start ; fi
-# CMD [ "npm", "start" ]
+CMD if [ $NODE_ENV = production ] ; then npm start ; else npm run nodemon ; fi
