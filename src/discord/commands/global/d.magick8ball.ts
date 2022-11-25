@@ -8,9 +8,9 @@ import { startLog } from '../../utils/startLog';
 
 const PREFIX = parse(__filename).name;
 
-export default magick8ball;
+export default dMagick8ball;
 
-export const magick8ball: SlashCommand = {
+export const dMagick8ball: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('magick8ball')
     .setDescription('Ask the magick 8-ball a question!'),

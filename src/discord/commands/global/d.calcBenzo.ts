@@ -12,9 +12,9 @@ import { startLog } from '../../utils/startLog';
 
 const PREFIX = parse(__filename).name;
 
-export default dcalcBenzo;
+export default dCalcbenzo;
 
-export const dcalcBenzo: SlashCommand = {
+export const dCalcbenzo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_benzo')
     .setDescription('This tool helps figure out how much of a given benzo dose converts into another benzo dose.')
@@ -49,7 +49,7 @@ export const dcalcBenzo: SlashCommand = {
         **Please make sure to research the substances thoroughly before using them.**
         It's a good idea to start with a lower dose than the calculator shows, since everybody can react differently to different substances.
         `);
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

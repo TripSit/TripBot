@@ -9,9 +9,9 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const PREFIX = parse(__filename).name;
 
-export default dTime;
+export default dTimezone;
 
-export const dTime: SlashCommand = {
+export const dTimezone: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('timezone')
     .setDescription('Get or set timezones!')

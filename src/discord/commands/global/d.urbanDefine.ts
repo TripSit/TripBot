@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { parse } from 'path';
+import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { urbandefine } from '../../../global/commands/g.urbandefine';
@@ -9,9 +10,9 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const PREFIX = parse(__filename).name;
 
-export default durbandefine;
+export default dUrbandefine;
 
-export const durbandefine: SlashCommand = {
+export const dUrbandefine: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('urban_define')
     .setDescription('Define a word on Urban Dictionary')
@@ -31,8 +32,8 @@ export const durbandefine: SlashCommand = {
     const result = await urbandefine(term);
 
     const embed = embedTemplate()
-      .setDescription(result);
-    interaction.reply({ embeds: [embed], ephemeral: false });
+      .setDescription(stripIndents`${result}`);
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

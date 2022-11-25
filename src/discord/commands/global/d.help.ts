@@ -31,9 +31,9 @@ const buttonList = [
   button2,
 ];
 
-export default help;
+export default dHelp;
 
-export const help: SlashCommand = {
+export const dHelp: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('help')
     .setDescription('Information bout TripBot Commands'),

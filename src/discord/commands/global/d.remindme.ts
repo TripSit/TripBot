@@ -24,9 +24,9 @@ const buttonList = [
   new ButtonBuilder().setCustomId('nextbtn').setLabel('Next').setStyle(ButtonStyle.Success),
 ];
 
-export default dremindme;
+export default dRemindme;
 
-export const dremindme: SlashCommand = {
+export const dRemindme: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('remindme')
     .setDescription('Handle reminders!')
@@ -144,7 +144,7 @@ export const dremindme: SlashCommand = {
       } else if (!interaction.channel) {
         interaction.reply({ embeds: [embed], ephemeral: true });
       } else if (interaction.channel.type === ChannelType.DM) {
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        interaction.reply({ embeds: [embed] });
         // interaction.user.send({embeds: [embed]});
       } else {
         interaction.reply({ embeds: [embed], ephemeral: true });

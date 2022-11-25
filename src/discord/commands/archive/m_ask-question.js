@@ -14,6 +14,6 @@ module.exports = {
     .setType(ApplicationCommandType.Message),
   async execute(interaction) {
     const embed = template.embedTemplate().setTitle('I would ask a question in #drug-questions on behalf of this user!');
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
   },
 };

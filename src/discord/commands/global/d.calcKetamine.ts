@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { parse } from 'path';
+import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcKetamine } from '../../../global/commands/g.calcKetamine';
@@ -9,10 +10,10 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const PREFIX = parse(__filename).name;
 
-export default dCalcKetamine;
+export default dCalcketamine;
 
 // Calculate insufflated dosages
-export const dCalcKetamine: SlashCommand = {
+export const dCalcketamine: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_ketamine')
     .setDescription('Get ketamine dosage information')
@@ -77,17 +78,17 @@ export const dCalcKetamine: SlashCommand = {
     embed.addFields(
       {
         name: 'Insufflated',
-        value: data.insufflated,
+        value: stripIndents`${data.insufflated}`,
         inline: true,
       },
       {
         name: 'Rectal',
-        value: data.rectal,
+        value: stripIndents`${data.rectal}`,
         inline: true,
       },
     );
 
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

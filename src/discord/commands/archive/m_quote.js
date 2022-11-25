@@ -14,6 +14,6 @@ module.exports = {
     .setType(ApplicationCommandType.Message),
   async execute(interaction) {
     const embed = template.embedTemplate().setTitle('I would store this message!');
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
   },
 };

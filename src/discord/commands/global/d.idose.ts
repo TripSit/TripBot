@@ -27,9 +27,9 @@ const buttonList = [
   new ButtonBuilder().setCustomId('nextbtn').setLabel('Next').setStyle(ButtonStyle.Success),
 ];
 
-export default didose;
+export default dIdose;
 
-export const didose: SlashCommand = {
+export const dIdose: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('idose')
     .setDescription('Your personal dosage information!')
@@ -195,7 +195,7 @@ export const didose: SlashCommand = {
       } else if (!interaction.channel) {
         interaction.reply({ embeds: [embed], ephemeral: true });
       } else if (interaction.channel.type === ChannelType.DM) {
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        interaction.reply({ embeds: [embed] });
         // interaction.user.send({embeds: [embed]});
       } else {
         interaction.reply({ embeds: [embed], ephemeral: true });

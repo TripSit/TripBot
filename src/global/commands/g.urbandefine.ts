@@ -55,7 +55,7 @@ export async function urbandefine(term:string) {
     const upvotes = `${data.list[0].thumbs_up}`;
     const downvotes = `${data.list[0].thumbs_down}`;
 
-    const response = stripIndents`**Definition for *${term}* ** (+${upvotes}/-${downvotes})
+    const response = stripIndents`**Definition for "${term}" ** (+${upvotes}/-${downvotes})
     ${definition}
     Example: ${example}`;
     log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);

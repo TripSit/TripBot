@@ -29,7 +29,7 @@ export const dTestkits: SlashCommand = {
       embed.addFields(
         {
           name: `${entry.name} (${entry.country})`,
-          value: `${entry.website ? `
+          value: stripIndents`${entry.website ? `
             [Website](${entry.website})` : ''}\
             ${entry.description ? `
             ${entry.description}` : ''}
@@ -43,7 +43,7 @@ export const dTestkits: SlashCommand = {
         [How to use fent strips](https://dancesafe.org/you-may-be-using-fentanyl-testing-strips-incorrectly/)
         [More testkit resources on the TripSit wiki!](https://wiki.tripsit.me/wiki/Test_Kits)
         `);
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

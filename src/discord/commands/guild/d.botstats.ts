@@ -32,7 +32,9 @@ export const dBotstats: SlashCommand = {
     // @ts-ignore - This works so idk why it's complaining
     const commandCount = interaction.client.commands.size;
     // log.debug(`[${PREFIX}] commandCount: ${commandCount}`);
-    const uptime = (new Date().getTime() - global.bootTime.getTime());
+    const uptime = global.bootTime
+      ? (new Date().getTime() - global.bootTime.getTime())
+      : 0;
     // log.debug(`[${PREFIX}] uptime: ${uptime}`);
 
     // Create the embed

@@ -10,8 +10,19 @@ import {
   MessageReaction,
   CommandInteraction,
   BaseGuildTextChannel, // eslint-disable-line
+  BaseChannel,
+  Collection,
+  CommandInteractionOptionResolver, // eslint-disable-line
+  ToAPIApplicationCommandOptions,
+  ChatInputCommandInteraction, // eslint-disable-line
+  // ClientApplication,
+  // FetchApplicationCommandOptions,
+  // ApplicationCommandDataResolvable,
 } from 'discord.js';
+// import fs from 'fs';
+// import path, { parse } from 'path';
 import { parse } from 'path';
+// import { SlashCommand } from '../../discord/@types/commandDef';
 
 import log from '../../global/utils/log'; // eslint-disable-line
 
@@ -46,7 +57,21 @@ export default class MockDiscord {
 
   private reactionUser!: User;
 
-  constructor(options:any) {
+  constructor(options:{
+    message?: any,
+    reaction?: any,
+    command: {
+      id: string;
+      name: string;
+      type: number;
+      options: ToAPIApplicationCommandOptions[] | {
+        name: string;
+        type: number;
+        options: ToAPIApplicationCommandOptions[];
+      }[];
+    }
+  }) {
+    // log.debug(`${PREFIX} - constructor - options: ${JSON.stringify(options, null, 2)}`);
     this.mockClient();
     this.mockGuild();
     this.mockChannel();
@@ -62,11 +87,11 @@ export default class MockDiscord {
     this.mockMessage(options?.message?.content);
     this.mockInteracion(options?.command);
 
-    // this.mockPrototypes();
+    this.mockPrototypes();
 
-    if (options?.partyChannel?.messages) {
-      this.mockPartyMessages(options.partyChannel.messages);
-    }
+    // if (options?.partyChannel?.messages) {
+    //   this.mockPartyMessages(options.partyChannel.messages);
+    // }
 
     if (options?.reaction) {
       const lastPartyMessage = this.botPartyTextChannel.messages.cache.last();
@@ -131,13 +156,13 @@ export default class MockDiscord {
     return this.reactionUser;
   }
 
-  // private mockPrototypes() {
-  //   TextChannel.prototype.send = jest.fn().mockImplementation(() => ({
-  //     react: jest.fn(),
-  //   }));
+  private mockPrototypes() { // eslint-disable-line
+    TextChannel.prototype.send = jest.fn().mockImplementation(() => ({
+      react: jest.fn(),
+    }));
 
-  //   Message.prototype.edit = jest.fn();
-  // }
+    Message.prototype.edit = jest.fn();
+  }
 
   private mockReaction(reactionOptions:any, message:any): void {
     this.reaction = Reflect.construct(MessageReaction, [
@@ -149,8 +174,47 @@ export default class MockDiscord {
 
   private mockClient(): void {
     this.client = new Client({ intents: [] });
-    // log.debug(`[${PREFIX}] command.options: ${JSON.stringify(this.client.options, null, 2)}`);
     this.client.login = jest.fn(() => Promise.resolve('LOGIN_TOKEN'));
+    // My stuff
+    this.client.commands = new Collection();
+    // this.client.application = Reflect.construct(ClientApplication, [
+    //   this.client,
+    //   { id: '1234567890' },
+    // ]);
+
+    // // Register global commands
+    // const globalCommands = path.join(__dirname, '../../discord/commands/global');
+    // const globalFiles = fs.readdirSync(globalCommands);
+    // // log.debug(`[${PREFIX}] Global command files: ${globalFiles}`);
+    // globalFiles.forEach(file => {
+    //   const filePath = path.join(globalCommands, file);
+    //   // log.debug(`[${PREFIX}] Loading global command: ${filePath}`);
+    //   const command = require(filePath); // eslint-disable-line
+    //   // log.debug(`[${PREFIX}] Command: ${JSON.stringify(command, null, 2)}`);
+    //   const commandData = command[Object.keys(command).find(
+    // key => command[key].data !== undefined) as string].data.toJSON();
+    //   // log.debug(`[${PREFIX}] Command data: ${JSON.stringify(commandData, null, 2)}`);
+    //   // log.debug(`[${PREFIX}] Loaded global command: ${commandData.name}`);
+    //   // this.client.commands.set(commandData, command);
+    //   // this.client.application?.commands.create(commandData);
+    // });
+
+    // // Register guild commands
+    // const guildCommands = path.join(__dirname, '../../discord/commands/guild');
+    // const guildFiles = fs.readdirSync(guildCommands);
+    // // log.debug(`[${PREFIX}] Guild command files: ${guildFiles}`);
+    // guildFiles.forEach(file => {
+    //   const filePath = path.join(guildCommands, file);
+    //   // log.debug(`[${PREFIX}] Loading global command: ${filePath}`);
+    //   const command = require(filePath); // eslint-disable-line
+    //   // log.debug(`[${PREFIX}] Command: ${JSON.stringify(command, null, 2)}`);
+    //   const commandData = command[Object.keys(command).find(
+    // key => command[key].data !== undefined) as string].data.toJSON();  // eslint-disable-line
+    //   // log.debug(`[${PREFIX}] Command data: ${JSON.stringify(commandData, null, 2)}`);
+    //   // log.debug(`[${PREFIX}] Loaded global command: ${commandData.name}`);
+    //   // this.client.commands.set(commandData, command);
+    //   // this.client.application?.commands.create(commandData);
+    // });
   }
 
   private mockGuild(): void {
@@ -186,16 +250,18 @@ export default class MockDiscord {
   }
 
   private mockChannel(): void {
-    this.channel = Reflect.construct(GuildChannel, [
+    this.channel = Reflect.construct(BaseChannel, [
       this.client,
       {
         id: 'channel-id',
       },
+
     ]);
+    (this.channel as TextChannel).send = jest.fn();
   }
 
   private mockPartyChannel(): void {
-    this.botPartyChannel = Reflect.construct(GuildChannel, [
+    this.botPartyChannel = Reflect.construct(BaseChannel, [
       this.client,
       {
         id: 'party-channel-id',
@@ -361,18 +427,48 @@ export default class MockDiscord {
     this.message.react = jest.fn();
   }
 
-  private mockInteracion(command:any): void {
+  private mockInteracion(command:{
+    id: string;
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[] | {
+      name: string;
+      type: number;
+      options: ToAPIApplicationCommandOptions[];
+    }[];
+  }): void {
     if (!command) return;
-    this.interaction = Reflect.construct(CommandInteraction, [
+
+    this.interaction = Reflect.construct(ChatInputCommandInteraction, [
       this.client,
       {
         data: command,
         id: BigInt(1),
         user: this.guildMember,
+        channel: this.textChannel,
       },
+      this.textChannel,
     ]);
+    this.interaction.options = Reflect.construct(CommandInteractionOptionResolver, [this.client, command.options]);
+
+    // Define the 'getString' method
+    // (this.interaction.options as CommandInteractionOptionResolver).getString = jest.fn().mockImplementation(
+    //   (name:string) => {
+    //     const options = command.options as ToAPIApplicationCommandOptions[];
+    //     // log.debug(`[${PREFIX}] getString: ${name} - ${JSON.stringify(options, null, 2)}`);
+    //     const option = options.find(opt => (opt as any).name === name);
+    //     if (!option) return null;
+    //     // log.debug(`[${PREFIX}] option ${JSON.stringify((option as any).value, null, 2)}`);
+    //     return (option as any).value;
+    //   },
+    // );
     this.interaction.reply = jest.fn();
+    this.interaction.deferReply = () => Promise.resolve({} as any);
+    this.interaction.editReply = jest.fn();
+    // this.interaction.followUp = jest.fn();
     this.interaction.guildId = this.guild.id;
     this.interaction.isCommand = jest.fn(() => true);
+    // const test = this.interaction.channel;
+    // this.interaction.channel.send = jest.fn();
   }
 }

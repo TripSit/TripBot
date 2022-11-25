@@ -1,13 +1,16 @@
 import {
   ChatInputCommandInteraction,
-  CommandInteraction,
+  // CommandInteraction,
+  EmbedBuilder,
   Message,
   SlashCommandBuilder,
   ToAPIApplicationCommandOptions,
   SlashCommandSubcommandsOnlyBuilder,
-  APIApplicationCommandOption,
-  APIChatInputApplicationCommandInteractionData,
-  APIApplicationCommandInteractionData,
+  // ApplicationCommandOptionBase,
+  // ApplicationCommandOption,
+  // APIApplicationCommandOption,
+  // APIChatInputApplicationCommandInteractionData,
+  // APIApplicationCommandInteractionData,
 } from 'discord.js';
 import { parse } from 'path';
 import { SlashCommand } from '../../discord/@types/commandDef';
@@ -39,16 +42,19 @@ export const optionType = {
   10: Number,
 } as any;
 
-function getNestedOptions(options:ToAPIApplicationCommandOptions[]):any {
-  return options.reduce((allOptions, option):any => {
-    // log.debug(`[${PREFIX}] option: ${JSON.stringify(option, null, 2)}`);
-    const jsonStr = option.toJSON();
-    // log.debug(`[${PREFIX}] optionJson: ${JSON.stringify(option, null, 2)}`);
-    if (!jsonStr.options!) return [...allOptions, option];
-    const nestedOptions = getNestedOptions(jsonStr.options);
+function getNestedOptions(options:ToAPIApplicationCommandOptions[]):ToAPIApplicationCommandOptions[] {
+  // This gets a flat array of options, including nested options
+  const list = options.reduce((
+    allOptions:ToAPIApplicationCommandOptions[],
+    option:ToAPIApplicationCommandOptions,
+  ) => { // @ts-ignore
+    // log.debug(`[${PREFIX}] option: ${JSON.stringify(option, null, 2)}`); // @ts-ignore
+    // console.log(option); // @ts-ignore
+    if (!option.toJSON().options) return [...allOptions, option]; // @ts-ignore
+    const nestedOptions = getNestedOptions(option.toJSON().options);
     return [option, ...allOptions, ...nestedOptions];
-    return [...allOptions, option];
   }, []);
+  return list;
 }
 
 function castToType(value: string, typeId: number) {
@@ -60,37 +66,64 @@ export function getParsedCommand(
   stringCommand: string,
   commandData: Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'> | SlashCommandSubcommandsOnlyBuilder,
 ) {
-  log.debug(`[${PREFIX}] options1: ${JSON.stringify(commandData.options, null, 2)}`);
-  const options = getNestedOptions(commandData.options);
-  log.debug(`[${PREFIX}] options2: ${JSON.stringify(options, null, 2)}`);
-  log.debug(`[${PREFIX}] options2 type: ${typeof options}`);
-  const optionsIndentifiers = options.map((option:any) => `${option.name}:`);
-  const requestedOptions = options.reduce((requestedOptions2:any, option:any) => {
-    const identifier = `${option.name}:`;
-    if (!stringCommand.includes(identifier)) return requestedOptions2;
+  // log.debug(`[${PREFIX}] commandData.options: ${JSON.stringify(commandData.options, null, 2)}`);
+  // log.debug(`[${PREFIX}] stringCommand: ${JSON.stringify(stringCommand, null, 2)}`);
+  const options = getNestedOptions(commandData.options); // @ts-ignore
+  // log.debug(`[${PREFIX}] getNestedOptions: ${JSON.stringify(options, null, 2)}`); // @ts-ignore
+  const optionsIndentifiers = options.map(option => `${option.name}:`);
+  // log.debug(`[${PREFIX}] optionsIndentifiers: ${JSON.stringify(optionsIndentifiers, null, 2)}`);
+  const requestedOptions = options.reduce((
+    requestedOptions2:ToAPIApplicationCommandOptions[],
+    option:ToAPIApplicationCommandOptions,
+  ):any[] => {
+    const identifier = `${option.toJSON().name}:`;
+    // log.debug(`[${PREFIX}] identifier: ${JSON.stringify(identifier, null, 2)}`);
+    const inclused = stringCommand.includes(identifier);
+    // log.debug(`[${PREFIX}] inclused: ${JSON.stringify(inclused, null, 2)}`);
+    if (!inclused) return requestedOptions2;
     const remainder = stringCommand.split(identifier)[1];
+    // log.debug(`[${PREFIX}] remainder: ${JSON.stringify(remainder, null, 2)}`);
 
-    const nextOptionIdentifier = remainder.split(' ').find(word => optionsIndentifiers.includes(word));
+    const nextoptions = remainder.split(' ');
+    // log.debug(`[${PREFIX}] nextoptions: ${JSON.stringify(nextoptions, null, 2)}`);
+
+    const nextOptionIdentifier = nextoptions.find(word => {
+      // log.debug(`[${PREFIX}] word: ${JSON.stringify(word, null, 2)}`);
+      const wordIdentifier = word.split(':')[0];
+      // log.debug(`[${PREFIX}] wordIdentifier: ${JSON.stringify(wordIdentifier, null, 2)}`);
+      return optionsIndentifiers.includes(`${wordIdentifier}:`);
+    });
+    // log.debug(`[${PREFIX}] nextOptionIdentifier: ${JSON.stringify(nextOptionIdentifier, null, 2)}`);
+
     if (nextOptionIdentifier) {
       const value = remainder.split(nextOptionIdentifier)[0].trim();
+      // log.debug(`[${PREFIX}] value: ${JSON.stringify(value, null, 2)}`);
+      const formattedValue = castToType(value, option.toJSON().type);
+      // log.debug(`[${PREFIX}] formattedValue: ${JSON.stringify(formattedValue, null, 2)}`);
       return [...requestedOptions2, {
-        name: option.name,
-        value: castToType(value, option.type),
-        type: option.type,
+        name: option.toJSON().name,
+        value: formattedValue,
+        type: option.toJSON().type,
       }];
     }
 
+    // log.debug(`[${PREFIX}] remainderFinal: ${JSON.stringify(remainder, null, 2)}`);
     return [...requestedOptions2, {
-      name: option.name,
-      value: castToType(remainder.trim(), option.type),
-      type: option.type,
+      name: option.toJSON().name,
+      value: castToType(remainder.trim(), option.toJSON().type),
+      type: option.toJSON().type,
     }];
   }, []);
-  const optionNames = options.map((option:any) => option.name);
+  // log.debug(`[${PREFIX}] requestedOptions: ${JSON.stringify(requestedOptions, null, 2)}`);
+  const optionNames = options.map(option => option.toJSON().name);
+  // log.debug(`[${PREFIX}] optionNames: ${JSON.stringify(optionNames, null, 2)}`);
   const splittedCommand = stringCommand.split(' ');
+  // log.debug(`[${PREFIX}] splittedCommand: ${JSON.stringify(splittedCommand, null, 2)}`);
   const name = splittedCommand[0].replace('/', '');
+  // log.debug(`[${PREFIX}] name: ${JSON.stringify(name, null, 2)}`);
   const subcommand = splittedCommand.find(word => optionNames.includes(word));
-  return {
+  // log.debug(`[${PREFIX}] subcommand: ${JSON.stringify(subcommand, null, 2)}`);
+  const retValue = {
     id: name,
     name,
     type: 1,
@@ -100,12 +133,14 @@ export function getParsedCommand(
       options: requestedOptions,
     }] : requestedOptions,
   };
+  // log.debug(`[${PREFIX}] retValue: ${JSON.stringify(retValue, null, 2)}`);
+  return retValue;
 }
 
 export function embedContaining(content:any) {
   return {
-    embeds: expect.arrayContaining([expect.objectContaining(content)]),
-    fetchReply: true,
+    embeds: expect.arrayContaining([expect.objectContaining(new EmbedBuilder(content))]),
+    // fetchReply: true,
   };
 }
 
@@ -128,9 +163,20 @@ export function copy(obj:any) {
 }
 
 /* Spy 'reply' */
-export function mockInteractionAndSpyReply(command:any) {
+export function mockInteractionAndSpyReply(command:{
+  id: string;
+  name: string;
+  type: number;
+  options: ToAPIApplicationCommandOptions[] | {
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[];
+  }[];
+}) {
   const discord = new MockDiscord({ command });
+  // console.log(discord);
   const interaction = discord.getInteraction() as ChatInputCommandInteraction;
+  // console.log(interaction);
   const spy = jest.spyOn(interaction, 'reply');
   return { interaction, spy };
 }
@@ -141,7 +187,50 @@ export async function executeCommandAndSpyReply(
     id: string;
     name: string;
     type: number;
-    options: any;
+    options: ToAPIApplicationCommandOptions[] | {
+      name: string;
+      type: number;
+      options: ToAPIApplicationCommandOptions[];
+    }[];
+  },
+  // config = {},
+) {
+  const { interaction, spy } = mockInteractionAndSpyReply(content);
+  // const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
+  await Command.execute(interaction);
+  return spy;
+}
+
+/* Spy 'editReply' */
+export function mockInteractionAndSpyEditReply(command:{
+  id: string;
+  name: string;
+  type: number;
+  options: ToAPIApplicationCommandOptions[] | {
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[];
+  }[];
+}) {
+  const discord = new MockDiscord({ command });
+  // console.log(discord);
+  const interaction = discord.getInteraction() as ChatInputCommandInteraction;
+  // console.log(interaction);
+  const spy = jest.spyOn(interaction, 'editReply');
+  return { interaction, spy };
+}
+
+export async function executeCommandAndSpyEditReply(
+  Command:SlashCommand,
+  content:{
+    id: string;
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[] | {
+      name: string;
+      type: number;
+      options: ToAPIApplicationCommandOptions[];
+    }[];
   },
   // config = {},
 ) {
@@ -152,35 +241,71 @@ export async function executeCommandAndSpyReply(
 }
 
 /* Spy channel 'send' with mock options */
-export function mockInteractionWithOptionsAndSpyChannelSend(options:any) {
-  const discord = new MockDiscord(options);
-  const interaction = discord.getInteraction() as CommandInteraction;
-  const channel = discord.getBotPartyTextChannel();
-  const spy = jest.spyOn(channel, 'send');
+export function mockInteractionWithOptionsAndSpyChannelSend(command:{
+  id: string;
+  name: string;
+  type: number;
+  options: ToAPIApplicationCommandOptions[] | {
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[];
+  }[];
+}) {
+  const discord = new MockDiscord({ command });
+  const interaction = discord.getInteraction() as ChatInputCommandInteraction;
+  // const channel = discord.getBotPartyTextChannel();
+  if (!interaction.channel) throw new Error('Channel not found');
+  const spy = jest.spyOn(interaction.channel, 'send');
   return { interaction, spy };
 }
 
-export async function executeCommandWithMockOptionsAndSpySentMessage(Command:any, options:any, config = {}) {
+export async function executeCommandWithMockOptionsAndSpySentMessage(
+  Command:SlashCommand,
+  options:{
+    id: string;
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[] | {
+      name: string;
+      type: number;
+      options: ToAPIApplicationCommandOptions[];
+    }[];
+  },
+  // config = {},
+) {
   const { interaction, spy } = mockInteractionWithOptionsAndSpyChannelSend(options);
-  const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
-  await commandInstance.execute();
+  // const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
+  await Command.execute(interaction);
   return spy;
 }
 
 /* Spy 'edit' with mock options */
 export function mockMessageWithOptionsAndSpyEdit(options:any) {
   const discord = new MockDiscord(options);
-  const interaction = discord.getInteraction() as CommandInteraction;
+  const interaction = discord.getInteraction() as ChatInputCommandInteraction;
   const channel = discord.getBotPartyTextChannel();
   const lastMessage = channel.messages.cache.last() as Message;
   const spy = jest.spyOn(lastMessage, 'edit');
   return { interaction, spy };
 }
 
-export async function executeCommandWithMockOptionsAndSpyEdit(Command:any, options:any, config = {}) {
+export async function executeCommandWithMockOptionsAndSpyEdit(
+  Command:SlashCommand,
+  options:{
+    id: string;
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[] | {
+      name: string;
+      type: number;
+      options: ToAPIApplicationCommandOptions[];
+    }[];
+  },
+  // config = {},
+) {
   const { interaction, spy } = mockMessageWithOptionsAndSpyEdit(options);
-  const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
-  await commandInstance.execute();
+  // const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
+  await Command.execute(interaction);
   return spy;
 }
 

@@ -14,7 +14,6 @@ export const dReagents: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('reagents')
     .setDescription('Display reagent color chart!'),
-
   async execute(interaction) {
     startLog(PREFIX, interaction);
     interaction.reply(await reagents());

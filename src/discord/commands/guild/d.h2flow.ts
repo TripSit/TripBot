@@ -58,7 +58,7 @@ export const dH2flow: SlashCommand = {
         url: 'https://www.youtube.com/watch?v=6r17Ez9V3AQ&t=132s',
       })
       .setThumbnail('https://i.imgur.com/2niEJJO.png')
-      .setColor(Colors.DarkBlue)
+      .setColor(Colors.Blue)
       .setDescription(stripIndents`
       These are not useless internet points✨
       This is an emoji-based social🌐media experience!
@@ -91,7 +91,7 @@ export const dH2flow: SlashCommand = {
         },
       );
 
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
 
     return false;
   },

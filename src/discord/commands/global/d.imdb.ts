@@ -10,9 +10,9 @@ import { startLog } from '../../utils/startLog';
 
 const PREFIX = parse(__filename).name;
 
-export default imdbSearch;
+export default dImdb;
 
-export const imdbSearch: SlashCommand = {
+export const dImdb: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('imdb')
     .setDescription('Search imdb')
@@ -58,7 +58,7 @@ export const imdbSearch: SlashCommand = {
 
     // interaction.followUp({embeds: [embed]});
     await interaction.editReply({ embeds: [embed] });
-    // interaction.reply({embeds: [embed], ephemeral: false});
+    // interaction.reply({embeds: [embed]});
     return true;
   },
 };

@@ -23,7 +23,7 @@ export const dDonate: SlashCommand = {
     startLog(PREFIX, interaction);
     const donateInfo = await donate();
     const embed = embedTemplate()
-      .setColor(Colors.DarkBlue)
+      .setColor(Colors.Purple)
       .setTitle('Donate to keep TripSit running and fund our future projects!')
       .setURL('https://tripsit.me/donate/')
       .setDescription(
@@ -34,13 +34,15 @@ export const dDonate: SlashCommand = {
       );
     // for (const entry of donateInfo) {
     donateInfo.forEach(entry => {
-      embed.addFields(
-        {
-          name: entry.name,
-          value: `${entry.value.length > 0 ? `[Website](${entry.value})` : entry.value}`,
-          inline: true,
-        },
-      );
+      if (entry.value.length > 0) {
+        embed.addFields(
+          {
+            name: entry.name,
+            value: `${entry.value !== '\u200B' ? `[Website](${entry.value})` : entry.value}`,
+            inline: true,
+          },
+        );
+      }
     });
     interaction.reply({ embeds: [embed] });
     return true;

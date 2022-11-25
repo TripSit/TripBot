@@ -9,9 +9,9 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const PREFIX = parse(__filename).name;
 
-export default dgrounding;
+export default dGrounding;
 
-export const dgrounding: SlashCommand = {
+export const dGrounding: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('grounding')
     .setDescription('Send an image with the 5-senses grounding exercise'),

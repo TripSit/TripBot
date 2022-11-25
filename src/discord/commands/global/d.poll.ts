@@ -1,7 +1,6 @@
 import {
   SlashCommandBuilder,
   GuildMember,
-  TextChannel,
   Message,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
@@ -9,6 +8,7 @@ import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { startLog } from '../../utils/startLog';
 import { embedTemplate } from '../../utils/embedTemplate';
+import log from '../../../global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name;
 
@@ -24,9 +24,9 @@ const emojiDict = {
   9: '9️⃣',
 };
 
-export default dpoll;
+export default dPoll;
 
-export const dpoll: SlashCommand = {
+export const dPoll: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('poll')
     .setDescription('Creates a poll!')
@@ -35,23 +35,30 @@ export const dpoll: SlashCommand = {
       .setDescription('What do you want to ask?')
       .setRequired(true))
     .addStringOption(option => option
-      .setName('options')
+      .setName('choices')
       .setDescription('CSV of options, EG: "Red, Blue, Green"')
       .setRequired(true)),
   async execute(interaction) {
     startLog(PREFIX, interaction);
     // await interaction.deferReply({ephemeral: true});
-    interaction.reply({ content: 'Creating poll...', ephemeral: true });
+    // interaction.reply({ content: 'Creating poll...', ephemeral: true });
     const question = interaction.options.getString('question');
-    const optionsString = interaction.options.getString('options');
+    log.debug(`[${PREFIX}] question: ${question}`);
+    const optionsString = interaction.options.getString('choices');
+    log.debug(`[${PREFIX}] optionsString: ${optionsString}`);
     if (!question || !optionsString) {
-      await interaction.editReply('You need to provide a question and options!');
+      await interaction.reply('You need to provide a question and options!');
       return false;
     }
     const optionsArray = optionsString.split(',');
 
     if (optionsArray.length > 9) {
-      await interaction.editReply('You can only have 9 options max!');
+      await interaction.reply('You can only have 9 options max!');
+      return false;
+    }
+
+    if (!interaction.channel) {
+      await interaction.reply('You need to be in a channel to use this command!');
       return false;
     }
 
@@ -66,7 +73,7 @@ export const dpoll: SlashCommand = {
       .setDescription(stripIndents`${body}`)
       .setFooter({ text: `*A poll by ${(interaction.member as GuildMember).displayName}*` });
 
-    await (interaction.channel as TextChannel).send({ embeds: [pollEmbed] })
+    await interaction.channel.send({ embeds: [pollEmbed] })
       .then(async (msg:Message) => {
         for (let i = 0; i < optionsArray.length; i += 1) {
           /* eslint-disable no-await-in-loop */
@@ -74,7 +81,7 @@ export const dpoll: SlashCommand = {
         }
       });
 
-    // await interaction.editReply('Done!');
+    await interaction.reply('Done!');
     return true;
   },
 };

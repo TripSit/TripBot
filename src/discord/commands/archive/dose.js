@@ -68,11 +68,11 @@ module.exports = {
       });
     }
     try {
-      interaction.member.send({ embeds: [embed], ephemeral: false });
+      interaction.member.send({ embeds: [embed] });
     } catch (err1) {
       // log.error(`[${PREFIX}] error1: ${err1}`);
       try {
-        interaction.user.send({ embeds: [embed], ephemeral: false });
+        interaction.user.send({ embeds: [embed] });
       } catch (err2) {
         // log.error(`[${PREFIX}] error2: ${err2}`);
       }

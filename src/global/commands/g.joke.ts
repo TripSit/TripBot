@@ -12,6 +12,8 @@ export default joke;
  * @return {any}
  */
 export async function joke():Promise<any> {
+  // log.debug(`[${PREFIX}] joke()`);
+  // log.debug(`[${PREFIX}] env.RAPID_TOKEN: ${env.RAPID_TOKEN}`);
   const { data } = await axios.get('https://jokeapi-v2.p.rapidapi.com/joke/Misc,Pun', {
     params: {
       format: 'json',

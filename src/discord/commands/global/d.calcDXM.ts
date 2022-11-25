@@ -18,9 +18,9 @@ type DxmDataType = {
   Fourth: { min: number, max: number };
 };
 
-export default calxDXM;
+export default dCalcdxm;
 
-export const calxDXM: SlashCommand = {
+export const dCalcdxm: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_dxm')
     .setDescription('Get DXM dosage information')
@@ -79,7 +79,7 @@ export const calxDXM: SlashCommand = {
       );
       header = false;
     });
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

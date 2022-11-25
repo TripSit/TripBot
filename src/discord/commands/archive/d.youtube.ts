@@ -64,7 +64,7 @@ export const dYoutube: SlashCommand = {
       else if (result.thumbnails.default) embed.setThumbnail(result.thumbnails.default.url);
     }
 
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

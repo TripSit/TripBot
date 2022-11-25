@@ -10,9 +10,9 @@ import { startLog } from '../../utils/startLog';
 
 const PREFIX = parse(__filename).name;
 
-export default dcalcPsychedelics;
+export default dCalcpsychedelics;
 
-export const dcalcPsychedelics: SlashCommand = {
+export const dCalcpsychedelics: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_psychedelics')
     .setDescription('Check psychedelic tolerance information')
@@ -67,7 +67,7 @@ export const dcalcPsychedelics: SlashCommand = {
         As all bodies and brains are different, results may vary. 
         [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
       `);
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
 
     return true;
   },

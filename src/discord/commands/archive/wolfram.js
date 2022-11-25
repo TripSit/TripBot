@@ -56,10 +56,10 @@ module.exports = {
     //         { name: 'Example C', value: data.list[2].example, inline: false },
     //     );
     // if (!interaction.replied) {
-    //     interaction.reply({ embeds: [embed], ephemeral: false });
+    //     interaction.reply({ embeds: [embed] });
     // }
     // else {
-    //     interaction.followUp({ embeds: [embed], ephemeral: false });
+    //     interaction.followUp({ embeds: [embed] });
     // }
     // return;
   },

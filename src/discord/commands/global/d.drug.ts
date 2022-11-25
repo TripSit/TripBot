@@ -47,7 +47,7 @@ export const dDrug: SlashCommand = {
     }
 
     if (drugData.summary) {
-      embed.setDescription(`${drugData.summary}\n\n`);
+      embed.setDescription(stripIndents`${drugData.summary}\n\n`);
     }
 
     embed.setColor(Colors.Purple);
@@ -56,14 +56,14 @@ export const dDrug: SlashCommand = {
 
     if (drugData.aliases) {
       const aliases = `Aliases: ${drugData.aliases.join(', ')}\n\n`;
-      embed.addFields({ name: 'Aliases', value: aliases, inline: false });
+      embed.addFields({ name: 'Aliases', value: stripIndents`${aliases}`, inline: false });
     }
 
     if (drugData.interactions) {
       const dangerInt = drugData.interactions.filter(i => i.status === 'Dangerous');
       const dangerNames = dangerInt.map(i => i.name);
       if (dangerNames.length > 0) {
-        embed.addFields({ name: '**💀 Dangerous 🛑 Interactions 💀**', value: dangerNames.join(', '), inline: false });
+        embed.addFields({ name: '**💀 Dangerous 🛑 Interactions 💀**', value: stripIndents`${dangerNames.join(', ')}`, inline: false }); // eslint-disable-line
       }
     }
 
@@ -78,7 +78,7 @@ export const dDrug: SlashCommand = {
       if (drugData.classes.psychoactive) {
         classInfo += `**Physical**: ${drugData.classes.chemical}\n`;
       }
-      embed.addFields({ name: 'ℹ Class', value: classInfo, inline: true });
+      embed.addFields({ name: 'ℹ Class', value: stripIndents`${classInfo}`, inline: true });
       firstRowColumns += 1;
     }
 
@@ -87,7 +87,7 @@ export const dDrug: SlashCommand = {
       const crossToleranceMap = drugData.crossTolerances
         .map(crossTolerance => crossTolerance[0].toUpperCase() + crossTolerance.substring(1));
 
-      embed.addFields({ name: '🔀 Cross Tolerances', value: crossToleranceMap.join(', '), inline: true });
+      embed.addFields({ name: '🔀 Cross Tolerances', value: stripIndents`${crossToleranceMap.join(', ')}`, inline: true }); // eslint-disable-line
       firstRowColumns += 1;
     }
 
@@ -95,7 +95,7 @@ export const dDrug: SlashCommand = {
     if (drugData.addictionPotential) {
       const addPot = drugData.addictionPotential.toString();
       const capitalized = addPot[0].toUpperCase() + addPot.substring(1);
-      embed.addFields({ name: '💔 Addiction Potential', value: capitalized, inline: true });
+      embed.addFields({ name: '💔 Addiction Potential', value: stripIndents`${capitalized}`, inline: true });
       firstRowColumns += 1;
     }
     let toleranceAdded = false;
@@ -125,7 +125,7 @@ export const dDrug: SlashCommand = {
         if (drugData.toxicity) {
           const toxicityMap = drugData.toxicity.map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
           const toxicityString = toxicityMap.join(', ');
-          embed.addFields({ name: '☣ Toxicity', value: toxicityString, inline: true });
+          embed.addFields({ name: '☣ Toxicity', value: stripIndents`${toxicityString}`, inline: true });
           // log.debug(`[${PREFIX}] Added toxicity`);
           toxicityAdded = true;
           firstRowColumns += 1;
@@ -187,7 +187,7 @@ export const dDrug: SlashCommand = {
               roaInfo.dosage.forEach(d => {
                 dosageString += `${d.name}: ${d.value}\n`;
               });
-              embed.addFields({ name: `💊 Dosage (${roaName})`, value: dosageString, inline: true });
+              embed.addFields({ name: `💊 Dosage (${roaName})`, value: stripIndents`${dosageString}`, inline: true });
               dosageColumns += 1;
             }
           }
@@ -222,7 +222,7 @@ export const dDrug: SlashCommand = {
                 const toxicityMap = drugData.toxicity
                   .map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
                 const toxicityString = toxicityMap.join(', ');
-                embed.addFields({ name: '☣ Toxicity', value: toxicityString, inline: true });
+                embed.addFields({ name: '☣ Toxicity', value: stripIndents`${toxicityString}`, inline: true });
                 // log.debug(`[${PREFIX}] Added toxicity A`);
                 toxicityAdded = true;
                 dosageColumns += 1;
@@ -247,7 +247,7 @@ export const dDrug: SlashCommand = {
                 roaInfo.duration.forEach(d => {
                   durationString += `${d.name}: ${d.value}\n`;
                 });
-                embed.addFields({ name: `⏳ Duration (${roaName})`, value: durationString, inline: true });
+                embed.addFields({ name: `⏳ Duration (${roaName})`, value: stripIndents`${durationString}`, inline: true }); // eslint-disable-line max-len
                 durationColumns += 1;
               }
             }
@@ -284,7 +284,7 @@ export const dDrug: SlashCommand = {
                 const toxicityMap = drugData.toxicity
                   .map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
                 const toxicityString = toxicityMap.join(', ');
-                embed.addFields({ name: '☣ Toxicity', value: toxicityString, inline: true });
+                embed.addFields({ name: '☣ Toxicity', value: stripIndents`${toxicityString}`, inline: true });
                 // log.debug(`[${PREFIX}] Added toxicity B`);
                 toxicityAdded = true;
                 durationColumns += 1;
@@ -300,7 +300,7 @@ export const dDrug: SlashCommand = {
     }
 
     if (drugData.reagents) {
-      embed.addFields({ name: '🔬Reagent Results', value: drugData.reagents.toString(), inline: false });
+      embed.addFields({ name: '🔬Reagent Results', value: stripIndents`${drugData.reagents.toString()}`, inline: false }); // eslint-disable-line max-len
     }
 
     if (!toleranceAdded) {
@@ -326,16 +326,16 @@ export const dDrug: SlashCommand = {
       if (drugData.toxicity) {
         const toxicityMap = drugData.toxicity.map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
         const toxicityString = toxicityMap.join(', ');
-        embed.addFields({ name: '☣ Toxicity', value: toxicityString, inline: true });
+        embed.addFields({ name: '☣ Toxicity', value: stripIndents`${toxicityString}`, inline: true });
         // log.debug('Added toxicity C');
       }
     }
 
     if (drugData.experiencesUrl) {
-      embed.addFields({ name: 'Links', value: `[Erowid](${drugData.experiencesUrl.toString()})`, inline: false });
+      embed.addFields({ name: 'Links', value: stripIndents`[Erowid](${drugData.experiencesUrl.toString()})`, inline: false }); // eslint-disable-line max-len
     }
 
-    interaction.reply({ embeds: [embed], ephemeral: false });
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };
