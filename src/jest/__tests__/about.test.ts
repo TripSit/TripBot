@@ -11,10 +11,12 @@ import log from '../../global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line
 
-describe('AboutCommand', () => {
-  it('replies with about message embed', async () => {
+const slashCommand = dAbout;
+
+describe(slashCommand.data.name, () => {
+  it(slashCommand.data.description, async () => {
     const commandData = dAbout.data;
-    const stringCommand = '/about';
+    const stringCommand = `/${commandData.name}`;
     const command = getParsedCommand(stringCommand, commandData);
     // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
     const spy = await executeCommandAndSpyReply(dAbout, command);

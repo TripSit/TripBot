@@ -13,7 +13,8 @@ import {
   BaseChannel,
   Collection,
   CommandInteractionOptionResolver, // eslint-disable-line
-  ToAPIApplicationCommandOptions, // eslint-disable-line
+  ToAPIApplicationCommandOptions,
+  ChatInputCommandInteraction, // eslint-disable-line
   // ClientApplication,
   // FetchApplicationCommandOptions,
   // ApplicationCommandDataResolvable,
@@ -254,7 +255,9 @@ export default class MockDiscord {
       {
         id: 'channel-id',
       },
+
     ]);
+    (this.channel as TextChannel).send = jest.fn();
   }
 
   private mockPartyChannel(): void {
@@ -435,32 +438,37 @@ export default class MockDiscord {
     }[];
   }): void {
     if (!command) return;
-    this.interaction = Reflect.construct(CommandInteraction, [
+
+    this.interaction = Reflect.construct(ChatInputCommandInteraction, [
       this.client,
       {
         data: command,
         id: BigInt(1),
         user: this.guildMember,
+        channel: this.textChannel,
       },
+      this.textChannel,
     ]);
     this.interaction.options = Reflect.construct(CommandInteractionOptionResolver, [this.client, command.options]);
 
     // Define the 'getString' method
-    (this.interaction.options as CommandInteractionOptionResolver).getString = jest.fn().mockImplementation(
-      (name:string) => {
-        const options = command.options as ToAPIApplicationCommandOptions[];
-        // log.debug(`[${PREFIX}] getString: ${name} - ${JSON.stringify(options, null, 2)}`);
-        const option = options.find(opt => (opt as any).name === name);
-        if (!option) return null;
-        // log.debug(`[${PREFIX}] option ${JSON.stringify((option as any).value, null, 2)}`);
-        return (option as any).value;
-      },
-    );
+    // (this.interaction.options as CommandInteractionOptionResolver).getString = jest.fn().mockImplementation(
+    //   (name:string) => {
+    //     const options = command.options as ToAPIApplicationCommandOptions[];
+    //     // log.debug(`[${PREFIX}] getString: ${name} - ${JSON.stringify(options, null, 2)}`);
+    //     const option = options.find(opt => (opt as any).name === name);
+    //     if (!option) return null;
+    //     // log.debug(`[${PREFIX}] option ${JSON.stringify((option as any).value, null, 2)}`);
+    //     return (option as any).value;
+    //   },
+    // );
     this.interaction.reply = jest.fn();
-    this.interaction.deferReply = jest.fn();
+    this.interaction.deferReply = () => Promise.resolve({} as any);
     this.interaction.editReply = jest.fn();
     // this.interaction.followUp = jest.fn();
     this.interaction.guildId = this.guild.id;
     this.interaction.isCommand = jest.fn(() => true);
+    // const test = this.interaction.channel;
+    // this.interaction.channel.send = jest.fn();
   }
 }

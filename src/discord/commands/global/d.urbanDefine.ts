@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { parse } from 'path';
+import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { urbandefine } from '../../../global/commands/g.urbandefine';
@@ -31,7 +32,7 @@ export const dUrbandefine: SlashCommand = {
     const result = await urbandefine(term);
 
     const embed = embedTemplate()
-      .setDescription(result);
+      .setDescription(stripIndents`${result}`);
     interaction.reply({ embeds: [embed] });
     return true;
   },

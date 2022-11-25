@@ -181,6 +181,25 @@ export function mockInteractionAndSpyReply(command:{
   return { interaction, spy };
 }
 
+/* Spy 'editReply' */
+export function mockInteractionAndSpyEditReply(command:{
+  id: string;
+  name: string;
+  type: number;
+  options: ToAPIApplicationCommandOptions[] | {
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[];
+  }[];
+}) {
+  const discord = new MockDiscord({ command });
+  // console.log(discord);
+  const interaction = discord.getInteraction() as ChatInputCommandInteraction;
+  // console.log(interaction);
+  const spy = jest.spyOn(interaction, 'editReply');
+  return { interaction, spy };
+}
+
 export async function executeCommandAndSpyReply(
   Command:SlashCommand,
   content:{
@@ -201,19 +220,62 @@ export async function executeCommandAndSpyReply(
   return spy;
 }
 
+export async function executeCommandAndSpyEditReply(
+  Command:SlashCommand,
+  content:{
+    id: string;
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[] | {
+      name: string;
+      type: number;
+      options: ToAPIApplicationCommandOptions[];
+    }[];
+  },
+  // config = {},
+) {
+  const { interaction, spy } = mockInteractionAndSpyEditReply(content);
+  // const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
+  await Command.execute(interaction);
+  return spy;
+}
+
 /* Spy channel 'send' with mock options */
-export function mockInteractionWithOptionsAndSpyChannelSend(options:any) {
-  const discord = new MockDiscord(options);
-  const interaction = discord.getInteraction() as CommandInteraction;
-  const channel = discord.getBotPartyTextChannel();
-  const spy = jest.spyOn(channel, 'send');
+export function mockInteractionWithOptionsAndSpyChannelSend(command:{
+  id: string;
+  name: string;
+  type: number;
+  options: ToAPIApplicationCommandOptions[] | {
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[];
+  }[];
+}) {
+  const discord = new MockDiscord({ command });
+  const interaction = discord.getInteraction() as ChatInputCommandInteraction;
+  // const channel = discord.getBotPartyTextChannel();
+  if (!interaction.channel) throw new Error('Channel not found');
+  const spy = jest.spyOn(interaction.channel, 'send');
   return { interaction, spy };
 }
 
-export async function executeCommandWithMockOptionsAndSpySentMessage(Command:any, options:any, config = {}) {
+export async function executeCommandWithMockOptionsAndSpySentMessage(
+  Command:SlashCommand,
+  options:{
+    id: string;
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[] | {
+      name: string;
+      type: number;
+      options: ToAPIApplicationCommandOptions[];
+    }[];
+  },
+  // config = {},
+) {
   const { interaction, spy } = mockInteractionWithOptionsAndSpyChannelSend(options);
-  const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
-  await commandInstance.execute();
+  // const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
+  await Command.execute(interaction);
   return spy;
 }
 

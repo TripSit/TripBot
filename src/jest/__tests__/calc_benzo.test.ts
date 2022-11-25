@@ -16,7 +16,7 @@ describe(slashCommand.data.name, () => {
     const commandData = slashCommand.data;
     const stringCommand = `/${commandData.name} i_have:12.3 mg_of:bromazepam and_i_want_the_dose_of:clobazam`;
     const command = getParsedCommand(stringCommand, commandData);
-    // log.debug(`[${PREFIX}] getParsedCommand: ${JSON.stringify(command, null, 2)}`);
+    // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
     const spy = await executeCommandAndSpyReply(slashCommand, command);
     expect(spy).toHaveBeenCalledWith(embedContaining({
       color: Colors.Purple,
