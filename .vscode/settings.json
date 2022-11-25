@@ -7,4 +7,5 @@
         "javascript",
         "typescript",
     ],
+    "editor.tabSize": 2,
 }
