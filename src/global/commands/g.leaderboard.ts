@@ -56,7 +56,6 @@ export async function leaderboard(
 
     let rank = 1;
     for (const user of allUserExperience) { // eslint-disable-line
-    // allUserExperience.forEach(async (user) => {
       const userData = await getUser(null, user.user_id); // eslint-disable-line
       if (!userData) {
         log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
@@ -89,18 +88,16 @@ export async function leaderboard(
     }
 
     // Grab all the user experience from the database
-    // for (const category of ['TRIPSITTER', 'GENERAL', 'DEVELOPER', 'TEAM', 'IGNORED']) {
-    ['TRIPSITTER', 'GENERAL', 'DEVELOPER', 'TEAM', 'IGNORED'].forEach(async category => {
-      const userExperience = await db<UserExperience>('user_experience')
+    for (const category of ['TRIPSITTER', 'GENERAL', 'DEVELOPER', 'TEAM', 'IGNORED']) { // eslint-disable-line
+      const userExperience = await db<UserExperience>('user_experience') // eslint-disable-line
         .select('*')
         .where('type', category)
         .orderBy('total_points', 'desc')
         .limit(3);
 
       rank = 1;
-      // for (const user of userExperience) {
-      userExperience.forEach(async user => {
-        const userData = await getUser(null, user.user_id);
+      for (const user of userExperience) { // eslint-disable-line
+        const userData = await getUser(null, user.user_id); // eslint-disable-line
         if (!userData) {
           log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
         }
@@ -119,8 +116,8 @@ export async function leaderboard(
           });
           rank += 1;
         }
-      });
-    });
+      }
+    }
   } else if (categoryName === 'TOTAL') {
     title = 'Top 15 users in all categories';
     description = 'Total Experience is the sum of all experience in all categories.';
@@ -130,17 +127,19 @@ export async function leaderboard(
       .select(
         db.ref('user_id'),
       )
+      .whereNot('type', 'IGNORED')
+      .andWhereNot('type', 'TOTAL')
       .groupBy(['user_id'])
       .sum({ total_points: 'total_points' })
       .orderBy('total_points', 'desc')
-      .limit(3);
+      .limit(15);
 
     // log.debug(`[${PREFIX}] userExperience: ${JSON.stringify(userExperience, null, 2)}`);
 
     let rank = 1;
-    // for (const user of userExperience) {
-    userExperience.forEach(async user => {
-      const userData = await getUser(null, user.user_id);
+    for (const user of userExperience) { // eslint-disable-line
+    // userExperience.forEach(async user => {
+      const userData = await getUser(null, user.user_id); // eslint-disable-line
       if (!userData) {
         log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
       }
@@ -175,7 +174,7 @@ export async function leaderboard(
         });
         rank += 1;
       }
-    });
+    }
   } else {
     // Grab all the user experience from the database
     const userExperience = await db<UserExperience>('user_experience')
@@ -187,23 +186,27 @@ export async function leaderboard(
       .orderBy('total_points', 'desc')
       .limit(15);
 
+    log.debug(`[${PREFIX}] userExperience: ${JSON.stringify(userExperience, null, 2)}`);
+
     const rankList = [] as RankType[];
     let i = 1;
-    // for (const user of userExperience) {
-    userExperience.forEach(async user => {
-      const userData = await getUser(null, user.user_id);
+    for (const user of userExperience) { // eslint-disable-line
+    // userExperience.forEach(async user => {
+      const userData = await getUser(null, user.user_id); // eslint-disable-line
       if (!userData) {
         log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
       }
       if (!userData.discord_id) {
         log.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
       }
+      log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData)}`);
 
       if (userData && userData.discord_id) {
         rankList.push({ rank: i, id: userData.discord_id, level: user.level });
         i += 1;
       }
-    });
+    }
+    log.debug(`[${PREFIX}] rankList: ${JSON.stringify(rankList, null, 2)}`);
     results = {
       [categoryName]: rankList,
     };

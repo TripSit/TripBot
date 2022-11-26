@@ -10,7 +10,7 @@ import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { startLog } from '../../utils/startLog';
-import log from '../../../global/utils/log'; // eslint-disable-line no-unused-vars
+// import log from '../../../global/utils/log'; // eslint-disable-line no-unused-vars
 import env from '../../../global/utils/env.config';
 
 const PREFIX = parse(__filename).name;
@@ -70,12 +70,12 @@ export const dReminder: SlashCommand = {
       return false;
     }
 
-    const { channelId } = interaction;
-    log.debug(`[${PREFIX}] channelId: ${channelId}`);
+    // const { channelId } = interaction;
+    // log.debug(`[${PREFIX}] channelId: ${channelId}`);
     const chanId = (interaction.channel as TextBasedChannel).id;
-    log.debug(`[${PREFIX}] chanId: ${chanId}`);
+    // log.debug(`[${PREFIX}] chanId: ${chanId}`);
     const reminderData = reminderDict[chanId];
-    log.debug(`[${PREFIX}] reminderData: ${JSON.stringify(reminderData, null, 2)}`);
+    // log.debug(`[${PREFIX}] reminderData: ${JSON.stringify(reminderData, null, 2)}`);
     if (!reminderData) {
       interaction.reply({
         content: 'This command can only be used in a channel with a reminder!',
@@ -84,9 +84,9 @@ export const dReminder: SlashCommand = {
       return false;
     }
     const reminderTitle = reminderData[0];
-    log.debug(`[${PREFIX}] reminderTitle: ${reminderTitle}`);
+    // log.debug(`[${PREFIX}] reminderTitle: ${reminderTitle}`);
     const reminderText = reminderData[1];
-    log.debug(`[${PREFIX}] reminderText: ${reminderText}`);
+    // log.debug(`[${PREFIX}] reminderText: ${reminderText}`);
 
     const reminder = embedTemplate()
       .setColor(Colors.Red)
@@ -95,12 +95,11 @@ export const dReminder: SlashCommand = {
 
     interaction.channel?.send({ embeds: [reminder] });
 
-    interaction.reply({ content: 'Reminder sent!', ephemeral: true });
-
     const channelBotlog = interaction.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
       channelBotlog.send(`${(interaction.member as GuildMember).displayName} sent a reminder to ${(interaction.channel as TextChannel).name}`);
     }
+    interaction.reply({ content: 'Reminder sent!', ephemeral: true });
     return true;
   },
 };

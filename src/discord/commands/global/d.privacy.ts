@@ -52,14 +52,8 @@ export const dPrivacy: SlashCommand = {
       if (confirmation === 'YesPlease!') {
         const userDeleteData = await privacy('delete', interaction.user.id);
         embed.setTitle('Deleting Your Data')
-          .setDescription(`Your data was deleted: ${JSON.stringify(userDeleteData, null, 2)}`)
-          .addFields([
-            {
-              name: 'Discord ID',
-              value: interaction.user.id,
-              inline: true,
-            },
-          ]);
+          .setDescription(`Your data was deleted:
+          ${userDeleteData}`);
       } else {
         embed.setTitle('Are you sure?') /* eslint-disable max-len */
           .setDescription(stripIndents`This will delete all data we have on you, except:
@@ -70,18 +64,14 @@ export const dPrivacy: SlashCommand = {
           
           This will delete everything else. Be sure you want to do this! 
           
-          **If you're sure, run this same command but with 'YesPlease!' as the confirmation code.**
+          **Run this same command but with 'YesPlease!' as the confirmation code.**
           
-          The following data will be deleted: ${JSON.stringify(userData, null, 2)}`)
-          .addFields([
-            {
-              name: 'Discord ID',
-              value: interaction.user.id,
-              inline: true,
-            },
-          ]);
+          The following data will be deleted:
+          ${userData}`);
       }
     }
+
+    interaction.reply({ embeds: [embed], ephemeral: true });
     return true;
   },
 };

@@ -50,7 +50,7 @@ export async function timezone(
 
     const userData = await getUser(memberId, null);
 
-    log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData, null, 2)}`);
+    // log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData, null, 2)}`);
 
     if (userData.timezone !== null) {
       const tzCode = userData.timezone;

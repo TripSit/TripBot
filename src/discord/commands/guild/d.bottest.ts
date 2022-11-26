@@ -87,7 +87,7 @@ const testableCommands = [ // eslint-disable-line
   'joke',
   'karma',
   'kipp',
-  // 'last', // WIP
+  'last',
   'leaderboard',
   'poll',
   'profile',
@@ -96,9 +96,9 @@ const testableCommands = [ // eslint-disable-line
   'reminder',
   'say',
   'timezone',
-  // 'tripsit', // WIP
+  // 'tripsitmode', // WIP
   'urban_define',
-  'youtube',
+  // 'youtube', // WIP
 ];
 
 /**
@@ -126,9 +126,8 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     channel: interaction.channel,
     reply: (content:string) => interaction.followUp(content),
     editReply: (content:string) => interaction.followUp(content),
-    deferReply: () => {
-
-    },
+    followUp: (content:string) => interaction.followUp(content),
+    deferReply: () => {},
   };
 
   // log.debug(`[${PREFIX}] Running command: ${name}`);
@@ -139,7 +138,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
 
   if (!interaction.channel) return null;
 
-  await sleep(1000);
+  await sleep(2000);
 
   await interaction.channel.send(`> **${commandName}** - Initializing test!`);
 
@@ -150,7 +149,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     //     getString: (name:string) => {
     //       if (name === 'name') return 'value';
     //     },
-    //     getInteger: (name:string) => {
+    //     getNumber: (name:string) => {
     //       if (name === 'name') return 0;
     //     },
     //     getMember: (name:string) => {
@@ -181,7 +180,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'get',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Initialize a variable with a random month and day
 
@@ -221,7 +220,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'set',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Get the new birthday
       await interaction.channel.send(`> **${commandName}** - Getting new birthdate (Should be ${monthName} ${day})`);
@@ -254,7 +253,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         },
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'exercise') return '2';
@@ -262,7 +261,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         },
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'exercise') return '3';
@@ -270,7 +269,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         },
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'exercise') return '4';
@@ -303,7 +302,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
           if (name === 'taking') return 'RoboTablets (30 mg tablets)';
           return null;
         },
-        getInteger: (name:string) => {
+        getNumber: (name:string) => {
           if (name === 'calc_weight') return '200';
           return null;
         },
@@ -317,7 +316,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
           if (name === 'units') return 'lbs';
           return null;
         },
-        getInteger: (name:string) => {
+        getNumber: (name:string) => {
           if (name === 'weight') return '200';
           return null;
         },
@@ -328,7 +327,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     if (commandName === 'calc_psychedelics') {
       // await command.execute(interaction, ['200', '', '4', 'lsd']);
       testInteraction.options = {
-        getInteger: (name:string) => {
+        getNumber: (name:string) => {
           if (name === 'last_dose') return 2;
           if (name === 'desired_dose') return 4;
           if (name === 'days') return 4;
@@ -337,9 +336,9 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'mushrooms',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
       testInteraction.options = {
-        getInteger: (name:string) => {
+        getNumber: (name:string) => {
           if (name === 'last_dose') return 2;
           if (name === 'desired_dose') return null;
           if (name === 'days') return 4;
@@ -348,9 +347,9 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'mushrooms',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
       testInteraction.options = {
-        getInteger: (name:string) => {
+        getNumber: (name:string) => {
           if (name === 'last_dose') return 200;
           if (name === 'desired_dose') return 400;
           if (name === 'days') return 4;
@@ -359,9 +358,9 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'lsd',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
       testInteraction.options = {
-        getInteger: (name:string) => {
+        getNumber: (name:string) => {
           if (name === 'last_dose') return 200;
           if (name === 'desired_dose') return null;
           if (name === 'days') return 4;
@@ -410,7 +409,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'get',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Get random value 1-10
       const randomValue = Math.floor(Math.random() * 10) + 1;
@@ -427,7 +426,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'set',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Test getting the existing drama
       await interaction.channel.send(`> **${commandName}** - Get new record, should be the same as above`);
@@ -471,7 +470,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'get',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Set a dose
       await interaction.channel.send(`> **${commandName}** - Setting record`);
@@ -491,7 +490,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'set',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Get history
       await interaction.channel.send(`> **${commandName}** - Get records`);
@@ -511,7 +510,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'get',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Delete record
       await interaction.channel.send(`> **${commandName}** - Deleting record`);
@@ -531,7 +530,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'delete',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Get history
       await interaction.channel.send(`> **${commandName}** - Get records`);
@@ -580,6 +579,13 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       await command.execute(testInteraction);
       return true;
     }
+    if (commandName === 'last') {
+      testInteraction.options = {
+        getMember: () => interaction.member,
+      };
+      await command.execute(testInteraction);
+      return true;
+    }
     if (commandName === 'leaderboard') {
       testInteraction.options = {
         getString: (name:string) => {
@@ -588,7 +594,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         },
       };
       await command.execute(testInteraction);
-      sleep(1000);
+      sleep(2000);
 
       testInteraction.options = {
         getString: (name:string) => {
@@ -597,7 +603,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         },
       };
       await command.execute(testInteraction);
-      sleep(1000);
+      sleep(2000);
 
       testInteraction.options = {
         getString: (name:string) => {
@@ -606,7 +612,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         },
       };
       await command.execute(testInteraction);
-      sleep(1000);
+      sleep(2000);
 
       testInteraction.options = {
         getString: (name:string) => {
@@ -615,7 +621,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         },
       };
       await command.execute(testInteraction);
-      sleep(1000);
+      sleep(2000);
 
       testInteraction.options = {
         getString: (name:string) => {
@@ -624,7 +630,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         },
       };
       await command.execute(testInteraction);
-      sleep(1000);
+      sleep(2000);
 
       testInteraction.options = {
         getString: (name:string) => {
@@ -633,7 +639,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         },
       };
       await command.execute(testInteraction);
-      sleep(1000);
+      sleep(2000);
 
       testInteraction.options = {
         getString: (name:string) => {
@@ -648,9 +654,34 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'question') return 'Is TripBot Awesome?';
-          if (name === 'options') return 'Yes,Also Yes,No...but yes';
+          if (name === 'choices') return 'Yes,Also Yes,No...but yes';
           return null;
         },
+      };
+      await command.execute(testInteraction);
+      return true;
+    }
+    if (commandName === 'privacy') {
+      // get
+      await interaction.channel.send(`> **${commandName}** - Get`);
+      testInteraction.options = {
+        getMember: async (name:string) => {
+          if (name === 'user') return interaction.member;
+          return null;
+        },
+        getSubcommand: () => 'get',
+      };
+      await command.execute(testInteraction);
+      // await sleep(2000);
+
+      // delete
+      await interaction.channel.send(`> **${commandName}** - Delete`);
+      testInteraction.options = {
+        getMember: async (name:string) => {
+          if (name === 'user') return interaction.member;
+          return null;
+        },
+        getSubcommand: () => 'delete',
       };
       await command.execute(testInteraction);
       return true;
@@ -678,7 +709,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'get',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Set a dose
       await interaction.channel.send(`> **${commandName}** - Setting record`);
@@ -695,7 +726,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'set',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Set a dose
       await interaction.channel.send(`> **${commandName}** - Setting record`);
@@ -712,7 +743,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'set',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Get history
       await interaction.channel.send(`> **${commandName}** - Get records`);
@@ -729,7 +760,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'get',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Delete record
       await interaction.channel.send(`> **${commandName}** - Deleting record`);
@@ -746,7 +777,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'delete',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Get history
       await interaction.channel.send(`> **${commandName}** - Get records`);
@@ -768,11 +799,11 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     if (commandName === 'reminder') {
       testInteraction.channel = await interaction.guild?.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
       await command.execute(testInteraction);
-      sleep(1000);
+      sleep(2000);
 
       testInteraction.channel = await interaction.guild?.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
       await command.execute(testInteraction);
-      sleep(1000);
+      sleep(2000);
 
       testInteraction.channel = await interaction.guild?.channels.fetch(env.CHANNEL_SANCTUARY) as TextChannel;
       await command.execute(testInteraction);
@@ -807,7 +838,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'get',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Set the record
       await interaction.channel.send(`> **${commandName}** - Setting new timezone to 'America/Chicago'`);
@@ -823,7 +854,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'set',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Get the new record
       await interaction.channel.send(`> **${commandName}** - Getting new record (Should be same as above)`);
@@ -854,7 +885,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         getSubcommand: () => 'set',
       };
       await command.execute(testInteraction);
-      await sleep(1000);
+      await sleep(2000);
 
       // Get the new record
       await interaction.channel.send(`> **${commandName}** - Getting new record (Should be same as above)`);
@@ -882,6 +913,34 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       await command.execute(testInteraction);
       return true;
     }
+    // if (commandName === 'tripsitmode') {
+    //   // Turn on
+    //   await interaction.channel.send(`> **${commandName}** - Turn on`);
+    //   const target = await interaction.guild?.members.fetch('332687787172167680');
+    //   testInteraction.options = {
+    //     getMember: async (name:string) => {
+    //       log.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+    //       if (name === 'user') return target;
+    //       return null;
+    //     },
+    //     getSubcommand: () => 'on',
+    //   };
+    //   await command.execute(testInteraction);
+    //   // await sleep(2000);
+
+    //   // // Turn off
+    //   // await interaction.channel.send(`> **${commandName}** - Turn off`);
+    //   // testInteraction.options = {
+    //   //   getMember: async (name:string) => {
+    //   //     const target = await interaction.guild?.members.fetch('332687787172167680');
+    //   //     if (name === 'user') return target;
+    //   //     return null;
+    //   //   },
+    //   //   getSubcommand: () => 'off',
+    //   // };
+    //   // await command.execute(testInteraction);
+    //   return true;
+    // }
     if (commandName === 'urban_define') {
       testInteraction.options = {
         getString: (name:string) => {
@@ -926,25 +985,23 @@ async function testGlobal(
     await client.application?.commands.fetch({ force: true })
       .then(async globalCommands => {
         await interaction.followUp(`> Testing ${globalCommands.size} global commands!`);
-        // for (const command of globalCommands) {
-        globalCommands.forEach(async command => {
-          // log.debug(`[${PREFIX}] Testing global command ${command.name}`);
-          await runCommand(interaction, command.name)
+        for (const command of globalCommands) { // eslint-disable-line no-restricted-syntax
+          // log.debug(`[${PREFIX}] Testing global command ${command[1].name}`);
+          await runCommand(interaction, command[1].name) // eslint-disable-line no-await-in-loop
             .then(result => {
               if (result === true) {
-                // log.debug(`[${PREFIX}] Global command ${command.name} passed!`);
-                results.total.push(command.name);
-                results.passed.push(command.name);
+                // log.debug(`[${PREFIX}] Global command ${command[1].name} passed!`);
+                results.total.push(command[1].name);
+                results.passed.push(command[1].name);
               } else if (result === false) {
-                // log.debug(`[${PREFIX}] Global command ${command.name} failed!`);
-                results.total.push(command.name);
-                results.failed.push(command.name);
+                // log.debug(`[${PREFIX}] Global command ${command[1].name} failed!`);
+                results.total.push(command[1].name);
+                results.failed.push(command[1].name);
               } else if (result === null) {
-                // log.debug(`[${PREFIX}] Global command ${command.name} was not tested!`);
-
+                // log.debug(`[${PREFIX}] Global command ${command[1].name} was not tested!`);
               }
             });
-        });
+        }
       });
     // .finally(() => {
     //   // log.debug(`[${PREFIX}] Global commands results: ${JSON.stringify(results)}`);
@@ -969,25 +1026,24 @@ async function testGuild(
   await interaction.guild.commands.fetch({ force: true })
     .then(async guildCommands => {
       await interaction.followUp(`> Testing ${guildCommands.size} guild commands!`);
-      // for (const command of guildCommands) {
-      guildCommands.forEach(async command => {
-        // log.debug(`[${PREFIX}] Testing guild command ${command.name}`);
-        await runCommand(interaction, command.name)
+      for (const command of guildCommands) { // eslint-disable-line no-restricted-syntax
+        // log.debug(`[${PREFIX}] Testing guild command ${command[1].name}`);
+        await runCommand(interaction, command[1].name) // eslint-disable-line no-await-in-loop
           .then(result => {
             if (result === true) {
-              // log.debug(`[${PREFIX}] Global command ${command.name} passed!`);
-              results.total.push(command.name);
-              results.passed.push(command.name);
+              // log.debug(`[${PREFIX}] Global command ${command[1].name} passed!`);
+              results.total.push(command[1].name);
+              results.passed.push(command[1].name);
             } else if (result === false) {
-              // log.debug(`[${PREFIX}] Global command ${command.name} failed!`);
-              results.total.push(command.name);
-              results.failed.push(command.name);
+              // log.debug(`[${PREFIX}] Global command ${command[1].name} failed!`);
+              results.total.push(command[1].name);
+              results.failed.push(command[1].name);
             } else if (result === null) {
-              // log.debug(`[${PREFIX}] Global command ${command.name} was not tested!`);
+              // log.debug(`[${PREFIX}] Global command ${command[1].name} was not tested!`);
 
             }
           });
-      });
+      }
     });
   return results;
 }

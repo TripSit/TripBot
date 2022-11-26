@@ -63,10 +63,10 @@ export const dLeaderboard: SlashCommand = {
       IGNORED: 'Voidscreamer',
     };
 
-    let row = 0;
-    let rowName = '';
     // for (const [category, value] of Object.entries(leaderboardVals)) {
     Object.entries(leaderboardVals).forEach(([category, value]) => {
+      let row = 0;
+      let rowName = '';
       // log.debug(`[${PREFIX}] Category: ${category}`);
       // log.debug(`[${PREFIX}] rowName: ${rowName}`);
       // log.debug(`[${PREFIX}] row: ${row}`);

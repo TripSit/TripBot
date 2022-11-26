@@ -2,16 +2,17 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   ButtonInteraction,
+  GuildMember,
 } from 'discord.js';
-import * as path from 'path';
+// import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 // import {embedTemplate} from '../../utils/embedTemplate';
 // import {stripIndents} from 'common-tags';
 // import env from '../../../global/utils/env.config';
-import log from '../../../global/utils/log';
+// import log from '../../../global/utils/log';
 import { tripsitmeButton, tripsitmeClose } from '../../utils/tripsitme';
 
-const PREFIX = path.parse(__filename).name;
+// const PREFIX = path.parse(__filename).name;
 
 export default tripsitmode;
 
@@ -38,12 +39,12 @@ export const tripsitmode: SlashCommand = {
   async execute(interaction:ChatInputCommandInteraction) {
     const enable = interaction.options.getSubcommand();
 
-    const targetMember = interaction.options.getMember('user');
+    const targetMember = interaction.options.getMember('user') as GuildMember;
 
-    log.debug(`[${PREFIX}] 
-    enable: ${enable}
-    targetMember: ${targetMember}
-    `);
+    // log.debug(`[${PREFIX}]
+    // enable: ${enable}
+    // targetMember: ${JSON.stringify(targetMember, null, 2)}
+    // `);
 
     if (enable === 'on') {
       const testInteraction = {

@@ -43,9 +43,9 @@ export const dPoll: SlashCommand = {
     // await interaction.deferReply({ephemeral: true});
     // interaction.reply({ content: 'Creating poll...', ephemeral: true });
     const question = interaction.options.getString('question');
-    log.debug(`[${PREFIX}] question: ${question}`);
+    // log.debug(`[${PREFIX}] question: ${question}`);
     const optionsString = interaction.options.getString('choices');
-    log.debug(`[${PREFIX}] optionsString: ${optionsString}`);
+    // log.debug(`[${PREFIX}] optionsString: ${optionsString}`);
     if (!question || !optionsString) {
       await interaction.reply('You need to provide a question and options!');
       return false;
