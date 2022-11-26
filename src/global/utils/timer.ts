@@ -78,13 +78,15 @@ export async function runTimer() {
           }
 
           // Max online count
-          let maxCount = onlineCount;
+          let maxCount = 0;
           // Update the database's max_online_members if it's higher than the current value
           // log.debug(`[${PREFIX}] Getting guild data`);
           const guildData = await getGuild(env.DISCORD_GUILD_ID);
           if (guildData) {
             if (guildData.max_online_members) {
+              maxCount = guildData.max_online_members;
               if (onlineCount > guildData.max_online_members) {
+                maxCount = onlineCount;
                 await db<DiscordGuilds>('discord_guilds')
                   .update({
                     max_online_members: onlineCount,
@@ -97,8 +99,6 @@ export async function runTimer() {
                     .setDescription(`We have reached ${maxCount} online members!`);
                   channelGeneral.send({ embeds: [embed] });
                 }
-              } else {
-                maxCount = guildData.max_online_members;
               }
             } else {
               await db<DiscordGuilds>('discord_guilds')
@@ -111,7 +111,8 @@ export async function runTimer() {
           const channelMax = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_MAX);
           if (channelMax) {
             const currentCount = parseInt(channelMax.name.split(': ')[1], 10);
-            if (currentCount !== maxCount) {
+            // log.debug(`[${PREFIX}] currentCount: ${currentCount} | maxCount: ${maxCount}`);
+            if (maxCount > currentCount) {
               channelMax.setName(`Max Online: ${maxCount}`);
               log.debug(`[${PREFIX}] Updated max online members to ${maxCount}!`);
             } else {
