@@ -362,7 +362,7 @@ export const dProfile: SlashCommand = {
     context.fillStyle = cardColor;
     context.fill();
     context.restore();
-    await interaction.guild?.members.fetch({ user: target.id, withPresences: true, force: true });
+    // await interaction.guild.members.fetch({ user: target.id, withPresences: true, force: true });
 
     let statusIcon = 'https://i.imgur.com/eICJIwe.png';
     if (target.presence) {
