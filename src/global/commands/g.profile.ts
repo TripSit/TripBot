@@ -39,16 +39,16 @@ export async function profile(
       db.ref('total_points'),
       db.ref('type'),
     )
-    .where('user_id', userData.id);
+    .where('user_id', userData.id)
+    .andWhereNot('type', 'IGNORED')
+    .andWhereNot('type', 'TOTAL');
 
   // log.debug(`[${PREFIX}] currentExp: ${JSON.stringify(currentExp, null, 2)}`);
 
   // Go through currentExp and add up the total points
   // for (const exp of currentExp) {
   currentExp.forEach(exp => {
-    if (exp.type !== 'IGNORED') {
-      profileData.totalExp += exp.total_points;
-    }
+    profileData.totalExp += exp.total_points;
   });
   log.info(`[${PREFIX}] response: ${JSON.stringify(profileData, null, 2)}`);
   return profileData;
