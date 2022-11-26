@@ -5,6 +5,7 @@ import {
   Colors,
 } from 'discord.js';
 import { parse } from 'path';
+import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { invite } from '../../../global/commands/g.invite';
@@ -25,7 +26,7 @@ export const dInvite: SlashCommand = {
       .setColor(Colors.DarkBlue)
       .setTitle('Invite TripBot')
       .setURL(inviteInfo.bot)
-      .setDescription(`
+      .setDescription(stripIndents`
         [Click here to invite TripBot to your own server](${inviteInfo.bot}).
         Note: For advanced features you will need to give the bot more permissions.
 

@@ -27,14 +27,12 @@ type ResultsObject = {
 };
 
 // These commands are not meant to be tested
-const notTestableCommands = [ // eslint-disable-line
+const manualCommands = [ // eslint-disable-line
   'clearchat', // This would wipe out the results of the test
   'issue', // This is a simple API that will submit a github issue to production
-  'ping', // This is a test command that is not meant to be tested
-  'setup', // This needs to be manually tested
-  'bottest', // This would start recursion
   'moderate',
   'modmail',
+  'setup', // This needs to be manually tested
   'u_ban', // Opens a modal and idk how to test modals
   'u_info', // Opens a modal and idk how to test modals
   'u_kick', // Opens a modal and idk how to test modals
@@ -45,24 +43,27 @@ const notTestableCommands = [ // eslint-disable-line
   'm_warn', // Opens a modal and idk how to test modals
   'feedback', // Opens a modal and idk how to test modals
   'report', // Opens a modal and idk how to test modals
-
 ];
 
 // These commands are simple replies and CANNOT take input
-const replyCommands = [ // eslint-disable-line
+const jestCommands = [ // eslint-disable-line
   'about',
   'botstats',
+  'breathe',
+  'calc_benzo',
+  'calc_dxm',
+  'calc_ketamine',
   'coinflip',
-  'contact',
+  'combo',
   'combochart',
+  'contact',
+  'convert',
   'donate',
+  'drug',
   'ems',
   'grounding',
-  'h2flow',
-  'help',
   'hydrate',
-  'joke',
-  'kipp',
+  'invite',
   'lovebomb',
   'magick8ball',
   'reagents',
@@ -76,26 +77,26 @@ const replyCommands = [ // eslint-disable-line
 // The commands REQUIRE input of some sort
 const testableCommands = [ // eslint-disable-line
   'birthday',
-  'breathe',
-  'calc_benzo',
-  'calc_dxm',
-  'calc_ketamine',
   'calc_psychedelics',
-  'combo',
-  'convert',
   'dramacounter',
-  'drug',
+  'h2flow',
+  'help',
   'idose',
   'imdb',
   'imgur',
+  'joke',
   'karma',
+  'kipp',
+  // 'last', // WIP
   'leaderboard',
   'poll',
   'profile',
+  // 'privacy', // WIP
   'remindme',
   'reminder',
   'say',
   'timezone',
+  // 'tripsit', // WIP
   'urban_define',
   'youtube',
 ];
@@ -132,7 +133,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
 
   // log.debug(`[${PREFIX}] Running command: ${name}`);
 
-  if (!testableCommands.includes(commandName) && !replyCommands.includes(commandName)) return null;
+  if (!testableCommands.includes(commandName)) return null;
 
   // log.debug(`[${PREFIX}] in channel: ${(interaction.channel as TextChannel).name}`);
 

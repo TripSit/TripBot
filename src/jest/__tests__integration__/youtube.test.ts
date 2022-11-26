@@ -3,13 +3,13 @@ import {
 } from 'discord.js';
 import { parse } from 'path';
 import { stripIndents } from 'common-tags';
-import { dYoutube } from '../../discord/commands/global/d.youtube';
+import { dAbout } from '../../discord/commands/global/d.about';
 import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
 import log from '../../global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line
 
-const slashCommand = dYoutube;
+const slashCommand = dAbout;
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
