@@ -5,7 +5,7 @@ import {
 } from 'discord.js';
 import { parse } from 'path';
 import { stripIndents } from 'common-tags';
-import { dUrbandefine } from '../../discord/commands/global/d.urbanDefine';
+import { dUrbandefine } from '../../discord/commands/archive/d.urbanDefine';
 import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
 import log from '../../global/utils/log'; // eslint-disable-line
 
