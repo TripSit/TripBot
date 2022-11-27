@@ -14,7 +14,8 @@ import {
   Collection,
   CommandInteractionOptionResolver, // eslint-disable-line
   ToAPIApplicationCommandOptions,
-  ChatInputCommandInteraction, // eslint-disable-line
+  ChatInputCommandInteraction,
+  ReactionEmoji, // eslint-disable-line
   // ClientApplication,
   // FetchApplicationCommandOptions,
   // ApplicationCommandDataResolvable,
@@ -58,8 +59,8 @@ export default class MockDiscord {
   private reactionUser!: User;
 
   constructor(options:{
-    message?: any,
-    reaction?: any,
+    message?: Message,
+    reaction?: MessageReaction,
     command: {
       id: string;
       name: string;
@@ -84,7 +85,7 @@ export default class MockDiscord {
 
     this.mockUser();
     this.mockGuildMember();
-    this.mockMessage(options?.message?.content);
+    this.mockMessage(options?.message?.content as string);
     this.mockInteracion(options?.command);
 
     this.mockPrototypes();
@@ -94,9 +95,9 @@ export default class MockDiscord {
     // }
 
     if (options?.reaction) {
-      const lastPartyMessage = this.botPartyTextChannel.messages.cache.last();
+      const lastPartyMessage = this.botPartyTextChannel.messages.cache.last() as Message;
       this.mockReaction(options.reaction, lastPartyMessage);
-      this.mockReactionUser(options.reaction?.user?.id);
+      this.mockReactionUser('mock-id');
     }
 
     this.guild.channels.cache.set(this.botPartyTextChannel.id, this.botPartyTextChannel);
@@ -164,7 +165,7 @@ export default class MockDiscord {
     Message.prototype.edit = jest.fn();
   }
 
-  private mockReaction(reactionOptions:any, message:any): void {
+  private mockReaction(reactionOptions:MessageReaction, message:Message): void {
     this.reaction = Reflect.construct(MessageReaction, [
       this.client,
       { emoji: reactionOptions.emoji },
@@ -337,7 +338,7 @@ export default class MockDiscord {
     ]);
   }
 
-  private mockReactionUser(userId:any): void {
+  private mockReactionUser(userId:string): void {
     this.reactionUser = Reflect.construct(User, [
       this.client,
       {
@@ -370,8 +371,8 @@ export default class MockDiscord {
     ]);
   }
 
-  private mockPartyMessages(messages:any): void {
-    messages.forEach((message:any) => {
+  private mockPartyMessages(messages:Message[]): void {
+    messages.forEach((message:Message) => {
       const msg = Reflect.construct(Message, [
         this.client,
         {
@@ -384,7 +385,7 @@ export default class MockDiscord {
           pinned: false,
           tts: false,
           nonce: 'nonce',
-          embeds: [message.embed],
+          embeds: [message.embeds],
           attachments: [],
           edited_timestamp: null,
           reactions: [],
@@ -400,7 +401,7 @@ export default class MockDiscord {
     });
   }
 
-  private mockMessage(content:any): void {
+  private mockMessage(content:string): void {
     this.message = Reflect.construct(Message, [
       this.client,
       {
@@ -463,7 +464,8 @@ export default class MockDiscord {
     //   },
     // );
     this.interaction.reply = jest.fn();
-    this.interaction.deferReply = () => Promise.resolve({} as any);
+    // this.interaction.deferReply = () => Promise.resolve({} as Promise<Message<boolean>>);
+    this.interaction.deferReply = jest.fn();
     this.interaction.editReply = jest.fn();
     // this.interaction.followUp = jest.fn();
     this.interaction.guildId = this.guild.id;

@@ -6,6 +6,7 @@ import {
   SlashCommandBuilder,
   ToAPIApplicationCommandOptions,
   SlashCommandSubcommandsOnlyBuilder,
+  EmbedData,
   // ApplicationCommandOptionBase,
   // ApplicationCommandOption,
   // APIApplicationCommandOption,
@@ -28,6 +29,10 @@ export const defaultConfig = {
   buildPreview: 'enabled',
 };
 
+type Options = {
+  [key:number]: typeof String | typeof Number | typeof Boolean,
+};
+
 export const optionType = {
   // 0: null,
   // 1: subCommand,
@@ -40,7 +45,7 @@ export const optionType = {
   // 8: role,
   // 9: mentionable,
   10: Number,
-} as any;
+} as Options;
 
 function getNestedOptions(options:ToAPIApplicationCommandOptions[]):ToAPIApplicationCommandOptions[] {
   // This gets a flat array of options, including nested options
@@ -58,7 +63,7 @@ function getNestedOptions(options:ToAPIApplicationCommandOptions[]):ToAPIApplica
 }
 
 function castToType(value: string, typeId: number) {
-  const typeCaster = optionType[typeId] as any;
+  const typeCaster = optionType[typeId] as typeof String | typeof Number | typeof Boolean;
   return typeCaster ? typeCaster(value) : value;
 }
 
@@ -75,7 +80,7 @@ export function getParsedCommand(
   const requestedOptions = options.reduce((
     requestedOptions2:ToAPIApplicationCommandOptions[],
     option:ToAPIApplicationCommandOptions,
-  ):any[] => {
+  ):ToAPIApplicationCommandOptions[] => {
     const identifier = `${option.toJSON().name}:`;
     // log.debug(`[${PREFIX}] identifier: ${JSON.stringify(identifier, null, 2)}`);
     const inclused = stringCommand.includes(identifier);
@@ -100,7 +105,7 @@ export function getParsedCommand(
       // log.debug(`[${PREFIX}] value: ${JSON.stringify(value, null, 2)}`);
       const formattedValue = castToType(value, option.toJSON().type);
       // log.debug(`[${PREFIX}] formattedValue: ${JSON.stringify(formattedValue, null, 2)}`);
-      return [...requestedOptions2, {
+      return [...requestedOptions2, { // @ts-ignore
         name: option.toJSON().name,
         value: formattedValue,
         type: option.toJSON().type,
@@ -108,7 +113,7 @@ export function getParsedCommand(
     }
 
     // log.debug(`[${PREFIX}] remainderFinal: ${JSON.stringify(remainder, null, 2)}`);
-    return [...requestedOptions2, {
+    return [...requestedOptions2, { // @ts-ignore
       name: option.toJSON().name,
       value: castToType(remainder.trim(), option.toJSON().type),
       type: option.toJSON().type,
@@ -137,20 +142,20 @@ export function getParsedCommand(
   return retValue;
 }
 
-export function embedContaining(content:any) {
+export function embedContaining(content:EmbedData) {
   return {
     embeds: expect.arrayContaining([expect.objectContaining(new EmbedBuilder(content))]),
     // fetchReply: true,
   };
 }
 
-export function embedContainingWithoutFetchReply(content:any) {
+export function embedContainingWithoutFetchReply(content:EmbedData) {
   return {
     embeds: expect.arrayContaining([expect.objectContaining(content)]),
   };
 }
 
-export function fieldContainingValue(expectedValue:any) {
+export function fieldContainingValue(expectedValue:string) {
   return embedContainingWithoutFetchReply({
     fields: expect.arrayContaining([expect.objectContaining({
       value: expect.stringContaining(expectedValue),
@@ -158,7 +163,7 @@ export function fieldContainingValue(expectedValue:any) {
   });
 }
 
-export function copy(obj:any) {
+export function copy(obj:any) { // eslint-disable-line @typescript-eslint/no-explicit-any
   return JSON.parse(JSON.stringify(obj));
 }
 
@@ -280,8 +285,17 @@ export async function executeCommandWithMockOptionsAndSpySentMessage(
 }
 
 /* Spy 'edit' with mock options */
-export function mockMessageWithOptionsAndSpyEdit(options:any) {
-  const discord = new MockDiscord(options);
+export function mockMessageWithOptionsAndSpyEdit(command:{
+  id: string;
+  name: string;
+  type: number;
+  options: ToAPIApplicationCommandOptions[] | {
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[];
+  }[];
+}) {
+  const discord = new MockDiscord({ command });
   const interaction = discord.getInteraction() as ChatInputCommandInteraction;
   const channel = discord.getBotPartyTextChannel();
   const lastMessage = channel.messages.cache.last() as Message;
@@ -310,8 +324,17 @@ export async function executeCommandWithMockOptionsAndSpyEdit(
 }
 
 /* Spy 'edit' with mock options for a party reaction */
-export function mockPartyReactionAndSpyEdit(options:any) {
-  const discord = new MockDiscord(options);
+export function mockPartyReactionAndSpyEdit(command:{
+  id: string;
+  name: string;
+  type: number;
+  options: ToAPIApplicationCommandOptions[] | {
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[];
+  }[];
+}) {
+  const discord = new MockDiscord({ command });
   const channel = discord.getBotPartyTextChannel();
   const lastMessage = channel.messages.cache.last() as Message;
   const userMessage = discord.getMessage();
@@ -323,9 +346,23 @@ export function mockPartyReactionAndSpyEdit(options:any) {
   };
 }
 
-export async function executePartyReactionAndSpyEdit(Command:any, action:any, options:any, config = {}) {
-  const { spy, reaction, user } = mockPartyReactionAndSpyEdit(options);
-  const commandInstance = new Command(reaction, user, { ...defaultConfig, ...config });
-  await commandInstance.execute(action);
-  return spy;
-}
+// export async function executePartyReactionAndSpyEdit(
+//   Command:SlashCommand,
+//   action:any,
+//   options:{
+//     id: string;
+//     name: string;
+//     type: number;
+//     options: ToAPIApplicationCommandOptions[] | {
+//       name: string;
+//       type: number;
+//       options: ToAPIApplicationCommandOptions[];
+//     }[];
+//   },
+//   config = {},
+// ) {
+//   const { spy, reaction, user } = mockPartyReactionAndSpyEdit(options);
+//   const commandInstance = new Command(reaction, user, { ...defaultConfig, ...config });
+//   await commandInstance.execute(action);
+//   return spy;
+// }

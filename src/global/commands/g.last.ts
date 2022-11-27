@@ -33,7 +33,11 @@ export async function last(
   // and return an array of messages
   const guild = target.guild as Guild;
   let totalMessages = 0;
-  const messageInfo = [] as any[];
+  const messageInfo = [] as {
+    channel: string;
+    content: string;
+    timestamp: Date;
+  }[];
 
   return new Promise(async (resolve) => { // eslint-disable-line
     await guild.channels.fetch()
@@ -74,7 +78,7 @@ export async function last(
             }
 
             // Sort the messages by timestamp
-            messageInfo.sort((a, b) => a.timestamp - b.timestamp);
+            messageInfo.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
 
             // Get the most recent message
             const lastMessage = messageInfo[messageInfo.length - 1];

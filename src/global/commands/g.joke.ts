@@ -5,13 +5,20 @@ import log from '../utils/log';
 
 const PREFIX = parse(__filename).name;
 
+type Joke = {
+  type: 'twopart' | 'single';
+  setup?: string;
+  delivery?: string;
+  joke?: string;
+};
+
 export default joke;
 
 /**
  *
  * @return {any}
  */
-export async function joke():Promise<any> {
+export async function joke():Promise<Joke> {
   // log.debug(`[${PREFIX}] joke()`);
   // log.debug(`[${PREFIX}] env.RAPID_TOKEN: ${env.RAPID_TOKEN}`);
   const { data } = await axios.get('https://jokeapi-v2.p.rapidapi.com/joke/Misc,Pun', {
@@ -28,5 +35,5 @@ export async function joke():Promise<any> {
 
   log.info(`[${PREFIX}] response: ${JSON.stringify(data, null, 2)}`);
 
-  return data;
+  return data as Joke;
 }

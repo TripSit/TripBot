@@ -42,7 +42,7 @@ export const dCalcpsychedelics: SlashCommand = {
     startLog(PREFIX, interaction);
     const lastDose = interaction.options.getNumber('last_dose', true);
     const desiredDose = interaction.options.getNumber('desired_dose');
-    const days = interaction.options.getNumber('days')!;
+    const days = interaction.options.getNumber('days', true);
 
     const command = interaction.options.getSubcommand();
 
