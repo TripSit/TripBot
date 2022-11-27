@@ -186,7 +186,7 @@ export async function leaderboard(
       .orderBy('total_points', 'desc')
       .limit(15);
 
-    log.debug(`[${PREFIX}] userExperience: ${JSON.stringify(userExperience, null, 2)}`);
+    // log.debug(`[${PREFIX}] userExperience: ${JSON.stringify(userExperience, null, 2)}`);
 
     const rankList = [] as RankType[];
     let i = 1;
@@ -199,14 +199,14 @@ export async function leaderboard(
       if (!userData.discord_id) {
         log.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
       }
-      log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData)}`);
+      // log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData)}`);
 
       if (userData && userData.discord_id) {
         rankList.push({ rank: i, id: userData.discord_id, level: user.level });
         i += 1;
       }
     }
-    log.debug(`[${PREFIX}] rankList: ${JSON.stringify(rankList, null, 2)}`);
+    // log.debug(`[${PREFIX}] rankList: ${JSON.stringify(rankList, null, 2)}`);
     results = {
       [categoryName]: rankList,
     };
