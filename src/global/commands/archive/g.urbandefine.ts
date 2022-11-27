@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { parse } from 'path';
 import { stripIndents } from 'common-tags';
-import log from '../utils/log';
-import env from '../utils/env.config';
+import log from '../../utils/log';
+import env from '../../utils/env.config';
 
 const PREFIX = parse(__filename).name;
 

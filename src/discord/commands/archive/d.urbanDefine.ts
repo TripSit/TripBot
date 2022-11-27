@@ -5,7 +5,7 @@ import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { urbandefine } from '../../../global/commands/g.urbandefine';
+import { urbandefine } from '../../../global/commands/archive/g.urbandefine';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const PREFIX = parse(__filename).name;
