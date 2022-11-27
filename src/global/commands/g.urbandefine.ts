@@ -28,6 +28,8 @@ export async function urbandefine(term:string) {
     },
   );
 
+  log.debug(`[${PREFIX}] response: ${JSON.stringify(data, null, 2)}`);
+
   type UrbanDefinition = {
     definition: string,
     permalink: string,
