@@ -28,7 +28,7 @@ export async function urbandefine(term:string) {
     },
   );
 
-  log.debug(`[${PREFIX}] response: ${JSON.stringify(data, null, 2)}`);
+  log.debug(data);
 
   type UrbanDefinition = {
     definition: string,
