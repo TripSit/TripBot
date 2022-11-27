@@ -14,6 +14,7 @@ import {
 import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
+import { globalTemplate } from '../../../global/commands/_g.template';
 import env from '../../../global/utils/env.config';
 import log from '../../../global/utils/log';
 import { startLog } from '../../utils/startLog';
