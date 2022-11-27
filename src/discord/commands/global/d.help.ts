@@ -88,7 +88,7 @@ export const dHelp: SlashCommand = {
     funEmbed.addFields({ name: 'Triptoys', value: getDesc('triptoys') ?? '', inline: true });
     funEmbed.addFields({ name: 'Imgur', value: getDesc('imgur') ?? '', inline: true });
     funEmbed.addFields({ name: 'Magick8Ball', value: getDesc('magick8ball') ?? '', inline: true });
-    funEmbed.addFields({ name: 'Urban Define', value: getDesc('urban_define') ?? '', inline: true });
+    // funEmbed.addFields({ name: 'Urban Define', value: getDesc('urban_define') ?? '', inline: true });
     funEmbed.addFields({ name: 'Topic', value: getDesc('topic') ?? '', inline: true });
     funEmbed.addFields({ name: 'Joke', value: getDesc('joke') ?? '', inline: true });
     // funEmbed.addFields({ name: 'Youtube', value: getDesc('youtube') ?? '', inline: true });
