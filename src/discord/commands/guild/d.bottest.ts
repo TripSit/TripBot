@@ -79,6 +79,7 @@ const testableCommands = [ // eslint-disable-line
   'birthday',
   'calc_psychedelics',
   'dramacounter',
+  'experience',
   'h2flow',
   'help',
   'idose',
@@ -91,7 +92,6 @@ const testableCommands = [ // eslint-disable-line
   'leaderboard',
   'poll',
   'profile',
-  // 'privacy', // WIP
   'remindme',
   'reminder',
   'say',
@@ -447,6 +447,13 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
           if (name === 'substance') return 'DXM';
           return null;
         },
+      };
+      await command.execute(testInteraction);
+      return true;
+    }
+    if (commandName === 'experience') {
+      testInteraction.options = {
+        getMember: () => interaction.member,
       };
       await command.execute(testInteraction);
       return true;
