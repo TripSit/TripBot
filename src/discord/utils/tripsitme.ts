@@ -1080,7 +1080,7 @@ export async function tripsitmeButton(
     .setTitle('Tripsitter Help Request');
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
     .setCustomId('triageInput')
-    .setLabel('What substance? How much taken? What time?')
+    .setLabel('What substance? How much taken? How long ago?')
     .setStyle(TextInputStyle.Short)));
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
     .setCustomId('introInput')
