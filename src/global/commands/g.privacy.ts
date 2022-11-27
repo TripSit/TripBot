@@ -7,7 +7,8 @@ import {
   UserExperience,
   UserReminders,
   Users,
-  UserTickets,
+  // UserTickets,
+  // UserActions,
 } from '../@types/pgdb';
 import log from '../utils/log';
 
@@ -34,8 +35,8 @@ export async function privacy(
     .where('user_id', userData.id);
   const userReminders = await db<UserReminders>('user_reminders')
     .where('user_id', userData.id);
-  const userTickets = await db<UserTickets>('user_tickets')
-    .where('user_id', userData.id);
+  // const userTickets = await db<UserTickets>('user_tickets')
+  //   .where('user_id', userData.id);
 
   if (command === 'get') {
     response = '';
@@ -76,9 +77,9 @@ export async function privacy(
     if (userReminders.length > 0) {
       response += `\n\nYou have ${userReminders.length} reminders. Use /reminders get to see specifics!`;
     }
-    if (userTickets.length > 0) {
-      response += `\n\nYou have ${userTickets.length} tickets. Use /tickets get to see specifics!`;
-    }
+    // if (userTickets.length > 0) {
+    //   response += `\n\nYou have ${userTickets.length} tickets. Use /tickets get to see specifics!`;
+    // }
   }
   if (command === 'delete') {
     const blankUser = {
@@ -112,9 +113,9 @@ export async function privacy(
     await db<UserReminders>('user_reminders')
       .where('user_id', userData.id)
       .del();
-    await db<UserTickets>('user_tickets')
-      .where('user_id', userData.id)
-      .del();
+    // await db<UserTickets>('user_tickets')
+    //   .where('user_id', userData.id)
+    //   .del();
 
     response = 'I deleted your User Data:\n';
       for (const [key, value] of Object.entries(userData)) { // eslint-disable-line
@@ -143,9 +144,9 @@ export async function privacy(
     if (userReminders.length > 0) {
       response += `\n\nI deleted ${userReminders.length} reminders!`;
     }
-    if (userTickets.length > 0) {
-      response += `\n\nI deleted ${userTickets.length} tickets!`;
-    }
+    // if (userTickets.length > 0) {
+    //   response += `\n\nI deleted ${userTickets.length} tickets!`;
+    // }
   }
 
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
