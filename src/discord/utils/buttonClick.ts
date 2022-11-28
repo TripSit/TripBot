@@ -229,7 +229,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     const guild = interaction.client.guilds.resolve(env.DISCORD_GUILD_ID);
     // log.debug(guild);
     if (guild) {
-      guild.members.ban(interaction.user, { deleteMessageDays: 7, reason: 'Refused warning' });
+      guild.members.ban(interaction.user, { deleteMessageDays: 0, reason: 'Refused warning' });
     }
     const embed = embedTemplate()
       .setColor(Colors.Red)
