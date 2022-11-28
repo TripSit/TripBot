@@ -25,9 +25,9 @@ export const info: UserCommand = {
     .setType(ApplicationCommandType.User),
   async execute(interaction) {
     actor = interaction.member as GuildMember;
-    log.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
+  // log.debug(`[${PREFIX}] actor: ${JSON.stringify(actor, null, 2)}`);
     target = interaction.targetMember as GuildMember;
-    log.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+  // log.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
 
     const testInteraction = {
       options: {},

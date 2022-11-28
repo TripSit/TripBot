@@ -14,7 +14,7 @@ const PREFIX = parse(__filename).name;
  * @param {User} user The user that added the reaction
  */
 export async function removeDuplicates(reaction:MessageReaction, user:User) {
-  log.debug(`[${PREFIX}] starting!`);
+// log.debug(`[${PREFIX}] starting!`);
   // const reactionAuthor = reaction.message.author;
   // const reactionEmoji = reaction.emoji;
 

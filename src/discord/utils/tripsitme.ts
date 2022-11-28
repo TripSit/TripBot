@@ -189,7 +189,7 @@ export async function tripsitmeOwned(
   const userData = await getUser(userId, null);
   const ticketData = await getOpenTicket(userData.id, null);
 
-  log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+  // log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
   if (!ticketData) {
     const rejectMessage = `Hey ${interaction.member}, ${target.displayName} not have an open session!`;
@@ -437,7 +437,7 @@ export async function tripsitmeClose(
   const userData = await getUser(target.id, null);
   const ticketData = await getOpenTicket(userData.id, null);
 
-  log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+  // log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
   if (!ticketData) {
     const rejectMessage = `Hey ${interaction.member}, ${target.displayName} not have an open session!`;
@@ -461,7 +461,7 @@ export async function tripsitmeClose(
       .insert(ticketData)
       .onConflict('id')
       .merge();
-    log.debug(`[${PREFIX}] Updated ticket status to DELETED`);
+  // log.debug(`[${PREFIX}] Updated ticket status to DELETED`);
   }
 
   const closeMessage = stripIndents`Hey ${target}, it looks like you're doing somewhat better!
@@ -557,7 +557,7 @@ export async function tripsitmeResolve(
   const userData = await getUser(target.id, null);
   const ticketData = await getOpenTicket(userData.id, null);
 
-  log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+  // log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
   if (ticketData === undefined || Object.entries(ticketData).length === 0) {
     const rejectMessage = `Hey ${interaction.member}, you do not have an open session!`;
@@ -626,7 +626,7 @@ export async function tripsitmeResolve(
       .insert(ticketData)
       .onConflict('id')
       .merge();
-    log.debug(`[${PREFIX}] Updated ticket status to DELETED`);
+  // log.debug(`[${PREFIX}] Updated ticket status to DELETED`);
   }
 
   const endHelpMessage = stripIndents`Hey ${target}, we're glad you're doing better!
@@ -768,8 +768,8 @@ export async function tripSitMe(
   // Determine the target.
   // If the user clicked the button, the target is whoever initialized the interaction.
   // Otherwise, the target is the user mentioned in the /tripsit command.
-  log.debug(`[${PREFIX}] memberInput: ${JSON.stringify(memberInput, null, 2)}`);
-  log.debug(`[${PREFIX}] interaction.member: ${JSON.stringify(interaction.member, null, 2)}`);
+  // log.debug(`[${PREFIX}] memberInput: ${JSON.stringify(memberInput, null, 2)}`);
+  // log.debug(`[${PREFIX}] interaction.member: ${JSON.stringify(interaction.member, null, 2)}`);
   const target = (memberInput ?? interaction.member) as GuildMember;
   // log.debug(`[${PREFIX}] target: ${target}`);
 
@@ -920,7 +920,7 @@ export async function tripSitMe(
     deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
   } as UserTickets;
 
-  log.debug(`[${PREFIX}] newTicketData: ${JSON.stringify(newTicketData, null, 2)}`);
+  // log.debug(`[${PREFIX}] newTicketData: ${JSON.stringify(newTicketData, null, 2)}`);
 
   // Update thet ticket in the DB
   await db<UserTickets>('user_tickets')
@@ -947,7 +947,7 @@ export async function tripsitmeButton(
   }
   const target = interaction.member as GuildMember;
 
-  log.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+  // log.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
 
   const actorIsAdmin = (target as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
   const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
@@ -991,7 +991,7 @@ export async function tripsitmeButton(
 
   const ticketData = await getOpenTicket(userData.id, null);
 
-  log.debug(`[${PREFIX}] Target ticket data: ${JSON.stringify(ticketData, null, 2)}`);
+  // log.debug(`[${PREFIX}] Target ticket data: ${JSON.stringify(ticketData, null, 2)}`);
 
   if (ticketData !== undefined) {
     // log.debug(`[${PREFIX}] Target has open ticket: ${JSON.stringify(ticketData, null, 2)}`);
@@ -1000,15 +1000,15 @@ export async function tripsitmeButton(
     try {
       threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
-      log.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted`);
+    // log.debug(`[${PREFIX}] There was an error updating the help thread, it was likely deleted`);
       // Update the ticket status to closed
       ticketData.status = 'DELETED' as TicketStatus;
       await db<UserTickets>('user_tickets')
         .insert(ticketData)
         .onConflict('id')
         .merge();
-      log.debug(`[${PREFIX}] Updated ticket status to DELETED`);
-      log.debug(`[${PREFIX}] Ticket: ${JSON.stringify(ticketData, null, 2)}`);
+    // log.debug(`[${PREFIX}] Updated ticket status to DELETED`);
+    // log.debug(`[${PREFIX}] Ticket: ${JSON.stringify(ticketData, null, 2)}`);
     }
 
     if (threadHelpUser.id) {

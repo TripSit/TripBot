@@ -311,7 +311,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
       roleArray.forEach(role => {
         if (role[0]) {
           if (role[1]) {
-            log.debug(`[${PREFIX}] role: ${role[0].name}`);
+          // log.debug(`[${PREFIX}] role: ${role[0].name}`);
             selectMenu.addOptions(
               {
                 label: role[0].name,

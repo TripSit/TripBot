@@ -68,7 +68,7 @@ module.exports = {
       .then(dom => dom.window.document);
 
     if (!document.querySelector('.pid-box-1')) {
-      log.debug(`[${PREFIX}] No results found for ${inputImprint} ${inputColor} ${inputShape}`);
+    // log.debug(`[${PREFIX}] No results found for ${inputImprint} ${inputColor} ${inputShape}`);
       return;
     }
     const firstResult = document.querySelector('.pid-box-1');
@@ -84,11 +84,11 @@ module.exports = {
     const details = firstResult.getElementsByClassName('ddc-pid-details')[0].innerHTML;
     const strengthmatched = details.match(strengthregex);
     const strength = strengthmatched[2];
-    log.debug(`[${PREFIX}] strength: ${strength}`);
+  // log.debug(`[${PREFIX}] strength: ${strength}`);
 
     const imprintmatched = details.match(imprintregex);
     const imprint = imprintmatched[2].toUpperCase();
-    log.debug(`[${PREFIX}] imprint: ${imprint}`);
+  // log.debug(`[${PREFIX}] imprint: ${imprint}`);
 
     const colormatched = details.match(colorregex);
     let color = 'Null';
@@ -96,11 +96,11 @@ module.exports = {
       color = colormatched.at(2);
       color = color.replace('&amp;', '&');
     }
-    log.debug(`[${PREFIX}] color: ${color}`);
+  // log.debug(`[${PREFIX}] color: ${color}`);
 
     const shapematched = details.match(shaperegex);
     const shape = shapematched[2];
-    log.debug(`[${PREFIX}] shape: ${shape}`);
+  // log.debug(`[${PREFIX}] shape: ${shape}`);
 
     const embed = template.embedTemplate()
       .setAuthor({
@@ -124,7 +124,7 @@ module.exports = {
       .then(dom => dom.window.document);
 
     if (!doc.querySelector('.pid-list')) {
-      log.debug(`[${PREFIX}] No results found for ${inputImprint} ${inputColor} ${inputShape}`);
+    // log.debug(`[${PREFIX}] No results found for ${inputImprint} ${inputColor} ${inputShape}`);
       return;
     }
     const details2 = doc.querySelector('.pid-list').innerHTML;
@@ -149,7 +149,7 @@ module.exports = {
     // eslint-disable-next-line
     // It seems like drugs.com has some weird image handling, so we need to download the image and upload the image to imgur
     // I will eventually cache these images so we don't need to download/upload every time
-    log.debug(`[${PREFIX}] Starting axios image request`);
+  // log.debug(`[${PREFIX}] Starting axios image request`);
 
     const imgurUrl = await axios.get(imageURL, {
       responseType: 'stream',

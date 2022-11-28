@@ -30,8 +30,8 @@ async function getCommands(commandType: string): Promise<SlashCommand[]> {
 }
 
 if (validateEnv()) {
-  log.debug(`[${PREFIX}] discordClientId: ${env.DISCORD_CLIENT_ID}`);
-  log.debug(`[${PREFIX}] discordGuildId: ${env.DISCORD_GUILD_ID}`);
+// log.debug(`[${PREFIX}] discordClientId: ${env.DISCORD_CLIENT_ID}`);
+// log.debug(`[${PREFIX}] discordGuildId: ${env.DISCORD_GUILD_ID}`);
 
   const rest = new REST({ version: '9' }).setToken(
     env.DISCORD_CLIENT_TOKEN as string,
@@ -48,10 +48,10 @@ if (validateEnv()) {
     )),
   ])
     .then(() => {
-      log.info('Commands successfully registered!');
+      log.info(`[${PREFIX}] Commands successfully registered!`);
     })
     .catch(ex => {
-      log.error('Error in registering commands:', ex);
+      log.error(`[${PREFIX}] Error in registering commands: ${ex}`);
       process.exit(1);
     });
 }

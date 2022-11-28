@@ -926,7 +926,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     //   const target = await interaction.guild?.members.fetch('332687787172167680');
     //   testInteraction.options = {
     //     getMember: async (name:string) => {
-    //       log.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+    //     // log.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
     //       if (name === 'user') return target;
     //       return null;
     //     },

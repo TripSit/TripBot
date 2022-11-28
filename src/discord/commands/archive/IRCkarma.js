@@ -14,10 +14,10 @@ module.exports = {
   async karma(message) {
     // Check if '++' is in the message
     if (message.cleanContent.includes('++')) {
-      log.debug(`[${PREFIX}] Found ++ in message`);
+    // log.debug(`[${PREFIX}] Found ++ in message`);
       // Find the word directly before the ++
       const wordBeforePlus = message.cleanContent.split('++')[0];
-      log.debug(`[${PREFIX}] Word before ++: ${wordBeforePlus}`);
+    // log.debug(`[${PREFIX}] Word before ++: ${wordBeforePlus}`);
 
       // If the word is blank, ignore it
       if (wordBeforePlus === null
@@ -55,10 +55,10 @@ module.exports = {
     }
 
     if (message.cleanContent.includes('--')) {
-      log.debug(`[${PREFIX}] Found -- in message`);
+    // log.debug(`[${PREFIX}] Found -- in message`);
       // Find the word directly before the --
       const wordBeforePlus = message.cleanContent.split('--')[0];
-      log.debug(`[${PREFIX}] Word before --: ${wordBeforePlus}`);
+    // log.debug(`[${PREFIX}] Word before --: ${wordBeforePlus}`);
 
       // Extract guild data
       const tripsitGuild = message.client.guilds.resolve(DISCORD_GUILD_ID);

@@ -12,7 +12,7 @@ module.exports = {
     .setName('update-guilds')
     .setDescription('This will update the guild information in the db!'),
   async execute(interaction) {
-    log.debug(`[${PREFIX}] Updating guilds...`);
+  // log.debug(`[${PREFIX}] Updating guilds...`);
     // Using discord.js find the guilds this bot is in
     const guilds = interaction.client.guilds.cache;
     let guildCount = 0;
@@ -52,6 +52,6 @@ module.exports = {
       embeds: [embed],
       ephemeral: false,
     });
-    log.debug(`[${PREFIX}] Guilds updated!`);
+  // log.debug(`[${PREFIX}] Guilds updated!`);
   },
 };

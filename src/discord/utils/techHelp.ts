@@ -134,7 +134,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
       // Get whatever they sent in the modal
       const modalInput = i.fields.getTextInputValue(`${issueType}IssueInput`);
-      log.debug(`[${PREFIX}] modalInput: ${modalInput}!`);
+      // log.debug(`[${PREFIX}] modalInput: ${modalInput}!`);
 
       // // Get the actor
       const actor = i.user;
@@ -146,7 +146,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
         type: i.guild.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
         reason: `${actor.username} submitted a(n) ${issueType} issue`,
       });
-      log.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);
+      // log.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);
 
       const embed = embedTemplate();
       embed.setDescription(
@@ -174,7 +174,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
         );
 
       await ticketThread.send({ content: message, components: [techHelpButtons] });
-      log.debug(`[${PREFIX}] Sent intro message to meta-thread ${ticketThread.id}`);
+    // log.debug(`[${PREFIX}] Sent intro message to meta-thread ${ticketThread.id}`);
     });
 }
 

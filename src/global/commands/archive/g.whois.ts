@@ -19,7 +19,7 @@
 //     }
 //   });
 // } else {
-//   log.debug(`[${PREFIX}] Failed! IRC Client not running`);
+// // log.debug(`[${PREFIX}] Failed! IRC Client not running`);
 //   throw new Error('IRC Client not running!');
 // }
 
@@ -30,7 +30,7 @@
 // }
 
 // if (!data.host) {
-//   log.debug(`[${PREFIX}] Failed! ${target} not found on IRC.`);
+// // log.debug(`[${PREFIX}] Failed! ${target} not found on IRC.`);
 //   throw new Error('User not found on IRC!');
 // }
 

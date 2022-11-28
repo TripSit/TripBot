@@ -171,10 +171,10 @@ module.exports = {
       // eslint-disable-next-line no-await-in-loop
       const member = await interaction.guild.members.fetch({ query: name, limit: 1 });
       const target = member.first();
-      log.debug(`[${PREFIX}] member: ${target.toString()}`);
+    // log.debug(`[${PREFIX}] member: ${target.toString()}`);
 
       target.ban(member, { days: 7, reason: 'Raid account?' });
-      log.debug(`[${PREFIX}] Banned ${name}!`);
+    // log.debug(`[${PREFIX}] Banned ${name}!`);
     }
   },
 };

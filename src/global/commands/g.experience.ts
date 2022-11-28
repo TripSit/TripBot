@@ -20,11 +20,11 @@ export async function experience(
     .where('user_id', userData.id)
     .orderBy('level', 'desc');
 
-  log.debug(`[${PREFIX}] experienceData: ${JSON.stringify(experienceData, null, 2)}`);
+  // log.debug(`[${PREFIX}] experienceData: ${JSON.stringify(experienceData, null, 2)}`);
 
   let response = '';
   for (const row of experienceData) { // eslint-disable-line no-restricted-syntax
-    log.debug(`[${PREFIX}] row: ${JSON.stringify(row, null, 2)}`);
+  // log.debug(`[${PREFIX}] row: ${JSON.stringify(row, null, 2)}`);
     // Lowercase besides the first letter
     const levelName = (row.type as string).charAt(0).toUpperCase() + (row.type as string).slice(1).toLowerCase();
     response += `**Level ${row.level} ${levelName}**`;

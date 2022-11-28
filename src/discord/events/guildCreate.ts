@@ -41,6 +41,6 @@ export const guildCreate: GuildCreateEvent = {
     Description: ${guild.description ? guild.description : 'No description'}
     `);
 
-    log.debug(`[${PREFIX}] finished!`);
+  // log.debug(`[${PREFIX}] finished!`);
   },
 };

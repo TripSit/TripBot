@@ -31,7 +31,7 @@ import { parse } from 'path';
 import { embedTemplate } from './embedTemplate';
 import env from '../../global/utils/env.config';
 import { startLog } from './startLog';
-import log from '../../global/utils/log'; // eslint-disable-line no-unused-vars
+import log from '../../global/utils/log'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { getGuild } from '../../global/utils/knex';
 
 const PREFIX = parse(__filename).name;
@@ -344,7 +344,7 @@ export async function applicationApprove(
     const myRole = myMember.roles.highest;
 
     if (role.comparePositionTo(myRole) < 0) {
-      log.debug(`[${PREFIX}] Adding role ${role.name} to ${target.displayName}`);
+    // log.debug(`[${PREFIX}] Adding role ${role.name} to ${target.displayName}`);
       target.roles.add(role);
     } else {
       interaction.reply(`I do not have permission to add the ${role.name} role to ${target.displayName}!`);

@@ -31,7 +31,7 @@ module.exports = {
           key2: 'value',
         }),
       });
-      log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+    // log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
       embed.setDescription(data);
     } catch (error) {
       log.error(`[${PREFIX}] ${error}`);

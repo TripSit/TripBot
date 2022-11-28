@@ -103,7 +103,7 @@ export const dinvite: SlashCommand = {
       .setName('channel')),
 
   async execute(interaction:ChatInputCommandInteraction) {
-    log.debug(`[${PREFIX}] starting!`);
+  // log.debug(`[${PREFIX}] starting!`);
 
     const discordChannel = interaction.options.getChannel('channel')!;
 

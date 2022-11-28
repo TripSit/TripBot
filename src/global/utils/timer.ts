@@ -45,7 +45,7 @@ export async function runTimer() {
             const currentCount = parseInt(channelTotal.name.split(': ')[1], 10);
             if (currentCount !== memberCount) {
               channelTotal.setName(`Total Members: ${memberCount}`);
-              log.debug(`[${PREFIX}] Updated total members to ${memberCount}!`);
+              // log.debug(`[${PREFIX}] Updated total members to ${memberCount}!`);
               // Check if the total members is divisible by 100
               if (memberCount % 100 === 0) {
                 const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
@@ -114,7 +114,7 @@ export async function runTimer() {
             // log.debug(`[${PREFIX}] currentCount: ${currentCount} | maxCount: ${maxCount}`);
             if (maxCount > currentCount) {
               channelMax.setName(`Max Online: ${maxCount}`);
-              log.debug(`[${PREFIX}] Updated max online members to ${maxCount}!`);
+            // log.debug(`[${PREFIX}] Updated max online members to ${maxCount}!`);
             } else {
               // log.debug(`[${PREFIX}] Max members is already ${maxCount}!`);
             }

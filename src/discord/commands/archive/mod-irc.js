@@ -98,19 +98,19 @@ module.exports = {
       .setName('ban')),
   async execute(interaction) {
     const actor = interaction.member;
-    log.debug(`[${PREFIX}] Actor: ${actor}`);
+  // log.debug(`[${PREFIX}] Actor: ${actor}`);
     const command = interaction.options.getSubcommand();
-    log.debug(`[${PREFIX}] Command: ${command}`);
+  // log.debug(`[${PREFIX}] Command: ${command}`);
     const target = interaction.options.getString('target');
-    log.debug(`[${PREFIX}] target: ${target}`);
+  // log.debug(`[${PREFIX}] target: ${target}`);
     const toggle = interaction.options.getString('toggle');
-    log.debug(`[${PREFIX}] toggle: ${toggle}`);
+  // log.debug(`[${PREFIX}] toggle: ${toggle}`);
     const reason = interaction.options.getString('reason');
-    log.debug(`[${PREFIX}] reason: ${reason}`);
+  // log.debug(`[${PREFIX}] reason: ${reason}`);
     const channel = interaction.options.getString('channel');
-    log.debug(`[${PREFIX}] channel: ${channel}`);
+  // log.debug(`[${PREFIX}] channel: ${channel}`);
     const duration = interaction.options.getString('duration');
-    log.debug(`[${PREFIX}] duration: ${duration}`);
+  // log.debug(`[${PREFIX}] duration: ${duration}`);
 
     const minutes = duration ? (await parseDuration.execute(duration) / 1000) / 60 : 0;
 

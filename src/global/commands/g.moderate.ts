@@ -134,13 +134,13 @@ export async function moderate(
   pubReason: string | null,
   duration: number | null,
 ):Promise<InteractionReplyOptions> {
-  log.debug(`${PREFIX} 
-  actor: ${actor.user.tag}
-  command: ${command}
-  target: ${target.user.tag}
-  privReason: ${privReason}
-  pubReason: ${pubReason}
-  duration: ${duration}`);
+  // log.debug(`${PREFIX}
+  // actor: ${actor.user.tag}
+  // command: ${command}
+  // target: ${target.user.tag}
+  // privReason: ${privReason}
+  // pubReason: ${pubReason}
+  // duration: ${duration}`);
 
   // Send a message to the user
   if (command !== 'REPORT' && command !== 'NOTE' && command !== 'INFO') {
@@ -232,7 +232,7 @@ export async function moderate(
     try {
       const deleteMessageValue = duration ?? 0;
       if (deleteMessageValue > 0) {
-        log.debug(`[${PREFIX}] I am deleting ${deleteMessageValue} days of messages!`);
+      // log.debug(`[${PREFIX}] I am deleting ${deleteMessageValue} days of messages!`);
         const response = await last(target);
         extraMessage = `${target.displayName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`;
       }
@@ -320,7 +320,7 @@ export async function moderate(
   }
 
   if (command !== 'INFO') {
-    log.debug(`[${PREFIX}] actionData: ${JSON.stringify(actionData, null, 2)}`);
+  // log.debug(`[${PREFIX}] actionData: ${JSON.stringify(actionData, null, 2)}`);
     await db<UserActions>('user_actions')
       .insert(actionData)
       .onConflict('id')
@@ -343,16 +343,16 @@ export async function moderate(
     .where('user_id', targetData.id)
     .orderBy('created_at', 'desc');
 
-  log.debug(`[${PREFIX}] targetActionListRaw: ${JSON.stringify(targetActionListRaw, null, 2)}`);
+  // log.debug(`[${PREFIX}] targetActionListRaw: ${JSON.stringify(targetActionListRaw, null, 2)}`);
 
   // for (const action of targetActionListRaw) {
   targetActionListRaw.forEach(action => {
     const actionString = `${action.type} (${time(action.created_at, 'R')}) - ${action.internal_note
-      ?? 'No note provided'}}`;
+      ?? 'No note provided'}`;
     targetActionList[action.type as keyof typeof targetActionList].push(actionString);
   });
 
-  log.debug(`[${PREFIX}] targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
+  // log.debug(`[${PREFIX}] targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
 
   const modlogEmbed = embedTemplate()
     // eslint-disable-next-line

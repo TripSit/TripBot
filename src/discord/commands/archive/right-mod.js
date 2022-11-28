@@ -137,15 +137,15 @@ module.exports = {
 
   async execute(interaction) {
     const actor = interaction.member;
-    log.debug(`[${PREFIX}] Actor: ${actor.displayName}`);
+  // log.debug(`[${PREFIX}] Actor: ${actor.displayName}`);
     let command = interaction.options.getSubcommand();
-    log.debug(`[${PREFIX}] Command: ${command}`);
+  // log.debug(`[${PREFIX}] Command: ${command}`);
     let target = interaction.options.getMember('target');
-    log.debug(`[${PREFIX}] target: ${target.displayName}`);
+  // log.debug(`[${PREFIX}] target: ${target.displayName}`);
     const toggle = interaction.options.getString('toggle');
-    log.debug(`[${PREFIX}] toggle: ${toggle}`);
+  // log.debug(`[${PREFIX}] toggle: ${toggle}`);
     const reason = interaction.options.getString('reason');
-    log.debug(`[${PREFIX}] reason: ${reason}`);
+  // log.debug(`[${PREFIX}] reason: ${reason}`);
     // const duration = interaction.options.getString('duration');
     // log.debug(`[${PREFIX}] duration: ${duration}`);
 
@@ -155,18 +155,18 @@ module.exports = {
       if (command === 'ban') {
         target = interaction.options.getUser('target');
         isMember = false;
-        log.debug(`[${PREFIX}] target_user.id: ${target.id}`);
+      // log.debug(`[${PREFIX}] target_user.id: ${target.id}`);
         const bans = await interaction.guild.bans.fetch();
-        log.debug(`[${PREFIX}] interaction.guild.bans.fetch(): ${bans}`);
+      // log.debug(`[${PREFIX}] interaction.guild.bans.fetch(): ${bans}`);
         command = 'unban';
         // color = 'GREEN';
         await interaction.guild.bans.remove(target, reason);
-        log.debug(`[${PREFIX}] I unbanned ${target}!`);
+      // log.debug(`[${PREFIX}] I unbanned ${target}!`);
       } else if (command === 'timeout') {
         target.timeout(0, reason);
         command = 'untimeout';
         // color = 'GREEN';
-        log.debug(`[${PREFIX}] I untimed out ${target}!`);
+      // log.debug(`[${PREFIX}] I untimed out ${target}!`);
       }
     }
 
@@ -175,7 +175,7 @@ module.exports = {
         .setColor(Colors.Red)
         .setDescription('target not found, are you sure they are in the server?');
       interaction.reply({ embeds: [embed], ephemeral: true });
-      log.debug(`[${PREFIX}] Target not found!`);
+    // log.debug(`[${PREFIX}] Target not found!`);
       return;
     }
 
@@ -258,13 +258,13 @@ module.exports = {
     if (command === 'info') {
       // interaction.reply({ embeds: [target_embed], ephemeral: true, components: [mod_buttons] });
       interaction.reply({ embeds: [targetEmbed], ephemeral: true });
-      log.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${target.user.name}`);
+    // log.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${target.user.name}`);
       return;
     }
-    log.debug(`${PREFIX} CHANNEL_MODERATORS: ${CHANNEL_MODERATORS}`);
+  // log.debug(`${PREFIX} CHANNEL_MODERATORS: ${CHANNEL_MODERATORS}`);
     const modChan = interaction.client.channels.cache.get(CHANNEL_MODERATORS);
     // mod_chan.send({ embeds: [target_embed], components: [mod_buttons] });
     modChan.send({ embeds: [targetEmbed] });
-    log.debug(`${PREFIX} send a message to the moderators room`);
+  // log.debug(`${PREFIX} send a message to the moderators room`);
   },
 };

@@ -77,6 +77,6 @@ module.exports = {
         // log.error(`[${PREFIX}] error2: ${err2}`);
       }
     }
-    log.debug(`[${PREFIX}] Finsihed!`);
+  // log.debug(`[${PREFIX}] Finsihed!`);
   },
 };

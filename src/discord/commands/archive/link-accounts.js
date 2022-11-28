@@ -59,11 +59,11 @@ module.exports = {
     module.exports.interaction = interaction;
 
     const actor = interaction.member;
-    log.debug(`[${PREFIX}] Actor: ${actor}`);
+  // log.debug(`[${PREFIX}] Actor: ${actor}`);
     const service = interaction.options.getSubcommand();
-    log.debug(`[${PREFIX}] service: ${service}`);
+  // log.debug(`[${PREFIX}] service: ${service}`);
     const nickname = interaction.options.getString('nickname');
-    log.debug(`[${PREFIX}] target: ${nickname}`);
+  // log.debug(`[${PREFIX}] target: ${nickname}`);
     // Create an authentication token to use for the link
     const token = `${Math.random().toString(36).substring(2, 8)}-${Math.random().toString(36).substring(2, 8)}-${Math.random().toString(36).substring(2, 8)}`;
 
@@ -79,11 +79,11 @@ module.exports = {
             interaction.reply({ embeds: [embed], ephemeral: true });
             return;
           }
-          log.debug(`[${PREFIX}] ${actor} ${data.accountinfo} ${data.account}`);
+        // log.debug(`[${PREFIX}] ${actor} ${data.accountinfo} ${data.account}`);
           const [actorData, actorFbid] = await getUserInfo(actor);
           if (actorData.irc && actorData.irc.verified) {
-            log.debug(`[${PREFIX}] actorData.irc: ${actorData.irc}`);
-            log.debug(`[${PREFIX}] actorData.irc.nickname: ${actorData.irc.nickname}`);
+          // log.debug(`[${PREFIX}] actorData.irc: ${actorData.irc}`);
+          // log.debug(`[${PREFIX}] actorData.irc.nickname: ${actorData.irc.nickname}`);
             embed.setDescription(stripIndents`Your account is already linked to '${actorData.irc.nickname}'`);
             interaction.reply({ embeds: [embed], ephemeral: true });
             return;
@@ -113,7 +113,7 @@ module.exports = {
           actorData.authToken = token;
 
           // log.debug(`[${PREFIX}] actorData: ${JSON.stringify(actorData, null, 2)}`);
-          log.debug(`[${PREFIX}] actorFbid: ${actorFbid}`);
+        // log.debug(`[${PREFIX}] actorFbid: ${actorFbid}`);
 
           await setUserInfo(actorFbid, actorData);
 
@@ -132,19 +132,19 @@ module.exports = {
     }
   },
   async verifyLink(service, accountInfo, token) {
-    log.debug(`[${PREFIX}] Actor: ${accountInfo.account}`);
-    log.debug(`[${PREFIX}] givnToken: ${token}`);
+  // log.debug(`[${PREFIX}] Actor: ${accountInfo.account}`);
+  // log.debug(`[${PREFIX}] givnToken: ${token}`);
 
     const [actorData, actorFbid] = await getUserInfo(accountInfo);
 
     // log.debug(`[${PREFIX}] user: ${JSON.stringify(actorData, null, 2)}`);
-    log.debug(`[${PREFIX}] authToken: ${actorData.authToken}`);
-    log.debug(`[${PREFIX}] typeof authToken: ${typeof actorData.authToken}`);
-    log.debug(`[${PREFIX}] typeof givnToken: ${typeof token}`);
+  // log.debug(`[${PREFIX}] authToken: ${actorData.authToken}`);
+  // log.debug(`[${PREFIX}] typeof authToken: ${typeof actorData.authToken}`);
+  // log.debug(`[${PREFIX}] typeof givnToken: ${typeof token}`);
 
     if (actorData.authToken) {
       if (actorData.authToken.toString() === token.toString()) {
-        log.debug(`[${PREFIX}] actorData.authToken matches!`);
+      // log.debug(`[${PREFIX}] actorData.authToken matches!`);
         const embed = template.embedTemplate();
         embed.setTitle('Link your account to IRC - Success!');
         if (service === 'irc') {
@@ -153,9 +153,9 @@ module.exports = {
           global.ircClient.say(accountInfo.nick, 'Your account has been linked!');
           const tripsitGuild = module.exports.interaction.client.guilds.cache.get(DISCORD_GUILD_ID);
           const roleIrcVerified = tripsitGuild.roles.cache.get(roleIrcVerifiedId);
-          log.debug(`[${PREFIX}] discord ID: ${actorData.discord.id}`);
+        // log.debug(`[${PREFIX}] discord ID: ${actorData.discord.id}`);
           const target = await tripsitGuild.members.fetch(actorData.discord.id);
-          log.debug(`[${PREFIX}] target: ${target}`);
+        // log.debug(`[${PREFIX}] target: ${target}`);
           await target.roles.add(roleIrcVerified);
           embed.setDescription(stripIndents`You have successfully linked your Discord account to the ${accountInfo.nick} IRC account!
           If this is not expected please contact Moonbear#1024 on discord, but don't worry: your account is safe!`);

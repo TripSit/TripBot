@@ -14,8 +14,8 @@ export default urbandefine;
  * @return {string} definition
  */
 export async function urbandefine(term:string) {
-  log.debug(`[${PREFIX}] UrbanDefine looking for ${term}`);
-  log.debug(`[${PREFIX}] RAPID_TOKEN: ${env.RAPID_TOKEN.slice(0, 4)}`);
+// log.debug(`[${PREFIX}] UrbanDefine looking for ${term}`);
+// log.debug(`[${PREFIX}] RAPID_TOKEN: ${env.RAPID_TOKEN.slice(0, 4)}`);
   const { data } = await axios.get(
     'https://mashape-community-urban-dictionary.p.rapidapi.com/define',
     {
@@ -28,7 +28,7 @@ export async function urbandefine(term:string) {
     },
   );
 
-  log.debug(data);
+// log.debug(data);
 
   type UrbanDefinition = {
     definition: string,
@@ -44,7 +44,7 @@ export async function urbandefine(term:string) {
     thumbs_down: number
   };
 
-  log.debug(`[${PREFIX}] UrbanDefine found ${data.list.length} results`);
+// log.debug(`[${PREFIX}] UrbanDefine found ${data.list.length} results`);
 
   // Sort data by the thumbs_up value
   (data.list as UrbanDefinition[]).sort((a, b) => b.thumbs_up - a.thumbs_up);

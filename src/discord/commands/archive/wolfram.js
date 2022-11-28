@@ -23,7 +23,7 @@ module.exports = {
 
   async execute(interaction) {
     const question = interaction.options.getString('question');
-    log.debug(`[${PREFIX}] question: ${question}`);
+  // log.debug(`[${PREFIX}] question: ${question}`);
 
     const requestPayload = new URLSearchParams();
     requestPayload.append('input', question);
@@ -41,7 +41,7 @@ module.exports = {
       },
     );
 
-    log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+  // log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
     // const embed = template.embedTemplate()
     //     .setTitle(`Definition for: ${word}`)
     //     .addFields(
