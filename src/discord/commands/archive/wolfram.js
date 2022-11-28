@@ -3,9 +3,9 @@
 const path = require('path');
 const { SlashCommandBuilder } = require('discord.js');
 const axios = require('axios');
-const logger = require('../../../global/utils/logger');
+const logger = require('../../../global/utils/log');
 
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 const {
   rapidApiKey,
@@ -23,7 +23,7 @@ module.exports = {
 
   async execute(interaction) {
     const question = interaction.options.getString('question');
-    logger.debug(`[${PREFIX}] question: ${question}`);
+  // log.debug(`[${PREFIX}] question: ${question}`);
 
     const requestPayload = new URLSearchParams();
     requestPayload.append('input', question);
@@ -41,7 +41,7 @@ module.exports = {
       },
     );
 
-    logger.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+  // log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
     // const embed = template.embedTemplate()
     //     .setTitle(`Definition for: ${word}`)
     //     .addFields(
@@ -56,12 +56,11 @@ module.exports = {
     //         { name: 'Example C', value: data.list[2].example, inline: false },
     //     );
     // if (!interaction.replied) {
-    //     interaction.reply({ embeds: [embed], ephemeral: false });
+    //     interaction.reply({ embeds: [embed] });
     // }
     // else {
-    //     interaction.followUp({ embeds: [embed], ephemeral: false });
+    //     interaction.followUp({ embeds: [embed] });
     // }
-    // logger.debug(`[${PREFIX}] finished!`);
     // return;
   },
 };

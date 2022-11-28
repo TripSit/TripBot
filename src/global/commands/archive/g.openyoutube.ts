@@ -1,7 +1,7 @@
 import * as yt from 'youtube-search-without-api-key';
-// import logger from '../utils/logger';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+// import log from '../utils/log';
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 /**
  * Looks up youtube videos
@@ -33,11 +33,9 @@ export async function youtubeSearch(query:string):Promise<{
   };
   views: any;
 }[]> {
-  // logger.debug(`${PREFIX} started!`);
-  // logger.debug(`${PREFIX} query: ${query}`);
+  // log.debug(`${PREFIX} query: ${query}`);
   // const reponse = await yt.search(query);
-  // logger.debug(`${PREFIX} reponse: ${JSON.stringify(reponse, null, 2)}`);
-  // logger.debug(`${PREFIX} finished!`);
+  // log.debug(`${PREFIX} reponse: ${JSON.stringify(reponse, null, 2)}`);
   // return reponse;
-  return await yt.search(query);
-};
+  return yt.search(query);
+}

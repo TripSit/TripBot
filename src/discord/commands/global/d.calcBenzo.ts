@@ -3,36 +3,44 @@ import {
   Colors,
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand1} from '../../@types/commandDef';
-import {embedTemplate} from '../../utils/embedTemplate';
-import {calcBenzo} from '../../../global/commands/g.calcBenzo';
-// import logger from '../../../global/utils/logger';
-import {stripIndents} from 'common-tags';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import { stripIndents } from 'common-tags';
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { embedTemplate } from '../../utils/embedTemplate';
+import { calcBenzo } from '../../../global/commands/g.calcBenzo';
+import { startLog } from '../../utils/startLog';
 
-export const dcalcBenzo: SlashCommand1 = {
+const PREFIX = parse(__filename).name;
+
+export default dCalcbenzo;
+
+export const dCalcbenzo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_benzo')
     .setDescription('This tool helps figure out how much of a given benzo dose converts into another benzo dose.')
-    .addNumberOption((option) => option.setName('i_have')
+    .addNumberOption(option => option.setName('i_have')
       .setDescription('mg')
       .setRequired(true))
-    .addStringOption((option) => option.setName('mg_of')
+    .addStringOption(option => option.setName('mg_of')
       .setDescription('Pick the first benzo')
-      .setRequired(true)
-      .setAutocomplete(true))
-    .addStringOption((option) => option.setName('and_i_want_the_dose_of')
+      .setAutocomplete(true)
+      .setRequired(true))
+    .addStringOption(option => option.setName('and_i_want_the_dose_of')
       .setDescription('Pick the second drug')
-      .setRequired(true)
-      .setAutocomplete(true)),
+      .setAutocomplete(true)
+      .setRequired(true)),
 
   async execute(interaction) {
-    const dosage = interaction.options.getNumber('i_have')!;
-    const drugA = interaction.options.getString('mg_of')!;
-    const drugB = interaction.options.getString('and_i_want_the_dose_of')!;
-
+    startLog(PREFIX, interaction);
+    const dosage = interaction.options.getNumber('i_have', true);
+    const drugA = interaction.options.getString('mg_of', true);
+    const drugB = interaction.options.getString('and_i_want_the_dose_of', true);
     const data = await calcBenzo(dosage, drugA, drugB);
+
+    if (typeof data === 'string') {
+      interaction.reply({ content: data, ephemeral: true });
+      return false;
+    }
 
     const embed = embedTemplate()
       .setColor(Colors.Purple)
@@ -41,8 +49,7 @@ export const dcalcBenzo: SlashCommand1 = {
         **Please make sure to research the substances thoroughly before using them.**
         It's a good idea to start with a lower dose than the calculator shows, since everybody can react differently to different substances.
         `);
-    interaction.reply({embeds: [embed], ephemeral: false});
-    // logger.debug(`[${PREFIX}] finished!`);
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };

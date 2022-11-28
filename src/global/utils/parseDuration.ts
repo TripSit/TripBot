@@ -1,6 +1,8 @@
-// import logger from './logger';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+// import log from './logger';
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
+
+export default parseDuration;
 
 /**
  * This takes a string and converts it into time
@@ -35,7 +37,7 @@ export async function parseDuration(duration:string):Promise<number> {
           tempString += c;
           idx += 1;
         } else {
-          // logger.debug(`[${PREFIX}] TValue: ${tempString}`);
+          // log.debug(`[${PREFIX}] TValue: ${tempString}`);
           tempNumber = Number.parseInt(tempString, 10);
           stage = 3;
         }
@@ -47,7 +49,7 @@ export async function parseDuration(duration:string):Promise<number> {
         if (c === ' ') {
           break;
         } else if (supported.includes(c)) {
-          // logger.debug(`[${PREFIX}] Qualifier ${c}`);
+          // log.debug(`[${PREFIX}] Qualifier ${c}`);
           switch (c) {
             case 'h':
               timeValue += tempNumber * 60 * 60 * 1000;
@@ -71,7 +73,7 @@ export async function parseDuration(duration:string):Promise<number> {
               timeValue += tempNumber * 365 * 24 * 60 * 60 * 1000;
               break;
             default:
-              // logger.debug(`[${PREFIX}] Unknown qualifier ${c}`);
+              // log.debug(`[${PREFIX}] Unknown qualifier ${c}`);
               break;
           }
           stage = 1;
@@ -83,4 +85,4 @@ export async function parseDuration(duration:string):Promise<number> {
     }
   }
   return timeValue;
-};
+}

@@ -1,40 +1,46 @@
-import {Guild} from 'discord.js';
 import {
-  guildEvent,
+  TextChannel,
+} from 'discord.js';
+import {
+  GuildCreateEvent,
 } from '../@types/eventDef';
+import { db, getGuild } from '../../global/utils/knex';
+import { DiscordGuilds } from '../../global/@types/pgdb';
 import env from '../../global/utils/env.config';
-import logger from '../../global/utils/logger';
+import log from '../../global/utils/log';
+
 const PREFIX = require('path').parse(__filename).name;
 
-export const guildCreate: guildEvent = {
+export default guildCreate;
+
+export const guildCreate: GuildCreateEvent = {
   name: 'guildCreate',
+  async execute(guild) {
+    log.info(`[${PREFIX}] Joined guild: ${guild.name} (id: ${guild.id})`);
 
-  async execute(guild: Guild) {
-    logger.debug(`[${PREFIX}] starting!`);
-    logger.info(`[${PREFIX}] Joined guild: ${guild.name} (id: ${guild.id})`);
+    const guildData = await getGuild(guild.id);
 
-    if (global.db) {
-      const ref = db.ref(`${env.FIREBASE_DB_GUILDS}/${guild.id}`);
-      await ref.once('value', (data) => {
-        if (data.val() !== null) {
-          if (data.val().guild_banned) {
-            logger.info(`[${PREFIX}] I'm banned from ${guild.name}, leaving!`);
-            guild.leave();
-            return;
-          }
-          const guildData = {
-            guild_name: guild.name,
-            guild_createdAt: guild.createdAt || '',
-            guild_joinedAt: guild.joinedAt || '',
-            guild_description: `${guild.description ? guild.description : 'No description'}`,
-            guild_member_count: guild.memberCount || 0,
-            guild_owner_id: guild.ownerId || 'No Owner',
-            guild_banned: false,
-          };
-          ref.update(guildData);
-        }
-      });
+    if (guildData.is_banned) {
+      log.info(`[${PREFIX}] I'm banned from ${guild.name}, leaving!`);
+      guild.leave();
+      return;
     }
-    logger.debug(`[${PREFIX}] finished!`);
+    await db<DiscordGuilds>('discord_guilds')
+      .insert({
+        id: guild.id,
+        joined_at: new Date(),
+      })
+      .onConflict('discord_id')
+      .merge();
+
+    const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    botlog.send(`I just joined a guild! I am now in ${client.guilds.cache.size} guilds!
+    ${guild.name} (id: ${guild.id})
+    Created at: ${guild.createdAt}
+    Member count: ${guild.memberCount}
+    Description: ${guild.description ? guild.description : 'No description'}
+    `);
+
+  // log.debug(`[${PREFIX}] finished!`);
   },
 };

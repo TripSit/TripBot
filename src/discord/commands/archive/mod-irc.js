@@ -1,10 +1,10 @@
 'use strict';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
-const {SlashCommandBuilder} = require('discord.js');
-const logger = require('../../../global/utils/logger');
-const {getUserInfo, setUserInfo} = require('../../../global/services/firebaseAPI');
+import { parse } from 'path';
+
+const PREFIX = parse(__filename).name;
+const { SlashCommandBuilder } = require('discord.js');
+const logger = require('../../../global/utils/log');
 const parseDuration = require('../../../global/utils/parseDuration');
 
 const {
@@ -15,102 +15,102 @@ const botPrefix = env.IRC_BOTPREFIX;
 
 module.exports = {
   data: new SlashCommandBuilder()
-      .setName('mod-irc')
-      .setDescription('IRC Mod Actions!')
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('Info on a user')
-          .addStringOption((option) => option
-              .setName('target')
-              .setDescription('User to get info on!')
-              .setRequired(true))
-          .setName('info'))
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('Warn a user')
-          .addStringOption((option) => option
-              .setName('target')
-              .setDescription('User to warn!')
-              .setRequired(true))
-          .addStringOption((option) => option
-              .setName('reason')
-              .setDescription('Reason for warn!')
-              .setRequired(true))
-          .setName('warn'))
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('Quiet a user')
-          .addStringOption((option) => option
-              .setName('target')
-              .setDescription('User to quiet!')
-              .setRequired(true))
-          .addStringOption((option) => option
-              .setName('duration')
-              .setDescription('How long to quiet!')
-              .setRequired(true))
-          .addStringOption((option) => option
-              .setName('reason')
-              .setDescription('Reason for quiet!')
-              .setRequired(true))
-          .addStringOption((option) => option
-              .setName('toggle')
-              .setDescription('On off?')
-              .addChoices(
-                  {name: 'On', value: 'on'},
-                  {name: 'Off', value: 'off'},
-              )
-              .setRequired(true))
-          .setName('quiet'))
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('Kick a user')
-          .addStringOption((option) => option
-              .setName('target')
-              .setDescription('User to kick!')
-              .setRequired(true))
-          .addStringOption((option) => option
-              .setName('reason')
-              .setDescription('Reason for kick!')
-              .setRequired(true))
-          .addStringOption((option) => option
-              .setName('channel')
-              .setDescription('Channel to kick from!')
-              .setRequired(true))
-          .setName('kick'))
-      .addSubcommand((subcommand) => subcommand
-          .setDescription('Ban a user')
-          .addStringOption((option) => option
-              .setName('target')
-              .setDescription('User to ban!')
-              .setRequired(true))
-          .addStringOption((option) => option
-              .setName('duration')
-              .setDescription('How long to ban!')
-              .setRequired(true))
-          .addStringOption((option) => option
-              .setName('reason')
-              .setDescription('Reason for ban!')
-              .setRequired(true))
-          .addStringOption((option) => option
-              .setName('toggle')
-              .setDescription('On off?')
-              .addChoices(
-                  {name: 'On', value: 'on'},
-                  {name: 'Off', value: 'off'},
-              )
-              .setRequired(true))
-          .setName('ban')),
+    .setName('mod-irc')
+    .setDescription('IRC Mod Actions!')
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Info on a user')
+      .addStringOption(option => option
+        .setName('target')
+        .setDescription('User to get info on!')
+        .setRequired(true))
+      .setName('info'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Warn a user')
+      .addStringOption(option => option
+        .setName('target')
+        .setDescription('User to warn!')
+        .setRequired(true))
+      .addStringOption(option => option
+        .setName('reason')
+        .setDescription('Reason for warn!')
+        .setRequired(true))
+      .setName('warn'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Quiet a user')
+      .addStringOption(option => option
+        .setName('target')
+        .setDescription('User to quiet!')
+        .setRequired(true))
+      .addStringOption(option => option
+        .setName('duration')
+        .setDescription('How long to quiet!')
+        .setRequired(true))
+      .addStringOption(option => option
+        .setName('reason')
+        .setDescription('Reason for quiet!')
+        .setRequired(true))
+      .addStringOption(option => option
+        .setName('toggle')
+        .setDescription('On off?')
+        .addChoices(
+          { name: 'On', value: 'on' },
+          { name: 'Off', value: 'off' },
+        )
+        .setRequired(true))
+      .setName('quiet'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Kick a user')
+      .addStringOption(option => option
+        .setName('target')
+        .setDescription('User to kick!')
+        .setRequired(true))
+      .addStringOption(option => option
+        .setName('reason')
+        .setDescription('Reason for kick!')
+        .setRequired(true))
+      .addStringOption(option => option
+        .setName('channel')
+        .setDescription('Channel to kick from!')
+        .setRequired(true))
+      .setName('kick'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Ban a user')
+      .addStringOption(option => option
+        .setName('target')
+        .setDescription('User to ban!')
+        .setRequired(true))
+      .addStringOption(option => option
+        .setName('duration')
+        .setDescription('How long to ban!')
+        .setRequired(true))
+      .addStringOption(option => option
+        .setName('reason')
+        .setDescription('Reason for ban!')
+        .setRequired(true))
+      .addStringOption(option => option
+        .setName('toggle')
+        .setDescription('On off?')
+        .addChoices(
+          { name: 'On', value: 'on' },
+          { name: 'Off', value: 'off' },
+        )
+        .setRequired(true))
+      .setName('ban')),
   async execute(interaction) {
     const actor = interaction.member;
-    logger.debug(`[${PREFIX}] Actor: ${actor}`);
+  // log.debug(`[${PREFIX}] Actor: ${actor}`);
     const command = interaction.options.getSubcommand();
-    logger.debug(`[${PREFIX}] Command: ${command}`);
+  // log.debug(`[${PREFIX}] Command: ${command}`);
     const target = interaction.options.getString('target');
-    logger.debug(`[${PREFIX}] target: ${target}`);
+  // log.debug(`[${PREFIX}] target: ${target}`);
     const toggle = interaction.options.getString('toggle');
-    logger.debug(`[${PREFIX}] toggle: ${toggle}`);
+  // log.debug(`[${PREFIX}] toggle: ${toggle}`);
     const reason = interaction.options.getString('reason');
-    logger.debug(`[${PREFIX}] reason: ${reason}`);
+  // log.debug(`[${PREFIX}] reason: ${reason}`);
     const channel = interaction.options.getString('channel');
-    logger.debug(`[${PREFIX}] channel: ${channel}`);
+  // log.debug(`[${PREFIX}] channel: ${channel}`);
     const duration = interaction.options.getString('duration');
-    logger.debug(`[${PREFIX}] duration: ${duration}`);
+  // log.debug(`[${PREFIX}] duration: ${duration}`);
 
     const minutes = duration ? (await parseDuration.execute(duration) / 1000) / 60 : 0;
 
@@ -144,7 +144,7 @@ module.exports = {
         global.ircClient.say('#sandbox', `Sent: ${botPrefix}${command} ${target}`);
       }
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
 
     interaction.reply(`I ${command}ed ${target} ${channel ? `in ${channel}` : ''}${minutes ? ` for ${minutes} minutes` : ''} because '${reason}'`);
@@ -154,11 +154,11 @@ module.exports = {
 
     // Transfor actor data
     if ('discord' in actorData) {
-      if ('modActions' in actorData) {
-        actorData.discord.modActions[actorAction] = (
-          actorData.discord.modActions[actorAction] || 0) + 1;
+      if ('ModActions' in actorData) {
+        actorData.discord.ModActions[actorAction] = (
+          actorData.discord.ModActions[actorAction] || 0) + 1;
       } else {
-        actorData.discord.modActions = {[actorAction]: 1};
+        actorData.discord.ModActions = { [actorAction]: 1 };
       }
     }
 
@@ -173,16 +173,15 @@ module.exports = {
     //   const targetAction = `${command}_received`;
 
     //   // Transform taget data
-    //   if ('modActions' in targetData) {
-    //     targetData.discord.modActions[targetAction] = (
-    // targetData.discord.modActions[targetAction] || 0) + 1;
+    //   if ('ModActions' in targetData) {
+    //     targetData.discord.ModActions[targetAction] = (
+    // targetData.discord.ModActions[targetAction] || 0) + 1;
     //   } else {
-    //     targetData.discord.modActions = { [targetAction]: 1 };
+    //     targetData.discord.ModActions = { [targetAction]: 1 };
     //   }
 
     //   // Load target data
     //   await setUserInfo(targetResults[1], targetData);
     // }
-    logger.debug(`[${PREFIX}] finished!`);
   },
 };

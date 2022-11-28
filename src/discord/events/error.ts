@@ -1,26 +1,29 @@
 import {
   TextChannel,
+  Guild,
 } from 'discord.js';
-import {errorEvent} from '../@types/eventDef';
-import logger from '../../global/utils/logger';
+import { parse } from 'path';
+import { ErrorEvent } from '../@types/eventDef';
+import log from '../../global/utils/log';
 import env from '../../global/utils/env.config';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
 
-export const error: errorEvent = {
+const PREFIX = parse(__filename).name;
+
+export default error;
+
+export const error: ErrorEvent = {
   name: 'error',
-  once: false,
-  async execute(error: Error):Promise<void> {
-    logger.error(`[${PREFIX}] Client error ${JSON.stringify(error, null, 2)}`);
-    // logger.error(`[${PREFIX}] error.name: ${error.name}`);
-    // logger.error(`[${PREFIX}] error.message: ${error.message}`);
-    logger.error(`[${PREFIX}] ERROR: ${error.stack}`);
+  async execute(errorObj) {
+    log.error(`[${PREFIX}] Client error ${JSON.stringify(error, null, 2)}`);
+    // log.error(`[${PREFIX}] errorObj.name: ${errorObj.name}`);
+    // log.error(`[${PREFIX}] errorObj.message: ${errorObj.message}`);
+    log.error(`[${PREFIX}] ERROR: ${errorObj.stack}`);
     if (env.NODE_ENV === 'production') {
       const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-      const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+      const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
       const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
       botlog.send(`Hey ${tripbotdevrole}, I just got an error (error):
-      ${error.stack}
+      ${errorObj.stack}
       `);
     }
   },

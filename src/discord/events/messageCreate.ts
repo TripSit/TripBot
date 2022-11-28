@@ -1,33 +1,32 @@
 import {
-  Message,
-} from 'discord.js';
-import {
   ChannelType,
 } from 'discord-api-types/v10';
 import {
-  messageEvent,
+  MessageCreateEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
 // import {thoughtPolice} from '../utils/d.thoughtPolice';
-import {experience} from '../../global/utils/experience';
-import {announcements} from '../utils/announcements';
-import {messageCommand} from '../utils/messageCommand';
-import {modmailDMInteraction, modmailThreadInteraction} from '../commands/guild/modmail';
-// import logger from '../../global/utils/logger';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+import { experience } from '../../global/utils/experience';
+import { announcements } from '../utils/announcements';
+import { messageCommand } from '../utils/messageCommand';
+import { modmailDMInteraction, modmailThreadInteraction } from '../commands/guild/modmail';
+// import log from '../../global/utils/log';
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
-export const messageCreate: messageEvent = {
+export default messageCreate;
+
+export const messageCreate: MessageCreateEvent = {
   name: 'messageCreate',
-  async execute(message: Message):Promise<void> {
+  async execute(message) {
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (message.guild) {
-      if (message.guild.id !== env.DISCORD_GUILD_ID.toString()) {
+      if (message.guild.id !== env.DISCORD_GUILD_ID) {
         return;
       }
     }
 
-    // logger.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
+    // log.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
 
     // Disabled for testing
     // thoughtPolice(message);

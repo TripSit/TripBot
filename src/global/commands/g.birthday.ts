@@ -1,68 +1,57 @@
-/* eslint-disable max-len */
-import {
-  GuildMember,
-} from 'discord.js';
-import logger from '../utils/logger';
-import env from '../utils/env.config';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import { DateTime } from 'luxon';
+import { parse } from 'path';
+import { db, getUser } from '../utils/knex';
+import { Users } from '../@types/pgdb';
+import log from '../utils/log';
+
+const PREFIX = parse(__filename).name;
+
+export default birthday;
 
 /**
- * Information about the bot!
+ * Birthday information of a user
  * @param {'get' | 'set'} command
- * @param {GuildMember} member
+ * @param {GuildMember} memberId
  * @param {string} month The birthday month
  * @param {number} day The birthday day
- * @return {any} an object with information about the bot
+ * @return {string} an object with information about the bot
  */
 export async function birthday(
   command: 'get' | 'set',
-  member: GuildMember,
-  month?: string,
-  day?: number):Promise<any> {
+  memberId: string,
+  month?: number | null,
+  day?: number | null,
+):Promise<DateTime | null> {
+  let response = {} as DateTime | null;
   if (command === 'set') {
-    // TODO: Use luxon
-    const month30 = ['April', 'June', 'September', 'November'];
-    const month31 = ['January', 'March', 'May', 'July', 'August', 'October', 'December'];
-    if (month !== undefined && day !== undefined) {
-      if (month30.includes(month) && day > 30) {
-        return `${month} only has 30 days!`;
-      }
-      if (month31.includes(month) && day > 31) {
-        return `${month} only has 31 days!`;
-      }
-      if (month === 'February' && day > 28) {
-        return 'February only has 28 days!';
-      }
-    }
-    const birthday = {
-      month: month,
-      day: day,
-    };
+    // log.debug(`[${PREFIX}] ${command} ${memberId} ${month} ${day}`);
+    const birthDate = DateTime.utc(2000, month as number, day as number);
 
-    // logger.debug(`[${PREFIX}] Setting ${userId}/birthday = ${birthday}`);
-    if (global.db) {
-      const ref = db.ref(`${env.FIREBASE_DB_USERS}/${member.id}/birthday`);
-      ref.set(birthday);
-    }
-    return `${month} ${day} is your new birthday!`;
+    // log.debug(`[${PREFIX}] Setting birthDate for ${memberId} to ${birthDate}`);
+
+    await db<Users>('users')
+      .insert({
+        discord_id: memberId,
+        birthday: birthDate.toJSDate(),
+      })
+      .onConflict('discord_id')
+      .merge();
+    response = birthDate;
   } else if (command === 'get') {
-    type birthdayEntry = {
-      'month': string,
-      'day': number,
+    const userData = await getUser(memberId, null);
+    if (userData.birthday !== null) {
+      const birthDateRaw = userData.birthday;
+      // log.debug(`[${PREFIX}] birthDate: ${birthDate}`);
+      const birthDate = DateTime.fromJSDate(birthDateRaw, { zone: 'utc' });
+      // log.debug(`[${PREFIX}] birthday: ${birthday}`);
+      response = birthDate;
+    } else {
+      // log.debug(`[${PREFIX}] birthday is NULL`);
+      response = null;
     }
-    let resp = '';
-    const ref = db.ref(`${env.FIREBASE_DB_USERS}/${member.id}/birthday`);
-    await ref.once('value', (data) => {
-      if (data.val() !== null) {
-        const birthday = data.val() as birthdayEntry;
-        logger.debug(`[${PREFIX}] birthday: ${JSON.stringify(birthday)}`);
-        resp = `${member.displayName} was born on ${birthday.month} ${birthday.day}`;
-      } else {
-        logger.debug(`[${PREFIX}] data is NULL`);
-        resp = `${member.displayName} is immortal <3 (and has not set a birthday)`;
-      }
-    });
-    return resp;
   }
-};
+  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  log.info(`[${PREFIX}] response: ${JSON.stringify(response?.toJSDate().toString(), null, 2)}`);
+
+  return response;
+}

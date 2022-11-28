@@ -4,11 +4,11 @@ import {
 import {
   ActivityType,
 } from 'discord-api-types/v10';
-import env from '../../global/utils/env.config';
-import logger from '../../global/utils/logger';
+// import env from '../../global/utils/env.config';
+// import log from '../../global/utils/log';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 // https://discord.js.org/#/docs/discord.js/stable/typedef/ActivityType
 // https://discord.com/developers/docs/game-sdk/activities#data-models-activitytype-enum
@@ -27,42 +27,42 @@ const PREFIX = path.parse(__filename).name;
 // SO WHY IS IT AN OPTION???
 // 5  - COMPETING - Competing in {message}
 
-const activities = [
-  {message: 'with a scale', type: ActivityType.Playing},
-  {message: '/urban_define', type: ActivityType.Watching},
-  {message: 'you /breathe', type: ActivityType.Listening},
-  {message: 'around with /drug', type: ActivityType.Playing},
-  {message: 'test kit results', type: ActivityType.Watching},
-  {message: 'laughter at /joke', type: ActivityType.Listening},
-  {message: 'with /triptoys', type: ActivityType.Playing},
-  {message: 'people /hydrate', type: ActivityType.Watching},
-  {message: 'someone talk', type: ActivityType.Listening},
-  {message: 'with /magic8ball', type: ActivityType.Playing},
-  {message: 'the /coinflip result', type: ActivityType.Watching},
-  {message: 'a new /topic', type: ActivityType.Listening},
-];
+// const activities = [
+//   {message: 'with a scale', type: ActivityType.Playing},
+//   {message: '/urban_define', type: ActivityType.Watching},
+//   {message: 'you /breathe', type: ActivityType.Listening},
+//   {message: 'around with /drug', type: ActivityType.Playing},
+//   {message: 'test kit results', type: ActivityType.Watching},
+//   {message: 'laughter at /joke', type: ActivityType.Listening},
+//   {message: 'with /triptoys', type: ActivityType.Playing},
+//   {message: 'people /hydrate', type: ActivityType.Watching},
+//   {message: 'someone talk', type: ActivityType.Listening},
+//   {message: 'with /magic8ball', type: ActivityType.Playing},
+//   {message: 'the /coinflip result', type: ActivityType.Watching},
+//   {message: 'a new /topic', type: ActivityType.Listening},
+// ];
 
-const delay = env.NODE_ENV === 'production' ? 5 * 60 * 1000 : 5 * 1000;
+// const delay = env.NODE_ENV === 'production' ? 5 * 60 * 1000 : 5 * 1000;
+
+export default startStatusLoop;
 
 /**
  * This changes the status of the bot every 5 minutes
  * @param {Client} client The client running the bot
  */
 export async function startStatusLoop(client:Client) {
-  logger.info(`[${PREFIX}] Starting status loop...`);
-
-  let state = 0;
-  let presence = activities[state];
-  // logger.debug(`[${PREFIX}] Setting presence to ${presence.message}`);
-  // logger.debug(`[${PREFIX}] Setting presence type to ${presence.type}`);
+  client.user?.setActivity('someone in DM 💜', { type: ActivityType.Listening });
+  // let state = 0;
+  // let presence = activities[state];
+  // log.debug(`[${PREFIX}] Setting presence to ${presence.message}`);
+  // log.debug(`[${PREFIX}] Setting presence type to ${presence.type}`);
   // @ts-ignore
-  client.user?.setActivity(presence.message, {type: presence.type});
-
-  setInterval(() => {
-    state = (state + 1) % activities.length;
-    presence = activities[state];
-    // logger.debug(`[${PREFIX}] Setting activity to ${presence.type} ${presence.message}`);
-    // @ts-ignore
-    client.user?.setActivity(presence.message, {type: presence.type});
-  }, delay);
-};
+  // client.user?.setActivity(presence.message, {type: presence.type});
+  // setInterval(() => {
+  //   state = (state + 1) % activities.length;
+  //   presence = activities[state];
+  //   // log.debug(`[${PREFIX}] Setting activity to ${presence.type} ${presence.message}`);
+  //   // @ts-ignore
+  //   client.user?.setActivity(presence.message, {type: presence.type});
+  // }, delay);
+}

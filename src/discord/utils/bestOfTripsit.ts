@@ -3,15 +3,13 @@ import {
   EmbedBuilder,
   Colors,
   MessageReaction,
-  User,
   TextChannel,
 } from 'discord.js';
-import logger from '../../global/utils/logger';
+import { stripIndents } from 'common-tags';
 import env from '../../global/utils/env.config';
-import {stripIndents} from 'common-tags';
-
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+// import log from '../../global/utils/log';
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
 const tripsitterChannels = [
   env.CHANNEL_TRIPSIT,
@@ -25,22 +23,20 @@ const tripsitterChannels = [
 // How many votes are needed for each action, in production and dev
 const votePinThreshold = env.NODE_ENV === 'production' ? 5 : 2;
 
+export default bestOf;
+
 /**
  * This runs when there are enough upvotes on a message
  * @param {MessageReaction} reaction The reaction that was added
  * @param {User} user The user that added the reaction
  * @return {Promise<void>}
  */
-export async function bestOf(reaction:MessageReaction, user:User) {
-  logger.debug(`[${PREFIX}] starting!`);
-
-  logger.debug(`[${PREFIX}] reaction.count: ${reaction.count}`);
-  logger.debug(`[${PREFIX}] reaction.emoji.name: ${reaction.emoji.name}`);
-
+export async function bestOf(reaction:MessageReaction) {
   if (reaction.count === votePinThreshold && reaction.emoji.name?.includes('upvote')) {
+    // log.debug(`[${PREFIX}] Message has reached pin threshold!`);
     // Check if the message.channe.id is in the list of tripsitter channels
     if (tripsitterChannels.includes(reaction.message.channel.id)) {
-      logger.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
+      // log.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
       return;
     }
 
@@ -48,14 +44,14 @@ export async function bestOf(reaction:MessageReaction, user:User) {
 
     if (channelObj.parentId) {
       if (tripsitterChannels.includes(channelObj.parentId)) {
-        logger.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
+        // log.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
         return;
       }
     }
 
     const channel = channelObj.guild.channels.cache.get(env.CHANNEL_BESTOF) as TextChannel;
 
-    logger.debug(`[${PREFIX}] Sending message to ${channel.name}`);
+    // log.debug(`[${PREFIX}] Sending message to ${channel.name}`);
 
     if (channel !== undefined) {
       reaction.message.reply(
@@ -76,7 +72,7 @@ export async function bestOf(reaction:MessageReaction, user:User) {
         attachmentUrl = reaction.message.attachments.at(0)?.url;
       }
 
-      logger.debug(`[${PREFIX}] attachmentUrl: ${attachmentUrl}`);
+      // log.debug(`[${PREFIX}] attachmentUrl: ${attachmentUrl}`);
 
       const embed = new EmbedBuilder()
         .setAuthor({
@@ -86,9 +82,9 @@ export async function bestOf(reaction:MessageReaction, user:User) {
         })
         .setColor(Colors.Purple)
         .addFields(
-          {name: '\u200B', value: `[Go to post!](${reaction.message.url})`, inline: true},
+          { name: '\u200B', value: `[Go to post!](${reaction.message.url})`, inline: true },
         )
-        .setFooter({text: `Sent in #${(reaction.message.channel as TextChannel).name} at ${formattedDate}`});
+        .setFooter({ text: `Sent in #${(reaction.message.channel as TextChannel).name} at ${formattedDate}` });
 
       if (reaction.message.content) {
         embed.setDescription(reaction.message.content);
@@ -97,9 +93,7 @@ export async function bestOf(reaction:MessageReaction, user:User) {
         embed.setImage(`${attachmentUrl}`);
       }
 
-      channel.send({embeds: [embed]});
+      channel.send({ embeds: [embed] });
     }
   }
-
-  logger.debug(`[${PREFIX}] finished!`);
-};
+}

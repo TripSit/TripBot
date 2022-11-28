@@ -1,57 +1,62 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import {SlashCommand} from '../../@types/commandDef';
-import {imgurSearch} from '../../../global/commands/g.imgur';
-import logger from '../../../global/utils/logger';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import { parse } from 'path';
+import { SlashCommand } from '../../@types/commandDef';
+import { imgurSearch } from '../../../global/commands/g.imgur';
+import { startLog } from '../../utils/startLog';
+// import log from '../../../global/utils/log';
+const PREFIX = parse(__filename).name;
 
-export const imgur: SlashCommand = {
+export default dImgur;
+
+export const dImgur: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('imgur')
     .setDescription('Search Imgur')
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setName('search')
       .setDescription('What are you looking for?')
       .setRequired(true))
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setName('sort')
       .setDescription('How should the results be sorted?')
       .addChoices(
-        {name: 'Default: Top', value: 'top'},
-        {name: 'Viral', value: 'viral'},
-        {name: 'Time', value: 'time'},
+        { name: 'Default: Top', value: 'top' },
+        { name: 'Viral', value: 'viral' },
+        { name: 'Time', value: 'time' },
       ))
-    .addStringOption((option) => option
+    .addStringOption(option => option
       .setName('window')
       .setDescription('How far back should we look?')
       .addChoices(
-        {name: 'Default: All', value: 'all'},
-        {name: 'Day', value: 'day'},
-        {name: 'Week', value: 'week'},
-        {name: 'Month', value: 'month'},
-        {name: 'Year', value: 'year'},
+        { name: 'Default: All', value: 'all' },
+        { name: 'Day', value: 'day' },
+        { name: 'Week', value: 'week' },
+        { name: 'Month', value: 'month' },
+        { name: 'Year', value: 'year' },
       )),
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     // Sometimes the API takes a few seconds to respond.
-    await interaction.reply('Searching Imgur...');
     const search = interaction.options.getString('search');
     const sort = interaction.options.getString('sort') || 'top';
     const window = interaction.options.getString('window') || 'all';
-    logger.debug(`[${PREFIX}] query: ${search}`);
-    logger.debug(`[${PREFIX}] sort: ${sort}`);
-    logger.debug(`[${PREFIX}] window: ${window}`);
+    // log.debug(`[${PREFIX}] query: ${search}`);
+    // log.debug(`[${PREFIX}] sort: ${sort}`);
+    // log.debug(`[${PREFIX}] window: ${window}`);
+
+    await interaction.deferReply();
 
     // eslint-disable-next-line max-len
     const query = `https://api.imgur.com/3/gallery/search/${sort !== null ? `${sort}/` : ''}${window !== null ? `${window}/` : ''}?q=${search}`;
-    logger.debug(`[${PREFIX}] query: ${query}`);
+    // log.debug(`[${PREFIX}] query: ${query}`);
 
     const url = await imgurSearch(query);
 
-    logger.debug(`[${PREFIX}] url: ${url}`);
+    // log.debug(`[${PREFIX}] url: ${url}`);
 
-    if (!interaction.replied) interaction.reply(url);
-    else interaction.editReply(url);
+    await interaction.editReply(url);
+    return true;
   },
 };

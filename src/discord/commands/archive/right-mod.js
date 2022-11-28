@@ -1,3 +1,5 @@
+import { parse } from 'path';
+
 'use strict';
 
 const {
@@ -5,12 +7,10 @@ const {
   time,
   Colors,
 } = require('discord.js');
-const logger = require('../../../global/utils/logger');
+const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
-const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name; // eslint-disable-line
+const PREFIX = parse(__filename).name; // eslint-disable-line
 
 const { CHANNEL_MODERATORS } = require('../../../../env');
 
@@ -137,17 +137,17 @@ module.exports = {
 
   async execute(interaction) {
     const actor = interaction.member;
-    logger.debug(`[${PREFIX}] Actor: ${actor.displayName}`);
+  // log.debug(`[${PREFIX}] Actor: ${actor.displayName}`);
     let command = interaction.options.getSubcommand();
-    logger.debug(`[${PREFIX}] Command: ${command}`);
+  // log.debug(`[${PREFIX}] Command: ${command}`);
     let target = interaction.options.getMember('target');
-    logger.debug(`[${PREFIX}] target: ${target.displayName}`);
+  // log.debug(`[${PREFIX}] target: ${target.displayName}`);
     const toggle = interaction.options.getString('toggle');
-    logger.debug(`[${PREFIX}] toggle: ${toggle}`);
+  // log.debug(`[${PREFIX}] toggle: ${toggle}`);
     const reason = interaction.options.getString('reason');
-    logger.debug(`[${PREFIX}] reason: ${reason}`);
+  // log.debug(`[${PREFIX}] reason: ${reason}`);
     // const duration = interaction.options.getString('duration');
-    // logger.debug(`[${PREFIX}] duration: ${duration}`);
+    // log.debug(`[${PREFIX}] duration: ${duration}`);
 
     // let color = '';
     let isMember = true;
@@ -155,18 +155,18 @@ module.exports = {
       if (command === 'ban') {
         target = interaction.options.getUser('target');
         isMember = false;
-        logger.debug(`[${PREFIX}] target_user.id: ${target.id}`);
+      // log.debug(`[${PREFIX}] target_user.id: ${target.id}`);
         const bans = await interaction.guild.bans.fetch();
-        logger.debug(`[${PREFIX}] interaction.guild.bans.fetch(): ${bans}`);
+      // log.debug(`[${PREFIX}] interaction.guild.bans.fetch(): ${bans}`);
         command = 'unban';
         // color = 'GREEN';
         await interaction.guild.bans.remove(target, reason);
-        logger.debug(`[${PREFIX}] I unbanned ${target}!`);
+      // log.debug(`[${PREFIX}] I unbanned ${target}!`);
       } else if (command === 'timeout') {
         target.timeout(0, reason);
         command = 'untimeout';
         // color = 'GREEN';
-        logger.debug(`[${PREFIX}] I untimed out ${target}!`);
+      // log.debug(`[${PREFIX}] I untimed out ${target}!`);
       }
     }
 
@@ -175,7 +175,7 @@ module.exports = {
         .setColor(Colors.Red)
         .setDescription('target not found, are you sure they are in the server?');
       interaction.reply({ embeds: [embed], ephemeral: true });
-      logger.debug(`[${PREFIX}] Target not found!`);
+    // log.debug(`[${PREFIX}] Target not found!`);
       return;
     }
 
@@ -185,14 +185,14 @@ module.exports = {
 
     // Transfor actor data
     if ('discord' in actorData) {
-      if ('modActions' in actorData) {
-        actorData.discord.modActions[actorAction] = (
-          actorData.discord.modActions[actorAction] || 0) + 1;
+      if ('ModActions' in actorData) {
+        actorData.discord.ModActions[actorAction] = (
+          actorData.discord.ModActions[actorAction] || 0) + 1;
       } else {
-        actorData.discord.modActions = { [actorAction]: 1 };
+        actorData.discord.ModActions = { [actorAction]: 1 };
       }
     } else {
-      actorData.discord = { modActions: { [actorAction]: 1 } };
+      actorData.discord = { ModActions: { [actorAction]: 1 } };
     }
 
     // Load actor data
@@ -204,14 +204,14 @@ module.exports = {
 
     // Transform taget data
     if ('discord' in actorData) {
-      if ('modActions' in targetData) {
-        targetData.discord.modActions[targetAction] = (
-          targetData.discord.modActions[targetAction] || 0) + 1;
+      if ('ModActions' in targetData) {
+        targetData.discord.ModActions[targetAction] = (
+          targetData.discord.ModActions[targetAction] || 0) + 1;
       } else {
-        targetData.discord.modActions = { [targetAction]: 1 };
+        targetData.discord.ModActions = { [targetAction]: 1 };
       }
     } else {
-      targetData.discord = { modActions: { [targetAction]: 1 } };
+      targetData.discord = { ModActions: { [targetAction]: 1 } };
     }
 
     // Load target data
@@ -258,15 +258,13 @@ module.exports = {
     if (command === 'info') {
       // interaction.reply({ embeds: [target_embed], ephemeral: true, components: [mod_buttons] });
       interaction.reply({ embeds: [targetEmbed], ephemeral: true });
-      logger.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${target.user.name}`);
-      logger.debug(`[${PREFIX}] finished!`);
+    // log.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${target.user.name}`);
       return;
     }
-    logger.debug(`${PREFIX} CHANNEL_MODERATORS: ${CHANNEL_MODERATORS}`);
+  // log.debug(`${PREFIX} CHANNEL_MODERATORS: ${CHANNEL_MODERATORS}`);
     const modChan = interaction.client.channels.cache.get(CHANNEL_MODERATORS);
     // mod_chan.send({ embeds: [target_embed], components: [mod_buttons] });
     modChan.send({ embeds: [targetEmbed] });
-    logger.debug(`${PREFIX} send a message to the moderators room`);
-    logger.debug(`[${PREFIX}] finished!`);
+  // log.debug(`${PREFIX} send a message to the moderators room`);
   },
 };

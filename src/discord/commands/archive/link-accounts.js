@@ -1,11 +1,11 @@
 'use strict';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import { parse } from 'path';
+
+const PREFIX = parse(__filename).name;
 const { SlashCommandBuilder } = require('discord.js');
 const { stripIndents } = require('common-tags/lib');
-const logger = require('../../../global/utils/logger');
-const { getUserInfo, setUserInfo } = require('../../../global/services/firebaseAPI');
+const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
 
 const {
@@ -59,11 +59,11 @@ module.exports = {
     module.exports.interaction = interaction;
 
     const actor = interaction.member;
-    logger.debug(`[${PREFIX}] Actor: ${actor}`);
+  // log.debug(`[${PREFIX}] Actor: ${actor}`);
     const service = interaction.options.getSubcommand();
-    logger.debug(`[${PREFIX}] service: ${service}`);
+  // log.debug(`[${PREFIX}] service: ${service}`);
     const nickname = interaction.options.getString('nickname');
-    logger.debug(`[${PREFIX}] target: ${nickname}`);
+  // log.debug(`[${PREFIX}] target: ${nickname}`);
     // Create an authentication token to use for the link
     const token = `${Math.random().toString(36).substring(2, 8)}-${Math.random().toString(36).substring(2, 8)}-${Math.random().toString(36).substring(2, 8)}`;
 
@@ -79,11 +79,11 @@ module.exports = {
             interaction.reply({ embeds: [embed], ephemeral: true });
             return;
           }
-          logger.debug(`[${PREFIX}] ${actor} ${data.accountinfo} ${data.account}`);
+        // log.debug(`[${PREFIX}] ${actor} ${data.accountinfo} ${data.account}`);
           const [actorData, actorFbid] = await getUserInfo(actor);
           if (actorData.irc && actorData.irc.verified) {
-            logger.debug(`[${PREFIX}] actorData.irc: ${actorData.irc}`);
-            logger.debug(`[${PREFIX}] actorData.irc.nickname: ${actorData.irc.nickname}`);
+          // log.debug(`[${PREFIX}] actorData.irc: ${actorData.irc}`);
+          // log.debug(`[${PREFIX}] actorData.irc.nickname: ${actorData.irc.nickname}`);
             embed.setDescription(stripIndents`Your account is already linked to '${actorData.irc.nickname}'`);
             interaction.reply({ embeds: [embed], ephemeral: true });
             return;
@@ -103,7 +103,7 @@ module.exports = {
           If you forget or otherwise lose this token you can rerun this command to generate a new one.`);
           interaction.reply({ embeds: [embed], ephemeral: true });
 
-          // logger.debug(`[${PREFIX}] user whois: ${JSON.stringify(data, null, 2)}`);
+          // log.debug(`[${PREFIX}] user whois: ${JSON.stringify(data, null, 2)}`);
           actorData.irc = {
             accountName: data.account,
             vhost: data.host,
@@ -112,8 +112,8 @@ module.exports = {
           };
           actorData.authToken = token;
 
-          // logger.debug(`[${PREFIX}] actorData: ${JSON.stringify(actorData, null, 2)}`);
-          logger.debug(`[${PREFIX}] actorFbid: ${actorFbid}`);
+          // log.debug(`[${PREFIX}] actorData: ${JSON.stringify(actorData, null, 2)}`);
+        // log.debug(`[${PREFIX}] actorFbid: ${actorFbid}`);
 
           await setUserInfo(actorFbid, actorData);
 
@@ -123,8 +123,6 @@ module.exports = {
           If this is expected, please respond with the auth token given in discord.
 
           If this is not expected, please contact Moonbear#1024 on discord, but don't worry: your account is safe!`);
-
-          return logger.debug(`[${PREFIX}] finished!`);
         });
       } else {
         embed.setDescription(stripIndents`
@@ -134,19 +132,19 @@ module.exports = {
     }
   },
   async verifyLink(service, accountInfo, token) {
-    logger.debug(`[${PREFIX}] Actor: ${accountInfo.account}`);
-    logger.debug(`[${PREFIX}] givnToken: ${token}`);
+  // log.debug(`[${PREFIX}] Actor: ${accountInfo.account}`);
+  // log.debug(`[${PREFIX}] givnToken: ${token}`);
 
     const [actorData, actorFbid] = await getUserInfo(accountInfo);
 
-    // logger.debug(`[${PREFIX}] user: ${JSON.stringify(actorData, null, 2)}`);
-    logger.debug(`[${PREFIX}] authToken: ${actorData.authToken}`);
-    logger.debug(`[${PREFIX}] typeof authToken: ${typeof actorData.authToken}`);
-    logger.debug(`[${PREFIX}] typeof givnToken: ${typeof token}`);
+    // log.debug(`[${PREFIX}] user: ${JSON.stringify(actorData, null, 2)}`);
+  // log.debug(`[${PREFIX}] authToken: ${actorData.authToken}`);
+  // log.debug(`[${PREFIX}] typeof authToken: ${typeof actorData.authToken}`);
+  // log.debug(`[${PREFIX}] typeof givnToken: ${typeof token}`);
 
     if (actorData.authToken) {
       if (actorData.authToken.toString() === token.toString()) {
-        logger.debug(`[${PREFIX}] actorData.authToken matches!`);
+      // log.debug(`[${PREFIX}] actorData.authToken matches!`);
         const embed = template.embedTemplate();
         embed.setTitle('Link your account to IRC - Success!');
         if (service === 'irc') {
@@ -155,9 +153,9 @@ module.exports = {
           global.ircClient.say(accountInfo.nick, 'Your account has been linked!');
           const tripsitGuild = module.exports.interaction.client.guilds.cache.get(DISCORD_GUILD_ID);
           const roleIrcVerified = tripsitGuild.roles.cache.get(roleIrcVerifiedId);
-          logger.debug(`[${PREFIX}] discord ID: ${actorData.discord.id}`);
+        // log.debug(`[${PREFIX}] discord ID: ${actorData.discord.id}`);
           const target = await tripsitGuild.members.fetch(actorData.discord.id);
-          logger.debug(`[${PREFIX}] target: ${target}`);
+        // log.debug(`[${PREFIX}] target: ${target}`);
           await target.roles.add(roleIrcVerified);
           embed.setDescription(stripIndents`You have successfully linked your Discord account to the ${accountInfo.nick} IRC account!
           If this is not expected please contact Moonbear#1024 on discord, but don't worry: your account is safe!`);

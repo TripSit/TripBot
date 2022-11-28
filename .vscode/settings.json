@@ -1,18 +1,11 @@
 {
-  "eslint.validate": ["javascript","typescript"],
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  },
-  "editor.rulers": [120],
-  "editor.tabSize": 2,
-  "search.exclude": {
-    "env.js": true,
-    "bootstrap.min.css": true,
-    "babel.config.js": true,
-    "package-lock.json": true,
-    "config.json": true,
-    "**/*.json": true
-  },
-  "npm.exclude": "**/node_modules_bak/**"
-
+    "eslint.codeActionsOnSave.rules": null,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    },
+    "eslint.validate": [
+        "javascript",
+        "typescript",
+    ],
+    "editor.tabSize": 2,
 }

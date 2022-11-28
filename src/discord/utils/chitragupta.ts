@@ -1,12 +1,24 @@
+/* eslint-disable max-len */
+
 import {
   MessageReaction,
+  // TextChannel,
   User,
 } from 'discord.js';
-import env from '../../global/utils/env.config';
-import logger from '../../global/utils/logger';
-import * as path from 'path';
-import {stripIndents} from 'common-tags';
-const PREFIX = path.parse(__filename).name;
+// import { DateTime } from 'luxon';
+// import { parse } from 'path';
+// import { stripIndents } from 'common-tags';
+// import env from '../../global/utils/env.config';
+import { db } from '../../global/utils/knex';
+import {
+  Users,
+  // UserExperience
+} from '../../global/@types/pgdb';
+// import log from '../../global/utils/log';
+
+// const PREFIX = parse(__filename).name;
+
+export default chitragupta;
 
 /**
  *
@@ -19,54 +31,69 @@ export async function chitragupta(
   user:User,
   action: 1 | -1,
 ) {
-  logger.debug(`[${PREFIX}] start!`);
+  // const verb = action === 1 ? 'upvoted' : 'downvoted';
   const actor = user;
-  const emoji = reaction.emoji.toString();
-  const target = reaction.message.author!;
+  // const emoji = reaction.emoji.toString();
+  if (reaction.message.author === null) {
+    // log.debug(`[${PREFIX}] Ignoring bot interaction`);
+    return;
+  }
+  const target = reaction.message.author;
 
-  // logger.debug(`[${PREFIX}] ${actor} ${action} ${emoji} ${target}!`);
-
-  // logger.debug(`[${PREFIX}] emoji: ${JSON.stringify(reaction.emoji, null, 2)}`);
+  // log.debug(`[${PREFIX}] ${actor} ${action} ${emoji} ${target}!`);
 
   // Can't give karma to yourself!
   if (actor === target) {
     return;
   }
 
-  // logger.debug(`[${PREFIX}] actor: ${actor}`);
-  if (!reaction.emoji.name!.includes('upvote')) {
-    logger.debug(`[${PREFIX}] Invalid emoji: ${emoji.toString()}`);
-    return;
+  // log.debug(`[${PREFIX}] actor: ${actor}`);
+  if (!reaction.emoji.name) return;
+  if (!reaction.emoji.name.includes('upvote')) return;
+
+  // Increment karma of the actor
+  let actorKarma = await db<Users>('users')
+    .increment('karma_given', action)
+    .where('discord_id', actor.id)
+    .returning(['karma_received', 'karma_given']);
+
+  if (actorKarma.length === 0) {
+    // User doesn't exist in the database
+    // log.debug(`[${PREFIX}] User doesn't exist in the database: ${actor.id}`);
+    // Create new user
+    const newUser = {
+      discord_id: actor.id,
+      karma_given: action,
+      karma_received: 0,
+    };
+    actorKarma = await db<Users>('users')
+      .insert(newUser)
+      .returning(['karma_received', 'karma_given']);
   }
 
-  logger.debug(stripIndents`[${PREFIX}] ${user.username} gave ${reaction.emoji.name} to \
-  ${target.username} in ${reaction.message.guild}!`);
+  // Increment the karma of the target
+  let targetKarma = await db<Users>('users')
+    .increment('karma_received', action)
+    .where('discord_id', target.id)
+    .returning(['karma_received', 'karma_given']);
 
-  if (global.db) {
-    const actorRef = db.ref(`${env.FIREBASE_DB_USERS}/${actor.id}/karma/karma_given`);
-    await actorRef.once('value', (data) => {
-      let points = action;
-      if (data.val() !== null) {
-        logger.debug(`[${PREFIX}] data.val(): ${JSON.stringify(data.val(), null, 2)}`);
-        points = data.val() + action;
-      }
-      actorRef.set(points);
-      logger.debug(`[${PREFIX}] ${env.FIREBASE_DB_USERS}/${actor.id}/karma/karma_given set to ${points}`);
-    });
+  if (targetKarma.length === 0) {
+    // User doesn't exist in the database
+    // log.debug(`[${PREFIX}] User doesn't exist in the database: ${actor.id}`);
+    // Create new user
+    const newUser = {
+      discord_id: target.id,
+      karma_given: 0,
+      karma_received: action,
+    };
+    targetKarma = await db<Users>('users')
+      .insert(newUser)
+      .returning(['karma_received', 'karma_given']);
   }
+  // log.debug(`[${PREFIX}] actorKarma ${JSON.stringify(actorKarma)}!`);
+  // log.debug(`[${PREFIX}] targetKarma ${JSON.stringify(targetKarma)}!`);
+  // log.debug(`[${PREFIX}] ${user.username} (R:${actorKarma[0].karma_received}|G:${actorKarma[0].karma_given}) ${verb} ${target.username} (R:${targetKarma[0].karma_received}|G:${targetKarma[0].karma_given}) in ${(reaction.message.channel as TextChannel).name}!`);
 
-  if (global.db) {
-    const targetRef = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}/karma/karma_received`);
-    await targetRef.once('value', (data) => {
-      let points = action;
-      if (data.val() !== null) {
-        logger.debug(`[${PREFIX}] data.val(): ${JSON.stringify(data.val(), null, 2)}`);
-        points = data.val() + action;
-      }
-      targetRef.set(points);
-      logger.debug(`[${PREFIX}] ${env.FIREBASE_DB_USERS}/${target.id}/karma/karma_received set to ${points}`);
-    });
-  }
-
-  return logger.debug(`[${PREFIX}] finished!`);
-};
+  // log.debug(`[${PREFIX}] ${actor.username} has received (${actorKarma[0].karma_received}) and given (${actorKarma[0].karma_given})!`);
+  // log.debug(`[${PREFIX}] ${target.username} has received (${targetKarma[0].karma_received}) and given (${targetKarma[0].karma_given})!`);
+}

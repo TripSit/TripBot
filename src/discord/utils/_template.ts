@@ -1,18 +1,20 @@
 import {
   Client,
 } from 'discord.js';
-import logger from '../../global/utils/logger';
+import { parse } from 'path';
 import env from '../../global/utils/env.config';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import log from '../../global/utils/log';
+
+const PREFIX = parse(__filename).name;
+
+export default template;
 
 /**
  * Template
  * @param {Client} client The Client that manages this interaction
  * @return {Promise<void>}
-**/
-export async function bestOf(client: Client): Promise<void> {
-  logger.debug(`[${PREFIX}] starting!`);
-  logger.debug(`[${PREFIX}] guildId: ${env.DISCORD_GUILD_ID}`);
-  logger.debug(`[${PREFIX}] finished!`);
-};
+* */
+export async function template(client: Client): Promise<void> {
+  log.debug(`[${PREFIX}] guildId: ${env.DISCORD_GUILD_ID}`);
+  log.debug(`[${PREFIX}] client: ${client}`);
+}

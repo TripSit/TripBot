@@ -5,15 +5,15 @@ import {
   Invite,
   TextChannel,
 } from 'discord.js';
+import { setTimeout } from 'timers/promises';
+import { parse } from 'path';
 import env from '../../global/utils/env.config';
-import {clientEvent} from '../@types/eventDef';
-import {setTimeout} from 'timers/promises';
-import logger from '../../global/utils/logger';
+import { ReadyEvent } from '../@types/eventDef';
+import log from '../../global/utils/log';
 
-import {startStatusLoop} from '../utils/statusLoop';
+import { startStatusLoop } from '../utils/statusLoop';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 // Initialize the invite cache
 global.guildInvites = new Collection();
@@ -26,7 +26,7 @@ global.guildInvites = new Collection();
 async function getInvites(client: Client) {
   // Loop over all the guilds
   client.guilds.cache.forEach(async (guild:Guild) => {
-    if (guild.id !== env.DISCORD_GUILD_ID.toString()) return;
+    if (guild.id !== env.DISCORD_GUILD_ID) return;
     // Fetch all Guild Invites
     const firstInvites = await guild.invites.fetch();
     // Set the key as Guild ID, and create a map which has the invite code, and the number of uses
@@ -34,23 +34,24 @@ async function getInvites(client: Client) {
   });
 }
 
-export const ready: clientEvent = {
+export default ready;
+
+export const ready: ReadyEvent = {
   name: 'ready',
   once: true,
-  async execute(client: Client):Promise<void> {
+  async execute(client) {
     await setTimeout(1000);
     startStatusLoop(client);
     Promise.all([getInvites(client)])
       .then(() => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
-        logger.info(`[${PREFIX}] Discord finished booting in ${bootDuration}s!`);
-        if (env.NODE_ENV === 'production') {
+        log.info(`[${PREFIX}] Discord finished booting in ${bootDuration}s!`);
+        if (env.NODE_ENV !== 'development') {
           const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-          const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID)!;
+          const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
           const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
           botlog.send(`Hey ${tripbotdevrole}, bot has restart! Booted in ${bootDuration} seconds`);
         }
-      })
-    ;
+      });
   },
 };

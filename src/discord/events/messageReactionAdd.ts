@@ -1,62 +1,50 @@
+// import {
+//   MessageReaction,
+//   User,
+// } from 'discord.js';
 import {
-  MessageReaction,
-  User,
-} from 'discord.js';
-import {
-  reactionEvent,
+  MessageReactionAddEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
-import logger from '../../global/utils/logger';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
-import {chitragupta} from '../utils/chitragupta';
-import {handleReactionRoles} from '../utils/handleReactionRoles';
-import {sparklePoints} from '../utils/sparklePoints';
-import {bestOf} from '../utils/bestOfTripsit';
+import { chitragupta } from '../utils/chitragupta';
+import { handleReactionRoles } from '../utils/handleReactionRoles';
+import { bestOf } from '../utils/bestOfTripsit';
+// import log from '../../global/utils/log';
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
 
-export const messageReactionAdd: reactionEvent = {
+export default messageReactionAdd;
+
+export const messageReactionAdd: MessageReactionAddEvent = {
   name: 'messageReactionAdd',
-  async execute(reaction: MessageReaction, user: User) {
-    logger.debug(`[${PREFIX}] starting!`);
+  async execute(messageReaction, user) {
     // Only run on Tripsit
-    if (reaction.message.guild?.id !== env.DISCORD_GUILD_ID.toString()) {
+    if (messageReaction.message.guild?.id !== env.DISCORD_GUILD_ID) {
       return;
     }
 
     // Dont run on bots
     if (user.bot) {
-      // logger.debug(`[${PREFIX}] Ignoring bot interaction`);
+      // log.debug(`[${PREFIX}] Ignoring bot interaction`);
       return;
     }
 
     // When a reaction is received, check if the structure is partial
-    if (reaction.partial) await reaction.fetch();
+    if (messageReaction.partial) await messageReaction.fetch();
 
-    // logger.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction.emoji.name, null, 2)}`);
-    // logger.debug(`[${PREFIX}] users: ${JSON.stringify(reaction.users, null, 2)}`);
-    // {
-    //   "messageId": "1001828599172702218",
-    //   "me": false,
-    //   "users": [
-    //     "177537158419054592"
-    //   ],
-    //   "count": 1,
-    //   "emojiId": "958721361587630210"
-    // }
+    // log.info(`[${PREFIX}] ${user.username} (${user.id}) added ${reaction.emoji.name}`);
+
+    // log.debug(`[${PREFIX}] reaction: ${JSON.stringify(reaction.emoji.name, null, 2)}`);
+    // log.debug(`[${PREFIX}] users: ${JSON.stringify(reaction.users, null, 2)}`);
 
     // if (reaction.message.author?.bot) {
-    //   logger.debug(`[${PREFIX}] Ignoring bot interaction`);
+    //   // log.debug(`[${PREFIX}] Ignoring bot interaction`);
     //   return;
     // }
 
-    // This can run on bots
-    sparklePoints(reaction, user);
-
-    handleReactionRoles(reaction, user, true);
-
-    chitragupta(reaction, user, 1);
-    bestOf(reaction, user);
+    handleReactionRoles(messageReaction, user, true);
+    chitragupta(messageReaction, user, 1);
+    bestOf(messageReaction);
     // await communityMod(reaction, user);
-    // logger.debug(`[${PREFIX}] finished!`);
   },
 };

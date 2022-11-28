@@ -1,12 +1,18 @@
 /* eslint-disable max-len */
-import {stripIndents} from 'common-tags';
+import { stripIndents } from 'common-tags';
+import { parse } from 'path';
+import log from '../utils/log';
+
+const PREFIX = parse(__filename).name;
+
+export default about;
 
 /**
  * Information about the bot!
- * @return {any} an object with information about the bot
+ * @return {aboutInfo} an object with information about the bot
  */
-export async function about():Promise<aboutInfo> {
-  const aboutInfo ={
+export async function about():Promise<AboutInfo> {
+  const aboutInfo = {
     name: 'TripSit',
     url: 'https://tripsit.me/',
     description: stripIndents`
@@ -47,10 +53,11 @@ export async function about():Promise<aboutInfo> {
         The actual [research for the LSD calculator](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/)
       `,
   };
+  log.info(`[${PREFIX}] response: ${JSON.stringify(aboutInfo, null, 2)}`);
   return aboutInfo;
-};
+}
 
-type aboutInfo = {
+type AboutInfo = {
   name: string;
   url: string;
   invite: string;
@@ -59,4 +66,4 @@ type aboutInfo = {
   support: string;
   feedback: string;
   credits: string;
-}
+};

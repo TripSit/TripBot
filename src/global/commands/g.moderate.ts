@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import {
   time,
   Colors,
@@ -5,25 +6,30 @@ import {
   ButtonBuilder,
   GuildMember,
   TextChannel,
-  ChatInputCommandInteraction,
   Role,
   Guild,
-  ModalSubmitInteraction,
-  UserContextMenuCommandInteraction,
+  InteractionReplyOptions,
 } from 'discord.js';
 import {
   ButtonStyle,
 } from 'discord-api-types/v10';
-import {modActionDict} from '../@types/database.d';
-import {stripIndents} from 'common-tags';
-import {embedTemplate} from '../../discord/utils/embedTemplate';
-import {last} from './g.last';
+// import {ModActionDict} from '../@types/database.d';
 
+import { stripIndents } from 'common-tags';
 import ms from 'ms';
+import { parse } from 'path';
+import { embedTemplate } from '../../discord/utils/embedTemplate';
+import { db, getUser } from '../utils/knex';
+import {
+  UserActions,
+  UserActionType,
+} from '../@types/pgdb';
+import { last } from './g.last';
+
 import env from '../utils/env.config';
-import logger from '../utils/logger';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import log from '../utils/log';
+
+const PREFIX = parse(__filename).name;
 
 // const teamRoles = [
 //   env.ROLE_DIRECTOR,
@@ -41,57 +47,57 @@ const PREFIX = path.parse(__filename).name;
 // ];
 
 const embedVariables = {
-  timeout: {
+  TIMEOUT: {
     embedColor: Colors.Yellow,
     embedTitle: 'Timeout!',
     verb: 'timed out',
   },
-  untimeout: {
+  UNTIMEOUT: {
     embedColor: Colors.Green,
     embedTitle: 'Untimeout!',
     verb: 'removed from time-out',
   },
-  kick: {
+  KICK: {
     embedColor: Colors.Orange,
     embedTitle: 'Kicked!',
     verb: 'kicked',
   },
-  ban: {
+  FULL_BAN: {
     embedColor: Colors.Red,
     embedTitle: 'Banned!',
     verb: 'banned',
   },
-  unban: {
+  UNBAN: {
     embedColor: Colors.Green,
     embedTitle: 'Un-banned!',
     verb: 'un-banned',
   },
-  underban: {
+  UNDERBAN: {
     embedColor: Colors.Blue,
     embedTitle: 'Underbanned!',
     verb: 'underbanned',
   },
-  ununderban: {
+  UNUNDERBAN: {
     embedColor: Colors.Green,
     embedTitle: 'Un-Underbanned!',
     verb: 'un-underbanned',
   },
-  warn: {
+  WARNING: {
     embedColor: Colors.Yellow,
     embedTitle: 'Warned!',
     verb: 'warned',
   },
-  note: {
+  NOTE: {
     embedColor: Colors.Yellow,
     embedTitle: 'Note!',
     verb: 'noted',
   },
-  report: {
+  REPORT: {
     embedColor: Colors.Orange,
     embedTitle: 'Report!',
     verb: 'reported',
   },
-  info: {
+  INFO: {
     embedColor: Colors.Green,
     embedTitle: 'Info!',
     verb: 'got info on',
@@ -109,6 +115,8 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
     .setStyle(ButtonStyle.Danger),
 );
 
+export default moderate;
+
 /**
  * Takes a user and performs a moderation action on them
  * @param {GuildMember} actor
@@ -117,285 +125,320 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
  * @param {string | null} privReason
  * @param {string | null} pubReason
  * @param {number | null} duration
- * @param {ChatInputCommandInteraction} interaction
  */
 export async function moderate(
   actor: GuildMember,
-  command:string,
+  command: UserActionType | 'INFO' | 'UNBAN' | 'UNTIMEOUT' | 'UNUNDERBAN',
   target: GuildMember,
   privReason: string | null,
   pubReason: string | null,
   duration: number | null,
-  interaction:ChatInputCommandInteraction | ModalSubmitInteraction | UserContextMenuCommandInteraction | undefined,
-):Promise<any> {
-  logger.debug(stripIndents`[${PREFIX}]
-      Actor: ${actor}
-      Command: ${command}
-      Target: ${target}
-      Duration: ${duration}
-      PubReason: ${pubReason}
-      PrivReason: ${privReason}
-    `);
-
-  // Determine if the actor is on the team
-  // if (actor.roles) {
-  //   // If you're unbanning a actor they wont have roles
-  //   actor.roles.cache.forEach(async (role) => {
-  //     if (teamRoles.includes(role.id)) {
-  //       // Actor Team check - Only team members can use mod actions (except report)
-  //       if (command !== 'report') {
-  //         // logger.debug(`[${PREFIX}] actor is NOT a team member!`);
-  //         return {content: stripIndents`Hey ${actor}, you need to be a team member to ${command}!`, ephemeral: true};
-  //       }
-  //     }
-  //   });
-  // }
-
-  // Determine if the target is on the team
-  // if (target.roles) {
-  //   target.roles.cache.forEach(async (role) => {
-  //     if (teamRoles.includes(role.id)) {
-  //       // Target Team check - Only NON team members can be targeted by mod actions
-  //       logger.debug(`[${PREFIX}] Target is a team member111!`);
-  //       return {content: stripIndents`Hey ${actor}, you cannot ${command} a team member!`, ephemeral: true};
-  //     }
-  //   });
-  // }
-
-  const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
-  const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
+):Promise<InteractionReplyOptions> {
+  // log.debug(`${PREFIX}
+  // actor: ${actor.user.tag}
+  // command: ${command}
+  // target: ${target.user.tag}
+  // privReason: ${privReason}
+  // pubReason: ${pubReason}
+  // duration: ${duration}`);
 
   // Send a message to the user
-  /* eslint-disable max-len */
-  if (command !== 'report' && command !== 'note' && command !== 'info') {
+  if (command !== 'REPORT' && command !== 'NOTE' && command !== 'INFO') {
     const warnEmbed = embedTemplate()
       .setColor(embedVariables[command as keyof typeof embedVariables].embedColor)
       .setTitle(embedVariables[command as keyof typeof embedVariables].embedTitle)
       .setDescription(stripIndents`
-    Hey ${target}, you have been ${embedVariables[command as keyof typeof embedVariables].verb}${duration && command === 'timeout' ? ` for ${ms(duration, {long: true})}` : ''} by Team TripSit:
+    Hey ${target}, you have been ${embedVariables[command as keyof typeof embedVariables].verb}${duration && command === 'TIMEOUT' ? ` for ${ms(duration, { long: true })}` : ''} by Team TripSit:
 
     ${pubReason}
 
     **Do not message a moderator to talk about this!**
     
-    ${command !== 'ban' && command !== 'underban' && command !== 'kick'?
-    `You can respond to this bot and it will allow you to talk to the team privately!` :
-    `You can send an email to appeals@tripsit.me to appeal this ban!`}
+    ${command !== 'FULL_BAN' && command !== 'UNDERBAN' && command !== 'KICK'
+    ? 'You can respond to this bot and it will allow you to talk to the team privately!'
+    : 'You can send an email to appeals@tripsit.me to appeal this ban!'}
     Please read the rules and be respectful of them.
 
     https://tripsit.me/rules 
     `);
-    if (command !== 'ban' && command !== 'underban' && command !== 'kick') {
+    if (command !== 'FULL_BAN' && command !== 'UNDERBAN' && command !== 'KICK') {
       try {
-        await target.user.send({embeds: [warnEmbed], components: [warnButtons]});
+        await target.user.send({ embeds: [warnEmbed], components: [warnButtons] });
       } catch (error) {
         // Ignore
       }
     } else {
       try {
-        await target.user.send({embeds: [warnEmbed]});
+        await target.user.send({ embeds: [warnEmbed] });
       } catch (error) {
         // Ignore
       }
     }
   }
 
+  const actorData = await getUser(actor.id, null);
+  const targetData = await getUser(target.id, null);
+
   let extraMessage = '';
+
+  let actionData = {
+    id: undefined as string | undefined,
+    user_id: targetData.id,
+    type: {} as UserActionType,
+    ban_evasion_related_user: null as string | null,
+    description: pubReason ?? 'No reason provided' as string,
+    internal_note: privReason ?? 'No reason provided' as string | null,
+    expires_at: null as Date | null,
+    repealed_by: null as string | null,
+    repealed_at: null as Date | null,
+    created_by: actorData.id,
+    created_at: new Date(),
+  } as UserActions;
+
   // Perform actions
-  if (command === 'timeout') {
+  if (command === 'TIMEOUT') {
+    actionData.type = 'TIMEOUT' as UserActionType;
     try {
       target.timeout(duration, privReason ?? 'No reason provided');
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
-  } else if (command === 'untimeout') {
+  } else if (command === 'UNTIMEOUT') {
+    actionData.type = 'TIMEOUT' as UserActionType;
+    // Get the current timeout record from the DB
+
+    const timeoutRecord = await db<UserActions>('user_actions')
+      .select('*')
+      .where('user_id', targetData.id)
+      .andWhere('type', 'TIMEOUT')
+      .andWhere('repealed_at', null)
+      .first();
+
+    if (timeoutRecord) {
+      actionData = timeoutRecord;
+    }
+
+    actionData.repealed_at = new Date();
+    actionData.repealed_by = actorData.id;
+
     try {
       target.timeout(0, privReason ?? 'No reason provided');
-      logger.debug(`[${PREFIX}] I untimeouted ${target.displayName} because\n '${privReason}'!`);
+      // log.debug(`[${PREFIX}] I untimeouted ${target.displayName} because\n '${privReason}'!`);
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
-  } else if (command === 'kick') {
-    try {
-      target.kick();
-    } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
-    }
-  } else if (command === 'ban') {
+  } else if (command === 'FULL_BAN') {
+    actionData.type = 'FULL_BAN' as UserActionType;
     try {
       const deleteMessageValue = duration ?? 0;
-      logger.debug(`[${PREFIX}] Days to delete: ${deleteMessageValue}`);
       if (deleteMessageValue > 0) {
-        logger.debug(`[${PREFIX}] I am deleting ${deleteMessageValue} days of messages!`);
+      // log.debug(`[${PREFIX}] I am deleting ${deleteMessageValue} days of messages!`);
         const response = await last(target);
         extraMessage = `${target.displayName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`;
       }
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-      targetGuild.members.ban(target, {deleteMessageSeconds: deleteMessageValue, reason: privReason ?? 'No reason provided'});
+      // log.debug(`[${PREFIX}] Days to delete: ${deleteMessageValue}`);
+      targetGuild.members.ban(target, { deleteMessageSeconds: deleteMessageValue, reason: privReason ?? 'No reason provided' });
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
-  } else if (command === 'unban') {
+  } else if (command === 'UNBAN') {
+    actionData.type = 'BAN' as UserActionType;
+
+    const previousRecord = await db<UserActions>('user_actions')
+      .select('*')
+      .where('user_id', targetData.id)
+      .andWhere('type', 'FULL_BAN')
+      .andWhere('repealed_at', null)
+      .first();
+
+    if (previousRecord) {
+      actionData = previousRecord;
+    }
+
+    actionData.repealed_at = new Date();
+    actionData.repealed_by = actorData.id;
+
     try {
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       await targetGuild.bans.fetch();
       await targetGuild.bans.remove(target.user, privReason ?? 'No reason provided');
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
-  } else if (command === 'underban') {
+  } else if (command === 'UNDERBAN') {
+    actionData.type = 'UNDERBAN' as UserActionType;
     try {
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-      targetGuild.members.ban(target, {reason: privReason ?? 'No reason provided'});
+      targetGuild.members.ban(target, { reason: privReason ?? 'No reason provided' });
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
-  } else if (command === 'ununderban') {
+  } else if (command === 'UNUNDERBAN') {
+    actionData.type = 'UNDERBAN' as UserActionType;
+
+    const previousRecord = await db<UserActions>('user_actions')
+      .select('*')
+      .where('user_id', targetData.id)
+      .andWhere('type', 'UNDERBAN')
+      .andWhere('repealed_at', null)
+      .first();
+
+    if (previousRecord) {
+      actionData = previousRecord;
+    }
+
+    actionData.repealed_at = new Date();
+    actionData.repealed_by = actorData.id;
+
     try {
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       await targetGuild.bans.fetch();
       await targetGuild.bans.remove(target.user, privReason ?? 'No reason provided');
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
+  } else if (command === 'TICKET_BAN') {
+    actionData.type = 'TICKET_BAN' as UserActionType;
+  } else if (command === 'DISCORD_BOT_BAN') {
+    actionData.type = 'DISCORD_BOT_BAN' as UserActionType;
+  } else if (command === 'BAN_EVASION') {
+    actionData.type = 'BAN_EVASION' as UserActionType;
+  } else if (command === 'NOTE') {
+    actionData.type = 'NOTE' as UserActionType;
+  } else if (command === 'REPORT') {
+    actionData.type = 'REPORT' as UserActionType;
+  } else if (command === 'KICK') {
+    actionData.type = 'KICK' as UserActionType;
+    try {
+      target.kick();
+    } catch (err) {
+      log.error(`[${PREFIX}] Error: ${err}`);
+    }
+  } else if (command === 'WARNING') {
+    actionData.type = 'WARNING' as UserActionType;
   }
 
-  const targetActionCount = {
-    timeout: 0,
-    kick: 0,
-    ban: 0,
-    underban: 0,
-    warn: 0,
-    note: 0,
-    report: 0,
-  };
+  if (command !== 'INFO') {
+  // log.debug(`[${PREFIX}] actionData: ${JSON.stringify(actionData, null, 2)}`);
+    await db<UserActions>('user_actions')
+      .insert(actionData)
+      .onConflict('id')
+      .merge();
+  }
+
   const targetActionList = {
-    timeout: [] as string[],
-    kick: [] as string[],
-    ban: [] as string[],
-    underban: [] as string[],
-    warn: [] as string[],
-    note: [] as string[],
-    report: [] as string[],
+    TIMEOUT: [] as string[],
+    KICK: [] as string[],
+    FULL_BAN: [] as string[],
+    UNDERBAN: [] as string[],
+    WARNING: [] as string[],
+    NOTE: [] as string[],
+    REPORT: [] as string[],
   };
 
-  const actionData = {
-    actor: actor.id,
-    command: command,
-    target: target.id,
-    duration: duration,
-    privReason: privReason,
-    pubReason: pubReason,
-  };
-  let actions = {} as modActionDict;
-  const ref = db.ref(`${env.FIREBASE_DB_USERS}/${target.id}/modActions/`);
-  await ref.once('value', (data) => {
-    if (data.val() !== null) {
-      actions = data.val();
-      actions[Date.now().valueOf().toString()] = actionData;
-      Object.keys(actions).forEach(async (actionDate) => {
-        const actionValue = actions[actionDate];
-        const actionCommand = actionValue.command;
-        if (actionCommand in targetActionCount) {
-          targetActionCount[actionCommand as keyof typeof targetActionCount] += 1;
-        }
-        if (actionCommand in targetActionList) {
-          // turn actionDate into a date object
-          const actionDateObj = new Date(parseInt(actionDate));
-          // Format the date into a short format
-          const actionDateFormatted = actionDateObj.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-          });
-          const actionString = stripIndents`
-            ${actionDateFormatted} by <@${actionValue.actor}>: ${actionValue.privReason} ${actionValue.pubReason ? `**PubReason: ${actionValue.pubReason}**` : ''}
-          `;
-          targetActionList[actionCommand as keyof typeof targetActionList].push(actionString);
-        }
-      });
-    } else {
-      actions[Date.now().valueOf().toString()] = actionData;
-    }
-    ref.set(actions);
+  // Populate targetActionList from the db
+  const targetActionListRaw = await db<UserActions>('user_actions')
+    .select('*')
+    .where('user_id', targetData.id)
+    .orderBy('created_at', 'desc');
+
+  // log.debug(`[${PREFIX}] targetActionListRaw: ${JSON.stringify(targetActionListRaw, null, 2)}`);
+
+  // for (const action of targetActionListRaw) {
+  targetActionListRaw.forEach(action => {
+    const actionString = `${action.type} (${time(action.created_at, 'R')}) - ${action.internal_note
+      ?? 'No note provided'}`;
+    targetActionList[action.type as keyof typeof targetActionList].push(actionString);
   });
 
-  // logger.debug(`[${PREFIX}] actions: ${JSON.stringify(actions)}`);
-  logger.debug(`[${PREFIX}] targetActionCount: ${JSON.stringify(targetActionCount)}`);
-  // logger.debug(`[${PREFIX}] targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
+  // log.debug(`[${PREFIX}] targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
 
   const modlogEmbed = embedTemplate()
     // eslint-disable-next-line
-    .setTitle(`${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} (${target.user.tag})${duration && command === 'timeout' ? ` for ${ms(duration, {long: true})}` : ''}`)
+    .setTitle(`${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} (${target.user.tag})${duration && command === 'TIMEOUT' ? ` for ${ms(duration, {long: true})}` : ''}`)
     .setDescription(stripIndents`
     **PrivReason:** ${privReason ?? 'No reason provided'}
     ${pubReason ? `**PubReason:** ${pubReason}` : ''}
     `)
-    .setColor(Colors.Blue)
+    .setColor(embedVariables[command as keyof typeof embedVariables].embedColor)
     .addFields(
-      {name: 'Created', value: `${time(target.user.createdAt, 'R')}`, inline: true},
-      {name: 'Joined', value: `${target.joinedAt ? time(target.joinedAt!, 'R') : 'Unknown'}`, inline: true},
-      {name: 'ID', value: `${target.id}`, inline: true},
-      {name: '# of Reports', value: `${targetActionCount.report}`, inline: true},
-      {name: '# of Warns', value: `${targetActionCount.warn}`, inline: true},
-      {name: '# of Timeouts', value: `${targetActionCount.timeout}`, inline: true},
-      // {name: '# of Kicks', value: `${targetActionCount.kick}`, inline: true},
-      // {name: '# of Bans', value: `${targetActionCount.ban}`, inline: true},
-      {name: '# of Notes', value: `${targetActionCount.note}`, inline: true},
-      {name: '# of Tripsitmes', value: `TBD`, inline: true},
-      // {name: '# of I\'m Good', value: `TBD`, inline: true},
-      {name: '# of Fucks to Give', value: '0', inline: true},
-      // {name: '\u200B', value: '\u200B', inline: true},
-      // {name: 'Displayname', value: `${target.displayName}`, inline: true},
-      // {name: 'Tag', value: `${target.user.tag}`, inline: true},
+      { name: 'Created', value: `${time(target.user.createdAt, 'R')}`, inline: true },
+      { name: 'Joined', value: `${target.joinedAt ? time(target.joinedAt, 'R') : 'Unknown'}`, inline: true },
+      { name: 'ID', value: `${target.id}`, inline: true },
     );
+  if (targetActionList.NOTE.length > 0) {
+    modlogEmbed.addFields({ name: '# of Notes', value: `${targetActionList.NOTE.length}`, inline: true });
+  }
+  if (targetActionList.WARNING.length > 0) {
+    modlogEmbed.addFields({ name: '# of Warns', value: `${targetActionList.WARNING.length}`, inline: true });
+  }
+  if (targetActionList.REPORT.length > 0) {
+    modlogEmbed.addFields({ name: '# of Reports', value: `${targetActionList.REPORT.length}`, inline: true });
+  }
+  if (targetActionList.TIMEOUT.length > 0) {
+    modlogEmbed.addFields({ name: '# of Timeouts', value: `${targetActionList.TIMEOUT.length}`, inline: true });
+  }
+  if (targetActionList.KICK.length > 0) {
+    modlogEmbed.addFields({ name: '# of Kicks', value: `${targetActionList.KICK.length}`, inline: true });
+  }
+  if (targetActionList.FULL_BAN.length > 0) {
+    modlogEmbed.addFields({ name: '# of Bans', value: `${targetActionList.FULL_BAN.length}`, inline: true });
+  }
+  if (targetActionList.UNDERBAN.length > 0) {
+    modlogEmbed.addFields({ name: '# of Underbans', value: `${targetActionList.UNDERBAN.length}`, inline: true });
+  }
 
   // Send the message to the mod channel
-  if (command !== 'info') {
+  if (command !== 'INFO') {
+    const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
     // We must send the mention outside of the embed, cuz mentions dont work in embeds
     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
     const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
-    modChan.send({content: `${command !== 'note' ? `Hey ${roleModerator}` : ``}`, embeds: [modlogEmbed]});
+    modChan.send({ content: `${command !== 'NOTE' ? `Hey ${roleModerator}` : ''}`, embeds: [modlogEmbed] });
+    // log.debug(`[${PREFIX}] sent a message to the moderators room`);
     if (extraMessage) {
-      await modChan.send({content: extraMessage});
+      await modChan.send({ content: extraMessage });
     }
-    logger.debug(`[${PREFIX}] sent a message to the moderators room`);
   }
 
   // If this is the info command then return with info
-  if (command === 'info') {
+  if (command === 'INFO') {
     let infoString = stripIndents`
-      ${targetActionList.ban.length > 0 ? `**Bans**\n${targetActionList.ban.join('\n')}` : ''}
-      ${targetActionList.underban.length > 0 ? `**Underbans**\n${targetActionList.underban.join('\n')}` : ''}
-      ${targetActionList.kick.length > 0 ? `**Kicks**\n${targetActionList.kick.join('\n')}` : ''}
-      ${targetActionList.timeout.length > 0 ? `**Timeouts**\n${targetActionList.timeout.join('\n')}` : ''}
-      ${targetActionList.warn.length > 0 ? `**Warns**\n${targetActionList.warn.join('\n')}` : ''}
-      ${targetActionList.report.length > 0 ? `**Reports**\n${targetActionList.report.join('\n')}` : ''}
-      ${targetActionList.note.length > 0 ? `**Notes**\n${targetActionList.note.join('\n')}` : ''}
+      ${targetActionList.FULL_BAN.length > 0 ? `**Bans**\n${targetActionList.FULL_BAN.join('\n')}` : ''}
+      ${targetActionList.UNDERBAN.length > 0 ? `**Underbans**\n${targetActionList.UNDERBAN.join('\n')}` : ''}
+      ${targetActionList.KICK.length > 0 ? `**Kicks**\n${targetActionList.KICK.join('\n')}` : ''}
+      ${targetActionList.TIMEOUT.length > 0 ? `**Timeouts**\n${targetActionList.TIMEOUT.join('\n')}` : ''}
+      ${targetActionList.WARNING.length > 0 ? `**Warns**\n${targetActionList.WARNING.join('\n')}` : ''}
+      ${targetActionList.REPORT.length > 0 ? `**Reports**\n${targetActionList.REPORT.join('\n')}` : ''}
+      ${targetActionList.NOTE.length > 0 ? `**Notes**\n${targetActionList.NOTE.join('\n')}` : ''}
     `;
     if (infoString.length === 0) {
       infoString = 'Squeaky clean!';
     }
-    logger.debug(`[${PREFIX}] infoString: ${infoString}`);
+    // log.debug(`[${PREFIX}] infoString: ${infoString}`);
     modlogEmbed.setDescription(infoString);
     try {
-      logger.debug(`[${PREFIX}] returned info about ${target.displayName}`);
-      return {embeds: [modlogEmbed], ephemeral: true};
+      log.info(`[${PREFIX}] response: ${JSON.stringify(infoString, null, 2)}`);
+      return { embeds: [modlogEmbed], ephemeral: true };
     } catch (err) {
-      logger.error(`[${PREFIX}] Error: ${err}`);
+      log.error(`[${PREFIX}] Error: ${err}`);
     }
   }
 
   // Send a message to the modlog room
-  if (command !== 'info') {
-    modlog.send({embeds: [modlogEmbed]});
-    logger.debug(`[${PREFIX}] sent a message to the modlog room`);
+  if (command !== 'INFO') {
+    const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+    modlog.send({ embeds: [modlogEmbed] });
+    // log.debug(`[${PREFIX}] sent a message to the modlog room`);
   }
 
   // Return a message to the user confirming the user was acted on
-  logger.debug(`[${PREFIX}] ${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
+  // log.debug(`[${PREFIX}] ${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
+  const desc = `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`;
   const response = embedTemplate()
     .setColor(Colors.Yellow)
-    .setDescription(`${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
-  return {embeds: [response], ephemeral: true};
-};
+    .setDescription(desc);
+  log.info(`[${PREFIX}] response: ${JSON.stringify(desc, null, 2)}`);
+  return { embeds: [response], ephemeral: true };
+}

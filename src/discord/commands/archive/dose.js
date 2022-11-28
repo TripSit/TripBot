@@ -6,10 +6,10 @@ const {
   time,
   Colors,
 } = require('discord.js');
-const logger = require('../../../global/utils/logger');
+const logger = require('../../../global/utils/log');
 const template = require('../../utils/embed-template');
 
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -68,15 +68,15 @@ module.exports = {
       });
     }
     try {
-      interaction.member.send({ embeds: [embed], ephemeral: false });
+      interaction.member.send({ embeds: [embed] });
     } catch (err1) {
-      // logger.error(`[${PREFIX}] error1: ${err1}`);
+      // log.error(`[${PREFIX}] error1: ${err1}`);
       try {
-        interaction.user.send({ embeds: [embed], ephemeral: false });
+        interaction.user.send({ embeds: [embed] });
       } catch (err2) {
-        // logger.error(`[${PREFIX}] error2: ${err2}`);
+        // log.error(`[${PREFIX}] error2: ${err2}`);
       }
     }
-    logger.debug(`[${PREFIX}] Finsihed!`);
+  // log.debug(`[${PREFIX}] Finsihed!`);
   },
 };

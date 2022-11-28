@@ -1,23 +1,22 @@
 import {
   SelectMenuInteraction,
-  Client,
 } from 'discord.js';
-import logger from '../../global/utils/logger';
-import {applicationStart} from '../utils/application';
-import {applicationReject} from './application';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import { applicationStart, applicationReject } from './application';
+// import log from '../../global/utils/log';
+// import {parse} from 'path';
+// const PREFIX = parse(__filename).name;
+
+export default selectMenu;
 
 /**
  * This runs whenever a buttion is clicked
- * @param {SelectMenuInteraction} interaction The interaction that started this
+ * @param {SelectMenuInteraction} interaction The interaction that initialized this
  * @param {Client} client The client that manages it
  * @return {Promise<void>}
  */
-export async function selectMenu(interaction:SelectMenuInteraction, client:Client): Promise<void> {
-  logger.debug(`[${PREFIX}] started!`);
-  const customId = interaction.customId;
-  logger.debug(`[${PREFIX}] customId: ${customId}`);
+export async function selectMenu(interaction:SelectMenuInteraction): Promise<void> {
+  const { customId } = interaction;
+  // log.debug(`[${PREFIX}] customId: ${customId}`);
 
   if (customId.startsWith('applicationReject')) {
     await applicationReject(interaction);
@@ -25,6 +24,4 @@ export async function selectMenu(interaction:SelectMenuInteraction, client:Clien
   if (customId.startsWith('applicationRoleSelectMenu')) {
     await applicationStart(interaction);
   }
-
-  logger.debug(`[${PREFIX}] finished!`);
-};
+}

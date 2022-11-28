@@ -1,16 +1,16 @@
-/* eslint-disable no-unused-vars */
+import { parse } from 'path';
+import log from '../utils/log';
 
-import {stripIndents} from 'common-tags';
-import env from '../utils/env.config';
-import logger from '../utils/logger';
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
+
+export default globalTemplate;
 
 /**
  *
- * @return {any}
+ * @return {string}
  */
-export async function globalTemplate():Promise<any> {
-  logger.debug(`${PREFIX} started!`);
-  logger.debug(`${PREFIX} finished!`);
-};
+export async function globalTemplate():Promise<string> {
+  const response = 'I did thing!';
+  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  return response;
+}

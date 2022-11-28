@@ -1,12 +1,10 @@
 import {
-  Client,
   AutocompleteInteraction,
 } from 'discord.js';
-import logger from '../../global/utils/logger';
 import Fuse from 'fuse.js';
 
-import * as path from 'path';
-const PREFIX = path.parse(__filename).name;
+import { parse } from 'path';
+import log from '../../global/utils/log';
 
 import pillColors from '../../global/assets/data/pill_colors.json';
 import pillShapes from '../../global/assets/data/pill_shapes.json';
@@ -14,6 +12,8 @@ import drugDataAll from '../../global/assets/data/drug_db_combined.json';
 import drugDataTripsit from '../../global/assets/data/drug_db_tripsit.json';
 import timezones from '../../global/assets/data/timezones.json';
 import unitsOfMeasurement from '../../global/assets/data/units_of_measurement.json';
+
+const PREFIX = parse(__filename).name;
 
 const timezoneNames:string[] = [];
 for (let i = 0; i < timezones.length; i += 1) {
@@ -30,23 +30,24 @@ for (let i = 0; i < pillColors.length; i += 1) {
   pillColorNames.push(Object.keys(pillColors[i])[0]);
 }
 const defaultColors = pillColorNames.slice(0, 25);
-// logger.debug(`[${PREFIX}] pill_color_names: ${pill_color_names}`);
+// log.debug(`[${PREFIX}] pill_color_names: ${pill_color_names}`);
 
 const pillShapeNames:string[] = [];
 for (let i = 0; i < pillShapes.length; i += 1) {
   pillShapeNames.push(Object.keys(pillShapes[i])[0]);
 }
 const defaultShapes = pillShapeNames.slice(0, 25);
-// logger.debug(`[${PREFIX}] pill_shape_names: ${pill_shape_names}`);
+// log.debug(`[${PREFIX}] pill_shape_names: ${pill_shape_names}`);
 
+export default autocomplete;
 /**
  * Handles autocomplete information
  * @param {AutocompleteInteraction} interaction
  * @param {Client} client
  * @return {Promise<void>}
  */
-export async function autocomplete(interaction:AutocompleteInteraction, client:Client):Promise<void> {
-  logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
+export async function autocomplete(interaction:AutocompleteInteraction):Promise<void> {
+  // log.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
   if (interaction.commandName === 'pill-id') {
     const focusedOption = interaction.options.getFocused(true).name;
     const options = {
@@ -62,10 +63,10 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
       const results = fuse.search(focusedValue);
       if (results.length > 0) {
         const top25 = results.slice(0, 25);
-        const listResults = top25.map((choice) => ({name: choice.item, value: choice.item}));
+        const listResults = top25.map(choice => ({ name: choice.item, value: choice.item }));
         interaction.respond(listResults);
       } else {
-        interaction.respond(defaultColors.map((choice) => ({name: choice, value: choice})));
+        interaction.respond(defaultColors.map(choice => ({ name: choice, value: choice })));
       }
     }
     if (focusedOption === 'shape') {
@@ -74,14 +75,14 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
       const results = fuse.search(focusedValue);
       if (results.length > 0) {
         const top25 = results.slice(0, 25);
-        const listResults = top25.map((choice) => ({name: choice.item, value: choice.item}));
+        const listResults = top25.map(choice => ({ name: choice.item, value: choice.item }));
         interaction.respond(listResults);
       } else {
-        interaction.respond(defaultShapes.map((choice) => ({name: choice, value: choice})));
+        interaction.respond(defaultShapes.map(choice => ({ name: choice, value: choice })));
       }
     }
   } else if (interaction.commandName === 'calc_benzo') {
-    logger.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
+    // log.debug(`[${PREFIX}] Autocomplete requested for: ${interaction.commandName}`);
     const options = {
       shouldSort: true,
       threshold: 0.2,
@@ -96,42 +97,43 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
     };
 
     if (drugDataTripsit === null || drugDataTripsit === undefined) {
-      logger.error(`[${PREFIX}] drugDataAll is null or undefined`);
+      log.error(`[${PREFIX}] drugDataAll is null or undefined`);
       return;
     }
 
     const drugNames = Object.keys(drugDataTripsit);
-    const benzoNames = drugNames.filter((drugName) => {
-      return drugDataTripsit[drugName as keyof typeof drugDataTripsit].properties.hasOwnProperty('dose_to_diazepam');
+    const benzoNames = drugNames.filter(drugName => {
+      const props = drugDataTripsit[drugName as keyof typeof drugDataTripsit].properties;
+      return Object.prototype.hasOwnProperty.call(props, 'dose_to_diazepam');
     });
 
-    // logger.debug(`[${PREFIX}] benzoNames: ${benzoNames}`);
+    // log.debug(`[${PREFIX}] benzoNames: ${benzoNames}`);
 
-    const benzoCache = benzoNames.map((drugName) => {
+    const benzoCache = benzoNames.map(drugName => {
       const drugObj = {
         name: drugName,
         aliases: [] as string[],
       };
-      if (drugDataTripsit[drugName as keyof typeof drugDataTripsit].hasOwnProperty('aliases')) {
+      if (Object.prototype.hasOwnProperty.call(drugDataTripsit[drugName as keyof typeof drugDataTripsit], 'aliases')) {
         // @ts-ignore
         drugObj.aliases = drugDataTripsit[drugName as keyof typeof drugDataTripsit].aliases;
       }
       return drugObj;
     });
 
-    // logger.debug(`[${PREFIX}] benzoCache: ${JSON.stringify(benzoCache, null, 2)}`);
+    // log.debug(`[${PREFIX}] benzoCache: ${JSON.stringify(benzoCache, null, 2)}`);
 
     const fuse = new Fuse(benzoCache, options);
     const focusedValue = interaction.options.getFocused();
-    // logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
+    // log.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
     const results = fuse.search(focusedValue);
-    // logger.debug(`[${PREFIX}] results: ${JSON.stringify(results, null, 2)}`);
+    // log.debug(`[${PREFIX}] results: ${JSON.stringify(results, null, 2)}`);
     if (results.length > 0) {
       const top25 = results.slice(0, 25);
-      interaction.respond(top25.map((choice) => ({name: choice.item.name, value: choice.item.name})));
+      interaction.respond(top25.map(choice => ({ name: choice.item.name, value: choice.item.name })));
     } else {
       const defaultBenzoNames = benzoNames.slice(0, 25);
-      interaction.respond(defaultBenzoNames.map((choice) => ({name: choice, value: choice})));
+      interaction.respond(defaultBenzoNames.map(choice => ({ name: choice, value: choice })));
     }
   } else if (interaction.commandName === 'timezone') {
     const options = {
@@ -143,21 +145,21 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
 
     const fuse = new Fuse(timezones, options);
     const focusedValue = interaction.options.getFocused();
-    // logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
+    // log.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
     const results = fuse.search(focusedValue);
-    // logger.debug(`[${PREFIX}] Autocomplete results: ${results}`);
+    // log.debug(`[${PREFIX}] Autocomplete results: ${results}`);
     if (results.length > 0) {
       const top25 = results.slice(0, 25);
-      const listResults = top25.map((choice) => ({
+      const listResults = top25.map(choice => ({
         name: choice.item.label,
         value: choice.item.label,
       }));
-        // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
+        // log.debug(`[${PREFIX}] list_results: ${listResults}`);
       interaction.respond(listResults);
     } else {
       const defaultTimezones = timezoneNames.slice(0, 25);
-      const listResults = defaultTimezones.map((choice) => ({name: choice, value: choice}));
-      // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
+      const listResults = defaultTimezones.map(choice => ({ name: choice, value: choice }));
+      // log.debug(`[${PREFIX}] list_results: ${listResults}`);
       interaction.respond(listResults);
     }
   } else if (interaction.commandName === 'convert') {
@@ -167,19 +169,19 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
     let displayUnits = [];
     let measure = '';
     if (firstUnit !== '' && !focusedOption) {
-      logger.debug(`[${PREFIX}] firstUnit: ${firstUnit}`);
+      // log.debug(`[${PREFIX}] firstUnit: ${firstUnit}`);
       // eslint-disable-next-line
         for (const i in unitsOfMeasurement) {
-        if (unitsOfMeasurement[i].abbr.toLowerCase() === (firstUnit! as string).toLowerCase()) {
+        if (unitsOfMeasurement[i].abbr.toLowerCase() === (firstUnit as string).toLowerCase()) {
           measure = unitsOfMeasurement[i].measure;
-          logger.debug(`[${PREFIX}] First unit measure: ${measure}`);
+          // log.debug(`[${PREFIX}] First unit measure: ${measure}`);
         }
       }
       // eslint-disable-next-line
         for (const i in unitsOfMeasurement) {
         if (unitsOfMeasurement[i].measure.toLowerCase() === measure.toLowerCase()) {
           displayUnits.push(unitsOfMeasurement[i]);
-          logger.debug(`[${PREFIX}] Added: ${unitsOfMeasurement[i].plural}`);
+          // log.debug(`[${PREFIX}] Added: ${unitsOfMeasurement[i].plural}`);
         }
       }
     } else {
@@ -197,32 +199,30 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
 
     const fuse = new Fuse(displayUnits, options);
     const focusedValue = interaction.options.getFocused();
-    // logger.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
+    // log.debug(`[${PREFIX}] focusedValue: ${focusedValue}`);
     const results = fuse.search(focusedValue);
-    // logger.debug(`[${PREFIX}] Autocomplete results: ${results}`);
+    // log.debug(`[${PREFIX}] Autocomplete results: ${results}`);
     if (results.length > 0) {
       const top25 = results.slice(0, 25);
-      const listResults = top25.map((choice) => ({
+      const listResults = top25.map(choice => ({
         name: choice.item.abbr,
         value: choice.item.abbr,
       }));
-        // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
+        // log.debug(`[${PREFIX}] list_results: ${listResults}`);
+      interaction.respond(listResults);
+    } else if (measure !== '') {
+      const top25 = displayUnits.slice(0, 25);
+      const listResults = top25.map(choice => ({
+        name: choice.abbr,
+        value: choice.abbr,
+      }));
+      // log.debug(`[${PREFIX}] list_results: ${listResults}`);
       interaction.respond(listResults);
     } else {
-      if (measure !== '') {
-        const top25 = displayUnits.slice(0, 25);
-        const listResults = top25.map((choice) => ({
-          name: choice.abbr,
-          value: choice.abbr,
-        }));
-          // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
-        interaction.respond(listResults);
-      } else {
-        const defaultMeasurements = measurementNames.slice(0, 25);
-        const listResults = defaultMeasurements.map((choice) => ({name: choice, value: choice}));
-        // logger.debug(`[${PREFIX}] list_results: ${listResults}`);
-        interaction.respond(listResults);
-      }
+      const defaultMeasurements = measurementNames.slice(0, 25);
+      const listResults = defaultMeasurements.map(choice => ({ name: choice, value: choice }));
+      // log.debug(`[${PREFIX}] list_results: ${listResults}`);
+      interaction.respond(listResults);
     }
   } else { // If you don't need a specific autocomplete, return a list of drug names
     const options = {
@@ -243,8 +243,8 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
     let top25 = [];
     if (results.length > 0) {
       top25 = results.slice(0, 25);
-      interaction.respond(top25.map((choice) => (
-        {name: choice.item.name, value: choice.item.name})));
+      interaction.respond(top25.map(choice => (
+        { name: choice.item.name, value: choice.item.name })));
     } else {
       const TOP_PSYCHS = ['Cannabis', 'MDMA', 'LSD', 'DMT', 'Mushrooms'];
       const TOP_DISSOS = ['Zolpidem', 'Ketamine', 'DXM', 'PCP', 'Salvia'];
@@ -252,8 +252,7 @@ export async function autocomplete(interaction:AutocompleteInteraction, client:C
       const TOP_BENZOS = ['Alprazolam', 'Clonazepam', 'Diazepam', 'Lorazepam', 'Flunitrazepam'];
       const TOP_SPEEDS = ['Nicotine', 'Amphetamine', 'Cocaine', 'Methamphetamine', 'Methylphenidate'];
       const TOP_DRUGS = TOP_PSYCHS.concat(TOP_DISSOS, TOP_OPIATE, TOP_BENZOS, TOP_SPEEDS);
-      interaction.respond(TOP_DRUGS.map((choice) => ({name: choice, value: choice})));
+      interaction.respond(TOP_DRUGS.map(choice => ({ name: choice, value: choice })));
     }
   }
-  logger.debug(`[${PREFIX}] finished!`);
-};
+}
