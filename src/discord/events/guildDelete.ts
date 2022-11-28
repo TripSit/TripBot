@@ -27,7 +27,7 @@ export const guildDelete: GuildDeleteEvent = {
         id: guild.id,
         removed_at: new Date(),
       })
-      .onConflict('discord_id')
+      .onConflict('id')
       .merge();
 
     const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;

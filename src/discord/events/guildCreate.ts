@@ -30,7 +30,7 @@ export const guildCreate: GuildCreateEvent = {
         id: guild.id,
         joined_at: new Date(),
       })
-      .onConflict('discord_id')
+      .onConflict('id')
       .merge();
 
     const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
