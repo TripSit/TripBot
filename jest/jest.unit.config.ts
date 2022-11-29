@@ -20,7 +20,7 @@ const jestConfig: Config = {
     '<rootDir>/src/discord/utils/*',
     '<rootDir>/src/discord/events/*',
     '<rootDir>/src/discord/dscrd.ts',
-    '<rootDir>/src/discord/__tests*/*',
+    '<rootDir>/src/discord/__tests__/__test*/*',
     '<rootDir>/src/discord/commands/index.ts',
     '<rootDir>/src/discord/commands/archive/*',
     '<rootDir>/src/discord/commands/global/_d.globalTemplate.ts',
