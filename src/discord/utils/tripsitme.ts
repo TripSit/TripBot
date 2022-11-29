@@ -412,7 +412,12 @@ export async function tripsitmeClose(
     return;
   }
 
+  // log.debug(`[${PREFIX}] tripsitmeClose`);
+  // log.debug(`[${PREFIX}] interaction.customId: ${interaction.customId}`);
+
   const targetId = interaction.customId.split('~')[1];
+
+  // log.debug(`[${PREFIX}] targetId: ${targetId}`);
 
   // const guildData = await getGuild(interaction.guild.id);
 
@@ -427,6 +432,8 @@ export async function tripsitmeClose(
 
   const target = await interaction.guild.members.fetch(targetId);
   const actor = interaction.member as GuildMember;
+
+  // log.debug(`[${PREFIX}] actor.id: ${actor.id}`);
 
   if (targetId === actor.id) {
     // log.debug(`[${PREFIX}] not the target!`);
@@ -789,14 +796,20 @@ export async function tripSitMe(
   // log.debug(`[${PREFIX}] Created ${threadHelpUser.name} ${threadHelpUser.id}`);
 
   // Send reply to the actor
-  const replyMessage = memberInput
-    ? stripIndents`
-        Hey ${interaction.member}, we've activated tripsit mode on ${target.user.username}!
+  // const replyMessage = memberInput
+  //   ? stripIndents`
+  //       Hey ${interaction.member}, we've activated tripsit mode on ${target.user.username}!
 
-        Check your channel list for ${threadHelpUser.toString()} to talk to the user
+  //       Check your channel list for ${threadHelpUser.toString()} to talk to the user
 
-        **Be sure add some information about the user to the thread!**`
-    : stripIndents`
+  //       **Be sure add some information about the user to the thread!**`
+  //   : stripIndents`
+  //       Hey ${target}, thank you for asking for assistance!
+
+  //       Click here to be taken to your private room: ${threadHelpUser.toString()}
+
+  //       You can also click in your channel list to see your private room!`;
+  const replyMessage = stripIndents`
         Hey ${target}, thank you for asking for assistance!
 
         Click here to be taken to your private room: ${threadHelpUser.toString()}
@@ -809,12 +822,24 @@ export async function tripSitMe(
   // log.debug(`[${PREFIX}] Sent response to ${target.user.tag}`);
 
   // Send the intro message to the thread
-  const firstMessage = memberInput
-    ? stripIndents`
-      Hey ${target}, the team thinks you could use assistance!
-      Someone from the ${roleTripsitter} ${guildData.role_helper ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
-      If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.`
-    : stripIndents`
+  // const firstMessage = memberInput
+  //   ? stripIndents`
+  //     Hey ${target}, the team thinks you could use assistance!
+  //     Someone from the ${roleTripsitter} ${guildData.role_helper ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
+  //     If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.`
+  //   : stripIndents`
+  //     Hey ${target}, thank you for asking for assistance!
+
+  //     You've taken: ${triage ? `\n${triage}` : '\n*No info given*'}
+
+  //     Your issue: ${intro ? `\n${intro}` : '\n*No info given*'}
+
+  //     Someone from the ${roleTripsitter} ${guildData.role_helper ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
+  //     If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
+  //     When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
+  //     If you just would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
+  //     `;
+  const firstMessage = stripIndents`
       Hey ${target}, thank you for asking for assistance!
 
       You've taken: ${triage ? `\n${triage}` : '\n*No info given*'}
@@ -826,6 +851,7 @@ export async function tripSitMe(
       When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
       If you just would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
       `;
+
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
