@@ -48,13 +48,15 @@ export const messageDelete: MessageDeleteEvent = {
 
     // Now grab the user object of the person who deleted the message
     // Also grab the target of this action to double-check things
-    const { executor } = deletionLog;
+    const { executor, target } = deletionLog;
+
+    const intro = `${executor?.id === target.id ? executor.tag : 'Someone'}`;
 
     const embed = embedTemplate()
       .setAuthor(null)
       .setFooter(null)
       .setColor(Colors.Red)
-      .setTitle(`${executor?.tag ?? 'Someone'} deleted msg in ${(message.channel as TextChannel).name}`)
+      .setTitle(`${intro} deleted msg in ${(message.channel as TextChannel).name}`)
       .addFields([
         { name: message.author.tag, value: message.content, inline: true },
       ]);
