@@ -3,18 +3,18 @@ import {
 } from 'discord.js';
 import { parse } from 'path';
 import { stripIndents } from 'common-tags';
-import { dCalcketamine } from '../commands/global/d.calcKetamine';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../../jest/utils/testutils';
-import log from '../../global/utils/log'; // eslint-disable-line
+import { dTestkits } from '../../src/discord/commands/global/d.testkits';
+import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import log from '../../src/global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line
 
-const slashCommand = dCalcketamine;
+const slashCommand = dTestkits;
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
     const commandData = slashCommand.data;
-    const stringCommand = `/${commandData.name} weight:130.4 units:kg`;
+    const stringCommand = `/${commandData.name}`;
     const command = getParsedCommand(stringCommand, commandData);
     // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
     const spy = await executeCommandAndSpyReply(slashCommand, command);
@@ -29,25 +29,25 @@ describe(slashCommand.data.name, () => {
         iconURL: 'https://imgur.com/b923xK2.png',
         text: 'Dose responsibly!',
       },
+      title: 'Test Kit Resources and information!',
+      description: stripIndents`
+      [How to use a reagent test kit](https://dancesafe.org/testing-kit-instructions/)
+      [How to use fent strips](https://dancesafe.org/you-may-be-using-fentanyl-testing-strips-incorrectly/)
+      [More testkit resources on the TripSit wiki!](https://wiki.tripsit.me/wiki/Test_Kits)
+      `,
       fields: [
         {
-          name: 'Insufflated',
+          name: 'Dosetest (Worldwide)',
           value: stripIndents`
-          **Threshold**: 29mg
-          **Light**: 43mg
-          **Common**: 86mg
-          **Strong**: 144mg-216mg
-          **KHole**: 287mg`,
+          [Website](https://dosetest.com/)            
+          20% off test kits with code TripSit!`,
           inline: true,
         },
         {
-          name: 'Rectal',
+          name: 'ReagentTests UK (UK & EU)',
           value: stripIndents`
-          **Threshold**: 29mg
-          **Light**: 43mg
-          **Common**: 86mg
-          **Strong**: 144mg-216mg
-          **KHole**: 287mg`,
+          [Website](https://www.reagent-tests.uk/shop/)            
+          10% off with code tripsitwiki!`,
           inline: true,
         },
       ],

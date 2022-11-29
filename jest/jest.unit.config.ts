@@ -2,7 +2,7 @@ import type { Config } from 'jest';
 
 const jestConfig: Config = {
   testMatch: [
-    '<rootDir>/src/**/__tests__/*.test.ts',
+    '<rootDir>/jest/__tests__/*.test.ts',
   ],
   collectCoverage: true,
   collectCoverageFrom: [
@@ -20,12 +20,10 @@ const jestConfig: Config = {
     '<rootDir>/src/discord/utils/*',
     '<rootDir>/src/discord/events/*',
     '<rootDir>/src/discord/dscrd.ts',
-    '<rootDir>/src/discord/__tests__/__test*/*',
     '<rootDir>/src/discord/commands/index.ts',
     '<rootDir>/src/discord/commands/archive/*',
     '<rootDir>/src/discord/commands/global/_d.globalTemplate.ts',
-    '<rootDir>/src/discord/commands/discord/_d.discordTemplate.ts',
-
+    '<rootDir>/src/discord/commands/guild/_d.guildTemplate.ts',
   ],
   testEnvironment: 'node',
   clearMocks: true,

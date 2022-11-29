@@ -3,9 +3,9 @@ import {
 } from 'discord.js';
 import { parse } from 'path';
 import { stripIndents } from 'common-tags';
-import { dContact } from '../commands/global/d.contact';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../../jest/utils/testutils';
-import log from '../../global/utils/log'; // eslint-disable-line
+import { dContact } from '../../src/discord/commands/global/d.contact';
+import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import log from '../../src/global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line
 

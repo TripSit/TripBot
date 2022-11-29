@@ -2,28 +2,17 @@ import {
   Colors,
 } from 'discord.js';
 import { parse } from 'path';
-import axios from 'axios';
-import { dJoke } from '../commands/global/d.joke';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../../jest/utils/testutils';
-import log from '../../global/utils/log'; // eslint-disable-line
+import { stripIndents } from 'common-tags';
+import { dWarmline } from '../../src/discord/commands/global/d.warmline';
+import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import log from '../../src/global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line
 
-const slashCommand = dJoke;
+const slashCommand = dWarmline;
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    jest.spyOn(axios, 'get').mockResolvedValue({
-      data: {
-        type: 'single',
-        joke: 'What do you call a fake noodle? An impasta.',
-        flags: {
-          nsfw: false,
-          religious: false,
-          political: false,
-        },
-      },
-    });
     const commandData = slashCommand.data;
     const stringCommand = `/${commandData.name}`;
     const command = getParsedCommand(stringCommand, commandData);
@@ -40,8 +29,14 @@ describe(slashCommand.data.name, () => {
         iconURL: 'https://imgur.com/b923xK2.png',
         text: 'Dose responsibly!',
       },
-      title: 'What do you call a fake noodle? An impasta.',
-      // description: '{data.delivery}',
+      title: 'Warmline Information',
+      fields: [
+        {
+          name: 'Warmline Directory (Worldwide)',
+          value: stripIndents`[Website](https://warmline.org/warmdir.html#directory)`,
+          inline: true,
+        },
+      ],
     }));
   });
 });

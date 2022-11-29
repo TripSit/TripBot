@@ -364,3 +364,4 @@ built/
 node_modules_bak
 .scannerwork/
 coverage/
+eslint-report.json

@@ -3,9 +3,9 @@ import {
 } from 'discord.js';
 import { parse } from 'path';
 import { stripIndents } from 'common-tags';
-import { dCalcdxm } from '../commands/global/d.calcDXM';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../../jest/utils/testutils';
-import log from '../../global/utils/log'; // eslint-disable-line
+import { dCalcdxm } from '../../src/discord/commands/global/d.calcDXM';
+import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import log from '../../src/global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line
 

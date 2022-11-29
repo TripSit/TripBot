@@ -1,7 +1,7 @@
 import { parse } from 'path';
-import { dBreathe } from '../commands/global/d.breathe';
-import { executeCommandAndSpyReply, getParsedCommand } from '../../../jest/utils/testutils';
-import log from '../../global/utils/log'; // eslint-disable-line
+import { dBreathe } from '../../src/discord/commands/global/d.breathe';
+import { executeCommandAndSpyReply, getParsedCommand } from '../utils/testutils';
+import log from '../../src/global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line
 

@@ -2,18 +2,30 @@ import {
   Colors,
 } from 'discord.js';
 import { parse } from 'path';
-import { dConvert } from '../commands/global/d.convert';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../../jest/utils/testutils';
-import log from '../../global/utils/log'; // eslint-disable-line
+import axios from 'axios';
+import { dJoke } from '../../src/discord/commands/global/d.joke';
+import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import log from '../../src/global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line
 
-const slashCommand = dConvert;
+const slashCommand = dJoke;
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
+    jest.spyOn(axios, 'get').mockResolvedValue({
+      data: {
+        type: 'single',
+        joke: 'What do you call a fake noodle? An impasta.',
+        flags: {
+          nsfw: false,
+          religious: false,
+          political: false,
+        },
+      },
+    });
     const commandData = slashCommand.data;
-    const stringCommand = `/${commandData.name} value:123456 units:ft-us into:km`;
+    const stringCommand = `/${commandData.name}`;
     const command = getParsedCommand(stringCommand, commandData);
     // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
     const spy = await executeCommandAndSpyReply(slashCommand, command);
@@ -28,7 +40,8 @@ describe(slashCommand.data.name, () => {
         iconURL: 'https://imgur.com/b923xK2.png',
         text: 'Dose responsibly!',
       },
-      title: '123456 ft-us is 37.62946285463479 km',
+      title: 'What do you call a fake noodle? An impasta.',
+      // description: '{data.delivery}',
     }));
   });
 });

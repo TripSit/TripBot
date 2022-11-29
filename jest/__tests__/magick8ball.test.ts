@@ -1,11 +1,11 @@
 import { parse } from 'path';
-import { dTopic } from '../commands/global/d.topic';
-import { executeCommandAndSpyReply, getParsedCommand } from '../../../jest/utils/testutils';
-import log from '../../global/utils/log'; // eslint-disable-line
+import { dMagick8ball } from '../../src/discord/commands/global/d.magick8ball';
+import { executeCommandAndSpyReply, getParsedCommand } from '../utils/testutils';
+import log from '../../src/global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line
 
-const slashCommand = dTopic;
+const slashCommand = dMagick8ball;
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
