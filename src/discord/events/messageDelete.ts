@@ -51,6 +51,8 @@ export const messageDelete: MessageDeleteEvent = {
     const { executor } = deletionLog;
 
     const embed = embedTemplate()
+      .setAuthor(null)
+      .setFooter(null)
       .setColor(Colors.Red)
       .setTitle(`${executor?.tag ?? 'Someone'} deleted msg in ${(message.channel as TextChannel).name}`)
       .addFields([

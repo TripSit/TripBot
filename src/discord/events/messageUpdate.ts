@@ -33,6 +33,8 @@ export const messageUpdate: MessageUpdateEvent = {
     if (newMessage.author.bot) return;
 
     const embed = embedTemplate()
+      .setAuthor(null)
+      .setFooter(null)
       .setColor(Colors.Yellow)
       .setTitle(`${newMessage.member?.nickname} edited msg in ${(newMessage.channel as TextChannel).name}`)
       .setURL(newMessage.url)
