@@ -1,17 +1,12 @@
-name: LintBuildTest
+name: Scan
 
 on:
   push:
     branches:
-      - development
-      - dev/workflows
-  pull_request:
-    branches:
       - main
-      - development
 
 jobs:
-  LintBuildTest:
+  Scan:
 
     runs-on: ubuntu-latest
 
@@ -29,15 +24,7 @@ jobs:
         distribution: 'adopt'
     - name: Update npm
       run: npm install -g npm && npm --version
-    - name: Install eslint
-      run: npm install eslint eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import --save-dev && npx eslint --version
-    - name: Linting
-      run: npx eslint --fix --ext .ts,.js .
     - name: Install dependencies
       run: npm ci
-    - name: Copy env
-      run: cp .env.example .env
-    - name: Test
-      run: npm test
     - name: Scan
       run: npm run sonar-scanner
