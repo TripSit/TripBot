@@ -6,7 +6,7 @@ import {
 import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { dUrbandefine } from '../commands/archive/d.urbanDefine';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../../jest/utils/testutils';
+import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../utils/testutils';
 import log from '../../global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line

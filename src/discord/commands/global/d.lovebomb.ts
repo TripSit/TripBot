@@ -21,7 +21,7 @@ export const dlovebomb: SlashCommand = {
 
   async execute(interaction) {
     startLog(PREFIX, interaction);
-    const message = `${heartEmojis.sort(() => 0.5 - Math.random()).slice(0, 30).join(' ')}`;
+    const message = `${[...heartEmojis].sort(() => 0.5 - Math.random()).slice(0, 30).join(' ')}`;
     interaction.reply(message);
 
     return true;

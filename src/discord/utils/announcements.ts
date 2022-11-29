@@ -244,28 +244,28 @@ export async function announcements(message:Message) {
           const bigAnnouncementDict = {
             0: {
               message: stripIndents`
-                ${happyEmojis.sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}
+                ${[...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}
                 **Please remember to KIPP - Keep It Positive Please!**
                 We're all here to help each other and have fun!
-                ${happyEmojis.sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}`,
+                ${[...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}`,
               footer: 'Send a ❤ to someone and react to get /h2flow points!',
               emoji: '❤',
             },
             1: {
               message: stripIndents`
-              ${movingEmojis.sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}
+              ${[...movingEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}
               **It's good to get up and move every hour!**
               Take a break, stretch, and get some fresh air!
-              ${movingEmojis.sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}`,
+              ${[...movingEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}`,
               footer: 'Get up, move around and react to get /h2flow points!',
               emoji: '🕴',
             },
             2: {
               message: stripIndents`
-              ${waterAndTeaEmojis.sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}
+              ${[...waterAndTeaEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}
               ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ
               Doesn't some water sound great right now?
-              ${waterAndTeaEmojis.sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}`,
+              ${[...waterAndTeaEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}`,
               footer: 'Take a sip of something and react to get /h2flow points!',
               emoji: '💧',
             },
@@ -294,15 +294,15 @@ export async function announcements(message:Message) {
               collector.on('collect', async (reaction, user) => {
                 const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
                 // Increment the users's pointType
-                const value = await db<Users>('users')
+                await db<Users>('users')
                   .increment(pointType, 1)
                   .where('discord_id', user.id)
                   .returning('*');
-                if (value[0]) {
-                  // log.debug(`[${PREFIX}] ${user.tag} ${pointType} incremented to ${value[0][pointType as keyof typeof value[0]]}`);
-                } else {
-                  // log.debug(`[${PREFIX}] ${user.tag} ${pointType} added as 1`);
-                }
+                // if (value[0]) {
+                //   // log.debug(`[${PREFIX}] ${user.tag} ${pointType} incremented to ${value[0][pointType as keyof typeof value[0]]}`);
+                // } else {
+                //   // log.debug(`[${PREFIX}] ${user.tag} ${pointType} added as 1`);
+                // }
               });
 
               collector.on('remove', async (reaction, user) => {

@@ -30,6 +30,14 @@ export const channelUpdate: ChannelUpdateEvent = {
       return;
     }
 
+    if ([
+      env.CHANNEL_STATS_TOTAL,
+      env.CHANNEL_STATS_ONLINE,
+      env.CHANNEL_STATS_MAX,
+    ].includes(newChannel.id)) {
+      return;
+    }
+
     // log.debug(`[${PREFIX}] Channel ${JSON.stringify(newChannel, null, 2)} was updated.`);
     // logger.debug(`[${PREFIX}] Channel ${JSON.stringify(oldChannel.guild, null, 2)} was updated.`);
 

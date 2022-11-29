@@ -64,7 +64,7 @@ export const dCalcdxm: SlashCommand = {
 
     const results = await calcDxm(givenWeight, weightUnits, taking);
     const dosageData = results.data as DxmDataType;
-    const units = results.units as string;
+    const { units } = results;
 
     const embed = embedTemplate()
       .setColor(Colors.Purple)

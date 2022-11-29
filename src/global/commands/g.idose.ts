@@ -72,7 +72,7 @@ export async function idose(
     }
 
     // Sort data based on the created_at property
-    const data = unsorteddata.sort((a, b) => {
+    const data = [...unsorteddata].sort((a, b) => {
       if (a.created_at < b.created_at) {
         return -1;
       }
@@ -143,7 +143,7 @@ export async function idose(
     // log.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);
 
     // Sort data based on the created_at property
-    const data = unsorteddata.sort((a, b) => {
+    const data = [...unsorteddata].sort((a, b) => {
       if (a.created_at < b.created_at) {
         return -1;
       }

@@ -100,7 +100,7 @@ export const dIdose: SlashCommand = {
     const volume = interaction.options.getNumber('volume');
     const units = interaction.options.getString('units') as DrugMassUnit | null;
     const roa = interaction.options.getString('roa') as DrugRoa | null;
-    const offset = interaction.options.getString('offset') as string | null;
+    const offset = interaction.options.getString('offset');
 
     // log.debug(`[${PREFIX}]
     // command: ${command}

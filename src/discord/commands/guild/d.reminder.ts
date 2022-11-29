@@ -40,10 +40,10 @@ const reminderDict = {
     'Keep #sanctuary slow and positive!',
     '#sanctuary is a positivity-enforced channel for people currently on substances. Please keep the conversation slow and positive, and remember that we are here to help!',
   ],
-  [env.CHANNEL_WEBTRIPSIT]: [
-    'Keep #web-tripsit clear for people who need help!',
-    'Reminder: this channel is for people who need immediate assistance or who have questions about harm reduction and safer drug use. To access our social chat channels, consider joining our discord at https://discord.gg/tripsit. Thank you!,',
-  ],
+  // [env.CHANNEL_WEBTRIPSIT]: [
+  //   'Keep #web-tripsit clear for people who need help!',
+  //   'Reminder: this channel is for people who need immediate assistance or who have questions about harm reduction and safer drug use. To access our social chat channels, consider joining our discord at https://discord.gg/tripsit. Thank you!,',
+  // ],
   [env.CHANNEL_WEBTRIPSIT1]: [
     'Keep #web-tripsit clear for people who need help!',
     'Reminder: this channel is for people who need immediate assistance or who have questions about harm reduction and safer drug use. To access our social chat channels, consider joining our discord at https://discord.gg/tripsit. Thank you!,',

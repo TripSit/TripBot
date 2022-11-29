@@ -9,7 +9,7 @@ import {
   executeCommandWithMockOptionsAndSpySentMessage,
   // embedContaining,
   getParsedCommand,
-} from '../../../jest/utils/testutils';
+} from '../../utils/testutils';
 import log from '../../global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line

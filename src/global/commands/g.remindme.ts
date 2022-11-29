@@ -61,7 +61,7 @@ export async function remindme(
     }
 
     // Sort data based on the created_at property
-    const data = unsorteddata.sort((a, b) => {
+    const data = [...unsorteddata].sort((a, b) => {
       if (a.created_at < b.created_at) {
         return -1;
       }
@@ -118,7 +118,7 @@ export async function remindme(
     }
 
     // Sort data based on the trigger_at property
-    const data = unsorteddata.sort((a, b) => {
+    const data = [...unsorteddata].sort((a, b) => {
       if (a.trigger_at < b.trigger_at) {
         return -1;
       }
