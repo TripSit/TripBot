@@ -30,13 +30,13 @@ export const guildDelete: GuildDeleteEvent = {
       .onConflict('id')
       .merge();
 
+    if (guild.id === '1026942722612924518') return;
+
     const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-    client.guilds.fetch(guild.id).then(guildData => {
-      botlog.send(`I just left a guild! I am now in ${client.guilds.cache.size} guilds!
-        ${guildData.name} (id: ${guildData.id})
-        Member count: ${guildData.memberCount}
-        Description: ${guildData.description ? guildData.description : 'No description'}
-      `);
-    });
+    botlog.send(`I just left a guild! I am now in ${client.guilds.cache.size} guilds!
+      ${guild.name} (id: ${guild.id})
+      Member count: ${guild.memberCount}
+      Description: ${guild.description ? guild.description : 'No description'}
+    `);
   },
 };
