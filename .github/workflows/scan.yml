@@ -6,6 +6,9 @@ name: Scan
 on:
   push:
     branches:
+      - dev/workflows
+  push:
+    branches:
       - main
 
 jobs:

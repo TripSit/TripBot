@@ -1,6 +1,9 @@
 name: Test
 
 on:
+  push:
+    branches:
+      - dev/workflows
   pull_request:
     branches:
       - main
