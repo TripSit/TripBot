@@ -39,3 +39,5 @@ jobs:
       run: cp .env.example .env
     - name: Test
       run: npm test
+    - name: Scan
+      run: npm run sonar-scanner
