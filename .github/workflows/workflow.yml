@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - development
+      - dev/workflows
   pull_request:
     branches:
       - main
@@ -21,6 +22,8 @@ jobs:
       with:
         node-version: '16.17.1'
         cache: 'npm'
+    - name: Setup Java JDK
+      uses: actions/setup-java@v3.6.0
     - name: Update npm
       run: npm install -g npm && npm --version
     - name: Install eslint
