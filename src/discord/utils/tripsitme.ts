@@ -660,7 +660,7 @@ export async function tripsitmeResolve(
       // Setup the reaction collector
       const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
       const collector = message.createReactionCollector({ filter, time: 1000 * 60 * 60 * 24 });
-      collector.on('collect', async (reaction: { emoji: { name: any; }; }) => {
+      collector.on('collect', async reaction => {
         threadHelpUser.send(stripIndents`
           ${env.EMOJI_INVISIBLE}
           > Thank you for your feedback, here's a cookie! 🍪
