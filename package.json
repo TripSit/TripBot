@@ -11,7 +11,7 @@
     "start": "npm run deploy && ts-node --transpile-only src/start.ts",
     "dev": "npm run lint && npm run patch && npm run nodemon",
     "setup": "npm run lint && npm run patch && npm run docker-build && npm run docker-run",
-    "test": "NODE_ENV=test jest -c ./src/jest/jest.unit.config.ts",
+    "test": "NODE_ENV=test jest -c ./jest/jest.unit.config.ts",
     "lint": "eslint --fix --ext .ts,.js .",
     "patch": "npm version patch -git-tag-version false",
     "nodemon": "nodemon --inspect=0.0.0.0:9229 --config ./nodemon.json",
@@ -19,7 +19,7 @@
     "docker-build": "docker compose build",
     "docker-run": "docker compose up -d",
     "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
-    "sonar-scanner": "sonar-scanner   -Dsonar.projectKey=tripbot   -Dsonar.sources=.   -Dsonar.host.url=https://sonarqube.pantheon.tripsit.me   -Dsonar.login=ec3c544afc5fee1baf64900580ddac40fc3cb97b"
+    "sonar-scanner": "sonar-scanner"
   },
   "repository": {
     "type": "git",

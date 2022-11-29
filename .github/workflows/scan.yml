@@ -26,5 +26,9 @@ jobs:
       run: npm install -g npm && npm --version
     - name: Install dependencies
       run: npm ci
+    - name: Copy env
+      run: cp .env.example .env
+    - name: Test
+      run: npm test 
     - name: Scan
       run: npm run sonar-scanner
