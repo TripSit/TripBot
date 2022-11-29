@@ -24,8 +24,9 @@ jobs:
         cache: 'npm'
     - name: Setup Java JDK
       uses: actions/setup-java@v3.6.0
-      with: 
+      with:
         java-version: '8'
+        distribution: 'adopt'
     - name: Update npm
       run: npm install -g npm && npm --version
     - name: Install eslint
