@@ -29,7 +29,7 @@ jobs:
     - name: Install eslint
       run: npm install eslint eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import --save-dev && npx eslint --version
     - name: Linting
-      run: npx eslint --ext .ts,.js .
+      run: npx eslint --fix --ext .ts,.js .
     - name: Install dependencies
       run: npm ci
     - name: Copy env
