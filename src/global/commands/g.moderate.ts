@@ -199,7 +199,7 @@ export async function moderate(
   if (command === 'TIMEOUT') {
     actionData.type = 'TIMEOUT' as UserActionType;
     try {
-      target.timeout(duration, privReason ?? 'No reason provided');
+      await target.timeout(duration, privReason ?? 'No reason provided');
     } catch (err) {
       log.error(`[${PREFIX}] Error: ${err}`);
     }
@@ -222,7 +222,7 @@ export async function moderate(
     actionData.repealed_by = actorData.id;
 
     try {
-      target.timeout(0, privReason ?? 'No reason provided');
+      await target.timeout(0, privReason ?? 'No reason provided');
       // log.debug(`[${PREFIX}] I untimeouted ${target.displayName} because\n '${privReason}'!`);
     } catch (err) {
       log.error(`[${PREFIX}] Error: ${err}`);
@@ -311,7 +311,7 @@ export async function moderate(
   } else if (command === 'KICK') {
     actionData.type = 'KICK' as UserActionType;
     try {
-      target.kick();
+      await target.kick();
     } catch (err) {
       log.error(`[${PREFIX}] Error: ${err}`);
     }

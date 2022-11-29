@@ -143,13 +143,13 @@ export async function needsHelpmode(
   const myMember = await interaction.guild.members.fetch(interaction.client.user.id);
   const myRole = myMember.roles.highest;
   // Remove all roles, except team and vanity, from the target
-  target.roles.cache.forEach(role => {
+  target.roles.cache.forEach(async role => {
     // log.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
     if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone') && role.id !== roleNeedshelp.id) {
       if (role.comparePositionTo(myRole) < 0) {
         // log.debug(`[${PREFIX}] Removing role ${role.name} from ${target.displayName}`);
         try {
-          target.roles.remove(role);
+          await target.roles.remove(role);
         } catch (err) {
           // log.debug(`[${PREFIX}] There was an error removing the role ${role.name} from ${target.displayName}`);
         }
@@ -577,7 +577,7 @@ export async function tripsitmeResolve(
       if (roleNeedshelp.comparePositionTo(myRole) < 0) {
         try {
           // log.debug(`[${PREFIX}] Removing ${roleNeedshelp.name} from ${target.displayName}`);
-          target.roles.remove(roleNeedshelp);
+          await target.roles.remove(roleNeedshelp);
         } catch (err) {
           log.error(`[${PREFIX}] Error removing ${roleNeedshelp.name} from ${target.displayName}`);
           log.error(err);
@@ -600,7 +600,7 @@ export async function tripsitmeResolve(
           if (roleObj.comparePositionTo(myRole) < 0) {
             // log.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.displayName}`);
             try {
-              target.roles.add(roleObj);
+              await target.roles.add(roleObj);
             } catch (err) {
               log.error(`[${PREFIX}] Error adding role ${roleObj.name} to ${target.displayName}`);
               log.error(err);
@@ -635,7 +635,7 @@ export async function tripsitmeResolve(
     After 7 days, or on request, it will be deleted to preserve your privacy =)`;
 
   try {
-    threadHelpUser.send(endHelpMessage);
+    await threadHelpUser.send(endHelpMessage);
   } catch (err) {
     log.error(`[${PREFIX}] Error sending end help message to ${threadHelpUser}`);
     log.error(err);
