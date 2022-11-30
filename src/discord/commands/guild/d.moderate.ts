@@ -198,6 +198,7 @@ export const mod: SlashCommand = {
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[2] !== interaction.id) return;
+        i.deferReply({ ephemeral: true });
         const privReason = i.fields.getTextInputValue('privReason');
         let pubReason = '';
         try {
@@ -212,7 +213,7 @@ export const mod: SlashCommand = {
             // Check if the given duration is a number between 0 and 7
             const days = parseInt(durationInput, 10);
             if (Number.isNaN(days) || days < 0 || days > 7) {
-              i.reply({ content: 'Invalid number of days given', ephemeral: true });
+              i.editReply({ content: 'Invalid number of days given' });
               return;
             }
             duration = duration
@@ -239,7 +240,7 @@ export const mod: SlashCommand = {
           duration,
         );
           // log.debug(`[${PREFIX}] Result: ${result}`);
-        i.reply(result);
+        i.editReply(result);
       });
 
     return false;
