@@ -24,7 +24,6 @@ async function birthdayGet(
   if (response === null) {
     embed.setTitle(`${member.displayName} is immortal! (Or has not set their birthday...)`);
     await interaction.reply({ embeds: [embed] });
-    return true;
   }
   embed.setTitle(`${member.displayName}'s birthday is ${(response as DateTime).toFormat('LLLL d')}`);
   // Determine how long until the birthday, even if the year is different
@@ -44,7 +43,6 @@ async function birthdayGet(
     embed.setDescription(`Only ${daysUntil.toFixed(0)} days left!`);
   }
   await interaction.reply({ embeds: [embed] });
-  return true;
 }
 
 async function birthdaySet(
@@ -57,12 +55,12 @@ async function birthdaySet(
 
   if (!monthInput) {
     await interaction.reply({ content: 'You need to specify a month!', ephemeral: true });
-    return false;
+    return;
   }
 
   if (!day) {
     await interaction.reply({ content: 'You need to specify a day!', ephemeral: true });
-    return false;
+    return;
   }
 
   const month30 = ['april', 'june', 'september', 'november'];
@@ -72,19 +70,19 @@ async function birthdaySet(
       const response = `${monthInput} only has 30 days!` as string;
       // log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
       interaction.reply({ content: response, ephemeral: true });
-      return false;
+      return;
     }
     if (month31.includes(monthInput.toLowerCase()) && day > 31) {
       const response = `${monthInput} only has 31 days!` as string;
       // log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
       interaction.reply({ content: response, ephemeral: true });
-      return false;
+      return;
     }
     if (monthInput.toLowerCase() === 'february' && day > 28) {
       const response = 'February only has 28 days!' as string;
       // log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
       interaction.reply({ content: response, ephemeral: true });
-      return false;
+      return;
     }
     // const monthDict = {
     //   'january': 0,
@@ -122,9 +120,7 @@ async function birthdaySet(
     const embed = embedTemplate();
     embed.setTitle(`Set your birthday to ${(response as DateTime).toFormat('LLLL d')}`);
     await interaction.reply({ embeds: [embed], ephemeral: true });
-    return true;
   }
-  return false;
 }
 
 export default dBirthday;
@@ -175,15 +171,13 @@ export const dBirthday: SlashCommand = {
       command = 'get';
     }
 
-    let result = false;
-
     if (command === 'set') {
       if (member === null) {
         member = interaction.member as GuildMember;
       } else {
         member = member as GuildMember;
       }
-      result = await birthdaySet(interaction, member, monthInput, day);
+      await birthdaySet(interaction, member, monthInput, day);
     }
 
     if (command === 'get') {
@@ -192,8 +186,8 @@ export const dBirthday: SlashCommand = {
       } else {
         member = member as GuildMember;
       }
-      result = await birthdayGet(interaction, member);
+      await birthdayGet(interaction, member);
     }
-    return result;
+    return true;
   },
 };
