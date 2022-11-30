@@ -32,6 +32,8 @@ export const messageUpdate: MessageUpdateEvent = {
     if (!newMessage.author) return;
     if (newMessage.author.bot) return;
 
+    const oldContent = oldMessage !== undefined && oldMessage !== null ? oldMessage.content : '(Not found)';
+
     const embed = embedTemplate()
       .setAuthor(null)
       .setFooter(null)
@@ -39,7 +41,7 @@ export const messageUpdate: MessageUpdateEvent = {
       .setTitle(`${newMessage.member?.nickname} edited msg in ${(newMessage.channel as TextChannel).name}`)
       .setURL(newMessage.url)
       .addFields([
-        { name: 'Old Message', value: oldMessage.content ?? '(Not found)', inline: true },
+        { name: 'Old Message', value: oldContent, inline: true },
         { name: 'New Message', value: newMessage.content, inline: true },
       ]);
 
