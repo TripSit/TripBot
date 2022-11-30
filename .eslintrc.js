@@ -34,7 +34,6 @@ module.exports = {
     // The following will show up as errors, just want to get this pushed for now
     'sonarjs/cognitive-complexity': ['warn', 50],
     'sonarjs/no-duplicate-string': ['warn', 3],
-    'sonarjs/no-collapsible-if': 'warn',
   },
 
   overrides: [

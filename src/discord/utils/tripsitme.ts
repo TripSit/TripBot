@@ -96,6 +96,9 @@ const otherRoles = [
 
 const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles},${otherRoles}`;
 
+const guildOnly = 'This must be performed in a guild!';
+const memberOnly = 'This must be performed by a member of a guild!';
+
 /**
  * Applies the NeedHelp role on a user and removes their other roles
  * @param {GuildMember} interaction
@@ -107,12 +110,12 @@ export async function needsHelpmode(
 ) {
   if (!interaction.guild) {
     // log.debug(`[${PREFIX}] no guild!`);
-    interaction.reply('This must be performed in a guild!');
+    interaction.reply(guildOnly);
     return;
   }
   if (!interaction.member) {
     // log.debug(`[${PREFIX}] no member!`);
-    interaction.reply('This must be performed by a member of a guild!');
+    interaction.reply(memberOnly);
     return;
   }
 
@@ -145,15 +148,11 @@ export async function needsHelpmode(
   // Remove all roles, except team and vanity, from the target
   target.roles.cache.forEach(async role => {
     // log.debug(`[${PREFIX}] role: ${role.name} - ${role.id}`);
-    if (!ignoredRoles.includes(role.id) && !role.name.includes('@everyone') && role.id !== roleNeedshelp.id) {
-      if (role.comparePositionTo(myRole) < 0) {
-        // log.debug(`[${PREFIX}] Removing role ${role.name} from ${target.displayName}`);
-        try {
-          await target.roles.remove(role);
-        } catch (err) {
-          // log.debug(`[${PREFIX}] There was an error removing the role ${role.name} from ${target.displayName}`);
-        }
-      }
+    if (!ignoredRoles.includes(role.id)
+    && !role.name.includes('@everyone')
+    && role.id !== roleNeedshelp.id
+    && role.comparePositionTo(myRole)) {
+      await target.roles.remove(role);
     }
   });
 
@@ -177,7 +176,7 @@ export async function tripsitmeOwned(
 ) {
   if (!interaction.guild) {
     // log.debug(`[${PREFIX}] no guild!`);
-    interaction.reply('This must be performed in a guild!');
+    interaction.reply(guildOnly);
     return;
   }
   // log.debug(`[${PREFIX}] tripsitmeOwned`);
@@ -232,7 +231,7 @@ export async function tripsitmeMeta(
 ) {
   if (!interaction.guild) {
     // log.debug(`[${PREFIX}] no guild!`);
-    interaction.reply('This must be performed in a guild!');
+    interaction.reply(guildOnly);
     return;
   }
   // log.debug(`[${PREFIX}] tripsitmeMeta`);
@@ -242,7 +241,7 @@ export async function tripsitmeMeta(
 
   if (!interaction.guild) {
     // log.debug(`[${PREFIX}] no guild!`);
-    interaction.reply('This must be performed in a guild!');
+    interaction.reply(guildOnly);
     return;
   }
   if (!interaction.channel) {
@@ -339,7 +338,7 @@ export async function tripsitmeBackup(
   // log.debug(`[${PREFIX}] tripsitmeBackup`);
   if (!interaction.guild) {
     // log.debug(`[${PREFIX}] no guild!`);
-    interaction.reply('This must be performed in a guild!');
+    interaction.reply(guildOnly);
     return;
   }
   if (!interaction.channel) {
@@ -403,12 +402,12 @@ export async function tripsitmeClose(
   await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) {
     // log.debug(`[${PREFIX}] no guild!`);
-    interaction.editReply('This must be performed in a guild!');
+    interaction.editReply(guildOnly);
     return;
   }
   if (!interaction.member) {
     // log.debug(`[${PREFIX}] no member!`);
-    interaction.editReply('This must be performed by a member of a guild!');
+    interaction.editReply(memberOnly);
     return;
   }
 
@@ -521,12 +520,12 @@ export async function tripsitmeResolve(
   await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) {
     // log.debug(`[${PREFIX}] no guild!`);
-    interaction.editReply('This must be performed in a guild!');
+    interaction.editReply(guildOnly);
     return;
   }
   if (!interaction.member) {
     // log.debug(`[${PREFIX}] no member!`);
-    interaction.editReply('This must be performed by a member of a guild!');
+    interaction.editReply(memberOnly);
     return;
   }
 
@@ -580,16 +579,9 @@ export async function tripsitmeResolve(
     const myRole = myMember.roles.highest;
     const targetRoles:string[] = userData.roles.split(',') || [];
 
-    if (roleNeedshelp) {
-      if (roleNeedshelp.comparePositionTo(myRole) < 0) {
-        try {
-          // log.debug(`[${PREFIX}] Removing ${roleNeedshelp.name} from ${target.displayName}`);
-          await target.roles.remove(roleNeedshelp);
-        } catch (err) {
-          log.error(`[${PREFIX}] Error removing ${roleNeedshelp.name} from ${target.displayName}`);
-          log.error(err);
-        }
-      }
+    if (roleNeedshelp && roleNeedshelp.comparePositionTo(myRole) < 0) {
+      // log.debug(`[${PREFIX}] Removing ${roleNeedshelp.name} from ${target.displayName}`);
+      await target.roles.remove(roleNeedshelp);
     }
 
     // readd each role to the target
@@ -603,16 +595,9 @@ export async function tripsitmeResolve(
         const roleObj = await interaction.guild.roles.fetch(roleId) as Role;
         if (!ignoredRoles.includes(roleObj.id)
           && roleObj.name !== '@everyone'
-          && roleObj.id !== roleNeedshelp.id) {
-          if (roleObj.comparePositionTo(myRole) < 0) {
-            // log.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.displayName}`);
-            try {
-              await target.roles.add(roleObj);
-            } catch (err) {
-              log.error(`[${PREFIX}] Error adding role ${roleObj.name} to ${target.displayName}`);
-              log.error(err);
-            }
-          }
+          && roleObj.id !== roleNeedshelp.id
+          && roleObj.comparePositionTo(myRole) < 0) {
+          await target.roles.add(roleObj);
         }
       });
     }
@@ -747,12 +732,12 @@ export async function tripSitMe(
 
   if (!interaction.guild) {
     // log.debug(`[${PREFIX}] no guild!`);
-    interaction.reply('This must be performed in a guild!');
+    interaction.reply(guildOnly);
     return;
   }
   if (!interaction.member) {
     // log.debug(`[${PREFIX}] no member!`);
-    interaction.reply('This must be performed by a member of a guild!');
+    interaction.reply(memberOnly);
     return;
   }
 
@@ -964,12 +949,12 @@ export async function tripsitmeButton(
   startLog(PREFIX, interaction);
   if (!interaction.guild) {
     // log.debug(`[${PREFIX}] no guild!`);
-    interaction.reply('This must be performed in a guild!');
+    interaction.reply(guildOnly);
     return;
   }
   if (!interaction.member) {
     // log.debug(`[${PREFIX}] no member!`);
-    interaction.reply('This must be performed by a member of a guild!');
+    interaction.reply(memberOnly);
     return;
   }
   const target = interaction.member as GuildMember;
