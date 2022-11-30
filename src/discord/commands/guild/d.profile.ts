@@ -246,7 +246,8 @@ export const dProfile: SlashCommand = {
     function numFormatter(num:number):string {
       if (num > 999 && num < 1000000) {
         return `${(num / 1000).toFixed(2)}K`;
-      } if (num > 1000000) {
+      }
+      if (num > 1000000) {
         return `${(num / 1000000).toFixed(2)}M`;
       }
       return num.toFixed(0);
@@ -254,10 +255,8 @@ export const dProfile: SlashCommand = {
 
     // Messages Sent Text
     if (targetData.totalExp) {
-      if (targetData.totalExp) {
-        const MessagesSent = targetData.totalExp / 20;
-        context.fillText(`${numFormatter(MessagesSent)}`, 684, 253);
-      }
+      const MessagesSent = targetData.totalExp / 20;
+      context.fillText(`${numFormatter(MessagesSent)}`, 684, 253);
     }
 
     context.fillText(`${numFormatter(targetData.karma_received)}`, 684, 190);
