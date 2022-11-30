@@ -293,7 +293,9 @@ export async function runTimer() {
               }
             }
             // Check if the ticket is ready to be deleted
-            if (ticket.deleted_at && ticket.status === 'ARCHIVED' && DateTime.fromJSDate(ticket.deleted_at) <= DateTime.local()) {
+            if (ticket.deleted_at
+              && ticket.status === 'ARCHIVED'
+              && DateTime.fromJSDate(ticket.deleted_at) <= DateTime.local()) {
               // Delete the ticket
               await db<UserTickets>('user_tickets')
                 .delete()
