@@ -133,11 +133,9 @@ export const dIdose: SlashCommand = {
 
     // log.debug(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
 
-    if (response[0]) {
-      if (response[0].name === 'Error') {
-        await interaction.reply({ content: response[0].value, ephemeral: true });
-        return false;
-      }
+    if (response[0] && response[0].name === 'Error') {
+      await interaction.reply({ content: response[0].value, ephemeral: true });
+      return false;
     }
 
     if (command === 'delete') {

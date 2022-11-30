@@ -38,21 +38,22 @@ export async function commandRun(
     await command.execute(interaction);
   } catch (error) {
     Error.stackTraceLimit = 25;
+    const genericError = 'There was an error while executing this command!';
     if (error instanceof Error) {
       log.error(`[${PREFIX}] ERROR: ${error.stack}`);
       if (!interaction.replied) {
         if (interaction.deferred) {
-          interaction.editReply('There was an error while executing this command!');
+          interaction.editReply(genericError);
         } else {
           interaction.reply({
-            content: 'There was an error while executing this command!',
+            content: genericError,
             ephemeral: true,
           });
         }
       } else {
         const embed = embedTemplate()
           .setColor(Colors.Red)
-          .setDescription('There was an error while executing this command!');
+          .setDescription(genericError);
         await interaction.editReply({ embeds: [embed] });
       }
       if (env.NODE_ENV === 'production') {

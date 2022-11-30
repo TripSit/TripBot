@@ -376,10 +376,11 @@ export const dProfile: SlashCommand = {
         statusIcon = 'https://i.imgur.com/2ZVC480.png';
       } else if (target.presence.status === 'offline') {
         // statusIcon = '.\\src\\discord\\assets\\img\\icons\\offline.png';
-        statusIcon = 'https://i.imgur.com/eICJIwe.png';
-      } else {
-        statusIcon = 'https://i.imgur.com/eICJIwe.png';
+        // statusIcon = 'https://i.imgur.com/eICJIwe.png';
       }
+      // else {
+      //   // statusIcon = 'https://i.imgur.com/eICJIwe.png';
+      // }
     }
 
     try {

@@ -225,108 +225,106 @@ export async function announcements(message:Message) {
   ];
 
   // log.debug(`[${PREFIX}] instance of TextChannel: ${message.channel instanceof TextChannel}`);
-  if (message.channel instanceof TextChannel) {
+  if (message.channel instanceof TextChannel
+    && message.channel.parentId
+    && generalChatCategories.includes(message.channel.parentId)) {
     // log.debug(`[${PREFIX}] message.channel.parentId: ${message.channel.parentId}`);
-    if (message.channel.parentId) {
-      // log.debug(`[${PREFIX}] generalChatCategories: ${generalChatCategories}`);
-      // log.debug(`[${PREFIX}] generalChatCategories.includes(message.channel.parentId): ${generalChatCategories.includes(message.channel.parentId)}`);
-      if (generalChatCategories.includes(message.channel.parentId)) {
-        messageCounter[message.channel.id] = messageCounter[message.channel.id]
-          ? messageCounter[message.channel.id] + 1
-          : 1;
+    // log.debug(`[${PREFIX}] generalChatCategories: ${generalChatCategories}`);
+    // log.debug(`[${PREFIX}] generalChatCategories.includes(message.channel.parentId): ${generalChatCategories.includes(message.channel.parentId)}`);
+    messageCounter[message.channel.id] = messageCounter[message.channel.id]
+      ? messageCounter[message.channel.id] + 1
+      : 1;
 
-        // log.debug(`[${PREFIX}] messageCounter[message.channel.id]: ${messageCounter[message.channel.id]}`);
-        // log.debug(`[${PREFIX}] bigFrequency: ${bigFrequency}`);
-        // log.debug(`[${PREFIX}] ${messageCounter[message.channel.id] % bigFrequency === 0}`);
-        // log.debug(`[${PREFIX}] frequency: ${frequency}`);
-        // log.debug(`[${PREFIX}] ${messageCounter[message.channel.id] % frequency === 0}`);
-        if (messageCounter[message.channel.id] % bigFrequency === 0) {
-          const bigAnnouncementDict = {
-            0: {
-              message: stripIndents`
+    // log.debug(`[${PREFIX}] messageCounter[message.channel.id]: ${messageCounter[message.channel.id]}`);
+    // log.debug(`[${PREFIX}] bigFrequency: ${bigFrequency}`);
+    // log.debug(`[${PREFIX}] ${messageCounter[message.channel.id] % bigFrequency === 0}`);
+    // log.debug(`[${PREFIX}] frequency: ${frequency}`);
+    // log.debug(`[${PREFIX}] ${messageCounter[message.channel.id] % frequency === 0}`);
+    if (messageCounter[message.channel.id] % bigFrequency === 0) {
+      const bigAnnouncementDict = {
+        0: {
+          message: stripIndents`
                 ${[...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}
                 **Please remember to KIPP - Keep It Positive Please!**
                 We're all here to help each other and have fun!
                 ${[...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}`,
-              footer: 'Send a ❤ to someone and react to get /h2flow points!',
-              emoji: '❤',
-            },
-            1: {
-              message: stripIndents`
+          footer: 'Send a ❤ to someone and react to get /h2flow points!',
+          emoji: '❤',
+        },
+        1: {
+          message: stripIndents`
               ${[...movingEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}
               **It's good to get up and move every hour!**
               Take a break, stretch, and get some fresh air!
               ${[...movingEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}`,
-              footer: 'Get up, move around and react to get /h2flow points!',
-              emoji: '🕴',
-            },
-            2: {
-              message: stripIndents`
+          footer: 'Get up, move around and react to get /h2flow points!',
+          emoji: '🕴',
+        },
+        2: {
+          message: stripIndents`
               ${[...waterAndTeaEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}
               ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ
               Doesn't some water sound great right now?
               ${[...waterAndTeaEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}`,
-              footer: 'Take a sip of something and react to get /h2flow points!',
-              emoji: '💧',
-            },
+          footer: 'Take a sip of something and react to get /h2flow points!',
+          emoji: '💧',
+        },
+      };
+
+      bigFrequencyCounter += 1;
+      if (bigFrequencyCounter > 2) {
+        bigFrequencyCounter = 0;
+      }
+
+      embed.setAuthor(null);
+      embed.setFooter({ text: bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].footer });
+      embed.setDescription(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].message);
+      await (message.channel as TextChannel).send({ embeds: [embed] })
+        .then(async msg => {
+          await msg.react(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji);
+          const filter = (reaction:MessageReaction) => reaction.emoji.name === bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji;
+          const collector = msg.createReactionCollector({ filter, time: 0, dispose: true });
+
+          const pointDict = {
+            '❤': 'empathy_points',
+            '🕴': 'move_points',
+            '💧': 'sparkle_points',
           };
 
-          bigFrequencyCounter += 1;
-          if (bigFrequencyCounter > 2) {
-            bigFrequencyCounter = 0;
-          }
+          collector.on('collect', async (reaction, user) => {
+            const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
+            // Increment the users's pointType
+            await db<Users>('users')
+              .increment(pointType, 1)
+              .where('discord_id', user.id)
+              .returning('*');
+            // if (value[0]) {
+            //   // log.debug(`[${PREFIX}] ${user.tag} ${pointType} incremented to ${value[0][pointType as keyof typeof value[0]]}`);
+            // } else {
+            //   // log.debug(`[${PREFIX}] ${user.tag} ${pointType} added as 1`);
+            // }
+          });
 
-          embed.setAuthor(null);
-          embed.setFooter({ text: bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].footer });
-          embed.setDescription(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].message);
-          await (message.channel as TextChannel).send({ embeds: [embed] })
-            .then(async msg => {
-              await msg.react(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji);
-              const filter = (reaction:MessageReaction) => reaction.emoji.name === bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji;
-              const collector = msg.createReactionCollector({ filter, time: 0, dispose: true });
+          collector.on('remove', async (reaction, user) => {
+            const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
+            // Increment the users's pointType
+            await db<Users>('users')
+              .increment(pointType, -1)
+              .where('discord_id', user.id)
+              .returning(pointType);
+            // log.debug(`[${PREFIX}] ${user.tag} ${pointType} decremented to ${value[0][pointType as keyof typeof value[0]]}`);
+          });
+        });
+    } else if (messageCounter[message.channel.id] % frequency === 0) {
+      // If the number of messages sent in the channel / by (frequency) has no remainder..
 
-              const pointDict = {
-                '❤': 'empathy_points',
-                '🕴': 'move_points',
-                '💧': 'sparkle_points',
-              };
+      const randomGenNumber = Math.floor(Math.random() * genAnnouncements.length);
 
-              collector.on('collect', async (reaction, user) => {
-                const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
-                // Increment the users's pointType
-                await db<Users>('users')
-                  .increment(pointType, 1)
-                  .where('discord_id', user.id)
-                  .returning('*');
-                // if (value[0]) {
-                //   // log.debug(`[${PREFIX}] ${user.tag} ${pointType} incremented to ${value[0][pointType as keyof typeof value[0]]}`);
-                // } else {
-                //   // log.debug(`[${PREFIX}] ${user.tag} ${pointType} added as 1`);
-                // }
-              });
+      const randomGenAnnouncement = genAnnouncements[randomGenNumber];
 
-              collector.on('remove', async (reaction, user) => {
-                const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
-                // Increment the users's pointType
-                await db<Users>('users')
-                  .increment(pointType, -1)
-                  .where('discord_id', user.id)
-                  .returning(pointType);
-                // log.debug(`[${PREFIX}] ${user.tag} ${pointType} decremented to ${value[0][pointType as keyof typeof value[0]]}`);
-              });
-            });
-        } else if (messageCounter[message.channel.id] % frequency === 0) {
-          // If the number of messages sent in the channel / by (frequency) has no remainder..
-
-          const randomGenNumber = Math.floor(Math.random() * genAnnouncements.length);
-
-          const randomGenAnnouncement = genAnnouncements[randomGenNumber];
-
-          // log.debug(`[${PREFIX}] randomGenAnnouncement: ${randomGenAnnouncement}`);
-          embed.setDescription(randomGenAnnouncement);
-          await (message.channel as TextChannel).send({ embeds: [embed] });
-        }
-      }
+      // log.debug(`[${PREFIX}] randomGenAnnouncement: ${randomGenAnnouncement}`);
+      embed.setDescription(randomGenAnnouncement);
+      await (message.channel as TextChannel).send({ embeds: [embed] });
     }
   }
 }

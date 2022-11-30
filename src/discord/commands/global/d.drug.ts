@@ -100,6 +100,8 @@ export const dDrug: SlashCommand = {
     }
     let toleranceAdded = false;
     let toxicityAdded = false;
+    const toleranceHeader = '↗ Tolerance';
+    const toxicityHeader = '☣ Toxicity';
 
     if (firstRowColumns > 0 && firstRowColumns < 3) {
       if (drugData.tolerance) {
@@ -117,19 +119,17 @@ export const dDrug: SlashCommand = {
           toleranceString += `Zero: ${tolZeroCap}\n`;
         }
 
-        embed.addFields({ name: '↗ Tolerance', value: stripIndents`${toleranceString}`, inline: true });
+        embed.addFields({ name: toleranceHeader, value: stripIndents`${toleranceString}`, inline: true });
         toleranceAdded = true;
         firstRowColumns += 1;
       }
-      if (firstRowColumns < 3) {
-        if (drugData.toxicity) {
-          const toxicityMap = drugData.toxicity.map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
-          const toxicityString = toxicityMap.join(', ');
-          embed.addFields({ name: '☣ Toxicity', value: stripIndents`${toxicityString}`, inline: true });
-          // log.debug(`[${PREFIX}] Added toxicity`);
-          toxicityAdded = true;
-          firstRowColumns += 1;
-        }
+      if (firstRowColumns < 3 && drugData.toxicity) {
+        const toxicityMap = drugData.toxicity.map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
+        const toxicityString = toxicityMap.join(', ');
+        embed.addFields({ name: toxicityHeader, value: stripIndents`${toxicityString}`, inline: true });
+        // log.debug(`[${PREFIX}] Added toxicity`);
+        toxicityAdded = true;
+        firstRowColumns += 1;
       }
       while (firstRowColumns < 3) {
         embed.addFields({ name: '\u200B', value: '\u200B', inline: true });
@@ -195,39 +195,36 @@ export const dDrug: SlashCommand = {
 
         // Make sure there's a newline between the dosages and durations
         if (dosageColumns > 0 && dosageColumns < 3) {
-          if (!toleranceAdded) {
-            if (drugData.tolerance) {
-              let toleranceString = '';
-              if (drugData.tolerance.full) {
-                const tolFullCap = drugData.tolerance.full[0].toUpperCase() + drugData.tolerance.full.substring(1);
-                toleranceString += `Full: ${tolFullCap}\n`;
-              }
-              if (drugData.tolerance.half) {
-                const tolHalfCap = drugData.tolerance.half[0].toUpperCase() + drugData.tolerance.half.substring(1);
-                toleranceString += `Half: ${tolHalfCap}\n`;
-              }
-              if (drugData.tolerance.zero) {
-                const tolZeroCap = drugData.tolerance.zero[0].toUpperCase() + drugData.tolerance.zero.substring(1);
-                toleranceString += `Zero: ${tolZeroCap}\n`;
-              }
+          if (!toleranceAdded
+            && drugData.tolerance) {
+            let toleranceString = '';
+            if (drugData.tolerance.full) {
+              const tolFullCap = drugData.tolerance.full[0].toUpperCase() + drugData.tolerance.full.substring(1);
+              toleranceString += `Full: ${tolFullCap}\n`;
+            }
+            if (drugData.tolerance.half) {
+              const tolHalfCap = drugData.tolerance.half[0].toUpperCase() + drugData.tolerance.half.substring(1);
+              toleranceString += `Half: ${tolHalfCap}\n`;
+            }
+            if (drugData.tolerance.zero) {
+              const tolZeroCap = drugData.tolerance.zero[0].toUpperCase() + drugData.tolerance.zero.substring(1);
+              toleranceString += `Zero: ${tolZeroCap}\n`;
+            }
 
-              embed.addFields({ name: '↗ Tolerance', value: stripIndents`${toleranceString}`, inline: true });
-              toleranceAdded = true;
-              dosageColumns += 1;
-            }
+            embed.addFields({ name: toleranceHeader, value: stripIndents`${toleranceString}`, inline: true });
+            toleranceAdded = true;
+            dosageColumns += 1;
           }
-          if (!toxicityAdded) {
-            if (firstRowColumns < 3) {
-              if (drugData.toxicity) {
-                const toxicityMap = drugData.toxicity
-                  .map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
-                const toxicityString = toxicityMap.join(', ');
-                embed.addFields({ name: '☣ Toxicity', value: stripIndents`${toxicityString}`, inline: true });
-                // log.debug(`[${PREFIX}] Added toxicity A`);
-                toxicityAdded = true;
-                dosageColumns += 1;
-              }
-            }
+          if (!toxicityAdded
+            && firstRowColumns < 3
+            && drugData.toxicity) {
+            const toxicityMap = drugData.toxicity
+              .map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
+            const toxicityString = toxicityMap.join(', ');
+            embed.addFields({ name: toxicityHeader, value: stripIndents`${toxicityString}`, inline: true });
+            // log.debug(`[${PREFIX}] Added toxicity A`);
+            toxicityAdded = true;
+            dosageColumns += 1;
           }
 
           while (dosageColumns < 3) {
@@ -241,55 +238,49 @@ export const dDrug: SlashCommand = {
         roaNames.forEach(roaName => {
           if (durationColumns < 3) {
             const roaInfo = drugData.roas.find(r => r.name === roaName);
-            if (roaInfo) {
-              if (roaInfo.duration) {
-                let durationString = '';
-                roaInfo.duration.forEach(d => {
-                  durationString += `${d.name}: ${d.value}\n`;
-                });
-                embed.addFields({ name: `⏳ Duration (${roaName})`, value: stripIndents`${durationString}`, inline: true }); // eslint-disable-line max-len
-                durationColumns += 1;
-              }
+            if (roaInfo && roaInfo.duration) {
+              let durationString = '';
+              roaInfo.duration.forEach(d => {
+                durationString += `${d.name}: ${d.value}\n`;
+              });
+              embed.addFields({ name: `⏳ Duration (${roaName})`, value: stripIndents`${durationString}`, inline: true }); // eslint-disable-line max-len
+              durationColumns += 1;
             }
           }
         });
 
         if (durationColumns > 0 && durationColumns < 3) {
-          if (!toleranceAdded) {
-            if (drugData.tolerance) {
-              let toleranceString = '';
-              if (drugData.tolerance.full) {
-                const tolFullCap = drugData.tolerance.full[0].toUpperCase() + drugData.tolerance.full.substring(1);
-                toleranceString += `Full: ${tolFullCap}\n`;
-              }
-              if (drugData.tolerance.half) {
-                const tolHalfCap = drugData.tolerance.half[0].toUpperCase() + drugData.tolerance.half.substring(1);
-                toleranceString += `Half: ${tolHalfCap}\n`;
-              }
-              if (drugData.tolerance.zero) {
-                const tolZeroCap = drugData.tolerance.zero[0].toUpperCase() + drugData.tolerance.zero.substring(1);
-                toleranceString += `Zero: ${tolZeroCap}\n`;
-              }
-
-              embed.addFields({ name: '↗ Tolerance', value: stripIndents`${toleranceString}`, inline: true });
-              toleranceAdded = true;
-              durationColumns += 1;
+          if (!toleranceAdded && drugData.tolerance) {
+            let toleranceString = '';
+            if (drugData.tolerance.full) {
+              const tolFullCap = drugData.tolerance.full[0].toUpperCase() + drugData.tolerance.full.substring(1);
+              toleranceString += `Full: ${tolFullCap}\n`;
             }
+            if (drugData.tolerance.half) {
+              const tolHalfCap = drugData.tolerance.half[0].toUpperCase() + drugData.tolerance.half.substring(1);
+              toleranceString += `Half: ${tolHalfCap}\n`;
+            }
+            if (drugData.tolerance.zero) {
+              const tolZeroCap = drugData.tolerance.zero[0].toUpperCase() + drugData.tolerance.zero.substring(1);
+              toleranceString += `Zero: ${tolZeroCap}\n`;
+            }
+
+            embed.addFields({ name: toleranceHeader, value: stripIndents`${toleranceString}`, inline: true });
+            toleranceAdded = true;
+            durationColumns += 1;
           }
           // log.debug(`[${PREFIX}] toxicityAdded: ${toxicityAdded}`);
-          if (!toxicityAdded) {
+          if (!toxicityAdded
+            && durationColumns < 3
+            && drugData.toxicity) {
             // log.debug(`[${PREFIX}] toxicityAdded: ${toxicityAdded}`);
-            if (durationColumns < 3) {
-              if (drugData.toxicity) {
-                const toxicityMap = drugData.toxicity
-                  .map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
-                const toxicityString = toxicityMap.join(', ');
-                embed.addFields({ name: '☣ Toxicity', value: stripIndents`${toxicityString}`, inline: true });
-                // log.debug(`[${PREFIX}] Added toxicity B`);
-                toxicityAdded = true;
-                durationColumns += 1;
-              }
-            }
+            const toxicityMap = drugData.toxicity
+              .map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
+            const toxicityString = toxicityMap.join(', ');
+            embed.addFields({ name: toxicityHeader, value: stripIndents`${toxicityString}`, inline: true });
+            // log.debug(`[${PREFIX}] Added toxicity B`);
+            toxicityAdded = true;
+            durationColumns += 1;
           }
 
           while (durationColumns < 3) {
@@ -303,32 +294,28 @@ export const dDrug: SlashCommand = {
       embed.addFields({ name: '🔬Reagent Results', value: stripIndents`${drugData.reagents.toString()}`, inline: false }); // eslint-disable-line max-len
     }
 
-    if (!toleranceAdded) {
-      if (drugData.tolerance) {
-        let toleranceString = '';
-        if (drugData.tolerance.full) {
-          const tolFullCap = drugData.tolerance.full[0].toUpperCase() + drugData.tolerance.full.substring(1);
-          toleranceString += `Full: ${tolFullCap}\n`;
-        }
-        if (drugData.tolerance.half) {
-          const tolHalfCap = drugData.tolerance.half[0].toUpperCase() + drugData.tolerance.half.substring(1);
-          toleranceString += `Half: ${tolHalfCap}\n`;
-        }
-        if (drugData.tolerance.zero) {
-          const tolZeroCap = drugData.tolerance.zero[0].toUpperCase() + drugData.tolerance.zero.substring(1);
-          toleranceString += `Zero: ${tolZeroCap}\n`;
-        }
-        embed.addFields({ name: '↗ Tolerance', value: stripIndents`${toleranceString}`, inline: true });
+    if (!toleranceAdded && drugData.tolerance) {
+      let toleranceString = '';
+      if (drugData.tolerance.full) {
+        const tolFullCap = drugData.tolerance.full[0].toUpperCase() + drugData.tolerance.full.substring(1);
+        toleranceString += `Full: ${tolFullCap}\n`;
       }
+      if (drugData.tolerance.half) {
+        const tolHalfCap = drugData.tolerance.half[0].toUpperCase() + drugData.tolerance.half.substring(1);
+        toleranceString += `Half: ${tolHalfCap}\n`;
+      }
+      if (drugData.tolerance.zero) {
+        const tolZeroCap = drugData.tolerance.zero[0].toUpperCase() + drugData.tolerance.zero.substring(1);
+        toleranceString += `Zero: ${tolZeroCap}\n`;
+      }
+      embed.addFields({ name: toleranceHeader, value: stripIndents`${toleranceString}`, inline: true });
     }
 
-    if (!toxicityAdded) {
-      if (drugData.toxicity) {
-        const toxicityMap = drugData.toxicity.map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
-        const toxicityString = toxicityMap.join(', ');
-        embed.addFields({ name: '☣ Toxicity', value: stripIndents`${toxicityString}`, inline: true });
-        // log.debug('Added toxicity C');
-      }
+    if (!toxicityAdded && drugData.toxicity) {
+      const toxicityMap = drugData.toxicity.map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
+      const toxicityString = toxicityMap.join(', ');
+      embed.addFields({ name: toxicityHeader, value: stripIndents`${toxicityString}`, inline: true });
+      // log.debug('Added toxicity C');
     }
 
     if (drugData.experiencesUrl) {

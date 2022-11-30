@@ -20,10 +20,8 @@ export const messageCreate: MessageCreateEvent = {
   name: 'messageCreate',
   async execute(message) {
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (message.guild) {
-      if (message.guild.id !== env.DISCORD_GUILD_ID) {
-        return;
-      }
+    if (message.guild && message.guild.id !== env.DISCORD_GUILD_ID) {
+      return;
     }
 
     // log.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);

@@ -815,21 +815,22 @@ export async function tripSitMe(
   //   : stripIndents`
   //     Hey ${target}, thank you for asking for assistance!
 
-  //     You've taken: ${triage ? `\n${triage}` : '\n*No info given*'}
+  //     You've taken: ${triage ? `\n${triage}` : noInfo}
 
-  //     Your issue: ${intro ? `\n${intro}` : '\n*No info given*'}
+  //     Your issue: ${intro ? `\n${intro}` : noInfo}
 
   //     Someone from the ${roleTripsitter} ${guildData.role_helper ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
   //     If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
   //     When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
   //     If you just would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
   //     `;
+  const noInfo = '\n*No info given*';
   const firstMessage = stripIndents`
       Hey ${target}, thank you for asking for assistance!
 
-      You've taken: ${triage ? `\n${triage}` : '\n*No info given*'}
+      You've taken: ${triage ? `\n${triage}` : noInfo}
 
-      Your issue: ${intro ? `\n${intro}` : '\n*No info given*'}
+      Your issue: ${intro ? `\n${intro}` : noInfo}
 
       Someone from the ${roleTripsitter} ${guildData.role_helper ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
@@ -860,10 +861,8 @@ export async function tripSitMe(
     .setColor(Colors.DarkBlue)
     .setDescription(stripIndents`
       ${target} has requested assistance!
-      **They've taken:** 
-      ${triage ? `${triage}` : '*No info given*'}
-      **Their issue: **
-      ${intro ? `${intro}` : '*No info given*'}
+      **They've taken:** ${triage ? `${triage}` : noInfo}
+      **Their issue: ** ${intro ? `${intro}` : noInfo}
 
       **Read the log before interacting**
       Use this channel coordinate efforts.
@@ -917,11 +916,11 @@ export async function tripSitMe(
   const userData = await getUser(target.id, null);
 
   // Set ticket information
-  const introStr = intro ? `\n${intro}` : '\n*No info given*';
+  const introStr = intro ? `\n${intro}` : noInfo;
   const newTicketData = {
     user_id: userData.id,
     description: `
-    They've taken: ${triage ? `\n${triage}` : '\n*No info given*'}
+    They've taken: ${triage ? `\n${triage}` : noInfo}
 
     Their issue: ${introStr}`,
     thread_id: threadHelpUser.id,

@@ -22,6 +22,8 @@ import { getGuild } from '../../global/utils/knex';
 
 const PREFIX = parse(__filename).name;
 
+const guildOnly = 'This command can only be used in a guild!';
+
 /**
  *
  * @param {ButtonInteraction} interaction The interaction that triggered this
@@ -30,7 +32,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   // log.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
   if (!interaction.guild) {
     interaction.reply({
-      content: 'This command can only be used in a server!',
+      content: guildOnly,
       ephemeral: true,
     });
     return;
@@ -108,7 +110,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
       if (!i.guild) {
         interaction.reply({
-          content: 'This command can only be used in a server!',
+          content: guildOnly,
           ephemeral: true,
         });
         return;
@@ -185,7 +187,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 export async function techHelpOwn(interaction:ButtonInteraction) {
   if (!interaction.guild) {
     interaction.reply({
-      content: 'This command can only be used in a server!',
+      content: guildOnly,
       ephemeral: true,
     });
     return;
@@ -208,7 +210,7 @@ issue and will either help you or figure out how to get you help!`,
 export async function techHelpClose(interaction:ButtonInteraction) {
   if (!interaction.guild) {
     interaction.reply({
-      content: 'This command can only be used in a server!',
+      content: guildOnly,
       ephemeral: true,
     });
     return;

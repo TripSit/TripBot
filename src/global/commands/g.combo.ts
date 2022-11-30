@@ -7,6 +7,8 @@ import comboDefs from '../assets/data/combo_definitions.json';
 
 const PREFIX = parse(__filename).name;
 
+const devMsg = '...this shouldn\'t have happened, please tell the developer!';
+
 export default combo;
 
 /**
@@ -33,7 +35,7 @@ export async function combo(
     return {
       success: false,
       title: 'Drug data was not found',
-      description: '...this shouldn\'t have happened, please tell the developer!',
+      description: devMsg,
     };
   }
 
@@ -45,7 +47,7 @@ export async function combo(
     return {
       success: false,
       title: `${drugA} was not found`,
-      description: '...this shouldn\'t have happened, please tell the developer!',
+      description: devMsg,
     };
   }
 
@@ -80,7 +82,7 @@ export async function combo(
     return {
       success: false,
       title: `${drugA} and ${drugB} have an unknown interaction!`,
-      description: '...this shouldn\'t have happened, please tell the developer!',
+      description: devMsg,
     };
   }
 

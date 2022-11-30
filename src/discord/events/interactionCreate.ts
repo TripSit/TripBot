@@ -38,12 +38,11 @@ export const interactionCreate: InteractionCreateEvent = {
       return;
     }
 
-    if (interaction.type === InteractionType.ApplicationCommand) {
+    if (interaction.type === InteractionType.ApplicationCommand
+      && interaction.isContextMenuCommand()) {
       // log.debug(`[${PREFIX}] interaction.isContextMenuCommand(): ${interaction.isContextMenuCommand()}`);
-      if (interaction.isContextMenuCommand()) {
-        commandRun(interaction, client);
-        return;
-      }
+      commandRun(interaction, client);
+      return;
     }
 
     if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
