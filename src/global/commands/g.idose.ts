@@ -1,3 +1,6 @@
+import {
+  time,
+} from 'discord.js';
 import { DateTime } from 'luxon';
 import { parse } from 'path';
 import { db, getUser } from '../utils/knex';
@@ -174,9 +177,13 @@ export async function idose(
 
       // Lowercase everything but the first letter
       const route = dose.route.charAt(0).toUpperCase() + dose.route.slice(1).toLowerCase();
+
+      const relative = time(new Date(timeVal.toJSDate()), 'R');
+      // Capitalize the first letter, lower the rest
+      const routeStr = route.charAt(0).toUpperCase() + route.slice(1).toLowerCase();
       const field = {
-        name: `(${i}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}`,
-        value: `${dose.dose} ${dose.units} of ${drugName} ${route}`,
+        name: `(${i}) ${relative}`,
+        value: `${dose.dose} ${dose.units} of ${drugName} ${routeStr}`,
         inline: true,
       };
       doses.push(field);

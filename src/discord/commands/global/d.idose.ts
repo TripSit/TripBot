@@ -205,19 +205,31 @@ export const dIdose: SlashCommand = {
         date = new Date();
       }
 
+      if (roa === null) {
+        return false;
+      }
+
       const timeString = time(date).valueOf().toString();
       // log.debug(`[${PREFIX}] timeString: ${timeString}`);
       const relative = time(date, 'R');
       // log.debug(`[${PREFIX}] relative: ${relative}`);
 
+      const routeStr = roa.charAt(0).toUpperCase() + roa.slice(1).toLowerCase();
+
       const embedField = {
-        name: `You dosed ${volume} ${units} of ${substance} ${roa}`,
+        name: `You dosed ${volume} ${units} of ${substance} ${routeStr}`,
         value: `${relative} on ${timeString}`,
       };
       embed.setColor(Colors.DarkBlue);
       embed.setTitle('New iDose entry:');
       embed.addFields(embedField);
-      interaction.reply({ embeds: [embed], ephemeral: true });
+
+      if (interaction.channel?.type === ChannelType.DM) {
+        interaction.reply({ embeds: [embed], ephemeral: false });
+      } else {
+        interaction.reply({ embeds: [embed], ephemeral: true });
+        interaction.user.send({ embeds: [embed] });
+      }
     }
     return true;
   },
