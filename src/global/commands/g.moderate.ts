@@ -243,7 +243,7 @@ export async function moderate(
       log.error(`[${PREFIX}] Error: ${err}`);
     }
   } else if (command === 'UNBAN') {
-    actionData.type = 'BAN' as UserActionType;
+    actionData.type = 'FULL_BAN' as UserActionType;
 
     const previousRecord = await db<UserActions>('user_actions')
       .select('*')
