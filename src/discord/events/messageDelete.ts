@@ -52,13 +52,16 @@ export const messageDelete: MessageDeleteEvent = {
 
     const intro = `${executor?.id === target.id ? executor.tag : 'Someone'}`;
 
+    await message.fetch(true);
+
+    const authorName = message.author ? message.author.tag : 'Unknown';
     const embed = embedTemplate()
       .setAuthor(null)
       .setFooter(null)
       .setColor(Colors.Red)
       .setTitle(`${intro} deleted msg in ${(message.channel as TextChannel).name}`)
       .addFields([
-        { name: message.author.tag, value: message.content, inline: true },
+        { name: authorName, value: message.content, inline: true },
       ]);
     const botlog = message.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
 
