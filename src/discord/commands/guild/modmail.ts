@@ -1001,15 +1001,13 @@ export async function modmailThreadInteraction(message:Message) {
         if (ticketData) {
           // log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
-          if (ticketData) {
-            if (ticketData.status === 'BLOCKED') {
-              message.channel.send(`Hey ${message.author.username}, this user is currently blocked. Please '/modmail block off', or click the button at the top, before conversation can resume.`);
-              return;
-            }
-            if (ticketData.status === 'PAUSED') {
-              message.channel.send(`Hey ${message.author.username}, this ticket is currently paused. Please '/modmail pause off', or click the button at the top, before conversation can resume.`);
-              return;
-            }
+          if (ticketData.status === 'BLOCKED') {
+            message.channel.send(`Hey ${message.author.username}, this user is currently blocked. Please '/modmail block off', or click the button at the top, before conversation can resume.`);
+            return;
+          }
+          if (ticketData.status === 'PAUSED') {
+            message.channel.send(`Hey ${message.author.username}, this ticket is currently paused. Please '/modmail pause off', or click the button at the top, before conversation can resume.`);
+            return;
           }
 
           const userData = await getUser(null, ticketData.user_id) as Users;
