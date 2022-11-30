@@ -38,7 +38,6 @@ module.exports = {
     'sonarjs/no-nested-template-literals': 'warn',
     'sonarjs/no-same-line-conditional': 'warn',
     'sonarjs/no-nested-switch': 'warn',
-    'sonarjs/no-small-switch': 'warn',
   },
 
   overrides: [
