@@ -25,21 +25,22 @@ export async function startLog(
   prefix: string,
   interaction: ChatInputCommandInteraction | UserContextMenuCommandInteraction | MessageContextMenuCommandInteraction | ButtonInteraction | SelectMenuInteraction,
 ): Promise<void> {
+  const guild = interaction.guild ? `in ${interaction.guild.name} (${interaction.guild?.id})` : 'in DM';
   let message = `[${prefix}] via ${interaction.user.tag} (${interaction.user.id}) \
-${interaction.guild ? `in ${interaction.guild.name} (${interaction.guild?.id})` : 'in DM'}`;
+${guild}`;
   if (Object.hasOwn(interaction, 'options')) {
     const interationOptions = (interaction as ChatInputCommandInteraction).options;
-    if (interationOptions.data) {
-      if (interationOptions.data.length > 0) {
-        // log.debug(`[${PREFIX}] ${JSON.stringify(interationOptions.data[0].options, null, 2)}`);
-        if (interationOptions.data[0].options !== undefined) {
-          message += ` subCommand: ${interationOptions.getSubcommand()}`;
-          if (interationOptions.data[0].options.length > 0) {
-            message += ` with params: ${interationOptions.data[0].options?.map(o => `${o.name}: ${o.value}`).join(', ')}`;
-          }
-        } else {
-          message += ` with params: ${interationOptions.data.map(o => `${o.name}: ${o.value}`).join(', ')}`;
+    if (interationOptions.data && interationOptions.data.length > 0) {
+      // log.debug(`[${PREFIX}] ${JSON.stringify(interationOptions.data[0].options, null, 2)}`);
+      if (interationOptions.data[0].options !== undefined) {
+        message += ` subCommand: ${interationOptions.getSubcommand()}`;
+        if (interationOptions.data[0].options.length > 0) {
+          const paramStr = interationOptions.data[0].options?.map(o => `${o.name}: ${o.value}`);
+          message += ` with params: ${paramStr.join(', ')}`;
         }
+      } else {
+        const paramStr = interationOptions.data.map(o => `${o.name}: ${o.value}`);
+        message += ` with params: ${paramStr.join(', ')}`;
       }
     }
   }

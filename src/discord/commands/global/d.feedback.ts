@@ -42,7 +42,8 @@ export const dFeedback: SlashCommand = {
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
-        const guildMessage = `${i.guild ? ` in ${i.guild.name}` : 'DM'}`;
+        const guildName = ` in ${i.guild?.name}`;
+        const guildMessage = `${i.guild ? guildName : 'DM'}`;
 
         const feedbackReport = i.fields.getTextInputValue('feedbackReport');
 

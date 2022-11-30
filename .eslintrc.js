@@ -35,7 +35,6 @@ module.exports = {
     'sonarjs/cognitive-complexity': ['warn', 50],
     'sonarjs/no-duplicate-string': ['warn', 3],
     'sonarjs/no-collapsible-if': 'warn',
-    'sonarjs/no-nested-template-literals': 'warn',
   },
 
   overrides: [

@@ -875,14 +875,16 @@ export async function modmailCreate(
       // log.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
 
       // Set ticket information
+      const modalBStr = `${modmailVars[issueType].labelB}
+      > ${modalInputB}
+      `;
+
       const newTicketData = {
         user_id: userData.id,
         description: `${modmailVars[issueType].labelA}
         > ${modalInputA}
     
-        ${modalInputB !== '' ? `${modmailVars[issueType].labelB}
-        > ${modalInputB}
-        ` : ''}`,
+        ${modalInputB !== '' ? modalBStr : ''}`,
         thread_id: ticketThread.id,
         type: issueType,
         status: 'OPEN',

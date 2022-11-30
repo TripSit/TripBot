@@ -40,13 +40,11 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
       if (Old !== undefined) {
         const tempVoiceCategory = Old.guild.channels.cache.get(env.CATEGORY_CAMPFIRE) as CategoryChannel;
         tempVoiceCategory.children.cache.forEach(channel => {
-          if (channel.type === ChannelType.GuildVoice) {
-            if (channel.id !== env.CHANNEL_CAMPFIRE) {
-              if (channel.members.size < 1) {
-                channel.delete('beep boop, i love to clean up');
-                // log.debug(`[${PREFIX}] deleted an empty temporary voice channel`);
-              }
-            }
+          if (channel.type === ChannelType.GuildVoice
+            && channel.id !== env.CHANNEL_CAMPFIRE
+            && channel.members.size < 1) {
+            channel.delete('beep boop, i love to clean up');
+            // log.debug(`[${PREFIX}] deleted an empty temporary voice channel`);
           }
         });
       }

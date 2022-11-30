@@ -932,12 +932,13 @@ export async function tripSitMe(
   const userData = await getUser(target.id, null);
 
   // Set ticket information
+  const introStr = intro ? `\n${intro}` : '\n*No info given*';
   const newTicketData = {
     user_id: userData.id,
     description: `
     They've taken: ${triage ? `\n${triage}` : '\n*No info given*'}
 
-    Their issue: ${intro ? `\n${intro}` : '\n*No info given*'}`,
+    Their issue: ${introStr}`,
     thread_id: threadHelpUser.id,
     type: 'TRIPSIT',
     status: 'OPEN',
@@ -1070,8 +1071,9 @@ export async function tripsitmeButton(
       // Send the update message to the thread
       let helpMessage = stripIndents`Hey ${target}, thanks for asking for help, we can continue talking here! What's up?`;
       if (minutes > 5) {
+        const helperStr = `and/or ${roleHelper}`;
         // log.debug(`[${PREFIX}] Target has open ticket, and it was created over 5 minutes ago!`);
-        helpMessage += `\n\nSomeone from the ${roleTripsitter} ${guildData.role_helper ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!`;
+        helpMessage += `\n\nSomeone from the ${roleTripsitter} ${guildData.role_helper ? helperStr : ''} team will be with you as soon as they're available!`;
       }
       threadHelpUser.send({
         content: helpMessage,
@@ -1084,7 +1086,8 @@ export async function tripsitmeButton(
       if (ticketData.meta_thread_id) {
         let metaMessage = '';
         if (minutes > 5) {
-          metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ?? `and/or ${roleHelper}`} team, ${target.toString()} has indicated they need assistance!`;
+          const helperString = `and/or ${roleHelper}`;
+          metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ?? helperString} team, ${target.toString()} has indicated they need assistance!`;
         } else {
           metaMessage = `${target.toString()} has indicated they need assistance!`;
         }
