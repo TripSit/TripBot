@@ -52,8 +52,6 @@ export const messageDelete: MessageDeleteEvent = {
 
     const intro = `${executor?.id === target.id ? executor.tag : 'Someone'}`;
 
-    await message.fetch(true);
-
     const authorName = message.author ? message.author.tag : 'Unknown';
     const embed = embedTemplate()
       .setAuthor(null)
