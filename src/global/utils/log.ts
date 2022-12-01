@@ -59,7 +59,8 @@ let transportOptions = [];
 if (env.NODE_ENV === 'production') {
   transportOptions = [
     new transports.Console(),
-    new LogtailTransport(new Logtail('wCKy55XyvN5aJRqyiRTYbza5')),
+
+    new LogtailTransport(new Logtail('UHsXGDC8SgMzMNSNXeqyFpf7')),
   ];
 } else {
   transportOptions = [
