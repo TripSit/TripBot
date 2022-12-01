@@ -50,16 +50,18 @@ export const messageDelete: MessageDeleteEvent = {
     // Also grab the target of this action to double-check things
     const { executor, target } = deletionLog;
 
-    const intro = `${executor?.id === target.id ? executor.tag : 'Someone'}`;
-
+    const intro = executor?.id === target.id ? executor.tag : 'Someone';
     const authorName = message.author ? message.author.tag : 'Unknown';
+    const content = message.content ? message.content : 'No content';
+    const channel = message.channel ? (message.channel as TextChannel).name : 'Unknown';
+    log.debug(`[${PREFIX}] ${intro} deleted a message by ${authorName} in #${channel}: ${content}`);
     const embed = embedTemplate()
       .setAuthor(null)
       .setFooter(null)
       .setColor(Colors.Red)
-      .setTitle(`${intro} deleted msg in ${(message.channel as TextChannel).name}`)
+      .setTitle(`${intro} deleted msg in ${channel}`)
       .addFields([
-        { name: authorName, value: message.content, inline: true },
+        { name: authorName, value: content, inline: true },
       ]);
     const botlog = message.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
 
