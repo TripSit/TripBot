@@ -49,6 +49,30 @@ async function checkStats() {
       }
     }
 
+    // Determine how many people have the Verified role
+    const roleVerified = await tripsitGuild.roles.fetch(env.ROLE_VERIFIED);
+    if (roleVerified) {
+      const { members } = roleVerified;
+      // log.debug(`[${PREFIX}] Role verified members: ${members.size}`);
+      const channelVerified = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_VERIFIED);
+      if (channelVerified) {
+        const currentCount = parseInt(channelVerified.name.split(': ')[1], 10);
+        if (currentCount !== members.size) {
+          channelVerified.setName(`Verified Members: ${members.size}`);
+          // log.debug(`[${PREFIX}] Updated verified members to ${members.size}!`);
+          if (members.size % 100 === 0) {
+            const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
+            if (channelGeneral) {
+              const embed = embedTemplate()
+                .setTitle('🎈🎉🎊 New Record 🎊🎉🎈')
+                .setDescription(`We have reached ${memberCount} verified members!`);
+              await channelGeneral.send({ embeds: [embed] });
+            }
+          }
+        }
+      }
+    }
+
     // Determine the number of users currently online
     const onlineCount = tripsitGuild.members.cache.filter(
       member => member.presence?.status !== undefined && member.presence?.status !== 'offline',
