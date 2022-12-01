@@ -8,4 +8,8 @@
         "typescript",
     ],
     "editor.tabSize": 2,
+    "sonarlint.connectedMode.project": {
+        "connectionId": "http-pantheon-tripsit-me-9000-",
+        "projectKey": "TripSit_tripsit-discord-bot_AYTJptWR28VKTT-v0K8N"
+    },
 }

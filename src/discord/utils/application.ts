@@ -241,7 +241,7 @@ export async function applicationStart(
       const actorHasRoleDeveloper = actor.permissions.has(PermissionsBitField.Flags.Administrator);
       // log.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
 
-      applicationThread.send(`Hey ${actorHasRoleDeveloper ? 'team!' : roleReviewer} there is a new application!`);
+      await applicationThread.send(`Hey ${actorHasRoleDeveloper ? 'team!' : roleReviewer} there is a new application!`);
       await applicationThread.send({ embeds: [appEmbed], components: [approveButton, rejectMenu] })
         .then(async message => {
           await message.react('👍');
@@ -299,7 +299,7 @@ export async function applicationReject(
     
     As we feel you have a right to know, your application was denied because ${rejectionWording}`;
 
-    target.send(stripIndents`${message}`);
+    await target.send(stripIndents`${message}`);
     // log.debug(`[${PREFIX} - applicationReject] rejectionReason: ${rejectionWording}`);
     (interaction.channel as ThreadChannel).setName(`🖤│${target.displayName}'s ${role.name} application!`);
   } else {
@@ -355,7 +355,7 @@ export async function applicationApprove(
       const channelTripsitmeta = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSITMETA) as TextChannel;
       const channelTripsit = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
       const hrCategory = await interaction.guild?.channels.fetch(env.CATEGROY_HARMREDUCTIONCENTRE) as CategoryChannel;
-      channelTripsitmeta.send(stripIndents`
+      await channelTripsitmeta.send(stripIndents`
       Please welcome our newest ${role.name}, ${target}! We're excited to have you here! 
       
       As a ${role.name}, some things have changed:
@@ -390,7 +390,7 @@ export async function applicationApprove(
       // const channelIrc = await interaction.guild?.channels.fetch(env.CHANNEL_IRC) as TextChannel;
       // const channelMatrix = await interaction.guild?.channels.fetch(env.CHANNEL_MATRIX) as TextChannel;
 
-      channelDevelopment.send(stripIndents`
+      await channelDevelopment.send(stripIndents`
       Please welcome our newest ${role.name}, ${target}! We're excited to have you here! 
       
       Our ${devCategory} category holds the projects we're working on.

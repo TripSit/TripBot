@@ -14,7 +14,7 @@ export const warn: WarnEvent = {
   name: 'warn',
   async execute(info) {
     const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-    botlog.send(info);
+    await botlog.send(info);
     log.error(`[${PREFIX}] ${info}`);
   },
 };

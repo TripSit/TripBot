@@ -461,12 +461,13 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     if (commandName === 'idose') {
       // Test getting a record
       await interaction.channel.send(`> **${commandName}** - Getting existing record`);
+      const duration = '23 mins ago';
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'substance') return 'Cannabis';
           if (name === 'units') return 'G';
           if (name === 'roa') return 'RECTAL';
-          if (name === 'offset') return '23 mins ago';
+          if (name === 'offset') return duration;
           return null;
         },
         getNumber: (name:string) => {
@@ -486,7 +487,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
           if (name === 'substance') return 'Cannabis';
           if (name === 'units') return 'G';
           if (name === 'roa') return 'RECTAL';
-          if (name === 'offset') return '23 mins ago';
+          if (name === 'offset') return duration;
           return null;
         },
         getNumber: (name:string) => {
@@ -506,7 +507,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
           if (name === 'substance') return 'Cannabis';
           if (name === 'units') return 'G';
           if (name === 'roa') return 'RECTAL';
-          if (name === 'offset') return '23 mins ago';
+          if (name === 'offset') return duration;
           return null;
         },
         getNumber: (name:string) => {
@@ -526,7 +527,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
           if (name === 'substance') return 'Cannabis';
           if (name === 'units') return 'G';
           if (name === 'roa') return 'RECTAL';
-          if (name === 'offset') return '23 mins ago';
+          if (name === 'offset') return duration;
           return null;
         },
         getNumber: (name:string) => {
@@ -546,7 +547,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
           if (name === 'substance') return 'Cannabis';
           if (name === 'units') return 'G';
           if (name === 'roa') return 'RECTAL';
-          if (name === 'offset') return '23 mins ago';
+          if (name === 'offset') return duration;
           return null;
         },
         getNumber: (name:string) => {
@@ -703,10 +704,11 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     if (commandName === 'remindme') {
       // Get existing reminders
       await interaction.channel.send(`> **${commandName}** - Getting existing record`);
+      const reminderA = 'Test reminder A';
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'offset') return '2 mins';
-          if (name === 'reminder') return 'Test reminder A';
+          if (name === 'reminder') return reminderA;
           return null;
         },
         getNumber: (name:string) => {
@@ -723,7 +725,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'offset') return '2 mins';
-          if (name === 'reminder') return 'Test reminder A';
+          if (name === 'reminder') return reminderA;
           return null;
         },
         getNumber: (name:string) => {
@@ -757,7 +759,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'offset') return '2 mins';
-          if (name === 'reminder') return 'Test reminder A';
+          if (name === 'reminder') return reminderA;
           return null;
         },
         getNumber: (name:string) => {
@@ -774,7 +776,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'offset') return '2 mins';
-          if (name === 'reminder') return 'Test reminder A';
+          if (name === 'reminder') return reminderA;
           return null;
         },
         getNumber: (name:string) => {
@@ -791,7 +793,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       testInteraction.options = {
         getString: (name:string) => {
           if (name === 'offset') return '2 mins';
-          if (name === 'reminder') return 'Test reminder A';
+          if (name === 'reminder') return reminderA;
           return null;
         },
         getNumber: (name:string) => {

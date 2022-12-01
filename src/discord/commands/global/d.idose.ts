@@ -100,7 +100,7 @@ export const dIdose: SlashCommand = {
     const volume = interaction.options.getNumber('volume');
     const units = interaction.options.getString('units') as DrugMassUnit | null;
     const roa = interaction.options.getString('roa') as DrugRoa | null;
-    const offset = interaction.options.getString('offset') as string | null;
+    const offset = interaction.options.getString('offset');
 
     // log.debug(`[${PREFIX}]
     // command: ${command}
@@ -133,11 +133,9 @@ export const dIdose: SlashCommand = {
 
     // log.debug(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
 
-    if (response[0]) {
-      if (response[0].name === 'Error') {
-        await interaction.reply({ content: response[0].value, ephemeral: true });
-        return false;
-      }
+    if (response[0] && response[0].name === 'Error') {
+      await interaction.reply({ content: response[0].value, ephemeral: true });
+      return false;
     }
 
     if (command === 'delete') {
@@ -207,19 +205,31 @@ export const dIdose: SlashCommand = {
         date = new Date();
       }
 
+      if (roa === null) {
+        return false;
+      }
+
       const timeString = time(date).valueOf().toString();
       // log.debug(`[${PREFIX}] timeString: ${timeString}`);
       const relative = time(date, 'R');
       // log.debug(`[${PREFIX}] relative: ${relative}`);
 
+      const routeStr = roa.charAt(0).toUpperCase() + roa.slice(1).toLowerCase();
+
       const embedField = {
-        name: `You dosed ${volume} ${units} of ${substance} ${roa}`,
+        name: `You dosed ${volume} ${units} of ${substance} ${routeStr}`,
         value: `${relative} on ${timeString}`,
       };
       embed.setColor(Colors.DarkBlue);
       embed.setTitle('New iDose entry:');
       embed.addFields(embedField);
-      interaction.reply({ embeds: [embed], ephemeral: true });
+
+      if (interaction.channel?.type === ChannelType.DM) {
+        interaction.reply({ embeds: [embed], ephemeral: false });
+      } else {
+        interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.user.send({ embeds: [embed] });
+      }
     }
     return true;
   },

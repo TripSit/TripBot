@@ -34,6 +34,8 @@ const PREFIX = parse(__filename).name;
 
 const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
 
+const channelOnly = 'You must run this in the channel you want the prompt to be in!';
+
 /**
  * Checks to see if the bot has the right permissions
  * @param {ChatInputCommandInteraction} interaction The guild to check
@@ -99,15 +101,16 @@ export async function hasPermissions(
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function tripsit(interaction:ChatInputCommandInteraction) {
+  const guildOnly = 'You must run this in the guild you want the prompt to be in!';
   if (!interaction.channel) {
     log.error(`${PREFIX} how to tripsit: no channel`);
-    interaction.reply('You must run this in the channel you want the prompt to be in!');
+    interaction.reply(channelOnly);
     return;
   }
 
   if (!interaction.guild) {
     log.error(`${PREFIX} how to tripsit: no guild`);
-    interaction.reply('You must run this in the guild you want the prompt to be in!');
+    interaction.reply(guildOnly);
     return;
   }
 
@@ -211,7 +214,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
   // log.debug(`[${PREFIX}] Setting up applications!`);
   if (!interaction.channel) {
     log.error(`${PREFIX} applications: no channel`);
-    interaction.reply('You must run this in the channel you want the prompt to be in!');
+    interaction.reply(channelOnly);
     return;
   }
 
@@ -343,7 +346,7 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
   // log.debug(`${PREFIX} techhelp!`);
   if (!(interaction.channel as TextChannel)) {
     log.error(`${PREFIX} how to tripsit: no channel`);
-    interaction.reply('You must run this in the channel you want the prompt to be in!');
+    interaction.reply(channelOnly);
     return;
   }
 
@@ -413,7 +416,7 @@ export async function rules(interaction:ChatInputCommandInteraction) {
   // log.debug(`${PREFIX} rules!`);
   if (!(interaction.channel as TextChannel)) {
     log.error(`${PREFIX} how to tripsit: no channel`);
-    interaction.reply('You must run this in the channel you want the prompt to be in!');
+    interaction.reply(channelOnly);
     return;
   }
   const channelTripsit = interaction.client.channels.cache.get(env.CHANNEL_TRIPSIT);
@@ -482,7 +485,7 @@ export async function rules(interaction:ChatInputCommandInteraction) {
 export async function ticketbooth(interaction:ChatInputCommandInteraction) {
   if (!(interaction.channel as TextChannel)) {
     log.error(`${PREFIX} how to tripsit: no channel`);
-    interaction.reply('You must run this in the channel you want the prompt to be in!');
+    interaction.reply(channelOnly);
     return;
   }
   startLog(PREFIX, interaction);
@@ -531,7 +534,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
   startLog(PREFIX, interaction);
   if (!(interaction.channel as TextChannel)) {
     log.error(`${PREFIX} how to tripsit: no channel`);
-    interaction.reply('You must run this in the channel you want the prompt to be in!');
+    interaction.reply(channelOnly);
     return;
   }
   // const channelIrc = interaction.member.client.channels.cache.get(CHANNEL_HELPDESK);
@@ -579,7 +582,7 @@ export async function mindsets(interaction:ChatInputCommandInteraction) {
   startLog(PREFIX, interaction);
   if (!(interaction.channel as TextChannel)) {
     log.error(`${PREFIX} how to tripsit: no channel`);
-    interaction.reply('You must run this in the channel you want the prompt to be in!');
+    interaction.reply(channelOnly);
     return;
   }
 
@@ -703,7 +706,7 @@ export async function colors(interaction:ChatInputCommandInteraction) {
   startLog(PREFIX, interaction);
   if (!(interaction.channel as TextChannel)) {
     log.error(`${PREFIX} how to tripsit: no channel`);
-    interaction.reply('You must run this in the channel you want the prompt to be in!');
+    interaction.reply(channelOnly);
     return;
   }
 
@@ -805,6 +808,8 @@ export async function colors(interaction:ChatInputCommandInteraction) {
     });
 }
 
+const roleQuestion = 'What role are people applying for?';
+const reviewerQuestion = 'What role reviews those applications?';
 /**
  * This command populates various channels with static prompts
  * This is actually kind of complicated, but not really, let me explain:
@@ -849,36 +854,36 @@ export const prompt: SlashCommand = {
         .setName('applications_channel')
         .setRequired(true))
       .addRoleOption(option => option
-        .setDescription('What role are people applying for?')
+        .setDescription(roleQuestion)
         .setName('application_role_a')
         .setRequired(true))
       .addRoleOption(option => option
-        .setDescription('What role reviews those applications?')
+        .setDescription(reviewerQuestion)
         .setName('application_reviewer_a')
         .setRequired(true))
       .addRoleOption(option => option
-        .setDescription('What role are people applying for?')
+        .setDescription(roleQuestion)
         .setName('application_role_b'))
       .addRoleOption(option => option
-        .setDescription('What role reviews those applications?')
+        .setDescription(reviewerQuestion)
         .setName('application_reviewer_b'))
       .addRoleOption(option => option
-        .setDescription('What role are people applying for?')
+        .setDescription(roleQuestion)
         .setName('application_role_c'))
       .addRoleOption(option => option
-        .setDescription('What role reviews those applications?')
+        .setDescription(reviewerQuestion)
         .setName('application_reviewer_c'))
       .addRoleOption(option => option
-        .setDescription('What role are people applying for?')
+        .setDescription(roleQuestion)
         .setName('application_role_d'))
       .addRoleOption(option => option
-        .setDescription('What role reviews those applications?')
+        .setDescription(reviewerQuestion)
         .setName('application_reviewer_d'))
       .addRoleOption(option => option
-        .setDescription('What role are people applying for?')
+        .setDescription(roleQuestion)
         .setName('application_role_e'))
       .addRoleOption(option => option
-        .setDescription('What role reviews those applications?')
+        .setDescription(reviewerQuestion)
         .setName('application_reviewer_e')))
     .addSubcommand(subcommand => subcommand
       .setDescription('techhelp info!')

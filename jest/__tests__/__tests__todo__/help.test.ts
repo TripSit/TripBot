@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import { parse } from 'path';
 import { dHelp } from '../commands/global/d.help';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../../jest/utils/testutils';
+import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../utils/testutils';
 import log from '../../global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line

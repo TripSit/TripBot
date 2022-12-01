@@ -50,31 +50,26 @@ export async function parseDuration(duration:string):Promise<number> {
           break;
         } else if (supported.includes(c)) {
           // log.debug(`[${PREFIX}] Qualifier ${c}`);
-          switch (c) {
-            case 'h':
-              timeValue += tempNumber * 60 * 60 * 1000;
-              break;
-            case 'mo':
-              timeValue += tempNumber * 30 * 24 * 60 * 60 * 1000;
-              break;
-            case 'm':
-              timeValue += tempNumber * 60 * 1000;
-              break;
-            case 's':
-              timeValue += tempNumber * 1000;
-              break;
-            case 'd':
-              timeValue += tempNumber * 24 * 60 * 60 * 1000;
-              break;
-            case 'w':
-              timeValue += tempNumber * 7 * 24 * 60 * 60 * 1000;
-              break;
-            case 'y':
-              timeValue += tempNumber * 365 * 24 * 60 * 60 * 1000;
-              break;
-            default:
-              // log.debug(`[${PREFIX}] Unknown qualifier ${c}`);
-              break;
+          if (c === 'h') {
+            timeValue += tempNumber * 60 * 60 * 1000;
+          }
+          if (c === 'mo') {
+            timeValue += tempNumber * 30 * 24 * 60 * 60 * 1000;
+          }
+          if (c === 'm') {
+            timeValue += tempNumber * 60 * 1000;
+          }
+          if (c === 's') {
+            timeValue += tempNumber * 1000;
+          }
+          if (c === 'd') {
+            timeValue += tempNumber * 24 * 60 * 60 * 1000;
+          }
+          if (c === 'w') {
+            timeValue += tempNumber * 7 * 24 * 60 * 60 * 1000;
+          }
+          if (c === 'y') {
+            timeValue += tempNumber * 365 * 24 * 60 * 60 * 1000;
           }
           stage = 1;
           break;

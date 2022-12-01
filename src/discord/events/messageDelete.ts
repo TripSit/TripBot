@@ -1,17 +1,20 @@
 import {
   TextChannel,
+  Colors,
 } from 'discord.js';
 import {
   // ChannelType,
   AuditLogEvent,
 } from 'discord-api-types/v10';
+import { parse } from 'path';
 import {
   MessageDeleteEvent,
 } from '../@types/eventDef';
+import { embedTemplate } from '../utils/embedTemplate';
 import env from '../../global/utils/env.config';
-// import logger from '../../global/utils/logger';
+import log from '../../global/utils/log'; // eslint-disable-line @typescript-eslint/no-unused-vars
 // import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -21,13 +24,14 @@ export const messageDelete: MessageDeleteEvent = {
   name: 'messageDelete',
   async execute(message) {
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (message.guild) {
-      if (message.guild.id !== env.DISCORD_GUILD_ID.toString()) {
-        return;
-      }
-    } else {
+    if (!message.guild) return;
+    if (message.guild.id !== env.DISCORD_GUILD_ID) {
       return;
     }
+
+    const msglog = message.client.channels.cache.get(env.CHANNEL_MSGLOG) as TextChannel;
+
+    // log.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}`);
 
     const fetchedLogs = await message.guild.fetchAuditLogs({
       limit: 1,
@@ -39,8 +43,7 @@ export const messageDelete: MessageDeleteEvent = {
 
     // Perform a coherence check to make sure that there's *something*
     if (!deletionLog) {
-      const botlog = message.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-      botlog.send(`A message by ${message.author.tag} was deleted, but no relevant audit logs were found.`);
+      await msglog.send(`A message by ${message.author.tag} was deleted, but no relevant audit logs were found.`);
       return;
     }
 
@@ -48,25 +51,20 @@ export const messageDelete: MessageDeleteEvent = {
     // Also grab the target of this action to double-check things
     const { executor, target } = deletionLog;
 
-    const botlog = message.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-    let response = '' as string;
-    // Update the output with a bit more information
-    // Also run a check to make sure that the log returned was for the same author's message
-    if (message.author) {
-      if (target.id === message.author.id) {
-        if (executor) {
-          response = `${executor.tag} deleted a message by ${message.author.tag} in ${message.channel} saying \n> ${message.content}`; // eslint-disable-line max-len
-        } else {
-          response = `Someone deleted a message by ${message.author.tag} in ${message.channel} saying \n> ${message.content}`; // eslint-disable-line max-len
-        }
-      } else {
-        response = `Someone deleted a message by ${message.author.tag} in ${message.channel} saying \n> ${message.content}`; // eslint-disable-line max-len
-      }
-    } else {
-      response = 'A message with no author was deleted!';
-      return;
-    }
+    const intro = executor?.id === target.id ? executor.tag : 'Someone';
+    const authorName = message.author ? message.author.tag : 'Unknown';
+    const content = message.content ? message.content : 'No content';
+    const channel = message.channel ? (message.channel as TextChannel).name : 'Unknown';
+    log.debug(`[${PREFIX}] ${intro} deleted a message by ${authorName} in #${channel}: ${content}`);
+    const embed = embedTemplate()
+      .setAuthor(null)
+      .setFooter(null)
+      .setColor(Colors.Red)
+      .setTitle(`${intro} deleted msg in ${channel}`)
+      .addFields([
+        { name: authorName, value: content, inline: true },
+      ]);
 
-    botlog.send(response);
+    await msglog.send({ embeds: [embed] });
   },
 };

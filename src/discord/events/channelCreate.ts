@@ -29,11 +29,11 @@ export const channelCreate: ChannelCreateEvent = {
 
     const creationLog = fetchedLogs.entries.first();
 
-    const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    const auditlog = client.channels.cache.get(env.CHANNEL_AUDITLOG) as TextChannel;
 
     // Perform a coherence check to make sure that there's *something*
     if (!creationLog) {
-      botlog.send(`Channel ${channel.name} was created, but no relevant audit logs were found.`);
+      await auditlog.send(`Channel ${channel.name} was created, but no relevant audit logs were found.`);
       return;
     }
 
@@ -43,6 +43,6 @@ export const channelCreate: ChannelCreateEvent = {
     } else {
       response = `Channel ${channel.name} was created, but the audit log was inconclusive.`;
     }
-    botlog.send(response);
+    await auditlog.send(response);
   },
 };

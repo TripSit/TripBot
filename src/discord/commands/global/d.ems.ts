@@ -24,17 +24,18 @@ export const dEms: SlashCommand = {
     embed.setTitle('EMS Information');
     // for (const entry of emsInfo) {
     emsInfo.forEach(entry => {
+      const country = `(${entry.country})`;
+      const website = `\n[Website](${entry.website})`;
+      const webchat = `\n[Webchat](${entry.website})`;
+      const phone = `\nCall: ${entry.phone}`;
+      const text = `\nText: ${entry.text}`;
       embed.addFields(
         {
-          name: `${entry.name} ${entry.country ? `(${entry.country})` : ''}`,
-          value: stripIndents`${entry.website ? `
-            [Website](${entry.website})` : ''}\
-            ${entry.webchat ? `
-            [Webchat](${entry.website})` : ''}\
-            ${entry.phone ? `
-            Call: ${entry.phone}` : ''}\
-            ${entry.text ? `
-            Text: ${entry.text}` : ''}`,
+          name: `${entry.name} ${entry.country ? country : ''}`,
+          value: stripIndents`${entry.website ? website : ''}\
+            ${entry.webchat ? webchat : ''}\
+            ${entry.phone ? phone : ''}\
+            ${entry.text ? text : ''}`,
           inline: true,
         },
       );

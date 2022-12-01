@@ -48,8 +48,11 @@ export const dImgur: SlashCommand = {
 
     await interaction.deferReply();
 
+    const sortStr = `${sort}/`;
+    const windowStr = `${window}/`;
+
     // eslint-disable-next-line max-len
-    const query = `https://api.imgur.com/3/gallery/search/${sort !== null ? `${sort}/` : ''}${window !== null ? `${window}/` : ''}?q=${search}`;
+    const query = `https://api.imgur.com/3/gallery/search/${sort !== null ? sortStr : ''}${window !== null ? windowStr : ''}?q=${search}`;
     // log.debug(`[${PREFIX}] query: ${query}`);
 
     const url = await imgurSearch(query);

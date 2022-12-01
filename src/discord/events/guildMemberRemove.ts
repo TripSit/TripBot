@@ -38,29 +38,36 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
       // NOTE: Can simplify with luxon
       const diff = Math.abs(Date.now() - joinedTimestamp);
       // log.debug(`[${PREFIX}] diff: ${diff}`);
-      const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
-      const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
-      const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      embed.setDescription(`${member} has left the guild after\
-                  ${years > 0 ? `${years} years` : ''}\
-                  ${years === 0 && months > 0 ? `${months} months` : ''}\
-                  ${months === 0 && weeks > 0 ? `${weeks} weeks` : ''}\
-                  ${weeks === 0 && days > 0 ? `${days} days` : ''}\
-                  ${days === 0 && hours > 0 ? `${hours} hours` : ''}\
-                  ${hours === 0 && minutes > 0 ? `${minutes} minutes` : ''}\
-                  ${minutes === 0 && seconds > 0 ? `${seconds} seconds` : ''}`);
+      const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365)) > 0
+        ? `${Math.floor(diff / (1000 * 60 * 60 * 24 * 365))} years, `
+        : '';
+      const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30)) > 0
+        ? `${Math.floor(diff / (1000 * 60 * 60 * 24 * 30))} months, `
+        : '';
+      const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7)) > 0
+        ? `${Math.floor(diff / (1000 * 60 * 60 * 24 * 7))} weeks, `
+        : '';
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24)) > 0
+        ? `${Math.floor(diff / (1000 * 60 * 60 * 24))} days, `
+        : '';
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)) > 0
+        ? `${Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))} hours, `
+        : '';
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+        ? `${Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))} minutes, `
+        : '';
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+        ? `${Math.floor((diff % (1000 * 60)) / 1000)} seconds`
+        : '';
+      const duration = `${years}${months}${weeks}${days}${hours}${minutes}${seconds}`;
+
+      embed.setDescription(`${member} has left the guild after ${duration}`);
     } else {
       embed.setDescription(`${member} has left the guild`);
     }
 
-    const channelBotlog = member.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-    if (channelBotlog) {
-      channelBotlog.send({ embeds: [embed] });
-    }
+    const auditlog = client.channels.cache.get(env.CHANNEL_AUDITLOG) as TextChannel;
+    await auditlog.send({ embeds: [embed] });
 
     await db<Users>('users')
       .insert({

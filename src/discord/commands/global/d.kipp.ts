@@ -24,11 +24,12 @@ export const dKipp: SlashCommand = {
       '😎', '😺', '😸', '😹', '😻', '👍', '✌'];
 
     // Get 10 random happy emojis from the list above
-    const rowA = happyEmojis.sort(() => 0.5 - Math.random()).slice(0, 8);
+    const rowA = [...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 8); // Sort the array
+
     // log.debug(`[${PREFIX}] Row A: ${rowA}`);
     const rowB = '\n💜Keep It Positive Please!💜\n';
     // log.debug(`[${PREFIX}] Row B: ${rowB}`);
-    const rowC = happyEmojis.sort(() => 0.5 - Math.random()).slice(0, 8);
+    const rowC = [...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 8); // Sort the array
     // log.debug(`[${PREFIX}] Row C: ${rowC}`);
     const output = rowA.join(' ') + rowB + rowC.join(' ');
     // log.debug(`[${PREFIX}] Output: ${output}`);

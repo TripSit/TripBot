@@ -39,11 +39,11 @@ export const channelPinsUpdate: ChannelPinsUpdateEvent = {
     // Since there's only 1 audit log entry in this collection, grab the first one
     const pinLog = fetchedLogs.entries.first();
 
-    const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    const auditlog = client.channels.cache.get(env.CHANNEL_AUDITLOG) as TextChannel;
 
     // Perform a coherence check to make sure that there's *something*
     if (!pinLog) {
-      botlog.send(`Channel ${channel.name} pinned a message, but no relevant audit logs were found.`);
+      await auditlog.send(`Channel ${channel.name} pinned a message, but no relevant audit logs were found.`);
       return;
     }
 
@@ -60,6 +60,6 @@ export const channelPinsUpdate: ChannelPinsUpdateEvent = {
       response = `Channel ${channel.name} had a message pinned, but the audit log was inconclusive.`;
     }
 
-    botlog.send(response);
+    await auditlog.send(response);
   },
 };

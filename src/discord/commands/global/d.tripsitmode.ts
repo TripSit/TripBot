@@ -72,9 +72,9 @@ export const tripsitmode: SlashCommand = {
       const testInteraction = {
         client: interaction.client,
         id: interaction.id,
-        customId: `tripsitmodeOn~${targetMember}`,
+        customId: `tripsitmodeOff~${targetMember.id}`,
         guild: interaction.guild,
-        member: targetMember,
+        member: interaction.member,
         user: interaction.user,
         channel: interaction.channel,
         deferReply: () => interaction.deferReply(),
@@ -84,6 +84,7 @@ export const tripsitmode: SlashCommand = {
           }
           return interaction.reply(content);
         },
+        editReply: content => interaction.editReply(content),
         followUp: content => interaction.followUp(content),
         showModal: modal => interaction.showModal(modal),
         awaitModalSubmit: params => interaction.awaitModalSubmit(params),

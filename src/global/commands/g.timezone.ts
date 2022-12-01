@@ -45,29 +45,25 @@ export async function timezone(
       .returning('*');
 
     return `I updated your timezone to ${tzvalue}`;
-  } if (command === 'get') {
-    let gmtValue = '';
+  }
+  let gmtValue = '';
 
-    const userData = await getUser(memberId, null);
+  const userData = await getUser(memberId, null);
 
-    // log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData, null, 2)}`);
+  // log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData, null, 2)}`);
 
-    if (userData.timezone !== null) {
-      const tzCode = userData.timezone;
-      for (let i = 0; i < timezones.length; i += 1) {
-        if (timezones[i].tzCode === tzCode) {
-          gmtValue = timezones[i].offset;
-          // log.debug(`[${PREFIX}] gmtValue: ${gmtValue}`);
-        }
+  if (userData.timezone !== null) {
+    const tzCode = userData.timezone;
+    for (let i = 0; i < timezones.length; i += 1) {
+      if (timezones[i].tzCode === tzCode) {
+        gmtValue = timezones[i].offset;
+        // log.debug(`[${PREFIX}] gmtValue: ${gmtValue}`);
       }
-      // get the user's timezone from the database
-      const timestring = new Date().toLocaleTimeString('en-US', { timeZone: tzCode });
-      response = `It is likely ${timestring} (GMT${gmtValue})`;
-      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
-      return response;
     }
-    // log.debug(`[${PREFIX}] tzCode is empty!`);
-    response = null;
+    // get the user's timezone from the database
+    const timestring = new Date().toLocaleTimeString('en-US', { timeZone: tzCode });
+    response = `It is likely ${timestring} (GMT${gmtValue})`;
+    log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
   }
   log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
   return response;

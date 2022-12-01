@@ -40,7 +40,7 @@ export const threadDelete: ThreadDeleteEvent = {
     // Since there's only 1 audit log entry in this collection, grab the first one
     const auditLog = fetchedLogs.entries.first();
 
-    const botlog = thread.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    const auditlog = client.channels.cache.get(env.CHANNEL_AUDITLOG) as TextChannel;
 
     // Find if the channel is used as a thread_id in any tickets
     const ticketData = await getOpenTicket(null, thread.id);
@@ -57,7 +57,7 @@ export const threadDelete: ThreadDeleteEvent = {
 
     // Perform a coherence check to make sure that there's *something*
     if (!auditLog) {
-      botlog.send(`${thread.name} was deleted, but no relevant audit logs were found.`);
+      await auditlog.send(`${thread.name} was deleted, but no relevant audit logs were found.`);
       return;
     }
 
@@ -69,6 +69,6 @@ export const threadDelete: ThreadDeleteEvent = {
       response = `${thread.name} was deleted, but the audit log was inconclusive.`;
     }
 
-    botlog.send(response);
+    await auditlog.send(response);
   },
 };

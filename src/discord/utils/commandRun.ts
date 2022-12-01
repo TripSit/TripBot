@@ -38,28 +38,29 @@ export async function commandRun(
     await command.execute(interaction);
   } catch (error) {
     Error.stackTraceLimit = 25;
+    const genericError = 'There was an error while executing this command!';
     if (error instanceof Error) {
       log.error(`[${PREFIX}] ERROR: ${error.stack}`);
       if (!interaction.replied) {
         if (interaction.deferred) {
-          interaction.editReply('There was an error while executing this command!');
+          interaction.editReply(genericError);
         } else {
           interaction.reply({
-            content: 'There was an error while executing this command!',
+            content: genericError,
             ephemeral: true,
           });
         }
       } else {
         const embed = embedTemplate()
           .setColor(Colors.Red)
-          .setDescription('There was an error while executing this command!');
+          .setDescription(genericError);
         await interaction.editReply({ embeds: [embed] });
       }
       if (env.NODE_ENV === 'production') {
         const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
         const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
         const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
-        botlog.send(`Hey ${tripbotdevrole}, I just got an error (commandRun: ${commandName}):
+        await botlog.send(`Hey ${tripbotdevrole}, I just got an error (commandRun: ${commandName}):
         ${error.stack}
         `);
       }
@@ -73,7 +74,7 @@ export async function commandRun(
         const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
         const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
         const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
-        botlog.send(`Hey ${tripbotdevrole}, I just got an error (commandRun: ${commandName}):
+        await botlog.send(`Hey ${tripbotdevrole}, I just got an error (commandRun: ${commandName}):
         ${error}
         `);
       }

@@ -164,76 +164,73 @@ export async function experience(
   const member = await guild.members.fetch(actor.id);
 
   // Give the proper VIP role
-  if (experienceType === 'total') {
-    // VIP only cares about total
-    if (level >= 5) {
-      // Ensure the member has the base VIP role if they're over level 5
-      let role = await guild.roles.fetch(env.ROLE_VIP) as Role;
-      if (!member.roles.cache.has(env.ROLE_VIP)) {
-        member.roles.add(role);
-        channelTripbotlogs.send(stripIndents`${actor.displayName} was given ${role.name}`);
-      }
+  if (experienceType === 'total' && level >= 5) {
+    // Ensure the member has the base VIP role if they're over level 5
+    let role = await guild.roles.fetch(env.ROLE_VIP) as Role;
+    if (!member.roles.cache.has(env.ROLE_VIP)) {
+      member.roles.add(role);
+      await channelTripbotlogs.send(stripIndents`${actor.displayName} was given ${role.name}`);
+    }
 
-      role = await guild.roles.fetch(env.ROLE_VIP_5) as Role;
-      if (level >= 10) {
-        // Check if the member already has the previous role, and if so, remove it
+    role = await guild.roles.fetch(env.ROLE_VIP_5) as Role;
+    if (level >= 10) {
+      // Check if the member already has the previous role, and if so, remove it
+      member.roles.remove(role);
+      role = await guild.roles.fetch(env.ROLE_VIP_10) as Role;
+      if (level >= 20) {
         member.roles.remove(role);
-        role = await guild.roles.fetch(env.ROLE_VIP_10) as Role;
-        if (level >= 20) {
+        role = await guild.roles.fetch(env.ROLE_VIP_20) as Role;
+        if (level >= 30) {
           member.roles.remove(role);
-          role = await guild.roles.fetch(env.ROLE_VIP_20) as Role;
-          if (level >= 30) {
+          role = await guild.roles.fetch(env.ROLE_VIP_30) as Role;
+          if (level >= 40) {
             member.roles.remove(role);
-            role = await guild.roles.fetch(env.ROLE_VIP_30) as Role;
-            if (level >= 40) {
+            role = await guild.roles.fetch(env.ROLE_VIP_40) as Role;
+            if (level >= 50) {
               member.roles.remove(role);
-              role = await guild.roles.fetch(env.ROLE_VIP_40) as Role;
-              if (level >= 50) {
+              role = await guild.roles.fetch(env.ROLE_VIP_50) as Role;
+              if (level >= 60) {
                 member.roles.remove(role);
-                role = await guild.roles.fetch(env.ROLE_VIP_50) as Role;
-                if (level >= 60) {
-                  member.roles.remove(role);
-                  role = await guild.roles.fetch(env.ROLE_VIP_60) as Role;
-                  // Beyond level 70 is not supported yet
-                  // if (level >= 70) {
-                  //   if (!member.roles.cache.has(role.id)) {
-                  //     member.roles.remove(role);
-                  //     channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
-                  //   }
-                  //   role = await guild.roles.fetch(env.ROLE_VIP_70) as Role;
-                  //   if (level >= 80) {
-                  //     if (!member.roles.cache.has(role.id)) {
-                  //       member.roles.remove(role);
-                  //       channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
-                  //     }
-                  //     role = await guild.roles.fetch(env.ROLE_VIP_80) as Role;
-                  //     if (level >= 90) {
-                  //       if (!member.roles.cache.has(role.id)) {
-                  //         member.roles.remove(role);
-                  //         channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
-                  //       }
-                  //       role = await guild.roles.fetch(env.ROLE_VIP_90) as Role;
-                  //       if (level >= 100) {
-                  //         if (!member.roles.cache.has(role.id)) {
-                  //           member.roles.remove(role);
-                  //           channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
-                  //         }
-                  //         role = await guild.roles.fetch(env.ROLE_VIP_100) as Role;
-                  //       }
-                  //     }
-                  //   }
-                  // }
-                }
+                role = await guild.roles.fetch(env.ROLE_VIP_60) as Role;
+                // Beyond level 70 is not supported yet
+                // if (level >= 70) {
+                //   if (!member.roles.cache.has(role.id)) {
+                //     member.roles.remove(role);
+                //     channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
+                //   }
+                //   role = await guild.roles.fetch(env.ROLE_VIP_70) as Role;
+                //   if (level >= 80) {
+                //     if (!member.roles.cache.has(role.id)) {
+                //       member.roles.remove(role);
+                //       channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
+                //     }
+                //     role = await guild.roles.fetch(env.ROLE_VIP_80) as Role;
+                //     if (level >= 90) {
+                //       if (!member.roles.cache.has(role.id)) {
+                //         member.roles.remove(role);
+                //         channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
+                //       }
+                //       role = await guild.roles.fetch(env.ROLE_VIP_90) as Role;
+                //       if (level >= 100) {
+                //         if (!member.roles.cache.has(role.id)) {
+                //           member.roles.remove(role);
+                //           channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
+                //         }
+                //         role = await guild.roles.fetch(env.ROLE_VIP_100) as Role;
+                //       }
+                //     }
+                //   }
+                // }
               }
             }
           }
         }
       }
-      // Check if the member already has the resulting role, and if not, add it
-      if (!member.roles.cache.has(role.id)) {
-        member.roles.add(role);
-        channelTripbotlogs.send(stripIndents`${actor.displayName} was given ${role.name}`);
-      }
+    }
+    // Check if the member already has the resulting role, and if not, add it
+    if (!member.roles.cache.has(role.id)) {
+      member.roles.add(role);
+      await channelTripbotlogs.send(stripIndents`${actor.displayName} was given ${role.name}`);
     }
   }
 
@@ -244,9 +241,9 @@ export async function experience(
     // log.debug(stripIndents`[${PREFIX}] ${message.author.username} has leveled up to ${experienceType} level ${level}!`);
 
     if (level % 5 === 0) {
-      channelTripbotlogs.send(stripIndents`${message.author.username} has leveled up to ${experienceType} level ${level}!`);
+      await channelTripbotlogs.send(stripIndents`${message.author.username} has leveled up to ${experienceType} level ${level}!`);
     }
-    // channelTripbotlogs.send({embeds: [embed]});
+    // await channelTripbotlogs.send({embeds: [embed]});
     levelExpPoints -= expToLevel;
     experienceData.level = level;
   }

@@ -49,7 +49,7 @@ export const optionType = {
 
 function getNestedOptions(options:ToAPIApplicationCommandOptions[]):ToAPIApplicationCommandOptions[] {
   // This gets a flat array of options, including nested options
-  const list = options.reduce((
+  return options.reduce((
     allOptions:ToAPIApplicationCommandOptions[],
     option:ToAPIApplicationCommandOptions,
   ) => { // @ts-ignore
@@ -59,7 +59,6 @@ function getNestedOptions(options:ToAPIApplicationCommandOptions[]):ToAPIApplica
     const nestedOptions = getNestedOptions(option.toJSON().options);
     return [option, ...allOptions, ...nestedOptions];
   }, []);
-  return list;
 }
 
 function castToType(value: string, typeId: number) {
@@ -128,7 +127,8 @@ export function getParsedCommand(
   // log.debug(`[${PREFIX}] name: ${JSON.stringify(name, null, 2)}`);
   const subcommand = splittedCommand.find(word => optionNames.includes(word));
   // log.debug(`[${PREFIX}] subcommand: ${JSON.stringify(subcommand, null, 2)}`);
-  const retValue = {
+  // log.debug(`[${PREFIX}] retValue: ${JSON.stringify(retValue, null, 2)}`);
+  return {
     id: name,
     name,
     type: 1,
@@ -138,8 +138,6 @@ export function getParsedCommand(
       options: requestedOptions,
     }] : requestedOptions,
   };
-  // log.debug(`[${PREFIX}] retValue: ${JSON.stringify(retValue, null, 2)}`);
-  return retValue;
 }
 
 export function embedContaining(content:EmbedData) {
@@ -223,26 +221,6 @@ export function mockInteractionAndSpyEditReply(command:{
   // console.log(interaction);
   const spy = jest.spyOn(interaction, 'editReply');
   return { interaction, spy };
-}
-
-export async function executeCommandAndSpyEditReply(
-  Command:SlashCommand,
-  content:{
-    id: string;
-    name: string;
-    type: number;
-    options: ToAPIApplicationCommandOptions[] | {
-      name: string;
-      type: number;
-      options: ToAPIApplicationCommandOptions[];
-    }[];
-  },
-  // config = {},
-) {
-  const { interaction, spy } = mockInteractionAndSpyReply(content);
-  // const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
-  await Command.execute(interaction);
-  return spy;
 }
 
 /* Spy channel 'send' with mock options */
