@@ -34,7 +34,7 @@ const myFormat = printf(({
   }
 
   // This makes it so that the logs look nice and even
-  // Idk why the length is 15, maybe cuz of colors?
+  // Idk why the length is 15, maybe cuz of colors
   if (level.length < 15) {
     msg += `${level}  `;
   } else {
