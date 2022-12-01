@@ -29,6 +29,8 @@ export const messageDelete: MessageDeleteEvent = {
       return;
     }
 
+    const msglog = message.client.channels.cache.get(env.CHANNEL_MSGLOG) as TextChannel;
+
     // log.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}`);
 
     const fetchedLogs = await message.guild.fetchAuditLogs({
@@ -41,8 +43,7 @@ export const messageDelete: MessageDeleteEvent = {
 
     // Perform a coherence check to make sure that there's *something*
     if (!deletionLog) {
-      const botlog = message.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-      botlog.send(`A message by ${message.author.tag} was deleted, but no relevant audit logs were found.`);
+      msglog.send(`A message by ${message.author.tag} was deleted, but no relevant audit logs were found.`);
       return;
     }
 
@@ -63,8 +64,7 @@ export const messageDelete: MessageDeleteEvent = {
       .addFields([
         { name: authorName, value: content, inline: true },
       ]);
-    const botlog = message.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
 
-    botlog.send({ embeds: [embed] });
+    msglog.send({ embeds: [embed] });
   },
 };

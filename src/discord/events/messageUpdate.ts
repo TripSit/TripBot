@@ -47,7 +47,7 @@ export const messageUpdate: MessageUpdateEvent = {
 
     // const response = `Message ${newMessage.id} was edited by ${newMessage.author.tag} in
     // ${(newMessage.channel as TextChannel).name} from ${oldMessage.content} to ${newMessage.content}.`;
-    const botlog = newMessage.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-    botlog.send({ embeds: [embed] });
+    const msglog = newMessage.client.channels.cache.get(env.CHANNEL_MSGLOG) as TextChannel;
+    msglog.send({ embeds: [embed] });
   },
 };
