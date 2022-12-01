@@ -1,4 +1,4 @@
-name: Scan
+name: TestAndScan
 
 on:
   push:
