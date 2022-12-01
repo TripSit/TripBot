@@ -53,7 +53,7 @@ export async function runTimer() {
                   const embed = embedTemplate()
                     .setTitle('🎈🎉🎊New Record🎊🎉🎈')
                     .setDescription(`We have reached ${memberCount} total members!`);
-                  channelGeneral.send({ embeds: [embed] });
+                  await channelGeneral.send({ embeds: [embed] });
                 }
               }
             } else {
@@ -97,7 +97,7 @@ export async function runTimer() {
                   const embed = embedTemplate()
                     .setTitle('🎈🎉🎊New Record🎊🎉🎈')
                     .setDescription(`We have reached ${maxCount} online members!`);
-                  channelGeneral.send({ embeds: [embed] });
+                  await channelGeneral.send({ embeds: [embed] });
                 }
               }
             } else {
@@ -144,7 +144,7 @@ export async function runTimer() {
                 if (userData && userData.discord_id) {
                   const user = await global.client.users.fetch(userData.discord_id);
                   if (user) {
-                    user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
+                    await user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
                   }
                 }
 

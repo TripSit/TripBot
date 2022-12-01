@@ -84,10 +84,8 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
           // log.debug(`[${PREFIX}] ${newMember.displayName} ${action} ${roleName}`);
 
           // const userInfo = await getUserInfo(newMember.id);
-          const channelBotlog = newMember.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-          if (channelBotlog) {
-            channelBotlog.send(`${newMember.displayName} ${action} ${roleName}`);
-          }
+          const auditlog = client.channels.cache.get(env.CHANNEL_AUDITLOG) as TextChannel;
+          await auditlog.send(`${newMember.displayName} ${action} ${roleName}`);
         }
       }
     }

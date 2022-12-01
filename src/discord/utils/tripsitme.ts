@@ -201,7 +201,7 @@ export async function tripsitmeOwned(
 
   const metaChannelId = ticketData?.meta_thread_id ?? env.CHANNEL_TRIPSITMETA;
   const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
-  metaChannel.send({
+  await metaChannel.send({
     content: stripIndents`${actor.displayName} has indicated that ${target.toString()} is receiving help!`,
   });
   if (metaChannelId !== env.CHANNEL_TRIPSITMETA) {
@@ -491,7 +491,7 @@ export async function tripsitmeClose(
 
   const metaChannelId = ticketData?.meta_thread_id ?? env.CHANNEL_TRIPSITMETA;
   const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
-  metaChannel.send({
+  await metaChannel.send({
     content: stripIndents`${actor.displayName} has indicated that ${target.toString()} no longer needs help!`,
   });
   if (metaChannelId !== env.CHANNEL_TRIPSITMETA) {
@@ -653,7 +653,7 @@ export async function tripsitmeResolve(
       const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
       const collector = message.createReactionCollector({ filter, time: 1000 * 60 * 60 * 24 });
       collector.on('collect', async reaction => {
-        threadHelpUser.send(stripIndents`
+        await threadHelpUser.send(stripIndents`
           ${env.EMOJI_INVISIBLE}
           > Thank you for your feedback, here's a cookie! 🍪
           ${env.EMOJI_INVISIBLE}
@@ -674,7 +674,7 @@ export async function tripsitmeResolve(
 
   const metaChannelId = ticketData?.meta_thread_id ?? env.CHANNEL_TRIPSITMETA;
   const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
-  metaChannel.send({
+  await metaChannel.send({
     content: stripIndents`${actor.displayName} has indicated that they no longer need help!`,
   });
   if (metaChannelId !== env.CHANNEL_TRIPSITMETA) {
@@ -1059,7 +1059,7 @@ export async function tripsitmeButton(
         // log.debug(`[${PREFIX}] Target has open ticket, and it was created over 5 minutes ago!`);
         helpMessage += `\n\nSomeone from the ${roleTripsitter} ${guildData.role_helper ? helperStr : ''} team will be with you as soon as they're available!`;
       }
-      threadHelpUser.send({
+      await threadHelpUser.send({
         content: helpMessage,
         allowedMentions: {
           parse: showMentions,
@@ -1077,7 +1077,7 @@ export async function tripsitmeButton(
         }
         const metaThread = await interaction.guild.channels.fetch(ticketData.meta_thread_id) as ThreadChannel;
         metaThread.setName(`💛│${target.displayName}'s discussion!`);
-        metaThread.send({
+        await metaThread.send({
           content: metaMessage,
           allowedMentions: {
             parse: showMentions,

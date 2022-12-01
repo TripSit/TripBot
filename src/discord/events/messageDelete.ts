@@ -43,7 +43,7 @@ export const messageDelete: MessageDeleteEvent = {
 
     // Perform a coherence check to make sure that there's *something*
     if (!deletionLog) {
-      msglog.send(`A message by ${message.author.tag} was deleted, but no relevant audit logs were found.`);
+      await msglog.send(`A message by ${message.author.tag} was deleted, but no relevant audit logs were found.`);
       return;
     }
 
@@ -65,6 +65,6 @@ export const messageDelete: MessageDeleteEvent = {
         { name: authorName, value: content, inline: true },
       ]);
 
-    msglog.send({ embeds: [embed] });
+    await msglog.send({ embeds: [embed] });
   },
 };

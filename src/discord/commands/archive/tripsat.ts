@@ -175,7 +175,7 @@ If they still need help it's okay to leave them with that role.`;
         if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
           metaUpdate = testNotice + metaUpdate;
         }
-        threadDiscussUser.send(metaUpdate);
+        await threadDiscussUser.send(metaUpdate);
       }
 
     // log.debug(`[${PREFIX}] Rejected the "im good" button`);
@@ -229,7 +229,7 @@ If they still need help it's okay to leave them with that role.`;
       const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
       const collector = message.createReactionCollector({ filter, time: 1000 * 60 * 60 * 24 });
       collector.on('collect', async (reaction, user) => {
-        threadHelpUser.send(stripIndents`
+        await threadHelpUser.send(stripIndents`
             ${invisibleEmoji}
             > Thank you for your feedback, here's a cookie! 🍪
             ${invisibleEmoji}
@@ -259,7 +259,7 @@ If they still need help it's okay to leave them with that role.`;
     endMetaHelpMessage = testNotice + endMetaHelpMessage;
   }
 
-  threadDiscussUser.send(endMetaHelpMessage);
+  await threadDiscussUser.send(endMetaHelpMessage);
 
 // log.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
   await interaction.editReply({ content: 'Done!' });

@@ -41,21 +41,21 @@ export async function messageCommand(message: Message): Promise<void> {
           return;
         }
         if (now - lastTime < 1000 * 60 * 5) {
-          message.channel.send(stripIndents`Hey ${displayName}, you just used that command, \
+          await message.channel.send(stripIndents`Hey ${displayName}, you just used that command, \
 give people a chance to answer 😄 If no one answers in 5 minutes you can try again.`);
           return;
         }
       }
       const roleTripsitter = message.guild.roles.cache.find(role => role.id === env.ROLE_TRIPSITTER) as Role;
       const roleHelper = message.guild.roles.cache.find(role => role.id === env.ROLE_HELPER) as Role;
-      message.channel.send(
+      await message.channel.send(
         `Hey ${displayName}, thank you for asking for help! We've notified our ${roleTripsitter} and\
 ${roleHelper}. Can you start off by telling us how much you took and the details of your problem?`,
       );
       // Update helpCounter with the current date that the user sent this command
       helpCounter.set(message.author.id, Date.now().valueOf());
     } else {
-      message.channel.send(`Hey ${displayName}, use /help to get a list of commands on discord!`);
+      await message.channel.send(`Hey ${displayName}, use /help to get a list of commands on discord!`);
     }
   } else if (message.content.startsWith(`_pokes <@${env.DISCORD_CLIENT_ID}>_`)) {
     const faces = [
@@ -66,7 +66,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       '🫣',
       '🤨',
     ];
-    message.channel.send(faces[Math.floor(Math.random() * faces.length)]);
+    await message.channel.send(faces[Math.floor(Math.random() * faces.length)]);
   } else if (
     (message.mentions.has(message.client.user) || message.cleanContent.toLowerCase().includes('tripbot'))
     && message.channel.type !== ChannelType.DM) {
@@ -78,6 +78,6 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       '*boops quietly*',
       '*beeps quietly*',
     ];
-    message.channel.send(responses[Math.floor(Math.random() * responses.length)]);
+    await message.channel.send(responses[Math.floor(Math.random() * responses.length)]);
   }
 }

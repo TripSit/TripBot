@@ -32,8 +32,8 @@ export const guildDelete: GuildDeleteEvent = {
 
     if (guild.id === '1026942722612924518') return;
 
-    const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-    botlog.send(`I just left a guild! I am now in ${client.guilds.cache.size} guilds!
+    const auditlog = client.channels.cache.get(env.CHANNEL_AUDITLOG) as TextChannel;
+    await auditlog.send(`I just left a guild! I am now in ${client.guilds.cache.size} guilds!
       ${guild.name} (id: ${guild.id})
       Member count: ${guild.memberCount}
       Description: ${guild.description ? guild.description : 'No description'}

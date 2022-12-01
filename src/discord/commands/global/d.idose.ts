@@ -228,7 +228,7 @@ export const dIdose: SlashCommand = {
         interaction.reply({ embeds: [embed], ephemeral: false });
       } else {
         interaction.reply({ embeds: [embed], ephemeral: true });
-        interaction.user.send({ embeds: [embed] });
+        await interaction.user.send({ embeds: [embed] });
       }
     }
     return true;

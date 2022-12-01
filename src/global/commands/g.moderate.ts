@@ -396,7 +396,7 @@ export async function moderate(
     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
     const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
     const greeting = `Hey ${roleModerator}`;
-    modChan.send({ content: `${command !== 'NOTE' ? greeting : ''}`, embeds: [modlogEmbed] });
+    await modChan.send({ content: `${command !== 'NOTE' ? greeting : ''}`, embeds: [modlogEmbed] });
     // log.debug(`[${PREFIX}] sent a message to the moderators room`);
     if (extraMessage) {
       await modChan.send({ content: extraMessage });

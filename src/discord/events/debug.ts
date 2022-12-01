@@ -20,6 +20,6 @@ export const debug: DebugEvent = {
     if (!enable) return;
     // log.debug(`[${PREFIX}] info: ${info}`);
     const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-    botlog.send(info);
+    await botlog.send(info);
   },
 };

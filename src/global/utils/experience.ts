@@ -169,7 +169,7 @@ export async function experience(
     let role = await guild.roles.fetch(env.ROLE_VIP) as Role;
     if (!member.roles.cache.has(env.ROLE_VIP)) {
       member.roles.add(role);
-      channelTripbotlogs.send(stripIndents`${actor.displayName} was given ${role.name}`);
+      await channelTripbotlogs.send(stripIndents`${actor.displayName} was given ${role.name}`);
     }
 
     role = await guild.roles.fetch(env.ROLE_VIP_5) as Role;
@@ -230,7 +230,7 @@ export async function experience(
     // Check if the member already has the resulting role, and if not, add it
     if (!member.roles.cache.has(role.id)) {
       member.roles.add(role);
-      channelTripbotlogs.send(stripIndents`${actor.displayName} was given ${role.name}`);
+      await channelTripbotlogs.send(stripIndents`${actor.displayName} was given ${role.name}`);
     }
   }
 
@@ -241,9 +241,9 @@ export async function experience(
     // log.debug(stripIndents`[${PREFIX}] ${message.author.username} has leveled up to ${experienceType} level ${level}!`);
 
     if (level % 5 === 0) {
-      channelTripbotlogs.send(stripIndents`${message.author.username} has leveled up to ${experienceType} level ${level}!`);
+      await channelTripbotlogs.send(stripIndents`${message.author.username} has leveled up to ${experienceType} level ${level}!`);
     }
-    // channelTripbotlogs.send({embeds: [embed]});
+    // await channelTripbotlogs.send({embeds: [embed]});
     levelExpPoints -= expToLevel;
     experienceData.level = level;
   }

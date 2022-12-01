@@ -91,7 +91,7 @@ export async function bestOf(reaction:MessageReaction) {
         embed.setImage(`${attachmentUrl}`);
       }
 
-      channel.send({ embeds: [embed] });
+      await channel.send({ embeds: [embed] });
     }
   }
 }

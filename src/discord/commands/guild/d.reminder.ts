@@ -93,11 +93,11 @@ export const dReminder: SlashCommand = {
       .setTitle(`REMINDER: ${reminderTitle}`)
       .setDescription(reminderText);
 
-    interaction.channel?.send({ embeds: [reminder] });
+    await interaction.channel?.send({ embeds: [reminder] });
 
-    const channelBotlog = interaction.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-    if (channelBotlog) {
-      channelBotlog.send(`${(interaction.member as GuildMember).displayName} sent a reminder to ${(interaction.channel as TextChannel).name}`);
+    const botlog = interaction.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    if (botlog) {
+      await botlog.send(`${(interaction.member as GuildMember).displayName} sent a reminder to ${(interaction.channel as TextChannel).name}`);
     }
     interaction.reply({ content: 'Reminder sent!', ephemeral: true });
     return true;

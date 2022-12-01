@@ -120,7 +120,7 @@ export async function modmailActions(
     ticketData.status = 'CLOSED' as TicketStatus;
     noun = 'Ticket';
     verb = 'CLOSED';
-    target.send('It looks like we\'re good here! We\'ve closed this ticket, but if you need anything else, feel free to open a new one!');
+    await target.send('It looks like we\'re good here! We\'ve closed this ticket, but if you need anything else, feel free to open a new one!');
     channel.setName(`💚${channel.name.substring(1)}`);
     // let message:Message;
     // await channel.send(stripIndents`
@@ -188,7 +188,7 @@ export async function modmailActions(
     ticketData.status = 'OPEN' as TicketStatus;
     noun = 'Ticket';
     verb = 'REOPENED';
-    target.send('This ticket has been reopened! Feel free to continue the conversation here.');
+    await target.send('This ticket has been reopened! Feel free to continue the conversation here.');
     // ticketChannel.setArchived(true, 'Archiving after close');
     channel.setName(`❤${channel.name.substring(1)}`);
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
@@ -215,7 +215,7 @@ export async function modmailActions(
     ticketData.status = 'BLOCKED' as TicketStatus;
     noun = 'User';
     verb = 'BLOCKED';
-    target.send('You have been blocked from using modmail. Please email us at appeals@tripsit.me if you feel this was an error!');
+    await target.send('You have been blocked from using modmail. Please email us at appeals@tripsit.me if you feel this was an error!');
     // ticketChannel.setArchived(true, 'Archiving after close');
     channel.setName(`❤${channel.name.substring(1)}`);
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
@@ -241,7 +241,7 @@ export async function modmailActions(
     ticketData.status = 'OPEN' as TicketStatus;
     noun = 'User';
     verb = 'UNBLOCKED';
-    target.send('You have been unblocked from using modmail!');
+    await target.send('You have been unblocked from using modmail!');
     channel.setName(`💛${channel.name.substring(1)}`);
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
@@ -266,7 +266,7 @@ export async function modmailActions(
     ticketData.status = 'OPEN' as TicketStatus;
     noun = 'Ticket';
     verb = 'UNPAUSED';
-    target.send('This ticket has been taken off hold, thank you for your patience!');
+    await target.send('This ticket has been taken off hold, thank you for your patience!');
     channel.setName(`💛${channel.name.substring(1)}`);
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
@@ -291,7 +291,7 @@ export async function modmailActions(
     ticketData.status = 'PAUSED' as TicketStatus;
     noun = 'Ticket';
     verb = 'PAUSED';
-    target.send('This ticket has been paused while we look into this, thank you for your patience!');
+    await target.send('This ticket has been paused while we look into this, thank you for your patience!');
     channel.setName(`🤎${channel.name.substring(1)}`);
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
@@ -315,7 +315,7 @@ export async function modmailActions(
   } else if (command === 'own') {
     noun = 'Ticket';
     verb = 'OWNED';
-    target.send(`${actor} has claimed this issue and will either help you or figure out how to get you help!`);
+    await target.send(`${actor} has claimed this issue and will either help you or figure out how to get you help!`);
     channel.setName(`💛${channel.name.substring(1)}`);
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
@@ -344,7 +344,7 @@ export async function modmailActions(
     interaction.reply(stripIndents`Hey ${target}, we're glad your issue is resolved!
     This ticket has been marked as resolved, but if you need anything else feel free to open a new one!`);
     channel.setName(`💚${channel.name.substring(1)}`);
-    channel.send(stripIndents`Hey team! ${target.toString()} has indicated that they no longer need help!`);
+    await channel.send(stripIndents`Hey team! ${target.toString()} has indicated that they no longer need help!`);
 
     // let message:Message;
     // await target.send(stripIndents`
@@ -420,12 +420,12 @@ export async function modmailActions(
     .merge();
 
   const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
-  const channelModlog = tripsitGuild.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
+  const modlog = tripsitGuild.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
   // Transform actor data
   const modlogEmbed = embedTemplate()
     .setColor(Colors.Blue)
     .setDescription(`${actor} ${command}ed ${target.tag} in ${ticketChannel}`);
-  channelModlog.send({ embeds: [modlogEmbed] });
+  await modlog.send({ embeds: [modlogEmbed] });
 
   if (interaction.channel) {
     let initialMessage = {} as Message;
@@ -528,7 +528,7 @@ export async function modmailInitialResponse(message:Message) {
         .setStyle(ButtonStyle.Danger),
     );
 
-  message.author.send({ embeds: [embed], components: [modmailInitialResponseButtons] });
+  await message.author.send({ embeds: [embed], components: [modmailInitialResponseButtons] });
 }
 
 /**
@@ -922,7 +922,7 @@ export async function modmailCreate(
 export async function modmailDMInteraction(message:Message) {
   // Dont run if the user mentions @everyone or @here.
   if (message.content.includes('@everyone') || message.content.includes('@here')) {
-    message.author.send('You\'re not allowed to use those mentions.');
+    await message.author.send('You\'re not allowed to use those mentions.');
     return;
   }
 
@@ -933,12 +933,12 @@ export async function modmailDMInteraction(message:Message) {
 
   if (ticketData) {
     if (ticketData.status === 'BLOCKED') {
-      message.author.send('*beeps sadly*');
+      await message.author.send('*beeps sadly*');
       return;
     }
 
     if (ticketData.status === 'PAUSED') {
-      message.author.send('Hey there! This ticket is currently on hold, please wait for a moderator to respond before sending another message.');
+      await message.author.send('Hey there! This ticket is currently on hold, please wait for a moderator to respond before sending another message.');
       return;
     }
 
@@ -959,7 +959,7 @@ export async function modmailDMInteraction(message:Message) {
         iconURL: message.author.displayAvatarURL(),
       });
       embed.setFooter(null);
-      thread.send({ embeds: [embed] });
+      await thread.send({ embeds: [embed] });
     }
 
     // Reset the archived_at time
@@ -1006,11 +1006,11 @@ export async function modmailThreadInteraction(message:Message) {
         // log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
         if (ticketData.status === 'BLOCKED') {
-          message.channel.send(`Hey ${message.author.username}, this user is currently blocked. Please '/modmail block off', or click the button at the top, before conversation can resume.`);
+          await message.channel.send(`Hey ${message.author.username}, this user is currently blocked. Please '/modmail block off', or click the button at the top, before conversation can resume.`);
           return;
         }
         if (ticketData.status === 'PAUSED') {
-          message.channel.send(`Hey ${message.author.username}, this ticket is currently paused. Please '/modmail pause off', or click the button at the top, before conversation can resume.`);
+          await message.channel.send(`Hey ${message.author.username}, this ticket is currently paused. Please '/modmail pause off', or click the button at the top, before conversation can resume.`);
           return;
         }
 
@@ -1032,7 +1032,7 @@ export async function modmailThreadInteraction(message:Message) {
           iconURL: message.member.displayAvatarURL(),
         });
         embed.setFooter(null);
-        user.send({ embeds: [embed] });
+        await user.send({ embeds: [embed] });
         // log.debug(`[${PREFIX}] message sent to user!`);
         // user.send(`<${message.member.nickname}> ${message.content}`);
 

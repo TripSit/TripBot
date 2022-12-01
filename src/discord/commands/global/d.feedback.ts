@@ -51,7 +51,7 @@ export const dFeedback: SlashCommand = {
         const botOwnerEmbed = embedTemplate()
           .setColor(Colors.Purple)
           .setDescription(`Hey ${botOwner.toString()},\n${i.user.tag}${guildMessage} reports:\n${feedbackReport}`);
-        botOwner.send({ embeds: [botOwnerEmbed] });
+        await botOwner.send({ embeds: [botOwnerEmbed] });
 
         const tripsitGuild = await i.client.guilds.fetch(env.DISCORD_GUILD_ID);
         const developerRole = tripsitGuild.roles.cache.find(role => role.id === env.ROLE_DEVELOPER);
@@ -64,7 +64,7 @@ export const dFeedback: SlashCommand = {
           log.error(`[${PREFIX}]Developer channel not found!`);
           return;
         }
-        devChan.send(`Hey ${developerRole.toString()}, a user submitted a feedback report:\n${feedbackReport}`);
+        await devChan.send(`Hey ${developerRole.toString()}, a user submitted a feedback report:\n${feedbackReport}`);
 
         const embed = embedTemplate()
           .setColor(Colors.Purple)

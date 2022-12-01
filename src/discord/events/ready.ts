@@ -43,14 +43,14 @@ export const ready: ReadyEvent = {
     await setTimeout(1000);
     startStatusLoop(client);
     Promise.all([getInvites(client)])
-      .then(() => {
+      .then(async () => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
         log.info(`[${PREFIX}] Discord finished booting in ${bootDuration}s!`);
         if (env.NODE_ENV !== 'development') {
           const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
           const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
           const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
-          botlog.send(`Hey ${tripbotdevrole}, bot has restart! Booted in ${bootDuration} seconds`);
+          await botlog.send(`Hey ${tripbotdevrole}, bot has restart! Booted in ${bootDuration} seconds`);
         }
       });
   },
