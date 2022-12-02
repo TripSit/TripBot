@@ -22,7 +22,8 @@ import { db, getGuild, getUser } from '../utils/knex';
 
 import env from '../utils/env.config';
 import log from '../utils/log';
-import { DiscordGuilds } from '../@types/pgdb';
+import { DiscordGuilds, Users } from '../@types/pgdb';
+import { startLog } from '../../discord/utils/startLog';
 
 const PREFIX = parse(__filename).name;
 
@@ -32,28 +33,28 @@ type UserActionType = 'BOTBAN' | 'UNBOTBAN';
 const embedVariables = {
   BOTKICK: {
     embedColor: Colors.Orange,
-    embedTitle: 'Kicked!',
-    verb: 'kicked',
+    embedTitle: 'Left!',
+    verb: 'made me leave',
   },
   BOTBAN: {
     embedColor: Colors.Red,
     embedTitle: 'Banned!',
-    verb: 'banned',
+    verb: 'bot banned',
   },
   BOTUNBAN: {
     embedColor: Colors.Green,
     embedTitle: 'Un-banned!',
-    verb: 'un-banned',
+    verb: 'bot un-banned',
   },
   WARNING: {
     embedColor: Colors.Yellow,
     embedTitle: 'Warned!',
-    verb: 'warned',
+    verb: 'bot warned',
   },
   NOTE: {
     embedColor: Colors.Yellow,
     embedTitle: 'Note!',
-    verb: 'noted',
+    verb: 'bot noted',
   },
   INFO: {
     embedColor: Colors.Green,
@@ -112,6 +113,12 @@ async function botmodUser(
   } else if (command === 'UNBOTBAN') {
     targetUserInfo.discord_bot_ban = false;
   }
+
+  log.debug(`[${PREFIX}] targetUserInfo: ${JSON.stringify(targetUserInfo, null, 2)}`);
+  await db<Users>('users')
+    .insert(targetUserInfo)
+    .onConflict('id')
+    .merge();
 
   const noReason = 'No reason provided';
   const modlogEmbed = embedTemplate()
@@ -317,6 +324,7 @@ export async function botmod(
   privReason: string | null,
   pubReason: string | null,
 ):Promise<InteractionReplyOptions> {
+  startLog(PREFIX, interaction);
   return group === 'user'
     ? botmodUser(interaction, actor, (command as UserActionType), target, privReason, pubReason)
     : botmodGuild(interaction, actor, (command as GuildActionType), target, privReason, pubReason);

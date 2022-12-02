@@ -5,6 +5,7 @@
 import {
   InteractionType,
 } from 'discord-api-types/v10';
+import { parse } from 'path';
 import {
   InteractionCreateEvent,
 } from '../@types/eventDef';
@@ -13,19 +14,15 @@ import { buttonClick } from '../utils/buttonClick';
 import { selectMenu } from '../utils/selectMenu';
 import { autocomplete } from '../utils/autocomplete';
 import { getUser } from '../../global/utils/knex';
-// import log from '../../global/utils/log';
-// import {parse} from 'path';
-// const PREFIX = parse(__filename).name;
+import log from '../../global/utils/log'; // eslint-disable-line
+
+const PREFIX = parse(__filename).name;  // eslint-disable-line
 
 export default interactionCreate;
 
 export const interactionCreate: InteractionCreateEvent = {
   name: 'interactionCreate',
   async execute(interaction) {
-    const userData = await getUser(interaction.user.id, null);
-    if (userData && userData.discord_bot_ban) {
-      return;
-    }
     // log.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}`);
     // log.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction)}`);
     // log.debug(`[${PREFIX}] interaction: ${interaction}`);
@@ -39,6 +36,11 @@ export const interactionCreate: InteractionCreateEvent = {
 
     if (interaction.isChatInputCommand()) {
       // log.debug(`[${PREFIX}] Interaction isChatInputCommand!`);
+      const userData = await getUser(interaction.user.id, null);
+      if (userData && userData.discord_bot_ban) {
+        interaction.reply({ content: '*beeps sadly*', ephemeral: true });
+        return;
+      }
       commandRun(interaction, client);
       return;
     }

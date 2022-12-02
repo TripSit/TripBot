@@ -108,6 +108,7 @@ export const dTemplate: SlashCommand = {
           .setRequired(true)))),
 
   async execute(interaction) {
+    startLog(PREFIX, interaction);
     const actor = interaction.member as GuildMember;
     // log.debug(`[${PREFIX}] Actor: ${actor}`);
     let command = interaction.options.getSubcommand().toUpperCase() as GuildActionType | UserActionType;
@@ -177,10 +178,10 @@ export const dTemplate: SlashCommand = {
 
     await interaction.showModal(modal);
 
-    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('modModal');
+    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('botModModal');
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
-        if (i.customId.split('~')[2] !== interaction.id) return;
+        if (i.customId.split('~')[1] !== interaction.id) return;
         i.deferReply({ ephemeral: true });
         const privReason = i.fields.getTextInputValue('privReason');
         let pubReason = '';
