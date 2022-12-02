@@ -24,6 +24,7 @@ async function birthdayGet(
   if (response === null) {
     embed.setTitle(`${member.displayName} is immortal! (Or has not set their birthday...)`);
     await interaction.reply({ embeds: [embed] });
+    return;
   }
   embed.setTitle(`${member.displayName}'s birthday is ${(response as DateTime).toFormat('LLLL d')}`);
   // Determine how long until the birthday, even if the year is different
