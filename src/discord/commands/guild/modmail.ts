@@ -927,6 +927,11 @@ export async function modmailDMInteraction(message:Message) {
   }
 
   const userData = await getUser(message.author.id, null);
+
+  if (userData && userData.ticket_ban) {
+    return;
+  }
+
   const ticketData = await getOpenTicket(userData.id, null);
 
   // log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);

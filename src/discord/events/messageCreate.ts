@@ -10,6 +10,7 @@ import { experience } from '../../global/utils/experience';
 import { announcements } from '../utils/announcements';
 import { messageCommand } from '../utils/messageCommand';
 import { modmailDMInteraction, modmailThreadInteraction } from '../commands/guild/modmail';
+import { getUser } from '../../global/utils/knex';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
@@ -21,6 +22,11 @@ export const messageCreate: MessageCreateEvent = {
   async execute(message) {
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (message.guild && message.guild.id !== env.DISCORD_GUILD_ID) {
+      return;
+    }
+
+    const userData = await getUser(message.author.id, null);
+    if (userData && userData.discord_bot_ban) {
       return;
     }
 
