@@ -182,7 +182,7 @@ export const dTemplate: SlashCommand = {
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
-        i.deferReply({ ephemeral: true });
+        await i.deferReply({ ephemeral: true });
         const privReason = i.fields.getTextInputValue('privReason');
         let pubReason = '';
         try {
@@ -191,7 +191,7 @@ export const dTemplate: SlashCommand = {
           // ignore
         }
         const result = await botmod(interaction, group, actor, command, targetId, privReason, pubReason);
-        i.editReply(result);
+        await i.editReply(result);
       });
     return false;
   },

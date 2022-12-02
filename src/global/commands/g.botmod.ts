@@ -41,7 +41,7 @@ const embedVariables = {
     embedTitle: 'Banned!',
     verb: 'bot banned',
   },
-  BOTUNBAN: {
+  UNBOTBAN: {
     embedColor: Colors.Green,
     embedTitle: 'Un-banned!',
     verb: 'bot un-banned',
@@ -325,7 +325,12 @@ export async function botmod(
   pubReason: string | null,
 ):Promise<InteractionReplyOptions> {
   startLog(PREFIX, interaction);
-  return group === 'user'
-    ? botmodUser(interaction, actor, (command as UserActionType), target, privReason, pubReason)
-    : botmodGuild(interaction, actor, (command as GuildActionType), target, privReason, pubReason);
+  let response = {} as InteractionReplyOptions;
+  if (group === 'user') {
+    response = await botmodUser(interaction, actor, (command as UserActionType), target, privReason, pubReason);
+  }
+  if (group === 'guild') {
+    response = await botmodGuild(interaction, actor, (command as GuildActionType), target, privReason, pubReason);
+  }
+  return response;
 }

@@ -23,6 +23,13 @@ export default interactionCreate;
 export const interactionCreate: InteractionCreateEvent = {
   name: 'interactionCreate',
   async execute(interaction) {
+    const userData = await getUser(interaction.user.id, null);
+    if (userData && userData.discord_bot_ban) {
+      if (interaction.isRepliable()) {
+        interaction.reply({ content: '*beeps sadly*', ephemeral: true });
+      }
+      return;
+    }
     // log.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction, null, 2)}`);
     // log.debug(`[${PREFIX}] interaction: ${JSON.stringify(interaction)}`);
     // log.debug(`[${PREFIX}] interaction: ${interaction}`);
@@ -36,11 +43,7 @@ export const interactionCreate: InteractionCreateEvent = {
 
     if (interaction.isChatInputCommand()) {
       // log.debug(`[${PREFIX}] Interaction isChatInputCommand!`);
-      const userData = await getUser(interaction.user.id, null);
-      if (userData && userData.discord_bot_ban) {
-        interaction.reply({ content: '*beeps sadly*', ephemeral: true });
-        return;
-      }
+
       commandRun(interaction, client);
       return;
     }
