@@ -840,6 +840,8 @@ export async function tripSitMe(
       parse: showMentions,
     },
     flags: ['SuppressEmbeds'],
+  }).then((message) => {
+    message.pin();
   });
 
   // log.debug(`[${PREFIX}] Sent intro message to ${threadHelpUser.name} ${threadHelpUser.id}`);
