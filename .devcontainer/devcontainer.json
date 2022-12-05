@@ -1,0 +1,85 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
+{
+	"name": "Ubuntu",
+	"image": "mcr.microsoft.com/devcontainers/base:jammy",
+
+	// Configure tool-specific properties.
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			"settings": {
+				// "editor.inlineSuggest.enabled": true,
+				// "eslint.codeActionsOnSave.rules": null,
+				// "editor.codeActionsOnSave": {
+				// 		"source.fixAll.eslint": true
+				// },
+				// "eslint.validate": [
+				// 		"javascript",
+				// 		"typescript"
+				// ],
+				// "editor.tabSize": 2,
+				// "git.enableSmartCommit": true,
+				// "git.autofetch": true,
+				// "git.confirmSync": false,
+				// "typescript.updateImportsOnFileMove.enabled": "always",
+				// "javascript.updateImportsOnFileMove.enabled": "always",
+				// "github.copilot.enable": {
+				// 	"*": true,
+				// 	"yaml": true,
+				// 	"plaintext": true,
+				// 	"markdown": true
+				// },
+				// "editor.rulers": [
+				// 	120
+				// ],
+				"sonarlint.connectedMode.connections.sonarqube": [
+					{
+							"serverUrl": "http://pantheon.tripsit.me:9000",
+							"connectionId": "http-pantheon-tripsit-me-9000-"
+					}
+				],
+				"sonarlint.rules": {
+						"typescript:S125": {
+								"level": "off"
+						},
+						"javascript:S125": {
+								"level": "off"
+						}
+				}
+			},
+			//"devPort": {},
+			// Specify which VS Code extensions to install (List of IDs)
+			"extensions": [
+				"ms-azuretools.vscode-docker",
+				"dbaeumer.vscode-eslint",
+				"GitHub.copilot",
+				"MariusAlchimavicius.json-to-ts",
+				"SonarSource.sonarlint-vscode",
+				"mikestead.dotenv",
+				"EditorConfig.EditorConfig"
+			]
+		}
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/node:1": {"version": "16.17.1"},
+		"ghcr.io/devcontainers/features/docker-from-docker:1": {},
+		"ghcr.io/devcontainers-contrib/features/jest:1": {},
+		"ghcr.io/devcontainers-contrib/features/typescript:1": {}
+	},
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "npm install -g npm && npm install -g npm-check-updates && npm run bootstrap"
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}
