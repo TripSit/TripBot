@@ -75,7 +75,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "npm install -g npm && npm install -g npm-check-updates && npm run bootstrap"
+	"postCreateCommand": "npm install -g npm && npm install -g npm-check-updates && npm run nodemon"
 
 	// Configure tool-specific properties.
 	// "customizations": {},
