@@ -517,6 +517,9 @@ export async function tripsitmeResolve(
   interaction:ButtonInteraction,
 ) {
   startLog(PREFIX, interaction);
+  if ((interaction.channel as ThreadChannel).archived) {
+    await (interaction.channel as ThreadChannel).setArchived(false);
+  }
   await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) {
     // log.debug(`[${PREFIX}] no guild!`);
