@@ -33,6 +33,7 @@ export const messageUpdate: MessageUpdateEvent = {
     if (newMessage.author.bot) return;
 
     const oldContent = oldMessage !== undefined && oldMessage !== null ? oldMessage.content : '(Not found)';
+    const newContent = newMessage !== undefined && newMessage !== null ? newMessage.content : '(Not found)';
 
     const embed = embedTemplate()
       .setAuthor(null)
@@ -42,7 +43,7 @@ export const messageUpdate: MessageUpdateEvent = {
       .setURL(newMessage.url)
       .addFields([
         { name: 'Old Message', value: oldContent, inline: true },
-        { name: 'New Message', value: newMessage.content, inline: true },
+        { name: 'New Message', value: newContent, inline: true },
       ]);
 
     // const response = `Message ${newMessage.id} was edited by ${newMessage.author.tag} in
