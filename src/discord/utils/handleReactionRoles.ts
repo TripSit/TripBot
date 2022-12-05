@@ -3,17 +3,17 @@ import {
   User,
   // Role,
 } from 'discord.js';
-import { parse } from 'path';
-import { stripIndents } from 'common-tags';
+// import { parse } from 'path';
+// import { stripIndents } from 'common-tags';
 import { db } from '../../global/utils/knex';
 // import {
 //   Users,
 // } from '../../global/@types/pgdb.d';
 import env from '../../global/utils/env.config';
-import log from '../../global/utils/log';
+// import log from '../../global/utils/log';
 import { Users, ReactionRoles } from '../../global/@types/pgdb';
 
-const PREFIX = parse(__filename).name;
+// const PREFIX = parse(__filename).name;
 
 const mindsetRemovalTime = env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 8 : 1000 * 30;
 
@@ -31,11 +31,11 @@ export async function handleReactionRoles(
   user:User,
   add:boolean,
 ): Promise<void> {
-  let message = `[${PREFIX}] via ${user.tag} (${user.id})`;
-  if (add) message += ' added';
-  else message += ' removed';
-  message += ` ${reaction.emoji.name} (${reaction.emoji.id}) {${reaction.emoji.identifier}}`;
-  log.info(stripIndents`${message}`);
+  // let message = `[${PREFIX}] via ${user.tag} (${user.id})`;
+  // if (add) message += ' added';
+  // else message += ' removed';
+  // message += ` ${reaction.emoji.name} (${reaction.emoji.id}) {${reaction.emoji.identifier}}`;
+  // log.info(stripIndents`${message}`);
 
   const messageId = reaction.message.id;
   const reactionId = reaction.emoji.id ?? reaction.emoji.name;
