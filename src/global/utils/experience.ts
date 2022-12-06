@@ -28,6 +28,40 @@ const ignoredRoles = Object.values({
 
 export default experience;
 
+async function getType(channel:TextChannel):Promise<ExperienceType> {
+  let experienceType = '';
+  if (channel.parent) {
+    // log.debug(`[${PREFIX}] parent: ${channel.parent.name} ${channel.parent.id}`);
+    if (channel.parent.parent) {
+      // log.debug(`[${PREFIX}] parent-parent: ${channel.parent.parent.name} ${channel.parent.parent.id}`);
+      if (channel.parent.parent.id === env.CATEGORY_TEAMTRIPSIT) {
+        experienceType = 'TEAM' as ExperienceType;
+      } else if (channel.parent.parent.id === env.CATEGORY_DEVELOPMENT) {
+        experienceType = 'DEVELOPER' as ExperienceType;
+      } else if (channel.parent.parent.id === env.CATEGROY_HARMREDUCTIONCENTRE) {
+        experienceType = 'TRIPSITTER' as ExperienceType;
+      } else if (channel.parent.parent.id === env.CATEGORY_GATEWAY) {
+        experienceType = 'IGNORED' as ExperienceType;
+      } else {
+        experienceType = 'GENERAL' as ExperienceType;
+      }
+    } else if (channel.parent.id === env.CATEGORY_TEAMTRIPSIT) {
+      experienceType = 'TEAM' as ExperienceType;
+    } else if (channel.parent.id === env.CATEGORY_DEVELOPMENT) {
+      experienceType = 'DEVELOPER' as ExperienceType;
+    } else if (channel.parent.id === env.CATEGROY_HARMREDUCTIONCENTRE) {
+      experienceType = 'TRIPSITTER' as ExperienceType;
+    } else if (channel.parent.id === env.CATEGORY_GATEWAY) {
+      experienceType = 'IGNORED' as ExperienceType;
+    } else {
+      experienceType = 'GENERAL' as ExperienceType;
+    }
+  } else {
+    experienceType = 'IGNORED' as ExperienceType;
+  }
+  return experienceType as ExperienceType;
+}
+
 /**
  * This takes a messsage and gives the user experience
  * @param {Message} message The message object to check
@@ -40,6 +74,10 @@ export async function experience(
     return;
   }
 
+  // Determine what kind of experience to give
+  const channel = message.channel as TextChannel;
+  const experienceType = await getType(channel);
+
   const actor = message.member;
 
   // Check if the user has an ignored role
@@ -51,38 +89,6 @@ export async function experience(
   // log.debug(stripIndents`[${PREFIX}] Message sent by ${message.author.username} \
   // in ${(message.channel as TextChannel).name} on ${message.guild}`);
 
-  // Determine what kind of experience to give
-  const channel = message.channel as TextChannel;
-  let experienceType = 'GENERAL';
-  if ((channel).parent) {
-    // log.debug(`[${PREFIX}] parent: ${channel.parent.name} ${channel.parent.id}`);
-    if (channel.parent.parent) {
-      // log.debug(`[${PREFIX}] parent-parent: ${channel.parent.parent.name} ${channel.parent.parent.id}`);
-      if (channel.parent.parent.id === env.CATEGORY_TEAMTRIPSIT) {
-        experienceType = 'TEAM';
-      } else if (channel.parent.parent.id === env.CATEGORY_DEVELOPMENT) {
-        experienceType = 'DEVELOPER';
-      } else if (channel.parent.parent.id === env.CATEGROY_HARMREDUCTIONCENTRE) {
-        experienceType = 'TRIPSITTER';
-      } else if (channel.parent.parent.id === env.CATEGORY_GATEWAY) {
-        experienceType = 'IGNORED';
-      } else {
-        experienceType = 'GENERAL';
-      }
-    } else if (channel.parent.id === env.CATEGORY_TEAMTRIPSIT) {
-      experienceType = 'TEAM';
-    } else if (channel.parent.id === env.CATEGORY_DEVELOPMENT) {
-      experienceType = 'DEVELOPER';
-    } else if (channel.parent.id === env.CATEGROY_HARMREDUCTIONCENTRE) {
-      experienceType = 'TRIPSITTER';
-    } else if (channel.parent.id === env.CATEGORY_GATEWAY) {
-      experienceType = 'IGNORED';
-    } else {
-      experienceType = 'GENERAL';
-    }
-  } else {
-    experienceType = 'IGNORED';
-  }
   // log.debug(`[${PREFIX}] experienceType: ${experienceType}`);
 
   // Get random value between 15 and 25
@@ -118,7 +124,7 @@ export async function experience(
     await db<UserExperience>('user_experience')
       .insert({
         user_id: userData.id,
-        type: experienceType as ExperienceType,
+        type: experienceType,
         level_points: expPoints,
         total_points: expPoints,
         last_message_at: new Date(),
@@ -163,8 +169,31 @@ export async function experience(
   const channelTripbotlogs = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
   const member = await guild.members.fetch(actor.id);
 
+  // Calculate total experience points
+  let allExpPoints = 0;
+  const currentExp = await db<UserExperience>('user_experience')
+    .select(
+      db.ref('total_points'),
+      db.ref('type'),
+    )
+    .where('user_id', userData.id)
+    .andWhereNot('type', 'IGNORED')
+    .andWhereNot('type', 'TOTAL');
+
+  currentExp.forEach(exp => {
+    allExpPoints += exp.total_points;
+  });
+  let totalLevel = 0;
+  let totalLevelPoints = allExpPoints;
+  let totalExpToLevel = 0;
+  while (totalLevelPoints > totalExpToLevel) {
+    totalExpToLevel = 5 * (totalLevel ** 2) + (50 * totalLevel) + 100;
+    totalLevel += 1;
+    totalLevelPoints -= totalExpToLevel;
+  }
+
   // Give the proper VIP role
-  if (experienceType === 'total' && level >= 5) {
+  if (totalLevel >= 5) {
     // Ensure the member has the base VIP role if they're over level 5
     let role = await guild.roles.fetch(env.ROLE_VIP) as Role;
     if (!member.roles.cache.has(env.ROLE_VIP)) {
@@ -173,45 +202,45 @@ export async function experience(
     }
 
     role = await guild.roles.fetch(env.ROLE_VIP_5) as Role;
-    if (level >= 10) {
+    if (totalLevel >= 10) {
       // Check if the member already has the previous role, and if so, remove it
       member.roles.remove(role);
       role = await guild.roles.fetch(env.ROLE_VIP_10) as Role;
-      if (level >= 20) {
+      if (totalLevel >= 20) {
         member.roles.remove(role);
         role = await guild.roles.fetch(env.ROLE_VIP_20) as Role;
-        if (level >= 30) {
+        if (totalLevel >= 30) {
           member.roles.remove(role);
           role = await guild.roles.fetch(env.ROLE_VIP_30) as Role;
-          if (level >= 40) {
+          if (totalLevel >= 40) {
             member.roles.remove(role);
             role = await guild.roles.fetch(env.ROLE_VIP_40) as Role;
-            if (level >= 50) {
+            if (totalLevel >= 50) {
               member.roles.remove(role);
               role = await guild.roles.fetch(env.ROLE_VIP_50) as Role;
-              if (level >= 60) {
+              if (totalLevel >= 60) {
                 member.roles.remove(role);
                 role = await guild.roles.fetch(env.ROLE_VIP_60) as Role;
                 // Beyond level 70 is not supported yet
-                // if (level >= 70) {
+                // if (totalLevel >= 70) {
                 //   if (!member.roles.cache.has(role.id)) {
                 //     member.roles.remove(role);
                 //     channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
                 //   }
                 //   role = await guild.roles.fetch(env.ROLE_VIP_70) as Role;
-                //   if (level >= 80) {
+                //   if (totalLevel >= 80) {
                 //     if (!member.roles.cache.has(role.id)) {
                 //       member.roles.remove(role);
                 //       channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
                 //     }
                 //     role = await guild.roles.fetch(env.ROLE_VIP_80) as Role;
-                //     if (level >= 90) {
+                //     if (totalLevel >= 90) {
                 //       if (!member.roles.cache.has(role.id)) {
                 //         member.roles.remove(role);
                 //         channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
                 //       }
                 //       role = await guild.roles.fetch(env.ROLE_VIP_90) as Role;
-                //       if (level >= 100) {
+                //       if (totalLevel >= 100) {
                 //         if (!member.roles.cache.has(role.id)) {
                 //           member.roles.remove(role);
                 //           channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
