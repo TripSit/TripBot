@@ -46,17 +46,17 @@ const embedVariables = {
     embedTitle: 'Un-banned!',
     verb: 'bot un-banned',
   },
-  WARNING: {
+  BOTWARNING: {
     embedColor: Colors.Yellow,
     embedTitle: 'Warned!',
     verb: 'bot warned',
   },
-  NOTE: {
+  BOTNOTE: {
     embedColor: Colors.Yellow,
     embedTitle: 'Note!',
     verb: 'bot noted',
   },
-  INFO: {
+  BOTINFO: {
     embedColor: Colors.Green,
     embedTitle: 'Info!',
     verb: 'got info on',
