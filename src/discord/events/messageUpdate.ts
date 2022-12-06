@@ -33,7 +33,9 @@ export const messageUpdate: MessageUpdateEvent = {
     if (newMessage.author.bot) return;
 
     const oldContent = oldMessage !== undefined && oldMessage !== null ? oldMessage.content : '(Not found)';
+    log.debug(`[${PREFIX}] oldContent: ${oldContent}`);
     const newContent = newMessage !== undefined && newMessage !== null ? newMessage.content : '(Not found)';
+    log.debug(`[${PREFIX}] newContent: ${newContent}`);
 
     const embed = embedTemplate()
       .setAuthor(null)
