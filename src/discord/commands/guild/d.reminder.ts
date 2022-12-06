@@ -40,10 +40,10 @@ const reminderDict = {
     'Keep #sanctuary slow and positive!',
     '#sanctuary is a positivity-enforced channel for people currently on substances. Please keep the conversation slow and positive, and remember that we are here to help!',
   ],
-  [env.CHANNEL_WEBTRIPSIT]: [
-    'Keep #web-tripsit clear for people who need help!',
-    'Reminder: this channel is for people who need immediate assistance or who have questions about harm reduction and safer drug use. To access our social chat channels, consider joining our discord at https://discord.gg/tripsit. Thank you!,',
-  ],
+  // [env.CHANNEL_WEBTRIPSIT]: [
+  //   'Keep #web-tripsit clear for people who need help!',
+  //   'Reminder: this channel is for people who need immediate assistance or who have questions about harm reduction and safer drug use. To access our social chat channels, consider joining our discord at https://discord.gg/tripsit. Thank you!,',
+  // ],
   [env.CHANNEL_WEBTRIPSIT1]: [
     'Keep #web-tripsit clear for people who need help!',
     'Reminder: this channel is for people who need immediate assistance or who have questions about harm reduction and safer drug use. To access our social chat channels, consider joining our discord at https://discord.gg/tripsit. Thank you!,',
@@ -93,11 +93,11 @@ export const dReminder: SlashCommand = {
       .setTitle(`REMINDER: ${reminderTitle}`)
       .setDescription(reminderText);
 
-    interaction.channel?.send({ embeds: [reminder] });
+    await interaction.channel?.send({ embeds: [reminder] });
 
-    const channelBotlog = interaction.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-    if (channelBotlog) {
-      channelBotlog.send(`${(interaction.member as GuildMember).displayName} sent a reminder to ${(interaction.channel as TextChannel).name}`);
+    const botlog = interaction.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    if (botlog) {
+      await botlog.send(`${(interaction.member as GuildMember).displayName} sent a reminder to ${(interaction.channel as TextChannel).name}`);
     }
     interaction.reply({ content: 'Reminder sent!', ephemeral: true });
     return true;

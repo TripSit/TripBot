@@ -105,9 +105,9 @@ export const guildMemberAdd: GuildMemberAddEvent = {
     if (inviteInfo) {
       embed.setFooter({ text: inviteInfo });
     }
-    const channelBotlog = member.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-    if (channelBotlog) {
-      channelBotlog.send({ embeds: [embed] });
+    const auditlog = client.channels.cache.get(env.CHANNEL_AUDITLOG) as TextChannel;
+    if (auditlog) {
+      await auditlog.send({ embeds: [embed] });
     }
   },
 };

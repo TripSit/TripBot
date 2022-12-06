@@ -37,9 +37,9 @@ export const dSay: SlashCommand = {
     const say = interaction.options.getString('say', true);
 
     if (channel) {
-      channel.send(say);
+      await channel.send(say);
     } else {
-      interaction.channel?.send(say);
+      await interaction.channel?.send(say);
     }
 
     interaction.reply({
@@ -49,7 +49,7 @@ export const dSay: SlashCommand = {
 
     const channelBotlog = interaction.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
-      channelBotlog.send(`${(interaction.member as GuildMember).displayName} made me say '${say}' \
+      await channelBotlog.send(`${(interaction.member as GuildMember).displayName} made me say '${say}' \
 in ${channel ? channel.toString() : interaction.channel?.toString()}`);
     }
 

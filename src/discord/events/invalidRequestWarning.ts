@@ -15,7 +15,7 @@ export const invalidRequestWarning: InvalidRequestWarningEvent = {
   async execute(invalidRequestWarningData) {
     const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     const response = `Invalid request warning count: ${invalidRequestWarningData.count} Time left: ${invalidRequestWarningData.remainingTime})`; // eslint-disable-line max-len
-    botlog.send(response);
+    await botlog.send(response);
     log.error(`[${PREFIX}] ${response}`);
   },
 };

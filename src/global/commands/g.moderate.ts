@@ -178,7 +178,7 @@ export async function moderate(
 
   const actorData = await getUser(actor.id, null);
   const targetData = await getUser(target.id, null);
-
+  const noReason = 'No reason provided';
   let extraMessage = '';
 
   let actionData = {
@@ -186,8 +186,8 @@ export async function moderate(
     user_id: targetData.id,
     type: {} as UserActionType,
     ban_evasion_related_user: null as string | null,
-    description: pubReason ?? 'No reason provided' as string,
-    internal_note: privReason ?? 'No reason provided' as string | null,
+    description: pubReason ?? noReason as string,
+    internal_note: privReason ?? noReason as string | null,
     expires_at: null as Date | null,
     repealed_by: null as string | null,
     repealed_at: null as Date | null,
@@ -199,7 +199,7 @@ export async function moderate(
   if (command === 'TIMEOUT') {
     actionData.type = 'TIMEOUT' as UserActionType;
     try {
-      await target.timeout(duration, privReason ?? 'No reason provided');
+      await target.timeout(duration, privReason ?? noReason);
     } catch (err) {
       log.error(`[${PREFIX}] Error: ${err}`);
     }
@@ -222,7 +222,7 @@ export async function moderate(
     actionData.repealed_by = actorData.id;
 
     try {
-      await target.timeout(0, privReason ?? 'No reason provided');
+      await target.timeout(0, privReason ?? noReason);
       // log.debug(`[${PREFIX}] I untimeouted ${target.displayName} because\n '${privReason}'!`);
     } catch (err) {
       log.error(`[${PREFIX}] Error: ${err}`);
@@ -238,12 +238,12 @@ export async function moderate(
       }
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       // log.debug(`[${PREFIX}] Days to delete: ${deleteMessageValue}`);
-      targetGuild.members.ban(target, { deleteMessageSeconds: deleteMessageValue, reason: privReason ?? 'No reason provided' });
+      targetGuild.members.ban(target, { deleteMessageSeconds: deleteMessageValue, reason: privReason ?? noReason });
     } catch (err) {
       log.error(`[${PREFIX}] Error: ${err}`);
     }
   } else if (command === 'UNBAN') {
-    actionData.type = 'BAN' as UserActionType;
+    actionData.type = 'FULL_BAN' as UserActionType;
 
     const previousRecord = await db<UserActions>('user_actions')
       .select('*')
@@ -262,7 +262,7 @@ export async function moderate(
     try {
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       await targetGuild.bans.fetch();
-      await targetGuild.bans.remove(target.user, privReason ?? 'No reason provided');
+      await targetGuild.bans.remove(target.user, privReason ?? noReason);
     } catch (err) {
       log.error(`[${PREFIX}] Error: ${err}`);
     }
@@ -270,7 +270,7 @@ export async function moderate(
     actionData.type = 'UNDERBAN' as UserActionType;
     try {
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-      targetGuild.members.ban(target, { reason: privReason ?? 'No reason provided' });
+      targetGuild.members.ban(target, { reason: privReason ?? noReason });
     } catch (err) {
       log.error(`[${PREFIX}] Error: ${err}`);
     }
@@ -294,7 +294,7 @@ export async function moderate(
     try {
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       await targetGuild.bans.fetch();
-      await targetGuild.bans.remove(target.user, privReason ?? 'No reason provided');
+      await targetGuild.bans.remove(target.user, privReason ?? noReason);
     } catch (err) {
       log.error(`[${PREFIX}] Error: ${err}`);
     }
@@ -358,7 +358,7 @@ export async function moderate(
     // eslint-disable-next-line
     .setTitle(`${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} (${target.user.tag})${duration && command === 'TIMEOUT' ? ` for ${ms(duration, {long: true})}` : ''}`)
     .setDescription(stripIndents`
-    **PrivReason:** ${privReason ?? 'No reason provided'}
+    **PrivReason:** ${privReason ?? noReason}
     ${pubReason ? `**PubReason:** ${pubReason}` : ''}
     `)
     .setColor(embedVariables[command as keyof typeof embedVariables].embedColor)
@@ -395,7 +395,8 @@ export async function moderate(
     // We must send the mention outside of the embed, cuz mentions dont work in embeds
     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
     const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
-    modChan.send({ content: `${command !== 'NOTE' ? `Hey ${roleModerator}` : ''}`, embeds: [modlogEmbed] });
+    const greeting = `Hey ${roleModerator}`;
+    await modChan.send({ content: `${command !== 'NOTE' ? greeting : ''}`, embeds: [modlogEmbed] });
     // log.debug(`[${PREFIX}] sent a message to the moderators room`);
     if (extraMessage) {
       await modChan.send({ content: extraMessage });

@@ -42,7 +42,8 @@ export const dFeedback: SlashCommand = {
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
-        const guildMessage = `${i.guild ? ` in ${i.guild.name}` : 'DM'}`;
+        const guildName = ` in ${i.guild?.name}`;
+        const guildMessage = `${i.guild ? guildName : 'DM'}`;
 
         const feedbackReport = i.fields.getTextInputValue('feedbackReport');
 
@@ -50,7 +51,7 @@ export const dFeedback: SlashCommand = {
         const botOwnerEmbed = embedTemplate()
           .setColor(Colors.Purple)
           .setDescription(`Hey ${botOwner.toString()},\n${i.user.tag}${guildMessage} reports:\n${feedbackReport}`);
-        botOwner.send({ embeds: [botOwnerEmbed] });
+        await botOwner.send({ embeds: [botOwnerEmbed] });
 
         const tripsitGuild = await i.client.guilds.fetch(env.DISCORD_GUILD_ID);
         const developerRole = tripsitGuild.roles.cache.find(role => role.id === env.ROLE_DEVELOPER);
@@ -63,7 +64,7 @@ export const dFeedback: SlashCommand = {
           log.error(`[${PREFIX}]Developer channel not found!`);
           return;
         }
-        devChan.send(`Hey ${developerRole.toString()}, a user submitted a feedback report:\n${feedbackReport}`);
+        await devChan.send(`Hey ${developerRole.toString()}, a user submitted a feedback report:\n${feedbackReport}`);
 
         const embed = embedTemplate()
           .setColor(Colors.Purple)

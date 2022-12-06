@@ -32,24 +32,26 @@ export const emojiUpdate: EmojiUpdateEvent = {
     // Since there's only 1 audit log entry in this collection, grab the first one
     const auditLog = fetchedLogs.entries.first();
 
-    const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    const auditlog = client.channels.cache.get(env.CHANNEL_AUDITLOG) as TextChannel;
 
     // Perform a coherence check to make sure that there's *something*
     if (!auditLog) {
-      botlog.send(`Emoji ${newEmoji.name} was updated, but no relevant audit logs were found.`);
+      await auditlog.send(`Emoji ${newEmoji.name} was updated, but no relevant audit logs were found.`);
       return;
     }
 
     let response = '' as string;
 
+    const changes = auditLog.changes.map(change => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`);
+
     if (auditLog.executor) {
       response = `Emoji **${newEmoji.toString()}** was updated by ${auditLog.executor.tag}:`;
-      response += `\n${auditLog.changes.map(change => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
+      response += `\n${changes.join('\n')}`; // eslint-disable-line max-len
     } else {
       response = `Emoji ${newEmoji.toString()} was updated, but the audit log was inconclusive.`;
-      response += `\n${auditLog.changes.map(change => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`).join('\n')}`; // eslint-disable-line max-len
+      response += `\n${changes.join('\n')}`; // eslint-disable-line max-len
     }
 
-    botlog.send(response);
+    await auditlog.send(response);
   },
 };

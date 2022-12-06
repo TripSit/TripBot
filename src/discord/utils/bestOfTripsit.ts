@@ -42,11 +42,9 @@ export async function bestOf(reaction:MessageReaction) {
 
     const channelObj = (reaction.message.channel as TextChannel);
 
-    if (channelObj.parentId) {
-      if (tripsitterChannels.includes(channelObj.parentId)) {
-        // log.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
-        return;
-      }
+    if (channelObj.parentId && tripsitterChannels.includes(channelObj.parentId)) {
+      // log.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
+      return;
     }
 
     const channel = channelObj.guild.channels.cache.get(env.CHANNEL_BESTOF) as TextChannel;
@@ -93,7 +91,7 @@ export async function bestOf(reaction:MessageReaction) {
         embed.setImage(`${attachmentUrl}`);
       }
 
-      channel.send({ embeds: [embed] });
+      await channel.send({ embeds: [embed] });
     }
   }
 }

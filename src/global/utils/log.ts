@@ -34,7 +34,7 @@ const myFormat = printf(({
   }
 
   // This makes it so that the logs look nice and even
-  // Idk why the length is 15, maybe cuz of colors?
+  // Idk why the length is 15, maybe cuz of colors
   if (level.length < 15) {
     msg += `${level}  `;
   } else {
@@ -59,7 +59,8 @@ let transportOptions = [];
 if (env.NODE_ENV === 'production') {
   transportOptions = [
     new transports.Console(),
-    new LogtailTransport(new Logtail('wCKy55XyvN5aJRqyiRTYbza5')),
+
+    new LogtailTransport(new Logtail('UHsXGDC8SgMzMNSNXeqyFpf7')),
   ];
 } else {
   transportOptions = [

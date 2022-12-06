@@ -48,7 +48,7 @@ export const dDramacounter: SlashCommand = {
     // log.debug(`[${PREFIX}] interaction.guild: ${JSON.stringify(interaction.guild, null, 2)}`);
 
     let lastDramaAt = {} as Date;
-    let dramaReason = '' as string;
+    let dramaReason = '';
     if (command === 'set') {
       const dramaVal = interaction.options.getString('dramatime');
       // log.debug(`[${PREFIX}] dramaVal: ${JSON.stringify(dramaVal, null, 2)}`);

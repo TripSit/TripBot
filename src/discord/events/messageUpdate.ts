@@ -1,14 +1,16 @@
 import {
+  Colors,
   TextChannel,
 } from 'discord.js';
-// import { parse } from 'path';
+import { parse } from 'path';
 import {
   MessageUpdateEvent,
 } from '../@types/eventDef';
 import env from '../../global/utils/env.config';
-// import log from '../../global/utils/log';
+import { embedTemplate } from '../utils/embedTemplate';
+import log from '../../global/utils/log'; // eslint-disable-line @typescript-eslint/no-unused-vars
 // eslint-disable-line no-unused-vars
-// const PREFIX = parse(__filename).name;
+const PREFIX = parse(__filename).name; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -30,8 +32,25 @@ export const messageUpdate: MessageUpdateEvent = {
     if (!newMessage.author) return;
     if (newMessage.author.bot) return;
 
-    const response = `Message ${newMessage.id} was edited by ${newMessage.author.tag} in ${(newMessage.channel as TextChannel).name} from ${oldMessage.content} to ${newMessage.content}.`; // eslint-disable-line max-len
-    const botlog = newMessage.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-    botlog.send(response);
+    const oldContent = oldMessage !== undefined && oldMessage !== null ? oldMessage.content : '(Not found)';
+    log.debug(`[${PREFIX}] oldContent: ${oldContent}`);
+    const newContent = newMessage !== undefined && newMessage !== null ? newMessage.content : '(Not found)';
+    log.debug(`[${PREFIX}] newContent: ${newContent}`);
+
+    const embed = embedTemplate()
+      .setAuthor(null)
+      .setFooter(null)
+      .setColor(Colors.Yellow)
+      .setTitle(`${newMessage.member?.nickname} edited msg in ${(newMessage.channel as TextChannel).name}`)
+      .setURL(newMessage.url)
+      .addFields([
+        { name: 'Old Message', value: oldContent, inline: true },
+        { name: 'New Message', value: newContent, inline: true },
+      ]);
+
+    // const response = `Message ${newMessage.id} was edited by ${newMessage.author.tag} in
+    // ${(newMessage.channel as TextChannel).name} from ${oldMessage.content} to ${newMessage.content}.`;
+    const msglog = newMessage.client.channels.cache.get(env.CHANNEL_MSGLOG) as TextChannel;
+    await msglog.send({ embeds: [embed] });
   },
 };

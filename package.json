@@ -1,6 +1,6 @@
 {
   "name": "tripsit-tripbot",
-  "version": "6.0.0",
+  "version": "6.0.3",
   "description": "A bot for TripSit (and maybe the world)",
   "main": "start.ts",
   "engines": {
@@ -11,15 +11,16 @@
     "start": "npm run deploy && ts-node --transpile-only src/start.ts",
     "dev": "npm run lint && npm run patch && npm run nodemon",
     "setup": "npm run lint && npm run patch && npm run docker-build && npm run docker-run",
-    "test": "NODE_ENV=test jest -c ./src/jest/jest.unit.config.ts",
+    "test": "NODE_ENV=test jest -c ./jest/jest.unit.config.ts",
     "lint": "eslint --fix --ext .ts,.js .",
+    "lintO": "eslint --format json --output-file ./eslint-report.json --fix --ext .ts,.js .",
     "patch": "npm version patch -git-tag-version false",
     "nodemon": "nodemon --inspect=0.0.0.0:9229 --config ./nodemon.json",
     "docker-rebuild": "npm run docker-build && npm run docker-run",
     "docker-build": "docker compose build",
     "docker-run": "docker compose up -d",
     "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
-    "sonar-scanner": "sonar-scanner   -Dsonar.projectKey=tripbot   -Dsonar.sources=.   -Dsonar.host.url=https://sonarqube.pantheon.tripsit.me   -Dsonar.login=ec3c544afc5fee1baf64900580ddac40fc3cb97b"
+    "sonar-scanner": "sonar-scanner"
   },
   "repository": {
     "type": "git",
@@ -88,6 +89,7 @@
     "eslint-import-resolver-typescript": "^3.5.1",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jest": "^27.1.5",
+    "eslint-plugin-sonarjs": "^0.16.0",
     "jest": "^29.3.1",
     "knex-types": "^0.4.0",
     "nodemon": "^2.0.20",

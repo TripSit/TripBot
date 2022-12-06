@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+/* eslint-disable sonarjs/no-duplicate-string */
 
 export interface TsSubstance {
   name: string;

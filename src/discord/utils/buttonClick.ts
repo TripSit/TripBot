@@ -128,7 +128,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
 
       // log.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
       const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-      channelTripbotlogs.send({
+      await channelTripbotlogs.send({
         content: `Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`,
       });
 
@@ -200,7 +200,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
             // log.debug(`[${PREFIX}] Member already has role!`);
             return;
           }
-          channelGeneral.send({ embeds: [embed] });
+          await channelGeneral.send({ embeds: [embed] });
         }
       }
     }
@@ -220,7 +220,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
       .setColor(Colors.Green)
       .setDescription(`${interaction.user.username} has acknowledged their warning.`);
     if (modChan) {
-      modChan.send({ embeds: [embed] });
+      await modChan.send({ embeds: [embed] });
     }
     interaction.reply('Thanks for understanding!');
     return;
@@ -234,7 +234,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     const embed = embedTemplate()
       .setColor(Colors.Red)
       .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
-    modChan.send({ embeds: [embed] });
+    await modChan.send({ embeds: [embed] });
     interaction.reply('Thanks for making this easy!');
     return;
   }
@@ -247,7 +247,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
       .setColor(Colors.Green)
       .setDescription(`${interaction.user.username} has acknowledged their warning.`);
     if (botOwner) {
-      botOwner.send({ embeds: [embed] });
+      await botOwner.send({ embeds: [embed] });
     }
     interaction.reply('Thanks for understanding!');
     return;
@@ -256,7 +256,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     const embed = embedTemplate()
       .setColor(Colors.Red)
       .setDescription(`${interaction.user.username} has refused their warning and was banned.`);
-    modChan.send({ embeds: [embed] });
+    await modChan.send({ embeds: [embed] });
     interaction.reply('Thanks for making this easy!');
     return;
   }

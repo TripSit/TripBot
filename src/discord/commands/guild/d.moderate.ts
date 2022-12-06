@@ -39,12 +39,12 @@ export const mod: SlashCommand = {
         .setRequired(true))
       .setName('info'))
     .addSubcommand(subcommand => subcommand
-      .setDescription('Ban a user')
+      .setDescription('Full ban a user')
       .addStringOption(option => option
         .setName('target')
-        .setDescription('User to ban!')
+        .setDescription('User to fully ban!')
         .setRequired(true))
-      .setName('ban'))
+      .setName('full_ban'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Underban a user')
       .addStringOption(option => option
@@ -112,7 +112,7 @@ export const mod: SlashCommand = {
     // log.debug(`[${PREFIX}] targetMember: ${targetMember}`);
 
     let verb = '';
-    if (command === 'BAN') {
+    if (command === 'FULL_BAN') {
       verb = 'banning';
     } else if (command === 'UNBAN') {
       verb = 'unbanning';
@@ -179,7 +179,7 @@ export const mod: SlashCommand = {
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReasonInput);
     modal.addComponents(firstActionRow);
 
-    if (['WARNING', 'KICK', 'TIMEOUT', 'UNTIMEOUT', 'BAN', 'UNBAN', 'UNDERBAN', 'UNUNDERBAN'].includes(command)) {
+    if (['WARNING', 'KICK', 'TIMEOUT', 'UNTIMEOUT', 'FULL_BAN', 'UNBAN', 'UNDERBAN', 'UNUNDERBAN'].includes(command)) {
       const pubReasonText = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReasonInput);
       modal.addComponents(pubReasonText);
     }
@@ -187,7 +187,7 @@ export const mod: SlashCommand = {
       const timeoutDurationText = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutDuration);
       modal.addComponents(timeoutDurationText);
     }
-    if (command === 'BAN') {
+    if (command === 'FULL_BAN') {
       const deleteMessagesText = new ActionRowBuilder<TextInputBuilder>().addComponents(deleteMessages);
       modal.addComponents(deleteMessagesText);
     }
@@ -198,6 +198,7 @@ export const mod: SlashCommand = {
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[2] !== interaction.id) return;
+        i.deferReply({ ephemeral: true });
         const privReason = i.fields.getTextInputValue('privReason');
         let pubReason = '';
         try {
@@ -208,11 +209,11 @@ export const mod: SlashCommand = {
         let duration = null as number | null;
         try {
           const durationInput = i.fields.getTextInputValue('duration');
-          if (command === 'BAN' || command === 'UNDERBAN') {
+          if (command === 'FULL_BAN' || command === 'UNDERBAN') {
             // Check if the given duration is a number between 0 and 7
             const days = parseInt(durationInput, 10);
             if (Number.isNaN(days) || days < 0 || days > 7) {
-              i.reply({ content: 'Invalid number of days given', ephemeral: true });
+              i.editReply({ content: 'Invalid number of days given' });
               return;
             }
             duration = duration
@@ -239,7 +240,7 @@ export const mod: SlashCommand = {
           duration,
         );
           // log.debug(`[${PREFIX}] Result: ${result}`);
-        i.reply(result);
+        i.editReply(result);
       });
 
     return false;

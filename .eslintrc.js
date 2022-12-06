@@ -10,9 +10,11 @@ module.exports = {
   },
   extends: [
     'airbnb-base',
+    'plugin:sonarjs/recommended',
   ],
   plugins: [
     '@typescript-eslint',
+    'sonarjs',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -29,6 +31,8 @@ module.exports = {
     '@typescript-eslint/no-non-null-assertion': 'warn',
     'max-len': ['warn', { code: 120 }],
     '@typescript-eslint/no-explicit-any': 'warn',
+    // The following will show up as errors, just want to get this pushed for now
+    'sonarjs/cognitive-complexity': ['warn', 50],
   },
 
   overrides: [

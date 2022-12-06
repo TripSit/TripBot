@@ -38,7 +38,6 @@ export enum DrugRoa {
 }
 
 export enum ExperienceType {
-  Total = 'TOTAL',
   General = 'GENERAL',
   Tripsitter = 'TRIPSITTER',
   Developer = 'DEVELOPER',

@@ -4,6 +4,8 @@
     },
     "include": [
       "./src/**/*.ts",
+      "./jest/**/*.ts",
+      "./jest/**/**/*.ts",
     ],
     "exclude": [
       "*/node_modules",

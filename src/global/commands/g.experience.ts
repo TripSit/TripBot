@@ -1,11 +1,13 @@
 import { parse } from 'path';
 import { db, getUser } from '../utils/knex';
-import { UserExperience } from '../@types/pgdb';
+import { UserExperience, ExperienceType } from '../@types/pgdb';
 import log from '../utils/log';
 
 const PREFIX = parse(__filename).name;
 
 export default experience;
+
+type ExpTypeNames = 'Total' | 'Tripsitter' | 'Team' | 'Developer' | 'General' | 'Ignored';
 
 /**
  * Get a user's experience
@@ -18,19 +20,31 @@ export async function experience(
   const userData = await getUser(userId, null);
   const experienceData = await db<UserExperience>('user_experience')
     .where('user_id', userData.id)
+    .andWhereNot('type', 'TOTAL')
     .orderBy('level', 'desc');
 
   // log.debug(`[${PREFIX}] experienceData: ${JSON.stringify(experienceData, null, 2)}`);
 
-  let response = '';
+  let allExpPoints = 0;
+  experienceData.forEach(exp => {
+    allExpPoints += exp.total_points;
+  });
+  let totalLevel = 0;
+  let totalLevelPoints = allExpPoints;
+  let totalExpToLevel = 0;
+  while (totalLevelPoints > totalExpToLevel) {
+    totalExpToLevel = 5 * (totalLevel ** 2) + (50 * totalLevel) + 100;
+    totalLevel += 1;
+    totalLevelPoints -= totalExpToLevel;
+  }
+
+  let response = `**Level ${totalLevel} Total**: : All experience combined\n`;
   for (const row of experienceData) { // eslint-disable-line no-restricted-syntax
   // log.debug(`[${PREFIX}] row: ${JSON.stringify(row, null, 2)}`);
     // Lowercase besides the first letter
-    const levelName = (row.type as string).charAt(0).toUpperCase() + (row.type as string).slice(1).toLowerCase();
+    const levelName = (row.type as ExperienceType).charAt(0).toUpperCase()
+    + (row.type as ExperienceType).slice(1).toLowerCase() as ExpTypeNames;
     response += `**Level ${row.level} ${levelName}**`;
-    if (levelName === 'Total') {
-      response += ': All experience combined\n';
-    }
     if (levelName === 'Tripsitter') {
       response += `: Harm Reduction Center category
       (Must have Helper role to get Sitter exp!)\n`;

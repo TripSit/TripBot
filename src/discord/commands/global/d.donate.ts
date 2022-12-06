@@ -35,10 +35,11 @@ export const dDonate: SlashCommand = {
     // for (const entry of donateInfo) {
     donateInfo.forEach(entry => {
       if (entry.value.length > 0) {
+        const hyperlink = `[Website](${entry.value})`;
         embed.addFields(
           {
             name: entry.name,
-            value: `${entry.value !== '\u200B' ? `[Website](${entry.value})` : entry.value}`,
+            value: `${entry.value !== '\u200B' ? hyperlink : entry.value}`,
             inline: true,
           },
         );
