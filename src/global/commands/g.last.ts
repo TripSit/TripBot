@@ -2,17 +2,16 @@
 import {
   GuildMember,
   time,
-  Guild,
 } from 'discord.js';
 import {
   ChannelType,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
+import { parse } from 'path';
 import env from '../utils/env.config';
-// import * as path from 'path';
-// import log from '../utils/log';
+import log from '../utils/log';
 
-// const PREFIX = path.parse(__filename).name;
+const PREFIX = parse(__filename).name;
 
 export default last;
 
@@ -31,7 +30,7 @@ export async function last(
   // log.debug(`[${PREFIX}] started!`);
   // This function will find all messages sent by the user in all channels
   // and return an array of messages
-  const guild = target.guild as Guild;
+  const { guild } = target;
   let totalMessages = 0;
   const messageInfo = [] as {
     channel: string;
@@ -48,20 +47,24 @@ export async function last(
             if (channel.parentId === env.CATEGORY_TEAMTRIPSIT) return;
             if (channel.parentId === env.CATEGORY_DEVELOPMENT) return;
             if (channel.type === ChannelType.GuildText) {
-              await channel.messages.fetch()
-                .then(async messages => {
-                  const memberMessages = messages.filter(message => message.author.id === target.id);
-                  totalMessages += memberMessages.size;
-                  // Get the info for each message and append it to messageInfo
-                  memberMessages.forEach(message => {
-                  // log.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}`);
-                    messageInfo.push({
-                      channel: `<#${message.channelId}>`,
-                      content: message.content,
-                      timestamp: message.createdAt,
+              try {
+                await channel.messages.fetch()
+                  .then(async messages => {
+                    const memberMessages = messages.filter(message => message.author.id === target.id);
+                    totalMessages += memberMessages.size;
+                    // Get the info for each message and append it to messageInfo
+                    memberMessages.forEach(message => {
+                    // log.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}`);
+                      messageInfo.push({
+                        channel: `<#${message.channelId}>`,
+                        content: message.content,
+                        timestamp: message.createdAt,
+                      });
                     });
                   });
-                });
+              } catch (error) {
+                log.error(`[${PREFIX}] error: ${error}`);
+              }
             }
           }),
         )
