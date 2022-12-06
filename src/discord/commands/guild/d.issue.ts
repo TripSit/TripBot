@@ -98,7 +98,7 @@ export const dIssue: SlashCommand = {
         // log.debug(`[${PREFIX}] env.DISCORD_OWNER_ID: ${env.DISCORD_OWNER_ID}`);
         const sentByOwner = i.user.id === env.DISCORD_OWNER_ID;
         if (!sentByOwner) {
-          issueBody += `This issue was submitted by ${(i.member as GuildMember).displayName} in ${i.guild}`;
+          issueBody += `\n\nThis issue was submitted by ${(i.member as GuildMember).displayName} in ${i.guild}`;
         }
 
         // log.debug(`[${PREFIX}] issueBody: ${JSON.stringify(issueBody, null, 2)}`);
