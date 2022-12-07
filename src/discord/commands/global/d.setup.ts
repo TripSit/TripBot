@@ -10,9 +10,8 @@ import {
   ModalBuilder,
   TextInputBuilder,
   SelectMenuBuilder,
-  GuildMember,
   ModalSubmitInteraction,
-  // Role,
+  PermissionResolvable,
 } from 'discord.js';
 import {
   ButtonStyle, TextInputStyle,
@@ -29,72 +28,13 @@ import { startLog } from '../../utils/startLog';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import log from '../../../global/utils/log';
+import { hasPermissions } from '../../utils/checkPermissions';
 
 const PREFIX = parse(__filename).name;
 
 const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
 
 const channelOnly = 'You must run this in the channel you want the prompt to be in!';
-
-/**
- * Checks to see if the bot has the right permissions
- * @param {ChatInputCommandInteraction} interaction The guild to check
- * @param {TextChannel} channel
- * @return {Promise<boolean>}
- */
-export async function hasPermissions(
-  interaction: ChatInputCommandInteraction,
-  channel: TextChannel,
-):Promise<boolean> {
-  // log.debug(`[${PREFIX}] Checking permissions`);
-  if (!interaction.guild) {
-    const embed = embedTemplate()
-      .setTitle('This command can only be used in a server!');
-    interaction.editReply({ embeds: [embed] });
-    return false;
-  }
-  const me = interaction.guild.members.me as GuildMember;
-  const channelPerms = channel.permissionsFor(me);
-  // log.debug(`[${PREFIX}] channelPerms: ${channelPerms?.toArray()}`);
-
-  if (!channelPerms.has('ViewChannel')) {
-    const embed = embedTemplate()
-      .setTitle(`I need the 'ViewChannel' permissions in ${channel.name} to view the channel!`);
-    interaction.followUp({ embeds: [embed] });
-    return false;
-  }
-  if (!channelPerms.has('SendMessages')) {
-    const embed = embedTemplate()
-      .setTitle(`I need the 'SendMessages' permissions in ${channel.name} to send messages!`);
-    interaction.followUp({ embeds: [embed] });
-    return false;
-  }
-  if (!channelPerms.has('CreatePrivateThreads')) {
-    const embed = embedTemplate()
-      .setTitle(`I need the 'CreatePrivateThreads' permissions in ${channel.name} to create a private thread!`);
-    interaction.followUp({ embeds: [embed] });
-    return false;
-  }
-  if (!channelPerms.has('CreatePublicThreads')) {
-    const embed = embedTemplate()
-      .setTitle(`I need the 'CreatePublicThreads' permissions in ${channel.name} create a public thread!`);
-    interaction.followUp({ embeds: [embed] });
-    return false;
-  }
-  if (!channelPerms.has('SendMessagesInThreads')) {
-    const embed = embedTemplate()
-      .setTitle(`I need the 'SendMessagesInThreads' permissions in ${channel.name} send messages in threads!`);
-    interaction.followUp({ embeds: [embed] });
-    return false;
-  }
-  if (!channelPerms.has('EmbedLinks')) {
-    const embed = embedTemplate()
-      .setTitle(`I need the 'EmbedLinks' permissions in ${channel.name} send messages in threads!`);
-    interaction.followUp({ embeds: [embed] });
-    return false;
-  }
-  return true;
-}
 
 /**
  * The tripsit prompt
@@ -114,12 +54,34 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  if (!await hasPermissions(interaction, (interaction.channel as TextChannel))) {
+  if (!await hasPermissions(
+    interaction,
+    (interaction.channel as TextChannel),
+    [
+      'ViewChannel' as PermissionResolvable,
+      'SendMessages' as PermissionResolvable,
+      'CreatePrivateThreads' as PermissionResolvable,
+      'CreatePublicThreads' as PermissionResolvable,
+      'SendMessagesInThreads' as PermissionResolvable,
+      'EmbedLinks' as PermissionResolvable,
+    ],
+  )) {
     // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
     return;
   }
 
-  if (!await hasPermissions(interaction, (interaction.options.getChannel('metatripsit') as TextChannel))) {
+  if (!await hasPermissions(
+    interaction,
+    (interaction.options.getChannel('metatripsit') as TextChannel),
+    [
+      'ViewChannel' as PermissionResolvable,
+      'SendMessages' as PermissionResolvable,
+      'CreatePrivateThreads' as PermissionResolvable,
+      'CreatePublicThreads' as PermissionResolvable,
+      'SendMessagesInThreads' as PermissionResolvable,
+      'EmbedLinks' as PermissionResolvable,
+    ],
+  )) {
     // log.debug(`${PREFIX} bot does NOT has permission to post!`);
     return;
   }
@@ -223,8 +185,18 @@ export async function applications(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  const hasPermission = await hasPermissions(interaction, (interaction.channel as TextChannel));
-  if (!hasPermission) {
+  if (!await hasPermissions(
+    interaction,
+    (interaction.channel as TextChannel),
+    [
+      'ViewChannel' as PermissionResolvable,
+      'SendMessages' as PermissionResolvable,
+      'CreatePrivateThreads' as PermissionResolvable,
+      'CreatePublicThreads' as PermissionResolvable,
+      'SendMessagesInThreads' as PermissionResolvable,
+      'EmbedLinks' as PermissionResolvable,
+    ],
+  )) {
     // log.debug(`[${PREFIX}] bot does NOT has permission to post in ${interaction.channel}!`);
     return;
   }
@@ -355,7 +327,18 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  if (!await hasPermissions(interaction, (interaction.channel as TextChannel))) {
+  if (!await hasPermissions(
+    interaction,
+    (interaction.channel as TextChannel),
+    [
+      'ViewChannel' as PermissionResolvable,
+      'SendMessages' as PermissionResolvable,
+      'CreatePrivateThreads' as PermissionResolvable,
+      'CreatePublicThreads' as PermissionResolvable,
+      'SendMessagesInThreads' as PermissionResolvable,
+      'EmbedLinks' as PermissionResolvable,
+    ],
+  )) {
     // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
     return;
   }

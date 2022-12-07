@@ -10,6 +10,7 @@ import { parse } from 'path';
 import env from '../../global/utils/env.config';
 import { ReadyEvent } from '../@types/eventDef';
 import log from '../../global/utils/log';
+import { checkGuildPermissions } from '../utils/checkPermissions';
 
 import { startStatusLoop } from '../utils/statusLoop';
 
@@ -40,10 +41,11 @@ export const ready: ReadyEvent = {
   name: 'ready',
   once: true,
   async execute(client) {
+    const tripsitGuild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
     await setTimeout(1000);
     startStatusLoop(client);
-    Promise.all([getInvites(client)])
-      .then(async () => {
+    Promise.all([checkGuildPermissions(client, tripsitGuild)]).then(async () => {
+      Promise.all([getInvites(client)]).then(async () => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
         log.info(`[${PREFIX}] Discord finished booting in ${bootDuration}s!`);
         if (env.NODE_ENV !== 'development') {
@@ -53,5 +55,6 @@ export const ready: ReadyEvent = {
           await botlog.send(`Hey ${tripbotdevrole}, bot has restart! Booted in ${bootDuration} seconds`);
         }
       });
+    });
   },
 };
