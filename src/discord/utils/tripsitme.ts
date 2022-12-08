@@ -806,7 +806,11 @@ export async function tripSitMe(
   const embed = embedTemplate()
     .setColor(Colors.DarkBlue)
     .setDescription(replyMessage);
-  interaction.reply({ embeds: [embed], ephemeral: true });
+  if (interaction.replied) {
+    interaction.followUp({ embeds: [embed] });
+  } else {
+    interaction.reply({ embeds: [embed], ephemeral: true });
+  }
   // log.debug(`[${PREFIX}] Sent response to ${target.user.tag}`);
 
   // Send the intro message to the thread
@@ -855,7 +859,7 @@ export async function tripSitMe(
       parse: showMentions,
     },
     flags: ['SuppressEmbeds'],
-  }).then((message) => {
+  }).then(message => {
     message.pin();
   });
 

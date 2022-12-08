@@ -52,10 +52,12 @@ export const channelPinsUpdate: ChannelPinsUpdateEvent = {
     if (pinLog.executor) {
       response = `Channel ${pinLog.executor.tag} pinned a message in ${channel.name}:`;
       // Get the message that was pinned
-      const message = await (channel as TextBasedChannel).messages.fetch(pinLog.extra.messageId);
-      response += `
-        > ${message.content}
-      `;
+      if ((channel as TextBasedChannel).messages === undefined) {
+        const message = await (channel as TextBasedChannel).messages.fetch(pinLog.extra.messageId);
+        response += `
+          > ${message.content}
+        `;
+      }
     } else {
       response = `Channel ${channel.name} had a message pinned, but the audit log was inconclusive.`;
     }
