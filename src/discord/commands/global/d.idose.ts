@@ -10,7 +10,6 @@ import {
   ChannelType,
   ButtonStyle,
 } from 'discord-api-types/v10';
-import { parse } from 'path';
 import { idose } from '../../../global/commands/g.idose';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -18,9 +17,8 @@ import { parseDuration } from '../../../global/utils/parseDuration';
 import { paginationEmbed } from '../../utils/pagination';
 import { DrugRoa, DrugMassUnit } from '../../../global/@types/pgdb';
 import { startLog } from '../../utils/startLog';
-import log from '../../../global/utils/log'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
-const PREFIX = parse(__filename).name;
+const PREFIX = f(__filename);
 
 const buttonList = [
   new ButtonBuilder().setCustomId('previousbtn').setLabel('Previous').setStyle(ButtonStyle.Danger),

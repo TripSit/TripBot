@@ -5,13 +5,10 @@ import {
 import {
   GatewayIntentBits,
 } from 'discord-api-types/v10';
-import { parse } from 'path';
-import env from '../global/utils/env.config';
-import log from '../global/utils/log';
 import { registerCommands } from './commands';
 import { registerEvents } from './events';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default discordConnect;
 
@@ -56,5 +53,5 @@ export async function discordConnect(): Promise<void> {
 
   Promise.all([registerCommands(client), registerEvents(client)])
     .then(() => client.login(env.DISCORD_CLIENT_TOKEN))
-    .then(() => log.info(`[${PREFIX}] ${client.user?.username} logged in!`));
+    .then(() => log.info(`${F} ${client.user?.username} logged in!`));
 }

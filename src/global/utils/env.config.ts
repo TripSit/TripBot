@@ -3,7 +3,8 @@ require('dotenv').config();
 
 const isProd = process.env.NODE_ENV === 'production';
 
-export default {
+export const env = {
+
   NODE_ENV: isProd ? 'production' : 'development',
   DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,
   DISCORD_GUILD_ID: process.env.DISCORD_GUILD_ID,
@@ -250,3 +251,12 @@ export default {
   EMOJI_CONSULTANT: isProd ? '<:ts_coder:979557703972163644>' : '<:ts_coder:980934790893142106>',
   EMOJI_CLEARMIND: isProd ? '<:ts_clearmind:979557762621136997>' : '<:ts_clearmind:980934790834442240>',
 };
+
+export default env;
+
+declare global {
+  // eslint-disable-next-line no-var, vars-on-top
+  var env: any; // NOSONAR
+}
+
+global.env = env;

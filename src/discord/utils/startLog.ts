@@ -1,18 +1,11 @@
-/* eslint-disable max-len */
 import {
   ChatInputCommandInteraction,
   UserContextMenuCommandInteraction,
   MessageContextMenuCommandInteraction,
   ButtonInteraction,
-  // CommandInteractionOption,`
   SelectMenuInteraction,
-  // ModalSubmitInteraction,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-// import { parse } from 'path';
-import log from '../../global/utils/log';
-
-// const PREFIX = parse(__filename).name;
 
 export default startLog;
 
@@ -23,7 +16,11 @@ export default startLog;
 * */
 export async function startLog(
   prefix: string,
-  interaction: ChatInputCommandInteraction | UserContextMenuCommandInteraction | MessageContextMenuCommandInteraction | ButtonInteraction | SelectMenuInteraction,
+  interaction: ChatInputCommandInteraction
+  | UserContextMenuCommandInteraction
+  | MessageContextMenuCommandInteraction
+  | ButtonInteraction
+  | SelectMenuInteraction,
 ): Promise<void> {
   const guild = interaction.guild ? `in ${interaction.guild.name} (${interaction.guild?.id})` : 'in DM';
   let message = `[${prefix}] via ${interaction.user.tag} (${interaction.user.id}) \

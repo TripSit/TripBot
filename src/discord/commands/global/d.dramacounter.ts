@@ -3,16 +3,14 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { DateTime } from 'luxon';
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { dramacounter } from '../../../global/commands/g.dramacounter';
 import { startLog } from '../../utils/startLog';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { SlashCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
-// import log from '../../../global/utils/log';
 
-const PREFIX = parse(__filename).name;
+const PREFIX = f(__filename);
 
 export default dDramacounter;
 

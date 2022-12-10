@@ -3,10 +3,12 @@ import {
   format,
   transports,
   addColors,
+  Logger,
 } from 'winston';
+import { parse } from 'path';
 import { Logtail } from '@logtail/node';
 import { LogtailTransport } from '@logtail/winston';
-import env from './env.config';
+// import env from './env.config';
 
 const {
   combine,
@@ -68,7 +70,7 @@ if (env.NODE_ENV === 'production') {
   ];
 }
 
-const log = createLogger({
+export const log = createLogger({
   level: 'debug',
   format: combine(
     format.colorize({ all: true }),
@@ -78,5 +80,19 @@ const log = createLogger({
   ),
   transports: transportOptions,
 });
+
+declare global {
+  type Log = Logger;
+  // eslint-disable-next-line no-var, vars-on-top
+  var log: Log; // NOSONAR
+  // eslint-disable-next-line no-var, vars-on-top
+  var f:(filename:string) => string; // NOSONAR
+}
+
+global.log = log;
+
+global.f = function f(filename: string) {
+  return `[${parse(filename).name}]`;
+};
 
 export default log;
