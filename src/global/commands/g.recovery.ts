@@ -1,5 +1,3 @@
-import { parse } from 'path';
-
 const F = f(__filename);
 
 export default recovery;

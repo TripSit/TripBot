@@ -1,7 +1,5 @@
-import { parse } from 'path';
 import { db, getGuild } from '../utils/knex';
 import { DiscordGuilds } from '../@types/pgdb';
-
 
 const F = f(__filename);
 

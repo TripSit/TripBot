@@ -1,4 +1,3 @@
-import { parse } from 'path';
 import { db, getUser } from '../utils/knex';
 import { UserExperience, ExperienceType } from '../@types/pgdb';
 

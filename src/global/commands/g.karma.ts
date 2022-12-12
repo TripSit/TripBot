@@ -1,4 +1,3 @@
-import { parse } from 'path';
 import { getUser } from '../utils/knex';
 import { Users } from '../@types/pgdb.d';
 

@@ -5,7 +5,7 @@ import {
   Routes,
 } from 'discord-api-types/v10';
 import fs from 'fs/promises';
-import path, { parse } from 'path';
+import path from 'path';
 import { SlashCommand } from '../@types/commandDef';
 import { validateEnv } from '../../global/utils/env.validate';
 
@@ -46,7 +46,7 @@ if (validateEnv()) {
     )),
   ])
     .then(() => {
-      log.info(F, `Commands successfully registered!`);
+      log.info(F, 'Commands successfully registered!');
     })
     .catch(ex => {
       log.error(F, `Error in registering commands: ${ex}`);

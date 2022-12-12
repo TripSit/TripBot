@@ -6,7 +6,7 @@ import {
   User,
 } from 'discord.js';
 // import { DateTime } from 'luxon';
-// import { parse } from 'path';
+
 // import { stripIndents } from 'common-tags';
 // import env from '../../global/utils/env.config';
 import { db } from '../../global/utils/knex';

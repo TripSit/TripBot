@@ -1,6 +1,6 @@
 // 'use strict';
 
-// import { parse } from 'path';
+
 
 // const F = f(__filename);
 // const { stripIndents } = require('common-tags');

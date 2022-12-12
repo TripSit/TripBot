@@ -10,7 +10,6 @@ import {
 // import {SlashCommand} from './commandDef';
 import { embedTemplate } from './embedTemplate';
 
-
 const F = f(__filename);
 
 export default commandRun;

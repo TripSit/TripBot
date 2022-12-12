@@ -3,7 +3,6 @@ import {
 } from 'discord.js';
 import Fuse from 'fuse.js';
 
-
 import pillColors from '../../global/assets/data/pill_colors.json';
 import pillShapes from '../../global/assets/data/pill_shapes.json';
 import drugDataAll from '../../global/assets/data/drug_db_combined.json';

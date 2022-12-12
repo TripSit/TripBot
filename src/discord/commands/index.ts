@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 // import log from '../../global/utils/log';
-// import { parse } from 'path';
+
 // const F = f(__filename);
 
 export default registerCommands;

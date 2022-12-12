@@ -1,5 +1,3 @@
-import { parse } from 'path';
-
 import drugDataTripsit from '../assets/data/drug_db_tripsit.json';
 
 const F = f(__filename);

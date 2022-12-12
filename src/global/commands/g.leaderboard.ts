@@ -1,4 +1,3 @@
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { db, getUser } from '../utils/knex';
 import { UserExperience } from '../@types/pgdb';

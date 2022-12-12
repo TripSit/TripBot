@@ -3,7 +3,7 @@ import {
   User,
   // Role,
 } from 'discord.js';
-// import { parse } from 'path';
+
 // import { stripIndents } from 'common-tags';
 import { db } from '../../global/utils/knex';
 // import {

@@ -1,6 +1,3 @@
-import { parse } from 'path';
-
-
 // Make an array of animal emojis
 const animals = [
   '🐌', '🐒', '🐔', '🐗', '🐚', '🐛', '🐜', '🐝', '🐞', '🐤', '🐦', '🐧',

@@ -1,4 +1,3 @@
-import { parse } from 'path';
 import { CbSubstance } from '../@types/combined.d';
 import drugDataAll from '../assets/data/drug_db_combined.json';
 

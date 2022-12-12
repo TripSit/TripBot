@@ -1,4 +1,3 @@
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 
 import drugDataAll from '../assets/data/drug_db_combined.json';

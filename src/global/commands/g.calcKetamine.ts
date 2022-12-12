@@ -1,6 +1,3 @@
-import { parse } from 'path';
-
-
 const F = f(__filename);
 
 /**
