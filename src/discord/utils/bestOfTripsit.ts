@@ -11,17 +11,13 @@ import env from '../../global/utils/env.config';
 // import {parse} from 'path';
 // const PREFIX = parse(__filename).name;
 
-const tripsitterChannels = [
-  env.CHANNEL_TRIPSIT,
-  env.CHANNEL_SANCTUARY,
-  env.CHANNEL_TRIPSITMETA,
-  env.CHANNEL_DRUGQUESTIONS,
-  env.CHANNEL_OPENTRIPSIT1,
-  env.CHANNEL_OPENTRIPSIT2,
+const ignoredCategories = [
+  env.CATEGORY_TEAMTRIPSIT,
+  env.CATEGROY_HARMREDUCTIONCENTRE,
 ];
 
 // How many votes are needed for each action, in production and dev
-const votePinThreshold = env.NODE_ENV === 'production' ? 5 : 2;
+const votePinThreshold = env.NODE_ENV === 'production' ? 5 : 1;
 
 export default bestOf;
 
@@ -33,27 +29,22 @@ export default bestOf;
  */
 export async function bestOf(reaction:MessageReaction) {
   if (reaction.count === votePinThreshold && reaction.emoji.name?.includes('upvote')) {
-    // log.debug(`[${PREFIX}] Message has reached pin threshold!`);
-    // Check if the message.channe.id is in the list of tripsitter channels
-    if (tripsitterChannels.includes(reaction.message.channel.id)) {
-      // log.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
-      return;
-    }
+    if (reaction.message.partial) await reaction.message.fetch();
 
     const channelObj = (reaction.message.channel as TextChannel);
 
-    if (channelObj.parentId && tripsitterChannels.includes(channelObj.parentId)) {
-      // log.debug(`[${PREFIX}] Message sent in a tripsitter channel`);
+    if (channelObj.parentId && ignoredCategories.includes(channelObj.parentId)) {
+      // log.debug(`[${PREFIX}] Message sent in an ignored channel`);
       return;
     }
 
-    const channel = channelObj.guild.channels.cache.get(env.CHANNEL_BESTOF) as TextChannel;
+    const channelBestof = channelObj.guild.channels.cache.get(env.CHANNEL_BESTOF) as TextChannel;
 
     // log.debug(`[${PREFIX}] Sending message to ${channel.name}`);
 
-    if (channel !== undefined) {
+    if (channelBestof !== undefined) {
       reaction.message.reply(
-        stripIndents`This got ${votePinThreshold} upvotes and has been pinned to ${channel.toString()}!`,
+        stripIndents`This got ${votePinThreshold} upvotes and has been pinned to ${channelBestof.toString()}!`,
       );
 
       if (reaction.partial) await reaction.fetch();
@@ -64,11 +55,14 @@ export async function bestOf(reaction:MessageReaction) {
         month: 'long',
         day: 'numeric',
       });
-      let attachmentUrl = null;
 
-      if (reaction.message.attachments.at(0) !== undefined) {
-        attachmentUrl = reaction.message.attachments.at(0)?.url;
-      }
+      const attachmentUrl = reaction.message.attachments.at(0) !== undefined
+        ? reaction.message.attachments.at(0)?.url
+        : null;
+
+      const embedUrl = reaction.message.embeds.at(0)?.thumbnail !== undefined
+        ? reaction.message.embeds.at(0)?.thumbnail?.url
+        : null;
 
       // log.debug(`[${PREFIX}] attachmentUrl: ${attachmentUrl}`);
 
@@ -84,14 +78,19 @@ export async function bestOf(reaction:MessageReaction) {
         )
         .setFooter({ text: `Sent in #${(reaction.message.channel as TextChannel).name} at ${formattedDate}` });
 
-      if (reaction.message.content) {
+      if (reaction.message.content && !embedUrl) {
         embed.setDescription(reaction.message.content);
       }
+
       if (attachmentUrl) {
         embed.setImage(`${attachmentUrl}`);
       }
 
-      await channel.send({ embeds: [embed] });
+      if (embedUrl) {
+        embed.setImage(`${embedUrl}`);
+      }
+
+      await channelBestof.send({ embeds: [embed] });
     }
   }
 }
