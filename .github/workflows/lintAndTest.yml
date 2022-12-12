@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - development
+  push:
+    branches:
       - dev/logUpdate
 
 jobs:
