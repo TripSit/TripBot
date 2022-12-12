@@ -86,13 +86,30 @@ declare global {
   // eslint-disable-next-line no-var, vars-on-top
   var log: Log; // NOSONAR
   // eslint-disable-next-line no-var, vars-on-top
+  var logging: { // NOSONAR
+    info: (prefix:string, message:string) => Log,
+    error: (prefix:string, message:string) => Log,
+    warn: (prefix:string, message:string) => Log,
+    debug: (prefix:string, message:string) => Log,
+    http: (prefix:string, message:string) => Log,
+  };
+  // eslint-disable-next-line no-var, vars-on-top
   var f:(filename:string) => string; // NOSONAR
 }
 
+export const logging = {
+  info: (F: string, message: string) => log.info(`[${F}] ${message}`),
+  error: (F: string, message: string) => log.error(`[${F}] ${message}`),
+  warn: (F: string, message: string) => log.warn(`[${F}] ${message}`),
+  debug: (F: string, message: string) => log.debug(`[${F}] ${message}`),
+  http: (F: string, message: string) => log.http(`[${F}] ${message}`),
+};
+
 global.log = log;
+global.logging = logging;
 
 global.f = function f(filename: string) {
-  return `[${parse(filename).name}]`;
+  return `${parse(filename).name}`;
 };
 
 export default log;
