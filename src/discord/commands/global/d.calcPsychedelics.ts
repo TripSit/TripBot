@@ -21,7 +21,7 @@ export const dCalcpsychedelics: SlashCommand = {
       .addNumberOption(option => option.setName('last_dose')
         .setDescription('ug of LSD')
         .setRequired(true))
-      .addIntegerOption(option => option.setName('days')
+      .addNumberOption(option => option.setName('days')
         .setDescription('Number of days since last dose?')
         .setRequired(true))
       .addNumberOption(option => option.setName('desired_dose')
@@ -32,7 +32,7 @@ export const dCalcpsychedelics: SlashCommand = {
       .addNumberOption(option => option.setName('last_dose')
         .setDescription('g of mushrooms')
         .setRequired(true))
-      .addIntegerOption(option => option.setName('days')
+      .addNumberOption(option => option.setName('days')
         .setDescription('Number of days since last dose?')
         .setRequired(true))
       .addNumberOption(option => option.setName('desired_dose')
@@ -41,7 +41,7 @@ export const dCalcpsychedelics: SlashCommand = {
     startLog(F, interaction);
     const lastDose = interaction.options.getNumber('last_dose', true);
     const desiredDose = interaction.options.getNumber('desired_dose');
-    const days = interaction.options.getInteger('days', true);
+    const days = interaction.options.getNumber('days', true);
 
     const command = interaction.options.getSubcommand();
 

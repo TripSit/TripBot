@@ -8,6 +8,7 @@ import {
 import { Logtail } from '@logtail/node';
 import { LogtailTransport } from '@logtail/winston';
 import { parse } from 'path';
+import { env } from './env.config';
 //
 
 const {

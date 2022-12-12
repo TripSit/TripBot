@@ -6,6 +6,7 @@ import {
 } from 'discord-api-types/v10';
 import fs from 'fs/promises';
 import path from 'path';
+import { log } from '../../global/utils/log';
 import { SlashCommand } from '../@types/commandDef';
 import { validateEnv } from '../../global/utils/env.validate';
 
@@ -31,9 +32,7 @@ if (validateEnv()) {
 // log.debug(F, `discordClientId: ${env.DISCORD_CLIENT_ID}`);
 // log.debug(F, `discordGuildId: ${env.DISCORD_GUILD_ID}`);
 
-  const rest = new REST({ version: '9' }).setToken(
-    env.DISCORD_CLIENT_TOKEN as string,
-  );
+  const rest = new REST({ version: '9' }).setToken(env.DISCORD_CLIENT_TOKEN);
 
   Promise.all([
     getCommands('global').then(commands => rest.put(

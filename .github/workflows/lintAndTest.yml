@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - development
+      - dev/logUpdate
 
 jobs:
   LintTest:
