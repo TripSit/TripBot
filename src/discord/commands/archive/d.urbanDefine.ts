@@ -1,14 +1,13 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { urbandefine } from '../../../global/commands/archive/g.urbandefine';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dUrbandefine;
 
@@ -22,7 +21,7 @@ export const dUrbandefine: SlashCommand = {
       .setRequired(true)),
 
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const term = interaction.options.getString('define');
     if (!term) {
       interaction.reply({ content: 'You must enter a search query.', ephemeral: true });

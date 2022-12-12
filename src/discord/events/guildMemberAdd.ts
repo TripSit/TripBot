@@ -6,18 +6,15 @@ import {
   Collection,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import {
   GuildMemberAddEvent,
 } from '../@types/eventDef';
 import { db } from '../../global/utils/knex';
-import log from '../../global/utils/log';
-import env from '../../global/utils/env.config';
 import { embedTemplate } from '../utils/embedTemplate';
 
 import { Users } from '../../global/@types/pgdb';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default guildMemberAdd;
 
@@ -28,7 +25,7 @@ export const guildMemberAdd: GuildMemberAddEvent = {
     if (member.guild.id !== env.DISCORD_GUILD_ID) {
       return;
     }
-    log.info(`[${PREFIX}] ${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
+    log.info(F, `${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
 
     const newInvites = await member.guild.invites.fetch();
     const cachedInvites = global.guildInvites.get(member.guild.id);
@@ -40,7 +37,7 @@ export const guildMemberAdd: GuildMemberAddEvent = {
         ? `Joined via ${inviter.tag}'s invite to ${invite.channel?.name} (${invite.code}-${invite.uses})`
         : 'Joined via the vanity url';
     }
-    // log.debug(`[${PREFIX}] inviteInfo: ${inviteInfo}`);
+    // log.debug(F, `inviteInfo: ${inviteInfo}`);
     global.guildInvites.set(
       member.guild.id,
       new Collection(newInvites.map(inviteEntry => [inviteEntry.code, inviteEntry.uses])),
@@ -54,11 +51,11 @@ export const guildMemberAdd: GuildMemberAddEvent = {
       .onConflict('discord_id')
       .merge();
 
-    // log.debug(`[${PREFIX}] Date.now(): ${Date.now()}`);
-    // log.debug(`[${PREFIX}] member.user.createdAt: ${member.user.createdAt.toString()}`);
+    // log.debug(F, `Date.now(): ${Date.now()}`);
+    // log.debug(F, `member.user.createdAt: ${member.user.createdAt.toString()}`);
 
     const diff = Math.abs(Date.now() - Date.parse(member.user.createdAt.toString()));
-    // log.debug(`[${PREFIX}] diff: ${diff}`);
+    // log.debug(F, `diff: ${diff}`);
     const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
     const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
     const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));

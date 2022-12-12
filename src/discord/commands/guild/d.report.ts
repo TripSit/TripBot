@@ -11,7 +11,6 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
-import { parse } from 'path';
 import { env } from 'process';
 import { SlashCommand } from '../../@types/commandDef';
 import { startLog } from '../../utils/startLog';
@@ -20,7 +19,7 @@ import { moderate } from '../../../global/commands/g.moderate';
 // import log from '../../../global/utils/log';
 import { UserActionType } from '../../../global/@types/pgdb';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dReport;
 
@@ -34,7 +33,7 @@ export const dReport: SlashCommand = {
       .setName('target')),
 
   async execute(interaction: ChatInputCommandInteraction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     // Only run on tripsit
     if (!interaction.guild) {
       await interaction.reply({ content: 'This command can only be used in a server!', ephemeral: true });
@@ -53,11 +52,11 @@ export const dReport: SlashCommand = {
     // await interaction.editReply({embeds: [embed]});
 
     const target = interaction.options.getString('target') as string;
-    // log.debug(`[${PREFIX}] target: ${target}`);
+    // log.debug(F, `target: ${target}`);
     const targetId = target.replace(/[<@!>]/g, '');
-    // log.debug(`[${PREFIX}] targetId: ${targetId}`);
+    // log.debug(F, `targetId: ${targetId}`);
     const targetMember = await interaction.guild.members.fetch(targetId) as GuildMember;
-    // log.debug(`[${PREFIX}] targetMember: ${targetMember}`);
+    // log.debug(F, `targetMember: ${targetMember}`);
 
     const modal = new ModalBuilder()
       .setCustomId(`modModal~report~${interaction.id}`)
@@ -87,7 +86,7 @@ export const dReport: SlashCommand = {
           null,
           null,
         );
-          // log.debug(`[${PREFIX}] Result: ${result}`);
+          // log.debug(F, `Result: ${result}`);
         i.reply(result);
       });
     return true;

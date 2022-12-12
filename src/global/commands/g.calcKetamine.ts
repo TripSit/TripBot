@@ -1,7 +1,7 @@
 import { parse } from 'path';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+
+const F = f(__filename);
 
 /**
  * Calculates insuffilated dosages
@@ -35,7 +35,7 @@ export async function calcKetamine(weight:number, unit:'lbs' | 'kg'):Promise<Ket
     const title = key.charAt(0).toUpperCase() + key.slice(1);
     noseDoseString += `**${title}**: ${noseDose[key as keyof typeof noseDose]}\n`;
   });
-  // log.debug(`[${PREFIX}] noseDoseString: ${noseDoseString}`);
+  // log.debug(F, `noseDoseString: ${noseDoseString}`);
 
   const buttDose = await generateInsufflatedDosages(calcWeight);
   let buttDoseString = '' as string;
@@ -44,14 +44,14 @@ export async function calcKetamine(weight:number, unit:'lbs' | 'kg'):Promise<Ket
     const title = key.charAt(0).toUpperCase() + key.slice(1);
     buttDoseString += `**${title}**: ${buttDose[key as keyof typeof buttDose]}\n`;
   });
-  // log.debug(`[${PREFIX}] buttDoseString: ${buttDoseString}`);
+  // log.debug(F, `buttDoseString: ${buttDoseString}`);
 
   const data = {
     insufflated: noseDoseString,
     rectal: buttDoseString,
   };
 
-  log.info(`[${PREFIX}] response: ${JSON.stringify(data, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(data, null, 2)}`);
   return data;
 }
 

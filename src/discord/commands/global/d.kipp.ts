@@ -1,13 +1,12 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
 import { startLog } from '../../utils/startLog';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dKipp;
 
@@ -17,7 +16,7 @@ export const dKipp: SlashCommand = {
     .setDescription('Keep it positive please!'),
 
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const happyEmojis = [
       '😀', '😃', '😄', '😊', '😁', '🥰', '😇', '😍', '😂', '🤣',
       '🙂', '😆', '😋', '😛', '🙃', '😜', '🤪', '😝', '🤗', '🤭',
@@ -26,13 +25,13 @@ export const dKipp: SlashCommand = {
     // Get 10 random happy emojis from the list above
     const rowA = [...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 8); // Sort the array
 
-    // log.debug(`[${PREFIX}] Row A: ${rowA}`);
+    // log.debug(F, `Row A: ${rowA}`);
     const rowB = '\n💜Keep It Positive Please!💜\n';
-    // log.debug(`[${PREFIX}] Row B: ${rowB}`);
+    // log.debug(F, `Row B: ${rowB}`);
     const rowC = [...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 8); // Sort the array
-    // log.debug(`[${PREFIX}] Row C: ${rowC}`);
+    // log.debug(F, `Row C: ${rowC}`);
     const output = rowA.join(' ') + rowB + rowC.join(' ');
-    // log.debug(`[${PREFIX}] Output: ${output}`);
+    // log.debug(F, `Output: ${output}`);
 
     const embed = embedTemplate()
       .setDescription(output)

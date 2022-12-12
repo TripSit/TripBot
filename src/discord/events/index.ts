@@ -2,7 +2,7 @@ import { Client } from 'discord.js';
 import fs from 'fs/promises';
 import path from 'path';
 // import log from '../../global/utils/log';
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 export default registerEvents;
 
@@ -12,7 +12,7 @@ export default registerEvents;
  */
 export async function registerEvents(client: Client): Promise<void> {
   const eventDir = path.join(__dirname, '../events');
-  // log.debug(`[${PREFIX}] eventDir: ${eventDir}`);
+  // log.debug(F, `eventDir: ${eventDir}`);
   const eventFiles = await fs.readdir(eventDir);
   eventFiles
     .filter(file => file.endsWith('.ts') && !file.endsWith('index.ts'))

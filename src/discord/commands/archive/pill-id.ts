@@ -10,7 +10,7 @@
 // const pillColors = require('../../../global/assets/data/pill_colors.json');
 // const pillShapes = require('../../../global/assets/data/pill_shapes.json');
 
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 // const {
 //   imgurId,
@@ -44,7 +44,7 @@
 //     const inputColor = interaction.options.getString('color');
 //     const inputShape = interaction.options.getString('shape');
 
-//     log.info(`[${PREFIX}] starting getPill with parameters: Imprint: ${inputImprint} Color: ${inputColor} Shape: ${inputShape}`);
+//     log.info(F, `starting getPill with parameters: Imprint: ${inputImprint} Color: ${inputColor} Shape: ${inputShape}`);
 
 //     // Loop through pill_colors to find the color
 //     let pillColorId = 0;
@@ -68,7 +68,7 @@
 //       .then(dom => dom.window.document);
 
 //     if (!document.querySelector('.pid-box-1')) {
-//     // log.debug(`[${PREFIX}] No results found for ${inputImprint} ${inputColor} ${inputShape}`);
+//     // log.debug(F, `No results found for ${inputImprint} ${inputColor} ${inputShape}`);
 //       return;
 //     }
 //     const firstResult = document.querySelector('.pid-box-1');
@@ -80,15 +80,15 @@
 //     const shaperegex = /(<li><b>Shape:<\/b> )(.*)(<\/li>)/;
 
 //     const drug = firstResult.getElementsByClassName('imprintdruglink')[0].innerHTML;
-//     // log.debug(`[${PREFIX}] drug: ${drug}`);
+//     // log.debug(F, `drug: ${drug}`);
 //     const details = firstResult.getElementsByClassName('ddc-pid-details')[0].innerHTML;
 //     const strengthmatched = details.match(strengthregex);
 //     const strength = strengthmatched[2];
-//   // log.debug(`[${PREFIX}] strength: ${strength}`);
+//   // log.debug(F, `strength: ${strength}`);
 
 //     const imprintmatched = details.match(imprintregex);
 //     const imprint = imprintmatched[2].toUpperCase();
-//   // log.debug(`[${PREFIX}] imprint: ${imprint}`);
+//   // log.debug(F, `imprint: ${imprint}`);
 
 //     const colormatched = details.match(colorregex);
 //     let color = 'Null';
@@ -96,11 +96,11 @@
 //       color = colormatched.at(2);
 //       color = color.replace('&amp;', '&');
 //     }
-//   // log.debug(`[${PREFIX}] color: ${color}`);
+//   // log.debug(F, `color: ${color}`);
 
 //     const shapematched = details.match(shaperegex);
 //     const shape = shapematched[2];
-//   // log.debug(`[${PREFIX}] shape: ${shape}`);
+//   // log.debug(F, `shape: ${shape}`);
 
 //     const embed = template.embedTemplate()
 //       .setAuthor({
@@ -124,24 +124,24 @@
 //       .then(dom => dom.window.document);
 
 //     if (!doc.querySelector('.pid-list')) {
-//     // log.debug(`[${PREFIX}] No results found for ${inputImprint} ${inputColor} ${inputShape}`);
+//     // log.debug(F, `No results found for ${inputImprint} ${inputColor} ${inputShape}`);
 //       return;
 //     }
 //     const details2 = doc.querySelector('.pid-list').innerHTML;
-//     // log.debug(`[${PREFIX}] details2: ${details2}`);
+//     // log.debug(F, `details2: ${details2}`);
 
 //     const availmatched = details2.match(/(<dt>Availability<\/dt>\n.*>)(.*)(<\/dd>)/);
-//     // log.debug(`[${PREFIX}] availmatched: ${availmatched[2]}`);
+//     // log.debug(F, `availmatched: ${availmatched[2]}`);
 
 //     const classMatched = details2.match(/(<dt>Drug Class<\/dt>\s.*\s.*">)(.*)(<\/a)/);
-//     // log.debug(`[${PREFIX}] class_matched: ${class_matched[2]}`);
+//     // log.debug(F, `class_matched: ${class_matched[2]}`);
 
 //     const desc = doc.querySelector('meta[name="twitter:description"]').content;
 //     // const desc = document.querySelector('meta[property=\'og:description\']');
-//     // log.debug(`[${PREFIX}] desc: ${desc}`);
+//     // log.debug(F, `desc: ${desc}`);
 //     embed.setDescription(desc);
 
-//     // log.debug(`[${PREFIX}] first_result: ${first_result}`);
+//     // log.debug(F, `first_result: ${first_result}`);
 //     embed.addFields(
 //       { name: 'Availability', value: availmatched[2], inline: true },
 //       { name: 'Class', value: classMatched[2], inline: true },
@@ -149,7 +149,7 @@
 //     // eslint-disable-next-line
 //     // It seems like drugs.com has some weird image handling, so we need to download the image and upload the image to imgur
 //     // I will eventually cache these images so we don't need to download/upload every time
-//   // log.debug(`[${PREFIX}] Starting axios image request`);
+//   // log.debug(F, `Starting axios image request`);
 
 //     const imgurUrl = await axios.get(imageURL, {
 //       responseType: 'stream',
@@ -160,7 +160,7 @@
 //       }))
 //       .then(imgurRes => imgurRes.data.link)
 //       .catch(ex => {
-//         log.error(`[${PREFIX}]`, ex);
+//         log.error(F, ``, ex);
 //         interaction.reply({
 //           embeds: [embed],
 //           ephemeral: false,

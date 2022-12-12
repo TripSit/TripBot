@@ -11,15 +11,13 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
-import env from '../../../global/utils/env.config';
 import { SlashCommand } from '../../@types/commandDef';
 import { issue } from '../../../global/commands/g.issue';
 import { startLog } from '../../utils/startLog';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dIssue;
 
@@ -57,7 +55,7 @@ export const dIssue: SlashCommand = {
       )
       .setName('effort')),
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     // Create the modal
     const modal = new ModalBuilder()
       .setCustomId(`issueModal~${interaction.id}`)
@@ -82,26 +80,26 @@ export const dIssue: SlashCommand = {
     modal.addComponents([title, body]);
     // Show the modal to the user
     await interaction.showModal(modal);
-    // log.debug(`[${PREFIX}] displayed modal!`);
+    // log.debug(F, `displayed modal!`);
 
     // Collect a modal submit interaction
     const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('issueModal');
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
-        // log.debug(`[${PREFIX}] submitted!`);
+        // log.debug(F, `submitted!`);
 
         // @ts-ignore https://discord.js.org/#/docs/discord.js/14.6.0/typedef/ModalData
         let issueBody = i.components[1].components[0].value;
 
-        // log.debug(`[${PREFIX}] i.user: ${i.user.id}`);
-        // log.debug(`[${PREFIX}] env.DISCORD_OWNER_ID: ${env.DISCORD_OWNER_ID}`);
+        // log.debug(F, `i.user: ${i.user.id}`);
+        // log.debug(F, `env.DISCORD_OWNER_ID: ${env.DISCORD_OWNER_ID}`);
         const sentByOwner = i.user.id === env.DISCORD_OWNER_ID;
         if (!sentByOwner) {
           issueBody += `\n\nThis issue was submitted by ${(i.member as GuildMember).displayName} in ${i.guild}`;
         }
 
-        // log.debug(`[${PREFIX}] issueBody: ${JSON.stringify(issueBody, null, 2)}`);
+        // log.debug(F, `issueBody: ${JSON.stringify(issueBody, null, 2)}`);
 
         // @ts-ignore https://discord.js.org/#/docs/discord.js/14.6.0/typedef/ModalData
         const labels = i.components[1].components[0].customId.split(',');
@@ -113,7 +111,7 @@ export const dIssue: SlashCommand = {
           filteredLabels,
         );
 
-        // log.debug(`[${PREFIX}] results: ${JSON.stringify(results, null, 2)}`);
+        // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
 
         if (results) {
           const embed = embedTemplate()

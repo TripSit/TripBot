@@ -1,9 +1,9 @@
 import { parse } from 'path';
 import { db, getGuild } from '../utils/knex';
 import { DiscordGuilds } from '../@types/pgdb';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+
+const F = f(__filename);
 
 export default dramacounter;
 
@@ -51,7 +51,7 @@ export async function dramacounter(
     response = { dramaReason, lastDramaAt };
   }
 
-  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }
 

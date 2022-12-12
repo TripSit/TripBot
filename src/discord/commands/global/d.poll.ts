@@ -4,13 +4,11 @@ import {
   Message,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { startLog } from '../../utils/startLog';
-import { embedTemplate } from '../../utils/embedTemplate';
-import log from '../../../global/utils/log'; // eslint-disable-line
+import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-line
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 const emojiDict = {
   1: '1️⃣',
@@ -39,13 +37,13 @@ export const dPoll: SlashCommand = {
       .setDescription('CSV of options, EG: "Red, Blue, Green"')
       .setRequired(true)),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     // await interaction.deferReply({ephemeral: true});
     // interaction.reply({ content: 'Creating poll...', ephemeral: true });
     const question = interaction.options.getString('question');
-    // log.debug(`[${PREFIX}] question: ${question}`);
+    // log.debug(F, `question: ${question}`);
     const optionsString = interaction.options.getString('choices');
-    // log.debug(`[${PREFIX}] optionsString: ${optionsString}`);
+    // log.debug(F, `optionsString: ${optionsString}`);
     if (!question || !optionsString) {
       await interaction.reply('You need to provide a question and options!');
       return false;

@@ -4,14 +4,13 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { donate } from '../../../global/commands/g.donate';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dDonate;
 
@@ -20,7 +19,7 @@ export const dDonate: SlashCommand = {
     .setName('donate')
     .setDescription('Shows different ways to support TripSit!'),
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const donateInfo = await donate();
     const embed = embedTemplate()
       .setColor(Colors.Purple)

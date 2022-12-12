@@ -53,5 +53,5 @@ export async function discordConnect(): Promise<void> {
 
   Promise.all([registerCommands(client), registerEvents(client)])
     .then(() => client.login(env.DISCORD_CLIENT_TOKEN))
-    .then(() => log.info(`${F} ${client.user?.username} logged in!`));
+    .then(() => log.info(F, `${client.user?.username} logged in!`));
 }

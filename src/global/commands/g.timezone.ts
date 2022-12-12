@@ -1,11 +1,10 @@
 /* eslint-disable max-len */
-import { parse } from 'path';
-import log from '../utils/log';
+
 import timezones from '../assets/data/timezones.json';
 import { db, getUser } from '../utils/knex';
 import { Users } from '../@types/pgdb';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default timezone;
 
@@ -21,7 +20,7 @@ export async function timezone(
   memberId: string,
   tzvalue?:string | null,
 ):Promise<string | null> {
-  // log.debug(`[${PREFIX}] tzvalue: ${command} ${memberId} ${tzvalue}`);
+  // log.debug(F, `tzvalue: ${command} ${memberId} ${tzvalue}`);
 
   let response = '' as string | null;
   if (command === 'set') {
@@ -30,10 +29,10 @@ export async function timezone(
     for (let i = 0; i < timezones.length; i += 1) {
       if (timezones[i].label === tzvalue) {
         tzCode = timezones[i].tzCode;
-        // log.debug(`[${PREFIX}] tzCode: ${tzCode}`);
+        // log.debug(F, `tzCode: ${tzCode}`);
       }
     }
-    // log.debug(`[${PREFIX}] actor.id: ${actor.id}`);
+    // log.debug(F, `actor.id: ${actor.id}`);
 
     await db<Users>('users')
       .insert({
@@ -50,21 +49,21 @@ export async function timezone(
 
   const userData = await getUser(memberId, null);
 
-  // log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData, null, 2)}`);
+  // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
   if (userData.timezone !== null) {
     const tzCode = userData.timezone;
     for (let i = 0; i < timezones.length; i += 1) {
       if (timezones[i].tzCode === tzCode) {
         gmtValue = timezones[i].offset;
-        // log.debug(`[${PREFIX}] gmtValue: ${gmtValue}`);
+        // log.debug(F, `gmtValue: ${gmtValue}`);
       }
     }
     // get the user's timezone from the database
     const timestring = new Date().toLocaleTimeString('en-US', { timeZone: tzCode });
     response = `It is likely ${timestring} (GMT${gmtValue})`;
-    log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+    log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   }
-  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }

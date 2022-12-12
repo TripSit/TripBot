@@ -2,13 +2,12 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { youtube } from '../../../global/commands/g.youtube';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export const dYoutube: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -20,9 +19,9 @@ export const dYoutube: SlashCommand = {
       .setName('search')),
 
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const query = interaction.options.getString('search');
-    // log.debug(`[${PREFIX}] - query: ${query}`);
+    // log.debug(F, `- query: ${query}`);
     if (!query) {
       interaction.reply({ content: 'You must enter a search query.', ephemeral: true });
       return false;
@@ -35,8 +34,8 @@ export const dYoutube: SlashCommand = {
       return true;
     }
 
-    // log.debug(`[${PREFIX}] - result: ${JSON.stringify(result, null, 2)}`);
-    // log.debug(`[${PREFIX}] - result: ${result.title} (${result.channelTitle}) (${result.link})`);
+    // log.debug(F, `- result: ${JSON.stringify(result, null, 2)}`);
+    // log.debug(F, `- result: ${result.title} (${result.channelTitle}) (${result.link})`);
 
     const embed = embedTemplate()
       .setColor(0xFF0000)

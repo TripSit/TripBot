@@ -6,15 +6,12 @@ import {
 import {
   ButtonStyle,
 } from 'discord-api-types/v10';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { startLog } from '../../utils/startLog';
-import env from '../../../global/utils/env.config';
-import log from '../../../global/utils/log';
 import { paginationEmbed } from '../../utils/pagination';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 const button1 = new ButtonBuilder()
   .setCustomId('previousbtn')
@@ -38,7 +35,7 @@ export const dHelp: SlashCommand = {
     .setName('help')
     .setDescription('Information bout TripBot Commands'),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
 
     const globalCommands = await interaction.client.application.commands.fetch();
     const guildCommands = await interaction.client.application.commands.fetch({ guildId: env.DISCORD_GUILD_ID });
@@ -49,15 +46,15 @@ export const dHelp: SlashCommand = {
      * @return {string}
      */
     function getDesc(commandName:string):string | undefined {
-      // log.debug(`[${PREFIX}] getDesc: ${commandName}`);
+      // log.debug(F, `getDesc: ${commandName}`);
       if (!globalCommands || !guildCommands) return undefined;
-      // log.debug(`[${PREFIX}] getDesc: ${desc}`);
+      // log.debug(F, `getDesc: ${desc}`);
       return globalCommands.filter(command => command.name === commandName).at(0)?.description
       ?? guildCommands.filter(command => command.name === commandName).at(0)?.description;
     }
 
     if (getDesc('drug') === undefined) {
-      log.error(`[${PREFIX}] getDesc('drug') is undefined`);
+      log.error(F, 'getDesc(\'drug\') is undefined');
       return false;
     }
 

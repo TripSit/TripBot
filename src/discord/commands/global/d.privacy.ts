@@ -7,7 +7,7 @@ import { privacy } from '../../../global/commands/g.privacy';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { startLog } from '../../utils/startLog';
 
-const PREFIX = f(__filename);
+const F = f(__filename);
 
 export default dPrivacy;
 
@@ -24,7 +24,7 @@ export const dPrivacy: SlashCommand = {
       .addStringOption(option => option.setName('confirmation')
         .setDescription('Enter your confirmation code to delete your data!'))),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const command = interaction.options.getSubcommand() as 'get' | 'delete';
     const embed = embedTemplate();
 

@@ -2,17 +2,14 @@ import {
   Colors,
   TextChannel,
 } from 'discord.js';
-import { parse } from 'path';
 import {
   GuildMemberRemoveEvent,
 } from '../@types/eventDef';
 import { db } from '../../global/utils/knex';
-import log from '../../global/utils/log';
-import env from '../../global/utils/env.config';
 import { embedTemplate } from '../utils/embedTemplate';
 import { Users } from '../../global/@types/pgdb';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default guildMemberRemove;
 
@@ -24,20 +21,20 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
       return;
     }
 
-    log.info(`[${PREFIX}] ${member} left guild: ${member.guild.name} (id: ${member.guild.id})`);
+    log.info(F, `${member} left guild: ${member.guild.name} (id: ${member.guild.id})`);
 
     const { joinedTimestamp } = member;
 
-    // log.debug(`[${PREFIX}] joinedTimestamp: ${joinedTimestamp}`);
+    // log.debug(F, `joinedTimestamp: ${joinedTimestamp}`);
     const embed = embedTemplate()
       .setColor(Colors.Red);
 
     if (joinedTimestamp) {
-      // log.debug(`[${PREFIX}] Date.now(): ${Date.now()}`);
+      // log.debug(F, `Date.now(): ${Date.now()}`);
       // display the difference between the two dates
       // NOTE: Can simplify with luxon
       const diff = Math.abs(Date.now() - joinedTimestamp);
-      // log.debug(`[${PREFIX}] diff: ${diff}`);
+      // log.debug(F, `diff: ${diff}`);
       const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365)) > 0
         ? `${Math.floor(diff / (1000 * 60 * 60 * 24 * 365))} years, `
         : '';

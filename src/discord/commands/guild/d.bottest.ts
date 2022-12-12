@@ -10,14 +10,11 @@ import {
 import {
 // TextInputStyle,
 } from 'discord-api-types/v10';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { startLog } from '../../utils/startLog';
-import env from '../../../global/utils/env.config';
-// import fs from 'fs/promises';
-import log from '../../../global/utils/log'; // eslint-disable-line
-const PREFIX = parse(__filename).name;
+// import fs from 'fs/promises'; // eslint-disable-line
+const F = f(__filename);
 // import drugDataAll from '../../../global/assets/data/drug_db_combined.json';
 // const drugNames = drugDataAll.map((d) => d.name);
 type ResultsObject = {
@@ -130,11 +127,11 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     deferReply: () => {},
   };
 
-  // log.debug(`[${PREFIX}] Running command: ${name}`);
+  // log.debug(F, `Running command: ${name}`);
 
   if (!testableCommands.includes(commandName)) return null;
 
-  // log.debug(`[${PREFIX}] in channel: ${(interaction.channel as TextChannel).name}`);
+  // log.debug(F, `in channel: ${(interaction.channel as TextChannel).name}`);
 
   if (!interaction.channel) return null;
 
@@ -928,7 +925,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     //   const target = await interaction.guild?.members.fetch('332687787172167680');
     //   testInteraction.options = {
     //     getMember: async (name:string) => {
-    //     // log.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
+    //     // log.debug(F, `target: ${JSON.stringify(target, null, 2)}`);
     //       if (name === 'user') return target;
     //       return null;
     //     },
@@ -995,25 +992,25 @@ async function testGlobal(
       .then(async globalCommands => {
         await interaction.followUp(`> Testing ${globalCommands.size} global commands!`);
         for (const command of globalCommands) { // eslint-disable-line no-restricted-syntax
-          // log.debug(`[${PREFIX}] Testing global command ${command[1].name}`);
+          // log.debug(F, `Testing global command ${command[1].name}`);
           await runCommand(interaction, command[1].name) // eslint-disable-line no-await-in-loop
             .then(result => {
               if (result === true) {
-                // log.debug(`[${PREFIX}] Global command ${command[1].name} passed!`);
+                // log.debug(F, `Global command ${command[1].name} passed!`);
                 results.total.push(command[1].name);
                 results.passed.push(command[1].name);
               } else if (result === false) {
-                // log.debug(`[${PREFIX}] Global command ${command[1].name} failed!`);
+                // log.debug(F, `Global command ${command[1].name} failed!`);
                 results.total.push(command[1].name);
                 results.failed.push(command[1].name);
               } else if (result === null) {
-                // log.debug(`[${PREFIX}] Global command ${command[1].name} was not tested!`);
+                // log.debug(F, `Global command ${command[1].name} was not tested!`);
               }
             });
         }
       });
     // .finally(() => {
-    //   // log.debug(`[${PREFIX}] Global commands results: ${JSON.stringify(results)}`);
+    //   // log.debug(F, `Global commands results: ${JSON.stringify(results)}`);
     // });
   }
   return results;
@@ -1036,19 +1033,19 @@ async function testGuild(
     .then(async guildCommands => {
       await interaction.followUp(`> Testing ${guildCommands.size} guild commands!`);
       for (const command of guildCommands) { // eslint-disable-line no-restricted-syntax
-        // log.debug(`[${PREFIX}] Testing guild command ${command[1].name}`);
+        // log.debug(F, `Testing guild command ${command[1].name}`);
         await runCommand(interaction, command[1].name) // eslint-disable-line no-await-in-loop
           .then(result => {
             if (result === true) {
-              // log.debug(`[${PREFIX}] Global command ${command[1].name} passed!`);
+              // log.debug(F, `Global command ${command[1].name} passed!`);
               results.total.push(command[1].name);
               results.passed.push(command[1].name);
             } else if (result === false) {
-              // log.debug(`[${PREFIX}] Global command ${command[1].name} failed!`);
+              // log.debug(F, `Global command ${command[1].name} failed!`);
               results.total.push(command[1].name);
               results.failed.push(command[1].name);
             } else if (result === null) {
-              // log.debug(`[${PREFIX}] Global command ${command[1].name} was not tested!`);
+              // log.debug(F, `Global command ${command[1].name} was not tested!`);
 
             }
           });
@@ -1071,7 +1068,7 @@ export const dBottest: SlashCommand = {
         { name: 'Global', value: 'Global' },
       )),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     if (!interaction.channel) {
       await interaction.reply('This command must be used in a channel!');
       return false;
@@ -1087,14 +1084,14 @@ export const dBottest: SlashCommand = {
 
     await testGlobal(interaction, results)
       .then(async globalResults => {
-        // log.debug(`[${PREFIX}] Global results: ${JSON.stringify(globalResults)}`);
+        // log.debug(F, `Global results: ${JSON.stringify(globalResults)}`);
         await testGuild(interaction, globalResults)
           .then(async guildResults => {
             if (!interaction.channel) {
               await interaction.reply('This command must be used in a channel!');
               return false;
             }
-            // log.debug(`[${PREFIX}] Guild results: ${JSON.stringify(guildResults)}`);
+            // log.debug(F, `Guild results: ${JSON.stringify(guildResults)}`);
             const embed = embedTemplate()
               .setTitle('Testing Results')
               .setDescription(`${guildResults.failed.length > 0

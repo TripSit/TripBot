@@ -6,15 +6,12 @@ import {
   TextChannel,
 } from 'discord.js';
 import { setTimeout } from 'timers/promises';
-import { parse } from 'path';
-import env from '../../global/utils/env.config';
 import { ReadyEvent } from '../@types/eventDef';
-import log from '../../global/utils/log';
 import { checkGuildPermissions } from '../utils/checkPermissions';
 
 import { startStatusLoop } from '../utils/statusLoop';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 // Initialize the invite cache
 global.guildInvites = new Collection();
@@ -47,7 +44,7 @@ export const ready: ReadyEvent = {
     Promise.all([checkGuildPermissions(client, tripsitGuild)]).then(async () => {
       Promise.all([getInvites(client)]).then(async () => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
-        log.info(`[${PREFIX}] Discord finished booting in ${bootDuration}s!`);
+        log.info(F, `Discord finished booting in ${bootDuration}s!`);
         if (env.NODE_ENV !== 'development') {
           const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
           const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;

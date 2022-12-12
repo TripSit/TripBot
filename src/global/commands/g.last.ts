@@ -7,11 +7,8 @@ import {
   ChannelType,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
-import env from '../utils/env.config';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default last;
 
@@ -27,7 +24,7 @@ export async function last(
     messageCount: number;
     totalMessages: number;
   }> {
-  // log.debug(`[${PREFIX}] started!`);
+  // log.debug(F, `started!`);
   // This function will find all messages sent by the user in all channels
   // and return an array of messages
   const { guild } = target;
@@ -54,7 +51,7 @@ export async function last(
                     totalMessages += memberMessages.size;
                     // Get the info for each message and append it to messageInfo
                     memberMessages.forEach(message => {
-                    // log.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}`);
+                    // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
                       messageInfo.push({
                         channel: `<#${message.channelId}>`,
                         content: message.content,
@@ -63,7 +60,7 @@ export async function last(
                     });
                   });
               } catch (error) {
-                log.error(`[${PREFIX}] error: ${error}`);
+                log.error(F, `error: ${error}`);
               }
             }
           }),
@@ -96,18 +93,18 @@ export async function last(
             messageInfo.forEach(message => {
               const messageStringTemp = `${time(message.timestamp, 'd')} ${message.channel}: ${message.content}\n`;
               // const messageUrl = `https://discord.com/channels/${guild.id}/${message.channel.id}/${message.id}`;
-              // log.debug(`[${PREFIX}] messageStringTemp: ${messageStringTemp}`);
-              // log.debug(`[${PREFIX}] size: ${messageString.length + messageStringTemp.length}`);
+              // log.debug(F, `messageStringTemp: ${messageStringTemp}`);
+              // log.debug(F, `size: ${messageString.length + messageStringTemp.length}`);
               if (messageString.length + messageStringTemp.length < 1950) {
                 messageStringIndex += 1;
                 messageString += messageStringTemp;
               }
             });
 
-            // log.debug(`[${PREFIX}] messageString: ${messageString}`);
-            // log.debug(`[${PREFIX}] messageStringIndex: ${messageStringIndex}`);
+            // log.debug(F, `messageString: ${messageString}`);
+            // log.debug(F, `messageStringIndex: ${messageStringIndex}`);
 
-            // log.debug(`[${PREFIX}] messageString: ${JSON.stringify(messageString, null, 2)}`);
+            // log.debug(F, `messageString: ${JSON.stringify(messageString, null, 2)}`);
             resolve({
               lastMessage: lastMessageText,
               messageList: messageString,

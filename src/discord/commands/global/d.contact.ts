@@ -3,14 +3,13 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { contact } from '../../../global/commands/g.contact';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dContact;
 
@@ -20,7 +19,7 @@ export const dContact: SlashCommand = {
     .setDescription('How to contact TripSit!'),
 
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const contactInfo = await contact();
     const embed = embedTemplate()
       .setColor(Colors.Purple)

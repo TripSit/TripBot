@@ -14,7 +14,7 @@ const F = f(__filename);
 * Starts everything in the bot.
 */
 async function start() {
-  log.info(`${F} Initializing service!`);
+  log.info(F, 'Initializing service!');
   if (!validateEnv()) return;
 
   if (env.DISCORD_CLIENT_TOKEN) {
@@ -27,7 +27,7 @@ async function start() {
 start();
 
 process.on('unhandledRejection', async (error: Error) => {
-  log.error(`${F} ERROR: ${error.stack}`);
+  log.error(F, `ERROR: ${error.stack}`);
   if (env.NODE_ENV === 'production') {
     const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
@@ -45,9 +45,9 @@ const destroy = () => {
   //     global.manager.teardown();
   //   }
   // } catch (err) {
-  //   log.error(`[${PREFIX}] ${err}`);
+  //   log.error(F, `${err}`);
   // }
-  // log.debug(`[${PREFIX}] Gracefully stopping the bot (CTRL + C pressed)`);
+  // log.debug(F, `Gracefully stopping the bot (CTRL + C pressed)`);
   process.exit(0);
 };
 process.on('SIGINT', destroy);

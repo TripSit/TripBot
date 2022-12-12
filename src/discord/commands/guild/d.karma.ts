@@ -2,13 +2,12 @@ import {
   SlashCommandBuilder,
   GuildMember,
 } from 'discord.js';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { karma } from '../../../global/commands/g.karma';
 import { startLog } from '../../utils/startLog';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 // const karmaQuotes = require('../../../global/assets/data/karma_quotes.json');
 
@@ -23,7 +22,7 @@ export const dKarma: SlashCommand = {
       .setDescription('User to lookup')
       .setRequired(true)),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const member = interaction.options.getMember('user') as GuildMember;
 
     const response = await karma(member.id);

@@ -1,9 +1,8 @@
 import { parse } from 'path';
 import { db, getUser } from '../utils/knex';
 import { UserExperience, ExperienceType } from '../@types/pgdb';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default experience;
 
@@ -23,7 +22,7 @@ export async function experience(
     .andWhereNot('type', 'TOTAL')
     .orderBy('level', 'desc');
 
-  // log.debug(`[${PREFIX}] experienceData: ${JSON.stringify(experienceData, null, 2)}`);
+  // log.debug(F, `experienceData: ${JSON.stringify(experienceData, null, 2)}`);
 
   let allExpPoints = 0;
   experienceData.forEach(exp => {
@@ -40,7 +39,7 @@ export async function experience(
 
   let response = `**Level ${totalLevel} Total**: : All experience combined\n`;
   for (const row of experienceData) { // eslint-disable-line no-restricted-syntax
-  // log.debug(`[${PREFIX}] row: ${JSON.stringify(row, null, 2)}`);
+  // log.debug(F, `row: ${JSON.stringify(row, null, 2)}`);
     // Lowercase besides the first letter
     const levelName = (row.type as ExperienceType).charAt(0).toUpperCase()
     + (row.type as ExperienceType).slice(1).toLowerCase() as ExpTypeNames;
@@ -67,6 +66,6 @@ export async function experience(
     response = 'No experience found!';
   }
 
-  log.info(`[${PREFIX}] response: ${response}`);
+  log.info(F, `response: ${response}`);
   return response;
 }

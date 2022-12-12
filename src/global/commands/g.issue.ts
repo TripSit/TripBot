@@ -1,11 +1,8 @@
 import { Octokit } from 'octokit';
 import { OctokitResponse } from '@octokit/types';
 import { Issue } from '@octokit/webhooks-types';
-import { parse } from 'path';
-import env from '../utils/env.config';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default issue;
 
@@ -50,7 +47,7 @@ export async function issue(
   }
 
   const results = await getResults() as OctokitResponse<Issue>;
-  log.info(`[${PREFIX}] response: ${JSON.stringify(results, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(results, null, 2)}`);
 
   return results;
 }

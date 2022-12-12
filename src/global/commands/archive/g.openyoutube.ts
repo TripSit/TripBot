@@ -1,7 +1,7 @@
 import * as yt from 'youtube-search-without-api-key';
-// import log from '../utils/log';
+// 
 // import {parse} from 'path';
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 /**
  * Looks up youtube videos

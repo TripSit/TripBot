@@ -2,7 +2,6 @@ import {
   EmbedBuilder,
   Colors,
 } from 'discord.js';
-import env from '../../global/utils/env.config';
 
 export default embedTemplate;
 

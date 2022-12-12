@@ -4,7 +4,6 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { startLog } from '../../utils/startLog';
@@ -12,7 +11,7 @@ import { h2flow } from '../../../global/commands/g.h2flow';
 
 // import log from '../../../global/utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dH2flow;
 
@@ -22,7 +21,7 @@ export const dH2flow: SlashCommand = {
     .setDescription('Welcome to the H2Flow Club!'),
 
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const data = await h2flow(interaction.user.id);
 
     const sparklePoints = data.sparkle_points;

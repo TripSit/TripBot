@@ -1,14 +1,13 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { ems } from '../../../global/commands/g.ems';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dEms;
 
@@ -17,7 +16,7 @@ export const dEms: SlashCommand = {
     .setName('ems')
     .setDescription('Information that may be helpful in a serious situation.'),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const emsInfo = await ems();
     const embed = embedTemplate();
 

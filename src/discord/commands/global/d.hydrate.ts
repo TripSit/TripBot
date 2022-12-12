@@ -3,12 +3,11 @@ import {
   Colors,
   SlashCommandBuilder,
 } from 'discord.js';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dHydrate;
 
@@ -18,7 +17,7 @@ export const dHydrate: SlashCommand = {
     .setDescription('Remember to hydrate!'),
 
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const output = stripIndents`
     💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊
     ⚠️ ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ ⚠️

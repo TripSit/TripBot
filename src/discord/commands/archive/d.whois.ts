@@ -2,14 +2,12 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { startLog } from '../../utils/startLog';
 // import {whoisIRC} from '../../../global/commands/archive/g.whois';
-import log from '../../../global/utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export const discordTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -21,7 +19,7 @@ export const discordTemplate: SlashCommand = {
       .setName('target')),
 
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     // const target = interaction.options.getString('target');
 
     // let body;

@@ -8,10 +8,8 @@ import {
 import {
   InviteCreateEvent,
 } from '../@types/eventDef';
-import env from '../../global/utils/env.config';
 // import log from '../../global/utils/log';
-// import * as path from 'path';
-// const PREFIX = path.parse(__filename).name;
+// const F= f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 

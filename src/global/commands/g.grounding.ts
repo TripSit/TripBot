@@ -1,7 +1,6 @@
 import { parse } from 'path';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default grounding;
 
@@ -11,6 +10,6 @@ export default grounding;
  */
 export async function grounding():Promise<string> {
   const response = 'https://imgur.com/wEg2xFB';
-  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }

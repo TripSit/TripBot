@@ -2,11 +2,8 @@ import {
   MessageReaction,
   User,
 } from 'discord.js';
-import { parse } from 'path';
-import log from '../../../global/utils/log';
-import env from '../../../global/utils/env.config';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 /**
  * This function removes duplicate roles from the role pickers
@@ -14,7 +11,7 @@ const PREFIX = parse(__filename).name;
  * @param {User} user The user that added the reaction
  */
 export async function removeDuplicates(reaction:MessageReaction, user:User) {
-// log.debug(`[${PREFIX}] starting!`);
+// log.debug(F, `starting!`);
   // const reactionAuthor = reaction.message.author;
   // const reactionEmoji = reaction.emoji;
 
@@ -24,12 +21,12 @@ export async function removeDuplicates(reaction:MessageReaction, user:User) {
     // If we're in the start-here channel, and the user who reacted is not a bot
     reaction.message.reactions.cache.forEach(async x => {
       // Loop through each reaction in the message
-      // log.debug(`[${PREFIX}] x.emoji.name: ${x.emoji.name}`);
-      // log.debug(`[${PREFIX}] r.emoji.name: ${reaction.emoji.name}`);
+      // log.debug(F, `x.emoji.name: ${x.emoji.name}`);
+      // log.debug(F, `r.emoji.name: ${reaction.emoji.name}`);
       if (x.emoji.name !== reaction.emoji.name) {
         // Look for reactions that are not the one we just added
-        // log.debug(`[${PREFIX}] Found other emoji, checking if IDS are the same`);
-        // log.debug(`[${PREFIX}] user.id: ${user.id}`);
+        // log.debug(F, `Found other emoji, checking if IDS are the same`);
+        // log.debug(F, `user.id: ${user.id}`);
         const reactUsers = await x.users.fetch();
         // Fetch the users who reacted to the message
         if (reactUsers.has(user.id)) {

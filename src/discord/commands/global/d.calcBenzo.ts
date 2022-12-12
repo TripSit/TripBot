@@ -4,13 +4,12 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcBenzo } from '../../../global/commands/g.calcBenzo';
 import { startLog } from '../../utils/startLog';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dCalcbenzo;
 
@@ -31,7 +30,7 @@ export const dCalcbenzo: SlashCommand = {
       .setRequired(true)),
 
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const dosage = interaction.options.getNumber('i_have', true);
     const drugA = interaction.options.getString('mg_of', true);
     const drugB = interaction.options.getString('and_i_want_the_dose_of', true);

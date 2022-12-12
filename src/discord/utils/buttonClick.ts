@@ -7,9 +7,6 @@ import {
   User,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
-import env from '../../global/utils/env.config';
-import log from '../../global/utils/log';
 import { startLog } from './startLog';
 import { embedTemplate } from './embedTemplate';
 import { applicationApprove } from './application';
@@ -26,7 +23,7 @@ import {
   modmailCreate, modmailActions,
 } from '../commands/guild/modmail';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default buttonClick;
 
@@ -37,12 +34,12 @@ export default buttonClick;
  * @return {Promise<void>}
  */
 export async function buttonClick(interaction:ButtonInteraction, client:Client) {
-  startLog(PREFIX, interaction);
+  startLog(F, interaction);
   const buttonID = interaction.customId;
   const command = client.commands.get(interaction.customId);
 
   if (command) {
-    // log.debug(`[${PREFIX}] command: ${command}`);
+    // log.debug(F, `command: ${command}`);
   }
 
   if (buttonID.startsWith('tripsitmeClick')) {
@@ -124,7 +121,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
       const memberRole = interaction.guild.roles.cache.find((role:Role) => role.id === env.ROLE_MEMBER);
       let colorValue = 1;
 
-      // log.debug(`[${PREFIX}] member: ${member.roles.cache}`);
+      // log.debug(F, `member: ${member.roles.cache}`);
 
       // log.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
       const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
@@ -144,14 +141,14 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        // log.debug(`[${PREFIX}] diff: ${diff}`);
-        // log.debug(`[${PREFIX}] years: ${years}`);
-        // log.debug(`[${PREFIX}] months: ${months}`);
-        // log.debug(`[${PREFIX}] weeks: ${weeks}`);
-        // log.debug(`[${PREFIX}] days: ${days}`);
-        // log.debug(`[${PREFIX}] hours: ${hours}`);
-        // log.debug(`[${PREFIX}] minutes: ${minutes}`);
-        // log.debug(`[${PREFIX}] seconds: ${seconds}`);
+        // log.debug(F, `diff: ${diff}`);
+        // log.debug(F, `years: ${years}`);
+        // log.debug(F, `months: ${months}`);
+        // log.debug(F, `weeks: ${weeks}`);
+        // log.debug(F, `days: ${days}`);
+        // log.debug(F, `hours: ${hours}`);
+        // log.debug(F, `minutes: ${minutes}`);
+        // log.debug(F, `seconds: ${seconds}`);
         if (years > 0) {
           colorValue = Colors.White;
         } else if (years === 0 && months > 0) {
@@ -167,7 +164,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
         } else if (minutes === 0 && seconds > 0) {
           colorValue = Colors.Red;
         }
-        // log.debug(`[${PREFIX}] coloValue: ${colorValue}`);
+        // log.debug(F, `coloValue: ${colorValue}`);
         const channelStart = member.client.channels.cache.get(env.CHANNEL_START.toString());
         const channelTechhelp = member.client.channels.cache.get(env.CHANNEL_HELPDESK);
         const channelBotspam = interaction.client.channels.cache.get(env.CHANNEL_BOTSPAM);
@@ -197,7 +194,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
             ephemeral: true,
           });
           if (member.roles.cache.has(memberRole.id as string)) {
-            // log.debug(`[${PREFIX}] Member already has role!`);
+            // log.debug(F, `Member already has role!`);
             return;
           }
           await channelGeneral.send({ embeds: [embed] });
@@ -242,7 +239,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     // Get the owner of the client
     await interaction.client.application.fetch();
     const botOwner = interaction.client.application.owner as User;
-    // log.debug(`[${PREFIX}] bot_owner: ${botOwner}`);
+    // log.debug(F, `bot_owner: ${botOwner}`);
     const embed = embedTemplate()
       .setColor(Colors.Green)
       .setDescription(`${interaction.user.username} has acknowledged their warning.`);
@@ -264,10 +261,10 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   if (!command) return;
 
   try {
-    // log.debug(`[${PREFIX}] Executing command: ${command.name}`);
+    // log.debug(F, `Executing command: ${command.name}`);
     command.execute(interaction);
   } catch (error) {
-    log.error(error);
+    log.error(F, error as string);
     interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
   }
 }

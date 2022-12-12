@@ -6,22 +6,20 @@ import {
 } from '../@types/eventDef';
 import { db, getGuild } from '../../global/utils/knex';
 import { DiscordGuilds } from '../../global/@types/pgdb';
-import env from '../../global/utils/env.config';
-import log from '../../global/utils/log';
 
-const PREFIX = require('path').parse(__filename).name;
+const F = f(__filename);
 
 export default guildCreate;
 
 export const guildCreate: GuildCreateEvent = {
   name: 'guildCreate',
   async execute(guild) {
-    log.info(`[${PREFIX}] Joined guild: ${guild.name} (id: ${guild.id})`);
+    log.info(F, `Joined guild: ${guild.name} (id: ${guild.id})`);
 
     const guildData = await getGuild(guild.id);
 
     if (guildData.is_banned) {
-      log.info(`[${PREFIX}] I'm banned from ${guild.name}, leaving!`);
+      log.info(F, `I'm banned from ${guild.name}, leaving!`);
       guild.leave();
       return;
     }
@@ -41,6 +39,6 @@ export const guildCreate: GuildCreateEvent = {
     Description: ${guild.description ? guild.description : 'No description'}
     `);
 
-  // log.debug(`[${PREFIX}] finished!`);
+  // log.debug(F, `finished!`);
   },
 };

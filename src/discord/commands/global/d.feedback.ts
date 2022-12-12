@@ -10,14 +10,11 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { startLog } from '../../utils/startLog';
 import { embedTemplate } from '../../utils/embedTemplate';
-import env from '../../../global/utils/env.config';
-import log from '../../../global/utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dFeedback;
 
@@ -26,7 +23,7 @@ export const dFeedback: SlashCommand = {
     .setName('feedback')
     .setDescription('Report a bug or other feedback to the bot dev team!'),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     // Create the modal
     const modal = new ModalBuilder()
       .setCustomId(`feedbackReportModal~${interaction.id}`)
@@ -56,12 +53,12 @@ export const dFeedback: SlashCommand = {
         const tripsitGuild = await i.client.guilds.fetch(env.DISCORD_GUILD_ID);
         const developerRole = tripsitGuild.roles.cache.find(role => role.id === env.ROLE_DEVELOPER);
         if (!developerRole) {
-          log.error(`[${PREFIX}]Developer role not found!`);
+          log.error(F, 'Developer role not found!');
           return;
         }
         const devChan = i.client.channels.cache.get(env.CHANNEL_TRIPBOT) as TextChannel;
         if (!devChan) {
-          log.error(`[${PREFIX}]Developer channel not found!`);
+          log.error(F, 'Developer channel not found!');
           return;
         }
         await devChan.send(`Hey ${developerRole.toString()}, a user submitted a feedback report:\n${feedbackReport}`);

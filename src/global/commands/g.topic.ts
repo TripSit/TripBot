@@ -1,8 +1,6 @@
 /* eslint-disable max-len */
-import { parse } from 'path';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 const topics = {
   1: 'What did you eat for breakfast?',
@@ -125,6 +123,6 @@ export default topic;
  */
 export async function topic():Promise<string> {
   const response = topics[Math.floor(Math.random() * Object.keys(topics).length) as keyof typeof topics];
-  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }

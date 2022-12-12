@@ -2,7 +2,7 @@
 
 // import { parse } from 'path';
 
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 // const { SlashCommandBuilder } = require('discord.js');
 // const logger = require('../../../global/utils/log');
 
@@ -171,10 +171,10 @@
 //       // eslint-disable-next-line no-await-in-loop
 //       const member = await interaction.guild.members.fetch({ query: name, limit: 1 });
 //       const target = member.first();
-//     // log.debug(`[${PREFIX}] member: ${target.toString()}`);
+//     // log.debug(F, `member: ${target.toString()}`);
 
 //       target.ban(member, { days: 7, reason: 'Raid account?' });
-//     // log.debug(`[${PREFIX}] Banned ${name}!`);
+//     // log.debug(F, `Banned ${name}!`);
 //     }
 //   },
 // };

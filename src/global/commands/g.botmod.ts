@@ -16,16 +16,12 @@ import {
 // import {ModActionDict} from '../@types/database.d';
 
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { db, getGuild, getUser } from '../utils/knex';
-
-import env from '../utils/env.config';
-import log from '../utils/log';
 import { DiscordGuilds, Users } from '../@types/pgdb';
 import { startLog } from '../../discord/utils/startLog';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 type GuildActionType = 'BOTKICK' | 'BOTBAN' | 'UNBOTBAN' | 'BOTWARNING' | 'BOTNOTE' | 'BOTINFO';
 type UserActionType = 'BOTBAN' | 'UNBOTBAN';
@@ -114,7 +110,7 @@ async function botmodUser(
     targetUserInfo.discord_bot_ban = false;
   }
 
-  log.debug(`[${PREFIX}] targetUserInfo: ${JSON.stringify(targetUserInfo, null, 2)}`);
+  log.debug(F, `targetUserInfo: ${JSON.stringify(targetUserInfo, null, 2)}`);
   await db<Users>('users')
     .insert(targetUserInfo)
     .onConflict('id')
@@ -137,15 +133,15 @@ async function botmodUser(
   await modChan.send({ content: `Hey ${roleModerator}`, embeds: [modlogEmbed] });
   const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
   modlog.send({ embeds: [modlogEmbed] });
-  // log.debug(`[${PREFIX}] sent a message to the moderators room`);
+  // log.debug(F, `sent a message to the moderators room`);
 
   // Return a message to the user confirming the user was acted on
-  // log.debug(`[${PREFIX}] ${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
+  // log.debug(F, `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
   const desc = `${targetUser.tag} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`;
   const response = embedTemplate()
     .setColor(Colors.Yellow)
     .setDescription(desc);
-  log.info(`[${PREFIX}] response: ${JSON.stringify(desc, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(desc, null, 2)}`);
   return { embeds: [response], ephemeral: true };
 }
 
@@ -231,7 +227,7 @@ async function botmodGuild(
   }
 
   if (command !== 'BOTINFO') {
-  // log.debug(`[${PREFIX}] actionData: ${JSON.stringify(actionData, null, 2)}`);
+  // log.debug(F, `actionData: ${JSON.stringify(actionData, null, 2)}`);
     await db<DiscordGuilds>('discord_guild')
       .insert(targetGuildInfo)
       .onConflict('id')
@@ -256,7 +252,7 @@ async function botmodGuild(
     await modChan.send({ content: `Hey ${roleModerator}`, embeds: [modlogEmbed] });
     const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
     modlog.send({ embeds: [modlogEmbed] });
-    // log.debug(`[${PREFIX}] sent a message to the moderators room`);
+    // log.debug(F, `sent a message to the moderators room`);
   }
 
   // If this is the info command then return with info
@@ -289,20 +285,20 @@ async function botmodGuild(
       );
 
     try {
-      // log.info(`[${PREFIX}] response: ${JSON.stringify(infoString, null, 2)}`);
+      // log.info(F, `response: ${JSON.stringify(infoString, null, 2)}`);
       return { embeds: [modlogEmbed], ephemeral: true };
     } catch (err) {
-      log.error(`[${PREFIX}] Error: ${err}`);
+      log.error(F, `Error: ${err}`);
     }
   }
 
   // Return a message to the user confirming the user was acted on
-  // log.debug(`[${PREFIX}] ${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
+  // log.debug(F, `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
   const desc = `${targetGuild.name} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`;
   const response = embedTemplate()
     .setColor(Colors.Yellow)
     .setDescription(desc);
-  log.info(`[${PREFIX}] response: ${JSON.stringify(desc, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(desc, null, 2)}`);
   return { embeds: [response], ephemeral: true };
 }
 
@@ -324,7 +320,7 @@ export async function botmod(
   privReason: string | null,
   pubReason: string | null,
 ):Promise<InteractionReplyOptions> {
-  startLog(PREFIX, interaction);
+  startLog(F, interaction);
   let response = {} as InteractionReplyOptions;
   if (group === 'user') {
     response = await botmodUser(interaction, actor, (command as UserActionType), target, privReason, pubReason);

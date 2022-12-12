@@ -11,7 +11,6 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import { MessageCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import { startLog } from '../../utils/startLog';
@@ -19,7 +18,7 @@ import { startLog } from '../../utils/startLog';
 import { moderate } from '../../../global/commands/g.moderate';
 import { UserActionType } from '../../../global/@types/pgdb';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default mTimeout;
 
@@ -28,7 +27,7 @@ export const mTimeout: MessageCommand = {
     .setName('Timeout')
     .setType(ApplicationCommandType.Message),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const actor = interaction.member as GuildMember;
     const target = interaction.targetMessage.member as GuildMember;
     const message = interaction.targetMessage.cleanContent;
@@ -80,7 +79,7 @@ export const mTimeout: MessageCommand = {
           minutes = duration
             ? await parseDuration(duration)
             : 604800000;
-          // log.debug(`[${PREFIX}] minutes: ${minutes}`);
+          // log.debug(F, `minutes: ${minutes}`);
         }
 
         const result = await moderate(
@@ -91,7 +90,7 @@ export const mTimeout: MessageCommand = {
           i.fields.getTextInputValue('pubReason'),
           minutes,
         );
-          // log.debug(`[${PREFIX}] Result: ${result}`);
+          // log.debug(F, `Result: ${result}`);
         i.reply(result);
       });
     return true;

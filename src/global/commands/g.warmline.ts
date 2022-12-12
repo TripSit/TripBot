@@ -1,7 +1,7 @@
 import { parse } from 'path';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+
+const F = f(__filename);
 
 export default warmline;
 
@@ -20,7 +20,7 @@ export async function warmline():Promise<HelpResource[]> {
       webchat: '',
     },
   ];
-  log.info(`[${PREFIX}] response: ${JSON.stringify(resources, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(resources, null, 2)}`);
   return resources;
 }
 

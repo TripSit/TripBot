@@ -5,10 +5,9 @@ import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
 import { WebhookUpdateEvent } from '../@types/eventDef';
-import env from '../../global/utils/env.config';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 export default webhookUpdate;
 

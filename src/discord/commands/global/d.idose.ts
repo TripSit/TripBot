@@ -18,7 +18,7 @@ import { paginationEmbed } from '../../utils/pagination';
 import { DrugRoa, DrugMassUnit } from '../../../global/@types/pgdb';
 import { startLog } from '../../utils/startLog';
 
-const PREFIX = f(__filename);
+const F = f(__filename);
 
 const buttonList = [
   new ButtonBuilder().setCustomId('previousbtn').setLabel('Previous').setStyle(ButtonStyle.Danger),
@@ -86,7 +86,7 @@ export const dIdose: SlashCommand = {
         .setDescription('Which record? (0, 1, 2, etc)')
         .setRequired(true))),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const embed = embedTemplate();
     const book = [] as EmbedBuilder[];
@@ -114,7 +114,7 @@ export const dIdose: SlashCommand = {
     let date = new Date();
     if (offset) {
       const out = await parseDuration(offset);
-      // log.debug(`[${PREFIX}] out: ${out}`);
+      // log.debug(F, `out: ${out}`);
       date.setTime(date.getTime() - out);
     }
 
@@ -129,7 +129,7 @@ export const dIdose: SlashCommand = {
       date,
     );
 
-    // log.debug(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+    // log.debug(F, `response: ${JSON.stringify(response, null, 2)}`);
 
     if (response[0] && response[0].name === 'Error') {
       await interaction.reply({ content: response[0].value, ephemeral: true });
@@ -152,14 +152,14 @@ export const dIdose: SlashCommand = {
           let pageFieldsCount = 0;
           for (let i = 0; i < response.length; i += 1) {
             pageFields.push({ name: response[i].name, value: response[i].value, inline: true });
-            // log.debug(`[${PREFIX}] Adding field ${field.name}`);
+            // log.debug(F, `Adding field ${field.name}`);
             pageFieldsCount += 1;
-            // log.debug(`[${PREFIX}] pageFieldsCount: ${pageFieldsCount}`);
+            // log.debug(F, `pageFieldsCount: ${pageFieldsCount}`);
             if (pageFieldsCount === 24) {
               pageEmbed.setFields(pageFields);
-              // log.debug(`[${PREFIX}] pageEmbed: ${JSON.stringify(pageEmbed)}`);
+              // log.debug(F, `pageEmbed: ${JSON.stringify(pageEmbed)}`);
               book.push(pageEmbed);
-              // log.debug(`[${PREFIX}] book.length: ${book.length}`);
+              // log.debug(F, `book.length: ${book.length}`);
               pageFields = [];
               pageFieldsCount = 0;
               pageEmbed = embedTemplate();
@@ -168,9 +168,9 @@ export const dIdose: SlashCommand = {
           // Add the last pageEmbed
           if (pageFieldsCount > 0) {
             pageEmbed.setFields(pageFields);
-            // log.debug(`[${PREFIX}] pageEmbed: ${JSON.stringify(pageEmbed)}`);
+            // log.debug(F, `pageEmbed: ${JSON.stringify(pageEmbed)}`);
             book.push(pageEmbed);
-            // log.debug(`[${PREFIX}] book.length: ${book.length}`);
+            // log.debug(F, `book.length: ${book.length}`);
           }
         }
         if (response.length <= 24) {
@@ -185,7 +185,7 @@ export const dIdose: SlashCommand = {
         embed.setTitle('No dose records!');
         embed.setDescription('You have no dose records, use /idose to add some!');
       }
-      // log.debug(`[${PREFIX}] book.length: ${book.length}`);
+      // log.debug(F, `book.length: ${book.length}`);
       if (book.length > 1) {
         paginationEmbed(interaction, book, buttonList);
       } else if (!interaction.channel) {
@@ -208,9 +208,9 @@ export const dIdose: SlashCommand = {
       }
 
       const timeString = time(date).valueOf().toString();
-      // log.debug(`[${PREFIX}] timeString: ${timeString}`);
+      // log.debug(F, `timeString: ${timeString}`);
       const relative = time(date, 'R');
-      // log.debug(`[${PREFIX}] relative: ${relative}`);
+      // log.debug(F, `relative: ${relative}`);
 
       const routeStr = roa.charAt(0).toUpperCase() + roa.slice(1).toLowerCase();
 

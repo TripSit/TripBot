@@ -1,12 +1,11 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { imgurSearch } from '../../../global/commands/g.imgur';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dImgur;
 
@@ -37,14 +36,14 @@ export const dImgur: SlashCommand = {
         { name: 'Year', value: 'year' },
       )),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     // Sometimes the API takes a few seconds to respond.
     const search = interaction.options.getString('search');
     const sort = interaction.options.getString('sort') || 'top';
     const window = interaction.options.getString('window') || 'all';
-    // log.debug(`[${PREFIX}] query: ${search}`);
-    // log.debug(`[${PREFIX}] sort: ${sort}`);
-    // log.debug(`[${PREFIX}] window: ${window}`);
+    // log.debug(F, `query: ${search}`);
+    // log.debug(F, `sort: ${sort}`);
+    // log.debug(F, `window: ${window}`);
 
     await interaction.deferReply();
 
@@ -53,11 +52,11 @@ export const dImgur: SlashCommand = {
 
     // eslint-disable-next-line max-len
     const query = `https://api.imgur.com/3/gallery/search/${sort !== null ? sortStr : ''}${window !== null ? windowStr : ''}?q=${search}`;
-    // log.debug(`[${PREFIX}] query: ${query}`);
+    // log.debug(F, `query: ${query}`);
 
     const url = await imgurSearch(query);
 
-    // log.debug(`[${PREFIX}] url: ${url}`);
+    // log.debug(F, `url: ${url}`);
 
     await interaction.editReply(url);
     return true;

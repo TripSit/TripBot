@@ -6,15 +6,12 @@ import {
   // ChannelType,
   AuditLogEvent,
 } from 'discord-api-types/v10';
-import { parse } from 'path';
 import {
   MessageDeleteEvent,
 } from '../@types/eventDef';
 import { embedTemplate } from '../utils/embedTemplate';
-import env from '../../global/utils/env.config';
-import log from '../../global/utils/log'; // eslint-disable-line @typescript-eslint/no-unused-vars
-// import * as path from 'path';
-const PREFIX = parse(__filename).name; // eslint-disable-line @typescript-eslint/no-unused-vars
+// eslint-disable-line @typescript-eslint/no-unused-vars
+const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -31,7 +28,7 @@ export const messageDelete: MessageDeleteEvent = {
 
     const msglog = message.client.channels.cache.get(env.CHANNEL_MSGLOG) as TextChannel;
 
-    // log.debug(`[${PREFIX}] message: ${JSON.stringify(message, null, 2)}`);
+    // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
 
     const fetchedLogs = await message.guild.fetchAuditLogs({
       limit: 1,
@@ -55,7 +52,7 @@ export const messageDelete: MessageDeleteEvent = {
     const authorName = message.author ? message.author.tag : 'Unknown';
     const content = message.content ? message.content : 'No content';
     const channel = message.channel ? (message.channel as TextChannel).name : 'Unknown';
-    log.debug(`[${PREFIX}] ${intro} deleted a message by ${authorName} in #${channel}: ${content}`);
+    log.debug(F, `${intro} deleted a message by ${authorName} in #${channel}: ${content}`);
     const embed = embedTemplate()
       .setAuthor(null)
       .setFooter(null)

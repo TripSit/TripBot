@@ -3,15 +3,13 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { drug } from '../../../global/commands/g.drug';
 import { startLog } from '../../utils/startLog';
 import { CbSubstance } from '../../../global/@types/combined.d';
-import log from '../../../global/utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dDrug;
 
@@ -25,7 +23,7 @@ export const dDrug: SlashCommand = {
       .setAutocomplete(true)),
 
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const embed = embedTemplate();
     const drugName = interaction.options.getString('substance');
     if (!drugName) {
@@ -34,7 +32,7 @@ export const dDrug: SlashCommand = {
       return false;
     }
     const drugData = await drug(drugName) as CbSubstance;
-    // log.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
+    // log.debug(F, `drugData: ${JSON.stringify(drugData, null, 2)}`);
 
     if (drugData === null) {
       embed.setTitle(`${drugName} was not found`);
@@ -127,7 +125,7 @@ export const dDrug: SlashCommand = {
         const toxicityMap = drugData.toxicity.map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
         const toxicityString = toxicityMap.join(', ');
         embed.addFields({ name: toxicityHeader, value: stripIndents`${toxicityString}`, inline: true });
-        // log.debug(`[${PREFIX}] Added toxicity`);
+        // log.debug(F, `Added toxicity`);
         toxicityAdded = true;
         firstRowColumns += 1;
       }
@@ -172,14 +170,14 @@ export const dDrug: SlashCommand = {
           }[],
         };
 
-        // log.debug(`[${PREFIX}] roaNames: ${roaNames}`);
+        // log.debug(F, `roaNames: ${roaNames}`);
 
         let dosageColumns = 0;
         roaNames.forEach(roaName => {
           if (dosageColumns < 3) {
             const roaInfo = (drugData.roas as RoaType[]).find((r:RoaType) => r.name === roaName);
             if (!roaInfo) {
-              log.error(`[${PREFIX}] Could not find roaInfo for ${roaName}`);
+              log.error(F, `Could not find roaInfo for ${roaName}`);
               return;
             }
             if (roaInfo.dosage) {
@@ -222,7 +220,7 @@ export const dDrug: SlashCommand = {
               .map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
             const toxicityString = toxicityMap.join(', ');
             embed.addFields({ name: toxicityHeader, value: stripIndents`${toxicityString}`, inline: true });
-            // log.debug(`[${PREFIX}] Added toxicity A`);
+            // log.debug(F, `Added toxicity A`);
             toxicityAdded = true;
             dosageColumns += 1;
           }
@@ -269,16 +267,16 @@ export const dDrug: SlashCommand = {
             toleranceAdded = true;
             durationColumns += 1;
           }
-          // log.debug(`[${PREFIX}] toxicityAdded: ${toxicityAdded}`);
+          // log.debug(F, `toxicityAdded: ${toxicityAdded}`);
           if (!toxicityAdded
             && durationColumns < 3
             && drugData.toxicity) {
-            // log.debug(`[${PREFIX}] toxicityAdded: ${toxicityAdded}`);
+            // log.debug(F, `toxicityAdded: ${toxicityAdded}`);
             const toxicityMap = drugData.toxicity
               .map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
             const toxicityString = toxicityMap.join(', ');
             embed.addFields({ name: toxicityHeader, value: stripIndents`${toxicityString}`, inline: true });
-            // log.debug(`[${PREFIX}] Added toxicity B`);
+            // log.debug(F, `Added toxicity B`);
             toxicityAdded = true;
             durationColumns += 1;
           }

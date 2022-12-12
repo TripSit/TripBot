@@ -3,13 +3,12 @@ import {
   Colors,
   SlashCommandBuilder,
 } from 'discord.js';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { calcDxm } from '../../../global/commands/g.calcDxm';
 import { startLog } from '../../utils/startLog';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 type DxmDataType = {
   First: { min: number, max: number };
@@ -48,7 +47,7 @@ export const dCalcdxm: SlashCommand = {
         { name: '30mg Gelcaps (30 mg caps)', value: '30mg Gelcaps (30 mg caps)' },
       )),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     // Calculate each plat min/max value
     const givenWeight = interaction.options.getNumber('calc_weight');
     const weightUnits = interaction.options.getString('units');

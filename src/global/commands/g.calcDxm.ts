@@ -1,7 +1,6 @@
 import { parse } from 'path';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 type DxmDataType = {
   First: { min: number, max: number };
@@ -50,11 +49,11 @@ export async function calcDxm(givenWeight:number, weightUnits:string, taking:str
     units = '(30 mg tablets)';
   }
 
-  // log.debug(`[${PREFIX}] roaValue:  ${roaValue}`);
-  // log.debug(`[${PREFIX}] units: ${units}`);
+  // log.debug(F, `roaValue:  ${roaValue}`);
+  // log.debug(F, `units: ${units}`);
 
   calcWeight /= roaValue;
-  // log.debug(`[${PREFIX}] calcWeight: ${calcWeight}`);
+  // log.debug(F, `calcWeight: ${calcWeight}`);
 
   const dxmData:DxmDataType = {
     First: { min: 1.5, max: 2.5 },
@@ -79,6 +78,6 @@ export async function calcDxm(givenWeight:number, weightUnits:string, taking:str
     };
   });
 
-  log.info(`[${PREFIX}] response: ${JSON.stringify(data, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(data, null, 2)}`);
   return { data, units };
 }

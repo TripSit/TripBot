@@ -2,12 +2,11 @@ import {
   SlashCommandBuilder,
   GuildMember,
 } from 'discord.js';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { timezone } from '../../../global/commands/g.timezone';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dTimezone;
 
@@ -30,7 +29,7 @@ export const dTimezone: SlashCommand = {
         .setRequired(true)
         .setAutocomplete(true))),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     const tzValue = interaction.options.getString('timezone');
     let member = interaction.options.getMember('user') as GuildMember | null;
@@ -45,7 +44,7 @@ export const dTimezone: SlashCommand = {
 
     const response = await timezone(command, member.id, tzValue);
 
-    // log.debug(`[${PREFIX}] response: ${response}`);
+    // log.debug(F, `response: ${response}`);
 
     if (command === 'get') {
       if (response === null) {

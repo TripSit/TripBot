@@ -1,12 +1,10 @@
 import { DateTime } from 'luxon';
-import { parse } from 'path';
 import { db, getUser } from '../utils/knex';
 import {
   UserReminders,
 } from '../@types/pgdb';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default remindme;
 
@@ -39,10 +37,10 @@ export async function remindme(
   if (command === 'delete') {
     if (recordNumber === null) {
       response = 'You must provide a record number to delete!';
-      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
       return response;
     }
-    // log.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
+    // log.debug(F, `Deleting record ${recordNumber}`);
 
     const userData = await getUser(userId, null);
 
@@ -56,7 +54,7 @@ export async function remindme(
 
     if (unsorteddata.length === 0) {
       response = 'You have no reminder records, you can use /remindme to add some!';
-      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
       return response;
     }
 
@@ -74,15 +72,15 @@ export async function remindme(
     const record = data[recordNumber];
     if (record === undefined || record === null) {
       response = 'That record does not exist!';
-      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
       return response;
     }
     const recordId = record.id;
     const reminderDate = data[recordNumber].created_at.toISOString();
-    // log.debug(`[${PREFIX}] reminderDate: ${reminderDate}`);
+    // log.debug(F, `reminderDate: ${reminderDate}`);
     const timeVal = DateTime.fromISO(reminderDate);
 
-    // log.debug(`[${PREFIX}] I deleted:
+    // log.debug(F, `I deleted:
     // (${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}
     // ${record.reminder_text}
     // `);
@@ -95,7 +93,7 @@ export async function remindme(
       > **(${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}**
       > ${record.reminder_text}
       `;
-    log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+    log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   }
   if (command === 'get') {
     const userData = await getUser(userId, null);
@@ -107,13 +105,13 @@ export async function remindme(
       )
       .where('user_id', userData.id);
 
-    // log.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);
+    // log.debug(F, `Data: ${JSON.stringify(unsorteddata, null, 2)}`);
 
-    // log.debug(`[${PREFIX}] unsorteddata: ${unsorteddata.length}`);
+    // log.debug(F, `unsorteddata: ${unsorteddata.length}`);
 
     if (!unsorteddata || unsorteddata.length === 0) {
       response = 'You have no reminder records, you can use /remindme to add some!';
-      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
       return response;
     }
 
@@ -128,7 +126,7 @@ export async function remindme(
       return 0;
     });
 
-    // log.debug(`[${PREFIX}] Sorted ${data.length} items!`);
+    // log.debug(F, `Sorted ${data.length} items!`);
 
     const reminders = [] as Reminder[];
 
@@ -144,13 +142,13 @@ export async function remindme(
       };
       reminders.push(field);
     }
-    log.info(`[${PREFIX}] response: ${JSON.stringify(reminders, null, 2)}`);
+    log.info(F, `response: ${JSON.stringify(reminders, null, 2)}`);
     response = reminders;
   }
   if (command === 'set') {
     if (!triggerAt) {
       response = 'You must provide a date and time for the reminder!';
-      log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
       return response;
     }
     const userData = await getUser(userId, null);
@@ -161,7 +159,7 @@ export async function remindme(
         trigger_at: triggerAt,
       });
     response = `I will remind you to ${reminderText} at ${triggerAt}!`;
-    log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+    log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   }
   return response;
 }

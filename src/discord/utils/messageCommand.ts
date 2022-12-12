@@ -5,10 +5,9 @@ import {
   Role,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import env from '../../global/utils/env.config';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 const helpCounter = new Map<string, number>();
 
@@ -30,14 +29,14 @@ export async function messageCommand(message: Message): Promise<void> {
   if (message.content.startsWith('~')) {
     // Find the word that appears after ~
     const command = message.content.split(' ')[0].slice(1);
-    // log.debug(`[${PREFIX}] command: ${command}`);
+    // log.debug(F, `command: ${command}`);
 
     if (command === 'tripsit') {
       const now = Date.now().valueOf();
       if (helpCounter.has(message.author.id)) {
         const lastTime = helpCounter.get(message.author.id);
         if (!lastTime) {
-          // log.debug(`[${PREFIX}] lastTime is undefined!`);
+          // log.debug(F, `lastTime is undefined!`);
           return;
         }
         if (now - lastTime < 1000 * 60 * 5) {
@@ -71,7 +70,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
     (message.mentions.has(message.client.user) || message.cleanContent.toLowerCase().includes('tripbot'))
     && message.channel.type !== ChannelType.DM) {
     if (message.author.bot) {
-      // log.debug(`[${PREFIX}] Ignoring bot interaction`);
+      // log.debug(F, `Ignoring bot interaction`);
       return;
     }
     const responses = [

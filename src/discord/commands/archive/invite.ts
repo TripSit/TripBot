@@ -3,12 +3,9 @@ import {
   ChatInputCommandInteraction,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
-import env from '../../../global/utils/env.config';
-import log from '../../../global/utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 const bridgeMap = {
   [env.CATEGORY_GATEWAY]: null,
@@ -103,7 +100,7 @@ export const dinvite: SlashCommand = {
       .setName('channel')),
 
   async execute(interaction:ChatInputCommandInteraction) {
-  // log.debug(`[${PREFIX}] starting!`);
+  // log.debug(F, `starting!`);
 
     const discordChannel = interaction.options.getChannel('channel')!;
 

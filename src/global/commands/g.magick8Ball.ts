@@ -1,7 +1,6 @@
 import { parse } from 'path';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 const answers = [
   'It is certain',
@@ -34,6 +33,6 @@ export default magick8Ball;
  */
 export async function magick8Ball():Promise<string> {
   const response = answers[Math.floor(Math.random() * answers.length)];
-  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }

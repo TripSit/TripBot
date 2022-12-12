@@ -17,7 +17,6 @@ import {
 
 import { stripIndents } from 'common-tags';
 import ms from 'ms';
-import { parse } from 'path';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { db, getUser } from '../utils/knex';
 import {
@@ -26,10 +25,7 @@ import {
 } from '../@types/pgdb';
 import { last } from './g.last';
 
-import env from '../utils/env.config';
-import log from '../utils/log';
-
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 // const teamRoles = [
 //   env.ROLE_DIRECTOR,
@@ -201,7 +197,7 @@ export async function moderate(
     try {
       await target.timeout(duration, privReason ?? noReason);
     } catch (err) {
-      log.error(`[${PREFIX}] Error: ${err}`);
+      log.error(F, `Error: ${err}`);
     }
   } else if (command === 'UNTIMEOUT') {
     actionData.type = 'TIMEOUT' as UserActionType;
@@ -223,24 +219,24 @@ export async function moderate(
 
     try {
       await target.timeout(0, privReason ?? noReason);
-      // log.debug(`[${PREFIX}] I untimeouted ${target.displayName} because\n '${privReason}'!`);
+      // log.debug(F, `I untimeouted ${target.displayName} because\n '${privReason}'!`);
     } catch (err) {
-      log.error(`[${PREFIX}] Error: ${err}`);
+      log.error(F, `Error: ${err}`);
     }
   } else if (command === 'FULL_BAN') {
     actionData.type = 'FULL_BAN' as UserActionType;
     try {
       const deleteMessageValue = duration ?? 0;
       if (deleteMessageValue > 0) {
-      // log.debug(`[${PREFIX}] I am deleting ${deleteMessageValue} days of messages!`);
+      // log.debug(F, `I am deleting ${deleteMessageValue} days of messages!`);
         const response = await last(target);
         extraMessage = `${target.displayName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`;
       }
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-      // log.debug(`[${PREFIX}] Days to delete: ${deleteMessageValue}`);
+      // log.debug(F, `Days to delete: ${deleteMessageValue}`);
       targetGuild.members.ban(target, { deleteMessageSeconds: deleteMessageValue, reason: privReason ?? noReason });
     } catch (err) {
-      log.error(`[${PREFIX}] Error: ${err}`);
+      log.error(F, `Error: ${err}`);
     }
   } else if (command === 'UNBAN') {
     actionData.type = 'FULL_BAN' as UserActionType;
@@ -264,7 +260,7 @@ export async function moderate(
       await targetGuild.bans.fetch();
       await targetGuild.bans.remove(target.user, privReason ?? noReason);
     } catch (err) {
-      log.error(`[${PREFIX}] Error: ${err}`);
+      log.error(F, `Error: ${err}`);
     }
   } else if (command === 'UNDERBAN') {
     actionData.type = 'UNDERBAN' as UserActionType;
@@ -272,7 +268,7 @@ export async function moderate(
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       targetGuild.members.ban(target, { reason: privReason ?? noReason });
     } catch (err) {
-      log.error(`[${PREFIX}] Error: ${err}`);
+      log.error(F, `Error: ${err}`);
     }
   } else if (command === 'UNUNDERBAN') {
     actionData.type = 'UNDERBAN' as UserActionType;
@@ -296,7 +292,7 @@ export async function moderate(
       await targetGuild.bans.fetch();
       await targetGuild.bans.remove(target.user, privReason ?? noReason);
     } catch (err) {
-      log.error(`[${PREFIX}] Error: ${err}`);
+      log.error(F, `Error: ${err}`);
     }
   } else if (command === 'TICKET_BAN') {
     actionData.type = 'TICKET_BAN' as UserActionType;
@@ -313,14 +309,14 @@ export async function moderate(
     try {
       await target.kick();
     } catch (err) {
-      log.error(`[${PREFIX}] Error: ${err}`);
+      log.error(F, `Error: ${err}`);
     }
   } else if (command === 'WARNING') {
     actionData.type = 'WARNING' as UserActionType;
   }
 
   if (command !== 'INFO') {
-  // log.debug(`[${PREFIX}] actionData: ${JSON.stringify(actionData, null, 2)}`);
+  // log.debug(F, `actionData: ${JSON.stringify(actionData, null, 2)}`);
     await db<UserActions>('user_actions')
       .insert(actionData)
       .onConflict('id')
@@ -343,7 +339,7 @@ export async function moderate(
     .where('user_id', targetData.id)
     .orderBy('created_at', 'desc');
 
-  // log.debug(`[${PREFIX}] targetActionListRaw: ${JSON.stringify(targetActionListRaw, null, 2)}`);
+  // log.debug(F, `targetActionListRaw: ${JSON.stringify(targetActionListRaw, null, 2)}`);
 
   // for (const action of targetActionListRaw) {
   targetActionListRaw.forEach(action => {
@@ -352,7 +348,7 @@ export async function moderate(
     targetActionList[action.type as keyof typeof targetActionList].push(actionString);
   });
 
-  // log.debug(`[${PREFIX}] targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
+  // log.debug(F, `targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
 
   const modlogEmbed = embedTemplate()
     // eslint-disable-next-line
@@ -397,7 +393,7 @@ export async function moderate(
     const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
     const greeting = `Hey ${roleModerator}`;
     await modChan.send({ content: `${command !== 'NOTE' ? greeting : ''}`, embeds: [modlogEmbed] });
-    // log.debug(`[${PREFIX}] sent a message to the moderators room`);
+    // log.debug(F, `sent a message to the moderators room`);
     if (extraMessage) {
       await modChan.send({ content: extraMessage });
     }
@@ -417,13 +413,13 @@ export async function moderate(
     if (infoString.length === 0) {
       infoString = 'Squeaky clean!';
     }
-    // log.debug(`[${PREFIX}] infoString: ${infoString}`);
+    // log.debug(F, `infoString: ${infoString}`);
     modlogEmbed.setDescription(infoString);
     try {
-      log.info(`[${PREFIX}] response: ${JSON.stringify(infoString, null, 2)}`);
+      log.info(F, `response: ${JSON.stringify(infoString, null, 2)}`);
       return { embeds: [modlogEmbed], ephemeral: true };
     } catch (err) {
-      log.error(`[${PREFIX}] Error: ${err}`);
+      log.error(F, `Error: ${err}`);
     }
   }
 
@@ -431,15 +427,15 @@ export async function moderate(
   if (command !== 'INFO') {
     const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
     modlog.send({ embeds: [modlogEmbed] });
-    // log.debug(`[${PREFIX}] sent a message to the modlog room`);
+    // log.debug(F, `sent a message to the modlog room`);
   }
 
   // Return a message to the user confirming the user was acted on
-  // log.debug(`[${PREFIX}] ${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
+  // log.debug(F, `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
   const desc = `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`;
   const response = embedTemplate()
     .setColor(Colors.Yellow)
     .setDescription(desc);
-  log.info(`[${PREFIX}] response: ${JSON.stringify(desc, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(desc, null, 2)}`);
   return { embeds: [response], ephemeral: true };
 }

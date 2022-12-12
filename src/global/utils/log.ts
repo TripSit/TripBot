@@ -5,10 +5,10 @@ import {
   addColors,
   Logger,
 } from 'winston';
-import { parse } from 'path';
 import { Logtail } from '@logtail/node';
 import { LogtailTransport } from '@logtail/winston';
-// import env from './env.config';
+import { parse } from 'path';
+//
 
 const {
   combine,
@@ -70,7 +70,7 @@ if (env.NODE_ENV === 'production') {
   ];
 }
 
-export const log = createLogger({
+export const logger = createLogger({
   level: 'debug',
   format: combine(
     format.colorize({ all: true }),
@@ -84,9 +84,9 @@ export const log = createLogger({
 declare global {
   type Log = Logger;
   // eslint-disable-next-line no-var, vars-on-top
-  var log: Log; // NOSONAR
+  var logger: Log; // NOSONAR
   // eslint-disable-next-line no-var, vars-on-top
-  var logging: { // NOSONAR
+  var log: { // NOSONAR
     info: (prefix:string, message:string) => Log,
     error: (prefix:string, message:string) => Log,
     warn: (prefix:string, message:string) => Log,
@@ -97,16 +97,16 @@ declare global {
   var f:(filename:string) => string; // NOSONAR
 }
 
-export const logging = {
-  info: (F: string, message: string) => log.info(`[${F}] ${message}`),
-  error: (F: string, message: string) => log.error(`[${F}] ${message}`),
-  warn: (F: string, message: string) => log.warn(`[${F}] ${message}`),
-  debug: (F: string, message: string) => log.debug(`[${F}] ${message}`),
-  http: (F: string, message: string) => log.http(`[${F}] ${message}`),
+export const log = {
+  info: (F: string, message: string) => logger.info(`[${F}] ${message}`),
+  error: (F: string, message: string) => logger.error(`[${F}] ${message}`),
+  warn: (F: string, message: string) => logger.warn(`[${F}] ${message}`),
+  debug: (F: string, message: string) => logger.debug(`[${F}] ${message}`),
+  http: (F: string, message: string) => logger.http(`[${F}] ${message}`),
 };
 
 global.log = log;
-global.logging = logging;
+global.logger = logger;
 
 global.f = function f(filename: string) {
   return `${parse(filename).name}`;

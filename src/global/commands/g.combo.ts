@@ -1,11 +1,10 @@
 import { parse } from 'path';
 import { stripIndents } from 'common-tags';
-import log from '../utils/log';
 
 import drugDataAll from '../assets/data/drug_db_combined.json';
 import comboDefs from '../assets/data/combo_definitions.json';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 const devMsg = '...this shouldn\'t have happened, please tell the developer!';
 
@@ -41,7 +40,7 @@ export async function combo(
 
   const drugData = drugDataAll.find(drug => drug.name === drugA);
 
-  // log.debug(`[${PREFIX}] drugData: ${JSON.stringify(drugData, null, 2)}`);
+  // log.debug(F, `drugData: ${JSON.stringify(drugData, null, 2)}`);
 
   if (!drugData) {
     return {
@@ -60,7 +59,7 @@ export async function combo(
     };
   }
 
-  // log.debug(`[${PREFIX}] interactions: ${drugData.interactions.length}`);
+  // log.debug(F, `interactions: ${drugData.interactions.length}`);
 
   const drugInteraction = drugData.interactions.find(interaction => interaction.name === drugB);
 
@@ -72,11 +71,11 @@ export async function combo(
     };
   }
 
-  // log.debug(`[${PREFIX}] drugInteraction: ${drugInteraction}`);
+  // log.debug(F, `drugInteraction: ${drugInteraction}`);
 
   const intDef = comboDefs.find(def => def.status === drugInteraction.status);
 
-  // log.debug(`[${PREFIX}] intDef: ${JSON.stringify(intDef)}`);
+  // log.debug(F, `intDef: ${JSON.stringify(intDef)}`);
 
   if (!intDef) {
     return {
@@ -103,7 +102,7 @@ export async function combo(
     color,
   };
 
-  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
 
   return response;
 }

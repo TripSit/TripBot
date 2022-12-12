@@ -1,5 +1,5 @@
 import { parse } from 'path';
-import log from '../utils/log';
+
 
 // Make an array of animal emojis
 const animals = [
@@ -8,7 +8,7 @@ const animals = [
   '🐺', '🐻', '🐼', '🦁', '🦄', '🦅', '🦆', '🦇', '🦉', '🦊', '🦋', '🙊',
 ];
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default coinflip;
 
@@ -50,7 +50,7 @@ export async function coinflip():Promise<string> {
   } else if (random === 100) {
     side = 'Due to inflation the coin kept floating away!';
   }
-  log.info(`[${PREFIX}] response: ${JSON.stringify(side, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(side, null, 2)}`);
 
   return side;
 }

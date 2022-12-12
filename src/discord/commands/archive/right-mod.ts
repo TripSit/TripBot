@@ -10,7 +10,7 @@
 // const logger = require('../../../global/utils/log');
 // const template = require('../../utils/embed-template');
 
-// const PREFIX = parse(__filename).name; // eslint-disable-line
+// const F = f(__filename); // eslint-disable-line
 
 // const { CHANNEL_MODERATORS } = require('../../../../env');
 
@@ -137,17 +137,17 @@
 
 //   async execute(interaction) {
 //     const actor = interaction.member;
-//   // log.debug(`[${PREFIX}] Actor: ${actor.displayName}`);
+//   // log.debug(F, `Actor: ${actor.displayName}`);
 //     let command = interaction.options.getSubcommand();
-//   // log.debug(`[${PREFIX}] Command: ${command}`);
+//   // log.debug(F, `Command: ${command}`);
 //     let target = interaction.options.getMember('target');
-//   // log.debug(`[${PREFIX}] target: ${target.displayName}`);
+//   // log.debug(F, `target: ${target.displayName}`);
 //     const toggle = interaction.options.getString('toggle');
-//   // log.debug(`[${PREFIX}] toggle: ${toggle}`);
+//   // log.debug(F, `toggle: ${toggle}`);
 //     const reason = interaction.options.getString('reason');
-//   // log.debug(`[${PREFIX}] reason: ${reason}`);
+//   // log.debug(F, `reason: ${reason}`);
 //     // const duration = interaction.options.getString('duration');
-//     // log.debug(`[${PREFIX}] duration: ${duration}`);
+//     // log.debug(F, `duration: ${duration}`);
 
 //     // let color = '';
 //     let isMember = true;
@@ -155,18 +155,18 @@
 //       if (command === 'ban') {
 //         target = interaction.options.getUser('target');
 //         isMember = false;
-//       // log.debug(`[${PREFIX}] target_user.id: ${target.id}`);
+//       // log.debug(F, `target_user.id: ${target.id}`);
 //         const bans = await interaction.guild.bans.fetch();
-//       // log.debug(`[${PREFIX}] interaction.guild.bans.fetch(): ${bans}`);
+//       // log.debug(F, `interaction.guild.bans.fetch(): ${bans}`);
 //         command = 'unban';
 //         // color = 'GREEN';
 //         await interaction.guild.bans.remove(target, reason);
-//       // log.debug(`[${PREFIX}] I unbanned ${target}!`);
+//       // log.debug(F, `I unbanned ${target}!`);
 //       } else if (command === 'timeout') {
 //         target.timeout(0, reason);
 //         command = 'untimeout';
 //         // color = 'GREEN';
-//       // log.debug(`[${PREFIX}] I untimed out ${target}!`);
+//       // log.debug(F, `I untimed out ${target}!`);
 //       }
 //     }
 
@@ -175,7 +175,7 @@
 //         .setColor(Colors.Red)
 //         .setDescription('target not found, are you sure they are in the server?');
 //       interaction.reply({ embeds: [embed], ephemeral: true });
-//     // log.debug(`[${PREFIX}] Target not found!`);
+//     // log.debug(F, `Target not found!`);
 //       return;
 //     }
 

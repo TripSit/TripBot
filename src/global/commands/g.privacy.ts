@@ -1,5 +1,4 @@
 /* eslint-disable max-len */
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { db, getUser } from '../utils/knex';
 import {
@@ -10,9 +9,8 @@ import {
   // UserTickets,
   // UserActions,
 } from '../@types/pgdb';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default privacy;
 
@@ -149,6 +147,6 @@ export async function privacy(
     // }
   }
 
-  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }

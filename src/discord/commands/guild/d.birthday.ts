@@ -3,7 +3,6 @@ import {
   GuildMember,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import { parse } from 'path';
 import { DateTime } from 'luxon';
 import { SlashCommand } from '../../@types/commandDef';
 import { birthday } from '../../../global/commands/g.birthday';
@@ -11,7 +10,7 @@ import { startLog } from '../../utils/startLog';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 async function birthdayGet(
   interaction:ChatInputCommandInteraction,
@@ -69,19 +68,19 @@ async function birthdaySet(
   if (monthInput !== undefined && day !== undefined) {
     if (month30.includes(monthInput.toLowerCase()) && day > 30) {
       const response = `${monthInput} only has 30 days!` as string;
-      // log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
       interaction.reply({ content: response, ephemeral: true });
       return;
     }
     if (month31.includes(monthInput.toLowerCase()) && day > 31) {
       const response = `${monthInput} only has 31 days!` as string;
-      // log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
       interaction.reply({ content: response, ephemeral: true });
       return;
     }
     if (monthInput.toLowerCase() === 'february' && day > 28) {
       const response = 'February only has 28 days!' as string;
-      // log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+      // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
       interaction.reply({ content: response, ephemeral: true });
       return;
     }
@@ -162,7 +161,7 @@ export const dBirthday: SlashCommand = {
         .setDescription('Day value')
         .setName('day'))),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     let member = interaction.options.getMember('user');
     const monthInput = interaction.options.getString('month');

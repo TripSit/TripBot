@@ -2,7 +2,7 @@
 
 // import { parse } from 'path';
 
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 // const { SlashCommandBuilder } = require('discord.js');
 // const logger = require('../../../global/utils/log');
 // const parseDuration = require('../../../global/utils/parseDuration');
@@ -98,19 +98,19 @@
 //       .setName('ban')),
 //   async execute(interaction) {
 //     const actor = interaction.member;
-//   // log.debug(`[${PREFIX}] Actor: ${actor}`);
+//   // log.debug(F, `Actor: ${actor}`);
 //     const command = interaction.options.getSubcommand();
-//   // log.debug(`[${PREFIX}] Command: ${command}`);
+//   // log.debug(F, `Command: ${command}`);
 //     const target = interaction.options.getString('target');
-//   // log.debug(`[${PREFIX}] target: ${target}`);
+//   // log.debug(F, `target: ${target}`);
 //     const toggle = interaction.options.getString('toggle');
-//   // log.debug(`[${PREFIX}] toggle: ${toggle}`);
+//   // log.debug(F, `toggle: ${toggle}`);
 //     const reason = interaction.options.getString('reason');
-//   // log.debug(`[${PREFIX}] reason: ${reason}`);
+//   // log.debug(F, `reason: ${reason}`);
 //     const channel = interaction.options.getString('channel');
-//   // log.debug(`[${PREFIX}] channel: ${channel}`);
+//   // log.debug(F, `channel: ${channel}`);
 //     const duration = interaction.options.getString('duration');
-//   // log.debug(`[${PREFIX}] duration: ${duration}`);
+//   // log.debug(F, `duration: ${duration}`);
 
 //     const minutes = duration ? (await parseDuration.execute(duration) / 1000) / 60 : 0;
 
@@ -144,7 +144,7 @@
 //         global.ircClient.say('#sandbox', `Sent: ${botPrefix}${command} ${target}`);
 //       }
 //     } catch (err) {
-//       log.error(`[${PREFIX}] Error: ${err}`);
+//       log.error(F, `Error: ${err}`);
 //     }
 
 //     interaction.reply(`I ${command}ed ${target} ${channel ? `in ${channel}` : ''}${minutes ? ` for ${minutes} minutes` : ''} because '${reason}'`);

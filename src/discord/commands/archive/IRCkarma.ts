@@ -4,7 +4,7 @@
 // const logger = require('../../../global/utils/log');
 // const template = require('../../utils/embed-template');
 
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 // const {
 //   DISCORD_GUILD_ID,
@@ -14,10 +14,10 @@
 //   async karma(message) {
 //     // Check if '++' is in the message
 //     if (message.cleanContent.includes('++')) {
-//     // log.debug(`[${PREFIX}] Found ++ in message`);
+//     // log.debug(F, `Found ++ in message`);
 //       // Find the word directly before the ++
 //       const wordBeforePlus = message.cleanContent.split('++')[0];
-//     // log.debug(`[${PREFIX}] Word before ++: ${wordBeforePlus}`);
+//     // log.debug(F, `Word before ++: ${wordBeforePlus}`);
 
 //       // If the word is blank, ignore it
 //       if (wordBeforePlus === null
@@ -55,10 +55,10 @@
 //     }
 
 //     if (message.cleanContent.includes('--')) {
-//     // log.debug(`[${PREFIX}] Found -- in message`);
+//     // log.debug(F, `Found -- in message`);
 //       // Find the word directly before the --
 //       const wordBeforePlus = message.cleanContent.split('--')[0];
-//     // log.debug(`[${PREFIX}] Word before --: ${wordBeforePlus}`);
+//     // log.debug(F, `Word before --: ${wordBeforePlus}`);
 
 //       // Extract guild data
 //       const tripsitGuild = message.client.guilds.resolve(DISCORD_GUILD_ID);

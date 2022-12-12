@@ -1,10 +1,9 @@
 import axios from 'axios';
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import log from '../../utils/log';
 import env from '../../utils/env.config';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default urbandefine;
 
@@ -14,8 +13,8 @@ export default urbandefine;
  * @return {string} definition
  */
 export async function urbandefine(term:string) {
-// log.debug(`[${PREFIX}] UrbanDefine looking for ${term}`);
-// log.debug(`[${PREFIX}] RAPID_TOKEN: ${env.RAPID_TOKEN.slice(0, 4)}`);
+// log.debug(F, `UrbanDefine looking for ${term}`);
+// log.debug(F, `RAPID_TOKEN: ${env.RAPID_TOKEN.slice(0, 4)}`);
   const { data } = await axios.get(
     'https://mashape-community-urban-dictionary.p.rapidapi.com/define',
     {
@@ -44,11 +43,11 @@ export async function urbandefine(term:string) {
     thumbs_down: number
   };
 
-// log.debug(`[${PREFIX}] UrbanDefine found ${data.list.length} results`);
+// log.debug(F, `UrbanDefine found ${data.list.length} results`);
 
   // Sort data by the thumbs_up value
   (data.list as UrbanDefinition[]).sort((a, b) => b.thumbs_up - a.thumbs_up);
-  // log.debug(`[${PREFIX}] data: ${JSON.stringify(data, null, 2)}`);
+  // log.debug(F, `data: ${JSON.stringify(data, null, 2)}`);
   const definition = `${data.list[0].definition.length > 1024
     ? `${data.list[0].definition.slice(0, 1020)}...`
     : data.list[0].definition}`.replace(/\[|\]/g, '');
@@ -61,6 +60,6 @@ export async function urbandefine(term:string) {
   const response = stripIndents`**Definition for "${term}" ** (+${upvotes}/-${downvotes})
     ${definition}
     Example: ${example}`;
-  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }

@@ -8,13 +8,10 @@ import {
   Guild,
 } from 'discord.js';
 // import {SlashCommand} from './commandDef';
-import { parse } from 'path';
 import { embedTemplate } from './embedTemplate';
-import log from '../../global/utils/log';
 
-import env from '../../global/utils/env.config';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default commandRun;
 
@@ -40,7 +37,7 @@ export async function commandRun(
     Error.stackTraceLimit = 25;
     const genericError = 'There was an error while executing this command!';
     if (error instanceof Error) {
-      log.error(`[${PREFIX}] ERROR: ${error.stack}`);
+      log.error(F, `ERROR: ${error.stack}`);
       if (!interaction.replied) {
         if (interaction.deferred) {
           interaction.editReply(genericError);
@@ -65,7 +62,7 @@ export async function commandRun(
         `);
       }
     } else {
-      log.error(`[${PREFIX}] ERROR: ${error}`);
+      log.error(F, `ERROR: ${error}`);
       interaction.reply({
         content: 'There was an unexpected error while executing this command!',
         ephemeral: true,

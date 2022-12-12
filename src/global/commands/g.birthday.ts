@@ -1,10 +1,8 @@
 import { DateTime } from 'luxon';
-import { parse } from 'path';
 import { db, getUser } from '../utils/knex';
 import { Users } from '../@types/pgdb';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default birthday;
 
@@ -24,10 +22,10 @@ export async function birthday(
 ):Promise<DateTime | null> {
   let response = {} as DateTime | null;
   if (command === 'set') {
-    // log.debug(`[${PREFIX}] ${command} ${memberId} ${month} ${day}`);
+    // log.debug(F, `${command} ${memberId} ${month} ${day}`);
     const birthDate = DateTime.utc(2000, month as number, day as number);
 
-    // log.debug(`[${PREFIX}] Setting birthDate for ${memberId} to ${birthDate}`);
+    // log.debug(F, `Setting birthDate for ${memberId} to ${birthDate}`);
 
     await db<Users>('users')
       .insert({
@@ -41,17 +39,17 @@ export async function birthday(
     const userData = await getUser(memberId, null);
     if (userData.birthday !== null) {
       const birthDateRaw = userData.birthday;
-      // log.debug(`[${PREFIX}] birthDate: ${birthDate}`);
+      // log.debug(F, `birthDate: ${birthDate}`);
       const birthDate = DateTime.fromJSDate(birthDateRaw, { zone: 'utc' });
-      // log.debug(`[${PREFIX}] birthday: ${birthday}`);
+      // log.debug(F, `birthday: ${birthday}`);
       response = birthDate;
     } else {
-      // log.debug(`[${PREFIX}] birthday is NULL`);
+      // log.debug(F, `birthday is NULL`);
       response = null;
     }
   }
-  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
-  log.info(`[${PREFIX}] response: ${JSON.stringify(response?.toJSDate().toString(), null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(response?.toJSDate().toString(), null, 2)}`);
 
   return response;
 }

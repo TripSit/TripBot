@@ -2,14 +2,13 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { testkits } from '../../../global/commands/g.testkits';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dTestkits;
 
@@ -19,7 +18,7 @@ export const dTestkits: SlashCommand = {
     .setDescription('Information on how to get a test kit'),
 
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const emsInfo = await testkits();
     const embed = embedTemplate();
 

@@ -7,14 +7,14 @@ import { SlashCommand } from '../../@types/commandDef';
 import { bridgeWording } from '../../../global/commands/archive/g.bridge';
 // import log from '../../../global/utils/log';
 // import {parse} from 'path';
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 export const bridge: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('bridge')
     .setDescription('Information on the bridge!'),
   async execute(interaction) {
-    // log.debug(`[${PREFIX}] starting!`);
+    // log.debug(F, `starting!`);
     const response = await bridgeWording();
     interaction.reply(stripIndents`${response}`);
     return true;

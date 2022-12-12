@@ -10,7 +10,6 @@ import {
   ApplicationCommandType,
   TextInputStyle,
 } from 'discord-api-types/v10';
-import { parse } from 'path';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import { UserCommand } from '../../@types/commandDef';
 // import log from '../../../global/utils/log';
@@ -18,7 +17,7 @@ import { moderate } from '../../../global/commands/g.moderate';
 import { startLog } from '../../utils/startLog';
 import { UserActionType } from '../../../global/@types/pgdb';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default uBan;
 
@@ -27,7 +26,7 @@ export const uBan: UserCommand = {
     .setName('Ban')
     .setType(ApplicationCommandType.User),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const actor = interaction.member as GuildMember;
     const target = interaction.targetMember as GuildMember;
 
@@ -79,7 +78,7 @@ export const uBan: UserCommand = {
         duration = durationInput
           ? await parseDuration(`${days} days`)
           : 0;
-        // log.debug(`[${PREFIX}] duration: ${duration}`);
+        // log.debug(F, `duration: ${duration}`);
 
         const result = await moderate(
           actor,

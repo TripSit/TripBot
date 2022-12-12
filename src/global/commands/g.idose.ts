@@ -2,7 +2,6 @@ import {
   time,
 } from 'discord.js';
 import { DateTime } from 'luxon';
-import { parse } from 'path';
 import { db, getUser } from '../utils/knex';
 import {
   UserDrugDoses,
@@ -10,9 +9,8 @@ import {
   DrugRoa,
   DrugMassUnit,
 } from '../@types/pgdb.d';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default idose;
 
@@ -52,7 +50,7 @@ export async function idose(
         value: 'You must provide a record number to delete!',
       }];
     }
-    // log.debug(`[${PREFIX}] Deleting record ${recordNumber}`);
+    // log.debug(F, `Deleting record ${recordNumber}`);
 
     const userData = await getUser(userId, null);
 
@@ -94,7 +92,7 @@ export async function idose(
     }
     const recordId = record.id;
     const doseDate = data[recordNumber].created_at.toISOString();
-    // log.debug(`[${PREFIX}] doseDate: ${doseDate}`);
+    // log.debug(F, `doseDate: ${doseDate}`);
     const timeVal = DateTime.fromISO(doseDate);
     const drugId = record.drug_id;
     const drugName = (await db<DrugNames>('drug_names')
@@ -103,7 +101,7 @@ export async function idose(
       .andWhere('is_default', true))[0].name;
     const route = record.route.charAt(0).toUpperCase() + record.route.slice(1).toLowerCase();
 
-    // log.debug(`[${PREFIX}] I deleted:
+    // log.debug(F, `I deleted:
     // (${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}
     // ${record.dose} ${record.units} of ${drugName} ${route}
     // `);
@@ -123,7 +121,7 @@ export async function idose(
   if (command === 'get') {
     const userData = await getUser(userId, null);
 
-    // log.debug(`[${PREFIX}] Getting data for ${userData.id}...`);
+    // log.debug(F, `Getting data for ${userData.id}...`);
 
     const unsorteddata = await db<UserDrugDoses>('user_drug_doses')
       .select(
@@ -143,7 +141,7 @@ export async function idose(
       }];
     }
 
-    // log.debug(`[${PREFIX}] Data: ${JSON.stringify(unsorteddata, null, 2)}`);
+    // log.debug(F, `Data: ${JSON.stringify(unsorteddata, null, 2)}`);
 
     // Sort data based on the created_at property
     const data = [...unsorteddata].sort((a, b) => {
@@ -156,7 +154,7 @@ export async function idose(
       return 0;
     });
 
-    // log.debug(`[${PREFIX}] Sorted ${data.length} items!`);
+    // log.debug(F, `Sorted ${data.length} items!`);
 
     const doses = [] as {
       name: string,
@@ -167,7 +165,7 @@ export async function idose(
     for (let i = 0; i < data.length; i += 1) {
       const dose = data[i];
       const doseDate = data[i].created_at.toISOString();
-      // log.debug(`[${PREFIX}] doseDate: ${doseDate}`);
+      // log.debug(F, `doseDate: ${doseDate}`);
       const timeVal = DateTime.fromISO(doseDate);
       const drugId = dose.drug_id;
       const drugName = (await db<DrugNames>('drug_names') // eslint-disable-line no-await-in-loop
@@ -204,7 +202,7 @@ export async function idose(
       }];
     }
 
-    // log.debug(`[${PREFIX}] Substance: ${substance}`);
+    // log.debug(F, `Substance: ${substance}`);
 
     const data = await db<DrugNames>('drug_names')
       .select(db.ref('drug_id'))
@@ -212,7 +210,7 @@ export async function idose(
       .orWhere('name', substance.toLowerCase())
       .orWhere('name', substance.toUpperCase());
 
-    // log.debug(`[${PREFIX}] Data: ${JSON.stringify(data, null, 2)}`);
+    // log.debug(F, `Data: ${JSON.stringify(data, null, 2)}`);
 
     if (data.length === 0) {
       // log.debug(`name = ${substance} not found in 'drugNames'`);
@@ -220,7 +218,7 @@ export async function idose(
 
     const drugId = data[0].drug_id;
 
-    // log.debug(`[${PREFIX}] drugId: ${drugId}`);
+    // log.debug(F, `drugId: ${drugId}`);
 
     const userData = await getUser(userId, null);
     await db<UserDrugDoses>('user_drug_doses')
@@ -237,6 +235,6 @@ export async function idose(
       value: 'I added a new value for you!',
     }];
   }
-  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }
