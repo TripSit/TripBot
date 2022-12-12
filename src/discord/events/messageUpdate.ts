@@ -35,11 +35,11 @@ export const messageUpdate: MessageUpdateEvent = {
     const oldContent = oldMessage.content !== undefined && oldMessage.content !== null && oldMessage.content !== ''
       ? oldMessage.content
       : '(Not found)';
-    log.debug(`[${PREFIX}] oldContent: ${oldContent}`);
+    // log.debug(`[${PREFIX}] oldContent: ${oldContent}`);
     const newContent = newMessage.content !== undefined && newMessage.content !== null && newMessage.content !== ''
       ? newMessage.content
       : '(Not found)';
-    log.debug(`[${PREFIX}] newContent: ${newContent}`);
+    // log.debug(`[${PREFIX}] newContent: ${newContent}`);
 
     const embed = embedTemplate()
       .setAuthor(null)

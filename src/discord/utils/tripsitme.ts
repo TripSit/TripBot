@@ -90,11 +90,11 @@ const mindsetRoles = [
   env.ROLE_SOBER,
 ];
 
-const otherRoles = [
-  env.ROLE_VERIFIED,
-];
+// const otherRoles = [
+//   env.ROLE_VERIFIED,
+// ];
 
-const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles},${otherRoles}`;
+const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
 
 const guildOnly = 'This must be performed in a guild!';
 const memberOnly = 'This must be performed by a member of a guild!';
@@ -183,7 +183,7 @@ export async function tripsitmeOwned(
   const userId = interaction.customId.split('~')[1];
   const actor = interaction.member as GuildMember;
 
-  const target = await interaction.guild.members.fetch(userId) as GuildMember;
+  const target = await interaction.guild.members.fetch(userId);
 
   const userData = await getUser(userId, null);
   const ticketData = await getOpenTicket(userData.id, null);
@@ -237,7 +237,7 @@ export async function tripsitmeMeta(
   // log.debug(`[${PREFIX}] tripsitmeMeta`);
   const userId = interaction.customId.split('~')[1];
   const actor = interaction.member as GuildMember;
-  const target = await interaction.guild.members.fetch(userId) as GuildMember;
+  const target = await interaction.guild.members.fetch(userId);
 
   if (!interaction.guild) {
     // log.debug(`[${PREFIX}] no guild!`);
@@ -348,7 +348,7 @@ export async function tripsitmeBackup(
   }
   const userId = interaction.customId.split('~')[1];
   const actor = interaction.member as GuildMember;
-  const target = await interaction.guild.members.fetch(userId) as GuildMember;
+  const target = await interaction.guild.members.fetch(userId);
 
   const userData = await getUser(userId, null);
   const ticketData = await getOpenTicket(userData.id, null);
@@ -708,6 +708,8 @@ export async function tripSitMe(
   triage:string,
   intro:string,
 ) {
+  await startLog('tripSitMe', interaction);
+
   // Lookup guild information for variables
   if (!interaction.guild) {
     interaction.reply({ content: 'This command can only be used in a server!', ephemeral: true });
@@ -768,7 +770,7 @@ export async function tripSitMe(
   const target = (memberInput ?? interaction.member) as GuildMember;
   // log.debug(`[${PREFIX}] target: ${target}`);
 
-  await needsHelpmode(interaction, target as GuildMember);
+  await needsHelpmode(interaction, target);
 
   // Get the tripsit channel from the guild
   const tripsitChannel = interaction.channel as TextChannel;
@@ -780,7 +782,7 @@ export async function tripSitMe(
     autoArchiveDuration: 1440,
     type: interaction.guild.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread,
     reason: `${target.displayName} requested help`,
-  }) as ThreadChannel;
+  });
   // log.debug(`[${PREFIX}] Created ${threadHelpUser.name} ${threadHelpUser.id}`);
 
   // Send reply to the actor
@@ -969,7 +971,7 @@ export async function tripsitmeButton(
 
   // log.debug(`[${PREFIX}] target: ${JSON.stringify(target, null, 2)}`);
 
-  const actorIsAdmin = (target as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
+  const actorIsAdmin = target.permissions.has(PermissionsBitField.Flags.Administrator);
   const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
 
   // const guildData = await getGuild(interaction.guild.id) as DiscordGuilds;

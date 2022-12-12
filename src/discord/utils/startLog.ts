@@ -4,6 +4,7 @@ import {
   MessageContextMenuCommandInteraction,
   ButtonInteraction,
   SelectMenuInteraction,
+  ModalSubmitInteraction,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 
@@ -20,7 +21,8 @@ export async function startLog(
   | UserContextMenuCommandInteraction
   | MessageContextMenuCommandInteraction
   | ButtonInteraction
-  | SelectMenuInteraction,
+  | SelectMenuInteraction
+  | ModalSubmitInteraction,
 ): Promise<void> {
   const guild = interaction.guild ? `in ${interaction.guild.name} (${interaction.guild?.id})` : 'in DM';
   let message = `[${prefix}] via ${interaction.user.tag} (${interaction.user.id}) \
