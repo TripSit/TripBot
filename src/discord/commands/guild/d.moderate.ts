@@ -7,7 +7,6 @@ import {
   TextInputBuilder,
   ActionRowBuilder,
   ModalSubmitInteraction,
-  Guild,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -19,7 +18,7 @@ import { parseDuration } from '../../../global/utils/parseDuration';
 import { moderate } from '../../../global/commands/g.moderate';
 import { startLog } from '../../utils/startLog';
 import env from '../../../global/utils/env.config';
-// import log from '../../../global/utils/log';
+import log from '../../../global/utils/log'; // eslint-disable-line
 import { ModAction } from '../../../global/@types/database';
 import { UserActionType } from '../../../global/@types/pgdb';
 
@@ -105,10 +104,10 @@ export const mod: SlashCommand = {
 
     // log.debug(`[${PREFIX}] toggle: ${toggle}`);
 
-    const targetGuild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
+    const targetGuild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID);
 
     // log.debug(`[${PREFIX}] target: ${target}`);
-    const targetMember = await targetGuild.members.fetch((target as string).slice(2, -1)) as GuildMember;
+    const targetMember = await targetGuild.members.fetch((target as string).slice(2, -1));
     // log.debug(`[${PREFIX}] targetMember: ${targetMember}`);
 
     let verb = '';

@@ -6,7 +6,7 @@ import {
   ButtonInteraction,
   // CommandInteractionOption,`
   SelectMenuInteraction,
-  // ModalSubmitInteraction,
+  ModalSubmitInteraction,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 // import { parse } from 'path';
@@ -23,7 +23,12 @@ export default startLog;
 * */
 export async function startLog(
   prefix: string,
-  interaction: ChatInputCommandInteraction | UserContextMenuCommandInteraction | MessageContextMenuCommandInteraction | ButtonInteraction | SelectMenuInteraction,
+  interaction: ChatInputCommandInteraction
+  | UserContextMenuCommandInteraction
+  | MessageContextMenuCommandInteraction
+  | ButtonInteraction
+  | SelectMenuInteraction
+  | ModalSubmitInteraction,
 ): Promise<void> {
   const guild = interaction.guild ? `in ${interaction.guild.name} (${interaction.guild?.id})` : 'in DM';
   let message = `[${prefix}] via ${interaction.user.tag} (${interaction.user.id}) \
