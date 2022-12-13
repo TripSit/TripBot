@@ -14,7 +14,7 @@ import { Users, ReactionRoles } from '../../global/@types/pgdb';
 
 // const F = f(__filename);
 
-const mindsetRemovalTime = env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 8 : 1000 * 30;
+const mindsetRemovalTime = env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 8 : 1000 * 5;
 
 export default handleReactionRoles;
 

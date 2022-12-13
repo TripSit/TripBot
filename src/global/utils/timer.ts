@@ -213,7 +213,7 @@ async function checkTickets() {
           if (guild) {
             const searchResults = await guild.members.search({ query: discordUser.username });
             // log.debug(F, `searchResults: ${JSON.stringify(searchResults)}`);
-            if (searchResults.keys.length > 0) {
+            if (searchResults.size > 0) {
               const member = await guild.members.fetch(discordUser);
               if (member) {
                 const myMember = await guild.members.fetch(env.DISCORD_CLIENT_ID);
@@ -279,6 +279,9 @@ async function checkMindsets() {
     // Loop through each user
     // for (const user of mindsetRoleData) {
     mindsetRoleData.forEach(async mindetUser => {
+      // log.debug(F, `mindsetUser: ${JSON.stringify(mindetUser, null, 2)}`);
+      // log.debug(F, `Expires: ${DateTime.fromJSDate(mindetUser.mindset_role_expires_at!) <= DateTime.local()}`);
+
       // Check if the user has a mindset role
       if (mindetUser.mindset_role
               && mindetUser.mindset_role_expires_at
@@ -286,10 +289,7 @@ async function checkMindsets() {
               && mindetUser.discord_id
       ) {
         // const expires = DateTime.fromJSDate(user.mindset_role_expires_at);
-        // log.debug(
-        //   `[${PREFIX}] ${user.discord_id}'s ${user.mindset_role}
-        // ${expires.toLocaleString(DateTime.DATETIME_MED)}`, // eslint-disable-line max-len
-        // );
+        // log.debug(F, `${DateTime.fromJSDate(mindetUser.mindset_role_expires_at)}`); // eslint-disable-line max-len
         // Check if the user's mindset role has expired
         // Get the user's discord id
         // Get the user's discord object
@@ -298,10 +298,13 @@ async function checkMindsets() {
         if (user && guild) {
           const searchResults = await guild.members.search({ query: user.username });
           // log.debug(F, `searchResults: ${JSON.stringify(searchResults)}`);
-          if (searchResults.keys.length > 0) {
+          // log.debug(F, `searchResults.keys: ${searchResults.size}`);
+          if (searchResults.size > 0) {
             // Get the user's discord member object
-            const member = await guild.members.fetch(user);
+            const member = await guild.members.fetch(user.id);
             const role = await guild.roles.fetch(mindetUser.mindset_role);
+            // log.debug(F, `member: ${JSON.stringify(member, null, 2)}`);
+            // log.debug(F, `role: ${JSON.stringify(role, null, 2)}`);
             if (member && role) {
               // Get the reaction role info from the db
               // const reactionRoleData = await db<ReactionRoles>('reaction_roles')
