@@ -5,7 +5,7 @@
 // const axios = require('axios');
 // const logger = require('../../../global/utils/log');
 
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 // const {
 //   rapidApiKey,
@@ -23,7 +23,7 @@
 
 //   async execute(interaction) {
 //     const question = interaction.options.getString('question');
-//   // log.debug(`[${PREFIX}] question: ${question}`);
+//   // log.debug(F, `question: ${question}`);
 
 //     const requestPayload = new URLSearchParams();
 //     requestPayload.append('input', question);
@@ -41,7 +41,7 @@
 //       },
 //     );
 
-//   // log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+//   // log.debug(F, `data: ${JSON.stringify(data)}`);
 //     // const embed = template.embedTemplate()
 //     //     .setTitle(`Definition for: ${word}`)
 //     //     .addFields(

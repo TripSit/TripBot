@@ -1,9 +1,7 @@
 /* eslint-disable max-len */
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default about;
 
@@ -53,7 +51,7 @@ export async function about():Promise<AboutInfo> {
         The actual [research for the LSD calculator](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/)
       `,
   };
-  log.info(`[${PREFIX}] response: ${JSON.stringify(aboutInfo, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(aboutInfo, null, 2)}`);
   return aboutInfo;
 }
 

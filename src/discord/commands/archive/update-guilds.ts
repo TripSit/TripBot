@@ -5,25 +5,25 @@
 // const logger = require('../../../global/utils/log');
 // const template = require('../../utils/embed-template');
 
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 // module.exports = {
 //   data: new SlashCommandBuilder()
 //     .setName('update-guilds')
 //     .setDescription('This will update the guild information in the db!'),
 //   async execute(interaction) {
-//   // log.debug(`[${PREFIX}] Updating guilds...`);
+//   // log.debug(F, `Updating guilds...`);
 //     // Using discord.js find the guilds this bot is in
 //     const guilds = interaction.client.guilds.cache;
 //     let guildCount = 0;
-//     // log.debug(`[${PREFIX}] guilds: ${JSON.stringify(guilds, null, 2)}`);
+//     // log.debug(F, `guilds: ${JSON.stringify(guilds, null, 2)}`);
 //     await guilds.forEach(async guild => {
 //       guildCount += 1;
 //       const targetResults = await getGuildInfo(guild);
 //       let targetData = targetResults[0];
 //       const targetFbid = targetResults[1];
-//       // log.debug(`[${PREFIX}] Guild data: ${JSON.stringify(targetData, null, 2)}`);
-//       // log.debug(`[${PREFIX}] Guild fbid: ${targetFbid}`);
+//       // log.debug(F, `Guild data: ${JSON.stringify(targetData, null, 2)}`);
+//       // log.debug(F, `Guild fbid: ${targetFbid}`);
 //       targetData = {
 //         guild_name: guild.name,
 //         guild_id: guild.id,
@@ -41,7 +41,7 @@
 //         guild_region: `${guild.region ? guild.region : 'No region'}`,
 //         ModActions: targetData.discord.ModActions ? targetData.discord.ModActions : {},
 //       };
-//       // log.debug(`[${PREFIX}] Guild data: ${JSON.stringify(targetData, null, 2)}`);
+//       // log.debug(F, `Guild data: ${JSON.stringify(targetData, null, 2)}`);
 //       await setGuildInfo(targetFbid, targetData);
 //     });
 //     // get length of guilds
@@ -52,6 +52,6 @@
 //       embeds: [embed],
 //       ephemeral: false,
 //     });
-//   // log.debug(`[${PREFIX}] Guilds updated!`);
+//   // log.debug(F, `Guilds updated!`);
 //   },
 // };

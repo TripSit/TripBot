@@ -3,17 +3,16 @@ import {
   User,
   // Role,
 } from 'discord.js';
-// import { parse } from 'path';
+
 // import { stripIndents } from 'common-tags';
 import { db } from '../../global/utils/knex';
 // import {
 //   Users,
 // } from '../../global/@types/pgdb.d';
-import env from '../../global/utils/env.config';
 // import log from '../../global/utils/log';
 import { Users, ReactionRoles } from '../../global/@types/pgdb';
 
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 const mindsetRemovalTime = env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 8 : 1000 * 30;
 
@@ -39,7 +38,7 @@ export async function handleReactionRoles(
 
   const messageId = reaction.message.id;
   const reactionId = reaction.emoji.id ?? reaction.emoji.name;
-  // log.debug(`[${PREFIX}] messageId: ${messageId} | reactionId: ${reactionId}`);
+  // log.debug(F, `messageId: ${messageId} | reactionId: ${reactionId}`);
   const ReactionRole = await db<ReactionRoles>('reaction_roles')
     .select(db.ref('role_id'))
     .where('message_id', messageId)
@@ -47,18 +46,18 @@ export async function handleReactionRoles(
     .first();
 
   if (ReactionRole === undefined) {
-    // log.debug(`[${PREFIX}] No reaction role found!`);
+    // log.debug(F, `No reaction role found!`);
     return;
   }
 
   if (reaction.message.guild) {
     const role = await reaction.message.guild.roles.fetch(ReactionRole.role_id);
     if (role !== null) {
-      // log.debug(`[${PREFIX}] role: ${role.name}`);
+      // log.debug(F, `role: ${role.name}`);
       if (add) {
         // Add the role
         (await reaction.message.guild.members.fetch(user.id)).roles.add(role);
-        // log.debug(`[${PREFIX}] Added role ${role.name} to ${user.username}`);
+        // log.debug(F, `Added role ${role.name} to ${user.username}`);
         reaction.message.reactions.cache.each(r => {
           if (r.emoji.name !== reaction.emoji.name) {
             r.users.remove(user);
@@ -76,8 +75,8 @@ export async function handleReactionRoles(
           `${env.EMOJI_TALKATIVE}`,
           `${env.EMOJI_WORKING}`,
         ];
-        // log.debug(`[${PREFIX}] mindsetEmojis: ${mindsetEmojis}`);
-        // log.debug(`[${PREFIX}] identifier: <:${reaction.emoji.identifier}>`);
+        // log.debug(F, `mindsetEmojis: ${mindsetEmojis}`);
+        // log.debug(F, `identifier: <:${reaction.emoji.identifier}>`);
         if (mindsetEmojis.includes(`<:${reaction.emoji.identifier}>`)) {
           // Update the database
           await db<Users>('users')
@@ -88,16 +87,16 @@ export async function handleReactionRoles(
             })
             .onConflict('discord_id')
             .merge();
-          // log.debug(`[${PREFIX}] Updated mindest DB ${user.username}`);
+          // log.debug(F, `Updated mindest DB ${user.username}`);
         }
       } else {
         // Remove the role
         (await reaction.message.guild.members.fetch(user.id)).roles.remove(role);
-        // log.debug(`[${PREFIX}] Removed role ${role.name} from ${user.username}`);
+        // log.debug(F, `Removed role ${role.name} from ${user.username}`);
       }
     }
   } else {
-    // log.debug(`[${PREFIX}] No guild found!`);
+    // log.debug(F, `No guild found!`);
 
   }
 }

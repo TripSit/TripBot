@@ -3,14 +3,12 @@ import {
   Role,
   SlashCommandBuilder,
 } from 'discord.js';
-// import * as path from 'path';
-import env from '../../../global/utils/env.config';
 import { SlashCommand } from '../../@types/commandDef';
 import { last } from '../../../global/commands/g.last';
 
 // import log from '../../../global/utils/logger';
 
-// const PREFIX = path.parse(__filename).name;
+// const F= f(__filename);
 
 export default dLast;
 

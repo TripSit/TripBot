@@ -6,7 +6,7 @@ import {
   User,
 } from 'discord.js';
 // import { DateTime } from 'luxon';
-// import { parse } from 'path';
+
 // import { stripIndents } from 'common-tags';
 // import env from '../../global/utils/env.config';
 import { db } from '../../global/utils/knex';
@@ -16,7 +16,7 @@ import {
 } from '../../global/@types/pgdb';
 // import log from '../../global/utils/log';
 
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 export default chitragupta;
 
@@ -35,19 +35,19 @@ export async function chitragupta(
   const actor = user;
   // const emoji = reaction.emoji.toString();
   if (reaction.message.author === null) {
-    // log.debug(`[${PREFIX}] Ignoring bot interaction`);
+    // log.debug(F, `Ignoring bot interaction`);
     return;
   }
   const target = reaction.message.author;
 
-  // log.debug(`[${PREFIX}] ${actor} ${action} ${emoji} ${target}!`);
+  // log.debug(F, `${actor} ${action} ${emoji} ${target}!`);
 
   // Can't give karma to yourself!
   if (actor === target) {
     return;
   }
 
-  // log.debug(`[${PREFIX}] actor: ${actor}`);
+  // log.debug(F, `actor: ${actor}`);
   if (!reaction.emoji.name) return;
   if (!reaction.emoji.name.includes('upvote')) return;
 
@@ -59,7 +59,7 @@ export async function chitragupta(
 
   if (actorKarma.length === 0) {
     // User doesn't exist in the database
-    // log.debug(`[${PREFIX}] User doesn't exist in the database: ${actor.id}`);
+    // log.debug(F, `User doesn't exist in the database: ${actor.id}`);
     // Create new user
     const newUser = {
       discord_id: actor.id,
@@ -79,7 +79,7 @@ export async function chitragupta(
 
   if (targetKarma.length === 0) {
     // User doesn't exist in the database
-    // log.debug(`[${PREFIX}] User doesn't exist in the database: ${actor.id}`);
+    // log.debug(F, `User doesn't exist in the database: ${actor.id}`);
     // Create new user
     const newUser = {
       discord_id: target.id,
@@ -90,10 +90,10 @@ export async function chitragupta(
       .insert(newUser)
       .returning(['karma_received', 'karma_given']);
   }
-  // log.debug(`[${PREFIX}] actorKarma ${JSON.stringify(actorKarma)}!`);
-  // log.debug(`[${PREFIX}] targetKarma ${JSON.stringify(targetKarma)}!`);
-  // log.debug(`[${PREFIX}] ${user.username} (R:${actorKarma[0].karma_received}|G:${actorKarma[0].karma_given}) ${verb} ${target.username} (R:${targetKarma[0].karma_received}|G:${targetKarma[0].karma_given}) in ${(reaction.message.channel as TextChannel).name}!`);
+  // log.debug(F, `actorKarma ${JSON.stringify(actorKarma)}!`);
+  // log.debug(F, `targetKarma ${JSON.stringify(targetKarma)}!`);
+  // log.debug(F, `${user.username} (R:${actorKarma[0].karma_received}|G:${actorKarma[0].karma_given}) ${verb} ${target.username} (R:${targetKarma[0].karma_received}|G:${targetKarma[0].karma_given}) in ${(reaction.message.channel as TextChannel).name}!`);
 
-  // log.debug(`[${PREFIX}] ${actor.username} has received (${actorKarma[0].karma_received}) and given (${actorKarma[0].karma_given})!`);
-  // log.debug(`[${PREFIX}] ${target.username} has received (${targetKarma[0].karma_received}) and given (${targetKarma[0].karma_given})!`);
+  // log.debug(F, `${actor.username} has received (${actorKarma[0].karma_received}) and given (${actorKarma[0].karma_given})!`);
+  // log.debug(F, `${target.username} has received (${targetKarma[0].karma_received}) and given (${targetKarma[0].karma_given})!`);
 }

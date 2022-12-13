@@ -6,14 +6,14 @@ import { SlashCommand } from '../../@types/commandDef';
 import { eyeballing } from '../../../global/commands/archive/g.eyeballing';
 // import log from '../../../global/utils/log';
 // import {parse} from 'path';
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 export const deyeballing: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('eyeballing')
     .setDescription('Instructions on how to eyeball a dose'),
   async execute(interaction:ChatInputCommandInteraction) {
-    // log.debug(`[${PREFIX}] starting!`);
+    // log.debug(F, `starting!`);
     interaction.reply(await eyeballing());
     return true;
   },

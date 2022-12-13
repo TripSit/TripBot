@@ -1,14 +1,13 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcKetamine } from '../../../global/commands/g.calcKetamine';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dCalcketamine;
 
@@ -28,17 +27,17 @@ export const dCalcketamine: SlashCommand = {
         { name: 'lbs', value: 'lbs' },
       )),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const givenWeight = interaction.options.getNumber('weight');
     if (!givenWeight) {
       interaction.reply({
         content: 'Something went wrong. Please try again.',
         ephemeral: true,
       });
-      // log.debug(`[${PREFIX}] weight: ${givenWeight}`);
+      // log.debug(F, `weight: ${givenWeight}`);
       return false;
     }
-    // log.debug(`[${PREFIX}] weight: ${givenWeight}`);
+    // log.debug(F, `weight: ${givenWeight}`);
 
     const weightUnits = interaction.options.getString('units') as 'kg' | 'lbs';
     if (!weightUnits) {
@@ -46,14 +45,14 @@ export const dCalcketamine: SlashCommand = {
         content: 'Something went wrong. Please try again.',
         ephemeral: true,
       });
-      // log.debug(`[${PREFIX}] weightUnits: ${weightUnits}`);
+      // log.debug(F, `weightUnits: ${weightUnits}`);
       return false;
     }
 
-    // log.debug(`[${PREFIX}] weightUnits: ${weightUnits}`);
+    // log.debug(F, `weightUnits: ${weightUnits}`);
 
     // const calcWeight = weightUnits === 'kg' ? givenWeight * 2.20462 : givenWeight;
-    // // log.debug(`[${PREFIX}] calcWeight: ${calcWeight}`);
+    // // log.debug(F, `calcWeight: ${calcWeight}`);
 
     const embed = embedTemplate();
     if (weightUnits === 'kg' && givenWeight > 179) {

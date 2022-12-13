@@ -3,12 +3,10 @@ import {
   ChatInputCommandInteraction,
   TextChannel,
 } from 'discord.js';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
-import log from '../../../global/utils/log';
 import { startLog } from '../../utils/startLog';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dClearchat;
 
@@ -26,7 +24,7 @@ export const dClearchat: SlashCommand = {
       .setDescription('Delete threads? (default: true)')
       .setName('delete-archived-threads')),
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     if (!interaction.channel) {
       interaction.reply({ content: 'This command can only be used in a server!', ephemeral: true });
       return false;
@@ -51,19 +49,19 @@ export const dClearchat: SlashCommand = {
     //   try {
     //     message.delete();
     //   } catch (err) {
-    //     log.error(`[${PREFIX}] ${err}`);
+    //     log.error(F, `${err}`);
     //   }
     // }
 
     if (deleteThreads) {
       // Delete every thread in the channel
       const fetchedThreads = await (interaction.channel as TextChannel).threads.fetch();
-      // log.debug(`[${PREFIX}] fetchedThreads: ${JSON.stringify(fetchedThreads, null, 2)}`);
+      // log.debug(F, `fetchedThreads: ${JSON.stringify(fetchedThreads, null, 2)}`);
       fetchedThreads.threads.forEach(async thread => {
         try {
           thread.delete();
         } catch (err) {
-          log.error(`[${PREFIX}] ${err}`);
+          log.error(F, `${err}`);
         }
       });
     }
@@ -71,12 +69,12 @@ export const dClearchat: SlashCommand = {
     if (deleteArchived) {
       // Delete every archived thread in the channel
       const archivedThreads = await (interaction.channel as TextChannel).threads.fetchArchived();
-      // log.debug(`[${PREFIX}] fetchedThreads: ${JSON.stringify(archivedThreads, null, 2)}`);
+      // log.debug(F, `fetchedThreads: ${JSON.stringify(archivedThreads, null, 2)}`);
       archivedThreads.threads.forEach(async thread => {
         try {
           thread.delete();
         } catch (err) {
-          log.error(`[${PREFIX}] ${err}`);
+          log.error(F, `${err}`);
         }
       });
     }

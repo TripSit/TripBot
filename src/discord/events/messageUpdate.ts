@@ -2,15 +2,12 @@ import {
   Colors,
   TextChannel,
 } from 'discord.js';
-import { parse } from 'path';
 import {
   MessageUpdateEvent,
 } from '../@types/eventDef';
-import env from '../../global/utils/env.config';
-import { embedTemplate } from '../utils/embedTemplate';
-import log from '../../global/utils/log'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { embedTemplate } from '../utils/embedTemplate'; // eslint-disable-line @typescript-eslint/no-unused-vars
 // eslint-disable-line no-unused-vars
-const PREFIX = parse(__filename).name; // eslint-disable-line @typescript-eslint/no-unused-vars
+const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -25,8 +22,8 @@ export const messageUpdate: MessageUpdateEvent = {
       return;
     }
 
-    // log.debug(`[${PREFIX}] oldMessage: ${JSON.stringify(oldMessage, null, 2)}`);
-    // log.debug(`[${PREFIX}] newMessage: ${JSON.stringify(newMessage, null, 2)}`);
+    // log.debug(F, `oldMessage: ${JSON.stringify(oldMessage, null, 2)}`);
+    // log.debug(F, `newMessage: ${JSON.stringify(newMessage, null, 2)}`);
 
     // Don't run when bots update messages
     if (!newMessage.author) return;
@@ -35,11 +32,11 @@ export const messageUpdate: MessageUpdateEvent = {
     const oldContent = oldMessage.content !== undefined && oldMessage.content !== null && oldMessage.content !== ''
       ? oldMessage.content
       : '(Not found)';
-    // log.debug(`[${PREFIX}] oldContent: ${oldContent}`);
+    // log.debug(F, `oldContent: ${oldContent}`);
     const newContent = newMessage.content !== undefined && newMessage.content !== null && newMessage.content !== ''
       ? newMessage.content
       : '(Not found)';
-    // log.debug(`[${PREFIX}] newContent: ${newContent}`);
+    // log.debug(F, `newContent: ${newContent}`);
 
     const embed = embedTemplate()
       .setAuthor(null)

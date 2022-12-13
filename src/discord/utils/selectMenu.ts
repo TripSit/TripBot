@@ -4,7 +4,7 @@ import {
 import { applicationStart, applicationReject } from './application';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 export default selectMenu;
 
@@ -16,7 +16,7 @@ export default selectMenu;
  */
 export async function selectMenu(interaction:SelectMenuInteraction): Promise<void> {
   const { customId } = interaction;
-  // log.debug(`[${PREFIX}] customId: ${customId}`);
+  // log.debug(F, `customId: ${customId}`);
 
   if (customId.startsWith('applicationReject')) {
     await applicationReject(interaction);

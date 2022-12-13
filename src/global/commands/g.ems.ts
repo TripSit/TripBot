@@ -1,7 +1,4 @@
-import { parse } from 'path';
-import log from '../utils/log';
-
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default ems;
 
@@ -93,7 +90,7 @@ export async function ems():Promise<HelpResource[]> {
       webchat: 'https://blog.opencounseling.com/suicide-hotlines/',
     },
   ];
-  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }
 

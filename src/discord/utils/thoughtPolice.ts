@@ -4,13 +4,12 @@ import {
   TextChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import env from '../../global/utils/env.config';
 
 import { bigBrother } from '../../global/utils/thoughtPolice';
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 export default thoughtPolice;
 
@@ -20,13 +19,13 @@ export default thoughtPolice;
  * @return {Promise<void>}
  */
 export async function thoughtPolice(message:Message): Promise<void> {
-  // log.debug(`[${PREFIX}] ${message.member!.displayName} said "${message.cleanContent}"`);
+  // log.debug(F, `${message.member!.displayName} said "${message.cleanContent}"`);
   const channelModlog = message.client.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
   // const roleModerators = message.guild?.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR);
 
   const result = await bigBrother(message.cleanContent.toLowerCase());
 
-  // log.debug(`[${PREFIX}] result: ${result}`);
+  // log.debug(F, `result: ${result}`);
 
   if (result && result === 'offensive') {
     message.delete();

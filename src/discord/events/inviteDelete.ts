@@ -8,10 +8,9 @@ import {
 import {
   InviteDeleteEvent,
 } from '../@types/eventDef';
-import env from '../../global/utils/env.config';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 

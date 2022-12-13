@@ -3,7 +3,6 @@ import {
   ThreadChannel,
 } from 'discord.js';
 import { DateTime } from 'luxon';
-import { parse } from 'path';
 import { db, getGuild, getUser } from './knex';
 import {
   Users,
@@ -12,12 +11,10 @@ import {
   TicketStatus,
   DiscordGuilds,
 } from '../@types/pgdb.d';
-import env from './env.config';
-import log from './log';
 
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 // Value in miliseconds (1000 * 60 = 1 minute)
 const interval = env.NODE_ENV === 'production' ? 1000 * 60 : 1000 * 10;
@@ -35,7 +32,7 @@ async function checkStats() {
       const currentCount = parseInt(channelTotal.name.split(': ')[1], 10);
       if (currentCount !== memberCount) {
         channelTotal.setName(`Total Members: ${memberCount}`);
-        // log.debug(`[${PREFIX}] Updated total members to ${memberCount}!`);
+        // log.debug(F, `Updated total members to ${memberCount}!`);
         // Check if the total members is divisible by 100
         if (memberCount % 100 === 0) {
           const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
@@ -53,13 +50,13 @@ async function checkStats() {
     const roleVerified = await tripsitGuild.roles.fetch(env.ROLE_VERIFIED);
     if (roleVerified) {
       const { members } = roleVerified;
-      // log.debug(`[${PREFIX}] Role verified members: ${members.size}`);
+      // log.debug(F, `Role verified members: ${members.size}`);
       const channelVerified = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_VERIFIED);
       if (channelVerified) {
         const currentCount = parseInt(channelVerified.name.split(': ')[1], 10);
         if (currentCount !== members.size) {
           channelVerified.setName(`Verified Members: ${members.size}`);
-          // log.debug(`[${PREFIX}] Updated verified members to ${members.size}!`);
+          // log.debug(F, `Updated verified members to ${members.size}!`);
           if (members.size % 100 === 0) {
             const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
             if (channelGeneral) {
@@ -83,16 +80,16 @@ async function checkStats() {
       const currentCount = parseInt(channelOnline.name.split(': ')[1], 10);
       if (currentCount !== onlineCount) {
         channelOnline.setName(`Online Members: ${onlineCount}`);
-        // log.debug(`[${PREFIX}] Updated online members to ${onlineCount}!`);
+        // log.debug(F, `Updated online members to ${onlineCount}!`);
       } else {
-        // log.debug(`[${PREFIX}] Online members is already ${onlineCount}!`);
+        // log.debug(F, `Online members is already ${onlineCount}!`);
       }
     }
 
     // Max online count
     let maxCount = 0;
     // Update the database's max_online_members if it's higher than the current value
-    // log.debug(`[${PREFIX}] Getting guild data`);
+    // log.debug(F, `Getting guild data`);
     const guildData = await getGuild(env.DISCORD_GUILD_ID);
     if (guildData) {
       if (guildData.max_online_members) {
@@ -123,19 +120,19 @@ async function checkStats() {
     const channelMax = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_MAX);
     if (channelMax) {
       const currentCount = parseInt(channelMax.name.split(': ')[1], 10);
-      // log.debug(`[${PREFIX}] currentCount: ${currentCount} | maxCount: ${maxCount}`);
+      // log.debug(F, `currentCount: ${currentCount} | maxCount: ${maxCount}`);
       if (maxCount > currentCount) {
         channelMax.setName(`Max Online: ${maxCount}`);
-        // log.debug(`[${PREFIX}] Updated max online members to ${maxCount}!`);
+        // log.debug(F, `Updated max online members to ${maxCount}!`);
       } else {
-        // log.debug(`[${PREFIX}] Max members is already ${maxCount}!`);
+        // log.debug(F, `Max members is already ${maxCount}!`);
       }
     }
   }
 }
 
 async function checkReminders() {
-  // log.info(`[${PREFIX}] Checking timers...`);
+  // log.info(F, `Checking timers...`);
   // Process reminders
   const reminderData = await db<UserReminders>('user_reminders')
     .select(
@@ -168,7 +165,7 @@ async function checkReminders() {
             .where('id', reminder.id);
         }
       } else {
-        log.error(`[${PREFIX}] Reminder ${reminder.id} has no trigger date!`);
+        log.error(F, `Reminder ${reminder.id} has no trigger date!`);
       }
     });
   }
@@ -205,7 +202,7 @@ async function checkTickets() {
         const thread = await global.client.channels.fetch(ticket.thread_id) as ThreadChannel;
         await thread.setArchived(true);
       } catch (error) {
-        // log.debug(`[${PREFIX}] There was an error archiving the thread, it was likely deleted`);
+        // log.debug(F, `There was an error archiving the thread, it was likely deleted`);
       }
 
       const userData = await getUser(null, ticket.user_id);
@@ -215,7 +212,7 @@ async function checkTickets() {
           const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
           if (guild) {
             const searchResults = await guild.members.search({ query: discordUser.username });
-            // log.debug(`[${PREFIX}] searchResults: ${JSON.stringify(searchResults)}`);
+            // log.debug(F, `searchResults: ${JSON.stringify(searchResults)}`);
             if (searchResults.keys.length > 0) {
               const member = await guild.members.fetch(discordUser);
               if (member) {
@@ -224,7 +221,7 @@ async function checkTickets() {
 
                 // Restore the old roles
                 if (userData.roles) {
-                  // log.debug(`[${PREFIX}] Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
+                  // log.debug(F, `Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
                   const roles = userData.roles.split(',');
                   // for (const role of roles) {
                   roles.forEach(async role => {
@@ -234,7 +231,7 @@ async function checkTickets() {
                             && roleObj.comparePositionTo(myRole) < 0
                     ) {
                       // Check if the bot has permission to add the role
-                      // log.debug(`[${PREFIX}] Adding ${userData.discord_id}'s ${role} role`);
+                      // log.debug(F, `Adding ${userData.discord_id}'s ${role} role`);
                       await member.roles.add(roleObj);
                     }
                   });
@@ -300,7 +297,7 @@ async function checkMindsets() {
         const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
         if (user && guild) {
           const searchResults = await guild.members.search({ query: user.username });
-          // log.debug(`[${PREFIX}] searchResults: ${JSON.stringify(searchResults)}`);
+          // log.debug(F, `searchResults: ${JSON.stringify(searchResults)}`);
           if (searchResults.keys.length > 0) {
             // Get the user's discord member object
             const member = await guild.members.fetch(user);
@@ -317,7 +314,7 @@ async function checkMindsets() {
 
               // Remove the reaction from the role message
               await member.roles.remove(role);
-              // log.debug(`[${PREFIX}] Removed ${user.discord_id}'s ${user.mindset_role} role`);
+              // log.debug(F, `Removed ${user.discord_id}'s ${user.mindset_role} role`);
               // Update the user's mindset role in the database
               await db<Users>('users')
                 .insert({

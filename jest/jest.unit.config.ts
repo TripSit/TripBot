@@ -1,6 +1,10 @@
 import type { Config } from 'jest';
 
 const jestConfig: Config = {
+  setupFilesAfterEnv: [
+    '<rootDir>/src/global/utils/log.ts',
+    '<rootDir>/src/global/utils/env.config.ts',
+  ],
   testMatch: [
     '<rootDir>/jest/__tests__/*.test.ts',
   ],

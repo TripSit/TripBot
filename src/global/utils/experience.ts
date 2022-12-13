@@ -7,13 +7,10 @@ import {
 } from 'discord.js';
 import { DateTime } from 'luxon';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import { db, getUser } from './knex';
 import { UserExperience, ExperienceType } from '../@types/pgdb';
-import env from './env.config';
-import log from './log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 // Define the time in between messages where exp will count
 const bufferTime = env.NODE_ENV === 'production' ? 60 * 1000 : 1 * 1000;
@@ -31,9 +28,9 @@ export default experience;
 async function getType(channel:TextChannel):Promise<ExperienceType> {
   let experienceType = '';
   if (channel.parent) {
-    // log.debug(`[${PREFIX}] parent: ${channel.parent.name} ${channel.parent.id}`);
+    // log.debug(F, `parent: ${channel.parent.name} ${channel.parent.id}`);
     if (channel.parent.parent) {
-      // log.debug(`[${PREFIX}] parent-parent: ${channel.parent.parent.name} ${channel.parent.parent.id}`);
+      // log.debug(F, `parent-parent: ${channel.parent.parent.name} ${channel.parent.parent.id}`);
       if (channel.parent.parent.id === env.CATEGORY_TEAMTRIPSIT) {
         experienceType = 'TEAM' as ExperienceType;
       } else if (channel.parent.parent.id === env.CATEGORY_DEVELOPMENT) {
@@ -82,14 +79,14 @@ export async function experience(
 
   // Check if the user has an ignored role
   if (ignoredRoles.some(role => message.member?.roles.cache.has(role))) {
-    // log.debug(`[${PREFIX}] Message sent by a user with an ignored role`);
+    // log.debug(F, `Message sent by a user with an ignored role`);
     return;
   }
 
   // log.debug(stripIndents`[${PREFIX}] Message sent by ${message.author.username} \
   // in ${(message.channel as TextChannel).name} on ${message.guild}`);
 
-  // log.debug(`[${PREFIX}] experienceType: ${experienceType}`);
+  // log.debug(F, `experienceType: ${experienceType}`);
 
   // Get random value between 15 and 25
   const expPoints = env.NODE_ENV === 'production'
@@ -98,7 +95,7 @@ export async function experience(
 
   const userData = await getUser(message.author.id, null);
 
-  // log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData, null, 2)}`);
+  // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
   const experienceData = await db<UserExperience>('user_experience')
     .select(
@@ -115,12 +112,12 @@ export async function experience(
     .andWhere('type', experienceType)
     .first();
 
-  // log.debug(`[${PREFIX}] experienceData: ${JSON.stringify(experienceData, null, 2)}`);
+  // log.debug(F, `experienceData: ${JSON.stringify(experienceData, null, 2)}`);
 
   // If the user has no experience, insert it
   if (!experienceData) {
-    // log.debug(`[${PREFIX}] Inserting new experience`);
-    // log.debug(`[${PREFIX}] experienceDataInsert: ${JSON.stringify(experienceData, null, 2)}`);
+    // log.debug(F, `Inserting new experience`);
+    // log.debug(F, `experienceDataInsert: ${JSON.stringify(experienceData, null, 2)}`);
     await db<UserExperience>('user_experience')
       .insert({
         user_id: userData.id,
@@ -134,27 +131,27 @@ export async function experience(
     return;
   }
   // If the user has experience, update it
-  // log.debug(`[${PREFIX}] Updating existing experience`);
+  // log.debug(F, `Updating existing experience`);
   experienceData.level_points += expPoints;
   experienceData.total_points += expPoints;
 
-  // log.debug(`[${PREFIX}] experienceDataUpdate: ${JSON.stringify(experienceData, null, 2)}`);
+  // log.debug(F, `experienceDataUpdate: ${JSON.stringify(experienceData, null, 2)}`);
 
   // Check if the message happened in the last minute
-  // log.debug(`[${PREFIX}] lastMessageAt: ${experienceData.last_message_at}`);
+  // log.debug(F, `lastMessageAt: ${experienceData.last_message_at}`);
   const lastMessageDate = DateTime.fromJSDate(experienceData.last_message_at);
 
   const currentDate = DateTime.now();
   const diff = currentDate.diff(lastMessageDate).toObject();
-  // log.debug(`[${PREFIX}] diff: ${JSON.stringify(diff)}`);
+  // log.debug(F, `diff: ${JSON.stringify(diff)}`);
 
   // If the message happened in the last minute, ignore it
   if (!diff.milliseconds) {
-    log.error(`[${PREFIX}] Error converting ${lastMessageDate}`);
+    log.error(F, `Error converting ${lastMessageDate}`);
     return;
   }
   if (diff.milliseconds < bufferTime) {
-    // log.debug(`[${PREFIX}] Message sent by a user in the last minute`);
+    // log.debug(F, `Message sent by a user in the last minute`);
     return;
   }
 
@@ -282,7 +279,7 @@ export async function experience(
   experienceData.last_message_at = new Date();
   experienceData.last_message_channel = message.channel.id;
 
-  // log.debug(`[${PREFIX}] experienceDataMerge: ${JSON.stringify(experienceData, null, 2)}`);
+  // log.debug(F, `experienceDataMerge: ${JSON.stringify(experienceData, null, 2)}`);
 
   await db<UserExperience>('user_experience')
     .insert(experienceData)

@@ -1,12 +1,9 @@
 import {
   TextChannel,
 } from 'discord.js';
-import { parse } from 'path';
 import { RateLimitEvent } from '../@types/eventDef';
-import log from '../../global/utils/log';
-import env from '../../global/utils/env.config';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default rateLimit;
 
@@ -26,6 +23,6 @@ export const rateLimit: RateLimitEvent = {
 
     const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
     await botlog.send(response);
-    log.error(`[${PREFIX}] ${response}`);
+    log.error(F, `${response}`);
   },
 };

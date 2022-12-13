@@ -15,12 +15,10 @@ import {
   ButtonStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import { embedTemplate } from './embedTemplate';
-import log from '../../global/utils/log';
 import { getGuild } from '../../global/utils/knex';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 const guildOnly = 'This command can only be used in a guild!';
 
@@ -29,7 +27,7 @@ const guildOnly = 'This command can only be used in a guild!';
  * @param {ButtonInteraction} interaction The interaction that triggered this
  */
 export async function techHelpClick(interaction:ButtonInteraction) {
-  // log.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
+  // log.debug(F, `Message: ${JSON.stringify(interaction, null, 2)}!`);
   if (!interaction.guild) {
     interaction.reply({
       content: guildOnly,
@@ -43,7 +41,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   const guildData = await getGuild(interaction.guild.id);
 
   if (!guildData) {
-    log.error(`[${PREFIX} - techHelpClick] guild not found: ${interaction.guild.id}`);
+    log.error(F, `- techHelpClick] guild not found: ${interaction.guild.id}`);
     interaction.reply({
       content: 'The Guild provided could not be found!',
       ephemeral: true,
@@ -52,7 +50,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   }
 
   if (!guildData.role_techhelp) {
-    log.error(`[${PREFIX} - techHelpClick] techhelp role not found: ${interaction.guild.id}`);
+    log.error(F, `- techHelpClick] techhelp role not found: ${interaction.guild.id}`);
     interaction.reply({
       content: 'The role provided could not be found!',
       ephemeral: true,
@@ -63,7 +61,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   const roleTechreview = interaction.guild.roles.cache.get(guildData.role_techhelp);
 
   if (!roleTechreview) {
-    log.error(`[${PREFIX} - techHelpClick] roleTechreview not found: ${interaction.guild.id}`);
+    log.error(F, `- techHelpClick] roleTechreview not found: ${interaction.guild.id}`);
     interaction.reply({
       content: 'The role provided could not be found!',
       ephemeral: true,
@@ -118,7 +116,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
       // Respond right away cuz the rest of this doesn't matter
       const member = await i.guild.members.fetch(i.user.id);
-      // log.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
+      // log.debug(F, `member: ${JSON.stringify(member, null, 2)}!`);
       if (member) {
         // Dont run if the user is on timeout
         if (member.communicationDisabledUntilTimestamp !== null) {
@@ -136,7 +134,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
       // Get whatever they sent in the modal
       const modalInput = i.fields.getTextInputValue(`${issueType}IssueInput`);
-      // log.debug(`[${PREFIX}] modalInput: ${modalInput}!`);
+      // log.debug(F, `modalInput: ${modalInput}!`);
 
       // // Get the actor
       const actor = i.user;
@@ -148,7 +146,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
         type: i.guild.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
         reason: `${actor.username} submitted a(n) ${issueType} issue`,
       });
-      // log.debug(`[${PREFIX}] Created meta-thread ${ticketThread.id}`);
+      // log.debug(F, `Created meta-thread ${ticketThread.id}`);
 
       const embed = embedTemplate();
       embed.setDescription(
@@ -176,7 +174,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
         );
 
       await ticketThread.send({ content: message, components: [techHelpButtons] });
-    // log.debug(`[${PREFIX}] Sent intro message to meta-thread ${ticketThread.id}`);
+    // log.debug(F, `Sent intro message to meta-thread ${ticketThread.id}`);
     });
 }
 

@@ -11,14 +11,13 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import { MessageCommand } from '../../@types/commandDef';
 // import log from '../../../global/utils/log';
 import { moderate } from '../../../global/commands/g.moderate';
 import { startLog } from '../../utils/startLog';
 import { UserActionType } from '../../../global/@types/pgdb';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default mReport;
 
@@ -27,7 +26,7 @@ export const mReport: MessageCommand = {
     .setName('Report')
     .setType(ApplicationCommandType.Message),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const actor = interaction.member as GuildMember;
     const target = interaction.targetMessage.member as GuildMember;
     const message = interaction.targetMessage.cleanContent;
@@ -66,7 +65,7 @@ export const mReport: MessageCommand = {
           null,
           null,
         );
-          // log.debug(`[${PREFIX}] Result: ${result}`);
+          // log.debug(F, `Result: ${result}`);
         i.reply(result);
       });
     return true;

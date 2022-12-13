@@ -4,7 +4,6 @@ import {
 import {
   MessageCreateEvent,
 } from '../@types/eventDef';
-import env from '../../global/utils/env.config';
 // import {thoughtPolice} from '../utils/d.thoughtPolice';
 import { experience } from '../../global/utils/experience';
 import { announcements } from '../utils/announcements';
@@ -13,7 +12,7 @@ import { modmailDMInteraction, modmailThreadInteraction } from '../commands/guil
 import { getUser } from '../../global/utils/knex';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 export default messageCreate;
 
@@ -30,7 +29,7 @@ export const messageCreate: MessageCreateEvent = {
       return;
     }
 
-    // log.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
+    // log.debug(F, `Message: ${JSON.stringify(message, null, 2)}!`);
 
     // Disabled for testing
     // thoughtPolice(message);

@@ -27,14 +27,11 @@ import {
   PermissionFlagsBits,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import { embedTemplate } from './embedTemplate';
-import env from '../../global/utils/env.config';
-import { startLog } from './startLog';
-import log from '../../global/utils/log'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { startLog } from './startLog'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { getGuild } from '../../global/utils/knex';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 // "your application was denied because..."
 const rejectionMessages = {
@@ -64,7 +61,7 @@ export async function applicationStart(
     return;
   }
 
-  startLog(PREFIX, interaction);
+  startLog(F, interaction);
 
   const roleRequestedId = interaction.values[0].split('~')[0];
   const roleReviewerId = interaction.values[0].split('~')[1];
@@ -96,12 +93,12 @@ export async function applicationStart(
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       if (!i.guild) {
-        // log.debug(`[${PREFIX}] no guild!`);
+        // log.debug(F, `no guild!`);
         i.reply('This must be performed in a guild!');
         return;
       }
       if (!i.member) {
-        // log.debug(`[${PREFIX}] no member!`);
+        // log.debug(F, `no member!`);
         i.reply('This must be performed by a member of a guild!');
         return;
       }
@@ -239,7 +236,7 @@ export async function applicationStart(
       );
 
       const actorHasRoleDeveloper = actor.permissions.has(PermissionsBitField.Flags.Administrator);
-      // log.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
+      // log.debug(F, `actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
 
       await applicationThread.send(`Hey ${actorHasRoleDeveloper ? 'team!' : roleReviewer} there is a new application!`);
       await applicationThread.send({ embeds: [appEmbed], components: [approveButton, rejectMenu] })
@@ -249,8 +246,8 @@ export async function applicationStart(
         });
 
       // Respond to the user
-      // log.debug(`[${PREFIX}] reason: ${reason}`);
-      // log.debug(`[${PREFIX}] skills: ${skills}`);
+      // log.debug(F, `reason: ${reason}`);
+      // log.debug(F, `skills: ${skills}`);
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription('Thank you for your interest! We will try to get back to you as soon as possible!');
@@ -271,12 +268,12 @@ export async function applicationReject(
     return;
   }
 
-  startLog(PREFIX, interaction);
+  startLog(F, interaction);
 
   const threadCreated = interaction.channel?.createdAt;
   // Check if the thread was created in the last 24 hours
   if (threadCreated && threadCreated.getTime() > Date.now() - 86400000) {
-    // log.debug(`[${PREFIX}] Thread created in the last 24 hours!`);
+    // log.debug(F, `Thread created in the last 24 hours!`);
     interaction.reply({ content: 'Woah there, please give the team at least 24 until the next day to act on this application!', ephemeral: true });
     return;
   }
@@ -315,14 +312,14 @@ export async function applicationReject(
 export async function applicationApprove(
   interaction: ButtonInteraction,
 ): Promise<void> {
-  startLog(PREFIX, interaction);
+  startLog(F, interaction);
   if (!interaction.guild) return;
   const actor = (interaction.member as GuildMember);
 
   const threadCreated = interaction.channel?.createdAt;
   // Check if the thread was created in the last 24 hours
   if (threadCreated && threadCreated.getTime() > Date.now() - 86400000) {
-    // log.debug(`[${PREFIX}] Thread created in the last 24 hours!`);
+    // log.debug(F, `Thread created in the last 24 hours!`);
     interaction.reply({ content: 'Woah there, please give the team at least 24 until the next day to act on this application!', ephemeral: true });
     return;
   }
@@ -344,7 +341,7 @@ export async function applicationApprove(
     const myRole = myMember.roles.highest;
 
     if (role.comparePositionTo(myRole) < 0) {
-    // log.debug(`[${PREFIX}] Adding role ${role.name} to ${target.displayName}`);
+    // log.debug(F, `Adding role ${role.name} to ${target.displayName}`);
       target.roles.add(role);
     } else {
       interaction.reply(`I do not have permission to add the ${role.name} role to ${target.displayName}!`);

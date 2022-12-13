@@ -6,7 +6,7 @@
 // const logger = require('../../../global/utils/log');
 // const template = require('../../utils/embed-template');
 
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 // module.exports = {
 //   data: new ContextMenuCommandBuilder()

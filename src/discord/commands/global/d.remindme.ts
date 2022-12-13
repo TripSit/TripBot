@@ -9,7 +9,6 @@ import {
   ChannelType,
   ButtonStyle,
 } from 'discord-api-types/v10';
-import { parse } from 'path';
 import { remindme } from '../../../global/commands/g.remindme';
 import { startLog } from '../../utils/startLog';
 import { SlashCommand } from '../../@types/commandDef';
@@ -17,7 +16,7 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import { paginationEmbed } from '../../utils/pagination';
 // import log from '../../../global/utils/log';
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 const buttonList = [
   new ButtonBuilder().setCustomId('previousbtn').setLabel('Previous').setStyle(ButtonStyle.Danger),
@@ -49,7 +48,7 @@ export const dRemindme: SlashCommand = {
         .setRequired(true))
       .setName('delete')),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const offset = interaction.options.getString('offset');
     const reminder = interaction.options.getString('reminder');
@@ -58,10 +57,10 @@ export const dRemindme: SlashCommand = {
     const reminderDatetime = new Date();
     if (offset) {
       const out = await parseDuration(offset);
-      // log.debug(`[${PREFIX}] out: ${out}`);
+      // log.debug(F, `out: ${out}`);
       reminderDatetime.setTime(reminderDatetime.getTime() + out);
     }
-    // log.debug(`[${PREFIX}] reminderDatetime: ${reminderDatetime}`);
+    // log.debug(F, `reminderDatetime: ${reminderDatetime}`);
 
     const response = await remindme(
       command,
@@ -97,14 +96,14 @@ export const dRemindme: SlashCommand = {
               value: response[i].value,
               inline: true,
             });
-            // log.debug(`[${PREFIX}] Adding field ${field.name}`);
+            // log.debug(F, `Adding field ${field.name}`);
             pageFieldsCount += 1;
-            // log.debug(`[${PREFIX}] pageFieldsCount: ${pageFieldsCount}`);
+            // log.debug(F, `pageFieldsCount: ${pageFieldsCount}`);
             if (pageFieldsCount === 24) {
               pageEmbed.setFields(pageFields);
-              // log.debug(`[${PREFIX}] pageEmbed: ${JSON.stringify(pageEmbed)}`);
+              // log.debug(F, `pageEmbed: ${JSON.stringify(pageEmbed)}`);
               book.push(pageEmbed);
-              // log.debug(`[${PREFIX}] book.length: ${book.length}`);
+              // log.debug(F, `book.length: ${book.length}`);
               pageFields = [];
               pageFieldsCount = 0;
               pageEmbed = embedTemplate();
@@ -113,9 +112,9 @@ export const dRemindme: SlashCommand = {
           // Add the last pageEmbed
           if (pageFieldsCount > 0) {
             pageEmbed.setFields(pageFields);
-            // log.debug(`[${PREFIX}] pageEmbed: ${JSON.stringify(pageEmbed)}`);
+            // log.debug(F, `pageEmbed: ${JSON.stringify(pageEmbed)}`);
             book.push(pageEmbed);
-            // log.debug(`[${PREFIX}] book.length: ${book.length}`);
+            // log.debug(F, `book.length: ${book.length}`);
           }
         }
         if (response.length <= 24) {
@@ -138,7 +137,7 @@ export const dRemindme: SlashCommand = {
         embed.setTitle('No reminders!');
         embed.setDescription('You have no reminders! Use /remindme to add some!');
       }
-      // log.debug(`[${PREFIX}] book.length: ${book.length}`);
+      // log.debug(F, `book.length: ${book.length}`);
       if (book.length > 1) {
         paginationEmbed(interaction, book, buttonList);
       } else if (!interaction.channel) {
@@ -158,14 +157,14 @@ export const dRemindme: SlashCommand = {
       }
 
       // const timeString = time(reminderDatetime).valueOf().toString();
-      // log.debug(`[${PREFIX}] timeString: ${timeString}`);
+      // log.debug(F, `timeString: ${timeString}`);
       const relative = time(reminderDatetime, 'R');
-      // log.debug(`[${PREFIX}] relative: ${relative}`);
+      // log.debug(F, `relative: ${relative}`);
 
       embed.setDescription(`${relative} I will remind you: ${reminder}`);
       interaction.reply({ embeds: [embed], ephemeral: true });
     }
-    // log.debug(`[${PREFIX}] Finsihed!`);
+    // log.debug(F, `Finsihed!`);
     return true;
   },
 };

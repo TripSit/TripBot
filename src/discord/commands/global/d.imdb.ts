@@ -2,13 +2,12 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { imdb } from '../../../global/commands/g.imdb';
 import { startLog } from '../../utils/startLog';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dImdb;
 
@@ -22,7 +21,7 @@ export const dImdb: SlashCommand = {
       .setRequired(true)),
 
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
 
     const title = interaction.options.getString('title', true);
     if (!title) {

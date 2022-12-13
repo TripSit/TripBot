@@ -8,7 +8,7 @@ import {
 // import log from '../../global/utils/log';
 
 // import {parse} from 'path';
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 // https://discord.js.org/#/docs/discord.js/stable/typedef/ActivityType
 // https://discord.com/developers/docs/game-sdk/activities#data-models-activitytype-enum
@@ -54,14 +54,14 @@ export async function startStatusLoop(client:Client) {
   client.user?.setActivity('someone in DM 💜', { type: ActivityType.Listening });
   // let state = 0;
   // let presence = activities[state];
-  // log.debug(`[${PREFIX}] Setting presence to ${presence.message}`);
-  // log.debug(`[${PREFIX}] Setting presence type to ${presence.type}`);
+  // log.debug(F, `Setting presence to ${presence.message}`);
+  // log.debug(F, `Setting presence type to ${presence.type}`);
   // @ts-ignore
   // client.user?.setActivity(presence.message, {type: presence.type});
   // setInterval(() => {
   //   state = (state + 1) % activities.length;
   //   presence = activities[state];
-  //   // log.debug(`[${PREFIX}] Setting activity to ${presence.type} ${presence.message}`);
+  //   // log.debug(F, `Setting activity to ${presence.type} ${presence.message}`);
   //   // @ts-ignore
   //   client.user?.setActivity(presence.message, {type: presence.type});
   // }, delay);

@@ -25,7 +25,6 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
 import {
   db,
   getOpenTicket,
@@ -38,8 +37,6 @@ import {
 } from '../../../global/@types/pgdb.d';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import env from '../../../global/utils/env.config';
-import log from '../../../global/utils/log';
 import { startLog } from '../../utils/startLog';
 
 const modMailOwn = 'modmailIssue~own';
@@ -49,7 +46,7 @@ const modMailBlock = 'modmailIssue~block';
 const modMailReopen = 'modmailIssue~reopen';
 const modMailIssuePlaceholder = 'I have an issue, can you please help?';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 /**
  * Handles modmail buttons
@@ -58,7 +55,7 @@ const PREFIX = parse(__filename).name;
 export async function modmailActions(
   interaction:ButtonInteraction | ChatInputCommandInteraction,
 ) {
-  startLog(PREFIX, interaction);
+  startLog(F, interaction);
   let command = '';
   if (interaction.isButton()) {
     const varArray = interaction.customId.split('~');
@@ -94,19 +91,19 @@ export async function modmailActions(
     }
   }
 
-  // log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+  // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
   const ticketChannel = await interaction.client.channels.fetch(ticketData.thread_id) as ThreadChannel;
 
   if (!ticketChannel) {
-    // log.debug(`[${PREFIX}] ticketChannel not found!`);
+    // log.debug(F, `ticketChannel not found!`);
     interaction.reply({ content: 'This user\'s ticket thread does not exist!', ephemeral: true });
     return;
   }
 
   const userData = await getUser(null, ticketData.user_id) as Users;
   if (!userData.discord_id) {
-    log.error(`[${PREFIX}] No discord_id found for user ${ticketData.user_id}!`);
+    log.error(F, `No discord_id found for user ${ticketData.user_id}!`);
     return;
   }
 
@@ -116,7 +113,7 @@ export async function modmailActions(
   let noun = '';
   let updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>();
   if (command === 'close') {
-    // log.debug(`[${PREFIX}] Closing ticket!`);
+    // log.debug(F, `Closing ticket!`);
     ticketData.status = 'CLOSED' as TicketStatus;
     noun = 'Ticket';
     verb = 'CLOSED';
@@ -147,7 +144,7 @@ export async function modmailActions(
     //           > Thank you for your feedback, here's a cookie! 🍪
     //           ${env.EMOJI_INVISIBLE}
     //           `);
-    //       // log.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
+    //       // log.debug(F, `Collected ${reaction.emoji.name} from ${user.tag}`);
     //       const finalEmbed = embedTemplate()
     //         .setColor(Colors.Blue)
     //         .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
@@ -155,7 +152,7 @@ export async function modmailActions(
     //         const channelTripsitmeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
     //         await channelTripsitmeta.send({embeds: [finalEmbed]});
     //       } catch (err) {
-    //         // log.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
+    //         // log.debug(F, `Failed to send message, am i still in the tripsit guild?`);
     //       }
     //       msg.delete();
     //       collector.stop();
@@ -184,7 +181,7 @@ export async function modmailActions(
           .setStyle(ButtonStyle.Danger),
       );
   } else if (command === 'reopen') {
-    // log.debug(`[${PREFIX}] Reopening ticket!`);
+    // log.debug(F, `Reopening ticket!`);
     ticketData.status = 'OPEN' as TicketStatus;
     noun = 'Ticket';
     verb = 'REOPENED';
@@ -211,7 +208,7 @@ export async function modmailActions(
           .setStyle(ButtonStyle.Danger),
       );
   } else if (command === 'block') {
-    // log.debug(`[${PREFIX}] Blocking user!`);
+    // log.debug(F, `Blocking user!`);
     ticketData.status = 'BLOCKED' as TicketStatus;
     noun = 'User';
     verb = 'BLOCKED';
@@ -337,7 +334,7 @@ export async function modmailActions(
           .setStyle(ButtonStyle.Danger),
       );
   } else if (command === 'resolve') {
-    // log.debug(`[${PREFIX}] Resolving ticket!`);
+    // log.debug(F, `Resolving ticket!`);
     ticketData.status = 'RESOLVED' as TicketStatus;
     noun = 'Ticket';
     verb = 'RESOLVED';
@@ -371,7 +368,7 @@ export async function modmailActions(
     //           > Thank you for your feedback, here's a cookie! 🍪
     //           ${env.EMOJI_INVISIBLE}
     //           `);
-    //       // log.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
+    //       // log.debug(F, `Collected ${reaction.emoji.name} from ${user.tag}`);
     //       const finalEmbed = embedTemplate()
     //         .setColor(Colors.Blue)
     //         .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
@@ -379,7 +376,7 @@ export async function modmailActions(
     //         const channelTripsitmeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
     //         await channelTripsitmeta.send({embeds: [finalEmbed]});
     //       } catch (err) {
-    //         // log.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
+    //         // log.debug(F, `Failed to send message, am i still in the tripsit guild?`);
     //       }
     //       msg.delete();
     //       collector.stop();
@@ -410,7 +407,7 @@ export async function modmailActions(
   }
 
   if (interaction.channel && interaction.channel.type !== ChannelType.DM) {
-    // log.debug(`[${PREFIX}] Updating channel internally`);
+    // log.debug(F, `Updating channel internally`);
     await interaction.reply(`${noun} has been ${verb} by ${actor}! (The user cannot see this)`);
   }
 
@@ -477,7 +474,7 @@ export const modmail: SlashCommand = {
       .setDescription('Put the ticket on hold')
       .setName('pause')),
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     await modmailActions(interaction);
     return true;
   },
@@ -488,14 +485,14 @@ export const modmail: SlashCommand = {
  * @param {Message} message The message sent to the bot
  */
 export async function modmailInitialResponse(message:Message) {
-  // log.debug(`[${PREFIX}] Message: ${JSON.stringify(message, null, 2)}!`);
+  // log.debug(F, `Message: ${JSON.stringify(message, null, 2)}!`);
 
   const embed = embedTemplate()
     .setColor(Colors.Blue);
 
   const { author } = message;
   const guild = await message.client.guilds.fetch(env.DISCORD_GUILD_ID);
-  // log.debug(`[${PREFIX}] Message sent in DM by ${message.author.username}!`);
+  // log.debug(F, `Message sent in DM by ${message.author.username}!`);
   const description = stripIndents`Hey there ${author}! I'm a helper bot for ${guild} =)
 
   💚 Trip Sit Me! - This starts a thread with Team TripSit! You can also join our Discord server and ask for help there!
@@ -540,7 +537,7 @@ export async function modmailCreate(
   interaction:ButtonInteraction,
   issueType:'APPEAL' | 'TRIPSIT' | 'TECH' | 'FEEDBACK',
 ) {
-  // log.debug(`[${PREFIX}] Message: ${JSON.stringify(interaction, null, 2)}!`);
+  // log.debug(F, `Message: ${JSON.stringify(interaction, null, 2)}!`);
 
   // const issueTypeDict = {
   //   appeal: TicketType.Appeal,
@@ -555,7 +552,7 @@ export async function modmailCreate(
   // Get the member object, if it exists
   // This is used later on to check if the user is part of the guild or not
   const member = interaction.member as GuildMember;
-  // log.debug(`[${PREFIX}] member: ${JSON.stringify(member, null, 2)}!`);
+  // log.debug(F, `member: ${JSON.stringify(member, null, 2)}!`);
 
   // Create a dict of variables to be used based on the type of request
   const modmailVars = {
@@ -631,7 +628,7 @@ export async function modmailCreate(
     try {
       issueThread = await channel.threads.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
-      // log.debug(`[${PREFIX}] The thread has likely been deleted!`);
+      // log.debug(F, `The thread has likely been deleted!`);
       await db<UserTickets>('user_tickets')
         .insert({
           id: ticketData.id,
@@ -640,7 +637,7 @@ export async function modmailCreate(
         .onConflict('id')
         .merge();
     }
-    // log.debug(`[${PREFIX}] thread_id: ${JSON.stringify(thread_id, null, 2)}!`);
+    // log.debug(F, `thread_id: ${JSON.stringify(thread_id, null, 2)}!`);
     if (issueThread.id) {
       const embed = embedTemplate();
       if (member instanceof GuildMember) {
@@ -695,11 +692,11 @@ export async function modmailCreate(
       if (i.customId.split('~')[2] !== interaction.id) return;
       // Get whatever they sent in the modal
       const modalInputA = i.fields.getTextInputValue('inputA');
-      // log.debug(`[${PREFIX}] modalInputA: ${modalInputA}!`);
+      // log.debug(F, `modalInputA: ${modalInputA}!`);
       let modalInputB = '';
       try {
         modalInputB = i.fields.getTextInputValue('inputB');
-        // log.debug(`[${PREFIX}] modalInputB: ${modalInputB}!`);
+        // log.debug(F, `modalInputB: ${modalInputB}!`);
       } catch (e) {
         // This is fine
       }
@@ -712,15 +709,15 @@ export async function modmailCreate(
         type: threadtype,
         reason: `${actor.username} submitted a(n) ${issueType} ticket!`,
       });
-        // log.debug(`[${PREFIX}] Created thread ${ticketThread.id}`);
+        // log.debug(F, `Created thread ${ticketThread.id}`);
 
       // Get the tripsit guild
       const tripsitGuild = i.client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
       // Get the helper and TS roles
       const roleHelper = await tripsitGuild.roles.fetch(env.ROLE_TRIPSITTER) as Role;
-      // log.debug(`[${PREFIX}] roleHelper: ${roleHelper}`);
+      // log.debug(F, `roleHelper: ${roleHelper}`);
       const roleTripsitter = tripsitGuild.roles.cache.find(role => role.id === env.ROLE_TRIPSITTER) as Role;
-      // log.debug(`[${PREFIX}] roleTripsitter: ${roleTripsitter}`);
+      // log.debug(F, `roleTripsitter: ${roleTripsitter}`);
 
       // Respond to the user
       const embed = embedTemplate();
@@ -785,7 +782,7 @@ export async function modmailCreate(
           **We will respond to right here when we can!**`;
         }
 
-        // log.debug(`[${PREFIX}] firstResponse: ${firstResponse}`);
+        // log.debug(F, `firstResponse: ${firstResponse}`);
         const embedDM = embedTemplate();
         embedDM.setDescription(firstResponse);
 
@@ -867,7 +864,7 @@ export async function modmailCreate(
         components: [modmailButtons],
         flags: ['SuppressEmbeds'],
       });
-        // log.debug(`[${PREFIX}] Sent intro message to thread ${ticketThread.id}`);
+        // log.debug(F, `Sent intro message to thread ${ticketThread.id}`);
 
       // Determine when the thread should be archived
       const threadArchiveTime = new Date();
@@ -875,7 +872,7 @@ export async function modmailCreate(
         ? threadArchiveTime.getTime() + 1000 * 60 * 60 * 24
         : threadArchiveTime.getTime() + 1000 * 60 * 10;
       threadArchiveTime.setTime(archiveTime);
-      // log.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
+      // log.debug(F, `threadArchiveTime: ${threadArchiveTime}`);
 
       // Set ticket information
       const modalBStr = `${modmailVars[issueType].labelB}
@@ -934,7 +931,7 @@ export async function modmailDMInteraction(message:Message) {
 
   const ticketData = await getOpenTicket(userData.id, null);
 
-  // log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+  // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
   if (ticketData) {
     if (ticketData.status === 'BLOCKED') {
@@ -955,7 +952,7 @@ export async function modmailDMInteraction(message:Message) {
     } catch (error) {
       // This just means the thread is deleted
     }
-    // log.debug(`[${PREFIX}] issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
+    // log.debug(F, `issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
     if (thread.id) {
       const embed = embedTemplate();
       embed.setDescription(message.content);
@@ -974,8 +971,8 @@ export async function modmailDMInteraction(message:Message) {
       ? threadArchiveTime.getTime() + 1000 * 60 * 60 * 24
       : threadArchiveTime.getTime() + 1000 * 60 * 10;
     threadArchiveTime.setTime(archiveTime);
-    // log.debug(`[${PREFIX}] threadArchiveTime: ${threadArchiveTime}`);
-    // log.debug(`[${PREFIX}] User not member of guild`);
+    // log.debug(F, `threadArchiveTime: ${threadArchiveTime}`);
+    // log.debug(F, `User not member of guild`);
 
     // Update the ticket in the DB
     await db<UserTickets>('user_tickets')
@@ -998,17 +995,17 @@ export async function modmailThreadInteraction(message:Message) {
   if (message.member) {
     const threadMessage = message.channel.type === ChannelType.PublicThread
     || message.channel.type === ChannelType.PrivateThread;
-    // log.debug(`[${PREFIX}] threadMessage: ${threadMessage}!`);
+    // log.debug(F, `threadMessage: ${threadMessage}!`);
     if (threadMessage
       && (message.channel.parentId === env.CHANNEL_HELPDESK
       || message.channel.parentId === env.CHANNEL_TALKTOTS
       || message.channel.parentId === env.CHANNEL_TRIPSIT)) {
-      // log.debug(`[${PREFIX}] message.channel.parentId: ${message.channel.parentId}!`);
-      // log.debug(`[${PREFIX}] message sent in a thread in a helpdesk channel!`);
+      // log.debug(F, `message.channel.parentId: ${message.channel.parentId}!`);
+      // log.debug(F, `message sent in a thread in a helpdesk channel!`);
       // Get the ticket info
       const ticketData = await getOpenTicket(null, message.channel.id);
       if (ticketData) {
-        // log.debug(`[${PREFIX}] ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+        // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
         if (ticketData.status === 'BLOCKED') {
           await message.channel.send(`Hey ${message.author.username}, this user is currently blocked. Please '/modmail block off', or click the button at the top, before conversation can resume.`);
@@ -1021,13 +1018,13 @@ export async function modmailThreadInteraction(message:Message) {
 
         const userData = await getUser(null, ticketData.user_id) as Users;
         if (!userData.discord_id) {
-          log.error(`[${PREFIX}] No discord_id found for user ${ticketData.user_id}!`);
+          log.error(F, `No discord_id found for user ${ticketData.user_id}!`);
           return;
         }
 
         // Get the user from the ticketData
         const user = await message.client.users.fetch(userData.discord_id);
-        // log.debug(`[${PREFIX}] user: ${JSON.stringify(user, null, 2)}!`);
+        // log.debug(F, `user: ${JSON.stringify(user, null, 2)}!`);
 
         // Send the message to the user
         const embed = embedTemplate();
@@ -1038,7 +1035,7 @@ export async function modmailThreadInteraction(message:Message) {
         });
         embed.setFooter(null);
         await user.send({ embeds: [embed] });
-        // log.debug(`[${PREFIX}] message sent to user!`);
+        // log.debug(F, `message sent to user!`);
         // user.send(`<${message.member.nickname}> ${message.content}`);
 
         // Reset the archived_at time
@@ -1048,7 +1045,7 @@ export async function modmailThreadInteraction(message:Message) {
           ? threadArchiveTime.getTime() + 1000 * 60 * 60 * 24
           : threadArchiveTime.getTime() + 1000 * 60 * 10;
         threadArchiveTime.setTime(archiveTime);
-        // log.debug(`[${PREFIX}] threadArchiveTime reset: ${threadArchiveTime}`);
+        // log.debug(F, `threadArchiveTime reset: ${threadArchiveTime}`);
 
         // Update the ticket in the DB
         await db<UserTickets>('user_tickets')
@@ -1057,7 +1054,7 @@ export async function modmailThreadInteraction(message:Message) {
             deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
           })
           .where('id', ticketData.id);
-        // log.debug(`[${PREFIX}] ticket updated in DB!`);
+        // log.debug(F, `ticket updated in DB!`);
       }
     }
   }

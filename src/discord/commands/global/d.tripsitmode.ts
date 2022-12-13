@@ -4,7 +4,6 @@ import {
   ButtonInteraction,
   GuildMember,
 } from 'discord.js';
-// import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 // import {embedTemplate} from '../../utils/embedTemplate';
 // import {stripIndents} from 'common-tags';
@@ -12,7 +11,7 @@ import { SlashCommand } from '../../@types/commandDef';
 // import log from '../../../global/utils/log';
 import { tripsitmeButton, tripsitmeClose } from '../../utils/tripsitme';
 
-// const PREFIX = path.parse(__filename).name;
+// const F= f(__filename);
 
 export default tripsitmode;
 

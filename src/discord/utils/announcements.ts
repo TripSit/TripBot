@@ -5,13 +5,12 @@ import {
   TextChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import env from '../../global/utils/env.config';
 import { embedTemplate } from './embedTemplate';
 import { db } from '../../global/utils/knex';
 import { Users } from '../../global/@types/pgdb';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 const frequency = env.NODE_ENV === 'production' ? 50 : 2;
 const bigFrequency = env.NODE_ENV === 'production' ? 250 : 3;
@@ -224,22 +223,22 @@ export async function announcements(message:Message) {
     env.CATEGORY_CAMPGROUND,
   ];
 
-  // log.debug(`[${PREFIX}] instance of TextChannel: ${message.channel instanceof TextChannel}`);
+  // log.debug(F, `instance of TextChannel: ${message.channel instanceof TextChannel}`);
   if (message.channel instanceof TextChannel
     && message.channel.parentId
     && generalChatCategories.includes(message.channel.parentId)) {
-    // log.debug(`[${PREFIX}] message.channel.parentId: ${message.channel.parentId}`);
-    // log.debug(`[${PREFIX}] generalChatCategories: ${generalChatCategories}`);
-    // log.debug(`[${PREFIX}] generalChatCategories.includes(message.channel.parentId): ${generalChatCategories.includes(message.channel.parentId)}`);
+    // log.debug(F, `message.channel.parentId: ${message.channel.parentId}`);
+    // log.debug(F, `generalChatCategories: ${generalChatCategories}`);
+    // log.debug(F, `generalChatCategories.includes(message.channel.parentId): ${generalChatCategories.includes(message.channel.parentId)}`);
     messageCounter[message.channel.id] = messageCounter[message.channel.id]
       ? messageCounter[message.channel.id] + 1
       : 1;
 
-    // log.debug(`[${PREFIX}] messageCounter[message.channel.id]: ${messageCounter[message.channel.id]}`);
-    // log.debug(`[${PREFIX}] bigFrequency: ${bigFrequency}`);
-    // log.debug(`[${PREFIX}] ${messageCounter[message.channel.id] % bigFrequency === 0}`);
-    // log.debug(`[${PREFIX}] frequency: ${frequency}`);
-    // log.debug(`[${PREFIX}] ${messageCounter[message.channel.id] % frequency === 0}`);
+    // log.debug(F, `messageCounter[message.channel.id]: ${messageCounter[message.channel.id]}`);
+    // log.debug(F, `bigFrequency: ${bigFrequency}`);
+    // log.debug(F, `${messageCounter[message.channel.id] % bigFrequency === 0}`);
+    // log.debug(F, `frequency: ${frequency}`);
+    // log.debug(F, `${messageCounter[message.channel.id] % frequency === 0}`);
     if (messageCounter[message.channel.id] % bigFrequency === 0) {
       const bigAnnouncementDict = {
         0: {
@@ -299,9 +298,9 @@ export async function announcements(message:Message) {
               .where('discord_id', user.id)
               .returning('*');
             // if (value[0]) {
-            //   // log.debug(`[${PREFIX}] ${user.tag} ${pointType} incremented to ${value[0][pointType as keyof typeof value[0]]}`);
+            //   // log.debug(F, `${user.tag} ${pointType} incremented to ${value[0][pointType as keyof typeof value[0]]}`);
             // } else {
-            //   // log.debug(`[${PREFIX}] ${user.tag} ${pointType} added as 1`);
+            //   // log.debug(F, `${user.tag} ${pointType} added as 1`);
             // }
           });
 
@@ -312,7 +311,7 @@ export async function announcements(message:Message) {
               .increment(pointType, -1)
               .where('discord_id', user.id)
               .returning(pointType);
-            // log.debug(`[${PREFIX}] ${user.tag} ${pointType} decremented to ${value[0][pointType as keyof typeof value[0]]}`);
+            // log.debug(F, `${user.tag} ${pointType} decremented to ${value[0][pointType as keyof typeof value[0]]}`);
           });
         });
     } else if (messageCounter[message.channel.id] % frequency === 0) {
@@ -322,7 +321,7 @@ export async function announcements(message:Message) {
 
       const randomGenAnnouncement = genAnnouncements[randomGenNumber];
 
-      // log.debug(`[${PREFIX}] randomGenAnnouncement: ${randomGenAnnouncement}`);
+      // log.debug(F, `randomGenAnnouncement: ${randomGenAnnouncement}`);
       embed.setDescription(randomGenAnnouncement);
       await (message.channel as TextChannel).send({ embeds: [embed] });
     }

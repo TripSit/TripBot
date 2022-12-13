@@ -6,7 +6,7 @@
 // const logger = require('../../../global/utils/log');
 // const template = require('../../utils/embed-template');
 
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 // const {
 //   rapidApiKey,
@@ -31,10 +31,10 @@
 //           key2: 'value',
 //         }),
 //       });
-//     // log.debug(`[${PREFIX}] data: ${JSON.stringify(data)}`);
+//     // log.debug(F, `data: ${JSON.stringify(data)}`);
 //       embed.setDescription(data);
 //     } catch (error) {
-//       log.error(`[${PREFIX}] ${error}`);
+//       log.error(F, `${error}`);
 //       embed.setDescription(`Error with this API! This is not an error with the bot!\n\n${error}`);
 //     }
 

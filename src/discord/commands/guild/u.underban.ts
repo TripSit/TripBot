@@ -10,7 +10,6 @@ import {
   ApplicationCommandType,
   TextInputStyle,
 } from 'discord-api-types/v10';
-import { parse } from 'path';
 import { UserCommand } from '../../@types/commandDef';
 // import log from '../../../global/utils/log';
 import { moderate } from '../../../global/commands/g.moderate';
@@ -18,7 +17,7 @@ import { startLog } from '../../utils/startLog';
 // import {startLog} from '../../utils/startLog';
 import { UserActionType } from '../../../global/@types/pgdb';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default uUnderban;
 
@@ -27,8 +26,8 @@ export const uUnderban: UserCommand = {
     .setName('Underban')
     .setType(ApplicationCommandType.User),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
-    // startLog(PREFIX, interaction);
+    startLog(F, interaction);
+    // startLog(F, interaction);
     const actor = interaction.member as GuildMember;
     const target = interaction.targetMember as GuildMember;
 
@@ -68,7 +67,7 @@ export const uUnderban: UserCommand = {
           null,
         );
 
-        // log.debug(`[${PREFIX}] Result: ${result}`);
+        // log.debug(F, `Result: ${result}`);
         i.reply(result);
       });
     return true;

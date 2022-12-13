@@ -2,14 +2,13 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import ms from 'ms';
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dBotstats;
 
@@ -18,24 +17,24 @@ export const dBotstats: SlashCommand = {
     .setName('botstats')
     .setDescription('Get stats about the bot!'),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     // Get the number of guilds the bot is in
     const guildCount = interaction.client.guilds.cache.size;
-    // log.debug(`[${PREFIX}] guildCount: ${guildCount}`);
+    // log.debug(F, `guildCount: ${guildCount}`);
     // Get the number of users the bot can see
     const userCount = interaction.client.users.cache.size;
-    // log.debug(`[${PREFIX}] userCount: ${userCount}`);
+    // log.debug(F, `userCount: ${userCount}`);
     // Get the number of channels the bot can see
     const channelCount = interaction.client.channels.cache.size;
-    // log.debug(`[${PREFIX}] channelCount: ${channelCount}`);
+    // log.debug(F, `channelCount: ${channelCount}`);
     // Get the number of commands the bot has
     // @ts-ignore - This works so idk why it's complaining
     const commandCount = interaction.client.commands.size;
-    // log.debug(`[${PREFIX}] commandCount: ${commandCount}`);
+    // log.debug(F, `commandCount: ${commandCount}`);
     const uptime = global.bootTime
       ? (new Date().getTime() - global.bootTime.getTime())
       : 0;
-    // log.debug(`[${PREFIX}] uptime: ${uptime}`);
+    // log.debug(F, `uptime: ${uptime}`);
 
     // Create the embed
     const embed = embedTemplate();

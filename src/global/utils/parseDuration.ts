@@ -1,6 +1,6 @@
 // import log from './logger';
 // import {parse} from 'path';
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 export default parseDuration;
 
@@ -37,7 +37,7 @@ export async function parseDuration(duration:string):Promise<number> {
           tempString += c;
           idx += 1;
         } else {
-          // log.debug(`[${PREFIX}] TValue: ${tempString}`);
+          // log.debug(F, `TValue: ${tempString}`);
           tempNumber = Number.parseInt(tempString, 10);
           stage = 3;
         }
@@ -49,7 +49,7 @@ export async function parseDuration(duration:string):Promise<number> {
         if (c === ' ') {
           break;
         } else if (supported.includes(c)) {
-          // log.debug(`[${PREFIX}] Qualifier ${c}`);
+          // log.debug(F, `Qualifier ${c}`);
           if (c === 'h') {
             timeValue += tempNumber * 60 * 60 * 1000;
           }

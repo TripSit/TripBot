@@ -4,14 +4,13 @@ import {
   SlashCommandBuilder,
   Colors,
 } from 'discord.js';
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { invite } from '../../../global/commands/g.invite';
 import { startLog } from '../../utils/startLog';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dInvite;
 
@@ -20,7 +19,7 @@ export const dInvite: SlashCommand = {
     .setName('invite')
     .setDescription('Shows an invite link for this bot!'),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const inviteInfo = await invite();
     const embed = embedTemplate()
       .setColor(Colors.DarkBlue)

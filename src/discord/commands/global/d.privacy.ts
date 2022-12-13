@@ -1,27 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  ActionRowBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  Colors,
   SlashCommandBuilder,
-  TextChannel,
-  ModalSubmitInteraction,
 } from 'discord.js';
-import {
-  TextInputStyle,
-} from 'discord-api-types/v10';
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { privacy } from '../../../global/commands/g.privacy';
-import { birthday } from '../../../global/commands/g.birthday';
 import { embedTemplate } from '../../utils/embedTemplate';
-import env from '../../../global/utils/env.config';
-import log from '../../../global/utils/log';
 import { startLog } from '../../utils/startLog';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dPrivacy;
 
@@ -38,7 +24,7 @@ export const dPrivacy: SlashCommand = {
       .addStringOption(option => option.setName('confirmation')
         .setDescription('Enter your confirmation code to delete your data!'))),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const command = interaction.options.getSubcommand() as 'get' | 'delete';
     const embed = embedTemplate();
 

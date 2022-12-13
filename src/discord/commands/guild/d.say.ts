@@ -3,13 +3,10 @@ import {
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
-import { startLog } from '../../utils/startLog';
-import env from '../../../global/utils/env.config';
-import log from '../../../global/utils/log'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { startLog } from '../../utils/startLog'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dSay;
 
@@ -24,7 +21,7 @@ export const dSay: SlashCommand = {
       .setDescription('Where should I say it? (Default: \'here\')')
       .setName('channel')),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     if (!interaction.guild) {
       interaction.reply({
         content: 'This command can only be used in a server!',

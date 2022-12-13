@@ -3,15 +3,12 @@ import {
   Guild,
   SlashCommandBuilder,
 } from 'discord.js';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { leaderboard } from '../../../global/commands/g.leaderboard';
 import { startLog } from '../../utils/startLog';
-import { embedTemplate } from '../../utils/embedTemplate';
-import log from '../../../global/utils/log'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import env from '../../../global/utils/env.config';
+import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 type RankType = { 'rank': number, 'id': string, 'level': number };
 type LeaderboardType = {
@@ -36,7 +33,7 @@ export const dLeaderboard: SlashCommand = {
         { name: 'Ignored', value: 'IGNORED' },
       )),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const categoryOption = interaction.options.getString('category');
     const categoryName = categoryOption ?? 'OVERALL';
 
@@ -46,7 +43,7 @@ export const dLeaderboard: SlashCommand = {
     const response = await leaderboard(categoryName);
     const leaderboardVals = response.results as LeaderboardType;
 
-    // log.debug(`[${PREFIX}] response: ${JSON.stringify(leaderboardVals, null, 2)}`);
+    // log.debug(F, `response: ${JSON.stringify(leaderboardVals, null, 2)}`);
 
     const embed = embedTemplate()
       .setTitle(response.title)
@@ -67,30 +64,30 @@ export const dLeaderboard: SlashCommand = {
     Object.entries(leaderboardVals).forEach(([category, value]) => {
       let row = 0;
       let rowName = '';
-      // log.debug(`[${PREFIX}] Category: ${category}`);
-      // log.debug(`[${PREFIX}] rowName: ${rowName}`);
-      // log.debug(`[${PREFIX}] row: ${row}`);
-      // log.debug(`[${PREFIX}] Category name: ${category}`);
+      // log.debug(F, `Category: ${category}`);
+      // log.debug(F, `rowName: ${rowName}`);
+      // log.debug(F, `row: ${row}`);
+      // log.debug(F, `Category name: ${category}`);
       // Capitalize the first letter in user.rank
       const categoryTitle = rankDict[category as keyof typeof rankDict];
       const catNameCapitalized = categoryTitle.charAt(0).toUpperCase() + categoryTitle.slice(1);
-      // log.debug(`[${PREFIX}] Proper name: ${catNameCapitalized}`);
+      // log.debug(F, `Proper name: ${catNameCapitalized}`);
       value.forEach(user => {
-        // log.debug(`[${PREFIX}] user.id: ${user.id}`);
-        // log.debug(`[${PREFIX}] row: ${row}`);
+        // log.debug(F, `user.id: ${user.id}`);
+        // log.debug(F, `row: ${row}`);
         if (rowName !== catNameCapitalized && rowName !== '') {
           rowName = catNameCapitalized;
           embed.addFields({ name: '\u200B', value: '\u200B', inline: true });
-          // log.debug(`[${PREFIX}] added first blank row`);
+          // log.debug(F, `added first blank row`);
           row += 1;
-          // log.debug(`[${PREFIX}] row: ${row}`);
+          // log.debug(F, `row: ${row}`);
           if (row < 3) {
-            // log.debug(`[${PREFIX}] row is less than 3`);
+            // log.debug(F, `row is less than 3`);
             embed.addFields({ name: '\u200B', value: '\u200B', inline: true });
-            // log.debug(`[${PREFIX}] added second blank row`);
+            // log.debug(F, `added second blank row`);
             row = 0;
           } else {
-            // log.debug(`[${PREFIX}] row is not less than 3`);
+            // log.debug(F, `row is not less than 3`);
             row = 0;
           }
         }
@@ -98,7 +95,7 @@ export const dLeaderboard: SlashCommand = {
 
         // Get the user's discord username from the discord API
         const discordUsername = guild.members.cache.get(user.id);
-        // log.debug(`[${PREFIX}] discordUsername: ${discordUsername}`);
+        // log.debug(F, `discordUsername: ${discordUsername}`);
         embed.addFields({
           name: `#${user.rank} ${rowName}`,
           value: `L.${user.level} ${discordUsername?.toString()}`,

@@ -1,18 +1,12 @@
-/* eslint-disable max-len */
 import {
   ChatInputCommandInteraction,
   UserContextMenuCommandInteraction,
   MessageContextMenuCommandInteraction,
   ButtonInteraction,
-  // CommandInteractionOption,`
   SelectMenuInteraction,
   ModalSubmitInteraction,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-// import { parse } from 'path';
-import log from '../../global/utils/log';
-
-// const PREFIX = parse(__filename).name;
 
 export default startLog;
 
@@ -36,7 +30,7 @@ ${guild}`;
   if (Object.hasOwn(interaction, 'options')) {
     const interationOptions = (interaction as ChatInputCommandInteraction).options;
     if (interationOptions.data && interationOptions.data.length > 0) {
-      // log.debug(`[${PREFIX}] ${JSON.stringify(interationOptions.data[0].options, null, 2)}`);
+      // log.debug(F, `${JSON.stringify(interationOptions.data[0].options, null, 2)}`);
       if (interationOptions.data[0].options !== undefined) {
         message += ` subCommand: ${interationOptions.getSubcommand()}`;
         if (interationOptions.data[0].options.length > 0) {
@@ -55,5 +49,5 @@ ${guild}`;
   if ((interaction as SelectMenuInteraction).customId) {
     message += ` with customId: ${(interaction as ButtonInteraction).customId}`;
   }
-  log.info(stripIndents`${message}`);
+  logger.info(stripIndents`${message}`);
 }

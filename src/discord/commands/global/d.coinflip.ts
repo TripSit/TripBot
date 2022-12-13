@@ -1,12 +1,11 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { coinflip } from '../../../global/commands/g.coinflip';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dCoinflip;
 
@@ -15,7 +14,7 @@ export const dCoinflip: SlashCommand = {
     .setName('coinflip')
     .setDescription('Flip a coin'),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     interaction.reply(await coinflip());
     return true;
   },

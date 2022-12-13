@@ -1,9 +1,6 @@
 import ytSearch, { YouTubeSearchResults } from 'youtube-search';
-import { parse } from 'path';
-import log from '../utils/log';
-import env from '../utils/env.config';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default youtube;
 
@@ -40,6 +37,6 @@ export async function youtube(query:string):Promise<YouTubeSearchResults> {
   }
 
   const results = (await getResults(query) as YouTubeSearchResults[])[0];
-  log.info(`[${PREFIX}] response: ${JSON.stringify(results.title, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(results.title, null, 2)}`);
   return results;
 }

@@ -3,16 +3,14 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { DateTime } from 'luxon';
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { dramacounter } from '../../../global/commands/g.dramacounter';
 import { startLog } from '../../utils/startLog';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { SlashCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
-// import log from '../../../global/utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dDramacounter;
 
@@ -35,7 +33,7 @@ export const dDramacounter: SlashCommand = {
         .setDescription('What was the drama? Be descriptive, or cryptic.')
         .setRequired(true))),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const command = interaction.options.getSubcommand() as 'get' | 'set';
 
     if (!interaction.guild) {
@@ -45,13 +43,13 @@ export const dDramacounter: SlashCommand = {
       });
       return false;
     }
-    // log.debug(`[${PREFIX}] interaction.guild: ${JSON.stringify(interaction.guild, null, 2)}`);
+    // log.debug(F, `interaction.guild: ${JSON.stringify(interaction.guild, null, 2)}`);
 
     let lastDramaAt = {} as Date;
     let dramaReason = '';
     if (command === 'set') {
       const dramaVal = interaction.options.getString('dramatime');
-      // log.debug(`[${PREFIX}] dramaVal: ${JSON.stringify(dramaVal, null, 2)}`);
+      // log.debug(F, `dramaVal: ${JSON.stringify(dramaVal, null, 2)}`);
       if (!dramaVal) {
         interaction.reply({
           content: 'You need to specify a time for the drama to have happened.',
@@ -60,9 +58,9 @@ export const dDramacounter: SlashCommand = {
         return false;
       }
       const dramatimeValue = await parseDuration(dramaVal);
-      // log.debug(`[${PREFIX}] dramatimeValue: ${JSON.stringify(dramatimeValue, null, 2)}`);
+      // log.debug(F, `dramatimeValue: ${JSON.stringify(dramatimeValue, null, 2)}`);
       const dramaIssue = interaction.options.getString('dramaissue');
-      // log.debug(`[${PREFIX}] dramaIssue: ${JSON.stringify(dramaIssue, null, 2)}`);
+      // log.debug(F, `dramaIssue: ${JSON.stringify(dramaIssue, null, 2)}`);
       if (!dramaIssue) {
         interaction.reply({
           content: 'You need to specify what the drama was.',
@@ -72,7 +70,7 @@ export const dDramacounter: SlashCommand = {
       }
       dramaReason = dramaIssue;
       lastDramaAt = DateTime.now().minus(dramatimeValue).toJSDate();
-      // log.debug(`[${PREFIX}] dramaTime: ${JSON.stringify(lastDramaAt, null, 2)}`);
+      // log.debug(F, `dramaTime: ${JSON.stringify(lastDramaAt, null, 2)}`);
     }
 
     const response = await dramacounter(command, interaction.guild.id, lastDramaAt, dramaReason);

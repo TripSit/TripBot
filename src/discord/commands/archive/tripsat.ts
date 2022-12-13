@@ -13,12 +13,9 @@ import {
   // TextChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { parse } from 'path';
-import env from '../../../global/utils/env.config';
-import log from '../../../global/utils/log';
 import { embedTemplate } from '../../utils/embedTemplate';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 const teamRoles = [
   env.ROLE_DIRECTOR,
@@ -80,15 +77,15 @@ const invisibleEmoji = env.NODE_ENV === 'production'
 export async function tripsat(
   interaction:ButtonInteraction,
 ) {
-// log.debug(`[${PREFIX}] starting!`);
+// log.debug(F, `starting!`);
   await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) {
-  // log.debug(`[${PREFIX}] no guild!`);
+  // log.debug(F, `no guild!`);
     interaction.reply('This must be performed in a guild!');
     return;
   }
   if (!interaction.member) {
-  // log.debug(`[${PREFIX}] no member!`);
+  // log.debug(F, `no member!`);
     interaction.reply('This must be performed by a member of a guild!');
     return;
   }
@@ -102,7 +99,7 @@ export async function tripsat(
   const actor = interaction.member as GuildMember;
 
   if (meOrThem === 'me' && targetId !== actor.id) {
-  // log.debug(`[${PREFIX}] not the target!`);
+  // log.debug(F, `not the target!`);
     interaction.reply({ content: 'Only the user receiving help can click this button!', ephemeral: true });
     return;
   }
@@ -112,9 +109,9 @@ export async function tripsat(
   const targetLastHelpedMetaThreadId = '';
   const targetRoles:string[] = [];
 
-// log.debug(`[${PREFIX}] targetLastHelpedDate: ${targetLastHelpedDate}`);
-// log.debug(`[${PREFIX}] targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
-// log.debug(`[${PREFIX}] targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);
+// log.debug(F, `targetLastHelpedDate: ${targetLastHelpedDate}`);
+// log.debug(F, `targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
+// log.debug(F, `targetLastHelpedMetaThreadId: ${targetLastHelpedMetaThreadId}`);
 
   // const channelOpentripsit = await interaction.client.channels.cache.get(env.CHANNEL_OPENTRIPSIT);
   // const channelSanctuary = await interaction.client.channels.cache.get(env.CHANNEL_SANCTUARY);
@@ -125,16 +122,16 @@ export async function tripsat(
     .find(chan => chan.id === targetLastHelpedMetaThreadId) as ThreadChannel;
 
   const actorHasRoleDeveloper = (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
-// log.debug(`[${PREFIX}] actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
+// log.debug(F, `actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
 
   const targetHasRoleDeveloper = (target as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
-// log.debug(`[${PREFIX}] targetHasRoleDeveloper: ${targetHasRoleDeveloper}`);
+// log.debug(F, `targetHasRoleDeveloper: ${targetHasRoleDeveloper}`);
 
   const roleNeedshelp = await interaction.guild.roles.fetch(needsHelpId)!;
   const targetHasNeedsHelpRole = (target.roles as GuildMemberRoleManager).cache.find(
     (role:Role) => role === roleNeedshelp,
   ) !== undefined;
-// log.debug(`[${PREFIX}] targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
+// log.debug(F, `targetHasNeedsHelpRole: ${targetHasNeedsHelpRole}`);
 
   if (!targetHasNeedsHelpRole) {
     let rejectMessage = `Hey ${interaction.member}, you're not currently being taken care of!`;
@@ -144,15 +141,15 @@ export async function tripsat(
     }
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
-  // log.debug(`[${PREFIX}] target ${target} does not need help!`);
+  // log.debug(F, `target ${target} does not need help!`);
     interaction.editReply({ embeds: [embed] });
     return;
   }
 
   if (targetLastHelpedDate) {
     const lastHour = Date.now() - (1000 * 60 * 60);
-  // log.debug(`[${PREFIX}] lastHelp: ${targetLastHelpedDate.valueOf() * 1000}`);
-  // log.debug(`[${PREFIX}] lastHour: ${lastHour.valueOf()}`);
+  // log.debug(F, `lastHelp: ${targetLastHelpedDate.valueOf() * 1000}`);
+  // log.debug(F, `lastHour: ${lastHour.valueOf()}`);
     if (targetLastHelpedDate.valueOf() * 1000 > lastHour.valueOf()) {
       let message = stripIndents`Hey ${interaction.member} you just asked for help recently!
         Take a moment to breathe and wait for someone to respond =)
@@ -178,7 +175,7 @@ If they still need help it's okay to leave them with that role.`;
         await threadDiscussUser.send(metaUpdate);
       }
 
-    // log.debug(`[${PREFIX}] Rejected the "im good" button`);
+    // log.debug(F, `Rejected the "im good" button`);
       return;
     }
   }
@@ -186,17 +183,17 @@ If they still need help it's okay to leave them with that role.`;
   // For each role in targetRoles2, add it to the target
   if (targetRoles) {
     targetRoles.forEach(async roleId => {
-    // log.debug(`[${PREFIX}] Re-adding roleId: ${roleId}`);
+    // log.debug(F, `Re-adding roleId: ${roleId}`);
       const roleObj = interaction.guild!.roles.cache.find(r => r.id === roleId) as Role;
       if (!ignoredRoles.includes(roleObj.id) && roleObj.name !== '@everyone') {
-      // log.debug(`[${PREFIX}] Adding role ${roleObj.name} to ${target.nickname || target.user.username}`);
+      // log.debug(F, `Adding role ${roleObj.name} to ${target.nickname || target.user.username}`);
         await target.roles.add(roleObj);
       }
     });
   }
 
   await target.roles.remove(roleNeedshelp!);
-// log.debug(`[${PREFIX}] Removed ${roleNeedshelp!.name} from ${target.nickname || target.user.username}`);
+// log.debug(F, `Removed ${roleNeedshelp!.name} from ${target.nickname || target.user.username}`);
 
   let endHelpMessage = stripIndents`Hey ${target}, we're glad you're doing better!
       We've restored your old roles back to normal <3
@@ -234,7 +231,7 @@ If they still need help it's okay to leave them with that role.`;
             > Thank you for your feedback, here's a cookie! 🍪
             ${invisibleEmoji}
             `);
-      // log.debug(`[${PREFIX}] Collected ${reaction.emoji.name} from ${user.tag}`);
+      // log.debug(F, `Collected ${reaction.emoji.name} from ${user.tag}`);
         const finalEmbed = embedTemplate()
           .setColor(Colors.Blue)
           .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
@@ -243,7 +240,7 @@ If they still need help it's okay to leave them with that role.`;
             await threadDiscussUser.send({ embeds: [finalEmbed] });
           }
         } catch (err) {
-        // log.debug(`[${PREFIX}] Failed to send message, am i still in the tripsit guild?`);
+        // log.debug(F, `Failed to send message, am i still in the tripsit guild?`);
         }
         msg.delete();
         collector.stop();
@@ -261,6 +258,6 @@ If they still need help it's okay to leave them with that role.`;
 
   await threadDiscussUser.send(endMetaHelpMessage);
 
-// log.debug(`[${PREFIX}] target ${target} is no longer being helped!`);
+// log.debug(F, `target ${target} is no longer being helped!`);
   await interaction.editReply({ content: 'Done!' });
 }

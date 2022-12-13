@@ -1,10 +1,8 @@
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { db, getUser } from '../utils/knex';
 import { UserExperience } from '../@types/pgdb';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 type RankType = { 'rank': number, 'id': string, 'level': number };
 type LeaderboardType = {
@@ -58,10 +56,10 @@ export async function leaderboard(
     for (const user of allUserExperience) { // eslint-disable-line
       const userData = await getUser(null, user.user_id); // eslint-disable-line
       if (!userData) {
-        log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
+        log.error(F, `Could not find user with id ${user.user_id}`);
       }
       if (!userData.discord_id) {
-        log.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
+        log.error(F, `User ${user.user_id} does not have a discord id`);
       }
 
       if (userData && userData.discord_id && user.total_points) {
@@ -99,10 +97,10 @@ export async function leaderboard(
       for (const user of userExperience) { // eslint-disable-line
         const userData = await getUser(null, user.user_id); // eslint-disable-line
         if (!userData) {
-          log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
+          log.error(F, `Could not find user with id ${user.user_id}`);
         }
         if (!userData.discord_id) {
-          log.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
+          log.error(F, `User ${user.user_id} does not have a discord id`);
         }
 
         if (userData && userData.discord_id && user.total_points) {
@@ -134,20 +132,20 @@ export async function leaderboard(
       .orderBy('total_points', 'desc')
       .limit(15);
 
-    // log.debug(`[${PREFIX}] userExperience: ${JSON.stringify(userExperience, null, 2)}`);
+    // log.debug(F, `userExperience: ${JSON.stringify(userExperience, null, 2)}`);
 
     let rank = 1;
     for (const user of userExperience) { // eslint-disable-line
     // userExperience.forEach(async user => {
       const userData = await getUser(null, user.user_id); // eslint-disable-line
       if (!userData) {
-        log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
+        log.error(F, `Could not find user with id ${user.user_id}`);
       }
       if (!userData.discord_id) {
-        log.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
+        log.error(F, `User ${user.user_id} does not have a discord id`);
       }
       if (!user.total_points) {
-        log.error(`[${PREFIX}] User ${user.user_id} has no total points`);
+        log.error(F, `User ${user.user_id} has no total points`);
       }
 
       if (userData && userData.discord_id && user.total_points) {
@@ -161,7 +159,7 @@ export async function leaderboard(
           levelPoints -= expToLevel;
         }
 
-        // log.debug(`[${PREFIX}] discordUser: ${JSON.stringify(userData)} is level ${level}`);
+        // log.debug(F, `discordUser: ${JSON.stringify(userData)} is level ${level}`);
 
         if (!results.TOTAL) {
           results.TOTAL = [];
@@ -186,7 +184,7 @@ export async function leaderboard(
       .orderBy('total_points', 'desc')
       .limit(15);
 
-    // log.debug(`[${PREFIX}] userExperience: ${JSON.stringify(userExperience, null, 2)}`);
+    // log.debug(F, `userExperience: ${JSON.stringify(userExperience, null, 2)}`);
 
     const rankList = [] as RankType[];
     let i = 1;
@@ -194,19 +192,19 @@ export async function leaderboard(
     // userExperience.forEach(async user => {
       const userData = await getUser(null, user.user_id); // eslint-disable-line
       if (!userData) {
-        log.error(`[${PREFIX}] Could not find user with id ${user.user_id}`);
+        log.error(F, `Could not find user with id ${user.user_id}`);
       }
       if (!userData.discord_id) {
-        log.error(`[${PREFIX}] User ${user.user_id} does not have a discord id`);
+        log.error(F, `User ${user.user_id} does not have a discord id`);
       }
-      // log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData)}`);
+      // log.debug(F, `userData: ${JSON.stringify(userData)}`);
 
       if (userData && userData.discord_id) {
         rankList.push({ rank: i, id: userData.discord_id, level: user.level });
         i += 1;
       }
     }
-    // log.debug(`[${PREFIX}] rankList: ${JSON.stringify(rankList, null, 2)}`);
+    // log.debug(F, `rankList: ${JSON.stringify(rankList, null, 2)}`);
     results = {
       [categoryName]: rankList,
     };
@@ -217,7 +215,7 @@ export async function leaderboard(
     description,
     results,
   };
-  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
 
   return response;
 }

@@ -11,15 +11,12 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { globalTemplate } from '../../../global/commands/_g.template';
-import env from '../../../global/utils/env.config';
-import log from '../../../global/utils/log';
 import { startLog } from '../../utils/startLog';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dTemplate;
 
@@ -55,7 +52,7 @@ export const dTemplate: SlashCommand = {
         .setDescription('mentionable')
         .setRequired(true))),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
 
     const string = interaction.options.getString('string');
     const number = interaction.options.getNumber('number');
@@ -77,7 +74,7 @@ export const dTemplate: SlashCommand = {
     const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(modalInput);
     modal.addComponents(firstActionRow);
     await interaction.showModal(modal);
-    // log.debug(`[${PREFIX}] displayed modal!`);
+    // log.debug(F, `displayed modal!`);
     const filter = (i:ModalSubmitInteraction) => i.customId.includes('feedbackReportModal');
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {

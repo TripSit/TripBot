@@ -1,8 +1,6 @@
 /* eslint-disable max-len */
-import { parse } from 'path';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default testkits;
 
@@ -25,7 +23,7 @@ export async function testkits():Promise<HelpResource[]> {
       description: '10% off with code tripsitwiki!',
     },
   ];
-  log.info(`[${PREFIX}] response: ${JSON.stringify(response, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
 
   return response;
 }

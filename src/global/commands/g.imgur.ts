@@ -1,9 +1,6 @@
 import axios from 'axios';
-import { parse } from 'path';
-import env from '../utils/env.config';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default imgurSearch;
 
@@ -40,11 +37,11 @@ export async function imgurSearch(query:string):Promise<string> {
             imageLink = res.data.data[0].link;
           }
         } else {
-          // log.debug(`[${PREFIX}] No results found!`);
+          // log.debug(F, `No results found!`);
           imageLink = `No results found for ${query}!`;
         }
 
-        // log.debug(`[${PREFIX}] imageLink: ${imageLink}`);
+        // log.debug(F, `imageLink: ${imageLink}`);
 
         resolve(imageLink);
       }).catch((err:Error) => {
@@ -54,6 +51,6 @@ export async function imgurSearch(query:string):Promise<string> {
   }
 
   const results = await searchImgur();
-  log.info(`[${PREFIX}] response: ${JSON.stringify(results, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(results, null, 2)}`);
   return results;
 }

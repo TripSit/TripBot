@@ -6,10 +6,9 @@ import {
   TextChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import env from '../../global/utils/env.config';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 const ignoredCategories = [
   env.CATEGORY_TEAMTRIPSIT,
@@ -34,13 +33,13 @@ export async function bestOf(reaction:MessageReaction) {
     const channelObj = (reaction.message.channel as TextChannel);
 
     if (channelObj.parentId && ignoredCategories.includes(channelObj.parentId)) {
-      // log.debug(`[${PREFIX}] Message sent in an ignored channel`);
+      // log.debug(F, `Message sent in an ignored channel`);
       return;
     }
 
     const channelBestof = channelObj.guild.channels.cache.get(env.CHANNEL_BESTOF) as TextChannel;
 
-    // log.debug(`[${PREFIX}] Sending message to ${channel.name}`);
+    // log.debug(F, `Sending message to ${channel.name}`);
 
     if (channelBestof !== undefined) {
       reaction.message.reply(
@@ -64,7 +63,7 @@ export async function bestOf(reaction:MessageReaction) {
         ? reaction.message.embeds.at(0)?.thumbnail?.url
         : null;
 
-      // log.debug(`[${PREFIX}] attachmentUrl: ${attachmentUrl}`);
+      // log.debug(F, `attachmentUrl: ${attachmentUrl}`);
 
       const embed = new EmbedBuilder()
         .setAuthor({

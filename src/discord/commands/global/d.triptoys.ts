@@ -2,12 +2,11 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
-import { parse } from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { startLog } from '../../utils/startLog';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default dTriptoys;
 
@@ -69,10 +68,10 @@ export const dTriptoys: SlashCommand = {
         { name: ballsdemo, value: '23' },
       )),
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const toyName = interaction.options.getString('toy') || '25';
     const toyId = parseInt(toyName, 10);
-    // log.debug(`[${PREFIX}] toy_name: ${toyName}`);
+    // log.debug(F, `toy_name: ${toyName}`);
 
     const toys = {
       1: { name: weavesilk, value: '[Generate art](http://weavesilk.com/)', inline: true },
@@ -111,7 +110,7 @@ export const dTriptoys: SlashCommand = {
       const randomIndex = Math.floor(Math.random() * Object.keys(toys).length);
       // Get a random toy
       const randomToy = toys[randomIndex as keyof typeof toys];
-      // log.debug(`[${PREFIX}] random_toy: ${JSON.stringify(randomToy, null, 2)}`);
+      // log.debug(F, `random_toy: ${JSON.stringify(randomToy, null, 2)}`);
       embed.addFields(randomToy);
     }
 

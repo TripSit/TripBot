@@ -5,14 +5,13 @@ import {
   ChannelType,
   AuditLogEvent,
 } from 'discord-api-types/v10';
-// import { parse } from 'path';
+
 import {
   ChannelUpdateEvent,
 } from '../@types/eventDef';
-import env from '../../global/utils/env.config';
 // import log from '../../global/utils/log';
 
-// const PREFIX = parse(__filename).name;
+// const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -38,7 +37,7 @@ export const channelUpdate: ChannelUpdateEvent = {
       return;
     }
 
-    // log.debug(`[${PREFIX}] Channel ${JSON.stringify(newChannel, null, 2)} was updated.`);
+    // log.debug(F, `Channel ${JSON.stringify(newChannel, null, 2)} was updated.`);
     // logger.debug(`[${PREFIX}] Channel ${JSON.stringify(oldChannel.guild, null, 2)} was updated.`);
 
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)

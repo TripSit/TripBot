@@ -1,7 +1,4 @@
-import { parse } from 'path';
-import log from '../utils/log';
-
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default calcPsychedelics;
 
@@ -27,7 +24,7 @@ export async function calcPsychedelics(
 
   const result = Math.round(newAmount * 10) / 10;
 
-  log.info(`[${PREFIX}] response: ${JSON.stringify(result, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(result, null, 2)}`);
 
   return result;
 }

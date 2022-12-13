@@ -10,19 +10,16 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
-import { parse } from 'path';
 import { stripIndent, stripIndents } from 'common-tags';
 import { botmod } from '../../../global/commands/g.botmod';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { globalTemplate } from '../../../global/commands/_g.template';
 import { db, getGuild } from '../../../global/utils/knex';
-import env from '../../../global/utils/env.config';
-import log from '../../../global/utils/log';
 import { startLog } from '../../utils/startLog';
 import { DiscordGuilds } from '../../../global/@types/pgdb';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 type GuildActionType = 'BOTKICK' | 'BOTBAN' | 'UNBOTBAN' | 'BOTWARNING' | 'BOTNOTE' | 'BOTINFO';
 type UserActionType = 'BOTBAN' | 'UNBOTBAN';
@@ -108,17 +105,17 @@ export const dTemplate: SlashCommand = {
           .setRequired(true)))),
 
   async execute(interaction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     const actor = interaction.member as GuildMember;
-    // log.debug(`[${PREFIX}] Actor: ${actor}`);
+    // log.debug(F, `Actor: ${actor}`);
     let command = interaction.options.getSubcommand().toUpperCase() as GuildActionType | UserActionType;
-    // log.debug(`[${PREFIX}] Command: ${command}`);
+    // log.debug(F, `Command: ${command}`);
     const group = interaction.options.getSubcommandGroup() as 'user' | 'guild';
-    // log.debug(`[${PREFIX}] Group: ${group}`);
+    // log.debug(F, `Group: ${group}`);
     const targetId = interaction.options.getString('target', true);
-    // log.debug(`[${PREFIX}] target: ${targetId}`);
+    // log.debug(F, `target: ${targetId}`);
     const toggle = interaction.options.getString('toggle') ?? 'on' as 'on' | 'off';
-    // log.debug(`[${PREFIX}] toggle: ${toggle}`);
+    // log.debug(F, `toggle: ${toggle}`);
 
     if (toggle === 'off' && command === 'BOTBAN') {
       command = `UN${command}`;
@@ -147,7 +144,7 @@ export const dTemplate: SlashCommand = {
         null,
         null,
       );
-      // log.debug(`[${PREFIX}] Result: ${result}`);
+      // log.debug(F, `Result: ${result}`);
       await interaction.reply(result);
       return true;
     }

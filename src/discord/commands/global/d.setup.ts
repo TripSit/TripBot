@@ -17,24 +17,22 @@ import {
   ButtonStyle, TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndent, stripIndents } from 'common-tags';
-import { parse } from 'path';
 import { db } from '../../../global/utils/knex';
 import {
   DiscordGuilds,
   ReactionRoles,
 } from '../../../global/@types/pgdb';
-import env from '../../../global/utils/env.config';
 import { startLog } from '../../utils/startLog';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import log from '../../../global/utils/log';
 import { hasPermissions } from '../../utils/checkPermissions';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
 
 const channelOnly = 'You must run this in the channel you want the prompt to be in!';
+const noChannel = 'how to tripsit: no channel';
 
 /**
  * The tripsit prompt
@@ -43,13 +41,13 @@ const channelOnly = 'You must run this in the channel you want the prompt to be 
 export async function tripsit(interaction:ChatInputCommandInteraction) {
   const guildOnly = 'You must run this in the guild you want the prompt to be in!';
   if (!interaction.channel) {
-    log.error(`${PREFIX} how to tripsit: no channel`);
+    log.error(F, noChannel);
     interaction.reply(channelOnly);
     return;
   }
 
   if (!interaction.guild) {
-    log.error(`${PREFIX} how to tripsit: no guild`);
+    log.error(F, 'how to tripsit: no guild');
     interaction.reply(guildOnly);
     return;
   }
@@ -173,9 +171,9 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function applications(interaction:ChatInputCommandInteraction) {
-  // log.debug(`[${PREFIX}] Setting up applications!`);
+  // log.debug(F, `Setting up applications!`);
   if (!interaction.channel) {
-    log.error(`${PREFIX} applications: no channel`);
+    log.error(F, 'applications: no channel');
     interaction.reply(channelOnly);
     return;
   }
@@ -197,7 +195,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
       'EmbedLinks' as PermissionResolvable,
     ],
   )) {
-    // log.debug(`[${PREFIX}] bot does NOT has permission to post in ${interaction.channel}!`);
+    // log.debug(F, `bot does NOT has permission to post in ${interaction.channel}!`);
     return;
   }
 
@@ -286,7 +284,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
       roleArray.forEach(role => {
         if (role[0]) {
           if (role[1]) {
-          // log.debug(`[${PREFIX}] role: ${role[0].name}`);
+          // log.debug(F, `role: ${role[0].name}`);
             selectMenu.addOptions(
               {
                 label: role[0].name,
@@ -317,7 +315,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
 export async function techhelp(interaction:ChatInputCommandInteraction) {
   // log.debug(`${PREFIX} techhelp!`);
   if (!(interaction.channel as TextChannel)) {
-    log.error(`${PREFIX} how to tripsit: no channel`);
+    log.error(F, noChannel);
     interaction.reply(channelOnly);
     return;
   }
@@ -398,13 +396,13 @@ Thanks for reading, stay safe!
 export async function rules(interaction:ChatInputCommandInteraction) {
   // log.debug(`${PREFIX} rules!`);
   if (!(interaction.channel as TextChannel)) {
-    log.error(`${PREFIX} how to tripsit: no channel`);
+    log.error(F, noChannel);
     interaction.reply(channelOnly);
     return;
   }
   const channelTripsit = interaction.client.channels.cache.get(env.CHANNEL_TRIPSIT);
   if (!channelTripsit) {
-    log.error(`${PREFIX} how to tripsit: no channel`);
+    log.error(F, noChannel);
     interaction.reply('We can\'t find the tripsit channel!');
     return;
   }
@@ -467,11 +465,11 @@ export async function rules(interaction:ChatInputCommandInteraction) {
  */
 export async function ticketbooth(interaction:ChatInputCommandInteraction) {
   if (!(interaction.channel as TextChannel)) {
-    log.error(`${PREFIX} how to tripsit: no channel`);
+    log.error(F, noChannel);
     interaction.reply(channelOnly);
     return;
   }
-  startLog(PREFIX, interaction);
+  startLog(F, interaction);
   const channelTripsit = await interaction.client.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
   const channelSanctuary = await interaction.client.channels.fetch(env.CHANNEL_SANCTUARY) as TextChannel;
   const channelOpentripsit = await interaction.client.channels.fetch(env.CHANNEL_OPENTRIPSIT1) as TextChannel;
@@ -514,9 +512,9 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function starthere(interaction:ChatInputCommandInteraction) {
-  startLog(PREFIX, interaction);
+  startLog(F, interaction);
   if (!(interaction.channel as TextChannel)) {
-    log.error(`${PREFIX} how to tripsit: no channel`);
+    log.error(F, noChannel);
     interaction.reply(channelOnly);
     return;
   }
@@ -562,9 +560,9 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function mindsets(interaction:ChatInputCommandInteraction) {
-  startLog(PREFIX, interaction);
+  startLog(F, interaction);
   if (!(interaction.channel as TextChannel)) {
-    log.error(`${PREFIX} how to tripsit: no channel`);
+    log.error(F, noChannel);
     interaction.reply(channelOnly);
     return;
   }
@@ -686,9 +684,9 @@ export async function mindsets(interaction:ChatInputCommandInteraction) {
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function colors(interaction:ChatInputCommandInteraction) {
-  startLog(PREFIX, interaction);
+  startLog(F, interaction);
   if (!(interaction.channel as TextChannel)) {
-    log.error(`${PREFIX} how to tripsit: no channel`);
+    log.error(F, noChannel);
     interaction.reply(channelOnly);
     return;
   }
@@ -894,7 +892,7 @@ export const prompt: SlashCommand = {
       .setDescription('ticketbooth info!')
       .setName('ticketbooth')),
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(PREFIX, interaction);
+    startLog(F, interaction);
     // await interaction.deferReply({ephemeral: true});
     const command = interaction.options.getSubcommand();
     if (command === 'applications') {

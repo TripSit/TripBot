@@ -1,12 +1,10 @@
 /* eslint-disable max-len */
-import { parse } from 'path';
 import { db, getUser } from '../utils/knex';
 import {
   UserExperience,
 } from '../@types/pgdb.d';
-import log from '../utils/log';
 
-const PREFIX = parse(__filename).name;
+const F = f(__filename);
 
 export default profile;
 
@@ -18,11 +16,11 @@ export default profile;
 export async function profile(
   memberId: string,
 ):Promise<ProfileData> {
-  // log.debug(`[${PREFIX}] memberId: ${memberId}`);
+  // log.debug(F, `memberId: ${memberId}`);
 
   const userData = await getUser(memberId, null);
 
-  // log.debug(`[${PREFIX}] userData: ${JSON.stringify(userData, null, 2)}`);
+  // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
   const profileData = {
     birthday: userData.birthday,
@@ -32,7 +30,7 @@ export async function profile(
     totalExp: 0,
   };
 
-  // log.debug(`[${PREFIX}] profileData: ${JSON.stringify(profileData, null, 2)}`);
+  // log.debug(F, `profileData: ${JSON.stringify(profileData, null, 2)}`);
 
   const currentExp = await db<UserExperience>('user_experience')
     .select(
@@ -43,14 +41,14 @@ export async function profile(
     .andWhereNot('type', 'IGNORED')
     .andWhereNot('type', 'TOTAL');
 
-  // log.debug(`[${PREFIX}] currentExp: ${JSON.stringify(currentExp, null, 2)}`);
+  // log.debug(F, `currentExp: ${JSON.stringify(currentExp, null, 2)}`);
 
   // Go through currentExp and add up the total points
   // for (const exp of currentExp) {
   currentExp.forEach(exp => {
     profileData.totalExp += exp.total_points;
   });
-  log.info(`[${PREFIX}] response: ${JSON.stringify(profileData, null, 2)}`);
+  log.info(F, `response: ${JSON.stringify(profileData, null, 2)}`);
   return profileData;
 }
 
