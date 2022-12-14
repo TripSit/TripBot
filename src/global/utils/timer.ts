@@ -186,9 +186,13 @@ async function checkTickets() {
   // Loop through each ticket
   // for (const ticket of ticketData) {
   ticketData.forEach(async ticket => {
+    // log.debug(F, `Ticket: ${ticket.id} archives on ${ticket.archived_at} deletes on ${ticket.deleted_at}`);
     // Check if the ticket is ready to be archived
-    if (ticket.archived_at && ticket.status !== 'ARCHIVED'
-            && DateTime.fromJSDate(ticket.archived_at) <= DateTime.local()) {
+    if (ticket.archived_at
+      && ticket.status !== 'ARCHIVED'
+      && DateTime.fromJSDate(ticket.archived_at) <= DateTime.local()) {
+      log.debug(F, `Archiving ticket ${ticket.id}...`);
+
       // Archive the ticket set the deleted time to 1 week from now
       await db<UserTickets>('user_tickets')
         .update({
@@ -198,13 +202,16 @@ async function checkTickets() {
         .where('id', ticket.id);
 
       // Archive the thread on discord
-      try {
-        const thread = await global.client.channels.fetch(ticket.thread_id) as ThreadChannel;
-        await thread.setArchived(true);
-      } catch (error) {
-        // log.debug(F, `There was an error archiving the thread, it was likely deleted`);
+      if (ticket.thread_id) {
+        try {
+          const thread = await global.client.channels.fetch(ticket.thread_id) as ThreadChannel;
+          await thread.setArchived(true);
+        } catch (err) {
+          // Thread was likely manually deleted
+        }
       }
 
+      // Restore roles on the user
       const userData = await getUser(null, ticket.user_id);
       if (userData.discord_id) {
         const discordUser = await global.client.users.fetch(userData.discord_id);
@@ -247,23 +254,57 @@ async function checkTickets() {
           }
         }
       }
+    } else if (ticket.status === 'ARCHIVED') {
+      // log.debug(F, `Ticket ${ticket.id} is already archived`);
+    } else {
+      // log.debug(F, `Ticket ${ticket.id} is not ready to be archived`);
     }
+
     // Check if the ticket is ready to be deleted
     if (ticket.deleted_at
-              && ticket.status === 'ARCHIVED'
-              && DateTime.fromJSDate(ticket.deleted_at) <= DateTime.local()) {
+      && DateTime.fromJSDate(ticket.deleted_at) <= DateTime.local()
+    ) {
+      log.debug(F, `Deleting ticket ${ticket.id}...`);
       // Delete the ticket
       await db<UserTickets>('user_tickets')
         .delete()
         .where('id', ticket.id);
 
       // Delete the thread on discord
-      const thread = await global.client.channels.fetch(ticket.thread_id) as ThreadChannel;
-      if (thread) {
-        await thread.delete();
+      if (ticket.thread_id) {
+        try {
+          const thread = await global.client.channels.fetch(ticket.thread_id) as ThreadChannel;
+          await thread.delete();
+        } catch (err) {
+          // Thread was likely manually deleted
+        }
       }
+    } else {
+      // log.debug(F, `Ticket ${ticket.id} is not ready to be deleted`);
     }
   });
+
+  // As a failsafe, loop through the Tripsit room and delete any threads that are older than 10 days and are archived
+  const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+  if (guild) {
+    const guildData = await getGuild(guild.id);
+    if (guildData && guildData.channel_tripsit) {
+      const channel = await guild.channels.fetch(guildData.channel_tripsit) as TextChannel;
+      if (channel) {
+        const threadList = await channel.threads.fetchArchived();
+        threadList.threads.forEach(async thread => {
+          // Check if the thread was created over a week ago
+          await thread.fetch();
+          if (DateTime.fromJSDate(thread.createdAt as Date) <= DateTime.local().minus({ days: 10 })) {
+            thread.delete();
+            // log.debug(F, `Thread ${thread.id} is deleted`);
+          } else {
+            // log.debug(F, `Thread ${thread.id} is not ready to be deleted`);
+          }
+        });
+      }
+    }
+  }
 }
 
 async function checkMindsets() {
