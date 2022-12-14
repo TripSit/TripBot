@@ -191,7 +191,7 @@ async function checkTickets() {
     if (ticket.archived_at
       && ticket.status !== 'ARCHIVED'
       && DateTime.fromJSDate(ticket.archived_at) <= DateTime.local()) {
-      log.debug(F, `Archiving ticket ${ticket.id}...`);
+      // log.debug(F, `Archiving ticket ${ticket.id}...`);
 
       // Archive the ticket set the deleted time to 1 week from now
       await db<UserTickets>('user_tickets')
@@ -264,7 +264,7 @@ async function checkTickets() {
     if (ticket.deleted_at
       && DateTime.fromJSDate(ticket.deleted_at) <= DateTime.local()
     ) {
-      log.debug(F, `Deleting ticket ${ticket.id}...`);
+      // log.debug(F, `Deleting ticket ${ticket.id}...`);
       // Delete the ticket
       await db<UserTickets>('user_tickets')
         .delete()
@@ -287,13 +287,13 @@ async function checkTickets() {
   // As a failsafe, loop through the Tripsit room and delete any threads that are older than 7 days and are archived
   const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
   if (guild) {
-    log.debug(F, 'Checking Tripsit room for old threads...');
+    // log.debug(F, 'Checking Tripsit room for old threads...');
     const guildData = await getGuild(guild.id);
     if (guildData && guildData.channel_tripsit) {
-      log.debug(F, `Tripsit room: ${guildData.channel_tripsit}`);
+      // log.debug(F, `Tripsit room: ${guildData.channel_tripsit}`);
       const channel = await guild.channels.fetch(guildData.channel_tripsit) as TextChannel;
       if (channel) {
-        log.debug(F, `Tripsit room: ${channel.name} (${channel.id})`);
+        // log.debug(F, `Tripsit room: ${channel.name} (${channel.id})`);
         const threadList = await channel.threads.fetch({
           archived: {
             type: 'private',
@@ -302,15 +302,15 @@ async function checkTickets() {
           },
         });
         // const threadList = await channel.threads.fetchArchived({ type: 'private', fetchAll: true });
-        log.debug(F, `Found ${threadList.threads.size} archived threads in Tripsit room`);
+        // log.debug(F, `Found ${threadList.threads.size} archived threads in Tripsit room`);
         threadList.threads.forEach(async thread => {
           // Check if the thread was created over a week ago
           await thread.fetch();
           if (DateTime.fromJSDate(thread.createdAt as Date) <= DateTime.local().minus({ days: 7 })) {
             thread.delete();
-            log.debug(F, `Thread ${thread.id} is deleted`);
+            // log.debug(F, `Thread ${thread.id} is deleted`);
           } else {
-            log.debug(F, `Thread ${thread.id} is not ready to be deleted ${thread.createdAt}`);
+            // log.debug(F, `Thread ${thread.id} is not ready to be deleted ${thread.createdAt}`);
           }
         });
       }
