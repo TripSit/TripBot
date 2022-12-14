@@ -17,7 +17,7 @@ import { embedTemplate } from '../../discord/utils/embedTemplate';
 const F = f(__filename);
 
 // Value in miliseconds (1000 * 60 = 1 minute)
-const interval = env.NODE_ENV === 'production' ? 1000 * 20 : 1000 * 10;
+const interval = env.NODE_ENV === 'production' ? 1000 * 30 : 1000 * 10;
 
 export default runTimer;
 
@@ -294,7 +294,7 @@ async function checkTickets() {
       const channel = await guild.channels.fetch(guildData.channel_tripsit) as TextChannel;
       if (channel) {
         log.debug(F, `Tripsit room: ${channel.name} (${channel.id})`);
-        const threadList = await channel.threads.fetchArchived({ fetchAll: true });
+        const threadList = await channel.threads.fetchArchived({ type: 'private', fetchAll: true });
         log.debug(F, `Found ${threadList.threads.size} archived threads in Tripsit room`);
         threadList.threads.forEach(async thread => {
           // Check if the thread was created over a week ago
