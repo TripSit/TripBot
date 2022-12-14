@@ -294,7 +294,13 @@ async function checkTickets() {
       const channel = await guild.channels.fetch(guildData.channel_tripsit) as TextChannel;
       if (channel) {
         log.debug(F, `Tripsit room: ${channel.name} (${channel.id})`);
-        const threadList = await channel.threads.fetch({ archived: { type: 'private', fetchAll: true } });
+        const threadList = await channel.threads.fetch({
+          archived: {
+            type: 'private',
+            fetchAll: true,
+            before: new Date().setDate(new Date().getDate() - 7),
+          },
+        });
         // const threadList = await channel.threads.fetchArchived({ type: 'private', fetchAll: true });
         log.debug(F, `Found ${threadList.threads.size} archived threads in Tripsit room`);
         threadList.threads.forEach(async thread => {
