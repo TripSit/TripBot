@@ -199,6 +199,9 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
           }
           await channelGeneral.send({ embeds: [embed] });
         }
+      } else {
+        log.error(F, `memberRole ${env.ROLE_MEMBER} not found`);
+        interaction.reply({ content: 'Something went wrong, please make sure the right role exists!' });
       }
     }
   }
