@@ -1,6 +1,6 @@
 {
   "name": "tripsit-tripbot",
-  "version": "6.0.3",
+  "version": "6.0.7",
   "description": "A bot for TripSit (and maybe the world)",
   "main": "start.ts",
   "engines": {
@@ -17,8 +17,8 @@
     "patch": "npm version patch -git-tag-version false",
     "nodemon": "nodemon --inspect=0.0.0.0:9229 --config ./nodemon.json",
     "docker-rebuild": "npm run docker-build && npm run docker-run",
-    "docker-build": "docker compose build",
-    "docker-run": "docker compose up -d",
+    "docker-build": "docker-compose build",
+    "docker-run": "docker-compose up -d",
     "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
     "sonar-scanner": "sonar-scanner"
   },
