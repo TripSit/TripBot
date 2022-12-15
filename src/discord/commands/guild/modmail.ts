@@ -565,7 +565,7 @@ export async function modmailCreate(
       labelB: '',
       placeholderB: '',
       color: Colors.Red,
-      channelId: env.CHANNEL_TALKTOTS,
+      channelId: env.CHANNEL_SUGGESTIONS,
       channelTitle: `🧡│${member ? member.displayName : actor.username}'s ban appeal`,
       pingRole: env.ROLE_MODERATOR,
       firstResponse: 'thank you for using the bot to appeal your ban!',
@@ -607,7 +607,7 @@ export async function modmailCreate(
       labelB: '',
       placeholderB: '',
       color: Colors.Blue,
-      channelId: env.CHANNEL_TALKTOTS,
+      channelId: env.CHANNEL_SUGGESTIONS,
       channelTitle: `🧡│${member ? member.displayName : actor.username}'s feedback`,
       pingRole: env.ROLE_MODERATOR,
       firstResponse: 'thank you for your feedback!',
@@ -998,7 +998,7 @@ export async function modmailThreadInteraction(message:Message) {
     // log.debug(F, `threadMessage: ${threadMessage}!`);
     if (threadMessage
       && (message.channel.parentId === env.CHANNEL_HELPDESK
-      || message.channel.parentId === env.CHANNEL_TALKTOTS
+      || message.channel.parentId === env.CHANNEL_SUGGESTIONS
       || message.channel.parentId === env.CHANNEL_TRIPSIT)) {
       // log.debug(F, `message.channel.parentId: ${message.channel.parentId}!`);
       // log.debug(F, `message sent in a thread in a helpdesk channel!`);

@@ -1,6 +1,7 @@
 import { stripIndents } from 'common-tags';
 import { db, getUser } from '../utils/knex';
 import { UserExperience } from '../@types/pgdb';
+import { getTotalLevel } from '../utils/experience';
 
 const F = f(__filename);
 
@@ -47,10 +48,14 @@ export async function leaderboard(
       .select(
         db.ref('user_id'),
       )
+      .andWhereNot('type', 'IGNORED')
+      .whereNot('type', 'TOTAL')
       .groupBy(['user_id'])
       .sum({ total_points: 'total_points' })
       .orderBy('total_points', 'desc')
       .limit(3);
+
+    log.debug(F, `allUserExperience: ${JSON.stringify(allUserExperience, null, 2)}`);
 
     let rank = 1;
     for (const user of allUserExperience) { // eslint-disable-line
@@ -63,14 +68,7 @@ export async function leaderboard(
       }
 
       if (userData && userData.discord_id && user.total_points) {
-        let level = 0;
-        let levelPoints = user.total_points;
-        let expToLevel = 0;
-        while (levelPoints > expToLevel) {
-          level += 1;
-          expToLevel = 5 * (level ** 2) + (50 * level) + 100;
-          levelPoints -= expToLevel;
-        }
+        const totalData = await getTotalLevel(user.total_points); // eslint-disable-line
 
         if (!results.TOTAL) {
           results.TOTAL = [];
@@ -79,7 +77,7 @@ export async function leaderboard(
         results.TOTAL.push({
           rank,
           id: userData.discord_id,
-          level,
+          level: totalData.level,
         });
         rank += 1;
       }
@@ -149,17 +147,7 @@ export async function leaderboard(
       }
 
       if (userData && userData.discord_id && user.total_points) {
-        let level = 0;
-        let levelPoints = user.total_points;
-        let expToLevel = 0;
-        // let i = 0;
-        while (levelPoints > expToLevel) {
-          level += 1;
-          expToLevel = 5 * (level ** 2) + (50 * level) + 100;
-          levelPoints -= expToLevel;
-        }
-
-        // log.debug(F, `discordUser: ${JSON.stringify(userData)} is level ${level}`);
+        const totalData = await getTotalLevel(user.total_points); // eslint-disable-line
 
         if (!results.TOTAL) {
           results.TOTAL = [];
@@ -168,7 +156,7 @@ export async function leaderboard(
         results.TOTAL.push({
           rank,
           id: userData.discord_id,
-          level,
+          level: totalData.level,
         });
         rank += 1;
       }

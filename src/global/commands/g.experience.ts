@@ -1,5 +1,6 @@
 import { db, getUser } from '../utils/knex';
 import { UserExperience, ExperienceType } from '../@types/pgdb';
+import { getTotalLevel } from '../utils/experience';
 
 const F = f(__filename);
 
@@ -19,6 +20,7 @@ export async function experience(
   const experienceData = await db<UserExperience>('user_experience')
     .where('user_id', userData.id)
     .andWhereNot('type', 'TOTAL')
+    .andWhereNot('type', 'IGNORED')
     .orderBy('level', 'desc');
 
   // log.debug(F, `experienceData: ${JSON.stringify(experienceData, null, 2)}`);
@@ -27,16 +29,10 @@ export async function experience(
   experienceData.forEach(exp => {
     allExpPoints += exp.total_points;
   });
-  let totalLevel = 0;
-  let totalLevelPoints = allExpPoints;
-  let totalExpToLevel = 0;
-  while (totalLevelPoints > totalExpToLevel) {
-    totalExpToLevel = 5 * (totalLevel ** 2) + (50 * totalLevel) + 100;
-    totalLevel += 1;
-    totalLevelPoints -= totalExpToLevel;
-  }
 
-  let response = `**Level ${totalLevel} Total**: : All experience combined\n`;
+  const totalData = await getTotalLevel(allExpPoints);
+
+  let response = `**Level ${totalData.level} Total**: : All experience combined\n`;
   for (const row of experienceData) { // eslint-disable-line no-restricted-syntax
   // log.debug(F, `row: ${JSON.stringify(row, null, 2)}`);
     // Lowercase besides the first letter

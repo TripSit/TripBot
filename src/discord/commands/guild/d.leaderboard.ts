@@ -34,6 +34,7 @@ export const dLeaderboard: SlashCommand = {
       )),
   async execute(interaction) {
     startLog(F, interaction);
+    interaction.deferReply();
     const categoryOption = interaction.options.getString('category');
     const categoryName = categoryOption ?? 'OVERALL';
 
@@ -105,7 +106,7 @@ export const dLeaderboard: SlashCommand = {
       });
     });
 
-    interaction.reply({ embeds: [embed] });
+    interaction.editReply({ embeds: [embed] });
 
     return true;
   },

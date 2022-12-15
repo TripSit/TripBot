@@ -97,7 +97,7 @@ export async function announcements(message:Message) {
   // const channelViplounge = await message.client.channels.fetch(env.CHANNEL_VIPLOUNGE)!;
   // const channelAdultSwim = await message.client.channels.fetch(env.CHANNEL_REALTALK)!;
   // const channelGoldLounge = await message.client.channels.fetch(env.CHANNEL_GOLDLOUNGE)!;
-  // const channelTalkToTS = await message.client.channels.fetch(env.CHANNEL_TALKTOTS)!;
+  // const channelTalkToTS = await message.client.channels.fetch(env.CHANNEL_SUGGESTIONS)!;
   // const channelBestOf = await message.client.channels.fetch(env.CHANNEL_BESTOF)!;
   // const channelKudos = await message.client.channels.fetch(env.CHANNEL_KUDOS)!;
   // const channelCampfire = await message.client.channels.fetch(env.CHANNEL_CAMPFIRE)!;

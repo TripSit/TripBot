@@ -377,7 +377,7 @@ export async function applicationApprove(
       If you have any questions, please reach out to a moderator or the team lead!
     `);
     }
-    if (role.id === env.ROLE_CONSULTANT) {
+    if (role.id === env.ROLE_CONTRIBUTOR) {
       const devCategory = await interaction.guild?.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
       const channelTripcord = await interaction.guild?.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
       const channelTripbot = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;

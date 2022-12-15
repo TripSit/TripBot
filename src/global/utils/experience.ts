@@ -59,6 +59,25 @@ async function getType(channel:TextChannel):Promise<ExperienceType> {
   return experienceType as ExperienceType;
 }
 
+export async function getTotalLevel(totalExp:number):Promise<{
+  level:number,
+  levelPoints:number,
+  expToLevel:number,
+}> {
+  log.debug('totalLevel', `totalExp: ${totalExp}`);
+  let level = 0;
+  let levelPoints = totalExp;
+  let expToLevel = 0;
+  while (levelPoints > expToLevel) {
+    log.debug(F, `totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
+    level += 1;
+    expToLevel = 5 * (level ** 2) + (50 * level) + 100;
+    levelPoints -= expToLevel;
+  }
+  log.debug(F, `totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
+  return { level, levelPoints, expToLevel };
+}
+
 /**
  * This takes a messsage and gives the user experience
  * @param {Message} message The message object to check
@@ -188,6 +207,8 @@ export async function experience(
     totalLevel += 1;
     totalLevelPoints -= totalExpToLevel;
   }
+
+  // log.debug(F, `totalLevel: ${totalLevel}`);
 
   // Give the proper VIP role
   if (totalLevel >= 5) {

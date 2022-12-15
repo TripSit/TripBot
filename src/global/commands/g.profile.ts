@@ -41,13 +41,10 @@ export async function profile(
     .andWhereNot('type', 'IGNORED')
     .andWhereNot('type', 'TOTAL');
 
-  // log.debug(F, `currentExp: ${JSON.stringify(currentExp, null, 2)}`);
-
-  // Go through currentExp and add up the total points
-  // for (const exp of currentExp) {
   currentExp.forEach(exp => {
     profileData.totalExp += exp.total_points;
   });
+  // 212160
   log.info(F, `response: ${JSON.stringify(profileData, null, 2)}`);
   return profileData;
 }

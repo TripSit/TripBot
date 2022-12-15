@@ -71,7 +71,7 @@ declare global {
       CHANNEL_VIPLOUNGE: string;
       CHANNEL_REALTALK: string;
       CHANNEL_GOLDLOUNGE: string;
-      CHANNEL_TALKTOTS: string;
+      CHANNEL_SUGGESTIONS: string;
       CHANNEL_BESTOF: string;
       CHANNEL_MINECRAFT: string;
       CHANNEL_CAMPFIRE: string;
@@ -135,7 +135,7 @@ declare global {
       ROLE_NEEDSHELP: string;
       ROLE_RESEARCHER: string;
       ROLE_CLEARMIND: string;
-      ROLE_CONSULTANT: string;
+      ROLE_CONTRIBUTOR: string;
       ROLE_MEMBER: string;
       ROLE_UNDERBAN: string;
       ROLE_VIP: string;

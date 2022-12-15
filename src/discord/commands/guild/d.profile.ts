@@ -11,6 +11,7 @@ import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { profile } from '../../../global/commands/g.profile';
 import { startLog } from '../../utils/startLog';
+import { getTotalLevel } from '../../../global/utils/experience';
 
 const F = f(__filename);
 
@@ -261,40 +262,27 @@ export const dProfile: SlashCommand = {
 
     // Choose and Draw the Star Image
     let starImagePath = 'https://i.imgur.com/vU1erLP.png';
-    let level = 0;
-    let levelPoints = targetData.totalExp;
-    let expToLevel = 0;
-    // let i = 0;
-    while (levelPoints > expToLevel) {
-      expToLevel = 5 * (level ** 2) + (50 * level) + 100;
-      // log.debug(F, `(${i}) Level: ${level}, Level Points: ${levelPoints}, Exp to Level: ${expToLevel}`);
-      // i++;
-      level += 1;
-      levelPoints -= expToLevel;
-      // log.debug(`[${PREFIX}]Leftover: ${levelPoints}`);
-    }
+    const totalData = await getTotalLevel(targetData.totalExp);
 
-    // log.debug(F, `${level}`);
-
-    if (level < 6) {
+    if (totalData.level < 6) {
       // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIP.png';
       starImagePath = 'https://i.imgur.com/vU1erLP.png';
-    } else if (level < 10) {
+    } else if (totalData.level < 10) {
       // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL5.png';
       starImagePath = 'https://i.imgur.com/DRaOnUY.png';
-    } else if (level < 20) {
+    } else if (totalData.level < 20) {
       // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL10.png';
       starImagePath = 'https://i.imgur.com/hBuDOvE.png';
-    } else if (level < 30) {
+    } else if (totalData.level < 30) {
       // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL20.png';
       starImagePath = 'https://i.imgur.com/3jfSa7x.png';
-    } else if (level < 40) {
+    } else if (totalData.level < 40) {
       // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL30.png';
       starImagePath = 'https://i.imgur.com/tlVnx1o.png';
-    } else if (level < 50) {
+    } else if (totalData.level < 50) {
       // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL40.png';
       starImagePath = 'https://i.imgur.com/zNB2rtD.png';
-    } else if (level >= 50) {
+    } else if (totalData.level >= 50) {
       // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL50.png';
       starImagePath = 'https://i.imgur.com/5ElzDZ8.png';
     }
@@ -319,9 +307,9 @@ export const dProfile: SlashCommand = {
     };
 
     // VIP Level Text
-    context.font = applyLevel(canvasObj, `${level}`);
+    context.font = applyLevel(canvasObj, `${totalData.level}`);
     context.fillStyle = cardColor;
-    context.fillText(`${level}`, 807, 154);
+    context.fillText(`${totalData.level}`, 807, 154);
 
     // Avatar Image
     const avatar = await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' }));
@@ -335,8 +323,7 @@ export const dProfile: SlashCommand = {
 
     // Level Bar Math
     let percentageOfLevel = 0;
-    const expToNextLevel = 5 * (level ** 2) + (50 * level) + 100;
-    percentageOfLevel = (levelPoints / expToNextLevel);
+    percentageOfLevel = (totalData.levelPoints / totalData.expToLevel);
     // log.debug(F, `percentageOfLevel: ${percentageOfLevel}`);
 
     // Circular Level Bar

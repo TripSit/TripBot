@@ -51,7 +51,7 @@ const bridgeMap = {
   [env.CHANNEL_VIPLOUNGE]: null,
   // [env.CHANNEL_ADULTSWIM]: null,
   [env.CHANNEL_GOLDLOUNGE]: null,
-  [env.CHANNEL_TALKTOTS]: null,
+  [env.CHANNEL_SUGGESTIONS]: null,
   [env.CHANNEL_BESTOF]: null,
   [env.CHANNEL_MINECRAFT]: null,
   // [env.CHANNEL_HUB]: null,
