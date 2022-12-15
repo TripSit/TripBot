@@ -199,19 +199,11 @@ export async function experience(
   currentExp.forEach(exp => {
     allExpPoints += exp.total_points;
   });
-  let totalLevel = 0;
-  let totalLevelPoints = allExpPoints;
-  let totalExpToLevel = 0;
-  while (totalLevelPoints > totalExpToLevel) {
-    totalExpToLevel = 5 * (totalLevel ** 2) + (50 * totalLevel) + 100;
-    totalLevel += 1;
-    totalLevelPoints -= totalExpToLevel;
-  }
 
-  // log.debug(F, `totalLevel: ${totalLevel}`);
+  const totalData = await getTotalLevel(allExpPoints);
 
   // Give the proper VIP role
-  if (totalLevel >= 5) {
+  if (totalData.level >= 5) {
     // Ensure the member has the base VIP role if they're over level 5
     let role = await guild.roles.fetch(env.ROLE_VIP) as Role;
     if (!member.roles.cache.has(env.ROLE_VIP)) {
@@ -220,45 +212,45 @@ export async function experience(
     }
 
     role = await guild.roles.fetch(env.ROLE_VIP_5) as Role;
-    if (totalLevel >= 10) {
+    if (totalData.level >= 10) {
       // Check if the member already has the previous role, and if so, remove it
       member.roles.remove(role);
       role = await guild.roles.fetch(env.ROLE_VIP_10) as Role;
-      if (totalLevel >= 20) {
+      if (totalData.level >= 20) {
         member.roles.remove(role);
         role = await guild.roles.fetch(env.ROLE_VIP_20) as Role;
-        if (totalLevel >= 30) {
+        if (totalData.level >= 30) {
           member.roles.remove(role);
           role = await guild.roles.fetch(env.ROLE_VIP_30) as Role;
-          if (totalLevel >= 40) {
+          if (totalData.level >= 40) {
             member.roles.remove(role);
             role = await guild.roles.fetch(env.ROLE_VIP_40) as Role;
-            if (totalLevel >= 50) {
+            if (totalData.level >= 50) {
               member.roles.remove(role);
               role = await guild.roles.fetch(env.ROLE_VIP_50) as Role;
-              if (totalLevel >= 60) {
+              if (totalData.level >= 60) {
                 member.roles.remove(role);
                 role = await guild.roles.fetch(env.ROLE_VIP_60) as Role;
                 // Beyond level 70 is not supported yet
-                // if (totalLevel >= 70) {
+                // if (level >= 70) {
                 //   if (!member.roles.cache.has(role.id)) {
                 //     member.roles.remove(role);
                 //     channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
                 //   }
                 //   role = await guild.roles.fetch(env.ROLE_VIP_70) as Role;
-                //   if (totalLevel >= 80) {
+                //   if (level >= 80) {
                 //     if (!member.roles.cache.has(role.id)) {
                 //       member.roles.remove(role);
                 //       channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
                 //     }
                 //     role = await guild.roles.fetch(env.ROLE_VIP_80) as Role;
-                //     if (totalLevel >= 90) {
+                //     if (level >= 90) {
                 //       if (!member.roles.cache.has(role.id)) {
                 //         member.roles.remove(role);
                 //         channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
                 //       }
                 //       role = await guild.roles.fetch(env.ROLE_VIP_90) as Role;
-                //       if (totalLevel >= 100) {
+                //       if (level >= 100) {
                 //         if (!member.roles.cache.has(role.id)) {
                 //           member.roles.remove(role);
                 //           channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
