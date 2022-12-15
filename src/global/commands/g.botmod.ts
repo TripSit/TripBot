@@ -110,7 +110,7 @@ async function botmodUser(
     targetUserInfo.discord_bot_ban = false;
   }
 
-  log.debug(F, `targetUserInfo: ${JSON.stringify(targetUserInfo, null, 2)}`);
+  // log.debug(F, `targetUserInfo: ${JSON.stringify(targetUserInfo, null, 2)}`);
   await db<Users>('users')
     .insert(targetUserInfo)
     .onConflict('id')

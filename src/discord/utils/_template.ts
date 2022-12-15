@@ -1,8 +1,10 @@
-import {
-  Client,
-} from 'discord.js';
+/* eslint-disable no-unused-vars */
 
-const F = f(__filename);
+// import {
+//   Client,
+// } from 'discord.js';
+
+// const F = f(__filename);
 
 export default template;
 
@@ -11,7 +13,7 @@ export default template;
  * @param {Client} client The Client that manages this interaction
  * @return {Promise<void>}
 * */
-export async function template(client: Client): Promise<void> {
-  log.debug(F, `guildId: ${env.DISCORD_GUILD_ID}`);
-  log.debug(F, `client: ${client}`);
+export async function template(/* client: Client */): Promise<void> {
+  // log.debug(F, `guildId: ${env.DISCORD_GUILD_ID}`);
+  // log.debug(F, `client: ${client}`);
 }

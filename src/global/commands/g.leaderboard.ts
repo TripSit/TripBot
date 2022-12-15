@@ -55,7 +55,7 @@ export async function leaderboard(
       .orderBy('total_points', 'desc')
       .limit(3);
 
-    log.debug(F, `allUserExperience: ${JSON.stringify(allUserExperience, null, 2)}`);
+    // log.debug(F, `allUserExperience: ${JSON.stringify(allUserExperience, null, 2)}`);
 
     let rank = 1;
     for (const user of allUserExperience) { // eslint-disable-line

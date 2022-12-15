@@ -10,8 +10,6 @@ import {
 //   ReactionRoleList,
 // } from '../../global/@types/database';
 
-const F = f(__filename);
-
 // const mindsetRoles = [
 //   env.ROLE_DRUNK,
 //   env.ROLE_HIGH,
@@ -78,14 +76,14 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
 
       // Check if the role added was a donator role
       if (role.id === env.ROLE_BOOSTER && action === 'added') {
-        log.debug(F, `${newMember.displayName} boosted the server!`);
+        // log.debug(F, `${newMember.displayName} boosted the server!`);
         const channelGoldlounge = client.channels.cache.get(env.CHANNEL_GOLDLOUNGE) as TextChannel;
         await channelGoldlounge.send(`${newMember.displayName} boosted the server! Thanks for helping make this place awesome!`); // eslint-disable-line max-len
       }
 
       // Check if the role added was a donator role
       if (role.id === env.ROLE_PATRON && action === 'added') {
-        log.debug(F, `${newMember.displayName} became a patron!`);
+        // log.debug(F, `${newMember.displayName} became a patron!`);
         const channelGoldlounge = client.channels.cache.get(env.CHANNEL_GOLDLOUNGE) as TextChannel;
         await channelGoldlounge.send(`${newMember.displayName} became a patron! Thanks for helping us to keep the lights on!`); // eslint-disable-line max-len
       }

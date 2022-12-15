@@ -64,17 +64,17 @@ export async function getTotalLevel(totalExp:number):Promise<{
   levelPoints:number,
   expToLevel:number,
 }> {
-  log.debug('totalLevel', `totalExp: ${totalExp}`);
+  // log.debug('totalLevel', `totalExp: ${totalExp}`);
   let level = 0;
   let levelPoints = totalExp;
   let expToLevel = 0;
   while (levelPoints > expToLevel) {
-    log.debug(F, `totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
+    // log.debug(F, `totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
     level += 1;
     expToLevel = 5 * (level ** 2) + (50 * level) + 100;
     levelPoints -= expToLevel;
   }
-  log.debug(F, `totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
+  // log.debug(F, `totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
   return { level, levelPoints, expToLevel };
 }
 

@@ -25,21 +25,21 @@ async function getDiscordUser(string:string):Promise<User> {
   let returnUser = {} as User;
   // Check if the string begins with <@ or ends with >
   if (!string.startsWith('<@') || !string.endsWith('>')) {
-    log.debug(F, `getDiscordUser: ${string} is a mention!`);
+    // log.debug(F, `getDiscordUser: ${string} is a mention!`);
     returnUser = await client.users.fetch(string);
   }
 
   // Check if the string is a series of numbers
   if (Number.isInteger(string)) {
-    log.debug(F, `getDiscordUser: ${string} is a number!`);
+    // log.debug(F, `getDiscordUser: ${string} is a number!`);
   }
 
   // Chec if the string is a tag
   if (string.includes('#')) {
-    log.debug(F, `getDiscordUser: ${string} is a tag!`);
+    // log.debug(F, `getDiscordUser: ${string} is a tag!`);
   }
 
-  log.debug(F, `getDiscordUser: ${returnUser})`);
+  // log.debug(F, `getDiscordUser: ${returnUser})`);
   return returnUser;
 }
 

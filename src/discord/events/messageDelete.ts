@@ -52,7 +52,7 @@ export const messageDelete: MessageDeleteEvent = {
     const authorName = message.author ? message.author.tag : 'Unknown';
     const content = message.content ? message.content : 'No content';
     const channel = message.channel ? (message.channel as TextChannel).name : 'Unknown';
-    log.debug(F, `${intro} deleted a message by ${authorName} in #${channel}: ${content}`);
+    // log.debug(F, `${intro} deleted a message by ${authorName} in #${channel}: ${content}`);
     const embed = embedTemplate()
       .setAuthor(null)
       .setFooter(null)

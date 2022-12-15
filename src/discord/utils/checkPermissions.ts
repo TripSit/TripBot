@@ -173,7 +173,7 @@ export async function hasPermissions(
   channel: TextChannel,
   permissionList:PermissionResolvable[],
 ):Promise<boolean> {
-  log.debug(F, `Checking channel ${channel.name} for the following permissions: ${permissionList.join(', ')}`);
+  // log.debug(F, `Checking channel ${channel.name} for the following permissions: ${permissionList.join(', ')}`);
   if (!interaction.guild) {
     const embed = embedTemplate()
       .setTitle('This command can only be used in a server!');
