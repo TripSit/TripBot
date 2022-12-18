@@ -42,12 +42,19 @@ export const messageUpdate: MessageUpdateEvent = {
       .setAuthor(null)
       .setFooter(null)
       .setColor(Colors.Yellow)
-      .setTitle(`${newMessage.member?.nickname} edited msg in ${(newMessage.channel as TextChannel).name}`)
-      .setURL(newMessage.url)
-      .addFields([
+      .setTitle(`${newMessage.member?.nickname} edited msg in ${(newMessage.channel as TextChannel).name}`);
+    try {
+      embed.setURL(newMessage.url);
+      embed.addFields([
         { name: 'Old Message', value: oldContent, inline: true },
         { name: 'New Message', value: newContent, inline: true },
       ]);
+    } catch (err) {
+      log.error(F, `Error creating embed: ${err}`);
+      log.error(F, `oldContent: ${oldContent}`);
+      log.error(F, `newContent: ${newContent}`);
+      log.error(F, `newMessage: ${newMessage.url}`);
+    }
 
     // const response = `Message ${newMessage.id} was edited by ${newMessage.author.tag} in
     // ${(newMessage.channel as TextChannel).name} from ${oldMessage.content} to ${newMessage.content}.`;
