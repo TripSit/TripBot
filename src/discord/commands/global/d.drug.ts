@@ -326,40 +326,93 @@ export const dDrug: SlashCommand = {
       return true;
     }
 
-    if (response === 'summary' || response === 'all') {
-      embed = await addSummary(embed, drugData);
+    embed = await addSummary(embed, drugData);
 
-      if (response === 'summary') {
-        interaction.reply({ embeds: [embed] });
-        return true;
+    if (response === 'summary') {
+      interaction.reply({ embeds: [embed] });
+      return true;
+    }
+
+    embed = await addAliases(embed, drugData);
+    embed = await addInteractions(embed, drugData);
+
+    let embedRowColumns = 0;
+
+    // CLASS
+    if (drugData.classes) {
+      embed = await addClasses(embed, drugData);
+      embedRowColumns += 1;
+    }
+
+    // CROSS TOLLERANCE
+    if (drugData.crossTolerances && drugData.crossTolerances.length >= 1) {
+      embed = await addCrosstolerance(embed, drugData);
+      embedRowColumns += 1;
+    }
+
+    // ADDICTION POTENTIAL
+    if (drugData.addictionPotential) {
+      embed = await addAddictions(embed, drugData);
+      embedRowColumns += 1;
+    }
+
+    // Make sure that each column has three rows to utilize space
+    let toleranceAdded = false;
+    let toxicityAdded = false;
+
+    [
+      embed,
+      toleranceAdded,
+      toxicityAdded,
+    ] = await fillInColumns(
+      embed,
+      drugData,
+      embedRowColumns,
+      toleranceAdded,
+      toxicityAdded,
+    );
+
+    // Dosage
+    if (drugData.roas) {
+      // Get a list of drug ROA names
+      const roaNames = drugData.roas.map(roa => roa.name);
+
+      // For HR reasons we prefer non-invasive methods
+      if (roaNames.indexOf('Insufflated') > 0) {
+        roaNames.splice(roaNames.indexOf('Insufflated'), 1);
+        roaNames.unshift('Insufflated');
       }
 
-      embed = await addAliases(embed, drugData);
-      embed = await addInteractions(embed, drugData);
-
-      let embedRowColumns = 0;
-
-      // CLASS
-      if (drugData.classes) {
-        embed = await addClasses(embed, drugData);
-        embedRowColumns += 1;
+      if (roaNames.indexOf('Vapourised') > 0) {
+        roaNames.splice(roaNames.indexOf('Vapourised'), 1);
+        roaNames.unshift('Vapourised');
+      }
+      if (roaNames.indexOf('Smoked') > 0) {
+        roaNames.splice(roaNames.indexOf('Smoked'), 1);
+        roaNames.unshift('Smoked');
       }
 
-      // CROSS TOLLERANCE
-      if (drugData.crossTolerances && drugData.crossTolerances.length >= 1) {
-        embed = await addCrosstolerance(embed, drugData);
-        embedRowColumns += 1;
-      }
+      // For each roaName, get the dosage and duration
+      // log.debug(F, `roaNames: ${roaNames}`);
 
-      // ADDICTION POTENTIAL
-      if (drugData.addictionPotential) {
-        embed = await addAddictions(embed, drugData);
-        embedRowColumns += 1;
-      }
-
-      // Make sure that each column has three rows to utilize space
-      let toleranceAdded = false;
-      let toxicityAdded = false;
+      embedRowColumns = 0;
+      roaNames.forEach(roaName => {
+        if (embedRowColumns < 3) {
+          const roaInfo = (drugData.roas as RoaType[]).find((r:RoaType) => r.name === roaName);
+          if (!roaInfo) {
+            log.error(F, `Could not find roaInfo for ${roaName}`);
+            return;
+          }
+          if (roaInfo.dosage) {
+            let dosageString = '';
+            roaInfo.dosage.forEach(d => {
+              dosageString += `${d.name}: ${d.value}\n`;
+            });
+            embed.addFields({ name: `💊 Dosage (${roaName})`, value: stripIndents`${dosageString}`, inline: true });
+            embedRowColumns += 1;
+          }
+        }
+      });
 
       [
         embed,
@@ -373,94 +426,39 @@ export const dDrug: SlashCommand = {
         toxicityAdded,
       );
 
-      // Dosage
-      if (drugData.roas) {
-      // Get a list of drug ROA names
-        const roaNames = drugData.roas.map(roa => roa.name);
+      // DURATION
+      [embed, embedRowColumns] = await addDurations(embed, drugData, roaNames);
 
-        // For HR reasons we prefer non-invasive methods
-        if (roaNames.indexOf('Insufflated') > 0) {
-          roaNames.splice(roaNames.indexOf('Insufflated'), 1);
-          roaNames.unshift('Insufflated');
-        }
-
-        if (roaNames.indexOf('Vapourised') > 0) {
-          roaNames.splice(roaNames.indexOf('Vapourised'), 1);
-          roaNames.unshift('Vapourised');
-        }
-        if (roaNames.indexOf('Smoked') > 0) {
-          roaNames.splice(roaNames.indexOf('Smoked'), 1);
-          roaNames.unshift('Smoked');
-        }
-
-        // For each roaName, get the dosage and duration
-        // log.debug(F, `roaNames: ${roaNames}`);
-
-        embedRowColumns = 0;
-        roaNames.forEach(roaName => {
-          if (embedRowColumns < 3) {
-            const roaInfo = (drugData.roas as RoaType[]).find((r:RoaType) => r.name === roaName);
-            if (!roaInfo) {
-              log.error(F, `Could not find roaInfo for ${roaName}`);
-              return;
-            }
-            if (roaInfo.dosage) {
-              let dosageString = '';
-              roaInfo.dosage.forEach(d => {
-                dosageString += `${d.name}: ${d.value}\n`;
-              });
-              embed.addFields({ name: `💊 Dosage (${roaName})`, value: stripIndents`${dosageString}`, inline: true });
-              embedRowColumns += 1;
-            }
-          }
-        });
-
-        [
-          embed,
-          toleranceAdded,
-          toxicityAdded,
-        ] = await fillInColumns(
-          embed,
-          drugData,
-          embedRowColumns,
-          toleranceAdded,
-          toxicityAdded,
-        );
-
-        // DURATION
-        [embed, embedRowColumns] = await addDurations(embed, drugData, roaNames);
-
-        [
-          embed,
-          toleranceAdded,
-          toxicityAdded,
-        ] = await fillInColumns(
-          embed,
-          drugData,
-          embedRowColumns,
-          toleranceAdded,
-          toxicityAdded,
-        );
-      }
-
-      // Reagents
-      await addReagents(embed, drugData);
-
-      // Tolerance
-      if (!toleranceAdded) {
-        await addTolerances(embed, drugData);
-      }
-
-      // Toxicity
-      if (!toxicityAdded) {
-        await addToxicities(embed, drugData);
-      }
-
-      // Experiences
-      await addExperiences(embed, drugData);
-
-      interaction.reply({ embeds: [embed] });
+      [
+        embed,
+        toleranceAdded,
+        toxicityAdded,
+      ] = await fillInColumns(
+        embed,
+        drugData,
+        embedRowColumns,
+        toleranceAdded,
+        toxicityAdded,
+      );
     }
+
+    // Reagents
+    await addReagents(embed, drugData);
+
+    // Tolerance
+    if (!toleranceAdded) {
+      await addTolerances(embed, drugData);
+    }
+
+    // Toxicity
+    if (!toxicityAdded) {
+      await addToxicities(embed, drugData);
+    }
+
+    // Experiences
+    await addExperiences(embed, drugData);
+
+    interaction.reply({ embeds: [embed] });
 
     return true;
   },
