@@ -82,7 +82,7 @@ export const uBan: UserCommand = {
 
         const result = await moderate(
           actor,
-          'BAN' as UserActionType,
+          'FULL_BAN' as UserActionType,
           target,
           privReason,
           pubReason,
