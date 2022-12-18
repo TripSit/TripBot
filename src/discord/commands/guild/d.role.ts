@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   ChatInputCommandInteraction,
+  Colors,
   GuildMember,
   Role,
   SlashCommandBuilder,
   TextChannel,
+  User,
 } from 'discord.js';
 import { db } from '../../../global/utils/knex';
 import {
@@ -89,9 +91,7 @@ export const dRole: SlashCommand = {
         .setAutocomplete(true)
         .setRequired(true))
       .addUserOption(option => option.setName('user')
-        .setDescription('(Mod only, defaults to you) The user to give the role.'))
-      .addBooleanOption(option => option.setName('restrict')
-        .setDescription('(Mod only, defaults false) Restrict user to this role.')))
+        .setDescription('(Mod only, defaults to you) The user to give the role.')))
     .addSubcommand(subcommand => subcommand
       .setName('remove')
       .setDescription('Remove a role.')
@@ -100,9 +100,7 @@ export const dRole: SlashCommand = {
         .setAutocomplete(true)
         .setRequired(true))
       .addUserOption(option => option.setName('user')
-        .setDescription('(Mod only, defaults to you) The user to remove the role.'))
-      .addBooleanOption(option => option.setName('restrict')
-        .setDescription('(Mod only, defaults false) Restrict user from this role.')))
+        .setDescription('(Mod only, defaults to you) The user to remove the role.')))
     .addSubcommand(subcommand => subcommand
       .setName('msgsetup')
       .setDescription('(Mod Only) Set up a reaction role message!')
@@ -119,18 +117,44 @@ export const dRole: SlashCommand = {
     startlog(F, interaction);
     if (!interaction.guild) return false;
     const command = interaction.options.getSubcommand();
-    const role = interaction.options.getRole('role', true) as Role;
+    const roleId = interaction.options.getString('role', true);
+    const role = await interaction.guild.roles.fetch(roleId) as Role;
+
+    // Check if interaction.member type is APIInteractionGuildMember
+    const isMod = (interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR);
+    const isTs = (interaction.member as GuildMember).roles.cache.has(env.ROLE_TRIPSITTER);
+
+    let user = {} as User;
+    let member = {} as GuildMember;
+    let verb = '' as string;
+    let preposition = '' as string;
+    let target = '' as string;
     if (command === 'add') {
-      const user = interaction.options.getUser('user') ?? interaction.user;
-      const member = await interaction.guild.members.fetch(user.id);
+      verb = 'added';
+      preposition = 'to';
+      if (isMod || isTs) {
+        user = interaction.options.getUser('user') ?? interaction.user;
+      } else {
+        user = interaction.user;
+      }
+      member = await interaction.guild.members.fetch(user.id);
+      target = member.displayName;
       await member.roles.add(role);
       await interaction.reply({ content: `Added ${role.name} to ${member.nickname}!`, ephemeral: true });
     } else if (command === 'remove') {
-      const user = interaction.options.getUser('user', true);
-      const member = await interaction.guild.members.fetch(user.id);
-      await member.roles.add(role);
+      verb = 'removed';
+      preposition = 'from';
+      if (isMod || isTs) {
+        user = interaction.options.getUser('user') ?? interaction.user;
+      } else {
+        user = interaction.user;
+      }
+      member = await interaction.guild.members.fetch(user.id);
+      target = member.displayName;
+      await member.roles.remove(role);
       await interaction.reply({ content: `Removed ${role.name} from ${member.nickname}!`, ephemeral: true });
     } else if (command === 'setup') {
+      verb = 'setup';
       if ((interaction.member as GuildMember).roles.cache.find(r => r.id === env.ROLE_DEVELOPER) === undefined) {
         await interaction.reply({ content: 'You do not have permission to use this command!', ephemeral: true });
         return false;
@@ -144,6 +168,11 @@ export const dRole: SlashCommand = {
         role,
       );
     }
+
+    const targetstring = target !== '' ? ` ${preposition} ${target}` : '';
+    const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+    await channelBotlog.send(`${(interaction.member as GuildMember).displayName} ${verb} ${role.name}${targetstring}`);
+
     return true;
   },
 };

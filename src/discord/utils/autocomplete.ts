@@ -10,7 +10,7 @@ import drugDataTripsit from '../../global/assets/data/drug_db_tripsit.json';
 import timezones from '../../global/assets/data/timezones.json';
 import unitsOfMeasurement from '../../global/assets/data/units_of_measurement.json';
 
-const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
 
 const timezoneNames:string[] = [];
 for (const timezone of timezones) { // eslint-disable-line
@@ -87,7 +87,7 @@ async function autocompleteBenzos(interaction:AutocompleteInteraction) {
   };
 
   if (drugDataTripsit === null || drugDataTripsit === undefined) {
-    log.error(F, 'drugDataAll is null or undefined');
+    // log.error(F, 'drugDataAll is null or undefined');
     return;
   }
 
@@ -282,11 +282,11 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
   ];
 
   // Check if interaction.member type is APIInteractionGuildMember
-  const higestRole = (interaction.member as GuildMember).roles.highest;
+  const isMod = (interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR);
+  const isTs = (interaction.member as GuildMember).roles.cache.has(env.ROLE_TRIPSITTER);
 
   const roleList = [] as { name:string, value:string }[];
-
-  if (higestRole.id === env.ROLE_MODERATOR) {
+  if (isMod) {
     // If the user is a moderator, they can manage the:
     // NeedsHelp, Helper, Mindset, Verified, Occult and Contributor roles.
     // They can manage these roles on anyone, except other moderators and tripsitters.
@@ -299,7 +299,7 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
       { name: 'Underban', value: env.ROLE_UNDERBAN },
       ...mindsetRoles,
     );
-  } else if (higestRole.id === env.ROLE_TRIPSITTER) {
+  } else if (isTs) {
     // If the user is a tripsitter, they can manage the
     // NeedsHelp, Helper and Mindset roles.
     // They can manage these roles on anyone, except other tripsitters and moderators.
@@ -344,7 +344,7 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
 
       const nonNullRoles = roles.filter(role => role.name !== '');
 
-      log.debug(F, `nonNullRoles: ${JSON.stringify(nonNullRoles, null, 2)}`);
+      // log.debug(F, `nonNullRoles: ${JSON.stringify(nonNullRoles, null, 2)}`);
 
       roleList.push(...nonNullRoles);
     }
@@ -369,11 +369,11 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
   const focusedValue = interaction.options.getFocused();
   const results = fuse.search(focusedValue);
   if (results.length > 0) {
-    log.debug(F, `Results: ${JSON.stringify(results, null, 2)}`);
+    // log.debug(F, `Results: ${JSON.stringify(results, null, 2)}`);
     interaction.respond(results.map(choice => (
       { name: choice.item.name, value: choice.item.name })));
   } else {
-    log.debug(F, `roleDict: ${JSON.stringify(roleDict, null, 2)}`);
+    // log.debug(F, `roleDict: ${JSON.stringify(roleDict, null, 2)}`);
     interaction.respond(roleDict);
   }
 }
