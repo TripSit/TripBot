@@ -1034,9 +1034,13 @@ export async function modmailThreadInteraction(message:Message) {
           iconURL: message.member.displayAvatarURL(),
         });
         embed.setFooter(null);
-        await user.send({ embeds: [embed] });
+        try {
+          await user.send({ embeds: [embed] });
+        } catch (error) {
+          log.error(F, `Error sending message to user: ${error}`);
+          log.error(F, `User: ${JSON.stringify(user, null, 2)}`);
+        }
         // log.debug(F, `message sent to user!`);
-        // user.send(`<${message.member.nickname}> ${message.content}`);
 
         // Reset the archived_at time
         // Determine when the thread should be archived
