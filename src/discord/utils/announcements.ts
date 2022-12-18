@@ -201,7 +201,7 @@ export async function announcements(message:Message) {
   //   `Upvote something 10 times to make it into the ${channelBestOf}`,
   //   `Give thanks and positive feedback in ${channelKudos}`,
   //   `Open a voice chat in ${channelCampfire}!`,
-  //   `Want to help out tripsit 'behind the scenes'? Review the #vip-welcome ${channelDevWelcome} room and pick up the Consultant role to access the Development category where we discuss projects and ideas! You don't need to be a coder to be Headers, all input is welcome`,
+  //   `Want to help out tripsit 'behind the scenes'? Review the #vip-welcome ${channelDevWelcome} room and pick up the Contributor role to access the Development category where we discuss projects and ideas! You don't need to be a coder to be Headers, all input is welcome`,
   // ];
 
   const embed = embedTemplate();

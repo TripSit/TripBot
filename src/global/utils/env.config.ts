@@ -271,7 +271,7 @@ export const env = {
   EMOJI_THUMBDOWN: isProd ? '<:ts_thumbdown:979721915390369822>' : '<:ts_thumbdown:980917845527519312>',
   EMOJI_PINKHEART: isProd ? '<:pink_heart:958072815884582922>' : '<:pink_heart:977926946656763904>',
   EMOJI_RESEARCHER: isProd ? '<:ts_researcher:979557718648057916>' : '<:ts_researcher:980934790867984415>',
-  EMOJI_CONSULTANT: isProd ? '<:ts_coder:979557703972163644>' : '<:ts_coder:980934790893142106>',
+  EMOJI_CONTRIBUTOR: isProd ? '<:ts_coder:979557703972163644>' : '<:ts_coder:980934790893142106>',
   EMOJI_CLEARMIND: isProd ? '<:ts_clearmind:979557762621136997>' : '<:ts_clearmind:980934790834442240>',
 };
 

@@ -17,7 +17,7 @@ import {
 //   env.ROLE_TRIPPING,
 //   env.ROLE_DISSOCIATING,
 //   env.ROLE_STIMMING,
-//   env.ROLE_NODDING,
+//   env.ROLE_SEDATED,
 //   env.ROLE_SOBER,
 // ];
 
