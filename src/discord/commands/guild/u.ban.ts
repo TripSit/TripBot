@@ -62,7 +62,7 @@ export const uBan: UserCommand = {
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
-        i.deferReply();
+        await i.deferReply({ ephemeral: true });
         const privReason = i.fields.getTextInputValue('privReason');
         const pubReason = i.fields.getTextInputValue('pubReason');
         const durationInput = i.fields.getTextInputValue('duration');
@@ -89,7 +89,7 @@ export const uBan: UserCommand = {
           duration,
         );
 
-        i.editReply(result);
+        await i.editReply(result);
       });
     return true;
   },

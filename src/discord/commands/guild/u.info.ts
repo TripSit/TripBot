@@ -20,6 +20,7 @@ export const uInfo: UserCommand = {
     .setType(ApplicationCommandType.User),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: true });
     const actor = interaction.member as GuildMember;
     const target = interaction.options.data[0].member as GuildMember;
 
@@ -33,7 +34,7 @@ export const uInfo: UserCommand = {
     );
 
     // log.debug(F, `Result: ${result}`);
-    interaction.reply(result);
+    await interaction.editReply(result);
 
     return true;
   },

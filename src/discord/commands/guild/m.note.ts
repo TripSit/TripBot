@@ -51,6 +51,7 @@ export const mNote: MessageCommand = {
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
+        await i.deferReply({ ephemeral: true });
         const privReason = stripIndents`
         ${i.fields.getTextInputValue('privReason')}
     
@@ -68,7 +69,7 @@ export const mNote: MessageCommand = {
           null,
         );
           // log.debug(F, `Result: ${result}`);
-        i.reply(result);
+        await i.editReply(result);
       });
     return true;
   },
