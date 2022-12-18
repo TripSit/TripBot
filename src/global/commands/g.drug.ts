@@ -14,18 +14,12 @@ export async function drug(drugName:string):Promise<CbSubstance | null> {
     return null;
   }
 
-  let drugData = (drugDataAll as CbSubstance[]).find(substance => substance.name === drugName);
-  // log.debug(F, `drugData1: ${JSON.stringify(drugData, null, 2)}`);
+  const drugData = (drugDataAll as CbSubstance[]).find(
+    substance => substance.name.toLowerCase() === drugName.toLowerCase(),
+  );
+
   if (!drugData) {
-    drugData = (drugDataAll as CbSubstance[]).find(substance => substance.name === drugName.toLowerCase());
-    // log.debug(F, `drugData2: ${JSON.stringify(drugData, null, 2)}`);
-    if (!drugData) {
-      drugData = (drugDataAll as CbSubstance[]).find(substance => substance.name === drugName.toUpperCase());
-      // log.debug(F, `drugData3: ${JSON.stringify(drugData, null, 2)}`);
-      if (!drugData) {
-        return null;
-      }
-    }
+    return null;
   }
 
   log.info(F, `response: ${JSON.stringify(drugData, null, 2)}`);
