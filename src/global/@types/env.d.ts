@@ -156,7 +156,7 @@ declare global {
       ROLE_TRIPPING: string;
       ROLE_DISSOCIATING: string;
       ROLE_STIMMING: string;
-      ROLE_NODDING: string;
+      ROLE_SEDATED: string;
       ROLE_SOBER: string;
       ROLE_HELPER: string;
       ROLE_TALKATIVE: string;

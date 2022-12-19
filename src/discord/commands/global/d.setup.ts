@@ -167,7 +167,7 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
 }
 
 /**
- * The consultants prompt
+ * The contributors prompt
  * @param {Interaction} interaction The interaction that triggered this
  */
 export async function applications(interaction:ChatInputCommandInteraction) {
@@ -246,7 +246,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
     We currently have two positions open:
 
     * Helper
-    * Consultant
+    * Contributor
 
     **These are not formal roles, but rather a way to get access to the rooms to help out and prove you want to be a part of the org!**
     
@@ -258,7 +258,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
     As long as you have a general understanding of how drugs work and how hey interact with mental health conditions we do not require a formal education for users interested in taking on the helper role. 
     While we do value lived/living experience with drug use it is not required to be an effective helper!
     
-    The **Consultant** role is for people who want to help out in the back-end with development or other organizational work.
+    The **Contributor** role is for people who want to help out in the back-end with development or other organizational work.
     You don't need to code, but you should have some experience with the org and be able to contribute to the org in some way.
     We appreciate all types of help: Not just coders, but anyone who wants to give input or test out new features!
   
@@ -653,7 +653,7 @@ export async function mindsets(interaction:ChatInputCommandInteraction) {
           channel_id: msg.channel.id,
           message_id: msg.id,
           reaction_id: env.EMOJI_SEDATED.slice(env.EMOJI_SEDATED.indexOf(':', 3) + 1, env.EMOJI_SEDATED.indexOf('>')),
-          role_id: env.ROLE_NODDING,
+          role_id: env.ROLE_SEDATED,
         },
         {
           guild_id: msg.channel.guild.id,

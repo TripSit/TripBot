@@ -91,7 +91,7 @@ export async function handleReactionRoles(
         // log.debug(F, `Updated mindest DB ${user.username}`);
       }
 
-      // If this is the consultant role, send a message to the consultant room
+      // If this is the contributor role, send a message to the contributor room
       if (role.id === env.ROLE_CONTRIBUTOR) {
         const devCategory = await reaction.message.guild?.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
         // const channelTripcord = await reaction.message.guild?.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;

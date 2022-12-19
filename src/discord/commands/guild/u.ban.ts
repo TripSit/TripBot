@@ -62,7 +62,7 @@ export const uBan: UserCommand = {
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
-        i.deferReply();
+        await i.deferReply({ ephemeral: true });
         const privReason = i.fields.getTextInputValue('privReason');
         const pubReason = i.fields.getTextInputValue('pubReason');
         const durationInput = i.fields.getTextInputValue('duration');
@@ -82,14 +82,14 @@ export const uBan: UserCommand = {
 
         const result = await moderate(
           actor,
-          'BAN' as UserActionType,
+          'FULL_BAN' as UserActionType,
           target,
           privReason,
           pubReason,
           duration,
         );
 
-        i.editReply(result);
+        await i.editReply(result);
       });
     return true;
   },

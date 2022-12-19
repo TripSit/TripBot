@@ -17,6 +17,16 @@ const bigFrequency = env.NODE_ENV === 'production' ? 250 : 3;
 const messageCounter = {} as MessageCounterType;
 let bigFrequencyCounter = 0;
 
+/**
+ * @param {number} ms
+ * @return {Promise<void>}
+ */
+function sleep(ms:number):Promise<void> {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
+
 const waterAndTeaEmojis = [
   // '🏊', '🏊🏻', '🏊🏼', '🏊🏽', '🏊🏾', '🏊🏿',
   // '🏄', '🏄🏻', '🏄🏼', '🏄🏽', '🏄🏾', '🏄🏿',
@@ -201,7 +211,7 @@ export async function announcements(message:Message) {
   //   `Upvote something 10 times to make it into the ${channelBestOf}`,
   //   `Give thanks and positive feedback in ${channelKudos}`,
   //   `Open a voice chat in ${channelCampfire}!`,
-  //   `Want to help out tripsit 'behind the scenes'? Review the #vip-welcome ${channelDevWelcome} room and pick up the Consultant role to access the Development category where we discuss projects and ideas! You don't need to be a coder to be Headers, all input is welcome`,
+  //   `Want to help out tripsit 'behind the scenes'? Review the #vip-welcome ${channelDevWelcome} room and pick up the Contributor role to access the Development category where we discuss projects and ideas! You don't need to be a coder to be Headers, all input is welcome`,
   // ];
 
   const embed = embedTemplate();
@@ -323,6 +333,9 @@ export async function announcements(message:Message) {
 
       // log.debug(F, `randomGenAnnouncement: ${randomGenAnnouncement}`);
       embed.setDescription(randomGenAnnouncement);
+
+      await sleep(3000);
+
       await (message.channel as TextChannel).send({ embeds: [embed] });
     }
   }

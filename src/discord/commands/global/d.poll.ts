@@ -67,9 +67,12 @@ export const dPoll: SlashCommand = {
 
     const pollEmbed = embedTemplate()
       .setAuthor(null)
-      .setTitle(`**${question}**`)
       .setDescription(stripIndents`${body}`)
       .setFooter({ text: `*A poll by ${(interaction.member as GuildMember).displayName}*` });
+
+    if (question !== undefined && question !== null && question !== '') {
+      pollEmbed.setTitle(`**${question}**`);
+    }
 
     await interaction.channel.send({ embeds: [pollEmbed] })
       .then(async (msg:Message) => {

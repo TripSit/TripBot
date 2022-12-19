@@ -83,7 +83,7 @@ const mindsetRoles = [
   env.ROLE_TRIPPING,
   env.ROLE_DISSOCIATING,
   env.ROLE_STIMMING,
-  env.ROLE_NODDING,
+  env.ROLE_SEDATED,
   env.ROLE_SOBER,
 ];
 
@@ -192,7 +192,11 @@ export async function tripsitmeOwned(
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
-    interaction.editReply({ embeds: [embed] });
+    if (interaction.deferred) {
+      interaction.editReply({ embeds: [embed] });
+    } else {
+      interaction.reply({ embeds: [embed] });
+    }
     return;
   }
 
@@ -593,7 +597,8 @@ export async function tripsitmeResolve(
           return;
         }
         const roleObj = await interaction.guild.roles.fetch(roleId) as Role;
-        if (!ignoredRoles.includes(roleObj.id)
+        if (roleObj
+          && !ignoredRoles.includes(roleObj.id)
           && roleObj.name !== '@everyone'
           && roleObj.id !== roleNeedshelp.id
           && roleObj.comparePositionTo(myRole) < 0) {
@@ -672,13 +677,18 @@ export async function tripsitmeResolve(
       });
     });
 
-  const metaChannelId = ticketData?.meta_thread_id ?? env.CHANNEL_TRIPSITMETA;
-  const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
-  await metaChannel.send({
-    content: stripIndents`${actor.displayName} has indicated that they no longer need help!`,
-  });
-  if (metaChannelId !== env.CHANNEL_TRIPSITMETA) {
-    metaChannel.setName(`💚│${target.displayName}'s discussion!`);
+  let metaChannelId = ticketData?.meta_thread_id;
+  if (metaChannelId === null && interaction.guild.id === env.GUILD_TRIPSIT) {
+    metaChannelId = env.CHANNEL_TRIPSITMETA;
+  }
+  if (metaChannelId !== null) {
+    const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
+    await metaChannel.send({
+      content: stripIndents`${actor.displayName} has indicated that they no longer need help!`,
+    });
+    if (metaChannelId !== env.CHANNEL_TRIPSITMETA) {
+      metaChannel.setName(`💚│${target.displayName}'s discussion!`);
+    }
   }
 
   // Update the ticket status to resolved

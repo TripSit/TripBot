@@ -57,10 +57,16 @@ export const messageDelete: MessageDeleteEvent = {
       .setAuthor(null)
       .setFooter(null)
       .setColor(Colors.Red)
-      .setTitle(`${intro} deleted msg in ${channel}`)
-      .addFields([
+      .setTitle(`${intro} deleted msg in ${channel}`);
+
+    try {
+      embed.addFields([
         { name: authorName, value: content, inline: true },
       ]);
+    } catch (e) {
+      log.error(F, `Error adding fields to embed: ${e}`);
+      log.error(F, `${authorName}, ${content}`);
+    }
 
     await msglog.send({ embeds: [embed] });
   },

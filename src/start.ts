@@ -4,6 +4,7 @@ import { log } from './global/utils/log';
 import { discordConnect } from './discord/dscrd'; // eslint-disable-line
 import { validateEnv } from './global/utils/env.validate'; // eslint-disable-line
 import { runTimer } from './global/utils/timer'; // eslint-disable-line
+import { runStats } from './global/utils/stats'; // eslint-disable-line
 import { startLog } from './discord/utils/startLog'; // eslint-disable-line
 
 global.bootTime = new Date();
@@ -22,6 +23,7 @@ async function start() {
   }
 
   runTimer();
+  runStats();
 }
 
 start();
