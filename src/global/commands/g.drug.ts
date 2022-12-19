@@ -1,7 +1,7 @@
 import { CbSubstance } from '../@types/combined.d';
 import drugDataAll from '../assets/data/drug_db_combined.json';
 
-const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
 
 export default drug;
 
@@ -22,6 +22,6 @@ export async function drug(drugName:string):Promise<CbSubstance | null> {
     return null;
   }
 
-  log.info(F, `response: ${JSON.stringify(drugData, null, 2)}`);
+  // log.info(F, `response: ${JSON.stringify(drugData, null, 2)}`);
   return drugData;
 }
