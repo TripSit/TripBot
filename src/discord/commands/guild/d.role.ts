@@ -117,8 +117,7 @@ export const dRole: SlashCommand = {
     startlog(F, interaction);
     if (!interaction.guild) return false;
     const command = interaction.options.getSubcommand();
-    const roleId = interaction.options.getString('role', true);
-    const role = await interaction.guild.roles.fetch(roleId) as Role;
+    let role = {} as Role;
 
     // Check if interaction.member type is APIInteractionGuildMember
     const isMod = (interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR);
@@ -130,6 +129,8 @@ export const dRole: SlashCommand = {
     let preposition = '' as string;
     let target = '' as string;
     if (command === 'add') {
+      const roleId = interaction.options.getString('role', true);
+      role = await interaction.guild.roles.fetch(roleId) as Role;
       verb = 'added';
       preposition = 'to';
       if (isMod || isTs) {
@@ -142,6 +143,8 @@ export const dRole: SlashCommand = {
       await member.roles.add(role);
       await interaction.reply({ content: `Added ${role.name} to ${member.nickname}!`, ephemeral: true });
     } else if (command === 'remove') {
+      const roleId = interaction.options.getString('role', true);
+      role = await interaction.guild.roles.fetch(roleId) as Role;
       verb = 'removed';
       preposition = 'from';
       if (isMod || isTs) {
@@ -153,7 +156,8 @@ export const dRole: SlashCommand = {
       target = member.displayName;
       await member.roles.remove(role);
       await interaction.reply({ content: `Removed ${role.name} from ${member.nickname}!`, ephemeral: true });
-    } else if (command === 'setup') {
+    } else if (command === 'msgsetup') {
+      role = interaction.options.getRole('role', true) as Role;
       verb = 'setup';
       if ((interaction.member as GuildMember).roles.cache.find(r => r.id === env.ROLE_DEVELOPER) === undefined) {
         await interaction.reply({ content: 'You do not have permission to use this command!', ephemeral: true });
