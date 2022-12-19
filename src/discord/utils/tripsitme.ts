@@ -192,7 +192,11 @@ export async function tripsitmeOwned(
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
-    interaction.editReply({ embeds: [embed] });
+    if (interaction.deferred) {
+      interaction.editReply({ embeds: [embed] });
+    } else {
+      interaction.reply({ embeds: [embed] });
+    }
     return;
   }
 

@@ -291,14 +291,22 @@ export const dDrug: SlashCommand = {
         { name: 'All', value: 'all' },
         { name: 'Dosage', value: 'dosage' },
         { name: 'Summary', value: 'summary' },
-      )),
+      ))
+    .addBooleanOption(option => option.setName('public')
+      .setDescription('Post result in chat? (Defaults to true)')),
   async execute(interaction) {
     startLog(F, interaction);
     let embed = embedTemplate();
+    // Check if the interaction is coming from DM
+    if (interaction.channelId !== null) {
+      embed.setFooter({ text: 'You can use this command in DM for privacy if you want!' });
+    }
+
+    const ephemeral = !interaction.options.getBoolean('public') ?? false;
     const drugName = interaction.options.getString('substance');
     if (!drugName) {
       embed.setTitle('No drug name was provided');
-      interaction.reply({ embeds: [embed] });
+      interaction.reply({ embeds: [embed], ephemeral: true });
       return false;
     }
     const drugData = await drug(drugName) as CbSubstance;
@@ -310,7 +318,7 @@ export const dDrug: SlashCommand = {
         '...this shouldn\'t have happened, please tell the developer!',
       );
       // If this happens then something went wrong with the auto-complete
-      interaction.reply({ embeds: [embed] });
+      interaction.reply({ embeds: [embed], ephemeral: true });
       return false;
     }
 
@@ -322,14 +330,14 @@ export const dDrug: SlashCommand = {
 
     if (response === 'dosage') {
       embed = await addDosages(embed, drugData);
-      interaction.reply({ embeds: [embed] });
+      interaction.reply({ embeds: [embed], ephemeral });
       return true;
     }
 
     embed = await addSummary(embed, drugData);
 
     if (response === 'summary') {
-      interaction.reply({ embeds: [embed] });
+      interaction.reply({ embeds: [embed], ephemeral });
       return true;
     }
 
@@ -458,7 +466,7 @@ export const dDrug: SlashCommand = {
     // Experiences
     await addExperiences(embed, drugData);
 
-    interaction.reply({ embeds: [embed] });
+    interaction.reply({ embeds: [embed], ephemeral });
 
     return true;
   },
