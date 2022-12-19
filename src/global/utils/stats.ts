@@ -26,14 +26,14 @@ async function checkStats() {
 
   // Total member count
   const { memberCount } = tripsitGuild;
-  log.debug(F, `memberCount: ${memberCount}`);
+  // log.debug(F, `memberCount: ${memberCount}`);
   const channelTotal = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_TOTAL);
-  log.debug(F, `channelTotal: ${channelTotal?.name}`);
+  // log.debug(F, `channelTotal: ${channelTotal?.name}`);
   if (channelTotal) {
     const name = `Total: ${memberCount}`;
     if (channelTotal.name !== name) {
       channelTotal.setName(name);
-      log.debug(F, `Updated total members to ${memberCount}!`);
+      // log.debug(F, `Updated total members to ${memberCount}!`);
       // Check if the total members is divisible by 100
       if (memberCount % 100 === 0) {
         const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
@@ -56,15 +56,15 @@ async function checkStats() {
     // log.debug(F, `Role verified members: ${members.size}`);
     const channelVerified = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_VERIFIED);
     if (channelVerified) {
-      const percentVerified = Math.round(((members.size / memberCount) * 100));
-      log.debug(F, `percentVerified: ${percentVerified}%`);
+      // log.debug(F, `${members.size} / ${memberCount} = ${(members.size / memberCount) * 10000}`);
+      const percentVerified = Math.round(((members.size / memberCount) * 10000)) / 100;
+      // log.debug(F, `percentVerified: ${percentVerified}%`);
       const name = `Verified: ${members.size} (${percentVerified}%)`;
-      log.debug(F, `channelVerified: ${channelVerified.name}`);
-      log.debug(F, `name: ${name}`);
+      // log.debug(F, `channelVerified: ${channelVerified.name}`);
+      // log.debug(F, `name: ${name}`);
       if (channelVerified.name !== name) {
-        log.debug(F, `Updating verified members to ${members.size}!`);
-        const test = await channelVerified.setName(name);
-        log.debug(F, `test: ${test}`);
+        // log.debug(F, `Updating verified members to ${members.size}!`);
+        await channelVerified.setName(name);
         // log.debug(F, `Updated verified members to ${members.size}!`);
         if (members.size % 100 === 0) {
           const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
