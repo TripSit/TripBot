@@ -9,10 +9,7 @@ import {
   UserReminders,
   UserTickets,
   TicketStatus,
-  DiscordGuilds,
 } from '../@types/pgdb.d';
-
-import { embedTemplate } from '../../discord/utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -20,116 +17,6 @@ const F = f(__filename);
 const interval = env.NODE_ENV === 'production' ? 1000 * 30 : 1000 * 10;
 
 export default runTimer;
-
-async function checkStats() {
-  // Determine how many people are in the tripsit guild
-  const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-  if (tripsitGuild) {
-    // Total member count
-    const { memberCount } = tripsitGuild;
-    const channelTotal = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_TOTAL);
-    if (channelTotal) {
-      const currentCount = parseInt(channelTotal.name.split(': ')[1], 10);
-      if (currentCount !== memberCount) {
-        channelTotal.setName(`Total Members: ${memberCount}`);
-        // log.debug(F, `Updated total members to ${memberCount}!`);
-        // Check if the total members is divisible by 100
-        if (memberCount % 100 === 0) {
-          const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
-          if (channelGeneral) {
-            const embed = embedTemplate()
-              .setTitle('🎈🎉🎊New Record🎊🎉🎈')
-              .setDescription(`We have reached ${memberCount} total members!`);
-            await channelGeneral.send({ embeds: [embed] });
-          }
-        }
-      }
-    }
-
-    // Determine how many people have the Verified role
-    const roleVerified = await tripsitGuild.roles.fetch(env.ROLE_VERIFIED);
-    if (roleVerified) {
-      const { members } = roleVerified;
-      // log.debug(F, `Role verified members: ${members.size}`);
-      const channelVerified = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_VERIFIED);
-      if (channelVerified) {
-        const currentCount = parseInt(channelVerified.name.split(': ')[1], 10);
-        if (currentCount !== members.size) {
-          channelVerified.setName(`Verified Members: ${members.size}`);
-          // log.debug(F, `Updated verified members to ${members.size}!`);
-          if (members.size % 100 === 0) {
-            const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
-            if (channelGeneral) {
-              const embed = embedTemplate()
-                .setTitle('🎈🎉🎊 New Record 🎊🎉🎈')
-                .setDescription(`We have reached ${memberCount} verified members!`);
-              await channelGeneral.send({ embeds: [embed] });
-            }
-          }
-        }
-      }
-    }
-
-    // Determine the number of users currently online
-    const onlineCount = tripsitGuild.members.cache.filter(
-      member => member.presence?.status !== undefined && member.presence?.status !== 'offline',
-    ).size;
-    // const onlineCount = 10;
-    const channelOnline = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_ONLINE);
-    if (channelOnline) {
-      const currentCount = parseInt(channelOnline.name.split(': ')[1], 10);
-      if (currentCount !== onlineCount) {
-        channelOnline.setName(`Online Members: ${onlineCount}`);
-        // log.debug(F, `Updated online members to ${onlineCount}!`);
-      } else {
-        // log.debug(F, `Online members is already ${onlineCount}!`);
-      }
-    }
-
-    // Max online count
-    let maxCount = 0;
-    // Update the database's max_online_members if it's higher than the current value
-    // log.debug(F, `Getting guild data`);
-    const guildData = await getGuild(env.DISCORD_GUILD_ID);
-    if (guildData) {
-      if (guildData.max_online_members) {
-        maxCount = guildData.max_online_members;
-        if (onlineCount > guildData.max_online_members) {
-          maxCount = onlineCount;
-          await db<DiscordGuilds>('discord_guilds')
-            .update({
-              max_online_members: onlineCount,
-            })
-            .where('id', env.DISCORD_GUILD_ID);
-          const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
-          if (channelGeneral) {
-            const embed = embedTemplate()
-              .setTitle('🎈🎉🎊New Record🎊🎉🎈')
-              .setDescription(`We have reached ${maxCount} online members!`);
-            await channelGeneral.send({ embeds: [embed] });
-          }
-        }
-      } else {
-        await db<DiscordGuilds>('discord_guilds')
-          .update({
-            max_online_members: onlineCount,
-          })
-          .where('id', env.DISCORD_GUILD_ID);
-      }
-    }
-    const channelMax = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_MAX);
-    if (channelMax) {
-      const currentCount = parseInt(channelMax.name.split(': ')[1], 10);
-      // log.debug(F, `currentCount: ${currentCount} | maxCount: ${maxCount}`);
-      if (maxCount > currentCount) {
-        channelMax.setName(`Max Online: ${maxCount}`);
-        // log.debug(F, `Updated max online members to ${maxCount}!`);
-      } else {
-        // log.debug(F, `Max members is already ${maxCount}!`);
-      }
-    }
-  }
-}
 
 async function checkReminders() {
   // log.info(F, `Checking timers...`);
@@ -398,7 +285,6 @@ export async function runTimer() {
   function checkTimers() {
     setTimeout(
       async () => {
-        await checkStats();
         await checkReminders();
         await checkTickets();
         await checkMindsets();
