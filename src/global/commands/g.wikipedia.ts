@@ -15,7 +15,7 @@ export async function wikipedia(query: string):Promise<string> {
     );
     return response.data.extract;
   } catch (e) {
-    log.error(F, `${(e as Error).message} query: ${query}`);
+    log.debug(F, `${(e as Error).message} query: ${query}`);
     return `An error occured while trying to fetch the definition for ${query} from wikipedia.`;
   }
 }
