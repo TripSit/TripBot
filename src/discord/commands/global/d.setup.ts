@@ -789,6 +789,100 @@ export async function colors(interaction:ChatInputCommandInteraction) {
     });
 }
 
+/**
+ * The colors prompt
+ * @param {Interaction} interaction The interaction that triggered this
+ */
+export async function donorColors(interaction:ChatInputCommandInteraction) {
+  // startLog(F, interaction);
+  if (!(interaction.channel as TextChannel)) {
+    log.error(F, noChannel);
+    interaction.reply(channelOnly);
+    return;
+  }
+
+  let reactionRoleInfo = [] as {
+    guild_id: string;
+    channel_id: string;
+    message_id: string;
+    reaction_id: string;
+    role_id: string;
+  }[];
+
+  const colorEmbed = embedTemplate()
+    .setDescription('You now have access to new donor colors!\nReact to this message to set the color of your nickname!')
+    .setFooter({ text: 'You can only pick one color at a time, choose wisely!' })
+    .setColor(Colors.Blue);
+
+  await (interaction.channel as TextChannel).send({ embeds: [colorEmbed] })
+    .then(async msg => {
+      await msg.react('❤');
+      await msg.react('🧡');
+      await msg.react('💛');
+      await msg.react('💚');
+      await msg.react('💙');
+      await msg.react('💜');
+      await msg.react(env.EMOJI_PINKHEART);
+      reactionRoleInfo = [
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: '❤',
+          role_id: env.ROLE_DONOR_RED,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: '🧡',
+          role_id: env.ROLE_DONOR_ORANGE,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: '💛',
+          role_id: env.ROLE_DONOR_YELLOW,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: '💚',
+          role_id: env.ROLE_DONOR_GREEN,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: '💙',
+          role_id: env.ROLE_DONOR_BLUE,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: '💜',
+          role_id: env.ROLE_DONOR_PURPLE,
+        },
+        {
+          guild_id: msg.channel.guild.id,
+          channel_id: msg.channel.id,
+          message_id: msg.id,
+          reaction_id: env.EMOJI_PINKHEART.slice(env.EMOJI_PINKHEART.indexOf(':', 3) + 1, env.EMOJI_PINKHEART.indexOf('>')),
+          role_id: env.ROLE_DONOR_PINK,
+        },
+      ];
+
+      // Update the database
+      await db<ReactionRoles>('reaction_roles')
+        .insert(reactionRoleInfo)
+        .onConflict(['role_id', 'reaction_id'])
+        .merge();
+    });
+}
+
 const roleQuestion = 'What role are people applying for?';
 const reviewerQuestion = 'What role reviews those applications?';
 /**
@@ -890,10 +984,13 @@ export const prompt: SlashCommand = {
       .setName('color'))
     .addSubcommand(subcommand => subcommand
       .setDescription('ticketbooth info!')
-      .setName('ticketbooth')),
+      .setName('ticketbooth'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('donor color setup')
+      .setName('donorcolors')),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
-    // await interaction.deferReply({ephemeral: true});
+    await interaction.deferReply({ ephemeral: true });
     const command = interaction.options.getSubcommand();
     if (command === 'applications') {
       await applications(interaction);
@@ -911,8 +1008,16 @@ export const prompt: SlashCommand = {
       await tripsit(interaction);
     } else if (command === 'ticketbooth') {
       await ticketbooth(interaction);
+    } else if (command === 'donorcolors') {
+      await donorColors(interaction);
     }
-    // await interaction.editReply('Donezo!');
+    if (!interaction.replied) {
+      if (interaction.deferred) {
+        await interaction.editReply({ content: 'Donezo!' });
+      } else {
+        await interaction.reply({ content: 'Donezo!', ephemeral: true });
+      }
+    }
     return true;
   },
 };

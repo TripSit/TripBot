@@ -1,4 +1,5 @@
 import {
+  ChatInputCommandInteraction,
   Role,
   TextChannel,
   // Message,
@@ -20,6 +21,7 @@ import {
 //   env.ROLE_SEDATED,
 //   env.ROLE_SOBER,
 // ];
+import { donorColors } from '../commands/global/d.setup';
 
 export default guildMemberUpdate;
 
@@ -78,14 +80,23 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
       if (role.id === env.ROLE_BOOSTER && action === 'added') {
         // log.debug(F, `${newMember.displayName} boosted the server!`);
         const channelGoldlounge = client.channels.cache.get(env.CHANNEL_GOLDLOUNGE) as TextChannel;
-        await channelGoldlounge.send(`${newMember.displayName} boosted the server! Thanks for helping make this place awesome!`); // eslint-disable-line max-len
+        await channelGoldlounge.send(`Hey @here, ${newMember} just boosted the server, give them a big thank you for helping to keep this place awesome!`); // eslint-disable-line max-len
+        const interaction = {
+          channel: channelGoldlounge,
+          user: newMember.user,
+        } as ChatInputCommandInteraction;
+        await donorColors(interaction);
       }
 
       // Check if the role added was a donator role
       if (role.id === env.ROLE_PATRON && action === 'added') {
         // log.debug(F, `${newMember.displayName} became a patron!`);
         const channelGoldlounge = client.channels.cache.get(env.CHANNEL_GOLDLOUNGE) as TextChannel;
-        await channelGoldlounge.send(`${newMember.displayName} became a patron! Thanks for helping us to keep the lights on!`); // eslint-disable-line max-len
+        await channelGoldlounge.send(`Hey @here, ${newMember} just became a patron, give them a big thank you for helping us keep the lights on and expand!`); // eslint-disable-line max-len
+        const interaction = {
+          channel: channelGoldlounge,
+        } as ChatInputCommandInteraction;
+        await donorColors(interaction);
       }
     }
   },
