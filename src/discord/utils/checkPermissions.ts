@@ -26,139 +26,140 @@ export async function checkGuildPermissions(
   const botMember = await tripsitGuild.members.fetch(client.user?.id as string);
   if (botMember.permissions.has('Administrator' as PermissionResolvable)) {
     log.info(F, 'I have the \'Administrator\' permissions!');
-  } else {
-    // General Server Permissions
-    if (!botMember.permissions.has('ViewChannel' as PermissionResolvable)) {
-      log.warn(F, 'I need the \'ViewChannel\' permissions to view all channels!');
-    }
-    // if (!botMember.permissions.has('ManageChannels' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'ManageChannels' permissions!`);
-    // }
-    // if (!botMember.permissions.has('ManageRoles' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'ManageRoles' permissions!`);
-    // }
-    // if (!botMember.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'ManageEmojisAndStickers' permissions!`);
-    // }
-    if (!botMember.permissions.has('ViewAuditLog' as PermissionResolvable)) {
-      log.warn(F, 'I need the \'ViewAuditLog\' permissions to post the audit log!');
-    }
-    // if (!botMember.permissions.has('ViewGuildInsights' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'ViewGuildInsights' permissions!`);
-    // }
-    // if (!botMember.permissions.has('ManageWebhooks' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'ManageWebhooks' permissions!`);
-    // }
-    if (!botMember.permissions.has('ManageGuild' as PermissionResolvable)) {
-      log.warn(F, 'I need \'ManageGuild\' permissions to check invites!');
-    }
-
-    // Membership Permissions
-    // if (!botMember.permissions.has('CreateInstantInvite' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'CreateInstantInvite' permissions!`);
-    // }
-    if (!botMember.permissions.has('ChangeNickname' as PermissionResolvable)) {
-      log.warn(F, 'I need the \'ChangeNickname\' permission to change my own nickname!');
-    }
-    // if (!botMember.permissions.has('ManageNicknames' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'ManageNicknames' permissions!`);
-    // }
-    if (!botMember.permissions.has('KickMembers' as PermissionResolvable)) {
-      log.warn(F, 'I need the \'KickMembers\' permissions to Kick members!');
-    }
-    if (!botMember.permissions.has('BanMembers' as PermissionResolvable)) {
-      log.warn(F, 'I need the \'BanMembers\' permissions to Ban members!');
-    }
-    if (!botMember.permissions.has('ModerateMembers' as PermissionResolvable)) {
-      log.warn(F, 'I need the \'ModerateMembers\' permissions to Timeout members!');
-    }
-
-    // Text Channel Permissions
-    if (!botMember.permissions.has('SendMessages' as PermissionResolvable)) {
-      log.error(F, 'I need the \'SendMessages\' permissions to send messages in chat!');
-    }
-    if (!botMember.permissions.has('SendMessagesInThreads' as PermissionResolvable)) {
-      log.warn(F, 'I need the \'SendMessagesInThreads\' permissions to !');
-    }
-    if (!botMember.permissions.has('CreatePublicThreads' as PermissionResolvable)) {
-      log.warn(F, 'I need the \'CreatePublicThreads\' permissions to create threads!');
-    }
-    if (!botMember.permissions.has('CreatePrivateThreads' as PermissionResolvable)) {
-      log.warn(F, 'I need the \'CreatePrivateThreads\' permissions to create threads!');
-    }
-    if (!botMember.permissions.has('EmbedLinks' as PermissionResolvable)) {
-      log.warn(F, 'I need the \'EmbedLinks\' permissions to make pretty embeds!');
-    }
-    // if (!botMember.permissions.has('AttachFiles' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'AttachFiles' permissions!`);
-    // }
-    if (!botMember.permissions.has('AddReactions' as PermissionResolvable)) {
-      log.warn(F, 'I need the \'AddReactions\' permissions to add reactions to messages!');
-    }
-    if (!botMember.permissions.has('UseExternalEmojis' as PermissionResolvable)) {
-      log.warn(F, 'I need the \'UseExternalEmojis\' permissions to !');
-    }
-    // if (!botMember.permissions.has('UseExternalStickers' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'UseExternalStickers' permissions!`);
-    // }
-    // if (!botMember.permissions.has('MentionEveryone' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'MentionEveryone' permissions!`);
-    // }
-    if (!botMember.permissions.has('ManageMessages' as PermissionResolvable)) {
-      log.warn(F, 'I need the \'ManageMessages\' permissions to delete messages when someone is banned, and to pin messages!');
-    }
-    if (!botMember.permissions.has('ManageThreads' as PermissionResolvable)) {
-      log.warn(F, 'I need the \'ManageThreads\' permissions to archive/delete threads!');
-    }
-    // if (!botMember.permissions.has('ReadMessageHistory' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'ReadMessageHistory' permissions!`);
-    // }
-    // if (!botMember.permissions.has('SendTTSMessages' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'SendTTSMessages' permissions!`);
-    // }
-    // if (!botMember.permissions.has('UseApplicationCommands' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'UseApplicationCommands' permissions!`);
-    // }
-
-    // Voice Channel Permissions
-    // if (!botMember.permissions.has('Connect' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'Connect' permissions!`);
-    // }
-    // if (!botMember.permissions.has('Speak' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'Speak' permissions!`);
-    // }
-    // if (!botMember.permissions.has('Stream' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'Stream' permissions!`);
-    // }
-    // if (!botMember.permissions.has('UseEmbeddedActivities' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'UseEmbeddedActivities' permissions!`);
-    // }
-    // if (!botMember.permissions.has('UseVAD' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'UseVAD' permissions!`);
-    // }
-    // if (!botMember.permissions.has('PrioritySpeaker' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'PrioritySpeaker' permissions!`);
-    // }
-    // if (!botMember.permissions.has('MuteMembers' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'MuteMembers' permissions!`);
-    // }
-    // if (!botMember.permissions.has('DeafenMembers' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'DeafenMembers' permissions!`);
-    // }
-    // if (!botMember.permissions.has('MoveMembers' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'MoveMembers' permissions!`);
-    // }
-
-    // Stage Channels
-    // if (!botMember.permissions.has('RequestToSpeak' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'RequestToSpeak' permissions!`);
-    // }
-
-    // Events Permissions
-    // if (!botMember.permissions.has('ManageEvents' as PermissionResolvable)) {
-    //   log.silly(F, `I do not support the 'ManageEvents' permissions!`);
-    // }
+    return;
   }
+  // General Server Permissions
+  if (!botMember.permissions.has('ViewChannel' as PermissionResolvable)) {
+    log.warn(F, 'I need the \'ViewChannel\' permissions to view all channels!');
+  }
+  // if (!botMember.permissions.has('ManageChannels' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'ManageChannels' permissions!`);
+  // }
+  // if (!botMember.permissions.has('ManageRoles' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'ManageRoles' permissions!`);
+  // }
+  // if (!botMember.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'ManageEmojisAndStickers' permissions!`);
+  // }
+  if (!botMember.permissions.has('ViewAuditLog' as PermissionResolvable)) {
+    log.warn(F, 'I need the \'ViewAuditLog\' permissions to post the audit log!');
+  }
+  // if (!botMember.permissions.has('ViewGuildInsights' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'ViewGuildInsights' permissions!`);
+  // }
+  // if (!botMember.permissions.has('ManageWebhooks' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'ManageWebhooks' permissions!`);
+  // }
+  if (!botMember.permissions.has('ManageGuild' as PermissionResolvable)) {
+    log.warn(F, 'I need \'ManageGuild\' permissions to check invites!');
+  }
+
+  // Membership Permissions
+  // if (!botMember.permissions.has('CreateInstantInvite' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'CreateInstantInvite' permissions!`);
+  // }
+  if (!botMember.permissions.has('ChangeNickname' as PermissionResolvable)) {
+    log.warn(F, 'I need the \'ChangeNickname\' permission to change my own nickname!');
+  }
+  // if (!botMember.permissions.has('ManageNicknames' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'ManageNicknames' permissions!`);
+  // }
+  if (!botMember.permissions.has('KickMembers' as PermissionResolvable)) {
+    log.warn(F, 'I need the \'KickMembers\' permissions to Kick members!');
+  }
+  if (!botMember.permissions.has('BanMembers' as PermissionResolvable)) {
+    log.warn(F, 'I need the \'BanMembers\' permissions to Ban members!');
+  }
+  if (!botMember.permissions.has('ModerateMembers' as PermissionResolvable)) {
+    log.warn(F, 'I need the \'ModerateMembers\' permissions to Timeout members!');
+  }
+
+  // Text Channel Permissions
+  if (!botMember.permissions.has('SendMessages' as PermissionResolvable)) {
+    log.error(F, 'I need the \'SendMessages\' permissions to send messages in chat!');
+  }
+  if (!botMember.permissions.has('SendMessagesInThreads' as PermissionResolvable)) {
+    log.warn(F, 'I need the \'SendMessagesInThreads\' permissions to !');
+  }
+  if (!botMember.permissions.has('CreatePublicThreads' as PermissionResolvable)) {
+    log.warn(F, 'I need the \'CreatePublicThreads\' permissions to create threads!');
+  }
+  if (!botMember.permissions.has('CreatePrivateThreads' as PermissionResolvable)) {
+    log.warn(F, 'I need the \'CreatePrivateThreads\' permissions to create threads!');
+  }
+  if (!botMember.permissions.has('EmbedLinks' as PermissionResolvable)) {
+    log.warn(F, 'I need the \'EmbedLinks\' permissions to make pretty embeds!');
+  }
+  // if (!botMember.permissions.has('AttachFiles' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'AttachFiles' permissions!`);
+  // }
+  if (!botMember.permissions.has('AddReactions' as PermissionResolvable)) {
+    log.warn(F, 'I need the \'AddReactions\' permissions to add reactions to messages!');
+  }
+  if (!botMember.permissions.has('UseExternalEmojis' as PermissionResolvable)) {
+    log.warn(F, 'I need the \'UseExternalEmojis\' permissions to !');
+  }
+  // if (!botMember.permissions.has('UseExternalStickers' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'UseExternalStickers' permissions!`);
+  // }
+  // if (!botMember.permissions.has('MentionEveryone' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'MentionEveryone' permissions!`);
+  // }
+  if (!botMember.permissions.has('ManageMessages' as PermissionResolvable)) {
+    log.warn(F, 'I need the \'ManageMessages\' permissions to delete messages when someone is banned, and to pin messages!');
+  }
+  if (!botMember.permissions.has('ManageThreads' as PermissionResolvable)) {
+    log.warn(F, 'I need the \'ManageThreads\' permissions to archive/delete threads!');
+  }
+  // if (!botMember.permissions.has('ReadMessageHistory' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'ReadMessageHistory' permissions!`);
+  // }
+  // if (!botMember.permissions.has('SendTTSMessages' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'SendTTSMessages' permissions!`);
+  // }
+  // if (!botMember.permissions.has('UseApplicationCommands' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'UseApplicationCommands' permissions!`);
+  // }
+
+  // Voice Channel Permissions
+  // if (!botMember.permissions.has('Connect' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'Connect' permissions!`);
+  // }
+  // if (!botMember.permissions.has('Speak' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'Speak' permissions!`);
+  // }
+  // if (!botMember.permissions.has('Stream' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'Stream' permissions!`);
+  // }
+  // if (!botMember.permissions.has('UseEmbeddedActivities' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'UseEmbeddedActivities' permissions!`);
+  // }
+  // if (!botMember.permissions.has('UseVAD' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'UseVAD' permissions!`);
+  // }
+  // if (!botMember.permissions.has('PrioritySpeaker' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'PrioritySpeaker' permissions!`);
+  // }
+  // if (!botMember.permissions.has('MuteMembers' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'MuteMembers' permissions!`);
+  // }
+  // if (!botMember.permissions.has('DeafenMembers' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'DeafenMembers' permissions!`);
+  // }
+  // if (!botMember.permissions.has('MoveMembers' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'MoveMembers' permissions!`);
+  // }
+
+  // Stage Channels
+  // if (!botMember.permissions.has('RequestToSpeak' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'RequestToSpeak' permissions!`);
+  // }
+
+  // Events Permissions
+  // if (!botMember.permissions.has('ManageEvents' as PermissionResolvable)) {
+  //   log.silly(F, `I do not support the 'ManageEvents' permissions!`);
+  // }
+
   log.info(F, 'Permissions checked!');
 }
 

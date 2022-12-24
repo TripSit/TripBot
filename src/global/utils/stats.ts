@@ -71,7 +71,7 @@ async function checkStats() {
           if (channelGeneral) {
             const embed = embedTemplate()
               .setTitle(newRecordString)
-              .setDescription(`We have reached ${memberCount} verified members!`);
+              .setDescription(`We have reached ${members.size} verified members!`);
             await channelGeneral.send({ embeds: [embed] });
           }
         }
