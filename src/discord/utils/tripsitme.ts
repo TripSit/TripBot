@@ -19,6 +19,7 @@ import {
   // TextChannel,
   // MessageFlags,
   MessageMentionTypes,
+  ChatInputCommandInteraction,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -102,17 +103,17 @@ const memberOnly = 'This must be performed by a member of a guild!';
  * @param {GuildMember} target
  * */
 export async function needsHelpmode(
-  interaction: ModalSubmitInteraction | ButtonInteraction,
+  interaction: ModalSubmitInteraction | ButtonInteraction | ChatInputCommandInteraction,
   target: GuildMember,
 ) {
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    interaction.reply(guildOnly);
+    await interaction.reply(guildOnly);
     return;
   }
   if (!interaction.member) {
     // log.debug(F, `no member!`);
-    interaction.reply(memberOnly);
+    await interaction.reply(memberOnly);
     return;
   }
 
@@ -159,7 +160,7 @@ export async function needsHelpmode(
     await target.roles.add(roleNeedshelp);
   } catch (err) {
     log.error(F, `Error adding role to target: ${err}`);
-    interaction.reply(stripIndents`There was an error adding the NeedsHelp role!
+    await interaction.reply(stripIndents`There was an error adding the NeedsHelp role!
       Make sure the bot's role is higher than NeedsHelp in the Role list!`);
   }
 }
@@ -173,7 +174,7 @@ export async function tripsitmeOwned(
 ) {
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    interaction.reply(guildOnly);
+    await interaction.reply(guildOnly);
     return;
   }
   // log.debug(F, `tripsitmeOwned`);
@@ -193,9 +194,9 @@ export async function tripsitmeOwned(
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
     if (interaction.deferred) {
-      interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
     } else {
-      interaction.reply({ embeds: [embed] });
+      await interaction.reply({ embeds: [embed] });
     }
     return;
   }
@@ -220,7 +221,7 @@ export async function tripsitmeOwned(
     .where('id', ticketData.id);
 
   // Reply to the user
-  interaction.reply({ content: 'Thanks!', ephemeral: true });
+  await interaction.reply({ content: 'Thanks!', ephemeral: true });
 }
 
 /**
@@ -232,7 +233,7 @@ export async function tripsitmeMeta(
 ) {
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    interaction.reply(guildOnly);
+    await interaction.reply(guildOnly);
     return;
   }
   // log.debug(F, `tripsitmeMeta`);
@@ -242,17 +243,17 @@ export async function tripsitmeMeta(
 
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    interaction.reply(guildOnly);
+    await interaction.reply(guildOnly);
     return;
   }
   if (!interaction.channel) {
     // log.debug(F, `no channel!`);
-    interaction.reply('This must be performed in a channel!');
+    await interaction.reply('This must be performed in a channel!');
     return;
   }
   if (!interaction.member) {
     // log.debug(F, `no member!`);
-    interaction.reply('This must be performed by a member!');
+    await interaction.reply('This must be performed by a member!');
     return;
   }
 
@@ -264,7 +265,7 @@ export async function tripsitmeMeta(
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
 
@@ -326,7 +327,7 @@ export async function tripsitmeMeta(
     allowedMentions: {},
   });
 
-  interaction.reply({ content: 'Donezo!', ephemeral: true });
+  await interaction.reply({ content: 'Donezo!', ephemeral: true });
 }
 
 /**
@@ -339,12 +340,12 @@ export async function tripsitmeBackup(
   // log.debug(F, `tripsitmeBackup`);
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    interaction.reply(guildOnly);
+    await interaction.reply(guildOnly);
     return;
   }
   if (!interaction.channel) {
     // log.debug(F, `no channel!`);
-    interaction.reply('This must be performed in a channel!');
+    await interaction.reply('This must be performed in a channel!');
     return;
   }
   const userId = interaction.customId.split('~')[1];
@@ -359,7 +360,7 @@ export async function tripsitmeBackup(
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
 
@@ -389,7 +390,7 @@ export async function tripsitmeBackup(
     await interaction.channel.send(backupMessage);
   }
 
-  interaction.reply({ content: 'Backup message sent!', ephemeral: true });
+  await interaction.reply({ content: 'Backup message sent!', ephemeral: true });
 }
 
 /**
@@ -403,12 +404,12 @@ export async function tripsitmeClose(
   await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    interaction.editReply(guildOnly);
+    await interaction.editReply(guildOnly);
     return;
   }
   if (!interaction.member) {
     // log.debug(F, `no member!`);
-    interaction.editReply(memberOnly);
+    await interaction.editReply(memberOnly);
     return;
   }
 
@@ -437,7 +438,7 @@ export async function tripsitmeClose(
 
   if (targetId === actor.id) {
     // log.debug(F, `not the target!`);
-    interaction.editReply({ content: 'You should not be able to see this button!' });
+    await interaction.editReply({ content: 'You should not be able to see this button!' });
     return;
   }
 
@@ -451,7 +452,7 @@ export async function tripsitmeClose(
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
 
@@ -524,12 +525,12 @@ export async function tripsitmeResolve(
   await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    interaction.editReply(guildOnly);
+    await interaction.editReply(guildOnly);
     return;
   }
   if (!interaction.member) {
     // log.debug(F, `no member!`);
-    interaction.editReply(memberOnly);
+    await interaction.editReply(memberOnly);
     return;
   }
 
@@ -560,7 +561,7 @@ export async function tripsitmeResolve(
 
   if (targetId !== actor.id) {
     // log.debug(F, `not the target!`);
-    interaction.editReply({ content: 'Only the user receiving help can click this button!' });
+    await interaction.editReply({ content: 'Only the user receiving help can click this button!' });
     return;
   }
 
@@ -574,7 +575,7 @@ export async function tripsitmeResolve(
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
 
@@ -714,13 +715,13 @@ export async function tripSitMe(
   memberInput:GuildMember | null,
   triage:string,
   intro:string,
-) {
+):Promise<ThreadChannel | null> {
   await startLog('tripSitMe', interaction);
 
   // Lookup guild information for variables
   if (!interaction.guild) {
-    interaction.reply({ content: 'This command can only be used in a server!', ephemeral: true });
-    return;
+    await interaction.reply({ content: 'This command can only be used in a server!', ephemeral: true });
+    return null;
   }
   const actor = interaction.member;
   const guildData = await getGuild(interaction.guild.id);
@@ -744,13 +745,13 @@ export async function tripSitMe(
 
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    interaction.reply(guildOnly);
-    return;
+    await interaction.reply(guildOnly);
+    return null;
   }
   if (!interaction.member) {
     // log.debug(F, `no member!`);
-    interaction.reply(memberOnly);
-    return;
+    await interaction.reply(memberOnly);
+    return null;
   }
 
   // log.debug(F, `submitted with |
@@ -780,8 +781,15 @@ export async function tripSitMe(
   await needsHelpmode(interaction, target);
 
   // Get the tripsit channel from the guild
-  const tripsitChannel = interaction.channel as TextChannel;
+  const tripsitChannel = guildData.channel_tripsit
+    ? await interaction.guild.channels.fetch(guildData.channel_tripsit) as TextChannel
+    : {} as TextChannel;
 
+  if (!tripsitChannel.id) {
+    // log.debug(F, `no tripsit channel!`);
+    await interaction.reply({ content: 'No tripsit channel found! Make sure to run /setup tripsit', ephemeral: true });
+    return null;
+  }
   // Create a new private thread in the channel
   // If we're not in production we need to create a public thread
   const threadHelpUser = await tripsitChannel.threads.create({
@@ -790,56 +798,7 @@ export async function tripSitMe(
     type: interaction.guild.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread,
     reason: `${target.displayName} requested help`,
   });
-  // log.debug(F, `Created ${threadHelpUser.name} ${threadHelpUser.id}`);
 
-  // Send reply to the actor
-  // const replyMessage = memberInput
-  //   ? stripIndents`
-  //       Hey ${interaction.member}, we've activated tripsit mode on ${target.user.username}!
-
-  //       Check your channel list for ${threadHelpUser.toString()} to talk to the user
-
-  //       **Be sure add some information about the user to the thread!**`
-  //   : stripIndents`
-  //       Hey ${target}, thank you for asking for assistance!
-
-  //       Click here to be taken to your private room: ${threadHelpUser.toString()}
-
-  //       You can also click in your channel list to see your private room!`;
-  const replyMessage = stripIndents`
-        Hey ${target}, thank you for asking for assistance!
-
-        Click here to be taken to your private room: ${threadHelpUser.toString()}
-
-        You can also click in your channel list to see your private room!`;
-  const embed = embedTemplate()
-    .setColor(Colors.DarkBlue)
-    .setDescription(replyMessage);
-  if (interaction.replied) {
-    interaction.followUp({ embeds: [embed] });
-  } else {
-    interaction.reply({ embeds: [embed], ephemeral: true });
-  }
-  // log.debug(F, `Sent response to ${target.user.tag}`);
-
-  // Send the intro message to the thread
-  // const firstMessage = memberInput
-  //   ? stripIndents`
-  //     Hey ${target}, the team thinks you could use assistance!
-  //     Someone from the ${roleTripsitter} ${guildData.role_helper ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
-  //     If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.`
-  //   : stripIndents`
-  //     Hey ${target}, thank you for asking for assistance!
-
-  //     You've taken: ${triage ? `\n${triage}` : noInfo}
-
-  //     Your issue: ${intro ? `\n${intro}` : noInfo}
-
-  //     Someone from the ${roleTripsitter} ${guildData.role_helper ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
-  //     If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
-  //     When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
-  //     If you just would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
-  //     `;
   const noInfo = '\n*No info given*';
   const firstMessage = stripIndents`
       Hey ${target}, thank you for asking for assistance!
@@ -954,6 +913,8 @@ export async function tripSitMe(
   // Update thet ticket in the DB
   await db<UserTickets>('user_tickets')
     .insert(newTicketData);
+
+  return threadHelpUser;
 }
 
 /**
@@ -966,12 +927,12 @@ export async function tripsitmeButton(
   startLog(F, interaction);
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    interaction.reply(guildOnly);
+    await interaction.reply(guildOnly);
     return;
   }
   if (!interaction.member) {
     // log.debug(F, `no member!`);
-    interaction.reply(memberOnly);
+    await interaction.reply(memberOnly);
     return;
   }
   const target = interaction.member as GuildMember;
@@ -1061,7 +1022,7 @@ export async function tripsitmeButton(
         .setDescription(stripIndents`Hey ${interaction.member}, you have an open session!
   
         Check your channel list or click '${threadHelpUser.toString()} to get help!`);
-      interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], ephemeral: true });
       // log.debug(F, `Rejected need for help`);
 
       // Check if the created_by is in the last 5 minutes
@@ -1121,12 +1082,27 @@ export async function tripsitmeButton(
   await interaction.showModal(modal);
 
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeSubmit');
-  interaction.awaitModalSubmit({ filter, time: 0 })
+  await interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       const triage = i.fields.getTextInputValue('triageInput');
       const intro = i.fields.getTextInputValue('introInput');
 
-      tripSitMe(i, target, triage, intro);
+      const threadHelpUser = await tripSitMe(i, target, triage, intro) as ThreadChannel;
+
+      const replyMessage = stripIndents`
+      Hey ${target}, thank you for asking for assistance!
+      
+      Click here to be taken to your private room: ${threadHelpUser.toString()}
+  
+      You can also click in your channel list to see your private room!`;
+      const embed = embedTemplate()
+        .setColor(Colors.DarkBlue)
+        .setDescription(replyMessage);
+      if (interaction.replied) {
+        await interaction.followUp({ embeds: [embed] });
+      } else {
+        await interaction.reply({ embeds: [embed], ephemeral: true });
+      }
     });
 }
