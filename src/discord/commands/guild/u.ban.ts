@@ -71,7 +71,7 @@ export const uBan: UserCommand = {
         // Check if the given duration is a number between 0 and 7
         const days = parseInt(durationInput, 10);
         if (Number.isNaN(days) || days < 0 || days > 7) {
-          i.reply({ content: 'Invalid number of days given', ephemeral: true });
+          await i.editReply({ content: 'Invalid number of days! At least 0, maximum of 7.' });
           return;
         }
 

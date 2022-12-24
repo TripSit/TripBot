@@ -234,6 +234,7 @@ export async function moderate(
       }
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       // log.debug(F, `Days to delete: ${deleteMessageValue}`);
+      // log.debug(F, `target: ${target.user.tag} | deleteMessageValue: ${deleteMessageValue} | privReason: ${privReason ?? noReason}`);
       targetGuild.members.ban(target, { deleteMessageSeconds: deleteMessageValue, reason: privReason ?? noReason });
     } catch (err) {
       log.error(F, `Error: ${err}`);
@@ -352,11 +353,7 @@ export async function moderate(
 
   const modlogEmbed = embedTemplate()
     // eslint-disable-next-line
-    .setTitle(`${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} (${target.user.tag})${duration && command === 'TIMEOUT' ? ` for ${ms(duration, {long: true})}` : ''}`)
-    .setDescription(stripIndents`
-    **PrivReason:** ${privReason ?? noReason}
-    ${pubReason ? `**PubReason:** ${pubReason}` : ''}
-    `)
+    .setAuthor({ name: `${target.displayName} (${target.user.tag})`, iconURL: target.user.displayAvatarURL() })
     .setColor(embedVariables[command as keyof typeof embedVariables].embedColor)
     .addFields(
       { name: 'Created', value: `${time(target.user.createdAt, 'R')}`, inline: true },
@@ -391,8 +388,18 @@ export async function moderate(
     // We must send the mention outside of the embed, cuz mentions dont work in embeds
     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
     const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
+    const timeoutDuration = duration ? ` for ${ms(duration, { long: true })}` : '';
     const greeting = `Hey ${roleModerator}`;
-    await modChan.send({ content: `${command !== 'NOTE' ? greeting : ''}`, embeds: [modlogEmbed] });
+    const summary = `${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} ${command === 'TIMEOUT' ? timeoutDuration : ''}`;
+    await modChan.send({
+      content: stripIndents`
+      ${command !== 'NOTE' ? greeting : ''}
+      ${summary}
+      **PrivReason:** ${privReason ?? noReason}
+      ${pubReason ? `**PubReason:** ${pubReason}` : ''}
+    `,
+      embeds: [modlogEmbed],
+    });
     // log.debug(F, `sent a message to the moderators room`);
     if (extraMessage) {
       await modChan.send({ content: extraMessage });

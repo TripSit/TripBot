@@ -53,9 +53,9 @@ export const mReport: MessageCommand = {
         const privReason = stripIndents`
         ${i.fields.getTextInputValue('privReason')}
     
-        [The offending message:](${messageUrl})
+        **The offending message**
         > ${message}
-    
+        ${messageUrl}
         `;
 
         const result = await moderate(
