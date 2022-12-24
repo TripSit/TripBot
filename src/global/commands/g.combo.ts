@@ -37,11 +37,12 @@ export async function combo(
     };
   }
 
-  const drugData = drugDataAll.find(drug => drug.name === drugA);
+  const drugAData = drugDataAll.find(drug => drug.name.toLowerCase() === drugA.toLowerCase());
+  const drugBData = drugDataAll.find(drug => drug.name.toLowerCase() === drugB.toLowerCase());
 
   // log.debug(F, `drugData: ${JSON.stringify(drugData, null, 2)}`);
 
-  if (!drugData) {
+  if (!drugAData) {
     return {
       success: false,
       title: `${drugA} was not found`,
@@ -49,24 +50,46 @@ export async function combo(
     };
   }
 
-  if (!drugData.interactions) {
+  if (!drugBData) {
     return {
-      success: true,
-      title: `${drugA} has no known interactions!`,
-      description: stripIndents`This does not mean combining this with anything is safe!
-      This means we don't have information on it!`,
+      success: false,
+      title: `${drugB} was not found`,
+      description: devMsg,
     };
   }
 
-  // log.debug(F, `interactions: ${drugData.interactions.length}`);
+  if (!drugAData.interactions) {
+    return {
+      success: true,
+      title: `Could not find interaction info for ${drugA}!`,
+      description: stripIndents`[Check out the wiki page](${drugAData.url})`,
+    };
+  }
 
-  const drugInteraction = drugData.interactions.find(interaction => interaction.name === drugB);
+  if (!drugBData.interactions) {
+    return {
+      success: true,
+      title: `Could not find interaction info for ${drugB}!`,
+      description: stripIndents`[Check out the wiki page](${drugBData.url})`,
+    };
+  }
+
+  // log.debug(F, `interactions: ${drugAData.interactions.length}`);
+
+  const drugInteraction = drugAData.interactions.find(
+    interaction => interaction.name.toLowerCase() === drugB.toLowerCase(),
+  );
 
   if (!drugInteraction) {
     return {
       success: true,
-      title: `${drugA} and ${drugB} have no known interactions!`,
-      description: 'This does not mean combining them is safe!\nThis means we don\'t have information on it!',
+      title: `Could not find interaction info for ${drugA} and ${drugB}!`,
+      description: `This does not mean combining them is safe!\nThis means we don't have information on it!
+
+      Start your research here:
+      [${drugA}](${drugAData.url})
+      [${drugB}](${drugBData.url})
+      `,
     };
   }
 
