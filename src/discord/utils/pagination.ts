@@ -62,7 +62,7 @@ export async function paginationEmbed(
   const filter = (i:Interaction) => i.customId === buttonList[1].data.custom_id // @ts-ignore
     || i.customId === buttonList[0].data.custom_id;
 
-  const collector = await curPage.createMessageComponentCollector({
+  const collector = curPage.createMessageComponentCollector({
     filter,
     time: timeout,
   });
@@ -71,11 +71,11 @@ export async function paginationEmbed(
     switch (i.customId) {
       // @ts-ignore
       case buttonList[0].data.custom_id:
-        page = page > 0 ? page -= 1 : pages.length - 1;
+        page = page > 0 ? page - 1 : pages.length - 1;
         break;
       // @ts-ignore
       case buttonList[1].data.custom_id:
-        page = page + 1 < pages.length ? page += 1 : 0;
+        page = page + 1 < pages.length ? page + 1 : 0;
         break;
       default:
         break;

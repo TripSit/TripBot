@@ -288,7 +288,7 @@ export async function announcements(message:Message) {
       embed.setAuthor(null);
       embed.setFooter({ text: bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].footer });
       embed.setDescription(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].message);
-      await (message.channel as TextChannel).send({ embeds: [embed] })
+      await message.channel.send({ embeds: [embed] })
         .then(async msg => {
           await msg.react(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji);
           const filter = (reaction:MessageReaction) => reaction.emoji.name === bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji;
@@ -336,7 +336,7 @@ export async function announcements(message:Message) {
 
       await sleep(3000);
 
-      await (message.channel as TextChannel).send({ embeds: [embed] });
+      await message.channel.send({ embeds: [embed] });
     }
   }
 }
