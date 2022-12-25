@@ -1,12 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  ActionRowBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  Colors,
   SlashCommandBuilder,
-  TextChannel,
-  ModalSubmitInteraction,
 } from 'discord.js';
 
 import { SlashCommand } from '../../@types/commandDef';
