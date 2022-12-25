@@ -7,15 +7,12 @@ import {
   ButtonBuilder,
   TextInputBuilder,
   Colors,
-  GuildMember,
   ThreadChannel,
   Message,
   ButtonInteraction,
   TextChannel,
   ModalSubmitInteraction,
   Role,
-  GuildMemberRoleManager,
-  // MessageReaction,
   User,
   Guild,
 } from 'discord.js';
@@ -48,6 +45,8 @@ const modMailIssuePlaceholder = 'I have an issue, can you please help?';
 
 const F = f(__filename);
 
+export default modmail;
+
 /**
  * Handles modmail buttons
  * @param {ButtonInteraction} interaction
@@ -65,7 +64,7 @@ export async function modmailActions(
     command = interaction.options.getSubcommand();
   }
 
-  const actor = interaction.user as User;
+  const actor = interaction.user;
 
   // Get the ticket info
   let ticketData = {} as UserTickets;
@@ -101,7 +100,7 @@ export async function modmailActions(
     return;
   }
 
-  const userData = await getUser(null, ticketData.user_id) as Users;
+  const userData = await getUser(null, ticketData.user_id);
   if (!userData.discord_id) {
     log.error(F, `No discord_id found for user ${ticketData.user_id}!`);
     return;
@@ -119,46 +118,6 @@ export async function modmailActions(
     verb = 'CLOSED';
     await target.send('It looks like we\'re good here! We\'ve closed this ticket, but if you need anything else, feel free to open a new one!');
     channel.setName(`💚${channel.name.substring(1)}`);
-    // let message:Message;
-    // await channel.send(stripIndents`
-    //       ${env.EMOJI_INVISIBLE}
-    //       > **If you have a minute, your feedback is important to us!**
-    //       > Please rate your experience with ${channel.guild.name}'s service by reacting below.
-    //       > Thank you!
-    //       ${env.EMOJI_INVISIBLE}
-    //       `)
-    //   .then(async (msg) => {
-    //     message = msg;
-    //     await msg.react('🙁');
-    //     await msg.react('😕');
-    //     await msg.react('😐');
-    //     await msg.react('🙂');
-    //     await msg.react('😁');
-
-    //     // Setup the reaction collector
-    //     const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
-    //     const collector = message.createReactionCollector({filter, time: 1000 * 60 * 60 * 24});
-    //     collector.on('collect', async (reaction, user) => {
-    //       channel.send(stripIndents`
-    //           ${env.EMOJI_INVISIBLE}
-    //           > Thank you for your feedback, here's a cookie! 🍪
-    //           ${env.EMOJI_INVISIBLE}
-    //           `);
-    //       // log.debug(F, `Collected ${reaction.emoji.name} from ${user.tag}`);
-    //       const finalEmbed = embedTemplate()
-    //         .setColor(Colors.Blue)
-    //         .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
-    //       try {
-    //         const channelTripsitmeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
-    //         await channelTripsitmeta.send({embeds: [finalEmbed]});
-    //       } catch (err) {
-    //         // log.debug(F, `Failed to send message, am i still in the tripsit guild?`);
-    //       }
-    //       msg.delete();
-    //       collector.stop();
-    //     });
-    //   });
-    // ticketChannel.setArchived(true, 'Archiving after close');
 
     // Update modmail buttons
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
@@ -343,47 +302,6 @@ export async function modmailActions(
     channel.setName(`💚${channel.name.substring(1)}`);
     await channel.send(stripIndents`Hey team! ${target.toString()} has indicated that they no longer need help!`);
 
-    // let message:Message;
-    // await target.send(stripIndents`
-    //       ${env.EMOJI_INVISIBLE}
-    //       > **If you have a minute, your feedback is important to us!**
-    //       > Please rate your experience with ${channel.guild.name}'s service by reacting below.
-    //       > Thank you!
-    //       ${env.EMOJI_INVISIBLE}
-    //       `)
-    //   .then(async (msg) => {
-    //     message = msg;
-    //     await msg.react('🙁');
-    //     await msg.react('😕');
-    //     await msg.react('😐');
-    //     await msg.react('🙂');
-    //     await msg.react('😁');
-
-    //     // Setup the reaction collector
-    //     const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
-    //     const collector = message.createReactionCollector({filter, time: 1000 * 60 * 60 * 24});
-    //     collector.on('collect', async (reaction, user) => {
-    //       channel.send(stripIndents`
-    //           ${env.EMOJI_INVISIBLE}
-    //           > Thank you for your feedback, here's a cookie! 🍪
-    //           ${env.EMOJI_INVISIBLE}
-    //           `);
-    //       // log.debug(F, `Collected ${reaction.emoji.name} from ${user.tag}`);
-    //       const finalEmbed = embedTemplate()
-    //         .setColor(Colors.Blue)
-    //         .setDescription(`Collected ${reaction.emoji.name} from ${user.tag}`);
-    //       try {
-    //         const channelTripsitmeta = interaction.client.channels.cache.get(env.CHANNEL_TRIPSITMETA) as TextChannel;
-    //         await channelTripsitmeta.send({embeds: [finalEmbed]});
-    //       } catch (err) {
-    //         // log.debug(F, `Failed to send message, am i still in the tripsit guild?`);
-    //       }
-    //       msg.delete();
-    //       collector.stop();
-    //     });
-    //   });
-    // ticketChannel.setArchived(true, 'Archiving after close');
-
     // Update modmail buttons
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
@@ -411,10 +329,16 @@ export async function modmailActions(
     await interaction.reply(`${noun} has been ${verb} by ${actor}! (The user cannot see this)`);
   }
 
-  await db<UserTickets>('user_tickets')
-    .insert(ticketData)
-    .onConflict('id')
-    .merge();
+  try {
+    await db<UserTickets>('user_tickets')
+      .insert(ticketData)
+      .onConflict('id')
+      .merge();
+  } catch (err) {
+    log.error(F, 'Failed to update ticket data!');
+    log.error(F, `${JSON.stringify(err, null, 2)}`);
+    log.debug(F, `Ticket data: ${JSON.stringify(ticketData)}`);
+  }
 
   const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
   const modlog = tripsitGuild.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
@@ -445,8 +369,6 @@ export async function modmailActions(
     }
   }
 }
-
-export default modmail;
 
 export const modmail: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -491,9 +413,9 @@ export async function modmailInitialResponse(message:Message) {
     .setColor(Colors.Blue);
 
   const { author } = message;
-  const guild = await message.client.guilds.fetch(env.DISCORD_GUILD_ID);
+  const guildTripsit = await message.client.guilds.fetch(env.DISCORD_GUILD_ID);
   // log.debug(F, `Message sent in DM by ${message.author.username}!`);
-  const description = stripIndents`Hey there ${author}! I'm a helper bot for ${guild} =)
+  const description = stripIndents`Hey there ${author}! I'm a helper bot for ${guildTripsit} =)
 
   💚 Trip Sit Me! - This starts a thread with Team TripSit! You can also join our Discord server and ask for help there!
   
@@ -537,22 +459,32 @@ export async function modmailCreate(
   interaction:ButtonInteraction,
   issueType:'APPEAL' | 'TRIPSIT' | 'TECH' | 'FEEDBACK',
 ) {
-  // log.debug(F, `Message: ${JSON.stringify(interaction, null, 2)}!`);
-
-  // const issueTypeDict = {
-  //   appeal: TicketType.Appeal,
-  //   tripsit: TicketType.Tripsit,
-  //   tech: TicketType.Tech,
-  //   feedback: TicketType.Feedback,
-  // };
-
   // Get the actor
   const actor = interaction.user;
 
-  // Get the member object, if it exists
-  // This is used later on to check if the user is part of the guild or not
-  const member = interaction.member as GuildMember;
-  // log.debug(F, `member: ${JSON.stringify(member, null, 2)}!`);
+  // Get the tripsit guild
+  const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
+
+  // Check if the user is part of the guild
+  const member = await tripsitGuild.members.fetch(actor.id);
+
+  if (member) {
+    if (issueType === 'TRIPSIT') {
+      const channelTripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
+      await interaction.reply({ content: `Please use the button in ${channelTripsit}!` });
+      return;
+    }
+    if (issueType === 'TECH') {
+      const channelTechhelp = await tripsitGuild.channels.fetch(env.CHANNEL_HELPDESK) as TextChannel;
+      await interaction.reply({ content: `Please use the button in ${channelTechhelp}!` });
+      return;
+    }
+    if (issueType === 'FEEDBACK') {
+      const channelSuggestions = await tripsitGuild.channels.fetch(env.CHANNEL_SUGGESTIONS) as TextChannel;
+      await interaction.reply({ content: `Please use the button in ${channelSuggestions}!` });
+      return;
+    }
+  }
 
   // Create a dict of variables to be used based on the type of request
   const modmailVars = {
@@ -614,7 +546,7 @@ export async function modmailCreate(
     },
   };
 
-  const userData = await getUser(actor.id, null) as Users;
+  const userData = await getUser(actor.id, null);
 
   const ticketData = await getOpenTicket(userData.id, null);
 
@@ -629,26 +561,25 @@ export async function modmailCreate(
       issueThread = await channel.threads.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
       // log.debug(F, `The thread has likely been deleted!`);
-      await db<UserTickets>('user_tickets')
-        .insert({
-          id: ticketData.id,
-          status: 'CLOSED' as TicketStatus,
-        })
-        .onConflict('id')
-        .merge();
+      try {
+        await db<UserTickets>('user_tickets')
+          .insert({
+            id: ticketData.id,
+            status: 'CLOSED' as TicketStatus,
+          })
+          .onConflict('id')
+          .merge();
+      } catch (error) {
+        log.error(F, `Error closing ticket: ${JSON.stringify(error, null, 2)}`);
+        log.error(F, `Ticketdata: ${JSON.stringify(ticketData, null, 2)}`);
+      }
     }
     // log.debug(F, `thread_id: ${JSON.stringify(thread_id, null, 2)}!`);
     if (issueThread.id) {
       const embed = embedTemplate();
-      if (member instanceof GuildMember) {
-        embed.setDescription(stripIndents`
-          You already have an open issue here${issueThread.toString()}, come join the conversation!
-        `);
-      } else {
-        embed.setDescription(stripIndents`
-          You already have an open issue, you can talk to the team by talking to the bot!
-        `);
-      }
+      embed.setDescription(stripIndents`
+        You already have an open session, you can talk to the team by responding here!
+      `);
       interaction.reply({ embeds: [embed], ephemeral: true });
       return;
     }
@@ -701,7 +632,7 @@ export async function modmailCreate(
         // This is fine
       }
 
-      // Create the thread
+      // Create the thread in the tripsit guild
       const threadtype = channel.guild.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread;
       const ticketThread = await channel.threads.create({
         name: modmailVars[issueType].channelTitle,
@@ -711,8 +642,6 @@ export async function modmailCreate(
       });
         // log.debug(F, `Created thread ${ticketThread.id}`);
 
-      // Get the tripsit guild
-      const tripsitGuild = i.client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
       // Get the helper and TS roles
       const roleHelper = await tripsitGuild.roles.fetch(env.ROLE_TRIPSITTER) as Role;
       // log.debug(F, `roleHelper: ${roleHelper}`);
@@ -720,36 +649,7 @@ export async function modmailCreate(
       // log.debug(F, `roleTripsitter: ${roleTripsitter}`);
 
       // Respond to the user
-      const embed = embedTemplate();
-      let firstResponse = '';
-      if (member instanceof GuildMember) {
-        firstResponse = stripIndents`
-          Hey ${actor}, ${modmailVars[issueType].firstResponse}
-
-          Click here to be taken to your private room: ${ticketThread.toString()}
-
-          You can also click in your channel list to see your private room!
-        `;
-        if (issueType === 'TRIPSIT') {
-          firstResponse = stripIndents`
-          Hey ${actor}, ${modmailVars[issueType].firstResponse}
-
-          Click here to be taken to your private room: ${ticketThread.toString()}
-
-          You can also click in your channel list to see your private room!
-
-          ${roleHelper.name} and ${roleTripsitter.name} will be with you as soon as they're available!
-          If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
-          When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
-          If you just would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
-        `;
-        }
-        i.reply({
-          embeds: [embed],
-          flags: ['SuppressEmbeds'],
-        });
-      } else {
-        firstResponse = stripIndents`
+      let firstResponse = stripIndents`
           Hey ${actor}, ${modmailVars[issueType].firstResponse}
 
           We've sent the following details to the team:
@@ -761,8 +661,8 @@ export async function modmailCreate(
           ` : ''}
           **We will respond to right here when we can!**
         `;
-        if (issueType === 'TRIPSIT') {
-          firstResponse = stripIndents`
+      if (issueType === 'TRIPSIT') {
+        firstResponse = stripIndents`
           Hey ${actor}, thank you for asking for assistance!
   
           We've sent the following details to the team:
@@ -780,27 +680,26 @@ export async function modmailCreate(
           When you're feeling better you can use the "I'm Good" button to let the team know you're okay!
 
           **We will respond to right here when we can!**`;
-        }
-
-        // log.debug(F, `firstResponse: ${firstResponse}`);
-        const embedDM = embedTemplate();
-        embedDM.setDescription(firstResponse);
-
-        const finishedButton = new ActionRowBuilder<ButtonBuilder>()
-          .addComponents(
-            new ButtonBuilder()
-              .setCustomId('modmailIssue~resolve')
-              .setLabel('I\'m good now!')
-              .setStyle(ButtonStyle.Success),
-          );
-
-        i.reply({
-          embeds: [embedDM],
-          components: [finishedButton],
-          ephemeral: false,
-          // flags: ['SuppressEmbeds'],
-        });
       }
+
+      // log.debug(F, `firstResponse: ${firstResponse}`);
+      const embedDM = embedTemplate();
+      embedDM.setDescription(firstResponse);
+
+      const finishedButton = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          new ButtonBuilder()
+            .setCustomId('modmailIssue~resolve')
+            .setLabel('I\'m good now!')
+            .setStyle(ButtonStyle.Success),
+        );
+
+      i.reply({
+        embeds: [embedDM],
+        components: issueType === 'TRIPSIT' ? [finishedButton] : undefined,
+        ephemeral: false,
+        // flags: ['SuppressEmbeds'],
+      });
 
       // Determine if this command was initialized by a Developer
       const roleDeveloper = tripsitGuild.roles.cache.find(role => role.id === env.ROLE_DEVELOPER) as Role;
@@ -894,21 +793,31 @@ export async function modmailCreate(
       } as UserTickets;
 
       // Insert that ticket in the DB
-      await db<UserTickets>('user_tickets')
-        .insert(newTicketData);
+      try {
+        await db<UserTickets>('user_tickets')
+          .insert(newTicketData);
+      } catch (error) {
+        log.error(F, `Error inserting ticket into DB: ${error}`);
+        log.error(F, `ticketData: ${JSON.stringify(newTicketData)}`);
+      }
 
       // Save the user's roles in the db
       let actorRoles = [] as string[];
       if (member) {
-        actorRoles = (member.roles as GuildMemberRoleManager).cache.map(role => role.name);
+        actorRoles = member.roles.cache.map(role => role.name);
       }
-      await db<Users>('users')
-        .insert({
-          id: userData.id,
-          roles: actorRoles.toString(),
-        })
-        .onConflict('id')
-        .merge();
+      try {
+        await db<Users>('users')
+          .insert({
+            id: userData.id,
+            roles: actorRoles.toString(),
+          })
+          .onConflict('id')
+          .merge();
+      } catch (error) {
+        log.error(F, `Error inserting user roles into DB: ${error}`);
+        log.error(F, `ID: ${userData.id} | actorRoles: ${JSON.stringify(actorRoles)}`);
+      }
     });
 }
 
@@ -924,8 +833,10 @@ export async function modmailDMInteraction(message:Message) {
   }
 
   const userData = await getUser(message.author.id, null);
+  log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}!`);
 
   if (userData && userData.ticket_ban) {
+    log.debug(F, `User ${message.author.tag} is banned from creating tickets.`);
     return;
   }
 
@@ -952,7 +863,7 @@ export async function modmailDMInteraction(message:Message) {
     } catch (error) {
       // This just means the thread is deleted
     }
-    // log.debug(F, `issueThread: ${JSON.stringify(issueThread, null, 2)}!`);
+    log.debug(F, `thread: ${JSON.stringify(thread, null, 2)}!`);
     if (thread.id) {
       const embed = embedTemplate();
       embed.setDescription(message.content);
@@ -962,26 +873,23 @@ export async function modmailDMInteraction(message:Message) {
       });
       embed.setFooter(null);
       await thread.send({ embeds: [embed] });
+      // Reset the archived_at time
+      // Determine when the thread should be archived
+      const threadArchiveTime = new Date();
+      const archiveTime = env.NODE_ENV === 'production'
+        ? threadArchiveTime.getTime() + 1000 * 60 * 60 * 24
+        : threadArchiveTime.getTime() + 1000 * 60 * 10;
+      threadArchiveTime.setTime(archiveTime);
+
+      // Update the ticket in the DB
+      await db<UserTickets>('user_tickets')
+        .update({
+          archived_at: threadArchiveTime,
+          deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
+        })
+        .where('id', ticketData.id);
+      return;
     }
-
-    // Reset the archived_at time
-    // Determine when the thread should be archived
-    const threadArchiveTime = new Date();
-    const archiveTime = env.NODE_ENV === 'production'
-      ? threadArchiveTime.getTime() + 1000 * 60 * 60 * 24
-      : threadArchiveTime.getTime() + 1000 * 60 * 10;
-    threadArchiveTime.setTime(archiveTime);
-    // log.debug(F, `threadArchiveTime: ${threadArchiveTime}`);
-    // log.debug(F, `User not member of guild`);
-
-    // Update the ticket in the DB
-    await db<UserTickets>('user_tickets')
-      .update({
-        archived_at: threadArchiveTime,
-        deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
-      })
-      .where('id', ticketData.id);
-    return;
   }
 
   modmailInitialResponse(message);
@@ -1016,7 +924,7 @@ export async function modmailThreadInteraction(message:Message) {
           return;
         }
 
-        const userData = await getUser(null, ticketData.user_id) as Users;
+        const userData = await getUser(null, ticketData.user_id);
         if (!userData.discord_id) {
           log.error(F, `No discord_id found for user ${ticketData.user_id}!`);
           return;

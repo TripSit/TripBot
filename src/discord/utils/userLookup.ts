@@ -1,64 +1,65 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  ActionRowBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  Colors,
-  SlashCommandBuilder,
-  TextChannel,
-  ModalSubmitInteraction,
+  ChatInputCommandInteraction,
+  GuildMember,
   User,
 } from 'discord.js';
-import {
-  TextInputStyle,
-} from 'discord-api-types/v10';
-import { SlashCommand } from '../@types/commandDef';
-import { embedTemplate } from './embedTemplate';
-import { globalTemplate } from '../../global/commands/_g.template';
-import { startLog } from './startLog';
 
-const F = f(__filename);
+const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
-export default dTemplate;
+export default getDiscordMember;
 
-async function getDiscordUser(string:string):Promise<User> {
-  let returnUser = {} as User;
-  // Check if the string begins with <@ or ends with >
-  if (!string.startsWith('<@') || !string.endsWith('>')) {
-    // log.debug(F, `getDiscordUser: ${string} is a mention!`);
-    returnUser = await client.users.fetch(string);
+export async function getDiscordMember(
+  interaction:ChatInputCommandInteraction,
+  string:string,
+):Promise<GuildMember> {
+  let member = {} as GuildMember;
+  if (!interaction.guild) return member;
+  log.info(F, `string: ${string}`);
+
+  if (string.startsWith('<@') && string.endsWith('>')) {
+    // log.debug(F, `${string} is a mention!`);
+    const id = string.replace(/[<@!>]/g, '');
+    member = await interaction.guild.members.fetch(id);
+  } else if (string.match(/^\d+$/)) {
+    // Use regex to see if the string is all numbers
+    // log.debug(F, `${string} is an ID!`);
+    member = await interaction.guild.members.fetch(string);
+  } else if (string.includes('#')) {
+    // log.debug(F, `${string} is a tag!`);
+    const username = string.split('#')[0];
+    const searchCollection = await interaction.guild.members.fetch({ query: username, limit: 1 });
+    if (searchCollection.first() !== undefined) {
+      member = searchCollection.first() as GuildMember;
+    }
+  } else {
+    // log.debug(F, `${string} is a username(?)!`);
+    const searchCollection = await interaction.guild.members.fetch({ query: string, limit: 1 });
+    if (searchCollection.first() !== undefined) {
+      member = searchCollection.first() as GuildMember;
+    }
   }
 
-  // Check if the string is a series of numbers
-  if (Number.isInteger(string)) {
-    // log.debug(F, `getDiscordUser: ${string} is a number!`);
-  }
-
-  // Chec if the string is a tag
-  if (string.includes('#')) {
-    // log.debug(F, `getDiscordUser: ${string} is a tag!`);
-  }
-
-  // log.debug(F, `getDiscordUser: ${returnUser})`);
-  return returnUser;
+  log.info(F, `getDiscordUser: ${member.user.tag} (${member.id})`);
+  return member;
 }
 
-export const dTemplate: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('template')
-    .setDescription('Example!')
-    .addSubcommand(subcommand => subcommand
-      .setName('subcommand')
-      .setDescription('subcommand')
-      .addStringOption(option => option.setName('string')
-        .setDescription('string')
-        .setRequired(true))),
-  async execute(interaction) {
-    startLog(F, interaction);
+export async function getDiscordUser(
+  interaction:ChatInputCommandInteraction,
+  string:string,
+):Promise<User> {
+  let user = {} as User;
 
-    const string = interaction.options.getString('string') as string;
+  log.debug(F, `string: ${string}`);
 
-    interaction.reply({ content: string });
-    return true;
-  },
-};
+  // Check if the string begins with <@ or ends with >
+  if (string.startsWith('<@') && string.endsWith('>')) {
+    log.debug(F, `${string} is a mention!`);
+    user = await client.users.fetch(string.replace(/[<@!>]/g, ''));
+  } else if (BigInt(string)) {
+    log.debug(F, `${string} is an ID!`);
+    user = await client.users.fetch(string);
+  }
+
+  log.debug(F, `getDiscordUser: ${user.tag} (${user.id})`);
+  return user;
+}
