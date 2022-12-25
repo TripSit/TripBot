@@ -69,7 +69,7 @@ export async function getGuild(guildId:string) {
       .insert({ id: guildId })
       .returning('*'));
   }
-  return data as DiscordGuilds;
+  return data;
 }
 
 /**

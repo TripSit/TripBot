@@ -55,7 +55,7 @@ export const dReport: SlashCommand = {
     // log.debug(F, `target: ${target}`);
     const targetId = target.replace(/[<@!>]/g, '');
     // log.debug(F, `targetId: ${targetId}`);
-    const targetMember = await interaction.guild.members.fetch(targetId) as GuildMember;
+    const targetMember = await interaction.guild.members.fetch(targetId);
     // log.debug(F, `targetMember: ${targetMember}`);
 
     const modal = new ModalBuilder()

@@ -37,7 +37,7 @@ export async function calcBenzo(
     return response;
   }
 
-  const regex = /[0-9]+\.?[0-9]?/;
+  const regex = /\d+\.?\d?/;
   const convertedDoseA = regex.exec(drugDataA.properties['dose_to_diazepam' as keyof typeof drugDataA.properties]);
   if (!convertedDoseA) {
     const response = `${drugA} dose_to_diazepam property is not a number, this should not have happened!`;

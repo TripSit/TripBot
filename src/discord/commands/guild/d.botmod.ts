@@ -10,14 +10,9 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
-import { stripIndent, stripIndents } from 'common-tags';
 import { botmod } from '../../../global/commands/g.botmod';
 import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
-import { globalTemplate } from '../../../global/commands/_g.template';
-import { db, getGuild } from '../../../global/utils/knex';
 import { startLog } from '../../utils/startLog';
-import { DiscordGuilds } from '../../../global/@types/pgdb';
 
 const F = f(__filename);
 

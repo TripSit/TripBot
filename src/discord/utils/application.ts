@@ -122,7 +122,7 @@ export async function applicationStart(
         type: i.guild?.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread,
         reason: `${actor.displayName} submitted an application!`,
         invitable: env.NODE_ENV === 'production' ? false : undefined,
-      }) as ThreadChannel;
+      });
 
       const appEmbed = embedTemplate()
         .setColor(Colors.DarkBlue)
@@ -283,8 +283,12 @@ export async function applicationReject(
     const memberId = interaction.customId.split('~')[1];
     const roleId = interaction.customId.split('~')[2];
 
-    const target = await interaction.guild?.members.fetch(memberId) as GuildMember;
-    const role = await interaction.guild?.roles.fetch(roleId) as Role;
+    const target = await interaction.guild?.members.fetch(memberId);
+    const role = await interaction.guild?.roles.fetch(roleId);
+    if (!target || !role) {
+      interaction.reply({ content: 'Could not find target and/or role!', ephemeral: true });
+      return;
+    }
 
     const rejectionReason = interaction.values[0];
     const rejectionWording = rejectionMessages[rejectionReason as keyof typeof rejectionMessages];
@@ -330,7 +334,7 @@ export async function applicationApprove(
     const memberId = interaction.customId.split('~')[1];
     const roleId = interaction.customId.split('~')[2];
 
-    const target = await interaction.guild?.members.fetch(memberId) as GuildMember;
+    const target = await interaction.guild?.members.fetch(memberId);
     const role = await interaction.guild?.roles.fetch(roleId) as Role;
 
     (interaction.channel as ThreadChannel).setName(`💚│${target.displayName}'s ${role.name} application1!`);

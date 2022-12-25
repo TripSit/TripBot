@@ -1,41 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  ButtonInteraction,
-  ModalSubmitInteraction,
-  ModalBuilder,
-  ActionRowBuilder,
-  TextInputBuilder,
-  Colors,
-  TextChannel,
   GuildMember,
-  ChannelType,
-  ThreadChannel,
-  time,
-  User,
-  ButtonBuilder,
-  SelectMenuBuilder,
-  SelectMenuInteraction,
-  Role,
-  PermissionsBitField,
-  CategoryChannel,
   SlashCommandBuilder,
-  EmbedBuilder,
 } from 'discord.js';
-import {
-  TextInputStyle,
-  // ChannelType,
-  ButtonStyle,
-  PermissionFlagsBits,
-} from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { experience } from '../../../global/commands/g.experience';
-import { startLog } from '../../utils/startLog';
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
-import { paginationEmbed } from '../../utils/pagination';
 
 const F = f(__filename);
 

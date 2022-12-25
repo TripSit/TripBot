@@ -90,10 +90,10 @@ export const dRemindme: SlashCommand = {
           // Add fields to the pageEmbed until there are 24 fields
           let pageFields = [] as EmbedField[];
           let pageFieldsCount = 0;
-          for (let i = 0; i < response.length; i += 1) {
+          for (const record of response) { // eslint-disable-line
             pageFields.push({
-              name: `(${response[i].index}) ${time(response[i].date, 'R')}`,
-              value: response[i].value,
+              name: `(${record.index}) ${time(record.date, 'R')}`,
+              value: record.value,
               inline: true,
             });
             // log.debug(F, `Adding field ${field.name}`);
@@ -124,10 +124,10 @@ export const dRemindme: SlashCommand = {
             value: string;
             inline: boolean;
           }[];
-          for (let i = 0; i < response.length; i += 1) {
+          for (const record of response) { // eslint-disable-line
             fields.push({
-              name: `(${response[i].index}) ${time(response[i].date, 'R')}`,
-              value: response[i].value,
+              name: `(${record.index}) ${time(record.date, 'R')}`,
+              value: record.value,
               inline: true,
             });
           }

@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   ChatInputCommandInteraction,
-  Colors,
   GuildMember,
   Role,
   SlashCommandBuilder,
@@ -14,7 +12,6 @@ import {
 } from '../../../global/@types/pgdb';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 

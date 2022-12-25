@@ -7,13 +7,11 @@ import {
   GuildMember,
   TextChannel,
   Role,
-  Guild,
   InteractionReplyOptions,
 } from 'discord.js';
 import {
   ButtonStyle,
 } from 'discord-api-types/v10';
-// import {ModActionDict} from '../@types/database.d';
 
 import { stripIndents } from 'common-tags';
 import ms from 'ms';
@@ -386,7 +384,7 @@ export async function moderate(
   if (command !== 'INFO') {
     const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
     // We must send the mention outside of the embed, cuz mentions dont work in embeds
-    const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
+    const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
     const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
     const timeoutDuration = duration ? ` for ${ms(duration, { long: true })}` : '';
     const greeting = `Hey ${roleModerator}`;

@@ -27,8 +27,8 @@ export async function dramacounter(
     const guildData = await getGuild(guildId);
 
     if (guildData.last_drama_at) {
-      const lastDramaDate = guildData.last_drama_at as Date;
-      const lastDramaReason = guildData.drama_reason as string;
+      const lastDramaDate = guildData.last_drama_at;
+      const lastDramaReason = guildData.drama_reason || 'No reason given';
       response = {
         dramaReason: lastDramaReason,
         lastDramaAt: lastDramaDate,

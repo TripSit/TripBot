@@ -46,7 +46,7 @@ export async function issue(
     });
   }
 
-  const results = await getResults() as OctokitResponse<Issue>;
+  const results = await getResults();
   log.info(F, `response: ${JSON.stringify(results, null, 2)}`);
 
   return results;

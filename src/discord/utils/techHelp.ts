@@ -143,7 +143,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       const ticketThread = await (i.channel as TextChannel).threads.create({
         name: `🧡│${actor.username}'s ${issueType} issue!`,
         autoArchiveDuration: 1440,
-        type: i.guild.premiumTier > 2 ? ChannelType.GuildPrivateThread : ChannelType.GuildPublicThread,
+        type: i.guild.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread,
         reason: `${actor.username} submitted a(n) ${issueType} issue`,
       });
       // log.debug(F, `Created meta-thread ${ticketThread.id}`);
@@ -192,7 +192,7 @@ export async function techHelpOwn(interaction:ButtonInteraction) {
   }
   const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
-  const target = await interaction.guild.members.fetch(targetId) as GuildMember;
+  const target = await interaction.guild.members.fetch(targetId);
 
   interaction.reply({
     content: stripIndents`${(interaction.member as GuildMember).displayName} has claimed this \
@@ -215,7 +215,7 @@ export async function techHelpClose(interaction:ButtonInteraction) {
   }
   const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
-  const target = await interaction.guild.members.fetch(targetId) as GuildMember;
+  const target = await interaction.guild.members.fetch(targetId);
 
   interaction.reply({
     content: stripIndents`${(interaction.member as GuildMember).displayName} has indicated that \

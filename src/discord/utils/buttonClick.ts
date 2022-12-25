@@ -193,7 +193,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
           `,
             ephemeral: true,
           });
-          if (member.roles.cache.has(memberRole.id as string)) {
+          if (member.roles.cache.has(memberRole.id)) {
             // log.debug(F, `Member already has role!`);
             return;
           }

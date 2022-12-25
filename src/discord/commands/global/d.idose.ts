@@ -150,8 +150,8 @@ export const dIdose: SlashCommand = {
           // Add fields to the pageEmbed until there are 24 fields
           let pageFields = [] as EmbedField[];
           let pageFieldsCount = 0;
-          for (let i = 0; i < response.length; i += 1) {
-            pageFields.push({ name: response[i].name, value: response[i].value, inline: true });
+          for (const record of response) { // eslint-disable-line no-restricted-syntax
+            pageFields.push({ name: record.name, value: record.value, inline: true });
             // log.debug(F, `Adding field ${field.name}`);
             pageFieldsCount += 1;
             // log.debug(F, `pageFieldsCount: ${pageFieldsCount}`);
@@ -176,8 +176,8 @@ export const dIdose: SlashCommand = {
         if (response.length <= 24) {
           // Add fields to the embed
           const fields = [] as EmbedField[];
-          for (let i = 0; i < response.length; i += 1) {
-            fields.push({ name: response[i].name, value: response[i].value, inline: true });
+          for (const record of response) { // eslint-disable-line no-restricted-syntax
+            fields.push({ name: record.name, value: record.value, inline: true });
           }
           embed.setFields(fields);
         }

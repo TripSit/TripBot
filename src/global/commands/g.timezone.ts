@@ -26,9 +26,9 @@ export async function timezone(
   if (command === 'set') {
     // define offset as the value from the timezones array
     let tzCode = '';
-    for (let i = 0; i < timezones.length; i += 1) {
-      if (timezones[i].label === tzvalue) {
-        tzCode = timezones[i].tzCode;
+    for (const zone of timezones) { // eslint-disable-line no-restricted-syntax
+      if (zone.label === tzvalue) {
+        tzCode = zone.tzCode;
         // log.debug(F, `tzCode: ${tzCode}`);
       }
     }
@@ -53,9 +53,9 @@ export async function timezone(
 
   if (userData.timezone !== null) {
     const tzCode = userData.timezone;
-    for (let i = 0; i < timezones.length; i += 1) {
-      if (timezones[i].tzCode === tzCode) {
-        gmtValue = timezones[i].offset;
+    for (const zone of timezones) { // eslint-disable-line no-restricted-syntax
+      if (zone.tzCode === tzCode) {
+        gmtValue = zone.offset;
         // log.debug(F, `gmtValue: ${gmtValue}`);
       }
     }
