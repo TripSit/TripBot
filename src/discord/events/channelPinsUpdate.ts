@@ -44,7 +44,7 @@ export const channelPinsUpdate: ChannelPinsUpdateEvent = {
       return;
     }
 
-    let response = '' as string;
+    let response = '';
 
     if (pinLog.executor) {
       response = `Channel ${pinLog.executor.tag} pinned a message in ${channel.name}:`;

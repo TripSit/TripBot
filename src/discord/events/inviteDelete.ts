@@ -41,13 +41,9 @@ export const inviteDelete: InviteDeleteEvent = {
       return;
     }
 
-    let response = '' as string;
-
-    if (deletionLog.executor) {
-      response = `${invite.url} was deleted by ${deletionLog.executor.tag}:`;
-    } else {
-      response = `${invite.url} was deleted, but the audit log was inconclusive.`;
-    }
+    const response = deletionLog.executor
+      ? `Channel ${invite.url} was deleted by ${deletionLog.executor.tag}.`
+      : `Channel ${invite.url} was deleted, but the audit log was inconclusive.`;
 
     await auditlog.send(response);
 

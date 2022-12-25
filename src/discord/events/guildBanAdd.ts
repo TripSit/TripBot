@@ -37,13 +37,9 @@ export const guildBanAdd: GuildBanAddEvent = {
       return;
     }
 
-    let response = '' as string;
-
-    if (creationLog.executor) {
-      response = `${ban.user} was banned by ${creationLog.executor.tag}.`;
-    } else {
-      response = `${ban.user} was banned, but the audit log was inconclusive.`;
-    }
+    const response = creationLog.executor
+      ? `Channel ${ban.user} was banned by ${creationLog.executor.tag}.`
+      : `Channel ${ban.user} was banned, but the audit log was inconclusive.`;
 
     await auditlog.send(response);
   },

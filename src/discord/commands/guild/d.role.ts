@@ -4,7 +4,6 @@ import {
   Role,
   SlashCommandBuilder,
   TextChannel,
-  User,
 } from 'discord.js';
 import { db } from '../../../global/utils/knex';
 import {
@@ -120,7 +119,6 @@ export const dRole: SlashCommand = {
     const isMod = (interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR);
     const isTs = (interaction.member as GuildMember).roles.cache.has(env.ROLE_TRIPSITTER);
 
-    let user = {} as User;
     let member = {} as GuildMember;
     let verb = '' as string;
     let preposition = '' as string;
@@ -130,11 +128,8 @@ export const dRole: SlashCommand = {
       role = await interaction.guild.roles.fetch(roleId) as Role;
       verb = 'added';
       preposition = 'to';
-      if (isMod || isTs) {
-        user = interaction.options.getUser('user') ?? interaction.user;
-      } else {
-        user = interaction.user;
-      }
+      const selectedUser = interaction.options.getUser('user') ?? interaction.user;
+      const user = isMod || isTs ? selectedUser : interaction.user;
       member = await interaction.guild.members.fetch(user.id);
       target = member.displayName;
       await member.roles.add(role);
@@ -144,11 +139,8 @@ export const dRole: SlashCommand = {
       role = await interaction.guild.roles.fetch(roleId) as Role;
       verb = 'removed';
       preposition = 'from';
-      if (isMod || isTs) {
-        user = interaction.options.getUser('user') ?? interaction.user;
-      } else {
-        user = interaction.user;
-      }
+      const selectedUser = interaction.options.getUser('user') ?? interaction.user;
+      const user = isMod || isTs ? selectedUser : interaction.user;
       member = await interaction.guild.members.fetch(user.id);
       target = member.displayName;
       await member.roles.remove(role);

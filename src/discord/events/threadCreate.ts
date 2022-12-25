@@ -38,13 +38,9 @@ export const threadCreate: ThreadCreateEvent = {
       return;
     }
 
-    let response = '' as string;
-
-    if (auditLog.executor) {
-      response = `${thread.name} was created by ${auditLog.executor.tag}.`;
-    } else {
-      response = `${thread.name} was created, but the audit log was inconclusive.`;
-    }
+    const response = auditLog.executor
+      ? `Channel ${thread.name} was created by ${auditLog.executor.tag}.`
+      : `Channel ${thread.name} was created, but the audit log was inconclusive.`;
 
     await auditlog.send(response);
   },

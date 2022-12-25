@@ -37,13 +37,9 @@ export const guildBanRemove: GuildBanRemoveEvent = {
       return;
     }
 
-    let response = '' as string;
-
-    if (creationLog.executor) {
-      response = `${ban.user} was unbaned by ${creationLog.executor.tag}.`;
-    } else {
-      response = `${ban.user} was unbaned, but the audit log was inconclusive.`;
-    }
+    const response = creationLog.executor
+      ? `Channel ${ban.user} was unbanned by ${creationLog.executor.tag}.`
+      : `Channel ${ban.user} was unbanned, but the audit log was inconclusive.`;
 
     await auditlog.send(response);
   },

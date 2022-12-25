@@ -93,15 +93,13 @@ async function checkStats() {
     }
   }
 
-  // Max online count
-  let maxCount = 0;
   // Update the database's max_online_members if it's higher than the current value
   // log.debug(F, `Getting guild data`);
   const guildData = await getGuild(env.DISCORD_GUILD_ID);
   if (guildData) {
     if (guildData.max_online_members) {
-      maxCount = guildData.max_online_members;
-      if (onlineCount > guildData.max_online_members) {
+      let maxCount = guildData.max_online_members;
+      if (onlineCount > maxCount) {
         maxCount = onlineCount;
         await db<DiscordGuilds>('discord_guilds')
           .update({

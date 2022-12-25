@@ -8,7 +8,10 @@ import {
   ThreadDeleteEvent,
 } from '../@types/eventDef';
 import { db, getOpenTicket } from '../../global/utils/knex';
-import { TicketStatus, UserTickets } from '../../global/@types/pgdb'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import {
+  TicketStatus,
+  UserTickets,
+} from '../../global/@types/pgdb';
 
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
@@ -58,13 +61,9 @@ export const threadDelete: ThreadDeleteEvent = {
       return;
     }
 
-    let response = '' as string;
-
-    if (auditLog.executor) {
-      response = `${thread.name} was deleted by ${auditLog.executor.tag}.`;
-    } else {
-      response = `${thread.name} was deleted, but the audit log was inconclusive.`;
-    }
+    const response = auditLog.executor
+      ? `Channel ${thread.name} was deleted by ${auditLog.executor.tag}.`
+      : `Channel ${thread.name} was deleted, but the audit log was inconclusive.`;
 
     await auditlog.send(response);
   },

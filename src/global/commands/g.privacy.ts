@@ -37,7 +37,6 @@ export async function privacy(
   //   .where('user_id', userData.id);
 
   if (command === 'get') {
-    response = '';
     for (const [key, value] of Object.entries(userData)) { // eslint-disable-line
       if (value !== null && value !== undefined && value !== '') {
         if (

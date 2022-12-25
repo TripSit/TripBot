@@ -57,8 +57,9 @@ export async function leaderboard(
 
     // log.debug(F, `allUserExperience: ${JSON.stringify(allUserExperience, null, 2)}`);
 
-    let rank = 1;
+    let rank = 0;
     for (const user of allUserExperience) { // eslint-disable-line
+      rank += 1;
       const userData = await getUser(null, user.user_id); // eslint-disable-line
       if (!userData) {
         log.error(F, `Could not find user with id ${user.user_id}`);
@@ -79,7 +80,6 @@ export async function leaderboard(
           id: userData.discord_id,
           level: totalData.level,
         });
-        rank += 1;
       }
     }
 
@@ -91,8 +91,9 @@ export async function leaderboard(
         .orderBy('total_points', 'desc')
         .limit(3);
 
-      rank = 1;
+      let categoryRank = 0;
       for (const user of userExperience) { // eslint-disable-line
+        categoryRank += 1;
         const userData = await getUser(null, user.user_id); // eslint-disable-line
         if (!userData) {
           log.error(F, `Could not find user with id ${user.user_id}`);
@@ -106,11 +107,10 @@ export async function leaderboard(
             results[category] = [];
           }
           results[category].push({
-            rank,
+            rank: categoryRank,
             id: userData.discord_id,
             level: user.level,
           });
-          rank += 1;
         }
       }
     }

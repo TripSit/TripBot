@@ -43,13 +43,9 @@ export const channelDelete: ChannelDeleteEvent = {
       return;
     }
 
-    let response = '' as string;
-
-    if (deletionLog.executor) {
-      response = `Channel ${channel.name} was deleted by ${deletionLog.executor.tag}.`;
-    } else {
-      response = `Channel ${channel.name} was deleted, but the audit log was inconclusive.`;
-    }
+    const response = deletionLog.executor
+      ? `Channel ${channel.name} was deleted by ${deletionLog.executor.tag}.`
+      : `Channel ${channel.name} was deleted, but the audit log was inconclusive.`;
 
     await auditlog.send(response);
   },

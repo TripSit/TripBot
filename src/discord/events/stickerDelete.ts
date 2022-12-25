@@ -38,13 +38,9 @@ export const stickerDelete: StickerDeleteEvent = {
       return;
     }
 
-    let response = '' as string;
-
-    if (auditLog.executor) {
-      response = `${sticker.name} was deleted by ${auditLog.executor.tag}.`;
-    } else {
-      response = `${sticker.name} was deleted, but the audit log was inconclusive.`;
-    }
+    const response = auditLog.executor
+      ? `Channel ${sticker.name} was deleted by ${auditLog.executor.tag}.`
+      : `Channel ${sticker.name} was deleted, but the audit log was inconclusive.`;
 
     await auditlog.send(response);
   },

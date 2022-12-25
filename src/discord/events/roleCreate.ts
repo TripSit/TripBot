@@ -15,13 +15,13 @@ export default roleCreate;
 
 export const roleCreate: RoleCreateEvent = {
   name: 'roleCreate',
-  async execute(emoji) {
+  async execute(role) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (emoji.guild.id !== env.DISCORD_GUILD_ID) {
+    if (role.guild.id !== env.DISCORD_GUILD_ID) {
       return;
     }
 
-    const fetchedLogs = await emoji.guild.fetchAuditLogs({
+    const fetchedLogs = await role.guild.fetchAuditLogs({
       limit: 1,
       type: AuditLogEvent.RoleCreate,
     });
@@ -33,17 +33,13 @@ export const roleCreate: RoleCreateEvent = {
 
     // Perform a coherence check to make sure that there's *something*
     if (!auditLog) {
-      await auditlog.send(`${emoji.name} was created, but no relevant audit logs were found.`);
+      await auditlog.send(`${role.name} was created, but no relevant audit logs were found.`);
       return;
     }
 
-    let response = '' as string;
-
-    if (auditLog.executor) {
-      response = `${emoji.name} was created by ${auditLog.executor.tag}.`;
-    } else {
-      response = `${emoji.name} was created, but the audit log was inconclusive.`;
-    }
+    const response = auditLog.executor
+      ? `Channel ${role.name} was created by ${auditLog.executor.tag}.`
+      : `Channel ${role.name} was created, but the audit log was inconclusive.`;
 
     await auditlog.send(response);
   },

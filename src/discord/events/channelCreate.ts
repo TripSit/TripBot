@@ -34,12 +34,10 @@ export const channelCreate: ChannelCreateEvent = {
       return;
     }
 
-    let response = '' as string;
-    if (creationLog.executor) {
-      response = `Channel ${channel.name} was created by ${creationLog.executor.tag}.`;
-    } else {
-      response = `Channel ${channel.name} was created, but the audit log was inconclusive.`;
-    }
+    const response = creationLog.executor
+      ? `Channel ${channel.name} was created by ${creationLog.executor.tag}.`
+      : `Channel ${channel.name} was created, but the audit log was inconclusive.`;
+
     await auditlog.send(response);
   },
 };

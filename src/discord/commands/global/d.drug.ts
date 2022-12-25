@@ -228,16 +228,16 @@ async function addDosages(
     const roaNames = drugData.roas.map(roa => roa.name);
 
     // For HR reasons we prefer non-invasive methods
-    if (roaNames.indexOf('Insufflated') > 0) {
+    if (roaNames.includes('Insufflated')) {
       roaNames.splice(roaNames.indexOf('Insufflated'), 1);
       roaNames.unshift('Insufflated');
     }
 
-    if (roaNames.indexOf('Vapourised') > 0) {
+    if (roaNames.includes('Vapourised')) {
       roaNames.splice(roaNames.indexOf('Vapourised'), 1);
       roaNames.unshift('Vapourised');
     }
-    if (roaNames.indexOf('Smoked') > 0) {
+    if (roaNames.includes('Smoked')) {
       roaNames.splice(roaNames.indexOf('Smoked'), 1);
       roaNames.unshift('Smoked');
     }
@@ -386,16 +386,16 @@ export const dDrug: SlashCommand = {
       const roaNames = drugData.roas.map(roa => roa.name);
 
       // For HR reasons we prefer non-invasive methods
-      if (roaNames.indexOf('Insufflated') > 0) {
+      if (roaNames.includes('Insufflated')) {
         roaNames.splice(roaNames.indexOf('Insufflated'), 1);
         roaNames.unshift('Insufflated');
       }
 
-      if (roaNames.indexOf('Vapourised') > 0) {
+      if (roaNames.includes('Vapourised')) {
         roaNames.splice(roaNames.indexOf('Vapourised'), 1);
         roaNames.unshift('Vapourised');
       }
-      if (roaNames.indexOf('Smoked') > 0) {
+      if (roaNames.includes('Smoked')) {
         roaNames.splice(roaNames.indexOf('Smoked'), 1);
         roaNames.unshift('Smoked');
       }

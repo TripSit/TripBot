@@ -111,7 +111,7 @@ export const dProfile: SlashCommand = {
         coloredCard = 'https://i.imgur.com/7KGS566.png';
         cardColor = '#404040';
         // chipColor = '#FFFFFF';
-        textColor = '#ffffff';
+        // textColor = '#ffffff';
       } else if (colorRole.id === env.ROLE_BLACK) {
         // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardBlack.png');
         coloredCard = 'https://i.imgur.com/0QgZvFi.png';
@@ -181,7 +181,8 @@ export const dProfile: SlashCommand = {
       const usernameContext = canvas.getContext('2d');
       let fontSize = 50;
       do {
-        usernameContext.font = `${fontSize -= 2}px futura`;
+        fontSize -= 2;
+        usernameContext.font = `${fontSize}px futura`;
       } while (usernameContext.measureText(text).width > 435);
       return usernameContext.font;
     };
@@ -266,7 +267,7 @@ export const dProfile: SlashCommand = {
 
     if (totalData.level < 6) {
       // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIP.png';
-      starImagePath = 'https://i.imgur.com/vU1erLP.png';
+      // starImagePath = 'https://i.imgur.com/vU1erLP.png';
     } else if (totalData.level < 10) {
       // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL5.png';
       starImagePath = 'https://i.imgur.com/DRaOnUY.png';
@@ -300,8 +301,9 @@ export const dProfile: SlashCommand = {
       const levelContext = canvas.getContext('2d');
       let fontSize = 50;
       do {
+        fontSize -= 10;
         levelContext.textAlign = 'center';
-        levelContext.font = `${fontSize -= 10}px futura`;
+        levelContext.font = `${fontSize}px futura`;
       } while (levelContext.measureText(text).width > 62);
       return levelContext.font;
     };

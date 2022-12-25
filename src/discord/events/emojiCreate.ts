@@ -37,13 +37,9 @@ export const emojiCreate: EmojiCreateEvent = {
       return;
     }
 
-    let response = '' as string;
-
-    if (creationLog.executor) {
-      response = `${emoji.name} was created by ${creationLog.executor.tag}.`;
-    } else {
-      response = `${emoji.name} was created, but the audit log was inconclusive.`;
-    }
+    const response = creationLog.executor
+      ? `Channel ${emoji.name} was created by ${creationLog.executor.tag}.`
+      : `Channel ${emoji.name} was created, but the audit log was inconclusive.`;
 
     await auditlog.send(response);
   },
