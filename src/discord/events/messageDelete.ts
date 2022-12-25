@@ -61,7 +61,7 @@ export const messageDelete: MessageDeleteEvent = {
 
     try {
       embed.addFields([
-        { name: authorName, value: content, inline: true },
+        { name: authorName, value: content.slice(0, 1023), inline: true },
       ]);
     } catch (e) {
       log.error(F, `Error adding fields to embed: ${e}`);

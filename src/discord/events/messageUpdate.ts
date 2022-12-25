@@ -46,8 +46,8 @@ export const messageUpdate: MessageUpdateEvent = {
     try {
       embed.setURL(newMessage.url);
       embed.addFields([
-        { name: 'Old Message', value: oldContent, inline: true },
-        { name: 'New Message', value: newContent, inline: true },
+        { name: 'Old Message', value: oldContent.slice(0, 1024), inline: true },
+        { name: 'New Message', value: newContent.slice(0, 1024), inline: true },
       ]);
     } catch (err) {
       log.error(F, `Error creating embed: ${err}`);
