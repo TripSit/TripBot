@@ -217,13 +217,8 @@ async function botmodGuild(
     targetGuild.leave();
   } else if (command === 'UNBOTBAN') {
     targetGuildInfo.is_banned = false;
-    // TODO
-  } else if (command === 'BOTNOTE') {
-    // actionData.type = 'NOTE' as UserActionType;
   } else if (command === 'BOTKICK') {
     targetGuild.leave();
-  } else if (command === 'BOTWARNING') {
-    // TODO
   }
 
   if (command !== 'BOTINFO') {
