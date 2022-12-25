@@ -20,7 +20,7 @@
     "docker-build": "docker compose build",
     "docker-run": "docker compose up -d",
     "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
-    "sonar-scanner": "sonar-scanner"
+    "sonar-scanner": "sonar-scanner -D SONAR_TOKEN=$SONAR_TOKEN"
   },
   "repository": {
     "type": "git",
