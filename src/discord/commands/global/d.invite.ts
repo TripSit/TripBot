@@ -21,15 +21,24 @@ export const dInvite: SlashCommand = {
   async execute(interaction) {
     startLog(F, interaction);
     const inviteInfo = await invite();
+    const devNotice = process.env.NODE_ENV === 'production'
+      ? ''
+      : '\nThis is a development version of the bot. Please use the production version for the best experience.\n\n';
+    const botname = process.env.NODE_ENV === 'production'
+      ? 'TripBot'
+      : 'TripBot Dev';
+    const guildname = process.env.NODE_ENV === 'production'
+      ? 'TripSit'
+      : 'TripSit Dev';
     const embed = embedTemplate()
       .setColor(Colors.DarkBlue)
-      .setTitle('Invite TripBot')
+      .setTitle(`Invite ${botname}`)
       .setURL(inviteInfo.bot)
-      .setDescription(stripIndents`
+      .setDescription(stripIndents`${devNotice}
         [Click here to invite TripBot to your own server](${inviteInfo.bot}).
         Note: For advanced features you will need to give the bot more permissions.
 
-        The official support server is [TripSit discord](${inviteInfo.discord}). 
+        The official support server is [${guildname} discord](${inviteInfo.discord}). 
         If you have issues/questions, join and talk with Moonbear!
       `);
     interaction.reply({ embeds: [embed] });
