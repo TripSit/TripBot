@@ -16,5 +16,6 @@ RUN npm ci
 COPY . .
 
 EXPOSE 8080
+EXPOSE 9229
 
 CMD if [ $NODE_ENV = production ] ; then npm start ; else npm run nodemon ; fi
