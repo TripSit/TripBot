@@ -15,6 +15,7 @@ import {
   Role,
   User,
   Guild,
+  GuildMember,
 } from 'discord.js';
 import {
   ChannelType,
@@ -35,6 +36,104 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { startLog } from '../../utils/startLog';
+
+/* Test script
+1a) Init
+Trigger: Send a message to the bot
+Result: Bot responds with the ModMailInitialResponse embed
+
+1b) Init again
+Trigger: Send another message to the bot
+Result: Bot responds with the ModMailInitialResponse embed, again
+
+2a) External tripsit start
+Trigger: Make sure you're not in the tripsit guild and click the tripsitme button in the DM
+Result: Bot shows an embed to ask for info
+
+2a) External tripsit submit
+Trigger: Fill in the modal and click submit
+Result: New thread is created in the guild with an orange icon, user is told that their message was submitted
+
+2b) External tripsit - send dm message
+Trigger: Send another message to the bot
+Result: Message is sent to the thread
+
+2c) External tripsit - send thread message
+Trigger: In the thread, send a message
+Result: Message is sent to to the DM
+
+3) Modmail Own
+Trigger: While inside the thread, click the own button
+Result: Message is posted in the thread, message is sent to the user, channel icon changes to Yellow
+
+4a) Modmail pause
+Trigger: While inside the thread, click the pause button
+Result: Message is posted in the thread, message is sent to the user, channel icon changes to ???
+
+4b) Modmail pause - send dm message
+Trigger: Send a DM to the bot
+Result: bot responds in dm "Sorry this ticket is paused"
+
+4c) Modmail pause - send thread message
+Trigger: Send a message in the thread
+Result: Bot responds in thread "Sorry this ticket is paused, the user cannot see this, you must unpause to send a message"
+
+4d) Modmail unpause
+Trigger: While inside the thread, click the unpause button
+Result: Message is posted in the thread, message is sent to the user, channel icon changes to ???
+
+5a) Modmail block
+Trigger: While inside the thread, click the block button
+Result: Message is posted in the thread, message is sent to the user, channel icon changes to ???
+
+5b) Modmail block - send dm message
+Trigger: Send a DM to the bot
+Result: bot responds in dm "sad beeps"
+
+5c) Modmail block - send thread message
+Trigger: Send a message in the thread
+Result: Bot responds in thread "Sorry this user is blocked, the user cannot see this, you must unpause to send a message"
+
+5d) Modmail unblock
+Trigger: While inside the thread, click the unblock button
+Result: Message is posted in the thread, message is sent to the user, channel icon changes to ???
+
+6a) Modmail close
+Trigger: While inside the thread, click the close button
+Result: Message is posted in the thread, message is sent to the user, channel icon changes to ???
+
+6b) Modmail close - send dm message
+Trigger: Send a DM to the bot
+Result: Message is sent to the thread
+
+6c) Modmail close - send thread message
+Trigger: Send a message in the thread
+Result: Message is sent to to the DM
+
+7a) Modmail I'm Good (DM)
+Trigger: Click the Im Good button in DM
+Result: Message is posted in the thread, message is sent to the user, channel icon changes to ???
+
+7b) Modmail I'm Good (DM) - send dm message
+Trigger: Send a DM to the bot
+Result: Re-show the prompt for the Im Good button
+
+7c) Modmail I'm Good (DM) - send thread message
+Trigger: Send a message in the thread
+Result: "Sorry this ticket is resolved, the user will need to create a new ticket for you to send them a message"
+
+8a) Botbanned
+Trigger: Use the /botmod botban command to ban a user
+Result: Message is posted to the modlog room
+
+8b) Botbanned - send thread message
+Trigger:
+Result:
+
+8c) Botbanned - send dm message
+Trigger:
+Result:
+*/
 
 const modMailOwn = 'modmailIssue~own';
 const modMailPause = 'modmailIssue~pause';
@@ -58,7 +157,7 @@ export async function modmailActions(
   let command = '';
   if (interaction.isButton()) {
     const varArray = interaction.customId.split('~');
-    [command] = varArray; // Not sure about this
+    [, command] = varArray; // , skips the first element
     // command = varArray[1];
   } else if (interaction.isCommand()) {
     command = interaction.options.getSubcommand();
@@ -70,7 +169,7 @@ export async function modmailActions(
   let ticketData = {} as UserTickets;
   if (interaction.channel) {
     if (interaction.channel.type === ChannelType.DM) {
-      const userData = await getUser(null, actor.id);
+      const userData = await getUser(actor.id, null);
       const ticketDataRaw = await getOpenTicket(userData.id, null);
 
       if (!ticketDataRaw) {
@@ -90,7 +189,7 @@ export async function modmailActions(
     }
   }
 
-  // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+  log.debug(F, `ticketDataAction: ${JSON.stringify(ticketData, null, 2)}!`);
 
   const ticketChannel = await interaction.client.channels.fetch(ticketData.thread_id) as ThreadChannel;
 
@@ -111,12 +210,16 @@ export async function modmailActions(
   let verb = '';
   let noun = '';
   let updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>();
+  let userMessage = '';
+
+  log.debug(F, `command: ${command}!`);
   if (command === 'close') {
     // log.debug(F, `Closing ticket!`);
     ticketData.status = 'CLOSED' as TicketStatus;
     noun = 'Ticket';
     verb = 'CLOSED';
-    await target.send('It looks like we\'re good here! We\'ve closed this ticket, but if you need anything else, feel free to open a new one!');
+    userMessage = 'It looks like we\'re good here! We\'ve closed this ticket, but if you need anything else, feel free to open a new one!';
+    await target.send(userMessage);
     channel.setName(`💚${channel.name.substring(1)}`);
 
     // Update modmail buttons
@@ -144,7 +247,8 @@ export async function modmailActions(
     ticketData.status = 'OPEN' as TicketStatus;
     noun = 'Ticket';
     verb = 'REOPENED';
-    await target.send('This ticket has been reopened! Feel free to continue the conversation here.');
+    userMessage = 'This ticket has been reopened! Feel free to continue the conversation here.';
+    await target.send(userMessage);
     // ticketChannel.setArchived(true, 'Archiving after close');
     channel.setName(`❤${channel.name.substring(1)}`);
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
@@ -171,7 +275,8 @@ export async function modmailActions(
     ticketData.status = 'BLOCKED' as TicketStatus;
     noun = 'User';
     verb = 'BLOCKED';
-    await target.send('You have been blocked from using modmail. Please email us at appeals@tripsit.me if you feel this was an error!');
+    userMessage = 'You have been blocked from using modmail. Please email us at appeals@tripsit.me if you feel this was an error!';
+    await target.send(userMessage);
     // ticketChannel.setArchived(true, 'Archiving after close');
     channel.setName(`❤${channel.name.substring(1)}`);
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
@@ -197,7 +302,8 @@ export async function modmailActions(
     ticketData.status = 'OPEN' as TicketStatus;
     noun = 'User';
     verb = 'UNBLOCKED';
-    await target.send('You have been unblocked from using modmail!');
+    userMessage = 'You have been unblocked from using modmail!';
+    await target.send(userMessage);
     channel.setName(`💛${channel.name.substring(1)}`);
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
@@ -222,7 +328,8 @@ export async function modmailActions(
     ticketData.status = 'OPEN' as TicketStatus;
     noun = 'Ticket';
     verb = 'UNPAUSED';
-    await target.send('This ticket has been taken off hold, thank you for your patience!');
+    userMessage = 'This ticket has been taken off hold, thank you for your patience!';
+    await target.send(userMessage);
     channel.setName(`💛${channel.name.substring(1)}`);
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
@@ -247,7 +354,8 @@ export async function modmailActions(
     ticketData.status = 'PAUSED' as TicketStatus;
     noun = 'Ticket';
     verb = 'PAUSED';
-    await target.send('This ticket has been paused while we look into this, thank you for your patience!');
+    userMessage = 'This ticket has been paused while we look into this, thank you for your patience!';
+    await target.send(userMessage);
     channel.setName(`🤎${channel.name.substring(1)}`);
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
@@ -271,7 +379,8 @@ export async function modmailActions(
   } else if (command === 'own') {
     noun = 'Ticket';
     verb = 'OWNED';
-    await target.send(`${actor} has claimed this issue and will either help you or figure out how to get you help!`);
+    userMessage = `${actor} has claimed this issue and will either help you or figure out how to get you help!`;
+    await target.send(userMessage);
     channel.setName(`💛${channel.name.substring(1)}`);
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
@@ -293,12 +402,14 @@ export async function modmailActions(
           .setStyle(ButtonStyle.Danger),
       );
   } else if (command === 'resolve') {
-    // log.debug(F, `Resolving ticket!`);
+    // I'm good button
+    log.debug(F, 'Resolving ticket!');
     ticketData.status = 'RESOLVED' as TicketStatus;
     noun = 'Ticket';
     verb = 'RESOLVED';
-    interaction.reply(stripIndents`Hey ${target}, we're glad your issue is resolved!
-    This ticket has been marked as resolved, but if you need anything else feel free to open a new one!`);
+    userMessage = stripIndents`Hey ${target}, we're glad your issue is resolved!
+    This ticket has been marked as resolved, but if you need anything else feel free to open a new one!`;
+    interaction.reply(userMessage);
     channel.setName(`💚${channel.name.substring(1)}`);
     await channel.send(stripIndents`Hey team! ${target.toString()} has indicated that they no longer need help!`);
 
@@ -326,7 +437,7 @@ export async function modmailActions(
 
   if (interaction.channel && interaction.channel.type !== ChannelType.DM) {
     // log.debug(F, `Updating channel internally`);
-    await interaction.reply(`${noun} has been ${verb} by ${actor}! (The user cannot see this)`);
+    await interaction.reply(`${noun} has been ${verb} by ${actor}! I told the user: \n>${userMessage}`);
   }
 
   try {
@@ -361,11 +472,13 @@ export async function modmailActions(
         content = initialMessage.content;
       }
 
-      initialMessage.edit({
-        content,
-        components: [updatedModmailButtons],
-        flags: ['SuppressEmbeds'],
-      });
+      if (initialMessage.id) {
+        initialMessage.edit({
+          content,
+          components: [updatedModmailButtons],
+          flags: ['SuppressEmbeds'],
+        });
+      }
     }
   }
 }
@@ -465,10 +578,15 @@ export async function modmailCreate(
   // Get the tripsit guild
   const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
 
-  // Check if the user is part of the guild
-  const member = await tripsitGuild.members.fetch(actor.id);
+  let member = {} as GuildMember;
+  try {
+    member = await tripsitGuild.members.fetch(actor.id);
+  } catch (error) {
+    // This just means the actor isnt in the guild
+  }
 
-  if (member) {
+  // log.debug(F, `Member: ${JSON.stringify(member, null, 2)}!`);
+  if (member.id) {
     if (issueType === 'TRIPSIT') {
       const channelTripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
       await interaction.reply({ content: `Please use the button in ${channelTripsit}!` });
@@ -498,7 +616,7 @@ export async function modmailCreate(
       placeholderB: '',
       color: Colors.Red,
       channelId: env.CHANNEL_SUGGESTIONS,
-      channelTitle: `🧡│${member ? member.displayName : actor.username}'s ban appeal`,
+      channelTitle: `🧡│${member.id ? member.displayName : actor.username}'s ban appeal`,
       pingRole: env.ROLE_MODERATOR,
       firstResponse: 'thank you for using the bot to appeal your ban!',
     },
@@ -512,7 +630,7 @@ export async function modmailCreate(
       placeholderB: modMailIssuePlaceholder,
       color: Colors.Green,
       channelId: env.CHANNEL_TRIPSIT,
-      channelTitle: `🧡│${member ? member.displayName : actor.username}'s channel`,
+      channelTitle: `🧡│${member.id ? member.displayName : actor.username}'s channel`,
       pingRole: env.ROLE_HELPER,
       firstResponse: 'thank you for asking for assistance!',
     },
@@ -526,7 +644,7 @@ export async function modmailCreate(
       placeholderB: '',
       color: Colors.Grey,
       channelId: env.CHANNEL_HELPDESK,
-      channelTitle: `🧡│${member ? member.displayName : actor.username}'s tech issue`,
+      channelTitle: `🧡│${member.id ? member.displayName : actor.username}'s tech issue`,
       pingRole: env.ROLE_MODERATOR,
       firstResponse: 'thank you for asking for assistance!',
     },
@@ -540,7 +658,7 @@ export async function modmailCreate(
       placeholderB: '',
       color: Colors.Blue,
       channelId: env.CHANNEL_SUGGESTIONS,
-      channelTitle: `🧡│${member ? member.displayName : actor.username}'s feedback`,
+      channelTitle: `🧡│${member.id ? member.displayName : actor.username}'s feedback`,
       pingRole: env.ROLE_MODERATOR,
       firstResponse: 'thank you for your feedback!',
     },
@@ -548,7 +666,18 @@ export async function modmailCreate(
 
   const userData = await getUser(actor.id, null);
 
-  const ticketData = await getOpenTicket(userData.id, null);
+  // const ticketData = await getOpenTicket(userData.id, null);
+
+  const ticketData = await db<UserTickets>('user_tickets')
+    .select('*')
+    .where('user_id', userData.id)
+    .where('type', 'TRIPSIT')
+    .andWhereNot('status', 'CLOSED')
+    .andWhereNot('status', 'RESOLVED')
+    .andWhereNot('status', 'DELETED')
+    .first();
+
+  log.debug(F, `ticketData: ${ticketData?.status}!`);
 
   // Get the parent channel to be used
   const channel = interaction.client.channels.cache.get(modmailVars[issueType].channelId) as TextChannel;
@@ -560,19 +689,12 @@ export async function modmailCreate(
     try {
       issueThread = await channel.threads.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
-      // log.debug(F, `The thread has likely been deleted!`);
-      try {
-        await db<UserTickets>('user_tickets')
-          .insert({
-            id: ticketData.id,
-            status: 'CLOSED' as TicketStatus,
-          })
-          .onConflict('id')
-          .merge();
-      } catch (error) {
-        log.error(F, `Error closing ticket: ${JSON.stringify(error, null, 2)}`);
-        log.error(F, `Ticketdata: ${JSON.stringify(ticketData, null, 2)}`);
-      }
+      log.debug(F, 'Cant find thread, it has likely been deleted!');
+      await db<UserTickets>('user_tickets')
+        .update({
+          status: 'DELETED' as TicketStatus,
+        })
+        .where('id', ticketData?.id);
     }
     // log.debug(F, `thread_id: ${JSON.stringify(thread_id, null, 2)}!`);
     if (issueThread.id) {
@@ -803,7 +925,7 @@ export async function modmailCreate(
 
       // Save the user's roles in the db
       let actorRoles = [] as string[];
-      if (member) {
+      if (member.id) {
         actorRoles = member.roles.cache.map(role => role.name);
       }
       try {
@@ -833,7 +955,7 @@ export async function modmailDMInteraction(message:Message) {
   }
 
   const userData = await getUser(message.author.id, null);
-  log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}!`);
+  // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}!`);
 
   if (userData && userData.ticket_ban) {
     log.debug(F, `User ${message.author.tag} is banned from creating tickets.`);
@@ -841,8 +963,7 @@ export async function modmailDMInteraction(message:Message) {
   }
 
   const ticketData = await getOpenTicket(userData.id, null);
-
-  // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+  log.debug(F, `ticketData (DM): ${JSON.stringify(ticketData, null, 2)}!`);
 
   if (ticketData) {
     if (ticketData.status === 'BLOCKED') {
@@ -861,10 +982,11 @@ export async function modmailDMInteraction(message:Message) {
     try {
       thread = await channel.threads.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (error) {
+      log.debug(F, `Error fetching thread, it was likely deleted: ${error}`);
       // This just means the thread is deleted
     }
-    log.debug(F, `thread: ${JSON.stringify(thread, null, 2)}!`);
-    if (thread.id) {
+    // log.debug(F, `thread: ${JSON.stringify(thread, null, 2)}!`);
+    if (thread.id && ticketData.status !== 'CLOSED') {
       const embed = embedTemplate();
       embed.setDescription(message.content);
       embed.setAuthor({
@@ -890,6 +1012,13 @@ export async function modmailDMInteraction(message:Message) {
         .where('id', ticketData.id);
       return;
     }
+    // If the thread is closed, delete the ticket from the db
+    log.debug(F, `Closing ticket ${ticketData.id} in the DB!`);
+    await db<UserTickets>('user_tickets')
+      .update({
+        status: 'CLOSED' as TicketStatus,
+      })
+      .where('id', ticketData.id);
   }
 
   modmailInitialResponse(message);
@@ -913,7 +1042,7 @@ export async function modmailThreadInteraction(message:Message) {
       // Get the ticket info
       const ticketData = await getOpenTicket(null, message.channel.id);
       if (ticketData) {
-        // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+        log.debug(F, `ticketData (Thread): ${JSON.stringify(ticketData, null, 2)}!`);
 
         if (ticketData.status === 'BLOCKED') {
           await message.channel.send(`Hey ${message.author.username}, this user is currently blocked. Please '/modmail block off', or click the button at the top, before conversation can resume.`);

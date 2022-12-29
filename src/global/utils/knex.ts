@@ -87,7 +87,7 @@ export async function getOpenTicket(
       .select('*')
       .where('thread_id', threadId)
       .where('type', 'TRIPSIT')
-    // .andWhereNot('status', 'CLOSED')
+      .andWhereNot('status', 'CLOSED')
       .andWhereNot('status', 'RESOLVED')
       .andWhereNot('status', 'DELETED')
       .first();
@@ -97,7 +97,7 @@ export async function getOpenTicket(
       .select('*')
       .where('user_id', userId)
       .where('type', 'TRIPSIT')
-    // .andWhereNot('status', 'CLOSED')
+      .andWhereNot('status', 'CLOSED')
       .andWhereNot('status', 'RESOLVED')
       .andWhereNot('status', 'DELETED')
       .first();

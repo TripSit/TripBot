@@ -50,7 +50,7 @@ export const threadDelete: ThreadDeleteEvent = {
       // If it is, close the ticket
       await db<UserTickets>('user_tickets')
         .update({
-          status: 'CLOSED' as TicketStatus,
+          status: 'DELETED' as TicketStatus,
         })
         .where('id', ticketData.id);
     }
