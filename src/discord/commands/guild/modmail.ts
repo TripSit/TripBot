@@ -126,13 +126,13 @@ Result: "Sorry this ticket is resolved, the user will need to create a new ticke
 Trigger: Use the /botmod botban command to ban a user
 Result: Message is posted to the modlog room
 
-8b) Botbanned - send thread message
-Trigger:
-Result:
-
 8c) Botbanned - send dm message
-Trigger:
-Result:
+Trigger: Send a DM to the bot
+Result: bot responds in dm "sad beeps"
+
+8b) Botbanned - send thread message
+Trigger: Send a message in the thread
+Result: Bot responds in thread "Sorry this user is botbanned, the user cannot see this, you must unpause to send a message"
 */
 
 const modMailOwn = 'modmailIssue~own';
