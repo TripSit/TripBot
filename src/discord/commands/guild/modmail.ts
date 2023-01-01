@@ -38,11 +38,11 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import { startLog } from '../../utils/startLog';
 
 /* Test script
-1a) Init
+1a) Init !
 Trigger: Send a message to the bot
 Result: Bot responds with the ModMailInitialResponse embed
 
-1b) Init again
+1b) Init again !
 Trigger: Send another message to the bot
 Result: Bot responds with the ModMailInitialResponse embed, again
 
@@ -53,6 +53,10 @@ Result: Bot shows an embed to ask for info
 2a) External tripsit submit
 Trigger: Fill in the modal and click submit
 Result: New thread is created in the guild with an orange icon, user is told that their message was submitted
+
+2a) External tripsit start, again
+Trigger: Click the Trip Sit Me button again
+Result: Bot says you have an active thread and that you can just type in dm
 
 2b) External tripsit - send dm message
 Trigger: Send another message to the bot
@@ -164,12 +168,12 @@ export async function modmailActions(
   }
 
   const actor = interaction.user;
+  const userData = await getUser(actor.id, null);
 
   // Get the ticket info
   let ticketData = {} as UserTickets;
   if (interaction.channel) {
     if (interaction.channel.type === ChannelType.DM) {
-      const userData = await getUser(actor.id, null);
       const ticketDataRaw = await getOpenTicket(userData.id, null);
 
       if (!ticketDataRaw) {
@@ -199,7 +203,6 @@ export async function modmailActions(
     return;
   }
 
-  const userData = await getUser(null, ticketData.user_id);
   if (!userData.discord_id) {
     log.error(F, `No discord_id found for user ${ticketData.user_id}!`);
     return;
@@ -271,6 +274,12 @@ export async function modmailActions(
           .setStyle(ButtonStyle.Danger),
       );
   } else if (command === 'block') {
+    userData.discord_bot_ban = true;
+    await db<Users>('users')
+      .insert(userData)
+      .onConflict('id')
+      .merge();
+
     // log.debug(F, `Blocking user!`);
     ticketData.status = 'BLOCKED' as TicketStatus;
     noun = 'User';
@@ -299,6 +308,11 @@ export async function modmailActions(
           .setStyle(ButtonStyle.Danger),
       );
   } else if (command === 'unblock') {
+    userData.discord_bot_ban = false;
+    await db<Users>('users')
+      .insert(userData)
+      .onConflict('id')
+      .merge();
     ticketData.status = 'OPEN' as TicketStatus;
     noun = 'User';
     verb = 'UNBLOCKED';
@@ -1012,11 +1026,11 @@ export async function modmailDMInteraction(message:Message) {
         .where('id', ticketData.id);
       return;
     }
-    // If the thread is closed, delete the ticket from the db
-    log.debug(F, `Closing ticket ${ticketData.id} in the DB!`);
+    // If the thread is deleted, delete the ticket from the db
+    log.debug(F, `Deleting ticket ${ticketData.id} in the DB!`);
     await db<UserTickets>('user_tickets')
       .update({
-        status: 'CLOSED' as TicketStatus,
+        status: 'DELETED' as TicketStatus,
       })
       .where('id', ticketData.id);
   }
