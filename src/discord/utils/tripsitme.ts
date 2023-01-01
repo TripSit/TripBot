@@ -1099,10 +1099,11 @@ export async function tripsitmeButton(
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription(replyMessage);
-      if (interaction.replied) {
-        await interaction.followUp({ embeds: [embed] });
-      } else {
-        await interaction.reply({ embeds: [embed], ephemeral: true });
-      }
+      await i.reply({ embeds: [embed], ephemeral: true });
+      // if (interaction.replied) {
+      //   await interaction.followUp({ embeds: [embed] });
+      // } else {
+      //   await interaction.reply({ embeds: [embed], ephemeral: true });
+      // }
     });
 }

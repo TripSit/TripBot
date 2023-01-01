@@ -990,7 +990,7 @@ export const prompt: SlashCommand = {
       .setName('donorcolors')),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: true });
+    // await interaction.deferReply({ ephemeral: true });
     const command = interaction.options.getSubcommand();
     if (command === 'applications') {
       await applications(interaction);
