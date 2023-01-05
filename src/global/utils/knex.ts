@@ -86,8 +86,8 @@ export async function getOpenTicket(
     ticketData = await db<UserTickets>('user_tickets')
       .select('*')
       .where('thread_id', threadId)
-      .where('type', 'TRIPSIT')
-    // .andWhereNot('status', 'CLOSED')
+      // .where('type', 'TRIPSIT')
+      .andWhereNot('status', 'CLOSED')
       .andWhereNot('status', 'RESOLVED')
       .andWhereNot('status', 'DELETED')
       .first();
@@ -96,8 +96,8 @@ export async function getOpenTicket(
     ticketData = await db<UserTickets>('user_tickets')
       .select('*')
       .where('user_id', userId)
-      .where('type', 'TRIPSIT')
-    // .andWhereNot('status', 'CLOSED')
+      // .where('type', 'TRIPSIT')
+      .andWhereNot('status', 'CLOSED')
       .andWhereNot('status', 'RESOLVED')
       .andWhereNot('status', 'DELETED')
       .first();
