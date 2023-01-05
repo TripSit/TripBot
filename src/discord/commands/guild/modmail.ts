@@ -563,7 +563,7 @@ export async function modmailCreate(
       labelB: '',
       placeholderB: '',
       color: Colors.Red,
-      channelId: env.CHANNEL_SUGGESTIONS,
+      channelId: env.CHANNEL_MODERATORS,
       channelTitle: `🧡│${member.id ? member.displayName : actor.username}'s ban appeal`,
       pingRole: env.ROLE_MODERATOR,
       firstResponse: 'thank you for using the bot to appeal your ban!',
@@ -865,6 +865,8 @@ export async function modmailCreate(
         deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
       } as UserTickets;
 
+      log.debug(F, `newTicketData: ${JSON.stringify(newTicketData)}`);
+
       // Insert that ticket in the DB
       try {
         await db<UserTickets>('user_tickets')
@@ -986,7 +988,7 @@ export async function modmailThreadInteraction(message:Message) {
     // log.debug(F, `threadMessage: ${threadMessage}!`);
     if (threadMessage
       && (message.channel.parentId === env.CHANNEL_HELPDESK
-      || message.channel.parentId === env.CHANNEL_SUGGESTIONS
+      || message.channel.parentId === env.CHANNEL_MODERATORS
       || message.channel.parentId === env.CHANNEL_TRIPSIT)) {
       // log.debug(F, `message.channel.parentId: ${message.channel.parentId}!`);
       // log.debug(F, `message sent in a thread in a helpdesk channel!`);
