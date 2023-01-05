@@ -13,7 +13,6 @@ import {
   TextChannel,
   ModalSubmitInteraction,
   Role,
-  User,
   Guild,
   GuildMember,
 } from 'discord.js';
@@ -46,27 +45,27 @@ Result: Bot responds with the ModMailInitialResponse embed
 Trigger: Send another message to the bot
 Result: Bot responds with the ModMailInitialResponse embed, again
 
-2a) External tripsit start
+2a) External tripsit start !
 Trigger: Make sure you're not in the tripsit guild and click the tripsitme button in the DM
 Result: Bot shows an embed to ask for info
 
-2a) External tripsit submit
+2a) External tripsit submit !
 Trigger: Fill in the modal and click submit
 Result: New thread is created in the guild with an orange icon, user is told that their message was submitted
 
-2a) External tripsit start, again
+2a) External tripsit start, again !
 Trigger: Click the Trip Sit Me button again
 Result: Bot says you have an active thread and that you can just type in dm
 
-2b) External tripsit - send dm message
+2b) External tripsit - send dm message !
 Trigger: Send another message to the bot
 Result: Message is sent to the thread
 
-2c) External tripsit - send thread message
+2c) External tripsit - send thread message !
 Trigger: In the thread, send a message
 Result: Message is sent to to the DM
 
-3) Modmail Own
+3) Modmail Own !
 Trigger: While inside the thread, click the own button
 Result: Message is posted in the thread, message is sent to the user, channel icon changes to Yellow
 
@@ -141,14 +140,46 @@ Result: Bot responds in thread "Sorry this user is botbanned, the user cannot se
 
 const modMailOwn = 'modmailIssue~own';
 const modMailPause = 'modmailIssue~pause';
-const modMailClose = 'modmailIssue~close';
+const modMailUnpause = 'modmailIssue~unpause';
 const modMailBlock = 'modmailIssue~block';
+const modMailUnblock = 'modmailIssue~unblock';
+const modMailClose = 'modmailIssue~close';
 const modMailReopen = 'modmailIssue~reopen';
+const modMailResolve = 'modmailIssue~resolve';
 const modMailIssuePlaceholder = 'I have an issue, can you please help?';
 
 const F = f(__filename);
 
 export default modmail;
+
+async function updateButtons(
+  interaction: ButtonInteraction | ChatInputCommandInteraction,
+  newButtons: ActionRowBuilder<ButtonBuilder>,
+  ticketData: UserTickets | null,
+) {
+  if (interaction.channel) {
+    let initialMessage = {} as Message;
+    let content = '';
+    if (interaction.channel.type !== ChannelType.DM) {
+      if (interaction.isButton()) {
+        initialMessage = interaction.message;
+        content = interaction.message.content;
+      }
+      if (interaction.isCommand() && interaction.channel) {
+        initialMessage = await interaction.channel.messages.fetch((ticketData as UserTickets).first_message_id) as Message;
+        content = initialMessage.content;
+      }
+
+      if (initialMessage.id) {
+        initialMessage.edit({
+          content,
+          components: [newButtons],
+          flags: ['SuppressEmbeds'],
+        });
+      }
+    }
+  }
+}
 
 /**
  * Handles modmail buttons
@@ -168,48 +199,50 @@ export async function modmailActions(
   }
 
   const actor = interaction.user;
-  const userData = await getUser(actor.id, null);
+  // log.debug(F, `actor: ${actor.username}!`);
+  // log.debug(F, `ticketChannel.name: ${ticketChannel.name}!`);
+  // log.debug(F, `ticketChannel.type: ${ticketChannel.type}!`);
 
   // Get the ticket info
   let ticketData = {} as UserTickets;
-  if (interaction.channel) {
-    if (interaction.channel.type === ChannelType.DM) {
-      const ticketDataRaw = await getOpenTicket(userData.id, null);
+  if (interaction.channel
+    && (interaction.channel.type === ChannelType.PublicThread
+    || interaction.channel.type === ChannelType.PrivateThread)) {
+    log.debug(F, `interaction.channel.id: ${interaction.channel.id}!`);
+    const ticketDataRaw = await getOpenTicket(null, interaction.channel.id);
 
-      if (!ticketDataRaw) {
-        interaction.reply({ content: 'This user\'s ticket thread does not exist!', ephemeral: true });
-        return;
-      }
-      ticketData = ticketDataRaw;
-    } else if (interaction.channel.type === ChannelType.PublicThread
-      || interaction.channel.type === ChannelType.PrivateThread) {
-      const ticketDataRaw = await getOpenTicket(null, interaction.channel.id);
-
-      if (!ticketDataRaw) {
-        interaction.reply({ content: 'This ticket thread does not exist!', ephemeral: true });
-        return;
-      }
-      ticketData = ticketDataRaw;
+    if (!ticketDataRaw) {
+      interaction.reply({ content: 'This ticket thread does not exist!', ephemeral: true });
+      return;
     }
+    ticketData = ticketDataRaw;
+  } else if (interaction.channel && interaction.channel.type === ChannelType.DM) {
+    const actorUserData = await getUser(actor.id, null);
+    const ticketDataRaw = await getOpenTicket(actorUserData.id, null);
+
+    if (!ticketDataRaw) {
+      interaction.reply({ content: 'This user\'s ticket thread does not exist!', ephemeral: true });
+      return;
+    }
+    ticketData = ticketDataRaw;
   }
 
-  log.debug(F, `ticketDataAction: ${JSON.stringify(ticketData, null, 2)}!`);
+  log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
   const ticketChannel = await interaction.client.channels.fetch(ticketData.thread_id) as ThreadChannel;
 
+  const targetUserData = await getUser(null, ticketData.user_id);
+  if (!targetUserData.discord_id) {
+    log.error(F, `No discord_id found for user ${ticketData.user_id}!`);
+    return;
+  }
+  const target = await interaction.client.users.fetch(targetUserData.discord_id);
   if (!ticketChannel) {
     // log.debug(F, `ticketChannel not found!`);
     interaction.reply({ content: 'This user\'s ticket thread does not exist!', ephemeral: true });
     return;
   }
 
-  if (!userData.discord_id) {
-    log.error(F, `No discord_id found for user ${ticketData.user_id}!`);
-    return;
-  }
-
-  const target = interaction.client.users.cache.get(userData.discord_id) as User;
-  const channel = interaction.client.channels.cache.get(ticketData.thread_id) as ThreadChannel;
   let verb = '';
   let noun = '';
   let updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>();
@@ -217,241 +250,159 @@ export async function modmailActions(
 
   log.debug(F, `command: ${command}!`);
   if (command === 'close') {
-    // log.debug(F, `Closing ticket!`);
-    ticketData.status = 'CLOSED' as TicketStatus;
-    noun = 'Ticket';
-    verb = 'CLOSED';
-    userMessage = 'It looks like we\'re good here! We\'ve closed this ticket, but if you need anything else, feel free to open a new one!';
-    await target.send(userMessage);
-    channel.setName(`💚${channel.name.substring(1)}`);
-
-    // Update modmail buttons
-    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        new ButtonBuilder()
-          .setCustomId(modMailOwn)
-          .setLabel('Own')
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId(modMailPause)
-          .setLabel('Pause')
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(modMailBlock)
-          .setLabel('Block')
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId(modMailReopen)
-          .setLabel('Reopen')
-          .setStyle(ButtonStyle.Danger),
-      );
+    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(modMailBlock).setLabel('Block').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(modMailReopen).setLabel('Reopen').setStyle(ButtonStyle.Danger),
+    );
+    if (ticketData.status === 'CLOSED') {
+      await interaction.reply({ content: 'This ticket is already closed!', ephemeral: true });
+    } else {
+      // log.debug(F, `Closing ticket!`);
+      noun = 'Ticket';
+      verb = 'CLOSED';
+      ticketData.status = 'CLOSED' as TicketStatus;
+      userMessage = 'It looks like we\'re good here! We\'ve closed this ticket, but if you need anything else, feel free to open a new one!';
+      await target.send(userMessage);
+      ticketChannel.setName(`💚${ticketChannel.name.substring(1)}`);
+    }
   } else if (command === 'reopen') {
-    // log.debug(F, `Reopening ticket!`);
-    ticketData.status = 'OPEN' as TicketStatus;
-    noun = 'Ticket';
-    verb = 'REOPENED';
-    userMessage = 'This ticket has been reopened! Feel free to continue the conversation here.';
-    await target.send(userMessage);
-    // ticketChannel.setArchived(true, 'Archiving after close');
-    channel.setName(`❤${channel.name.substring(1)}`);
-    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        new ButtonBuilder()
-          .setCustomId(modMailOwn)
-          .setLabel('Own')
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId(modMailPause)
-          .setLabel('Pause')
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(modMailBlock)
-          .setLabel('Block')
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId(modMailClose)
-          .setLabel('Close')
-          .setStyle(ButtonStyle.Danger),
-      );
+    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(modMailPause).setLabel('Pause').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId(modMailBlock).setLabel('Block').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(modMailClose).setLabel('Close').setStyle(ButtonStyle.Danger),
+    );
+    if (ticketData.status !== 'CLOSED') {
+      await interaction.reply({ content: 'This ticket is not closed!', ephemeral: true });
+    } else {
+      // log.debug(F, `Reopening ticket!`);
+      noun = 'Ticket';
+      verb = 'REOPENED';
+      ticketData.status = 'OWNED' as TicketStatus;
+      userMessage = 'This ticket has been reopened! Feel free to continue the conversation here.';
+      await target.send(userMessage);
+      ticketChannel.setName(`❤${ticketChannel.name.substring(1)}`);
+    }
   } else if (command === 'block') {
-    userData.discord_bot_ban = true;
-    await db<Users>('users')
-      .insert(userData)
-      .onConflict('id')
-      .merge();
-
+    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(modMailUnblock).setLabel('Unblock').setStyle(ButtonStyle.Secondary),
+    );
+    if (ticketData.status === 'BLOCKED') {
+      await interaction.reply({ content: 'This ticket is already blocked!', ephemeral: true });
+    } else {
     // log.debug(F, `Blocking user!`);
-    ticketData.status = 'BLOCKED' as TicketStatus;
-    noun = 'User';
-    verb = 'BLOCKED';
-    userMessage = 'You have been blocked from using modmail. Please email us at appeals@tripsit.me if you feel this was an error!';
-    await target.send(userMessage);
-    // ticketChannel.setArchived(true, 'Archiving after close');
-    channel.setName(`❤${channel.name.substring(1)}`);
-    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        new ButtonBuilder()
-          .setCustomId(modMailOwn)
-          .setLabel('Own')
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId(modMailPause)
-          .setLabel('Pause')
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId('modmailIssue~unblock')
-          .setLabel('Unblock')
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId(modMailClose)
-          .setLabel('Close')
-          .setStyle(ButtonStyle.Danger),
-      );
-  } else if (command === 'unblock') {
-    userData.discord_bot_ban = false;
-    await db<Users>('users')
-      .insert(userData)
-      .onConflict('id')
-      .merge();
-    ticketData.status = 'OPEN' as TicketStatus;
-    noun = 'User';
-    verb = 'UNBLOCKED';
-    userMessage = 'You have been unblocked from using modmail!';
-    await target.send(userMessage);
-    channel.setName(`💛${channel.name.substring(1)}`);
-    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        new ButtonBuilder()
-          .setCustomId(modMailOwn)
-          .setLabel('Own')
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId(modMailPause)
-          .setLabel('Pause')
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(modMailBlock)
-          .setLabel('Block')
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId(modMailClose)
-          .setLabel('Close')
-          .setStyle(ButtonStyle.Danger),
-      );
-  } else if (command === 'unpause') {
-    ticketData.status = 'OPEN' as TicketStatus;
-    noun = 'Ticket';
-    verb = 'UNPAUSED';
-    userMessage = 'This ticket has been taken off hold, thank you for your patience!';
-    await target.send(userMessage);
-    channel.setName(`💛${channel.name.substring(1)}`);
-    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        new ButtonBuilder()
-          .setCustomId(modMailOwn)
-          .setLabel('Own')
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId(modMailPause)
-          .setLabel('Pause')
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(modMailBlock)
-          .setLabel('Block')
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId(modMailClose)
-          .setLabel('Close')
-          .setStyle(ButtonStyle.Danger),
-      );
-  } else if (command === 'pause') {
-    ticketData.status = 'PAUSED' as TicketStatus;
-    noun = 'Ticket';
-    verb = 'PAUSED';
-    userMessage = 'This ticket has been paused while we look into this, thank you for your patience!';
-    await target.send(userMessage);
-    channel.setName(`🤎${channel.name.substring(1)}`);
-    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        new ButtonBuilder()
-          .setCustomId(modMailOwn)
-          .setLabel('Own')
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId('modmailIssue~unpause')
-          .setLabel('Unpause')
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(modMailBlock)
-          .setLabel('Block')
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId(modMailClose)
-          .setLabel('Close')
-          .setStyle(ButtonStyle.Danger),
-      );
-  } else if (command === 'own') {
-    noun = 'Ticket';
-    verb = 'OWNED';
-    userMessage = `${actor} has claimed this issue and will either help you or figure out how to get you help!`;
-    await target.send(userMessage);
-    channel.setName(`💛${channel.name.substring(1)}`);
-    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        new ButtonBuilder()
-          .setCustomId(modMailOwn)
-          .setLabel('Own')
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId(modMailPause)
-          .setLabel('Pause')
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(modMailBlock)
-          .setLabel('Block')
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId(modMailClose)
-          .setLabel('Close')
-          .setStyle(ButtonStyle.Danger),
-      );
-  } else if (command === 'resolve') {
-    // I'm good button
-    log.debug(F, 'Resolving ticket!');
-    ticketData.status = 'RESOLVED' as TicketStatus;
-    noun = 'Ticket';
-    verb = 'RESOLVED';
-    userMessage = stripIndents`Hey ${target}, we're glad your issue is resolved!
-    This ticket has been marked as resolved, but if you need anything else feel free to open a new one!`;
-    interaction.reply(userMessage);
-    channel.setName(`💚${channel.name.substring(1)}`);
-    await channel.send(stripIndents`Hey team! ${target.toString()} has indicated that they no longer need help!`);
+      noun = 'User';
+      verb = 'BLOCKED';
+      ticketData.status = 'BLOCKED' as TicketStatus;
+      userMessage = 'You have been blocked from using modmail. Please email us at appeals@tripsit.me if you feel this was an error!';
+      await target.send(userMessage);
+      ticketChannel.setName(`❤${ticketChannel.name.substring(1)}`);
 
-    // Update modmail buttons
-    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        new ButtonBuilder()
-          .setCustomId(modMailOwn)
-          .setLabel('Own')
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId(modMailPause)
-          .setLabel('Pause')
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(modMailBlock)
-          .setLabel('Block')
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId(modMailReopen)
-          .setLabel('Reopen')
-          .setStyle(ButtonStyle.Danger),
-      );
+      // Block impacts the user directly
+      targetUserData.discord_bot_ban = true;
+      await db<Users>('users')
+        .insert(targetUserData)
+        .onConflict('id')
+        .merge();
+    }
+  } else if (command === 'unblock') {
+    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(modMailPause).setLabel('Pause').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId(modMailBlock).setLabel('Block').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(modMailClose).setLabel('Close').setStyle(ButtonStyle.Danger),
+    );
+    if (ticketData.status !== 'BLOCKED') {
+      await interaction.reply({ content: 'This ticket is not blocked!', ephemeral: true });
+    } else {
+      // log.debug(F, `Unblocking user!`);
+      noun = 'User';
+      verb = 'UNBLOCKED';
+      ticketData.status = 'OWNED' as TicketStatus;
+      userMessage = 'You have been unblocked from using modmail!';
+      await target.send(userMessage);
+      ticketChannel.setName(`💛${ticketChannel.name.substring(1)}`);
+      targetUserData.discord_bot_ban = false;
+      await db<Users>('users')
+        .insert(targetUserData)
+        .onConflict('id')
+        .merge();
+    }
+  } else if (command === 'pause') {
+    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(modMailUnpause).setLabel('Unpause').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId(modMailBlock).setLabel('Block').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(modMailClose).setLabel('Close').setStyle(ButtonStyle.Danger),
+    );
+    if (ticketData.status === 'PAUSED') {
+      await interaction.reply({ content: 'This ticket is already paused!', ephemeral: true });
+    } else {
+      noun = 'Ticket';
+      verb = 'PAUSED';
+      ticketData.status = 'PAUSED' as TicketStatus;
+      userMessage = 'This ticket has been paused while we look into this, thank you for your patience!';
+      await target.send(userMessage);
+    }
+  } else if (command === 'unpause') {
+    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(modMailPause).setLabel('Pause').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId(modMailBlock).setLabel('Block').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(modMailClose).setLabel('Close').setStyle(ButtonStyle.Danger),
+    );
+    if (ticketData.status !== 'PAUSED') {
+      await interaction.reply({ content: 'This ticket is not paused!', ephemeral: true });
+    } else {
+    // log.debug(F, `Unpausing ticket!`);
+      noun = 'Ticket';
+      verb = 'UNPAUSED';
+      ticketData.status = 'OWNED' as TicketStatus;
+      userMessage = 'This ticket has been taken off hold, thank you for your patience!';
+      await target.send(userMessage);
+      ticketChannel.setName(`💛${ticketChannel.name.substring(1)}`);
+    }
+  } else if (command === 'own') {
+    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(modMailPause).setLabel('Pause').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId(modMailBlock).setLabel('Block').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(modMailClose).setLabel('Close').setStyle(ButtonStyle.Danger),
+    );
+    if (ticketData.status === 'OWNED') {
+      await interaction.reply({ content: 'This ticket is already owned!', ephemeral: true });
+    } else {
+    // log.debug(F, `Claiming ticket!`);
+      noun = 'Ticket';
+      verb = 'OWNED';
+      ticketData.status = 'OWNED' as TicketStatus;
+      userMessage = `${actor} has claimed this issue and will either help you or figure out how to get you help!`;
+      await target.send(userMessage);
+      ticketChannel.setName(`💛${ticketChannel.name.substring(1)}`);
+    }
+  } else if (command === 'resolve') {
+    updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(modMailBlock).setLabel('Block').setStyle(ButtonStyle.Secondary),
+    );
+    if (ticketData.status === 'RESOLVED') {
+      await interaction.reply({ content: 'This ticket is already resolved!', ephemeral: true });
+    } else {
+    // log.debug(F, 'Resolving ticket!'); // I'm good button
+      noun = 'Ticket';
+      verb = 'RESOLVED';
+      ticketData.status = 'RESOLVED' as TicketStatus;
+      userMessage = stripIndents`Hey ${target}, we're glad your issue is resolved!
+    This ticket has been marked as resolved, but if you need anything else feel free to open a new one!`;
+      ticketChannel.setName(`💚${ticketChannel.name.substring(1)}`);
+      await ticketChannel.send(stripIndents`Hey team! ${target.toString()} has indicated that they no longer need help!`);
+    }
   }
 
-  if (interaction.channel && interaction.channel.type !== ChannelType.DM) {
-    // log.debug(F, `Updating channel internally`);
-    await interaction.reply(`${noun} has been ${verb} by ${actor}! I told the user: \n>${userMessage}`);
+  if (ticketChannel.archived) {
+    await ticketChannel.setArchived(false);
+  }
+
+  if (!interaction.replied) {
+    if (command === 'resolve') {
+      await interaction.reply(userMessage);
+    } else {
+      await interaction.reply(`${noun} has been ${verb} by ${actor}! I told the user: \n>${userMessage}`);
+    }
   }
 
   try {
@@ -473,28 +424,11 @@ export async function modmailActions(
     .setDescription(`${actor} ${command}ed ${target.tag} in ${ticketChannel}`);
   await modlog.send({ embeds: [modlogEmbed] });
 
-  if (interaction.channel) {
-    let initialMessage = {} as Message;
-    let content = '';
-    if (interaction.channel.type !== ChannelType.DM) {
-      if (interaction.isButton()) {
-        initialMessage = interaction.message;
-        content = interaction.message.content;
-      }
-      if (interaction.isCommand() && interaction.channel) {
-        initialMessage = await interaction.channel.messages.fetch(ticketData.first_message_id) as Message;
-        content = initialMessage.content;
-      }
-
-      if (initialMessage.id) {
-        initialMessage.edit({
-          content,
-          components: [updatedModmailButtons],
-          flags: ['SuppressEmbeds'],
-        });
-      }
-    }
-  }
+  await updateButtons(
+    interaction,
+    updatedModmailButtons,
+    ticketData,
+  );
 }
 
 export const modmail: SlashCommand = {
@@ -759,7 +693,7 @@ export async function modmailCreate(
       if (i.customId.split('~')[2] !== interaction.id) return;
       // Get whatever they sent in the modal
       const modalInputA = i.fields.getTextInputValue('inputA');
-      // log.debug(F, `modalInputA: ${modalInputA}!`);
+      log.debug(F, `modalInputA: ${modalInputA}!`);
       let modalInputB = '';
       try {
         modalInputB = i.fields.getTextInputValue('inputB');
@@ -770,6 +704,9 @@ export async function modmailCreate(
 
       // Create the thread in the tripsit guild
       const threadtype = channel.guild.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread;
+      log.debug(F, `threadtype: ${threadtype}!`);
+      log.debug(F, `name: ${modmailVars[issueType].channelTitle}!`);
+      log.debug(F, `reson: ${actor.username} submitted a(n) ${issueType} ticket!!`);
       const ticketThread = await channel.threads.create({
         name: modmailVars[issueType].channelTitle,
         autoArchiveDuration: 1440,
@@ -825,7 +762,7 @@ export async function modmailCreate(
       const finishedButton = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           new ButtonBuilder()
-            .setCustomId('modmailIssue~resolve')
+            .setCustomId(modMailResolve)
             .setLabel('I\'m good now!')
             .setStyle(ButtonStyle.Success),
         );
@@ -1064,6 +1001,14 @@ export async function modmailThreadInteraction(message:Message) {
         }
         if (ticketData.status === 'PAUSED') {
           await message.channel.send(`Hey ${message.author.username}, this ticket is currently paused. Please '/modmail pause off', or click the button at the top, before conversation can resume.`);
+          return;
+        }
+        if (ticketData.status === 'CLOSED') {
+          await message.channel.send(`Hey ${message.author.username}, this ticket is currently paused. Please '/modmail close off', or click the button at the top, before conversation can resume.`);
+          return;
+        }
+        if (ticketData.status === 'RESOLVED') {
+          await message.channel.send(`Hey ${message.author.username}, this ticket is currently resolved, the user will need to submit a new issue before conversation can resume.`);
           return;
         }
 

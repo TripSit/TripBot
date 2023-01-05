@@ -77,6 +77,8 @@ async function checkTickets() {
     // Check if the ticket is ready to be archived
     if (ticket.archived_at
       && ticket.status !== 'ARCHIVED'
+      && ticket.status !== 'DELETED'
+      && ticket.status !== 'PAUSED'
       && DateTime.fromJSDate(ticket.archived_at) <= DateTime.local()) {
       // log.debug(F, `Archiving ticket ${ticket.id}...`);
 
