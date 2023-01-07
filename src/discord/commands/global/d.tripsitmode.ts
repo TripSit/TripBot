@@ -1,4 +1,3 @@
-import { stripIndents } from 'common-tags';
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
@@ -20,9 +19,10 @@ import {
   PermissionsBitField,
   // TextChannel,
   // MessageFlags,
-  MessageMentionTypes,
+  // MessageMentionTypes,
   TextInputStyle,
 } from 'discord.js';
+import { stripIndents } from 'common-tags';
 import { TicketStatus, UserTickets } from '../../../global/@types/pgdb';
 import {
   db, getGuild, getOpenTicket, getUser,
@@ -120,7 +120,7 @@ export const tripsitmode: SlashCommand = {
         return false;
       }
 
-      const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
+      // const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
 
       const userData = await getUser(target.id, null);
 
@@ -178,9 +178,9 @@ export const tripsitmode: SlashCommand = {
           }
           await threadHelpUser.send({
             content: helpMessage,
-            allowedMentions: {
-              parse: showMentions,
-            },
+            // allowedMentions: {
+            //   parse: showMentions,
+            // },
           });
           // log.debug(F, `Pinged user in help thread`);
 
@@ -196,9 +196,9 @@ export const tripsitmode: SlashCommand = {
             const metaThread = await interaction.guild.channels.fetch(ticketData.meta_thread_id) as ThreadChannel;
             await metaThread.send({
               content: metaMessage,
-              allowedMentions: {
-                parse: showMentions,
-              },
+              // allowedMentions: {
+              //   parse: showMentions,
+              // },
             });
             await metaThread.setName(`💛│${target.displayName}'s discussion!`);
             // log.debug(F, `Pinged team in meta thread!`);
@@ -235,7 +235,7 @@ export const tripsitmode: SlashCommand = {
           const replyMessage = stripIndents`
           Hey ${i.member}, you activated tripsit mode on ${target.displayName}!
       
-          Click here to be taken to their private room: ${threadHelpUser.toString()}
+          Click here to be taken to their private room: ${threadHelpUser}
       
           You can also click in your channel list to see your private room!`;
           const embed = embedTemplate()

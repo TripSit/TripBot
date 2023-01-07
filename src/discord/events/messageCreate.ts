@@ -43,19 +43,19 @@ export const messageCreate: MessageCreateEvent = {
       return;
     }
 
-    // If this is a DM, run the modmail function.
-    if (message.channel.type === ChannelType.DM) {
-      await modmailDMInteraction(message);
-    }
+    // // If this is a DM, run the modmail function.
+    // if (message.channel.type === ChannelType.DM) {
+    //   await modmailDMInteraction(message);
+    // }
 
     // Run this now, so that when you're helping in the tech/tripsit rooms you'll always get exp
     experience(message);
 
     // Check if the message came in a thread in the helpdesk channel
 
-    if (message.channel.isThread()) {
-      modmailThreadInteraction(message);
-    }
+    // if (message.channel.isThread()) {
+    //   modmailThreadInteraction(message);
+    // }
 
     announcements(message);
   },

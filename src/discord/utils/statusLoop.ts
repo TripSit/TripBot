@@ -51,7 +51,7 @@ export default startStatusLoop;
  * @param {Client} client The client running the bot
  */
 export async function startStatusLoop(client:Client) {
-  client.user?.setActivity('someone in DM 💜', { type: ActivityType.Listening });
+  client.user?.setActivity('with a test kit', { type: ActivityType.Playing });
   // let state = 0;
   // let presence = activities[state];
   // log.debug(F, `Setting presence to ${presence.message}`);
