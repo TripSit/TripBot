@@ -36,12 +36,13 @@ async function checkStats() {
       // log.debug(F, `Updated total members to ${memberCount}!`);
       // Check if the total members is divisible by 100
       if (memberCount % 100 === 0) {
-        const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
-        if (channelGeneral) {
+        // const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
+        const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
+        if (channelLounge) {
           const embed = embedTemplate()
             .setTitle(newRecordString)
             .setDescription(`We have reached ${memberCount} total members!`);
-          await channelGeneral.send({ embeds: [embed] });
+          await channelLounge.send({ embeds: [embed] });
         }
       }
     }
@@ -67,12 +68,13 @@ async function checkStats() {
         await channelVerified.setName(name);
         // log.debug(F, `Updated verified members to ${members.size}!`);
         if (members.size % 100 === 0) {
-          const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
-          if (channelGeneral) {
+          // const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
+          const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
+          if (channelLounge) {
             const embed = embedTemplate()
               .setTitle(newRecordString)
               .setDescription(`We have reached ${members.size} verified members!`);
-            await channelGeneral.send({ embeds: [embed] });
+            await channelLounge.send({ embeds: [embed] });
           }
         }
       }
@@ -106,12 +108,13 @@ async function checkStats() {
             max_online_members: onlineCount,
           })
           .where('id', env.DISCORD_GUILD_ID);
-        const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
-        if (channelGeneral) {
+        // const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
+        const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
+        if (channelLounge) {
           const embed = embedTemplate()
             .setTitle(newRecordString)
             .setDescription(`We have reached ${maxCount} online members!`);
-          await channelGeneral.send({ embeds: [embed] });
+          await channelLounge.send({ embeds: [embed] });
         }
 
         const channelMax = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_MAX);

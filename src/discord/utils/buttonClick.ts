@@ -165,10 +165,11 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
           colorValue = Colors.Red;
         }
         // log.debug(F, `coloValue: ${colorValue}`);
-        const channelStart = member.client.channels.cache.get(env.CHANNEL_START.toString());
-        const channelTechhelp = member.client.channels.cache.get(env.CHANNEL_HELPDESK);
-        const channelBotspam = interaction.client.channels.cache.get(env.CHANNEL_BOTSPAM);
-        // const channelTripsit = member.client.channels.cache.get(CHANNEL_TRIPSIT);
+        const channelStart = await interaction.client.channels.fetch(env.CHANNEL_START);
+        const channelTechhelp = await interaction.client.channels.fetch(env.CHANNEL_HELPDESK);
+        const channelBotspam = await interaction.client.channels.fetch(env.CHANNEL_BOTSPAM);
+        const channelRules = await interaction.client.channels.fetch(env.CHANNEL_RULES);
+        // const channelTripsit = await member.client.channels.fetch(CHANNEL_TRIPSIT);
         const embed = embedTemplate()
           .setAuthor(null)
           .setColor(colorValue)
@@ -176,19 +177,20 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
           .setFooter(null)
           .setDescription(stripIndents`
                 **Please welcome ${member.toString()} to the guild!**
-                We're glad you're here and hope you enjoy your stay!
                 Check out ${channelStart} set your color and icon
-                Stay safe, be chill, have fun!`);
+                Make sure you've read the ${channelRules}
+                Be safe, have fun, /report any issues!`);
 
-        const channelGeneral = member.client.channels.cache.get(env.CHANNEL_GENERAL.toString()) as TextChannel;
-        if (channelGeneral) {
+        // const channelGeneral = member.client.channels.cache.get(env.CHANNEL_GENERAL.toString()) as TextChannel;
+        const channelLounge = await member.client.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
+        if (channelLounge) {
           interaction.reply({
             content: stripIndents`
           Awesome! This channel will disappear when you click away, before you go:
           If you want to talk to the team about /anything/ you can start a new thread in ${channelTechhelp}
           Go ahead and test out the bot in the ${channelBotspam} channel!
           Check out ${channelStart} set your color and icon!
-          Or go say hi in ${channelGeneral}!
+          Or go say hi in ${channelLounge}!
           That's all, have fun!
           `,
             ephemeral: true,
@@ -197,7 +199,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
             // log.debug(F, `Member already has role!`);
             return;
           }
-          await channelGeneral.send({ embeds: [embed] });
+          await channelLounge.send({ embeds: [embed] });
         }
       } else {
         log.error(F, `memberRole ${env.ROLE_MEMBER} not found`);
