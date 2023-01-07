@@ -1,54 +1,46 @@
 import {
+  TextChannel,
   VoiceState,
-  ChannelType,
-  CategoryChannel,
 } from 'discord.js';
 import { VoiceStateUpdateEvent } from '../@types/eventDef';
-// import log from '../../global/utils/log';
-// import {parse} from 'path';
-// const F = f(__filename);
+import { pitchTent, teardownTent } from '../utils/tents';
+
+const F = f(__filename); // eslint-disable-line
 
 export default voiceStateUpdate;
 
 export const voiceStateUpdate: VoiceStateUpdateEvent = {
   name: 'voiceStateUpdate',
   async execute(Old: VoiceState, New: VoiceState) {
-    if (New.guild.id !== env.DISCORD_GUILD_ID) return;
-    if (New.member?.user?.bot) return;
-    if (Old.member?.user?.bot) return;
-    // log.debug(F, `${New.member?.displayName} ${New.channelId ?
-    // `joined channel ${New.channel?.name} (${New.channelId})` :
-    // `left channel ${Old.channel?.name} (${Old.channelId})`} `);
+    if (New.guild.id !== env.DISCORD_GUILD_ID) return; // Dont run on non-tripsit guilds
+    if (New.member?.user?.bot) return; // Dont run on bots
+    if (Old.member?.user?.bot) return; // Dont run on bots
 
-    // log.debug(F, `Tempvoice channel is is ${env.CHANNEL_CAMPFIRE}`);
+    // log.debug(F, `Old: ${JSON.stringify(Old, null, 2)}`);
+    // log.debug(F, `New: ${JSON.stringify(New, null, 2)}`);
+
+    const channelModlog = await New.guild.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+
+    let modMessage = '';
+    if (Old.channel) {
+      if (New.channel) {
+        modMessage = `${Old.member?.displayName} left ${Old.channel?.name} and joined ${New.channel?.name}`;
+      } else {
+        modMessage = `${Old.member?.displayName} left ${Old.channel?.name}`;
+      }
+    } else {
+      modMessage = `${New.member?.displayName} joined ${New.channel?.name}`;
+    }
+    channelModlog.send(modMessage);
 
     if (New.channelId === env.CHANNEL_CAMPFIRE) {
-      // log.debug('user joinded tempvoice');
-      New.member?.guild.channels.create({
-        name: `⛺│${New.member.displayName}'s tent`,
-        type: ChannelType.GuildVoice,
-        parent: env.CATEGORY_BACKSTAGE,
-      }).then(result => {
-        // log.debug(F, `created a temporary voice channel for ${New.member?.displayName}`);
-        New.member?.voice.setChannel(result.id);
-        // log.debug(F, `Moved ${New.member?.displayName} to the newly created voice channel`);
-      });
+      // If the user joined the campfire channel, pitch a new tent
+      pitchTent(Old, New);
     }
 
-    try {
-      if (Old !== undefined) {
-        const tempVoiceCategory = Old.guild.channels.cache.get(env.CATEGORY_BACKSTAGE) as CategoryChannel;
-        tempVoiceCategory.children.cache.forEach(channel => {
-          if (channel.type === ChannelType.GuildVoice
-            && channel.id !== env.CHANNEL_CAMPFIRE
-            && channel.members.size < 1) {
-            channel.delete('beep boop, i love to clean up');
-            // log.debug(F, `deleted an empty temporary voice channel`);
-          }
-        });
-      }
-    } catch (err) {
-      // log.debug(F, `${err}`);
+    if (Old !== undefined) {
+      // If the user left a channel, check if we need to tear down a tent
+      teardownTent(Old);
     }
   },
 };
