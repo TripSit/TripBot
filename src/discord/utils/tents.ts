@@ -2,8 +2,8 @@ import {
   VoiceState,
   ChannelType,
   CategoryChannel,
-  GuildMember,
-  PermissionsBitField,
+  // GuildMember,
+  // PermissionsBitField,
 } from 'discord.js';
 
 // const F = f(__filename);
@@ -24,16 +24,16 @@ export async function pitchTent(
     parent: env.CATEGORY_BACKSTAGE,
   }).then(newChannel => {
     New.member?.voice.setChannel(newChannel.id);
-    newChannel.permissionOverwrites.set([
-      {
-        id: New.member as GuildMember,
-        allow: [
-          PermissionsBitField.Flags.MuteMembers,
-          PermissionsBitField.Flags.MoveMembers,
-          PermissionsBitField.Flags.DeafenMembers,
-        ],
-      },
-    ]);
+    // newChannel.permissionOverwrites.set([
+    //   {
+    //     id: New.member as GuildMember,
+    //     allow: [
+    //       // PermissionsBitField.Flags.MuteMembers,
+    //       // PermissionsBitField.Flags.MoveMembers,
+    //       // PermissionsBitField.Flags.DeafenMembers,
+    //     ],
+    //   },
+    // ]);
   });
 }
 

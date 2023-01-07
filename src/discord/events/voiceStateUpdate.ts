@@ -19,7 +19,7 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
     // log.debug(F, `Old: ${JSON.stringify(Old, null, 2)}`);
     // log.debug(F, `New: ${JSON.stringify(New, null, 2)}`);
 
-    const channelModlog = await New.guild.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+    const channelAuditlog = await New.guild.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
     let modMessage = '';
     if (Old.channel) {
@@ -31,7 +31,7 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
     } else {
       modMessage = `${New.member?.displayName} joined ${New.channel?.name}`;
     }
-    channelModlog.send(modMessage);
+    channelAuditlog.send(modMessage);
 
     if (New.channelId === env.CHANNEL_CAMPFIRE) {
       // If the user joined the campfire channel, pitch a new tent
