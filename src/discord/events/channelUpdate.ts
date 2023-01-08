@@ -11,7 +11,7 @@ import {
 } from '../@types/eventDef';
 // import log from '../../global/utils/log';
 
-// const F = f(__filename);
+const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -21,13 +21,9 @@ export const channelUpdate: ChannelUpdateEvent = {
   name: 'channelUpdate',
   async execute(oldChannel, newChannel) {
     // Dont run on DMs
-    if (newChannel.type === ChannelType.DM) {
-      return;
-    }
-
-    if (oldChannel.type === ChannelType.DM) {
-      return;
-    }
+    if (newChannel.type === ChannelType.DM) return;
+    // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
+    if (newChannel.guild.id !== env.DISCORD_GUILD_ID) return;
 
     if ([
       env.CHANNEL_STATS_TOTAL,
@@ -37,15 +33,9 @@ export const channelUpdate: ChannelUpdateEvent = {
       return;
     }
 
-    // log.debug(F, `Channel ${JSON.stringify(newChannel, null, 2)} was updated.`);
-    // logger.debug(`[${PREFIX}] Channel ${JSON.stringify(oldChannel.guild, null, 2)} was updated.`);
+    log.debug(F, `Channel ${newChannel.name} was updated.`);
 
-    // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (newChannel.guild.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
-
-    const fetchedLogs = await oldChannel.guild.fetchAuditLogs({
+    const fetchedLogs = await newChannel.guild.fetchAuditLogs({
       limit: 1,
       type: AuditLogEvent.ChannelUpdate,
     });

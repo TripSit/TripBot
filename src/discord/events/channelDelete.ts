@@ -8,7 +8,8 @@ import {
 import {
   ChannelDeleteEvent,
 } from '../@types/eventDef';
-// const F= f(__filename);
+
+const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -18,14 +19,10 @@ export const channelDelete: ChannelDeleteEvent = {
   name: 'channelDelete',
   async execute(channel) {
     // Dont run on DMs
-    if (channel.type === ChannelType.DM) {
-      return;
-    }
-
+    if (channel.type === ChannelType.DM) return;
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (channel.guild.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
+    if (channel.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.debug(F, `Channel ${channel.name} was deleted.`);
 
     const fetchedLogs = await channel.guild.fetchAuditLogs({
       limit: 1,

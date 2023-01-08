@@ -7,7 +7,8 @@ import {
 import {
   ThreadUpdateEvent,
 } from '../@types/eventDef';
-// const F= f(__filename);
+
+const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -18,9 +19,8 @@ export const threadUpdate: ThreadUpdateEvent = {
   async execute(oldThread, newThread) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!newThread.guild) return;
-    if (newThread.guild.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
+    if (newThread.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.debug(F, `Thread ${newThread.name} was updated.`);
 
     const fetchedLogs = await newThread.guild.fetchAuditLogs({
       limit: 1,

@@ -7,7 +7,7 @@ import {
 import { WebhookUpdateEvent } from '../@types/eventDef';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-// const F = f(__filename);
+const F = f(__filename);
 
 export default webhookUpdate;
 
@@ -15,9 +15,8 @@ export const webhookUpdate: WebhookUpdateEvent = {
   name: 'webhookUpdate',
   async execute(channel) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (channel.guild.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
+    if (channel.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.debug(F, `Webhook ${channel.name} was updated`);
 
     const fetchedLogs = await channel.guild.fetchAuditLogs({
       limit: 1,

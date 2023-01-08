@@ -23,19 +23,16 @@ import {
 // ];
 import { donorColors } from '../commands/global/d.setup';
 
+const F = f(__filename);
+
 export default guildMemberUpdate;
 
 export const guildMemberUpdate: GuildMemberUpdateEvent = {
   name: 'guildMemberUpdate',
   async execute(oldMember, newMember) {
     // Only run this on TripSit
-    if (newMember.guild.id.toString() !== env.DISCORD_GUILD_ID) return;
-    // log.debug(F, `guildMemberUpdate`);
-    // log.debug(`${PREFIX} Member.guildId: ${newMember.guild.id}`);
-    // log.debug(`${PREFIX} discordGuildId: ${discordGuildId}`);
-    // log.debug(F, `Running on TripSit`);
-    // log.debug(F, `oldMember: ${JSON.stringify(oldMember, null, 2)}`);
-    // log.debug(F, `newMember: ${JSON.stringify(newMember, null, 2)}`);
+    if (newMember.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.info(F, `${newMember} was updated`);
 
     const oldRoles = oldMember.roles.cache.map(role => role.id);
 

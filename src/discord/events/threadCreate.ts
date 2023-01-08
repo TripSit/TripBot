@@ -7,7 +7,8 @@ import {
 import {
   ThreadCreateEvent,
 } from '../@types/eventDef';
-// const F= f(__filename);
+
+const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -18,9 +19,8 @@ export const threadCreate: ThreadCreateEvent = {
   async execute(thread) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!thread.guild) return;
-    if (thread.guild.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
+    if (thread.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.debug(F, `Thread ${thread.name} was created.`);
 
     const fetchedLogs = await thread.guild.fetchAuditLogs({
       limit: 1,

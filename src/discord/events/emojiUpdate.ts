@@ -7,7 +7,8 @@ import {
 import {
   EmojiUpdateEvent,
 } from '../@types/eventDef';
-// const F= f(__filename);
+
+const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -17,9 +18,8 @@ export const emojiUpdate: EmojiUpdateEvent = {
   name: 'emojiUpdate',
   async execute(oldEmoji, newEmoji) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (newEmoji.guild.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
+    if (newEmoji.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.debug(F, `Emoji ${newEmoji.name} was updated.`);
 
     const fetchedLogs = await newEmoji.guild.fetchAuditLogs({
       limit: 1,

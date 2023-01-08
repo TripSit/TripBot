@@ -60,7 +60,6 @@ export async function applicationStart(
     interaction.reply({ content: 'No application selected.', ephemeral: true });
     return;
   }
-
   startLog(F, interaction);
 
   const roleRequestedId = interaction.values[0].split('~')[0];

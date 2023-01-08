@@ -22,13 +22,10 @@ export default threadDelete;
 export const threadDelete: ThreadDeleteEvent = {
   name: 'threadDelete',
   async execute(thread) {
-    // log.debug(F, `threadDelete: ${thread.name} (${thread.id})`);
-
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!thread.guild) return;
-    if (thread.guild.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
+    if (thread.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.debug(F, `Thread ${thread.name} was deleted.`);
 
     // log.debug(F, `threadDelete: ${thread.name} (${thread.id})`);
 

@@ -7,7 +7,8 @@ import {
 import {
   GuildBanRemoveEvent,
 } from '../@types/eventDef';
-// const F= f(__filename);
+
+const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -17,9 +18,8 @@ export const guildBanRemove: GuildBanRemoveEvent = {
   name: 'guildBanRemove',
   async execute(ban) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (ban.guild.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
+    if (ban.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.debug(F, `Channel ${ban.user} was remove.`);
 
     const fetchedLogs = await ban.guild.fetchAuditLogs({
       limit: 1,

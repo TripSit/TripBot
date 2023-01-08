@@ -21,10 +21,8 @@ export default guildMemberAdd;
 export const guildMemberAdd: GuildMemberAddEvent = {
   name: 'guildMemberAdd',
   async execute(member) {
-    // Only run on Tripsit
-    if (member.guild.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
+    // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
+    if (member.guild.id !== env.DISCORD_GUILD_ID) return;
     log.info(F, `${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
 
     const newInvites = await member.guild.invites.fetch();

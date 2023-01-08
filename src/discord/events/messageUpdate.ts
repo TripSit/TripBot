@@ -16,11 +16,10 @@ export default messageUpdate;
 export const messageUpdate: MessageUpdateEvent = {
   name: 'messageUpdate',
   async execute(oldMessage, newMessage) {
-    if (!newMessage.guild) return;
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (newMessage.guild.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
+    if (!newMessage.guild) return;
+    if (newMessage.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.debug(F, `Message in ${newMessage.channel} was updated.`);
 
     // log.debug(F, `oldMessage: ${JSON.stringify(oldMessage, null, 2)}`);
     // log.debug(F, `newMessage: ${JSON.stringify(newMessage, null, 2)}`);

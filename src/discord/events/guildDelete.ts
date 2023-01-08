@@ -14,10 +14,6 @@ export default guildDelete;
 export const guildDelete: GuildDeleteEvent = {
   name: 'guildDelete',
   async execute(guild) {
-  // logger.debug(`[${PREFIX}] starting!`);
-    log.info(F, `Left guild: ${guild.name} (id: ${guild.id})`);
-    // logger.debug(`[${PREFIX}] finished!`);
-
     log.info(F, `Left guild: ${guild.name} (id: ${guild.id})`);
     await db<DiscordGuilds>('discord_guilds')
       .insert({

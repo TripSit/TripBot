@@ -7,7 +7,8 @@ import {
 import {
   EmojiCreateEvent,
 } from '../@types/eventDef';
-// const F= f(__filename);
+
+const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -17,9 +18,8 @@ export const emojiCreate: EmojiCreateEvent = {
   name: 'emojiCreate',
   async execute(emoji) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (emoji.guild.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
+    if (emoji.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.debug(F, `Emoji ${emoji.name} was created.`);
 
     const fetchedLogs = await emoji.guild.fetchAuditLogs({
       limit: 1,

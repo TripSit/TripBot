@@ -16,5 +16,9 @@ export const guildUpdate: GuildUpdateEvent = {
       log.info(F, `I'm banned from ${guild.name}, leaving!`);
       guild.leave();
     }
+
+    // Only run this on TripSit
+    if (guild.id !== env.DISCORD_GUILD_ID) return;
+    log.info(F, `${guild} was updated`);
   },
 };

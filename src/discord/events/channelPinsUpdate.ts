@@ -9,7 +9,8 @@ import {
 import {
   ChannelPinsUpdateEvent,
 } from '../@types/eventDef';
-// const F= f(__filename);
+
+const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -19,14 +20,10 @@ export const channelPinsUpdate: ChannelPinsUpdateEvent = {
   name: 'channelPinsUpdate',
   async execute(channel) {
     // Dont run on DMs
-    if (channel.type === ChannelType.DM) {
-      return;
-    }
-
+    if (channel.type === ChannelType.DM) return;
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (channel.guild.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
+    if (channel.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.debug(F, `Channel ${channel.name} pins were updated.`);
 
     const fetchedLogs = await channel.guild.fetchAuditLogs({
       limit: 1,

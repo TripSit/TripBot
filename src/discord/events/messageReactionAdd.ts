@@ -10,17 +10,16 @@ import { handleReactionRoles } from '../utils/handleReactionRoles';
 import { bestOf } from '../utils/bestOfTripsit';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-// const F = f(__filename);
+const F = f(__filename);
 
 export default messageReactionAdd;
 
 export const messageReactionAdd: MessageReactionAddEvent = {
   name: 'messageReactionAdd',
   async execute(messageReaction, user) {
-    // Only run on Tripsit
-    if (messageReaction.message.guild?.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
+    // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
+    if (messageReaction.message.guild?.id !== env.DISCORD_GUILD_ID) return;
+    log.debug(F, `${user} added a reaction`);
 
     // Dont run on bots
     if (user.bot) {

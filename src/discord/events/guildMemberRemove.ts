@@ -16,11 +16,8 @@ export default guildMemberRemove;
 export const guildMemberRemove: GuildMemberRemoveEvent = {
   name: 'guildMemberRemove',
   async execute(member) {
-    // Only run on the tripsit guild
-    if (member.guild.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
-
+    // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
+    if (member.guild.id !== env.DISCORD_GUILD_ID) return;
     log.info(F, `${member} left guild: ${member.guild.name} (id: ${member.guild.id})`);
 
     const { joinedTimestamp } = member;

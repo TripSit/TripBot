@@ -1,6 +1,6 @@
-import {
-  ChannelType,
-} from 'discord-api-types/v10';
+// import {
+//   ChannelType,
+// } from 'discord-api-types/v10';
 import {
   MessageCreateEvent,
 } from '../@types/eventDef';
@@ -8,7 +8,7 @@ import {
 import { experience } from '../../global/utils/experience';
 import { announcements } from '../utils/announcements';
 import { messageCommand } from '../utils/messageCommand';
-import { modmailDMInteraction, modmailThreadInteraction } from '../commands/guild/modmail';
+// import { modmailDMInteraction, modmailThreadInteraction } from '../commands/guild/modmail';
 import { getUser } from '../../global/utils/knex';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';

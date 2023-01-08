@@ -10,7 +10,7 @@ import {
 } from '../@types/eventDef';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-// const F = f(__filename);
+const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -21,9 +21,8 @@ export const inviteDelete: InviteDeleteEvent = {
   async execute(invite) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!invite.guild) return;
-    if (invite.guild.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
+    if (invite.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.debug(F, `Channel ${invite} was deleted.`);
 
     const fetchedLogs = await (invite.guild as Guild).fetchAuditLogs({
       limit: 1,

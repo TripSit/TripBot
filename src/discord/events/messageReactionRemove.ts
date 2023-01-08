@@ -15,10 +15,9 @@ export default messageReactionRemove;
 export const messageReactionRemove: MessageReactionRemoveEvent = {
   name: 'messageReactionRemove',
   async execute(reaction, user) {
-    // Only run on Tripsit
-    if (reaction.message.guild?.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
+    // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
+    if (reaction.message.guild?.id !== env.DISCORD_GUILD_ID) return;
+    log.debug(F, `${user} removed a reaction`);
 
     // log.debug(F, `reaction: ${JSON.stringify(reaction.emoji.name, null, 2)}`);
     // log.debug(F, `user: ${JSON.stringify(user, null, 2)}`);

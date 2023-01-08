@@ -1,10 +1,11 @@
 import {
   SelectMenuInteraction,
 } from 'discord.js';
-import { applicationStart, applicationReject } from './application';
+import { applicationStart, applicationReject } from '../utils/application';
+import { startLog } from '../utils/startLog';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-// const F = f(__filename);
+const F = f(__filename);
 
 export default selectMenu;
 
@@ -16,7 +17,7 @@ export default selectMenu;
  */
 export async function selectMenu(interaction:SelectMenuInteraction): Promise<void> {
   const { customId } = interaction;
-  // log.debug(F, `customId: ${customId}`);
+  startLog(F, interaction);
 
   if (customId.startsWith('applicationReject')) {
     await applicationReject(interaction);

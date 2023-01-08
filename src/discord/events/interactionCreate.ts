@@ -10,8 +10,8 @@ import {
 } from '../@types/eventDef';
 import { commandRun } from '../utils/commandRun';
 import { buttonClick } from './buttonClick';
-import { selectMenu } from '../utils/selectMenu';
-import { autocomplete } from '../utils/autocomplete';
+import { selectMenu } from './selectMenu';
+import { autocomplete } from './autocomplete';
 import { getUser } from '../../global/utils/knex'; // eslint-disable-line
 
 const F = f(__filename);  // eslint-disable-line

@@ -7,7 +7,8 @@ import {
 import {
   StickerDeleteEvent,
 } from '../@types/eventDef';
-// const F= f(__filename);
+
+const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -18,9 +19,8 @@ export const stickerDelete: StickerDeleteEvent = {
   async execute(sticker) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!sticker.guild) return;
-    if (sticker.guild.id !== env.DISCORD_GUILD_ID) {
-      return;
-    }
+    if (sticker.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.debug(F, `Sticker ${sticker.name} was deleted.`);
 
     const fetchedLogs = await sticker.guild.fetchAuditLogs({
       limit: 1,
