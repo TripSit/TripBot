@@ -807,9 +807,9 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       await command.execute(testInteraction);
       sleep(2000);
 
-      testInteraction.channel = await interaction.guild?.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
-      await command.execute(testInteraction);
-      sleep(2000);
+      // testInteraction.channel = await interaction.guild?.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
+      // await command.execute(testInteraction);
+      // sleep(2000);
 
       testInteraction.channel = await interaction.guild?.channels.fetch(env.CHANNEL_SANCTUARY) as TextChannel;
       await command.execute(testInteraction);

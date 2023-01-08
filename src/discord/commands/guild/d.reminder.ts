@@ -30,10 +30,10 @@ const reminderDict = {
     'Keep social talk to #modhaven!',
     'While we all love to have a good time, we want to keep this channel easy to scan for people to keep up with news and updates. Please keep social talk to #modhaven!',
   ],
-  [`${env.CHANNEL_GENERAL}`]: [
-    'Keep #general welcoming and move drug talk to #lounge',
-    '#general is the first channel new members see. To ensure we make a good impression, we ask that you move all NSFW conversation, including most drug-related talk, to #lounge or the appropriate Backstage channel to ensure a comfortable landing space for new members, thank you!',
-  ],
+  // [`${env.CHANNEL_GENERAL}`]: [
+  //   'Keep #general welcoming and move drug talk to #lounge',
+  //   '#general is the first channel new members see. To ensure we make a good impression, we ask that you move all NSFW conversation, including most drug-related talk, to #lounge or the appropriate Backstage channel to ensure a comfortable landing space for new members, thank you!',
+  // ],
   [`${env.CHANNEL_SANCTUARY}`]: [
     'Keep #sanctuary slow and positive!',
     '#sanctuary is a positivity-enforced channel for people currently on substances. Please keep the conversation slow and positive, and remember that we are here to help!',

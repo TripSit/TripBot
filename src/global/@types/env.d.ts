@@ -48,7 +48,7 @@ declare global {
       CHANNEL_DRUGQUESTIONS: string;
 
       CATEGORY_CAMPGROUND: string;
-      CHANNEL_GENERAL: string;
+      // CHANNEL_GENERAL: string;
       CHANNEL_PETS: string;
       CHANNEL_FOOD: string;
       CHANNEL_MUSIC: string;

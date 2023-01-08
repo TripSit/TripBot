@@ -5,10 +5,11 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { last } from '../../../global/commands/g.last';
+import { startLog } from '../../utils/startLog';
 
 // import log from '../../../global/utils/logger';
 
-// const F= f(__filename);
+const F = f(__filename);
 
 export default dLast;
 
@@ -29,6 +30,7 @@ export const dLast: SlashCommand = {
     } else {
       return false;
     }
+    startLog(F, interaction);
 
     interaction.deferReply();
 

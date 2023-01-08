@@ -6,6 +6,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { experience } from '../../../global/commands/g.experience';
+import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
@@ -19,6 +20,7 @@ export const dExperience: SlashCommand = {
       .setName('user')
       .setDescription('User to lookup')),
   async execute(interaction) {
+    startLog(F, interaction);
     let member = interaction.options.getMember('user') as GuildMember;
     if (!member) {
       member = interaction.member as GuildMember;
