@@ -15,7 +15,7 @@ export async function calcBenzo(
   dosage:number,
   drugA:string,
   drugB:string,
-):Promise<string | number> {
+):Promise<number> {
   // log.debug(F, `dosage: ${dosage} | drug_a: ${drugA} | drug_b: ${drugB}`);
 
   // if (drugDataTripsit === null || drugDataTripsit === undefined) {
@@ -28,38 +28,33 @@ export async function calcBenzo(
   if (!drugDataA) {
     const response = `${drugA} was not found in db, did you spell that right?`;
     log.error(F, `${response}`);
-    return response;
+    return -1;
   }
 
   if (!Object.prototype.hasOwnProperty.call(drugDataA.properties, 'dose_to_diazepam')) {
     const response = `${drugA} does not have a conversion property, you should not have been able to select this!`;
     log.error(F, `${response}`);
-    return response;
+    return -1;
   }
 
   const regex = /\d+\.?\d?/;
-  const convertedDoseA = regex.exec(drugDataA.properties['dose_to_diazepam' as keyof typeof drugDataA.properties]);
-  if (!convertedDoseA) {
-    const response = `${drugA} dose_to_diazepam property is not a number, this should not have happened!`;
-    log.error(F, `${response}`);
-    return response;
-  }
+  const convertedDoseA = regex.exec(drugDataA.properties['dose_to_diazepam' as keyof typeof drugDataA.properties]) as RegExpExecArray; // eslint-disable-line max-len
 
   const drugDataB = drugDataTripsit[drugB as keyof typeof drugDataTripsit];
 
   if (!drugDataB) {
     const response = `${drugB} was not found in db, did you spell that right?`;
     log.error(F, `${response}`);
-    return response;
+    return -1;
   }
 
   if (!Object.prototype.hasOwnProperty.call(drugDataB.properties, 'dose_to_diazepam')) {
     const response = `${drugB} does not have a conversion property, you should not have been able to select this!`;
     log.error(F, `${response}`);
-    return response;
+    return -1;
   }
 
-  const convertedDoseB = regex.exec(drugDataB.properties['dose_to_diazepam' as keyof typeof drugDataB.properties]);
+  const convertedDoseB = regex.exec(drugDataB.properties['dose_to_diazepam' as keyof typeof drugDataB.properties]) as RegExpExecArray; // eslint-disable-line max-len
   // log.debug(F, `convertedDoseA: ${convertedDoseA}`);
   // log.debug(F, `convertedDoseA: ${convertedDoseA.toString()}`);
   // log.debug(F, `convertedDoseA: ${parseFloat(convertedDoseA.toString())}`);
@@ -71,13 +66,8 @@ export async function calcBenzo(
   // log.debug(F, `dosage2: ${parseFloat(convertedDoseA.toString()) *
   // parseFloat(convertedDoseB.toString())}`);
 
-  if (!convertedDoseB) {
-    const response = `${drugB} dose_to_diazepam property is not a number, this should not have happened!`;
-    log.error(F, `${response}`);
-    return response;
-  }
-
   const result = (dosage / parseFloat(convertedDoseA.toString())) * parseFloat(convertedDoseB.toString());
-  log.info(F, `response: ${JSON.stringify(result, null, 2)}`);
-  return result;
+  const rounded = Math.round(result * 100) / 100;
+  log.info(F, `response: ${JSON.stringify(rounded, null, 2)}`);
+  return rounded;
 }

@@ -14,14 +14,16 @@ describe(slashCommand.data.name, () => {
     const command = getParsedCommand(stringCommand, commandData);
     // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
     const spy = await executeCommandAndSpyReply(slashCommand, command);
-    expect(spy).toHaveBeenCalledWith(embedContaining({
-      color: Colors.DarkBlue,
-      author: undefined,
-      footer: undefined,
-      description: stripIndents`
+    expect(spy).toHaveBeenCalledWith({
+      embeds: embedContaining({
+        color: Colors.DarkBlue,
+        author: undefined,
+        footer: undefined,
+        description: stripIndents`
       💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊
       ⚠️ ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ ⚠️
       💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊`,
-    }));
+      }),
+    });
   });
 });

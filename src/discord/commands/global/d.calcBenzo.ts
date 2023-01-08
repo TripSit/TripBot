@@ -36,8 +36,12 @@ export const dCalcbenzo: SlashCommand = {
     const drugB = interaction.options.getString('and_i_want_the_dose_of', true);
     const data = await calcBenzo(dosage, drugA, drugB);
 
-    if (typeof data === 'string') {
-      interaction.reply({ content: data, ephemeral: true });
+    if (data === -1) {
+      interaction.reply({
+        content: stripIndents`There was an error during conversion!
+        I've let the developer know, please try again with different parameters!`,
+        ephemeral: true,
+      });
       return false;
     }
 

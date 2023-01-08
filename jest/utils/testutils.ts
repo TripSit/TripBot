@@ -141,10 +141,7 @@ export function getParsedCommand(
 }
 
 export function embedContaining(content:EmbedData) {
-  return {
-    embeds: expect.arrayContaining([expect.objectContaining(new EmbedBuilder(content))]),
-    // fetchReply: true,
-  };
+  return expect.arrayContaining([expect.objectContaining(new EmbedBuilder(content))]);
 }
 
 export function embedContainingWithoutFetchReply(content:EmbedData) {

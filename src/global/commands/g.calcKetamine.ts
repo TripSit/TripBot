@@ -1,5 +1,7 @@
 const F = f(__filename);
 
+export default calcKetamine;
+
 /**
  * Calculates insuffilated dosages
  * @param {number} weightInLbs Weight in lbs
@@ -15,7 +17,20 @@ export async function generateInsufflatedDosages(weightInLbs:number):Promise<Dos
   };
 }
 
-export default calcKetamine;
+/**
+ * Calculates rectal dosages
+ * @param {number} weightInLbs Weight in lbs
+ * @return {any} Something
+ */
+export async function generateRectalDosages(weightInLbs:number):Promise<Dosage> {
+  return {
+    threshold: `${Math.round(weightInLbs * 0.3)}mg`,
+    light: `${Math.round(weightInLbs * 0.5)}mg`,
+    common: `${Math.round(weightInLbs * 0.75)}mg-${Math.round(weightInLbs * 2)}mg`,
+    strong: `${Math.round(weightInLbs * 2)}mg-${Math.round(weightInLbs * 2.5)}mg`,
+    kHole: `${Math.round(weightInLbs * 3)}mg-${Math.round(weightInLbs * 4)}mg`,
+  };
+}
 
 /**
  * Calculates ketamine dosages
@@ -34,7 +49,7 @@ export async function calcKetamine(weight:number, unit:'lbs' | 'kg'):Promise<Ket
   });
   // log.debug(F, `noseDoseString: ${noseDoseString}`);
 
-  const buttDose = await generateInsufflatedDosages(calcWeight);
+  const buttDose = await generateRectalDosages(calcWeight);
   let buttDoseString = '' as string;
   // for (const [key, value] of Object.entries(buttDose)) {
   Object.keys(buttDose).forEach(key => {
@@ -50,21 +65,6 @@ export async function calcKetamine(weight:number, unit:'lbs' | 'kg'):Promise<Ket
 
   log.info(F, `response: ${JSON.stringify(data, null, 2)}`);
   return data;
-}
-
-/**
- * Calculates rectal dosages
- * @param {number} weightInLbs Weight in lbs
- * @return {any} Something
- */
-export async function generateRectalDosages(weightInLbs:number):Promise<Dosage> {
-  return {
-    threshold: `${Math.round(weightInLbs * 0.3)}mg`,
-    light: `${Math.round(weightInLbs * 0.5)}mg`,
-    common: `${Math.round(weightInLbs * 0.75)}mg-${Math.round(weightInLbs * 2)}mg`,
-    strong: `${Math.round(weightInLbs * 2)}mg-${Math.round(weightInLbs * 2.5)}mg`,
-    kHole: `${Math.round(weightInLbs * 3)}mg-${Math.round(weightInLbs * 4)}mg`,
-  };
 }
 
 type KetaDosage = {

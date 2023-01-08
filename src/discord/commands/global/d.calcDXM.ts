@@ -28,15 +28,14 @@ export const dCalcdxm: SlashCommand = {
       .setRequired(true))
     .addStringOption(option => option.setName('units')
       .setDescription('In what units?')
-      .setRequired(true)
       .addChoices(
         { name: 'kg', value: 'kg' },
         { name: 'lbs', value: 'lbs' },
-      ))
+      )
+      .setRequired(true))
     .addStringOption(option => option.setName('taking')
       // eslint-disable-next-line max-len
       .setDescription('What are you taking? All products listed here contain DXM hBr as the sole active ingredient.')
-      .setRequired(true)
       .addChoices(
         { name: 'RoboTablets (30 mg tablets)', value: 'RoboTablets (30 mg tablets)' },
         { name: 'RoboCough (ml)', value: 'RoboCough (ml)' },
@@ -45,21 +44,14 @@ export const dCalcdxm: SlashCommand = {
         { name: 'Robitussin Gelcaps (15 mg caps)', value: 'Robitussin Gelcaps (15 mg caps)' },
         { name: 'Pure (mg)', value: 'Pure (mg)' },
         { name: '30mg Gelcaps (30 mg caps)', value: '30mg Gelcaps (30 mg caps)' },
-      )),
+      )
+      .setRequired(true)),
   async execute(interaction) {
     startLog(F, interaction);
     // Calculate each plat min/max value
-    const givenWeight = interaction.options.getNumber('calc_weight');
-    const weightUnits = interaction.options.getString('units');
-    const taking = interaction.options.getString('taking');
-
-    if (!givenWeight || !weightUnits || !taking) {
-      interaction.reply({
-        content: 'Something went wrong. Please try again.',
-        ephemeral: true,
-      });
-      return false;
-    }
+    const givenWeight = interaction.options.getNumber('calc_weight', true);
+    const weightUnits = interaction.options.getString('units', true);
+    const taking = interaction.options.getString('taking', true);
 
     const results = await calcDxm(givenWeight, weightUnits, taking);
     const dosageData = results.data as DxmDataType;

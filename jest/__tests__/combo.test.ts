@@ -15,22 +15,24 @@ describe(slashCommand.data.name, () => {
     const command = getParsedCommand(stringCommand, commandData);
     // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
     const spy = await executeCommandAndSpyReply(slashCommand, command);
-    expect(spy).toHaveBeenCalledWith(embedContaining({
-      color: 2123412,
-      author: {
-        iconURL: 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png',
-        name: 'TripSit.Me',
-        url: 'http://www.tripsit.me',
-      },
-      footer: {
-        iconURL: 'https://imgur.com/b923xK2.png',
-        text: 'Dose responsibly!',
-      },
-      thumbnail: {
+    expect(spy).toHaveBeenCalledWith({
+      embeds: embedContaining({
+        color: 2123412,
+        author: {
+          iconURL: 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png',
+          name: 'TripSit.Me',
+          url: 'http://www.tripsit.me',
+        },
+        footer: {
+          iconURL: 'https://imgur.com/b923xK2.png',
+          text: 'Dose responsibly!',
+        },
+        thumbnail: {
         url: 'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/samsung/320/up-right-arrow_2197-fe0f.png', // eslint-disable-line
-      },
-      title: 'Mixing **MDMA** and **Ketamine**: ↗ Low Risk & Synergy ↗',
+        },
+        title: 'Mixing **MDMA** and **Ketamine**: ↗ Low Risk & Synergy ↗',
       description: stripIndents`These drugs work together to cause an effect greater than the sum of its parts, and they aren't likely to cause an adverse or undesirable reaction when used carefully. Additional research should always be done before combining drugs.`, // eslint-disable-line
-    }));
+      }),
+    });
   });
 });

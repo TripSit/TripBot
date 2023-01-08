@@ -21,42 +21,20 @@ export const dCalcketamine: SlashCommand = {
       .setRequired(true))
     .addStringOption(option => option.setName('units')
       .setDescription('In what unit?')
-      .setRequired(true)
       .addChoices(
         { name: 'kg', value: 'kg' },
         { name: 'lbs', value: 'lbs' },
-      )),
+      )
+      .setRequired(true)),
   async execute(interaction) {
     startLog(F, interaction);
-    const givenWeight = interaction.options.getNumber('weight');
-    if (!givenWeight) {
-      interaction.reply({
-        content: 'Something went wrong. Please try again.',
-        ephemeral: true,
-      });
-      // log.debug(F, `weight: ${givenWeight}`);
-      return false;
-    }
-    // log.debug(F, `weight: ${givenWeight}`);
+    const givenWeight = interaction.options.getNumber('weight', true);
 
-    const weightUnits = interaction.options.getString('units') as 'kg' | 'lbs';
-    if (!weightUnits) {
-      interaction.reply({
-        content: 'Something went wrong. Please try again.',
-        ephemeral: true,
-      });
-      // log.debug(F, `weightUnits: ${weightUnits}`);
-      return false;
-    }
-
-    // log.debug(F, `weightUnits: ${weightUnits}`);
-
-    // const calcWeight = weightUnits === 'kg' ? givenWeight * 2.20462 : givenWeight;
-    // // log.debug(F, `calcWeight: ${calcWeight}`);
+    const weightUnits = interaction.options.getString('units', true) as 'kg' | 'lbs';
 
     const embed = embedTemplate();
     if (weightUnits === 'kg' && givenWeight > 179) {
-      embed.setTitle('Please enter a valid weight less than 179 kg.');
+      embed.setTitle('Please enter a weight less than 179 kg.');
       interaction.reply({
         embeds: [embed],
         ephemeral: true,
@@ -64,7 +42,7 @@ export const dCalcketamine: SlashCommand = {
       return false;
     }
     if (weightUnits === 'lbs' && givenWeight > 398) {
-      embed.setTitle('Please enter a valid weight less than 398 lbs.');
+      embed.setTitle('Please enter a weight less than 398 lbs.');
       interaction.reply({
         embeds: [embed],
         ephemeral: true,
