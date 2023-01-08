@@ -9,7 +9,7 @@ import {
   InteractionCreateEvent,
 } from '../@types/eventDef';
 import { commandRun } from '../utils/commandRun';
-import { buttonClick } from '../utils/buttonClick';
+import { buttonClick } from './buttonClick';
 import { selectMenu } from '../utils/selectMenu';
 import { autocomplete } from '../utils/autocomplete';
 import { getUser } from '../../global/utils/knex'; // eslint-disable-line
