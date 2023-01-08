@@ -1,13 +1,9 @@
 import {
   Colors,
 } from 'discord.js';
-import { parse } from 'path';
 import axios from 'axios';
 import { dJoke } from '../../src/discord/commands/global/d.joke';
 import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
-import log from '../../src/global/utils/log'; // eslint-disable-line
-
-const PREFIX = parse(__filename).name; // eslint-disable-line
 
 const slashCommand = dJoke;
 
