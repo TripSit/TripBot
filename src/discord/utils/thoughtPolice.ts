@@ -20,8 +20,7 @@ export default thoughtPolice;
  */
 export async function thoughtPolice(message:Message): Promise<void> {
   // log.debug(F, `${message.member!.displayName} said "${message.cleanContent}"`);
-  const channelModlog = message.client.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
-  // const roleModerators = message.guild?.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR);
+  const channelModlog = await message.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
 
   const result = await bigBrother(message.cleanContent.toLowerCase());
 

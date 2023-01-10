@@ -58,7 +58,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
     return;
   }
 
-  const roleTechreview = interaction.guild.roles.cache.get(guildData.role_techhelp);
+  const roleTechreview = await interaction.guild.roles.fetch(guildData.role_techhelp);
 
   if (!roleTechreview) {
     log.error(F, `- techHelpClick] roleTechreview not found: ${interaction.guild.id}`);

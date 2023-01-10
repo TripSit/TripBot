@@ -71,6 +71,7 @@ export async function handleReactionRoles(
       await member.roles.add(role);
 
       // Remove other reactions
+      reaction.message.fetch();
       reaction.message.reactions.cache.each(r => {
         if (r.emoji.name !== reaction.emoji.name) {
           r.users.remove(user);

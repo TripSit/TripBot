@@ -93,7 +93,7 @@ export const dReminder: SlashCommand = {
 
     await interaction.channel?.send({ embeds: [reminder] });
 
-    const botlog = interaction.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    const botlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     if (botlog) {
       await botlog.send(`${(interaction.member as GuildMember).displayName} sent a reminder to ${(interaction.channel as TextChannel).name}`);
     }

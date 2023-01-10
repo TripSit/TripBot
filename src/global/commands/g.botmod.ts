@@ -129,7 +129,7 @@ async function botmodUser(
   const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
   // We must send the mention outside of the embed, cuz mentions dont work in embeds
   const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-  const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
+  const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
   await modChan.send({ content: `Hey ${roleModerator}`, embeds: [modlogEmbed] });
   const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
   modlog.send({ embeds: [modlogEmbed] });
@@ -243,7 +243,7 @@ async function botmodGuild(
     const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
     // We must send the mention outside of the embed, cuz mentions dont work in embeds
     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-    const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
+    const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
     await modChan.send({ content: `Hey ${roleModerator}`, embeds: [modlogEmbed] });
     const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
     modlog.send({ embeds: [modlogEmbed] });

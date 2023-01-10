@@ -416,8 +416,8 @@ export async function modmailActions(
     log.debug(F, `Ticket data: ${JSON.stringify(ticketData)}`);
   }
 
-  const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
-  const modlog = tripsitGuild.channels.cache.get(env.CHANNEL_MODLOG) as TextChannel;
+  const tripsitGuild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID);
+  const modlog = await tripsitGuild.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
   // Transform actor data
   const modlogEmbed = embedTemplate()
     .setColor(Colors.Blue)
@@ -524,7 +524,7 @@ export async function modmailCreate(
   const actor = interaction.user;
 
   // Get the tripsit guild
-  const tripsitGuild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
+  const tripsitGuild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
 
   let member = {} as GuildMember;
   try {
@@ -628,7 +628,7 @@ export async function modmailCreate(
   log.debug(F, `ticketData: ${ticketData?.status}!`);
 
   // Get the parent channel to be used
-  const channel = interaction.client.channels.cache.get(modmailVars[issueType].channelId) as TextChannel;
+  const channel = await interaction.client.channels.fetch(modmailVars[issueType].channelId) as TextChannel;
 
   // Check if an open thread already exists, and if so, update that thread
   if (ticketData) {
@@ -718,7 +718,7 @@ export async function modmailCreate(
       // Get the helper and TS roles
       const roleHelper = await tripsitGuild.roles.fetch(env.ROLE_TRIPSITTER) as Role;
       // log.debug(F, `roleHelper: ${roleHelper}`);
-      const roleTripsitter = tripsitGuild.roles.cache.find(role => role.id === env.ROLE_TRIPSITTER) as Role;
+      const roleTripsitter = await tripsitGuild.roles.fetch(env.ROLE_TRIPSITTER) as Role;
       // log.debug(F, `roleTripsitter: ${roleTripsitter}`);
 
       // Respond to the user
@@ -775,10 +775,11 @@ export async function modmailCreate(
       });
 
       // Determine if this command was initialized by a Developer
-      const roleDeveloper = tripsitGuild.roles.cache.find(role => role.id === env.ROLE_DEVELOPER) as Role;
+      tripsitGuild.roles.fetch();
+      const roleDeveloper = await tripsitGuild.roles.fetch(env.ROLE_DEVELOPER) as Role;
       const isDev = roleDeveloper.members.map(m => m.user.id === i.user.id);
-      const pingRole = tripsitGuild.roles.cache.find(role => role.id === modmailVars[issueType].pingRole) as Role;
-      const tripsitterRole = tripsitGuild.roles.cache.find(role => role.id === env.ROLE_TRIPSITTER) as Role;
+      const pingRole = await tripsitGuild.roles.fetch(modmailVars[issueType].pingRole) as Role;
+      const tripsitterRole = await tripsitGuild.roles.fetch(env.ROLE_TRIPSITTER) as Role;
 
       // Send a message to the thread
       let threadFirstResponse = stripIndents`
@@ -930,7 +931,7 @@ export async function modmailDMInteraction(message:Message) {
     }
 
     // Send a message to the thread
-    const channel = message.client.channels.cache.get(env.CHANNEL_HELPDESK) as TextChannel;
+    const channel = await message.client.channels.fetch(env.CHANNEL_HELPDESK) as TextChannel;
     let thread = {} as ThreadChannel;
     try {
       thread = await channel.threads.fetch(ticketData.thread_id) as ThreadChannel;

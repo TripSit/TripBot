@@ -124,13 +124,8 @@ export async function needsHelpmode(
     roleNeedshelp = await interaction.guild.roles.fetch(guildData.role_needshelp) as Role;
   }
 
-  // Check if the target already has the needshelp role
-  // const targetHasRoleNeedshelp = target.roles.cache.find(
-  //   (role) => role === roleNeedshelp,
-  // ) !== undefined;
-  // log.debug(F, `targetHasRoleNeedshelp: ${targetHasRoleNeedshelp}`);
-
   // Save the user's roles to the DB
+  target.fetch();
   const targetRoleIds = target.roles.cache.map(role => role.id);
   // log.debug(F, `targetRoleIds: ${targetRoleIds}`);
   await db<Users>('users')

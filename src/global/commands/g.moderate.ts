@@ -385,7 +385,7 @@ export async function moderate(
     const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
     // We must send the mention outside of the embed, cuz mentions dont work in embeds
     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-    const roleModerator = tripsitGuild.roles.cache.find((role:Role) => role.id === env.ROLE_MODERATOR) as Role;
+    const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
     const timeoutDuration = duration ? ` for ${ms(duration, { long: true })}` : '';
     const greeting = `Hey ${roleModerator}`;
     const summary = `${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} ${command === 'TIMEOUT' ? timeoutDuration : ''}`;

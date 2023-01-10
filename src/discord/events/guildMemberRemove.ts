@@ -60,7 +60,7 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
       embed.setDescription(`${member} has left the guild`);
     }
 
-    const auditlog = client.channels.cache.get(env.CHANNEL_AUDITLOG) as TextChannel;
+    const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
     await auditlog.send({ embeds: [embed] });
 
     await db<Users>('users')

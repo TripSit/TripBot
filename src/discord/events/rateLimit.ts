@@ -21,7 +21,7 @@ export const rateLimit: RateLimitEvent = {
     URL: ${rateLimitData.url}
     `;
 
-    const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    const botlog = await client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     await botlog.send(response);
     log.error(F, `${response}`);
   },

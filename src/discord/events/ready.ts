@@ -23,6 +23,7 @@ global.guildInvites = new Collection();
  */
 async function getInvites(client: Client) {
   // Loop over all the guilds
+  client.guilds.fetch();
   client.guilds.cache.forEach(async (guild:Guild) => {
     if (guild.id !== env.DISCORD_GUILD_ID) return;
     // Fetch all Guild Invites
@@ -46,9 +47,9 @@ export const ready: ReadyEvent = {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
         log.info(F, `Discord finished booting in ${bootDuration}s!`);
         if (env.NODE_ENV !== 'development') {
-          const botlog = client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
-          const tripsitguild = client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
-          const tripbotdevrole = tripsitguild.roles.cache.get(env.ROLE_TRIPBOTDEV);
+          const botlog = await client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+          const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
+          const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
           await botlog.send(`Hey ${tripbotdevrole}, bot has restart! Booted in ${bootDuration} seconds`);
         }
       });

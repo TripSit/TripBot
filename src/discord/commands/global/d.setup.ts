@@ -400,7 +400,7 @@ export async function rules(interaction:ChatInputCommandInteraction) {
     interaction.reply(channelOnly);
     return;
   }
-  const channelTripsit = interaction.client.channels.cache.get(env.CHANNEL_TRIPSIT);
+  const channelTripsit = await interaction.client.channels.fetch(env.CHANNEL_TRIPSIT);
   if (!channelTripsit) {
     log.error(F, noChannel);
     interaction.reply('We can\'t find the tripsit channel!');
@@ -518,13 +518,13 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
     interaction.reply(channelOnly);
     return;
   }
-  // const channelIrc = interaction.member.client.channels.cache.get(CHANNEL_HELPDESK);
-  // const channelQuestions = interaction.client.channels.cache.get(CHANNEL_DRUGQUESTIONS);
-  const channelBotspam = interaction.client.channels.cache.get(env.CHANNEL_BOTSPAM);
-  // const channelSanctuary = interaction.client.channels.cache.get(CHANNEL_SANCTUARY);
-  // const channelGeneral = interaction.client.channels.cache.get(CHANNEL_GENERAL);
-  const channelTripsit = interaction.client.channels.cache.get(env.CHANNEL_TRIPSIT);
-  const channelRules = interaction.client.channels.cache.get(env.CHANNEL_RULES);
+  // const channelIrc = await interaction.member.client.channels.fetch(CHANNEL_HELPDESK);
+  // const channelQuestions = await interaction.client.channels.fetch(CHANNEL_DRUGQUESTIONS);
+  const channelBotspam = await interaction.client.channels.fetch(env.CHANNEL_BOTSPAM);
+  // const channelSanctuary = await interaction.client.channels.fetch(CHANNEL_SANCTUARY);
+  // const channelGeneral = await interaction.client.channels.fetch(CHANNEL_GENERAL);
+  const channelTripsit = await interaction.client.channels.fetch(env.CHANNEL_TRIPSIT);
+  const channelRules = await interaction.client.channels.fetch(env.CHANNEL_RULES);
 
   // **If someone has the "bot" tag they are talking from IRC!**
   // > IRC is an older chat system where TripSit began: chat.tripsit.me

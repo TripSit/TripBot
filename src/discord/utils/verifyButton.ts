@@ -3,7 +3,6 @@ import { stripIndents } from 'common-tags';
 import {
   ButtonInteraction,
   Colors,
-  Role,
   TextChannel,
 } from 'discord.js';
 import { embedTemplate } from './embedTemplate';
@@ -30,13 +29,13 @@ export async function verifyButton(interaction:ButtonInteraction): Promise<void>
   const member = await interaction.guild.members.fetch(interaction.user.id);
 
   if (member) {
-    const memberRole = interaction.guild.roles.cache.find((role:Role) => role.id === env.ROLE_MEMBER);
+    const memberRole = await interaction.guild.roles.fetch(env.ROLE_MEMBER);
     let colorValue = 1;
 
     // log.debug(F, `member: ${member.roles.cache}`);
 
     // log.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
-    const channelTripbotlogs = global.client.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    const channelTripbotlogs = await global.client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     await channelTripbotlogs.send({
       content: `Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`,
     });

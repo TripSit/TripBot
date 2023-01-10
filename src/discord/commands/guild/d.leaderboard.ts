@@ -1,6 +1,6 @@
 import {
   Colors,
-  Guild,
+  GuildMember,
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
@@ -39,7 +39,7 @@ export const dLeaderboard: SlashCommand = {
     const categoryName = categoryOption ?? 'OVERALL';
 
     // Get the tripsit guild
-    const guild = interaction.client.guilds.cache.get(env.DISCORD_GUILD_ID) as Guild;
+    const guild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID);
 
     const response = await leaderboard(categoryName);
     const leaderboardVals = response.results as LeaderboardType;
@@ -61,8 +61,8 @@ export const dLeaderboard: SlashCommand = {
       IGNORED: 'Voidscreamer',
     };
 
-    // for (const [category, value] of Object.entries(leaderboardVals)) {
-    Object.entries(leaderboardVals).forEach(([category, value]) => {
+    for (const [category, value] of Object.entries(leaderboardVals)) { // eslint-disable-line no-restricted-syntax
+    // Object.entries(leaderboardVals).forEach(([category, value]) => {
       let row = 0;
       let rowName = '';
       // log.debug(F, `Category: ${category}`);
@@ -73,7 +73,7 @@ export const dLeaderboard: SlashCommand = {
       const categoryTitle = rankDict[category as keyof typeof rankDict];
       const catNameCapitalized = categoryTitle.charAt(0).toUpperCase() + categoryTitle.slice(1);
       // log.debug(F, `Proper name: ${catNameCapitalized}`);
-      value.forEach(user => {
+      for (const user of value) { // eslint-disable-line no-restricted-syntax
         // log.debug(F, `user.id: ${user.id}`);
         // log.debug(F, `row: ${row}`);
         if (rowName !== catNameCapitalized && rowName !== '') {
@@ -95,16 +95,20 @@ export const dLeaderboard: SlashCommand = {
         rowName = catNameCapitalized;
 
         // Get the user's discord username from the discord API
-        const discordUsername = guild.members.cache.get(user.id);
-        // log.debug(F, `discordUsername: ${discordUsername}`);
+        let member = {} as GuildMember;
+        try {
+          member = await guild.members.fetch(user.id); // eslint-disable-line no-await-in-loop
+        } catch (error) {
+          //
+        }
         embed.addFields({
           name: `#${user.rank} ${rowName}`,
-          value: `L.${user.level} ${discordUsername?.toString()}`,
+          value: `L.${user.level} ${member.displayName}`,
           inline: true,
         });
         row += 1;
-      });
-    });
+      }
+    }
 
     await interaction.editReply({ embeds: [embed] });
 

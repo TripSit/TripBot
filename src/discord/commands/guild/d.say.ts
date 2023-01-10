@@ -44,7 +44,7 @@ export const dSay: SlashCommand = {
       ephemeral: true,
     });
 
-    const channelBotlog = interaction.guild.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
+    const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
       await channelBotlog.send(`${(interaction.member as GuildMember).displayName} made me say '${say}' \
 in ${channel ? channel.toString() : interaction.channel?.toString()}`);

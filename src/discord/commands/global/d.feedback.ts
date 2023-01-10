@@ -51,12 +51,13 @@ export const dFeedback: SlashCommand = {
         await botOwner.send({ embeds: [botOwnerEmbed] });
 
         const tripsitGuild = await i.client.guilds.fetch(env.DISCORD_GUILD_ID);
-        const developerRole = tripsitGuild.roles.cache.find(role => role.id === env.ROLE_DEVELOPER);
+        tripsitGuild.roles.fetch();
+        const developerRole = await tripsitGuild.roles.fetch(env.ROLE_DEVELOPER);
         if (!developerRole) {
           log.error(F, 'Developer role not found!');
           return;
         }
-        const devChan = i.client.channels.cache.get(env.CHANNEL_TRIPBOT) as TextChannel;
+        const devChan = await i.client.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
         if (!devChan) {
           log.error(F, 'Developer channel not found!');
           return;

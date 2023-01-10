@@ -46,7 +46,7 @@ export async function pitchTent(
 export async function teardownTent(
   Old:VoiceState,
 ): Promise<void> {
-  const tempVoiceCategory = Old.guild.channels.cache.get(env.CATEGORY_BACKSTAGE) as CategoryChannel;
+  const tempVoiceCategory = await Old.guild.channels.fetch(env.CATEGORY_BACKSTAGE) as CategoryChannel;
   tempVoiceCategory.children.cache.forEach(channel => {
     // If the channel is a voice channel, and it's not the campfire, and it's empty, delete it
     if (channel.type === ChannelType.GuildVoice

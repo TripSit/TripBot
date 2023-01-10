@@ -36,7 +36,7 @@ export const dLast: SlashCommand = {
 
     const target = interaction.options.getMember('user') as GuildMember;
     const actor = interaction.member as GuildMember;
-    const roleModerator = interaction.guild?.roles.cache.find(role => role.id === env.ROLE_MODERATOR) as Role;
+    const roleModerator = await interaction.guild?.roles.fetch(env.ROLE_MODERATOR) as Role;
     const actorIsMod = actor.roles.cache.has(roleModerator.id);
 
     const response = await last(target);

@@ -15,7 +15,7 @@ const F = f(__filename); // eslint-disable-line
 export async function acceptWarning(interaction:ButtonInteraction): Promise<void> {
   // log.debug(F, `guildId: ${env.DISCORD_GUILD_ID}`);
   // log.debug(F, `client: ${client}`);
-  const modChan = interaction.client.channels.cache.get(env.CHANNEL_MODERATORS) as TextChannel;
+  const modChan = await interaction.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
   const embed = embedTemplate()
     .setColor(Colors.Green)
     .setDescription(`${interaction.user.username} has acknowledged their warning.`);
@@ -33,7 +33,7 @@ export async function acceptWarning(interaction:ButtonInteraction): Promise<void
 export async function refuseWarning(interaction:ButtonInteraction): Promise<void> {
   const guild = interaction.client.guilds.resolve(env.DISCORD_GUILD_ID);
   // log.debug(guild);
-  const modChan = interaction.client.channels.cache.get(env.CHANNEL_MODERATORS) as TextChannel;
+  const modChan = await interaction.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
   if (guild) {
     guild.members.ban(interaction.user, { deleteMessageDays: 0, reason: 'Refused warning' });
   }

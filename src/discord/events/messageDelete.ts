@@ -25,7 +25,7 @@ export const messageDelete: MessageDeleteEvent = {
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
     log.debug(F, `Message in ${message.channel} was deleted.`);
 
-    const msglog = message.client.channels.cache.get(env.CHANNEL_MSGLOG) as TextChannel;
+    const msglog = await message.client.channels.fetch(env.CHANNEL_MSGLOG) as TextChannel;
 
     // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
 

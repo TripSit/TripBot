@@ -1,11 +1,7 @@
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { Colors } from 'discord.js';
 import { dBotstats } from '../../src/discord/commands/guild/d.botstats';
 import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
-import log from '../../src/global/utils/log'; // eslint-disable-line
-
-const PREFIX = parse(__filename).name; // eslint-disable-line
 
 const slashCommand = dBotstats;
 
@@ -30,13 +26,13 @@ describe(slashCommand.data.name, () => {
         color: Colors.Purple,
         title: 'Bot Stats',
         description: stripIndents`
-      Here are some stats about the bot!
-      Guilds: 1
-      Users: 1
-      Channels: 1
-      Commands: 0
-      Uptime: 0ms
-    `,
+          Here are some stats about the bot!
+          Guilds: 1
+          Users: 1
+          Channels: 1
+          Commands: 0
+          Uptime: 0ms
+        `,
       }),
     });
   });

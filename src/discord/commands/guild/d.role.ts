@@ -148,7 +148,7 @@ export const dRole: SlashCommand = {
     } else if (command === 'msgsetup') {
       role = interaction.options.getRole('role', true) as Role;
       verb = 'setup';
-      if ((interaction.member as GuildMember).roles.cache.find(r => r.id === env.ROLE_DEVELOPER) === undefined) {
+      if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_DEVELOPER)) {
         await interaction.reply({ content: 'You do not have permission to use this command!', ephemeral: true });
         return false;
       }

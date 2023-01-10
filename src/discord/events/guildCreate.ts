@@ -31,7 +31,8 @@ export const guildCreate: GuildCreateEvent = {
       .onConflict('id')
       .merge();
 
-    const auditlog = client.channels.cache.get(env.CHANNEL_AUDITLOG) as TextChannel;
+    const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    client.guilds.fetch();
     await auditlog.send(`I just joined a guild! I am now in ${client.guilds.cache.size} guilds!
     ${guild.name} (id: ${guild.id})
     Created at: ${guild.createdAt}

@@ -37,7 +37,7 @@ export const threadDelete: ThreadDeleteEvent = {
     // Since there's only 1 audit log entry in this collection, grab the first one
     const auditLog = fetchedLogs.entries.first();
 
-    const auditlog = client.channels.cache.get(env.CHANNEL_AUDITLOG) as TextChannel;
+    const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
     // Find if the channel is used as a thread_id in any tickets
     const ticketData = await getOpenTicket(null, thread.id);

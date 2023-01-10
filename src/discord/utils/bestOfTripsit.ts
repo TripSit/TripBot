@@ -37,7 +37,7 @@ export async function bestOf(reaction:MessageReaction) {
       return;
     }
 
-    const channelBestof = channelObj.guild.channels.cache.get(env.CHANNEL_BESTOF) as TextChannel;
+    const channelBestof = await channelObj.guild.channels.fetch(env.CHANNEL_BESTOF) as TextChannel;
 
     // log.debug(F, `Sending message to ${channel.name}`);
 

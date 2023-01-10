@@ -26,7 +26,7 @@ export const channelCreate: ChannelCreateEvent = {
 
     const creationLog = fetchedLogs.entries.first();
 
-    const auditlog = client.channels.cache.get(env.CHANNEL_AUDITLOG) as TextChannel;
+    const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
     // Perform a coherence check to make sure that there's *something*
     if (!creationLog) {
