@@ -30,7 +30,7 @@ export default guildMemberUpdate;
 export const guildMemberUpdate: GuildMemberUpdateEvent = {
   name: 'guildMemberUpdate',
   async execute(oldMember, newMember) {
-    // Only run this on TripSit
+    // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (newMember.guild.id !== env.DISCORD_GUILD_ID) return;
     log.info(F, `${newMember} was updated`);
 

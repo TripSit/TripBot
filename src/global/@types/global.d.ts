@@ -5,6 +5,7 @@ declare global {
   var reactionRoles: { [key: string]: any };// eslint-disable-line
   var bootTime: Date; // eslint-disable-line
   var client: Client; // eslint-disable-line
+  var announcements: string[]; // eslint-disable-line
 }
 
 export {};

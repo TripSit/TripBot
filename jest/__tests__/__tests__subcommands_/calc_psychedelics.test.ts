@@ -1,13 +1,9 @@
 import {
   Colors,
 } from 'discord.js';
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
-import { dCalcpsychedelics } from '../commands/global/d.calcPsychedelics';
+import { dCalcpsychedelics } from '../../../src/discord/commands/global/d.calcPsychedelics';
 import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../utils/testutils';
-import log from '../../global/utils/log'; // eslint-disable-line
-
-const PREFIX = parse(__filename).name; // eslint-disable-line
 
 const slashCommand = dCalcpsychedelics;
 
