@@ -181,7 +181,7 @@ export async function experience(
   let { level } = experienceData;
   const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
 
-  const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+  const guild = await message.client.guilds.fetch(env.DISCORD_GUILD_ID);
   const channelTripbotlogs = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
   const member = await guild.members.fetch(actor.id);
 
