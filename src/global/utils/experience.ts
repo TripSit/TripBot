@@ -206,6 +206,7 @@ export async function experience(
   if (totalData.level >= 5) {
     // Ensure the member has the base VIP role if they're over level 5
     let role = await guild.roles.fetch(env.ROLE_VIP) as Role;
+    log.debug(F, `role: ${JSON.stringify(role, null, 2)}`);
     if (!member.roles.cache.has(env.ROLE_VIP)) {
       member.roles.add(role);
       await channelTripbotlogs.send(stripIndents`${actor.displayName} was given ${role.name}`);
@@ -267,6 +268,7 @@ export async function experience(
       }
     }
     // Check if the member already has the resulting role, and if not, add it
+    log.debug(F, `Checking if ${member.displayName} has role ${role.name}...`);
     if (!member.roles.cache.has(role.id)) {
       member.roles.add(role);
       await channelTripbotlogs.send(stripIndents`${actor.displayName} was given ${role.name}`);
