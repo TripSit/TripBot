@@ -2,8 +2,8 @@ import {
   TextChannel,
 } from 'discord.js';
 import {
-  // ChannelType,
-  AuditLogEvent, ChannelType,
+  // AuditLogEvent,
+  ChannelType,
 } from 'discord-api-types/v10';
 import {
   ChannelDeleteEvent,
@@ -24,26 +24,32 @@ export const channelDelete: ChannelDeleteEvent = {
     if (channel.guild.id !== env.DISCORD_GUILD_ID) return;
     log.debug(F, `Channel ${channel.name} was deleted.`);
 
-    const fetchedLogs = await channel.guild.fetchAuditLogs({
-      limit: 1,
-      type: AuditLogEvent.ChannelDelete,
-    });
-
-    // Since there's only 1 audit log entry in this collection, grab the first one
-    const deletionLog = fetchedLogs.entries.first();
-
     const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
-    // Perform a coherence check to make sure that there's *something*
-    if (!deletionLog) {
-      await auditlog.send(`Channel ${channel.name} was created, but no relevant audit logs were found.`);
-      return;
-    }
+    await auditlog.send(`Channel ${channel.name} was deleted.`);
 
-    const response = deletionLog.executor
-      ? `Channel ${channel.name} was deleted by ${deletionLog.executor.tag}.`
-      : `Channel ${channel.name} was deleted, but the audit log was inconclusive.`;
+    // const fetchedLogs = await channel.guild.fetchAuditLogs({
+    //   limit: 1,
+    //   type: AuditLogEvent.ChannelDelete,
+    // });
 
-    await auditlog.send(response);
+    // log.debug(F, `Fetched ${fetchedLogs.entries.size} audit logs.`);
+
+    // // Since there's only 1 audit log entry in this collection, grab the first one
+    // const deletionLog = fetchedLogs.entries.first();
+
+    // log.debug(F, `Fetched ${fetchedLogs.entries.size} audit logs.`);
+
+    // // Perform a coherence check to make sure that there's *something*
+    // if (!deletionLog) {
+    //   await auditlog.send(`Channel ${channel.name} was created, but no relevant audit logs were found.`);
+    //   return;
+    // }
+
+    // const response = deletionLog.executor
+    //   ? `Channel ${channel.name} was deleted by ${deletionLog.executor.tag}.`
+    //   : `Channel ${channel.name} was deleted, but the audit log was inconclusive.`;
+
+    // await auditlog.send(response);
   },
 };

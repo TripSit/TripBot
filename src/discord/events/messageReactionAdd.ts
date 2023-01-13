@@ -28,7 +28,7 @@ export const messageReactionAdd: MessageReactionAddEvent = {
     }
 
     // When a reaction is received, check if the structure is partial
-    if (messageReaction.partial) await messageReaction.fetch();
+    if (messageReaction.partial) await messageReaction.message.fetch();
 
     // log.info(F, `${user.username} (${user.id}) added ${reaction.emoji.name}`);
 
