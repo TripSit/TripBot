@@ -66,21 +66,29 @@ export async function combo(
 
     if (!drugInteraction && drugBData.classes?.chemical) {
       // If the interaction is not found by matching the name, try matching on the class
-      const drugBClassList = drugBData.classes?.chemical?.map(c => c.toLowerCase());
-      log.debug(F, `drugBClassList: ${drugBClassList}`);
+      const drugBChemClassList = drugBData.classes?.chemical?.map(c => c.toLowerCase());
+      log.debug(F, `drugBChemClassList: ${drugBChemClassList}`);
 
       drugInteraction = drugAData.interactions.find(
-        interaction => drugBClassList.includes(interaction.name.toLowerCase()),
+        interaction => drugBChemClassList.includes(interaction.name.toLowerCase()),
       );
+
+      log.debug(F, `drugInteractionCheck: ${JSON.stringify(drugInteraction, null, 2)}`);
+
+      if (!drugInteraction) {
+        drugInteraction = drugAData.interactions.find(
+          interaction => drugBChemClassList.includes(interaction.name.slice(0, -1).toLowerCase()),
+        );
+      }
     }
 
     if (!drugInteraction && drugBData.classes?.psychoactive) {
       // If the interaction is not found by matching the name, try matching on the class
-      const drugBClassList = drugBData.classes?.psychoactive?.map(c => c.toLowerCase());
-      log.debug(F, `drugBClassList: ${drugBClassList}`);
+      const drugBPsychClassList = drugBData.classes?.psychoactive?.map(c => c.toLowerCase());
+      log.debug(F, `drugBPsychClassList: ${drugBPsychClassList}`);
 
       drugInteraction = drugAData.interactions.find(
-        interaction => drugBClassList.includes(interaction.name.toLowerCase()),
+        interaction => drugBPsychClassList.includes(interaction.name.toLowerCase()),
       );
     }
   } else if (drugBData.interactions) {
@@ -109,7 +117,7 @@ export async function combo(
     }
   }
 
-  if (!drugInteraction.status) {
+  if (!drugInteraction || !drugInteraction.status) {
     return {
       success: true,
       title: `Could not find interaction info for ${drugA} and ${drugB}!`,
