@@ -61,7 +61,7 @@ export async function combo(
   if (drugAData.interactions) {
     // Match based on name
     drugInteraction = drugAData.interactions.find(
-      interaction => interaction.name.toLowerCase() === drugB.toLowerCase(),
+      interaction => interaction.name.toLowerCase().includes(drugB.toLowerCase()),
     );
 
     if (!drugInteraction && drugBData.classes?.chemical) {
@@ -98,21 +98,27 @@ export async function combo(
 
     if (!drugInteraction && drugAData.classes?.chemical) {
       // If the interaction is not found by matching the name, try matching on the class
-      const drugAClassList = drugAData.classes?.chemical?.map(c => c.toLowerCase());
-      log.debug(F, `drugAClassList: ${drugAClassList}`);
+      const drugAChemClassList = drugAData.classes?.chemical?.map(c => c.toLowerCase());
+      log.debug(F, `drugAClassList: ${drugAChemClassList}`);
 
       drugInteraction = drugBData.interactions.find(
-        interaction => drugAClassList.includes(interaction.name.toLowerCase()),
+        interaction => drugAChemClassList.includes(interaction.name.toLowerCase()),
       );
+
+      if (!drugInteraction) {
+        drugInteraction = drugBData.interactions.find(
+          interaction => drugAChemClassList.includes(interaction.name.slice(0, -1).toLowerCase()),
+        );
+      }
     }
 
     if (!drugInteraction && drugBData.classes?.psychoactive) {
       // If the interaction is not found by matching the name, try matching on the class
-      const drugAClassList = drugBData.classes?.psychoactive?.map(c => c.toLowerCase());
-      log.debug(F, `drugAClassList: ${drugAClassList}`);
+      const drugAPsychClassList = drugBData.classes?.psychoactive?.map(c => c.toLowerCase());
+      log.debug(F, `drugAPsychClassList: ${drugAPsychClassList}`);
 
       drugInteraction = drugBData.interactions.find(
-        interaction => drugAClassList.includes(interaction.name.toLowerCase()),
+        interaction => drugAPsychClassList.includes(interaction.name.toLowerCase()),
       );
     }
   }
