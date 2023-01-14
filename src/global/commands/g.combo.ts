@@ -1,5 +1,3 @@
-import { stripIndents } from 'common-tags';
-
 import drugDataAll from '../assets/data/drug_db_combined.json';
 import comboDefs from '../assets/data/combo_definitions.json';
 
@@ -45,7 +43,7 @@ export async function combo(
   if (!drugAData) {
     return {
       success: false,
-      title: `${drugA} was not found`,
+      title: `${drugA} was not found, make sure you spelled it correctly`,
       description: devMsg,
     };
   }
@@ -53,34 +51,39 @@ export async function combo(
   if (!drugBData) {
     return {
       success: false,
-      title: `${drugB} was not found`,
+      title: `${drugB} was not found, make sure you spelled it correctly!`,
       description: devMsg,
     };
   }
 
-  if (!drugAData.interactions) {
-    return {
-      success: true,
-      title: `Could not find interaction info for ${drugA}!`,
-      description: stripIndents`[Check out the wiki page](${drugAData.url})`,
-    };
+  let drugInteraction = {} as any;
+
+  if (drugAData.interactions) {
+    // Match based on name
+    drugInteraction = drugAData.interactions.find(
+      interaction => interaction.name.toLowerCase() === drugB.toLowerCase(),
+    );
+
+    if (!drugInteraction && drugBData.classes?.chemical) {
+      // If the interaction is not found by matching the name, try matching on the class
+      const drugBClassList = drugBData.classes?.chemical?.map(c => c.toLowerCase());
+      log.debug(F, `drugBClassList: ${drugBClassList}`);
+
+      drugInteraction = drugAData.interactions.find(
+        interaction => drugBClassList.includes(interaction.name.toLowerCase()),
+      );
+    }
+  } else if (drugBData.interactions && drugAData.classes?.chemical) {
+    // If the interaction is not found by matching the name, try matching on the class
+    const drugAClassList = drugAData.classes?.chemical?.map(c => c.toLowerCase());
+    log.debug(F, `drugAClassList: ${drugAClassList}`);
+
+    drugInteraction = drugBData.interactions.find(
+      interaction => drugAClassList.includes(interaction.name.toLowerCase()),
+    );
   }
 
-  if (!drugBData.interactions) {
-    return {
-      success: true,
-      title: `Could not find interaction info for ${drugB}!`,
-      description: stripIndents`[Check out the wiki page](${drugBData.url})`,
-    };
-  }
-
-  // log.debug(F, `interactions: ${drugAData.interactions.length}`);
-
-  const drugInteraction = drugAData.interactions.find(
-    interaction => interaction.name.toLowerCase() === drugB.toLowerCase(),
-  );
-
-  if (!drugInteraction) {
+  if (!drugInteraction.status) {
     return {
       success: true,
       title: `Could not find interaction info for ${drugA} and ${drugB}!`,
@@ -93,9 +96,7 @@ export async function combo(
     };
   }
 
-  // log.debug(F, `drugInteraction: ${drugInteraction}`);
-
-  const intDef = comboDefs.find(def => def.status === drugInteraction.status);
+  const intDef = comboDefs.find(def => def.status === drugInteraction?.status);
 
   // log.debug(F, `intDef: ${JSON.stringify(intDef)}`);
 
