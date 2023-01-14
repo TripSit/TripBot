@@ -35,25 +35,28 @@ export async function combo(
     };
   }
 
-  const drugAData = drugDataAll.find(drug => drug.name.toLowerCase() === drugA.toLowerCase());
-  const drugBData = drugDataAll.find(drug => drug.name.toLowerCase() === drugB.toLowerCase());
-
-  // log.debug(F, `drugData: ${JSON.stringify(drugData, null, 2)}`);
-
+  let drugAData = drugDataAll.find(drug => drug.name.toLowerCase() === drugA.toLowerCase());
   if (!drugAData) {
-    return {
-      success: false,
-      title: `${drugA} was not found, make sure you spelled it correctly`,
-      description: devMsg,
-    };
+    drugAData = drugDataAll.find(drug => drug.aliases?.map(c => c.toLowerCase()).includes(drugA.toLowerCase()));
+    if (!drugAData) {
+      return {
+        success: false,
+        title: `${drugA} was not found, make sure you spelled it correctly`,
+        description: devMsg,
+      };
+    }
   }
 
+  let drugBData = drugDataAll.find(drug => drug.name.toLowerCase() === drugB.toLowerCase());
   if (!drugBData) {
-    return {
-      success: false,
-      title: `${drugB} was not found, make sure you spelled it correctly!`,
-      description: devMsg,
-    };
+    drugBData = drugDataAll.find(drug => drug.aliases?.map(c => c.toLowerCase()).includes(drugA.toLowerCase()));
+    if (!drugBData) {
+      return {
+        success: false,
+        title: `${drugB} was not found, make sure you spelled it correctly!`,
+        description: devMsg,
+      };
+    }
   }
 
   let drugInteraction = {} as any;
