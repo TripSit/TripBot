@@ -531,12 +531,26 @@ export async function tripsitmeResolve(
     return;
   }
 
+  // log.debug(F, `interaction.customId: ${interaction.customId}`);
   const targetId = interaction.customId.split('~')[1];
+  // log.debug(F, `targetId: ${targetId}`);
+  const override = interaction.customId.split('~')[0] === 'tripsitmodeOffOverride';
+  // log.debug(F, `override: ${override}`);
 
-  const guildData = await getGuild(interaction.guild.id);
+  const target = await interaction.guild.members.fetch(targetId);
+  const actor = interaction.member as GuildMember;
+
+  log.debug(F, `${interaction.deferred} ${interaction.replied} ${interaction.ephemeral}`);
+
+  if (targetId !== actor.id && !override) {
+    // log.debug(F, `not the target!`);
+    await interaction.editReply({ content: 'Only the user receiving help can click this button!' });
+    return;
+  }
 
   let roleNeedshelp = {} as Role;
   let channelTripsitmeta = {} as TextChannel;
+  const guildData = await getGuild(interaction.guild.id);
   if (guildData.role_needshelp) {
     roleNeedshelp = await interaction.guild.roles.fetch(guildData.role_needshelp) as Role;
   }
@@ -544,37 +558,7 @@ export async function tripsitmeResolve(
     channelTripsitmeta = await interaction.guild.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
   }
 
-  const target = await interaction.guild.members.fetch(targetId);
-  const actor = interaction.member as GuildMember;
-
-  // log.debug(stripIndents`[${PREFIX}]:
-  //   meOrThem: ${meOrThem}
-  //   targetId: ${targetId}
-  //   roleNeedshelpId: ${roleNeedshelp.id}
-  //   channelTripsittersId: ${channelTripsitmeta.id}
-  //   actor: ${actor.displayName}
-  //   target: ${target.displayName}
-  // `);
-
-  if (targetId !== actor.id) {
-    // log.debug(F, `not the target!`);
-    await interaction.editReply({ content: 'Only the user receiving help can click this button!' });
-    return;
-  }
-
   const userData = await getUser(target.id, null);
-  const ticketData = await getOpenTicket(userData.id, null);
-
-  // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
-
-  if (ticketData === undefined || Object.entries(ticketData).length === 0) {
-    const rejectMessage = `Hey ${interaction.member}, you do not have an open session!`;
-    const embed = embedTemplate().setColor(Colors.DarkBlue);
-    embed.setDescription(rejectMessage);
-    // log.debug(F, `target ${target} does not need help!`);
-    await interaction.editReply({ embeds: [embed] });
-    return;
-  }
 
   if (userData.roles) {
     const myMember = await interaction.guild.members.fetch(interaction.client.user.id);
@@ -607,6 +591,19 @@ export async function tripsitmeResolve(
   }
 
   // log.debug(F, `targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
+
+  const ticketData = await getOpenTicket(userData.id, null);
+
+  // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+
+  if (ticketData === undefined || Object.entries(ticketData).length === 0) {
+    const rejectMessage = `Hey ${interaction.member}, you do not have an open session!`;
+    const embed = embedTemplate().setColor(Colors.DarkBlue);
+    embed.setDescription(rejectMessage);
+    // log.debug(F, `target ${target} does not need help!`);
+    await interaction.editReply({ embeds: [embed] });
+    return;
+  }
 
   // Get the channel objects for the help thread
   let threadHelpUser = {} as ThreadChannel;

@@ -33,7 +33,7 @@ import { embedTemplate } from '../../utils/embedTemplate';
 // import {stripIndents} from 'common-tags';
 // import env from '../../../global/utils/env.config';
 // import log from '../../../global/utils/log';
-import { needsHelpmode, tripSitMe, tripsitmeClose } from '../../utils/tripsitme';
+import { needsHelpmode, tripSitMe, tripsitmeResolve } from '../../utils/tripsitme';
 
 const F = f(__filename);
 
@@ -65,21 +65,23 @@ export const tripsitmode: SlashCommand = {
     .setDescription(
       'This command will apply the NeedsHelp role onto a user, and remove other roles!',
     )
-    .addUserOption(option => option
-      .setName('user')
-      .setDescription('Member to modify')
-      .setRequired(true))
-    .addStringOption(option => option
-      .setName('enable')
-      .setDescription('Turn tripsitmode on/off?')
-      .addChoices(
-        { name: 'On', value: 'on' },
-        { name: 'Off', value: 'off' },
-      )
-      .setRequired(true)),
+    .addSubcommand(subcommand => subcommand
+      .setName('on')
+      .setDescription('Turn on tripsit mode for a user')
+      .addUserOption(option => option
+        .setName('user')
+        .setDescription('Member to modify')
+        .setRequired(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('off')
+      .setDescription('Turn off tripsit mode for a user')
+      .addUserOption(option => option
+        .setName('user')
+        .setDescription('Member to modify')
+        .setRequired(true))),
   async execute(interaction:ChatInputCommandInteraction) {
     startlog(F, interaction);
-    const enable = interaction.options.getString('enable') as 'on' | 'off';
+    const enable = interaction.options.getSubcommand() as 'on' | 'off';
 
     const target = interaction.options.getMember('user') as GuildMember;
 
@@ -248,12 +250,12 @@ export const tripsitmode: SlashCommand = {
       const testInteraction = {
         client: interaction.client,
         id: interaction.id,
-        customId: `tripsitmodeOff~${target.id}`,
+        customId: `tripsitmodeOffOverride~${target.id}`,
         guild: interaction.guild,
         member: interaction.member,
         user: interaction.user,
         channel: interaction.channel,
-        deferReply: () => interaction.deferReply(),
+        deferReply: content => interaction.deferReply(content),
         reply: content => {
           if (interaction.deferred || interaction.replied) {
             return interaction.followUp(content);
@@ -265,7 +267,7 @@ export const tripsitmode: SlashCommand = {
         showModal: modal => interaction.showModal(modal),
         awaitModalSubmit: params => interaction.awaitModalSubmit(params),
       } as ButtonInteraction;
-      tripsitmeClose(testInteraction);
+      tripsitmeResolve(testInteraction);
     }
     return true;
   },
