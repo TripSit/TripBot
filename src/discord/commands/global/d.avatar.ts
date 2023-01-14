@@ -31,11 +31,6 @@ export const dTemplate: SlashCommand = {
       .setTitle(`${member.displayName}'s Profile Picture`)
       .setImage(`${user.displayAvatarURL()}?size=4096`);
     await interaction.reply({ embeds: [embed] });
-
-    const embed2 = embedTemplate()
-      .setTitle(`${member.displayName}'s Profile Picture`)
-      .setImage(`${user.avatarURL()}?size=4096`);
-    await interaction.followUp({ embeds: [embed2] });
     return true;
   },
 };
