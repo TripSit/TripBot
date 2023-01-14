@@ -49,7 +49,7 @@ export async function combo(
 
   let drugBData = drugDataAll.find(drug => drug.name.toLowerCase() === drugB.toLowerCase());
   if (!drugBData) {
-    drugBData = drugDataAll.find(drug => drug.aliases?.map(c => c.toLowerCase()).includes(drugA.toLowerCase()));
+    drugBData = drugDataAll.find(drug => drug.aliases?.map(c => c.toLowerCase()).includes(drugB.toLowerCase()));
     if (!drugBData) {
       return {
         success: false,
