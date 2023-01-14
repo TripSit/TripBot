@@ -112,9 +112,9 @@ export async function combo(
       }
     }
 
-    if (!drugInteraction && drugBData.classes?.psychoactive) {
+    if (!drugInteraction && drugAData.classes?.psychoactive) {
       // If the interaction is not found by matching the name, try matching on the class
-      const drugAPsychClassList = drugBData.classes?.psychoactive?.map(c => c.toLowerCase());
+      const drugAPsychClassList = drugAData.classes?.psychoactive?.map(c => c.toLowerCase());
       log.debug(F, `drugAPsychClassList: ${drugAPsychClassList}`);
 
       drugInteraction = drugBData.interactions.find(
