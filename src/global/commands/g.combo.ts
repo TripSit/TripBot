@@ -93,7 +93,7 @@ export async function combo(
     }
   } else if (drugBData.interactions) {
     drugInteraction = drugBData.interactions.find(
-      interaction => interaction.name.toLowerCase() === drugA.toLowerCase(),
+      interaction => interaction.name.toLowerCase().includes(drugA.toLowerCase()),
     );
 
     if (!drugInteraction && drugAData.classes?.chemical) {
