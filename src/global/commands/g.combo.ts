@@ -73,14 +73,40 @@ export async function combo(
         interaction => drugBClassList.includes(interaction.name.toLowerCase()),
       );
     }
-  } else if (drugBData.interactions && drugAData.classes?.chemical) {
-    // If the interaction is not found by matching the name, try matching on the class
-    const drugAClassList = drugAData.classes?.chemical?.map(c => c.toLowerCase());
-    log.debug(F, `drugAClassList: ${drugAClassList}`);
 
+    if (!drugInteraction && drugBData.classes?.psychoactive) {
+      // If the interaction is not found by matching the name, try matching on the class
+      const drugBClassList = drugBData.classes?.psychoactive?.map(c => c.toLowerCase());
+      log.debug(F, `drugBClassList: ${drugBClassList}`);
+
+      drugInteraction = drugAData.interactions.find(
+        interaction => drugBClassList.includes(interaction.name.toLowerCase()),
+      );
+    }
+  } else if (drugBData.interactions) {
     drugInteraction = drugBData.interactions.find(
-      interaction => drugAClassList.includes(interaction.name.toLowerCase()),
+      interaction => interaction.name.toLowerCase() === drugA.toLowerCase(),
     );
+
+    if (!drugInteraction && drugAData.classes?.chemical) {
+      // If the interaction is not found by matching the name, try matching on the class
+      const drugAClassList = drugAData.classes?.chemical?.map(c => c.toLowerCase());
+      log.debug(F, `drugAClassList: ${drugAClassList}`);
+
+      drugInteraction = drugBData.interactions.find(
+        interaction => drugAClassList.includes(interaction.name.toLowerCase()),
+      );
+    }
+
+    if (!drugInteraction && drugBData.classes?.psychoactive) {
+      // If the interaction is not found by matching the name, try matching on the class
+      const drugAClassList = drugBData.classes?.psychoactive?.map(c => c.toLowerCase());
+      log.debug(F, `drugAClassList: ${drugAClassList}`);
+
+      drugInteraction = drugBData.interactions.find(
+        interaction => drugAClassList.includes(interaction.name.toLowerCase()),
+      );
+    }
   }
 
   if (!drugInteraction.status) {

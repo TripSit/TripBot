@@ -13,12 +13,10 @@ import {
   // APIChatInputApplicationCommandInteractionData,
   // APIApplicationCommandInteractionData,
 } from 'discord.js';
-import { parse } from 'path';
 import { SlashCommand } from '../../src/discord/@types/commandDef';
 import MockDiscord from './mockDiscord';
-import log from '../../src/global/utils/log'; // eslint-disable-line
 
-const PREFIX = parse(__filename).name; // eslint-disable-line
+const F = f(__filename); // eslint-disable-line
 
 export const defaultConfig = {
   id: '11',
@@ -47,14 +45,16 @@ export const optionType = {
   10: Number,
 } as Options;
 
-function getNestedOptions(options:ToAPIApplicationCommandOptions[]):ToAPIApplicationCommandOptions[] {
+function getNestedOptions(
+  options:ToAPIApplicationCommandOptions[],
+):ToAPIApplicationCommandOptions[] {
+  // log.debug(F, `options: ${JSON.stringify(options, null, 2)}`);
   // This gets a flat array of options, including nested options
   return options.reduce((
     allOptions:ToAPIApplicationCommandOptions[],
     option:ToAPIApplicationCommandOptions,
   ) => { // @ts-ignore
-    // log.debug(`[${PREFIX}] option: ${JSON.stringify(option, null, 2)}`); // @ts-ignore
-    // console.log(option); // @ts-ignore
+    log.debug(F, `option: ${JSON.stringify(option, null, 2)}`); // @ts-ignore
     if (!option.toJSON().options) return [...allOptions, option]; // @ts-ignore
     const nestedOptions = getNestedOptions(option.toJSON().options);
     return [option, ...allOptions, ...nestedOptions];
@@ -70,8 +70,61 @@ export function getParsedCommand(
   stringCommand: string,
   commandData: Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'> | SlashCommandSubcommandsOnlyBuilder,
 ) {
-  // log.debug(`[${PREFIX}] commandData.options: ${JSON.stringify(commandData.options, null, 2)}`);
-  // log.debug(`[${PREFIX}] stringCommand: ${JSON.stringify(stringCommand, null, 2)}`);
+  // log.debug(F, `commandData.options: ${JSON.stringify(commandData.options, null, 2)}`);
+  // [
+  //   {
+  //     "type": 1,
+  //     "name": "lsd",
+  //     "description": "Check LSD tolerance information",
+  //     "options": [
+  //       {
+  //         "type": 10,
+  //         "name": "last_dose",
+  //         "description": "ug of LSD",
+  //         "required": true
+  //       },
+  //       {
+  //         "type": 10,
+  //         "name": "days",
+  //         "description": "Number of days since last dose?",
+  //         "required": true
+  //       },
+  //       {
+  //         "type": 10,
+  //         "name": "desired_dose",
+  //         "description": "ug of LSD",
+  //         "required": false
+  //       }
+  //     ]
+  //   },
+  //   {
+  //     "type": 1,
+  //     "name": "mushrooms",
+  //     "description": "Check mushroom tolerance information",
+  //     "options": [
+  //       {
+  //         "type": 10,
+  //         "name": "last_dose",
+  //         "description": "g of mushrooms",
+  //         "required": true
+  //       },
+  //       {
+  //         "type": 10,
+  //         "name": "days",
+  //         "description": "Number of days since last dose?",
+  //         "required": true
+  //       },
+  //       {
+  //         "type": 10,
+  //         "name": "desired_dose",
+  //         "description": "g of mushrooms",
+  //         "required": false
+  //       }
+  //     ]
+  //   }
+  // ]
+  // log.debug(F, `stringCommand: ${JSON.stringify(stringCommand, null, 2)}`);
+  // "/calc_psychedelics lsd last_dose:300 days:3 desired_dose:400"
   const options = getNestedOptions(commandData.options); // @ts-ignore
   // log.debug(`[${PREFIX}] getNestedOptions: ${JSON.stringify(options, null, 2)}`); // @ts-ignore
   const optionsIndentifiers = options.map(option => `${option.name}:`);
