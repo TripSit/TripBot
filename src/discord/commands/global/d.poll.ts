@@ -2,11 +2,14 @@ import {
   SlashCommandBuilder,
   GuildMember,
   Message,
+  ChannelType,
+  PermissionResolvable,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { startLog } from '../../utils/startLog';
 import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-line
+import { hasPermissions } from '../../utils/checkPermissions';
 
 const F = f(__filename);
 
@@ -60,6 +63,16 @@ export const dPoll: SlashCommand = {
       return false;
     }
 
+    if (interaction.channel.type === ChannelType.DM) {
+      await interaction.reply('You can\'t poll yourself!');
+      return false;
+    }
+
+    if (interaction.channel.type === ChannelType.GuildVoice) {
+      await interaction.reply('You can\'t poll a voice channel!');
+      return false;
+    }
+
     let body = '';
     for (let i = 0; i < optionsArray.length; i += 1) {
       body += `\n${i + 1}. ${optionsArray[i].trim()}`;
@@ -74,6 +87,20 @@ export const dPoll: SlashCommand = {
       pollEmbed.setTitle(`**${question}**`);
     }
 
+    const hasPostPermission = hasPermissions(interaction, interaction.channel, [
+      'ViewChannel' as PermissionResolvable,
+      'SendMessages' as PermissionResolvable,
+      'AddReactions' as PermissionResolvable,
+    ]);
+
+    if (!hasPostPermission) {
+      await interaction.reply({
+        content: 'I do not have the right permissions! Please make sure I can View, Send Messages and React to messages here!', // eslint-disable-line
+        ephemeral: true,
+      });
+      return false;
+    }
+
     await interaction.channel.send({ embeds: [pollEmbed] })
       .then(async (msg:Message) => {
         for (let i = 0; i < optionsArray.length; i += 1) {
@@ -82,7 +109,7 @@ export const dPoll: SlashCommand = {
         }
       });
 
-    await interaction.reply('Done!');
+    await interaction.reply({ content: 'Done!', ephemeral: true });
     return true;
   },
 };

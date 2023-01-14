@@ -5,6 +5,9 @@ import {
   GuildMember,
   Guild,
   PermissionResolvable,
+  PublicThreadChannel,
+  PrivateThreadChannel,
+  NewsChannel,
 } from 'discord.js';
 import { embedTemplate } from './embedTemplate';
 
@@ -171,7 +174,7 @@ export async function checkGuildPermissions(
  */
 export async function hasPermissions(
   interaction: ChatInputCommandInteraction,
-  channel: TextChannel,
+  channel: TextChannel | PublicThreadChannel | PrivateThreadChannel | NewsChannel,
   permissionList:PermissionResolvable[],
 ):Promise<boolean> {
   // log.debug(F, `Checking channel ${channel.name} for the following permissions: ${permissionList.join(', ')}`);
