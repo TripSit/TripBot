@@ -125,7 +125,13 @@ export const dRole: SlashCommand = {
     let target = '' as string;
     if (command === 'add') {
       const roleId = interaction.options.getString('role', true);
+      log.debug(F, `Role ID is ${roleId}`);
       role = await interaction.guild.roles.fetch(roleId) as Role;
+      log.debug(F, `Role is ${JSON.stringify(role, null, 2)}`);
+      if (!role) {
+        interaction.reply({ content: 'Role not found! Please use the dropdown menu', ephemeral: true });
+        return false;
+      }
       verb = 'added';
       preposition = 'to';
       const selectedUser = interaction.options.getUser('user') ?? interaction.user;
