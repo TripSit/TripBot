@@ -22,12 +22,12 @@ import {
 } from 'discord.js';
 // import fs from 'fs';
 // import path, { parse } from 'path';
-import { parse } from 'path';
 // import { SlashCommand } from '../../discord/@types/commandDef';
 
-import log from '../../src/global/utils/log'; // eslint-disable-line
+const F = f(__filename);  // eslint-disable-line
 
-const PREFIX = parse(__filename).name;  // eslint-disable-line
+const userAvatarUrl = 'userAvatarUrl';
+const mockChannelId = 'mock-channel-id';
 
 export default class MockDiscord {
   private client!: Client;
@@ -248,13 +248,40 @@ export default class MockDiscord {
         emojis: [],
       },
     ]);
+    this.guild.members.fetch = jest.fn().mockResolvedValue(Reflect.construct(GuildMember, [
+      this.client,
+      {
+        // id: BigInt(1),
+        id: '123456789',
+        deaf: false,
+        mute: false,
+        self_mute: false,
+        self_deaf: false,
+        session_id: 'session-id',
+        channel_id: mockChannelId,
+        nick: 'nick',
+        joined_at: new Date('2020-01-01').getTime(),
+        user: Reflect.construct(User, [
+          this.client,
+          {
+            id: '123456789',
+            username: 'USERNAME',
+            discriminator: 'user#0000',
+            avatar: userAvatarUrl,
+            bot: false,
+          },
+        ]),
+        roles: [],
+      },
+      this.guild,
+    ]));
   }
 
   private mockChannel(): void {
     this.channel = Reflect.construct(BaseChannel, [
       this.client,
       {
-        id: 'channel-id',
+        id: mockChannelId,
       },
 
     ]);
@@ -329,10 +356,10 @@ export default class MockDiscord {
     this.user = Reflect.construct(User, [
       this.client,
       {
-        id: 'user-id',
+        id: '123456789',
         username: 'USERNAME',
         discriminator: 'user#0000',
-        avatar: 'user avatar url',
+        avatar: userAvatarUrl,
         bot: false,
       },
     ]);
@@ -345,23 +372,34 @@ export default class MockDiscord {
         id: userId,
         username: `USERNAME-${userId}`,
         discriminator: `user#0000-${userId}`,
-        avatar: 'user avatar url',
+        avatar: userAvatarUrl,
         bot: false,
       },
     ]);
   }
 
   private mockGuildMember(): void {
+    // console.log('mockdiscord'); // eslint-disable-line
+    // this.mockClient();
+    // console.log('this.client'); // eslint-disable-line
+    // console.log(this.client); // eslint-disable-line
+    // this.mockUser();
+    // console.log('this.user'); // eslint-disable-line
+    // console.log(this.user); // eslint-disable-line
+    // this.mockGuild();
+    // console.log('this.guild'); // eslint-disable-line
+    // console.log(this.guild); // eslint-disable-line
     this.guildMember = Reflect.construct(GuildMember, [
       this.client,
       {
-        id: BigInt(1),
+        // id: BigInt(1),
+        id: '123456789',
         deaf: false,
         mute: false,
         self_mute: false,
         self_deaf: false,
         session_id: 'session-id',
-        channel_id: 'channel-id',
+        channel_id: mockChannelId,
         nick: 'nick',
         joined_at: new Date('2020-01-01').getTime(),
         user: this.user,
@@ -369,6 +407,8 @@ export default class MockDiscord {
       },
       this.guild,
     ]);
+    // console.log('this.guildMember'); // eslint-disable-line
+    // console.log(this.guildMember); // eslint-disable-line
   }
 
   private mockPartyMessages(messages:Message[]): void {
@@ -451,7 +491,6 @@ export default class MockDiscord {
       this.textChannel,
     ]);
     this.interaction.options = Reflect.construct(CommandInteractionOptionResolver, [this.client, command.options]);
-
     // Define the 'getString' method
     // (this.interaction.options as CommandInteractionOptionResolver).getString = jest.fn().mockImplementation(
     //   (name:string) => {
@@ -470,7 +509,5 @@ export default class MockDiscord {
     // this.interaction.followUp = jest.fn();
     this.interaction.guildId = this.guild.id;
     this.interaction.isCommand = jest.fn(() => true);
-    // const test = this.interaction.channel;
-    // this.interaction.channel.send = jest.fn();
   }
 }

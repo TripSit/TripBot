@@ -2,6 +2,7 @@
 import {
   SlashCommandBuilder,
 } from 'discord.js';
+import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcPsychedelics } from '../../../global/commands/g.calcPsychedelics';
@@ -39,6 +40,7 @@ export const dCalcpsychedelics: SlashCommand = {
         .setDescription('g of mushrooms'))),
   async execute(interaction) {
     startLog(F, interaction);
+    log.debug(F, `${JSON.stringify(interaction.options, null, 2)}`);
     const lastDose = interaction.options.getNumber('last_dose', true);
     const desiredDose = interaction.options.getNumber('desired_dose');
     const days = interaction.options.getNumber('days', true);
@@ -61,7 +63,7 @@ export const dCalcpsychedelics: SlashCommand = {
 
     const embed = embedTemplate()
       .setTitle(title)
-      .setDescription(`
+      .setDescription(stripIndents`
         This ESTIMATE only works for tryptamines (LSD and Magic Mushrooms).
         As all bodies and brains are different, results may vary. 
         [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 

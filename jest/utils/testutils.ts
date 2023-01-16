@@ -1,12 +1,14 @@
 import {
   ChatInputCommandInteraction,
   // CommandInteraction,
+  User,
   EmbedBuilder,
   Message,
   SlashCommandBuilder,
   ToAPIApplicationCommandOptions,
   SlashCommandSubcommandsOnlyBuilder,
   EmbedData,
+  Client,
   // ApplicationCommandOptionBase,
   // ApplicationCommandOption,
   // APIApplicationCommandOption,
@@ -54,15 +56,38 @@ function getNestedOptions(
     allOptions:ToAPIApplicationCommandOptions[],
     option:ToAPIApplicationCommandOptions,
   ) => { // @ts-ignore
-    log.debug(F, `option: ${JSON.stringify(option, null, 2)}`); // @ts-ignore
+    // log.debug(F, `allOptions: ${JSON.stringify(allOptions, null, 2)}`);
+    // log.debug(F, `option: ${JSON.stringify(option, null, 2)}`); // @ts-ignore
+    if (option.options) return [...allOptions, option, ...option.options]; // @ts-ignore
     if (!option.toJSON().options) return [...allOptions, option]; // @ts-ignore
-    const nestedOptions = getNestedOptions(option.toJSON().options);
-    return [option, ...allOptions, ...nestedOptions];
+    // log.debug(F, 'option.toJSON().options passed'); // @ts-ignore
+    const nestedOptions = getNestedOptions(option.toJSON().options); // @ts-ignore
+    // log.debug(F, `nestedOptions: ${JSON.stringify(nestedOptions, null, 2)}`); // @ts-ignore
+    return [...allOptions, option, ...nestedOptions]; // @ts-ignore
   }, []);
 }
 
 function castToType(value: string, typeId: number) {
+  function userConstructor(): User {
+    return Reflect.construct(User, [
+      new Client({ intents: [] }),
+      {
+        // id: BigInt(123456789),
+        id: '123456789',
+        username: 'USERNAME',
+        discriminator: 'user#0000',
+        avatar: 'user avatar url',
+        bot: false,
+      },
+    ]);
+  }
+
+  if (typeId === 6) {
+    return userConstructor();
+  }
+
   const typeCaster = optionType[typeId] as typeof String | typeof Number | typeof Boolean;
+
   return typeCaster ? typeCaster(value) : value;
 }
 
@@ -70,63 +95,8 @@ export function getParsedCommand(
   stringCommand: string,
   commandData: Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'> | SlashCommandSubcommandsOnlyBuilder,
 ) {
-  // log.debug(F, `commandData.options: ${JSON.stringify(commandData.options, null, 2)}`);
-  // [
-  //   {
-  //     "type": 1,
-  //     "name": "lsd",
-  //     "description": "Check LSD tolerance information",
-  //     "options": [
-  //       {
-  //         "type": 10,
-  //         "name": "last_dose",
-  //         "description": "ug of LSD",
-  //         "required": true
-  //       },
-  //       {
-  //         "type": 10,
-  //         "name": "days",
-  //         "description": "Number of days since last dose?",
-  //         "required": true
-  //       },
-  //       {
-  //         "type": 10,
-  //         "name": "desired_dose",
-  //         "description": "ug of LSD",
-  //         "required": false
-  //       }
-  //     ]
-  //   },
-  //   {
-  //     "type": 1,
-  //     "name": "mushrooms",
-  //     "description": "Check mushroom tolerance information",
-  //     "options": [
-  //       {
-  //         "type": 10,
-  //         "name": "last_dose",
-  //         "description": "g of mushrooms",
-  //         "required": true
-  //       },
-  //       {
-  //         "type": 10,
-  //         "name": "days",
-  //         "description": "Number of days since last dose?",
-  //         "required": true
-  //       },
-  //       {
-  //         "type": 10,
-  //         "name": "desired_dose",
-  //         "description": "g of mushrooms",
-  //         "required": false
-  //       }
-  //     ]
-  //   }
-  // ]
-  // log.debug(F, `stringCommand: ${JSON.stringify(stringCommand, null, 2)}`);
-  // "/calc_psychedelics lsd last_dose:300 days:3 desired_dose:400"
   const options = getNestedOptions(commandData.options); // @ts-ignore
-  // log.debug(`[${PREFIX}] getNestedOptions: ${JSON.stringify(options, null, 2)}`); // @ts-ignore
+  // log.debug(F, `getNestedOptions: ${JSON.stringify(options, null, 2)}`); // @ts-ignore
   const optionsIndentifiers = options.map(option => `${option.name}:`);
   // log.debug(`[${PREFIX}] optionsIndentifiers: ${JSON.stringify(optionsIndentifiers, null, 2)}`);
   const requestedOptions = options.reduce((
@@ -147,7 +117,7 @@ export function getParsedCommand(
     const nextOptionIdentifier = nextoptions.find(word => {
       // log.debug(`[${PREFIX}] word: ${JSON.stringify(word, null, 2)}`);
       const wordIdentifier = word.split(':')[0];
-      // log.debug(`[${PREFIX}] wordIdentifier: ${JSON.stringify(wordIdentifier, null, 2)}`);
+      // log.debug(F, `wordIdentifier: ${JSON.stringify(wordIdentifier, null, 2)}`);
       return optionsIndentifiers.includes(`${wordIdentifier}:`);
     });
     // log.debug(`[${PREFIX}] nextOptionIdentifier: ${JSON.stringify(nextOptionIdentifier, null, 2)}`);
@@ -156,7 +126,7 @@ export function getParsedCommand(
       const value = remainder.split(nextOptionIdentifier)[0].trim();
       // log.debug(`[${PREFIX}] value: ${JSON.stringify(value, null, 2)}`);
       const formattedValue = castToType(value, option.toJSON().type);
-      // log.debug(`[${PREFIX}] formattedValue: ${JSON.stringify(formattedValue, null, 2)}`);
+      log.debug(F, `formattedValue: ${JSON.stringify(formattedValue, null, 2)}`);
       return [...requestedOptions2, { // @ts-ignore
         name: option.toJSON().name,
         value: formattedValue,
@@ -164,10 +134,21 @@ export function getParsedCommand(
       }];
     }
 
-    // log.debug(`[${PREFIX}] remainderFinal: ${JSON.stringify(remainder, null, 2)}`);
+    // log.debug(F, `remainderFinal: ${JSON.stringify(remainder, null, 2)}`);
+    const formattedValue2 = castToType(remainder.trim(), option.toJSON().type);
+    // log.debug(F, `formattedValue2: ${JSON.stringify(formattedValue2, null, 2)}`);
+    if (option.toJSON().type === 6) {
+      // log.debug(F, 'option.toJSON().type === 6');
+      return [...requestedOptions2, { // @ts-ignore
+        name: option.toJSON().name,
+        value: '1223456789',
+        type: option.toJSON().type,
+        user: formattedValue2,
+      }];
+    }
     return [...requestedOptions2, { // @ts-ignore
       name: option.toJSON().name,
-      value: castToType(remainder.trim(), option.toJSON().type),
+      value: formattedValue2,
       type: option.toJSON().type,
     }];
   }, []);
