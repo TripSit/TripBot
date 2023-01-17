@@ -59,6 +59,43 @@ describe(slashCommand.data.name, () => {
     expect(await executeCommandAndSpyReply(
       slashCommand,
       getParsedCommand(
+        `/${slashCommand.data.name} weight:130.4 units:lbs`,
+        slashCommand.data,
+        'tripsit',
+      ),
+    )).toHaveBeenCalledWith({
+      embeds: embedContaining({
+        author: authorInfo,
+        footer: footerInfo,
+        color: Colors.Purple,
+        fields: [
+          {
+            name: 'Insufflated',
+            value: stripIndents`
+            **Threshold**: 13mg
+            **Light**: 20mg
+            **Common**: 39mg
+            **Strong**: 65mg-98mg
+            **KHole**: 130mg`,
+            inline: true,
+          },
+          {
+            name: 'Rectal',
+            value: stripIndents`
+            **Threshold**: 39mg
+            **Light**: 65mg
+            **Common**: 98mg-261mg
+            **Strong**: 261mg-326mg
+            **KHole**: 391mg-522mg`,
+            inline: true,
+          },
+        ],
+      }),
+    });
+
+    expect(await executeCommandAndSpyReply(
+      slashCommand,
+      getParsedCommand(
         `/${slashCommand.data.name} weight:180 units:kg`,
         slashCommand.data,
         'tripsit',

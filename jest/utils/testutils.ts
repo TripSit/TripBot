@@ -127,7 +127,7 @@ export function getParsedCommand(
       const value = remainder.split(nextOptionIdentifier)[0].trim();
       // log.debug(`[${PREFIX}] value: ${JSON.stringify(value, null, 2)}`);
       const formattedValue = castToType(value, option.toJSON().type);
-      log.debug(F, `formattedValue: ${JSON.stringify(formattedValue, null, 2)}`);
+      // log.debug(F, `formattedValue: ${JSON.stringify(formattedValue, null, 2)}`);
       return [...requestedOptions2, { // @ts-ignore
         name: option.toJSON().name,
         value: formattedValue,

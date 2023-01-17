@@ -40,7 +40,7 @@ export const dCalcpsychedelics: SlashCommand = {
         .setDescription('g of mushrooms'))),
   async execute(interaction) {
     startLog(F, interaction);
-    log.debug(F, `${JSON.stringify(interaction.options, null, 2)}`);
+    // log.debug(F, `${JSON.stringify(interaction.options, null, 2)}`);
     const lastDose = interaction.options.getNumber('last_dose', true);
     const desiredDose = interaction.options.getNumber('desired_dose');
     const days = interaction.options.getNumber('days', true);

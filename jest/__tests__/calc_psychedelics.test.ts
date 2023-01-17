@@ -43,7 +43,7 @@ describe(slashCommand.data.name, () => {
     expect(await executeCommandAndSpyReply(
       slashCommand,
       getParsedCommand(
-        `/${slashCommand.data.name} lsd last_dose:300 days:3`,
+        `/${slashCommand.data.name} lsd last_dose:300 days:16 desired_dose:1200`,
         slashCommand.data,
         'tripsit',
       ),
@@ -52,7 +52,28 @@ describe(slashCommand.data.name, () => {
         author: authorInfo,
         footer: footerInfo,
         color: Colors.Purple,
-        title: '534 ug of LSD is needed to feel the same effects as 300 ug of LSD taken 3 days ago.',
+        title: '1200 ug of LSD is needed to feel the same effects as 1200 ug of LSD when 300 ug were taken 16 days ago.',
+        description: stripIndents`
+          This ESTIMATE only works for tryptamines (LSD and Magic Mushrooms).
+          As all bodies and brains are different, results may vary. 
+          [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
+        `,
+      }),
+    });
+
+    expect(await executeCommandAndSpyReply(
+      slashCommand,
+      getParsedCommand(
+        `/${slashCommand.data.name} lsd last_dose:900 days:16`,
+        slashCommand.data,
+        'tripsit',
+      ),
+    )).toHaveBeenCalledWith({
+      embeds: embedContaining({
+        author: authorInfo,
+        footer: footerInfo,
+        color: Colors.Purple,
+        title: '900 ug of LSD is needed to feel the same effects as 900 ug of LSD taken 16 days ago.',
         description: stripIndents`
           This ESTIMATE only works for tryptamines (LSD and Magic Mushrooms).
           As all bodies and brains are different, results may vary. 

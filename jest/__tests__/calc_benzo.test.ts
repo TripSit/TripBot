@@ -78,7 +78,7 @@ describe(slashCommand.data.name, () => {
     expect(await executeCommandAndSpyReply(
       slashCommand,
       getParsedCommand(
-        `/${slashCommand.data.name} i_have:12.3 mg_of:bromazepams and_i_want_the_dose_of:clobazam`,
+        `/${slashCommand.data.name} i_have:12.3 mg_of:bromxazepams and_i_want_the_dose_of:clobazam`,
         slashCommand.data,
         'dm',
       ),
@@ -92,7 +92,7 @@ describe(slashCommand.data.name, () => {
     expect(await executeCommandAndSpyReply(
       slashCommand,
       getParsedCommand(
-        `/${slashCommand.data.name} i_have:12.3 mg_of:bromazepams and_i_want_the_dose_of:clobazams`,
+        `/${slashCommand.data.name} i_have:12.3 mg_of:bromazepam and_i_want_the_dose_of:clobazams`,
         slashCommand.data,
         'dm',
       ),
