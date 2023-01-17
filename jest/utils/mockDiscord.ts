@@ -16,6 +16,7 @@ import {
   ToAPIApplicationCommandOptions,
   ChatInputCommandInteraction,
   ReactionEmoji, // eslint-disable-line
+  Options, // eslint-disable-line
   // ClientApplication,
   // FetchApplicationCommandOptions,
   // ApplicationCommandDataResolvable,
@@ -62,6 +63,7 @@ export default class MockDiscord {
     message?: Message,
     reaction?: MessageReaction,
     command: {
+      context: 'tripsit' | 'guild' | 'dm',
       id: string;
       name: string;
       type: number;
@@ -70,39 +72,22 @@ export default class MockDiscord {
         type: number;
         options: ToAPIApplicationCommandOptions[];
       }[];
-    }
+    },
   }) {
-    // log.debug(`${PREFIX} - constructor - options: ${JSON.stringify(options, null, 2)}`);
     this.mockClient();
-    this.mockGuild();
-    this.mockChannel();
-    this.mockGuildChannel();
-    this.mockTextChannel();
-
-    this.mockPartyChannel();
-    this.mockBotPartyGuildChannel();
-    this.mockBotPartyTextChannel();
+    this.mockGuild(options?.command.context);
+    this.mockChannel(options?.command.context);
+    this.mockGuildChannel(options?.command.context);
+    this.mockTextChannel(options?.command.context);
 
     this.mockUser();
-    this.mockGuildMember();
+    this.mockGuildMember(options?.command.context);
     this.mockMessage(options?.message?.content as string);
     this.mockInteracion(options?.command);
 
     this.mockPrototypes();
 
-    // if (options?.partyChannel?.messages) {
-    //   this.mockPartyMessages(options.partyChannel.messages);
-    // }
-
-    if (options?.reaction) {
-      const lastPartyMessage = this.botPartyTextChannel.messages.cache.last() as Message;
-      this.mockReaction(options.reaction, lastPartyMessage);
-      this.mockReactionUser('mock-id');
-    }
-
-    this.guild.channels.cache.set(this.botPartyTextChannel.id, this.botPartyTextChannel);
-    this.client.channels.cache.set(this.botPartyTextChannel.id, this.botPartyTextChannel);
-    this.client.guilds.cache.set(this.guild.id, this.guild);
+    this.client.guilds.cache.set(this.guild?.id, this.guild);
   }
 
   public getClient(): Client {
@@ -218,74 +203,139 @@ export default class MockDiscord {
     // });
   }
 
-  private mockGuild(): void {
-    this.guild = Reflect.construct(Guild, [
-      this.client,
-      {
-        unavailable: false,
-        id: 'guild-id',
-        name: 'mocked js guild',
-        icon: 'mocked guild icon url',
-        splash: 'mocked guild splash url',
-        region: 'eu-west',
-        member_count: 42,
-        large: false,
-        features: [],
-        application_id: 'application-id',
-        afkTimeout: 1000,
-        afk_channel_id: 'afk-channel-id',
-        system_channel_id: 'system-channel-id',
-        embed_enabled: true,
-        verification_level: 2,
-        explicit_content_filter: 3,
-        mfa_level: 8,
-        joined_at: new Date('2018-01-01').getTime(),
-        owner_id: 'owner-id',
-        channels: [],
-        roles: [],
-        presences: [],
-        voice_states: [],
-        emojis: [],
-      },
-    ]);
-    this.guild.members.fetch = jest.fn().mockResolvedValue(Reflect.construct(GuildMember, [
-      this.client,
-      {
-        // id: BigInt(1),
-        id: '123456789',
-        deaf: false,
-        mute: false,
-        self_mute: false,
-        self_deaf: false,
-        session_id: 'session-id',
-        channel_id: mockChannelId,
-        nick: 'nick',
-        joined_at: new Date('2020-01-01').getTime(),
-        user: Reflect.construct(User, [
-          this.client,
-          {
-            id: '123456789',
-            username: 'USERNAME',
-            discriminator: 'user#0000',
-            avatar: userAvatarUrl,
-            bot: false,
-          },
-        ]),
-        roles: [],
-      },
-      this.guild,
-    ]));
+  private mockGuild(
+    context: 'tripsit' | 'guild' | 'dm',
+  ): void {
+    if (context === 'tripsit') {
+      this.guild = Reflect.construct(Guild, [
+        this.client,
+        {
+          unavailable: false,
+          id: '179641883222474752',
+          name: 'TripSit Guild',
+          icon: 'mocked guild icon url',
+          splash: 'mocked guild splash url',
+          region: 'eu-west',
+          member_count: 42,
+          large: false,
+          features: [],
+          application_id: 'application-id',
+          afkTimeout: 1000,
+          afk_channel_id: 'afk-channel-id',
+          system_channel_id: 'system-channel-id',
+          embed_enabled: true,
+          verification_level: 2,
+          explicit_content_filter: 3,
+          mfa_level: 8,
+          joined_at: new Date('2018-01-01').getTime(),
+          owner_id: 'owner-id',
+          channels: [],
+          roles: [],
+          presences: [],
+          voice_states: [],
+          emojis: [],
+        },
+      ]);
+      this.guild.members.fetch = jest.fn().mockResolvedValue(Reflect.construct(GuildMember, [
+        this.client,
+        {
+          // id: BigInt(1),
+          id: '123456789',
+          deaf: false,
+          mute: false,
+          self_mute: false,
+          self_deaf: false,
+          session_id: 'session-id1',
+          channel_id: mockChannelId,
+          nick: 'nick',
+          joined_at: new Date().getTime(),
+          user: Reflect.construct(User, [
+            this.client,
+            {
+              id: '123456789',
+              username: 'USERNAME',
+              discriminator: 'user#0000',
+              avatar: userAvatarUrl,
+              bot: false,
+            },
+          ]),
+          roles: [],
+        },
+        this.guild,
+      ]));
+    } else if (context === 'guild') {
+      this.guild = Reflect.construct(Guild, [
+        this.client,
+        {
+          unavailable: false,
+          id: '960606557622657026',
+          name: 'Not TripSit Guild',
+          icon: 'mocked guild icon url',
+          splash: 'mocked guild splash url',
+          region: 'eu-west',
+          member_count: 42,
+          large: false,
+          features: [],
+          application_id: 'application-id',
+          afkTimeout: 1000,
+          afk_channel_id: 'afk-channel-id',
+          system_channel_id: 'system-channel-id',
+          embed_enabled: true,
+          verification_level: 2,
+          explicit_content_filter: 3,
+          mfa_level: 8,
+          joined_at: new Date('2018-01-01').getTime(),
+          owner_id: 'owner-id',
+          channels: [],
+          roles: [],
+          presences: [],
+          voice_states: [],
+          emojis: [],
+        },
+      ]);
+      this.guild.members.fetch = jest.fn().mockResolvedValue(Reflect.construct(GuildMember, [
+        this.client,
+        {
+          // id: BigInt(1),
+          id: '123456789',
+          deaf: false,
+          mute: false,
+          self_mute: false,
+          self_deaf: false,
+          session_id: 'session-id',
+          channel_id: mockChannelId,
+          nick: 'nick',
+          joined_at: new Date('2020-01-01').getTime(),
+          user: Reflect.construct(User, [
+            this.client,
+            {
+              id: '123456789',
+              username: 'USERNAME',
+              discriminator: 'user#0000',
+              avatar: userAvatarUrl,
+              bot: false,
+            },
+          ]),
+          roles: [],
+        },
+        this.guild,
+      ]));
+    }
   }
 
-  private mockChannel(): void {
-    this.channel = Reflect.construct(BaseChannel, [
-      this.client,
-      {
-        id: mockChannelId,
-      },
+  private mockChannel(
+    context: 'tripsit' | 'guild' | 'dm',
+  ): void {
+    if (context !== 'dm') {
+      this.channel = Reflect.construct(BaseChannel, [
+        this.client,
+        {
+          id: mockChannelId,
+        },
 
-    ]);
-    (this.channel as TextChannel).send = jest.fn();
+      ]);
+      (this.channel as TextChannel).send = jest.fn();
+    }
   }
 
   private mockPartyChannel(): void {
@@ -297,17 +347,21 @@ export default class MockDiscord {
     ]);
   }
 
-  private mockGuildChannel(): void {
-    this.guildChannel = Reflect.construct(GuildChannel, [
-      this.guild,
-      {
-        ...this.channel,
-        name: 'guild-channel',
-        position: 1,
-        parent_id: '123456789',
-        permission_overwrites: [],
-      },
-    ]);
+  private mockGuildChannel(
+    context: 'tripsit' | 'guild' | 'dm',
+  ): void {
+    if (context !== 'dm') {
+      this.guildChannel = Reflect.construct(GuildChannel, [
+        this.guild,
+        {
+          ...this.channel,
+          name: 'guild-channel',
+          position: 1,
+          parent_id: '123456789',
+          permission_overwrites: [],
+        },
+      ]);
+    }
   }
 
   private mockBotPartyTextChannel(): void {
@@ -338,18 +392,22 @@ export default class MockDiscord {
     ]);
   }
 
-  private mockTextChannel(): void {
-    this.textChannel = Reflect.construct(TextChannel, [
-      this.guild,
-      {
-        ...this.guildChannel,
-        topic: 'topic',
-        nsfw: false,
-        last_message_id: '123456789',
-        lastPinTimestamp: new Date('2019-01-01').getTime(),
-        rate_limit_per_user: 0,
-      },
-    ]);
+  private mockTextChannel(
+    context: 'tripsit' | 'guild' | 'dm',
+  ): void {
+    if (context !== 'dm') {
+      this.textChannel = Reflect.construct(TextChannel, [
+        this.guild,
+        {
+          ...this.guildChannel,
+          topic: 'topic',
+          nsfw: false,
+          last_message_id: '123456789',
+          lastPinTimestamp: new Date('2019-01-01').getTime(),
+          rate_limit_per_user: 0,
+        },
+      ]);
+    }
   }
 
   private mockUser(): void {
@@ -378,37 +436,29 @@ export default class MockDiscord {
     ]);
   }
 
-  private mockGuildMember(): void {
-    // console.log('mockdiscord'); // eslint-disable-line
-    // this.mockClient();
-    // console.log('this.client'); // eslint-disable-line
-    // console.log(this.client); // eslint-disable-line
-    // this.mockUser();
-    // console.log('this.user'); // eslint-disable-line
-    // console.log(this.user); // eslint-disable-line
-    // this.mockGuild();
-    // console.log('this.guild'); // eslint-disable-line
-    // console.log(this.guild); // eslint-disable-line
-    this.guildMember = Reflect.construct(GuildMember, [
-      this.client,
-      {
-        // id: BigInt(1),
-        id: '123456789',
-        deaf: false,
-        mute: false,
-        self_mute: false,
-        self_deaf: false,
-        session_id: 'session-id',
-        channel_id: mockChannelId,
-        nick: 'nick',
-        joined_at: new Date('2020-01-01').getTime(),
-        user: this.user,
-        roles: [],
-      },
-      this.guild,
-    ]);
-    // console.log('this.guildMember'); // eslint-disable-line
-    // console.log(this.guildMember); // eslint-disable-line
+  private mockGuildMember(
+    context: 'tripsit' | 'guild' | 'dm',
+  ): void {
+    if (context !== 'dm') {
+      this.guildMember = Reflect.construct(GuildMember, [
+        this.client,
+        {
+          // id: BigInt(1),
+          id: '123456789',
+          deaf: false,
+          mute: false,
+          self_mute: false,
+          self_deaf: false,
+          session_id: 'session-id',
+          channel_id: mockChannelId,
+          nick: 'nick',
+          joined_at: new Date('2020-01-01').getTime(),
+          user: this.user,
+          roles: [],
+        },
+        this.guild,
+      ]);
+    }
   }
 
   private mockPartyMessages(messages:Message[]): void {
@@ -485,10 +535,11 @@ export default class MockDiscord {
       {
         data: command,
         id: BigInt(1),
-        user: this.guildMember,
-        channel: this.textChannel,
+        user: this.user,
+        // member: this.guildMember,
+        // channel: this.textChannel,
       },
-      this.textChannel,
+      // this.textChannel,
     ]);
     this.interaction.options = Reflect.construct(CommandInteractionOptionResolver, [this.client, command.options]);
     // Define the 'getString' method
@@ -507,7 +558,7 @@ export default class MockDiscord {
     this.interaction.deferReply = jest.fn();
     this.interaction.editReply = jest.fn();
     // this.interaction.followUp = jest.fn();
-    this.interaction.guildId = this.guild.id;
+    this.interaction.guildId = this.guild?.id;
     this.interaction.isCommand = jest.fn(() => true);
   }
 }

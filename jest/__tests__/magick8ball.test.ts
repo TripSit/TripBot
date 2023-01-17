@@ -9,11 +9,13 @@ const slashCommand = dMagick8ball;
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    const commandData = slashCommand.data;
-    const stringCommand = `/${commandData.name}`;
-    const command = getParsedCommand(stringCommand, commandData);
-    // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
-    const spy = await executeCommandAndSpyReply(slashCommand, command);
-    expect(spy).toHaveBeenCalledWith(expect.any(String));
+    expect(await executeCommandAndSpyReply(
+      slashCommand,
+      getParsedCommand(
+        `/${slashCommand.data.name}`,
+        slashCommand.data,
+        'tripsit',
+      ),
+    )).toHaveBeenCalledWith(expect.any(String));
   });
 });

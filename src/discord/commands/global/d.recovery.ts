@@ -15,7 +15,9 @@ export const dRecovery: SlashCommand = {
     .setDescription('Information that may be helpful in a serious situation.'),
   async execute(interaction) {
     startLog(F, interaction);
-    interaction.reply(await recovery());
+    interaction.reply({
+      content: await recovery(),
+    });
     return true;
   },
 };

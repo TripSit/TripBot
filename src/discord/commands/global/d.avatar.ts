@@ -21,7 +21,10 @@ export const dAvatar: SlashCommand = {
     startLog(F, interaction);
     // log.debug(F, `${JSON.stringify(interaction.options, null, 2)}`);
     // If this doesnt happen in a guild then ignore it
-    if (!interaction.guild) return false;
+    if (!interaction.guild) {
+      interaction.reply({ content: 'This command can only be used in a discord guild!', ephemeral: true });
+      return false;
+    }
 
     const user = interaction.options.getUser('user', true);
 

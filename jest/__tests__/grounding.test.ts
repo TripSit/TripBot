@@ -9,11 +9,15 @@ const slashCommand = dGrounding;
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    const commandData = slashCommand.data;
-    const stringCommand = `/${commandData.name}`;
-    const command = getParsedCommand(stringCommand, commandData);
-    // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
-    const spy = await executeCommandAndSpyReply(slashCommand, command);
-    expect(spy).toHaveBeenCalledWith('https://imgur.com/wEg2xFB');
+    expect(await executeCommandAndSpyReply(
+      slashCommand,
+      getParsedCommand(
+        `/${slashCommand.data.name}`,
+        slashCommand.data,
+        'dm',
+      ),
+    )).toHaveBeenCalledWith(
+      'https://imgur.com/wEg2xFB',
+    );
   });
 });

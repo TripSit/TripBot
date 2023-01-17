@@ -5,31 +5,36 @@ import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '..
 
 const slashCommand = dBotstats;
 
+const authorInfo = {
+  iconURL: 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png',
+  name: 'TripSit.Me',
+  url: 'http://www.tripsit.me',
+};
+const footerInfo = {
+  iconURL: 'https://imgur.com/b923xK2.png',
+  text: 'Dose responsibly!',
+};
+
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    const commandData = slashCommand.data;
-    const stringCommand = `/${commandData.name}`;
-    const command = getParsedCommand(stringCommand, commandData);
-    // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
-    const spy = await executeCommandAndSpyReply(slashCommand, command);
-    expect(spy).toHaveBeenCalledWith({
+    expect(await executeCommandAndSpyReply(
+      slashCommand,
+      getParsedCommand(
+        `/${slashCommand.data.name}`,
+        slashCommand.data,
+        'tripsit',
+      ),
+    )).toHaveBeenCalledWith({
       embeds: embedContaining({
-        author: {
-          iconURL: 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png',
-          name: 'TripSit.Me',
-          url: 'http://www.tripsit.me',
-        },
-        footer: {
-          iconURL: 'https://imgur.com/b923xK2.png',
-          text: 'Dose responsibly!',
-        },
+        author: authorInfo,
+        footer: footerInfo,
         color: Colors.Purple,
         title: 'Bot Stats',
         description: stripIndents`
           Here are some stats about the bot!
           Guilds: 1
           Users: 1
-          Channels: 1
+          Channels: 0
           Commands: 0
           Uptime: 0ms
         `,

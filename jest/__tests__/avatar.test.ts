@@ -1,8 +1,7 @@
+import { stripIndents } from 'common-tags';
 import { Colors } from 'discord.js';
 import { dAvatar } from '../../src/discord/commands/global/d.avatar';
 import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
-
-const F = f(__filename); // eslint-disable-line
 
 const slashCommand = dAvatar;
 
@@ -11,7 +10,6 @@ const authorInfo = {
   name: 'TripSit.Me',
   url: 'http://www.tripsit.me',
 };
-
 const footerInfo = {
   iconURL: 'https://imgur.com/b923xK2.png',
   text: 'Dose responsibly!',
@@ -19,12 +17,14 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    const commandData = slashCommand.data;
-    const stringCommand = `/${commandData.name} user:@MoonBear#1024`;
-    const command = getParsedCommand(stringCommand, commandData);
-    // log.debug(F, `command: ${JSON.stringify(command, null, 2)}`);
-    const spy = await executeCommandAndSpyReply(slashCommand, command);
-    expect(spy).toHaveBeenCalledWith({
+    expect(await executeCommandAndSpyReply(
+      slashCommand,
+      getParsedCommand(
+        `/${slashCommand.data.name} user:@MoonBear#1024`,
+        slashCommand.data,
+        'tripsit',
+      ),
+    )).toHaveBeenCalledWith({
       embeds: embedContaining({
         author: authorInfo,
         footer: footerInfo,
@@ -34,6 +34,18 @@ describe(slashCommand.data.name, () => {
           url: 'https://cdn.discordapp.com/avatars/123456789/user%20avatar%20url.webp?size=4096',
         },
       }),
+    });
+
+    expect(await executeCommandAndSpyReply(
+      slashCommand,
+      getParsedCommand(
+        `/${slashCommand.data.name}`,
+        slashCommand.data,
+        'dm',
+      ),
+    )).toHaveBeenCalledWith({
+      content: stripIndents`This command can only be used in a discord guild!`,
+      ephemeral: true,
     });
   });
 });

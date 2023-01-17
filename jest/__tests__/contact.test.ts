@@ -1,35 +1,39 @@
 import {
   Colors,
 } from 'discord.js';
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { dContact } from '../../src/discord/commands/global/d.contact';
 import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
-import log from '../../src/global/utils/log'; // eslint-disable-line
-
-const PREFIX = parse(__filename).name; // eslint-disable-line
 
 const slashCommand = dContact;
 
+const authorInfo = {
+  iconURL: 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png',
+  name: 'TripSit.Me',
+  url: 'http://www.tripsit.me',
+};
+const footerInfo = {
+  iconURL: 'https://imgur.com/b923xK2.png',
+  text: 'Dose responsibly!',
+};
+
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    const commandData = slashCommand.data;
-    const stringCommand = `/${commandData.name}`;
-    const command = getParsedCommand(stringCommand, commandData);
-    // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
-    const spy = await executeCommandAndSpyReply(slashCommand, command);
-    expect(spy).toHaveBeenCalledWith({
+    expect(await executeCommandAndSpyReply(
+      slashCommand,
+      getParsedCommand(
+        `/${slashCommand.data.name}`,
+        slashCommand.data,
+        'tripsit',
+      ),
+    )).toHaveBeenCalledWith({
       embeds: embedContaining({
-        color: Colors.Purple,
-        author: {
-          iconURL: 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png',
-          name: 'TripSit.Me',
-          url: 'http://www.tripsit.me',
-        },
+        author: authorInfo,
         footer: {
           iconURL: undefined,
           text: 'Thanks for asking!',
         },
+        color: Colors.Purple,
         title: 'Contact TripSit',
         url: 'https://tripsit.me/contact-us/',
         description: stripIndents`The best way to get in contact with TeamTripsit the Discord via the link below!

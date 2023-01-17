@@ -12,7 +12,6 @@ const authorInfo = {
   name: 'TripSit.Me',
   url: 'http://www.tripsit.me',
 };
-
 const footerInfo = {
   iconURL: 'https://imgur.com/b923xK2.png',
   text: 'Dose responsibly!',
@@ -20,16 +19,18 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    const commandData = slashCommand.data;
-    const stringCommand = `/${commandData.name} lsd last_dose:300 days:3 desired_dose:400`;
-    const command = getParsedCommand(stringCommand, commandData);
-    // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
-    const spy = await executeCommandAndSpyReply(slashCommand, command);
-    expect(spy).toHaveBeenCalledWith({
+    expect(await executeCommandAndSpyReply(
+      slashCommand,
+      getParsedCommand(
+        `/${slashCommand.data.name} lsd last_dose:300 days:3 desired_dose:400`,
+        slashCommand.data,
+        'tripsit',
+      ),
+    )).toHaveBeenCalledWith({
       embeds: embedContaining({
-        color: Colors.Purple,
         author: authorInfo,
         footer: footerInfo,
+        color: Colors.Purple,
         title: '634 ug of LSD is needed to feel the same effects as 400 ug of LSD when 300 ug were taken 3 days ago.',
         description: stripIndents`
           This ESTIMATE only works for tryptamines (LSD and Magic Mushrooms).

@@ -16,7 +16,6 @@ const authorInfo = {
   name: 'TripSit.Me',
   url: 'http://www.tripsit.me',
 };
-
 const footerInfo = {
   iconURL: 'https://imgur.com/b923xK2.png',
   text: 'Dose responsibly!',
@@ -24,28 +23,44 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    const commandData = slashCommand.data;
-    const stringCommand = `/${commandData.name}`;
-    const command = getParsedCommand(stringCommand, commandData);
-    // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
-    const spy = await executeCommandAndSpyReply(slashCommand, command);
-    expect(spy).toHaveBeenCalledWith({
+    expect(await executeCommandAndSpyReply(
+      slashCommand,
+      getParsedCommand(
+        `/${slashCommand.data.name}`,
+        slashCommand.data,
+        'tripsit',
+      ),
+    )).toHaveBeenCalledWith({
       embeds: embedContaining({
         author: authorInfo,
         footer: footerInfo,
         color: Colors.DarkBlue,
         title: 'About TripBot',
         url: 'https://tripsit.me/about/',
-        description: stripIndents`This app is created by TripSit, an organisation which helps to provide factual information        about drugs and how to reduce the harms involved in using them.
-              The official support server is [TripSit discord](https://discord.gg/TripSit). If you have issues/questions, join and talk with Moonbear!`,
+        description: stripIndents``,
+        image: {
+          url: 'imgurl',
+        },
         fields: [
           {
-            name: 'Invite',
-            value: stripIndents`[Click here to invite TripBot to your own server](https://discord.com/api/oauth2/authorize?client_id=957780726806380545&permissions=18432&scope=bot%20applications.commands).
-                  Note: For advanced features you will need to give the bot more permissions at your discression.`,
+            name: 'name',
+            value: stripIndents`desc`,
+            inline: true,
           },
         ],
       }),
+    });
+
+    expect(await executeCommandAndSpyReply(
+      slashCommand,
+      getParsedCommand(
+        `/${slashCommand.data.name}`,
+        slashCommand.data,
+        'dm',
+      ),
+    )).toHaveBeenCalledWith({
+      content: stripIndents`This command can only be used in a discord guild!`,
+      ephemeral: true,
     });
   });
 });

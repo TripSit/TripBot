@@ -12,7 +12,6 @@ const authorInfo = {
   name: 'TripSit.Me',
   url: 'http://www.tripsit.me',
 };
-
 const footerInfo = {
   iconURL: 'https://imgur.com/b923xK2.png',
   text: 'Dose responsibly!',
@@ -20,16 +19,18 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    const commandData = slashCommand.data;
-    const stringCommand = `/${commandData.name} calc_weight:200 units:kg taking:RoboCough (ml)`;
-    const command = getParsedCommand(stringCommand, commandData);
-    // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
-    const spy = await executeCommandAndSpyReply(slashCommand, command);
-    expect(spy).toHaveBeenCalledWith({
+    expect(await executeCommandAndSpyReply(
+      slashCommand,
+      getParsedCommand(
+        `/${slashCommand.data.name} calc_weight:200 units:kg taking:RoboCough (ml)`,
+        slashCommand.data,
+        'tripsit',
+      ),
+    )).toHaveBeenCalledWith({
       embeds: embedContaining({
-        color: Colors.Purple,
         author: authorInfo,
         footer: footerInfo,
+        color: Colors.Purple,
         title: 'DXM Dosages',
         description: stripIndents`For a 200kg individual taking RoboCough (ml)`,
         fields: [

@@ -94,6 +94,7 @@ function castToType(value: string, typeId: number) {
 export function getParsedCommand(
   stringCommand: string,
   commandData: Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'> | SlashCommandSubcommandsOnlyBuilder,
+  context: 'tripsit' | 'guild' | 'dm',
 ) {
   const options = getNestedOptions(commandData.options); // @ts-ignore
   // log.debug(F, `getNestedOptions: ${JSON.stringify(options, null, 2)}`); // @ts-ignore
@@ -163,6 +164,7 @@ export function getParsedCommand(
   // log.debug(`[${PREFIX}] subcommand: ${JSON.stringify(subcommand, null, 2)}`);
   // log.debug(`[${PREFIX}] retValue: ${JSON.stringify(retValue, null, 2)}`);
   return {
+    context,
     id: name,
     name,
     type: 1,
@@ -197,16 +199,19 @@ export function copy(obj:any) { // eslint-disable-line @typescript-eslint/no-exp
 }
 
 /* Spy 'reply' */
-export function mockInteractionAndSpyReply(command:{
-  id: string;
-  name: string;
-  type: number;
-  options: ToAPIApplicationCommandOptions[] | {
+export function mockInteractionAndSpyReply(
+  command:{
+    context: 'tripsit' | 'guild' | 'dm',
+    id: string;
     name: string;
     type: number;
-    options: ToAPIApplicationCommandOptions[];
-  }[];
-}) {
+    options: ToAPIApplicationCommandOptions[] | {
+      name: string;
+      type: number;
+      options: ToAPIApplicationCommandOptions[];
+    }[];
+  },
+) {
   const discord = new MockDiscord({ command });
   // console.log(discord);
   const interaction = discord.getInteraction() as ChatInputCommandInteraction;
@@ -218,6 +223,7 @@ export function mockInteractionAndSpyReply(command:{
 export async function executeCommandAndSpyReply(
   Command:SlashCommand,
   content:{
+    context: 'tripsit' | 'guild' | 'dm',
     id: string;
     name: string;
     type: number;
@@ -227,7 +233,6 @@ export async function executeCommandAndSpyReply(
       options: ToAPIApplicationCommandOptions[];
     }[];
   },
-  // config = {},
 ) {
   const { interaction, spy } = mockInteractionAndSpyReply(content);
   // const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
@@ -237,6 +242,7 @@ export async function executeCommandAndSpyReply(
 
 /* Spy 'editReply' */
 export function mockInteractionAndSpyEditReply(command:{
+  context: 'tripsit' | 'guild' | 'dm',
   id: string;
   name: string;
   type: number;
@@ -256,6 +262,7 @@ export function mockInteractionAndSpyEditReply(command:{
 
 /* Spy channel 'send' with mock options */
 export function mockInteractionWithOptionsAndSpyChannelSend(command:{
+  context: 'tripsit' | 'guild' | 'dm',
   id: string;
   name: string;
   type: number;
@@ -276,6 +283,7 @@ export function mockInteractionWithOptionsAndSpyChannelSend(command:{
 export async function executeCommandWithMockOptionsAndSpySentMessage(
   Command:SlashCommand,
   options:{
+    context: 'tripsit' | 'guild' | 'dm',
     id: string;
     name: string;
     type: number;
@@ -295,6 +303,7 @@ export async function executeCommandWithMockOptionsAndSpySentMessage(
 
 /* Spy 'edit' with mock options */
 export function mockMessageWithOptionsAndSpyEdit(command:{
+  context: 'tripsit' | 'guild' | 'dm',
   id: string;
   name: string;
   type: number;
@@ -315,6 +324,7 @@ export function mockMessageWithOptionsAndSpyEdit(command:{
 export async function executeCommandWithMockOptionsAndSpyEdit(
   Command:SlashCommand,
   options:{
+    context: 'tripsit' | 'guild' | 'dm',
     id: string;
     name: string;
     type: number;
@@ -334,6 +344,7 @@ export async function executeCommandWithMockOptionsAndSpyEdit(
 
 /* Spy 'edit' with mock options for a party reaction */
 export function mockPartyReactionAndSpyEdit(command:{
+  context: 'tripsit' | 'guild' | 'dm',
   id: string;
   name: string;
   type: number;
