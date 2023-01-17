@@ -39,5 +39,68 @@ describe(slashCommand.data.name, () => {
         `,
       }),
     });
+
+    expect(await executeCommandAndSpyReply(
+      slashCommand,
+      getParsedCommand(
+        `/${slashCommand.data.name} lsd last_dose:300 days:3`,
+        slashCommand.data,
+        'tripsit',
+      ),
+    )).toHaveBeenCalledWith({
+      embeds: embedContaining({
+        author: authorInfo,
+        footer: footerInfo,
+        color: Colors.Purple,
+        title: '534 ug of LSD is needed to feel the same effects as 300 ug of LSD taken 3 days ago.',
+        description: stripIndents`
+          This ESTIMATE only works for tryptamines (LSD and Magic Mushrooms).
+          As all bodies and brains are different, results may vary. 
+          [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
+        `,
+      }),
+    });
+
+    expect(await executeCommandAndSpyReply(
+      slashCommand,
+      getParsedCommand(
+        `/${slashCommand.data.name} mushrooms last_dose:3.5 days:3 desired_dose:4.5`,
+        slashCommand.data,
+        'tripsit',
+      ),
+    )).toHaveBeenCalledWith({
+      embeds: embedContaining({
+        author: authorInfo,
+        footer: footerInfo,
+        color: Colors.Purple,
+        title: '7.2 g of Mushrooms is needed to feel the same effects as 4.5 g of Mushrooms when 3.5 g were taken 3 days ago.',
+        description: stripIndents`
+          This ESTIMATE only works for tryptamines (LSD and Magic Mushrooms).
+          As all bodies and brains are different, results may vary. 
+          [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
+        `,
+      }),
+    });
+
+    expect(await executeCommandAndSpyReply(
+      slashCommand,
+      getParsedCommand(
+        `/${slashCommand.data.name} mushrooms last_dose:3.5 days:3`,
+        slashCommand.data,
+        'tripsit',
+      ),
+    )).toHaveBeenCalledWith({
+      embeds: embedContaining({
+        author: authorInfo,
+        footer: footerInfo,
+        color: Colors.Purple,
+        title: '6.2 g of Mushrooms is needed to feel the same effects as 3.5 g of Mushrooms taken 3 days ago.',
+        description: stripIndents`
+          This ESTIMATE only works for tryptamines (LSD and Magic Mushrooms).
+          As all bodies and brains are different, results may vary. 
+          [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
+        `,
+      }),
+    });
   });
 });
