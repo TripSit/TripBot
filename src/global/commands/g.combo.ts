@@ -1,3 +1,4 @@
+import { stripIndents } from 'common-tags';
 import drugDataAll from '../assets/data/drug_db_combined.json';
 import comboDefs from '../assets/data/combo_definitions.json';
 
@@ -27,21 +28,13 @@ export async function combo(
     thumbnail?: string,
     color?: string,
   }> {
-  if (drugDataAll === null || drugDataAll === undefined) {
-    return {
-      success: false,
-      title: 'Drug data was not found',
-      description: devMsg,
-    };
-  }
-
   let drugAData = drugDataAll.find(drug => drug.name.toLowerCase() === drugA.toLowerCase());
   if (!drugAData) {
     drugAData = drugDataAll.find(drug => drug.aliases?.map(c => c.toLowerCase()).includes(drugA.toLowerCase()));
     if (!drugAData) {
       return {
         success: false,
-        title: `${drugA} was not found, make sure you spelled it correctly`,
+        title: `${drugA} was not found, make sure you spelled it correctly!`,
         description: devMsg,
       };
     }
@@ -62,23 +55,27 @@ export async function combo(
   let drugInteraction = {} as any;
 
   if (drugAData.interactions) {
+    log.debug(F, `${drugA} has interactions`);
     // Match based on name
     drugInteraction = drugAData.interactions.find(
       interaction => interaction.name.toLowerCase().includes(drugB.toLowerCase()),
     );
 
     if (!drugInteraction && drugBData.classes?.chemical) {
+      log.debug(F, `${drugA} Interaction not found, checking chemical classes in ${drugB}`);
+
       // If the interaction is not found by matching the name, try matching on the class
       const drugBChemClassList = drugBData.classes?.chemical?.map(c => c.toLowerCase());
-      log.debug(F, `drugBChemClassList: ${drugBChemClassList}`);
+      // log.debug(F, `drugBChemClassList: ${drugBChemClassList}`);
 
       drugInteraction = drugAData.interactions.find(
         interaction => drugBChemClassList.includes(interaction.name.toLowerCase()),
       );
 
-      log.debug(F, `drugInteractionCheck: ${JSON.stringify(drugInteraction, null, 2)}`);
+      // log.debug(F, `drugInteractionCheck: ${JSON.stringify(drugInteraction, null, 2)}`);
 
       if (!drugInteraction) {
+        log.debug(F, `${drugA} Interaction not found, checking classes, removing s from end of class name`);
         drugInteraction = drugAData.interactions.find(
           interaction => drugBChemClassList.includes(interaction.name.slice(0, -1).toLowerCase()),
         );
@@ -86,29 +83,34 @@ export async function combo(
     }
 
     if (!drugInteraction && drugBData.classes?.psychoactive) {
+      log.debug(F, `${drugA} Interaction not found, checking psychoactive classes`);
+
       // If the interaction is not found by matching the name, try matching on the class
       const drugBPsychClassList = drugBData.classes?.psychoactive?.map(c => c.toLowerCase());
-      log.debug(F, `drugBPsychClassList: ${drugBPsychClassList}`);
+      // log.debug(F, `drugBPsychClassList: ${drugBPsychClassList}`);
 
       drugInteraction = drugAData.interactions.find(
         interaction => drugBPsychClassList.includes(interaction.name.toLowerCase()),
       );
     }
   } else if (drugBData.interactions) {
+    log.debug(F, `${drugB} has interactions}`);
     drugInteraction = drugBData.interactions.find(
       interaction => interaction.name.toLowerCase().includes(drugA.toLowerCase()),
     );
 
     if (!drugInteraction && drugAData.classes?.chemical) {
+      log.debug(F, `${drugB} Interaction not found, checking chemical classes in ${drugA}`);
       // If the interaction is not found by matching the name, try matching on the class
       const drugAChemClassList = drugAData.classes?.chemical?.map(c => c.toLowerCase());
-      log.debug(F, `drugAClassList: ${drugAChemClassList}`);
+      // log.debug(F, `drugAClassList: ${drugAChemClassList}`);
 
       drugInteraction = drugBData.interactions.find(
         interaction => drugAChemClassList.includes(interaction.name.toLowerCase()),
       );
 
       if (!drugInteraction) {
+        log.debug(F, `${drugB} Interaction not found, checking classes, removing s from end of class name`);
         drugInteraction = drugBData.interactions.find(
           interaction => drugAChemClassList.includes(interaction.name.slice(0, -1).toLowerCase()),
         );
@@ -116,9 +118,10 @@ export async function combo(
     }
 
     if (!drugInteraction && drugAData.classes?.psychoactive) {
+      log.debug(F, `${drugB} Interaction not found, checking psychoactive classes`);
       // If the interaction is not found by matching the name, try matching on the class
       const drugAPsychClassList = drugAData.classes?.psychoactive?.map(c => c.toLowerCase());
-      log.debug(F, `drugAPsychClassList: ${drugAPsychClassList}`);
+      // log.debug(F, `drugAPsychClassList: ${drugAPsychClassList}`);
 
       drugInteraction = drugBData.interactions.find(
         interaction => drugAPsychClassList.includes(interaction.name.toLowerCase()),
@@ -130,26 +133,33 @@ export async function combo(
     return {
       success: true,
       title: `Could not find interaction info for ${drugA} and ${drugB}!`,
-      description: `This does not mean combining them is safe!\nThis means we don't have information on it!
+      description: stripIndents`This does not mean combining them is safe!\nThis means we don't have information on it!
 
       Start your research here:
       [${drugA}](${drugAData.url})
-      [${drugB}](${drugBData.url})
-      `,
+      [${drugB}](${drugBData.url})`,
     };
   }
 
-  const intDef = comboDefs.find(def => def.status === drugInteraction?.status);
+  type ComboDef = {
+    status: string;
+    emoji: string;
+    color: string;
+    definition: string;
+    thumbnail: string;
+  };
+
+  const intDef = comboDefs.find(def => def.status === drugInteraction?.status) as ComboDef;
 
   // log.debug(F, `intDef: ${JSON.stringify(intDef)}`);
 
-  if (!intDef) {
-    return {
-      success: false,
-      title: `${drugA} and ${drugB} have an unknown interaction!`,
-      description: devMsg,
-    };
-  }
+  // if (!intDef) {
+  //   return {
+  //     success: false,
+  //     title: `${drugA} and ${drugB} have an unknown interaction!`,
+  //     description: devMsg,
+  //   };
+  // }
 
   const {
     status,
