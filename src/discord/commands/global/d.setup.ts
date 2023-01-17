@@ -112,10 +112,10 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
   let modalText = stripIndents`
     Welcome to ${(interaction.channel as TextChannel).name}!
 
-    **Need to talk with a tripsitter? Click the buttom below!**
+    **Need to talk with a TripSitter? Click the button below!**
     Share what substance you're asking about, time and size of dose, and any other relevant info.
     This will create a new thread and alert the community that you need assistance!
-    🛑 Please do not message helpers or tripsitters directly! 🛑
+    🛑 Please do not message Helpers or TripSitters directly! 🛑
   `;
 
   if (channelSanctuary) {
