@@ -261,36 +261,34 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
   if (!interaction.member) return;
 
   const colorRoles = [
-    { name: 'Color Red', value: env.ROLE_RED },
-    { name: 'Color Orange', value: env.ROLE_ORANGE },
-    { name: 'Color Yellow', value: env.ROLE_YELLOW },
-    { name: 'Color Green', value: env.ROLE_GREEN },
-    { name: 'Color Blue', value: env.ROLE_BLUE },
-    { name: 'Color Purple', value: env.ROLE_PURPLE },
-    { name: 'Color Pink', value: env.ROLE_PINK },
-    { name: 'Color Black', value: env.ROLE_BLACK },
-    { name: 'Color White', value: env.ROLE_WHITE },
+    { name: '💖 Tuplp', value: env.ROLE_RED },
+    { name: '🧡 Marigold', value: env.ROLE_ORANGE },
+    { name: '💛 Daffodil', value: env.ROLE_YELLOW },
+    { name: '💚 Waterlily', value: env.ROLE_GREEN },
+    { name: '💙 Bluebell', value: env.ROLE_BLUE },
+    { name: '💜 Hyacinth', value: env.ROLE_PURPLE },
+    { name: '💗 Azalea', value: env.ROLE_PINK },
   ] as RoleDef[];
 
   const premiumColorRoles = [
-    { name: 'Color Donor Red', value: env.ROLE_DONOR_RED },
-    { name: 'Color Donor Orange', value: env.ROLE_DONOR_ORANGE },
-    { name: 'Color Donor Yellow', value: env.ROLE_DONOR_YELLOW },
-    { name: 'Color Donor Green', value: env.ROLE_DONOR_GREEN },
-    { name: 'Color Donor Blue', value: env.ROLE_DONOR_BLUE },
-    { name: 'Color Donor Purple', value: env.ROLE_DONOR_PURPLE },
-    { name: 'Color Donor Pink', value: env.ROLE_DONOR_PINK },
+    { name: '💖 Red', value: env.ROLE_DONOR_RED },
+    { name: '🧡 Orange', value: env.ROLE_DONOR_ORANGE },
+    { name: '💛 Yellow', value: env.ROLE_DONOR_YELLOW },
+    { name: '💚 Green', value: env.ROLE_DONOR_GREEN },
+    { name: '💙 Blue', value: env.ROLE_DONOR_BLUE },
+    { name: '💜 Purple', value: env.ROLE_DONOR_PURPLE },
+    { name: '💗 Pink', value: env.ROLE_DONOR_PINK },
   ] as RoleDef[];
 
   const mindsetRoles = [
-    { name: 'Mindset Drunk', value: env.ROLE_DRUNK },
-    { name: 'Mindset High', value: env.ROLE_HIGH },
-    { name: 'Mindset Rolling', value: env.ROLE_ROLLING },
-    { name: 'Mindset Tripping', value: env.ROLE_TRIPPING },
-    { name: 'Mindset Dissociating', value: env.ROLE_DISSOCIATING },
-    { name: 'Mindset Stimming', value: env.ROLE_STIMMING },
-    { name: 'Mindset Sedated', value: env.ROLE_SEDATED },
-    { name: 'Mindset Sober', value: env.ROLE_SOBER },
+    { name: 'Drunk', value: env.ROLE_DRUNK },
+    { name: 'High', value: env.ROLE_HIGH },
+    { name: 'Rolling', value: env.ROLE_ROLLING },
+    { name: 'Tripping', value: env.ROLE_TRIPPING },
+    { name: 'Dissociating', value: env.ROLE_DISSOCIATING },
+    { name: 'Stimming', value: env.ROLE_STIMMING },
+    { name: 'Sedated', value: env.ROLE_SEDATED },
+    { name: 'Sober', value: env.ROLE_SOBER },
   ] as RoleDef[];
 
   // Check if interaction.member type is APIInteractionGuildMember
@@ -328,12 +326,14 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
     // NeedsHelp, Helper, Contributor, Color and Mindset roles.
     // They can only mange their own roles.
     if (command === 'add') {
+      // Everyone can add mindset roles
       roleList.push(
         ...mindsetRoles,
       );
       const isDonor = (interaction.member as GuildMember).roles.cache.has(env.ROLE_DONOR);
       const isPatron = (interaction.member as GuildMember).roles.cache.has(env.ROLE_PATRON);
 
+      // If the user is a donor or patreon they have access to extra color roles
       if (isDonor || isPatron) {
         roleList.push(...premiumColorRoles);
       } else {
