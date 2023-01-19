@@ -1,4 +1,5 @@
 import { stripIndents } from 'common-tags';
+import { CbSubstance } from '../@types/combined.d';
 import drugDataAll from '../assets/data/drug_db_combined.json';
 import comboDefs from '../assets/data/combo_definitions.json';
 
@@ -40,9 +41,11 @@ export async function combo(
     }
   }
 
-  let drugBData = drugDataAll.find(drug => drug.name.toLowerCase() === drugB.toLowerCase());
+  let drugBData = (drugDataAll as CbSubstance[]).find(drug => drug.name.toLowerCase() === drugB.toLowerCase());
   if (!drugBData) {
-    drugBData = drugDataAll.find(drug => drug.aliases?.map(c => c.toLowerCase()).includes(drugB.toLowerCase()));
+    drugBData = (drugDataAll as CbSubstance[]).find(
+      drug => drug.aliases?.map(c => c.toLowerCase()).includes(drugB.toLowerCase()),
+    );
     if (!drugBData) {
       return {
         success: false,

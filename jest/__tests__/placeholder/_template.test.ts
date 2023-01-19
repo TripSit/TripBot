@@ -7,8 +7,6 @@ import { stripIndents } from 'common-tags';
 import { dAbout } from '../../../src/discord/commands/global/d.about';
 import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../utils/testutils';
 
-const F = f(__filename); // eslint-disable-line
-
 const slashCommand = dAbout;
 
 const authorInfo = {

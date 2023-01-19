@@ -12,6 +12,8 @@ import { CbSubstance } from '../../../global/@types/combined.d';
 
 const F = f(__filename);
 
+export default dDrug;
+
 type RoaType = {
   name: string,
   dosage?: {
@@ -25,7 +27,6 @@ type RoaType = {
   }[],
 };
 
-export default dDrug;
 
 async function addSummary(
   embed: EmbedBuilder,
@@ -299,24 +300,23 @@ export const dDrug: SlashCommand = {
     let embed = embedTemplate();
     // Check if the interaction is coming from DM
     const ephemeral = !(interaction.options.getBoolean('public') ?? true);
+    log.debug(F, `ephemeral: ${ephemeral} | interaction.channelId: ${interaction.channelId}`);
     if (interaction.channelId !== null && !ephemeral) {
       embed.setFooter({ text: 'You can use this command in DM for privacy if you want!' });
     }
-    log.debug(F, `ephemeral: ${ephemeral}`);
-    const drugName = interaction.options.getString('substance');
-    if (!drugName) {
-      embed.setTitle('No drug name was provided');
-      interaction.reply({ embeds: [embed], ephemeral: true });
-      return false;
-    }
+    // log.debug(F, `ephemeral: ${ephemeral}`);
+    const drugName = interaction.options.getString('substance', true);
+    // if (!drugName) {
+    //   embed.setTitle('No drug name was provided');
+    //   interaction.reply({ embeds: [embed], ephemeral: true });
+    //   return false;
+    // }
     const drugData = await drug(drugName) as CbSubstance;
     // log.debug(F, `drugData: ${JSON.stringify(drugData, null, 2)}`);
 
     if (drugData === null) {
       embed.setTitle(`${drugName} was not found`);
-      embed.setDescription(
-        '...this shouldn\'t have happened, please tell the developer!',
-      );
+      embed.setDescription(stripIndents`...this shouldn\'t have happened, please tell the developer!`);
       // If this happens then something went wrong with the auto-complete
       interaction.reply({ embeds: [embed], ephemeral: true });
       return false;
