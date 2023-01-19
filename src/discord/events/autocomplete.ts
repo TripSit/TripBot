@@ -271,13 +271,13 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
   ] as RoleDef[];
 
   const premiumColorRoles = [
-    { name: '💖 Red', value: env.ROLE_DONOR_RED },
-    { name: '🧡 Orange', value: env.ROLE_DONOR_ORANGE },
-    { name: '💛 Yellow', value: env.ROLE_DONOR_YELLOW },
-    { name: '💚 Green', value: env.ROLE_DONOR_GREEN },
-    { name: '💙 Blue', value: env.ROLE_DONOR_BLUE },
-    { name: '💜 Purple', value: env.ROLE_DONOR_PURPLE },
-    { name: '💗 Pink', value: env.ROLE_DONOR_PINK },
+    { name: '💖 Ruby', value: env.ROLE_DONOR_RED },
+    { name: '🧡 Sunstone', value: env.ROLE_DONOR_ORANGE },
+    { name: '💛 Citrine', value: env.ROLE_DONOR_YELLOW },
+    { name: '💚 Jade', value: env.ROLE_DONOR_GREEN },
+    { name: '💙 Sapphire', value: env.ROLE_DONOR_BLUE },
+    { name: '💜 Amethyst', value: env.ROLE_DONOR_PURPLE },
+    { name: '💗 Pezzottaite', value: env.ROLE_DONOR_PINK },
   ] as RoleDef[];
 
   const mindsetRoles = [
