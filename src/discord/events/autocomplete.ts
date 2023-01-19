@@ -12,6 +12,8 @@ import unitsOfMeasurement from '../../global/assets/data/units_of_measurement.js
 
 const F = f(__filename); // eslint-disable-line
 
+type RoleDef = { name: string; value: string };
+
 const timezoneNames:string[] = [];
 for (const timezone of timezones) { // eslint-disable-line
   timezoneNames.push(timezone.label);
@@ -268,7 +270,17 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
     { name: 'Color Pink', value: env.ROLE_PINK },
     { name: 'Color Black', value: env.ROLE_BLACK },
     { name: 'Color White', value: env.ROLE_WHITE },
-  ];
+  ] as RoleDef[];
+
+  const premiumColorRoles = [
+    { name: 'Color Donor Red', value: env.ROLE_DONOR_RED },
+    { name: 'Color Donor Orange', value: env.ROLE_DONOR_ORANGE },
+    { name: 'Color Donor Yellow', value: env.ROLE_DONOR_YELLOW },
+    { name: 'Color Donor Green', value: env.ROLE_DONOR_GREEN },
+    { name: 'Color Donor Blue', value: env.ROLE_DONOR_BLUE },
+    { name: 'Color Donor Purple', value: env.ROLE_DONOR_PURPLE },
+    { name: 'Color Donor Pink', value: env.ROLE_DONOR_PINK },
+  ] as RoleDef[];
 
   const mindsetRoles = [
     { name: 'Mindset Drunk', value: env.ROLE_DRUNK },
@@ -279,13 +291,14 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
     { name: 'Mindset Stimming', value: env.ROLE_STIMMING },
     { name: 'Mindset Sedated', value: env.ROLE_SEDATED },
     { name: 'Mindset Sober', value: env.ROLE_SOBER },
-  ];
+  ] as RoleDef[];
 
   // Check if interaction.member type is APIInteractionGuildMember
   const isMod = (interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR);
   const isTs = (interaction.member as GuildMember).roles.cache.has(env.ROLE_TRIPSITTER);
 
   const roleList = [] as { name:string, value:string }[];
+  const command = interaction.options.getSubcommand();
   if (isMod) {
     // If the user is a moderator, they can manage the:
     // NeedsHelp, Helper, Mindset, Verified, Occult and Contributor roles.
@@ -298,6 +311,7 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
       { name: 'Occult', value: env.ROLE_OCCULT },
       { name: 'Underban', value: env.ROLE_UNDERBAN },
       ...mindsetRoles,
+      ...premiumColorRoles,
     );
   } else if (isTs) {
     // If the user is a tripsitter, they can manage the
@@ -307,18 +321,27 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
       { name: 'NeedsHelp', value: env.ROLE_NEEDSHELP },
       { name: 'Helper', value: env.ROLE_HELPER },
       ...mindsetRoles,
+      ...premiumColorRoles,
     );
   } else {
     // If the user is not a moderator or tripsitter, they can manage the
     // NeedsHelp, Helper, Contributor, Color and Mindset roles.
     // They can only mange their own roles.
-    const command = interaction.options.getSubcommand();
     if (command === 'add') {
       roleList.push(
         ...mindsetRoles,
-        ...colorRoles,
       );
+      const isDonor = (interaction.member as GuildMember).roles.cache.has(env.ROLE_DONOR);
+      const isPatron = (interaction.member as GuildMember).roles.cache.has(env.ROLE_PATRON);
+
+      if (isDonor || isPatron) {
+        roleList.push(...premiumColorRoles);
+      } else {
+        roleList.push(...colorRoles);
+      }
     }
+
+    // Keep this here cuz while the team can remove any role, regular membesr can only remove roles they already have
     if (command === 'remove') {
       const potentialRoles = [
         { name: 'NeedsHelp', value: env.ROLE_NEEDSHELP },
@@ -327,6 +350,7 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
         { name: 'Occult', value: env.ROLE_OCCULT },
         ...colorRoles,
         ...mindsetRoles,
+        ...premiumColorRoles,
       ];
 
       const potentialRoleIds = potentialRoles.map(role => role.value);
