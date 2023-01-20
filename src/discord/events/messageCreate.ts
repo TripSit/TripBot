@@ -8,6 +8,7 @@ import {
 import { experience } from '../../global/utils/experience';
 import { announcements } from '../utils/announcements';
 import { messageCommand } from '../utils/messageCommand';
+import { youAre } from '../utils/youAre';
 // import { modmailDMInteraction, modmailThreadInteraction } from '../commands/guild/modmail';
 import { getUser } from '../../global/utils/knex';
 // import log from '../../global/utils/log';
@@ -37,6 +38,7 @@ export const messageCreate: MessageCreateEvent = {
     // This needs to run here beacuse the widgetbot peeps will use this and they are "bot users"
     // This handles ~ commands
     messageCommand(message);
+    youAre(message);
 
     // Don't run on bots
     if (message.author.bot) {
