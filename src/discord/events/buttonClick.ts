@@ -18,6 +18,7 @@ import {
 } from '../commands/guild/modmail';
 import { verifyButton } from '../utils/verifyButton';
 import { acceptWarning, refuseWarning } from '../utils/warnButtons';
+import { processReactionRole } from '../commands/guild/d.reactionRole';
 
 const F = f(__filename);
 
@@ -32,6 +33,11 @@ export default buttonClick;
 export async function buttonClick(interaction:ButtonInteraction, client:Client) {
   startLog(F, interaction);
   const buttonID = interaction.customId;
+
+  if (buttonID.startsWith('"ID":"RR"')) {
+    await processReactionRole(interaction);
+    return;
+  }
 
   if (buttonID.startsWith('tripsitmeClick')) {
     await tripsitmeButton(interaction);
