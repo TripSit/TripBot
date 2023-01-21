@@ -11,6 +11,7 @@ import { messageCommand } from '../utils/messageCommand';
 import { youAre } from '../utils/youAre';
 // import { modmailDMInteraction, modmailThreadInteraction } from '../commands/guild/modmail';
 import { getUser } from '../../global/utils/knex';
+import { karma } from '../utils/karma';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 // const F = f(__filename);
@@ -39,6 +40,7 @@ export const messageCreate: MessageCreateEvent = {
     // This handles ~ commands
     messageCommand(message);
     youAre(message);
+    karma(message);
 
     // Don't run on bots
     if (message.author.bot) {
