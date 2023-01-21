@@ -219,15 +219,15 @@ export const dProfile: SlashCommand = {
     }
 
     let targetBirthday = {} as Date;
-    const itIsYourBirthday = false;
+    let itIsYourBirthday = false;
 
     if (targetData.birthday) {
       targetBirthday = targetData.birthday;
 
       const today = new Date();
       if (today.getMonth() === targetBirthday.getMonth() && today.getDate() === targetBirthday.getDate()) {
-        // log.debug(F, `Birthday Match!`);
-        // itIsYourBirthday = true;
+        // log.debug(F, 'Birthday Match!');
+        itIsYourBirthday = true;
       }
       if (targetBirthday.getDate() < 10) {
         context.fillText(`${targetBirthday.toLocaleString('en-US', { month: 'short' })} 0${targetBirthday.getDate()}`, 446, 253);
