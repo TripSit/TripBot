@@ -229,39 +229,26 @@ export async function experience(
             if (totalData.level >= 50) {
               member.roles.remove(role);
               role = await guild.roles.fetch(env.ROLE_VIP_50) as Role;
-              // if (totalData.level >= 60) {
-              //   member.roles.remove(role);
-              //   role = await guild.roles.fetch(env.ROLE_VIP_60) as Role;
-              // Beyond level 70 is not supported yet
-              // if (level >= 70) {
-              //   if (!member.roles.cache.has(role.id)) {
-              //     member.roles.remove(role);
-              //     channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
-              //   }
-              //   role = await guild.roles.fetch(env.ROLE_VIP_70) as Role;
-              //   if (level >= 80) {
-              //     if (!member.roles.cache.has(role.id)) {
-              //       member.roles.remove(role);
-              //       channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
-              //     }
-              //     role = await guild.roles.fetch(env.ROLE_VIP_80) as Role;
-              //     if (level >= 90) {
-              //       if (!member.roles.cache.has(role.id)) {
-              //         member.roles.remove(role);
-              //         channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
-              //       }
-              //       role = await guild.roles.fetch(env.ROLE_VIP_90) as Role;
-              //       if (level >= 100) {
-              //         if (!member.roles.cache.has(role.id)) {
-              //           member.roles.remove(role);
-              //           channelTripbotlogs.send(stripIndents`${actor.username} removed ${role.name}`);
-              //         }
-              //         role = await guild.roles.fetch(env.ROLE_VIP_100) as Role;
-              //       }
-              //     }
-              //   }
-              // }
-              // }
+              if (totalData.level >= 60) {
+                member.roles.remove(role);
+                role = await guild.roles.fetch(env.ROLE_VIP_60) as Role;
+                if (level >= 70) {
+                  member.roles.remove(role);
+                  role = await guild.roles.fetch(env.ROLE_VIP_70) as Role;
+                  if (level >= 80) {
+                    member.roles.remove(role);
+                    role = await guild.roles.fetch(env.ROLE_VIP_80) as Role;
+                    if (level >= 90) {
+                      member.roles.remove(role);
+                      role = await guild.roles.fetch(env.ROLE_VIP_90) as Role;
+                      if (level >= 100) {
+                        member.roles.remove(role);
+                        role = await guild.roles.fetch(env.ROLE_VIP_100) as Role;
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }
