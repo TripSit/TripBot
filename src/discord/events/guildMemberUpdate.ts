@@ -1,5 +1,4 @@
 import {
-  ChatInputCommandInteraction,
   Role,
   TextChannel,
   // Message,
@@ -21,7 +20,6 @@ import {
 //   env.ROLE_SEDATED,
 //   env.ROLE_SOBER,
 // ];
-import { donorColors } from '../commands/global/d.setup';
 
 const F = f(__filename);
 
@@ -78,11 +76,6 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
         // log.debug(F, `${newMember.displayName} boosted the server!`);
         const channelGoldlounge = await client.channels.fetch(env.CHANNEL_GOLDLOUNGE) as TextChannel;
         await channelGoldlounge.send(`Hey @here, ${newMember} just boosted the server, give them a big thank you for helping to keep this place awesome!`); // eslint-disable-line max-len
-        const interaction = {
-          channel: channelGoldlounge,
-          user: newMember.user,
-        } as ChatInputCommandInteraction;
-        await donorColors(interaction);
       }
 
       // Check if the role added was a donator role
@@ -90,10 +83,6 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
         // log.debug(F, `${newMember.displayName} became a patron!`);
         const channelGoldlounge = await client.channels.fetch(env.CHANNEL_GOLDLOUNGE) as TextChannel;
         await channelGoldlounge.send(`Hey @here, ${newMember} just became a patron, give them a big thank you for helping us keep the lights on and expand!`); // eslint-disable-line max-len
-        const interaction = {
-          channel: channelGoldlounge,
-        } as ChatInputCommandInteraction;
-        await donorColors(interaction);
       }
     }
   },

@@ -12,6 +12,7 @@ import {
   SelectMenuBuilder,
   ModalSubmitInteraction,
   PermissionResolvable,
+  Role,
 } from 'discord.js';
 import {
   ButtonStyle, TextInputStyle,
@@ -20,7 +21,6 @@ import { stripIndent, stripIndents } from 'common-tags';
 import { db } from '../../../global/utils/knex';
 import {
   DiscordGuilds,
-  ReactionRoles,
 } from '../../../global/@types/pgdb';
 import { startLog } from '../../utils/startLog';
 import { SlashCommand } from '../../@types/commandDef';
@@ -33,6 +33,149 @@ const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
 
 const channelOnly = 'You must run this in the channel you want the prompt to be in!';
 const noChannel = 'how to tripsit: no channel';
+const roleQuestion = 'What role are people applying for?';
+const reviewerQuestion = 'What role reviews those applications?';
+/**
+ * This command populates various channels with static prompts
+ * This is actually kind of complicated, but not really, let me explain:
+ * Each prompt generally allows a response from the user, like giving a role or sending a message
+ * @param {Interaction} interaction The interaction that triggered this
+ */
+export const prompt: SlashCommand = {
+  data: new SlashCommandBuilder()
+    .setName('setup')
+    .setDescription('Set up various channels and prompts!')
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Tripsit info!')
+      .setName('tripsit')
+      .addRoleOption(option => option
+        .setDescription('What is your Tripsitter role?')
+        .setName('tripsitter')
+        .setRequired(true))
+      .addRoleOption(option => option
+        .setDescription('What is your Needshelp role?')
+        .setName('needshelp')
+        .setRequired(true))
+      .addChannelOption(option => option
+        .setDescription('What is your Meta-tripsit channel?')
+        .setName('metatripsit')
+        .setRequired(true))
+      // .addChannelOption((option) => option
+      //   .setDescription('Do you have a sanctuary room?')
+      //   .setName('sanctuary'),
+      // )
+      // .addChannelOption((option) => option
+      //   .setDescription('Do you have a general room?')
+      //   .setName('general'),
+      // )
+      .addRoleOption(option => option
+        .setDescription('What is your Helper role?')
+        .setName('helper')))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Set up the application page. 5 roles max!')
+      .setName('applications')
+      .addChannelOption(option => option
+        .setDescription('What channel stores applications?')
+        .setName('applications_channel')
+        .setRequired(true))
+      .addRoleOption(option => option
+        .setDescription(roleQuestion)
+        .setName('application_role_a')
+        .setRequired(true))
+      .addRoleOption(option => option
+        .setDescription(reviewerQuestion)
+        .setName('application_reviewer_a')
+        .setRequired(true))
+      .addRoleOption(option => option
+        .setDescription(roleQuestion)
+        .setName('application_role_b'))
+      .addRoleOption(option => option
+        .setDescription(reviewerQuestion)
+        .setName('application_reviewer_b'))
+      .addRoleOption(option => option
+        .setDescription(roleQuestion)
+        .setName('application_role_c'))
+      .addRoleOption(option => option
+        .setDescription(reviewerQuestion)
+        .setName('application_reviewer_c'))
+      .addRoleOption(option => option
+        .setDescription(roleQuestion)
+        .setName('application_role_d'))
+      .addRoleOption(option => option
+        .setDescription(reviewerQuestion)
+        .setName('application_reviewer_d'))
+      .addRoleOption(option => option
+        .setDescription(roleQuestion)
+        .setName('application_role_e'))
+      .addRoleOption(option => option
+        .setDescription(reviewerQuestion)
+        .setName('application_reviewer_e')))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('techhelp info!')
+      .setName('techhelp')
+      .addRoleOption(option => option
+        .setDescription('What role responds to tickets here?')
+        .setName('roletechreviewer')
+        .setRequired(true))
+      .addChannelOption(option => option
+        .setDescription('Do you have a tripsit room?')
+        .setName('tripsit')))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('rules info!')
+      .setName('rules'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('starthere info!')
+      .setName('starthere'))
+    // .addSubcommand(subcommand => subcommand
+    //   .setDescription('mindset reaction roles!')
+    //   .setName('mindset'))
+    // .addSubcommand(subcommand => subcommand
+    //   .setDescription('color reaction roles')
+    //   .setName('color'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('ticketbooth info!')
+      .setName('ticketbooth')),
+  // .addSubcommand(subcommand => subcommand
+  //   .setDescription('pronoun picker!')
+  //   .setName('pronouns'))
+  // .addSubcommand(subcommand => subcommand
+  //   .setDescription('donor color setup')
+  //   .setName('premiumcolors')),
+  async execute(interaction:ChatInputCommandInteraction) {
+    startLog(F, interaction);
+    // await interaction.deferReply({ ephemeral: true });
+    const command = interaction.options.getSubcommand();
+    if (command === 'applications') {
+      await applications(interaction);
+    } else if (command === 'techhelp') {
+      await techhelp(interaction);
+    } else if (command === 'rules') {
+      await rules(interaction);
+    } else if (command === 'starthere') {
+      await starthere(interaction);
+    } else if (command === 'mindset') {
+      await mindsets(interaction);
+    } else if (command === 'color') {
+      await colors(interaction);
+    } else if (command === 'tripsit') {
+      await tripsit(interaction);
+    } else if (command === 'ticketbooth') {
+      await ticketbooth(interaction);
+    } else if (command === 'premiumcolors') {
+      await premiumColors(interaction);
+    } else if (command === 'pronouns') {
+      await pronouns(interaction);
+    }
+    if (!interaction.replied) {
+      if (interaction.deferred) {
+        await interaction.editReply({ content: 'Donezo!' });
+      } else {
+        await interaction.reply({ content: 'Donezo!', ephemeral: true });
+      }
+    }
+    return true;
+  },
+};
 
 /**
  * The tripsit prompt
@@ -567,116 +710,79 @@ export async function mindsets(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  const mindsetEmbed = embedTemplate()
+  const roleDrunk = await interaction.guild?.roles.fetch(env.ROLE_DRUNK) as Role;
+  const roleHigh = await interaction.guild?.roles.fetch(env.ROLE_HIGH) as Role;
+  const roleRolling = await interaction.guild?.roles.fetch(env.ROLE_ROLLING) as Role;
+  const roleTripping = await interaction.guild?.roles.fetch(env.ROLE_TRIPPING) as Role;
+  const roleDissociating = await interaction.guild?.roles.fetch(env.ROLE_DISSOCIATING) as Role;
+  const roleStimming = await interaction.guild?.roles.fetch(env.ROLE_STIMMING) as Role;
+  const roleSedated = await interaction.guild?.roles.fetch(env.ROLE_SEDATED) as Role;
+  const roleTalkative = await interaction.guild?.roles.fetch(env.ROLE_TALKATIVE) as Role;
+  const roleWorking = await interaction.guild?.roles.fetch(env.ROLE_WORKING) as Role;
+
+  const embed = embedTemplate()
     .setDescription(stripIndents`
       **React to this message to show your mindset!**
-
-      ${env.EMOJI_DRUNK} - Drunk
-      ${env.EMOJI_HIGH} - High
-      ${env.EMOJI_ROLLING} - Rolling
-      ${env.EMOJI_TRIPPING} - Tripping
-      ${env.EMOJI_DISSOCIATING} - Dissociating
-      ${env.EMOJI_STIMMING} - Stimming
-      ${env.EMOJI_SEDATED} - Sedated
-      ${env.EMOJI_TALKATIVE} - I'm just happy to chat!
-      ${env.EMOJI_WORKING} - I'm busy and may be slow to respond!
-
-      *You may have more than one mindset, please pick the main one!*
     `)
-    .setFooter({ text: 'These roles reset after 8 hours to (somewhat) accurately show your mindset!' })
+    // .setFooter({ text: 'These roles reset after 8 hours to (somewhat) accurately show your mindset!' })
+    .setFooter({ text: 'You can only pick one mindset at a time!' })
     .setColor(Colors.Purple);
-  let reactionRoleInfo = [] as {
-    guild_id: string;
-    channel_id: string;
-    message_id: string;
-    reaction_id: string;
-    role_id: string;
-  }[];
 
-  await (interaction.channel as TextChannel).send({ embeds: [mindsetEmbed] })
-    .then(async msg => {
-      await msg.react(`${env.EMOJI_DRUNK}`);
-      await msg.react(`${env.EMOJI_HIGH}`);
-      await msg.react(`${env.EMOJI_ROLLING}`);
-      await msg.react(`${env.EMOJI_TRIPPING}`);
-      await msg.react(`${env.EMOJI_DISSOCIATING}`);
-      await msg.react(`${env.EMOJI_STIMMING}`);
-      await msg.react(`${env.EMOJI_SEDATED}`);
-      // await msg.react(`${env.EMOJI_SOBER}`);
-      await msg.react(`${env.EMOJI_TALKATIVE}`);
-      await msg.react(`${env.EMOJI_WORKING}`);
-      reactionRoleInfo = [
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: env.EMOJI_DRUNK.slice(env.EMOJI_DRUNK.indexOf(':', 3) + 1, env.EMOJI_DRUNK.indexOf('>')),
-          role_id: env.ROLE_DRUNK,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: env.EMOJI_HIGH.slice(env.EMOJI_HIGH.indexOf(':', 3) + 1, env.EMOJI_HIGH.indexOf('>')),
-          role_id: env.ROLE_HIGH,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: env.EMOJI_ROLLING.slice(env.EMOJI_ROLLING.indexOf(':', 3) + 1, env.EMOJI_ROLLING.indexOf('>')),
-          role_id: env.ROLE_ROLLING,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: env.EMOJI_TRIPPING.slice(env.EMOJI_TRIPPING.indexOf(':', 3) + 1, env.EMOJI_TRIPPING.indexOf('>')),
-          role_id: env.ROLE_TRIPPING,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: env.EMOJI_DISSOCIATING.slice(env.EMOJI_DISSOCIATING.indexOf(':', 3) + 1, env.EMOJI_DISSOCIATING.indexOf('>')),
-          role_id: env.ROLE_DISSOCIATING,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: env.EMOJI_STIMMING.slice(env.EMOJI_STIMMING.indexOf(':', 3) + 1, env.EMOJI_STIMMING.indexOf('>')),
-          role_id: env.ROLE_STIMMING,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: env.EMOJI_SEDATED.slice(env.EMOJI_SEDATED.indexOf(':', 3) + 1, env.EMOJI_SEDATED.indexOf('>')),
-          role_id: env.ROLE_SEDATED,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: env.EMOJI_TALKATIVE.slice(env.EMOJI_TALKATIVE.indexOf(':', 3) + 1, env.EMOJI_TALKATIVE.indexOf('>')),
-          role_id: env.ROLE_TALKATIVE,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: env.EMOJI_WORKING.slice(env.EMOJI_WORKING.indexOf(':', 3) + 1, env.EMOJI_WORKING.indexOf('>')),
-          role_id: env.ROLE_WORKING,
-        },
-      ];
+  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setLabel(`${roleDrunk.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleDrunk.id}"`)
+      .setEmoji(env.EMOJI_DRUNK)
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleHigh.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleHigh.id}"`)
+      .setEmoji(env.EMOJI_HIGH)
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleRolling.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleRolling.id}"`)
+      .setEmoji(env.EMOJI_ROLLING)
+      .setStyle(ButtonStyle.Primary),
+  );
 
-      // Update the database
-      await db<ReactionRoles>('reaction_roles')
-        .insert(reactionRoleInfo)
-        .onConflict(['role_id', 'reaction_id'])
-        .merge();
-    });
+  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setLabel(`${roleTripping.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleTripping.id}"`)
+      .setEmoji(env.EMOJI_TRIPPING)
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleDissociating.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleDissociating.id}"`)
+      .setEmoji(env.EMOJI_DISSOCIATING)
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleStimming.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleStimming.id}"`)
+      .setEmoji(env.EMOJI_STIMMING)
+      .setStyle(ButtonStyle.Primary),
+  );
+
+  const row3 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setLabel(`${roleSedated.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleSedated.id}"`)
+      .setEmoji(env.EMOJI_SEDATED)
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleTalkative.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleTalkative.id}"`)
+      .setEmoji(env.EMOJI_TALKATIVE)
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleWorking.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleWorking.id}"`)
+      .setEmoji(env.EMOJI_WORKING)
+      .setStyle(ButtonStyle.Primary),
+  );
+
+  await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2, row3] });
 }
 
 /**
@@ -691,109 +797,74 @@ export async function colors(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  let reactionRoleInfo = [] as {
-    guild_id: string;
-    channel_id: string;
-    message_id: string;
-    reaction_id: string;
-    role_id: string;
-  }[];
+  const roleRed = await interaction.guild?.roles.fetch(env.ROLE_RED) as Role;
+  const roleOrange = await interaction.guild?.roles.fetch(env.ROLE_ORANGE) as Role;
+  const roleYellow = await interaction.guild?.roles.fetch(env.ROLE_YELLOW) as Role;
+  const roleGreen = await interaction.guild?.roles.fetch(env.ROLE_GREEN) as Role;
+  const roleBlue = await interaction.guild?.roles.fetch(env.ROLE_BLUE) as Role;
+  const rolePurple = await interaction.guild?.roles.fetch(env.ROLE_PURPLE) as Role;
+  const rolePink = await interaction.guild?.roles.fetch(env.ROLE_PINK) as Role;
+  const roleBlack = await interaction.guild?.roles.fetch(env.ROLE_BLACK) as Role;
 
-  const colorEmbed = embedTemplate()
+  const embed = embedTemplate()
     .setDescription('React to this message to set the color of your nickname!')
     .setFooter({ text: 'You can only pick one color at a time!' })
     .setColor(Colors.Blue);
 
-  await (interaction.channel as TextChannel).send({ embeds: [colorEmbed] })
-    .then(async msg => {
-      await msg.react('❤');
-      await msg.react('🧡');
-      await msg.react('💛');
-      await msg.react('💚');
-      await msg.react('💙');
-      await msg.react('💜');
-      await msg.react(env.EMOJI_PINKHEART);
-      await msg.react('🖤');
-      await msg.react('🤍');
-      reactionRoleInfo = [
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: '❤',
-          role_id: env.ROLE_RED,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: '🧡',
-          role_id: env.ROLE_ORANGE,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: '💛',
-          role_id: env.ROLE_YELLOW,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: '💚',
-          role_id: env.ROLE_GREEN,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: '💙',
-          role_id: env.ROLE_BLUE,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: '💜',
-          role_id: env.ROLE_PURPLE,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: env.EMOJI_PINKHEART.slice(env.EMOJI_PINKHEART.indexOf(':', 3) + 1, env.EMOJI_PINKHEART.indexOf('>')),
-          role_id: env.ROLE_PINK,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: '🖤',
-          role_id: env.ROLE_BLACK,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: '🤍',
-          role_id: env.ROLE_WHITE,
-        },
-      ];
+  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setLabel(`${roleRed.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleRed.id}"`)
+      .setEmoji('❤')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleOrange.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleOrange.id}"`)
+      .setEmoji('🧡')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleYellow.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleYellow.id}"`)
+      .setEmoji('💛')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleGreen.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleGreen.id}"`)
+      .setEmoji('💚')
+      .setStyle(ButtonStyle.Primary),
+  );
 
-      // Update the database
-      await db<ReactionRoles>('reaction_roles')
-        .insert(reactionRoleInfo)
-        .onConflict(['role_id', 'reaction_id'])
-        .merge();
-    });
+  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setLabel(`${roleBlue.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleBlue.id}"`)
+      .setEmoji('💙')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${rolePurple.name}`)
+      .setCustomId(`"ID":"RR","RID":"${rolePurple.id}"`)
+      .setEmoji('💜')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${rolePink.name}`)
+      .setCustomId(`"ID":"RR","RID":"${rolePink.id}"`)
+      .setEmoji(env.EMOJI_PINKHEART)
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleBlack.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleBlack.id}"`)
+      .setEmoji('🖤')
+      .setStyle(ButtonStyle.Primary),
+  );
+
+  await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
 }
 
 /**
- * The colors prompt
+ * The premium colors prompt
  * @param {Interaction} interaction The interaction that triggered this
  */
-export async function donorColors(interaction:ChatInputCommandInteraction) {
+export async function premiumColors(interaction:ChatInputCommandInteraction) {
   // startLog(F, interaction);
   if (!(interaction.channel as TextChannel)) {
     log.error(F, noChannel);
@@ -801,223 +872,122 @@ export async function donorColors(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  let reactionRoleInfo = [] as {
-    guild_id: string;
-    channel_id: string;
-    message_id: string;
-    reaction_id: string;
-    role_id: string;
-  }[];
-
-  const colorEmbed = embedTemplate()
-    .setDescription('You now have access to new donor colors!\nReact to this message to set the color of your nickname!')
+  const embed = embedTemplate()
+    .setDescription(stripIndents`Boosters and Patrons can access new colors!
+    React to this message to set the color of your nickname!`)
     .setFooter({ text: 'You can only pick one color at a time, choose wisely!' })
     .setColor(Colors.Blue);
 
-  await (interaction.channel as TextChannel).send({ embeds: [colorEmbed] })
-    .then(async msg => {
-      await msg.react('❤');
-      await msg.react('🧡');
-      await msg.react('💛');
-      await msg.react('💚');
-      await msg.react('💙');
-      await msg.react('💜');
-      await msg.react(env.EMOJI_PINKHEART);
-      reactionRoleInfo = [
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: '❤',
-          role_id: env.ROLE_DONOR_RED,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: '🧡',
-          role_id: env.ROLE_DONOR_ORANGE,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: '💛',
-          role_id: env.ROLE_DONOR_YELLOW,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: '💚',
-          role_id: env.ROLE_DONOR_GREEN,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: '💙',
-          role_id: env.ROLE_DONOR_BLUE,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: '💜',
-          role_id: env.ROLE_DONOR_PURPLE,
-        },
-        {
-          guild_id: msg.channel.guild.id,
-          channel_id: msg.channel.id,
-          message_id: msg.id,
-          reaction_id: env.EMOJI_PINKHEART.slice(env.EMOJI_PINKHEART.indexOf(':', 3) + 1, env.EMOJI_PINKHEART.indexOf('>')),
-          role_id: env.ROLE_DONOR_PINK,
-        },
-      ];
+  const roleDonorRed = await interaction.guild?.roles.fetch(env.ROLE_DONOR_RED) as Role;
+  const roleDonorOrange = await interaction.guild?.roles.fetch(env.ROLE_DONOR_ORANGE) as Role;
+  const roleDonorYellow = await interaction.guild?.roles.fetch(env.ROLE_DONOR_YELLOW) as Role;
+  const roleDonorGreen = await interaction.guild?.roles.fetch(env.ROLE_DONOR_GREEN) as Role;
+  const roleDonorBlue = await interaction.guild?.roles.fetch(env.ROLE_DONOR_BLUE) as Role;
+  const roleDonorPurple = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PURPLE) as Role;
+  const roleDonorPink = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PINK) as Role;
+  const roleDonorWhite = await interaction.guild?.roles.fetch(env.ROLE_WHITE) as Role;
 
-      // Update the database
-      await db<ReactionRoles>('reaction_roles')
-        .insert(reactionRoleInfo)
-        .onConflict(['role_id', 'reaction_id'])
-        .merge();
-    });
+  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setLabel(`${roleDonorRed.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleDonorRed.id}"`)
+      .setEmoji('❤')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleDonorOrange.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleDonorOrange.id}"`)
+      .setEmoji('🧡')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleDonorYellow.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleDonorYellow.id}"`)
+      .setEmoji('💛')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleDonorGreen.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleDonorGreen.id}"`)
+      .setEmoji('💚')
+      .setStyle(ButtonStyle.Primary),
+  );
+
+  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setLabel(`${roleDonorBlue.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleDonorBlue.id}"`)
+      .setEmoji('💙')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleDonorPurple.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleDonorPurple.id}"`)
+      .setEmoji('💜')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleDonorPink.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleDonorPink.id}"`)
+      .setEmoji(env.EMOJI_PINKHEART)
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${roleDonorWhite.name}`)
+      .setCustomId(`"ID":"RR","RID":"${roleDonorWhite.id}"`)
+      .setEmoji('🤍')
+      .setStyle(ButtonStyle.Primary),
+  );
+  await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
 }
 
-const roleQuestion = 'What role are people applying for?';
-const reviewerQuestion = 'What role reviews those applications?';
 /**
- * This command populates various channels with static prompts
- * This is actually kind of complicated, but not really, let me explain:
- * Each prompt generally allows a response from the user, like giving a role or sending a message
+ * The pronoun prompt
  * @param {Interaction} interaction The interaction that triggered this
  */
-export const prompt: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('setup')
-    .setDescription('Set up various channels and prompts!')
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Tripsit info!')
-      .setName('tripsit')
-      .addRoleOption(option => option
-        .setDescription('What is your Tripsitter role?')
-        .setName('tripsitter')
-        .setRequired(true))
-      .addRoleOption(option => option
-        .setDescription('What is your Needshelp role?')
-        .setName('needshelp')
-        .setRequired(true))
-      .addChannelOption(option => option
-        .setDescription('What is your Meta-tripsit channel?')
-        .setName('metatripsit')
-        .setRequired(true))
-      // .addChannelOption((option) => option
-      //   .setDescription('Do you have a sanctuary room?')
-      //   .setName('sanctuary'),
-      // )
-      // .addChannelOption((option) => option
-      //   .setDescription('Do you have a general room?')
-      //   .setName('general'),
-      // )
-      .addRoleOption(option => option
-        .setDescription('What is your Helper role?')
-        .setName('helper')))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Set up the application page. 5 roles max!')
-      .setName('applications')
-      .addChannelOption(option => option
-        .setDescription('What channel stores applications?')
-        .setName('applications_channel')
-        .setRequired(true))
-      .addRoleOption(option => option
-        .setDescription(roleQuestion)
-        .setName('application_role_a')
-        .setRequired(true))
-      .addRoleOption(option => option
-        .setDescription(reviewerQuestion)
-        .setName('application_reviewer_a')
-        .setRequired(true))
-      .addRoleOption(option => option
-        .setDescription(roleQuestion)
-        .setName('application_role_b'))
-      .addRoleOption(option => option
-        .setDescription(reviewerQuestion)
-        .setName('application_reviewer_b'))
-      .addRoleOption(option => option
-        .setDescription(roleQuestion)
-        .setName('application_role_c'))
-      .addRoleOption(option => option
-        .setDescription(reviewerQuestion)
-        .setName('application_reviewer_c'))
-      .addRoleOption(option => option
-        .setDescription(roleQuestion)
-        .setName('application_role_d'))
-      .addRoleOption(option => option
-        .setDescription(reviewerQuestion)
-        .setName('application_reviewer_d'))
-      .addRoleOption(option => option
-        .setDescription(roleQuestion)
-        .setName('application_role_e'))
-      .addRoleOption(option => option
-        .setDescription(reviewerQuestion)
-        .setName('application_reviewer_e')))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('techhelp info!')
-      .setName('techhelp')
-      .addRoleOption(option => option
-        .setDescription('What role responds to tickets here?')
-        .setName('roletechreviewer')
-        .setRequired(true))
-      .addChannelOption(option => option
-        .setDescription('Do you have a tripsit room?')
-        .setName('tripsit')))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('rules info!')
-      .setName('rules'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('starthere info!')
-      .setName('starthere'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('mindset reaction roles!')
-      .setName('mindset'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('color reaction roles')
-      .setName('color'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('ticketbooth info!')
-      .setName('ticketbooth'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('donor color setup')
-      .setName('donorcolors')),
-  async execute(interaction:ChatInputCommandInteraction) {
-    startLog(F, interaction);
-    // await interaction.deferReply({ ephemeral: true });
-    const command = interaction.options.getSubcommand();
-    if (command === 'applications') {
-      await applications(interaction);
-    } else if (command === 'techhelp') {
-      await techhelp(interaction);
-    } else if (command === 'rules') {
-      await rules(interaction);
-    } else if (command === 'starthere') {
-      await starthere(interaction);
-    } else if (command === 'mindset') {
-      await mindsets(interaction);
-    } else if (command === 'color') {
-      await colors(interaction);
-    } else if (command === 'tripsit') {
-      await tripsit(interaction);
-    } else if (command === 'ticketbooth') {
-      await ticketbooth(interaction);
-    } else if (command === 'donorcolors') {
-      await donorColors(interaction);
-    }
-    if (!interaction.replied) {
-      if (interaction.deferred) {
-        await interaction.editReply({ content: 'Donezo!' });
-      } else {
-        await interaction.reply({ content: 'Donezo!', ephemeral: true });
-      }
-    }
-    return true;
-  },
-};
+export async function pronouns(interaction:ChatInputCommandInteraction) {
+  // startLog(F, interaction);
+  if (!(interaction.channel as TextChannel)) {
+    log.error(F, noChannel);
+    interaction.reply(channelOnly);
+    return;
+  }
+
+  const embed = embedTemplate()
+    .setDescription(stripIndents`Click a button below to pick your pronouns!`)
+    .setFooter({ text: 'You can only pick one pronoun at a time, choose wisely!' })
+    .setColor(Colors.Blue);
+
+  const pronounHe = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_HE) as Role;
+  const pronounShe = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_SHE) as Role;
+  const pronounThey = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_THEY) as Role;
+  const pronounAny = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_ANY) as Role;
+  const pronounAsk = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_ASK) as Role;
+
+  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setLabel(`${pronounHe.name}`)
+      .setCustomId(`"ID":"RR","RID":"${pronounHe.id}"`)
+      .setEmoji('👨')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${pronounShe.name}`)
+      .setCustomId(`"ID":"RR","RID":"${pronounShe.id}"`)
+      .setEmoji('👩')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${pronounThey.name}`)
+      .setCustomId(`"ID":"RR","RID":"${pronounThey.id}"`)
+      .setEmoji('🧑')
+      .setStyle(ButtonStyle.Primary),
+  );
+
+  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setLabel(`${pronounAny.name}`)
+      .setCustomId(`"ID":"RR","RID":"${pronounAny.id}"`)
+      .setEmoji('♾')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel(`${pronounAsk.name}`)
+      .setCustomId(`"ID":"RR","RID":"${pronounAsk.id}"`)
+      .setEmoji('❔')
+      .setStyle(ButtonStyle.Primary),
+  );
+
+  await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
+}

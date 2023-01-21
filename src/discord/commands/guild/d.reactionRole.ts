@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 
+import { stripIndents } from 'common-tags';
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -13,6 +14,9 @@ import {
   TextInputBuilder,
   TextInputStyle,
   ModalSubmitInteraction,
+  CategoryChannel,
+  ChatInputCommandInteraction,
+  Colors,
 } from 'discord.js';
 // import { db } from '../../../global/utils/knex';
 // import {
@@ -28,101 +32,445 @@ export default dReactionRole;
 const guildError = 'This must be performed in a guild!';
 const memberError = 'This must be performed by a member of a guild!';
 
+type RoleDef = { name: string; value: string };
+
+const colorRoles = [
+  { name: '💖 Tuplp', value: env.ROLE_RED },
+  { name: '🧡 Marigold', value: env.ROLE_ORANGE },
+  { name: '💛 Daffodil', value: env.ROLE_YELLOW },
+  { name: '💚 Waterlily', value: env.ROLE_GREEN },
+  { name: '💙 Bluebell', value: env.ROLE_BLUE },
+  { name: '💜 Hyacinth', value: env.ROLE_PURPLE },
+  { name: '💗 Azalea', value: env.ROLE_PINK },
+  { name: '🖤 Black', value: env.ROLE_BLACK },
+] as RoleDef[];
+
+// log.debug(F, `Color roles: ${JSON.stringify(colorRoles, null, 2)}`);
+// const colorNames = colorRoles.map(role => role.name);
+const colorIds = colorRoles.map(role => role.value);
+
+const premiumColorRoles = [
+  { name: '💖 Ruby', value: env.ROLE_DONOR_RED },
+  { name: '🧡 Sunstone', value: env.ROLE_DONOR_ORANGE },
+  { name: '💛 Citrine', value: env.ROLE_DONOR_YELLOW },
+  { name: '💚 Jade', value: env.ROLE_DONOR_GREEN },
+  { name: '💙 Sapphire', value: env.ROLE_DONOR_BLUE },
+  { name: '💜 Amethyst', value: env.ROLE_DONOR_PURPLE },
+  { name: '💗 Pezzottaite', value: env.ROLE_DONOR_PINK },
+  { name: '🤍 Snowdrop', value: env.ROLE_WHITE },
+] as RoleDef[];
+
+// log.debug(F, `Premium Color roles: ${JSON.stringify(premiumColorRoles, null, 2)}`);
+// const premiumColorNames = premiumColorRoles.map(role => role.name);
+const premiumColorIds = premiumColorRoles.map(role => role.value);
+
+const mindsetRoles = [
+  { name: 'Drunk', value: env.ROLE_DRUNK },
+  { name: 'High', value: env.ROLE_HIGH },
+  { name: 'Rolling', value: env.ROLE_ROLLING },
+  { name: 'Tripping', value: env.ROLE_TRIPPING },
+  { name: 'Dissociating', value: env.ROLE_DISSOCIATING },
+  { name: 'Stimming', value: env.ROLE_STIMMING },
+  { name: 'Sedated', value: env.ROLE_SEDATED },
+  { name: 'Sober', value: env.ROLE_SOBER },
+] as RoleDef[];
+
+// log.debug(F, `Mindset roles: ${JSON.stringify(mindsetRoles, null, 2)}`);
+// const mindsetNames = mindsetRoles.map(role => role.name);
+const mindsetIds = mindsetRoles.map(role => role.value);
+
+const pronounRoles = [
+  { name: 'He/Him', value: env.ROLE_PRONOUN_HE },
+  { name: 'She/Her', value: env.ROLE_PRONOUN_SHE },
+  { name: 'They/Them', value: env.ROLE_PRONOUN_THEY },
+  { name: 'Any', value: env.ROLE_PRONOUN_ANY },
+  { name: 'Ask', value: env.ROLE_PRONOUN_ASK },
+] as RoleDef[];
+
+// log.debug(F, `Pronoun roles: ${JSON.stringify(pronounRoles, null, 2)}`);
+// const pronounNames = pronounRoles.map(role => role.name);
+const pronounIds = pronounRoles.map(role => role.value);
+
 export const dReactionRole: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('reaction_role')
-    .setDescription('Create a reaction role message')
-    .addRoleOption(option => option.setName('role')
-      .setRequired(true)
-      .setDescription('What role should be applied?'))
-    .addStringOption(option => option.setName('emoji')
-      .setRequired(true)
-      .setDescription('What emoji should be used?'))
-    .addBooleanOption(option => option.setName('intro_message')
-      .setDescription('Do they need to provide an intro message?'))
-    .addChannelOption(option => option.setName('intro_channel')
-      .setDescription('Where should the announcement be posted?')),
-  // .addBooleanOption(option => option.setName('needs_approval')
-  //   .setDescription('Does this role need approval?')),
+    .setDescription('Create a reaction role messages')
+    .addSubcommand(subcommand => subcommand
+      .setName('custom')
+      .setDescription('Create a custom reaction role message')
+      .addRoleOption(option => option.setName('role')
+        .setRequired(true)
+        .setDescription('What role should be applied?'))
+      .addStringOption(option => option.setName('emoji')
+        .setRequired(true)
+        .setDescription('What emoji should be used?'))
+      .addBooleanOption(option => option.setName('intro_message')
+        .setDescription('Do they need to provide an intro message?'))
+      .addChannelOption(option => option.setName('intro_channel')
+        .setDescription('Where should the announcement be posted?')))
+    .addSubcommand(subcommand => subcommand
+      .setName('template')
+      .setDescription('Display a pre-defined set of reaction role messages')
+      .addStringOption(option => option.setName('set')
+        .setRequired(true)
+        .setDescription('What set of reaction roles should be displayed?')
+        .addChoices(
+          { name: 'Color', value: 'color' },
+          { name: 'Premium Color', value: 'premium_color' },
+          { name: 'Mindset', value: 'mindset' },
+          { name: 'Pronoun', value: 'pronoun' },
+        ))),
   async execute(interaction) {
     startlog(F, interaction);
     if (!interaction.guild) return false;
-    const emoji = interaction.options.getString('emoji', true);
-    const role = interaction.options.getRole('role', true) as Role;
-    const introMessage = interaction.options.getBoolean('intro_message')
-      ? `"${interaction.options.getBoolean('intro_message')}"`
-      : null;
-    const introChannel = interaction.options.getChannel('intro_channel')
-      ? `"${interaction.options.getChannel('intro_channel', true).id}"`
-      : null;
+    const subcommand = interaction.options.getSubcommand();
 
-    if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_DEVELOPER)) {
-      await interaction.reply({ content: 'You do not have permission to use this command!', ephemeral: true });
-      return false;
+    if (subcommand === 'template') {
+      setupTemplateReactionRole(interaction);
+    } else if (subcommand === 'custom') {
+      setupCustomReactionRole(interaction);
     }
-
-    // Display modal to get intro message from the user
-    const modal = new ModalBuilder()
-      .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
-      .setTitle(`${role.name} Description`);
-    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setCustomId('description')
-      .setRequired(true)
-      .setLabel('Describe this role!')
-        .setPlaceholder(`This will go into the embed to let people know what they're clicking on!`) // eslint-disable-line
-      .setMaxLength(2000)
-      .setStyle(TextInputStyle.Paragraph)));
-    await interaction.showModal(modal);
-
-    // Collect a modal submit interaction
-    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
-    interaction.awaitModalSubmit({ filter, time: 0 })
-      .then(async i => {
-        const {
-          II,
-        } = JSON.parse(`{${i.customId}}`);
-
-        if (II !== interaction.id) return;
-        if (!i.guild) {
-          // log.debug(F, `no guild!`);
-          i.reply(guildError);
-          return;
-        }
-        if (!i.member) {
-          // log.debug(F, `no member!`);
-          i.reply(memberError);
-        }
-
-        const description = i.fields.getTextInputValue('description');
-
-        const embed = embedTemplate()
-          .setFooter(null)
-          .setDescription(description);
-
-        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-          new ButtonBuilder()
-            .setCustomId(`"ID":"RR","RID":"${role.id}","IM":${introMessage},"IC":${introChannel}`) // eslint-disable-line
-            .setEmoji(emoji)
-            .setStyle(ButtonStyle.Primary),
-        );
-        await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row] });
-
-        const channelBotlog = await i.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-        await channelBotlog.send(`${(interaction.member as GuildMember).displayName} created a new reaction role message`);
-        i.reply({ content: 'Reaction role message created!', ephemeral: true });
-      });
-
     return true;
   },
 };
+
+export async function setupTemplateReactionRole(
+  interaction:ChatInputCommandInteraction,
+) {
+  const set = interaction.options.getString('set', true);
+
+  if (set === 'color') {
+    const roleRed = await interaction.guild?.roles.fetch(env.ROLE_RED) as Role;
+    const roleOrange = await interaction.guild?.roles.fetch(env.ROLE_ORANGE) as Role;
+    const roleYellow = await interaction.guild?.roles.fetch(env.ROLE_YELLOW) as Role;
+    const roleGreen = await interaction.guild?.roles.fetch(env.ROLE_GREEN) as Role;
+    const roleBlue = await interaction.guild?.roles.fetch(env.ROLE_BLUE) as Role;
+    const rolePurple = await interaction.guild?.roles.fetch(env.ROLE_PURPLE) as Role;
+    const rolePink = await interaction.guild?.roles.fetch(env.ROLE_PINK) as Role;
+    const roleBlack = await interaction.guild?.roles.fetch(env.ROLE_BLACK) as Role;
+
+    const embed = embedTemplate()
+      .setDescription('React to this message to set the color of your nickname!')
+      .setFooter({ text: 'You can only pick one color at a time!' })
+      .setColor(Colors.Red);
+
+    const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel(`${roleRed.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleRed.id}"`)
+        .setEmoji('❤')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleOrange.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleOrange.id}"`)
+        .setEmoji('🧡')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleYellow.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleYellow.id}"`)
+        .setEmoji('💛')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleGreen.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleGreen.id}"`)
+        .setEmoji('💚')
+        .setStyle(ButtonStyle.Primary),
+    );
+
+    const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel(`${roleBlue.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleBlue.id}"`)
+        .setEmoji('💙')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${rolePurple.name}`)
+        .setCustomId(`"ID":"RR","RID":"${rolePurple.id}"`)
+        .setEmoji('💜')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${rolePink.name}`)
+        .setCustomId(`"ID":"RR","RID":"${rolePink.id}"`)
+        .setEmoji(env.EMOJI_PINKHEART)
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleBlack.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleBlack.id}"`)
+        .setEmoji('🖤')
+        .setStyle(ButtonStyle.Primary),
+    );
+
+    await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
+  } else if (set === 'premium_color') {
+    const embed = embedTemplate()
+      .setDescription(stripIndents`Boosters and Patrons can access new colors!
+    React to this message to set the color of your nickname!`)
+      .setFooter({ text: 'You can only pick one color at a time, choose wisely!' })
+      .setColor(Colors.Purple);
+
+    const roleDonorRed = await interaction.guild?.roles.fetch(env.ROLE_DONOR_RED) as Role;
+    const roleDonorOrange = await interaction.guild?.roles.fetch(env.ROLE_DONOR_ORANGE) as Role;
+    const roleDonorYellow = await interaction.guild?.roles.fetch(env.ROLE_DONOR_YELLOW) as Role;
+    const roleDonorGreen = await interaction.guild?.roles.fetch(env.ROLE_DONOR_GREEN) as Role;
+    const roleDonorBlue = await interaction.guild?.roles.fetch(env.ROLE_DONOR_BLUE) as Role;
+    const roleDonorPurple = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PURPLE) as Role;
+    const roleDonorPink = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PINK) as Role;
+    const roleDonorWhite = await interaction.guild?.roles.fetch(env.ROLE_WHITE) as Role;
+
+    const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel(`${roleDonorRed.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleDonorRed.id}"`)
+        .setEmoji('❤')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleDonorOrange.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleDonorOrange.id}"`)
+        .setEmoji('🧡')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleDonorYellow.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleDonorYellow.id}"`)
+        .setEmoji('💛')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleDonorGreen.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleDonorGreen.id}"`)
+        .setEmoji('💚')
+        .setStyle(ButtonStyle.Primary),
+    );
+
+    const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel(`${roleDonorBlue.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleDonorBlue.id}"`)
+        .setEmoji('💙')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleDonorPurple.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleDonorPurple.id}"`)
+        .setEmoji('💜')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleDonorPink.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleDonorPink.id}"`)
+        .setEmoji(env.EMOJI_PINKHEART)
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleDonorWhite.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleDonorWhite.id}"`)
+        .setEmoji('🤍')
+        .setStyle(ButtonStyle.Primary),
+    );
+    await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
+  } else if (set === 'mindset') {
+    const roleDrunk = await interaction.guild?.roles.fetch(env.ROLE_DRUNK) as Role;
+    const roleHigh = await interaction.guild?.roles.fetch(env.ROLE_HIGH) as Role;
+    const roleRolling = await interaction.guild?.roles.fetch(env.ROLE_ROLLING) as Role;
+    const roleTripping = await interaction.guild?.roles.fetch(env.ROLE_TRIPPING) as Role;
+    const roleDissociating = await interaction.guild?.roles.fetch(env.ROLE_DISSOCIATING) as Role;
+    const roleStimming = await interaction.guild?.roles.fetch(env.ROLE_STIMMING) as Role;
+    const roleSedated = await interaction.guild?.roles.fetch(env.ROLE_SEDATED) as Role;
+    const roleTalkative = await interaction.guild?.roles.fetch(env.ROLE_TALKATIVE) as Role;
+    const roleWorking = await interaction.guild?.roles.fetch(env.ROLE_WORKING) as Role;
+
+    const embed = embedTemplate()
+      .setDescription(stripIndents`
+        **React to this message to show your mindset!**
+      `)
+      // .setFooter({ text: 'These roles reset after 8 hours to (somewhat) accurately show your mindset!' })
+      .setFooter({ text: 'You can only pick one mindset at a time!' })
+      .setColor(Colors.Green);
+
+    const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel(`${roleDrunk.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleDrunk.id}"`)
+        .setEmoji(env.EMOJI_DRUNK)
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleHigh.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleHigh.id}"`)
+        .setEmoji(env.EMOJI_HIGH)
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleRolling.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleRolling.id}"`)
+        .setEmoji(env.EMOJI_ROLLING)
+        .setStyle(ButtonStyle.Primary),
+    );
+
+    const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel(`${roleTripping.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleTripping.id}"`)
+        .setEmoji(env.EMOJI_TRIPPING)
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleDissociating.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleDissociating.id}"`)
+        .setEmoji(env.EMOJI_DISSOCIATING)
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleStimming.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleStimming.id}"`)
+        .setEmoji(env.EMOJI_STIMMING)
+        .setStyle(ButtonStyle.Primary),
+    );
+
+    const row3 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel(`${roleSedated.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleSedated.id}"`)
+        .setEmoji(env.EMOJI_SEDATED)
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleTalkative.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleTalkative.id}"`)
+        .setEmoji(env.EMOJI_TALKATIVE)
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${roleWorking.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleWorking.id}"`)
+        .setEmoji(env.EMOJI_WORKING)
+        .setStyle(ButtonStyle.Primary),
+    );
+
+    await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2, row3] });
+  } else if (set === 'pronoun') {
+    const embed = embedTemplate()
+      .setDescription(stripIndents`Click a button below to pick your pronouns!`)
+      .setFooter({ text: 'You can only pick one pronoun at a time, choose wisely!' })
+      .setColor(Colors.Blue);
+
+    const pronounHe = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_HE) as Role;
+    const pronounShe = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_SHE) as Role;
+    const pronounThey = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_THEY) as Role;
+    const pronounAny = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_ANY) as Role;
+    const pronounAsk = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_ASK) as Role;
+
+    const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel(`${pronounHe.name}`)
+        .setCustomId(`"ID":"RR","RID":"${pronounHe.id}"`)
+        .setEmoji('👨')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${pronounShe.name}`)
+        .setCustomId(`"ID":"RR","RID":"${pronounShe.id}"`)
+        .setEmoji('👩')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${pronounThey.name}`)
+        .setCustomId(`"ID":"RR","RID":"${pronounThey.id}"`)
+        .setEmoji('🧑')
+        .setStyle(ButtonStyle.Primary),
+    );
+
+    const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel(`${pronounAny.name}`)
+        .setCustomId(`"ID":"RR","RID":"${pronounAny.id}"`)
+        .setEmoji('♾')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${pronounAsk.name}`)
+        .setCustomId(`"ID":"RR","RID":"${pronounAsk.id}"`)
+        .setEmoji('❔')
+        .setStyle(ButtonStyle.Primary),
+    );
+
+    await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
+  }
+
+  interaction.reply({ content: 'Reaction roles have been set up!', ephemeral: true });
+}
+
+export async function setupCustomReactionRole(
+  interaction:ChatInputCommandInteraction,
+) {
+  const emoji = interaction.options.getString('emoji', true);
+  const role = interaction.options.getRole('role', true) as Role;
+  const introMessage = interaction.options.getBoolean('intro_message')
+    ? `"${interaction.options.getBoolean('intro_message')}"`
+    : null;
+  const introChannel = interaction.options.getChannel('intro_channel')
+    ? `"${interaction.options.getChannel('intro_channel', true).id}"`
+    : null;
+
+  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_DEVELOPER)) {
+    await interaction.reply({ content: 'You do not have permission to use this command!', ephemeral: true });
+    return false;
+  }
+
+  // Display modal to get intro message from the user
+  const modal = new ModalBuilder()
+    .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
+    .setTitle(`${role.name} Description`);
+  modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+    .setCustomId('description')
+    .setRequired(true)
+    .setLabel('Describe this role!')
+      .setPlaceholder(`This will go into the embed to let people know what they're clicking on!`) // eslint-disable-line
+    .setMaxLength(2000)
+    .setStyle(TextInputStyle.Paragraph)));
+  await interaction.showModal(modal);
+
+  // Collect a modal submit interaction
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
+  interaction.awaitModalSubmit({ filter, time: 0 })
+    .then(async i => {
+      const {
+        II,
+      } = JSON.parse(`{${i.customId}}`);
+
+      if (II !== interaction.id) return;
+      if (!i.guild) {
+        // log.debug(F, `no guild!`);
+        i.reply(guildError);
+        return;
+      }
+      if (!i.member) {
+        // log.debug(F, `no member!`);
+        i.reply(memberError);
+      }
+
+      const description = i.fields.getTextInputValue('description');
+
+      const embed = embedTemplate()
+        .setFooter(null)
+        .setDescription(description);
+
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`"ID":"RR","RID":"${role.id}","IM":${introMessage},"IC":${introChannel}`) // eslint-disable-line
+          .setEmoji(emoji)
+          .setStyle(ButtonStyle.Primary),
+      );
+      await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row] });
+
+      const channelBotlog = await i.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+      await channelBotlog.send(
+        `${(interaction.member as GuildMember).displayName} created a new reaction role message`,
+      );
+      i.reply({ content: 'Reaction role message created!', ephemeral: true });
+    });
+  return true;
+}
 
 export async function processReactionRole(
   interaction:ButtonInteraction,
 ) {
   log.debug(F, `Processing reaction role click Options: ${JSON.stringify(interaction.customId, null, 2)}`);
   const {
-    RID, IM, IC,
-  } = JSON.parse(`{${interaction.customId}}`);
+    RID,
+    IM,
+    IC,
+  } = JSON.parse(`{${interaction.customId}}`) as {
+    RID:string,
+    IM?:boolean,
+    IC?:string,
+  };
 
   log.debug(F, `RID: ${RID}, IM: ${IM}, IC: ${IC}`);
 
@@ -135,48 +483,67 @@ export async function processReactionRole(
     return;
   }
 
+  // If the user already has the role
   if (target.roles.cache.has(role.id)) {
-    // Display modal to get intro message from the user
-    const modal = new ModalBuilder()
-      .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
-      .setTitle(`Are you sure you want to remove ${role.name}?`);
-    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setCustomId('reason')
-      .setLabel('You can optionally tell us why!')
+    if (IM !== undefined) {
+      // Display modal to get intro message from the user
+      const modal = new ModalBuilder()
+        .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
+        .setTitle(`Are you sure you want to remove ${role.name}?`);
+      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+        .setCustomId('reason')
+        .setLabel('You can optionally tell us why!')
         .setPlaceholder(`We'll use this to try and improve our process!`) // eslint-disable-line
-      .setMaxLength(2000)
-      .setStyle(TextInputStyle.Paragraph)));
-    await interaction.showModal(modal);
+        .setValue('I just dont want to anymore')
+        .setMaxLength(2000)
+        .setStyle(TextInputStyle.Paragraph)));
+      await interaction.showModal(modal);
 
-    // Collect a modal submit interaction
-    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
-    interaction.awaitModalSubmit({ filter, time: 0 })
-      .then(async i => {
-        log.debug(F, `${JSON.stringify(i.customId)}`);
-        const {
-          II,
-        } = JSON.parse(`{${i.customId}}`);
+      // Collect a modal submit interaction
+      const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
+      interaction.awaitModalSubmit({ filter, time: 0 })
+        .then(async i => {
+          log.debug(F, `${JSON.stringify(i.customId)}`);
+          const {
+            II,
+          } = JSON.parse(`{${i.customId}}`);
 
-        if (II !== interaction.id) return;
-        if (!i.guild) {
-          // log.debug(F, `no guild!`);
-          i.reply(guildError);
-          return;
-        }
-        if (!i.member) {
-          // log.debug(F, `no member!`);
-          i.reply(memberError);
-        }
+          if (II !== interaction.id) return;
+          if (!i.guild) {
+            // log.debug(F, `no guild!`);
+            i.reply(guildError);
+            return;
+          }
+          if (!i.member) {
+            // log.debug(F, `no member!`);
+            i.reply(memberError);
+          }
 
-        await target.roles.remove(role);
-        await i.reply({ content: `Removed role ${role.name}`, ephemeral: true });
+          await target.roles.remove(role);
+          await i.reply({ content: `Removed role ${role.name}`, ephemeral: true });
 
-        const channelAudit = await i.guild.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
-        const reason = i.fields.getTextInputValue('reason');
-        await channelAudit.send(`${(i.member as GuildMember).displayName} removed role ${role.name} because: ${reason}`);
-      });
+          const channelAudit = await i.guild.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+          const reason = i.fields.getTextInputValue('reason');
+          await channelAudit.send(
+            `${(i.member as GuildMember).displayName} removed role ${role.name} because: ${reason}`,
+          );
+        });
+    } else {
+      await target.roles.remove(role);
+      await interaction.reply({ content: `Removed role ${role.name}`, ephemeral: true });
+    }
     return;
   }
+
+  // const channelTripsitmeta = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSITMETA) as TextChannel;
+  const channelTripsit = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
+  const hrCategory = await interaction.guild?.channels.fetch(env.CATEGROY_HARMREDUCTIONCENTRE) as CategoryChannel;
+  const devCategory = await interaction.guild?.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
+  const channelTripcord = await interaction.guild?.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
+  const channelTripbot = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
+  // const channelTripmobile = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPMOBILE) as TextChannel;
+  // const channelContent = await interaction.guild?.channels.fetch(env.CHANNEL_WIKICONTENT) as TextChannel;
+  // const channelDevelopment = await interaction.guild?.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
 
   let introMessage = '' as string;
   if (IM) {
@@ -231,7 +598,73 @@ export async function processReactionRole(
         await i.reply({ content: `Added role ${role.name}`, ephemeral: true });
 
         const channel = await i.guild?.channels.fetch(IC) as TextChannel;
-        channel.send(`${target} has joined as a ${role.name}, please welcome them!\n A little about them:\n\n> ${introMessage}`); // eslint-disable-line
+
+        if (channel.id === env.CHANNEL_TRIPSITMETA) {
+          const intro = stripIndents`
+          ${target} has joined as a ${role.name}, please welcome them!
+          
+          A little about them:
+          > ${introMessage}
+
+          Some info for you ${target}; as a ${role.name}, some things have changed:
+    
+          1) You now have access this this channel, which is used to coordinate with others!
+    
+          - Please use this room to ask for help if you're overwhelmed, and feel free to make a thread if it gets busy!
+    
+          2) You are able to receive and respond to help requests in the ${hrCategory}!
+    
+          - As people need help, a thread will be created in ${channelTripsit}.
+          - We use a thread in ${channelTripsit} to help the person in need, and talk here to coordinate with the team.
+          -- ${channelTripsit} threads are archived after 24 hours, and deleted after 7 days.
+        
+          For a refresher on tripsitting please see the following resources:
+          - <https://docs.google.com/document/d/1vE3jl9imdT3o62nNGn19k5HZVOkECF3jhjra8GkgvwE>
+          - <https://wiki.tripsit.me/wiki/How_To_Tripsit_Online>
+    
+          **If you have any questions, please reach out to a moderator or the team lead!**`;
+          channel.send(intro);
+        } else if (channel.id === env.CHANNEL_DEVELOPMENT) {
+          const intro = stripIndents`
+          ${target} has joined as a ${role.name}, please welcome them!
+          
+          A little about them:
+          > ${introMessage}
+
+          Some info for you ${target}: 
+      
+          Our ${devCategory} category holds the projects we're working on.
+    
+          > **We encourage you to make a new thread whenever possible!**
+          > This allows us to organize our efforts and not lose track of our thoughts!
+    
+          TripSit is run by volunteers, so things may be a bit slower than your day job.
+          Almost all the code is open source and can be found on our GitHub: <http://github.com/tripsit>
+          Discussion of changes happens mostly in the public channels in this category.
+          If you have an idea or feedback, make a new thread: we're happy to hear all sorts of input and ideas!
+    
+          ${channelTripcord}
+          > While this discord has existed for years, TS has only begun to focus on it relatively recently.
+          > It is still an ongoing WIP, and this channel is where we coordinate changes to the discord server!
+          > Ideas and suggestions are always welcome, and we're always looking to improve the experience!
+          > No coding experience is necessary to help make the discord an awesome place to be =)
+    
+          ${channelTripbot}
+          > Our ombi-bot Tripbot has made it's way into the discord server!
+          > This is a somewhat complex bot that is continually growing to meet the needs of TripSit.
+          > It also can be added to other servers to provide a subset of harm reduction features to the public
+
+          We have a ton of other channels, take your time to explore the threads!
+
+          If you have any questions, please reach out to a moderator or the lead dev!`;
+          channel.send(intro);
+        } else {
+          channel.send(stripIndents`
+          ${target} has joined as a ${role.name}, please welcome them!
+          
+          A little about them:
+          > ${introMessage}`); // eslint-disable-line
+        }
       });
   } else if (IC) {
     const channel = await interaction.guild?.channels.fetch(IC) as TextChannel;
@@ -240,12 +673,48 @@ export async function processReactionRole(
     // Post intro message to the channel
     channel.send(`${target} has joined as a ${role.name}, please welcome them!`);
   } else {
+    const isMod = (interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR);
+    const isTs = (interaction.member as GuildMember).roles.cache.has(env.ROLE_TRIPSITTER);
+    const isDonor = (interaction.member as GuildMember).roles.cache.has(env.ROLE_DONOR);
+    const isPatron = (interaction.member as GuildMember).roles.cache.has(env.ROLE_PATRON);
+
+    // You cant add a premium color if you're not a team member or a donor
+    if (premiumColorIds.includes(role.id) && !isMod && !isTs && !isDonor && !isPatron) {
+      log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium 
+            (isMod: ${isMod}, isTs: ${isTs} isDonor: ${isDonor}, isPatron: ${isPatron})`);
+      interaction.reply({ content: 'You do not have permission to use that role!', ephemeral: true });
+      return;
+    }
+
     await target.roles.add(role);
     await interaction.reply({ content: `Added role ${role.name}`, ephemeral: true });
-  }
 
-  // const isMod = (interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR);
-  // const isTs = (interaction.member as GuildMember).roles.cache.has(env.ROLE_TRIPSITTER);
-  // const isDonor = (interaction.member as GuildMember).roles.cache.has(env.ROLE_DONOR);
-  // const isPatron = (interaction.member as GuildMember).roles.cache.has(env.ROLE_PATRON);
+    // Remove the other color roles if you're adding a color role
+    if (colorIds.includes(role.id)) {
+      log.debug(F, 'Removing other color roles');
+      const otherColorRoles = colorIds.filter(r => r !== role.id);
+      await target.roles.remove([...otherColorRoles, ...premiumColorIds]);
+    }
+
+    // Remove the other premium mindset roles if you're adding a mindset role
+    if (premiumColorIds.includes(role.id)) {
+      log.debug(F, 'Removing other premium color roles');
+      const otherPremiumColorRoles = premiumColorIds.filter(r => r !== role.id);
+      await target.roles.remove([...otherPremiumColorRoles, ...colorIds]);
+    }
+
+    // Remove the other mindset roles if you're adding a mindset role
+    if (mindsetIds.includes(role.id)) {
+      log.debug(F, 'Removing other mindset roles');
+      const otherMindsetRoles = mindsetIds.filter(r => r !== role.id);
+      await target.roles.remove([...otherMindsetRoles]);
+    }
+
+    // Remove the other pronoun roles if you're adding a pronoun role
+    if (pronounIds.includes(role.id)) {
+      log.debug(F, 'Removing other pronoun roles');
+      const otherPronounRoles = pronounIds.filter(r => r !== role.id);
+      await target.roles.remove([...otherPronounRoles]);
+    }
+  }
 }

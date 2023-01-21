@@ -54,6 +54,7 @@ module.exports = {
         // This is a personal preference to enforce good code
         '@typescript-eslint/no-non-null-assertion': 'warn',
         'max-len': ['warn', { code: 120 }],
+        '@typescript-eslint/no-use-before-define': 'off',
       },
     },
   ],
