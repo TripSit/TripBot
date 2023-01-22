@@ -43,7 +43,7 @@ const colorRoles = [
   { name: '💙 Bluebell', value: env.ROLE_BLUE },
   { name: '💜 Hyacinth', value: env.ROLE_PURPLE },
   { name: '💗 Azalea', value: env.ROLE_PINK },
-  { name: '🖤 Black', value: env.ROLE_BLACK },
+  { name: '🤍 Snowdrop', value: env.ROLE_WHITE },
 ] as RoleDef[];
 
 // log.debug(F, `Color roles: ${JSON.stringify(colorRoles, null, 2)}`);
@@ -58,7 +58,8 @@ const premiumColorRoles = [
   { name: '💙 Sapphire', value: env.ROLE_DONOR_BLUE },
   { name: '💜 Amethyst', value: env.ROLE_DONOR_PURPLE },
   { name: '💗 Pezzottaite', value: env.ROLE_DONOR_PINK },
-  { name: '🤍 Snowdrop', value: env.ROLE_WHITE },
+  { name: '🖤 Laboradorite', value: env.ROLE_BLACK },
+
 ] as RoleDef[];
 
 // log.debug(F, `Premium Color roles: ${JSON.stringify(premiumColorRoles, null, 2)}`);
@@ -148,16 +149,16 @@ export async function setupTemplateReactionRole(
     const roleBlue = await interaction.guild?.roles.fetch(env.ROLE_BLUE) as Role;
     const rolePurple = await interaction.guild?.roles.fetch(env.ROLE_PURPLE) as Role;
     const rolePink = await interaction.guild?.roles.fetch(env.ROLE_PINK) as Role;
-    const roleBlack = await interaction.guild?.roles.fetch(env.ROLE_BLACK) as Role;
+    const roleWhite = await interaction.guild?.roles.fetch(env.ROLE_WHITE) as Role;
 
-    const redEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'tulip') as GuildEmoji;
-    const orangeEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'marigold') as GuildEmoji;
-    const yellowEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'daffodil') as GuildEmoji;
-    const greenEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'waterlilly') as GuildEmoji;
-    const blueEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'bluebell') as GuildEmoji;
-    const purpleEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'hyacinth') as GuildEmoji;
-    const pinkEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'azalea') as GuildEmoji;
-    const blackEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'ash') as GuildEmoji;
+    const redEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colortulip') as GuildEmoji;
+    const orangeEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colormarigold') as GuildEmoji;
+    const yellowEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colordaffodil') as GuildEmoji;
+    const greenEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorwaterlilly') as GuildEmoji;
+    const blueEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorbluebell') as GuildEmoji;
+    const purpleEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorhyacinth') as GuildEmoji;
+    const pinkEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorazalea') as GuildEmoji;
+    const whiteEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorsnowdrop') as GuildEmoji;
 
     const embed = embedTemplate()
       .setDescription('React to this message to set the color of your nickname!')
@@ -204,9 +205,9 @@ export async function setupTemplateReactionRole(
         .setEmoji(pinkEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setLabel(roleBlack.name)
-        .setCustomId(`"ID":"RR","RID":"${roleBlack.id}"`)
-        .setEmoji(blackEmoji.identifier)
+        .setLabel(roleWhite.name)
+        .setCustomId(`"ID":"RR","RID":"${roleWhite.id}"`)
+        .setEmoji(whiteEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -225,16 +226,16 @@ export async function setupTemplateReactionRole(
     const roleDonorBlue = await interaction.guild?.roles.fetch(env.ROLE_DONOR_BLUE) as Role;
     const roleDonorPurple = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PURPLE) as Role;
     const roleDonorPink = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PINK) as Role;
-    const roleDonorWhite = await interaction.guild?.roles.fetch(env.ROLE_WHITE) as Role;
+    const roleDonorBlack = await interaction.guild?.roles.fetch(env.ROLE_BLACK) as Role;
 
-    const redEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'ruby') as GuildEmoji;
-    const orangeEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'sunstone') as GuildEmoji;
-    const yellowEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'citrine') as GuildEmoji;
-    const greenEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'jade') as GuildEmoji;
-    const blueEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'sapphire') as GuildEmoji;
-    const purpleEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'amethyst') as GuildEmoji;
-    const pinkEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'pezzottaite') as GuildEmoji;
-    const whiteEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'diamond') as GuildEmoji;
+    const redEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorruby') as GuildEmoji;
+    const orangeEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorsunstone') as GuildEmoji;
+    const yellowEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorcitrine') as GuildEmoji;
+    const greenEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorjade') as GuildEmoji;
+    const blueEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorsapphire') as GuildEmoji;
+    const purpleEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'coloramethyst') as GuildEmoji;
+    const pinkEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorpezzottaite') as GuildEmoji;
+    const blackEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorlabradorite') as GuildEmoji;
 
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
@@ -276,9 +277,9 @@ export async function setupTemplateReactionRole(
         .setEmoji(pinkEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setLabel(`${roleDonorWhite.name}`)
-        .setCustomId(`"ID":"RR","RID":"${roleDonorWhite.id}"`)
-        .setEmoji(whiteEmoji.identifier)
+        .setLabel(`${roleDonorBlack.name}`)
+        .setCustomId(`"ID":"RR","RID":"${roleDonorBlack.id}"`)
+        .setEmoji(blackEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
     );
     await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
