@@ -701,13 +701,13 @@ export async function processReactionRole(
   } else {
     const isMod = (interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR);
     const isTs = (interaction.member as GuildMember).roles.cache.has(env.ROLE_TRIPSITTER);
-    const isDonor = (interaction.member as GuildMember).roles.cache.has(env.ROLE_DONOR);
+    const isBooster = (interaction.member as GuildMember).roles.cache.has(env.ROLE_BOOSTER);
     const isPatron = (interaction.member as GuildMember).roles.cache.has(env.ROLE_PATRON);
 
     // You cant add a premium color if you're not a team member or a donor
-    if (premiumColorIds.includes(role.id) && !isMod && !isTs && !isDonor && !isPatron) {
+    if (premiumColorIds.includes(role.id) && !isMod && !isTs && !isBooster && !isPatron) {
       log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium 
-            (isMod: ${isMod}, isTs: ${isTs} isDonor: ${isDonor}, isPatron: ${isPatron})`);
+            (isMod: ${isMod}, isTs: ${isTs} isBooster: ${isBooster}, isPatron: ${isPatron})`);
       interaction.reply({ content: 'You do not have permission to use that role!', ephemeral: true });
       return;
     }
