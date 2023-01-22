@@ -322,16 +322,16 @@ export async function announcements(message:Message) {
     } else if (messageCounter[message.channel.id] % frequency === 0) {
       // If the number of messages sent in the channel / by (frequency) has no remainder..
 
-      // log.debug(F, `genAccountment.length: ${hrAnnouncements.length}`);
+      // log.debug(F, `genAccountment.length: ${genAnnouncements.length}`);
 
       const randomGenNumber = Math.floor(Math.random() * (genAnnouncements.length));
 
       // log.debug(F, `randomGenNumber: ${randomGenNumber}`);
 
-      if (randomGenNumber === hrAnnouncements.length) {
+      if (randomGenNumber === genAnnouncements.length) {
         embed.setDescription(await fact());
       } else {
-        const randomGenAnnouncement = hrAnnouncements[randomGenNumber];
+        const randomGenAnnouncement = genAnnouncements[randomGenNumber];
         // log.debug(F, `randomGenAnnouncement: ${randomGenAnnouncement}`);
         embed.setDescription(randomGenAnnouncement);
       }
