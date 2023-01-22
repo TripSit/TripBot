@@ -28,8 +28,9 @@ export const threadDelete: ThreadDeleteEvent = {
     log.info(F, `Thread ${thread.name} was deleted.`);
 
     // log.debug(F, `threadDelete: ${thread.name} (${thread.id})`);
+    const tripsit = await client.guilds.fetch(env.DISCORD_GUILD_ID);
 
-    const fetchedLogs = await thread.guild.fetchAuditLogs({
+    const fetchedLogs = await tripsit.fetchAuditLogs({
       limit: 1,
       type: AuditLogEvent.ThreadDelete,
     });

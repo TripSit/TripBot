@@ -10,7 +10,7 @@ import { handleReactionRoles } from '../utils/handleReactionRoles';
 import { bestOf } from '../utils/bestOfTripsit';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-const F = f(__filename);
+const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 export default messageReactionAdd;
 
@@ -19,7 +19,7 @@ export const messageReactionAdd: MessageReactionAddEvent = {
   async execute(messageReaction, user) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (messageReaction.message.guild?.id !== env.DISCORD_GUILD_ID) return;
-    log.info(F, `${user} added a reaction`);
+    // log.info(F, `${user} added a reaction`);
 
     // Dont run on bots
     if (user.bot) {
