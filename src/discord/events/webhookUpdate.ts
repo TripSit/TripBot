@@ -16,7 +16,7 @@ export const webhookUpdate: WebhookUpdateEvent = {
   async execute(channel) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (channel.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.debug(F, `Webhook ${channel.name} was updated`);
+    log.info(F, `Webhook ${channel.name} was updated`);
 
     const fetchedLogs = await channel.guild.fetchAuditLogs({
       limit: 1,

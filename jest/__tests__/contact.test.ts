@@ -12,10 +12,10 @@ const authorInfo = {
   name: 'TripSit.Me',
   url: 'http://www.tripsit.me',
 };
-const footerInfo = {
-  iconURL: 'https://imgur.com/b923xK2.png',
-  text: 'Dose responsibly!',
-};
+// const footerInfo = {
+//   iconURL: 'https://imgur.com/b923xK2.png',
+//   text: 'Dose responsibly!',
+// };
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {

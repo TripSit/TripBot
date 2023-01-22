@@ -23,7 +23,7 @@ export const channelPinsUpdate: ChannelPinsUpdateEvent = {
     if (channel.type === ChannelType.DM) return;
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (channel.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.debug(F, `Channel ${channel.name} pins were updated.`);
+    log.info(F, `Channel ${channel.name} pins were updated.`);
 
     const fetchedLogs = await channel.guild.fetchAuditLogs({
       limit: 1,

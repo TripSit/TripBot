@@ -19,7 +19,7 @@ export const emojiUpdate: EmojiUpdateEvent = {
   async execute(oldEmoji, newEmoji) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (newEmoji.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.debug(F, `Emoji ${newEmoji.name} was updated.`);
+    log.info(F, `Emoji ${newEmoji.name} was updated.`);
 
     const fetchedLogs = await newEmoji.guild.fetchAuditLogs({
       limit: 1,

@@ -49,17 +49,17 @@ export async function getDiscordUser(
 ):Promise<User> {
   let user = {} as User;
 
-  log.debug(F, `string: ${string}`);
+  // log.debug(F, `string: ${string}`);
 
   // Check if the string begins with <@ or ends with >
   if (string.startsWith('<@') && string.endsWith('>')) {
-    log.debug(F, `${string} is a mention!`);
+    // log.debug(F, `${string} is a mention!`);
     user = await client.users.fetch(string.replace(/[<@!>]/g, ''));
   } else if (BigInt(string)) {
-    log.debug(F, `${string} is an ID!`);
+    // log.debug(F, `${string} is an ID!`);
     user = await client.users.fetch(string);
   }
 
-  log.debug(F, `getDiscordUser: ${user.tag} (${user.id})`);
+  // log.debug(F, `getDiscordUser: ${user.tag} (${user.id})`);
   return user;
 }

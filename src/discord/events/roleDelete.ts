@@ -19,7 +19,7 @@ export const roleDelete: RoleDeleteEvent = {
   async execute(role) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (role.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.debug(F, `Role ${role.name} was deleted.`);
+    log.info(F, `Role ${role.name} was deleted.`);
 
     const fetchedLogs = await role.guild.fetchAuditLogs({
       limit: 1,

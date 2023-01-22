@@ -19,7 +19,7 @@ export const messageReactionAdd: MessageReactionAddEvent = {
   async execute(messageReaction, user) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (messageReaction.message.guild?.id !== env.DISCORD_GUILD_ID) return;
-    log.debug(F, `${user} added a reaction`);
+    log.info(F, `${user} added a reaction`);
 
     // Dont run on bots
     if (user.bot) {

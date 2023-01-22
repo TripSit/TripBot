@@ -540,7 +540,7 @@ export async function tripsitmeResolve(
   const target = await interaction.guild.members.fetch(targetId);
   const actor = interaction.member as GuildMember;
 
-  log.debug(F, `${interaction.deferred} ${interaction.replied} ${interaction.ephemeral}`);
+  // log.debug(F, `${interaction.deferred} ${interaction.replied} ${interaction.ephemeral}`);
 
   if (targetId !== actor.id && !override) {
     // log.debug(F, `not the target!`);

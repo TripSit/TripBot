@@ -20,7 +20,7 @@ export const stickerUpdate: StickerUpdateEvent = {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!newSticker.guild) return;
     if (newSticker.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.debug(F, `Sticker ${newSticker.name} was updated.`);
+    log.info(F, `Sticker ${newSticker.name} was updated.`);
 
     const fetchedLogs = await newSticker.guild.fetchAuditLogs({
       limit: 1,

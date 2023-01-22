@@ -140,25 +140,27 @@ export async function setupTemplateReactionRole(
   interaction:ChatInputCommandInteraction,
 ) {
   const set = interaction.options.getString('set', true);
+  if (!interaction.guild) return;
+  const { guild } = interaction;
 
   if (set === 'color') {
-    const roleRed = await interaction.guild?.roles.fetch(env.ROLE_RED) as Role;
-    const roleOrange = await interaction.guild?.roles.fetch(env.ROLE_ORANGE) as Role;
-    const roleYellow = await interaction.guild?.roles.fetch(env.ROLE_YELLOW) as Role;
-    const roleGreen = await interaction.guild?.roles.fetch(env.ROLE_GREEN) as Role;
-    const roleBlue = await interaction.guild?.roles.fetch(env.ROLE_BLUE) as Role;
-    const rolePurple = await interaction.guild?.roles.fetch(env.ROLE_PURPLE) as Role;
-    const rolePink = await interaction.guild?.roles.fetch(env.ROLE_PINK) as Role;
-    const roleWhite = await interaction.guild?.roles.fetch(env.ROLE_WHITE) as Role;
+    const roleRed = await guild.roles.fetch(env.ROLE_RED) as Role;
+    const roleOrange = await guild.roles.fetch(env.ROLE_ORANGE) as Role;
+    const roleYellow = await guild.roles.fetch(env.ROLE_YELLOW) as Role;
+    const roleGreen = await guild.roles.fetch(env.ROLE_GREEN) as Role;
+    const roleBlue = await guild.roles.fetch(env.ROLE_BLUE) as Role;
+    const rolePurple = await guild.roles.fetch(env.ROLE_PURPLE) as Role;
+    const rolePink = await guild.roles.fetch(env.ROLE_PINK) as Role;
+    const roleWhite = await guild.roles.fetch(env.ROLE_WHITE) as Role;
 
-    const redEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colortulip') as GuildEmoji;
-    const orangeEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colormarigold') as GuildEmoji;
-    const yellowEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colordaffodil') as GuildEmoji;
-    const greenEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorwaterlily') as GuildEmoji;
-    const blueEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorbluebell') as GuildEmoji;
-    const purpleEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorhyacinth') as GuildEmoji;
-    const pinkEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorazalea') as GuildEmoji;
-    const whiteEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorsnowdrop') as GuildEmoji;
+    const redEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colortulip') as GuildEmoji;
+    const orangeEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colormarigold') as GuildEmoji;
+    const yellowEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colordaffodil') as GuildEmoji;
+    const greenEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorwaterlily') as GuildEmoji;
+    const blueEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorbluebell') as GuildEmoji;
+    const purpleEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorhyacinth') as GuildEmoji;
+    const pinkEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorazalea') as GuildEmoji;
+    const whiteEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorsnowdrop') as GuildEmoji;
 
     const embed = embedTemplate()
       .setDescription('React to this message to set the color of your nickname!')
@@ -219,23 +221,23 @@ export async function setupTemplateReactionRole(
       .setFooter({ text: 'You can only pick one color at a time, choose wisely!' })
       .setColor(Colors.Purple);
 
-    const roleDonorRed = await interaction.guild?.roles.fetch(env.ROLE_DONOR_RED) as Role;
-    const roleDonorOrange = await interaction.guild?.roles.fetch(env.ROLE_DONOR_ORANGE) as Role;
-    const roleDonorYellow = await interaction.guild?.roles.fetch(env.ROLE_DONOR_YELLOW) as Role;
-    const roleDonorGreen = await interaction.guild?.roles.fetch(env.ROLE_DONOR_GREEN) as Role;
-    const roleDonorBlue = await interaction.guild?.roles.fetch(env.ROLE_DONOR_BLUE) as Role;
-    const roleDonorPurple = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PURPLE) as Role;
-    const roleDonorPink = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PINK) as Role;
-    const roleDonorBlack = await interaction.guild?.roles.fetch(env.ROLE_BLACK) as Role;
+    const roleDonorRed = await guild.roles.fetch(env.ROLE_DONOR_RED) as Role;
+    const roleDonorOrange = await guild.roles.fetch(env.ROLE_DONOR_ORANGE) as Role;
+    const roleDonorYellow = await guild.roles.fetch(env.ROLE_DONOR_YELLOW) as Role;
+    const roleDonorGreen = await guild.roles.fetch(env.ROLE_DONOR_GREEN) as Role;
+    const roleDonorBlue = await guild.roles.fetch(env.ROLE_DONOR_BLUE) as Role;
+    const roleDonorPurple = await guild.roles.fetch(env.ROLE_DONOR_PURPLE) as Role;
+    const roleDonorPink = await guild.roles.fetch(env.ROLE_DONOR_PINK) as Role;
+    const roleDonorBlack = await guild.roles.fetch(env.ROLE_BLACK) as Role;
 
-    const redEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorruby') as GuildEmoji;
-    const orangeEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorsunstone') as GuildEmoji;
-    const yellowEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorcitrine') as GuildEmoji;
-    const greenEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorjade') as GuildEmoji;
-    const blueEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorsapphire') as GuildEmoji;
-    const purpleEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'coloramethyst') as GuildEmoji;
-    const pinkEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorpezzottaite') as GuildEmoji;
-    const blackEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorlabradorite') as GuildEmoji;
+    const redEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorruby') as GuildEmoji;
+    const orangeEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorsunstone') as GuildEmoji;
+    const yellowEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorcitrine') as GuildEmoji;
+    const greenEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorjade') as GuildEmoji;
+    const blueEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorsapphire') as GuildEmoji;
+    const purpleEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'coloramethyst') as GuildEmoji;
+    const pinkEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorpezzottaite') as GuildEmoji;
+    const blackEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorlabradorite') as GuildEmoji;
 
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
@@ -284,15 +286,15 @@ export async function setupTemplateReactionRole(
     );
     await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
   } else if (set === 'mindset') {
-    const roleDrunk = await interaction.guild?.roles.fetch(env.ROLE_DRUNK) as Role;
-    const roleHigh = await interaction.guild?.roles.fetch(env.ROLE_HIGH) as Role;
-    const roleRolling = await interaction.guild?.roles.fetch(env.ROLE_ROLLING) as Role;
-    const roleTripping = await interaction.guild?.roles.fetch(env.ROLE_TRIPPING) as Role;
-    const roleDissociating = await interaction.guild?.roles.fetch(env.ROLE_DISSOCIATING) as Role;
-    const roleStimming = await interaction.guild?.roles.fetch(env.ROLE_STIMMING) as Role;
-    const roleSedated = await interaction.guild?.roles.fetch(env.ROLE_SEDATED) as Role;
-    const roleTalkative = await interaction.guild?.roles.fetch(env.ROLE_TALKATIVE) as Role;
-    const roleWorking = await interaction.guild?.roles.fetch(env.ROLE_WORKING) as Role;
+    const roleDrunk = await guild.roles.fetch(env.ROLE_DRUNK) as Role;
+    const roleHigh = await guild.roles.fetch(env.ROLE_HIGH) as Role;
+    const roleRolling = await guild.roles.fetch(env.ROLE_ROLLING) as Role;
+    const roleTripping = await guild.roles.fetch(env.ROLE_TRIPPING) as Role;
+    const roleDissociating = await guild.roles.fetch(env.ROLE_DISSOCIATING) as Role;
+    const roleStimming = await guild.roles.fetch(env.ROLE_STIMMING) as Role;
+    const roleSedated = await guild.roles.fetch(env.ROLE_SEDATED) as Role;
+    const roleTalkative = await guild.roles.fetch(env.ROLE_TALKATIVE) as Role;
+    const roleWorking = await guild.roles.fetch(env.ROLE_WORKING) as Role;
 
     const embed = embedTemplate()
       .setDescription(stripIndents`
@@ -363,17 +365,17 @@ export async function setupTemplateReactionRole(
       // .setFooter({ text: 'You can only pick one pronoun at a time, choose wisely!' })
       .setColor(Colors.Blue);
 
-    const pronounHe = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_HE) as Role;
-    const pronounShe = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_SHE) as Role;
-    const pronounThey = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_THEY) as Role;
-    const pronounAny = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_ANY) as Role;
-    const pronounAsk = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_ASK) as Role;
+    const pronounHe = await guild.roles.fetch(env.ROLE_PRONOUN_HE) as Role;
+    const pronounShe = await guild.roles.fetch(env.ROLE_PRONOUN_SHE) as Role;
+    const pronounThey = await guild.roles.fetch(env.ROLE_PRONOUN_THEY) as Role;
+    const pronounAny = await guild.roles.fetch(env.ROLE_PRONOUN_ANY) as Role;
+    const pronounAsk = await guild.roles.fetch(env.ROLE_PRONOUN_ASK) as Role;
 
-    const emojiHe = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounhehim') as GuildEmoji;
-    const emojiShe = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounsheher') as GuildEmoji;
-    const emojiThey = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'pronountheythem') as GuildEmoji;
-    const emojiAny = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounanypronouns') as GuildEmoji;
-    const emojiAsk = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounaskme') as GuildEmoji;
+    const emojiHe = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounhehim') as GuildEmoji;
+    const emojiShe = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounsheher') as GuildEmoji;
+    const emojiThey = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronountheythem') as GuildEmoji;
+    const emojiAny = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounanypronouns') as GuildEmoji;
+    const emojiAsk = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounaskme') as GuildEmoji;
 
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
@@ -487,7 +489,7 @@ export async function setupCustomReactionRole(
 export async function processReactionRole(
   interaction:ButtonInteraction,
 ) {
-  log.debug(F, `Processing reaction role click Options: ${JSON.stringify(interaction.customId, null, 2)}`);
+  // log.debug(F, `Processing reaction role click Options: ${JSON.stringify(interaction.customId, null, 2)}`);
   const {
     RID,
     IM,
@@ -498,11 +500,14 @@ export async function processReactionRole(
     IC?:string,
   };
 
-  log.debug(F, `RID: ${RID}, IM: ${IM}, IC: ${IC}`);
+  // log.debug(F, `RID: ${RID}, IM: ${IM}, IC: ${IC}`);
 
   const target = interaction.member as GuildMember;
 
-  const role = await interaction.guild?.roles.fetch(RID);
+  if (!interaction.guild) return;
+  const { guild } = interaction;
+
+  const role = await guild.roles.fetch(RID);
 
   if (!role) {
     log.error(F, `Role ${RID} not found`);
@@ -529,7 +534,7 @@ export async function processReactionRole(
       const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
       interaction.awaitModalSubmit({ filter, time: 0 })
         .then(async i => {
-          log.debug(F, `${JSON.stringify(i.customId)}`);
+          // log.debug(F, `${JSON.stringify(i.customId)}`);
           const {
             II,
           } = JSON.parse(`{${i.customId}}`);
@@ -561,15 +566,15 @@ export async function processReactionRole(
     return;
   }
 
-  // const channelTripsitmeta = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSITMETA) as TextChannel;
-  const channelTripsit = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
-  const hrCategory = await interaction.guild?.channels.fetch(env.CATEGROY_HARMREDUCTIONCENTRE) as CategoryChannel;
-  const devCategory = await interaction.guild?.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
-  const channelTripcord = await interaction.guild?.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
-  const channelTripbot = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
-  // const channelTripmobile = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPMOBILE) as TextChannel;
-  // const channelContent = await interaction.guild?.channels.fetch(env.CHANNEL_WIKICONTENT) as TextChannel;
-  // const channelDevelopment = await interaction.guild?.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
+  // const channelTripsitmeta = await guild.channels.fetch(env.CHANNEL_TRIPSITMETA) as TextChannel;
+  const channelTripsit = await guild.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
+  const hrCategory = await guild.channels.fetch(env.CATEGROY_HARMREDUCTIONCENTRE) as CategoryChannel;
+  const devCategory = await guild.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
+  const channelTripcord = await guild.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
+  const channelTripbot = await guild.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
+  // const channelTripmobile = await guild.channels.fetch(env.CHANNEL_TRIPMOBILE) as TextChannel;
+  // const channelContent = await guild.channels.fetch(env.CHANNEL_WIKICONTENT) as TextChannel;
+  // const channelDevelopment = await guild.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
 
   let introMessage = '' as string;
   if (IM) {
@@ -598,13 +603,12 @@ export async function processReactionRole(
     const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
-        log.debug(F, `${JSON.stringify(i.customId)}`);
+        // log.debug(F, `${JSON.stringify(i.customId)}`);
         const {
           II,
         } = JSON.parse(`{${i.customId}}`);
 
-        log.debug(F, `II: ${II}`);
-        log.debug(F, `II: ${II}`);
+        // log.debug(F, `II: ${II}`);
 
         if (II !== interaction.id) return;
         if (!i.guild) {
@@ -618,7 +622,7 @@ export async function processReactionRole(
         }
 
         introMessage = i.fields.getTextInputValue('introduction');
-        log.debug(F, `introMessage: ${introMessage}`);
+        // log.debug(F, `introMessage: ${introMessage}`);
 
         await target.roles.add(role);
         await i.reply({ content: `Added role ${role.name}`, ephemeral: true });
@@ -693,7 +697,7 @@ export async function processReactionRole(
         }
       });
   } else if (IC) {
-    const channel = await interaction.guild?.channels.fetch(IC) as TextChannel;
+    const channel = await guild.channels.fetch(IC) as TextChannel;
     await target.roles.add(role);
     await interaction.reply({ content: `Added role ${role.name}`, ephemeral: true });
     // Post intro message to the channel
@@ -706,8 +710,8 @@ export async function processReactionRole(
 
     // You cant add a premium color if you're not a team member or a donor
     if (premiumColorIds.includes(role.id) && !isMod && !isTs && !isBooster && !isPatron) {
-      log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium 
-            (isMod: ${isMod}, isTs: ${isTs} isBooster: ${isBooster}, isPatron: ${isPatron})`);
+      // log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium
+      //       (isMod: ${isMod}, isTs: ${isTs} isBooster: ${isBooster}, isPatron: ${isPatron})`);
       interaction.reply({ content: 'You do not have permission to use that role!', ephemeral: true });
       return;
     }
@@ -717,28 +721,28 @@ export async function processReactionRole(
 
     // Remove the other color roles if you're adding a color role
     if (colorIds.includes(role.id)) {
-      log.debug(F, 'Removing other color roles');
+      // log.debug(F, 'Removing other color roles');
       const otherColorRoles = colorIds.filter(r => r !== role.id);
       await target.roles.remove([...otherColorRoles, ...premiumColorIds]);
     }
 
     // Remove the other premium mindset roles if you're adding a mindset role
     if (premiumColorIds.includes(role.id)) {
-      log.debug(F, 'Removing other premium color roles');
+      // log.debug(F, 'Removing other premium color roles');
       const otherPremiumColorRoles = premiumColorIds.filter(r => r !== role.id);
       await target.roles.remove([...otherPremiumColorRoles, ...colorIds]);
     }
 
     // Remove the other mindset roles if you're adding a mindset role
     if (mindsetIds.includes(role.id)) {
-      log.debug(F, 'Removing other mindset roles');
+      // log.debug(F, 'Removing other mindset roles');
       const otherMindsetRoles = mindsetIds.filter(r => r !== role.id);
       await target.roles.remove([...otherMindsetRoles]);
     }
 
     // // Remove the other pronoun roles if you're adding a pronoun role
     // if (pronounIds.includes(role.id)) {
-    //   log.debug(F, 'Removing other pronoun roles');
+    // log.debug(F, 'Removing other pronoun roles');
     //   const otherPronounRoles = pronounIds.filter(r => r !== role.id);
     //   await target.roles.remove([...otherPronounRoles]);
     // }

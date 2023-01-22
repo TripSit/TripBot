@@ -21,7 +21,7 @@ export const inviteCreate: InviteCreateEvent = {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!invite.guild) return;
     if (invite.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.debug(F, `Channel ${invite} was created.`);
+    log.info(F, `Channel ${invite} was created.`);
 
     const fetchedLogs = await (invite.guild as Guild).fetchAuditLogs({
       limit: 1,

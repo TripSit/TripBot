@@ -208,7 +208,7 @@ export async function modmailActions(
   if (interaction.channel
     && (interaction.channel.type === ChannelType.PublicThread
     || interaction.channel.type === ChannelType.PrivateThread)) {
-    log.debug(F, `interaction.channel.id: ${interaction.channel.id}!`);
+    // log.debug(F, `interaction.channel.id: ${interaction.channel.id}!`);
     const ticketDataRaw = await getOpenTicket(null, interaction.channel.id);
 
     if (!ticketDataRaw) {
@@ -227,7 +227,7 @@ export async function modmailActions(
     ticketData = ticketDataRaw;
   }
 
-  log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
+  // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}!`);
 
   const ticketChannel = await interaction.client.channels.fetch(ticketData.thread_id) as ThreadChannel;
 
@@ -248,7 +248,7 @@ export async function modmailActions(
   let updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>();
   let userMessage = '';
 
-  log.debug(F, `command: ${command}!`);
+  // log.debug(F, `command: ${command}!`);
   if (command === 'close') {
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder().setCustomId(modMailBlock).setLabel('Block').setStyle(ButtonStyle.Secondary),
@@ -413,7 +413,7 @@ export async function modmailActions(
   } catch (err) {
     log.error(F, 'Failed to update ticket data!');
     log.error(F, `${JSON.stringify(err, null, 2)}`);
-    log.debug(F, `Ticket data: ${JSON.stringify(ticketData)}`);
+    // log.debug(F, `Ticket data: ${JSON.stringify(ticketData)}`);
   }
 
   const tripsitGuild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID);
@@ -625,7 +625,7 @@ export async function modmailCreate(
     .andWhereNot('status', 'DELETED')
     .first();
 
-  log.debug(F, `ticketData: ${ticketData?.status}!`);
+  // log.debug(F, `ticketData: ${ticketData?.status}!`);
 
   // Get the parent channel to be used
   const channel = await interaction.client.channels.fetch(modmailVars[issueType].channelId) as TextChannel;
@@ -637,7 +637,7 @@ export async function modmailCreate(
     try {
       issueThread = await channel.threads.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
-      log.debug(F, 'Cant find thread, it has likely been deleted!');
+      // log.debug(F, 'Cant find thread, it has likely been deleted!');
       await db<UserTickets>('user_tickets')
         .update({
           status: 'DELETED' as TicketStatus,
@@ -693,7 +693,7 @@ export async function modmailCreate(
       if (i.customId.split('~')[2] !== interaction.id) return;
       // Get whatever they sent in the modal
       const modalInputA = i.fields.getTextInputValue('inputA');
-      log.debug(F, `modalInputA: ${modalInputA}!`);
+      // log.debug(F, `modalInputA: ${modalInputA}!`);
       let modalInputB = '';
       try {
         modalInputB = i.fields.getTextInputValue('inputB');
@@ -704,9 +704,9 @@ export async function modmailCreate(
 
       // Create the thread in the tripsit guild
       const threadtype = channel.guild.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread;
-      log.debug(F, `threadtype: ${threadtype}!`);
-      log.debug(F, `name: ${modmailVars[issueType].channelTitle}!`);
-      log.debug(F, `reson: ${actor.username} submitted a(n) ${issueType} ticket!!`);
+      // log.debug(F, `threadtype: ${threadtype}!`);
+      // log.debug(F, `name: ${modmailVars[issueType].channelTitle}!`);
+      // log.debug(F, `reson: ${actor.username} submitted a(n) ${issueType} ticket!!`);
       const ticketThread = await channel.threads.create({
         name: modmailVars[issueType].channelTitle,
         autoArchiveDuration: 1440,
@@ -866,7 +866,7 @@ export async function modmailCreate(
         deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
       } as UserTickets;
 
-      log.debug(F, `newTicketData: ${JSON.stringify(newTicketData)}`);
+      // log.debug(F, `newTicketData: ${JSON.stringify(newTicketData)}`);
 
       // Insert that ticket in the DB
       try {
@@ -912,12 +912,12 @@ export async function modmailDMInteraction(message:Message) {
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}!`);
 
   if (userData && userData.ticket_ban) {
-    log.debug(F, `User ${message.author.tag} is banned from creating tickets.`);
+    // log.debug(F, `User ${message.author.tag} is banned from creating tickets.`);
     return;
   }
 
   const ticketData = await getOpenTicket(userData.id, null);
-  log.debug(F, `ticketData (DM): ${JSON.stringify(ticketData, null, 2)}!`);
+  // log.debug(F, `ticketData (DM): ${JSON.stringify(ticketData, null, 2)}!`);
 
   if (ticketData) {
     if (ticketData.status === 'BLOCKED') {
@@ -936,7 +936,7 @@ export async function modmailDMInteraction(message:Message) {
     try {
       thread = await channel.threads.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (error) {
-      log.debug(F, `Error fetching thread, it was likely deleted: ${error}`);
+      // log.debug(F, `Error fetching thread, it was likely deleted: ${error}`);
       // This just means the thread is deleted
     }
     // log.debug(F, `thread: ${JSON.stringify(thread, null, 2)}!`);
@@ -967,7 +967,7 @@ export async function modmailDMInteraction(message:Message) {
       return;
     }
     // If the thread is deleted, delete the ticket from the db
-    log.debug(F, `Deleting ticket ${ticketData.id} in the DB!`);
+    // log.debug(F, `Deleting ticket ${ticketData.id} in the DB!`);
     await db<UserTickets>('user_tickets')
       .update({
         status: 'DELETED' as TicketStatus,
@@ -996,7 +996,7 @@ export async function modmailThreadInteraction(message:Message) {
       // Get the ticket info
       const ticketData = await getOpenTicket(null, message.channel.id);
       if (ticketData) {
-        log.debug(F, `ticketData (Thread): ${JSON.stringify(ticketData, null, 2)}!`);
+        // log.debug(F, `ticketData (Thread): ${JSON.stringify(ticketData, null, 2)}!`);
 
         if (ticketData.status === 'BLOCKED') {
           await message.channel.send(`Hey ${message.author.username}, this user is currently blocked. Please '/modmail block off', or click the button at the top, before conversation can resume.`);

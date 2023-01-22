@@ -109,7 +109,7 @@ export async function checkGuildPermissions(
   //   log.silly(F, `I do not support the 'MentionEveryone' permissions!`);
   // }
   if (!botMember.permissions.has('ManageMessages' as PermissionResolvable)) {
-    log.warn(F, 'I need the \'ManageMessages\' permissions to delete messages when someone is banned, and to pin messages!');
+    log.warn(F, 'I need the \'ManageMessages\' permissions to delete msgs when someone is banned, and to pin msgs!');
   }
   if (!botMember.permissions.has('ManageThreads' as PermissionResolvable)) {
     log.warn(F, 'I need the \'ManageThreads\' permissions to archive/delete threads!');

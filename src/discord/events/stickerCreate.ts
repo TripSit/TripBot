@@ -20,7 +20,7 @@ export const stickerCreate: StickerCreateEvent = {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!sticker.guild) return;
     if (sticker.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.debug(F, `Sticker ${sticker.name} was created.`);
+    log.info(F, `Sticker ${sticker.name} was created.`);
 
     const fetchedLogs = await sticker.guild.fetchAuditLogs({
       limit: 1,

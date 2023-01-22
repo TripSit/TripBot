@@ -20,7 +20,7 @@ export const threadCreate: ThreadCreateEvent = {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!thread.guild) return;
     if (thread.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.debug(F, `Thread ${thread.name} was created.`);
+    log.info(F, `Thread ${thread.name} was created.`);
 
     const fetchedLogs = await thread.guild.fetchAuditLogs({
       limit: 1,

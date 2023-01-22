@@ -33,7 +33,7 @@ export const channelUpdate: ChannelUpdateEvent = {
       return;
     }
 
-    log.debug(F, `Channel ${newChannel.name} was updated.`);
+    log.info(F, `Channel ${newChannel.name} was updated.`);
 
     const fetchedLogs = await newChannel.guild.fetchAuditLogs({
       limit: 1,

@@ -23,7 +23,7 @@ export const messageDelete: MessageDeleteEvent = {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!message.guild) return;
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.debug(F, `Message in ${message.channel} was deleted.`);
+    log.info(F, `Message in ${message.channel} was deleted.`);
 
     const msglog = await message.client.channels.fetch(env.CHANNEL_MSGLOG) as TextChannel;
 

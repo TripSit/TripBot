@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import {
   CategoryChannel,
   MessageReaction,
@@ -97,7 +98,6 @@ export async function handleReactionRoles(
         const devCategory = await reaction.message.guild?.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
         // const channelTripcord = await reaction.message.guild?.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
         // const channelTripbot = await reaction.message.guild?.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
-        // const channelTripmobile = await reaction.message.guild?.channels.fetch(env.CHANNEL_TRIPMOBILE) as TextChannel;
         // const channelContent = await reaction.message.guild?.channels.fetch(env.CHANNEL_CONTENT) as TextChannel;
         const channelDevelopment = await reaction.message.guild?.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
         // const channelIrc = await reaction.message.guild?.channels.fetch(env.CHANNEL_IRC) as TextChannel;

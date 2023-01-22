@@ -15,16 +15,16 @@ export async function calcPsychedelics(
 ):Promise<number> {
   let estimatedDosage = (lastDose / 100) * 280.059565 * (days ** -0.412565956);
   let newAmount = 0;
-  log.debug(F, `desiredDose: ${desiredDose}`);
+  // log.debug(F, `desiredDose: ${desiredDose}`);
   if (desiredDose) {
     estimatedDosage += (desiredDose - lastDose);
-    log.debug(F, `estimatedDosage: ${estimatedDosage} (desiredDose: ${desiredDose})`);
+    // log.debug(F, `estimatedDosage: ${estimatedDosage} (desiredDose: ${desiredDose})`);
     newAmount = ((estimatedDosage < desiredDose) ? desiredDose : estimatedDosage);
-    log.debug(F, `newAmountA: ${newAmount} (desiredDose: ${desiredDose})`);
+    // log.debug(F, `newAmountA: ${newAmount} (desiredDose: ${desiredDose})`);
   } else {
-    log.debug(F, `estimatedDosage: ${estimatedDosage} (desiredDose: ${desiredDose})`);
+    // log.debug(F, `estimatedDosage: ${estimatedDosage} (desiredDose: ${desiredDose})`);
     newAmount = ((estimatedDosage < lastDose) ? lastDose : estimatedDosage);
-    log.debug(F, `newAmountB: ${newAmount} (desiredDose: ${desiredDose})`);
+    // log.debug(F, `newAmountB: ${newAmount} (desiredDose: ${desiredDose})`);
   }
 
   const result = Math.round(newAmount * 10) / 10;

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Guild, TextChannel } from 'discord.js';
 import { getVoiceConnection } from '@discordjs/voice';
 import { env } from './global/utils/env.config';
@@ -43,7 +45,7 @@ process.on('unhandledRejection', async (error: Error) => {
 
 // Stop the bot when the process is closed (via Ctrl-C).
 const destroy = () => {
-  log.debug(F, 'Gracefully stopping the bot (CTRL + C pressed)');
+  log.info(F, 'Gracefully stopping the bot (CTRL + C pressed)');
   // try {
   //   if (global.manager) {
   //     global.manager.teardown();

@@ -19,7 +19,7 @@ export const guildBanAdd: GuildBanAddEvent = {
   async execute(ban) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (ban.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.debug(F, `Channel ${ban.user} was added.`);
+    log.info(F, `Channel ${ban.user} was added.`);
 
     const fetchedLogs = await ban.guild.fetchAuditLogs({
       limit: 1,

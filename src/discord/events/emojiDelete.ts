@@ -19,7 +19,7 @@ export const emojiDelete: EmojiDeleteEvent = {
   async execute(emoji) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (emoji.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.debug(F, `Emoji ${emoji.name} was deleted.`);
+    log.info(F, `Emoji ${emoji.name} was deleted.`);
 
     const fetchedLogs = await emoji.guild.fetchAuditLogs({
       limit: 1,

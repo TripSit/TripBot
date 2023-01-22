@@ -19,7 +19,7 @@ export const dFact: SlashCommand = {
     startLog(F, interaction);
     const data = await fact();
 
-    log.debug(F, `data: ${JSON.stringify(data, null, 2)}`);
+    // log.debug(F, `data: ${JSON.stringify(data, null, 2)}`);
 
     const embed = embedTemplate();
     embed.setTitle(data);

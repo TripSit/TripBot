@@ -20,7 +20,7 @@ export const threadUpdate: ThreadUpdateEvent = {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!newThread.guild) return;
     if (newThread.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.debug(F, `Thread ${newThread.name} was updated.`);
+    log.info(F, `Thread ${newThread.name} was updated.`);
 
     const fetchedLogs = await newThread.guild.fetchAuditLogs({
       limit: 1,

@@ -17,6 +17,13 @@ const footerInfo = {
   text: 'Dose responsibly!',
 };
 
+const dosageLabelSmoked = '💊 Dosage (Smoked)';
+const dosageLabelVaporized = '💊 Dosage (Vapourised)';
+const dosageLabelInsufflated = '💊 Dosage (Insufflated)';
+const durationLabelSmoked = '⏳ Duration (Smoked)';
+const durationLabelVaporized = '⏳ Duration (Vapourised)';
+const durationLabelInsufflated = '⏳ Duration (Insufflated)';
+
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
     // /drug substance:Cannabidiol response:All public:True
@@ -58,7 +65,7 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: '💊 Dosage (Smoked)',
+            name: dosageLabelSmoked,
             value: stripIndents`
               Threshold: 2 mg
               Light: 10 - 20 mg
@@ -68,7 +75,7 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: '💊 Dosage (Vapourised)',
+            name: dosageLabelVaporized,
             value: stripIndents`
               Threshold: 5-10mg
               Light: 10-15mg
@@ -78,7 +85,7 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: '💊 Dosage (Insufflated)',
+            name: dosageLabelInsufflated,
             value: stripIndents`
               Light: 10-25mg
               Common: 25-50mg
@@ -86,7 +93,7 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: '⏳ Duration (Smoked)',
+            name: durationLabelSmoked,
             value: stripIndents`
               Total: 5 - 20 minutes
               Onset: 20 - 40 seconds
@@ -97,12 +104,12 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: '⏳ Duration (Vapourised)',
+            name: durationLabelVaporized,
             value: stripIndents`After effects: 15-60 minutes`,
             inline: true,
           },
           {
-            name: '⏳ Duration (Insufflated)',
+            name: durationLabelInsufflated,
             value: stripIndents`
               Onset: 3-5 minutes
               Duration: 45-60 minutes
@@ -167,7 +174,7 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: '💊 Dosage (Smoked)',
+            name: dosageLabelSmoked,
             value: stripIndents`
               Threshold: 2 mg
               Light: 10 - 20 mg
@@ -177,7 +184,7 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: '💊 Dosage (Vapourised)',
+            name: dosageLabelVaporized,
             value: stripIndents`
               Threshold: 5-10mg
               Light: 10-15mg
@@ -187,7 +194,7 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: '💊 Dosage (Insufflated)',
+            name: dosageLabelInsufflated,
             value: stripIndents`
               Light: 10-25mg
               Common: 25-50mg
@@ -195,7 +202,7 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: '⏳ Duration (Smoked)',
+            name: durationLabelSmoked,
             value: stripIndents`
               Total: 5 - 20 minutes
               Onset: 20 - 40 seconds
@@ -206,12 +213,12 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: '⏳ Duration (Vapourised)',
+            name: durationLabelVaporized,
             value: stripIndents`After effects: 15-60 minutes`,
             inline: true,
           },
           {
-            name: '⏳ Duration (Insufflated)',
+            name: durationLabelInsufflated,
             value: stripIndents`
               Onset: 3-5 minutes
               Duration: 45-60 minutes
@@ -276,7 +283,7 @@ describe(slashCommand.data.name, () => {
         description: stripIndents`A popular and powerful psychedelic, typically used in two ways; either it is vapourised for a short 'breakthrough' experience, or it is taken in combination with an enzyme inhibitor for a long, intense trip (this is also known as ayahuasca or pharmahuasca).`, // eslint-disable-line
         fields: [
           {
-            name: '💊 Dosage (Smoked)',
+            name: dosageLabelSmoked,
             value: stripIndents`
               Threshold: 2 mg
               Light: 10 - 20 mg
@@ -286,7 +293,7 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: '💊 Dosage (Vapourised)',
+            name: dosageLabelVaporized,
             value: stripIndents`
               Threshold: 5-10mg
               Light: 10-15mg
@@ -296,7 +303,7 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: '💊 Dosage (Insufflated)',
+            name: dosageLabelInsufflated,
             value: stripIndents`
               Light: 10-25mg
               Common: 25-50mg
@@ -304,7 +311,7 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: '⏳ Duration (Smoked)',
+            name: durationLabelSmoked,
             value: stripIndents`
               Total: 5 - 20 minutes
               Onset: 20 - 40 seconds
@@ -315,12 +322,12 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: '⏳ Duration (Vapourised)',
+            name: durationLabelVaporized,
             value: stripIndents`After effects: 15-60 minutes`,
             inline: true,
           },
           {
-            name: '⏳ Duration (Insufflated)',
+            name: durationLabelInsufflated,
             value: stripIndents`
               Onset: 3-5 minutes
               Duration: 45-60 minutes

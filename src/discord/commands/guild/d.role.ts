@@ -96,18 +96,18 @@ export const dRole: SlashCommand = {
     let role = {} as Role;
 
     const roleId = interaction.options.getString('role', true);
-    log.debug(F, `Role ID: ${roleId}`);
+    // log.debug(F, `Role ID: ${roleId}`);
 
     // Check if roleId contains any letters
     if (/[a-zA-Z]/.test(roleId)) {
-      log.debug(F, 'Role ID is not a number');
+      // log.debug(F, 'Role ID is not a number');
       // If the role provided isnt an ID, try to find it by name
       const roleName = roleId.includes(' ') ? roleId.split(' ')[1].trim() : roleId;
-      log.debug(F, `Role name: ${roleName}`);
+      // log.debug(F, `Role name: ${roleName}`);
       // log.debug(F, `Role cache: ${interaction.guild.roles.cache}`);
       role = interaction.guild.roles.cache.find(r => r.name.toLowerCase() === roleName.toLowerCase()) as Role; // eslint-disable-line max-len
     } else {
-      log.debug(F, 'Role ID is a number');
+      // log.debug(F, 'Role ID is a number');
       role = await interaction.guild.roles.fetch(roleId) as Role;
     }
 
@@ -122,19 +122,19 @@ export const dRole: SlashCommand = {
     const isDonor = (interaction.member as GuildMember).roles.cache.has(env.ROLE_DONOR);
     const isPatron = (interaction.member as GuildMember).roles.cache.has(env.ROLE_PATRON);
 
-    log.debug(F, `isMod: ${isMod}, isTs: ${isTs}, isDonor: ${isDonor}, isPatron: ${isPatron}`);
+    // log.debug(F, `isMod: ${isMod}, isTs: ${isTs}, isDonor: ${isDonor}, isPatron: ${isPatron}`);
 
     // If you're not a mod or tripsitter, you can't add anything that's not in the "safe" list
     if (!safeRoleList.includes(role.id) && !isMod && !isTs) {
-      log.debug(F, `role.id is ${role.id} and is not in the safe list. (isMod: ${isMod}, isTs: ${isTs})`);
+      // log.debug(F, `role.id is ${role.id} and is not in the safe list. (isMod: ${isMod}, isTs: ${isTs})`);
       interaction.reply({ content: 'You do not have permission to use that role!', ephemeral: true });
       return false;
     }
 
     // You cant add a premium color if you're not a team member or a donor
     if (premiumColorIds.includes(role.id) && !isMod && !isTs && !isDonor && !isPatron) {
-      log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium 
-        (isMod: ${isMod}, isTs: ${isTs} isDonor: ${isDonor}, isPatron: ${isPatron})`);
+      // log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium
+      // (isMod: ${isMod}, isTs: ${isTs} isDonor: ${isDonor}, isPatron: ${isPatron})`);
       interaction.reply({ content: 'You do not have permission to use that role!', ephemeral: true });
       return false;
     }
@@ -159,21 +159,21 @@ export const dRole: SlashCommand = {
 
       // Remove the other color roles if you're adding a color role
       if (colorIds.includes(role.id)) {
-        log.debug(F, 'Removing other color roles');
+        // log.debug(F, 'Removing other color roles');
         const otherColorRoles = colorIds.filter(r => r !== role.id);
         await member.roles.remove([...otherColorRoles, ...premiumColorIds]);
       }
 
       // Remove the other premium mindset roles if you're adding a mindset role
       if (premiumColorIds.includes(role.id)) {
-        log.debug(F, 'Removing other premium color roles');
+        // log.debug(F, 'Removing other premium color roles');
         const otherPremiumColorRoles = premiumColorIds.filter(r => r !== role.id);
         await member.roles.remove([...otherPremiumColorRoles, ...colorIds]);
       }
 
       // Remove the other mindset roles if you're adding a mindset role
       if (mindsetIds.includes(role.id)) {
-        log.debug(F, 'Removing other mindset roles');
+        // log.debug(F, 'Removing other mindset roles');
         const otherMindsetRoles = mindsetIds.filter(r => r !== role.id);
         await member.roles.remove([...otherMindsetRoles]);
       }

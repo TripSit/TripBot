@@ -27,7 +27,6 @@ type RoaType = {
   }[],
 };
 
-
 async function addSummary(
   embed: EmbedBuilder,
   drugData: CbSubstance,
@@ -300,7 +299,7 @@ export const dDrug: SlashCommand = {
     let embed = embedTemplate();
     // Check if the interaction is coming from DM
     const ephemeral = !(interaction.options.getBoolean('public') ?? true);
-    log.debug(F, `ephemeral: ${ephemeral} | interaction.channelId: ${interaction.channelId}`);
+    // log.debug(F, `ephemeral: ${ephemeral} | interaction.channelId: ${interaction.channelId}`);
     if (interaction.channelId !== null && !ephemeral) {
       embed.setFooter({ text: 'You can use this command in DM for privacy if you want!' });
     }

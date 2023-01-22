@@ -22,7 +22,7 @@ export const inviteDelete: InviteDeleteEvent = {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!invite.guild) return;
     if (invite.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.debug(F, `Channel ${invite} was deleted.`);
+    log.info(F, `Channel ${invite} was deleted.`);
 
     const fetchedLogs = await (invite.guild as Guild).fetchAuditLogs({
       limit: 1,
