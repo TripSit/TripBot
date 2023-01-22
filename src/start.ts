@@ -1,4 +1,5 @@
 import { Guild, TextChannel } from 'discord.js';
+import { getVoiceConnection } from '@discordjs/voice';
 import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
 import { discordConnect } from './discord/dscrd'; // eslint-disable-line
@@ -42,6 +43,7 @@ process.on('unhandledRejection', async (error: Error) => {
 
 // Stop the bot when the process is closed (via Ctrl-C).
 const destroy = () => {
+  log.debug(F, 'Gracefully stopping the bot (CTRL + C pressed)');
   // try {
   //   if (global.manager) {
   //     global.manager.teardown();
@@ -49,7 +51,10 @@ const destroy = () => {
   // } catch (err) {
   //   log.error(F, `${err}`);
   // }
-  // log.debug(F, `Gracefully stopping the bot (CTRL + C pressed)`);
+  const existingConnection = getVoiceConnection(env.DISCORD_GUILD_ID);
+  if (existingConnection) {
+    existingConnection.destroy();
+  }
   process.exit(0);
 };
 process.on('SIGINT', destroy);

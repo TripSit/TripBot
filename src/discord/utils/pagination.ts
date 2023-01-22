@@ -4,6 +4,7 @@ import {
   ButtonBuilder,
   ActionRowBuilder,
   Message,
+  ButtonInteraction,
 } from 'discord.js';
 import {
   ButtonStyle,
@@ -67,7 +68,7 @@ export async function paginationEmbed(
     time: timeout,
   });
 
-  collector.on('collect', async i => {
+  collector.on('collect', async (i:ButtonInteraction) => {
     switch (i.customId) {
       // @ts-ignore
       case buttonList[0].data.custom_id:
