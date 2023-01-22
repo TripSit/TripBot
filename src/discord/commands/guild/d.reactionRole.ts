@@ -154,7 +154,7 @@ export async function setupTemplateReactionRole(
     const redEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colortulip') as GuildEmoji;
     const orangeEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colormarigold') as GuildEmoji;
     const yellowEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colordaffodil') as GuildEmoji;
-    const greenEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorwaterlilly') as GuildEmoji;
+    const greenEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorwaterlily') as GuildEmoji;
     const blueEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorbluebell') as GuildEmoji;
     const purpleEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorhyacinth') as GuildEmoji;
     const pinkEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorazalea') as GuildEmoji;
