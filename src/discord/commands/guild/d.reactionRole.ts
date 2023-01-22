@@ -163,6 +163,7 @@ export async function setupTemplateReactionRole(
     const whiteEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorsnowdrop') as GuildEmoji;
 
     const embed = embedTemplate()
+      .setAuthor({ name: 'Colors' })
       .setDescription('React to this message to set the color of your nickname!')
       .setFooter({ text: 'You can only pick one color at a time!' })
       .setColor(Colors.Red);
@@ -218,6 +219,7 @@ export async function setupTemplateReactionRole(
     const embed = embedTemplate()
       .setDescription(stripIndents`Boosters and Patrons can access new colors!
     React to this message to set the color of your nickname!`)
+      .setAuthor({ name: 'Premium Colors' })
       .setFooter({ text: 'You can only pick one color at a time, choose wisely!' })
       .setColor(Colors.Purple);
 
@@ -297,6 +299,7 @@ export async function setupTemplateReactionRole(
     const roleWorking = await guild.roles.fetch(env.ROLE_WORKING) as Role;
 
     const embed = embedTemplate()
+      .setAuthor({ name: 'Mindsets' })
       .setDescription(stripIndents`
         **React to this message to show your mindset!**
       `)
@@ -361,6 +364,7 @@ export async function setupTemplateReactionRole(
     await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2, row3] });
   } else if (set === 'pronoun') {
     const embed = embedTemplate()
+      .setAuthor({ name: 'Pronouns' })
       .setDescription(stripIndents`Click the button(s) below to pick your pronoun(s)!`)
       // .setFooter({ text: 'You can only pick one pronoun at a time, choose wisely!' })
       .setColor(Colors.Blue);

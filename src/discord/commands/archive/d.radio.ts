@@ -76,7 +76,9 @@ export const dRadio: SlashCommand = {
 
     connection.on(VoiceConnectionStatus.Ready, () => {
       log.debug(F, 'The connection has entered the Ready state - ready to play audio!');
+
       interaction.reply({ content: `I have joined ${channel.name} and would start to play ${url}` });
+
       const player = createAudioPlayer({
         behaviors: {
           noSubscriber: NoSubscriberBehavior.Pause,
