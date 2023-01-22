@@ -151,14 +151,14 @@ export async function setupTemplateReactionRole(
     const rolePink = await interaction.guild?.roles.fetch(env.ROLE_PINK) as Role;
     const roleWhite = await interaction.guild?.roles.fetch(env.ROLE_WHITE) as Role;
 
-    const redEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colortulip') as GuildEmoji;
-    const orangeEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colormarigold') as GuildEmoji;
-    const yellowEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colordaffodil') as GuildEmoji;
-    const greenEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorwaterlilly') as GuildEmoji;
-    const blueEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorbluebell') as GuildEmoji;
-    const purpleEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorhyacinth') as GuildEmoji;
-    const pinkEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorazalea') as GuildEmoji;
-    const whiteEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorsnowdrop') as GuildEmoji;
+    const redEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colortulip') as GuildEmoji;
+    const orangeEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colormarigold') as GuildEmoji;
+    const yellowEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colordaffodil') as GuildEmoji;
+    const greenEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorwaterlilly') as GuildEmoji;
+    const blueEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorbluebell') as GuildEmoji;
+    const purpleEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorhyacinth') as GuildEmoji;
+    const pinkEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorazalea') as GuildEmoji;
+    const whiteEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorsnowdrop') as GuildEmoji;
 
     const embed = embedTemplate()
       .setDescription('React to this message to set the color of your nickname!')
@@ -228,14 +228,14 @@ export async function setupTemplateReactionRole(
     const roleDonorPink = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PINK) as Role;
     const roleDonorBlack = await interaction.guild?.roles.fetch(env.ROLE_BLACK) as Role;
 
-    const redEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorruby') as GuildEmoji;
-    const orangeEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorsunstone') as GuildEmoji;
-    const yellowEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorcitrine') as GuildEmoji;
-    const greenEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorjade') as GuildEmoji;
-    const blueEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorsapphire') as GuildEmoji;
-    const purpleEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'coloramethyst') as GuildEmoji;
-    const pinkEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorpezzottaite') as GuildEmoji;
-    const blackEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'colorlabradorite') as GuildEmoji;
+    const redEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorruby') as GuildEmoji;
+    const orangeEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorsunstone') as GuildEmoji;
+    const yellowEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorcitrine') as GuildEmoji;
+    const greenEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorjade') as GuildEmoji;
+    const blueEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorsapphire') as GuildEmoji;
+    const purpleEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'coloramethyst') as GuildEmoji;
+    const pinkEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorpezzottaite') as GuildEmoji;
+    const blackEmoji = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'colorlabradorite') as GuildEmoji;
 
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
