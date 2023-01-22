@@ -369,21 +369,27 @@ export async function setupTemplateReactionRole(
     const pronounAny = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_ANY) as Role;
     const pronounAsk = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_ASK) as Role;
 
+    const emojiHe = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounhehim') as GuildEmoji;
+    const emojiShe = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounsheher') as GuildEmoji;
+    const emojiThey = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'pronountheythem') as GuildEmoji;
+    const emojiAny = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounanypronouns') as GuildEmoji;
+    const emojiAsk = interaction.guild?.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounaskme') as GuildEmoji;
+
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setLabel(`${pronounHe.name}`)
         .setCustomId(`"ID":"RR","RID":"${pronounHe.id}"`)
-        .setEmoji('👨')
+        .setEmoji(emojiHe.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${pronounShe.name}`)
         .setCustomId(`"ID":"RR","RID":"${pronounShe.id}"`)
-        .setEmoji('👩')
+        .setEmoji(emojiShe.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${pronounThey.name}`)
         .setCustomId(`"ID":"RR","RID":"${pronounThey.id}"`)
-        .setEmoji('🧑')
+        .setEmoji(emojiThey.identifier)
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -391,12 +397,12 @@ export async function setupTemplateReactionRole(
       new ButtonBuilder()
         .setLabel(`${pronounAny.name}`)
         .setCustomId(`"ID":"RR","RID":"${pronounAny.id}"`)
-        .setEmoji('♾')
+        .setEmoji(emojiAny.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${pronounAsk.name}`)
         .setCustomId(`"ID":"RR","RID":"${pronounAsk.id}"`)
-        .setEmoji('❔')
+        .setEmoji(emojiAsk.identifier)
         .setStyle(ButtonStyle.Primary),
     );
 
