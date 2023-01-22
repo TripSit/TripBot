@@ -17,6 +17,7 @@ import {
   CategoryChannel,
   ChatInputCommandInteraction,
   Colors,
+  GuildEmoji,
 } from 'discord.js';
 // import { db } from '../../../global/utils/knex';
 // import {
@@ -79,17 +80,17 @@ const mindsetRoles = [
 // const mindsetNames = mindsetRoles.map(role => role.name);
 const mindsetIds = mindsetRoles.map(role => role.value);
 
-const pronounRoles = [
-  { name: 'He/Him', value: env.ROLE_PRONOUN_HE },
-  { name: 'She/Her', value: env.ROLE_PRONOUN_SHE },
-  { name: 'They/Them', value: env.ROLE_PRONOUN_THEY },
-  { name: 'Any', value: env.ROLE_PRONOUN_ANY },
-  { name: 'Ask', value: env.ROLE_PRONOUN_ASK },
-] as RoleDef[];
+// const pronounRoles = [
+//   { name: 'He/Him', value: env.ROLE_PRONOUN_HE },
+//   { name: 'She/Her', value: env.ROLE_PRONOUN_SHE },
+//   { name: 'They/Them', value: env.ROLE_PRONOUN_THEY },
+//   { name: 'Any', value: env.ROLE_PRONOUN_ANY },
+//   { name: 'Ask', value: env.ROLE_PRONOUN_ASK },
+// ] as RoleDef[];
 
 // log.debug(F, `Pronoun roles: ${JSON.stringify(pronounRoles, null, 2)}`);
 // const pronounNames = pronounRoles.map(role => role.name);
-const pronounIds = pronounRoles.map(role => role.value);
+// const pronounIds = pronounRoles.map(role => role.value);
 
 export const dReactionRole: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -149,6 +150,15 @@ export async function setupTemplateReactionRole(
     const rolePink = await interaction.guild?.roles.fetch(env.ROLE_PINK) as Role;
     const roleBlack = await interaction.guild?.roles.fetch(env.ROLE_BLACK) as Role;
 
+    const redEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'tulip') as GuildEmoji;
+    const orangeEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'marigold') as GuildEmoji;
+    const yellowEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'daffodil') as GuildEmoji;
+    const greenEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'waterlilly') as GuildEmoji;
+    const blueEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'bluebell') as GuildEmoji;
+    const purpleEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'hyacinth') as GuildEmoji;
+    const pinkEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'azalea') as GuildEmoji;
+    const blackEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'ash') as GuildEmoji;
+
     const embed = embedTemplate()
       .setDescription('React to this message to set the color of your nickname!')
       .setFooter({ text: 'You can only pick one color at a time!' })
@@ -158,22 +168,22 @@ export async function setupTemplateReactionRole(
       new ButtonBuilder()
         .setLabel(`${roleRed.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleRed.id}"`)
-        .setEmoji('❤')
+        .setEmoji(redEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleOrange.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleOrange.id}"`)
-        .setEmoji('🧡')
+        .setEmoji(orangeEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleYellow.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleYellow.id}"`)
-        .setEmoji('💛')
+        .setEmoji(yellowEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleGreen.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleGreen.id}"`)
-        .setEmoji('💚')
+        .setEmoji(greenEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -181,22 +191,22 @@ export async function setupTemplateReactionRole(
       new ButtonBuilder()
         .setLabel(`${roleBlue.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleBlue.id}"`)
-        .setEmoji('💙')
+        .setEmoji(blueEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setLabel(`${rolePurple.name}`)
+        .setLabel(rolePurple.name)
         .setCustomId(`"ID":"RR","RID":"${rolePurple.id}"`)
-        .setEmoji('💜')
+        .setEmoji(purpleEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setLabel(`${rolePink.name}`)
+        .setLabel(rolePink.name)
         .setCustomId(`"ID":"RR","RID":"${rolePink.id}"`)
-        .setEmoji(env.EMOJI_PINKHEART)
+        .setEmoji(pinkEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setLabel(`${roleBlack.name}`)
+        .setLabel(roleBlack.name)
         .setCustomId(`"ID":"RR","RID":"${roleBlack.id}"`)
-        .setEmoji('🖤')
+        .setEmoji(blackEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -217,26 +227,35 @@ export async function setupTemplateReactionRole(
     const roleDonorPink = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PINK) as Role;
     const roleDonorWhite = await interaction.guild?.roles.fetch(env.ROLE_WHITE) as Role;
 
+    const redEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'ruby') as GuildEmoji;
+    const orangeEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'sunstone') as GuildEmoji;
+    const yellowEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'citrine') as GuildEmoji;
+    const greenEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'jade') as GuildEmoji;
+    const blueEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'sapphire') as GuildEmoji;
+    const purpleEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'amethyst') as GuildEmoji;
+    const pinkEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'pezzottaite') as GuildEmoji;
+    const whiteEmoji = interaction.guild?.emojis.cache.find(e => e.name === 'diamond') as GuildEmoji;
+
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setLabel(`${roleDonorRed.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorRed.id}"`)
-        .setEmoji('❤')
+        .setEmoji(redEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleDonorOrange.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorOrange.id}"`)
-        .setEmoji('🧡')
+        .setEmoji(orangeEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleDonorYellow.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorYellow.id}"`)
-        .setEmoji('💛')
+        .setEmoji(yellowEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleDonorGreen.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorGreen.id}"`)
-        .setEmoji('💚')
+        .setEmoji(greenEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -244,22 +263,22 @@ export async function setupTemplateReactionRole(
       new ButtonBuilder()
         .setLabel(`${roleDonorBlue.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorBlue.id}"`)
-        .setEmoji('💙')
+        .setEmoji(blueEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleDonorPurple.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorPurple.id}"`)
-        .setEmoji('💜')
+        .setEmoji(purpleEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleDonorPink.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorPink.id}"`)
-        .setEmoji(env.EMOJI_PINKHEART)
+        .setEmoji(pinkEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleDonorWhite.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorWhite.id}"`)
-        .setEmoji('🤍')
+        .setEmoji(whiteEmoji.identifier)
         .setStyle(ButtonStyle.Primary),
     );
     await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
@@ -339,8 +358,8 @@ export async function setupTemplateReactionRole(
     await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2, row3] });
   } else if (set === 'pronoun') {
     const embed = embedTemplate()
-      .setDescription(stripIndents`Click a button below to pick your pronouns!`)
-      .setFooter({ text: 'You can only pick one pronoun at a time, choose wisely!' })
+      .setDescription(stripIndents`Click the button(s) below to pick your pronoun(s)!`)
+      // .setFooter({ text: 'You can only pick one pronoun at a time, choose wisely!' })
       .setColor(Colors.Blue);
 
     const pronounHe = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_HE) as Role;
@@ -710,11 +729,11 @@ export async function processReactionRole(
       await target.roles.remove([...otherMindsetRoles]);
     }
 
-    // Remove the other pronoun roles if you're adding a pronoun role
-    if (pronounIds.includes(role.id)) {
-      log.debug(F, 'Removing other pronoun roles');
-      const otherPronounRoles = pronounIds.filter(r => r !== role.id);
-      await target.roles.remove([...otherPronounRoles]);
-    }
+    // // Remove the other pronoun roles if you're adding a pronoun role
+    // if (pronounIds.includes(role.id)) {
+    //   log.debug(F, 'Removing other pronoun roles');
+    //   const otherPronounRoles = pronounIds.filter(r => r !== role.id);
+    //   await target.roles.remove([...otherPronounRoles]);
+    // }
   }
 }
