@@ -147,7 +147,7 @@ export async function announcements(message:Message) {
     `Prove your superiority in ${channelTrivia.toString()}!`,
     `Enjoy a more relaxed environment in ${channelLounge.toString()}!`,
     `Want to talk fast? Join ${channelStims.toString()}!`,
-    `Benzo/deleriant/alcohol talk is welcome in ${channelDepressants.toString()}!`,
+    `Benzo/deliriant/alcohol talk is welcome in ${channelDepressants.toString()}!`,
     `Opiate talk is welcome in ${channelOpioids.toString()}!`,
     `Get real weird with it in ${channelDissociatives.toString()}!`,
     `Open your third eye in ${channelPsychedelics.toString()}!`,
