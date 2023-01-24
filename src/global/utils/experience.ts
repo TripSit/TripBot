@@ -203,48 +203,38 @@ export async function experience(
   const totalData = await getTotalLevel(allExpPoints);
 
   // Give the proper VIP role
-  if (totalData.level >= 5) {
-    // Ensure the member has the base VIP role if they're over level 5
-    let role = await guild.roles.fetch(env.ROLE_VIP) as Role;
-    // log.debug(F, `role: ${JSON.stringify(role, null, 2)}`);
-    if (!member.roles.cache.has(env.ROLE_VIP)) {
-      member.roles.add(role);
-      await channelTripbotlogs.send(stripIndents`${actor.displayName} was given ${role.name}`);
-    }
-
-    role = await guild.roles.fetch(env.ROLE_VIP_5) as Role;
-    if (totalData.level >= 10) {
-      // Check if the member already has the previous role, and if so, remove it
+  let role = await guild.roles.fetch(env.ROLE_VIP_0) as Role;
+  if (totalData.level >= 10) {
+    // Check if the member already has the previous role, and if so, remove it
+    member.roles.remove(role);
+    role = await guild.roles.fetch(env.ROLE_VIP_10) as Role;
+    if (totalData.level >= 20) {
       member.roles.remove(role);
-      role = await guild.roles.fetch(env.ROLE_VIP_10) as Role;
-      if (totalData.level >= 20) {
+      role = await guild.roles.fetch(env.ROLE_VIP_20) as Role;
+      if (totalData.level >= 30) {
         member.roles.remove(role);
-        role = await guild.roles.fetch(env.ROLE_VIP_20) as Role;
-        if (totalData.level >= 30) {
+        role = await guild.roles.fetch(env.ROLE_VIP_30) as Role;
+        if (totalData.level >= 40) {
           member.roles.remove(role);
-          role = await guild.roles.fetch(env.ROLE_VIP_30) as Role;
-          if (totalData.level >= 40) {
+          role = await guild.roles.fetch(env.ROLE_VIP_40) as Role;
+          if (totalData.level >= 50) {
             member.roles.remove(role);
-            role = await guild.roles.fetch(env.ROLE_VIP_40) as Role;
-            if (totalData.level >= 50) {
+            role = await guild.roles.fetch(env.ROLE_VIP_50) as Role;
+            if (totalData.level >= 60) {
               member.roles.remove(role);
-              role = await guild.roles.fetch(env.ROLE_VIP_50) as Role;
-              if (totalData.level >= 60) {
+              role = await guild.roles.fetch(env.ROLE_VIP_60) as Role;
+              if (totalData.level >= 70) {
                 member.roles.remove(role);
-                role = await guild.roles.fetch(env.ROLE_VIP_60) as Role;
-                if (level >= 70) {
+                role = await guild.roles.fetch(env.ROLE_VIP_70) as Role;
+                if (totalData.level >= 80) {
                   member.roles.remove(role);
-                  role = await guild.roles.fetch(env.ROLE_VIP_70) as Role;
-                  if (level >= 80) {
+                  role = await guild.roles.fetch(env.ROLE_VIP_80) as Role;
+                  if (totalData.level >= 90) {
                     member.roles.remove(role);
-                    role = await guild.roles.fetch(env.ROLE_VIP_80) as Role;
-                    if (level >= 90) {
+                    role = await guild.roles.fetch(env.ROLE_VIP_90) as Role;
+                    if (totalData.level >= 100) {
                       member.roles.remove(role);
-                      role = await guild.roles.fetch(env.ROLE_VIP_90) as Role;
-                      if (level >= 100) {
-                        member.roles.remove(role);
-                        role = await guild.roles.fetch(env.ROLE_VIP_100) as Role;
-                      }
+                      role = await guild.roles.fetch(env.ROLE_VIP_100) as Role;
                     }
                   }
                 }
@@ -254,12 +244,13 @@ export async function experience(
         }
       }
     }
-    // Check if the member already has the resulting role, and if not, add it
-    // log.debug(F, `Checking if ${member.displayName} has role ${role.name}...`);
-    if (!member.roles.cache.has(role.id)) {
-      member.roles.add(role);
-      await channelTripbotlogs.send(stripIndents`${actor.displayName} was given ${role.name}`);
-    }
+  }
+
+  // Check if the member already has the resulting role, and if not, add it
+  // log.debug(F, `Checking if ${member.displayName} has role ${role.name}...`);
+  if (!member.roles.cache.has(role.id)) {
+    member.roles.add(role);
+    await channelTripbotlogs.send(stripIndents`${actor.displayName} was given ${role.name}`);
   }
 
   // eslint-disable-next-line max-len
