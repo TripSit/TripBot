@@ -34,7 +34,7 @@ export const dConvert: SlashCommand = {
 
     const result = convert(value).from(units as convert.Unit).to(intoUnits as convert.Unit);
 
-    const response = `${value} ${units} is ${result} ${intoUnits}`;
+    const response = `${value} ${units} is ${result.toFixed(4)} ${intoUnits}`;
 
     log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
 
