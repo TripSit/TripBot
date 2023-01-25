@@ -3,9 +3,7 @@
 import {
   TextChannel,
 } from 'discord.js';
-import FeedParser from 'feedparser';
 import Parser from 'rss-parser';
-import fetch from 'node-fetch';
 import { stripIndents } from 'common-tags';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { db, getGuild, getUser } from './knex';
