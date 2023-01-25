@@ -1,8 +1,6 @@
 import { db } from '../utils/knex';
 import { Rss } from '../@types/pgdb';
 
-const F = f(__filename);
-
 /**
  *
  * @return {string}
@@ -11,10 +9,7 @@ export async function rssCreate(
   channelId:string,
   guildId:string,
   url:string,
-):Promise<string> {
-  const response = 'I did thing!';
-  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-
+):Promise<void> {
   await db<Rss>('rss')
     .insert({
       guild_id: guildId,
@@ -24,7 +19,18 @@ export async function rssCreate(
     })
     .onConflict(['guild_id', 'destination'])
     .merge();
-  return response;
+}
+
+/**
+ *
+ * @return {string}
+ */
+export async function rssList(
+  guildId:string,
+):Promise<Rss[]> {
+  return db<Rss>('rss')
+    .select('*')
+    .where('guild_id', guildId);
 }
 
 /**
@@ -34,13 +40,11 @@ export async function rssCreate(
 export async function rssDelete(
   channelId:string,
   guildId:string,
-):Promise<string> {
-  const result = await db<Rss>('rss')
+):Promise<void> {
+  await db<Rss>('rss')
     .select({
       guild_id: guildId,
       destination: channelId,
-    });
-
-  log.debug(F, `result: ${JSON.stringify(result, null, 2)}`);
-  return result.toString();
+    })
+    .delete();
 }

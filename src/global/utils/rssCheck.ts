@@ -7,9 +7,7 @@ import Parser from 'rss-parser';
 import { stripIndents } from 'common-tags';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { db, getGuild, getUser } from './knex';
-import {
-  DiscordGuilds,
-} from '../@types/pgdb';
+import { Rss } from '../@types/pgdb';
 
 export default runRss;
 
@@ -38,7 +36,7 @@ type RedditFeed = {
 const F = f(__filename);
 
 // Value in miliseconds (1000 * 60 = 1 minute)
-const interval = env.NODE_ENV === 'production' ? 1000 * 30 : 1000 * 10000;
+const interval = env.NODE_ENV === 'production' ? 1000 * 60 : 1000 * 10;
 
 /**
  * This function is called on start.ts and runs the timers
@@ -67,26 +65,11 @@ async function checkRss() {
   (async () => {
     const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
 
-    const guildData = {
-      name: 'TripSit',
-      id: '123',
-      rss: [
-        {
-          url: 'https://www.reddit.com/r/TripSit/new.rss',
-          last_post_id: '',
-          destination: '1052634233711108169',
-        },
-        // {
-        //   url: 'https://www.reddit.com/r/Herbalism/new.rss',
-        //   last_post_id: '',
-        //   destination: '1052634232817733662',
-        // },
-      ],
-    };
+    const rssData = await db<Rss>('rss')
+      .select('*')
+      .where('guild_id', guild.id);
 
-    if (!guildData.rss) return;
-
-    guildData.rss.forEach(async feed => {
+    rssData.forEach(async feed => {
       const mostRecentPost = (await parser.parseURL(feed.url)).items[0];
       // log.debug(F, `mostRecentPost: ${JSON.stringify(mostRecentPost, null, 2)}`);
 
@@ -115,6 +98,14 @@ async function checkRss() {
         .setTimestamp(new Date(mostRecentPost.pubDate));
 
       channelBotlog.send({ embeds: [embed] });
+
+      const newFeed = feed;
+      newFeed.last_post_id = mostRecentPost.id;
+
+      await db<Rss>('rss')
+        .insert(newFeed)
+        .onConflict(['guild_id', 'destination'])
+        .merge();
     });
   })();
 }
