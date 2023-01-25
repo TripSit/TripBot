@@ -37,7 +37,7 @@ export const dAvatar: SlashCommand = {
 
     const embed = embedTemplate()
       .setTitle(`${member.displayName}'s Profile Picture`)
-      .setImage(`${user.displayAvatarURL()}?size=4096`);
+      .setImage(`${member.displayAvatarURL()}?size=4096`);
     await interaction.reply({ embeds: [embed] });
     return true;
   },
