@@ -30,13 +30,13 @@ export const dRss: SlashCommand = {
       .addStringOption(option => option.setName('url')
         .setDescription('URL of the RSS feed, ends with .rss')
         .setRequired(true))
-      .addChannelOption(option => option.setName('channel')
+      .addChannelOption(option => option.setName('add_to_channel')
         .setDescription('Where to post this feed?')
         .setRequired(true)))
     .addSubcommand(subcommand => subcommand
       .setName('remove')
       .setDescription('Remove an RSS feed from this channel')
-      .addChannelOption(option => option.setName('channel')
+      .addChannelOption(option => option.setName('remove_from_channel')
         .setDescription('Remove RSS feed from which channel?')
         .setRequired(true)))
     .addSubcommand(subcommand => subcommand
@@ -47,7 +47,6 @@ export const dRss: SlashCommand = {
 
     if (!interaction.guild) return false;
 
-    const channel = interaction.options.getChannel('channel');
     const subcommand = interaction.options.getSubcommand();
 
     const verb = subcommand === 'add' ? 'added' : 'removed';
@@ -57,7 +56,11 @@ export const dRss: SlashCommand = {
       .setColor(subcommand === 'add' ? Colors.Green : Colors.Red);
 
     if (subcommand === 'add') {
+      const channel = interaction.options.getChannel('add_to_channel');
+      // log.debug(F, `channel: ${JSON.stringify(channel, null, 2)}`);
       if (!(channel instanceof TextChannel)) {
+        log.debug(F, 'channel is not a text channel');
+        // log.debug(F, `channel instanceof TextChannel: ${channel instanceof TextChannel}`);
         await interaction.reply({
           content: 'You must specify a text channel!',
           ephemeral: true,
@@ -65,7 +68,7 @@ export const dRss: SlashCommand = {
         return false;
       }
       const url = interaction.options.getString('url', true);
-      await rssCreate(channel.id, channel.guild.id, url);
+      await rssCreate(channel.id, interaction.guild.id, url);
       embed.setColor(Colors.Green);
       embed.setTitle(`RSS feed ${verb} ${preposition} ${channel.name}!`);
       embed.setDescription(`I've started watching ${url}!`);
@@ -85,6 +88,7 @@ export const dRss: SlashCommand = {
         embed.setTitle(`${interaction.guild.name} has no RSS feeds!`);
       }
     } else if (subcommand === 'remove') {
+      const channel = interaction.options.getChannel('remove_from_channel');
       if (!(channel instanceof TextChannel)) {
         await interaction.reply({
           content: 'You must specify a text channel!',

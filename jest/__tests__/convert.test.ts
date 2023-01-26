@@ -30,7 +30,7 @@ describe(slashCommand.data.name, () => {
         author: authorInfo,
         footer: footerInfo,
         color: Colors.Purple,
-        title: '123456 ft-us is 37.62946285463479 km',
+        title: '123456 ft-us is 37.6295 km',
       }),
     });
   });

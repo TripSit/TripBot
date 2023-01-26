@@ -31,7 +31,7 @@ describe(slashCommand.data.name, () => {
         color: Colors.Purple,
         title: 'nick\'s Profile Picture',
         image: {
-          url: 'https://cdn.discordapp.com/avatars/123456789/user%20avatar%20url.webp?size=4096',
+          url: 'https://cdn.discordapp.com/avatars/123456789/userAvatarUrl.webp?size=4096',
         },
       }),
     });

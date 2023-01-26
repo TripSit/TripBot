@@ -61,7 +61,7 @@ export async function runRss() {
 const parser: Parser<RedditFeed, RedditItem> = new Parser();
 
 async function checkRss() {
-  log.info(F, 'Checking rss...');
+  // log.info(F, 'Checking rss...');
   (async () => {
     const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
 

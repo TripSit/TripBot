@@ -1,6 +1,8 @@
 import { db } from '../utils/knex';
 import { Rss } from '../@types/pgdb';
 
+// const F = f(__filename);
+
 /**
  *
  * @return {string}
@@ -10,6 +12,7 @@ export async function rssCreate(
   guildId:string,
   url:string,
 ):Promise<void> {
+  // log.debug(F, `rssCreate(${channelId}, ${guildId}, ${url})`);
   await db<Rss>('rss')
     .insert({
       guild_id: guildId,
