@@ -28,7 +28,7 @@ async function start() {
 
   runTimer();
   runStats();
-  runRss();
+  // runRss();
 }
 
 start();
