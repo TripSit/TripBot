@@ -9,6 +9,7 @@ import { validateEnv } from './global/utils/env.validate'; // eslint-disable-lin
 import { runTimer } from './global/utils/timer'; // eslint-disable-line
 import { runStats } from './global/utils/stats'; // eslint-disable-line
 import { startLog } from './discord/utils/startLog'; // eslint-disable-line
+import { runRss } from './global/utils/rssCheck';
 
 global.bootTime = new Date();
 
@@ -27,6 +28,7 @@ async function start() {
 
   runTimer();
   runStats();
+  runRss();
 }
 
 start();

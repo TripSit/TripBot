@@ -9,6 +9,12 @@ import {
   SlashCommandSubcommandsOnlyBuilder,
   EmbedData,
   Client,
+  TextChannel,
+  VoiceChannel,
+  // Channel,
+  // Guild,
+  // BaseChannel,
+  // BaseGuildTextChannel,
   // ApplicationCommandOptionBase,
   // ApplicationCommandOption,
   // APIApplicationCommandOption,
@@ -58,7 +64,8 @@ function getNestedOptions(
   ) => { // @ts-ignore
     // log.debug(F, `allOptions: ${JSON.stringify(allOptions, null, 2)}`);
     // log.debug(F, `option: ${JSON.stringify(option, null, 2)}`); // @ts-ignore
-    if (option.options) return [...allOptions, option, ...option.options]; // @ts-ignore
+    if (option.options) return [...allOptions, option, ...option.options]; // @ts-ignore TODO
+    // log.debug(F, 'option.options passed'); // @ts-ignore
     if (!option.toJSON().options) return [...allOptions, option]; // @ts-ignore
     // log.debug(F, 'option.toJSON().options passed'); // @ts-ignore
     const nestedOptions = getNestedOptions(option.toJSON().options); // @ts-ignore
@@ -72,19 +79,73 @@ function castToType(value: string, typeId: number) {
     return Reflect.construct(User, [
       new Client({ intents: [] }),
       {
-        // id: BigInt(123456789),
         id: '123456789',
         username: 'USERNAME',
         discriminator: 'user#0000',
         avatar: 'user avatar url',
         bot: false,
+        options: {},
       },
     ]);
   }
 
-  if (typeId === 6) {
-    return userConstructor();
+  function channelConstructor(): TextChannel | VoiceChannel {
+    if (value === 'VoiceChannel') {
+      return (Reflect.construct(VoiceChannel, [
+        new Client({ intents: [] }),
+        {
+          type: 0,
+          id: '2222222',
+          name: 'VoiceChannel',
+          guildId: '960606557622657026',
+          guild: {
+            id: '960606557622657033333336',
+          },
+        },
+        new Client({ intents: [] }),
+      ]));
+    }
+
+    return (Reflect.construct(TextChannel, [
+      new Client({ intents: [] }),
+      {
+        type: 0,
+        id: '123456789',
+        name: 'TextChannel',
+        messages: [],
+        threads: [],
+        nsfw: false,
+        flags: 0,
+        rawPosition: 1,
+        topic: null,
+        lastMessageId: null,
+        rateLimitPerUser: 0,
+        createdTimestamp: 1671037922207,
+        permissionOverwrites: [
+          '1052644622230364241',
+          '960606557622657026',
+        ],
+        parentId: null,
+        guildId: '960606557622657026',
+        guild: {
+          id: '960606557622657033333336',
+        },
+      },
+      new Client({ intents: [] }),
+    ]));
   }
+
+  // if (typeId === 1) return subcommandConstructor();
+  // if (typeId === 2) return subcommandGroupConstructor();
+  // if (typeId === 3) return stringConstructor(); // Covered below
+  // if (typeId === 4) return integerConstructor(); // Covered below
+  // if (typeId === 5) return booleanConstructor(); // Covered below
+  if (typeId === 6) return userConstructor();
+  if (typeId === 7) return channelConstructor();
+  // if (typeId === 8) return roleConstructor();
+  // if (typeId === 9) return mentionableConstructor();
+  // if (typeId === 10) return numberConstructor();
+  // if (typeId === 11) return attachmentConstructor();
 
   const typeCaster = optionType[typeId] as typeof String | typeof Number | typeof Boolean;
 
@@ -96,36 +157,36 @@ export function getParsedCommand(
   commandData: Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'> | SlashCommandSubcommandsOnlyBuilder,
   context: 'tripsit' | 'guild' | 'dm',
 ) {
+  // log.debug(F, `stringCommand: ${JSON.stringify(stringCommand, null, 2)}`);
+  // log.debug(F, `commandData: ${JSON.stringify(commandData, null, 2)}`);
+  // log.debug(F, `commandData.options: ${JSON.stringify(commandData.options, null, 2)}`);
   const options = getNestedOptions(commandData.options); // @ts-ignore
   // log.debug(F, `getNestedOptions: ${JSON.stringify(options, null, 2)}`); // @ts-ignore
   const optionsIndentifiers = options.map(option => `${option.name}:`);
-  // log.debug(`[${PREFIX}] optionsIndentifiers: ${JSON.stringify(optionsIndentifiers, null, 2)}`);
   const requestedOptions = options.reduce((
     requestedOptions2:ToAPIApplicationCommandOptions[],
     option:ToAPIApplicationCommandOptions,
   ):ToAPIApplicationCommandOptions[] => {
     const identifier = `${option.toJSON().name}:`;
-    // log.debug(`[${PREFIX}] identifier: ${JSON.stringify(identifier, null, 2)}`);
     const inclused = stringCommand.includes(identifier);
-    // log.debug(`[${PREFIX}] inclused: ${JSON.stringify(inclused, null, 2)}`);
+    // log.debug(F, `identifier: ${identifier} | inclused: ${inclused}`);
     if (!inclused) return requestedOptions2;
     const remainder = stringCommand.split(identifier)[1];
-    // log.debug(`[${PREFIX}] remainder: ${JSON.stringify(remainder, null, 2)}`);
+    // log.debug(F, `remainder: ${JSON.stringify(remainder, null, 2)}`);
 
     const nextoptions = remainder.split(' ');
-    // log.debug(`[${PREFIX}] nextoptions: ${JSON.stringify(nextoptions, null, 2)}`);
+    // log.debug(F, `nextoptions: ${JSON.stringify(nextoptions, null, 2)}`);
 
     const nextOptionIdentifier = nextoptions.find(word => {
-      // log.debug(`[${PREFIX}] word: ${JSON.stringify(word, null, 2)}`);
       const wordIdentifier = word.split(':')[0];
-      // log.debug(F, `wordIdentifier: ${JSON.stringify(wordIdentifier, null, 2)}`);
+      // log.debug(F, `word: ${word} | wordIdentifier: ${wordIdentifier}`);
       return optionsIndentifiers.includes(`${wordIdentifier}:`);
     });
-    // log.debug(`[${PREFIX}] nextOptionIdentifier: ${JSON.stringify(nextOptionIdentifier, null, 2)}`);
+    // log.debug(F, `nextOptionIdentifier: ${JSON.stringify(nextOptionIdentifier, null, 2)}`);
 
     if (nextOptionIdentifier) {
       const value = remainder.split(nextOptionIdentifier)[0].trim();
-      // log.debug(`[${PREFIX}] value: ${JSON.stringify(value, null, 2)}`);
+      // log.debug(F, `value: ${JSON.stringify(value, null, 2)}`);
       const formattedValue = castToType(value, option.toJSON().type);
       // log.debug(F, `formattedValue: ${JSON.stringify(formattedValue, null, 2)}`);
       return [...requestedOptions2, { // @ts-ignore
@@ -147,22 +208,43 @@ export function getParsedCommand(
         user: formattedValue2,
       }];
     }
+
+    if (option.toJSON().type === 7) {
+      // log.debug(F, 'option.toJSON().type === 7');
+      return [...requestedOptions2, { // @ts-ignore
+        name: option.toJSON().name,
+        value: '1223456789',
+        type: option.toJSON().type,
+        channel: formattedValue2,
+      }];
+    }
     return [...requestedOptions2, { // @ts-ignore
       name: option.toJSON().name,
       value: formattedValue2,
       type: option.toJSON().type,
     }];
   }, []);
-  // log.debug(`[${PREFIX}] requestedOptions: ${JSON.stringify(requestedOptions, null, 2)}`);
+  // log.debug(F, `requestedOptions: ${JSON.stringify(requestedOptions, null, 2)}`);
   const optionNames = options.map(option => option.toJSON().name);
-  // log.debug(`[${PREFIX}] optionNames: ${JSON.stringify(optionNames, null, 2)}`);
+  // log.debug(F, `optionNames: ${JSON.stringify(optionNames, null, 2)}`);
   const splittedCommand = stringCommand.split(' ');
-  // log.debug(`[${PREFIX}] splittedCommand: ${JSON.stringify(splittedCommand, null, 2)}`);
+  // log.debug(F, `splittedCommand: ${JSON.stringify(splittedCommand, null, 2)}`);
   const name = splittedCommand[0].replace('/', '');
-  // log.debug(`[${PREFIX}] name: ${JSON.stringify(name, null, 2)}`);
+  // log.debug(F, `name: ${JSON.stringify(name, null, 2)}`);
   const subcommand = splittedCommand.find(word => optionNames.includes(word));
-  // log.debug(`[${PREFIX}] subcommand: ${JSON.stringify(subcommand, null, 2)}`);
-  // log.debug(`[${PREFIX}] retValue: ${JSON.stringify(retValue, null, 2)}`);
+  // log.debug(F, `subcommand: ${JSON.stringify(subcommand, null, 2)}`);
+  // log.debug(F, `retValue: ${JSON.stringify({
+  //   context,
+  //   id: name,
+  //   name,
+  //   type: 1,
+  //   options: subcommand ? [{
+  //     name: subcommand,
+  //     type: 1,
+  //     options: requestedOptions,
+  //   }] : requestedOptions,
+  // }, null, 2)}`);
+
   return {
     context,
     id: name,

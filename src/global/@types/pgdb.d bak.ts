@@ -38,7 +38,6 @@ export enum DrugRoa {
 }
 
 export enum ExperienceType {
-  Total = 'TOTAL',
   General = 'GENERAL',
   Tripsitter = 'TRIPSITTER',
   Developer = 'DEVELOPER',
@@ -89,7 +88,6 @@ export enum Table {
   KnexMigrations = 'knex_migrations',
   KnexMigrationsLock = 'knex_migrations_lock',
   ReactionRoles = 'reaction_roles',
-  Rss = 'rss',
   UserActions = 'user_actions',
   UserDrugDoses = 'user_drug_doses',
   UserExperience = 'user_experience',
@@ -218,14 +216,6 @@ export type ReactionRoles = {
   created_at: Date;
 };
 
-export type Rss = {
-  id: string;
-  guild_id: string;
-  url: string;
-  last_post_id: string;
-  destination: string;
-};
-
 export type UserActions = {
   id: string;
   user_id: string;
@@ -253,7 +243,7 @@ export type UserDrugDoses = {
 export type UserExperience = {
   id: string;
   user_id: string;
-  type: ExperienceType;
+  type: ExperienceType | null;
   level: number;
   level_points: number;
   total_points: number;
@@ -276,9 +266,9 @@ export type UserTickets = {
   description: string;
   thread_id: string;
   meta_thread_id: string | null;
-  first_message_id: string;
   type: TicketType;
   status: TicketStatus;
+  first_message_id: string;
   closed_by: string | null;
   closed_at: Date | null;
   reopened_by: string | null;
@@ -309,7 +299,7 @@ export type Users = {
   discord_bot_ban: boolean;
   ticket_ban: boolean;
   last_seen_at: Date;
-  last_seen_in: string | null;
+  last_seen_in: Date | null;
   joined_at: Date;
   removed_at: Date | null;
 };

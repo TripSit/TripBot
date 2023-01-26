@@ -298,7 +298,7 @@ export const dDrug: SlashCommand = {
     startLog(F, interaction);
     let embed = embedTemplate();
     // Check if the interaction is coming from DM
-    const ephemeral = !(interaction.options.getBoolean('public') ?? true);
+    const ephemeral = !(interaction.options.getBoolean('public') ?? false);
     // log.debug(F, `ephemeral: ${ephemeral} | interaction.channelId: ${interaction.channelId}`);
     if (interaction.channelId !== null && !ephemeral) {
       embed.setFooter({ text: 'You can use this command in DM for privacy if you want!' });
