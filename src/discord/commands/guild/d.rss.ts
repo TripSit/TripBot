@@ -11,6 +11,7 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
+import Parser from 'rss-parser';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { rssCreate, rssList, rssDelete } from '../../../global/commands/g.rss';
@@ -45,7 +46,13 @@ export const dRss: SlashCommand = {
   async execute(interaction) {
     startLog(F, interaction);
 
-    if (!interaction.guild) return false;
+    if (!interaction.guild) {
+      interaction.reply({
+        content: 'This command can only be used in a guild!',
+        ephemeral: true,
+      });
+      return false;
+    }
 
     const subcommand = interaction.options.getSubcommand();
 
@@ -56,6 +63,30 @@ export const dRss: SlashCommand = {
       .setColor(subcommand === 'add' ? Colors.Green : Colors.Red);
 
     if (subcommand === 'add') {
+      const url = interaction.options.getString('url', true);
+      if (!url.endsWith('.rss')) {
+        await interaction.reply({
+          content: 'You must use a URL ending with .rss!',
+          ephemeral: true,
+        });
+        return false;
+      }
+
+      const parser: Parser<any> = new Parser({ // eslint-disable-line @typescript-eslint/no-explicit-any
+        timeout: 1000,
+      });
+
+      try {
+        await parser.parseURL(url);
+      } catch (e) {
+        log.debug(F, `Error parsing URL: ${e}`);
+        await interaction.reply({
+          content: 'This is not a valid RSS URL, please check it and try again!',
+          ephemeral: true,
+        });
+        return false;
+      }
+
       const channel = interaction.options.getChannel('add_to_channel');
       // log.debug(F, `channel: ${JSON.stringify(channel, null, 2)}`);
       if (!(channel instanceof TextChannel)) {
@@ -67,7 +98,6 @@ export const dRss: SlashCommand = {
         });
         return false;
       }
-      const url = interaction.options.getString('url', true);
       await rssCreate(channel.id, interaction.guild.id, url);
       embed.setColor(Colors.Green);
       embed.setTitle(`RSS feed ${verb} ${preposition} ${channel.name}!`);

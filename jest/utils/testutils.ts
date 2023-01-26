@@ -10,6 +10,8 @@ import {
   EmbedData,
   Client,
   TextChannel,
+  VoiceChannel,
+  // Channel,
   // Guild,
   // BaseChannel,
   // BaseGuildTextChannel,
@@ -87,7 +89,23 @@ function castToType(value: string, typeId: number) {
     ]);
   }
 
-  function channelConstructor(): TextChannel {
+  function channelConstructor(): TextChannel | VoiceChannel {
+    if (value === 'VoiceChannel') {
+      return (Reflect.construct(VoiceChannel, [
+        new Client({ intents: [] }),
+        {
+          type: 0,
+          id: '2222222',
+          name: 'VoiceChannel',
+          guildId: '960606557622657026',
+          guild: {
+            id: '960606557622657033333336',
+          },
+        },
+        new Client({ intents: [] }),
+      ]));
+    }
+
     return (Reflect.construct(TextChannel, [
       new Client({ intents: [] }),
       {
@@ -112,31 +130,9 @@ function castToType(value: string, typeId: number) {
         guild: {
           id: '960606557622657033333336',
         },
-
-        // guild: Reflect.construct(Guild, [
-        //   new Client({ intents: [] }),
-        //   {
-        //     id: '960606557622657026',
-        //   },
-        //   new Client({ intents: [] }),
-        // ]),
       },
       new Client({ intents: [] }),
-    ])) as TextChannel;
-
-    // let mockChannel = {} as Channel;
-
-    // if (value === 'TextChannel') {
-    //   mockChannel = Reflect.construct(TextChannel, [
-    //     new Client({ intents: [] }),
-    //     {
-    //       id: '123456789',
-    //       name: 'lounge',
-    //       type: 'GUILD_TEXT',
-    //     },
-    //   ]);
-    // }
-    // return mockChannel;
+    ]));
   }
 
   // if (typeId === 1) return subcommandConstructor();
