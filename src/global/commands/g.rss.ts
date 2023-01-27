@@ -1,7 +1,7 @@
-import { db } from '../utils/knex';
+import { rssDel, rssGet, rssSet } from '../utils/knex';
 import { Rss } from '../@types/pgdb';
 
-// const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
 
 /**
  *
@@ -13,15 +13,13 @@ export async function rssCreate(
   url:string,
 ):Promise<void> {
   // log.debug(F, `rssCreate(${channelId}, ${guildId}, ${url})`);
-  await db<Rss>('rss')
-    .insert({
-      guild_id: guildId,
-      url,
-      last_post_id: '0000',
-      destination: channelId,
-    })
-    .onConflict(['guild_id', 'destination'])
-    .merge();
+
+  await rssSet({
+    guild_id: guildId,
+    url,
+    last_post_id: '0000',
+    destination: channelId,
+  } as Rss);
 }
 
 /**
@@ -31,9 +29,7 @@ export async function rssCreate(
 export async function rssList(
   guildId:string,
 ):Promise<Rss[]> {
-  return db<Rss>('rss')
-    .select('*')
-    .where('guild_id', guildId);
+  return rssGet(guildId);
 }
 
 /**
@@ -44,10 +40,5 @@ export async function rssDelete(
   channelId:string,
   guildId:string,
 ):Promise<void> {
-  await db<Rss>('rss')
-    .select({
-      guild_id: guildId,
-      destination: channelId,
-    })
-    .delete();
+  await rssDel(channelId, guildId);
 }

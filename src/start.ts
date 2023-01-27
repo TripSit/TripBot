@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Guild, TextChannel } from 'discord.js';
+import { TextChannel } from 'discord.js';
 import { getVoiceConnection } from '@discordjs/voice';
 import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
@@ -9,7 +9,7 @@ import { validateEnv } from './global/utils/env.validate'; // eslint-disable-lin
 import { runTimer } from './global/utils/timer'; // eslint-disable-line
 import { runStats } from './global/utils/stats'; // eslint-disable-line
 import { startLog } from './discord/utils/startLog'; // eslint-disable-line
-// import { runRss } from './global/utils/rssCheck';
+import { runRss } from './global/utils/rssCheck';
 
 global.bootTime = new Date();
 
@@ -28,7 +28,7 @@ async function start() {
 
   runTimer();
   runStats();
-  // runRss();
+  runRss();
 }
 
 start();
@@ -37,7 +37,7 @@ process.on('unhandledRejection', async (error: Error) => {
   log.error(F, `ERROR: ${error.stack}`);
   if (env.NODE_ENV === 'production') {
     const botlog = await client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-    const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
+    const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
     const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
     await botlog.send(`Hey ${tripbotdevrole}, I just got an error (start):
     ${error.stack}

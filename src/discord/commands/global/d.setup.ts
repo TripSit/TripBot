@@ -18,10 +18,7 @@ import {
   ButtonStyle, TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndent, stripIndents } from 'common-tags';
-import { db } from '../../../global/utils/knex';
-import {
-  DiscordGuilds,
-} from '../../../global/@types/pgdb';
+import { getGuild, guildUpdate } from '../../../global/utils/knex';
 import { startLog } from '../../utils/startLog';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -237,20 +234,20 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
   const channelTripsitmeta = interaction.options.getChannel('metatripsit');
   const channelTripsit = interaction.channel as TextChannel;
 
+  const guildData = await getGuild(interaction.guild.id);
+
+  guildData.id = interaction.guild.id;
+  guildData.channel_sanctuary = channelSanctuary ? channelSanctuary.id : null;
+  guildData.channel_general = channelGeneral ? channelGeneral.id : null;
+  guildData.channel_tripsitmeta = channelTripsitmeta ? channelTripsitmeta.id : null;
+  guildData.channel_tripsit = channelTripsit.id;
+  guildData.role_needshelp = roleNeedshelp ? roleNeedshelp.id : null;
+  guildData.role_tripsitter = roleTripsitter ? roleTripsitter.id : null;
+  guildData.role_helper = roleHelper ? roleHelper.id : null;
+
   // Save this info to the DB
-  await db<DiscordGuilds>('discord_guilds')
-    .insert({
-      id: interaction.guild.id,
-      channel_sanctuary: channelSanctuary ? channelSanctuary.id : null,
-      channel_general: channelGeneral ? channelGeneral.id : null,
-      channel_tripsitmeta: channelTripsitmeta ? channelTripsitmeta.id : null,
-      channel_tripsit: channelTripsit.id,
-      role_needshelp: roleNeedshelp ? roleNeedshelp.id : null,
-      role_tripsitter: roleTripsitter ? roleTripsitter.id : null,
-      role_helper: roleHelper ? roleHelper.id : null,
-    })
-    .onConflict('id')
-    .merge();
+
+  await guildUpdate(guildData);
 
   let modalText = stripIndents`
     Welcome to ${(interaction.channel as TextChannel).name}!
@@ -342,15 +339,15 @@ export async function applications(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  // Save the application channel to the DB
   const channelApplications = interaction.options.getChannel('applications_channel', true);
-  await db<DiscordGuilds>('discord_guilds')
-    .insert({
-      id: interaction.guild.id,
-      channel_applications: channelApplications.id,
-    })
-    .onConflict('id')
-    .merge();
+
+  const guildData = await getGuild(interaction.guild.id);
+
+  guildData.id = interaction.guild.id;
+  guildData.channel_applications = channelApplications.id;
+
+  // Save this info to the DB
+  await guildUpdate(guildData);
 
   /* eslint-disable no-unused-vars */
   const roleRequestdA = interaction.options.getRole('application_role_a');
@@ -484,14 +481,13 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  // Save the tech help reviewer role to the db
-  await db<DiscordGuilds>('discord_guilds')
-    .insert({
-      id: interaction.guild.id,
-      role_techhelp: interaction.options.getRole('roletechreviewer', true).id,
-    })
-    .onConflict('id')
-    .merge();
+  const guildData = await getGuild(interaction.guild.id);
+
+  guildData.id = interaction.guild.id;
+  guildData.role_techhelp = interaction.options.getRole('roletechreviewer', true).id;
+
+  // Save this info to the DB
+  await guildUpdate(guildData);
 
   let text = stripIndents`
     Welcome to ${interaction.guild.name}'s technical help channel!

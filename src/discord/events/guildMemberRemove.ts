@@ -5,9 +5,8 @@ import {
 import {
   GuildMemberRemoveEvent,
 } from '../@types/eventDef';
-import { db } from '../../global/utils/knex';
+import { getUser, usersUpdate } from '../../global/utils/knex';
 import { embedTemplate } from '../utils/embedTemplate';
-import { Users } from '../../global/@types/pgdb';
 
 const F = f(__filename);
 
@@ -63,13 +62,10 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
     const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
     await auditlog.send({ embeds: [embed] });
 
-    await db<Users>('users')
-      .insert({
-        discord_id: member.id,
-        removed_at: new Date(),
-      })
-      .into('users')
-      .onConflict('discord_id')
-      .merge();
+    const userData = await getUser(member.id, null);
+    userData.removed_at = new Date();
+    userData.discord_id = member.id;
+
+    await usersUpdate(userData);
   },
 };

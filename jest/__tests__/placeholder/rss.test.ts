@@ -1,7 +1,7 @@
 // import { stripIndents } from 'common-tags';
 import { Colors } from 'discord.js';
-import { dRss } from '../../src/discord/commands/guild/d.rss';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { dRss } from '../../../src/discord/commands/guild/d.rss';
+import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../utils/testutils';
 
 const slashCommand = dRss;
 

@@ -1,6 +1,5 @@
 import { DateTime } from 'luxon';
-import { db, getUser } from '../utils/knex';
-import { Users } from '../@types/pgdb';
+import { getUser, usersUpdate } from '../utils/knex';
 
 const F = f(__filename);
 
@@ -27,13 +26,12 @@ export async function birthday(
 
     // log.debug(F, `Setting birthDate for ${memberId} to ${birthDate}`);
 
-    await db<Users>('users')
-      .insert({
-        discord_id: memberId,
-        birthday: birthDate.toJSDate(),
-      })
-      .onConflict('discord_id')
-      .merge();
+    const userData = await getUser(memberId, null);
+
+    userData.birthday = birthDate.toJSDate();
+
+    await usersUpdate(userData);
+
     response = birthDate;
   } else if (command === 'get') {
     const userData = await getUser(memberId, null);

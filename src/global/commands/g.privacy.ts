@@ -1,14 +1,9 @@
 /* eslint-disable max-len */
 import { stripIndents } from 'common-tags';
-import { db, getUser } from '../utils/knex';
 import {
-  UserDrugDoses,
-  UserExperience,
-  UserReminders,
-  Users,
-  // UserTickets,
-  // UserActions,
-} from '../@types/pgdb';
+  experienceDel,
+  experienceGet, getUser, idoseDel, idoseGet, reminderDel, reminderGet, usersUpdate,
+} from '../utils/knex';
 
 const F = f(__filename);
 
@@ -27,12 +22,9 @@ export async function privacy(
   const userData = await getUser(userId, null);
   // const userActions = await db<UserActions>('user_actions')
   //   .where('user_id', userData.id);
-  const userDrugDoses = await db<UserDrugDoses>('user_drug_doses')
-    .where('user_id', userData.id);
-  const userExperience = await db<UserExperience>('user_experience')
-    .where('user_id', userData.id);
-  const userReminders = await db<UserReminders>('user_reminders')
-    .where('user_id', userData.id);
+  const userDrugDoses = await idoseGet(userData.id);
+  const userExperience = await experienceGet(userData.id);
+  const userReminders = await reminderGet(userData.id);
   // const userTickets = await db<UserTickets>('user_tickets')
   //   .where('user_id', userData.id);
 
@@ -79,40 +71,27 @@ export async function privacy(
     // }
   }
   if (command === 'delete') {
-    const blankUser = {
-      email: null,
-      username: null,
-      timezone: null,
-      birthday: null,
-      roles: '',
-      mindset_role: null,
-      mindset_role_expires_at: null,
-      karma_given: 0,
-      karma_received: 0,
-      sparkle_points: 0,
-      move_points: 0,
-      empathy_points: 0,
-      last_seen_at: undefined,
-      last_seen_in: null,
-      joined_at: undefined,
-      removed_at: null,
-    };
-    await db<Users>('users')
-      .where('id', userData.id)
-      .update(blankUser);
+    userData.email = null;
+    userData.username = null;
+    userData.timezone = null;
+    userData.birthday = null;
+    userData.roles = '';
+    userData.mindset_role = null;
+    userData.mindset_role_expires_at = null;
+    userData.karma_given = 0;
+    userData.karma_received = 0;
+    userData.sparkle_points = 0;
+    userData.move_points = 0;
+    userData.empathy_points = 0;
+    userData.last_seen_at = new Date(1970);
+    userData.last_seen_in = null;
+    userData.joined_at = new Date(1970);
+    userData.removed_at = null;
 
-    await db<UserDrugDoses>('user_drug_doses')
-      .where('user_id', userData.id)
-      .del();
-    await db<UserExperience>('user_experience')
-      .where('user_id', userData.id)
-      .del();
-    await db<UserReminders>('user_reminders')
-      .where('user_id', userData.id)
-      .del();
-    // await db<UserTickets>('user_tickets')
-    //   .where('user_id', userData.id)
-    //   .del();
+    await usersUpdate(userData);
+    await idoseDel(undefined, userData.id);
+    await experienceDel(userData.id);
+    await reminderDel(undefined, userData.id);
 
     response = 'I deleted your User Data:\n';
       for (const [key, value] of Object.entries(userData)) { // eslint-disable-line

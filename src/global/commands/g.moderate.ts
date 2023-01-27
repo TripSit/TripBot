@@ -16,7 +16,7 @@ import {
 import { stripIndents } from 'common-tags';
 import ms from 'ms';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
-import { db, getUser } from '../utils/knex';
+import { getUser, useractionsGet, useractionsSet } from '../utils/knex';
 import {
   UserActions,
   UserActionType,
@@ -201,16 +201,16 @@ export async function moderate(
     actionData.type = 'TIMEOUT' as UserActionType;
     // Get the current timeout record from the DB
 
-    const timeoutRecord = await db<UserActions>('user_actions')
-      .select('*')
-      .where('user_id', targetData.id)
-      .andWhere('type', 'TIMEOUT')
-      .andWhere('repealed_at', null)
-      .first();
+    const record = await useractionsGet(targetData.id, 'TIMEOUT');
 
-    if (timeoutRecord) {
-      actionData = timeoutRecord;
+    if (record.length === 0) {
+      return {
+        content: `I couldn't find a timeout record for ${target.displayName}!`,
+        ephemeral: true,
+      };
     }
+
+    [actionData] = record;
 
     actionData.repealed_at = new Date();
     actionData.repealed_by = actorData.id;
@@ -240,16 +240,16 @@ export async function moderate(
   } else if (command === 'UNBAN') {
     actionData.type = 'FULL_BAN' as UserActionType;
 
-    const previousRecord = await db<UserActions>('user_actions')
-      .select('*')
-      .where('user_id', targetData.id)
-      .andWhere('type', 'FULL_BAN')
-      .andWhere('repealed_at', null)
-      .first();
+    const record = await useractionsGet(targetData.id, 'FULL_BAN');
 
-    if (previousRecord) {
-      actionData = previousRecord;
+    if (record.length === 0) {
+      return {
+        content: `I couldn't find a timeout record for ${target.displayName}!`,
+        ephemeral: true,
+      };
     }
+
+    [actionData] = record;
 
     actionData.repealed_at = new Date();
     actionData.repealed_by = actorData.id;
@@ -272,16 +272,16 @@ export async function moderate(
   } else if (command === 'UNUNDERBAN') {
     actionData.type = 'UNDERBAN' as UserActionType;
 
-    const previousRecord = await db<UserActions>('user_actions')
-      .select('*')
-      .where('user_id', targetData.id)
-      .andWhere('type', 'UNDERBAN')
-      .andWhere('repealed_at', null)
-      .first();
+    const record = await useractionsGet(targetData.id, 'UNDERBAN');
 
-    if (previousRecord) {
-      actionData = previousRecord;
+    if (record.length === 0) {
+      return {
+        content: `I couldn't find a timeout record for ${target.displayName}!`,
+        ephemeral: true,
+      };
     }
+
+    [actionData] = record;
 
     actionData.repealed_at = new Date();
     actionData.repealed_by = actorData.id;
@@ -315,11 +315,8 @@ export async function moderate(
   }
 
   if (command !== 'INFO') {
-  // log.debug(F, `actionData: ${JSON.stringify(actionData, null, 2)}`);
-    await db<UserActions>('user_actions')
-      .insert(actionData)
-      .onConflict('id')
-      .merge();
+    // log.debug(F, `actionData: ${JSON.stringify(actionData, null, 2)}`);
+    await useractionsSet(actionData);
   }
 
   const targetActionList = {
@@ -333,10 +330,8 @@ export async function moderate(
   };
 
   // Populate targetActionList from the db
-  const targetActionListRaw = await db<UserActions>('user_actions')
-    .select('*')
-    .where('user_id', targetData.id)
-    .orderBy('created_at', 'desc');
+
+  const targetActionListRaw = await useractionsGet(targetData.id);
 
   // log.debug(F, `targetActionListRaw: ${JSON.stringify(targetActionListRaw, null, 2)}`);
 

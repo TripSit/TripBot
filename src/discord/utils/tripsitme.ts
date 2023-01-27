@@ -28,13 +28,13 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import {
-  db,
   getGuild,
   getOpenTicket,
   getUser,
+  ticketUpdate,
+  usersUpdate,
 } from '../../global/utils/knex';
 import {
-  Users,
   UserTickets,
   TicketStatus,
 } from '../../global/@types/pgdb.d';
@@ -128,13 +128,11 @@ export async function needsHelpmode(
   target.fetch();
   const targetRoleIds = target.roles.cache.map(role => role.id);
   // log.debug(F, `targetRoleIds: ${targetRoleIds}`);
-  await db<Users>('users')
-    .insert({
-      discord_id: target.id,
-      roles: targetRoleIds.toString(),
-    })
-    .onConflict('discord_id')
-    .merge();
+
+  const userData = await getUser(target.id, null);
+  userData.roles = targetRoleIds.toString();
+
+  await usersUpdate(userData);
 
   const myMember = await interaction.guild.members.fetch(interaction.client.user.id);
   const myRole = myMember.roles.highest;
@@ -211,9 +209,8 @@ export async function tripsitmeOwned(
 
   // Update the ticket's status in the DB
   ticketData.status = 'OWNED' as TicketStatus;
-  await db<UserTickets>('user_tickets')
-    .update(ticketData)
-    .where('id', ticketData.id);
+
+  await ticketUpdate(ticketData);
 
   // Reply to the user
   await interaction.reply({ content: 'Thanks!', ephemeral: true });
@@ -276,10 +273,7 @@ export async function tripsitmeMeta(
 
   ticketData.meta_thread_id = metaChannel.id;
 
-  await db<UserTickets>('user_tickets')
-    .insert(ticketData)
-    .onConflict('id')
-    .merge();
+  await ticketUpdate(ticketData);
 
   // Send an embed to the meta room
   const embedTripsitter = embedTemplate()
@@ -460,10 +454,8 @@ export async function tripsitmeClose(
     // log.debug(F, `There was an error updating the help thread, it was likely deleted:\n ${err}`);
     // Update the ticket status to closed
     ticketData.status = 'DELETED' as TicketStatus;
-    await db<UserTickets>('user_tickets')
-      .insert(ticketData)
-      .onConflict('id')
-      .merge();
+
+    await ticketUpdate(ticketData);
   // log.debug(F, `Updated ticket status to DELETED`);
   }
 
@@ -497,10 +489,7 @@ export async function tripsitmeClose(
 
   // Update the ticket status to closed
   ticketData.status = 'CLOSED' as TicketStatus;
-  await db<UserTickets>('user_tickets')
-    .insert(ticketData)
-    .onConflict('id')
-    .merge();
+  await ticketUpdate(ticketData);
 
   // log.debug(F, `${target.user.tag} (${target.user.id}) is no longer being helped!`);
   await interaction.editReply({ content: 'Done!' });
@@ -614,10 +603,7 @@ export async function tripsitmeResolve(
     // log.debug(F, `There was an error updating the help thread, it was likely deleted:\n ${err}`);
     // Update the ticket status to closed
     ticketData.status = 'DELETED' as TicketStatus;
-    await db<UserTickets>('user_tickets')
-      .insert(ticketData)
-      .onConflict('id')
-      .merge();
+    await ticketUpdate(ticketData);
   // log.debug(F, `Updated ticket status to DELETED`);
   }
 
@@ -688,10 +674,7 @@ export async function tripsitmeResolve(
 
   // Update the ticket status to resolved
   ticketData.status = 'RESOLVED' as TicketStatus;
-  await db<UserTickets>('user_tickets')
-    .insert(ticketData)
-    .onConflict('id')
-    .merge();
+  await ticketUpdate(ticketData);
 
   // log.debug(F, `${target.user.tag} (${target.user.id}) is no longer being helped!`);
   await interaction.editReply({ content: 'Done!' });
@@ -905,8 +888,7 @@ export async function tripSitMe(
   // log.debug(F, `newTicketData: ${JSON.stringify(newTicketData, null, 2)}`);
 
   // Update thet ticket in the DB
-  await db<UserTickets>('user_tickets')
-    .insert(newTicketData);
+  await ticketUpdate(newTicketData);
 
   return threadHelpUser;
 }
@@ -987,10 +969,7 @@ export async function tripsitmeButton(
     // log.debug(F, `There was an error updating the help thread, it was likely deleted`);
       // Update the ticket status to closed
       ticketData.status = 'DELETED' as TicketStatus;
-      await db<UserTickets>('user_tickets')
-        .insert(ticketData)
-        .onConflict('id')
-        .merge();
+      await ticketUpdate(ticketData);
     // log.debug(F, `Updated ticket status to DELETED`);
     // log.debug(F, `Ticket: ${JSON.stringify(ticketData, null, 2)}`);
     }

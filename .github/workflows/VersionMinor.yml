@@ -1,0 +1,33 @@
+name: VersionMinor
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+      
+jobs:
+  VersionMinor:
+
+    if: github.event.pull_request.merged == true
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+    - name: Use Node.js '16.17.1'
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16.17.1'
+        cache: 'npm'
+    - run: git config --global user.name 'LunaUrsa'
+    - run: git config --global user.email 'luna@tripsit.me'
+    - run: npm version minor -m "[RELEASE] %s"
+    - name: Git push version bump
+      run: git push origin dev --follow-tags --force
+    - id: set-version
+      name: Output version change
+      run: npm pkg get version

@@ -1,5 +1,5 @@
-import { db, getUser } from '../utils/knex';
-import { UserExperience, ExperienceType } from '../@types/pgdb';
+import { experienceGet, getUser } from '../utils/knex';
+import { ExperienceType } from '../@types/pgdb';
 import { getTotalLevel } from '../utils/experience';
 
 const F = f(__filename);
@@ -17,17 +17,19 @@ export async function experience(
   userId: string,
 ):Promise<string> {
   const userData = await getUser(userId, null);
-  const experienceData = await db<UserExperience>('user_experience')
-    .where('user_id', userData.id)
-    .andWhereNot('type', 'TOTAL')
-    .andWhereNot('type', 'IGNORED')
-    .orderBy('level', 'desc');
+  const experienceData = await experienceGet(userData.id);
+
+  if (!experienceData) {
+    return 'No experience found for this user';
+  }
 
   // log.debug(F, `experienceData: ${JSON.stringify(experienceData, null, 2)}`);
 
   let allExpPoints = 0;
   experienceData.forEach(exp => {
-    allExpPoints += exp.total_points;
+    if (exp.type !== 'TOTAL' && exp.type !== 'IGNORED') {
+      allExpPoints += exp.total_points;
+    }
   });
 
   const totalData = await getTotalLevel(allExpPoints);

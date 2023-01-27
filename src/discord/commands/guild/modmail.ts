@@ -23,12 +23,13 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import {
-  db,
   getOpenTicket,
   getUser,
+  ticketGet,
+  ticketUpdate,
+  usersUpdate,
 } from '../../../global/utils/knex';
 import {
-  Users,
   UserTickets,
   TicketStatus,
 } from '../../../global/@types/pgdb.d';
@@ -299,10 +300,8 @@ export async function modmailActions(
 
       // Block impacts the user directly
       targetUserData.discord_bot_ban = true;
-      await db<Users>('users')
-        .insert(targetUserData)
-        .onConflict('id')
-        .merge();
+
+      await usersUpdate(targetUserData);
     }
   } else if (command === 'unblock') {
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -321,10 +320,7 @@ export async function modmailActions(
       await target.send(userMessage);
       ticketChannel.setName(`💛${ticketChannel.name.substring(1)}`);
       targetUserData.discord_bot_ban = false;
-      await db<Users>('users')
-        .insert(targetUserData)
-        .onConflict('id')
-        .merge();
+      await usersUpdate(targetUserData);
     }
   } else if (command === 'pause') {
     updatedModmailButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -405,16 +401,7 @@ export async function modmailActions(
     }
   }
 
-  try {
-    await db<UserTickets>('user_tickets')
-      .insert(ticketData)
-      .onConflict('id')
-      .merge();
-  } catch (err) {
-    log.error(F, 'Failed to update ticket data!');
-    log.error(F, `${JSON.stringify(err, null, 2)}`);
-    // log.debug(F, `Ticket data: ${JSON.stringify(ticketData)}`);
-  }
+  await ticketUpdate(ticketData);
 
   const tripsitGuild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID);
   const modlog = await tripsitGuild.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
@@ -616,14 +603,7 @@ export async function modmailCreate(
 
   // const ticketData = await getOpenTicket(userData.id, null);
 
-  const ticketData = await db<UserTickets>('user_tickets')
-    .select('*')
-    .where('user_id', userData.id)
-    .where('type', 'TRIPSIT')
-    .andWhereNot('status', 'CLOSED')
-    .andWhereNot('status', 'RESOLVED')
-    .andWhereNot('status', 'DELETED')
-    .first();
+  const ticketData = await ticketGet(userData.id) as UserTickets | undefined;
 
   // log.debug(F, `ticketData: ${ticketData?.status}!`);
 
@@ -638,11 +618,8 @@ export async function modmailCreate(
       issueThread = await channel.threads.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
       // log.debug(F, 'Cant find thread, it has likely been deleted!');
-      await db<UserTickets>('user_tickets')
-        .update({
-          status: 'DELETED' as TicketStatus,
-        })
-        .where('id', ticketData?.id);
+      ticketData.status = 'DELETED' as TicketStatus;
+      await ticketUpdate(ticketData);
     }
     // log.debug(F, `thread_id: ${JSON.stringify(thread_id, null, 2)}!`);
     if (issueThread.id) {
@@ -869,31 +846,16 @@ export async function modmailCreate(
       // log.debug(F, `newTicketData: ${JSON.stringify(newTicketData)}`);
 
       // Insert that ticket in the DB
-      try {
-        await db<UserTickets>('user_tickets')
-          .insert(newTicketData);
-      } catch (error) {
-        log.error(F, `Error inserting ticket into DB: ${error}`);
-        log.error(F, `ticketData: ${JSON.stringify(newTicketData)}`);
-      }
+      await ticketUpdate(newTicketData);
 
       // Save the user's roles in the db
       let actorRoles = [] as string[];
       if (member.id) {
         actorRoles = member.roles.cache.map(role => role.name);
       }
-      try {
-        await db<Users>('users')
-          .insert({
-            id: userData.id,
-            roles: actorRoles.toString(),
-          })
-          .onConflict('id')
-          .merge();
-      } catch (error) {
-        log.error(F, `Error inserting user roles into DB: ${error}`);
-        log.error(F, `ID: ${userData.id} | actorRoles: ${JSON.stringify(actorRoles)}`);
-      }
+
+      userData.roles = actorRoles.toString();
+      await usersUpdate(userData);
     });
 }
 
@@ -957,22 +919,18 @@ export async function modmailDMInteraction(message:Message) {
         : threadArchiveTime.getTime() + 1000 * 60 * 10;
       threadArchiveTime.setTime(archiveTime);
 
+      ticketData.archived_at = threadArchiveTime;
+      ticketData.deleted_at = new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7);
+
       // Update the ticket in the DB
-      await db<UserTickets>('user_tickets')
-        .update({
-          archived_at: threadArchiveTime,
-          deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
-        })
-        .where('id', ticketData.id);
+      await ticketUpdate(ticketData);
+
       return;
     }
     // If the thread is deleted, delete the ticket from the db
     // log.debug(F, `Deleting ticket ${ticketData.id} in the DB!`);
-    await db<UserTickets>('user_tickets')
-      .update({
-        status: 'DELETED' as TicketStatus,
-      })
-      .where('id', ticketData.id);
+    ticketData.status = 'DELETED' as TicketStatus;
+    await ticketUpdate(ticketData);
   }
 
   modmailInitialResponse(message);
@@ -1051,13 +1009,10 @@ export async function modmailThreadInteraction(message:Message) {
         // log.debug(F, `threadArchiveTime reset: ${threadArchiveTime}`);
 
         // Update the ticket in the DB
-        await db<UserTickets>('user_tickets')
-          .update({
-            archived_at: threadArchiveTime,
-            deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
-          })
-          .where('id', ticketData.id);
-        // log.debug(F, `ticket updated in DB!`);
+
+        ticketData.archived_at = threadArchiveTime;
+        ticketData.deleted_at = new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7);
+        await ticketUpdate(ticketData);
       }
     }
   }

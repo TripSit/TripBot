@@ -23,9 +23,9 @@ import {
   TextInputStyle,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { TicketStatus, UserTickets } from '../../../global/@types/pgdb';
+import { TicketStatus } from '../../../global/@types/pgdb';
 import {
-  db, getGuild, getOpenTicket, getUser,
+  getGuild, getOpenTicket, getUser, ticketUpdate,
 } from '../../../global/utils/knex';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -137,10 +137,7 @@ export const tripsitmode: SlashCommand = {
         } catch (err) {
           // Update the ticket status to closed
           ticketData.status = 'DELETED' as TicketStatus;
-          await db<UserTickets>('user_tickets')
-            .insert(ticketData)
-            .onConflict('id')
-            .merge();
+          await ticketUpdate(ticketData);
         }
 
         // If a thread exists, re-apply needsHelp, update the thread, remind the user

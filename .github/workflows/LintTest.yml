@@ -1,13 +1,14 @@
-name: LintAndTest
+name: LintTest
 
 on:
   pull_request:
     branches:
       - main
       - development
-  push:
-    branches:
-      - dev/logUpdate
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
   LintTest:

@@ -3,12 +3,19 @@ import {
   ThreadChannel,
 } from 'discord.js';
 import { DateTime } from 'luxon';
-import { db, getGuild, getUser } from './knex';
 import {
-  Users,
-  UserReminders,
-  UserTickets,
-  TicketStatus,
+  reminderGet,
+  reminderDel,
+  ticketGet,
+  ticketDel,
+  getGuild,
+  getUser,
+  ticketUpdate,
+  usersGetMindsets,
+  usersUpdate,
+} from './knex';
+import {
+  TicketStatus, UserTickets,
 } from '../@types/pgdb.d';
 
 const F = f(__filename);
@@ -21,13 +28,7 @@ export default runTimer;
 async function checkReminders() {
   // log.info(F, `Checking timers...`);
   // Process reminders
-  const reminderData = await db<UserReminders>('user_reminders')
-    .select(
-      db.ref('id'),
-      db.ref('user_id'),
-      db.ref('reminder_text'),
-      db.ref('trigger_at'),
-    );
+  const reminderData = await reminderGet();
   if (reminderData.length > 0) {
     // Loop through each reminder
     // for (const reminder of reminderData) {
@@ -47,9 +48,7 @@ async function checkReminders() {
           }
 
           // Delete the reminder from the database
-          await db<UserReminders>('user_reminders')
-            .delete()
-            .where('id', reminder.id);
+          await reminderDel(reminder.id);
         }
       } else {
         log.error(F, `Reminder ${reminder.id} has no trigger date!`);
@@ -60,16 +59,7 @@ async function checkReminders() {
 
 async function checkTickets() {
   // Process tickets
-  const ticketData = await db<UserTickets>('user_tickets')
-    .select(
-      db.ref('id'),
-      db.ref('archived_at'),
-      db.ref('status'),
-      db.ref('thread_id'),
-      db.ref('user_id'),
-      db.ref('deleted_at'),
-    )
-    .whereNot('status', 'DELETED');
+  const ticketData = await ticketGet() as UserTickets[];
   // Loop through each ticket
   // for (const ticket of ticketData) {
   ticketData.forEach(async ticket => {
@@ -83,12 +73,12 @@ async function checkTickets() {
       // log.debug(F, `Archiving ticket ${ticket.id}...`);
 
       // Archive the ticket set the deleted time to 1 week from now
-      await db<UserTickets>('user_tickets')
-        .update({
-          status: 'ARCHIVED' as TicketStatus,
-          deleted_at: DateTime.local().plus({ days: 7 }).toJSDate(),
-        })
-        .where('id', ticket.id);
+
+      const updatedTicket = ticket;
+      updatedTicket.status = 'ARCHIVED' as TicketStatus;
+      updatedTicket.deleted_at = DateTime.local().plus({ days: 7 }).toJSDate();
+
+      await ticketUpdate(updatedTicket);
 
       // Archive the thread on discord
       if (ticket.thread_id) {
@@ -155,9 +145,7 @@ async function checkTickets() {
     ) {
       // log.debug(F, `Deleting ticket ${ticket.id}...`);
       // Delete the ticket
-      await db<UserTickets>('user_tickets')
-        .delete()
-        .where('id', ticket.id);
+      await ticketDel(ticket.id);
 
       // Delete the thread on discord
       if (ticket.thread_id) {
@@ -209,13 +197,7 @@ async function checkTickets() {
 
 async function checkMindsets() {
   // Process mindset roles
-  const mindsetRoleData = await db<Users>('users')
-    .select(
-      db.ref('mindset_role'),
-      db.ref('mindset_role_expires_at'),
-      db.ref('discord_id'),
-    )
-    .whereNotNull('mindset_role_expires_at');
+  const mindsetRoleData = await usersGetMindsets();
   if (mindsetRoleData.length > 0) {
     // Loop through each user
     // for (const user of mindsetRoleData) {
@@ -260,14 +242,12 @@ async function checkMindsets() {
               await member.roles.remove(role);
               // log.debug(F, `Removed ${user.discord_id}'s ${user.mindset_role} role`);
               // Update the user's mindset role in the database
-              await db<Users>('users')
-                .insert({
-                  discord_id: mindetUser.discord_id,
-                  mindset_role: null,
-                  mindset_role_expires_at: null,
-                })
-                .onConflict('discord_id')
-                .merge();
+
+              const updatedUser = mindetUser;
+              updatedUser.mindset_role = null;
+              updatedUser.mindset_role_expires_at = null;
+
+              await usersUpdate(updatedUser);
             }
           }
         }
@@ -284,6 +264,7 @@ export async function runTimer() {
    * This timer runs every (INTERVAL) to determine if there are any tasks to perform
    * This function uses setTimeout so that it can finish runing before the next loop
    */
+  // log.debug(F, `PGDBURL: ${env.POSTGRES_DBURL}`);
   function checkTimers() {
     setTimeout(
       async () => {
