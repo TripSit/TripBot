@@ -436,17 +436,20 @@ export async function experienceGetTop(
   if (env.POSTGRES_DBURL === undefined) return [];
   if (category) {
     if (userId) {
+      log.debug(F, 'experienceGetTop started with userId and category');
       return db<UserExperience>('user_experience')
         .where('user_id', userId)
         .andWhere('type', category)
         .limit(limit);
     }
+    log.debug(F, 'experienceGetTop started with category');
     return db<UserExperience>('user_experience')
       .select('*')
       .where('type', category)
       .orderBy('total_points', 'desc')
       .limit(limit);
   }
+  log.debug(F, 'experienceGetTop started without category');
   return (await db<UserExperience>('user_experience')
     .select(
       db.ref('user_id'),

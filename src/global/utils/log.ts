@@ -72,7 +72,7 @@ if (env.NODE_ENV === 'production') {
 }
 
 export const logger = createLogger({
-  level: 'debug',
+  level: env.DEBUG_LEVEL,
   format: combine(
     format.colorize({ all: true }),
     splat(),

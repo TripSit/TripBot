@@ -6,6 +6,7 @@ const isProd = process.env.NODE_ENV === 'production';
 
 export const env = {
   NODE_ENV: isProd ? 'production' : 'development',
+  DEBUG_LEVEL: isProd ? 'info' : 'debug',
   DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,
   DISCORD_OWNER_ID: process.env.DISCORD_OWNER_ID,
   DISCORD_GUILD_ID: process.env.DISCORD_GUILD_ID,
@@ -21,7 +22,7 @@ export const env = {
   YOUTUBE_TOKEN: process.env.YOUTUBE_TOKEN,
   IMDB_TOKEN: process.env.IMDB_TOKEN,
 
-  POSTGRES_DBURL: process.env.POSTGRES_DBURL,
+  POSTGRES_DBURL: isProd ? process.env.POSTGRES_DBURL : 'postgres://tripsit_api:P@ssw0rd@localhost:5432/tripsit',
 
   SONAR_URL: process.env.SONAR_URL,
   SONAR_TOKEN: process.env.SONAR_TOKEN,
