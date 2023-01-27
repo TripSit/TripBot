@@ -264,7 +264,7 @@ export async function runTimer() {
    * This timer runs every (INTERVAL) to determine if there are any tasks to perform
    * This function uses setTimeout so that it can finish runing before the next loop
    */
-  log.debug(F, `PGDBURL: ${env.POSTGRES_DBURL}`);
+  // log.debug(F, `PGDBURL: ${env.POSTGRES_DBURL}`);
   function checkTimers() {
     setTimeout(
       async () => {

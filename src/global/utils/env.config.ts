@@ -22,7 +22,7 @@ export const env = {
   YOUTUBE_TOKEN: process.env.YOUTUBE_TOKEN,
   IMDB_TOKEN: process.env.IMDB_TOKEN,
 
-  POSTGRES_DBURL: isProd ? process.env.POSTGRES_DBURL : 'postgres://tripsit_api:P@ssw0rd@localhost:5432/tripsit',
+  POSTGRES_DBURL: process.env.POSTGRES_DBURL,
 
   SONAR_URL: process.env.SONAR_URL,
   SONAR_TOKEN: process.env.SONAR_TOKEN,
