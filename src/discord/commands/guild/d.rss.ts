@@ -19,6 +19,8 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
+const testUrl = 'https://www.reddit.com/r/TripSit/new.rss'; // eslint-disable-line
+
 export default dRss;
 
 export const dRss: SlashCommand = {

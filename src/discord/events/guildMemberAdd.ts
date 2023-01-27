@@ -9,10 +9,8 @@ import { stripIndents } from 'common-tags';
 import {
   GuildMemberAddEvent,
 } from '../@types/eventDef';
-import { db } from '../../global/utils/knex';
+import { getUser, usersUpdate } from '../../global/utils/knex';
 import { embedTemplate } from '../utils/embedTemplate';
-
-import { Users } from '../../global/@types/pgdb';
 
 const F = f(__filename);
 
@@ -41,13 +39,11 @@ export const guildMemberAdd: GuildMemberAddEvent = {
       new Collection(newInvites.map(inviteEntry => [inviteEntry.code, inviteEntry.uses])),
     );
 
-    await db<Users>('users')
-      .insert({
-        discord_id: member.id,
-        joined_at: member.joinedAt ?? new Date(),
-      })
-      .onConflict('discord_id')
-      .merge();
+    const userData = await getUser(member.id, null);
+    userData.discord_id = member.id;
+    userData.joined_at = new Date();
+
+    await usersUpdate(userData);
 
     // log.debug(F, `Date.now(): ${Date.now()}`);
     // log.debug(F, `member.user.createdAt: ${member.user.createdAt.toString()}`);

@@ -19,10 +19,6 @@ import {
   Colors,
   GuildEmoji,
 } from 'discord.js';
-// import { db } from '../../../global/utils/knex';
-// import {
-//   ReactionRoles,
-// } from '../../../global/@types/pgdb';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 

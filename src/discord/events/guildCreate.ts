@@ -4,8 +4,7 @@ import {
 import {
   GuildCreateEvent,
 } from '../@types/eventDef';
-import { db, getGuild } from '../../global/utils/knex';
-import { DiscordGuilds } from '../../global/@types/pgdb';
+import { getGuild, guildUpdate } from '../../global/utils/knex';
 
 const F = f(__filename);
 
@@ -23,13 +22,9 @@ export const guildCreate: GuildCreateEvent = {
       guild.leave();
       return;
     }
-    await db<DiscordGuilds>('discord_guilds')
-      .insert({
-        id: guild.id,
-        joined_at: new Date(),
-      })
-      .onConflict('id')
-      .merge();
+
+    guildData.joined_at = new Date();
+    await guildUpdate(guildData);
 
     const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
     client.guilds.fetch();

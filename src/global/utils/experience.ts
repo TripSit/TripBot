@@ -7,7 +7,9 @@ import {
 } from 'discord.js';
 import { DateTime } from 'luxon';
 import { stripIndents } from 'common-tags';
-import { db, getUser } from './knex';
+import {
+  experienceGet, experienceGetTop, experienceUpdate, getUser,
+} from './knex';
 import { UserExperience, ExperienceType } from '../@types/pgdb';
 
 const F = f(__filename);
@@ -116,20 +118,7 @@ export async function experience(
 
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
-  const experienceData = await db<UserExperience>('user_experience')
-    .select(
-      db.ref('id'),
-      db.ref('user_id'),
-      db.ref('level'),
-      db.ref('type'),
-      db.ref('level_points'),
-      db.ref('total_points'),
-      db.ref('last_message_at'),
-      db.ref('last_message_channel'),
-    )
-    .where('user_id', userData.id)
-    .andWhere('type', experienceType)
-    .first();
+  const [experienceData] = await experienceGetTop(1, experienceType, userData.id);
 
   // log.debug(F, `experienceData: ${JSON.stringify(experienceData, null, 2)}`);
 
@@ -137,16 +126,15 @@ export async function experience(
   if (!experienceData) {
     // log.debug(F, `Inserting new experience`);
     // log.debug(F, `experienceDataInsert: ${JSON.stringify(experienceData, null, 2)}`);
-    await db<UserExperience>('user_experience')
-      .insert({
-        user_id: userData.id,
-        type: experienceType,
-        level_points: expPoints,
-        total_points: expPoints,
-        last_message_at: new Date(),
-        last_message_channel: message.channel.id,
-        level: 0,
-      });
+    await experienceUpdate({
+      user_id: userData.id,
+      type: experienceType,
+      level_points: expPoints,
+      total_points: expPoints,
+      last_message_at: new Date(),
+      last_message_channel: message.channel.id,
+      level: 0,
+    } as UserExperience);
     return;
   }
   // If the user has experience, update it
@@ -187,17 +175,13 @@ export async function experience(
 
   // Calculate total experience points
   let allExpPoints = 0;
-  const currentExp = await db<UserExperience>('user_experience')
-    .select(
-      db.ref('total_points'),
-      db.ref('type'),
-    )
-    .where('user_id', userData.id)
-    .andWhereNot('type', 'IGNORED')
-    .andWhereNot('type', 'TOTAL');
 
-  currentExp.forEach(exp => {
-    allExpPoints += exp.total_points;
+  const expData = await experienceGet(userData.id);
+
+  expData.forEach(exp => {
+    if (exp.type !== 'IGNORED' && exp.type !== 'TOTAL') {
+      allExpPoints += exp.total_points;
+    }
   });
 
   const totalData = await getTotalLevel(allExpPoints);
@@ -274,8 +258,5 @@ export async function experience(
 
   // log.debug(F, `experienceDataMerge: ${JSON.stringify(experienceData, null, 2)}`);
 
-  await db<UserExperience>('user_experience')
-    .insert(experienceData)
-    .onConflict(['id', 'user_id', 'type'])
-    .merge();
+  await experienceUpdate(experienceData);
 }

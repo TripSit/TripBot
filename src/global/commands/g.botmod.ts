@@ -17,8 +17,9 @@ import {
 
 import { stripIndents } from 'common-tags';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
-import { db, getGuild, getUser } from '../utils/knex';
-import { DiscordGuilds, Users } from '../@types/pgdb';
+import {
+  getGuild, getUser, guildUpdate, usersUpdate,
+} from '../utils/knex';
 import { startLog } from '../../discord/utils/startLog';
 
 const F = f(__filename);
@@ -111,10 +112,8 @@ async function botmodUser(
   }
 
   // log.debug(F, `targetUserInfo: ${JSON.stringify(targetUserInfo, null, 2)}`);
-  await db<Users>('users')
-    .insert(targetUserInfo)
-    .onConflict('id')
-    .merge();
+
+  await usersUpdate(targetUserInfo);
 
   const noReason = 'No reason provided';
   const modlogEmbed = embedTemplate()
@@ -223,10 +222,8 @@ async function botmodGuild(
 
   if (command !== 'BOTINFO') {
   // log.debug(F, `actionData: ${JSON.stringify(actionData, null, 2)}`);
-    await db<DiscordGuilds>('discord_guild')
-      .insert(targetGuildInfo)
-      .onConflict('id')
-      .merge();
+
+    await guildUpdate(targetGuildInfo);
   }
 
   const noReason = 'No reason provided';

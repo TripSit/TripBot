@@ -2,12 +2,13 @@ import {
   time,
 } from 'discord.js';
 import { DateTime } from 'luxon';
-import { db, getUser } from '../utils/knex';
 import {
-  UserDrugDoses,
-  DrugNames,
+  drugGet, getUser, idoseDel, idoseGet, idoseSet,
+} from '../utils/knex';
+import {
   DrugRoa,
   DrugMassUnit,
+  UserDrugDoses,
 } from '../@types/pgdb.d';
 
 const F = f(__filename);
@@ -54,16 +55,7 @@ export async function idose(
 
     const userData = await getUser(userId, null);
 
-    const unsorteddata = await db<UserDrugDoses>('user_drug_doses')
-      .select(
-        db.ref('id'),
-        db.ref('drug_id'),
-        db.ref('dose'),
-        db.ref('units'),
-        db.ref('route'),
-        db.ref('created_at'),
-      )
-      .where('user_id', userData.id);
+    const unsorteddata = await idoseGet(userData.id);
 
     if (unsorteddata.length === 0) {
       return [{
@@ -95,10 +87,15 @@ export async function idose(
     // log.debug(F, `doseDate: ${doseDate}`);
     const timeVal = DateTime.fromISO(doseDate);
     const drugId = record.drug_id;
-    const drugName = (await db<DrugNames>('drug_names')
-      .select(db.ref('name'))
-      .where('drug_id', drugId)
-      .andWhere('is_default', true))[0].name;
+
+    const drugData = await drugGet(drugId);
+    if (drugData.length === 0) {
+      return [{
+        name: 'Error',
+        value: 'That drug does not exist!',
+      }];
+    }
+    const drugName = drugData[0].name;
     const route = record.route.charAt(0).toUpperCase() + record.route.slice(1).toLowerCase();
 
     // log.debug(F, `I deleted:
@@ -106,9 +103,7 @@ export async function idose(
     // ${record.dose} ${record.units} of ${drugName} ${route}
     // `);
 
-    await db<UserDrugDoses>('user_drug_doses')
-      .where('id', recordId)
-      .del();
+    await idoseDel(recordId);
 
     response = [{
       name: 'Success',
@@ -123,18 +118,9 @@ export async function idose(
 
     // log.debug(F, `Getting data for ${userData.id}...`);
 
-    const unsorteddata = await db<UserDrugDoses>('user_drug_doses')
-      .select(
-        db.ref('id'),
-        db.ref('drug_id'),
-        db.ref('dose'),
-        db.ref('units'),
-        db.ref('route'),
-        db.ref('created_at'),
-      )
-      .where('user_id', userData.id);
+    const unsorteddata = await idoseGet(userData.id);
 
-    if (!unsorteddata) {
+    if (unsorteddata.length === 0) {
       return [{
         name: 'Error',
         value: 'You have no dose records, you can use /idose to add some!',
@@ -168,10 +154,8 @@ export async function idose(
       // log.debug(F, `doseDate: ${doseDate}`);
       const timeVal = DateTime.fromISO(doseDate);
       const drugId = dose.drug_id;
-      const drugName = (await db<DrugNames>('drug_names') // eslint-disable-line no-await-in-loop
-        .select(db.ref('name'))
-        .where('drug_id', drugId)
-        .andWhere('is_default', true))[0].name;
+
+      const drugName = (await drugGet(drugId))[0].name; // eslint-disable-line no-await-in-loop
 
       // Lowercase everything but the first letter
       const route = dose.route.charAt(0).toUpperCase() + dose.route.slice(1).toLowerCase();
@@ -204,16 +188,16 @@ export async function idose(
 
     // log.debug(F, `Substance: ${substance}`);
 
-    const data = await db<DrugNames>('drug_names')
-      .select(db.ref('drug_id'))
-      .where('name', substance)
-      .orWhere('name', substance.toLowerCase())
-      .orWhere('name', substance.toUpperCase());
+    const data = await drugGet('', substance);
 
     // log.debug(F, `Data: ${JSON.stringify(data, null, 2)}`);
 
     if (data.length === 0) {
       // log.debug(`name = ${substance} not found in 'drugNames'`);
+      return [{
+        name: 'Error',
+        value: 'That drug does not exist!',
+      }];
     }
 
     const drugId = data[0].drug_id;
@@ -221,15 +205,16 @@ export async function idose(
     // log.debug(F, `drugId: ${drugId}`);
 
     const userData = await getUser(userId, null);
-    await db<UserDrugDoses>('user_drug_doses')
-      .insert({
-        user_id: userData.id,
-        drug_id: drugId,
-        route: roa,
-        dose: volume,
-        units,
-        created_at: date,
-      });
+
+    await idoseSet({
+      user_id: userData.id,
+      drug_id: drugId,
+      route: roa,
+      dose: volume,
+      units,
+      created_at: date,
+    } as UserDrugDoses);
+
     response = [{
       name: 'Success',
       value: 'I added a new value for you!',

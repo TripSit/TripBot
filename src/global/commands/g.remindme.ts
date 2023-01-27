@@ -1,8 +1,8 @@
 import { DateTime } from 'luxon';
-import { db, getUser } from '../utils/knex';
+import { UserReminders } from '../@types/pgdb';
 import {
-  UserReminders,
-} from '../@types/pgdb';
+  getUser, reminderDel, reminderGet, reminderSet,
+} from '../utils/knex';
 
 const F = f(__filename);
 
@@ -44,13 +44,7 @@ export async function remindme(
 
     const userData = await getUser(userId, null);
 
-    const unsorteddata = await db<UserReminders>('user_reminders')
-      .select(
-        db.ref('id'),
-        db.ref('created_at'),
-        db.ref('reminder_text'),
-      )
-      .where('user_id', userData.id);
+    const unsorteddata = await reminderGet(userData.id);
 
     if (unsorteddata.length === 0) {
       response = 'You have no reminder records, you can use /remindme to add some!';
@@ -85,9 +79,7 @@ export async function remindme(
     // ${record.reminder_text}
     // `);
 
-    await db<UserReminders>('user_reminders')
-      .where('id', recordId)
-      .del();
+    await reminderDel(recordId);
 
     response = `I deleted:
       > **(${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}**
@@ -98,18 +90,13 @@ export async function remindme(
   if (command === 'get') {
     const userData = await getUser(userId, null);
 
-    const unsorteddata = await db<UserReminders>('user_reminders')
-      .select(
-        db.ref('trigger_at'),
-        db.ref('reminder_text'),
-      )
-      .where('user_id', userData.id);
+    const unsorteddata = await reminderGet(userData.id);
 
     // log.debug(F, `Data: ${JSON.stringify(unsorteddata, null, 2)}`);
 
     // log.debug(F, `unsorteddata: ${unsorteddata.length}`);
 
-    if (!unsorteddata || unsorteddata.length === 0) {
+    if (unsorteddata.length === 0) {
       response = 'You have no reminder records, you can use /remindme to add some!';
       log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
       return response;
@@ -152,12 +139,13 @@ export async function remindme(
       return response;
     }
     const userData = await getUser(userId, null);
-    await db<UserReminders>('user_reminders')
-      .insert({
-        user_id: userData.id,
-        reminder_text: reminderText,
-        trigger_at: triggerAt,
-      });
+
+    await reminderSet({
+      user_id: userData.id,
+      reminder_text: reminderText,
+      trigger_at: triggerAt,
+    } as UserReminders);
+
     response = `I will remind you to ${reminderText} at ${triggerAt}!`;
     log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   }

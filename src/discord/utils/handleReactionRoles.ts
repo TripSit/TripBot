@@ -9,12 +9,11 @@ import {
 
 // import { stripIndents } from 'common-tags';
 import { stripIndents } from 'common-tags';
-import { db } from '../../global/utils/knex';
+import { getUser, reactionroleGet, usersUpdate } from '../../global/utils/knex';
 // import {
 //   Users,
 // } from '../../global/@types/pgdb.d';
 // import log from '../../global/utils/log';
-import { Users, ReactionRoles } from '../../global/@types/pgdb';
 
 // const F = f(__filename);
 
@@ -47,18 +46,14 @@ export async function handleReactionRoles(
   add:boolean,
 ): Promise<void> {
   const messageId = reaction.message.id;
-  const reactionId = reaction.emoji.id ?? reaction.emoji.name;
+  const reactionId = reaction.emoji.id ?? `${reaction.emoji.name}`;
   // log.debug(F, `messageId: ${messageId} | reactionId: ${reactionId}`);
 
   if (!reaction.message.guild) return;
 
-  const ReactionRole = await db<ReactionRoles>('reaction_roles')
-    .select(db.ref('role_id'))
-    .where('message_id', messageId)
-    .andWhere('reaction_id', reactionId)
-    .first();
+  const ReactionRole = await reactionroleGet(messageId, reactionId);
 
-  if (ReactionRole === undefined) {
+  if (!ReactionRole) {
     // log.debug(F, `No reaction role found!`);
     return;
   }
@@ -82,15 +77,13 @@ export async function handleReactionRoles(
       // If this is a mindset emoji, set the end date
       if (mindsetEmojis.includes(`<:${reaction.emoji.identifier}>`)) {
         // Update the database
-        await db<Users>('users')
-          .insert({
-            discord_id: user.id,
-            mindset_role: role.id,
-            mindset_role_expires_at: new Date(Date.now() + mindsetRemovalTime),
-          })
-          .onConflict('discord_id')
-          .merge();
-        // log.debug(F, `Updated mindest DB ${user.username}`);
+        const userData = await getUser(user.id, null);
+
+        userData.discord_id = user.id;
+        userData.mindset_role = role.id;
+        userData.mindset_role_expires_at = new Date(Date.now() + mindsetRemovalTime);
+
+        await usersUpdate(userData);
       }
 
       // If this is the contributor role, send a message to the contributor room

@@ -1,6 +1,5 @@
 import { stripIndents } from 'common-tags';
-import { db, getUser } from '../utils/knex';
-import { UserExperience } from '../@types/pgdb';
+import { experienceGetTop, getUser } from '../utils/knex';
 import { getTotalLevel } from '../utils/experience';
 
 const F = f(__filename);
@@ -44,16 +43,7 @@ export async function leaderboard(
     `;
 
     // Grab all the user experience from the database
-    const allUserExperience = await db<UserExperience>('user_experience')
-      .select(
-        db.ref('user_id'),
-      )
-      .andWhereNot('type', 'IGNORED')
-      .whereNot('type', 'TOTAL')
-      .groupBy(['user_id'])
-      .sum({ total_points: 'total_points' })
-      .orderBy('total_points', 'desc')
-      .limit(3);
+    const allUserExperience = await experienceGetTop(3);
 
     // log.debug(F, `allUserExperience: ${JSON.stringify(allUserExperience, null, 2)}`);
 
@@ -85,12 +75,7 @@ export async function leaderboard(
 
     // Grab all the user experience from the database
     for (const category of ['TRIPSITTER', 'GENERAL', 'DEVELOPER', 'TEAM', 'IGNORED']) { // eslint-disable-line
-      const userExperience = await db<UserExperience>('user_experience') // eslint-disable-line
-        .select('*')
-        .where('type', category)
-        .orderBy('total_points', 'desc')
-        .limit(3);
-
+      const userExperience = await experienceGetTop(3, category);// eslint-disable-line
       let categoryRank = 0;
       for (const user of userExperience) { // eslint-disable-line
         categoryRank += 1;
@@ -119,16 +104,7 @@ export async function leaderboard(
     description = 'Total Experience is the sum of all experience in all categories.';
 
     // Grab all the user experience from the database
-    const userExperience = await db<UserExperience>('user_experience')
-      .select(
-        db.ref('user_id'),
-      )
-      .whereNot('type', 'IGNORED')
-      .andWhereNot('type', 'TOTAL')
-      .groupBy(['user_id'])
-      .sum({ total_points: 'total_points' })
-      .orderBy('total_points', 'desc')
-      .limit(15);
+    const userExperience = await experienceGetTop(15);
 
     // log.debug(F, `userExperience: ${JSON.stringify(userExperience, null, 2)}`);
 
@@ -163,14 +139,8 @@ export async function leaderboard(
     }
   } else {
     // Grab all the user experience from the database
-    const userExperience = await db<UserExperience>('user_experience')
-      .select(
-        db.ref('user_id'),
-        db.ref('level'),
-      )
-      .where('type', categoryName)
-      .orderBy('total_points', 'desc')
-      .limit(15);
+
+    const userExperience = await experienceGetTop(15, categoryName);
 
     // log.debug(F, `userExperience: ${JSON.stringify(userExperience, null, 2)}`);
 

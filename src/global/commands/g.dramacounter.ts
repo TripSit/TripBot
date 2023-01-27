@@ -1,5 +1,4 @@
-import { db, getGuild } from '../utils/knex';
-import { DiscordGuilds } from '../@types/pgdb';
+import { getGuild, guildUpdate } from '../utils/knex';
 
 const F = f(__filename);
 
@@ -23,9 +22,9 @@ export async function dramacounter(
     dramaReason: string;
     lastDramaAt: Date;
   };
-  if (command === 'get') {
-    const guildData = await getGuild(guildId);
+  const guildData = await getGuild(guildId);
 
+  if (command === 'get') {
     if (guildData.last_drama_at) {
       const lastDramaDate = guildData.last_drama_at;
       const lastDramaReason = guildData.drama_reason || 'No reason given';
@@ -37,15 +36,9 @@ export async function dramacounter(
       return { dramaReason: null, lastDramaAt: null };
     }
   } else if (command === 'set') {
-    await db<DiscordGuilds>('discord_guilds')
-      .insert({
-        id: guildId,
-        drama_reason: dramaReason,
-        last_drama_at: lastDramaAt,
-      })
-      .onConflict('id')
-      .merge()
-      .returning('*');
+    guildData.last_drama_at = lastDramaAt;
+    guildData.drama_reason = dramaReason;
+    await guildUpdate(guildData);
     response = { dramaReason, lastDramaAt };
   }
 

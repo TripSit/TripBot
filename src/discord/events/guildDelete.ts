@@ -4,8 +4,7 @@ import {
 import {
   GuildDeleteEvent,
 } from '../@types/eventDef';
-import { db } from '../../global/utils/knex';
-import { DiscordGuilds } from '../../global/@types/pgdb';
+import { getGuild, guildUpdate } from '../../global/utils/knex';
 
 const F = f(__filename);
 
@@ -15,13 +14,12 @@ export const guildDelete: GuildDeleteEvent = {
   name: 'guildDelete',
   async execute(guild) {
     log.info(F, `Left guild: ${guild.name} (id: ${guild.id})`);
-    await db<DiscordGuilds>('discord_guilds')
-      .insert({
-        id: guild.id,
-        removed_at: new Date(),
-      })
-      .onConflict('id')
-      .merge();
+
+    const guildData = await getGuild(guild.id);
+
+    guildData.removed_at = new Date();
+
+    await guildUpdate(guildData);
 
     if (guild.id === '1026942722612924518') return;
 

@@ -1,20 +1,11 @@
 /* eslint-disable max-len */
-
 import {
   MessageReaction,
-  // TextChannel,
   User,
 } from 'discord.js';
-// import { DateTime } from 'luxon';
-
-// import { stripIndents } from 'common-tags';
-// import env from '../../global/utils/env.config';
-import { db } from '../../global/utils/knex';
 import {
-  Users,
-  // UserExperience
-} from '../../global/@types/pgdb';
-// import log from '../../global/utils/log';
+  getUser, incrementKarma, usersUpdate,
+} from '../../global/utils/knex';
 
 // const F = f(__filename);
 
@@ -52,43 +43,33 @@ export async function chitragupta(
   if (!reaction.emoji.name.includes('upvote')) return;
 
   // Increment karma of the actor
-  const actorKarma = await db<Users>('users')
-    .increment('karma_given', action)
-    .where('discord_id', actor.id)
-    .returning(['karma_received', 'karma_given']);
+  await incrementKarma('karma_given', actor.id, action);
 
-  if (actorKarma.length === 0) {
+  const actorData = await getUser(actor.id, null);
+
+  if (actorData.karma_given === undefined) {
     // User doesn't exist in the database
     // log.debug(F, `User doesn't exist in the database: ${actor.id}`);
     // Create new user
-    const newUser = {
-      discord_id: actor.id,
-      karma_given: action,
-      karma_received: 0,
-    };
-    await db<Users>('users')
-      .insert(newUser)
-      .returning(['karma_received', 'karma_given']);
+    actorData.discord_id = actor.id;
+    actorData.karma_given = action;
+    actorData.karma_received = 0;
+
+    await usersUpdate(actorData);
   }
 
   // Increment the karma of the target
-  const targetKarma = await db<Users>('users')
-    .increment('karma_received', action)
-    .where('discord_id', target.id)
-    .returning(['karma_received', 'karma_given']);
+  await incrementKarma('karma_received', target.id, action);
+  const targetData = await getUser(target.id, null);
 
-  if (targetKarma.length === 0) {
+  if (targetData.karma_given === undefined) {
     // User doesn't exist in the database
     // log.debug(F, `User doesn't exist in the database: ${actor.id}`);
     // Create new user
-    const newUser = {
-      discord_id: target.id,
-      karma_given: 0,
-      karma_received: action,
-    };
-    await db<Users>('users')
-      .insert(newUser)
-      .returning(['karma_received', 'karma_given']);
+    targetData.discord_id = target.id;
+    targetData.karma_given = 0;
+    targetData.karma_received = action;
+    await usersUpdate(targetData);
   }
   // log.debug(F, `actorKarma ${JSON.stringify(actorKarma)}!`);
   // log.debug(F, `targetKarma ${JSON.stringify(targetKarma)}!`);

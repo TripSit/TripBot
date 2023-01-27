@@ -7,10 +7,9 @@ import {
 import {
   ThreadDeleteEvent,
 } from '../@types/eventDef';
-import { db, getOpenTicket } from '../../global/utils/knex';
+import { getOpenTicket, ticketUpdate } from '../../global/utils/knex';
 import {
   TicketStatus,
-  UserTickets,
 } from '../../global/@types/pgdb';
 
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -46,11 +45,9 @@ export const threadDelete: ThreadDeleteEvent = {
     if (ticketData) {
       // log.debug(F, `closing ticket: ${JSON.stringify(ticketData, null, 2)}`);
       // If it is, close the ticket
-      await db<UserTickets>('user_tickets')
-        .update({
-          status: 'DELETED' as TicketStatus,
-        })
-        .where('id', ticketData.id);
+
+      ticketData.status = 'DELETED' as TicketStatus;
+      await ticketUpdate(ticketData);
     }
 
     // Perform a coherence check to make sure that there's *something*

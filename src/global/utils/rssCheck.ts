@@ -6,8 +6,9 @@ import {
 import Parser from 'rss-parser';
 import { stripIndents } from 'common-tags';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
-import { db, getGuild, getUser } from './knex';
-import { Rss } from '../@types/pgdb';
+import {
+  rssGet, rssSet,
+} from './knex';
 
 export default runRss;
 
@@ -65,9 +66,7 @@ async function checkRss() {
   (async () => {
     const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
 
-    const rssData = await db<Rss>('rss')
-      .select('*')
-      .where('guild_id', guild.id);
+    const rssData = await rssGet(guild.id);
 
     rssData.forEach(async feed => {
       const mostRecentPost = (await parser.parseURL(feed.url)).items[0];
@@ -102,10 +101,7 @@ async function checkRss() {
       const newFeed = feed;
       newFeed.last_post_id = mostRecentPost.id;
 
-      await db<Rss>('rss')
-        .insert(newFeed)
-        .onConflict(['guild_id', 'destination'])
-        .merge();
+      await rssSet(newFeed);
     });
   })();
 }

@@ -1,8 +1,5 @@
 /* eslint-disable max-len */
-import { db, getUser } from '../utils/knex';
-import {
-  UserExperience,
-} from '../@types/pgdb.d';
+import { experienceGet, getUser } from '../utils/knex';
 
 const F = f(__filename);
 
@@ -32,19 +29,13 @@ export async function profile(
 
   // log.debug(F, `profileData: ${JSON.stringify(profileData, null, 2)}`);
 
-  const currentExp = await db<UserExperience>('user_experience')
-    .select(
-      db.ref('total_points'),
-      db.ref('type'),
-    )
-    .where('user_id', userData.id)
-    .andWhereNot('type', 'IGNORED')
-    .andWhereNot('type', 'TOTAL');
+  const expData = await experienceGet(userData.id);
 
-  currentExp.forEach(exp => {
-    profileData.totalExp += exp.total_points;
+  expData.forEach(exp => {
+    if (exp.type !== 'TOTAL' && exp.type !== 'IGNORED') {
+      profileData.totalExp += exp.total_points;
+    }
   });
-  // 212160
   log.info(F, `response: ${JSON.stringify(profileData, null, 2)}`);
   return profileData;
 }

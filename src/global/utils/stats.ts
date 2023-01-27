@@ -1,10 +1,7 @@
 import {
   TextChannel,
 } from 'discord.js';
-import { db, getGuild } from './knex';
-import {
-  DiscordGuilds,
-} from '../@types/pgdb';
+import { getGuild, guildUpdate } from './knex';
 
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 
@@ -99,15 +96,13 @@ async function checkStats() {
   // log.debug(F, `Getting guild data`);
   const guildData = await getGuild(env.DISCORD_GUILD_ID);
   if (guildData) {
+    const newGuild = guildData;
     if (guildData.max_online_members) {
       let maxCount = guildData.max_online_members;
       if (onlineCount > maxCount) {
         maxCount = onlineCount;
-        await db<DiscordGuilds>('discord_guilds')
-          .update({
-            max_online_members: onlineCount,
-          })
-          .where('id', env.DISCORD_GUILD_ID);
+        newGuild.max_online_members = maxCount;
+        await guildUpdate(newGuild);
         // const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
         const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
         if (channelLounge) {
@@ -133,11 +128,8 @@ async function checkStats() {
         }
       }
     } else {
-      await db<DiscordGuilds>('discord_guilds')
-        .update({
-          max_online_members: onlineCount,
-        })
-        .where('id', env.DISCORD_GUILD_ID);
+      newGuild.max_online_members = onlineCount;
+      await guildUpdate(newGuild);
     }
   }
 }

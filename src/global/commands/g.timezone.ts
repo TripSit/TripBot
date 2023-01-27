@@ -1,8 +1,7 @@
 /* eslint-disable max-len */
 
 import timezones from '../assets/data/timezones.json';
-import { db, getUser } from '../utils/knex';
-import { Users } from '../@types/pgdb';
+import { getUser, usersUpdate } from '../utils/knex';
 
 const F = f(__filename);
 
@@ -34,14 +33,11 @@ export async function timezone(
     }
     // log.debug(F, `actor.id: ${actor.id}`);
 
-    await db<Users>('users')
-      .insert({
-        discord_id: memberId,
-        timezone: tzCode,
-      })
-      .onConflict('discord_id')
-      .merge()
-      .returning('*');
+    const userData = await getUser(memberId, null);
+
+    userData.timezone = tzCode;
+
+    await usersUpdate(userData);
 
     return `I updated your timezone to ${tzvalue}`;
   }

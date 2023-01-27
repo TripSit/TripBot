@@ -6,8 +6,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { embedTemplate } from './embedTemplate';
-import { db } from '../../global/utils/knex';
-import { Users } from '../../global/@types/pgdb';
+import { incrementPoint } from '../../global/utils/knex';
 import { fact } from '../../global/commands/g.fact';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -297,25 +296,14 @@ export async function announcements(message:Message) {
 
           collector.on('collect', async (reaction, user) => {
             const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
-            // Increment the users's pointType
-            await db<Users>('users')
-              .increment(pointType, 1)
-              .where('discord_id', user.id)
-              .returning('*');
-            // if (value[0]) {
-            //   // log.debug(F, `${user.tag} ${pointType} incremented to ${value[0][pointType as keyof typeof value[0]]}`);
-            // } else {
-            //   // log.debug(F, `${user.tag} ${pointType} added as 1`);
-            // }
+            await incrementPoint(pointType, user.id, 1);
           });
 
           collector.on('remove', async (reaction, user) => {
             const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
             // Increment the users's pointType
-            await db<Users>('users')
-              .increment(pointType, -1)
-              .where('discord_id', user.id)
-              .returning(pointType);
+
+            await incrementPoint(pointType, user.id, -1);
             // log.debug(F, `${user.tag} ${pointType} decremented to ${value[0][pointType as keyof typeof value[0]]}`);
           });
         });
