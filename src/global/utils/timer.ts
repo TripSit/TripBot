@@ -77,6 +77,9 @@ async function checkTickets() {
       const updatedTicket = ticket;
       updatedTicket.status = 'ARCHIVED' as TicketStatus;
       updatedTicket.deleted_at = DateTime.local().plus({ days: 7 }).toJSDate();
+      if (!updatedTicket.description) {
+        updatedTicket.description = 'Ticket archived';
+      }
 
       await ticketUpdate(updatedTicket);
 
