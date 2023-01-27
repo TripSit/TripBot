@@ -296,7 +296,7 @@ export async function ticketDel(
 export async function ticketUpdate(
   value:UserTickets,
 ):Promise<void> {
-// log.debug(F, `ticketUpdate started with: value: ${value}`);
+  log.debug(F, `ticketUpdate started with: value: ${value}`);
   if (env.POSTGRES_DBURL === undefined) return;
   await db<UserTickets>('user_tickets')
     .insert(value)
