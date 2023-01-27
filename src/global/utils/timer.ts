@@ -83,6 +83,9 @@ async function checkTickets() {
       if (!updatedTicket.type) {
         updatedTicket.type = 'TRIPSIT' as TicketType;
       }
+      if (!updatedTicket.first_message_id) {
+        updatedTicket.first_message_id = '123';
+      }
 
       await ticketUpdate(updatedTicket);
 
