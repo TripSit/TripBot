@@ -15,7 +15,7 @@ import {
   usersUpdate,
 } from './knex';
 import {
-  TicketStatus, UserTickets,
+  TicketStatus, UserTickets, TicketType,
 } from '../@types/pgdb.d';
 
 const F = f(__filename);
@@ -79,6 +79,9 @@ async function checkTickets() {
       updatedTicket.deleted_at = DateTime.local().plus({ days: 7 }).toJSDate();
       if (!updatedTicket.description) {
         updatedTicket.description = 'Ticket archived';
+      }
+      if (!updatedTicket.type) {
+        updatedTicket.type = 'TRIPSIT' as TicketType;
       }
 
       await ticketUpdate(updatedTicket);
