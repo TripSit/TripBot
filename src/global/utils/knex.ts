@@ -32,7 +32,7 @@ export async function getUser(
   discordId:string | null,
   userId:string | null,
 ):Promise<Users> {
-  log.info(F, `getUser started with: discordId: ${discordId} | userId: ${userId}`);
+  log.debug(F, `getUser started with: discordId: ${discordId} | userId: ${userId}`);
   let data = {} as Users | undefined;
 
   if (env.POSTGRES_DBURL === undefined) {
@@ -296,7 +296,7 @@ export async function ticketDel(
 export async function ticketUpdate(
   value:UserTickets,
 ):Promise<void> {
-  log.debug(F, `ticketUpdate started with: value: ${value}`);
+  log.debug(F, `ticketUpdate started with: value: ${JSON.stringify(value)}`);
   if (env.POSTGRES_DBURL === undefined) return;
   await db<UserTickets>('user_tickets')
     .insert(value)
