@@ -6,10 +6,10 @@ import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
 import { discordConnect } from './discord/dscrd'; // eslint-disable-line
 import { validateEnv } from './global/utils/env.validate'; // eslint-disable-line
-import { runTimer } from './global/utils/timer'; // eslint-disable-line
-import { runStats } from './global/utils/stats'; // eslint-disable-line
+// import { runTimer } from './global/utils/timer'; // eslint-disable-line
+// import { runStats } from './global/utils/stats'; // eslint-disable-line
 import { startLog } from './discord/utils/startLog'; // eslint-disable-line
-import { runRss } from './global/utils/rssCheck';
+// import { runRss } from './global/utils/rssCheck';
 
 global.bootTime = new Date();
 
@@ -26,8 +26,8 @@ async function start() {
     discordConnect();
   }
 
-  runTimer();
-  runStats();
+  // runTimer();
+  // runStats();
   // runRss();
 }
 

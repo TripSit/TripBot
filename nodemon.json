@@ -2,6 +2,6 @@
   "watch": ["src"],
   "ext": ".ts",
   "ignore": ["src/assets/*", "backups/*"],
-  "exec": "node --inspect=0.0.0.0:9229 -r ts-node/register src/start.ts",
+  "exec": "node -r ts-node/register src/start.ts",
   "legacyWatch": true
 }
