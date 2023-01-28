@@ -49,7 +49,6 @@
     "@logtail/node": "^0.1.15",
     "@logtail/winston": "^0.1.15",
     "@napi-rs/canvas": "^0.1.34",
-    "@napi-rs/canvas-linux-x64-gnu": "^0.1.34",
     "@octokit/rest": "^19.0.7",
     "@octokit/types": "^9.0.0",
     "axios": "^1.2.3",
