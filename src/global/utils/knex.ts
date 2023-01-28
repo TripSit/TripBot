@@ -32,7 +32,7 @@ export async function getUser(
   discordId:string | null,
   userId:string | null,
 ):Promise<Users> {
-  log.debug(F, `getUser started with: discordId: ${discordId} | userId: ${userId}`);
+  // log.debug(F, `getUser started with: discordId: ${discordId} | userId: ${userId}`);
   let data = {} as Users | undefined;
 
   if (env.POSTGRES_DBURL === undefined) {

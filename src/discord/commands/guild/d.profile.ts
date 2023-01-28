@@ -33,6 +33,7 @@ export const dProfile: SlashCommand = {
     interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction,
   ) {
     startLog(F, interaction);
+    await interaction.deferReply();
     const target = interaction.options.getMember('target')
       ? interaction.options.getMember('target') as GuildMember
       : interaction.member as GuildMember;
@@ -392,7 +393,7 @@ export const dProfile: SlashCommand = {
 
     // Process The Entire Card and Send it to Discord
     const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-profile-image.png' });
-    interaction.reply({ files: [attachment] });
+    interaction.editReply({ files: [attachment] });
     return true;
   },
 };
