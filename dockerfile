@@ -3,6 +3,9 @@ FROM node:16.17.1
 # Create app directory
 WORKDIR /usr/src/app
 
+# Update npm
+RUN npm install -g npm@9.4.0
+
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 # where available (npm@5+)
