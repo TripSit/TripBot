@@ -220,17 +220,17 @@ export const dProfile: SlashCommand = {
     context.stroke();
 
     // WIP: Purchased Background
-    const Background = await Canvas.loadImage('https://i.gyazo.com/adfbab1d3fdeadef74ec18ce6efe869c.png');
+    // const Background = await Canvas.loadImage('https://i.gyazo.com/adfbab1d3fdeadef74ec18ce6efe869c.png');
     // const Background = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'background.png'));
-    context.save();
-    context.globalCompositeOperation = 'lighten';
-    context.globalAlpha = 0.03;
-    context.beginPath();
-    context.roundRect(9, 9, 657, 274, [10]);
-    context.roundRect(693, 9, 216, 274, [10]);
-    context.clip();
-    context.drawImage(Background, 0, 0);
-    context.restore();
+    // context.save();
+    // context.globalCompositeOperation = 'lighten';
+    // context.globalAlpha = 0.03;
+    // context.beginPath();
+    // context.roundRect(9, 9, 657, 274, [10]);
+    // context.roundRect(693, 9, 216, 274, [10]);
+    // context.clip();
+    // context.drawImage(Background, 0, 0);
+    // context.restore();
 
     // Load Icon Images
     const Icons = await Canvas.loadImage('https://i.gyazo.com/6669a36a7adf68996354bd7586cd7083.png');
@@ -422,7 +422,8 @@ export const dProfile: SlashCommand = {
 
     // Level Bar Math
     let percentageOfLevel = 0;
-    percentageOfLevel = (totalData.levelPoints / totalData.expToLevel);
+    const expToLevel = 5 * (totalData.level ** 2) + (50 * totalData.level) + 100;
+    percentageOfLevel = (totalData.level_points / expToLevel);
     log.debug(F, `percentageOfLevel: ${percentageOfLevel}`);
 
     // Circular Level Bar
