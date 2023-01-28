@@ -66,7 +66,7 @@ process.on('SIGTERM', destroy);
 
 declare global {
   // eslint-disable-next-line no-var, vars-on-top
-  var env:any; // NOSONAR
+  // var env:any; // NOSONAR
   // eslint-disable-next-line no-var, vars-on-top
   var startlog:any; // NOSONAR
 }
