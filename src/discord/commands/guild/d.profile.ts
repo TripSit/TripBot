@@ -10,7 +10,7 @@ import Canvas from '@napi-rs/canvas';
 import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { profile } from '../../../global/commands/g.profile';
-import { startLog } from '../../utils/startLog';
+// import { startLog } from '../../utils/startLog';
 import { getTotalLevel } from '../../../global/utils/experience';
 
 const F = f(__filename);
@@ -19,6 +19,112 @@ Canvas.GlobalFonts.registerFromPath(
   path.resolve(__dirname, '../../assets/img/Futura.otf'),
   'futura',
 );
+
+const colorDefs = {
+  [env.ROLE_PURPLE]: {
+    cardDarkColor: '#19151e',
+    cardLightColor: '#2d2636',
+    chipColor: '#47335f',
+    textColor: '#b072ff',
+  },
+  [env.ROLE_BLUE]: {
+    cardDarkColor: '#161d1f',
+    cardLightColor: '#283438',
+    chipColor: '#3a5760',
+    textColor: '#5acff5',
+  },
+  [env.ROLE_GREEN]: {
+    cardDarkColor: '#151a16',
+    cardLightColor: '#252e28',
+    chipColor: '#31543d',
+    textColor: '#6de194',
+  },
+  [env.ROLE_PINK]: {
+    cardDarkColor: '#1e151b',
+    cardLightColor: '#352530',
+    chipColor: '#5f324f',
+    textColor: '#ff6dcd',
+  },
+  [env.ROLE_RED]: {
+    cardDarkColor: '1f1616',
+    cardLightColor: '#382727',
+    chipColor: '#613838',
+    textColor: '#ff5f60',
+  },
+  [env.ROLE_ORANGE]: {
+    cardDarkColor: '#1d1814',
+    cardLightColor: '#342b24',
+    chipColor: '#5f422e',
+    textColor: '#ffa45f',
+  },
+  [env.ROLE_YELLOW]: {
+    cardDarkColor: '#1d1b14',
+    cardLightColor: '#333024',
+    chipColor: '#5e532d',
+    textColor: '#ffdd5d',
+  },
+  [env.ROLE_WHITE]: {
+    cardDarkColor: '#242424',
+    cardLightColor: '#404040',
+    chipColor: '#666666',
+    textColor: '#dadada',
+  },
+  [env.ROLE_BLACK]: {
+    cardDarkColor: '#0e0e0e',
+    cardLightColor: '#181818',
+    chipColor: '#262626',
+    textColor: '#626262',
+  },
+  [env.ROLE_DONOR_PURPLE]: {
+    cardDarkColor: '#1f1b25',
+    cardLightColor: '#372e42',
+    chipColor: '#432767',
+    textColor: '#9542ff',
+  },
+  [env.ROLE_DONOR_BLUE]: {
+    cardDarkColor: '#161d1f',
+    cardLightColor: '#283438',
+    chipColor: '#3a5760',
+    textColor: '#22bef0',
+  },
+  [env.ROLE_DONOR_GREEN]: {
+    cardDarkColor: '#1a211c',
+    cardLightColor: '#2d3b32',
+    chipColor: '#275c39',
+    textColor: '#45e47b',
+  },
+  [env.ROLE_DONOR_PINK]: {
+    cardDarkColor: '#261c23',
+    cardLightColor: '#44303d',
+    chipColor: '#682b52',
+    textColor: '#ff4ac1',
+  },
+  [env.ROLE_DONOR_RED]: {
+    cardDarkColor: '#241b1b',
+    cardLightColor: '#412e2e',
+    chipColor: '#662526',
+    textColor: '#ff3c3e',
+  },
+  [env.ROLE_DONOR_ORANGE]: {
+    cardDarkColor: '#241f1b',
+    cardLightColor: '#41362e',
+    chipColor: '#664225',
+    textColor: '#ff913b',
+  },
+  [env.ROLE_DONOR_YELLOW]: {
+    cardDarkColor: '#23211a',
+    cardLightColor: '#3f3b2c',
+    chipColor: '#655721',
+    textColor: '#ffd431',
+  },
+} as {
+  [key: string]: {
+    cardDarkColor: string;
+    cardLightColor: string;
+    chipColor: string;
+    textColor: string;
+  };
+};
 
 export default dProfile;
 
@@ -32,177 +138,156 @@ export const dProfile: SlashCommand = {
   async execute(
     interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction,
   ) {
-    startLog(F, interaction);
-    const target = interaction.options.getMember('target')
-      ? interaction.options.getMember('target') as GuildMember
-      : interaction.member as GuildMember;
-
-    // log.debug(F, `target: ${target.id}`);
-
-    // Get User Data
-    const targetData = await profile(target.id);
+    // startLog(F, interaction);
 
     if (!interaction.guild) {
       interaction.reply('You can only use this command in a guild!');
       return false;
     }
+    await interaction.deferReply();
+
+    // Target is the option given, if none is given, it will be the user who used the command
+    const target = interaction.options.getMember('target')
+      ? interaction.options.getMember('target') as GuildMember
+      : interaction.member as GuildMember;
+
+    const targetData = await profile(target.id);
 
     // Create Canvas and Context
-    const canvasWidth = 934;
-    const canvasHeight = 282;
+    const canvasWidth = 918;
+    const canvasHeight = 292;
     const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
     const context = canvasObj.getContext('2d');
 
-    // Choose colour based on user's role
-    // const defaultCard = path.resolve(__dirname, '../../assets/img/cards/profilecardDefault.png');
-    const defaultCard = 'https://i.imgur.com/WKfLb8T.png';
-    let coloredCard = defaultCard;
-    let cardColor = '#141414';
-    let textColor = '#ffffff';
+    // Choose color based on user's role
+    const cardLightColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#141414';
+    const cardDarkColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#000000';
+    const chipColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.chipColor || '#000000';
+    const textColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
 
-    const colorRole = target.roles.color;
-    // log.debug(F, `colorRole: ${colorRole?.id}`);
-    if (colorRole) {
-      if (colorRole.id === env.ROLE_PURPLE) {
-        // const purpleCard = path.resolve(__dirname, '../../assets/img/cards/profilecardPurple.png')
-        const purpleCard = 'https://i.imgur.com/UOV7Bkn.png';
-        coloredCard = purpleCard;
-        cardColor = '#2d2636';
-        // chipColor = '#FFC0CB';
-        textColor = '#b072ff';
-      } else if (colorRole.id === env.ROLE_BLUE) {
-        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardBlue.png');
-        coloredCard = 'https://i.imgur.com/76P7af1.png';
-        cardColor = '#283438';
-        // chipColor = '#FFA500';
-        textColor = '#5acff5';
-      } else if (colorRole.id === env.ROLE_GREEN) {
-        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardGreen.png');
-        coloredCard = 'https://i.imgur.com/eNQWeSM.png';
-        cardColor = '#252e28';
-        // chipColor = '#00FF00';
-        textColor = '#6de194';
-      } else if (colorRole.id === env.ROLE_PINK) {
-        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardPink.png');
-        coloredCard = 'https://i.imgur.com/DHp5Cwl.png';
-        cardColor = '#352530';
-        // chipColor = '#FF0000';
-        textColor = '#ff6dcd';
-      } else if (colorRole.id === env.ROLE_RED) {
-        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardRed.png');
-        coloredCard = 'https://i.imgur.com/HBM5RLI.png';
-        cardColor = '#382727';
-        // chipColor = '#FF0000';
-        textColor = '#ff5f60';
-      } else if (colorRole.id === env.ROLE_ORANGE) {
-        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardOrange.png');
-        coloredCard = 'https://i.imgur.com/oagaenH.png';
-        cardColor = '#342b24';
-        // chipColor = '#FFA500';
-        textColor = '#ffa45f';
-      } else if (colorRole.id === env.ROLE_YELLOW) {
-        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardYellow.png');
-        coloredCard = 'https://i.imgur.com/C0zd92H.png';
-        cardColor = '#333024';
-        // chipColor = '#FFFF00';
-        textColor = '#ffdd5d';
-      } else if (colorRole.id === env.ROLE_WHITE) {
-        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardWhite.png');
-        coloredCard = 'https://i.imgur.com/7KGS566.png';
-        cardColor = '#404040';
-        // chipColor = '#FFFFFF';
-        // textColor = '#ffffff';
-      } else if (colorRole.id === env.ROLE_BLACK) {
-        // coloredCard = path.resolve(__dirname, '../../assets/img/cards/profilecardBlack.png');
-        coloredCard = 'https://i.imgur.com/0QgZvFi.png';
-        cardColor = '#181818';
-        // chipColor = '#000000';
-        textColor = '#626262';
-      }
-    }
-    // log.debug(F, `cardColor: ${cardColor} | textColor: ${textColor} | coloredCard: ${coloredCard}`);
+    // const colorRole = target.roles.color;
 
-    // Backround Image
+    // Draw the card shape and chips
+    context.fillStyle = cardLightColor;
+    context.beginPath();
+    context.roundRect(0, 0, 675, 292, [19]);
+    context.fill();
+    context.fillStyle = cardLightColor;
+    context.beginPath();
+    context.roundRect(684, 0, 234, 292, [19]);
+    context.fill();
+    context.fillStyle = cardDarkColor;
+    context.beginPath();
+    context.roundRect(0, 0, 675, 145, [19]);
+    context.fill();
+    context.fillStyle = cardDarkColor;
+    context.beginPath();
+    context.roundRect(684, 0, 234, 206, [19]);
+    context.fill();
+
+    context.fillStyle = chipColor;
+    context.beginPath();
+    context.roundRect(18, 165, 201, 51, [19]);
+    context.fill();
+    context.fillStyle = chipColor;
+    context.beginPath();
+    context.roundRect(18, 225, 201, 51, [19]);
+    context.fill();
+    context.fillStyle = chipColor;
+    context.beginPath();
+    context.roundRect(237, 165, 201, 51, [19]);
+    context.fill();
+    context.fillStyle = chipColor;
+    context.beginPath();
+    context.roundRect(237, 225, 201, 51, [19]);
+    context.fill();
+    context.fillStyle = chipColor;
+    context.beginPath();
+    context.roundRect(456, 165, 201, 51, [19]);
+    context.fill();
+    context.fillStyle = chipColor;
+    context.beginPath();
+    context.roundRect(456, 225, 201, 51, [19]);
+    context.fill();
+    context.fillStyle = chipColor;
+    context.beginPath();
+    context.roundRect(702, 225, 201, 51, [19]);
+    context.fill();
+    context.strokeStyle = chipColor;
+    context.lineWidth = 18;
+    context.beginPath();
+    context.arc(801, 104, 77, 0, 2 * Math.PI);
+    context.stroke();
+
+    // WIP: Purchased Background
+    const Background = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'background.png'));
+    context.save();
+    context.globalCompositeOperation = 'lighten';
+    context.globalAlpha = 0.03;
+    context.beginPath();
+    context.roundRect(9, 9, 657, 274, [10]);
+    context.roundRect(693, 9, 216, 274, [10]);
+    context.clip();
+    context.drawImage(Background, 0, 0);
+    context.restore();
+
+    // Load Icon Images
+    const Icons = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'icons.png'));
+    context.drawImage(Icons, 5, 0, 913, 292);
+
+    // Avatar Image
+    const avatar = await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' }));
+    context.save();
+    context.beginPath();
+    context.arc(73, 73, 54, 0, Math.PI * 2, true);
+    context.closePath();
+    context.clip();
+    context.drawImage(avatar, 18, 18, 109, 109);
+    context.restore();
+
+    // Status Icon
+    context.save();
+    context.beginPath();
+    context.arc(109, 113, 21, 0, Math.PI * 2, true);
+    context.closePath();
+    context.fillStyle = cardDarkColor;
+    context.fill();
+    context.restore();
+
+    const StatusIconPath = target.presence
+      ? path.join(__dirname, '..', '..', 'assets', 'img', 'icons', `${target.presence?.status}.png`)
+      : path.join(__dirname, '..', '..', 'assets', 'img', 'icons', 'offline.png');
+
+    log.debug(F, `StatusIconPath: ${StatusIconPath}`);
+
     try {
-      // Doesn't work on windows
-      // TypeError [ERR_INVALID_PROTOCOL]: Protocol "c:" not supported. Expected "http:"
-      // const tryA = `C:\Projects\TS\tripsit-discord-bot\src\discord\assets\img\cards\profilecardDefault.png`;
-      // log.debug(F, `tryA: ${tryA}`);
-      // Doesnt work on Linux
-      // tryB: /workspace/src/discord/assets/img/cards/profilecardDefault.png
-      // const tryB = path.resolve(__dirname, '../../assets/img/cards/profilecardDefault.png');
-      // /workspace/src/discord/assets/img/cards/profilecardDefault.png
-      // log.debug(F, `tryB: ${tryB}`);
-      // const tryC = path.join(__dirname, '../../assets/img/cards/profilecardDefault.png');
-      // /workspace/src/discord/assets/img/cards/profilecardDefault.png
-      // log.debug(F, `tryC: ${tryC}`);
-      // const tryD = path.resolve('src/discord/assets/img/cards/profilecardDefault.png');
-      // /workspace/src/discord/assets/img/cards/profilecardDefault.png
-      // log.debug(F, `tryD: ${tryD}`);
-      // const tryE = path.resolve('./src/discord/assets/img/cards/profilecardDefault.png');
-      // /workspace/src/discord/assets/img/cards/profilecardDefault.png
-      // log.debug(F, `tryE: ${tryE}`);
-      // Doesnt work on windows
-      // Error loading background image: TypeError [ERR_INVALID_PROTOCOL]: Protocol "c:" not supported. Expected "http:"
-      // const tryF = path.resolve('~/src/discord/assets/img/cards/profilecardDefault.png');
-      // log.debug(F, `tryF: ${tryF}`);
-      // Doesnt work on windows
-      // Error loading background image: TypeError [ERR_INVALID_URL]: Invalid URL
-      // const tryG = '~/src/discord/assets/img/cards/profilecardDefault.png';
-      // log.debug(F, `tryG: ${tryG}`);
-      // const tryH = './src/discord/assets/img/cards/profilecardDefault.png';
-      // log.debug(F, `tryH: ${tryH}`);
-      // Doesnt work on windows
-      // Error loading background image: TypeError [ERR_INVALID_URL]: Invalid URL
-      // const tryI = '../../assets/img/cards/profilecardDefault.png';
-      // log.debug(F, `tryI: ${tryI}`);
-      // const tryJ = '.\\src\\discord\\assets\\img\\cards\\profilecardDefault.png';
-      // log.debug(F, `tryJ: ${tryJ}`);
-      // const tryK = '~\\src\\discord\\assets\\img\\cards\\profilecardDefault.png';
-      // log.debug(F, `tryK: ${tryK}`);
-      // const tryL = './src/discord/assets/img/cards/profilecardDefault.png';
-      // log.debug(F, `tryL: ${tryL}`);
-      // const tryM = '~/src/discord/assets/img/cards/profilecardDefault.png';
-      // log.debug(F, `tryM: ${tryM}`);
-
-      const background = await Canvas.loadImage(coloredCard);
-      // const background = await Canvas.loadImage('https://i.imgur.com/uFp3u7j.png');
-
-      // log.debug(F, `image loaded`);
-      // log.debug(F, `background: ${background}`);
-      context.drawImage(background, 0, 0, canvasObj.width, canvasObj.height);
-      // log.debug(F, `image drawn`);
+      const StatusIcon = await Canvas.loadImage(StatusIconPath);
+      context.drawImage(StatusIcon, 88, 92);
     } catch (err) {
-      log.error(F, `Error loading background image: ${err}`);
+      log.error(F, `Error loading status icon: ${err}`);
     }
+
+    // WIP: Check to see if a user has bought a title in the shop
+    // If so, move Username Text up so the title can fit underneath
 
     // Username Text Resize to fit
     const applyUsername = (canvas:Canvas.Canvas, text:string) => {
       const usernameContext = canvas.getContext('2d');
-      let fontSize = 50;
+      let fontSize = 40;
       do {
         fontSize -= 2;
         usernameContext.font = `${fontSize}px futura`;
-      } while (usernameContext.measureText(text).width > 435);
+      } while (usernameContext.measureText(text).width > 380);
       return usernameContext.font;
     };
 
-    // log.debug(F, `username resize`);
-
     // Username Text
-    context.font = applyUsername(canvasObj, `${target.user.tag}`);
+    context.font = applyUsername(canvasObj, `${target.displayName}`);
     context.fillStyle = textColor;
-    context.fillText(`${target.user.tag}`, 245, 124);
-    // context.font = applyUsername(canvas, `${target.displayName}`);
-    // context.fillStyle = textColor;
-    // context.fillText(`${target.displayName}`, 245, 124);
+    context.fillText(`${target.displayName}`, 146, 90);
 
-    // log.debug(F, `username`);
-
-    // log.debug(F, `targetData: ${JSON.stringify(targetData, null, 2)}`);
-
-    // User Info Text
-    context.font = '30px futura';
+    // User Timezone and Birthday Text
+    context.font = '25px futura';
     context.textAlign = 'right';
     context.fillStyle = '#ffffff';
 
@@ -213,9 +298,9 @@ export const dProfile: SlashCommand = {
         hour: 'numeric',
         minute: 'numeric',
       });
-      context.fillText(timestring, 446, 190);
+      context.fillText(timestring, 210, 201);
     } else {
-      context.fillText('Not set!', 446, 190);
+      context.fillText('NOT SET!', 210, 201);
     }
 
     let targetBirthday = {} as Date;
@@ -230,12 +315,12 @@ export const dProfile: SlashCommand = {
         itIsYourBirthday = true;
       }
       if (targetBirthday.getDate() < 10) {
-        context.fillText(`${targetBirthday.toLocaleString('en-US', { month: 'short' })} 0${targetBirthday.getDate()}`, 446, 253);
+        context.fillText(`${targetBirthday.toLocaleString('en-GB', { month: 'short' })} 0${targetBirthday.getDate()}`, 205, 260);
       } else {
-        context.fillText(`${targetBirthday.toLocaleString('en-US', { month: 'short' })} ${targetBirthday.getDate()}`, 446, 253);
+        context.fillText(`${targetBirthday.toLocaleString('en-GB', { month: 'short' })} ${targetBirthday.getDate()}`, 205, 260);
       }
     } else {
-      context.fillText('Not set!', 446, 253);
+      context.fillText('NOT SET!', 210, 260);
     }
 
     /**
@@ -254,145 +339,74 @@ export const dProfile: SlashCommand = {
     }
 
     // Messages Sent Text
+    const totalData = await getTotalLevel(targetData.totalExp);
     if (targetData.totalExp) {
       const MessagesSent = targetData.totalExp / 20;
-      context.fillText(`${numFormatter(MessagesSent)}`, 684, 253);
+      context.fillText(`${numFormatter(MessagesSent)}`, 429, 201);
     }
 
-    context.fillText(`${numFormatter(targetData.karma_received)}`, 684, 190);
+    // WIP: Voice Hours Text
+    context.fillText('WIP!', 429, 260);
 
-    // Choose and Draw the Star Image
-    let starImagePath = 'https://i.imgur.com/vU1erLP.png';
-    const totalData = await getTotalLevel(targetData.totalExp);
+    // Karma Text
+    context.fillText(`${numFormatter(targetData.karma_received)}`, 648, 201);
 
-    if (totalData.level < 6) {
-      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIP.png';
-      // starImagePath = 'https://i.imgur.com/vU1erLP.png';
-    } else if (totalData.level < 10) {
-      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL5.png';
-      starImagePath = 'https://i.imgur.com/DRaOnUY.png';
-    } else if (totalData.level < 20) {
-      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL10.png';
-      starImagePath = 'https://i.imgur.com/hBuDOvE.png';
-    } else if (totalData.level < 30) {
-      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL20.png';
-      starImagePath = 'https://i.imgur.com/3jfSa7x.png';
-    } else if (totalData.level < 40) {
-      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL30.png';
-      starImagePath = 'https://i.imgur.com/tlVnx1o.png';
-    } else if (totalData.level < 50) {
-      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL40.png';
-      starImagePath = 'https://i.imgur.com/zNB2rtD.png';
-    } else if (totalData.level >= 50) {
-      // starImagePath = '.\\src\\discord\\assets\\img\\badges\\VIPLVL50.png';
-      starImagePath = 'https://i.imgur.com/5ElzDZ8.png';
-    }
+    // WIP: Tokens Text
+    context.fillText('WIP!', 648, 260);
+
+    // Level Text
+    context.fillText(`${totalData.level}`, 894, 260);
+
+    // Get the first number of the level
+    const levelTier = Math.floor(totalData.level / 10);
 
     try {
-      // log.debug(F, `starImagePath: ${starImagePath}`);
-      const starImage = await Canvas.loadImage(starImagePath);
-      context.drawImage(starImage, 727, 61, 162, 162);
+      // log.debug(F, `LevelImagePath: ${LevelImagePath}`);
+      const LevelImage = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'badges', `VIP${levelTier}.png`));
+      context.drawImage(LevelImage, 756, 59, 90, 90);
     } catch (err) {
       log.error(F, `Error loading star image: ${err}`);
     }
 
-    // VIP Level Text Resize to fit
-    const applyLevel = (canvas:Canvas.Canvas, text:string) => {
-      const levelContext = canvas.getContext('2d');
-      let fontSize = 50;
-      do {
-        fontSize -= 10;
-        levelContext.textAlign = 'center';
-        levelContext.font = `${fontSize}px futura`;
-      } while (levelContext.measureText(text).width > 62);
-      return levelContext.font;
-    };
-
-    // VIP Level Text
-    context.font = applyLevel(canvasObj, `${totalData.level}`);
-    context.fillStyle = cardColor;
-    context.fillText(`${totalData.level}`, 807, 154);
-
-    // Avatar Image
-    const avatar = await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' }));
-    context.save();
-    context.beginPath();
-    context.arc(128, 141, 96, 0, Math.PI * 2, true);
-    context.closePath();
-    context.clip();
-    context.drawImage(avatar, 30, 44, 195, 195);
-    context.restore();
-
     // Level Bar Math
     let percentageOfLevel = 0;
     percentageOfLevel = (totalData.levelPoints / totalData.expToLevel);
-    // log.debug(F, `percentageOfLevel: ${percentageOfLevel}`);
+    log.debug(F, `percentageOfLevel: ${percentageOfLevel}`);
 
     // Circular Level Bar
-    context.save();
-    context.translate(0, 282);
-    context.rotate((270 * Math.PI) / 180);
     context.beginPath();
-    context.lineWidth = 21;
+    context.lineWidth = 18;
     context.lineCap = 'round';
-    context.arc(141, 807, 86, 0, Math.PI * (percentageOfLevel * 2), false);
+    context.arc(801, 104, 77, 1.5 * Math.PI, (0.70 * 1.4999) * Math.PI, false);
     context.strokeStyle = textColor;
     context.stroke();
-    context.restore();
 
-    // Status Icon
-    context.save();
-    context.beginPath();
-    context.arc(191, 211, 31, 0, Math.PI * 2, true);
-    context.closePath();
-    context.fillStyle = cardColor;
-    context.fill();
-    context.restore();
-    // await interaction.guild.members.fetch({ user: target.id, withPresences: true, force: true });
-
-    let statusIcon = 'https://i.imgur.com/eICJIwe.png';
-    if (target.presence) {
-      if (target.presence.status === 'online') {
-        // statusIcon = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
-        statusIcon = 'https://i.imgur.com/pJZGATd.png';
-      } else if (target.presence.status === 'idle') {
-        // statusIcon = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
-        statusIcon = 'https://i.imgur.com/3ZtlfpR.png';
-      } else if (target.presence.status === 'dnd') {
-        // statusIcon = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
-        statusIcon = 'https://i.imgur.com/2ZVC480.png';
-      } else if (target.presence.status === 'offline') {
-        // statusIcon = '.\\src\\discord\\assets\\img\\icons\\offline.png';
-        // statusIcon = 'https://i.imgur.com/eICJIwe.png';
-      }
-      // else {
-      //   // statusIcon = 'https://i.imgur.com/eICJIwe.png';
-      // }
-    }
-
-    try {
-      const status = await Canvas.loadImage(statusIcon);
-      context.drawImage(status, 160, 180, 62, 62);
-    } catch (err) {
-      log.error(F, `Error loading status icon: ${err}`);
-    }
+    // context.save();
+    // context.translate(0, 282);
+    // context.rotate((270 * Math.PI) / 180);
+    // context.beginPath();
+    // context.lineWidth = 21;
+    // context.lineCap = 'round';
+    // context.arc(141, 807, 86, 0, Math.PI * (percentageOfLevel * 2), false);
+    // context.strokeStyle = textColor;
+    // context.stroke();
+    // context.restore();
 
     // Birthday Mode
     if (itIsYourBirthday) {
-      // log.debug(F, `Birthday Match!`);
+      log.debug(F, 'Birthday Match!');
       context.font = '45px futura';
       context.textAlign = 'center';
       context.fillStyle = textColor;
       context.fillText('HAPPY BIRTHDAY!', 467, 55);
-      // const birthdayImage = '.src\\discord\\assets\\img\\cards\\birthdayOverlay.png';
-      const birthdayImage = 'https://i.imgur.com/uOkR6uf.png';
-      const birthdayOverlay = await Canvas.loadImage(birthdayImage);
+      // const birthdayOverlay = await Canvas.loadImage('https://i.imgur.com/uOkR6uf.png');
+      const birthdayOverlay = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'birthday.png'));
       context.drawImage(birthdayOverlay, 0, 0, 934, 282);
     }
 
     // Process The Entire Card and Send it to Discord
     const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-profile-image.png' });
-    interaction.reply({ files: [attachment] });
+    interaction.editReply({ files: [attachment] });
     return true;
   },
 };

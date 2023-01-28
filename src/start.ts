@@ -6,10 +6,10 @@ import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
 import { discordConnect } from './discord/dscrd'; // eslint-disable-line
 import { validateEnv } from './global/utils/env.validate'; // eslint-disable-line
+import { startLog } from './discord/utils/startLog'; // eslint-disable-line
 import { runTimer } from './global/utils/timer'; // eslint-disable-line
 import { runStats } from './global/utils/stats'; // eslint-disable-line
-import { startLog } from './discord/utils/startLog'; // eslint-disable-line
-import { runRss } from './global/utils/rssCheck';
+// import { runRss } from './global/utils/rssCheck';
 
 global.bootTime = new Date();
 
@@ -66,7 +66,7 @@ process.on('SIGTERM', destroy);
 
 declare global {
   // eslint-disable-next-line no-var, vars-on-top
-  var env:any; // NOSONAR
+  // var env:any; // NOSONAR
   // eslint-disable-next-line no-var, vars-on-top
   var startlog:any; // NOSONAR
 }
