@@ -356,6 +356,7 @@ export const dProfile: SlashCommand = {
 
     // Messages Sent Text
     const totalData = await getTotalLevel(targetData.totalExp);
+    // log.debug(F, `TotalData: ${JSON.stringify(totalData, null, 2)}`);
     if (targetData.totalExp) {
       const MessagesSent = targetData.totalExp / 20;
       context.fillText(`${numFormatter(MessagesSent)}`, 429, 201);
@@ -428,7 +429,19 @@ export const dProfile: SlashCommand = {
     context.beginPath();
     context.lineWidth = 18;
     context.lineCap = 'round';
-    context.arc(801, 104, 77, 1.5 * Math.PI, (0.70 * 1.4999) * Math.PI, false);
+    // context.arc(801, 104, 77, 1.5 * Math.PI, (0.70 * 1.4999) * Math.PI, false);
+
+    // Start at the 0 degrees position, in human terms, the 12 o'clock position
+    const startDegrees = 0;
+    // End degrees is the percentage of the level * 360 degrees, or a full circle
+    const endDegrees = 360 * percentageOfLevel;
+
+    // Canvas thinks that the "start" of a circle is the 3 o'clock position,
+    // so we need to subtract 90 degrees from the start and end degrees to "rotate" the circle
+    const startRadians = ((startDegrees - 90) * Math.PI) / 180;
+    const endRadians = ((endDegrees - 90) * Math.PI) / 180;
+
+    context.arc(801, 104, 77, startRadians, endRadians);
     context.strokeStyle = textColor;
     context.stroke();
 

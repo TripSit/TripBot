@@ -69,14 +69,17 @@ export async function getTotalLevel(totalExp:number):Promise<{
   // log.debug('totalLevel', `totalExp: ${totalExp}`);
   let level = 0;
   let levelPoints = totalExp;
-  let expToLevel = 0;
-  while (levelPoints > expToLevel) {
-    // log.debug(F, `totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
+  let expToLevel = 5 * (level ** 2) + (50 * level) + 100;
+  while (levelPoints >= expToLevel) {
+    // log.debug(F, `Level ${level} with ${levelPoints} experience points has ${expToLevel} points to level up`);
     level += 1;
-    expToLevel = 5 * (level ** 2) + (50 * level) + 100;
+    // log.debug(F, `Incremented level to ${level}`);
+    const newExpToLevel = 5 * (level ** 2) + (50 * level) + 100;
     levelPoints -= expToLevel;
+    // log.debug(F, `Now needs ${newExpToLevel} to get level ${level} and has ${levelPoints} experience points`);
+    expToLevel = newExpToLevel;
   }
-  // log.debug(F, `totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
+  // log.debug(F, `END: totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
   return { level, levelPoints, expToLevel };
 }
 
@@ -120,11 +123,11 @@ export async function experience(
 
   const [experienceData] = await experienceGetTop(1, experienceType, userData.id);
 
-  // log.debug(F, `experienceData: ${JSON.stringify(experienceData, null, 2)}`);
+  // log.debug(F, `Start type: ${experienceData.type} | level: ${experienceData.level} | level_points: ${experienceData.level_points} | total_points: ${experienceData.total_points}`);
 
   // If the user has no experience, insert it
   if (!experienceData) {
-    // log.debug(F, `Inserting new experience`);
+    // log.debug(F, 'Inserting new experience');
     // log.debug(F, `experienceDataInsert: ${JSON.stringify(experienceData, null, 2)}`);
     await experienceUpdate({
       user_id: userData.id,
@@ -137,13 +140,6 @@ export async function experience(
     } as UserExperience);
     return;
   }
-  // If the user has experience, update it
-  // log.debug(F, `Updating existing experience`);
-  experienceData.level_points += expPoints;
-  experienceData.total_points += expPoints;
-
-  // log.debug(F, `experienceDataUpdate: ${JSON.stringify(experienceData, null, 2)}`);
-
   // Check if the message happened in the last minute
   // log.debug(F, `lastMessageAt: ${experienceData.last_message_at}`);
   const lastMessageDate = DateTime.fromJSDate(experienceData.last_message_at);
@@ -257,6 +253,7 @@ export async function experience(
   experienceData.last_message_channel = message.channel.id;
 
   // log.debug(F, `experienceDataMerge: ${JSON.stringify(experienceData, null, 2)}`);
+  // log.debug(F, `End type: ${experienceData.type} | level: ${experienceData.level} | level_points: ${experienceData.level_points} | total_points: ${experienceData.total_points}`);
 
   await experienceUpdate(experienceData);
 }

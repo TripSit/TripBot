@@ -19,23 +19,22 @@ export async function profile(
 
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
+  const expData = await experienceGet(userData.id);
+
+  // log.debug(F, `expData: ${JSON.stringify(expData, null, 2)}`);
+
+  // Sum up every experience point as long as the type isnt ignored or total
+  const totalExp = expData
+    .filter(exp => exp.type !== 'TOTAL' && exp.type !== 'IGNORED')
+    .reduce((acc, exp) => acc + exp.total_points, 0);
+
   const profileData = {
     birthday: userData.birthday,
     timezone: userData.timezone,
     karma_given: userData.karma_given,
     karma_received: userData.karma_received,
-    totalExp: 0,
+    totalExp,
   };
-
-  // log.debug(F, `profileData: ${JSON.stringify(profileData, null, 2)}`);
-
-  const expData = await experienceGet(userData.id);
-
-  expData.forEach(exp => {
-    if (exp.type !== 'TOTAL' && exp.type !== 'IGNORED') {
-      profileData.totalExp += exp.total_points;
-    }
-  });
   log.info(F, `response: ${JSON.stringify(profileData, null, 2)}`);
   return profileData;
 }

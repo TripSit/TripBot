@@ -14,7 +14,7 @@ import { getUser } from '../../global/utils/knex';
 import { karma } from '../utils/karma';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-// const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
 
 export default messageCreate;
 
