@@ -4,7 +4,7 @@ import { getTotalLevel } from '../utils/experience';
 
 const F = f(__filename);
 
-export default experience;
+export default levels;
 
 type ExpTypeNames = 'Total' | 'Tripsitter' | 'Team' | 'Developer' | 'General' | 'Ignored';
 
@@ -13,7 +13,7 @@ type ExpTypeNames = 'Total' | 'Tripsitter' | 'Team' | 'Developer' | 'General' | 
  * @param {string} userId
  * @return {string}
  */
-export async function experience(
+export async function levels(
   userId: string,
 ):Promise<string> {
   const userData = await getUser(userId, null);

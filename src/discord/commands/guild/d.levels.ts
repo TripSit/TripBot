@@ -5,16 +5,16 @@ import {
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { experience } from '../../../global/commands/g.experience';
+import { levels } from '../../../global/commands/g.levels';
 import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dExperience;
+export default dLevels;
 
-export const dExperience: SlashCommand = {
+export const dLevels: SlashCommand = {
   data: new SlashCommandBuilder()
-    .setName('experience')
+    .setName('levels')
     .setDescription('Get someone\'s current experience levels!')
     .addUserOption(option => option
       .setName('user')
@@ -25,7 +25,7 @@ export const dExperience: SlashCommand = {
     if (!member) {
       member = interaction.member as GuildMember;
     }
-    const response = await experience(member.id);
+    const response = await levels(member.id);
     log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
     const embed = embedTemplate()
       .setTitle(`${member.user.username}'s Experience`)
