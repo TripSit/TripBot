@@ -10,6 +10,7 @@ import { startLog } from './discord/utils/startLog'; // eslint-disable-line
 import { runTimer } from './global/utils/timer'; // eslint-disable-line
 import { runStats } from './global/utils/stats'; // eslint-disable-line
 // import { runRss } from './global/utils/rssCheck';
+import { runVoiceCheck } from './global/utils/voiceExp';
 
 global.bootTime = new Date();
 
@@ -28,6 +29,7 @@ async function start() {
 
   runTimer();
   runStats();
+  runVoiceCheck();
   // runRss();
 }
 
