@@ -28,14 +28,6 @@ const timerInterval = env.NODE_ENV === 'production' ? 1000 * 60 : 1000 * 10;
 // Value in miliseconds (1000 * 60 = 1 minute)
 const expInterval = env.NODE_ENV === 'production' ? 1000 * 60 * 2 : 1000 * 5;
 
-type VoiceExpType = 'GENERAL_VOICE' | 'TRIPSITTER_VOICE' | 'TEAM_VOICE' | 'DEVELOPER_VOICE' | 'IGNORED_VOICE';
-
-export interface VoiceExp extends Omit<UserExperience, 'type'> {
-  type: VoiceExpType,
-}
-
-const tableVoiceExp = [{}] as VoiceExp[];
-
 const expPoints = env.NODE_ENV === 'production'
   ? (Math.floor(Math.random() * (25 - 15 + 1)) + 15) / 2
   : 100;
@@ -65,11 +57,11 @@ async function checkVoice() {
   (async () => {
     // Define each category type and the category channel id
     const categoryDefs = [
-      { category: 'GENERAL' as ExperienceType, id: env.CATEGORY_CAMPGROUND },
-      { category: 'GENERAL' as ExperienceType, id: env.CATEGORY_BACKSTAGE },
-      { category: 'TEAM' as ExperienceType, id: env.CATEGORY_TEAMTRIPSIT },
-      { category: 'TRIPSITTER' as ExperienceType, id: env.CATEGROY_HARMREDUCTIONCENTRE },
-      { category: 'DEVELOPER' as ExperienceType, id: env.CATEGORY_DEVELOPMENT },
+      { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_CAMPGROUND },
+      { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_BACKSTAGE },
+      { category: 'TEAM' as ExperienceCategory, id: env.CATEGORY_TEAMTRIPSIT },
+      { category: 'TRIPSITTER' as ExperienceCategory, id: env.CATEGROY_HARMREDUCTIONCENTRE },
+      { category: 'DEVELOPER' as ExperienceCategory, id: env.CATEGORY_DEVELOPMENT },
     ];
 
     // For each of the above types, check each voice channel in the category

@@ -53,7 +53,7 @@ export async function experience(
 
   // Determine what kind of experience to give
   const experienceCategory = await getCategory(message.channel);
-  // log.debug(F, `experienceType: ${experienceType}`);
+  // log.debug(F, `experienceCategory: ${experienceCategory}`);
 
   const userData = await getUser(message.author.id, null);
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
@@ -68,7 +68,7 @@ export async function experience(
     await experienceUpdate({
       user_id: userData.id,
       category: experienceCategory,
-      type: 'TEXT' as ExperienceCategory,
+      type: 'TEXT' as ExperienceType,
       level_points: expPoints,
       total_points: expPoints,
       last_message_at: new Date(),
@@ -110,14 +110,14 @@ export async function experience(
 
     if (experienceData.level % 10 === 0) {
       let id = '' as string;
-      // log.debug(F, `experienceType: ${experienceType}`);
-      if (experienceCategory === 'GENERAL' as ExperienceType) {
+      // log.debug(F, `experienceCategory: ${experienceCategory}`);
+      if (experienceCategory === 'GENERAL' as ExperienceCategory) {
         id = env.CHANNEL_LOUNGE;
-      } else if (experienceCategory === 'TRIPSITTER' as ExperienceType) {
+      } else if (experienceCategory === 'TRIPSITTER' as ExperienceCategory) {
         id = env.CHANNEL_TRIPSITMETA;
-      } else if (experienceCategory === 'DEVELOPER' as ExperienceType) {
+      } else if (experienceCategory === 'DEVELOPER' as ExperienceCategory) {
         id = env.CHANNEL_DEVELOPMENT;
-      } else if (experienceCategory === 'TEAM' as ExperienceType) {
+      } else if (experienceCategory === 'TEAM' as ExperienceCategory) {
         id = env.CHANNEL_TEAMTRIPSIT;
       }
       const channel = await message.guild.channels.fetch(id) as TextChannel;
@@ -156,6 +156,133 @@ export async function experience(
   // Try to give the appropriate role
   await giveMilestone(message, levelTier);
 }
+
+/**
+ * This takes a messsage and gives the user experience
+ * @param {Message} message The message object to check
+ */
+// export async function experienceGive(
+//   discordId:string,
+//   experienceCategory:ExperienceCategory,
+//   experienceType:ExperienceType,
+// ) {
+//   // Ignore this message if the user...
+//   if (
+//     !message.member // Is not a member of a guild
+//     || !message.channel // Was not sent in a channel
+//     || !(message.channel instanceof TextChannel) // Was not sent in a text channel
+//     || !message.guild // Was not sent in a guild
+//     || message.author.bot // Was sent by a bot
+//     || ignoredRoles.some(role => message.member?.roles.cache.has(role)) // Has a role that should be ignored
+//   ) {
+//     return;
+//   }
+
+//   // Determine what kind of experience to give
+//   const experienceCategory = await getCategory(message.channel);
+//   // log.debug(F, `experienceCategory: ${experienceCategory}`);
+
+//   const userData = await getUser(message.author.id, null);
+//   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
+
+//   const [experienceData] = await experienceGet(1, experienceCategory, 'TEXT', userData.id);
+//   // log.debug(F, `Start type: ${experienceData.type} | level: ${experienceData.level} | level_points: ${experienceData.level_points} | total_points: ${experienceData.total_points}`);
+
+//   // If the user has no experience, insert it, and we're done here
+//   if (!experienceData) {
+//     // log.debug(F, 'Inserting new experience');
+//     // log.debug(F, `experienceDataInsert: ${JSON.stringify(experienceData, null, 2)}`);
+//     await experienceUpdate({
+//       user_id: userData.id,
+//       category: experienceCategory,
+//       type: 'TEXT' as ExperienceCategory,
+//       level_points: expPoints,
+//       total_points: expPoints,
+//       last_message_at: new Date(),
+//       last_message_channel: message.channel.id,
+//       level: 0,
+//     } as UserExperience);
+//     // Give the user the VIP 0 role the first time they talk
+//     const role = await message.guild?.roles.fetch(env.ROLE_VIP_0) as Role;
+//     await message.member?.roles.add(role);
+//     return;
+//   }
+
+//   // If the user has experience, heck if the message happened in the last minute
+//   // log.debug(F, `lastMessageAt: ${experienceData.last_message_at}`);
+//   const lastMessageDate = DateTime.fromJSDate(experienceData.last_message_at);
+
+//   const currentDate = DateTime.now();
+//   const diff = currentDate.diff(lastMessageDate).toObject();
+//   // log.debug(F, `diff: ${JSON.stringify(diff)}`);
+
+//   if (diff.milliseconds && diff.milliseconds < bufferTime) {
+//     // log.debug(F, `Message sent by a user in the last minute`);
+//     return;
+//   }
+
+//   // If the time diff is over one bufferTime, increase the experience points
+//   experienceData.level_points += expPoints;
+//   experienceData.total_points += expPoints;
+
+//   // Determine how many exp points are needed to level up
+//   const expToLevel = await expForNextLevel(experienceData.level);
+
+//   if (expToLevel < experienceData.level_points) {
+//     experienceData.level += 1;
+//     const channelTripbotlogs = await message.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+//     const categoryName = experienceCategory.charAt(0).toUpperCase() + experienceCategory.slice(1).toLowerCase(); // eslint-disable-line max-len
+//     await channelTripbotlogs.send(stripIndents`${message.member.displayName} has leveled up to ${categoryName} level ${experienceData.level}!`);
+//     log.debug(F, `${message.author.username} has leveled up to ${categoryName} level ${experienceData.level}!`);
+
+//     if (experienceData.level % 10 === 0) {
+//       let id = '' as string;
+//       // log.debug(F, `experienceCategory: ${experienceCategory}`);
+//       if (experienceCategory === 'GENERAL' as experienceCategory) {
+//         id = env.CHANNEL_LOUNGE;
+//       } else if (experienceCategory === 'TRIPSITTER' as experienceCategory) {
+//         id = env.CHANNEL_TRIPSITMETA;
+//       } else if (experienceCategory === 'DEVELOPER' as experienceCategory) {
+//         id = env.CHANNEL_DEVELOPMENT;
+//       } else if (experienceCategory === 'TEAM' as experienceCategory) {
+//         id = env.CHANNEL_TEAMTRIPSIT;
+//       }
+//       const channel = await message.guild.channels.fetch(id) as TextChannel;
+//       const emojis = [...announcementEmojis].sort(() => 0.5 - Math.random()).slice(0, 3); // Sort the array
+//       await channel.send(`${emojis} **${message.member} has reached ${experienceCategory} level ${experienceData.level}!** ${emojis}`);
+//     }
+
+//     experienceData.level_points -= expToLevel;
+//   }
+
+//   log.debug(F, `${message.author.username} +${expPoints} (${experienceData.level_points}/${expToLevel}>${experienceData.level}) ${experienceCategory} = ${message.channel.name}`);
+
+//   experienceData.last_message_at = new Date();
+//   experienceData.last_message_channel = message.channel.id;
+
+//   // Get the current experience data before updating
+//   // So we can determine the total exp if if they leveled up
+//   const allExpData = await experienceGet(1, undefined, undefined, userData.id);
+//   await experienceUpdate(experienceData);
+//   // Dont move the above calls out of order!!!
+
+//   // Calculate total experience points
+//   const totalExp = allExpData
+//     .filter(exp => exp.type !== 'VOICE' && exp.category !== 'TOTAL' && exp.category !== 'IGNORED')
+//     .reduce((acc, exp) => acc + exp.total_points, 0);
+
+//   // Pretend that the total exp would get the same exp as the category
+//   // Get the total level
+//   const totalData = await getTotalLevel(totalExp + expPoints);
+
+//   // log.debug(F, `totalData: ${JSON.stringify(totalData, null, 2)}`);
+
+//   // Determine the first digit of the level
+//   const levelTier = Math.floor(totalData.level / 10);
+
+//   // Try to give the appropriate role
+//   await giveMilestone(message, levelTier);
+// }
 
 async function giveMilestone(
   message:Message,
@@ -239,38 +366,38 @@ async function giveMilestone(
   }
 }
 
-async function getCategory(channel:TextChannel):Promise<ExperienceType> {
-  let experienceType = '';
+async function getCategory(channel:TextChannel):Promise<ExperienceCategory> {
+  let experienceCategory = '';
   if (channel.parent) {
     // log.debug(F, `parent: ${channel.parent.name} ${channel.parent.id}`);
     if (channel.parent.parent) {
       // log.debug(F, `parent-parent: ${channel.parent.parent.name} ${channel.parent.parent.id}`);
       if (channel.parent.parent.id === env.CATEGORY_TEAMTRIPSIT) {
-        experienceType = 'TEAM' as ExperienceType;
+        experienceCategory = 'TEAM' as ExperienceCategory;
       } else if (channel.parent.parent.id === env.CATEGORY_DEVELOPMENT) {
-        experienceType = 'DEVELOPER' as ExperienceType;
+        experienceCategory = 'DEVELOPER' as ExperienceCategory;
       } else if (channel.parent.parent.id === env.CATEGROY_HARMREDUCTIONCENTRE) {
-        experienceType = 'TRIPSITTER' as ExperienceType;
+        experienceCategory = 'TRIPSITTER' as ExperienceCategory;
       } else if (channel.parent.parent.id === env.CATEGORY_GATEWAY) {
-        experienceType = 'IGNORED' as ExperienceType;
+        experienceCategory = 'IGNORED' as ExperienceCategory;
       } else {
-        experienceType = 'GENERAL' as ExperienceType;
+        experienceCategory = 'GENERAL' as ExperienceCategory;
       }
     } else if (channel.parent.id === env.CATEGORY_TEAMTRIPSIT) {
-      experienceType = 'TEAM' as ExperienceType;
+      experienceCategory = 'TEAM' as ExperienceCategory;
     } else if (channel.parent.id === env.CATEGORY_DEVELOPMENT) {
-      experienceType = 'DEVELOPER' as ExperienceType;
+      experienceCategory = 'DEVELOPER' as ExperienceCategory;
     } else if (channel.parent.id === env.CATEGROY_HARMREDUCTIONCENTRE) {
-      experienceType = 'TRIPSITTER' as ExperienceType;
+      experienceCategory = 'TRIPSITTER' as ExperienceCategory;
     } else if (channel.parent.id === env.CATEGORY_GATEWAY) {
-      experienceType = 'IGNORED' as ExperienceType;
+      experienceCategory = 'IGNORED' as ExperienceCategory;
     } else {
-      experienceType = 'GENERAL' as ExperienceType;
+      experienceCategory = 'GENERAL' as ExperienceCategory;
     }
   } else {
-    experienceType = 'IGNORED' as ExperienceType;
+    experienceCategory = 'IGNORED' as ExperienceCategory;
   }
-  return experienceType as ExperienceType;
+  return experienceCategory as ExperienceCategory;
 }
 
 export async function getTotalLevel(

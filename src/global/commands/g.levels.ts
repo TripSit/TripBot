@@ -1,5 +1,5 @@
 import { experienceGet, getUser } from '../utils/knex';
-import { ExperienceType } from '../@types/pgdb';
+import { ExperienceCategory } from '../@types/pgdb';
 import { getTotalLevel } from '../utils/experience';
 
 const F = f(__filename);
@@ -38,8 +38,8 @@ export async function levels(
   for (const row of experienceData) { // eslint-disable-line no-restricted-syntax
   // log.debug(F, `row: ${JSON.stringify(row, null, 2)}`);
     // Lowercase besides the first letter
-    const levelName = (row.category as ExperienceType).charAt(0).toUpperCase()
-    + (row.category as ExperienceType).slice(1).toLowerCase() as ExpTypeNames;
+    const levelName = (row.category as ExperienceCategory).charAt(0).toUpperCase()
+    + (row.category as ExperienceCategory).slice(1).toLowerCase() as ExpTypeNames;
     response += `**Level ${row.level} ${levelName}**`;
     if (levelName === 'Tripsitter') {
       response += `: Harm Reduction Center category

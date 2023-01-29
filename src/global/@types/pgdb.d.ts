@@ -38,17 +38,17 @@ export enum DrugRoa {
 }
 
 export enum ExperienceCategory {
-  Text = 'TEXT',
-  Voice = 'VOICE',
-}
-
-export enum ExperienceType {
   Total = 'TOTAL',
   General = 'GENERAL',
   Tripsitter = 'TRIPSITTER',
   Developer = 'DEVELOPER',
   Team = 'TEAM',
   Ignored = 'IGNORED',
+}
+
+export enum ExperienceType {
+  Text = 'TEXT',
+  Voice = 'VOICE',
 }
 
 export enum TicketStatus {
@@ -258,14 +258,14 @@ export type UserDrugDoses = {
 export type UserExperience = {
   id: string;
   user_id: string;
-  category: ExperienceType;
+  category: ExperienceCategory;
   level: number;
   level_points: number;
   total_points: number;
   last_message_at: Date;
   last_message_channel: string;
   created_at: Date;
-  type: ExperienceCategory;
+  type: ExperienceType;
 };
 
 export type UserReminders = {
