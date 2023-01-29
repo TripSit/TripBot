@@ -104,7 +104,7 @@ export async function experience(
   if (expToLevel < experienceData.level_points) {
     experienceData.level += 1;
     const channelTripbotlogs = await message.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-    await channelTripbotlogs.send(stripIndents`${message.member} has leveled up to ${experienceType} level ${experienceData.level}!`);
+    await channelTripbotlogs.send(stripIndents`${message.member.displayName} has leveled up to ${experienceType} level ${experienceData.level}!`);
     log.debug(F, `${message.author.username} has leveled up to ${experienceType} level ${experienceData.level}!`);
 
     if (experienceData.level % 10 === 0) {
