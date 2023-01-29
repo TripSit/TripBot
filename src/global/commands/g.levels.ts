@@ -17,7 +17,7 @@ export async function levels(
   userId: string,
 ):Promise<string> {
   const userData = await getUser(userId, null);
-  const experienceData = await experienceGet(userData.id);
+  const experienceData = await experienceGet(1, undefined, undefined, userData.id);
 
   if (!experienceData) {
     return 'No experience found for this user';
@@ -27,7 +27,7 @@ export async function levels(
 
   let allExpPoints = 0;
   experienceData.forEach(exp => {
-    if (exp.type !== 'TOTAL' && exp.type !== 'IGNORED') {
+    if (exp.category !== 'TOTAL' && exp.category !== 'IGNORED') {
       allExpPoints += exp.total_points;
     }
   });
@@ -38,8 +38,8 @@ export async function levels(
   for (const row of experienceData) { // eslint-disable-line no-restricted-syntax
   // log.debug(F, `row: ${JSON.stringify(row, null, 2)}`);
     // Lowercase besides the first letter
-    const levelName = (row.type as ExperienceType).charAt(0).toUpperCase()
-    + (row.type as ExperienceType).slice(1).toLowerCase() as ExpTypeNames;
+    const levelName = (row.category as ExperienceType).charAt(0).toUpperCase()
+    + (row.category as ExperienceType).slice(1).toLowerCase() as ExpTypeNames;
     response += `**Level ${row.level} ${levelName}**`;
     if (levelName === 'Tripsitter') {
       response += `: Harm Reduction Center category

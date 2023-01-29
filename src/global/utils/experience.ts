@@ -8,10 +8,9 @@ import {
 import { DateTime } from 'luxon';
 import { stripIndents } from 'common-tags';
 import {
-  experienceGet,
-  experienceGetTop, experienceUpdate, getUser,
+  experienceGet, experienceUpdate, getUser,
 } from './knex';
-import { UserExperience, ExperienceType } from '../@types/pgdb';
+import { UserExperience, ExperienceType, ExperienceCategory } from '../@types/pgdb';
 
 const F = f(__filename); // eslint-disable-line
 
@@ -53,13 +52,13 @@ export async function experience(
   }
 
   // Determine what kind of experience to give
-  const experienceType = await getType(message.channel);
+  const experienceCategory = await getCategory(message.channel);
   // log.debug(F, `experienceType: ${experienceType}`);
 
   const userData = await getUser(message.author.id, null);
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
-  const [experienceData] = await experienceGetTop(1, experienceType, userData.id);
+  const [experienceData] = await experienceGet(1, experienceCategory, 'TEXT', userData.id);
   // log.debug(F, `Start type: ${experienceData.type} | level: ${experienceData.level} | level_points: ${experienceData.level_points} | total_points: ${experienceData.total_points}`);
 
   // If the user has no experience, insert it, and we're done here
@@ -68,7 +67,8 @@ export async function experience(
     // log.debug(F, `experienceDataInsert: ${JSON.stringify(experienceData, null, 2)}`);
     await experienceUpdate({
       user_id: userData.id,
-      type: experienceType,
+      category: experienceCategory,
+      type: 'TEXT' as ExperienceCategory,
       level_points: expPoints,
       total_points: expPoints,
       last_message_at: new Date(),
@@ -99,44 +99,49 @@ export async function experience(
   experienceData.total_points += expPoints;
 
   // Determine how many exp points are needed to level up
-  const expToLevel = 5 * (experienceData.level ** 2) + (50 * experienceData.level) + 100;
+  const expToLevel = await expForNextLevel(experienceData.level);
 
   if (expToLevel < experienceData.level_points) {
     experienceData.level += 1;
     const channelTripbotlogs = await message.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-    await channelTripbotlogs.send(stripIndents`${message.member.displayName} has leveled up to ${experienceType} level ${experienceData.level}!`);
-    log.debug(F, `${message.author.username} has leveled up to ${experienceType} level ${experienceData.level}!`);
+    const categoryName = experienceCategory.charAt(0).toUpperCase() + experienceCategory.slice(1).toLowerCase(); // eslint-disable-line max-len
+    await channelTripbotlogs.send(stripIndents`${message.member.displayName} has leveled up to ${categoryName} level ${experienceData.level}!`);
+    log.debug(F, `${message.author.username} has leveled up to ${categoryName} level ${experienceData.level}!`);
 
     if (experienceData.level % 10 === 0) {
       let id = '' as string;
       // log.debug(F, `experienceType: ${experienceType}`);
-      if (experienceType === 'GENERAL' as ExperienceType) {
+      if (experienceCategory === 'GENERAL' as ExperienceType) {
         id = env.CHANNEL_LOUNGE;
-      } else if (experienceType === 'TRIPSITTER' as ExperienceType) {
+      } else if (experienceCategory === 'TRIPSITTER' as ExperienceType) {
         id = env.CHANNEL_TRIPSITMETA;
-      } else if (experienceType === 'DEVELOPER' as ExperienceType) {
+      } else if (experienceCategory === 'DEVELOPER' as ExperienceType) {
         id = env.CHANNEL_DEVELOPMENT;
-      } else if (experienceType === 'TEAM' as ExperienceType) {
+      } else if (experienceCategory === 'TEAM' as ExperienceType) {
         id = env.CHANNEL_TEAMTRIPSIT;
       }
       const channel = await message.guild.channels.fetch(id) as TextChannel;
       const emojis = [...announcementEmojis].sort(() => 0.5 - Math.random()).slice(0, 3); // Sort the array
-      await channel.send(`${emojis} **${message.member} has reached ${experienceType} level ${experienceData.level}!** ${emojis}`);
+      await channel.send(`${emojis} **${message.member} has reached ${experienceCategory} level ${experienceData.level}!** ${emojis}`);
     }
 
     experienceData.level_points -= expToLevel;
   }
 
-  log.debug(F, `${message.author.username} +${expPoints} (${experienceData.level_points}/${expToLevel}>${experienceData.level}) ${experienceType} = ${message.channel.name}`);
+  log.debug(F, `${message.author.username} +${expPoints} (${experienceData.level_points}/${expToLevel}>${experienceData.level}) ${experienceCategory} = ${message.channel.name}`);
 
   experienceData.last_message_at = new Date();
   experienceData.last_message_channel = message.channel.id;
 
-  const expData = await experienceGet(userData.id);
+  // Get the current experience data before updating
+  // So we can determine the total exp if if they leveled up
+  const allExpData = await experienceGet(1, undefined, undefined, userData.id);
   await experienceUpdate(experienceData);
+  // Dont move the above calls out of order!!!
+
   // Calculate total experience points
-  const totalExp = expData
-    .filter(exp => exp.type !== 'TOTAL' && exp.type !== 'IGNORED')
+  const totalExp = allExpData
+    .filter(exp => exp.type !== 'VOICE' && exp.category !== 'TOTAL' && exp.category !== 'IGNORED')
     .reduce((acc, exp) => acc + exp.total_points, 0);
 
   // Pretend that the total exp would get the same exp as the category
@@ -234,7 +239,7 @@ async function giveMilestone(
   }
 }
 
-async function getType(channel:TextChannel):Promise<ExperienceType> {
+async function getCategory(channel:TextChannel):Promise<ExperienceType> {
   let experienceType = '';
   if (channel.parent) {
     // log.debug(F, `parent: ${channel.parent.name} ${channel.parent.id}`);
@@ -270,22 +275,29 @@ async function getType(channel:TextChannel):Promise<ExperienceType> {
 
 export async function getTotalLevel(
   totalExp:number,
-):Promise<Omit<UserExperience, 'id' | 'user_id' | 'type' | 'total_points' | 'last_message_at' | 'last_message_channel' | 'created_at'>> {
+):Promise<Omit<UserExperience, 'id' | 'user_id' | 'type' | 'category' | 'total_points' | 'last_message_at' | 'last_message_channel' | 'created_at'>> {
   // log.debug('totalLevel', `totalExp: ${totalExp}`);
   let level = 0;
   let levelPoints = totalExp;
-  let expToLevel = 5 * (level ** 2) + (50 * level) + 100;
+  let expToLevel = await expForNextLevel(level);
   while (levelPoints >= expToLevel) {
     // log.debug(F, `Level ${level} with ${levelPoints} experience points has ${expToLevel} points to level up`);
     level += 1;
     // log.debug(F, `Incremented level to ${level}`);
-    const newExpToLevel = 5 * (level ** 2) + (50 * level) + 100;
+    const newExpToLevel = await expForNextLevel(level); // eslint-disable-line no-await-in-loop
     levelPoints -= expToLevel;
     // log.debug(F, `Now needs ${newExpToLevel} to get level ${level} and has ${levelPoints} experience points`);
     expToLevel = newExpToLevel;
   }
   // log.debug(F, `END: totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
   return { level, level_points: levelPoints };
+}
+
+export async function expForNextLevel(
+  level:number,
+):Promise<number> {
+  // This is a simple formula, making sure it's standardized across the system
+  return 5 * (level ** 2) + (50 * level) + 100;
 }
 
 const announcementEmojis = [

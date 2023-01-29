@@ -37,6 +37,11 @@ export enum DrugRoa {
   Transdermal = 'TRANSDERMAL',
 }
 
+export enum ExperienceCategory {
+  Text = 'TEXT',
+  Voice = 'VOICE',
+}
+
 export enum ExperienceType {
   Total = 'TOTAL',
   General = 'GENERAL',
@@ -253,13 +258,14 @@ export type UserDrugDoses = {
 export type UserExperience = {
   id: string;
   user_id: string;
-  type: ExperienceType;
+  category: ExperienceType;
   level: number;
   level_points: number;
   total_points: number;
   last_message_at: Date;
   last_message_channel: string;
   created_at: Date;
+  type: ExperienceCategory;
 };
 
 export type UserReminders = {

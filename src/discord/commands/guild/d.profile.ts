@@ -11,7 +11,7 @@ import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { profile } from '../../../global/commands/g.profile';
 // import { startLog } from '../../utils/startLog';
-import { getTotalLevel } from '../../../global/utils/experience';
+import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 
 const F = f(__filename);
 
@@ -422,7 +422,7 @@ export const dProfile: SlashCommand = {
 
     // Level Bar Math
     let percentageOfLevel = 0;
-    const expToLevel = 5 * (totalData.level ** 2) + (50 * totalData.level) + 100;
+    const expToLevel = await expForNextLevel(totalData.level);
     percentageOfLevel = (totalData.level_points / expToLevel);
     log.debug(F, `percentageOfLevel: ${percentageOfLevel}`);
 

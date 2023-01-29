@@ -7,10 +7,6 @@ import { log } from './global/utils/log';
 import { discordConnect } from './discord/dscrd'; // eslint-disable-line
 import { validateEnv } from './global/utils/env.validate'; // eslint-disable-line
 import { startLog } from './discord/utils/startLog'; // eslint-disable-line
-import { runTimer } from './global/utils/timer'; // eslint-disable-line
-import { runStats } from './global/utils/stats'; // eslint-disable-line
-// import { runRss } from './global/utils/rssCheck';
-import { runVoiceCheck } from './global/utils/voiceExp';
 
 global.bootTime = new Date();
 
@@ -26,11 +22,6 @@ async function start() {
   if (env.DISCORD_CLIENT_TOKEN) {
     discordConnect();
   }
-
-  runTimer();
-  runStats();
-  runVoiceCheck();
-  // runRss();
 }
 
 start();

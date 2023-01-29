@@ -1,5 +1,5 @@
 import { stripIndents } from 'common-tags';
-import { experienceGetTop, getUser } from '../utils/knex';
+import { experienceGet, getUser } from '../utils/knex';
 import { getTotalLevel } from '../utils/experience';
 
 const F = f(__filename);
@@ -43,7 +43,7 @@ export async function leaderboard(
     `;
 
     // Grab all the user experience from the database
-    const allUserExperience = await experienceGetTop(3);
+    const allUserExperience = await experienceGet(3, undefined, undefined, undefined);
 
     // log.debug(F, `allUserExperience: ${JSON.stringify(allUserExperience, null, 2)}`);
 
@@ -75,7 +75,7 @@ export async function leaderboard(
 
     // Grab all the user experience from the database
     for (const category of ['TRIPSITTER', 'GENERAL', 'DEVELOPER', 'TEAM', 'IGNORED']) { // eslint-disable-line
-      const userExperience = await experienceGetTop(3, category);// eslint-disable-line
+      const userExperience = await experienceGet(3, category, undefined, undefined);// eslint-disable-line
       let categoryRank = 0;
       for (const user of userExperience) { // eslint-disable-line
         categoryRank += 1;
@@ -104,7 +104,7 @@ export async function leaderboard(
     description = 'Total Experience is the sum of all experience in all categories.';
 
     // Grab all the user experience from the database
-    const userExperience = await experienceGetTop(15);
+    const userExperience = await experienceGet(15, undefined, undefined, undefined);
 
     // log.debug(F, `userExperience: ${JSON.stringify(userExperience, null, 2)}`);
 
@@ -140,7 +140,7 @@ export async function leaderboard(
   } else {
     // Grab all the user experience from the database
 
-    const userExperience = await experienceGetTop(15, categoryName);
+    const userExperience = await experienceGet(15, categoryName, undefined, undefined);
 
     // log.debug(F, `userExperience: ${JSON.stringify(userExperience, null, 2)}`);
 

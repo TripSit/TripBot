@@ -416,46 +416,77 @@ export async function reactionroleGet(
 }
 
 export async function experienceGet(
-  userId:string,
-):Promise<UserExperience[]> {
-// log.debug(F, 'experienceGet started');
-  if (env.POSTGRES_DBURL === undefined) return [];
-  return db<UserExperience>('user_experience')
-    .where('user_id', userId)
-    // .andWhereNot('type', 'TOTAL')
-    // .andWhereNot('type', 'IGNORED')
-    .orderBy('level', 'desc');
-}
-
-export async function experienceGetTop(
   limit:number,
-  category?:string,
-  userId?:string,
+  category:string | undefined,
+  type:string | undefined,
+  userId:string | undefined,
 ):Promise<UserExperience[]> {
 // log.debug(F, 'experienceGet started');
   if (env.POSTGRES_DBURL === undefined) return [];
   if (category) {
-    if (userId) {
-    // log.debug(F, 'experienceGetTop started with userId and category');
+    if (type) {
+      if (userId) {
+        // log.debug(F, 'experienceGet started with userId and category');
+        return db<UserExperience>('user_experience')
+          .where('user_id', userId)
+          .andWhere('category', category)
+          .andWhere('type', type)
+          .limit(limit);
+      }
+      // log.debug(F, 'experienceGet started with category');
       return db<UserExperience>('user_experience')
-        .where('user_id', userId)
-        .andWhere('type', category)
+        .select('*')
+        .where('category', category)
+        .andWhere('type', type)
+        .orderBy('total_points', 'desc')
         .limit(limit);
     }
-    // log.debug(F, 'experienceGetTop started with category');
+    if (userId) {
+    // log.debug(F, 'experienceGet started with userId and category');
+      return db<UserExperience>('user_experience')
+        .where('user_id', userId)
+        .andWhere('category', category)
+        .limit(limit);
+    }
+    // log.debug(F, 'experienceGet started with category');
     return db<UserExperience>('user_experience')
       .select('*')
-      .where('type', category)
+      .where('category', category)
       .orderBy('total_points', 'desc')
       .limit(limit);
   }
-  // log.debug(F, 'experienceGetTop started without category');
+  if (userId) {
+    if (type) {
+      // log.debug(F, 'experienceGet started with type');
+      return db<UserExperience>('user_experience')
+        .select('*')
+        .where('type', type)
+        .orderBy('total_points', 'desc')
+        .limit(limit);
+    }
+    // log.debug(F, 'experienceGet started with userId');
+    return db<UserExperience>('user_experience')
+      .where('user_id', userId)
+      .orderBy('level', 'desc')
+      .limit(limit);
+  }
+  if (type) {
+    // log.debug(F, 'experienceGet started with type');
+    return (await db<UserExperience>('user_experience')
+      .select('*')
+      .where('type', type)
+      .andWhereNot('category', 'TOTAL')
+      .andWhereNot('category', 'IGNORED')
+      .groupBy(['user_id'])
+      .sum({ total_points: 'total_points' })
+      .orderBy('total_points', 'desc')
+      .limit(limit)) as UserExperience[];
+  }
+  // log.debug(F, 'experienceGet started without category');
   return (await db<UserExperience>('user_experience')
-    .select(
-      db.ref('user_id'),
-    )
-    .whereNot('type', 'TOTAL')
-    .andWhereNot('type', 'IGNORED')
+    .select('*')
+    .whereNot('category', 'TOTAL')
+    .andWhereNot('category', 'IGNORED')
     .groupBy(['user_id'])
     .sum({ total_points: 'total_points' })
     .orderBy('total_points', 'desc')
@@ -479,7 +510,7 @@ export async function experienceUpdate(
   if (env.POSTGRES_DBURL === undefined) return;
   await db<UserExperience>('user_experience')
     .insert(data)
-    .onConflict(['id', 'user_id', 'type'])
+    .onConflict(['user_id', 'category', 'type'])
     .merge();
 }
 

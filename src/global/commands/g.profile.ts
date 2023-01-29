@@ -19,13 +19,13 @@ export async function profile(
 
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
-  const expData = await experienceGet(userData.id);
+  const expData = await experienceGet(1, undefined, undefined, userData.id);
 
   // log.debug(F, `expData: ${JSON.stringify(expData, null, 2)}`);
 
   // Sum up every experience point as long as the type isnt ignored or total
   const totalExp = expData
-    .filter(exp => exp.type !== 'TOTAL' && exp.type !== 'IGNORED')
+    .filter(exp => exp.category !== 'TOTAL' && exp.category !== 'IGNORED')
     .reduce((acc, exp) => acc + exp.total_points, 0);
 
   const profileData = {
