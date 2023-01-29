@@ -331,9 +331,9 @@ export const dProfile: SlashCommand = {
         itIsYourBirthday = true;
       }
       if (targetBirthday.getDate() < 10) {
-        context.fillText(`${targetBirthday.toLocaleString('en-GB', { month: 'short' })} 0${targetBirthday.getDate()}`, 205, 260);
+        context.fillText(`0${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 260);
       } else {
-        context.fillText(`${targetBirthday.toLocaleString('en-GB', { month: 'short' })} ${targetBirthday.getDate()}`, 205, 260);
+        context.fillText(`${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 260);
       }
     } else {
       context.fillText('NOT SET!', 210, 260);
