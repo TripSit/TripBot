@@ -1,6 +1,6 @@
 import { experienceGet, getUser } from '../utils/knex';
-import { ExperienceCategory } from '../@types/pgdb';
 import { getTotalLevel } from '../utils/experience';
+import { ExperienceType } from '../@types/pgdb';
 
 const F = f(__filename);
 
@@ -17,7 +17,7 @@ export async function levels(
   userId: string,
 ):Promise<string> {
   const userData = await getUser(userId, null);
-  const experienceData = await experienceGet(1, undefined, undefined, userData.id);
+  const experienceData = await experienceGet(1, undefined, 'TEXT' as ExperienceType, userData.id);
 
   if (!experienceData) {
     return 'No experience found for this user';
@@ -27,7 +27,7 @@ export async function levels(
 
   let allExpPoints = 0;
   experienceData.forEach(exp => {
-    if (exp.category !== 'TOTAL' && exp.category !== 'IGNORED') {
+    if (exp.type !== 'VOICE' && exp.category !== 'TOTAL' && exp.category !== 'IGNORED') {
       allExpPoints += exp.total_points;
     }
   });
@@ -38,8 +38,8 @@ export async function levels(
   for (const row of experienceData) { // eslint-disable-line no-restricted-syntax
   // log.debug(F, `row: ${JSON.stringify(row, null, 2)}`);
     // Lowercase besides the first letter
-    const levelName = (row.category as ExperienceCategory).charAt(0).toUpperCase()
-    + (row.category as ExperienceCategory).slice(1).toLowerCase() as ExpTypeNames;
+    const levelName = row.category.charAt(0).toUpperCase()
+    + row.category.slice(1).toLowerCase() as ExpTypeNames;
     response += `**Level ${row.level} ${levelName}**`;
     if (levelName === 'Tripsitter') {
       response += `: Harm Reduction Center category

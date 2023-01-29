@@ -24,8 +24,12 @@ export async function profile(
   // log.debug(F, `expData: ${JSON.stringify(expData, null, 2)}`);
 
   // Sum up every experience point as long as the type isnt ignored or total
-  const totalExp = expData
-    .filter(exp => exp.category !== 'TOTAL' && exp.category !== 'IGNORED')
+  const totalTextExp = expData
+    .filter(exp => exp.type !== 'VOICE' && exp.category !== 'TOTAL' && exp.category !== 'IGNORED')
+    .reduce((acc, exp) => acc + exp.total_points, 0);
+
+  const totalVoiceExp = expData
+    .filter(exp => exp.type === 'VOICE' && exp.category !== 'TOTAL' && exp.category !== 'IGNORED')
     .reduce((acc, exp) => acc + exp.total_points, 0);
 
   const profileData = {
@@ -33,7 +37,8 @@ export async function profile(
     timezone: userData.timezone,
     karma_given: userData.karma_given,
     karma_received: userData.karma_received,
-    totalExp,
+    totalTextExp,
+    totalVoiceExp,
   };
   log.info(F, `response: ${JSON.stringify(profileData, null, 2)}`);
   return profileData;
@@ -44,5 +49,6 @@ type ProfileData = {
   timezone: string | null,
   karma_given: number,
   karma_received: number,
-  totalExp: number,
+  totalTextExp: number,
+  totalVoiceExp: number,
 };

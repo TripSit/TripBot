@@ -1,6 +1,7 @@
 import { stripIndents } from 'common-tags';
 import { experienceGet, getUser } from '../utils/knex';
 import { getTotalLevel } from '../utils/experience';
+import { ExperienceCategory, ExperienceType } from '../@types/pgdb';
 
 const F = f(__filename);
 
@@ -43,7 +44,7 @@ export async function leaderboard(
     `;
 
     // Grab all the user experience from the database
-    const allUserExperience = await experienceGet(3, undefined, undefined, undefined);
+    const allUserExperience = await experienceGet(3, undefined, 'TEXT' as ExperienceType, undefined);
 
     // log.debug(F, `allUserExperience: ${JSON.stringify(allUserExperience, null, 2)}`);
 
@@ -73,9 +74,9 @@ export async function leaderboard(
       }
     }
 
-    // Grab all the user experience from the database
+    // Grab the top three of each experience category
     for (const category of ['TRIPSITTER', 'GENERAL', 'DEVELOPER', 'TEAM', 'IGNORED']) { // eslint-disable-line
-      const userExperience = await experienceGet(3, category, undefined, undefined);// eslint-disable-line
+      const userExperience = await experienceGet(3, category as ExperienceCategory, 'TEXT' as ExperienceType, undefined);// eslint-disable-line
       let categoryRank = 0;
       for (const user of userExperience) { // eslint-disable-line
         categoryRank += 1;
@@ -138,9 +139,9 @@ export async function leaderboard(
       }
     }
   } else {
-    // Grab all the user experience from the database
+    // Grab top 15 of that category
 
-    const userExperience = await experienceGet(15, categoryName, undefined, undefined);
+    const userExperience = await experienceGet(15, categoryName as ExperienceCategory, 'TEXT' as ExperienceType, undefined);
 
     // log.debug(F, `userExperience: ${JSON.stringify(userExperience, null, 2)}`);
 

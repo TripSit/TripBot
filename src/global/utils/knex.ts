@@ -3,6 +3,8 @@ import knex from 'knex';
 import {
   DiscordGuilds,
   DrugNames,
+  ExperienceCategory,
+  ExperienceType,
   ReactionRoles,
   Rss,
   UserActions,
@@ -417,8 +419,8 @@ export async function reactionroleGet(
 
 export async function experienceGet(
   limit:number,
-  category:string | undefined,
-  type:string | undefined,
+  category:ExperienceCategory | undefined,
+  type:ExperienceType | undefined,
   userId:string | undefined,
 ):Promise<UserExperience[]> {
 // log.debug(F, 'experienceGet started');
@@ -426,14 +428,14 @@ export async function experienceGet(
   if (category) {
     if (type) {
       if (userId) {
-        // log.debug(F, 'experienceGet started with userId and category');
+        // log.debug(F, 'experienceGet started with userId type and category');
         return db<UserExperience>('user_experience')
           .where('user_id', userId)
           .andWhere('category', category)
           .andWhere('type', type)
           .limit(limit);
       }
-      // log.debug(F, 'experienceGet started with category');
+      log.debug(F, 'experienceGet started with category and type');
       return db<UserExperience>('user_experience')
         .select('*')
         .where('category', category)
@@ -442,13 +444,13 @@ export async function experienceGet(
         .limit(limit);
     }
     if (userId) {
-    // log.debug(F, 'experienceGet started with userId and category');
+      log.debug(F, 'experienceGet started with userId and category');
       return db<UserExperience>('user_experience')
         .where('user_id', userId)
         .andWhere('category', category)
         .limit(limit);
     }
-    // log.debug(F, 'experienceGet started with category');
+    log.debug(F, 'experienceGet started with category');
     return db<UserExperience>('user_experience')
       .select('*')
       .where('category', category)
@@ -457,23 +459,23 @@ export async function experienceGet(
   }
   if (userId) {
     if (type) {
-      // log.debug(F, 'experienceGet started with type');
+      log.debug(F, 'experienceGet started with userid and type');
       return db<UserExperience>('user_experience')
         .select('*')
         .where('type', type)
         .orderBy('total_points', 'desc')
         .limit(limit);
     }
-    // log.debug(F, 'experienceGet started with userId');
+    log.debug(F, 'experienceGet started with userId');
     return db<UserExperience>('user_experience')
       .where('user_id', userId)
       .orderBy('level', 'desc')
       .limit(limit);
   }
   if (type) {
-    // log.debug(F, 'experienceGet started with type');
+    log.debug(F, 'experienceGet started with type');
     return (await db<UserExperience>('user_experience')
-      .select('*')
+      .select(db.ref('user_id'))
       .where('type', type)
       .andWhereNot('category', 'TOTAL')
       .andWhereNot('category', 'IGNORED')
@@ -482,11 +484,12 @@ export async function experienceGet(
       .orderBy('total_points', 'desc')
       .limit(limit)) as UserExperience[];
   }
-  // log.debug(F, 'experienceGet started without category');
+  log.debug(F, 'experienceGet started without any options');
   return (await db<UserExperience>('user_experience')
-    .select('*')
+    .select(db.ref('user_id'))
     .whereNot('category', 'TOTAL')
     .andWhereNot('category', 'IGNORED')
+    .andWhereNot('type', 'VOICE')
     .groupBy(['user_id'])
     .sum({ total_points: 'total_points' })
     .orderBy('total_points', 'desc')

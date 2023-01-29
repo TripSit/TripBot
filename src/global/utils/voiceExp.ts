@@ -3,20 +3,9 @@
 import {
   CategoryChannel,
   ChannelType,
-  GuildMember,
-  TextChannel,
 } from 'discord.js';
-import Parser from 'rss-parser';
-import { stripIndents } from 'common-tags';
-import { embedTemplate } from '../../discord/utils/embedTemplate';
-import {
-  experienceGet,
-  experienceUpdate,
-  getUser,
-  rssGet, rssSet,
-} from './knex';
-import { ExperienceCategory, ExperienceType, UserExperience } from '../@types/pgdb';
-import { expForNextLevel } from './experience';
+import { ExperienceCategory, ExperienceType } from '../@types/pgdb';
+import { experience } from './experience';
 
 export default runVoiceCheck;
 
@@ -89,60 +78,7 @@ async function checkVoice() {
             // For each human in chat, check if they have been awarded voice exp in the last 5 minutes
             // If they have not, award them voice exp
             humansInChat.forEach(async member => {
-              // Find the user in the db
-              const userData = await getUser(member.id, null);
-              const [experienceData] = await experienceGet(1, categoryDef.category, 'VOICE', userData.id);
-
-              if (experienceData) {
-                const origPoints = experienceData.level_points;
-                const expToLevel = await expForNextLevel(experienceData.level);
-                // If the user has been awarded voice exp in the last 5 minutes, do nothing
-                if (experienceData.last_message_at.getTime() + expInterval > new Date().getTime()) {
-                  log.debug(
-                    F,
-                    `[${channel.name}] ${member.displayName}: ${origPoints} + 0 = ${experienceData.level_points} / ${expToLevel} > ${experienceData.level + 1})`, // eslint-disable-line max-len
-                  );
-                } else {
-                  // If the user has not been awarded voice exp in the last 5 minutes, award them voice exp
-                  experienceData.level_points += expPoints;
-                  experienceData.total_points += expPoints;
-
-                  if (expToLevel < experienceData.level_points) {
-                    experienceData.level += 1;
-                    const channelTripbotlogs = await channel.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-                    // Lowercase everything but the first letter in the categoryDef.category
-                    const categoryName = categoryDef.category.charAt(0).toUpperCase() + categoryDef.category.slice(1).toLowerCase(); // eslint-disable-line max-len
-                    await channelTripbotlogs.send(stripIndents`${member.displayName} has leveled up to ${categoryDef.category} Voice level ${experienceData.level}!`); // eslint-disable-line max-len
-                    log.debug(F, `${member.displayName} has leveled up to ${categoryName} Voice level ${experienceData.level}!`); // eslint-disable-line max-len
-                    experienceData.level_points -= expToLevel;
-                  }
-                  experienceData.last_message_at = new Date();
-                  experienceData.last_message_channel = channel.id;
-
-                  log.debug(
-                    F,
-                    `[${channel.name}] ${member.displayName}: ${origPoints} + ${expPoints} = ${experienceData.level_points} / ${expToLevel} > ${experienceData.level + 1})`, // eslint-disable-line max-len
-                  );
-                  await experienceUpdate(experienceData);
-                }
-              } else {
-                const newUser = {
-                  user_id: userData.id,
-                  category: `${categoryDef.category}`,
-                  type: 'VOICE',
-                  level: 0,
-                  level_points: expPoints,
-                  total_points: expPoints,
-                  last_message_at: new Date(),
-                  last_message_channel: channel.id,
-                } as UserExperience;
-                // log.debug(F, `Adding new user to voice exp table: ${JSON.stringify(newUser)}`);
-                log.debug(
-                  F,
-                  `[${channel.name}] ${member.displayName}: 0 + ${expPoints} = ${expPoints} / ?? > 1`, // eslint-disable-line max-len
-                );
-                await experienceUpdate(newUser);
-              }
+              await experience(member, categoryDef.category, 'VOICE' as ExperienceType, channel);
             });
           }
         }

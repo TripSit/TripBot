@@ -355,10 +355,10 @@ export const dProfile: SlashCommand = {
     }
 
     // Messages Sent Text
-    const totalData = await getTotalLevel(targetData.totalExp);
+    const totalData = await getTotalLevel(targetData.totalTextExp);
     // log.debug(F, `TotalData: ${JSON.stringify(totalData, null, 2)}`);
-    if (targetData.totalExp) {
-      const MessagesSent = targetData.totalExp / 20;
+    if (targetData.totalTextExp) {
+      const MessagesSent = targetData.totalTextExp / 20;
       context.fillText(`${numFormatter(MessagesSent)}`, 429, 201);
     }
 
