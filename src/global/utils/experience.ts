@@ -97,7 +97,6 @@ export async function experience(
   // If the time diff is over one bufferTime, increase the experience points
   experienceData.level_points += expPoints;
   experienceData.total_points += expPoints;
-  log.debug(F, `I gave ${message.author.username} ${expPoints} ${experienceType} experience points!`);
 
   // Determine how many exp points are needed to level up
   const expToLevel = 5 * (experienceData.level ** 2) + (50 * experienceData.level) + 100;
@@ -105,7 +104,7 @@ export async function experience(
   if (expToLevel < experienceData.level_points) {
     experienceData.level += 1;
     const channelTripbotlogs = await message.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-    await channelTripbotlogs.send(stripIndents`${message.member} has leveled up to ${experienceType} level ${experienceData.level}!`);
+    await channelTripbotlogs.send(stripIndents`${message.member.displayName} has leveled up to ${experienceType} level ${experienceData.level}!`);
     log.debug(F, `${message.author.username} has leveled up to ${experienceType} level ${experienceData.level}!`);
 
     if (experienceData.level % 10 === 0) {
@@ -128,6 +127,8 @@ export async function experience(
     experienceData.level_points -= expToLevel;
   }
 
+  log.debug(F, `${message.author.username} +${expPoints} (${experienceData.level_points}/${expToLevel}>${experienceData.level}) ${experienceType} = ${message.channel.name}`);
+
   experienceData.last_message_at = new Date();
   experienceData.last_message_channel = message.channel.id;
 
@@ -142,7 +143,7 @@ export async function experience(
   // Get the total level
   const totalData = await getTotalLevel(totalExp + expPoints);
 
-  log.debug(F, `totalData: ${JSON.stringify(totalData, null, 2)}`);
+  // log.debug(F, `totalData: ${JSON.stringify(totalData, null, 2)}`);
 
   // Determine the first digit of the level
   const levelTier = Math.floor(totalData.level / 10);
@@ -205,17 +206,17 @@ async function giveMilestone(
     },
   };
 
-  log.debug(F, `LevelTier: ${levelTier}`);
+  // log.debug(F, `LevelTier: ${levelTier}`);
 
   const role = await message.guild?.roles.fetch(roleDefs[levelTier as keyof typeof roleDefs].role) as Role;
 
-  log.debug(F, `Role: ${role.name} (${role.id})`);
+  // log.debug(F, `Role: ${role.name} (${role.id})`);
 
   if (levelTier >= 1) {
     const previousRole = await message.guild?.roles.fetch(
       roleDefs[(levelTier - 1) as keyof typeof roleDefs].role,
     ) as Role;
-    log.debug(F, `Previous role: ${previousRole.name} (${previousRole.id})`);
+    // log.debug(F, `Previous role: ${previousRole.name} (${previousRole.id})`);
     if (message.member?.roles.cache.has(previousRole.id)) {
       log.debug(F, `Removing ${message.member} role ${previousRole.name} (${previousRole.id})`);
       message.member?.roles.remove(previousRole);
@@ -226,7 +227,7 @@ async function giveMilestone(
   if (!message.member?.roles.cache.has(role.id)) {
     log.debug(F, `Giving ${message.member} role ${role.name} (${role.id})`);
     await message.member?.roles.add(role);
-    if (levelTier !== 1) {
+    if (levelTier >= 2) {
       const channel = await message.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
       await channel.send(`${emojis} **${message.member} has reached TOTAL level ${levelTier}0!** ${emojis}`);
     }
