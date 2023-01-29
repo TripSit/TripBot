@@ -97,7 +97,7 @@ export async function experience(
   // If the time diff is over one bufferTime, increase the experience points
   experienceData.level_points += expPoints;
   experienceData.total_points += expPoints;
-  log.debug(F, `I gave ${message.author.username} ${expPoints} ${experienceType} experience points for talking in ${message.channel}`);
+  log.debug(F, `I gave ${message.author.username} ${expPoints} ${experienceType} experience points for talking in ${message.channel.name}`);
 
   // Determine how many exp points are needed to level up
   const expToLevel = 5 * (experienceData.level ** 2) + (50 * experienceData.level) + 100;
