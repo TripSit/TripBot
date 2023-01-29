@@ -9,7 +9,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { startLog } from '../../utils/startLog';
 import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-line
-import { hasPermissions } from '../../utils/checkPermissions';
+import { checkChannelPermissions } from '../../utils/checkPermissions';
 
 const F = f(__filename);
 
@@ -126,7 +126,7 @@ export const dPoll: SlashCommand = {
       pollEmbed.setTitle(`**${question}**`);
     }
 
-    const hasPostPermission = hasPermissions(interaction, interaction.channel, [
+    const hasPostPermission = checkChannelPermissions(interaction.channel, [
       'ViewChannel' as PermissionResolvable,
       'SendMessages' as PermissionResolvable,
       'AddReactions' as PermissionResolvable,

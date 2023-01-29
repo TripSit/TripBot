@@ -220,19 +220,21 @@ export const dProfile: SlashCommand = {
     context.stroke();
 
     // WIP: Purchased Background
-    const Background = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'background.png'));
-    context.save();
-    context.globalCompositeOperation = 'lighten';
-    context.globalAlpha = 0.03;
-    context.beginPath();
-    context.roundRect(9, 9, 657, 274, [10]);
-    context.roundRect(693, 9, 216, 274, [10]);
-    context.clip();
-    context.drawImage(Background, 0, 0);
-    context.restore();
+    // const Background = await Canvas.loadImage('https://i.gyazo.com/adfbab1d3fdeadef74ec18ce6efe869c.png');
+    // const Background = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'background.png'));
+    // context.save();
+    // context.globalCompositeOperation = 'lighten';
+    // context.globalAlpha = 0.03;
+    // context.beginPath();
+    // context.roundRect(9, 9, 657, 274, [10]);
+    // context.roundRect(693, 9, 216, 274, [10]);
+    // context.clip();
+    // context.drawImage(Background, 0, 0);
+    // context.restore();
 
     // Load Icon Images
-    const Icons = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'icons.png'));
+    const Icons = await Canvas.loadImage('https://i.gyazo.com/6669a36a7adf68996354bd7586cd7083.png');
+    // const Icons = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'icons.png'));
     context.drawImage(Icons, 5, 0, 913, 292);
 
     // Avatar Image
@@ -254,11 +256,25 @@ export const dProfile: SlashCommand = {
     context.fill();
     context.restore();
 
-    const StatusIconPath = target.presence
-      ? path.join(__dirname, '..', '..', 'assets', 'img', 'icons', `${target.presence?.status}.png`)
-      : path.join(__dirname, '..', '..', 'assets', 'img', 'icons', 'offline.png');
+    // const StatusIconPath = target.presence
+    //   ? path.join(__dirname, '..', '..', 'assets', 'img', 'icons', `${target.presence?.status}.png`)
+    //   : path.join(__dirname, '..', '..', 'assets', 'img', 'icons', 'offline.png');
 
-    log.debug(F, `StatusIconPath: ${StatusIconPath}`);
+    // log.debug(F, `StatusIconPath: ${StatusIconPath}`);
+
+    let StatusIconPath = 'https://i.gyazo.com/b2b1bf7d91acdb4ccc72dfde3d7075fc.png';
+    if (target.presence) {
+      if (target.presence.status === 'online') {
+        // StatusIconPath = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
+        StatusIconPath = 'https://i.gyazo.com/cd7b9e018d4818e4b6588cab5d5b019d.png';
+      } else if (target.presence.status === 'idle') {
+        // StatusIconPath = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
+        StatusIconPath = 'https://i.gyazo.com/df8f4a4ca2553d4d657ee82e4bf64a3a.png';
+      } else if (target.presence.status === 'dnd') {
+        // StatusIconPath = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
+        StatusIconPath = 'https://i.gyazo.com/a98f0e9dd72f6fb59af388d719d01e64.png';
+      }
+    }
 
     try {
       const StatusIcon = await Canvas.loadImage(StatusIconPath);
@@ -315,9 +331,9 @@ export const dProfile: SlashCommand = {
         itIsYourBirthday = true;
       }
       if (targetBirthday.getDate() < 10) {
-        context.fillText(`${targetBirthday.toLocaleString('en-GB', { month: 'short' })} 0${targetBirthday.getDate()}`, 205, 260);
+        context.fillText(`0${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 260);
       } else {
-        context.fillText(`${targetBirthday.toLocaleString('en-GB', { month: 'short' })} ${targetBirthday.getDate()}`, 205, 260);
+        context.fillText(`${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 260);
       }
     } else {
       context.fillText('NOT SET!', 210, 260);
@@ -340,6 +356,7 @@ export const dProfile: SlashCommand = {
 
     // Messages Sent Text
     const totalData = await getTotalLevel(targetData.totalExp);
+    // log.debug(F, `TotalData: ${JSON.stringify(totalData, null, 2)}`);
     if (targetData.totalExp) {
       const MessagesSent = targetData.totalExp / 20;
       context.fillText(`${numFormatter(MessagesSent)}`, 429, 201);
@@ -358,11 +375,46 @@ export const dProfile: SlashCommand = {
     context.fillText(`${totalData.level}`, 894, 260);
 
     // Get the first number of the level
-    const levelTier = Math.floor(totalData.level / 10);
+    // const levelTier = Math.floor(totalData.level / 10);
+
+    // try {
+    //   // log.debug(F, `LevelImagePath: ${LevelImagePath}`);
+    //   const LevelImage = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'badges', `VIP${levelTier}.png`));
+    //   context.drawImage(LevelImage, 756, 59, 90, 90);
+    // } catch (err) {
+    //   log.error(F, `Error loading star image: ${err}`);
+    // }
+
+    // Choose and Draw the Star Image
+    let LevelImagePath = 'https://i.gyazo.com/13daebdda4ca75ab59923396f255f7db.png';
+
+    if (totalData.level < 10) {
+      LevelImagePath = 'https://i.gyazo.com/13daebdda4ca75ab59923396f255f7db.png';
+    } else if (totalData.level < 20) {
+      LevelImagePath = 'https://i.gyazo.com/5d37a2d3193c4c7e8a033b6b2ed7cb7f.png';
+    } else if (totalData.level < 30) {
+      LevelImagePath = 'https://i.gyazo.com/161506f23b1907ac1280db26ead5a0a4.png';
+    } else if (totalData.level < 40) {
+      LevelImagePath = 'https://i.gyazo.com/4bd15a019f7fd5c881e196c38a8b8bf5.png';
+    } else if (totalData.level < 50) {
+      LevelImagePath = 'https://i.gyazo.com/ca0b1aca00a71a992c196ca0498efef3.png';
+    } else if (totalData.level < 60) {
+      LevelImagePath = 'https://i.gyazo.com/f614a14051dbc1366ce4de2ead98a519.png';
+    } else if (totalData.level < 70) {
+      LevelImagePath = 'https://i.gyazo.com/3844d103c034f16e781fd947f593895c.png';
+    } else if (totalData.level < 80) {
+      LevelImagePath = 'https://i.gyazo.com/0357a63887c1183d53827eb8ebb29ee3.png';
+    } else if (totalData.level < 90) {
+      LevelImagePath = 'https://i.gyazo.com/693948d030989ffa5bf5e381f471bac6.png';
+    } else if (totalData.level < 100) {
+      LevelImagePath = 'https://i.gyazo.com/eed9e28789262927cefe0a68b3126ed2.png';
+    } else if (totalData.level >= 100) {
+      LevelImagePath = 'https://i.gyazo.com/4428c08aaf82b7363fb7a327ce27a4c3.png';
+    }
 
     try {
       // log.debug(F, `LevelImagePath: ${LevelImagePath}`);
-      const LevelImage = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'badges', `VIP${levelTier}.png`));
+      const LevelImage = await Canvas.loadImage(LevelImagePath);
       context.drawImage(LevelImage, 756, 59, 90, 90);
     } catch (err) {
       log.error(F, `Error loading star image: ${err}`);
@@ -370,14 +422,27 @@ export const dProfile: SlashCommand = {
 
     // Level Bar Math
     let percentageOfLevel = 0;
-    percentageOfLevel = (totalData.levelPoints / totalData.expToLevel);
+    const expToLevel = 5 * (totalData.level ** 2) + (50 * totalData.level) + 100;
+    percentageOfLevel = (totalData.level_points / expToLevel);
     log.debug(F, `percentageOfLevel: ${percentageOfLevel}`);
 
     // Circular Level Bar
     context.beginPath();
     context.lineWidth = 18;
     context.lineCap = 'round';
-    context.arc(801, 104, 77, 1.5 * Math.PI, (0.70 * 1.4999) * Math.PI, false);
+    // context.arc(801, 104, 77, 1.5 * Math.PI, (0.70 * 1.4999) * Math.PI, false);
+
+    // Start at the 0 degrees position, in human terms, the 12 o'clock position
+    const startDegrees = 0;
+    // End degrees is the percentage of the level * 360 degrees, or a full circle
+    const endDegrees = 360 * percentageOfLevel;
+
+    // Canvas thinks that the "start" of a circle is the 3 o'clock position,
+    // so we need to subtract 90 degrees from the start and end degrees to "rotate" the circle
+    const startRadians = ((startDegrees - 90) * Math.PI) / 180;
+    const endRadians = ((endDegrees - 90) * Math.PI) / 180;
+
+    context.arc(801, 104, 77, startRadians, endRadians);
     context.strokeStyle = textColor;
     context.stroke();
 
@@ -399,8 +464,8 @@ export const dProfile: SlashCommand = {
       context.textAlign = 'center';
       context.fillStyle = textColor;
       context.fillText('HAPPY BIRTHDAY!', 467, 55);
-      // const birthdayOverlay = await Canvas.loadImage('https://i.imgur.com/uOkR6uf.png');
-      const birthdayOverlay = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'birthday.png'));
+      const birthdayOverlay = await Canvas.loadImage('https://i.imgur.com/uOkR6uf.png');
+      // const birthdayOverlay = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'birthday.png'));
       context.drawImage(birthdayOverlay, 0, 0, 934, 282);
     }
 

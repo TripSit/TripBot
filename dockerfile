@@ -3,6 +3,11 @@ FROM node:16.17.1
 # Create app directory
 WORKDIR /usr/src/app
 
+# Update npm
+# RUN npm install npm@5.3.0
+# RUN rm -rf /usr/local/lib/node_modules/npm
+# RUN mv node_modules/npm /usr/local/lib/node_modules/npm
+
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 # where available (npm@5+)

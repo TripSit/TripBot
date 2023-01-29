@@ -3,6 +3,7 @@ import {
   Collection,
   Guild,
   Invite,
+  PermissionResolvable,
   TextChannel,
 } from 'discord.js';
 import { setTimeout } from 'timers/promises';
@@ -39,16 +40,22 @@ export const ready: ReadyEvent = {
   name: 'ready',
   once: true,
   async execute(client) {
-    const tripsitGuild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
     await setTimeout(1000);
     startStatusLoop(client);
-    Promise.all([checkGuildPermissions(client, tripsitGuild)]).then(async () => {
+    const hostGuild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
+    await checkGuildPermissions(hostGuild, [
+      'Administrator' as PermissionResolvable,
+    ]).then(async result => {
+      if (!result.hasPermission) {
+        log.error(F, `I do not have the '${result.permission}' permission in ${hostGuild.name}!`);
+        process.exit(1);
+      }
       Promise.all([getInvites(client)]).then(async () => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
         log.info(F, `Discord finished booting in ${bootDuration}s!`);
         if (env.NODE_ENV !== 'development') {
           const botlog = await client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-          const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
+          const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
           const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
           await botlog.send(`Hey ${tripbotdevrole}, bot has restart! Booted in ${bootDuration} seconds`);
         }

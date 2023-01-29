@@ -22,9 +22,9 @@ export const validateEnv = () => {
     log.warn(F, 'Missing POSTGRES_DBURL: You wont be able to use the database!');
   }
 
-  if (!process.env.DISCORD_CLIENT_SECRET) {
-    log.warn(F, 'Missing DISCORD_CLIENT_SECRET: I think this is an oauth thing?');
-  }
+  // if (!process.env.DISCORD_CLIENT_SECRET) {
+  //   log.warn(F, 'Missing DISCORD_CLIENT_SECRET: I think this is an oauth thing?');
+  // }
 
   if (!process.env.GITHUB_TOKEN) {
     log.warn(F, 'Missing GITHUB_TOKEN: You wont be able to use /issue');

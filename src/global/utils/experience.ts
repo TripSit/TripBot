@@ -8,14 +8,22 @@ import {
 import { DateTime } from 'luxon';
 import { stripIndents } from 'common-tags';
 import {
-  experienceGet, experienceGetTop, experienceUpdate, getUser,
+  experienceGet,
+  experienceGetTop, experienceUpdate, getUser,
 } from './knex';
 import { UserExperience, ExperienceType } from '../@types/pgdb';
 
-const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
+
+export default experience;
 
 // Define the time in between messages where exp will count
 const bufferTime = env.NODE_ENV === 'production' ? 60 * 1000 : 1 * 1000;
+
+// Get random value between 15 and 25
+const expPoints = env.NODE_ENV === 'production'
+  ? Math.floor(Math.random() * (25 - 15 + 1)) + 15
+  : 1000;
 
 const ignoredRoles = Object.values({
   needshelp: [env.ROLE_NEEDSHELP],
@@ -25,7 +33,205 @@ const ignoredRoles = Object.values({
   tempvoice: [env.ROLE_TEMPVOICE],
 }).flat();
 
-export default experience;
+/**
+ * This takes a messsage and gives the user experience
+ * @param {Message} message The message object to check
+ */
+export async function experience(
+  message:Message,
+) {
+  // Ignore this message if the user...
+  if (
+    !message.member // Is not a member of a guild
+    || !message.channel // Was not sent in a channel
+    || !(message.channel instanceof TextChannel) // Was not sent in a text channel
+    || !message.guild // Was not sent in a guild
+    || message.author.bot // Was sent by a bot
+    || ignoredRoles.some(role => message.member?.roles.cache.has(role)) // Has a role that should be ignored
+  ) {
+    return;
+  }
+
+  // Determine what kind of experience to give
+  const experienceType = await getType(message.channel);
+  // log.debug(F, `experienceType: ${experienceType}`);
+
+  const userData = await getUser(message.author.id, null);
+  // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
+
+  const [experienceData] = await experienceGetTop(1, experienceType, userData.id);
+  // log.debug(F, `Start type: ${experienceData.type} | level: ${experienceData.level} | level_points: ${experienceData.level_points} | total_points: ${experienceData.total_points}`);
+
+  // If the user has no experience, insert it, and we're done here
+  if (!experienceData) {
+    // log.debug(F, 'Inserting new experience');
+    // log.debug(F, `experienceDataInsert: ${JSON.stringify(experienceData, null, 2)}`);
+    await experienceUpdate({
+      user_id: userData.id,
+      type: experienceType,
+      level_points: expPoints,
+      total_points: expPoints,
+      last_message_at: new Date(),
+      last_message_channel: message.channel.id,
+      level: 0,
+    } as UserExperience);
+    // Give the user the VIP 0 role the first time they talk
+    const role = await message.guild?.roles.fetch(env.ROLE_VIP_0) as Role;
+    await message.member?.roles.add(role);
+    return;
+  }
+
+  // If the user has experience, heck if the message happened in the last minute
+  // log.debug(F, `lastMessageAt: ${experienceData.last_message_at}`);
+  const lastMessageDate = DateTime.fromJSDate(experienceData.last_message_at);
+
+  const currentDate = DateTime.now();
+  const diff = currentDate.diff(lastMessageDate).toObject();
+  // log.debug(F, `diff: ${JSON.stringify(diff)}`);
+
+  if (diff.milliseconds && diff.milliseconds < bufferTime) {
+    // log.debug(F, `Message sent by a user in the last minute`);
+    return;
+  }
+
+  // If the time diff is over one bufferTime, increase the experience points
+  experienceData.level_points += expPoints;
+  experienceData.total_points += expPoints;
+  log.debug(F, `I gave ${message.author.username} ${expPoints} ${experienceType} experience points!`);
+
+  // Determine how many exp points are needed to level up
+  const expToLevel = 5 * (experienceData.level ** 2) + (50 * experienceData.level) + 100;
+
+  if (expToLevel < experienceData.level_points) {
+    experienceData.level += 1;
+    const channelTripbotlogs = await message.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+    await channelTripbotlogs.send(stripIndents`${message.member} has leveled up to ${experienceType} level ${experienceData.level}!`);
+    log.debug(F, `${message.author.username} has leveled up to ${experienceType} level ${experienceData.level}!`);
+
+    if (experienceData.level % 10 === 0) {
+      let id = '' as string;
+      // log.debug(F, `experienceType: ${experienceType}`);
+      if (experienceType === 'GENERAL' as ExperienceType) {
+        id = env.CHANNEL_LOUNGE;
+      } else if (experienceType === 'TRIPSITTER' as ExperienceType) {
+        id = env.CHANNEL_TRIPSITMETA;
+      } else if (experienceType === 'DEVELOPER' as ExperienceType) {
+        id = env.CHANNEL_DEVELOPMENT;
+      } else if (experienceType === 'TEAM' as ExperienceType) {
+        id = env.CHANNEL_TEAMTRIPSIT;
+      }
+      const channel = await message.guild.channels.fetch(id) as TextChannel;
+      const emojis = [...announcementEmojis].sort(() => 0.5 - Math.random()).slice(0, 3); // Sort the array
+      await channel.send(`${emojis} **${message.member} has reached ${experienceType} level ${experienceData.level}!** ${emojis}`);
+    }
+
+    experienceData.level_points -= expToLevel;
+  }
+
+  experienceData.last_message_at = new Date();
+  experienceData.last_message_channel = message.channel.id;
+
+  const expData = await experienceGet(userData.id);
+  await experienceUpdate(experienceData);
+  // Calculate total experience points
+  const totalExp = expData
+    .filter(exp => exp.type !== 'TOTAL' && exp.type !== 'IGNORED')
+    .reduce((acc, exp) => acc + exp.total_points, 0);
+
+  // Pretend that the total exp would get the same exp as the category
+  // Get the total level
+  const totalData = await getTotalLevel(totalExp + expPoints);
+
+  log.debug(F, `totalData: ${JSON.stringify(totalData, null, 2)}`);
+
+  // Determine the first digit of the level
+  const levelTier = Math.floor(totalData.level / 10);
+
+  // Try to give the appropriate role
+  await giveMilestone(message, levelTier);
+}
+
+async function giveMilestone(
+  message:Message,
+  levelTier:number,
+) {
+  // get three random emojis from announcementEmojis
+  const emojis = [...announcementEmojis].sort(() => 0.5 - Math.random()).slice(0, 3); // Sort the array
+
+  const roleDefs = {
+    0: {
+      message: '',
+      role: env.ROLE_VIP_0 as string,
+    },
+    1: {
+      message: `${emojis} **${message.member} has reached level 10!** ${emojis}`,
+      role: env.ROLE_VIP_1 as string,
+    },
+    2: {
+      message: `${emojis} **${message.member} has reached level 20!** ${emojis}`,
+      role: env.ROLE_VIP_2 as string,
+    },
+    3: {
+      message: `${emojis} **${message.member} has reached level 30!** ${emojis}`,
+      role: env.ROLE_VIP_3 as string,
+    },
+    4: {
+      message: `${emojis} **${message.member} has reached level 40!** ${emojis}`,
+      role: env.ROLE_VIP_4 as string,
+    },
+    5: {
+      message: `${emojis} **${message.member} has reached level 50!** ${emojis}`,
+      role: env.ROLE_VIP_5 as string,
+    },
+    6: {
+      message: `${emojis} **${message.member} has reached level 60!** ${emojis}`,
+      role: env.ROLE_VIP_6 as string,
+    },
+    7: {
+      message: `${emojis} **${message.member} has reached level 70!** ${emojis}`,
+      role: env.ROLE_VIP_7 as string,
+    },
+    8: {
+      message: `${emojis} **${message.member} has reached level 80!** ${emojis}`,
+      role: env.ROLE_VIP_8 as string,
+    },
+    9: {
+      message: `${emojis} **${message.member} has reached level 90!** ${emojis}`,
+      role: env.ROLE_VIP_9 as string,
+    },
+    10: {
+      message: `${emojis} **${message.member} has reached level 100!** ${emojis}`,
+      role: env.ROLE_VIP_10 as string,
+    },
+  };
+
+  log.debug(F, `LevelTier: ${levelTier}`);
+
+  const role = await message.guild?.roles.fetch(roleDefs[levelTier as keyof typeof roleDefs].role) as Role;
+
+  log.debug(F, `Role: ${role.name} (${role.id})`);
+
+  if (levelTier >= 1) {
+    const previousRole = await message.guild?.roles.fetch(
+      roleDefs[(levelTier - 1) as keyof typeof roleDefs].role,
+    ) as Role;
+    log.debug(F, `Previous role: ${previousRole.name} (${previousRole.id})`);
+    if (message.member?.roles.cache.has(previousRole.id)) {
+      log.debug(F, `Removing ${message.member} role ${previousRole.name} (${previousRole.id})`);
+      message.member?.roles.remove(previousRole);
+    }
+  }
+
+  // Check if the member already has the resulting role, and if not, add it
+  if (!message.member?.roles.cache.has(role.id)) {
+    log.debug(F, `Giving ${message.member} role ${role.name} (${role.id})`);
+    await message.member?.roles.add(role);
+    if (levelTier !== 1) {
+      const channel = await message.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      await channel.send(`${emojis} **${message.member} has reached TOTAL level ${levelTier}0!** ${emojis}`);
+    }
+  }
+}
 
 async function getType(channel:TextChannel):Promise<ExperienceType> {
   let experienceType = '';
@@ -61,202 +267,31 @@ async function getType(channel:TextChannel):Promise<ExperienceType> {
   return experienceType as ExperienceType;
 }
 
-export async function getTotalLevel(totalExp:number):Promise<{
-  level:number,
-  levelPoints:number,
-  expToLevel:number,
-}> {
+export async function getTotalLevel(
+  totalExp:number,
+):Promise<Omit<UserExperience, 'id' | 'user_id' | 'type' | 'total_points' | 'last_message_at' | 'last_message_channel' | 'created_at'>> {
   // log.debug('totalLevel', `totalExp: ${totalExp}`);
   let level = 0;
   let levelPoints = totalExp;
-  let expToLevel = 0;
-  while (levelPoints > expToLevel) {
-    // log.debug(F, `totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
+  let expToLevel = 5 * (level ** 2) + (50 * level) + 100;
+  while (levelPoints >= expToLevel) {
+    // log.debug(F, `Level ${level} with ${levelPoints} experience points has ${expToLevel} points to level up`);
     level += 1;
-    expToLevel = 5 * (level ** 2) + (50 * level) + 100;
+    // log.debug(F, `Incremented level to ${level}`);
+    const newExpToLevel = 5 * (level ** 2) + (50 * level) + 100;
     levelPoints -= expToLevel;
+    // log.debug(F, `Now needs ${newExpToLevel} to get level ${level} and has ${levelPoints} experience points`);
+    expToLevel = newExpToLevel;
   }
-  // log.debug(F, `totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
-  return { level, levelPoints, expToLevel };
+  // log.debug(F, `END: totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
+  return { level, level_points: levelPoints };
 }
 
-/**
- * This takes a messsage and gives the user experience
- * @param {Message} message The message object to check
- */
-export async function experience(
-  message:Message,
-) {
-  // If the message didnt come from a guild member, or inside of a channel, ignore it
-  if (!message.member || !message.channel) {
-    return;
-  }
-
-  // Determine what kind of experience to give
-  const channel = message.channel as TextChannel;
-  const experienceType = await getType(channel);
-
-  const actor = message.member;
-
-  // Check if the user has an ignored role
-  if (ignoredRoles.some(role => message.member?.roles.cache.has(role))) {
-    // log.debug(F, `Message sent by a user with an ignored role`);
-    return;
-  }
-
-  // log.debug(stripIndents`[${PREFIX}] Message sent by ${message.author.username} \
-  // in ${(message.channel as TextChannel).name} on ${message.guild}`);
-
-  // log.debug(F, `experienceType: ${experienceType}`);
-
-  // Get random value between 15 and 25
-  const expPoints = env.NODE_ENV === 'production'
-    ? Math.floor(Math.random() * (25 - 15 + 1)) + 15
-    : 100;
-
-  const userData = await getUser(message.author.id, null);
-
-  // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
-
-  const [experienceData] = await experienceGetTop(1, experienceType, userData.id);
-
-  // log.debug(F, `experienceData: ${JSON.stringify(experienceData, null, 2)}`);
-
-  // If the user has no experience, insert it
-  if (!experienceData) {
-    // log.debug(F, `Inserting new experience`);
-    // log.debug(F, `experienceDataInsert: ${JSON.stringify(experienceData, null, 2)}`);
-    await experienceUpdate({
-      user_id: userData.id,
-      type: experienceType,
-      level_points: expPoints,
-      total_points: expPoints,
-      last_message_at: new Date(),
-      last_message_channel: message.channel.id,
-      level: 0,
-    } as UserExperience);
-    return;
-  }
-  // If the user has experience, update it
-  // log.debug(F, `Updating existing experience`);
-  experienceData.level_points += expPoints;
-  experienceData.total_points += expPoints;
-
-  // log.debug(F, `experienceDataUpdate: ${JSON.stringify(experienceData, null, 2)}`);
-
-  // Check if the message happened in the last minute
-  // log.debug(F, `lastMessageAt: ${experienceData.last_message_at}`);
-  const lastMessageDate = DateTime.fromJSDate(experienceData.last_message_at);
-
-  const currentDate = DateTime.now();
-  const diff = currentDate.diff(lastMessageDate).toObject();
-  // log.debug(F, `diff: ${JSON.stringify(diff)}`);
-
-  // If the message happened in the last minute, ignore it
-  if (!diff.milliseconds) {
-    log.error(F, `Error converting ${lastMessageDate}`);
-    return;
-  }
-  if (diff.milliseconds < bufferTime) {
-    // log.debug(F, `Message sent by a user in the last minute`);
-    return;
-  }
-
-  // If the time diff is over one bufferTime, increase the experience points
-  let levelExpPoints = experienceData.level_points + expPoints;
-  const totalExpPoints = experienceData.total_points + expPoints;
-
-  let { level } = experienceData;
-  const expToLevel = 5 * (level ** 2) + (50 * level) + 100;
-
-  const guild = await message.client.guilds.fetch(env.DISCORD_GUILD_ID);
-  const channelTripbotlogs = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-  const member = await guild.members.fetch(actor.id);
-
-  // Calculate total experience points
-  let allExpPoints = 0;
-
-  const expData = await experienceGet(userData.id);
-
-  expData.forEach(exp => {
-    if (exp.type !== 'IGNORED' && exp.type !== 'TOTAL') {
-      allExpPoints += exp.total_points;
-    }
-  });
-
-  const totalData = await getTotalLevel(allExpPoints);
-
-  // Give the proper VIP role
-  let role = await guild.roles.fetch(env.ROLE_VIP_0) as Role;
-  if (totalData.level >= 10) {
-    // Check if the member already has the previous role, and if so, remove it
-    member.roles.remove(role);
-    role = await guild.roles.fetch(env.ROLE_VIP_10) as Role;
-    if (totalData.level >= 20) {
-      member.roles.remove(role);
-      role = await guild.roles.fetch(env.ROLE_VIP_20) as Role;
-      if (totalData.level >= 30) {
-        member.roles.remove(role);
-        role = await guild.roles.fetch(env.ROLE_VIP_30) as Role;
-        if (totalData.level >= 40) {
-          member.roles.remove(role);
-          role = await guild.roles.fetch(env.ROLE_VIP_40) as Role;
-          if (totalData.level >= 50) {
-            member.roles.remove(role);
-            role = await guild.roles.fetch(env.ROLE_VIP_50) as Role;
-            if (totalData.level >= 60) {
-              member.roles.remove(role);
-              role = await guild.roles.fetch(env.ROLE_VIP_60) as Role;
-              if (totalData.level >= 70) {
-                member.roles.remove(role);
-                role = await guild.roles.fetch(env.ROLE_VIP_70) as Role;
-                if (totalData.level >= 80) {
-                  member.roles.remove(role);
-                  role = await guild.roles.fetch(env.ROLE_VIP_80) as Role;
-                  if (totalData.level >= 90) {
-                    member.roles.remove(role);
-                    role = await guild.roles.fetch(env.ROLE_VIP_90) as Role;
-                    if (totalData.level >= 100) {
-                      member.roles.remove(role);
-                      role = await guild.roles.fetch(env.ROLE_VIP_100) as Role;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // Check if the member already has the resulting role, and if not, add it
-  // log.debug(F, `Checking if ${member.displayName} has role ${role.name}...`);
-  if (!member.roles.cache.has(role.id)) {
-    member.roles.add(role);
-    await channelTripbotlogs.send(stripIndents`${actor.displayName} was given ${role.name}`);
-  }
-
-  // eslint-disable-next-line max-len
-  // log.debug(stripIndents`[${PREFIX}] ${message.author.username } (lv${level}) +${expPoints} ${experienceType} exp | Total: ${totalExpPoints}, Level: ${levelExpPoints}, Needed to level up: ${expToLevel-levelExpPoints}`);
-  if (expToLevel < levelExpPoints) {
-    level += 1;
-    // log.debug(stripIndents`[${PREFIX}] ${message.author.username} has leveled up to ${experienceType} level ${level}!`);
-
-    if (level % 5 === 0) {
-      await channelTripbotlogs.send(stripIndents`${message.author.username} has leveled up to ${experienceType} level ${level}!`);
-    }
-    // await channelTripbotlogs.send({embeds: [embed]});
-    levelExpPoints -= expToLevel;
-    experienceData.level = level;
-  }
-
-  experienceData.level_points = levelExpPoints;
-  experienceData.total_points = totalExpPoints;
-  experienceData.last_message_at = new Date();
-  experienceData.last_message_channel = message.channel.id;
-
-  // log.debug(F, `experienceDataMerge: ${JSON.stringify(experienceData, null, 2)}`);
-
-  await experienceUpdate(experienceData);
-}
+const announcementEmojis = [
+  '🎉',
+  '🎊',
+  '🎈',
+  '🎁',
+  '🎆',
+  '🎇',
+];

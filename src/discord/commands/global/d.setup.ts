@@ -22,7 +22,7 @@ import { getGuild, guildUpdate } from '../../../global/utils/knex';
 import { startLog } from '../../utils/startLog';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { hasPermissions } from '../../utils/checkPermissions';
+import { checkChannelPermissions } from '../../utils/checkPermissions';
 
 const F = f(__filename);
 
@@ -192,8 +192,7 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  if (!await hasPermissions(
-    interaction,
+  if (!await checkChannelPermissions(
     (interaction.channel as TextChannel),
     [
       'ViewChannel' as PermissionResolvable,
@@ -208,8 +207,7 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  if (!await hasPermissions(
-    interaction,
+  if (!await checkChannelPermissions(
     (interaction.options.getChannel('metatripsit') as TextChannel),
     [
       'ViewChannel' as PermissionResolvable,
@@ -323,8 +321,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  if (!await hasPermissions(
-    interaction,
+  if (!await checkChannelPermissions(
     (interaction.channel as TextChannel),
     [
       'ViewChannel' as PermissionResolvable,
@@ -465,8 +462,7 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  if (!await hasPermissions(
-    interaction,
+  if (!await checkChannelPermissions(
     (interaction.channel as TextChannel),
     [
       'ViewChannel' as PermissionResolvable,
