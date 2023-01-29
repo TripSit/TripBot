@@ -142,7 +142,7 @@ export async function experience(
   // Get the total level
   const totalData = await getTotalLevel(totalExp + expPoints);
 
-  log.debug(F, `totalData: ${JSON.stringify(totalData, null, 2)}`);
+  // log.debug(F, `totalData: ${JSON.stringify(totalData, null, 2)}`);
 
   // Determine the first digit of the level
   const levelTier = Math.floor(totalData.level / 10);
@@ -205,17 +205,17 @@ async function giveMilestone(
     },
   };
 
-  log.debug(F, `LevelTier: ${levelTier}`);
+  // log.debug(F, `LevelTier: ${levelTier}`);
 
   const role = await message.guild?.roles.fetch(roleDefs[levelTier as keyof typeof roleDefs].role) as Role;
 
-  log.debug(F, `Role: ${role.name} (${role.id})`);
+  // log.debug(F, `Role: ${role.name} (${role.id})`);
 
   if (levelTier >= 1) {
     const previousRole = await message.guild?.roles.fetch(
       roleDefs[(levelTier - 1) as keyof typeof roleDefs].role,
     ) as Role;
-    log.debug(F, `Previous role: ${previousRole.name} (${previousRole.id})`);
+    // log.debug(F, `Previous role: ${previousRole.name} (${previousRole.id})`);
     if (message.member?.roles.cache.has(previousRole.id)) {
       log.debug(F, `Removing ${message.member} role ${previousRole.name} (${previousRole.id})`);
       message.member?.roles.remove(previousRole);
