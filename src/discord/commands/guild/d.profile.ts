@@ -46,7 +46,7 @@ const colorDefs = {
     textColor: '#ff6dcd',
   },
   [env.ROLE_RED]: {
-    cardDarkColor: '1f1616',
+    cardDarkColor: '#1f1616',
     cardLightColor: '#382727',
     chipColor: '#613838',
     textColor: '#ff5f60',
@@ -161,8 +161,8 @@ export const dProfile: SlashCommand = {
 
     // Choose color based on user's role
     const cardLightColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#141414';
-    const cardDarkColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#000000';
-    const chipColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.chipColor || '#000000';
+    const cardDarkColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#101010';
+    const chipColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.chipColor || '#202225';
     const textColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
 
     // const colorRole = target.roles.color;
