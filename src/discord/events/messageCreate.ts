@@ -64,19 +64,19 @@ export const messageCreate: MessageCreateEvent = {
     // }
 
     // Determine if the bot should give exp
-    if (
-      message.member // Is not a member of a guild
-    && message.channel // Was not sent in a channel
-    && (message.channel instanceof TextChannel) // Was not sent in a text channel
-    && message.guild // Was not sent in a guild
-    && !message.author.bot // Was sent by a bot
-    && !ignoredRoles.some(role => message.member?.roles.cache.has(role)) // Has a role that should be ignored
-    ) {
-      // Determine what kind of experience to give
-      const experienceCategory = await getCategory(message.channel);
-      // Run this now, so that when you're helping in the tech/tripsit rooms you'll always get exp
-      experience(message.member, experienceCategory, 'TEXT' as ExperienceType, message.channel);
-    }
+    // if (
+    //   message.member // Is not a member of a guild
+    // && message.channel // Was not sent in a channel
+    // && (message.channel instanceof TextChannel) // Was not sent in a text channel
+    // && message.guild // Was not sent in a guild
+    // && !message.author.bot // Was sent by a bot
+    // && !ignoredRoles.some(role => message.member?.roles.cache.has(role)) // Has a role that should be ignored
+    // ) {
+    //   // Determine what kind of experience to give
+    //   const experienceCategory = await getCategory(message.channel);
+    //   // Run this now, so that when you're helping in the tech/tripsit rooms you'll always get exp
+    //   experience(message.member, experienceCategory, 'TEXT' as ExperienceType, message.channel);
+    // }
 
     // Check if the message came in a thread in the helpdesk channel
 
