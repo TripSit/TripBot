@@ -93,6 +93,7 @@ export enum Table {
   Drugs = 'drugs',
   KnexMigrations = 'knex_migrations',
   KnexMigrationsLock = 'knex_migrations_lock',
+  Personas = 'personas',
   ReactionRoles = 'reaction_roles',
   Rss = 'rss',
   UserActions = 'user_actions',
@@ -211,6 +212,21 @@ export type KnexMigrations = {
 export type KnexMigrationsLock = {
   index: number;
   is_locked: number | null;
+};
+
+export type Personas = {
+  id: string;
+  user_id: string;
+  name: string;
+  class: string;
+  species: string;
+  guild: string;
+  tokens: number;
+  trip_token_multiplier: number;
+  last_quest: Date | null;
+  last_dungeon: Date | null;
+  last_raid: Date | null;
+  created_at: Date;
 };
 
 export type ReactionRoles = {

@@ -5,6 +5,7 @@ import {
   DrugNames,
   ExperienceCategory,
   ExperienceType,
+  Personas,
   ReactionRoles,
   Rss,
   UserActions,
@@ -600,5 +601,27 @@ export async function useractionsSet(
   await db<UserActions>('user_actions')
     .insert(data)
     .onConflict('id')
+    .merge();
+}
+
+export async function personaGet(
+  userId:string,
+):Promise<Personas[]> {
+// log.debug(F, 'useractionsGet started');
+  if (env.POSTGRES_DBURL === undefined) return [];
+  return db<Personas>('personas')
+    .select('*')
+    .where('user_id', userId)
+    .orderBy('created_at', 'desc');
+}
+
+export async function personaSet(
+  data:Personas,
+):Promise<void> {
+// log.debug(F, 'useractionsGet started');
+  if (env.POSTGRES_DBURL === undefined) return;
+  await db<Personas>('personas')
+    .insert(data)
+    .onConflict('user_id')
     .merge();
 }

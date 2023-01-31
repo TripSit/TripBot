@@ -14,8 +14,10 @@ import {
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-// import { rpg } from '../../../global/commands/g.rpg';
+import { getPersonaInfo, setPersonaInfo } from '../../../global/commands/g.rpg';
 import { startLog } from '../../utils/startLog';
+import { getUser } from '../../../global/utils/knex';
+import { Personas } from '../../../global/@types/pgdb';
 
 const F = f(__filename);
 
@@ -25,23 +27,6 @@ export default dRpg;
 const intervalQuest = env.NODE_ENV === 'production' ? 1000 * 60 * 60 : 1000 * 5;
 const intervalDungeon = env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 : 1000 * 10;
 const intervalRaid = env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 * 7 : 1000 * 15;
-
-type Persona = {
-  id: string;
-  userId: string;
-  discordId: string;
-  name: string;
-  class: string;
-  species: string;
-  guild: string;
-  tokens: number;
-  tripTokenMultiplier: number;
-  lastQuest: Date;
-  lastDungeon: Date;
-  lastRaid: Date;
-};
-
-const tablePersonas = [{}] as Persona[];
 
 const buttonTown = new ButtonBuilder()
   .setCustomId('rpgTown')
@@ -634,7 +619,7 @@ export const dRpg: SlashCommand = {
     } as RpgStates;
 
     // Check if the user has a persona
-    let [personaData] = await personaGet(interaction.user.id);
+    let [personaData] = await getPersonaInfo(interaction.user.id);
 
     log.debug(F, `Persona data: ${JSON.stringify(personaData, null, 2)}`);
 
@@ -651,14 +636,15 @@ export const dRpg: SlashCommand = {
       .setColor(states.town.color);
 
     if (!personaData) {
+      const userData = await getUser(interaction.user.id, null);
       personaData = {
-        discordId: interaction.user.id,
+        user_id: userData.id,
         tokens: 0,
-      } as Persona;
+      } as Personas;
 
       log.debug(F, `Setting Persona data: ${JSON.stringify(personaData, null, 2)}`);
 
-      await personaSet(personaData);
+      await setPersonaInfo(personaData);
       // await interaction.editReply({ embeds: [embedStart], components: states.setup.components });
     } else {
       await interaction.editReply({ embeds: [embedTown], components: states.town.components });
@@ -686,9 +672,9 @@ export const dRpg: SlashCommand = {
           .setColor(states.work.color);
         await i.update({ embeds: [embed], components: states.work.components });
       } else if (i.customId === 'rpgQuest') {
-        if (personaData.lastQuest
-          && personaData.lastQuest.getTime() + intervalQuest > new Date().getTime()) {
-          const unlockTime = new Date(personaData.lastQuest.getTime() + intervalQuest);
+        if (personaData.last_quest
+          && personaData.last_quest.getTime() + intervalQuest > new Date().getTime()) {
+          const unlockTime = new Date(personaData.last_quest.getTime() + intervalQuest);
           const embed = embedTemplate()
             .setTitle(states.questFail.title)
             .setDescription(stripIndents`${states.questFail.description}
@@ -700,8 +686,8 @@ export const dRpg: SlashCommand = {
 
         // Award the user coins
         personaData.tokens += 1;
-        personaData.lastQuest = new Date();
-        await personaSet(personaData);
+        personaData.last_quest = new Date();
+        await setPersonaInfo(personaData);
 
         const embed = embedTemplate()
           .setTitle(states.questSuccess.title)
@@ -710,9 +696,9 @@ export const dRpg: SlashCommand = {
           .setColor(states.questSuccess.color);
         await i.update({ embeds: [embed], components: states.questSuccess.components });
       } else if (i.customId === 'rpgDungeon') {
-        if (personaData.lastDungeon
-          && personaData.lastDungeon.getTime() + intervalDungeon > new Date().getTime()) {
-          const unlockTime = new Date(personaData.lastDungeon.getTime() + intervalDungeon);
+        if (personaData.last_dungeon
+          && personaData.last_dungeon.getTime() + intervalDungeon > new Date().getTime()) {
+          const unlockTime = new Date(personaData.last_dungeon.getTime() + intervalDungeon);
           const embed = embedTemplate()
             .setTitle(states.dungeonFail.title)
             .setDescription(stripIndents`${states.dungeonFail.description}
@@ -724,8 +710,8 @@ export const dRpg: SlashCommand = {
 
         // Award the user coins
         personaData.tokens += 10;
-        personaData.lastDungeon = new Date();
-        await personaSet(personaData);
+        personaData.last_dungeon = new Date();
+        await setPersonaInfo(personaData);
 
         const embed = embedTemplate()
           .setTitle(states.dungeonSuccess.title)
@@ -734,9 +720,9 @@ export const dRpg: SlashCommand = {
           .setColor(states.dungeonSuccess.color);
         await i.update({ embeds: [embed], components: states.dungeonSuccess.components });
       } else if (i.customId === 'rpgRaid') {
-        if (personaData.lastRaid
-          && personaData.lastRaid.getTime() + intervalRaid > new Date().getTime()) {
-          const unlockTime = new Date(personaData.lastRaid.getTime() + intervalRaid);
+        if (personaData.last_raid
+          && personaData.last_raid.getTime() + intervalRaid > new Date().getTime()) {
+          const unlockTime = new Date(personaData.last_raid.getTime() + intervalRaid);
           const embed = embedTemplate()
             .setTitle(states.raidFail.title)
             .setDescription(stripIndents`${states.raidFail.description}
@@ -748,8 +734,8 @@ export const dRpg: SlashCommand = {
 
         // Award the user coins
         personaData.tokens += 50;
-        personaData.lastRaid = new Date();
-        await personaSet(personaData);
+        personaData.last_raid = new Date();
+        await setPersonaInfo(personaData);
 
         const embed = embedTemplate()
           .setTitle(states.raidSuccess.title)
@@ -1035,23 +1021,3 @@ export const dRpg: SlashCommand = {
     return true;
   },
 };
-
-async function personaGet(
-  discordId: string,
-):Promise<Persona[]> {
-  return tablePersonas.filter(persona => persona.discordId === discordId);
-}
-
-async function personaSet(
-  personaData: Persona,
-):Promise<void> {
-  // Find the personaData in the tablePersonas array
-  const personaIndex = tablePersonas.findIndex(persona => persona.discordId === personaData.discordId);
-  if (personaIndex === -1) {
-    // If the personaData doesn't exist, add it to the array
-    tablePersonas.push(personaData);
-  } else {
-    // If the personaData exists, update it in the array
-    tablePersonas[personaIndex] = personaData;
-  }
-}

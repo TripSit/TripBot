@@ -1,14 +1,18 @@
-const F = f(__filename);
+import { Personas } from '../@types/pgdb';
+import { getUser, personaGet, personaSet } from '../utils/knex';
 
-export default rpg;
+const F = f(__filename); // eslint-disable-line
 
-/**
- *
- * @return {string}
- */
-export async function work(
-  userId:string,
-  coins:number,
+export async function getPersonaInfo(
+  discordId: string,
+):Promise<Personas[]> {
+  const userData = await getUser(discordId, null);
+
+  return personaGet(userData.id);
+}
+
+export async function setPersonaInfo(
+  personaData: Personas,
 ):Promise<void> {
-  log.info(F, `Giving ${coins} to ${userId}`);
+  return personaSet(personaData);
 }
