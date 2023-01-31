@@ -138,7 +138,7 @@ async function giveMilestone(
 ) {
   const userData = await getUser(member.id, null);
 
-  const allExpData = await experienceGet(1, undefined, 'TEXT' as ExperienceType, userData.id);
+  const allExpData = await experienceGet(10, undefined, 'TEXT' as ExperienceType, userData.id);
 
   // Calculate total experience points
   const totalExp = allExpData
@@ -152,7 +152,7 @@ async function giveMilestone(
 
   // Pretend that the total exp would get the same exp as the category
   // Get the total level
-  const totalData = await getTotalLevel(totalExp + expPoints);
+  const totalData = await getTotalLevel(totalExp);
   log.debug(F, `${member.displayName} is total Text level ${totalData.level}`);
 
   // Determine the first digit of the level
