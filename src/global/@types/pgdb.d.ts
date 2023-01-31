@@ -37,13 +37,18 @@ export enum DrugRoa {
   Transdermal = 'TRANSDERMAL',
 }
 
-export enum ExperienceType {
+export enum ExperienceCategory {
   Total = 'TOTAL',
   General = 'GENERAL',
   Tripsitter = 'TRIPSITTER',
   Developer = 'DEVELOPER',
   Team = 'TEAM',
   Ignored = 'IGNORED',
+}
+
+export enum ExperienceType {
+  Text = 'TEXT',
+  Voice = 'VOICE',
 }
 
 export enum TicketStatus {
@@ -88,6 +93,7 @@ export enum Table {
   Drugs = 'drugs',
   KnexMigrations = 'knex_migrations',
   KnexMigrationsLock = 'knex_migrations_lock',
+  Personas = 'personas',
   ReactionRoles = 'reaction_roles',
   Rss = 'rss',
   UserActions = 'user_actions',
@@ -208,6 +214,21 @@ export type KnexMigrationsLock = {
   is_locked: number | null;
 };
 
+export type Personas = {
+  id: string;
+  user_id: string;
+  name: string;
+  class: string;
+  species: string;
+  guild: string;
+  tokens: number;
+  trip_token_multiplier: number;
+  last_quest: Date | null;
+  last_dungeon: Date | null;
+  last_raid: Date | null;
+  created_at: Date;
+};
+
 export type ReactionRoles = {
   id: string;
   guild_id: string;
@@ -253,13 +274,14 @@ export type UserDrugDoses = {
 export type UserExperience = {
   id: string;
   user_id: string;
-  type: ExperienceType;
+  category: ExperienceCategory;
   level: number;
   level_points: number;
   total_points: number;
   last_message_at: Date;
   last_message_channel: string;
   created_at: Date;
+  type: ExperienceType;
 };
 
 export type UserReminders = {
