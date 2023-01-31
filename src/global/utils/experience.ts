@@ -150,7 +150,7 @@ export async function experience(
   const levelTier = Math.floor(totalData.level / 10);
 
   // Try to give the appropriate role
-  await giveMilestone(member, levelTier);
+  // await giveMilestone(member, levelTier);
 }
 
 async function giveMilestone(
