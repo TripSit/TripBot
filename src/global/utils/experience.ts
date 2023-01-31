@@ -87,6 +87,8 @@ export async function experience(
     );
     return;
   }
+  const categoryName = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase(); // eslint-disable-line max-len
+  const typeName = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
 
   // If the time diff is over one bufferTime, increase the experience points
   experienceData.level_points += expPoints;
@@ -95,8 +97,6 @@ export async function experience(
   if (expToLevel <= experienceData.level_points) {
     experienceData.level += 1;
     const channelTripbotlogs = await channel.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-    const categoryName = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase(); // eslint-disable-line max-len
-    const typeName = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
     await channelTripbotlogs.send(stripIndents`${member.displayName} has leveled up to ${categoryName} level ${experienceData.level}!`);
     log.debug(F, `${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`);
     experienceData.level_points -= expToLevel;
@@ -121,119 +121,169 @@ export async function experience(
 
   log.debug(
     F,
-    `[${channel.name}] ${member.displayName}: ${origPoints} + ${expPoints} = ${experienceData.level_points} / ${expToLevel} > ${experienceData.level + 1})`, // eslint-disable-line max-len
+    `[${channel.name}] (${categoryName}) {${typeName}} ${member.displayName}: ${origPoints} + ${expPoints} = ${experienceData.level_points} / ${expToLevel} > ${experienceData.level + 1})`, // eslint-disable-line max-len
   );
 
   experienceData.last_message_at = new Date();
   experienceData.last_message_channel = channel.id;
 
-  // Get the current experience data before updating
-  // So we can determine the total exp if if they leveled up
-  // const allExpData = await experienceGet(1, undefined, 'TEXT' as ExperienceType, userData.id);
   await experienceUpdate(experienceData);
-  // Dont move the above calls out of order!!!
 
-  // // Calculate total experience points
-  // const totalExp = allExpData
-  //   .filter(exp => exp.type !== 'VOICE'
-  //     && exp.category !== 'TOTAL'
-  //     && exp.category !== 'IGNORED')
-  //   .reduce((acc, exp) => acc + exp.total_points, 0);
+  // Try to give the appropriate role
+  await giveMilestone(member);
+}
+
+async function giveMilestone(
+  member:GuildMember,
+) {
+  const userData = await getUser(member.id, null);
+
+  const allExpData = await experienceGet(1, undefined, 'TEXT' as ExperienceType, userData.id);
+
+  // Calculate total experience points
+  const totalExp = allExpData
+    .filter(exp => exp.type !== 'VOICE'
+      && exp.category !== 'TOTAL'
+      && exp.category !== 'IGNORED')
+    .reduce((acc, exp) => acc + exp.total_points, 0);
+
+  // get three random emojis from announcementEmojis
+  const emojis = [...announcementEmojis].sort(() => 0.5 - Math.random()).slice(0, 3); // Sort the array
 
   // Pretend that the total exp would get the same exp as the category
   // Get the total level
-  // const totalData = await getTotalLevel(totalExp + expPoints);
+  const totalData = await getTotalLevel(totalExp + expPoints);
 
-  // log.debug(F, `totalData: ${JSON.stringify(totalData, null, 2)}`);
+  log.debug(F, `${member} is total Text level ${totalData.level}`);
 
-  // Determine the first digit of the level
+  const totalLevel = totalData.level;
+
+  // // Determine the first digit of the level
   // const levelTier = Math.floor(totalData.level / 10);
 
-  // Try to give the appropriate role
-  // await giveMilestone(member, levelTier);
+  // log.debug(F, `levelTier: ${levelTier}`);
+
+  // const roleDefs = {
+  //   0: {
+  //     message: '',
+  //     role: env.ROLE_VIP_0 as string,
+  //   },
+  //   1: {
+  //     message: `${emojis} **${member} has reached level 10!** ${emojis}`,
+  //     role: env.ROLE_VIP_1 as string,
+  //   },
+  //   2: {
+  //     message: `${emojis} **${member} has reached level 20!** ${emojis}`,
+  //     role: env.ROLE_VIP_2 as string,
+  //   },
+  //   3: {
+  //     message: `${emojis} **${member} has reached level 30!** ${emojis}`,
+  //     role: env.ROLE_VIP_3 as string,
+  //   },
+  //   4: {
+  //     message: `${emojis} **${member} has reached level 40!** ${emojis}`,
+  //     role: env.ROLE_VIP_4 as string,
+  //   },
+  //   5: {
+  //     message: `${emojis} **${member} has reached level 50!** ${emojis}`,
+  //     role: env.ROLE_VIP_5 as string,
+  //   },
+  //   6: {
+  //     message: `${emojis} **${member} has reached level 60!** ${emojis}`,
+  //     role: env.ROLE_VIP_6 as string,
+  //   },
+  //   7: {
+  //     message: `${emojis} **${member} has reached level 70!** ${emojis}`,
+  //     role: env.ROLE_VIP_7 as string,
+  //   },
+  //   8: {
+  //     message: `${emojis} **${member} has reached level 80!** ${emojis}`,
+  //     role: env.ROLE_VIP_8 as string,
+  //   },
+  //   9: {
+  //     message: `${emojis} **${member} has reached level 90!** ${emojis}`,
+  //     role: env.ROLE_VIP_9 as string,
+  //   },
+  //   10: {
+  //     message: `${emojis} **${member} has reached level 100!** ${emojis}`,
+  //     role: env.ROLE_VIP_10 as string,
+  //   },
+  // };
+
+  // // log.debug(F, `LevelTier: ${levelTier}`);
+
+  // Give the proper VIP role Check if the member already has the previous role, and if so, remove it
+  let role = await member.guild.roles.fetch(env.ROLE_VIP_0) as Role;
+  if (totalData.level >= 10) {
+    member.roles.remove(role);
+    role = await member.guild.roles.fetch(env.ROLE_VIP_10) as Role;
+    if (totalData.level >= 20) {
+      member.roles.remove(role);
+      role = await member.guild.roles.fetch(env.ROLE_VIP_20) as Role;
+      if (totalData.level >= 30) {
+        member.roles.remove(role);
+        role = await member.guild.roles.fetch(env.ROLE_VIP_30) as Role;
+        if (totalData.level >= 40) {
+          member.roles.remove(role);
+          role = await member.guild.roles.fetch(env.ROLE_VIP_40) as Role;
+          if (totalData.level >= 50) {
+            member.roles.remove(role);
+            role = await member.guild.roles.fetch(env.ROLE_VIP_50) as Role;
+            if (totalData.level >= 60) {
+              member.roles.remove(role);
+              role = await member.guild.roles.fetch(env.ROLE_VIP_60) as Role;
+              if (totalData.level >= 70) {
+                member.roles.remove(role);
+                role = await member.guild.roles.fetch(env.ROLE_VIP_70) as Role;
+                if (totalData.level >= 80) {
+                  member.roles.remove(role);
+                  role = await member.guild.roles.fetch(env.ROLE_VIP_80) as Role;
+                  if (totalData.level >= 90) {
+                    member.roles.remove(role);
+                    role = await member.guild.roles.fetch(env.ROLE_VIP_90) as Role;
+                    if (totalData.level >= 100) {
+                      member.roles.remove(role);
+                      role = await member.guild.roles.fetch(env.ROLE_VIP_100) as Role;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // const role = await member.guild?.roles.fetch(roleDefs[levelTier as keyof typeof roleDefs].role) as Role;
+
+  // // log.debug(F, `Role: ${role.name} (${role.id})`);
+
+  // if (levelTier >= 1) {
+  //   const previousRole = await member.guild?.roles.fetch(
+  //     roleDefs[(levelTier - 1) as keyof typeof roleDefs].role,
+  //   ) as Role;
+  //   // log.debug(F, `Previous role: ${previousRole.name} (${previousRole.id})`);
+  //   if (member?.roles.cache.has(previousRole.id)) {
+  //     log.debug(F, `Removing ${member} role ${previousRole.name} (${previousRole.id})`);
+  //     member?.roles.remove(previousRole);
+  //   }
+  // }
+
+  // Check if the member already has the resulting role, and if not, add it
+  if (!member?.roles.cache.has(role.id)) {
+    log.debug(F, `Giving ${member} role ${role.name} (${role.id})`);
+    await member?.roles.add(role);
+    // if (levelTier >= 2) {
+    //   const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+    //   await channel.send(`${emojis} **${member} has reached TOTAL level ${levelTier}0!** ${emojis}`);
+    // }
+    if (totalLevel >= 20) {
+      const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      await channel.send(`${emojis} **${member} has reached Total Text level ${totalLevel}!** ${emojis}`);
+    }
+  }
 }
-
-// async function giveMilestone(
-//   member:GuildMember,
-//   levelTier:number,
-// ) {
-//   // get three random emojis from announcementEmojis
-//   const emojis = [...announcementEmojis].sort(() => 0.5 - Math.random()).slice(0, 3); // Sort the array
-
-//   const roleDefs = {
-//     0: {
-//       message: '',
-//       role: env.ROLE_VIP_0 as string,
-//     },
-//     1: {
-//       message: `${emojis} **${member} has reached level 10!** ${emojis}`,
-//       role: env.ROLE_VIP_1 as string,
-//     },
-//     2: {
-//       message: `${emojis} **${member} has reached level 20!** ${emojis}`,
-//       role: env.ROLE_VIP_2 as string,
-//     },
-//     3: {
-//       message: `${emojis} **${member} has reached level 30!** ${emojis}`,
-//       role: env.ROLE_VIP_3 as string,
-//     },
-//     4: {
-//       message: `${emojis} **${member} has reached level 40!** ${emojis}`,
-//       role: env.ROLE_VIP_4 as string,
-//     },
-//     5: {
-//       message: `${emojis} **${member} has reached level 50!** ${emojis}`,
-//       role: env.ROLE_VIP_5 as string,
-//     },
-//     6: {
-//       message: `${emojis} **${member} has reached level 60!** ${emojis}`,
-//       role: env.ROLE_VIP_6 as string,
-//     },
-//     7: {
-//       message: `${emojis} **${member} has reached level 70!** ${emojis}`,
-//       role: env.ROLE_VIP_7 as string,
-//     },
-//     8: {
-//       message: `${emojis} **${member} has reached level 80!** ${emojis}`,
-//       role: env.ROLE_VIP_8 as string,
-//     },
-//     9: {
-//       message: `${emojis} **${member} has reached level 90!** ${emojis}`,
-//       role: env.ROLE_VIP_9 as string,
-//     },
-//     10: {
-//       message: `${emojis} **${member} has reached level 100!** ${emojis}`,
-//       role: env.ROLE_VIP_10 as string,
-//     },
-//   };
-
-//   // log.debug(F, `LevelTier: ${levelTier}`);
-
-//   const role = await member.guild?.roles.fetch(roleDefs[levelTier as keyof typeof roleDefs].role) as Role;
-
-//   // log.debug(F, `Role: ${role.name} (${role.id})`);
-
-//   if (levelTier >= 1) {
-//     const previousRole = await member.guild?.roles.fetch(
-//       roleDefs[(levelTier - 1) as keyof typeof roleDefs].role,
-//     ) as Role;
-//     // log.debug(F, `Previous role: ${previousRole.name} (${previousRole.id})`);
-//     if (member?.roles.cache.has(previousRole.id)) {
-//       log.debug(F, `Removing ${member} role ${previousRole.name} (${previousRole.id})`);
-//       member?.roles.remove(previousRole);
-//     }
-//   }
-
-//   // Check if the member already has the resulting role, and if not, add it
-//   if (!member?.roles.cache.has(role.id)) {
-//     log.debug(F, `Giving ${member} role ${role.name} (${role.id})`);
-//     await member?.roles.add(role);
-//     if (levelTier >= 2) {
-//       const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-//       await channel.send(`${emojis} **${member} has reached TOTAL level ${levelTier}0!** ${emojis}`);
-//     }
-//   }
-// }
 
 export async function getTotalLevel(
   totalExp:number,
