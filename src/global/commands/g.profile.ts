@@ -19,7 +19,7 @@ export async function profile(
 
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
-  const expData = await experienceGet(1, undefined, undefined, userData.id);
+  const expData = await experienceGet(10, undefined, undefined, userData.id);
 
   // log.debug(F, `expData: ${JSON.stringify(expData, null, 2)}`);
 
