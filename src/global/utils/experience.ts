@@ -19,7 +19,7 @@ export default experience;
 // Get random value between 15 and 25
 const expPoints = env.NODE_ENV === 'production'
   ? Math.floor(Math.random() * (25 - 15 + 1)) + 15
-  : 15;
+  : 500;
 
 // Value in miliseconds (1000 * 60 = 1 minute)
 const textExpInterval = env.NODE_ENV === 'production' ? 1000 * 60 * 1 : 1000 * 1;
@@ -130,7 +130,7 @@ export async function experience(
   await experienceUpdate(experienceData);
 
   // Try to give the appropriate role
-  // await giveMilestone(member);
+  await giveMilestone(member);
 }
 
 async function giveMilestone(
@@ -153,135 +153,146 @@ async function giveMilestone(
   // Pretend that the total exp would get the same exp as the category
   // Get the total level
   const totalData = await getTotalLevel(totalExp + expPoints);
-
   log.debug(F, `${member.displayName} is total Text level ${totalData.level}`);
 
-  const totalLevel = totalData.level;
+  // Determine the first digit of the level
+  const levelTier = Math.floor(totalData.level / 10);
+  log.debug(F, `levelTier: ${levelTier}`);
 
-  // // Determine the first digit of the level
-  // const levelTier = Math.floor(totalData.level / 10);
-
-  // log.debug(F, `levelTier: ${levelTier}`);
-
-  // const roleDefs = {
-  //   0: {
-  //     message: '',
-  //     role: env.ROLE_VIP_0 as string,
-  //   },
-  //   1: {
-  //     message: `${emojis} **${member} has reached level 10!** ${emojis}`,
-  //     role: env.ROLE_VIP_1 as string,
-  //   },
-  //   2: {
-  //     message: `${emojis} **${member} has reached level 20!** ${emojis}`,
-  //     role: env.ROLE_VIP_2 as string,
-  //   },
-  //   3: {
-  //     message: `${emojis} **${member} has reached level 30!** ${emojis}`,
-  //     role: env.ROLE_VIP_3 as string,
-  //   },
-  //   4: {
-  //     message: `${emojis} **${member} has reached level 40!** ${emojis}`,
-  //     role: env.ROLE_VIP_4 as string,
-  //   },
-  //   5: {
-  //     message: `${emojis} **${member} has reached level 50!** ${emojis}`,
-  //     role: env.ROLE_VIP_5 as string,
-  //   },
-  //   6: {
-  //     message: `${emojis} **${member} has reached level 60!** ${emojis}`,
-  //     role: env.ROLE_VIP_6 as string,
-  //   },
-  //   7: {
-  //     message: `${emojis} **${member} has reached level 70!** ${emojis}`,
-  //     role: env.ROLE_VIP_7 as string,
-  //   },
-  //   8: {
-  //     message: `${emojis} **${member} has reached level 80!** ${emojis}`,
-  //     role: env.ROLE_VIP_8 as string,
-  //   },
-  //   9: {
-  //     message: `${emojis} **${member} has reached level 90!** ${emojis}`,
-  //     role: env.ROLE_VIP_9 as string,
-  //   },
-  //   10: {
-  //     message: `${emojis} **${member} has reached level 100!** ${emojis}`,
-  //     role: env.ROLE_VIP_10 as string,
-  //   },
-  // };
+  const roleDefs = {
+    0: {
+      message: '',
+      role: env.ROLE_VIP_0 as string,
+    },
+    1: {
+      message: `${emojis} **${member} has reached level 10!** ${emojis}`,
+      role: env.ROLE_VIP_10 as string,
+    },
+    2: {
+      message: `${emojis} **${member} has reached level 20!** ${emojis}`,
+      role: env.ROLE_VIP_20 as string,
+    },
+    3: {
+      message: `${emojis} **${member} has reached level 30!** ${emojis}`,
+      role: env.ROLE_VIP_30 as string,
+    },
+    4: {
+      message: `${emojis} **${member} has reached level 40!** ${emojis}`,
+      role: env.ROLE_VIP_40 as string,
+    },
+    5: {
+      message: `${emojis} **${member} has reached level 50!** ${emojis}`,
+      role: env.ROLE_VIP_50 as string,
+    },
+    6: {
+      message: `${emojis} **${member} has reached level 60!** ${emojis}`,
+      role: env.ROLE_VIP_60 as string,
+    },
+    7: {
+      message: `${emojis} **${member} has reached level 70!** ${emojis}`,
+      role: env.ROLE_VIP_70 as string,
+    },
+    8: {
+      message: `${emojis} **${member} has reached level 80!** ${emojis}`,
+      role: env.ROLE_VIP_80 as string,
+    },
+    9: {
+      message: `${emojis} **${member} has reached level 90!** ${emojis}`,
+      role: env.ROLE_VIP_90 as string,
+    },
+    10: {
+      message: `${emojis} **${member} has reached level 100!** ${emojis}`,
+      role: env.ROLE_VIP_100 as string,
+    },
+  };
 
   // // log.debug(F, `LevelTier: ${levelTier}`);
 
-  // Give the proper VIP role Check if the member already has the previous role, and if so, remove it
-  let role = await member.guild.roles.fetch(env.ROLE_VIP_0) as Role;
-  if (totalData.level >= 10) {
-    member.roles.remove(role);
-    role = await member.guild.roles.fetch(env.ROLE_VIP_10) as Role;
-    if (totalData.level >= 20) {
-      member.roles.remove(role);
-      role = await member.guild.roles.fetch(env.ROLE_VIP_20) as Role;
-      if (totalData.level >= 30) {
-        member.roles.remove(role);
-        role = await member.guild.roles.fetch(env.ROLE_VIP_30) as Role;
-        if (totalData.level >= 40) {
-          member.roles.remove(role);
-          role = await member.guild.roles.fetch(env.ROLE_VIP_40) as Role;
-          if (totalData.level >= 50) {
-            member.roles.remove(role);
-            role = await member.guild.roles.fetch(env.ROLE_VIP_50) as Role;
-            if (totalData.level >= 60) {
-              member.roles.remove(role);
-              role = await member.guild.roles.fetch(env.ROLE_VIP_60) as Role;
-              if (totalData.level >= 70) {
-                member.roles.remove(role);
-                role = await member.guild.roles.fetch(env.ROLE_VIP_70) as Role;
-                if (totalData.level >= 80) {
-                  member.roles.remove(role);
-                  role = await member.guild.roles.fetch(env.ROLE_VIP_80) as Role;
-                  if (totalData.level >= 90) {
-                    member.roles.remove(role);
-                    role = await member.guild.roles.fetch(env.ROLE_VIP_90) as Role;
-                    if (totalData.level >= 100) {
-                      member.roles.remove(role);
-                      role = await member.guild.roles.fetch(env.ROLE_VIP_100) as Role;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // const role = await member.guild?.roles.fetch(roleDefs[levelTier as keyof typeof roleDefs].role) as Role;
-
-  // // log.debug(F, `Role: ${role.name} (${role.id})`);
-
-  // if (levelTier >= 1) {
-  //   const previousRole = await member.guild?.roles.fetch(
-  //     roleDefs[(levelTier - 1) as keyof typeof roleDefs].role,
-  //   ) as Role;
-  //   // log.debug(F, `Previous role: ${previousRole.name} (${previousRole.id})`);
-  //   if (member?.roles.cache.has(previousRole.id)) {
-  //     log.debug(F, `Removing ${member} role ${previousRole.name} (${previousRole.id})`);
-  //     member?.roles.remove(previousRole);
+  // // Give the proper VIP role Check if the member already has the previous role, and if so, remove it
+  // let role = await member.guild.roles.fetch(env.ROLE_VIP_0) as Role;
+  // if (totalData.level >= 10) {
+  //   member.roles.remove(role);
+  //   role = await member.guild.roles.fetch(env.ROLE_VIP_10) as Role;
+  //   if (totalData.level >= 20) {
+  //     member.roles.remove(role);
+  //     role = await member.guild.roles.fetch(env.ROLE_VIP_20) as Role;
+  //     if (totalData.level >= 30) {
+  //       member.roles.remove(role);
+  //       role = await member.guild.roles.fetch(env.ROLE_VIP_30) as Role;
+  //       if (totalData.level >= 40) {
+  //         member.roles.remove(role);
+  //         role = await member.guild.roles.fetch(env.ROLE_VIP_40) as Role;
+  //         if (totalData.level >= 50) {
+  //           member.roles.remove(role);
+  //           role = await member.guild.roles.fetch(env.ROLE_VIP_50) as Role;
+  //           if (totalData.level >= 60) {
+  //             member.roles.remove(role);
+  //             role = await member.guild.roles.fetch(env.ROLE_VIP_60) as Role;
+  //             if (totalData.level >= 70) {
+  //               member.roles.remove(role);
+  //               role = await member.guild.roles.fetch(env.ROLE_VIP_70) as Role;
+  //               if (totalData.level >= 80) {
+  //                 member.roles.remove(role);
+  //                 role = await member.guild.roles.fetch(env.ROLE_VIP_80) as Role;
+  //                 if (totalData.level >= 90) {
+  //                   member.roles.remove(role);
+  //                   role = await member.guild.roles.fetch(env.ROLE_VIP_90) as Role;
+  //                   if (totalData.level >= 100) {
+  //                     member.roles.remove(role);
+  //                     role = await member.guild.roles.fetch(env.ROLE_VIP_100) as Role;
+  //                   }
+  //                 }
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
   //   }
   // }
+
+  const role = await member.guild?.roles.fetch(roleDefs[levelTier as keyof typeof roleDefs].role) as Role;
+
+  log.debug(F, `Role: ${role.name} (${role.id})`);
+
+  if (levelTier >= 1) {
+    // Get a list of roleDefs below the users current tier
+    const previousRoles = Object.keys(roleDefs)
+      .filter(key => Number(key) < levelTier)
+      .map(key => roleDefs[parseInt(key, 10) as keyof typeof roleDefs].role);
+
+    // Remove all previous roles
+    previousRoles.forEach(async previousRole => {
+      const removeRole = await member.guild?.roles.fetch(previousRole) as Role;
+      if (member?.roles.cache.has(removeRole.id)) {
+        log.debug(F, `Removing ${member.displayName} role ${removeRole.name} (${removeRole.id})`);
+        member?.roles.remove(removeRole);
+      }
+    });
+
+    // const previousRole = await member.guild?.roles.fetch(
+    //   roleDefs[(levelTier - 1) as keyof typeof roleDefs].role,
+    // ) as Role;
+    // // log.debug(F, `Previous role: ${previousRole.name} (${previousRole.id})`);
+    // if (member?.roles.cache.has(previousRole.id)) {
+    //   log.debug(F, `Removing ${member} role ${previousRole.name} (${previousRole.id})`);
+    //   member?.roles.remove(previousRole);
+    // }
+  }
 
   // Check if the member already has the resulting role, and if not, add it
   if (!member?.roles.cache.has(role.id)) {
     log.debug(F, `Giving ${member.displayName} role ${role.name} (${role.id})`);
     await member?.roles.add(role);
-    // if (levelTier >= 2) {
-    //   const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-    //   await channel.send(`${emojis} **${member} has reached TOTAL level ${levelTier}0!** ${emojis}`);
-    // }
-    if (totalLevel >= 20) {
+    if (levelTier >= 2) {
       const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-      await channel.send(`${emojis} **${member} has reached Total Text level ${totalLevel}!** ${emojis}`);
+      await channel.send(`${emojis} **${member} has reached TOTAL level ${levelTier}0!** ${emojis}`);
     }
+    // if (totalLevel >= 20) {
+    //   log.debug(F, `${emojis} **${member} has reached Total Text level ${totalLevel}!** ${emojis}`);
+    //   // const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+    //   // await channel.send(`${emojis} **${member} has reached Total Text level ${totalLevel}!** ${emojis}`);
+    // }
   }
 }
 

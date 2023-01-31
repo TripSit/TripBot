@@ -463,7 +463,8 @@ export async function experienceGet(
       log.debug(F, 'experienceGet started with userid and type');
       return db<UserExperience>('user_experience')
         .select('*')
-        .where('type', type)
+        .where('user_id', userId)
+        .andWhere('type', type)
         .orderBy('total_points', 'desc')
         .limit(limit);
     }
