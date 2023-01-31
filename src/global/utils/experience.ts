@@ -130,7 +130,7 @@ export async function experience(
   await experienceUpdate(experienceData);
 
   // Try to give the appropriate role
-  await giveMilestone(member);
+  // await giveMilestone(member);
 }
 
 async function giveMilestone(
@@ -154,7 +154,7 @@ async function giveMilestone(
   // Get the total level
   const totalData = await getTotalLevel(totalExp + expPoints);
 
-  log.debug(F, `${member} is total Text level ${totalData.level}`);
+  log.debug(F, `${member.displayName} is total Text level ${totalData.level}`);
 
   const totalLevel = totalData.level;
 
@@ -272,7 +272,7 @@ async function giveMilestone(
 
   // Check if the member already has the resulting role, and if not, add it
   if (!member?.roles.cache.has(role.id)) {
-    log.debug(F, `Giving ${member} role ${role.name} (${role.id})`);
+    log.debug(F, `Giving ${member.displayName} role ${role.name} (${role.id})`);
     await member?.roles.add(role);
     // if (levelTier >= 2) {
     //   const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
