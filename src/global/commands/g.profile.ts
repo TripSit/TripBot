@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { experienceGet, getUser } from '../utils/knex';
+import { experienceGet, getUser, personaGet } from '../utils/knex';
 
 const F = f(__filename);
 
@@ -32,6 +32,13 @@ export async function profile(
     .filter(exp => exp.type === 'VOICE' && exp.category !== 'TOTAL' && exp.category !== 'IGNORED')
     .reduce((acc, exp) => acc + exp.total_points, 0);
 
+  const [personaData] = await personaGet(userData.id);
+
+  let tokens = 0;
+  if (personaData) {
+    tokens = personaData.tokens;
+  }
+
   const profileData = {
     birthday: userData.birthday,
     timezone: userData.timezone,
@@ -39,6 +46,7 @@ export async function profile(
     karma_received: userData.karma_received,
     totalTextExp,
     totalVoiceExp,
+    tokens,
   };
   log.info(F, `response: ${JSON.stringify(profileData, null, 2)}`);
   return profileData;
@@ -51,4 +59,5 @@ type ProfileData = {
   karma_received: number,
   totalTextExp: number,
   totalVoiceExp: number,
+  tokens: number,
 };

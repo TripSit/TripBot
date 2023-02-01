@@ -355,24 +355,30 @@ export const dProfile: SlashCommand = {
     }
 
     // Messages Sent Text
-    const totalData = await getTotalLevel(targetData.totalTextExp);
-    // log.debug(F, `TotalData: ${JSON.stringify(totalData, null, 2)}`);
     if (targetData.totalTextExp) {
       const MessagesSent = targetData.totalTextExp / 20;
       context.fillText(`${numFormatter(MessagesSent)}`, 429, 201);
+    } else {
+      context.fillText('0', 429, 201);
     }
 
     // WIP: Voice Hours Text
-    context.fillText('WIP!', 429, 260);
+    if (targetData.totalTextExp) {
+      const minsInChat = (targetData.totalVoiceExp / 10) / 2;
+      context.fillText(`${numFormatter(minsInChat)}`, 429, 260);
+    } else {
+      context.fillText('0', 429, 260);
+    }
 
     // Karma Text
     context.fillText(`${numFormatter(targetData.karma_received)}`, 648, 201);
 
     // WIP: Tokens Text
-    context.fillText('WIP!', 648, 260);
+    context.fillText(`${numFormatter(targetData.tokens)}`, 648, 260);
 
     // Level Text
-    context.fillText(`${totalData.level}`, 894, 260);
+    const totalTextData = await getTotalLevel(targetData.totalTextExp);
+    context.fillText(`${totalTextData.level}`, 894, 260);
 
     // Get the first number of the level
     // const levelTier = Math.floor(totalData.level / 10);
@@ -388,27 +394,27 @@ export const dProfile: SlashCommand = {
     // Choose and Draw the Star Image
     let LevelImagePath = 'https://i.gyazo.com/13daebdda4ca75ab59923396f255f7db.png';
 
-    if (totalData.level < 10) {
+    if (totalTextData.level < 10) {
       LevelImagePath = 'https://i.gyazo.com/13daebdda4ca75ab59923396f255f7db.png';
-    } else if (totalData.level < 20) {
+    } else if (totalTextData.level < 20) {
       LevelImagePath = 'https://i.gyazo.com/5d37a2d3193c4c7e8a033b6b2ed7cb7f.png';
-    } else if (totalData.level < 30) {
+    } else if (totalTextData.level < 30) {
       LevelImagePath = 'https://i.gyazo.com/161506f23b1907ac1280db26ead5a0a4.png';
-    } else if (totalData.level < 40) {
+    } else if (totalTextData.level < 40) {
       LevelImagePath = 'https://i.gyazo.com/4bd15a019f7fd5c881e196c38a8b8bf5.png';
-    } else if (totalData.level < 50) {
+    } else if (totalTextData.level < 50) {
       LevelImagePath = 'https://i.gyazo.com/ca0b1aca00a71a992c196ca0498efef3.png';
-    } else if (totalData.level < 60) {
+    } else if (totalTextData.level < 60) {
       LevelImagePath = 'https://i.gyazo.com/f614a14051dbc1366ce4de2ead98a519.png';
-    } else if (totalData.level < 70) {
+    } else if (totalTextData.level < 70) {
       LevelImagePath = 'https://i.gyazo.com/3844d103c034f16e781fd947f593895c.png';
-    } else if (totalData.level < 80) {
+    } else if (totalTextData.level < 80) {
       LevelImagePath = 'https://i.gyazo.com/0357a63887c1183d53827eb8ebb29ee3.png';
-    } else if (totalData.level < 90) {
+    } else if (totalTextData.level < 90) {
       LevelImagePath = 'https://i.gyazo.com/693948d030989ffa5bf5e381f471bac6.png';
-    } else if (totalData.level < 100) {
+    } else if (totalTextData.level < 100) {
       LevelImagePath = 'https://i.gyazo.com/eed9e28789262927cefe0a68b3126ed2.png';
-    } else if (totalData.level >= 100) {
+    } else if (totalTextData.level >= 100) {
       LevelImagePath = 'https://i.gyazo.com/4428c08aaf82b7363fb7a327ce27a4c3.png';
     }
 
@@ -422,8 +428,8 @@ export const dProfile: SlashCommand = {
 
     // Level Bar Math
     let percentageOfLevel = 0;
-    const expToLevel = await expForNextLevel(totalData.level);
-    percentageOfLevel = (totalData.level_points / expToLevel);
+    const expToLevel = await expForNextLevel(totalTextData.level);
+    percentageOfLevel = (totalTextData.level_points / expToLevel);
     log.debug(F, `percentageOfLevel: ${percentageOfLevel}`);
 
     // Circular Level Bar
