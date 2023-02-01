@@ -11,7 +11,7 @@ import { ReadyEvent } from '../@types/eventDef';
 import { checkGuildPermissions } from '../utils/checkPermissions';
 import { runTimer } from '../../global/utils/timer'; // eslint-disable-line
 import { runStats } from '../../global/utils/stats'; // eslint-disable-line
-// import { runRss } from './global/utils/rssCheck';
+import { runRss } from '../../global/utils/rssCheck';
 import { runVoiceCheck } from '../../global/utils/voiceExp';
 import { startStatusLoop } from '../utils/statusLoop';
 
@@ -58,7 +58,7 @@ export const ready: ReadyEvent = {
         runTimer(),
         runStats(),
         runVoiceCheck(),
-        // runRss(),
+        runRss(),
       ]).then(async () => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
         log.info(F, `Discord finished booting in ${bootDuration}s!`);
