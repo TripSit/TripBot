@@ -9,10 +9,10 @@ import {
   TextChannel,
   ModalBuilder,
   TextInputBuilder,
-  SelectMenuBuilder,
   ModalSubmitInteraction,
   PermissionResolvable,
   Role,
+  StringSelectMenuBuilder,
 } from 'discord.js';
 import {
   ButtonStyle, TextInputStyle,
@@ -23,10 +23,9 @@ import { startLog } from '../../utils/startLog';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
+import { imageGet } from '../../utils/imageGet';
 
 const F = f(__filename);
-
-const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
 
 const channelOnly = 'You must run this in the channel you want the prompt to be in!';
 const noChannel = 'how to tripsit: no channel';
@@ -408,7 +407,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
   interaction.awaitModalSubmit({ filter, time: 150000 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
-      const selectMenu = new SelectMenuBuilder()
+      const selectMenu = new StringSelectMenuBuilder()
         .setCustomId('applicationRoleSelectMenu')
         .setPlaceholder('Select role here!')
         .setMaxValues(1);
@@ -437,7 +436,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
       await (i.channel as TextChannel).send(
         {
           content: stripIndents`${i.fields.getTextInputValue('appliationText')}`,
-          components: [new ActionRowBuilder<SelectMenuBuilder>()
+          components: [new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(selectMenu)],
         },
       );
@@ -542,12 +541,20 @@ export async function rules(interaction:ChatInputCommandInteraction) {
     return;
   }
 
+  const rulesPath = await imageGet('rules');
+
+  const rulesFile = new AttachmentBuilder(rulesPath);
+
+  // get the file name from the path
+  const rulesFileName = rulesPath.split('/').pop();
+  log.debug(F, `rulesFileName: ${rulesFileName}`);
+
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter(null)
     .setColor(Colors.Red)
-    .setImage('attachment://RULES.png');
-  await (interaction.channel as TextChannel).send({ embeds: [embed], files: [file] });
+    .setImage(`attachment://${rulesFileName}`);
+  await (interaction.channel as TextChannel).send({ embeds: [embed], files: [rulesFile] });
 
   await (interaction.channel as TextChannel).send({
     content: `
