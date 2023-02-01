@@ -168,11 +168,11 @@ export const dProfile: SlashCommand = {
     // const colorRole = target.roles.color;
 
     // Draw the card shape and chips
+    // Card
     context.fillStyle = cardLightColor;
     context.beginPath();
     context.roundRect(0, 0, 675, 292, [19]);
     context.fill();
-    context.fillStyle = cardLightColor;
     context.beginPath();
     context.roundRect(684, 0, 234, 292, [19]);
     context.fill();
@@ -180,57 +180,53 @@ export const dProfile: SlashCommand = {
     context.beginPath();
     context.roundRect(0, 0, 675, 145, [19]);
     context.fill();
-    context.fillStyle = cardDarkColor;
     context.beginPath();
     context.roundRect(684, 0, 234, 206, [19]);
     context.fill();
-
+    // Chips
     context.fillStyle = chipColor;
     context.beginPath();
     context.roundRect(18, 165, 201, 51, [19]);
     context.fill();
-    context.fillStyle = chipColor;
     context.beginPath();
     context.roundRect(18, 225, 201, 51, [19]);
     context.fill();
-    context.fillStyle = chipColor;
     context.beginPath();
     context.roundRect(237, 165, 201, 51, [19]);
     context.fill();
-    context.fillStyle = chipColor;
     context.beginPath();
     context.roundRect(237, 225, 201, 51, [19]);
     context.fill();
-    context.fillStyle = chipColor;
     context.beginPath();
     context.roundRect(456, 165, 201, 51, [19]);
     context.fill();
-    context.fillStyle = chipColor;
     context.beginPath();
     context.roundRect(456, 225, 201, 51, [19]);
     context.fill();
-    context.fillStyle = chipColor;
     context.beginPath();
     context.roundRect(702, 225, 201, 51, [19]);
     context.fill();
-    context.strokeStyle = chipColor;
+    // Level Bar Circle BG
+    context.strokeStyle = textColor;
     context.lineWidth = 18;
     context.beginPath();
     context.arc(801, 104, 77, 0, 2 * Math.PI);
     context.stroke();
 
     // WIP: Purchased Background
-    // const Background = await Canvas.loadImage('https://i.gyazo.com/adfbab1d3fdeadef74ec18ce6efe869c.png');
+    const Background = await Canvas.loadImage('https://i.gyazo.com/419d2747174841b24ae9ac1144a6883c.png');
     // const Background = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'background.png'));
-    // context.save();
-    // context.globalCompositeOperation = 'lighten';
-    // context.globalAlpha = 0.03;
-    // context.beginPath();
-    // context.roundRect(9, 9, 657, 274, [10]);
-    // context.roundRect(693, 9, 216, 274, [10]);
-    // context.clip();
-    // context.drawImage(Background, 0, 0);
-    // context.restore();
+    context.save();
+    context.globalCompositeOperation = 'lighten';
+    context.globalAlpha = 0.03;
+    context.beginPath();
+    context.roundRect(9, 9, 657, 127, [10]);
+    context.roundRect(9, 154, 657, 129, [10]);
+    context.roundRect(693, 9, 217, 188, [10]);
+    context.roundRect(693, 215, 214, 68, [10]);
+    context.clip();
+    context.drawImage(Background, 0, 0);
+    context.restore();
 
     // Load Icon Images
     const Icons = await Canvas.loadImage('https://i.gyazo.com/6669a36a7adf68996354bd7586cd7083.png');
@@ -427,9 +423,10 @@ export const dProfile: SlashCommand = {
     log.debug(F, `percentageOfLevel: ${percentageOfLevel}`);
 
     // Circular Level Bar
-    context.beginPath();
-    context.lineWidth = 18;
+    context.strokeStyle = textColor;
     context.lineCap = 'round';
+    context.lineWidth = 18;
+    context.beginPath();
     // context.arc(801, 104, 77, 1.5 * Math.PI, (0.70 * 1.4999) * Math.PI, false);
 
     // Start at the 0 degrees position, in human terms, the 12 o'clock position
@@ -443,7 +440,6 @@ export const dProfile: SlashCommand = {
     const endRadians = ((endDegrees - 90) * Math.PI) / 180;
 
     context.arc(801, 104, 77, startRadians, endRadians);
-    context.strokeStyle = textColor;
     context.stroke();
 
     // context.save();
