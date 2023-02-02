@@ -7,6 +7,7 @@ import {
   ColorResolvable,
   MessageComponentInteraction,
   time,
+  ChatInputCommandInteraction,
 } from 'discord.js';
 import {
   ButtonStyle,
@@ -395,7 +396,16 @@ type RpgStates = {
 export const dRpg: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('rpg')
-    .setDescription('A TripSit RPG!'),
+    .setDescription('A TripSit RPG!')
+    .addSubcommand(subcommand => subcommand
+      .setName('quest')
+      .setDescription('Quest and earn a token!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('dungeon')
+      .setDescription('Clear a dungeon and earn 10 tokens!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('raid')
+      .setDescription('Raid a boss and earn 50 tokens!')),
   async execute(interaction) {
     startLog(F, interaction);
     // This command provides a RPG game for the user to play
@@ -424,43 +434,6 @@ export const dRpg: SlashCommand = {
     // - Inventory - View their inventory and equip/unequip items
     // - Stats - View their stats and level them up
     // - Guild - View their guild and join/leave a guild
-
-    // const selectClass = new StringSelectMenuBuilder()
-    //   .setCustomId('rpgClass')
-    //   .setPlaceholder('Select a class')
-    //   .addOptions(Object.values({ ...classDef }));
-
-    // const rowClass = new ActionRowBuilder<StringSelectMenuBuilder>()
-    //   .addComponents(selectClass);
-
-    // const displayName = new StringSelectMenuBuilder()
-    //   .setCustomId('rpgNameDisplay')
-    //   .setPlaceholder('No Name!')
-    //   .setOptions([{
-    //     label: 'No Name',
-    //     value: 'nameless',
-    //     emoji: '👤',
-    //     default: true,
-    //   }]);
-
-    // const rowNameDisplay = new ActionRowBuilder<StringSelectMenuBuilder>()
-    //   .addComponents(displayName);
-
-    // const selectSpecies = new StringSelectMenuBuilder()
-    //   .setCustomId('rpgSpecies')
-    //   .setPlaceholder('Select a species')
-    //   .addOptions(Object.values({ ...speciesDef }));
-
-    // const rowSpecies = new ActionRowBuilder<StringSelectMenuBuilder>()
-    //   .addComponents(selectSpecies);
-
-    // const selectGuild = new StringSelectMenuBuilder()
-    //   .setCustomId('rpgGuild')
-    //   .setPlaceholder('Select a guild')
-    //   .addOptions(Object.values({ ...guildDef }));
-
-    // const rowGuild = new ActionRowBuilder<StringSelectMenuBuilder>()
-    //   .addComponents(selectGuild);
 
     const states = {
       // setup: {
@@ -618,8 +591,117 @@ export const dRpg: SlashCommand = {
       // },
     } as RpgStates;
 
-    // Check if the user has a persona
     let [personaData] = await getPersonaInfo(interaction.user.id);
+
+    const subcommand = interaction.options.getSubcommand();
+
+    if (subcommand === 'quest') {
+      const result = await rpgQuest(interaction);
+      const unlockTime = new Date(personaData.last_quest
+        ? personaData.last_quest.getTime() + intervalQuest
+        : new Date().getTime() + intervalQuest);
+      if (result.success) {
+        const embed = embedTemplate()
+          .setTitle(states.questSuccess.title)
+          .setDescription(stripIndents`${states.questSuccess.description}
+        You now have ${result.total} TT$
+        You can try again ${time(unlockTime, 'R')}`)
+          .setColor(states.questSuccess.color);
+        await interaction.reply({ embeds: [embed], ephemeral: true });
+      } else {
+        const embed = embedTemplate()
+          .setTitle(states.questFail.title)
+          .setDescription(stripIndents`${states.questFail.description}
+          You can try again ${time(unlockTime, 'R')}`)
+          .setColor(states.questFail.color);
+        await interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+      return true;
+    }
+    if (subcommand === 'dungeon') {
+      const result = await rpgDungeon(interaction);
+      const unlockTime = new Date(personaData.last_quest
+        ? personaData.last_quest.getTime() + intervalQuest
+        : new Date().getTime() + intervalQuest);
+      if (result.success) {
+        const embed = embedTemplate()
+          .setTitle(states.questSuccess.title)
+          .setDescription(stripIndents`${states.questSuccess.description}
+        You now have ${result.total} TT$
+        You can try again ${time(unlockTime, 'R')}`)
+          .setColor(states.questSuccess.color);
+        await interaction.reply({ embeds: [embed], ephemeral: true });
+      } else {
+        const embed = embedTemplate()
+          .setTitle(states.questFail.title)
+          .setDescription(stripIndents`${states.questFail.description}
+          You can try again ${time(unlockTime, 'R')}`)
+          .setColor(states.questFail.color);
+        await interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+      return true;
+    }
+    if (subcommand === 'raid') {
+      const result = await rpgRaid(interaction);
+      const unlockTime = new Date(personaData.last_quest
+        ? personaData.last_quest.getTime() + intervalQuest
+        : new Date().getTime() + intervalQuest);
+      if (result.success) {
+        const embed = embedTemplate()
+          .setTitle(states.questSuccess.title)
+          .setDescription(stripIndents`${states.questSuccess.description}
+        You now have ${result.total} TT$
+        You can try again ${time(unlockTime, 'R')}
+        `)
+          .setColor(states.questSuccess.color);
+        await interaction.reply({ embeds: [embed], ephemeral: true });
+      } else {
+        const embed = embedTemplate()
+          .setTitle(states.questFail.title)
+          .setDescription(stripIndents`${states.questFail.description}
+          You can try again ${time(unlockTime, 'R')}`)
+          .setColor(states.questFail.color);
+        await interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+      return true;
+    }
+
+    // const selectClass = new StringSelectMenuBuilder()
+    //   .setCustomId('rpgClass')
+    //   .setPlaceholder('Select a class')
+    //   .addOptions(Object.values({ ...classDef }));
+
+    // const rowClass = new ActionRowBuilder<StringSelectMenuBuilder>()
+    //   .addComponents(selectClass);
+
+    // const displayName = new StringSelectMenuBuilder()
+    //   .setCustomId('rpgNameDisplay')
+    //   .setPlaceholder('No Name!')
+    //   .setOptions([{
+    //     label: 'No Name',
+    //     value: 'nameless',
+    //     emoji: '👤',
+    //     default: true,
+    //   }]);
+
+    // const rowNameDisplay = new ActionRowBuilder<StringSelectMenuBuilder>()
+    //   .addComponents(displayName);
+
+    // const selectSpecies = new StringSelectMenuBuilder()
+    //   .setCustomId('rpgSpecies')
+    //   .setPlaceholder('Select a species')
+    //   .addOptions(Object.values({ ...speciesDef }));
+
+    // const rowSpecies = new ActionRowBuilder<StringSelectMenuBuilder>()
+    //   .addComponents(selectSpecies);
+
+    // const selectGuild = new StringSelectMenuBuilder()
+    //   .setCustomId('rpgGuild')
+    //   .setPlaceholder('Select a guild')
+    //   .addOptions(Object.values({ ...guildDef }));
+
+    // const rowGuild = new ActionRowBuilder<StringSelectMenuBuilder>()
+    //   .addComponents(selectGuild);
 
     log.debug(F, `Persona data: ${JSON.stringify(personaData, null, 2)}`);
 
@@ -670,77 +752,65 @@ export const dRpg: SlashCommand = {
           .setColor(states.work.color);
         await i.update({ embeds: [embed], components: states.work.components });
       } else if (i.customId === 'rpgQuest') {
-        if (personaData.last_quest
-          && personaData.last_quest.getTime() + intervalQuest > new Date().getTime()) {
-          const unlockTime = new Date(personaData.last_quest.getTime() + intervalQuest);
+        const result = await rpgQuest(i);
+        if (result) {
+          const embed = embedTemplate()
+            .setTitle(states.questSuccess.title)
+            .setDescription(stripIndents`${states.questSuccess.description}
+          You now have ${personaData.tokens} TT$`)
+            .setColor(states.questSuccess.color);
+          await i.update({ embeds: [embed], components: states.questSuccess.components });
+        } else {
+          const unlockTime = new Date(personaData.last_quest
+            ? personaData.last_quest.getTime() + intervalQuest
+            : new Date().getTime() + intervalQuest);
           const embed = embedTemplate()
             .setTitle(states.questFail.title)
             .setDescription(stripIndents`${states.questFail.description}
-            You can try again in ${time(unlockTime, 'R')}`)
+            You can try again ${time(unlockTime, 'R')}`)
             .setColor(states.questFail.color);
           await i.update({ embeds: [embed], components: states.questFail.components });
-          return;
         }
-
-        // Award the user coins
-        personaData.tokens += 1;
-        personaData.last_quest = new Date();
-        await setPersonaInfo(personaData);
-
-        const embed = embedTemplate()
-          .setTitle(states.questSuccess.title)
-          .setDescription(stripIndents`${states.questSuccess.description}
-          You now have ${personaData.tokens} TT$`)
-          .setColor(states.questSuccess.color);
-        await i.update({ embeds: [embed], components: states.questSuccess.components });
       } else if (i.customId === 'rpgDungeon') {
-        if (personaData.last_dungeon
-          && personaData.last_dungeon.getTime() + intervalDungeon > new Date().getTime()) {
-          const unlockTime = new Date(personaData.last_dungeon.getTime() + intervalDungeon);
+        const result = await rpgDungeon(i);
+        if (result) {
+          const embed = embedTemplate()
+            .setTitle(states.dungeonSuccess.title)
+            .setDescription(stripIndents`${states.dungeonSuccess.description}
+          You now have ${result.total} TT$`)
+            .setColor(states.dungeonSuccess.color);
+          await i.update({ embeds: [embed], components: states.dungeonSuccess.components });
+        } else {
+          const unlockTime = new Date(personaData.last_dungeon
+            ? personaData.last_dungeon.getTime() + intervalQuest
+            : new Date().getTime() + intervalDungeon);
           const embed = embedTemplate()
             .setTitle(states.dungeonFail.title)
             .setDescription(stripIndents`${states.dungeonFail.description}
-            You can try again in ${time(unlockTime, 'R')}`)
+            You can try again ${time(unlockTime, 'R')}`)
             .setColor(states.dungeonFail.color);
           await i.update({ embeds: [embed], components: states.dungeonFail.components });
-          return;
         }
-
-        // Award the user coins
-        personaData.tokens += 10;
-        personaData.last_dungeon = new Date();
-        await setPersonaInfo(personaData);
-
-        const embed = embedTemplate()
-          .setTitle(states.dungeonSuccess.title)
-          .setDescription(stripIndents`${states.dungeonSuccess.description}
-          You now have ${personaData.tokens} TT$`)
-          .setColor(states.dungeonSuccess.color);
-        await i.update({ embeds: [embed], components: states.dungeonSuccess.components });
       } else if (i.customId === 'rpgRaid') {
-        if (personaData.last_raid
-          && personaData.last_raid.getTime() + intervalRaid > new Date().getTime()) {
-          const unlockTime = new Date(personaData.last_raid.getTime() + intervalRaid);
+        const result = await rpgDungeon(i);
+        if (result) {
+          const embed = embedTemplate()
+            .setTitle(states.raidSuccess.title)
+            .setDescription(stripIndents`${states.raidSuccess.description}
+          You now have ${personaData.tokens} TT$`)
+            .setColor(states.raidSuccess.color);
+          await i.update({ embeds: [embed], components: states.raidSuccess.components });
+        } else {
+          const unlockTime = new Date(personaData.last_raid
+            ? personaData.last_raid.getTime() + intervalQuest
+            : new Date().getTime() + intervalDungeon);
           const embed = embedTemplate()
             .setTitle(states.raidFail.title)
             .setDescription(stripIndents`${states.raidFail.description}
-            You can try again in ${time(unlockTime, 'R')}`)
+            You can try again ${time(unlockTime, 'R')}`)
             .setColor(states.raidFail.color);
           await i.update({ embeds: [embed], components: states.raidFail.components });
-          return;
         }
-
-        // Award the user coins
-        personaData.tokens += 50;
-        personaData.last_raid = new Date();
-        await setPersonaInfo(personaData);
-
-        const embed = embedTemplate()
-          .setTitle(states.raidSuccess.title)
-          .setDescription(stripIndents`${states.raidSuccess.description}
-          You now have ${personaData.tokens} TT$`)
-          .setColor(states.raidSuccess.color);
-        await i.update({ embeds: [embed], components: states.raidSuccess.components });
       }
       //  else if (i.customId === 'rpgGames') {
       //   // The user has clicked the games button, send them the games embed
@@ -1019,3 +1089,87 @@ export const dRpg: SlashCommand = {
     return true;
   },
 };
+
+export async function rpgQuest(
+  interaction: MessageComponentInteraction | ChatInputCommandInteraction,
+):Promise<{
+    success: boolean,
+    total: number,
+  }> {
+  // Check if the user has a persona
+  const [personaData] = await getPersonaInfo(interaction.user.id);
+
+  if (personaData.last_quest
+    && personaData.last_quest.getTime() + intervalQuest > new Date().getTime()) {
+    return {
+      success: false,
+      total: personaData.tokens,
+    };
+  }
+
+  // Award the user coins
+  personaData.tokens += 1;
+  personaData.last_quest = new Date();
+  await setPersonaInfo(personaData);
+
+  return {
+    success: true,
+    total: personaData.tokens,
+  };
+}
+
+export async function rpgDungeon(
+  interaction: MessageComponentInteraction | ChatInputCommandInteraction,
+):Promise<{
+    success: boolean,
+    total: number,
+  }> {
+  // Check if the user has a persona
+  const [personaData] = await getPersonaInfo(interaction.user.id);
+
+  if (personaData.last_dungeon
+    && personaData.last_dungeon.getTime() + intervalDungeon > new Date().getTime()) {
+    return {
+      success: false,
+      total: personaData.tokens,
+    };
+  }
+
+  // Award the user coins
+  personaData.tokens += 10;
+  personaData.last_dungeon = new Date();
+  await setPersonaInfo(personaData);
+
+  return {
+    success: true,
+    total: personaData.tokens,
+  };
+}
+
+export async function rpgRaid(
+  interaction: MessageComponentInteraction | ChatInputCommandInteraction,
+):Promise<{
+    success: boolean,
+    total: number,
+  }> {
+  // Check if the user has a persona
+  const [personaData] = await getPersonaInfo(interaction.user.id);
+
+  if (personaData.last_raid
+    && personaData.last_raid.getTime() + intervalRaid > new Date().getTime()) {
+    return {
+      success: false,
+      total: personaData.tokens,
+    };
+  }
+
+  // Award the user coins
+  personaData.tokens += 50;
+  personaData.last_raid = new Date();
+  await setPersonaInfo(personaData);
+
+  return {
+    success: true,
+    total: personaData.tokens,
+  };
+}
