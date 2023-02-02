@@ -21,7 +21,7 @@ export async function pitchTent(
   New.member?.guild.channels.create({
     name: `⛺│${New.member.displayName}'s tent`,
     type: ChannelType.GuildVoice,
-    parent: env.CATEGORY_BACKSTAGE,
+    parent: env.CATEGORY_CAMPGROUND,
   }).then(newChannel => {
     New.member?.voice.setChannel(newChannel.id);
     // newChannel.permissionOverwrites.set([
