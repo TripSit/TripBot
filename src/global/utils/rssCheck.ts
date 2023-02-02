@@ -74,6 +74,8 @@ async function checkRss() {
 
       if (feed.last_post_id === mostRecentPost.id) return;
 
+      log.debug(F, `New post: ${JSON.stringify(mostRecentPost, null, 2)}`);
+
       const channelBotlog = await guild.channels.fetch(feed.destination) as TextChannel;
 
       // Gets everything before "submitted by"
