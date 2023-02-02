@@ -8,6 +8,7 @@ import {
   MessageComponentInteraction,
   time,
   ChatInputCommandInteraction,
+  EmbedBuilder,
 } from 'discord.js';
 import {
   ButtonStyle,
@@ -24,10 +25,12 @@ const F = f(__filename);
 
 export default dRpg;
 
-// Value in miliseconds (1000 * 60 = 1 minute)
-const intervalQuest = env.NODE_ENV === 'production' ? 1000 * 60 * 60 : 1000 * 5;
-const intervalDungeon = env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 : 1000 * 10;
-const intervalRaid = env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 * 7 : 1000 * 15;
+// Value in miliseconds (1000 * 60 * 1 = 1 minute)
+const intervals = {
+  quest: env.NODE_ENV === 'production' ? 1000 * 60 * 60 : 1000 * 60 * 1,
+  dungeon: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 : 1000 * 60 * 5,
+  raid: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 * 7 : 1000 * 60 * 10,
+};
 
 const buttonTown = new ButtonBuilder()
   .setCustomId('rpgTown')
@@ -393,10 +396,169 @@ type RpgStates = {
   };
 };
 
+const states = {
+  // setup: {
+  //   title: 'Setup',
+  //   description: stripIndents`
+  //   Welcome to TripSit's RPG bot!
+
+  //   Please select a class and species to start your adventure.
+
+  //   You can change these later in your profile!
+  //   `,
+  //   components: [rowNameDisplay, rowSpecies, rowClass, rowGuild, rowStartProfile],
+  //   color: Colors.Green,
+  // },
+  town: {
+    title: 'Town',
+    description: stripIndents`
+    You are in TripTown, a new town on the edge of Triptopia, the TripSit Kingdom.
+
+    Besides for a few buildings, the town is still under construction.
+
+    You can help rebuild the town by doing a quest, clearing a dungeon, or going on a raid.
+
+    What would you like to do?`,
+    components: [rowTown],
+    color: Colors.Green,
+  },
+  work: {
+    title: 'Work',
+    description: stripIndents`
+      You are at work, you can go on a quest, clear a dungeon, or go on a raid.
+    `,
+    components: [rowWork],
+    color: Colors.Green,
+  },
+  // shop: {
+  //   title: 'Shop',
+  //   description: stripIndents`
+  //     You are in the shop, you can buy some items to help you on your journey.
+  //   `,
+  //   components: [rowItems, rowBackground, rowBorder, rowShop],
+  //   color: Colors.Green,
+  // },
+  // games: {
+  //   title: 'Games',
+  //   description: stripIndents`
+  //     You are playing some games, you can play some dice, flip a coin, or play some roulette.
+  //   `,
+  //   components: [rowGames],
+  //   color: Colors.Green,
+  // },
+  // profile: {
+  //   title: 'Profile',
+  //   description: stripIndents`
+  //     You are in your profile, you can change your name, species, class and here.
+  //   `,
+  //   components: [rowProfile],
+  //   color: Colors.Green,
+  // },
+  questSuccess: {
+    title: 'Quest',
+    description: stripIndents`
+      You went on a quest to clean up TripTown and gained 1 TripCoin!
+    `,
+    components: [rowWork],
+    color: Colors.Green,
+  },
+  questFail: {
+    title: 'Quest',
+    description: stripIndents`
+      It's been less than an hour since you last went on a quest, you're too tired to work.
+    `,
+    components: [rowWork],
+    color: '#ff0000',
+  },
+  dungeonSuccess: {
+    title: 'Dungeon',
+    description: stripIndents`
+      You cleared a dungeon and gained 10 TripCoins!
+    `,
+    components: [rowWork],
+    color: Colors.Green,
+  },
+  dungeonFail: {
+    title: 'Dungeon',
+    description: stripIndents`
+      It's been less than 24 hours since you last cleared a dungeon, you still need to prepare.
+    `,
+    components: [rowWork],
+    color: '#ff0000',
+  },
+  raidSuccess: {
+    title: 'Raid',
+    description: stripIndents`
+      You stormed into Moonbear's office, russled their jimmies and stole 50 TripCoins!
+    `,
+    components: [rowWork],
+    color: Colors.Green,
+  },
+  raidFail: {
+    title: 'Raid',
+    description: stripIndents`
+      It's been less than 7 days since you last raided Moonbear's office, give them a break!
+    `,
+    components: [rowWork],
+    color: '#ff0000',
+  },
+  blackjack: {
+    title: 'Blackjack',
+    description: stripIndents`
+      You are playing some blackjack.
+    `,
+    components: [rowGames],
+    color: Colors.Green,
+  },
+  coinFlip: {
+    title: 'Coin Flip',
+    description: stripIndents`
+      You are flipping a coin, you can flip a coin or flip a coin 10 times.
+    `,
+    components: [rowGames],
+    color: Colors.Green,
+  },
+  rockPaperScissors: {
+    title: 'Rock Paper Scissors',
+    description: stripIndents`
+      You are playing some rock paper scissors.
+    `,
+    components: [rowGames],
+    color: Colors.Green,
+  },
+  // inventory: {
+  //   title: 'Inventory',
+  //   description: stripIndents`
+  //     You are looking at your inventory, you can equip items or unequip items.
+  //   `,
+  //   components: [rowProfile],
+  //   color: Colors.Green,
+  // },
+  // stats: {
+  //   title: 'Stats',
+  //   description: stripIndents`
+  //     You are looking at your stats, you can change your species or class here.
+  //   `,
+  //   components: [rowProfile],
+  //   color: Colors.Green,
+  // },
+  // guild: {
+  //   title: 'Guild',
+  //   description: stripIndents`
+  //     You are looking at your guild, you can join a guild or leave your guild.
+  //   `,
+  //   components: [rowProfile],
+  //   color: Colors.Green,
+  // },
+} as RpgStates;
+
 export const dRpg: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('rpg')
     .setDescription('A TripSit RPG!')
+    .addSubcommand(subcommand => subcommand
+      .setName('town')
+      .setDescription('Go to TripTown!'))
     .addSubcommand(subcommand => subcommand
       .setName('quest')
       .setDescription('Quest and earn a token!'))
@@ -435,236 +597,64 @@ export const dRpg: SlashCommand = {
     // - Stats - View their stats and level them up
     // - Guild - View their guild and join/leave a guild
 
-    const states = {
-      // setup: {
-      //   title: 'Setup',
-      //   description: stripIndents`
-      //   Welcome to TripSit's RPG bot!
-
-      //   Please select a class and species to start your adventure.
-
-      //   You can change these later in your profile!
-      //   `,
-      //   components: [rowNameDisplay, rowSpecies, rowClass, rowGuild, rowStartProfile],
-      //   color: Colors.Green,
-      // },
-      town: {
-        title: 'Town',
-        description: stripIndents`
-        You are in TripTown, a new town on the edge of Triptopia, the TripSit Kingdom.
-
-        Besides for a few buildings, the town is still under construction.
-
-        You can help rebuild the town by doing a quest, clearing a dungeon, or going on a raid.
-
-        What would you like to do?`,
-        components: [rowTown],
-        color: Colors.Green,
-      },
-      work: {
-        title: 'Work',
-        description: stripIndents`
-          You are at work, you can go on a quest, clear a dungeon, or go on a raid.
-        `,
-        components: [rowWork],
-        color: Colors.Green,
-      },
-      // shop: {
-      //   title: 'Shop',
-      //   description: stripIndents`
-      //     You are in the shop, you can buy some items to help you on your journey.
-      //   `,
-      //   components: [rowItems, rowBackground, rowBorder, rowShop],
-      //   color: Colors.Green,
-      // },
-      // games: {
-      //   title: 'Games',
-      //   description: stripIndents`
-      //     You are playing some games, you can play some dice, flip a coin, or play some roulette.
-      //   `,
-      //   components: [rowGames],
-      //   color: Colors.Green,
-      // },
-      // profile: {
-      //   title: 'Profile',
-      //   description: stripIndents`
-      //     You are in your profile, you can change your name, species, class and here.
-      //   `,
-      //   components: [rowProfile],
-      //   color: Colors.Green,
-      // },
-      questSuccess: {
-        title: 'Quest',
-        description: stripIndents`
-          You went on a quest to clean up TripTown and gained 1 TripCoin!
-        `,
-        components: [rowWork],
-        color: Colors.Green,
-      },
-      questFail: {
-        title: 'Quest',
-        description: stripIndents`
-          It's been less than an hour since you last went on a quest, you're too tired to work.
-        `,
-        components: [rowWork],
-        color: '#ff0000',
-      },
-      dungeonSuccess: {
-        title: 'Dungeon',
-        description: stripIndents`
-          You cleared a dungeon and gained 10 TripCoins!
-        `,
-        components: [rowWork],
-        color: Colors.Green,
-      },
-      dungeonFail: {
-        title: 'Dungeon',
-        description: stripIndents`
-          It's been less than 24 hours since you last cleared a dungeon, you still need to prepare.
-        `,
-        components: [rowWork],
-        color: '#ff0000',
-      },
-      raidSuccess: {
-        title: 'Raid',
-        description: stripIndents`
-          You stormed into Moonbear's office, russled their jimmies and stole 50 TripCoins!
-        `,
-        components: [rowWork],
-        color: Colors.Green,
-      },
-      raidFail: {
-        title: 'Raid',
-        description: stripIndents`
-          It's been less than 7 days since you last raided Moonbear's office, give them a break!
-        `,
-        components: [rowWork],
-        color: '#ff0000',
-      },
-      blackjack: {
-        title: 'Blackjack',
-        description: stripIndents`
-          You are playing some blackjack.
-        `,
-        components: [rowGames],
-        color: Colors.Green,
-      },
-      coinFlip: {
-        title: 'Coin Flip',
-        description: stripIndents`
-          You are flipping a coin, you can flip a coin or flip a coin 10 times.
-        `,
-        components: [rowGames],
-        color: Colors.Green,
-      },
-      rockPaperScissors: {
-        title: 'Rock Paper Scissors',
-        description: stripIndents`
-          You are playing some rock paper scissors.
-        `,
-        components: [rowGames],
-        color: Colors.Green,
-      },
-      // inventory: {
-      //   title: 'Inventory',
-      //   description: stripIndents`
-      //     You are looking at your inventory, you can equip items or unequip items.
-      //   `,
-      //   components: [rowProfile],
-      //   color: Colors.Green,
-      // },
-      // stats: {
-      //   title: 'Stats',
-      //   description: stripIndents`
-      //     You are looking at your stats, you can change your species or class here.
-      //   `,
-      //   components: [rowProfile],
-      //   color: Colors.Green,
-      // },
-      // guild: {
-      //   title: 'Guild',
-      //   description: stripIndents`
-      //     You are looking at your guild, you can join a guild or leave your guild.
-      //   `,
-      //   components: [rowProfile],
-      //   color: Colors.Green,
-      // },
-    } as RpgStates;
-
     let [personaData] = await getPersonaInfo(interaction.user.id);
 
     const subcommand = interaction.options.getSubcommand();
 
-    if (subcommand === 'quest') {
-      const result = await rpgQuest(interaction);
-      const unlockTime = new Date(personaData.last_quest
-        ? personaData.last_quest.getTime() + intervalQuest
-        : new Date().getTime() + intervalQuest);
-      if (result.success) {
-        const embed = embedTemplate()
-          .setTitle(states.questSuccess.title)
-          .setDescription(stripIndents`${states.questSuccess.description}
-        You now have ${result.total} TT$
-        You can try again ${time(unlockTime, 'R')}`)
-          .setColor(states.questSuccess.color);
-        await interaction.reply({ embeds: [embed], ephemeral: true });
-      } else {
-        const embed = embedTemplate()
-          .setTitle(states.questFail.title)
-          .setDescription(stripIndents`${states.questFail.description}
-          You can try again ${time(unlockTime, 'R')}`)
-          .setColor(states.questFail.color);
-        await interaction.reply({ embeds: [embed], ephemeral: true });
-      }
+    if (subcommand === 'quest' || subcommand === 'dungeon' || subcommand === 'raid') {
+      log.debug(F, 'quest');
+      const result = await rpgWork(interaction, subcommand);
+      log.debug(F, `result: ${JSON.stringify(result)}`);
+      await interaction.reply({ embeds: [result], ephemeral: true });
       return true;
     }
-    if (subcommand === 'dungeon') {
-      const result = await rpgDungeon(interaction);
-      const unlockTime = new Date(personaData.last_quest
-        ? personaData.last_quest.getTime() + intervalQuest
-        : new Date().getTime() + intervalQuest);
-      if (result.success) {
-        const embed = embedTemplate()
-          .setTitle(states.questSuccess.title)
-          .setDescription(stripIndents`${states.questSuccess.description}
-        You now have ${result.total} TT$
-        You can try again ${time(unlockTime, 'R')}`)
-          .setColor(states.questSuccess.color);
-        await interaction.reply({ embeds: [embed], ephemeral: true });
-      } else {
-        const embed = embedTemplate()
-          .setTitle(states.questFail.title)
-          .setDescription(stripIndents`${states.questFail.description}
-          You can try again ${time(unlockTime, 'R')}`)
-          .setColor(states.questFail.color);
-        await interaction.reply({ embeds: [embed], ephemeral: true });
-      }
-      return true;
-    }
-    if (subcommand === 'raid') {
-      const result = await rpgRaid(interaction);
-      const unlockTime = new Date(personaData.last_quest
-        ? personaData.last_quest.getTime() + intervalQuest
-        : new Date().getTime() + intervalQuest);
-      if (result.success) {
-        const embed = embedTemplate()
-          .setTitle(states.questSuccess.title)
-          .setDescription(stripIndents`${states.questSuccess.description}
-        You now have ${result.total} TT$
-        You can try again ${time(unlockTime, 'R')}
-        `)
-          .setColor(states.questSuccess.color);
-        await interaction.reply({ embeds: [embed], ephemeral: true });
-      } else {
-        const embed = embedTemplate()
-          .setTitle(states.questFail.title)
-          .setDescription(stripIndents`${states.questFail.description}
-          You can try again ${time(unlockTime, 'R')}`)
-          .setColor(states.questFail.color);
-        await interaction.reply({ embeds: [embed], ephemeral: true });
-      }
-      return true;
-    }
+    // if (subcommand === 'dungeon') {
+    //   const result = await rpgDungeon(interaction);
+    //   const unlockTime = new Date(personaData.last_dungeon
+    //     ? personaData.last_dungeon.getTime() + intervalDungeon
+    //     : new Date().getTime() + intervalDungeon);
+    //   if (result.success) {
+    //     const embed = embedTemplate()
+    //       .setTitle(states.dungeonSuccess.title)
+    //       .setDescription(stripIndents`${states.questSuccess.description}
+    //     You now have ${result.total} TT$
+    //     You can try again ${time(unlockTime, 'R')}`)
+    //       .setColor(states.questSuccess.color);
+    //     await interaction.reply({ embeds: [embed], ephemeral: true });
+    //   } else {
+    //     const embed = embedTemplate()
+    //       .setTitle(states.dungeonFail.title)
+    //       .setDescription(stripIndents`${states.dungeonFail.description}
+    //       You can try again ${time(unlockTime, 'R')}`)
+    //       .setColor(states.dungeonFail.color);
+    //     await interaction.reply({ embeds: [embed], ephemeral: true });
+    //   }
+    //   return true;
+    // }
+    // if (subcommand === 'raid') {
+    //   const result = await rpgRaid(interaction);
+    //   const unlockTime = new Date(personaData.last_raid
+    //     ? personaData.last_raid.getTime() + intervalRaid
+    //     : new Date().getTime() + intervalRaid);
+    //   if (result.success) {
+    //     const embed = embedTemplate()
+    //       .setTitle(states.raidSuccess.title)
+    //       .setDescription(stripIndents`${states.raidSuccess.description}
+    //     You now have ${result.total} TT$
+    //     You can try again ${time(unlockTime, 'R')}
+    //     `)
+    //       .setColor(states.raidSuccess.color);
+    //     await interaction.reply({ embeds: [embed], ephemeral: true });
+    //   } else {
+    //     const embed = embedTemplate()
+    //       .setTitle(states.raidFail.title)
+    //       .setDescription(stripIndents`${states.raidFail.description}
+    //       You can try again ${time(unlockTime, 'R')}`)
+    //       .setColor(states.raidFail.color);
+    //     await interaction.reply({ embeds: [embed], ephemeral: true });
+    //   }
+    //   return true;
+    // }
 
     // const selectClass = new StringSelectMenuBuilder()
     //   .setCustomId('rpgClass')
@@ -751,66 +741,12 @@ export const dRpg: SlashCommand = {
           .setDescription(states.work.description)
           .setColor(states.work.color);
         await i.update({ embeds: [embed], components: states.work.components });
-      } else if (i.customId === 'rpgQuest') {
-        const result = await rpgQuest(i);
-        if (result) {
-          const embed = embedTemplate()
-            .setTitle(states.questSuccess.title)
-            .setDescription(stripIndents`${states.questSuccess.description}
-          You now have ${personaData.tokens} TT$`)
-            .setColor(states.questSuccess.color);
-          await i.update({ embeds: [embed], components: states.questSuccess.components });
-        } else {
-          const unlockTime = new Date(personaData.last_quest
-            ? personaData.last_quest.getTime() + intervalQuest
-            : new Date().getTime() + intervalQuest);
-          const embed = embedTemplate()
-            .setTitle(states.questFail.title)
-            .setDescription(stripIndents`${states.questFail.description}
-            You can try again ${time(unlockTime, 'R')}`)
-            .setColor(states.questFail.color);
-          await i.update({ embeds: [embed], components: states.questFail.components });
-        }
-      } else if (i.customId === 'rpgDungeon') {
-        const result = await rpgDungeon(i);
-        if (result) {
-          const embed = embedTemplate()
-            .setTitle(states.dungeonSuccess.title)
-            .setDescription(stripIndents`${states.dungeonSuccess.description}
-          You now have ${result.total} TT$`)
-            .setColor(states.dungeonSuccess.color);
-          await i.update({ embeds: [embed], components: states.dungeonSuccess.components });
-        } else {
-          const unlockTime = new Date(personaData.last_dungeon
-            ? personaData.last_dungeon.getTime() + intervalQuest
-            : new Date().getTime() + intervalDungeon);
-          const embed = embedTemplate()
-            .setTitle(states.dungeonFail.title)
-            .setDescription(stripIndents`${states.dungeonFail.description}
-            You can try again ${time(unlockTime, 'R')}`)
-            .setColor(states.dungeonFail.color);
-          await i.update({ embeds: [embed], components: states.dungeonFail.components });
-        }
-      } else if (i.customId === 'rpgRaid') {
-        const result = await rpgDungeon(i);
-        if (result) {
-          const embed = embedTemplate()
-            .setTitle(states.raidSuccess.title)
-            .setDescription(stripIndents`${states.raidSuccess.description}
-          You now have ${personaData.tokens} TT$`)
-            .setColor(states.raidSuccess.color);
-          await i.update({ embeds: [embed], components: states.raidSuccess.components });
-        } else {
-          const unlockTime = new Date(personaData.last_raid
-            ? personaData.last_raid.getTime() + intervalQuest
-            : new Date().getTime() + intervalDungeon);
-          const embed = embedTemplate()
-            .setTitle(states.raidFail.title)
-            .setDescription(stripIndents`${states.raidFail.description}
-            You can try again ${time(unlockTime, 'R')}`)
-            .setColor(states.raidFail.color);
-          await i.update({ embeds: [embed], components: states.raidFail.components });
-        }
+      } else if (i.customId === 'rpgQuest'
+      || i.customId === 'rpgDungeon'
+      || i.customId === 'rpgRaid') {
+        const command = i.customId.replace('rpg', '').toLowerCase();
+        const result = await rpgWork(i, command as 'quest' | 'dungeon' | 'raid');
+        await i.update({ embeds: [result], components: [rowWork] });
       }
       //  else if (i.customId === 'rpgGames') {
       //   // The user has clicked the games button, send them the games embed
@@ -1090,86 +1026,61 @@ export const dRpg: SlashCommand = {
   },
 };
 
-export async function rpgQuest(
+export async function rpgWork(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
-):Promise<{
-    success: boolean,
-    total: number,
-  }> {
+  command: 'quest' | 'dungeon' | 'raid',
+):Promise<EmbedBuilder> {
   // Check if the user has a persona
   const [personaData] = await getPersonaInfo(interaction.user.id);
 
-  if (personaData.last_quest
-    && personaData.last_quest.getTime() + intervalQuest > new Date().getTime()) {
-    return {
-      success: false,
-      total: personaData.tokens,
-    };
+  const dbKey = `last_${command}`;
+  const lastWork = personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] as Date;
+  log.debug(F, `lastWork: ${lastWork}`);
+
+  const interval = intervals[command] ?? 0;
+  log.debug(F, `interval: ${interval}`);
+  log.debug(F, `intervalMins: ${interval / 1000 / 60}}`);
+
+  const nextWork = new Date(lastWork.getTime() + interval);
+  log.debug(F, `nextWork: ${nextWork}`);
+
+  // log.debug(F, `personaData1: ${JSON.stringify(personaData, null, 2)}`);
+  if (nextWork.getTime() > new Date().getTime()) {
+    // log.debug(F, `lastwork: ${lastWork}`);
+    const failKey = `${command}Fail`;
+    return embedTemplate()
+      .setTitle(states[failKey].title)
+      .setDescription(stripIndents`${states[failKey].description}
+    You can try again ${time(nextWork, 'R')}`)
+      .setColor(states[failKey].color);
+  }
+
+  let tokens = 1;
+  if (command === 'dungeon') {
+    tokens = 10;
+  } else if (command === 'raid') {
+    tokens = 50;
   }
 
   // Award the user coins
-  personaData.tokens += 1;
-  personaData.last_quest = new Date();
+  personaData.tokens += tokens;
+  personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] = new Date();
+
+  // log.debug(F, `personaData2: ${JSON.stringify(personaData, null, 2)}`);
   await setPersonaInfo(personaData);
 
-  return {
-    success: true,
-    total: personaData.tokens,
-  };
-}
+  // return {
+  //   success: true,
+  //   total: personaData.tokens,
+  //   lastWork: new Date(),
+  //   nextWork: new Date(lastWork.getTime() + interval),
+  // };
+  const successKey = `${command}Success` as 'questFail' | 'dungeonFail' | 'raidFail';
 
-export async function rpgDungeon(
-  interaction: MessageComponentInteraction | ChatInputCommandInteraction,
-):Promise<{
-    success: boolean,
-    total: number,
-  }> {
-  // Check if the user has a persona
-  const [personaData] = await getPersonaInfo(interaction.user.id);
-
-  if (personaData.last_dungeon
-    && personaData.last_dungeon.getTime() + intervalDungeon > new Date().getTime()) {
-    return {
-      success: false,
-      total: personaData.tokens,
-    };
-  }
-
-  // Award the user coins
-  personaData.tokens += 10;
-  personaData.last_dungeon = new Date();
-  await setPersonaInfo(personaData);
-
-  return {
-    success: true,
-    total: personaData.tokens,
-  };
-}
-
-export async function rpgRaid(
-  interaction: MessageComponentInteraction | ChatInputCommandInteraction,
-):Promise<{
-    success: boolean,
-    total: number,
-  }> {
-  // Check if the user has a persona
-  const [personaData] = await getPersonaInfo(interaction.user.id);
-
-  if (personaData.last_raid
-    && personaData.last_raid.getTime() + intervalRaid > new Date().getTime()) {
-    return {
-      success: false,
-      total: personaData.tokens,
-    };
-  }
-
-  // Award the user coins
-  personaData.tokens += 50;
-  personaData.last_raid = new Date();
-  await setPersonaInfo(personaData);
-
-  return {
-    success: true,
-    total: personaData.tokens,
-  };
+  return embedTemplate()
+    .setTitle(states[successKey].title)
+    .setDescription(stripIndents`${states[successKey].description}
+You now have ${personaData.tokens} TT$
+You can try again ${time(new Date(new Date().getTime() + interval), 'R')}`)
+    .setColor(states[successKey].color);
 }
