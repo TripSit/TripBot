@@ -206,6 +206,9 @@ export const dProfile: SlashCommand = {
     context.beginPath();
     context.roundRect(702, 225, 201, 51, [19]);
     context.fill();
+    context.beginPath();
+    context.arc(603, 73, 54, 0, Math.PI * 2, true);
+    context.fill();
     // Level Bar Circle BG
     context.strokeStyle = textColor;
     context.lineWidth = 18;
@@ -251,6 +254,11 @@ export const dProfile: SlashCommand = {
     context.fillStyle = cardDarkColor;
     context.fill();
     context.restore();
+
+    // WIP: Camp Icon
+    const CampIconPath = 'https://i.gyazo.com/62a9db6c42ca3c03cc892b28f5d8b367.png';
+    const CampIcon = await Canvas.loadImage(CampIconPath);
+    context.drawImage(CampIcon, 547, 17);
 
     // const StatusIconPath = target.presence
     //   ? path.join(__dirname, '..', '..', 'assets', 'img', 'icons', `${target.presence?.status}.png`)
