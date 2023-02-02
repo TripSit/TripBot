@@ -646,15 +646,13 @@ export const dRpg: SlashCommand = {
 
       await setPersonaInfo(personaData);
       // await interaction.editReply({ embeds: [embedStart], components: states.setup.components });
-    } else {
-      await interaction.editReply({ embeds: [embedTown], components: states.town.components });
     }
 
     await interaction.editReply({ embeds: [embedTown], components: states.town.components });
 
     // Create a collector that will listen for the user to respond to the setup
     const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id;
-    const collector = message.createMessageComponentCollector({ filter, time: 60000 });
+    const collector = message.createMessageComponentCollector({ filter, time: 0 });
 
     collector.on('collect', async (i: MessageComponentInteraction) => {
       if (i.customId === 'rpgTown') {
