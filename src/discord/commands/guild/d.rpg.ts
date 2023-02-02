@@ -1041,7 +1041,9 @@ export async function rpgWork(
   log.debug(F, `interval: ${interval}`);
   log.debug(F, `intervalMins: ${interval / 1000 / 60}}`);
 
-  const nextWork = new Date(lastWork.getTime() + interval);
+  const nextWork = lastWork
+    ? new Date(lastWork.getTime() + interval)
+    : new Date(new Date().getTime() + interval);
   log.debug(F, `nextWork: ${nextWork}`);
 
   // log.debug(F, `personaData1: ${JSON.stringify(personaData, null, 2)}`);
