@@ -243,15 +243,17 @@ export type ReactionRoles = {
 export type RpgInventory = {
   id: string;
   persona_id: string;
-  name: string;
+  label: string;
+  value: string;
   description: string;
   quantity: number;
   weight: number;
-  value: number;
+  cost: number;
   equipped: boolean;
   consumable: boolean;
   effect: string;
-  effect_value: number;
+  effect_value: string;
+  emoji: string;
   created_at: Date;
 };
 

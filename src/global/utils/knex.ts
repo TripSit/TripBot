@@ -645,6 +645,6 @@ export async function inventorySet(
   if (env.POSTGRES_DBURL === undefined) return;
   await db<RpgInventory>('rpg_inventory')
     .insert(data)
-    .onConflict(['persona_id', 'name'])
+    .onConflict(['persona_id', 'value'])
     .merge();
 }

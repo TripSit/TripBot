@@ -16,6 +16,7 @@ import {
   StringSelectMenuInteraction,
   InteractionEditReplyOptions,
   InteractionUpdateOptions,
+  SelectMenuComponentOptionData,
 } from 'discord.js';
 import {
   APISelectMenuOption,
@@ -26,8 +27,10 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { getPersonaInfo, setPersonaInfo } from '../../../global/commands/g.rpg';
 import { startLog } from '../../utils/startLog';
-import { getUser, inventoryGet, personaSet } from '../../../global/utils/knex';
-import { Personas } from '../../../global/@types/pgdb';
+import {
+  getUser, inventoryGet, inventorySet, personaSet,
+} from '../../../global/utils/knex';
+import { Personas, RpgInventory } from '../../../global/@types/pgdb';
 
 const F = f(__filename);
 
@@ -35,9 +38,9 @@ export default dRpg;
 
 // Value in miliseconds (1000 * 60 * 1 = 1 minute)
 const intervals = {
-  quest: env.NODE_ENV === 'production' ? 1000 * 60 * 60 : 1000 * 60 * 1,
-  dungeon: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 : 1000 * 60 * 5,
-  raid: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 * 7 : 1000 * 60 * 10,
+  quest: env.NODE_ENV === 'production' ? 1000 * 60 * 60 : 1000 * 1,
+  dungeon: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 : 1000 * 1,
+  raid: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 * 7 : 1000 * 1,
 };
 
 const buttons = {
@@ -112,10 +115,10 @@ const buttons = {
     .setStyle(ButtonStyle.Success)
     .setEmoji('🏰'),
   buy: new ButtonBuilder()
-    .setCustomId('rpgBuy')
+    .setCustomId('rpgShopBuy')
     .setLabel('Buy')
     .setStyle(ButtonStyle.Success)
-    .setEmoji('✅'),
+    .setEmoji('🛒'),
   dice: new ButtonBuilder()
     .setCustomId('rpgDice')
     .setLabel('Dice')
@@ -135,46 +138,114 @@ const buttons = {
   [key: string]: ButtonBuilder;
 };
 
+const menus = {
+  item: new StringSelectMenuBuilder()
+    .setCustomId('rpgGeneralSelect')
+    .setPlaceholder('Select an item to buy'),
+  name: new StringSelectMenuBuilder()
+    .setCustomId('rpgNameDisplay')
+    .setPlaceholder('No Name!')
+    .setOptions([{
+      label: 'No Name',
+      value: 'nameless',
+      emoji: '👤',
+      default: true,
+    }]),
+  class: new StringSelectMenuBuilder()
+    .setCustomId('rpgClass')
+    .setPlaceholder('Select a class'),
+  species: new StringSelectMenuBuilder()
+    .setCustomId('rpgSpecies')
+    .setPlaceholder('Pick a species'),
+  guild: new StringSelectMenuBuilder()
+    .setCustomId('rpgGuild')
+    .setPlaceholder('Select a guild'),
+} as {
+  [key: string]: StringSelectMenuBuilder;
+};
+
 const items = {
   general: {
-    testKit: {
+    testkit: {
       label: 'TestKit',
       value: 'testkit',
       description: '100 Tokens - 10% more TripTokens from all sources!',
+      quantity: 1,
+      weight: 0,
+      cost: 100,
+      equipped: true,
+      consumable: false,
+      effect: 'tokenMultiplier',
+      effect_value: '1.1',
       emoji: '🧪',
     },
     scale: {
       label: 'Scale',
       value: 'scale',
-      description: '200 Tokens - 20% more TripTokens from all sources!',
+      description: '20% more TripTokens from all sources!',
+      quantity: 1,
+      weight: 0,
+      cost: 200,
+      equipped: true,
+      consumable: false,
+      effect: 'tokenMultiplier',
+      effect_value: '1.2',
       emoji: '⚖',
     },
   },
   backgrounds: {
     backgroundA: {
-      label: 'PatternA',
-      value: 'patternA',
-      description: '100 Tokens - Cool new pattern!',
+      label: 'BackgroundA',
+      value: 'backgrounda',
+      description: 'Cool new pattern!',
+      quantity: 1,
+      weight: 0,
+      cost: 100,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'patternA',
       emoji: '🧪',
     },
     backgroundB: {
-      label: 'PatternB',
-      value: 'patternB',
-      description: '100 Tokens - Cool new pattern!',
+      label: 'BackgroundB',
+      value: 'backgroundb',
+      description: 'Cool new pattern!',
+      quantity: 1,
+      weight: 0,
+      cost: 100,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'patternB',
       emoji: '🧪',
     },
   },
   borders: {
     borderA: {
       label: 'BorderA',
-      value: 'borderA',
-      description: '100 Tokens - Cool new border!',
+      value: 'bordera',
+      description: 'Cool new border!',
+      quantity: 1,
+      weight: 0,
+      cost: 100,
+      equipped: true,
+      consumable: false,
+      effect: 'border',
+      effect_value: 'borderA',
       emoji: '🧪',
     },
     borderB: {
       label: 'BorderB',
-      value: 'borderB',
-      description: '100 Tokens - Cool new border!',
+      value: 'borderb',
+      description: 'Cool new border!',
+      quantity: 1,
+      weight: 0,
+      cost: 100,
+      equipped: true,
+      consumable: false,
+      effect: 'border',
+      effect_value: 'borderB',
       emoji: '🧪',
     },
   },
@@ -184,11 +255,15 @@ const items = {
       label: string;
       value: string;
       description: string;
+      quantity: number;
+      weight: number;
+      cost: number;
+      equipped: boolean;
+      consumable: boolean;
+      effect: string;
+      effect_value: string;
       emoji: string;
-      // cost: number;
-      // effect: string;
-      // effectAmount: number;
-    }
+    };
   }
 };
 
@@ -417,15 +492,19 @@ export const dRpg: SlashCommand = {
         // The user has clicked the games button, send them the games embed
         await i.update(await rpgProfile(i));
       } else if (i.customId === 'rpgSpecies') {
-        await i.update(await rpgChange(i, 'species'));
+        await i.update(await rpgProfileChange(i, 'species'));
       } else if (i.customId === 'rpgClass') {
-        await i.update(await rpgChange(i, 'class'));
+        await i.update(await rpgProfileChange(i, 'class'));
       } else if (i.customId === 'rpgGuild') {
-        await i.update(await rpgChange(i, 'guild'));
+        await i.update(await rpgProfileChange(i, 'guild'));
       } else if (i.customId === 'rpgName') {
         await rpgName(i);
       } else if (i.customId === 'rpgAccept') {
-        await i.update(await rpgAccept(i));
+        await i.update(await rpgProfileAccept(i));
+      } else if (i.customId === 'rpgGeneralSelect') {
+        await i.update(await rpgShopChange(i));
+      } else if (i.customId === 'rpgShopBuy') {
+        await i.update(await rpgShopAccept(i));
       }
     });
 
@@ -540,6 +619,7 @@ export async function rpgWork(
         embeds: [embedTemplate()
           .setTitle(contracts[command].fail.title)
           .setDescription(stripIndents`${contracts[command].fail.description}
+      You still have ${personaData.tokens} TT$!
       You can try again ${time(new Date(lastWork.getTime() + interval), 'R')}`)
           .setColor(contracts[command].fail.color)],
         components: [rowWork],
@@ -564,6 +644,7 @@ export async function rpgWork(
       embeds: [embedTemplate()
         .setTitle(contracts[command].success.title)
         .setDescription(stripIndents`${contracts[command].success.description}
+    You now have ${personaData.tokens} TT$!
     You can try again ${time(new Date(new Date().getTime() + interval), 'R')}`)
         .setColor(contracts[command].success.color)],
       components: [rowWork],
@@ -592,25 +673,52 @@ export async function rpgShop(
   log.debug(F, `Persona inventory: ${JSON.stringify(personaInventory, null, 2)}`);
 
   // Get a string display of the user's inventory
-  const inventoryList = personaInventory.map(item => `**${item.name}** - ${item.description}`).join('\n');
+  const inventoryList = personaInventory.map(item => `**${item.label}** - ${item.description}`).join('\n');
   const inventoryString = stripIndents`
   **Inventory**
   ${inventoryList}
   `;
 
-  const selectItem = new StringSelectMenuBuilder()
-    .setCustomId('rpgPurchase')
-    .setPlaceholder('Select a item to buy')
-    .addOptions(Object.values(items.general))
-    .setMinValues(1)
-    .setMaxValues(Object.keys(items.general).length);
+  // Go through items.general and create a new object of items that the user doesnt have yet
+  let generalOptions = Object.values(items.general)
+    .map(item => {
+      if (!personaInventory.find(i => i.value === item.value)) {
+        return {
+          label: item.label,
+          value: item.value,
+          description: item.description,
+          emoji: item.emoji,
+        };
+      }
+      return null;
+    }) as SelectMenuComponentOptionData[];
+  generalOptions = generalOptions.filter(item => item !== null);
+  log.debug(F, `generalOptions: ${JSON.stringify(generalOptions, null, 2)}`);
 
+  if (generalOptions.length === 0) {
+    const rowShop = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        buttons.town,
+      );
+    return {
+      embeds: [embedTemplate()
+        .setTitle('Shop')
+        .setDescription(stripIndents`
+        You are in the shop, you can buy some items to help you on your journey.
+
+        You currently have **${personaData.tokens}** TripTokens.
+      ${personaInventory.length > 0 ? inventoryString : ''}`)
+        .setColor(Colors.Green)],
+      components: [rowShop],
+    };
+  }
+
+  menus.item.setOptions(generalOptions);
   const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(selectItem);
+    .addComponents(menus.item);
 
   const rowShop = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
-      buttons.buy,
       buttons.town,
     );
 
@@ -620,6 +728,353 @@ export async function rpgShop(
       .setTitle('Shop')
       .setDescription(stripIndents`
       You are in the shop, you can buy some items to help you on your journey.
+
+      You currently have **${personaData.tokens}** TripTokens.
+    ${personaInventory.length > 0 ? inventoryString : ''}`)
+      .setColor(Colors.Green)],
+    components: [rowItems, rowShop],
+  };
+}
+
+export async function rpgShopChange(
+  interaction:MessageComponentInteraction,
+):Promise<InteractionUpdateOptions> {
+  // Check get fresh persona data
+  const [personaData] = await getPersonaInfo(interaction.user.id);
+  log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);
+
+  // Get the existing inventory data
+  const personaInventory = await inventoryGet(personaData.id);
+  log.debug(F, `Persona inventory: ${JSON.stringify(personaInventory, null, 2)}`);
+
+  const [choice] = (interaction as StringSelectMenuInteraction).values;
+  log.debug(F, `choice: ${choice}`);
+
+  // Get a string display of the user's inventory
+  const inventoryList = personaInventory.map(item => `**${item.label}** - ${item.description}`).join('\n');
+  const inventoryString = stripIndents`
+    **Inventory**
+    ${inventoryList}
+    `;
+
+  // Get a list of items.general where the value does not equal the choice
+  const filteredItems = Object.values(items.general).filter(item => item.value !== choice);
+
+  const generalOptions = Object.values(filteredItems).map(item => {
+    if (item.value !== choice) {
+      return {
+        label: item.label,
+        value: item.value,
+        description: item.description,
+        emoji: item.emoji,
+      };
+    }
+    return null;
+  }) as SelectMenuComponentOptionData[];
+
+  menus.item.setOptions(generalOptions);
+
+  menus.item.addOptions([
+    {
+      label: { ...items.general }[choice as keyof typeof items.general].label,
+      value: { ...items.general }[choice as keyof typeof items.general].value,
+      description: { ...items.general }[choice as keyof typeof items.general].description,
+      emoji: { ...items.general }[choice as keyof typeof items.general].emoji,
+      default: true,
+    },
+  ]);
+
+  const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
+    .addComponents(menus.item);
+
+  buttons.buy.setLabel(`Buy ${items.general[choice as keyof typeof items.general].label} for ${items.general[choice as keyof typeof items.general].cost} TT$`);
+  const rowShop = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      buttons.town,
+      buttons.buy,
+    );
+
+  // selectSpecies.addOptions(Object.values(speciesDef).filter(s => s.value !== choice));
+
+  return {
+    embeds: [embedTemplate()
+      .setTitle('Shop')
+      .setDescription(stripIndents`
+      You are in the shop, you can buy some items to help you on your journey.
+
+      You currently have **${personaData.tokens}** TripTokens.
+    ${personaInventory.length > 0 ? inventoryString : ''}`)
+      .setColor(Colors.Green)],
+    components: [rowItems, rowShop],
+  };
+}
+
+export async function rpgShopAccept(
+  interaction:MessageComponentInteraction,
+):Promise<InteractionUpdateOptions> {
+  // Check get fresh persona data
+  const [personaData] = await getPersonaInfo(interaction.user.id);
+  log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);
+
+  // Get the existing inventory data
+  const personaInventory = await inventoryGet(personaData.id);
+  log.debug(F, `Persona inventory: ${JSON.stringify(personaInventory, null, 2)}`);
+
+  // Get a string display of the user's inventory
+  let inventoryList = personaInventory.map(item => `**${item.label}** - ${item.description}`).join('\n');
+  let inventoryString = stripIndents`
+      **Inventory**
+      ${inventoryList}
+      `;
+
+  // Message
+  // row 1: select menu
+  // row 2: buy button, town button
+
+  // If the user confirms the information, save the persona information
+  const itemComponent = interaction.message.components[0].components[0];
+  const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
+    (o:APISelectMenuOption) => o.default === true,
+  );
+
+  log.debug(F, `selectedItem: ${JSON.stringify(selectedItem, null, 2)}`);
+
+  const itemData = items.general[selectedItem?.value as keyof typeof items.general];
+
+  // Check if the user already has this item
+  const existingItem = personaInventory.find(item => item.label === itemData.label);
+  if (existingItem) {
+  // Go through items.general and create a new object of items that the user doesnt have yet
+    // Get a list of items.general where the value does not equal the choice
+    const filteredItems = Object.values(items.general).filter(item => item.value !== selectedItem?.value);
+
+    let generalOptions = Object.values(filteredItems)
+      .map(item => {
+        if (!personaInventory.find(i => i.value === item.value)) {
+          return {
+            label: item.label,
+            value: item.value,
+            description: item.description,
+            emoji: item.emoji,
+          };
+        }
+        return null;
+      }) as SelectMenuComponentOptionData[];
+    generalOptions = generalOptions.filter(item => item !== null);
+    log.debug(F, `generalOptions: ${JSON.stringify(generalOptions, null, 2)}`);
+
+    if (generalOptions.length === 0) {
+      const rowShop = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          buttons.town,
+        );
+      return {
+        embeds: [embedTemplate()
+          .setTitle('Shop')
+          .setDescription(stripIndents`
+          You are in the shop, you can buy some items to help you on your journey.
+
+          You currently have **${personaData.tokens}** TripTokens.
+        ${personaInventory.length > 0 ? inventoryString : ''}`)
+          .setColor(Colors.Green)],
+        components: [rowShop],
+      };
+    }
+
+    menus.item.setOptions(generalOptions);
+    menus.item.addOptions([
+      {
+        label: { ...items.general }[selectedItem?.value as keyof typeof items.general].label,
+        value: { ...items.general }[selectedItem?.value as keyof typeof items.general].value,
+        description: { ...items.general }[selectedItem?.value as keyof typeof items.general].description,
+        emoji: { ...items.general }[selectedItem?.value as keyof typeof items.general].emoji,
+        default: true,
+      },
+    ]);
+
+    const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
+      .addComponents(menus.item);
+
+    buttons.buy.setLabel(`Buy ${items.general[selectedItem?.value as keyof typeof items.general].label} for ${items.general[selectedItem?.value as keyof typeof items.general].cost} TT$`);
+
+    const rowShop = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        buttons.town,
+        buttons.buy,
+      );
+
+    return {
+      embeds: [embedTemplate()
+        .setTitle('Shop')
+        .setDescription(stripIndents`
+        **You already have this item!**
+  
+        You are in the shop, you can buy some items to help you on your journey.
+  
+        You currently have **${personaData.tokens}** TripTokens.
+      ${personaInventory.length > 0 ? inventoryString : ''}`)
+        .setColor(Colors.Red)],
+      components: [rowItems, rowShop],
+    };
+  }
+
+  // Check if the user has enough tokens to buy the item
+  if (personaData.tokens < itemData.cost) {
+    // Get a list of items.general where the value does not equal the choice
+    const filteredItems = Object.values(items.general).filter(item => item.value !== selectedItem?.value);
+
+    let generalOptions = Object.values(filteredItems)
+      .map(item => {
+        if (!personaInventory.find(i => i.value === item.value)) {
+          return {
+            label: item.label,
+            value: item.value,
+            description: item.description,
+            emoji: item.emoji,
+          };
+        }
+        return null;
+      }) as SelectMenuComponentOptionData[];
+    generalOptions = generalOptions.filter(item => item !== null);
+    log.debug(F, `generalOptions: ${JSON.stringify(generalOptions, null, 2)}`);
+
+    if (generalOptions.length === 0) {
+      const rowShop = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          buttons.town,
+        );
+      return {
+        embeds: [embedTemplate()
+          .setTitle('Shop')
+          .setDescription(stripIndents`
+          You are in the shop, you can buy some items to help you on your journey.
+
+          You currently have **${personaData.tokens}** TripTokens.
+        ${personaInventory.length > 0 ? inventoryString : ''}`)
+          .setColor(Colors.Green)],
+        components: [rowShop],
+      };
+    }
+
+    menus.item.setOptions(generalOptions);
+    menus.item.addOptions([
+      {
+        label: { ...items.general }[selectedItem?.value as keyof typeof items.general].label,
+        value: { ...items.general }[selectedItem?.value as keyof typeof items.general].value,
+        description: { ...items.general }[selectedItem?.value as keyof typeof items.general].description,
+        emoji: { ...items.general }[selectedItem?.value as keyof typeof items.general].emoji,
+        default: true,
+      },
+    ]);
+
+    const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
+      .addComponents(menus.item);
+
+    buttons.buy.setLabel(`Buy ${items.general[selectedItem?.value as keyof typeof items.general].label} for ${items.general[selectedItem?.value as keyof typeof items.general].cost} TT$`);
+
+    const rowShop = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        buttons.town,
+        buttons.buy,
+      );
+
+    return {
+      embeds: [embedTemplate()
+        .setTitle('Shop')
+        .setDescription(stripIndents`
+      **You do not have enough TripTokens to buy this item.**
+
+      You are in the shop, you can buy some items to help you on your journey.
+
+      You currently have **${personaData.tokens}** TripTokens.
+    ${personaInventory.length > 0 ? inventoryString : ''}`)
+        .setColor(Colors.Red)],
+      components: [rowItems, rowShop],
+    };
+  }
+
+  personaData.tokens -= itemData.cost;
+  await personaSet(personaData);
+
+  // Add the item to the user's inventory
+  const newItem = {
+    persona_id: personaData.id,
+    label: itemData.label,
+    value: itemData.value,
+    description: itemData.description,
+    quantity: itemData.quantity,
+    weight: itemData.weight,
+    cost: itemData.cost,
+    equipped: itemData.equipped,
+    consumable: itemData.consumable,
+    effect: itemData.effect,
+    effect_value: itemData.effect_value,
+    emoji: itemData.emoji,
+  } as RpgInventory;
+  log.debug(F, `personaInventory: ${JSON.stringify(newItem, null, 2)}`);
+  await inventorySet(newItem);
+
+  // Get a string display of the user's inventory
+  inventoryList = personaInventory.map(item => `**${item.label}** - ${item.description}`).join('\n');
+  inventoryString = stripIndents`
+    **Inventory**
+    ${inventoryList}
+    `;
+
+  // Go through items.general and create a new object of items that the user doesnt have yet
+  let generalOptions = Object.values(items.general)
+    .map(item => {
+      if (!personaInventory.find(i => i.value === item.value)) {
+        return {
+          label: item.label,
+          value: item.value,
+          description: item.description,
+          emoji: item.emoji,
+        };
+      }
+      return null;
+    }) as SelectMenuComponentOptionData[];
+  generalOptions = generalOptions.filter(item => item !== null);
+  log.debug(F, `generalOptions: ${JSON.stringify(generalOptions, null, 2)}`);
+
+  if (generalOptions.length === 0) {
+    const rowShop = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        buttons.town,
+      );
+    return {
+      embeds: [embedTemplate()
+        .setTitle('Shop')
+        .setDescription(stripIndents`
+        You are in the shop, you can buy some items to help you on your journey.
+
+        You currently have **${personaData.tokens}** TripTokens.
+      ${personaInventory.length > 0 ? inventoryString : ''}`)
+        .setColor(Colors.Green)],
+      components: [rowShop],
+    };
+  }
+
+  menus.item.setOptions(generalOptions);
+
+  const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
+    .addComponents(menus.item);
+
+  const rowShop = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      buttons.town,
+    );
+
+  // The user has clicked the shop button, send them the shop embed
+  return {
+    embeds: [embedTemplate()
+      .setTitle('Shop')
+      .setDescription(stripIndents`
+      **You have purchased ${itemData.label} for ${itemData.cost} TripTokens.**
+
+      You are in the shop, you can buy some items to help you on your journey.
+
+      You currently have **${personaData.tokens}** TripTokens.
     ${personaInventory.length > 0 ? inventoryString : ''}`)
       .setColor(Colors.Green)],
     components: [rowItems, rowShop],
@@ -660,17 +1115,7 @@ export async function rpgProfile(
   const [personaData] = await getPersonaInfo(interaction.user.id);
   log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);
 
-  const displayName = new StringSelectMenuBuilder()
-    .setCustomId('rpgNameDisplay')
-    .setPlaceholder('No Name!')
-    .setOptions([{
-      label: 'No Name',
-      value: 'nameless',
-      emoji: '👤',
-      default: true,
-    }]);
-
-  displayName.setOptions([{
+  menus.name.setOptions([{
     label: personaData.name,
     value: personaData.name,
     emoji: '👤',
@@ -679,7 +1124,7 @@ export async function rpgProfile(
   // log.debug(F, `displayName: ${JSON.stringify(displayName, null, 2)}`);
 
   const rowChangeNameDisplay = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .setComponents(displayName);
+    .setComponents(menus.name);
 
   // log.debug(F, `classDef: ${JSON.stringify(classDef, null, 2)}`);
   const selectedClassList = { ...genome.classes };
@@ -687,11 +1132,10 @@ export async function rpgProfile(
   selectedClassList[personaData.class as keyof typeof selectedClassList].default = true;
   // log.debug(F, `selectedClassList2: ${JSON.stringify(selectedClassList, null, 2)}`);
 
+  menus.class.setOptions(Object.values({ ...selectedClassList }));
+
   const rowChangeClass = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(new StringSelectMenuBuilder()
-      .setCustomId('rpgClass')
-      .setPlaceholder('Select a class')
-      .setOptions(Object.values({ ...selectedClassList })));
+    .setComponents(menus.class);
 
   log.debug(F, `speciesDef: ${JSON.stringify(genome.species, null, 2)}`);
   const selectedSpeciesList = { ...genome.species };
@@ -700,21 +1144,17 @@ export async function rpgProfile(
   log.debug(F, `selectedSpeciesList2: ${JSON.stringify(selectedSpeciesList, null, 2)}`);
   log.debug(F, `speciesDef2: ${JSON.stringify(genome.species, null, 2)}`);
 
+  menus.species.setOptions(Object.values({ ...selectedSpeciesList }));
   const rowChangeSpecies = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(new StringSelectMenuBuilder()
-      .setCustomId('rpgSpecies')
-      .setPlaceholder('Pick a species')
-      .setOptions(Object.values({ ...selectedSpeciesList })));
+    .addComponents(menus.species);
 
   const selectedGuildList = { ...genome.guilds };
   selectedGuildList[personaData.guild as keyof typeof selectedGuildList].default = true;
   // log.debug(F, `Selected guild list: ${JSON.stringify(selectedGuildList, null, 2)}`);
 
+  menus.guild.setOptions(Object.values(selectedGuildList));
   const rowChangeGuild = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(new StringSelectMenuBuilder()
-      .setCustomId('rpgGuild')
-      .setPlaceholder('Select a guild')
-      .setOptions(Object.values(selectedGuildList)));
+    .addComponents(menus.guild);
 
   const rowProfile = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
@@ -769,17 +1209,7 @@ export async function rpgName(
 
       log.debug(F, `name: ${choice}`);
 
-      const displayName = new StringSelectMenuBuilder()
-        .setCustomId('rpgNameDisplay')
-        .setPlaceholder('No Name!')
-        .setOptions([{
-          label: 'No Name',
-          value: 'nameless',
-          emoji: '👤',
-          default: true,
-        }]);
-
-      displayName.setOptions([{
+      menus.name.setOptions([{
         label: choice,
         value: choice,
         emoji: '👤',
@@ -808,7 +1238,7 @@ export async function rpgName(
         };
       }
       const rowChangeNameDisplay = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(displayName);
+        .addComponents(menus.name);
 
       const selectedClassList = { ...genome.classes };
       selectedClassList[personaData.class as keyof typeof selectedClassList].default = true;
@@ -819,23 +1249,17 @@ export async function rpgName(
       const selectedGuildList = { ...genome.guild };
       selectedGuildList[personaData.guild as keyof typeof selectedGuildList].default = true;
 
+      menus.class.setOptions(Object.values(selectedClassList));
       const rowChangeClass = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(new StringSelectMenuBuilder()
-          .setCustomId('rpgClass')
-          .setPlaceholder('Select a class')
-          .addOptions(Object.values(selectedClassList)));
+        .addComponents(menus.class);
 
+      menus.species.setOptions(Object.values(selectedSpeciesList));
       const rowChangeSpecies = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(new StringSelectMenuBuilder()
-          .setCustomId('rpgSpecies')
-          .setPlaceholder('Select a species')
-          .addOptions(Object.values(selectedSpeciesList)));
+        .addComponents(menus.species);
 
+      menus.guild.setOptions(Object.values(selectedGuildList));
       const rowChangeGuild = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(new StringSelectMenuBuilder()
-          .setCustomId('rpgGuild')
-          .setPlaceholder('Select a guild')
-          .addOptions(Object.values(selectedGuildList)));
+        .addComponents(menus.guild);
 
       return {
         embed: embedTemplate()
@@ -849,7 +1273,37 @@ export async function rpgName(
     });
 }
 
-export async function rpgAccept(
+export async function rpgProfileChange(
+  interaction:MessageComponentInteraction,
+  type: 'species' | 'class' | 'guild',
+):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
+  // Check get fresh persona data
+  const [personaData] = await getPersonaInfo(interaction.user.id);
+  log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);
+  log.debug(F, `type: ${type}`);
+
+  const [choice] = (interaction as StringSelectMenuInteraction).values;
+
+  const filteredItems = Object.values(genome.species).filter(item => item.value !== choice);
+
+  menus.species.setOptions(filteredItems);
+
+  menus.species.addOptions([
+    {
+      label: { ...genome.species }[choice as keyof typeof genome.species].label,
+      value: { ...genome.species }[choice as keyof typeof genome.species].value,
+      description: { ...genome.species }[choice as keyof typeof genome.species].description,
+      emoji: { ...genome.species }[choice as keyof typeof genome.species].emoji,
+      default: true,
+    },
+  ]);
+
+  // selectSpecies.addOptions(Object.values(speciesDef).filter(s => s.value !== choice));
+
+  return rpgTown();
+}
+
+export async function rpgProfileAccept(
   interaction: MessageComponentInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check get fresh persona data
@@ -887,37 +1341,6 @@ export async function rpgAccept(
   log.debug(F, `Setting Persona data: ${JSON.stringify(personaData, null, 2)}`);
 
   await personaSet(personaData);
-
-  return rpgTown();
-}
-
-export async function rpgChange(
-  interaction:MessageComponentInteraction,
-  type: 'species' | 'class' | 'guild',
-):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
-  // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
-  log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);
-  log.debug(F, `type: ${type}`);
-
-  const [choice] = (interaction as StringSelectMenuInteraction).values;
-
-  const selectSpecies = new StringSelectMenuBuilder()
-    .setCustomId('rpgSpecies')
-    .setPlaceholder('Select a species')
-    .addOptions(Object.values({ ...genome.species }));
-
-  selectSpecies.setOptions([
-    {
-      label: { ...genome.species }[choice as keyof typeof genome.species].label,
-      value: { ...genome.species }[choice as keyof typeof genome.species].value,
-      description: { ...genome.species }[choice as keyof typeof genome.species].description,
-      emoji: { ...genome.species }[choice as keyof typeof genome.species].emoji,
-      default: true,
-    },
-  ]);
-
-  // selectSpecies.addOptions(Object.values(speciesDef).filter(s => s.value !== choice));
 
   return rpgTown();
 }
