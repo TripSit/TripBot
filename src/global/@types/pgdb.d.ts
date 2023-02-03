@@ -95,6 +95,7 @@ export enum Table {
   KnexMigrationsLock = 'knex_migrations_lock',
   Personas = 'personas',
   ReactionRoles = 'reaction_roles',
+  RpgInventory = 'rpg_inventory',
   Rss = 'rss',
   UserActions = 'user_actions',
   UserDrugDoses = 'user_drug_doses',
@@ -236,6 +237,21 @@ export type ReactionRoles = {
   message_id: string;
   reaction_id: string;
   role_id: string;
+  created_at: Date;
+};
+
+export type RpgInventory = {
+  id: string;
+  persona_id: string;
+  name: string;
+  description: string;
+  quantity: number;
+  weight: number;
+  value: number;
+  equipped: boolean;
+  consumable: boolean;
+  effect: string;
+  effect_value: number;
   created_at: Date;
 };
 

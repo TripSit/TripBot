@@ -7,6 +7,7 @@ import {
   ExperienceType,
   Personas,
   ReactionRoles,
+  RpgInventory,
   Rss,
   UserActions,
   UserDrugDoses,
@@ -624,5 +625,26 @@ export async function personaSet(
   await db<Personas>('personas')
     .insert(data)
     .onConflict('user_id')
+    .merge();
+}
+
+export async function inventoryGet(
+  personaId:string,
+):Promise<RpgInventory[]> {
+// log.debug(F, 'useractionsGet started');
+  if (env.POSTGRES_DBURL === undefined) return [];
+  return db<RpgInventory>('rpg_inventory')
+    .select('*')
+    .where('persona_id', personaId);
+}
+
+export async function inventorySet(
+  data:RpgInventory,
+):Promise<void> {
+// log.debug(F, 'useractionsGet started');
+  if (env.POSTGRES_DBURL === undefined) return;
+  await db<RpgInventory>('rpg_inventory')
+    .insert(data)
+    .onConflict(['persona_id', 'name'])
     .merge();
 }
