@@ -7,11 +7,9 @@ import {
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
 import * as path from 'path';
-import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
 import { levels } from '../../../global/commands/g.levels';
-import { startLog } from '../../utils/startLog';
+import { getTotalLevel } from '../../../global/utils/experience';
 
 const F = f(__filename);
 
@@ -184,6 +182,9 @@ export const dLevels: SlashCommand = {
     // Top Right Chips
     context.fillStyle = chipColor;
     context.beginPath();
+    context.arc(603, 73, 54, 0, Math.PI * 2, true);
+    context.fill();
+    context.beginPath();
     context.roundRect(702, 18, 201, 51, [19]);
     context.fill();
     context.beginPath();
@@ -191,22 +192,25 @@ export const dLevels: SlashCommand = {
     context.fill();
     // Level Bar Chips
     context.beginPath();
-    context.roundRect(18, 172, 648, 76, [19]);
+    context.roundRect(18, 172, 51, 377, [19]);
     context.fill();
     context.beginPath();
-    context.roundRect(18, 257, 648, 51, [19]);
+    context.roundRect(87, 172, 570, 76, [19]);
     context.fill();
     context.beginPath();
-    context.roundRect(18, 317, 648, 51, [19]);
+    context.roundRect(87, 257, 570, 51, [19]);
     context.fill();
     context.beginPath();
-    context.roundRect(18, 377, 648, 51, [19]);
+    context.roundRect(87, 317, 570, 51, [19]);
     context.fill();
     context.beginPath();
-    context.roundRect(18, 437, 648, 51, [19]);
+    context.roundRect(87, 377, 570, 51, [19]);
     context.fill();
     context.beginPath();
-    context.roundRect(18, 497, 648, 51, [19]);
+    context.roundRect(87, 437, 570, 51, [19]);
+    context.fill();
+    context.beginPath();
+    context.roundRect(87, 497, 570, 51, [19]);
     context.fill();
     // Far Right Chips
     context.beginPath();
@@ -230,6 +234,23 @@ export const dLevels: SlashCommand = {
     context.beginPath();
     context.roundRect(702, 497, 132, 51, [19]);
     context.fill();
+
+    // WIP: Purchased Background
+    const Background = await Canvas.loadImage('https://i.gyazo.com/419d2747174841b24ae9ac1144a6883c.png');
+    context.save();
+    context.globalCompositeOperation = 'lighten';
+    context.globalAlpha = 0.03;
+    context.beginPath();
+    context.roundRect(0, 0, 918, 145, [19]);
+    context.roundRect(0, 154, 918, 412, [19]);
+    context.clip();
+    context.drawImage(Background, 0, 0);
+    context.restore();
+
+    // Load Icon Images
+    const Icons = await Canvas.loadImage('https://i.gyazo.com/9f0717d8a3ab093f5f16c119e4967a19.png');
+    // const Icons = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'icons.png'));
+    context.drawImage(Icons, 0, 0);
 
     // Avatar Image
     const avatar = await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' }));
@@ -277,6 +298,10 @@ export const dLevels: SlashCommand = {
       log.error(F, `Error loading status icon: ${err}`);
     }
 
+    // WIP: Camp Icon
+    const CampIconPath = 'https://i.gyazo.com/62a9db6c42ca3c03cc892b28f5d8b367.png';
+    const CampIcon = await Canvas.loadImage(CampIconPath);
+    context.drawImage(CampIcon, 547, 17);
     // WIP: Check to see if a user has bought a title in the shop
     // If so, move Username Text up so the title can fit underneath
 
@@ -295,6 +320,16 @@ export const dLevels: SlashCommand = {
     context.font = applyUsername(canvasObj, `${target.displayName}`);
     context.fillStyle = textColor;
     context.fillText(`${target.displayName}`, 146, 90);
+
+    // Choose and Draw the Level Image
+    const LevelImagePath = 'https://i.gyazo.com/f614a14051dbc1366ce4de2ead98a519.png';
+    try {
+      // log.debug(F, `LevelImagePath: ${LevelImagePath}`);
+      const LevelImage = await Canvas.loadImage(LevelImagePath);
+      context.drawImage(LevelImage, 97, 181, 58, 58);
+    } catch (err) {
+      log.error(F, `Error loading star image: ${err}`);
+    }
 
     // Process The Entire Card and Send it to Discord
     const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-profile-image.png' });

@@ -255,11 +255,6 @@ export const dProfile: SlashCommand = {
     context.fill();
     context.restore();
 
-    // WIP: Camp Icon
-    const CampIconPath = 'https://i.gyazo.com/62a9db6c42ca3c03cc892b28f5d8b367.png';
-    const CampIcon = await Canvas.loadImage(CampIconPath);
-    context.drawImage(CampIcon, 547, 17);
-
     // const StatusIconPath = target.presence
     //   ? path.join(__dirname, '..', '..', 'assets', 'img', 'icons', `${target.presence?.status}.png`)
     //   : path.join(__dirname, '..', '..', 'assets', 'img', 'icons', 'offline.png');
@@ -279,6 +274,11 @@ export const dProfile: SlashCommand = {
         StatusIconPath = 'https://i.gyazo.com/a98f0e9dd72f6fb59af388d719d01e64.png';
       }
     }
+
+    // WIP: Camp Icon
+    const CampIconPath = 'https://i.gyazo.com/62a9db6c42ca3c03cc892b28f5d8b367.png';
+    const CampIcon = await Canvas.loadImage(CampIconPath);
+    context.drawImage(CampIcon, 547, 17);
 
     try {
       const StatusIcon = await Canvas.loadImage(StatusIconPath);
@@ -389,7 +389,7 @@ export const dProfile: SlashCommand = {
     //   log.error(F, `Error loading star image: ${err}`);
     // }
 
-    // Choose and Draw the Star Image
+    // Choose and Draw the Level Image
     let LevelImagePath = 'https://i.gyazo.com/13daebdda4ca75ab59923396f255f7db.png';
 
     if (totalData.level < 10) {
