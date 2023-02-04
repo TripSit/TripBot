@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import {
   Colors,
   SlashCommandBuilder,
@@ -19,6 +20,7 @@ import {
   SelectMenuComponentOptionData,
 } from 'discord.js';
 import {
+  APIEmbed,
   APISelectMenuOption,
   ButtonStyle, TextInputStyle,
 } from 'discord-api-types/v10';
@@ -194,58 +196,56 @@ const items = {
     },
   },
   backgrounds: {
-    backgroundA: {
-      label: 'BackgroundA',
-      value: 'backgrounda',
-      description: 'Cool new pattern!',
+    abstracttrianges: {
+      label: 'Abstract Triangles',
+      value: 'abstracttrianges',
+      description: 'Abstract Triangles',
       quantity: 1,
       weight: 0,
-      cost: 100,
+      cost: 1000,
       equipped: true,
       consumable: false,
       effect: 'background',
-      effect_value: 'patternA',
+      effect_value: 'ProfileBG-AbstractTriangles',
       emoji: '🧪',
     },
-    backgroundB: {
-      label: 'BackgroundB',
-      value: 'backgroundb',
-      description: 'Cool new pattern!',
+    binary: {
+      label: 'Binary',
+      value: 'binary',
+      description: 'Binary',
       quantity: 1,
       weight: 0,
-      cost: 100,
+      cost: 1000,
       equipped: true,
       consumable: false,
       effect: 'background',
-      effect_value: 'patternB',
+      effect_value: 'ProfileBG-Binary',
       emoji: '🧪',
     },
-  },
-  borders: {
-    borderA: {
-      label: 'BorderA',
-      value: 'bordera',
-      description: 'Cool new border!',
+    chevron: {
+      label: 'Chevron',
+      value: 'chevron',
+      description: 'Chevron',
       quantity: 1,
       weight: 0,
-      cost: 100,
+      cost: 1000,
       equipped: true,
       consumable: false,
-      effect: 'border',
-      effect_value: 'borderA',
+      effect: 'background',
+      effect_value: 'ProfileBG-Chevron',
       emoji: '🧪',
     },
-    borderB: {
-      label: 'BorderB',
-      value: 'borderb',
-      description: 'Cool new border!',
+    coffeeswirl: {
+      label: 'Coffee Swirl',
+      value: 'coffeeswirl',
+      description: 'Coffee Swirl',
       quantity: 1,
       weight: 0,
-      cost: 100,
+      cost: 1000,
       equipped: true,
       consumable: false,
-      effect: 'border',
-      effect_value: 'borderB',
+      effect: 'background',
+      effect_value: 'ProfileBG-CoffeeSwirl',
       emoji: '🧪',
     },
   },
@@ -512,6 +512,48 @@ export const dRpg: SlashCommand = {
   },
 };
 
+const text = {
+  enter: [
+    'take a bus to',
+    'walk to',
+    'ride a bike to',
+    'drive to',
+    'somehow wind up in',
+    'teleport to',
+    'fly to',
+    'take a taxi to',
+    'take a train to',
+    'take a boat to',
+    'take a plane to',
+    'take a helicopter to',
+    'ride by eagle to',
+    'trek through the lands of middle earth to get to ',
+  ],
+  quest: [
+    'You find some missing children and return them to their parents. The children give you the {tokens} tokens they found on their adventure.',
+    'You find a lost puppy and return it to its owner. The owner gives you {tokens} tokens as thanks.',
+    'You find a lost cat and return it to its owner. The cat caughs up a hairball. Oh, that\'s actually {tokens} tokens. You wipe them off and pocket them.',
+    'You find a lost dog and return it to its owner. The dog looks into your eyes and you feel a connection to their soul. Your pocket feels {tokens} tokens heavier.',
+    'You find a lost bird and return it to its owner. The bird gives you a really cool feather. You trade the feather to some kid for {tokens} tokens.',
+    'You find a lost fish and return it to its owner. How do you lose a fish? You decide not to ask and leave with your {tokens} tokens as soon as you can.',
+    'You do some hunting and bring back some food for the town. The town gives you {tokens} tokens for your troubles.',
+    'You go fishing and bring back some food for the town. The town gives you {tokens} tokens for your troubles.',
+    'You go mining and bring back some ore for the town. The town gives you {tokens} tokens for your troubles.',
+    'You help build a new house in the town. The town gives you {tokens} tokens for your troubles.',
+  ],
+  dungeon: [
+    'You went to fight the evil wizard in the dark towner, but they\'re just misunderstood and enjoy earth tones. They appreciate the visit and gave you some tokens for your troubles.',
+    'You were tasked with killing a dragon that has looted the countryside, but it was only feeding its baby dragon. You taught the dragon how to farm and it gave you some Tokens.',
+    'You attempted to subdue the ogre known for assaulting people, but it turns out they just hug too hard. You taught them about personal boundries and they gave you some Tokens.',
+    'You went to the local cave to fight the goblin king, but it turns out he was just a goblin who wanted to be king. You taught him about democracy and he gave you some Tokens.',
+    'You journey to the dark forest to fight the evil witch, but they turn out to be a gardner with too much property. You taught her about landscapers and she gave you Tokens.',
+  ],
+};
+
+function rand(array:string[]):string {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
 export async function rpgTown():Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check if the user has a persona
   // const [personaData] = await getPersonaInfo(interaction.user.id);
@@ -528,11 +570,13 @@ export async function rpgTown():Promise<InteractionEditReplyOptions | Interactio
     embeds: [embedTemplate()
       .setTitle('Town')
       .setDescription(stripIndents`
-      You are in TripTown, a new town on the edge of Triptopia, the TripSit Kingdom.
-  
-      Besides for a few buildings, the town is still under construction.
-  
-      You can help rebuild the town by doing a quest, clearing a dungeon, or going on a raid.
+      You ${rand(text.enter)} TripTown, a new settlement on the edge of Triptopia, the TripSit Kingdom.
+
+      The town is still under construction with only a few buildings.
+      
+      *You get the impression that you're one of the first people to visit.*
+      
+      A recruitment center to take on jobs, and a small shop.
   
       What would you like to do?`)
       .setColor(Colors.Green)],
@@ -551,14 +595,6 @@ export async function rpgWork(
   const inventoryData = await inventoryGet(personaData.id);
   log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
 
-  // Filter inventoryData to find items with the 'tokenMultiplier' effect
-  const tokenMultipliers = inventoryData.filter(item => item.effect === 'tokenMultiplier');
-  log.debug(F, `tokenMultipliers: ${JSON.stringify(tokenMultipliers, null, 2)}`);
-
-  // Calculate the total multiplier
-  const tokenMultiplier = tokenMultipliers.reduce((acc, item) => acc + parseFloat(item.effect_value), 0);
-  log.debug(F, `tokenMultiplier: ${tokenMultiplier}`);
-
   const rowWork = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       buttons.quest,
@@ -571,7 +607,7 @@ export async function rpgWork(
     quest: {
       success: {
         title: 'Quest Success',
-        description: stripIndents`You went on a quest to clean up TripTown and gained {tokens} TripTokens!`,
+        description: stripIndents`${rand(text.quest)})}`,
         color: Colors.Green,
       },
       fail: {
@@ -585,9 +621,7 @@ export async function rpgWork(
     dungeon: {
       success: {
         title: 'Dungeon Success',
-        description: stripIndents`
-          You cleared a dungeon and gained {tokens} TripTokens!
-        `,
+        description: stripIndents`${rand(text.dungeon)})}`,
         color: Colors.Green,
       },
       fail: {
@@ -639,19 +673,27 @@ export async function rpgWork(
     }
 
     let tokens = 10;
-    if (command === 'dungeon') {
-      tokens = 50;
-    } else if (command === 'raid') {
-      tokens = 100;
+    if (command === 'dungeon') { tokens = 50; } else if (command === 'raid') { tokens = 100; }
+
+    let tokenMultiplier = inventoryData
+      .filter(item => item.effect === 'tokenMultiplier')
+      .reduce((acc, item) => acc + parseFloat(item.effect_value), 1);
+    log.debug(F, `tokenMultiplier (before donor): ${tokenMultiplier}`);
+
+    // CHeck if the user who started this interaction has the patreon or booster roles
+    const member = await interaction.guild?.members.fetch(interaction.user.id);
+    if (member?.roles.cache.has(env.ROLE_BOOSTER) || member?.roles.cache.has(env.ROLE_PATRON)) {
+      tokenMultiplier += 0.1;
     }
 
-    tokens *= 1 + tokenMultiplier;
+    // Round token multiplier to 1 decimal place
+    tokenMultiplier = Math.round(tokenMultiplier * 10) / 10;
+    log.debug(F, `tokenMultiplier: ${tokenMultiplier}`);
 
-    if (env.NODE_ENV === 'development') {
-      tokens *= 10;
-    }
+    tokens *= tokenMultiplier;
 
-    // Round tokens to the nearest integer
+    if (env.NODE_ENV === 'development') { tokens *= 10; }
+
     tokens = Math.round(tokens);
 
     // Award the user tokens
@@ -686,6 +728,117 @@ export async function rpgWork(
 export async function rpgShop(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
+  // Get the info used in the shop
+  const {
+    shopInventory,
+    personaTokens,
+    personaInventory,
+  } = await rpgShopInventory(interaction);
+
+  // Create the shop buttons - This is a select menu
+  const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
+    .addComponents(menus.item.setOptions(shopInventory));
+  // This is the row of nav buttons. It starts with the town button.
+  const rowShop = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(buttons.town);
+
+  // Everyone gets the town button, but only people with unpurchased items get the items select menu
+  const componentList = [rowShop] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
+  if (shopInventory.length > 0) { componentList.unshift(rowItems); }
+
+  // The user has clicked the shop button, send them the shop embed
+  return {
+    embeds: [embedTemplate()
+      .setTitle('Shop')
+      .setDescription(stripIndents`
+      You are in the shop, you can buy some items to help you on your journey.
+
+      You currently have **${personaTokens}** TripTokens.
+
+    ${personaInventory}`)
+      .setColor(Colors.Gold)],
+    components: componentList,
+  };
+}
+
+export async function rpgShopChange(
+  interaction:MessageComponentInteraction,
+):Promise<InteractionUpdateOptions> {
+  // Get the info used in the shop
+  const {
+    shopInventory,
+    personaTokens,
+    personaInventory,
+  } = await rpgShopInventory(interaction);
+
+  // Get the item the user selected
+  let choice = '' as string;
+  if (interaction.isButton()) {
+    const itemComponent = interaction.message.components[0].components[0];
+    const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
+      (o:APISelectMenuOption) => o.default === true,
+    );
+    choice = selectedItem?.value ?? '';
+  } else if (interaction.isStringSelectMenu()) {
+    [choice] = interaction.values;
+  }
+
+  log.debug(F, `choice: ${choice}`);
+
+  // Get a list of shopInventory where the value does not equal the choice
+  const filteredItems = Object.values(shopInventory).filter(item => item.value !== choice);
+
+  // Reset the options menu to be empty
+  menus.item.setOptions();
+
+  menus.item.addOptions(filteredItems);
+
+  // Use shopInventory and find the item that matches the choice, make it default
+  const chosenItem = shopInventory.find(shopItem => shopItem.value === choice);
+  if (chosenItem) {
+    chosenItem.default = true;
+    menus.item.addOptions(chosenItem);
+  }
+
+  const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
+    .addComponents(menus.item);
+
+  const rowShop = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      buttons.town,
+    );
+
+  if (chosenItem) {
+    rowShop.addComponents(
+      buttons.buy.setLabel(`Buy ${chosenItem?.label}`),
+    );
+  }
+
+  const components = menus.item.options.length === 0
+    ? [rowShop]
+    : [rowItems, rowShop];
+
+  return {
+    embeds: [embedTemplate()
+      .setTitle('Shop')
+      .setDescription(stripIndents`
+      You are in the shop, you can buy some items to help you on your journey.
+
+      You currently have **${personaTokens}** TripTokens.
+
+      ${personaInventory}`)
+      .setColor(Colors.Gold)],
+    components,
+  };
+}
+
+export async function rpgShopInventory(
+  interaction:MessageComponentInteraction | ChatInputCommandInteraction,
+):Promise<{
+    shopInventory:SelectMenuComponentOptionData[];
+    personaTokens:number;
+    personaInventory:string;
+  }> {
   // Check get fresh persona data
   const [personaData] = await getPersonaInfo(interaction.user.id);
 
@@ -695,13 +848,15 @@ export async function rpgShop(
 
   // Get a string display of the user's inventory
   const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
-  const inventoryString = stripIndents`
-  **Inventory**
-  ${inventoryList}
-  `;
+  const inventoryString = inventoryData.length > 0
+    ? stripIndents`
+      **Inventory**
+      ${inventoryList}
+      `
+    : '';
 
   // Go through items.general and create a new object of items that the user doesnt have yet
-  let generalOptions = Object.values(items.general)
+  const shopInventory = [...Object.values(items.general), ...Object.values(items.backgrounds)]
     .map(item => {
       if (!inventoryData.find(i => i.value === item.value)) {
         return {
@@ -712,321 +867,85 @@ export async function rpgShop(
         };
       }
       return null;
-    }) as SelectMenuComponentOptionData[];
-  generalOptions = generalOptions.filter(item => item !== null);
-  log.debug(F, `generalOptions: ${JSON.stringify(generalOptions, null, 2)}`);
-
-  if (generalOptions.length === 0) {
-    const rowShop = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        buttons.town,
-      );
-    return {
-      embeds: [embedTemplate()
-        .setTitle('Shop')
-        .setDescription(stripIndents`
-        You are in the shop, you can buy some items to help you on your journey.
-
-        You currently have **${personaData.tokens}** TripTokens.
-      ${inventoryData.length > 0 ? inventoryString : ''}`)
-        .setColor(Colors.Green)],
-      components: [rowShop],
-    };
-  }
-
-  menus.item.setOptions(generalOptions);
-  const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(menus.item);
-
-  const rowShop = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      buttons.town,
-    );
-
-  // The user has clicked the shop button, send them the shop embed
+    })
+    .filter(item => item !== null) as SelectMenuComponentOptionData[];
+  log.debug(F, `generalOptions: ${JSON.stringify(shopInventory, null, 2)}`);
   return {
-    embeds: [embedTemplate()
-      .setTitle('Shop')
-      .setDescription(stripIndents`
-      You are in the shop, you can buy some items to help you on your journey.
-
-      You currently have **${personaData.tokens}** TripTokens.
-    ${inventoryData.length > 0 ? inventoryString : ''}`)
-      .setColor(Colors.Green)],
-    components: [rowItems, rowShop],
-  };
-}
-
-export async function rpgShopChange(
-  interaction:MessageComponentInteraction,
-):Promise<InteractionUpdateOptions> {
-  // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
-  log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);
-
-  // Get the existing inventory data
-  const personaInventory = await inventoryGet(personaData.id);
-  log.debug(F, `Persona inventory: ${JSON.stringify(personaInventory, null, 2)}`);
-
-  const [choice] = (interaction as StringSelectMenuInteraction).values;
-  log.debug(F, `choice: ${choice}`);
-
-  // Get a string display of the user's inventory
-  const inventoryList = personaInventory.map(item => `**${item.label}** - ${item.description}`).join('\n');
-  const inventoryString = stripIndents`
-    **Inventory**
-    ${inventoryList}
-    `;
-
-  // Get a list of items.general where the value does not equal the choice
-  const filteredItems = Object.values(items.general).filter(item => item.value !== choice);
-
-  const generalOptions = Object.values(filteredItems).map(item => {
-    if (item.value !== choice) {
-      return {
-        label: `${item.label} - ${item.cost} TT$`,
-        value: item.value,
-        description: `${item.description} - ${item.cost} TT$`,
-        emoji: item.emoji,
-      };
-    }
-    return null;
-  }) as SelectMenuComponentOptionData[];
-
-  menus.item.setOptions(generalOptions);
-  menus.item.addOptions([
-    {
-      label: `${{ ...items.general }[choice as keyof typeof items.general].label} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
-      value: { ...items.general }[choice as keyof typeof items.general].value,
-      description: `${{ ...items.general }[choice as keyof typeof items.general].description} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
-      emoji: { ...items.general }[choice as keyof typeof items.general].emoji,
-      default: true,
-    },
-  ]);
-
-  const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(menus.item);
-
-  buttons.buy.setLabel(`Buy ${items.general[choice as keyof typeof items.general].label} for ${items.general[choice as keyof typeof items.general].cost} TT$`);
-  const rowShop = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      buttons.town,
-      buttons.buy,
-    );
-
-  // selectSpecies.addOptions(Object.values(speciesDef).filter(s => s.value !== choice));
-
-  return {
-    embeds: [embedTemplate()
-      .setTitle('Shop')
-      .setDescription(stripIndents`
-      You are in the shop, you can buy some items to help you on your journey.
-
-      You currently have **${personaData.tokens}** TripTokens.
-    ${personaInventory.length > 0 ? inventoryString : ''}`)
-      .setColor(Colors.Green)],
-    components: [rowItems, rowShop],
+    shopInventory,
+    personaTokens: personaData.tokens,
+    personaInventory: inventoryString,
   };
 }
 
 export async function rpgShopAccept(
   interaction:MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
+  // Get the info used in the shop
+  // const {
+  //   shopInventory,
+  //   personaTokens,
+  //   personaInventory,
+  // } = await rpgShopInventory(interaction);
+
   // Check get fresh persona data
   const [personaData] = await getPersonaInfo(interaction.user.id);
-  log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);
+  log.debug(F, `personaData (Accept): ${JSON.stringify(personaData, null, 2)}`);
 
-  // Get the existing inventory data
-  const personaInventory = await inventoryGet(personaData.id);
-  log.debug(F, `Persona inventory: ${JSON.stringify(personaInventory, null, 2)}`);
+  // // Get the existing inventory data
+  // const personaInventory = await inventoryGet(personaData.id);
+  // log.debug(F, `Persona inventory: ${JSON.stringify(personaInventory, null, 2)}`);
 
-  // Get a string display of the user's inventory
-  let inventoryList = personaInventory.map(item => `**${item.label}** - ${item.description}`).join('\n');
-  let inventoryString = stripIndents`
-      **Inventory**
-      ${inventoryList}
-      `;
+  // // Get a string display of the user's inventory
+  // let inventoryList = personaInventory.map(item => `**${item.label}** - ${item.description}`).join('\n');
+  // let inventoryString = stripIndents`
+  //     **Inventory**
+  //     ${inventoryList}
+  //     `;
 
-  // Message
-  // row 1: select menu
-  // row 2: buy button, town button
+  // // Message
+  // // row 1: select menu
+  // // row 2: buy button, town button
 
   // If the user confirms the information, save the persona information
   const itemComponent = interaction.message.components[0].components[0];
   const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
     (o:APISelectMenuOption) => o.default === true,
   );
-  log.debug(F, `selectedItem: ${JSON.stringify(selectedItem, null, 2)}`);
+  log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
 
-  const itemData = items.general[selectedItem?.value as keyof typeof items.general];
-  log.debug(F, `itemData: ${JSON.stringify(itemData, null, 2)}`);
-
-  // Check if the user already has this item
-  const existingItem = personaInventory.find(item => item.label === itemData.label);
-  if (existingItem) {
-  // Go through items.general and create a new object of items that the user doesnt have yet
-    // Get a list of items.general where the value does not equal the choice
-    const filteredItems = Object.values(items.general).filter(item => item.value !== selectedItem?.value);
-
-    let generalOptions = Object.values(filteredItems)
-      .map(item => {
-        if (!personaInventory.find(i => i.value === item.value)) {
-          return {
-            label: `${item.label} - ${item.cost} TT$`,
-            value: item.value,
-            description: `${item.description} - ${item.cost} TT$`,
-            emoji: item.emoji,
-          };
-        }
-        return null;
-      }) as SelectMenuComponentOptionData[];
-    generalOptions = generalOptions.filter(item => item !== null);
-    log.debug(F, `generalOptions: ${JSON.stringify(generalOptions, null, 2)}`);
-
-    if (generalOptions.length === 0) {
-      const rowShop = new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(
-          buttons.town,
-        );
-      return {
-        embeds: [embedTemplate()
-          .setTitle('Shop')
-          .setDescription(stripIndents`
-          You are in the shop, you can buy some items to help you on your journey.
-
-          You currently have **${personaData.tokens}** TripTokens.
-        ${personaInventory.length > 0 ? inventoryString : ''}`)
-          .setColor(Colors.Green)],
-        components: [rowShop],
-      };
-    }
-
-    menus.item.setOptions(generalOptions);
-    const choice = selectedItem?.value;
-    menus.item.addOptions([
-      {
-        label: `${{ ...items.general }[choice as keyof typeof items.general].label} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
-        value: { ...items.general }[choice as keyof typeof items.general].value,
-        description: `${{ ...items.general }[choice as keyof typeof items.general].description} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
-        emoji: { ...items.general }[choice as keyof typeof items.general].emoji,
-        default: true,
-      },
-    ]);
-
-    const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
-      .addComponents(menus.item);
-
-    buttons.buy.setLabel(`Buy ${items.general[selectedItem?.value as keyof typeof items.general].label} for ${items.general[selectedItem?.value as keyof typeof items.general].cost} TT$`);
-
-    const rowShop = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        buttons.town,
-        buttons.buy,
-      );
-
-    return {
-      embeds: [embedTemplate()
-        .setTitle('Shop')
-        .setDescription(stripIndents`
-        **You already have this item!**
-  
-        You are in the shop, you can buy some items to help you on your journey.
-  
-        You currently have **${personaData.tokens}** TripTokens.
-      ${personaInventory.length > 0 ? inventoryString : ''}`)
-        .setColor(Colors.Red)],
-      components: [rowItems, rowShop],
-    };
-  }
+  const allItems = [...Object.values(items.general), ...Object.values(items.backgrounds)];
+  const itemData = allItems.find(item => item.value === selectedItem?.value) as {
+    label: string;
+    value: string;
+    description: string;
+    quantity: number;
+    weight: number;
+    cost: number;
+    equipped: boolean;
+    consumable: boolean;
+    effect: string;
+    effect_value: string;
+    emoji: string;
+  };
+  log.debug(F, `itemData (accept): ${JSON.stringify(itemData, null, 2)}`);
 
   // Check if the user has enough tokens to buy the item
   if (personaData.tokens < itemData.cost) {
     log.debug(F, 'Not enough tokens to buy item');
-    // Get a list of items.general where the value does not equal the choice
-    // const filteredItems = Object.values(items.general).filter(item => item.value !== selectedItem?.value);
 
-    let generalOptions = Object.values(items.general)
-      .map(item => {
-        if (!personaInventory.find(i => i.value === item.value)) {
-          return {
-            label: `${item.label} - ${item.cost} TT$`,
-            value: item.value,
-            description: `${item.description} - ${item.cost} TT$`,
-            emoji: item.emoji,
-          };
-        }
-        return null;
-      }) as SelectMenuComponentOptionData[];
-    generalOptions = generalOptions.filter(item => item !== null);
-    log.debug(F, `generalOptions (not enough tokens): ${JSON.stringify(generalOptions, null, 2)}`);
+    const { embeds, components } = await rpgShopChange(interaction);
 
-    if (generalOptions.length === 0) {
-      const rowShop = new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(
-          buttons.town,
-        );
-      return {
-        embeds: [embedTemplate()
-          .setTitle('Shop')
-          .setDescription(stripIndents`
-          **You do not have enough TripTokens to buy this item.**
-
-          You currently have **${personaData.tokens}** TripTokens.
-        ${personaInventory.length > 0 ? inventoryString : ''}`)
-          .setColor(Colors.Red)],
-        components: [rowShop],
-      };
-    }
-
-    if (generalOptions.length > 1) {
-      const choice = selectedItem?.value;
-      const filteredItems = Object.values(items.general).filter(item => item.value !== choice);
-      menus.item.setOptions(filteredItems);
-      menus.item.addOptions([
-        {
-          label: `${{ ...items.general }[choice as keyof typeof items.general].label} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
-          value: { ...items.general }[choice as keyof typeof items.general].value,
-          description: `${{ ...items.general }[choice as keyof typeof items.general].description} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
-          emoji: { ...items.general }[choice as keyof typeof items.general].emoji,
-          default: true,
-        },
-      ]);
-    } else {
-      const choice = selectedItem?.value;
-      menus.item.setOptions([
-        {
-          label: `${{ ...items.general }[choice as keyof typeof items.general].label} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
-          value: { ...items.general }[choice as keyof typeof items.general].value,
-          description: `${{ ...items.general }[choice as keyof typeof items.general].description} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
-          emoji: { ...items.general }[choice as keyof typeof items.general].emoji,
-          default: true,
-        },
-      ]);
-    }
-
-    const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
-      .addComponents(menus.item);
-
-    buttons.buy.setLabel(`Buy ${items.general[selectedItem?.value as keyof typeof items.general].label} for ${items.general[selectedItem?.value as keyof typeof items.general].cost} TT$`);
-
-    const rowShop = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        buttons.town,
-        buttons.buy,
-      );
+    // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
+    const { description } = JSON.parse(JSON.stringify((embeds as APIEmbed[])[0]));
 
     return {
       embeds: [embedTemplate()
         .setTitle('Shop')
-        .setDescription(stripIndents`
-      **You do not have enough TripTokens to buy this item.**
-
-      You are in the shop, you can buy some items to help you on your journey.
-
-      You currently have **${personaData.tokens}** TripTokens.
-    ${personaInventory.length > 0 ? inventoryString : ''}`)
+        .setDescription(stripIndents`**You do not have enough tokens to buy this item.**
+        
+        ${description}`)
         .setColor(Colors.Red)],
-      components: [rowItems, rowShop],
+      components,
     };
   }
 
@@ -1050,73 +969,21 @@ export async function rpgShopAccept(
   } as RpgInventory;
   log.debug(F, `personaInventory: ${JSON.stringify(newItem, null, 2)}`);
 
-  personaInventory.push(newItem);
   await inventorySet(newItem);
 
-  // Get a string display of the user's inventory
-  inventoryList = personaInventory.map(item => `**${item.label}** - ${item.description}`).join('\n');
-  inventoryString = stripIndents`
-    **Inventory**
-    ${inventoryList}
-    `;
+  const { embeds, components } = await rpgShopChange(interaction);
 
-  // Go through items.general and create a new object of items that the user doesnt have yet
-  let generalOptions = Object.values(items.general)
-    .map(item => {
-      if (!personaInventory.find(i => i.value === item.value)) {
-        return {
-          label: `${item.label} - ${item.cost} TT$`,
-          value: item.value,
-          description: `${item.description} - ${item.cost} TT$`,
-          emoji: item.emoji,
-        };
-      }
-      return null;
-    }) as SelectMenuComponentOptionData[];
-  generalOptions = generalOptions.filter(item => item !== null);
-  log.debug(F, `generalOptions: ${JSON.stringify(generalOptions, null, 2)}`);
+  // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
+  const { description } = JSON.parse(JSON.stringify((embeds as APIEmbed[])[0]));
 
-  if (generalOptions.length === 0) {
-    const rowShop = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        buttons.town,
-      );
-    return {
-      embeds: [embedTemplate()
-        .setTitle('Shop')
-        .setDescription(stripIndents`
-        You are in the shop, you can buy some items to help you on your journey.
-
-        You currently have **${personaData.tokens}** TripTokens.
-      ${personaInventory.length > 0 ? inventoryString : ''}`)
-        .setColor(Colors.Green)],
-      components: [rowShop],
-    };
-  }
-
-  menus.item.setOptions(generalOptions);
-
-  const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(menus.item);
-
-  const rowShop = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      buttons.town,
-    );
-
-  // The user has clicked the shop button, send them the shop embed
   return {
     embeds: [embedTemplate()
       .setTitle('Shop')
-      .setDescription(stripIndents`
-      **You have purchased ${itemData.label} for ${itemData.cost} TripTokens.**
-
-      You are in the shop, you can buy some items to help you on your journey.
-
-      You currently have **${personaData.tokens}** TripTokens.
-    ${personaInventory.length > 0 ? inventoryString : ''}`)
+      .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemData.cost} TripTokens.**
+      
+      ${description}`)
       .setColor(Colors.Green)],
-    components: [rowItems, rowShop],
+    components,
   };
 }
 
@@ -1125,7 +992,7 @@ export async function rpgGames(
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check get fresh persona data
   const [personaData] = await getPersonaInfo(interaction.user.id);
-  log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);
+  log.debug(F, `personaData (Games): ${JSON.stringify(personaData, null, 2)}`);
 
   const rowGames = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
@@ -1152,7 +1019,7 @@ export async function rpgProfile(
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check get fresh persona data
   const [personaData] = await getPersonaInfo(interaction.user.id);
-  log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);
+  log.debug(F, `personaData (Profile): ${JSON.stringify(personaData, null, 2)}`);
 
   menus.name.setOptions([{
     label: personaData.name,
@@ -1318,7 +1185,7 @@ export async function rpgProfileChange(
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check get fresh persona data
   const [personaData] = await getPersonaInfo(interaction.user.id);
-  log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);
+  log.debug(F, `personaData (Change) ${JSON.stringify(personaData, null, 2)}`);
   log.debug(F, `type: ${type}`);
 
   const [choice] = (interaction as StringSelectMenuInteraction).values;
