@@ -18,6 +18,7 @@ import {
   InteractionEditReplyOptions,
   InteractionUpdateOptions,
   SelectMenuComponentOptionData,
+  AttachmentBuilder,
 } from 'discord.js';
 import {
   APIEmbed,
@@ -33,6 +34,7 @@ import {
   getUser, inventoryGet, inventorySet, personaSet,
 } from '../../../global/utils/knex';
 import { Personas, RpgInventory } from '../../../global/@types/pgdb';
+import { imageGet } from '../../utils/imageGet';
 
 const F = f(__filename);
 
@@ -196,35 +198,74 @@ const items = {
     },
   },
   backgrounds: {
-    abstracttrianges: {
-      label: 'Abstract Triangles',
-      value: 'abstracttrianges',
-      description: 'Abstract Triangles',
+    // Geolines: {
+    //   label: 'Geolines',
+    //   value: 'Geolines',
+    //   description: 'Geolines',
+    //   quantity: 1,
+    //   weight: 0,
+    //   cost: 1000,
+    //   equipped: true,
+    //   consumable: false,
+    //   effect: 'background',
+    //   effect_value: 'Geolines',
+    //   emoji: '🖼',
+    // },
+    // Waves: {
+    //   label: 'Waves',
+    //   value: 'Waves',
+    //   description: 'Waves',
+    //   quantity: 1,
+    //   weight: 0,
+    //   cost: 1000,
+    //   equipped: true,
+    //   consumable: false,
+    //   effect: 'background',
+    //   effect_value: 'Waves',
+    //   emoji: '🖼',
+    // },
+    // LiquidMaze: {
+    //   label: 'LiquidMaze',
+    //   value: 'LiquidMaze',
+    //   description: 'LiquidMaze',
+    //   quantity: 1,
+    //   weight: 0,
+    //   cost: 1000,
+    //   equipped: true,
+    //   consumable: false,
+    //   effect: 'background',
+    //   effect_value: 'LiquidMaze',
+    //   emoji: '🖼',
+    // },
+    // Flow: {
+    //   label: 'Flow',
+    //   value: 'Flow',
+    //   description: 'Flow',
+    //   quantity: 1,
+    //   weight: 0,
+    //   cost: 1000,
+    //   equipped: true,
+    //   consumable: false,
+    //   effect: 'background',
+    //   effect_value: 'Flow',
+    //   emoji: '🖼',
+    // },
+    DiamondChevron: {
+      label: 'DiamondChevron',
+      value: 'DiamondChevron',
+      description: 'DiamondChevron',
       quantity: 1,
       weight: 0,
       cost: 1000,
       equipped: true,
       consumable: false,
       effect: 'background',
-      effect_value: 'ProfileBG-AbstractTriangles',
-      emoji: '🧪',
+      effect_value: 'DiamondChevron',
+      emoji: '🖼',
     },
-    binary: {
-      label: 'Binary',
-      value: 'binary',
-      description: 'Binary',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: true,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'ProfileBG-Binary',
-      emoji: '🧪',
-    },
-    chevron: {
+    Chevron: {
       label: 'Chevron',
-      value: 'chevron',
+      value: 'Chevron',
       description: 'Chevron',
       quantity: 1,
       weight: 0,
@@ -232,21 +273,281 @@ const items = {
       equipped: true,
       consumable: false,
       effect: 'background',
-      effect_value: 'ProfileBG-Chevron',
-      emoji: '🧪',
+      effect_value: 'Chevron',
+      emoji: '🖼',
     },
-    coffeeswirl: {
-      label: 'Coffee Swirl',
-      value: 'coffeeswirl',
-      description: 'Coffee Swirl',
+    Concentric: {
+      label: 'Concentric',
+      value: 'Concentric',
+      description: 'Concentric',
       quantity: 1,
       weight: 0,
       cost: 1000,
       equipped: true,
       consumable: false,
       effect: 'background',
-      effect_value: 'ProfileBG-CoffeeSwirl',
-      emoji: '🧪',
+      effect_value: 'Concentric',
+      emoji: '🖼',
+    },
+    CubeTunnels: {
+      label: 'CubeTunnels',
+      value: 'CubeTunnels',
+      description: 'CubeTunnels',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'CubeTunnels',
+      emoji: '🖼',
+    },
+    Leaves: {
+      label: 'Leaves',
+      value: 'Leaves',
+      description: 'Leaves',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Leaves',
+      emoji: '🖼',
+    },
+    SquareTwist: {
+      label: 'SquareTwist',
+      value: 'SquareTwist',
+      description: 'SquareTwist',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'SquareTwist',
+      emoji: '🖼',
+    },
+    SquareSpiral: {
+      label: 'SquareSpiral',
+      value: 'SquareSpiral',
+      description: 'SquareSpiral',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'SquareSpiral',
+      emoji: '🖼',
+    },
+    Noise: {
+      label: 'Noise',
+      value: 'Noise',
+      description: 'Noise',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Noise',
+      emoji: '🖼',
+    },
+    Squiggles: {
+      label: 'Squiggles',
+      value: 'Squiggles',
+      description: 'Squiggles',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Squiggles',
+      emoji: '🖼',
+    },
+    TriangleOverlap: {
+      label: 'TriangleOverlap',
+      value: 'TriangleOverlap',
+      description: 'TriangleOverlap',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'TriangleOverlap',
+      emoji: '🖼',
+    },
+    XandO: {
+      label: 'XandO',
+      value: 'XandO',
+      description: 'XandO',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'XandO',
+      emoji: '🖼',
+    },
+    Safari: {
+      label: 'Safari',
+      value: 'Safari',
+      description: 'Safari',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Safari',
+      emoji: '🖼',
+    },
+    LineLeaves: {
+      label: 'LineLeaves',
+      value: 'LineLeaves',
+      description: 'LineLeaves',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'LineLeaves',
+      emoji: '🖼',
+    },
+    ArcadeCarpet: {
+      label: 'ArcadeCarpet',
+      value: 'ArcadeCarpet',
+      description: 'ArcadeCarpet',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'ArcadeCarpet',
+      emoji: '🖼',
+    },
+    Topography: {
+      label: 'Topography',
+      value: 'Topography',
+      description: 'Topography',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Topography',
+      emoji: '🖼',
+    },
+    CoffeeSwirl: {
+      label: 'CoffeeSwirl',
+      value: 'CoffeeSwirl',
+      description: 'CoffeeSwirl',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'CoffeeSwirl',
+      emoji: '🖼',
+    },
+    SpaceIcons: {
+      label: 'SpaceIcons',
+      value: 'SpaceIcons',
+      description: 'SpaceIcons',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'SpaceIcons',
+      emoji: '🖼',
+    },
+    Plaid: {
+      label: 'Plaid',
+      value: 'Plaid',
+      description: 'Plaid',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Plaid',
+      emoji: '🖼',
+    },
+    Paisley: {
+      label: 'Paisley',
+      value: 'Paisley',
+      description: 'Paisley',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Paisley',
+      emoji: '🖼',
+    },
+    AbstractTriangles: {
+      label: 'AbstractTriangles',
+      value: 'AbstractTriangles',
+      description: 'AbstractTriangles',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'AbstractTriangles',
+      emoji: '🖼',
+    },
+    Memphis: {
+      label: 'Memphis',
+      value: 'Memphis',
+      description: 'Memphis',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Memphis',
+      emoji: '🖼',
+    },
+    Connected: {
+      label: 'Connected',
+      value: 'Connected',
+      description: 'Connected',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Connected',
+      emoji: '🖼',
+    },
+    Binary: {
+      label: 'Binary',
+      value: 'Binary',
+      description: 'Binary',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Binary',
+      emoji: '🖼',
     },
   },
 } as {
@@ -530,23 +831,23 @@ const text = {
     'trek through the lands of middle earth to get to ',
   ],
   quest: [
-    'You find some missing children and return them to their parents. The children give you the {tokens} tokens they found on their adventure.',
-    'You find a lost puppy and return it to its owner. The owner gives you {tokens} tokens as thanks.',
-    'You find a lost cat and return it to its owner. The cat caughs up a hairball. Oh, that\'s actually {tokens} tokens. You wipe them off and pocket them.',
-    'You find a lost dog and return it to its owner. The dog looks into your eyes and you feel a connection to their soul. Your pocket feels {tokens} tokens heavier.',
-    'You find a lost bird and return it to its owner. The bird gives you a really cool feather. You trade the feather to some kid for {tokens} tokens.',
-    'You find a lost fish and return it to its owner. How do you lose a fish? You decide not to ask and leave with your {tokens} tokens as soon as you can.',
-    'You do some hunting and bring back some food for the town. The town gives you {tokens} tokens for your troubles.',
-    'You go fishing and bring back some food for the town. The town gives you {tokens} tokens for your troubles.',
-    'You go mining and bring back some ore for the town. The town gives you {tokens} tokens for your troubles.',
-    'You help build a new house in the town. The town gives you {tokens} tokens for your troubles.',
+    'You find some missing children and return them to their parents.\nThe children give you the {tokens} tokens they found on their adventure.',
+    'You find a lost puppy and return it to its owner.\nAs you were chasing the puppy you found {tokens} tokens on the ground, nice!',
+    'You find a lost cat and return it to its owner.\nThe cat caughs up a hairball.\nOh, that\'s actually {tokens} tokens!\nYou wipe them off and pocket them.',
+    'You find a lost dog and return it to its owner.\nThe dog looks into your eyes and you feel a connection to their soul.\nYour pocket feels {tokens} tokens heavier.',
+    'You find a lost bird and return it to its owner.\nThe bird gives you a really cool feather.\nYou trade the feather to some kid for {tokens} tokens.',
+    'You find a lost fish and return it to its owner.\nHow do you lose a fish?\nYou decide not to ask and leave with your {tokens} tokens as soon as you can.',
+    'You do some hunting and bring back some food for the town.\nThe town gives you {tokens} tokens for your troubles.',
+    'You go fishing and bring back some food for the town.\nThe town gives you {tokens} tokens for your troubles.',
+    'You go mining and bring back some ore for the town.\nThe town gives you {tokens} tokens for your troubles.',
+    'You help build a new house in the town.\nThe town gives you {tokens} tokens for your troubles.',
   ],
   dungeon: [
-    'You went to fight the evil wizard in the dark towner, but they\'re just misunderstood and enjoy earth tones. They appreciate the visit and gave you some tokens for your troubles.',
-    'You were tasked with killing a dragon that has looted the countryside, but it was only feeding its baby dragon. You taught the dragon how to farm and it gave you some Tokens.',
-    'You attempted to subdue the ogre known for assaulting people, but it turns out they just hug too hard. You taught them about personal boundries and they gave you some Tokens.',
-    'You went to the local cave to fight the goblin king, but it turns out he was just a goblin who wanted to be king. You taught him about democracy and he gave you some Tokens.',
-    'You journey to the dark forest to fight the evil witch, but they turn out to be a gardner with too much property. You taught her about landscapers and she gave you Tokens.',
+    'You voyaged to fight the evil wizard in the dark towner!\nBut they\'re just misunderstood and enjoy earth tones.\nThey appreciate the visit and gave you {tokens} tokens for your troubles.',
+    'You were tasked with killing a dragon that has looted the countryside!\nBut it was only feeding its baby dragon.\nYou taught the dragon how to farm and it gave you {tokens} Tokens.',
+    'You attempted to subdue the ogre known for assaulting people!\nBut it turns out they just hug too hard.\nYou taught them about personal boundries and they gave you {tokens} Tokens.',
+    'You went to the local cave to fight the goblin king!\nBut it turns out he was just a goblin who wanted to be king.\nYou taught him about democracy and he gave you {tokens} Tokens.',
+    'You journey to the dark forest to fight the evil witch!\nBut they turn out to be a gardner with too much property.\nYou taught her about landscapers and she gave you {tokens} Tokens.',
   ],
 };
 
@@ -581,6 +882,7 @@ export async function rpgTown():Promise<InteractionEditReplyOptions | Interactio
       What would you like to do?`)
       .setColor(Colors.Green)],
     components: [rowTown],
+    files: [],
   };
 }
 
@@ -607,7 +909,7 @@ export async function rpgWork(
     quest: {
       success: {
         title: 'Quest Success',
-        description: stripIndents`${rand(text.quest)})}`,
+        description: stripIndents`${rand(text.quest)}`,
         color: Colors.Green,
       },
       fail: {
@@ -621,7 +923,7 @@ export async function rpgWork(
     dungeon: {
       success: {
         title: 'Dungeon Success',
-        description: stripIndents`${rand(text.dungeon)})}`,
+        description: stripIndents`${rand(text.dungeon)}`,
         color: Colors.Green,
       },
       fail: {
@@ -794,10 +1096,38 @@ export async function rpgShopChange(
   menus.item.addOptions(filteredItems);
 
   // Use shopInventory and find the item that matches the choice, make it default
+  let itemData = {} as {
+    label: string;
+    value: string;
+    description: string;
+    quantity: number;
+    weight: number;
+    cost: number;
+    equipped: boolean;
+    consumable: boolean;
+    effect: string;
+    effect_value: string;
+    emoji: string;
+  };
   const chosenItem = shopInventory.find(shopItem => shopItem.value === choice);
   if (chosenItem) {
     chosenItem.default = true;
     menus.item.addOptions(chosenItem);
+    const allItems = [...Object.values(items.general), ...Object.values(items.backgrounds)];
+    itemData = allItems.find(item => item.value === chosenItem?.value) as {
+      label: string;
+      value: string;
+      description: string;
+      quantity: number;
+      weight: number;
+      cost: number;
+      equipped: boolean;
+      consumable: boolean;
+      effect: string;
+      effect_value: string;
+      emoji: string;
+    };
+    log.debug(F, `itemData (change): ${JSON.stringify(itemData, null, 2)}`);
   }
 
   const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
@@ -818,17 +1148,28 @@ export async function rpgShopChange(
     ? [rowShop]
     : [rowItems, rowShop];
 
-  return {
-    embeds: [embedTemplate()
-      .setTitle('Shop')
-      .setDescription(stripIndents`
+  const embed = embedTemplate()
+    .setTitle('Shop')
+    .setDescription(stripIndents`
       You are in the shop, you can buy some items to help you on your journey.
 
       You currently have **${personaTokens}** TripTokens.
 
       ${personaInventory}`)
-      .setColor(Colors.Gold)],
+    .setColor(Colors.Gold);
+
+  const imageFiles = [] as AttachmentBuilder[];
+  if (itemData && itemData.effect === 'background') {
+    const imagePath = await imageGet(itemData.effect_value);
+    log.debug(F, `imagePath: ${imagePath}`);
+    imageFiles.push(new AttachmentBuilder(imagePath));
+    embed.setImage(`attachment://${itemData.effect_value}.png`);
+  }
+
+  return {
+    embeds: [embed],
     components,
+    files: imageFiles,
   };
 }
 
@@ -938,14 +1279,24 @@ export async function rpgShopAccept(
     // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
     const { description } = JSON.parse(JSON.stringify((embeds as APIEmbed[])[0]));
 
+    const embed = embedTemplate()
+      .setTitle('Shop')
+      .setDescription(stripIndents`**You do not have enough tokens to buy this item.**
+    
+    ${description}`)
+      .setColor(Colors.Red);
+    const imageFiles = [] as AttachmentBuilder[];
+    if (itemData && itemData.effect === 'background') {
+      const imagePath = await imageGet(itemData.effect_value);
+      log.debug(F, `imagePath: ${imagePath}`);
+      imageFiles.push(new AttachmentBuilder(imagePath));
+      embed.setImage(`attachment://${itemData.effect_value}.png`);
+    }
+
     return {
-      embeds: [embedTemplate()
-        .setTitle('Shop')
-        .setDescription(stripIndents`**You do not have enough tokens to buy this item.**
-        
-        ${description}`)
-        .setColor(Colors.Red)],
+      embeds: [embed],
       components,
+      files: imageFiles,
     };
   }
 
