@@ -169,14 +169,14 @@ const items = {
     testkit: {
       label: 'TestKit',
       value: 'testkit',
-      description: '100 Tokens - 10% more TripTokens from all sources!',
+      description: '10% more TripTokens from all sources!',
       quantity: 1,
       weight: 0,
-      cost: 100,
+      cost: 2000,
       equipped: true,
       consumable: false,
       effect: 'tokenMultiplier',
-      effect_value: '1.1',
+      effect_value: '0.1',
       emoji: '🧪',
     },
     scale: {
@@ -185,11 +185,11 @@ const items = {
       description: '20% more TripTokens from all sources!',
       quantity: 1,
       weight: 0,
-      cost: 200,
+      cost: 3000,
       equipped: true,
       consumable: false,
       effect: 'tokenMultiplier',
-      effect_value: '1.2',
+      effect_value: '0.2',
       emoji: '⚖',
     },
   },
@@ -406,18 +406,18 @@ export const dRpg: SlashCommand = {
     // - Class - Warrior, Mage, Rogue, Cleric
     // - Species - Human, Elf, Dwarf, Orc, Gnome, Halfling
     //
-    // Once setup, the user can generate coins in a few different ways:
+    // Once setup, the user can generate tokens in a few different ways:
     // - Quest - Grants .1 TripToken, can only be used once every hour
     // - Dungeon - Grants 1 TripToken, can only be used once every 24 hours
     // - Raid - Grants 5 TripToken, can only be used once every 7 days
     //
-    // The user can also use their coins to buy items from the shop:
+    // The user can also use their tokens to buy items from the shop:
     // - Test Kit - 10% more tokens every time you gain tokens, costs 100 TripToken
     // - Scale - 20% more tokens every time you gain tokens, costs 200 TripToken
     // - Profile border - 30% more tokens every time you gain tokens, costs 300 TripToken
     // - Profile background - 40% more tokens every time you gain tokens, costs 400 TripToken
     //
-    // The user can also play some games to earn some coins:
+    // The user can also play some games to earn some tokens:
     // - Blackjack - Play a game of blackjack
     // - Coin Flip - Flip a coin or flip a coin 10 times
     // - Rock, Paper, Scissors - Play a game of rock, paper, scissors
@@ -547,6 +547,18 @@ export async function rpgWork(
   // Check if the user has a persona
   const [personaData] = await getPersonaInfo(interaction.user.id);
 
+  // Get the existing inventory data
+  const inventoryData = await inventoryGet(personaData.id);
+  log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
+
+  // Filter inventoryData to find items with the 'tokenMultiplier' effect
+  const tokenMultipliers = inventoryData.filter(item => item.effect === 'tokenMultiplier');
+  log.debug(F, `tokenMultipliers: ${JSON.stringify(tokenMultipliers, null, 2)}`);
+
+  // Calculate the total multiplier
+  const tokenMultiplier = tokenMultipliers.reduce((acc, item) => acc + parseFloat(item.effect_value), 0);
+  log.debug(F, `tokenMultiplier: ${tokenMultiplier}`);
+
   const rowWork = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       buttons.quest,
@@ -559,7 +571,7 @@ export async function rpgWork(
     quest: {
       success: {
         title: 'Quest Success',
-        description: stripIndents`You went on a quest to clean up TripTown and gained 1 TripCoin!`,
+        description: stripIndents`You went on a quest to clean up TripTown and gained {tokens} TripTokens!`,
         color: Colors.Green,
       },
       fail: {
@@ -574,7 +586,7 @@ export async function rpgWork(
       success: {
         title: 'Dungeon Success',
         description: stripIndents`
-          You cleared a dungeon and gained 10 TripCoins!
+          You cleared a dungeon and gained {tokens} TripTokens!
         `,
         color: Colors.Green,
       },
@@ -590,7 +602,7 @@ export async function rpgWork(
       success: {
         title: 'Raid Success',
         description: stripIndents`
-        You stormed into Moonbear's office, russled their jimmies and stole 50 TripCoins!
+        You stormed into Moonbear's office, russled their jimmies and stole {tokens} TripTokens!
       `,
         color: Colors.Green,
       },
@@ -626,14 +638,23 @@ export async function rpgWork(
       };
     }
 
-    let tokens = 1;
+    let tokens = 10;
     if (command === 'dungeon') {
-      tokens = 10;
-    } else if (command === 'raid') {
       tokens = 50;
+    } else if (command === 'raid') {
+      tokens = 100;
     }
 
-    // Award the user coins
+    tokens *= 1 + tokenMultiplier;
+
+    if (env.NODE_ENV === 'development') {
+      tokens *= 10;
+    }
+
+    // Round tokens to the nearest integer
+    tokens = Math.round(tokens);
+
+    // Award the user tokens
     personaData.tokens += tokens;
     personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] = new Date();
 
@@ -643,7 +664,7 @@ export async function rpgWork(
     return {
       embeds: [embedTemplate()
         .setTitle(contracts[command].success.title)
-        .setDescription(stripIndents`${contracts[command].success.description}
+        .setDescription(stripIndents`${contracts[command].success.description.replace('{tokens}', tokens.toString())}
     You now have ${personaData.tokens} TT$!
     You can try again ${time(new Date(new Date().getTime() + interval), 'R')}`)
         .setColor(contracts[command].success.color)],
@@ -669,11 +690,11 @@ export async function rpgShop(
   const [personaData] = await getPersonaInfo(interaction.user.id);
 
   // Get the existing inventory data
-  const personaInventory = await inventoryGet(personaData.id);
-  log.debug(F, `Persona inventory: ${JSON.stringify(personaInventory, null, 2)}`);
+  const inventoryData = await inventoryGet(personaData.id);
+  log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
 
   // Get a string display of the user's inventory
-  const inventoryList = personaInventory.map(item => `**${item.label}** - ${item.description}`).join('\n');
+  const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
   const inventoryString = stripIndents`
   **Inventory**
   ${inventoryList}
@@ -682,11 +703,11 @@ export async function rpgShop(
   // Go through items.general and create a new object of items that the user doesnt have yet
   let generalOptions = Object.values(items.general)
     .map(item => {
-      if (!personaInventory.find(i => i.value === item.value)) {
+      if (!inventoryData.find(i => i.value === item.value)) {
         return {
-          label: item.label,
+          label: `${item.label} - ${item.cost} TT$`,
           value: item.value,
-          description: item.description,
+          description: `${item.description} - ${item.cost} TT$`,
           emoji: item.emoji,
         };
       }
@@ -707,7 +728,7 @@ export async function rpgShop(
         You are in the shop, you can buy some items to help you on your journey.
 
         You currently have **${personaData.tokens}** TripTokens.
-      ${personaInventory.length > 0 ? inventoryString : ''}`)
+      ${inventoryData.length > 0 ? inventoryString : ''}`)
         .setColor(Colors.Green)],
       components: [rowShop],
     };
@@ -730,7 +751,7 @@ export async function rpgShop(
       You are in the shop, you can buy some items to help you on your journey.
 
       You currently have **${personaData.tokens}** TripTokens.
-    ${personaInventory.length > 0 ? inventoryString : ''}`)
+    ${inventoryData.length > 0 ? inventoryString : ''}`)
       .setColor(Colors.Green)],
     components: [rowItems, rowShop],
   };
@@ -763,9 +784,9 @@ export async function rpgShopChange(
   const generalOptions = Object.values(filteredItems).map(item => {
     if (item.value !== choice) {
       return {
-        label: item.label,
+        label: `${item.label} - ${item.cost} TT$`,
         value: item.value,
-        description: item.description,
+        description: `${item.description} - ${item.cost} TT$`,
         emoji: item.emoji,
       };
     }
@@ -773,12 +794,11 @@ export async function rpgShopChange(
   }) as SelectMenuComponentOptionData[];
 
   menus.item.setOptions(generalOptions);
-
   menus.item.addOptions([
     {
-      label: { ...items.general }[choice as keyof typeof items.general].label,
+      label: `${{ ...items.general }[choice as keyof typeof items.general].label} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
       value: { ...items.general }[choice as keyof typeof items.general].value,
-      description: { ...items.general }[choice as keyof typeof items.general].description,
+      description: `${{ ...items.general }[choice as keyof typeof items.general].description} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
       emoji: { ...items.general }[choice as keyof typeof items.general].emoji,
       default: true,
     },
@@ -836,10 +856,10 @@ export async function rpgShopAccept(
   const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
     (o:APISelectMenuOption) => o.default === true,
   );
-
   log.debug(F, `selectedItem: ${JSON.stringify(selectedItem, null, 2)}`);
 
   const itemData = items.general[selectedItem?.value as keyof typeof items.general];
+  log.debug(F, `itemData: ${JSON.stringify(itemData, null, 2)}`);
 
   // Check if the user already has this item
   const existingItem = personaInventory.find(item => item.label === itemData.label);
@@ -852,9 +872,9 @@ export async function rpgShopAccept(
       .map(item => {
         if (!personaInventory.find(i => i.value === item.value)) {
           return {
-            label: item.label,
+            label: `${item.label} - ${item.cost} TT$`,
             value: item.value,
-            description: item.description,
+            description: `${item.description} - ${item.cost} TT$`,
             emoji: item.emoji,
           };
         }
@@ -882,12 +902,13 @@ export async function rpgShopAccept(
     }
 
     menus.item.setOptions(generalOptions);
+    const choice = selectedItem?.value;
     menus.item.addOptions([
       {
-        label: { ...items.general }[selectedItem?.value as keyof typeof items.general].label,
-        value: { ...items.general }[selectedItem?.value as keyof typeof items.general].value,
-        description: { ...items.general }[selectedItem?.value as keyof typeof items.general].description,
-        emoji: { ...items.general }[selectedItem?.value as keyof typeof items.general].emoji,
+        label: `${{ ...items.general }[choice as keyof typeof items.general].label} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
+        value: { ...items.general }[choice as keyof typeof items.general].value,
+        description: `${{ ...items.general }[choice as keyof typeof items.general].description} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
+        emoji: { ...items.general }[choice as keyof typeof items.general].emoji,
         default: true,
       },
     ]);
@@ -920,23 +941,24 @@ export async function rpgShopAccept(
 
   // Check if the user has enough tokens to buy the item
   if (personaData.tokens < itemData.cost) {
+    log.debug(F, 'Not enough tokens to buy item');
     // Get a list of items.general where the value does not equal the choice
-    const filteredItems = Object.values(items.general).filter(item => item.value !== selectedItem?.value);
+    // const filteredItems = Object.values(items.general).filter(item => item.value !== selectedItem?.value);
 
-    let generalOptions = Object.values(filteredItems)
+    let generalOptions = Object.values(items.general)
       .map(item => {
         if (!personaInventory.find(i => i.value === item.value)) {
           return {
-            label: item.label,
+            label: `${item.label} - ${item.cost} TT$`,
             value: item.value,
-            description: item.description,
+            description: `${item.description} - ${item.cost} TT$`,
             emoji: item.emoji,
           };
         }
         return null;
       }) as SelectMenuComponentOptionData[];
     generalOptions = generalOptions.filter(item => item !== null);
-    log.debug(F, `generalOptions: ${JSON.stringify(generalOptions, null, 2)}`);
+    log.debug(F, `generalOptions (not enough tokens): ${JSON.stringify(generalOptions, null, 2)}`);
 
     if (generalOptions.length === 0) {
       const rowShop = new ActionRowBuilder<ButtonBuilder>()
@@ -947,25 +969,40 @@ export async function rpgShopAccept(
         embeds: [embedTemplate()
           .setTitle('Shop')
           .setDescription(stripIndents`
-          You are in the shop, you can buy some items to help you on your journey.
+          **You do not have enough TripTokens to buy this item.**
 
           You currently have **${personaData.tokens}** TripTokens.
         ${personaInventory.length > 0 ? inventoryString : ''}`)
-          .setColor(Colors.Green)],
+          .setColor(Colors.Red)],
         components: [rowShop],
       };
     }
 
-    menus.item.setOptions(generalOptions);
-    menus.item.addOptions([
-      {
-        label: { ...items.general }[selectedItem?.value as keyof typeof items.general].label,
-        value: { ...items.general }[selectedItem?.value as keyof typeof items.general].value,
-        description: { ...items.general }[selectedItem?.value as keyof typeof items.general].description,
-        emoji: { ...items.general }[selectedItem?.value as keyof typeof items.general].emoji,
-        default: true,
-      },
-    ]);
+    if (generalOptions.length > 1) {
+      const choice = selectedItem?.value;
+      const filteredItems = Object.values(items.general).filter(item => item.value !== choice);
+      menus.item.setOptions(filteredItems);
+      menus.item.addOptions([
+        {
+          label: `${{ ...items.general }[choice as keyof typeof items.general].label} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
+          value: { ...items.general }[choice as keyof typeof items.general].value,
+          description: `${{ ...items.general }[choice as keyof typeof items.general].description} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
+          emoji: { ...items.general }[choice as keyof typeof items.general].emoji,
+          default: true,
+        },
+      ]);
+    } else {
+      const choice = selectedItem?.value;
+      menus.item.setOptions([
+        {
+          label: `${{ ...items.general }[choice as keyof typeof items.general].label} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
+          value: { ...items.general }[choice as keyof typeof items.general].value,
+          description: `${{ ...items.general }[choice as keyof typeof items.general].description} - ${items.general[choice as keyof typeof items.general].cost} TT$`,
+          emoji: { ...items.general }[choice as keyof typeof items.general].emoji,
+          default: true,
+        },
+      ]);
+    }
 
     const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
       .addComponents(menus.item);
@@ -1012,6 +1049,8 @@ export async function rpgShopAccept(
     emoji: itemData.emoji,
   } as RpgInventory;
   log.debug(F, `personaInventory: ${JSON.stringify(newItem, null, 2)}`);
+
+  personaInventory.push(newItem);
   await inventorySet(newItem);
 
   // Get a string display of the user's inventory
@@ -1026,9 +1065,9 @@ export async function rpgShopAccept(
     .map(item => {
       if (!personaInventory.find(i => i.value === item.value)) {
         return {
-          label: item.label,
+          label: `${item.label} - ${item.cost} TT$`,
           value: item.value,
-          description: item.description,
+          description: `${item.description} - ${item.cost} TT$`,
           emoji: item.emoji,
         };
       }
