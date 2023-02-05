@@ -42,11 +42,11 @@ const F = f(__filename);
 export default dRpg;
 
 // Value in miliseconds (1000 * 60 * 1 = 1 minute)
-const intervals = {
-  quest: env.NODE_ENV === 'production' ? 1000 * 60 * 60 : 1000 * 1,
-  dungeon: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 : 1000 * 1,
-  raid: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 * 7 : 1000 * 1,
-};
+// const intervals = {
+//   quest: env.NODE_ENV === 'production' ? 1000 * 60 * 60 : 1000 * 1,
+//   dungeon: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 : 1000 * 1,
+//   raid: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 * 7 : 1000 * 1,
+// };
 
 const buttons = {
   name: new ButtonBuilder()
@@ -730,9 +730,9 @@ export const dRpg: SlashCommand = {
     .addSubcommand(subcommand => subcommand
       .setName('town')
       .setDescription('Go to TripTown!'))
-    // .addSubcommand(subcommand => subcommand
-    //   .setName('shop')
-    //   .setDescription('Go to the Shop!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('shop')
+      .setDescription('Go to the Shop!'))
     .addSubcommand(subcommand => subcommand
       .setName('home')
       .setDescription('Go to your Home!'))
@@ -806,18 +806,17 @@ export const dRpg: SlashCommand = {
       await setPersonaInfo(personaData);
       // await interaction.editReply({ embeds: [embedStart], components: states.setup.components });
     }
-
-    if (subcommand === 'quest' || subcommand === 'dungeon' || subcommand === 'raid') {
-      await interaction.editReply(await rpgWork(interaction, subcommand));
-    }
-    if (subcommand === 'shop') {
-      await interaction.editReply(await rpgShop(interaction));
-    }
     if (subcommand === 'town') {
       await interaction.editReply(await rpgTown(interaction));
     }
     if (subcommand === 'work') {
       await interaction.editReply(await rpgWork(interaction, null));
+    }
+    if (subcommand === 'quest' || subcommand === 'dungeon' || subcommand === 'raid') {
+      await interaction.editReply(await rpgWork(interaction, subcommand));
+    }
+    if (subcommand === 'shop') {
+      await interaction.editReply(await rpgShop(interaction));
     }
     if (subcommand === 'home') {
       await interaction.editReply(await rpgHome(interaction, ''));
@@ -883,6 +882,13 @@ export async function rpgTown(
   };
 }
 
+function getLastMonday(d:Date) {
+  const newd = new Date(d);
+  const day = newd.getDay();
+  const diff = newd.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+  return new Date(newd.setDate(diff));
+}
+
 export async function rpgWork(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
   command: 'quest' | 'dungeon' | 'raid' | null,
@@ -892,7 +898,7 @@ export async function rpgWork(
 
   // Get the existing inventory data
   const inventoryData = await inventoryGet(personaData.id);
-  log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
+  // log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
 
   const rowWork = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
@@ -912,7 +918,7 @@ export async function rpgWork(
       fail: {
         title: 'Quest Fail',
         description: stripIndents`
-          It's been less than an hour since you last went on a quest, you're too tired to work.
+          There are no more quests available at the moment. New quests are posted every hour!
         `,
         color: Colors.Red,
       },
@@ -926,7 +932,7 @@ export async function rpgWork(
       fail: {
         title: 'Dungeon Fail',
         description: stripIndents`
-          It's been less than 24 hours since you last cleared a dungeon, you still need to prepare.
+          You already cleared a dungeon today, you're still tired and need to prepare.
         `,
         color: Colors.Red,
       },
@@ -935,15 +941,15 @@ export async function rpgWork(
       success: {
         title: 'Raid Success',
         description: stripIndents`
-        You stormed into Moonbear's office, russled their jimmies and stole {tokens} TripTokens!
-      `,
+          You stormed into Moonbear's office, russled their jimmies and stole {tokens} TripTokens!
+        `,
         color: Colors.Green,
       },
       fail: {
         title: 'Raid Fail',
         description: stripIndents`
-        It's been less than 7 days since you last raided Moonbear's office, give them a break!
-      `,
+          You're already raided Moonbear's office this week, give them a break!
+        `,
         color: Colors.Red,
       },
     },
@@ -954,12 +960,51 @@ export async function rpgWork(
     const lastWork = personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] as Date;
     log.debug(F, `lastWork: ${lastWork}`);
 
-    const interval = intervals[command] ?? 0;
-    log.debug(F, `interval: ${interval}`);
-    log.debug(F, `intervalMins: ${interval / 1000 / 60}}`);
+    let resetTime = {} as Date;
+    let timeout = false;
+    if (command === 'quest') {
+      const currentHour = new Date().getHours();
+      log.debug(F, `currentHour: ${currentHour}`);
 
-    // log.debug(F, `personaData1: ${JSON.stringify(personaData, null, 2)}`);
-    if (lastWork && (lastWork.getTime() + interval > new Date().getTime())) {
+      resetTime = new Date(new Date().setHours(currentHour + 1, 0, 0, 0));
+
+      if (lastWork) {
+        const lastWorkHour = lastWork ? lastWork.getHours() : 0;
+        log.debug(F, `lastWorkHour: ${lastWorkHour}`);
+        if (lastWorkHour === currentHour) {
+          timeout = true;
+        }
+      }
+    } else if (command === 'dungeon') {
+      const currentDay = new Date().getDate();
+      log.debug(F, `currentDay: ${currentDay}`);
+      resetTime = new Date(new Date(new Date().setDate(currentDay + 1)).setHours(0, 0, 0, 0));
+
+      if (lastWork) {
+        const lastWorkDay = lastWork ? lastWork.getDate() : 0;
+        log.debug(F, `lastWorkDay: ${lastWorkDay}`);
+
+        // log.debug(F, `personaData1: ${JSON.stringify(personaData, null, 2)}`);
+        // if (lastWork && (lastWork.getTime() + interval > new Date().getTime())) {
+        if (lastWorkDay === currentDay) {
+          timeout = true;
+        }
+      }
+    } else if (command === 'raid') {
+      const lastMonday = getLastMonday(new Date());
+      log.debug(F, `lastMonday: ${lastMonday}`);
+      resetTime = new Date(new Date(lastMonday.getTime() + 7 * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0));
+
+      // Check if the last work was done after the last monday
+      if (lastWork && lastWork.getTime() > lastMonday.getTime()) {
+        timeout = true;
+      }
+    }
+
+    log.debug(F, `resetTime: ${resetTime}`);
+    log.debug(F, `timeout: ${timeout}`);
+
+    if (timeout) {
       return {
         embeds: [embedTemplate()
           .setAuthor(null)
@@ -967,7 +1012,7 @@ export async function rpgWork(
           .setTitle(contracts[command].fail.title)
           .setDescription(stripIndents`${contracts[command].fail.description}
       You still have ${personaData.tokens} TT$!
-      You can try again ${time(new Date(lastWork.getTime() + interval), 'R')}`)
+      You can try again ${time(resetTime, 'R')}`)
           .setColor(contracts[command].fail.color)],
         components: [rowWork],
       };
@@ -1011,7 +1056,7 @@ export async function rpgWork(
         .setTitle(contracts[command].success.title)
         .setDescription(stripIndents`${contracts[command].success.description.replace('{tokens}', tokens.toString())}
     You now have ${personaData.tokens} TT$!
-    You can try again ${time(new Date(new Date().getTime() + interval), 'R')}`)
+    You can try again ${time(resetTime, 'R')}`)
         .setColor(contracts[command].success.color)],
       components: [rowWork],
     };
