@@ -862,7 +862,7 @@ export async function rpgTown():Promise<InteractionEditReplyOptions | Interactio
   const rowTown = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       buttons.work,
-      // buttons.shop,
+      buttons.shop,
     // buttonGames,
     // buttonProfile,
     );
