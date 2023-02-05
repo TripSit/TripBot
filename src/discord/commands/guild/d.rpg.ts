@@ -14,11 +14,12 @@ import {
   TextInputBuilder,
   ModalSubmitInteraction,
   StringSelectMenuComponent,
-  StringSelectMenuInteraction,
+  // StringSelectMenuInteraction,
   InteractionEditReplyOptions,
   InteractionUpdateOptions,
   SelectMenuComponentOptionData,
   AttachmentBuilder,
+  GuildMember,
 } from 'discord.js';
 import {
   APIEmbed,
@@ -83,11 +84,11 @@ const buttons = {
     .setLabel('Games')
     .setStyle(ButtonStyle.Success)
     .setEmoji('🎮'),
-  profile: new ButtonBuilder()
-    .setCustomId('rpgProfile')
-    .setLabel('Profile')
+  home: new ButtonBuilder()
+    .setCustomId('rpgHome')
+    .setLabel('Home')
     .setStyle(ButtonStyle.Success)
-    .setEmoji('👤'),
+    .setEmoji('🛖'),
   quest: new ButtonBuilder()
     .setCustomId('rpgQuest')
     .setLabel('Quest')
@@ -146,6 +147,9 @@ const menus = {
   item: new StringSelectMenuBuilder()
     .setCustomId('rpgGeneralSelect')
     .setPlaceholder('Select an item to buy'),
+  background: new StringSelectMenuBuilder()
+    .setCustomId('rpgBackgroundSelect')
+    .setPlaceholder('Select a background to use.'),
   name: new StringSelectMenuBuilder()
     .setCustomId('rpgNameDisplay')
     .setPlaceholder('No Name!')
@@ -205,7 +209,7 @@ const items = {
     //   quantity: 1,
     //   weight: 0,
     //   cost: 1000,
-    //   equipped: true,
+    //   equipped: false,
     //   consumable: false,
     //   effect: 'background',
     //   effect_value: 'Geolines',
@@ -218,7 +222,7 @@ const items = {
     //   quantity: 1,
     //   weight: 0,
     //   cost: 1000,
-    //   equipped: true,
+    //   equipped: false,
     //   consumable: false,
     //   effect: 'background',
     //   effect_value: 'Waves',
@@ -231,7 +235,7 @@ const items = {
     //   quantity: 1,
     //   weight: 0,
     //   cost: 1000,
-    //   equipped: true,
+    //   equipped: false,
     //   consumable: false,
     //   effect: 'background',
     //   effect_value: 'LiquidMaze',
@@ -244,7 +248,7 @@ const items = {
     //   quantity: 1,
     //   weight: 0,
     //   cost: 1000,
-    //   equipped: true,
+    //   equipped: false,
     //   consumable: false,
     //   effect: 'background',
     //   effect_value: 'Flow',
@@ -257,7 +261,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'DiamondChevron',
@@ -270,7 +274,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'Chevron',
@@ -283,7 +287,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'Concentric',
@@ -296,7 +300,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'CubeTunnels',
@@ -309,7 +313,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'Leaves',
@@ -322,7 +326,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'SquareTwist',
@@ -335,7 +339,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'SquareSpiral',
@@ -348,7 +352,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'Noise',
@@ -361,7 +365,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'Squiggles',
@@ -374,7 +378,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'TriangleOverlap',
@@ -387,7 +391,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'XandO',
@@ -400,7 +404,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'Safari',
@@ -413,7 +417,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'LineLeaves',
@@ -426,7 +430,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'ArcadeCarpet',
@@ -439,7 +443,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'Topography',
@@ -452,7 +456,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'CoffeeSwirl',
@@ -465,7 +469,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'SpaceIcons',
@@ -478,7 +482,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'Plaid',
@@ -491,7 +495,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'Paisley',
@@ -504,7 +508,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'AbstractTriangles',
@@ -517,7 +521,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'Memphis',
@@ -530,7 +534,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'Connected',
@@ -543,7 +547,7 @@ const items = {
       quantity: 1,
       weight: 0,
       cost: 1000,
-      equipped: true,
+      equipped: false,
       consumable: false,
       effect: 'background',
       effect_value: 'Binary',
@@ -677,142 +681,6 @@ const genome = {
   }
 };
 
-export const dRpg: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('rpg')
-    .setDescription('A TripSit RPG!')
-    .addSubcommand(subcommand => subcommand
-      .setName('town')
-      .setDescription('Go to TripTown!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('shop')
-      .setDescription('Go to the Shop!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('work')
-      .setDescription('Go to the work center!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('quest')
-      .setDescription('Quest and earn a token!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('dungeon')
-      .setDescription('Clear a dungeon and earn 10 tokens!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('raid')
-      .setDescription('Raid a boss and earn 50 tokens!')),
-  async execute(interaction) {
-    startLog(F, interaction);
-    // This command provides a RPG game for the user to play
-    // It starts with the setup subcommand which has the user setup their character including:
-    // - Name - string
-    // - Class - Warrior, Mage, Rogue, Cleric
-    // - Species - Human, Elf, Dwarf, Orc, Gnome, Halfling
-    //
-    // Once setup, the user can generate tokens in a few different ways:
-    // - Quest - Grants .1 TripToken, can only be used once every hour
-    // - Dungeon - Grants 1 TripToken, can only be used once every 24 hours
-    // - Raid - Grants 5 TripToken, can only be used once every 7 days
-    //
-    // The user can also use their tokens to buy items from the shop:
-    // - Test Kit - 10% more tokens every time you gain tokens, costs 100 TripToken
-    // - Scale - 20% more tokens every time you gain tokens, costs 200 TripToken
-    // - Profile border - 30% more tokens every time you gain tokens, costs 300 TripToken
-    // - Profile background - 40% more tokens every time you gain tokens, costs 400 TripToken
-    //
-    // The user can also play some games to earn some tokens:
-    // - Blackjack - Play a game of blackjack
-    // - Coin Flip - Flip a coin or flip a coin 10 times
-    // - Rock, Paper, Scissors - Play a game of rock, paper, scissors
-    //
-    // The user can also view their profile:
-    // - Inventory - View their inventory and equip/unequip items
-    // - Stats - View their stats and level them up
-    // - Guild - View their guild and join/leave a guild
-    const subcommand = interaction.options.getSubcommand();
-
-    const message = subcommand === 'quest' || subcommand === 'dungeon' || subcommand === 'raid'
-      ? await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')], ephemeral: true })
-      : await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')] });
-
-    // Create a collector that will listen to buttons clicked by the user
-    const filter = (i: MessageComponentInteraction) => {
-      log.debug(F, `i.user.id: ${i.user.id}, interaction.user.id: ${interaction.user.id}`);
-      return i.user.id === interaction.user.id;
-    };
-    const collector = message.createMessageComponentCollector({ filter, time: 0 });
-
-    // Get the user's persona data
-    let [personaData] = await getPersonaInfo(interaction.user.id);
-    log.debug(F, `Persona data: ${JSON.stringify(personaData, null, 2)}`);
-
-    // If the user doesn't have persona data, create it
-    if (!personaData) {
-      const userData = await getUser(interaction.user.id, null);
-      personaData = {
-        user_id: userData.id,
-        tokens: 0,
-      } as Personas;
-
-      log.debug(F, `Setting Persona data: ${JSON.stringify(personaData, null, 2)}`);
-
-      await setPersonaInfo(personaData);
-      // await interaction.editReply({ embeds: [embedStart], components: states.setup.components });
-    }
-
-    if (subcommand === 'quest' || subcommand === 'dungeon' || subcommand === 'raid') {
-      await interaction.editReply(await rpgWork(interaction, subcommand));
-    }
-    if (subcommand === 'shop') {
-      await interaction.editReply(await rpgShop(interaction));
-    }
-    if (subcommand === 'town') {
-      await interaction.editReply(await rpgTown());
-    }
-    if (subcommand === 'work') {
-      await interaction.editReply(await rpgWork(interaction, null));
-    }
-
-    // Button collector
-    collector.on('collect', async (i: MessageComponentInteraction) => {
-      log.debug(F, `Interaction: ${JSON.stringify(i.customId, null, 2)}`);
-      if (i.customId === 'rpgTown') {
-        await i.update(await rpgTown());
-      } else if (i.customId === 'rpgWork') {
-        // The user has clicked the work button, send them the work embed
-        await i.update(await rpgWork(i, null));
-      } else if (i.customId === 'rpgQuest'
-      || i.customId === 'rpgDungeon'
-      || i.customId === 'rpgRaid') {
-        const command = i.customId.replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid';
-        await i.update(await rpgWork(i, command));
-      } else if (i.customId === 'rpgShop') {
-        await i.update(await rpgShop(i));
-      } else if (i.customId === 'rpgGames') {
-        // The user has clicked the games button, send them the games embed
-        await i.update(await rpgGames(i));
-      } else if (i.customId === 'rpgProfile') {
-        // The user has clicked the games button, send them the games embed
-        await i.update(await rpgProfile(i));
-      } else if (i.customId === 'rpgSpecies') {
-        await i.update(await rpgProfileChange(i, 'species'));
-      } else if (i.customId === 'rpgClass') {
-        await i.update(await rpgProfileChange(i, 'class'));
-      } else if (i.customId === 'rpgGuild') {
-        await i.update(await rpgProfileChange(i, 'guild'));
-      } else if (i.customId === 'rpgName') {
-        await rpgName(i);
-      } else if (i.customId === 'rpgAccept') {
-        await i.update(await rpgProfileAccept(i));
-      } else if (i.customId === 'rpgGeneralSelect') {
-        await i.update(await rpgShopChange(i));
-      } else if (i.customId === 'rpgShopBuy') {
-        await i.update(await rpgShopAccept(i));
-      }
-    });
-
-    return true;
-  },
-};
-
 const text = {
   enter: [
     'take a bus to',
@@ -855,7 +723,134 @@ function rand(array:string[]):string {
   return array[Math.floor(Math.random() * array.length)];
 }
 
-export async function rpgTown():Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
+export const dRpg: SlashCommand = {
+  data: new SlashCommandBuilder()
+    .setName('rpg')
+    .setDescription('A TripSit RPG!')
+    .addSubcommand(subcommand => subcommand
+      .setName('town')
+      .setDescription('Go to TripTown!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('shop')
+      .setDescription('Go to the Shop!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('home')
+      .setDescription('Go to your Home!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('work')
+      .setDescription('Go to the work center!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('quest')
+      .setDescription('Quest and earn a token!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('dungeon')
+      .setDescription('Clear a dungeon and earn 10 tokens!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('raid')
+      .setDescription('Raid a boss and earn 50 tokens!')),
+  async execute(interaction) {
+    startLog(F, interaction);
+    // This command provides a RPG game for the user to play
+    // It starts with the setup subcommand which has the user setup their character including:
+    // - Name - string
+    // - Class - Warrior, Mage, Rogue, Cleric
+    // - Species - Human, Elf, Dwarf, Orc, Gnome, Halfling
+    //
+    // Once setup, the user can generate tokens in a few different ways:
+    // - Quest - Grants .1 TripToken, can only be used once every hour
+    // - Dungeon - Grants 1 TripToken, can only be used once every 24 hours
+    // - Raid - Grants 5 TripToken, can only be used once every 7 days
+    //
+    // The user can also use their tokens to buy items from the shop:
+    // - Test Kit - 10% more tokens every time you gain tokens, costs 100 TripToken
+    // - Scale - 20% more tokens every time you gain tokens, costs 200 TripToken
+    // - Profile border - 30% more tokens every time you gain tokens, costs 300 TripToken
+    // - Profile background - 40% more tokens every time you gain tokens, costs 400 TripToken
+    //
+    // The user can also play some games to earn some tokens:
+    // - Blackjack - Play a game of blackjack
+    // - Coin Flip - Flip a coin or flip a coin 10 times
+    // - Rock, Paper, Scissors - Play a game of rock, paper, scissors
+    //
+    // The user can also view their persona stats:
+    // - Inventory - View their inventory and equip/unequip items
+    // - Stats - View their stats and level them up
+    // - Guild - View their guild and join/leave a guild
+    const subcommand = interaction.options.getSubcommand();
+
+    const message = subcommand === 'quest' || subcommand === 'dungeon' || subcommand === 'raid'
+      ? await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')], ephemeral: true })
+      : await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')] });
+
+    // Create a collector that will listen to buttons clicked by the user
+    const filter = (i: MessageComponentInteraction) => {
+      log.debug(F, `i.user.id: ${i.user.id}, interaction.user.id: ${interaction.user.id}`);
+      return i.user.id === interaction.user.id;
+    };
+    const collector = message.createMessageComponentCollector({ filter, time: 0 });
+
+    // Get the user's persona data
+    let [personaData] = await getPersonaInfo(interaction.user.id);
+    // log.debug(F, `Inital Persona data: ${JSON.stringify(personaData, null, 2)}`);
+
+    // If the user doesn't have persona data, create it
+    if (!personaData) {
+      const userData = await getUser(interaction.user.id, null);
+      personaData = {
+        user_id: userData.id,
+        tokens: 0,
+      } as Personas;
+
+      log.debug(F, `Setting Persona data: ${JSON.stringify(personaData, null, 2)}`);
+
+      await setPersonaInfo(personaData);
+      // await interaction.editReply({ embeds: [embedStart], components: states.setup.components });
+    }
+
+    if (subcommand === 'quest' || subcommand === 'dungeon' || subcommand === 'raid') {
+      await interaction.editReply(await rpgWork(interaction, subcommand));
+    }
+    if (subcommand === 'shop') {
+      await interaction.editReply(await rpgShop(interaction));
+    }
+    if (subcommand === 'town') {
+      await interaction.editReply(await rpgTown(interaction));
+    }
+    if (subcommand === 'work') {
+      await interaction.editReply(await rpgWork(interaction, null));
+    }
+    if (subcommand === 'home') {
+      await interaction.editReply(await rpgHome(interaction, ''));
+    }
+
+    // Button collector
+    collector.on('collect', async (i: MessageComponentInteraction) => {
+      log.debug(F, `Interaction: ${JSON.stringify(i.customId, null, 2)}`);
+      if (i.customId === 'rpgTown') await i.update(await rpgTown(i));
+      else if (i.customId === 'rpgWork') await i.update(await rpgWork(i, null));
+      else if (i.customId === 'rpgShop') await i.update(await rpgShop(i));
+      else if (i.customId === 'rpgGames') await i.update(await rpgGames(i));
+      else if (i.customId === 'rpgHome') await i.update(await rpgHome(i, ''));
+      else if (i.customId === 'rpgSpecies') await i.update(await rpgHome(i, ''));
+      else if (i.customId === 'rpgClass') await i.update(await rpgHome(i, ''));
+      else if (i.customId === 'rpgGuild') await i.update(await rpgHome(i, ''));
+      else if (i.customId === 'rpgName') await rpgHomeNameChange(i);
+      else if (i.customId === 'rpgAccept') await i.update(await rpgHomeAccept(i));
+      else if (i.customId === 'rpgGeneralSelect') await i.update(await rpgShopChange(i));
+      else if (i.customId === 'rpgShopBuy') await i.update(await rpgShopAccept(i));
+      else if (i.customId === 'rpgBackgroundSelect') await i.update(await rpgHome(i, ''));
+      else if (i.customId === 'rpgQuest' || i.customId === 'rpgDungeon' || i.customId === 'rpgRaid') {
+        await i.update(await rpgWork(i, i.customId.replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
+      }
+    });
+
+    return true;
+  },
+};
+
+export async function rpgTown(
+  interaction:MessageComponentInteraction | ChatInputCommandInteraction,
+):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check if the user has a persona
   // const [personaData] = await getPersonaInfo(interaction.user.id);
 
@@ -863,12 +858,14 @@ export async function rpgTown():Promise<InteractionEditReplyOptions | Interactio
     .addComponents(
       buttons.work,
       buttons.shop,
-    // buttonGames,
-    // buttonProfile,
+      // buttonGames,
+      buttons.home,
     );
 
   return {
     embeds: [embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
       .setTitle('Town')
       .setDescription(stripIndents`
       You ${rand(text.enter)} TripTown, a new settlement on the edge of Triptopia, the TripSit Kingdom.
@@ -965,6 +962,8 @@ export async function rpgWork(
     if (lastWork && (lastWork.getTime() + interval > new Date().getTime())) {
       return {
         embeds: [embedTemplate()
+          .setAuthor(null)
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
           .setTitle(contracts[command].fail.title)
           .setDescription(stripIndents`${contracts[command].fail.description}
       You still have ${personaData.tokens} TT$!
@@ -1007,6 +1006,8 @@ export async function rpgWork(
 
     return {
       embeds: [embedTemplate()
+        .setAuthor(null)
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
         .setTitle(contracts[command].success.title)
         .setDescription(stripIndents`${contracts[command].success.description.replace('{tokens}', tokens.toString())}
     You now have ${personaData.tokens} TT$!
@@ -1018,6 +1019,8 @@ export async function rpgWork(
 
   return {
     embeds: [embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
       .setTitle('Work')
       .setDescription(stripIndents`
       You are at work, you can go on a quest, clear a dungeon, or go on a raid.
@@ -1051,6 +1054,8 @@ export async function rpgShop(
   // The user has clicked the shop button, send them the shop embed
   return {
     embeds: [embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
       .setTitle('Shop')
       .setDescription(stripIndents`
       You are in the shop, you can buy some items to help you on your journey.
@@ -1149,6 +1154,8 @@ export async function rpgShopChange(
     : [rowItems, rowShop];
 
   const embed = embedTemplate()
+    .setAuthor(null)
+    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
     .setTitle('Shop')
     .setDescription(stripIndents`
       You are in the shop, you can buy some items to help you on your journey.
@@ -1232,21 +1239,6 @@ export async function rpgShopAccept(
   const [personaData] = await getPersonaInfo(interaction.user.id);
   log.debug(F, `personaData (Accept): ${JSON.stringify(personaData, null, 2)}`);
 
-  // // Get the existing inventory data
-  // const personaInventory = await inventoryGet(personaData.id);
-  // log.debug(F, `Persona inventory: ${JSON.stringify(personaInventory, null, 2)}`);
-
-  // // Get a string display of the user's inventory
-  // let inventoryList = personaInventory.map(item => `**${item.label}** - ${item.description}`).join('\n');
-  // let inventoryString = stripIndents`
-  //     **Inventory**
-  //     ${inventoryList}
-  //     `;
-
-  // // Message
-  // // row 1: select menu
-  // // row 2: buy button, town button
-
   // If the user confirms the information, save the persona information
   const itemComponent = interaction.message.components[0].components[0];
   const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
@@ -1280,6 +1272,8 @@ export async function rpgShopAccept(
     const { description } = JSON.parse(JSON.stringify((embeds as APIEmbed[])[0]));
 
     const embed = embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
       .setTitle('Shop')
       .setDescription(stripIndents`**You do not have enough tokens to buy this item.**
     
@@ -1329,6 +1323,8 @@ export async function rpgShopAccept(
 
   return {
     embeds: [embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
       .setTitle('Shop')
       .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemData.cost} TripTokens.**
       
@@ -1356,6 +1352,8 @@ export async function rpgGames(
   // The user has clicked the shop button, send them the shop embed
   return {
     embeds: [embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
       .setTitle('Games')
       .setDescription(stripIndents`
       You are playing some games, you can play some dice, flip a coin, or play some roulette.
@@ -1365,75 +1363,348 @@ export async function rpgGames(
   };
 }
 
-export async function rpgProfile(
+export async function rpgHome(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
+  message: string,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
+  const {
+    homeInventory,
+    personaTokens,
+    personaInventory,
+  } = await rpgHomeInventory(interaction);
+
   // Check get fresh persona data
   const [personaData] = await getPersonaInfo(interaction.user.id);
-  log.debug(F, `personaData (Profile): ${JSON.stringify(personaData, null, 2)}`);
+  // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
 
-  menus.name.setOptions([{
-    label: personaData.name,
-    value: personaData.name,
-    emoji: '👤',
-    default: true,
-  }]);
-  // log.debug(F, `displayName: ${JSON.stringify(displayName, null, 2)}`);
+  // Get the existing inventory data
+  const inventoryData = await inventoryGet(personaData.id);
+  // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
 
-  const rowChangeNameDisplay = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .setComponents(menus.name);
+  let defaultOption = '' as string;
+  // Get the equipped background
+  const equippedBackground = inventoryData.find(item => item.equipped === true);
+  log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
+  if (equippedBackground) {
+    defaultOption = equippedBackground.value;
+  }
+  log.debug(F, `defaultOption1: ${defaultOption} `);
 
-  // log.debug(F, `classDef: ${JSON.stringify(classDef, null, 2)}`);
-  const selectedClassList = { ...genome.classes };
-  // log.debug(F, `selectedClassList1: ${JSON.stringify(selectedClassList, null, 2)}`);
-  selectedClassList[personaData.class as keyof typeof selectedClassList].default = true;
-  // log.debug(F, `selectedClassList2: ${JSON.stringify(selectedClassList, null, 2)}`);
+  // Get the item the user selected
+  if (interaction.isButton()) {
+    const backgroundComponent = interaction.message.components[0].components[0];
+    if ((backgroundComponent as StringSelectMenuComponent).options) {
+      const selectedItem = (backgroundComponent as StringSelectMenuComponent).options.find(
+        (o:APISelectMenuOption) => o.default === true,
+      );
+      if (selectedItem) {
+        defaultOption = selectedItem.value;
+      }
+    }
+  } else if (interaction.isStringSelectMenu() && interaction.values) {
+    [defaultOption] = interaction.values;
+  }
 
-  menus.class.setOptions(Object.values({ ...selectedClassList }));
+  log.debug(F, `defaultOption2: ${defaultOption}`);
 
-  const rowChangeClass = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .setComponents(menus.class);
+  // Get a list of shopInventory where the value does not equal the choice
+  // If there is no choice, it will return all items the user has
+  const filteredItems = Object.values(homeInventory).filter(item => item.value !== defaultOption);
 
-  log.debug(F, `speciesDef: ${JSON.stringify(genome.species, null, 2)}`);
-  const selectedSpeciesList = { ...genome.species };
-  log.debug(F, `selectedSpeciesList1: ${JSON.stringify(selectedSpeciesList, null, 2)}`);
-  selectedSpeciesList[personaData.species as keyof typeof selectedSpeciesList].default = true;
-  log.debug(F, `selectedSpeciesList2: ${JSON.stringify(selectedSpeciesList, null, 2)}`);
-  log.debug(F, `speciesDef2: ${JSON.stringify(genome.species, null, 2)}`);
+  // Reset the options menu to be empty
+  menus.background.setOptions();
+  menus.background.addOptions(filteredItems);
 
-  menus.species.setOptions(Object.values({ ...selectedSpeciesList }));
-  const rowChangeSpecies = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(menus.species);
+  // Get the item the user chose and display that as the default option
+  let backgroundData = {} as {
+    label: string;
+    value: string;
+    description: string;
+    quantity: number;
+    weight: number;
+    cost: number;
+    equipped: boolean;
+    consumable: boolean;
+    effect: string;
+    effect_value: string;
+    emoji: string;
+  };
+  const chosenItem = homeInventory.find(item => item.value === defaultOption);
+  if (chosenItem) {
+    chosenItem.default = true;
+    menus.background.addOptions(chosenItem);
+    const allItems = [...Object.values(items.backgrounds)];
+    backgroundData = allItems.find(item => item.value === chosenItem?.value) as {
+      label: string;
+      value: string;
+      description: string;
+      quantity: number;
+      weight: number;
+      cost: number;
+      equipped: boolean;
+      consumable: boolean;
+      effect: string;
+      effect_value: string;
+      emoji: string;
+    };
+    log.debug(F, `backgroundData (home change): ${JSON.stringify(backgroundData, null, 2)}`);
+  }
 
-  const selectedGuildList = { ...genome.guilds };
-  selectedGuildList[personaData.guild as keyof typeof selectedGuildList].default = true;
-  // log.debug(F, `Selected guild list: ${JSON.stringify(selectedGuildList, null, 2)}`);
+  // Set the item row
+  const rowBackgrounds = new ActionRowBuilder<StringSelectMenuBuilder>()
+    .addComponents(menus.background);
 
-  menus.guild.setOptions(Object.values(selectedGuildList));
-  const rowChangeGuild = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(menus.guild);
+  // Build the embed
+  const embed = embedTemplate()
+    .setAuthor(null)
+    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
+    .setTitle('Home')
+    .setDescription(stripIndents`${message !== null ? message : ''}
 
-  const rowProfile = new ActionRowBuilder<ButtonBuilder>()
+      You ${rand(text.enter)} your home.
+      
+      You can change your banner here, which impacts your /profile background.
+
+      You currently have **${personaTokens}** TripTokens.
+
+      ${personaInventory}
+    `)
+    .setColor(Colors.Purple);
+
+  // If the select item has the 'background' effect, add the image to the embed
+  const files = [] as AttachmentBuilder[];
+  if (equippedBackground) {
+    const imagePath = await imageGet(equippedBackground.value);
+    log.debug(F, `equiped background imagePath: ${imagePath}`);
+    files.push(new AttachmentBuilder(imagePath));
+    embed.setThumbnail(`attachment://${equippedBackground.value}.png`);
+    log.debug(F, 'Set thumbnail!');
+  }
+
+  if (interaction.isStringSelectMenu() && backgroundData && backgroundData.effect === 'background') {
+    const imagePath = await imageGet(backgroundData.effect_value);
+    log.debug(F, `imagePathasdfasdfasf: ${imagePath}`);
+    files.push(new AttachmentBuilder(imagePath));
+    embed.setImage(`attachment://${backgroundData.effect_value}.png`);
+    log.debug(F, 'Set image!');
+  }
+
+  // Build out the home navigation buttons
+  const rowHome = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
-      buttons.name,
-      buttons.accept,
-      buttons.decline,
+    // buttons.name,
+    // buttons.accept,
+    // buttons.decline,
       buttons.town,
     );
 
-  // The user has clicked the profile button, send them the profile embed
+  if (chosenItem && interaction.isStringSelectMenu()) {
+    rowHome.addComponents(
+      buttons.accept,
+    );
+  }
+
+  // If the user has backgrounds, add the backgrounds row
+  const components = menus.background.options.length === 0
+    ? [rowHome]
+    : [rowBackgrounds, rowHome];
+
   return {
-    embeds: [embedTemplate()
-      .setTitle('Profile')
-      .setDescription(stripIndents`
-      You are in your profile, you can change your name, species, class and here.
-    `)
-      .setColor(Colors.Green)],
-    components: [rowChangeNameDisplay, rowChangeClass, rowChangeSpecies, rowChangeGuild, rowProfile],
+    embeds: [embed],
+    components,
+    files,
+  };
+  // const filteredItems = Object.values(genome.species).filter(item => item.value !== choice);
+
+  // // Reset the options menu to be empty
+  // menus.species.setOptions();
+
+  // menus.species.addOptions(filteredItems);
+
+  // menus.species.addOptions([
+  //   {
+  //     label: { ...genome.species }[choice as keyof typeof genome.species].label,
+  //     value: { ...genome.species }[choice as keyof typeof genome.species].value,
+  //     description: { ...genome.species }[choice as keyof typeof genome.species].description,
+  //     emoji: { ...genome.species }[choice as keyof typeof genome.species].emoji,
+  //     default: true,
+  //   },
+  // ]);
+
+  // selectSpecies.addOptions(Object.values(speciesDef).filter(s => s.value !== choice));
+
+  // menus.name.setOptions([{
+  //   label: personaData.name,
+  //   value: personaData.name,
+  //   emoji: '👤',
+  //   default: true,
+  // }]);
+
+  // const rowNameDisplay = new ActionRowBuilder<StringSelectMenuBuilder>()
+  //   .setComponents(menus.name);
+
+  // log.debug(F, `classDef: ${JSON.stringify(classDef, null, 2)}`);
+  // const selectedClassList = { ...genome.classes };
+  // log.debug(F, `selectedClassList1: ${JSON.stringify(selectedClassList, null, 2)}`);
+  // selectedClassList[personaData.class as keyof typeof selectedClassList].default = true;
+  // log.debug(F, `selectedClassList2: ${JSON.stringify(selectedClassList, null, 2)}`);
+
+  // menus.class.setOptions(Object.values({ ...selectedClassList }));
+
+  // const rowChangeClass = new ActionRowBuilder<StringSelectMenuBuilder>()
+  // //   .setComponents(menus.class);
+
+  // log.debug(F, `speciesDef: ${JSON.stringify(genome.species, null, 2)}`);
+  // const selectedSpeciesList = { ...genome.species };
+  // log.debug(F, `selectedSpeciesList1: ${JSON.stringify(selectedSpeciesList, null, 2)}`);
+  // selectedSpeciesList[personaData.species as keyof typeof selectedSpeciesList].default = true;
+  // log.debug(F, `selectedSpeciesList2: ${JSON.stringify(selectedSpeciesList, null, 2)}`);
+  // log.debug(F, `speciesDef2: ${JSON.stringify(genome.species, null, 2)}`);
+
+  // menus.species.setOptions(Object.values({ ...selectedSpeciesList }));
+  // const rowChangeSpecies = new ActionRowBuilder<StringSelectMenuBuilder>()
+  //   .addComponents(menus.species);
+
+  // const selectedGuildList = { ...genome.guilds };
+  // selectedGuildList[personaData.guild as keyof typeof selectedGuildList].default = true;
+  // log.debug(F, `Selected guild list: ${JSON.stringify(selectedGuildList, null, 2)}`);
+
+  // menus.guild.setOptions(Object.values(selectedGuildList));
+  // const rowChangeGuild = new ActionRowBuilder<StringSelectMenuBuilder>()
+  //   .addComponents(menus.guild);
+
+  // const { embeds, components } = await rpgHomeChange(interaction);
+
+  // // The user has clicked the home button, send them the home embed
+  // return {
+  //   embeds,
+  //   components,
+  // };
+}
+
+export async function rpgHomeAccept(
+  interaction: MessageComponentInteraction,
+):Promise<InteractionUpdateOptions> {
+  // Check get fresh persona data
+  const [personaData] = await getPersonaInfo(interaction.user.id);
+
+  // If the user confirms the information, save the persona information
+  const backgroundComponent = interaction.message.components[0].components[0];
+  const selectedItem = (backgroundComponent as StringSelectMenuComponent).options.find(
+    (o:APISelectMenuOption) => o.default === true,
+  );
+
+  // // If the user confirms the information, save the persona information
+  // const nameComponent = interaction.message.components[0].components[0];
+  // const selectedName = (nameComponent as StringSelectMenuComponent).options.find(
+  //   (o:APISelectMenuOption) => o.default === true,
+  // );
+  // const speciesComponent = interaction.message.components[1].components[0];
+  // const selectedSpecies = (speciesComponent as StringSelectMenuComponent).options.find(
+  //   (o:APISelectMenuOption) => o.default === true,
+  // );
+  // const classComponent = interaction.message.components[2].components[0];
+  // const selectedClass = (classComponent as StringSelectMenuComponent).options.find(
+  //   (o:APISelectMenuOption) => o.default === true,
+  // );
+  // const guildComponent = interaction.message.components[3].components[0];
+  // const selectedGuild = (guildComponent as StringSelectMenuComponent).options.find(
+  //   (o:APISelectMenuOption) => o.default === true,
+  // );
+
+  log.debug(F, `selectedItem (accept home): ${JSON.stringify(selectedItem, null, 2)}`);
+  // log.debug(F, `selectedName: ${JSON.stringify(selectedName, null, 2)}`);
+  // log.debug(F, `selectedSpecies: ${JSON.stringify(selectedSpecies, null, 2)}`);
+  // log.debug(F, `selectedClass: ${JSON.stringify(selectedClass, null, 2)}`);
+  // log.debug(F, `selectedGuild: ${JSON.stringify(selectedGuild, null, 2)}`);
+
+  // Get the existing inventory data
+  const inventoryData = await inventoryGet(personaData.id);
+  log.debug(F, `Persona home inventory (accept): ${JSON.stringify(inventoryData, null, 2)}`);
+
+  // Find the selectedItem in the inventoryData
+  const chosenItem = inventoryData.find(item => item.value === selectedItem?.value);
+
+  // Equip the item
+  if (chosenItem) {
+    chosenItem.equipped = true;
+    await inventorySet(chosenItem);
+  } else {
+    log.error(F, `Item not found in inventory: ${JSON.stringify(chosenItem, null, 2)}`);
+  }
+
+  // Un-equip all other items
+  const otherItems = inventoryData.filter(item => item.value !== selectedItem?.value);
+  otherItems.forEach(item => {
+    const newItem = item;
+    newItem.equipped = false;
+    inventorySet(newItem);
+  });
+
+  // Set persona data
+  // personaData.name = selectedName?.label ?? 'No Name';
+  // personaData.species = selectedSpecies?.value ?? 'formless';
+  // personaData.class = selectedClass?.value ?? 'jobless';
+  // personaData.guild = selectedGuild?.value ?? 'guildless';
+  // personaData.tokens = 0;
+
+  // log.debug(F, `Setting Persona data: ${JSON.stringify(personaData, null, 2)}`);
+
+  // await personaSet(personaData);
+  const { embeds, components, files } = await rpgHome(interaction, `**You have equipped ${chosenItem?.label}!**\n`);
+  return {
+    embeds,
+    components,
+    files,
   };
 }
 
-export async function rpgName(
+export async function rpgHomeInventory(
+  interaction:MessageComponentInteraction | ChatInputCommandInteraction,
+):Promise<{
+    homeInventory:SelectMenuComponentOptionData[];
+    personaTokens:number;
+    personaInventory:string;
+  }> {
+  // Check get fresh persona data
+  const [personaData] = await getPersonaInfo(interaction.user.id);
+
+  // Get the existing inventory data
+  const inventoryData = await inventoryGet(personaData.id);
+  // log.debug(F, `Persona home inventory: ${JSON.stringify(inventoryData, null, 2)}`);
+
+  // Get a string display of the user's inventory
+  const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
+  const inventoryString = inventoryData.length > 0
+    ? stripIndents`
+      **Inventory**
+      ${inventoryList}
+      `
+    : '';
+
+  // Go through items.general and create a new object of items that the user doesnt have yet
+  const homeInventory = [...Object.values(items.backgrounds)]
+    .map(item => {
+      if (inventoryData.find(i => i.value === item.value)) {
+        return {
+          label: `${item.label} - ${item.cost} TT$`,
+          value: item.value,
+          description: `${item.description} - ${item.cost} TT$`,
+          emoji: item.emoji,
+        };
+      }
+      return null;
+    })
+    .filter(item => item !== null) as SelectMenuComponentOptionData[];
+  // log.debug(F, `generalOptions: ${JSON.stringify(homeInventory, null, 2)}`);
+  return {
+    homeInventory,
+    personaTokens: personaData.tokens,
+    personaInventory: inventoryString,
+  };
+}
+
+export async function rpgHomeNameChange(
   interaction: MessageComponentInteraction,
 ):Promise<void> {
   // Check get fresh persona data
@@ -1475,7 +1746,7 @@ export async function rpgName(
 
       await i.reply({ content: `Your name has been set to ${choice}`, ephemeral: true });
 
-      const rowProfile = new ActionRowBuilder<ButtonBuilder>()
+      const rowHome = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           buttons.name,
           buttons.accept,
@@ -1486,12 +1757,14 @@ export async function rpgName(
       if (!personaData) {
         return {
           embed: embedTemplate()
-            .setTitle('Profile')
+            .setAuthor(null)
+            .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
+            .setTitle('Home')
             .setDescription(stripIndents`
-            You are in your profile, you can change your name, species, class and here.
+            You are in your home, you can change your name, species, class and here.
           `)
             .setColor(Colors.Green),
-          components: [rowProfile],
+          components: [rowHome],
         };
       }
       const rowChangeNameDisplay = new ActionRowBuilder<StringSelectMenuBuilder>()
@@ -1520,84 +1793,14 @@ export async function rpgName(
 
       return {
         embed: embedTemplate()
-          .setTitle('Profile')
+          .setAuthor(null)
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
+          .setTitle('Home')
           .setDescription(stripIndents`
-            You are in your profile, you can change your name, species, class and here.
+            You are in your home, you can change your name, species, class and here.
           `)
           .setColor(Colors.Green),
-        components: [rowChangeNameDisplay, rowChangeSpecies, rowChangeClass, rowChangeGuild, rowProfile],
+        components: [rowChangeNameDisplay, rowChangeSpecies, rowChangeClass, rowChangeGuild, rowHome],
       };
     });
-}
-
-export async function rpgProfileChange(
-  interaction:MessageComponentInteraction,
-  type: 'species' | 'class' | 'guild',
-):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
-  // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
-  log.debug(F, `personaData (Change) ${JSON.stringify(personaData, null, 2)}`);
-  log.debug(F, `type: ${type}`);
-
-  const [choice] = (interaction as StringSelectMenuInteraction).values;
-
-  const filteredItems = Object.values(genome.species).filter(item => item.value !== choice);
-
-  menus.species.setOptions(filteredItems);
-
-  menus.species.addOptions([
-    {
-      label: { ...genome.species }[choice as keyof typeof genome.species].label,
-      value: { ...genome.species }[choice as keyof typeof genome.species].value,
-      description: { ...genome.species }[choice as keyof typeof genome.species].description,
-      emoji: { ...genome.species }[choice as keyof typeof genome.species].emoji,
-      default: true,
-    },
-  ]);
-
-  // selectSpecies.addOptions(Object.values(speciesDef).filter(s => s.value !== choice));
-
-  return rpgTown();
-}
-
-export async function rpgProfileAccept(
-  interaction: MessageComponentInteraction,
-):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
-  // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
-
-  // If the user confirms the information, save the persona information
-  const nameComponent = interaction.message.components[0].components[0];
-  const selectedName = (nameComponent as StringSelectMenuComponent).options.find(
-    (o:APISelectMenuOption) => o.default === true,
-  );
-  const speciesComponent = interaction.message.components[1].components[0];
-  const selectedSpecies = (speciesComponent as StringSelectMenuComponent).options.find(
-    (o:APISelectMenuOption) => o.default === true,
-  );
-  const classComponent = interaction.message.components[2].components[0];
-  const selectedClass = (classComponent as StringSelectMenuComponent).options.find(
-    (o:APISelectMenuOption) => o.default === true,
-  );
-  const guildComponent = interaction.message.components[3].components[0];
-  const selectedGuild = (guildComponent as StringSelectMenuComponent).options.find(
-    (o:APISelectMenuOption) => o.default === true,
-  );
-
-  log.debug(F, `selectedName: ${JSON.stringify(selectedName, null, 2)}`);
-  log.debug(F, `selectedSpecies: ${JSON.stringify(selectedSpecies, null, 2)}`);
-  log.debug(F, `selectedClass: ${JSON.stringify(selectedClass, null, 2)}`);
-  log.debug(F, `selectedGuild: ${JSON.stringify(selectedGuild, null, 2)}`);
-
-  personaData.name = selectedName?.label ?? 'No Name';
-  personaData.species = selectedSpecies?.value ?? 'formless';
-  personaData.class = selectedClass?.value ?? 'jobless';
-  personaData.guild = selectedGuild?.value ?? 'guildless';
-  personaData.tokens = 0;
-
-  log.debug(F, `Setting Persona data: ${JSON.stringify(personaData, null, 2)}`);
-
-  await personaSet(personaData);
-
-  return rpgTown();
 }
