@@ -684,9 +684,9 @@ export const dRpg: SlashCommand = {
     .addSubcommand(subcommand => subcommand
       .setName('town')
       .setDescription('Go to TripTown!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('shop')
-      .setDescription('Go to the Shop!'))
+    // .addSubcommand(subcommand => subcommand
+    //   .setName('shop')
+    //   .setDescription('Go to the Shop!'))
     .addSubcommand(subcommand => subcommand
       .setName('work')
       .setDescription('Go to the work center!'))
@@ -862,7 +862,7 @@ export async function rpgTown():Promise<InteractionEditReplyOptions | Interactio
   const rowTown = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       buttons.work,
-      buttons.shop,
+      // buttons.shop,
     // buttonGames,
     // buttonProfile,
     );
