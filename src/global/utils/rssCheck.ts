@@ -94,9 +94,14 @@ async function checkRss() {
         .setAuthor({ name: 'New /r/TripSit post', iconURL: env.TS_ICON_URL })
         .setTitle(`${mostRecentPost.title}`)
         .setURL(mostRecentPost.link)
-        .setDescription(stripIndents`${body}`)
         .setFooter({ text: submittedBy, iconURL: env.FLAME_ICON_URL })
         .setTimestamp(new Date(mostRecentPost.pubDate));
+
+      if (body.length > 0) {
+        embed.setDescription(stripIndents`
+          ${body}
+        `);
+      }
 
       channelBotlog.send({ embeds: [embed] });
 
