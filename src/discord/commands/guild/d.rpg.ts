@@ -730,9 +730,9 @@ export const dRpg: SlashCommand = {
     .addSubcommand(subcommand => subcommand
       .setName('town')
       .setDescription('Go to TripTown!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('shop')
-      .setDescription('Go to the Shop!'))
+    // .addSubcommand(subcommand => subcommand
+    //   .setName('shop')
+    //   .setDescription('Go to the Shop!'))
     .addSubcommand(subcommand => subcommand
       .setName('home')
       .setDescription('Go to your Home!'))
