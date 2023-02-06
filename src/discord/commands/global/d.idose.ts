@@ -47,12 +47,6 @@ export const dIdose: SlashCommand = {
           { name: 'g (grams)', value: 'G' },
           { name: 'oz (ounces)', value: 'OZ' },
           { name: 'fl oz (fluid ounces)', value: 'FLOZ' },
-          { name: 'tabs', value: 'TABS' },
-          { name: 'caps', value: 'CAPS' },
-          { name: 'pills', value: 'PILLS' },
-          { name: 'drops', value: 'DROPS' },
-          { name: 'sprays', value: 'SPRAYS' },
-          { name: 'inhales', value: 'INHALES' },
         ))
       .addStringOption(option => option.setName('substance')
         .setDescription('What Substance?')
