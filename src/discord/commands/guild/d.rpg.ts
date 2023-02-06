@@ -910,6 +910,7 @@ export const dRpg: SlashCommand = {
       else if (i.customId === 'rpgWager100') await i.update(await rpgWager(i));
       else if (i.customId === 'rpgWager1000') await i.update(await rpgWager(i));
       else if (i.customId === 'rpgWager10000') await i.update(await rpgCoinflip(i));
+      else if (i.customId === 'rpgCoinFlip') await i.update(await rpgCoinflip(i));
       else if (i.customId === 'rpgCoinflipHeads') await i.editReply(await rpgCoinflip(i, 'heads'));
       else if (i.customId === 'rpgCoinflipTails') await i.editReply(await rpgCoinflip(i, 'tails'));
       // else if (i.customId === 'rpgRoulette') await i.update(await rpgCoinflip(i));
@@ -2172,31 +2173,30 @@ export async function rpgCoinflipAnimate(
   await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
     embeds: [embed.setFields([
       { name: '🪙', value: '🫴', inline: true },
-      { name: '\u200B', value: '🫱', inline: true },
-    ])],
-  });
-  await sleep(0.5 * 1000);
-
-  await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-    embeds: [embed.setFields([
-      { name: '\u200B', value: '\u200B', inline: true },
-      { name: '\u200B', value: '🫳', inline: true },
-      { name: '\u200B', value: '\u200B', inline: true },
-      { name: '\u200B', value: '\u200B', inline: true },
-      { name: '🪙', value: '🫱', inline: true },
-      { name: '\u200B', value: '\u200B', inline: true },
-    ])],
-  });
-  await sleep(0.5 * 1000);
-
-  await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-    embeds: [embed.setFields([
-      { name: '\u200B', value: '\u200B', inline: true },
-      { name: '🪙', value: '🫱', inline: true },
-      { name: '👀', value: '\u200B', inline: true },
     ])],
   });
   await sleep(1 * 1000);
+
+  // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+  //   embeds: [embed.setFields([
+  //     { name: '\u200B', value: '\u200B', inline: true },
+  //     { name: '\u200B', value: '🫳', inline: true },
+  //     { name: '\u200B', value: '\u200B', inline: true },
+  //     { name: '\u200B', value: '\u200B', inline: true },
+  //     { name: '🪙', value: '🫱', inline: true },
+  //     { name: '\u200B', value: '\u200B', inline: true },
+  //   ])],
+  // });
+  // await sleep(0.5 * 1000);
+
+  // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+  //   embeds: [embed.setFields([
+  //     { name: '\u200B', value: '\u200B', inline: true },
+  //     { name: '🪙', value: '🫱', inline: true },
+  //     { name: '👀', value: '\u200B', inline: true },
+  //   ])],
+  // });
+  // await sleep(1 * 1000);
 }
 
 export async function rpgWager(
