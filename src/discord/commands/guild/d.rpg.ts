@@ -144,28 +144,28 @@ const buttons = {
     .setLabel('Blackjack')
     .setStyle(ButtonStyle.Success)
     .setEmoji('🃏'),
-  coinflip1: new ButtonBuilder()
-    .setCustomId('rpgCoinflip1')
+  wager1: new ButtonBuilder()
+    .setCustomId('rpgWager1')
     .setLabel('Bet 1')
     .setStyle(ButtonStyle.Success)
     .setEmoji('🪙'),
-  coinflip10: new ButtonBuilder()
-    .setCustomId('rpgCoinflip10')
+  wager10: new ButtonBuilder()
+    .setCustomId('rpgWager10')
     .setLabel('Bet 10')
     .setStyle(ButtonStyle.Success)
     .setEmoji('🪙'),
-  coinflip100: new ButtonBuilder()
-    .setCustomId('rpgCoinflip100')
+  wager100: new ButtonBuilder()
+    .setCustomId('rpgWager100')
     .setLabel('Bet 100')
     .setStyle(ButtonStyle.Success)
     .setEmoji('🪙'),
-  coinflip1000: new ButtonBuilder()
-    .setCustomId('rpgCoinflip1000')
+  wager1000: new ButtonBuilder()
+    .setCustomId('rpgWager1000')
     .setLabel('Bet 1000')
     .setStyle(ButtonStyle.Success)
     .setEmoji('🪙'),
-  coinflip10000: new ButtonBuilder()
-    .setCustomId('rpgCoinflip10000')
+  wager10000: new ButtonBuilder()
+    .setCustomId('rpgWager10000')
     .setLabel('Bet 10000')
     .setStyle(ButtonStyle.Success)
     .setEmoji('🪙'),
@@ -761,7 +761,10 @@ const text = {
 };
 
 const wagers = {} as {
-  [key: string]: number,
+  [key: string]: {
+    type: string,
+    tokens: number,
+  },
 };
 
 function rand(array:string[]):string {
@@ -901,14 +904,14 @@ export const dRpg: SlashCommand = {
       else if (i.customId === 'rpgWork') await i.update(await rpgWork(i, null));
       else if (i.customId === 'rpgShop') await i.update(await rpgShop(i));
       else if (i.customId === 'rpgArcade') await i.update(await rpgArcade(i));
-      else if (i.customId === 'rpgCoinFlip') await i.update(await rpgCoinflip(i));
-      else if (i.customId === 'rpgCoinflip1') await i.update(await rpgCoinflip(i, 1));
-      else if (i.customId === 'rpgCoinflip10') await i.update(await rpgCoinflip(i, 10));
-      else if (i.customId === 'rpgCoinflip100') await i.update(await rpgCoinflip(i, 100));
-      else if (i.customId === 'rpgCoinflip1000') await i.update(await rpgCoinflip(i, 1000));
-      else if (i.customId === 'rpgCoinflip10000') await i.update(await rpgCoinflip(i, 10000));
-      else if (i.customId === 'rpgCoinflipHeads') await i.editReply(await rpgCoinflip(i, undefined, 'heads'));
-      else if (i.customId === 'rpgCoinflipTails') await i.editReply(await rpgCoinflip(i, undefined, 'tails'));
+      else if (i.customId === 'rpgWager') await i.update(await rpgCoinflip(i));
+      else if (i.customId === 'rpgWager1') await i.update(await rpgWager(i));
+      else if (i.customId === 'rpgWager10') await i.update(await rpgWager(i));
+      else if (i.customId === 'rpgWager100') await i.update(await rpgWager(i));
+      else if (i.customId === 'rpgWager1000') await i.update(await rpgWager(i));
+      else if (i.customId === 'rpgWager10000') await i.update(await rpgCoinflip(i));
+      else if (i.customId === 'rpgCoinflipHeads') await i.editReply(await rpgCoinflip(i, 'heads'));
+      else if (i.customId === 'rpgCoinflipTails') await i.editReply(await rpgCoinflip(i, 'tails'));
       // else if (i.customId === 'rpgRoulette') await i.update(await rpgCoinflip(i));
       // else if (i.customId === 'rpgBlackjack') await i.update(await rpgCoinflip(i));
       // else if (i.customId === 'rpgSlotmachine') await i.update(await rpgCoinflip(i));
@@ -1936,8 +1939,8 @@ export async function rpgArcade(
 
 export async function rpgCoinflip(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
-  bet?: number,
   choice?: 'heads' | 'tails',
+  message?: string,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // This displays the coinflip embed
   // There are 4 buttons for how much to bet: 1, 10, 100, 1000, 10000
@@ -1955,11 +1958,11 @@ export async function rpgCoinflip(
 
   const rowCoinflip = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
-      buttons.coinflip1,
-      buttons.coinflip10,
-      buttons.coinflip100,
-      buttons.coinflip1000,
-      buttons.coinflip10000,
+      buttons.wager1,
+      buttons.wager10,
+      buttons.wager100,
+      buttons.wager1000,
+      buttons.wager10000,
     );
 
   const rowCoinflip2 = new ActionRowBuilder<ButtonBuilder>()
@@ -1969,43 +1972,22 @@ export async function rpgCoinflip(
       buttons.arcade,
     );
 
-  let currentBet = wagers[interaction.user.id] || 0;
-  currentBet += bet || 0;
-  log.debug(F, `bet: ${currentBet}`);
+  if (!wagers[interaction.user.id]) {
+    wagers[interaction.user.id] = {
+      tokens: 0,
+      type: 'coinflip',
+    };
+  }
 
   // Check get fresh persona data
   const [personaData] = await getPersonaInfo(interaction.user.id);
   log.debug(F, `personaData (Coinflip): ${JSON.stringify(personaData, null, 2)}`);
 
-  if (personaData.tokens < currentBet) {
-    return {
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-        .setTitle('Coinflip')
-        .setDescription(stripIndents`
-          **You don't have enough to bet that much**
-
-          You start a game of coinflip.
-  
-          Click the buttons below to set how many of your tokens you want to bet.
-          Click the heads or tails button to flip the coin, or you can go back to the arcade.
-          If you win, you get the amount you bet.
-          If you lose, you lose the amount you bet.
-  
-          You can bet ${personaData.tokens} tokens.
-          ${wagers[interaction.user.id] !== 0 ? `You are betting ${wagers[interaction.user.id]} tokens.` : ''}
-        `)
-        .setColor(Colors.Red)],
-      components: [rowCoinflip, rowCoinflip2],
-    };
-  }
-
-  wagers[interaction.user.id] = currentBet;
+  const currentBet = wagers[interaction.user.id].tokens;
+  log.debug(F, `currentBet: ${currentBet}`);
 
   log.debug(F, `choice: ${choice}`);
-
-  if (choice && wagers[interaction.user.id] === 0) {
+  if (choice && currentBet === 0) {
     const noBetError = {
       embeds: [embedTemplate()
         .setAuthor(null)
@@ -2040,7 +2022,10 @@ export async function rpgCoinflip(
       // The user won
       personaData.tokens += currentBet;
       await personaSet(personaData);
-      wagers[interaction.user.id] = 0;
+      wagers[interaction.user.id] = {
+        tokens: 0,
+        type: 'coinflip',
+      };
       return {
         embeds: [embedTemplate()
           .setAuthor(null)
@@ -2067,8 +2052,10 @@ export async function rpgCoinflip(
     // The user lost
     personaData.tokens -= currentBet;
     await personaSet(personaData);
-    wagers[interaction.user.id] = 0;
-
+    wagers[interaction.user.id] = {
+      tokens: 0,
+      type: 'coinflip',
+    };
     return {
       embeds: [embedTemplate()
         .setAuthor(null)
@@ -2093,13 +2080,14 @@ export async function rpgCoinflip(
     };
   }
 
+  log.debug(F, 'No choice made, returning default screen');
   // The user has clicked the shop button, send them the shop embed
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
       .setTitle('Coinflip')
-      .setDescription(stripIndents`
+      .setDescription(stripIndents`${message ?? ''} 
         You start a game of coinflip.
 
         Click the buttons below to set how many of your tokens you want to bet.
@@ -2115,37 +2103,41 @@ export async function rpgCoinflip(
   };
 }
 
-function sleep(ms:number):Promise<void> {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms);
-  });
-}
-
-async function rpgCoinflipAnimate(
+export async function rpgCoinflipAnimate(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ) {
+  const spaceField = { name: '\u200B', value: '\u200B' };
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter(null)
     .setFields([
-      { name: '🪙', value: '\u200B' },
-      { name: '🫴', value: '\u200B' },
+      { name: '🪙', value: '🫱' },
     ]);
 
   await (interaction as MessageComponentInteraction).update({ // eslint-disable-line no-await-in-loop
     embeds: [embed],
   });
 
+  await sleep(1 * 1000);
+
+  await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+    embeds: [embed.setFields([
+      { name: '🪙', value: '👍' },
+    ])],
+  });
+
+  await sleep(0.5 * 1000);
+
   let height = 1;
   const ceiling = 3;
   while (height < ceiling) {
-    sleep(2 * 60 * 1000);
-    embed.setFields([{ name: '🪙', value: '\u200B' }]);
-    const spaceArray = Array(height).fill({ name: '\u200B', value: '\u200B' });
+    await sleep(0.25 * 1000); // eslint-disable-line no-await-in-loop
+    embed.setFields([{ name: '\u200B', value: '🪙' }]);
+    const spaceArray = Array(height).fill(spaceField);
     if (spaceArray && spaceArray.length > 0) {
       embed.addFields(spaceArray);
     }
-    embed.addFields([{ name: '🫴', value: '\u200B' }]);
+    embed.addFields([{ name: '\u200B', value: '🫴' }]);
 
     await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
       embeds: [embed],
@@ -2154,13 +2146,13 @@ async function rpgCoinflipAnimate(
     log.debug(F, `height up: ${height}`);
   }
   while (height > 0) {
-    sleep(2 * 60 * 1000);
-    embed.setFields([{ name: '🪙', value: '\u200B' }]);
+    await sleep(0.25 * 1000); // eslint-disable-line no-await-in-loop
+    embed.setFields([{ name: '\u200B', value: '🪙' }]);
     const spaceArray = Array(height).fill({ name: '\u200B', value: '\u200B' });
     if (spaceArray && spaceArray.length > 0) {
       embed.addFields(spaceArray);
     }
-    embed.addFields([{ name: '🫴', value: '\u200B' }]);
+    embed.addFields([{ name: '\u200B', value: '🫴' }]);
 
     await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
       embeds: [embed],
@@ -2168,15 +2160,254 @@ async function rpgCoinflipAnimate(
     height -= 1;
     log.debug(F, `height down: ${height}`);
   }
-  const embedFinal = embedTemplate()
-    .setAuthor(null)
-    .setFooter(null)
-    .setFields([
-      { name: '🪙', value: '\u200B' },
-      { name: '🫴', value: '\u200B' },
-    ]);
 
   await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-    embeds: [embedFinal],
+    embeds: [embed.setFields([
+      { name: '🪙', value: '🫴' },
+    ])],
+  });
+  await sleep(0.5 * 1000);
+
+  await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+    embeds: [embed.setFields([
+      { name: '🪙', value: '🫴', inline: true },
+      { name: '\u200B', value: '🫱', inline: true },
+    ])],
+  });
+  await sleep(0.5 * 1000);
+
+  await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+    embeds: [embed.setFields([
+      { name: '\u200B', value: '\u200B', inline: true },
+      { name: '\u200B', value: '🫳', inline: true },
+      { name: '\u200B', value: '\u200B', inline: true },
+      { name: '\u200B', value: '\u200B', inline: true },
+      { name: '🪙', value: '🫱', inline: true },
+      { name: '\u200B', value: '\u200B', inline: true },
+    ])],
+  });
+  await sleep(0.5 * 1000);
+
+  await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+    embeds: [embed.setFields([
+      { name: '\u200B', value: '\u200B', inline: true },
+      { name: '🪙', value: '🫱', inline: true },
+      { name: '👀', value: '\u200B', inline: true },
+    ])],
+  });
+  await sleep(1 * 1000);
+}
+
+export async function rpgWager(
+  interaction: MessageComponentInteraction,
+):Promise<InteractionUpdateOptions> {
+  let newBet = wagers[interaction.user.id].tokens;
+  const bet = parseInt(interaction.customId.slice(8), 10);
+  newBet += bet || 0;
+
+  const [personaData] = await getPersonaInfo(interaction.user.id);
+  if (personaData.tokens < newBet) {
+    const notEnough = '**You don\'t have enough to bet that much**\n';
+    if (wagers[interaction.user.id].type === 'coinflip') {
+      return rpgCoinflip(interaction, undefined, notEnough);
+    }
+    // if (wagers[interaction.user.id].type === 'roulette') {
+    //   return rpgRoulette(interaction, undefined, undefined, notEnough);
+    // }
+  }
+
+  wagers[interaction.user.id].tokens = newBet;
+
+  let functionName = {} as Promise<InteractionEditReplyOptions | InteractionUpdateOptions>;
+  if (wagers[interaction.user.id].type === 'coinflip') {
+    functionName = rpgCoinflip(interaction);
+  }
+  // if (wagers[interaction.user.id].type === 'roulette') {
+  //   return rpgRoulette(interaction, undefined, '**You don\'t have enough to bet that much**');
+  // }
+
+  return functionName;
+}
+
+// export async function rpgRoulette(
+//   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
+//   bet?: number,
+//   choice?: 'evens' | 'odds' | 'red' | 'black' | 'green'
+//   | 'high' | 'low' | '1st' | '2nd' | '3rd'
+//   | '1-2' | '3-4' | '5-6' | '7-8' | '0',
+//   message?: string,
+// ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
+//   // This displays the roulette
+//   // There are 4 buttons for how much to bet: 1, 10, 100, 1000, 10000
+//   // There are multiple rows of buttons for the type of bet to place:
+//   // row 1: evens, odds, red, black, green
+//   // row 2: high, low, 1st, 2nd, 3rd
+//   // row 3: 1-2, 3-4, 5-6, 7-8, 0
+
+//   const rowRoulette = new ActionRowBuilder<ButtonBuilder>()
+//     .addComponents(
+//       buttons.wager1,
+//       buttons.wager10,
+//       buttons.wager100,
+//       buttons.wager1000,
+//       buttons.wager10000,
+//     );
+
+//   const rowCoinflip2 = new ActionRowBuilder<ButtonBuilder>()
+//     .addComponents(
+//       buttons.coinflipHeads,
+//       buttons.coinflipTails,
+//       buttons.arcade,
+//     );
+
+//   let currentBet = wagers[interaction.user.id] || 0;
+//   currentBet += bet || 0;
+//   log.debug(F, `bet: ${currentBet}`);
+
+//   // Check get fresh persona data
+//   const [personaData] = await getPersonaInfo(interaction.user.id);
+//   log.debug(F, `personaData (Coinflip): ${JSON.stringify(personaData, null, 2)}`);
+
+//   if (personaData.tokens < currentBet) {
+//     return {
+//       embeds: [embedTemplate()
+//         .setAuthor(null)
+//         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
+//         .setTitle('Coinflip')
+//         .setDescription(stripIndents`
+//           **You don't have enough to bet that much**
+
+//           You start a game of coinflip.
+
+//           Click the buttons below to set how many of your tokens you want to bet.
+//           Click the heads or tails button to flip the coin, or you can go back to the arcade.
+//           If you win, you get the amount you bet.
+//           If you lose, you lose the amount you bet.
+
+//           You can bet ${personaData.tokens} tokens.
+//           ${wagers[interaction.user.id] !== 0 ? `You are betting ${wagers[interaction.user.id]} tokens.` : ''}
+//         `)
+//         .setColor(Colors.Red)],
+//       components: [rowCoinflip, rowCoinflip2],
+//     };
+//   }
+
+//   wagers[interaction.user.id] = currentBet;
+
+//   log.debug(F, `choice: ${choice}`);
+
+//   if (choice && wagers[interaction.user.id] === 0) {
+//     const noBetError = {
+//       embeds: [embedTemplate()
+//         .setAuthor(null)
+//         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
+//         .setTitle('Coinflip')
+//         .setDescription(stripIndents`
+//           **You can't flip a coin without first placing a bet!**
+
+//           You start a new game of coinflip.
+
+//           Click the buttons below to set how many of your tokens you want to bet.
+//           Click the heads or tails button to flip the coin, or you can go back to the arcade.
+//           If you win, you get the amount you bet.
+//           If you lose, you lose the amount you bet.
+
+//           You can bet ${personaData.tokens} tokens.
+//         `)
+//         .setColor(Colors.Gold)],
+//       components: [rowCoinflip, rowCoinflip2],
+//     };
+//     await (interaction as MessageComponentInteraction).update(noBetError);
+//     return noBetError;
+//   }
+
+//   if (choice) {
+//     await rpgCoinflipAnimate(interaction);
+
+//     // The user has chosen heads or tails, flip the coin
+//     const result = rand(['heads', 'tails']);
+//     log.debug(F, `result: ${result}`);
+//     if (result === choice) {
+//       // The user won
+//       personaData.tokens += currentBet;
+//       await personaSet(personaData);
+//       wagers[interaction.user.id] = 0;
+//       return {
+//         embeds: [embedTemplate()
+//           .setAuthor(null)
+//           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
+//           .setTitle('Coinflip')
+//           .setDescription(stripIndents`
+//             The coin came up **${result}** and you chose **${choice}**!
+
+//             **You won ${currentBet} tokens!**
+
+//             You start a new game of coinflip.
+
+//             Click the buttons below to set how many of your tokens you want to bet.
+//             Click the heads or tails button to flip the coin, or you can go back to the arcade.
+//             If you win, you get the amount you bet.
+//             If you lose, you lose the amount you bet.
+
+//             You can bet ${personaData.tokens} tokens.
+//           `)
+//           .setColor(Colors.Gold)],
+//         components: [rowCoinflip, rowCoinflip2],
+//       };
+//     }
+//     // The user lost
+//     personaData.tokens -= currentBet;
+//     await personaSet(personaData);
+//     wagers[interaction.user.id] = 0;
+
+//     return {
+//       embeds: [embedTemplate()
+//         .setAuthor(null)
+//         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
+//         .setTitle('Coinflip')
+//         .setDescription(stripIndents`
+//             The coin came up **${result}** and you chose **${choice}**!
+
+//             **You lost ${currentBet} tokens!**
+
+//             You start a new game of coinflip.
+
+//             Click the buttons below to set how many of your tokens you want to bet.
+//             Click the heads or tails button to flip the coin, or you can go back to the arcade.
+//             If you win, you get the amount you bet.
+//             If you lose, you lose the amount you bet.
+
+//             You can bet ${personaData.tokens} tokens.
+//           `)
+//         .setColor(Colors.Grey)],
+//       components: [rowCoinflip, rowCoinflip2],
+//     };
+//   }
+
+//   // The user has clicked the shop button, send them the shop embed
+//   return {
+//     embeds: [embedTemplate()
+//       .setAuthor(null)
+//       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
+//       .setTitle('Coinflip')
+//       .setDescription(stripIndents`
+//         You start a game of coinflip.
+
+//         Click the buttons below to set how many of your tokens you want to bet.
+//         Click the heads or tails button to flip the coin, or you can go back to the arcade.
+//         If you win, you get the amount you bet.
+//         If you lose, you lose the amount you bet.
+
+//         You can bet ${personaData.tokens} tokens.
+//         ${currentBet !== 0 ? `You are betting ${currentBet} tokens.` : ''}
+//       `)
+//       .setColor(Colors.Green)],
+//     components: [rowCoinflip, rowCoinflip2],
+//   };
+// }
+
+function sleep(ms:number):Promise<void> {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
   });
 }
