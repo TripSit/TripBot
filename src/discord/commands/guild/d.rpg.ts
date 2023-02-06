@@ -969,10 +969,11 @@ export async function rpgTown(
 }
 
 function getLastMonday(d:Date) {
-  const newd = new Date(d);
-  const day = newd.getDay();
-  const diff = newd.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-  return new Date(newd.setDate(diff));
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return new Date(d);
 }
 
 export async function rpgWork(
