@@ -9,7 +9,7 @@ import Canvas from '@napi-rs/canvas';
 import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { levels } from '../../../global/commands/g.levels';
-import { getTotalLevel } from '../../../global/utils/experience';
+// import { getTotalLevel } from '../../../global/utils/experience';
 
 const F = f(__filename);
 
@@ -150,6 +150,8 @@ export const dLevels: SlashCommand = {
       : interaction.member as GuildMember;
 
     const targetData = await levels(target.id);
+
+    log.debug(F, `targetData: ${JSON.stringify(targetData, null, 2)}`);
 
     // Create Canvas and Context
     const canvasWidth = 918;
