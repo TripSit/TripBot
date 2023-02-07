@@ -227,26 +227,28 @@ export const dProfile: SlashCommand = {
     const [personaData] = await getPersonaInfo(interaction.user.id);
     // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
 
-    // Get the existing inventory data
-    const inventoryData = await inventoryGet(personaData.id);
-    // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
+    if (personaData) {
+      // Get the existing inventory data
+      const inventoryData = await inventoryGet(personaData.id);
+      // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
 
-    const equippedBackground = inventoryData.find(item => item.equipped === true);
-    log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
-    if (equippedBackground) {
-      const imagePath = await imageGet(equippedBackground.value);
-      // const Background = await Canvas.loadImage('https://i.gyazo.com/adfbab1d3fdeadef74ec18ce6efe869c.png');
-      const Background = await Canvas.loadImage(imagePath);
-      // const Background = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'background.png'));
-      context.save();
-      context.globalCompositeOperation = 'lighten';
-      context.globalAlpha = 0.03;
-      context.beginPath();
-      context.roundRect(9, 9, 657, 274, [10]);
-      context.roundRect(693, 9, 216, 274, [10]);
-      context.clip();
-      context.drawImage(Background, 0, 0);
-      context.restore();
+      const equippedBackground = inventoryData.find(item => item.equipped === true);
+      log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
+      if (equippedBackground) {
+        const imagePath = await imageGet(equippedBackground.value);
+        // const Background = await Canvas.loadImage('https://i.gyazo.com/adfbab1d3fdeadef74ec18ce6efe869c.png');
+        const Background = await Canvas.loadImage(imagePath);
+        // const Background = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'background.png'));
+        context.save();
+        context.globalCompositeOperation = 'lighten';
+        context.globalAlpha = 0.03;
+        context.beginPath();
+        context.roundRect(9, 9, 657, 274, [10]);
+        context.roundRect(693, 9, 216, 274, [10]);
+        context.clip();
+        context.drawImage(Background, 0, 0);
+        context.restore();
+      }
     }
 
     // Load Icon Images
