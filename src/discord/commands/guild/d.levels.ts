@@ -152,6 +152,7 @@ export const dLevels: SlashCommand = {
     const targetData = await levels(target.id);
 
     log.debug(F, `targetData: ${JSON.stringify(targetData, null, 2)}`);
+    log.debug(F, `${(interaction.member as GuildMember).displayName} is Tripsitter level ${targetData.text.GENERAL.level} and is ${(targetData.text.GENERAL.exp / targetData.text.GENERAL.nextLevel) * 100}% to level ${targetData.text.GENERAL.level + 1}`); // eslint-disable-line max-len
 
     // Create Canvas and Context
     const canvasWidth = 918;
