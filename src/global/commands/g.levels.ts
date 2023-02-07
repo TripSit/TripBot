@@ -1,5 +1,6 @@
 import { experienceGet, getUser } from '../utils/knex';
 import { expForNextLevel, getTotalLevel } from '../utils/experience';
+import { ExperienceCategory, ExperienceType } from '../@types/pgdb';
 // import { ExperienceType } from '../@types/pgdb';
 
 const F = f(__filename);
@@ -101,19 +102,22 @@ export async function levels(
 
   // let response = `**Level ${totalData.level} Total**: : All experience combined\n`;
   for (const row of experienceData) { // eslint-disable-line no-restricted-syntax
-    if (row.type !== 'TEXT' && row.category !== 'TOTAL' && row.category !== 'IGNORED') {
+    log.debug(F, `row: ${JSON.stringify(row, null, 2)}`);
+    if (row.type === 'TEXT' as ExperienceType && row.category !== 'TOTAL' as ExperienceCategory && row.category !== 'IGNORED' as ExperienceCategory) {
       results.text[row.category] = {
         level: row.level,
         exp: row.level_points,
         nextLevel: await expForNextLevel(row.level), // eslint-disable-line no-await-in-loop
       };
+      log.debug(F, `results.text: ${JSON.stringify(results.text, null, 2)}`);
     }
-    if (row.type === 'VOICE' && row.category !== 'TOTAL' && row.category !== 'IGNORED') {
+    if (row.type === 'VOICE' as ExperienceType && row.category !== 'TOTAL' as ExperienceCategory && row.category !== 'IGNORED' as ExperienceCategory) {
       results.voice[row.category] = {
         level: row.level,
         exp: row.level_points,
         nextLevel: await expForNextLevel(row.level), // eslint-disable-line no-await-in-loop
       };
+      log.debug(F, `results.voice: ${JSON.stringify(results.voice, null, 2)}`);
     }
     // log.debug(F, `row: ${JSON.stringify(row, null, 2)}`);
     // Lowercase besides the first letter
