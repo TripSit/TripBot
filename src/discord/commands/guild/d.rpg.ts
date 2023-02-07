@@ -2015,10 +2015,21 @@ export async function rpgCoinflip(
   }
 
   if (choice) {
-    await rpgCoinflipAnimate(interaction);
+    if (env.NODE_ENV !== 'development') {
+      await rpgCoinflipAnimate(interaction);
+    } else {
+      await (interaction as MessageComponentInteraction).update({
+        embeds: [embedTemplate()
+          .setAuthor(null)
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
+          .setTitle('Coinflip'),
+        ],
+      });
+    }
 
     // The user has chosen heads or tails, flip the coin
     const result = rand(['heads', 'tails']);
+
     log.debug(F, `result: ${result}`);
     if (result === choice) {
       // The user won
@@ -2145,7 +2156,7 @@ export async function rpgCoinflipAnimate(
       embeds: [embed],
     });
     height += 1;
-    log.debug(F, `height up: ${height}`);
+    // log.debug(F, `height up: ${height}`);
   }
   while (height > 0) {
     await sleep(0.25 * 1000); // eslint-disable-line no-await-in-loop
@@ -2160,7 +2171,7 @@ export async function rpgCoinflipAnimate(
       embeds: [embed],
     });
     height -= 1;
-    log.debug(F, `height down: ${height}`);
+    // log.debug(F, `height down: ${height}`);
   }
 
   await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
