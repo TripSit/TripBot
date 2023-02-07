@@ -1910,7 +1910,7 @@ const gameData = {
     instructions: stripIndents`Click the buttons below to set how many of your tokens you want to bet.
     Click a bet button to place a bet on that outcome, or you can go back to the arcade.
     
-    Depending on what you picked and where arrow lands, you will win or lose your bet.
+    Depending on what you picked and where the ball lands, you will win or lose your bet.
 
     **Odds**
     "X:1" means you get X coins for every 1 you bet
@@ -2258,7 +2258,7 @@ export async function rpgArcadeAnimate(
       // await sleep(0.1 * 1000); // eslint-disable-line no-await-in-loop
     }
 
-    await sleep(5 * 1000);
+    await sleep(2 * 1000);
   }
 }
 
