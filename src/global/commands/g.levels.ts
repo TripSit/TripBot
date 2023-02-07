@@ -42,7 +42,7 @@ type ExperienceData = {
  */
 export async function levels(
   userId: string,
-):Promise<ExperienceData | string> {
+):Promise<ExperienceData> {
   const userData = await getUser(userId, null);
   const experienceData = await experienceGet(10, undefined, undefined, userData.id);
 
