@@ -74,6 +74,8 @@ async function checkRss() {
 
       if (feed.last_post_id === mostRecentPost.id) return;
 
+      log.debug(F, `New post: ${JSON.stringify(mostRecentPost, null, 2)}`);
+
       const channelBotlog = await guild.channels.fetch(feed.destination) as TextChannel;
 
       // Gets everything before "submitted by"
@@ -92,9 +94,14 @@ async function checkRss() {
         .setAuthor({ name: 'New /r/TripSit post', iconURL: env.TS_ICON_URL })
         .setTitle(`${mostRecentPost.title}`)
         .setURL(mostRecentPost.link)
-        .setDescription(stripIndents`${body}`)
         .setFooter({ text: submittedBy, iconURL: env.FLAME_ICON_URL })
         .setTimestamp(new Date(mostRecentPost.pubDate));
+
+      if (body.length > 0) {
+        embed.setDescription(stripIndents`
+          ${body}
+        `);
+      }
 
       channelBotlog.send({ embeds: [embed] });
 

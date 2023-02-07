@@ -517,7 +517,7 @@ export async function processReactionRole(
 
   // If the user already has the role
   if (target.roles.cache.has(role.id)) {
-    if (IM !== undefined) {
+    if (IM !== undefined && IM !== null) {
       // Display modal to get intro message from the user
       const modal = new ModalBuilder()
         .setCustomId(`"ID":"RR","II":"${interaction.id}"`)

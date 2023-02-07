@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { experienceGet, getUser } from '../utils/knex';
+import { experienceGet, getUser, personaGet } from '../utils/knex';
 
 const F = f(__filename);
 
@@ -19,21 +19,34 @@ export async function profile(
 
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
-  const expData = await experienceGet(userData.id);
+  const expData = await experienceGet(10, undefined, undefined, userData.id);
 
   // log.debug(F, `expData: ${JSON.stringify(expData, null, 2)}`);
 
   // Sum up every experience point as long as the type isnt ignored or total
-  const totalExp = expData
-    .filter(exp => exp.type !== 'TOTAL' && exp.type !== 'IGNORED')
+  const totalTextExp = expData
+    .filter(exp => exp.type !== 'VOICE' && exp.category !== 'TOTAL' && exp.category !== 'IGNORED')
     .reduce((acc, exp) => acc + exp.total_points, 0);
+
+  const totalVoiceExp = expData
+    .filter(exp => exp.type === 'VOICE' && exp.category !== 'TOTAL' && exp.category !== 'IGNORED')
+    .reduce((acc, exp) => acc + exp.total_points, 0);
+
+  const [personaData] = await personaGet(userData.id);
+
+  let tokens = 0;
+  if (personaData) {
+    tokens = personaData.tokens;
+  }
 
   const profileData = {
     birthday: userData.birthday,
     timezone: userData.timezone,
     karma_given: userData.karma_given,
     karma_received: userData.karma_received,
-    totalExp,
+    totalTextExp,
+    totalVoiceExp,
+    tokens,
   };
   log.info(F, `response: ${JSON.stringify(profileData, null, 2)}`);
   return profileData;
@@ -44,5 +57,7 @@ type ProfileData = {
   timezone: string | null,
   karma_given: number,
   karma_received: number,
-  totalExp: number,
+  totalTextExp: number,
+  totalVoiceExp: number,
+  tokens: number,
 };

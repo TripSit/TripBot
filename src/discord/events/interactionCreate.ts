@@ -63,7 +63,7 @@ export const interactionCreate: InteractionCreateEvent = {
         commandRun(interaction, client);
         return;
       }
-      if (interaction.isSelectMenu()) {
+      if (interaction.isStringSelectMenu()) {
         selectMenu(interaction);
         return;
       }

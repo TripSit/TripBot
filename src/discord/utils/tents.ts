@@ -21,7 +21,7 @@ export async function pitchTent(
   New.member?.guild.channels.create({
     name: `⛺│${New.member.displayName}'s tent`,
     type: ChannelType.GuildVoice,
-    parent: env.CATEGORY_BACKSTAGE,
+    parent: env.CATEGORY_CAMPGROUND,
   }).then(newChannel => {
     New.member?.voice.setChannel(newChannel.id);
     // newChannel.permissionOverwrites.set([
@@ -46,12 +46,15 @@ export async function pitchTent(
 export async function teardownTent(
   Old:VoiceState,
 ): Promise<void> {
-  const tempVoiceCategory = await Old.guild.channels.fetch(env.CATEGORY_BACKSTAGE) as CategoryChannel;
+  const tempVoiceCategory = await Old.guild.channels.fetch(env.CATEGORY_CAMPGROUND) as CategoryChannel;
   tempVoiceCategory.children.cache.forEach(channel => {
-    // If the channel is a voice channel, and it's not the campfire, and it's empty, delete it
+    // Get the number of humans in the channel
+    const humans = channel.members.filter(member => !member.user.bot).size;
+
+    // If the channel is a voice channel, and it's not the campfire, and there are no humans in it delete it
     if (channel.type === ChannelType.GuildVoice
       && channel.id !== env.CHANNEL_CAMPFIRE
-      && channel.members.size < 1) {
+      && humans < 1) {
       channel.delete('Removing temporary voice chan!');
       // log.debug(F, `deleted an empty temporary voice channel`);
     }

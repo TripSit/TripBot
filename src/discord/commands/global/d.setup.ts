@@ -9,10 +9,10 @@ import {
   TextChannel,
   ModalBuilder,
   TextInputBuilder,
-  SelectMenuBuilder,
   ModalSubmitInteraction,
   PermissionResolvable,
   Role,
+  StringSelectMenuBuilder,
 } from 'discord.js';
 import {
   ButtonStyle, TextInputStyle,
@@ -23,10 +23,9 @@ import { startLog } from '../../utils/startLog';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
+import { imageGet } from '../../utils/imageGet';
 
 const F = f(__filename);
-
-const file = new AttachmentBuilder('./src/discord/assets/img/RULES.png');
 
 const channelOnly = 'You must run this in the channel you want the prompt to be in!';
 const noChannel = 'how to tripsit: no channel';
@@ -408,7 +407,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
   interaction.awaitModalSubmit({ filter, time: 150000 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
-      const selectMenu = new SelectMenuBuilder()
+      const selectMenu = new StringSelectMenuBuilder()
         .setCustomId('applicationRoleSelectMenu')
         .setPlaceholder('Select role here!')
         .setMaxValues(1);
@@ -437,7 +436,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
       await (i.channel as TextChannel).send(
         {
           content: stripIndents`${i.fields.getTextInputValue('appliationText')}`,
-          components: [new ActionRowBuilder<SelectMenuBuilder>()
+          components: [new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(selectMenu)],
         },
       );
@@ -542,56 +541,73 @@ export async function rules(interaction:ChatInputCommandInteraction) {
     return;
   }
 
+  const rulesPath = await imageGet('rules');
+
+  const rulesFile = new AttachmentBuilder(rulesPath);
+
+  // get the file name from the path
+  const rulesFileName = rulesPath.split('/').pop();
+  log.debug(F, `rulesFileName: ${rulesFileName}`);
+
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter(null)
     .setColor(Colors.Red)
-    .setImage('attachment://RULES.png');
-  await (interaction.channel as TextChannel).send({ embeds: [embed], files: [file] });
+    .setImage(`attachment://${rulesFileName}`);
+  await (interaction.channel as TextChannel).send({ embeds: [embed], files: [rulesFile] });
 
-  await (interaction.channel as TextChannel).send(stripIndents`
-    > **-** **You can be banned without warning if you do not follow the rules!**
-    > **-** The "Big 4" rules are below, but generally be positive, be safe, and dont buy/sell stuff and you'll be fine.
-    > **-** If you need to clarify anything you can review the full unabridged network rules: https://wiki.tripsit.me/wiki/Rules 
-    > **-** The moderators reserve the right to remove those who break the 'spirit' of the rules, even if they don't break any specific rule.
-    > **-** If you see something against the rules or something that makes you feel unsafe, let the team know. We want this server to be a welcoming space!
-    ${env.EMOJI_INVISIBLE}
-    `);
+  await (interaction.channel as TextChannel).send({
+    content: `
+**By using and remaining connected to this discord you signify your agreement of TripSit's full terms and conditions: https://github.com/TripSit/rules/blob/main/termsofservice.md **
+If you do not agree to this policy, do not use this site.
+    `,
+    flags: ['SuppressEmbeds'],
+  });
 
-  await (interaction.channel as TextChannel).send(stripIndents`
-    > **🔞 1. You must be over 18 to participate in most channels!**
-    > **-** We believe that minors will use substances regardless of the info available to them so the best we can do is educate properly and send them on their way.
-    > **-** ${channelTripsit.toString()} allows minors to get help from a tripsitter.
-    > **-** We appreciate the support, but beyond this it is our belief that minors have more productive activitives than contributing to a harm reduction network <3
-    ${env.EMOJI_INVISIBLE}
-    `);
+  await (interaction.channel as TextChannel).send({
+    content: `
+1️⃣  Do not connect to TripSit or use our services if you are under eighteen.
+2️⃣  Do not use TripSit for any purpose or in any manner which could impair any other party's use or enjoyment of this site.
+    a. Do not post anything considered offensive/upsetting to those in an altered mindset without a spoiler and content warning tag.
+    b. Do not post images with the intent of causing disruption, including flashing imagery, spamming images, or multiple gifs.
+    c. Do not post pornography (including softcore), gore, depictions of acts of violence, or other offensive content.
+    d. Do not display an offensive profile picture, including pornography of any kind.
+    e. Do not use an offensive nickname or one that could cause anxiety in others, e.g., law enforcement or dictators.
+    f. Do not post content that victimizes, harasses, degrades, or intimidates an individual or group based on race, ethnicity, religion, sexual orientation, gender identification, drug of choice, level of addiction, mental health status, or other reasons.
+    g. Do not post explicit content outside of the designated areas.
+    h. Do not argue rules in public channels.
+3️⃣  Do not discuss, request, or post identifying information of websites, online vendors, or real-life people who sell or coordinate the purchase, distribution, or production of substances (legal, clearnet, or otherwise) or cryptocurrencies, i.e., no sourcing.
+    a. Do not discuss the specifics or go in-depth into the mechanics of online vending.
+    b. Do not show drug packaging to show how a vendor delivered something.
+    `,
+    flags: ['SuppressEmbeds'],
+  });
 
-  await (interaction.channel as TextChannel).send(stripIndents`
-    > **💊 2. No Sourcing!**
-    > **-** Don't post anything that would help you or others acquire drugs; legal or illegal, neither in the server nor in DMs.
-    > **-** Assume anyone attempting to buy or sell something is a scammer. Report scammers to the team to get a (virtual) cookie.
-    > **-** You may source harm reduction supplies and paraphernalia, providing that the source doesn't distribute any substances.
-    > **-** No self-promotion (server invites, advertisements, etc) without permission from a staff member.
-    ${env.EMOJI_INVISIBLE}
-    `);
+  await (interaction.channel as TextChannel).send({
+    content: `
+4️⃣  Do not post any content that encourages, promotes, or signifies the intent to engage in unnecessarily harmful practices.
+    a. Do not encourage substance use, and discourage drug dosages, drug combinations, or any drug experimentation which could be reliably considered unsafe.
+    b. Do not post pictures or videos of drug consumption that glorify substance use, eg, “stash pics” or excessive dosages.
+    c. Do not refuse to follow harm reduction standards, eg, continually engage in destructive behavior or refuse to call EMS when directed.
+    d. Do not post suicide threats; our team is not qualified to manage this situation.
+5️⃣  Do not post intentionally libelous, defamatory, deceptive, fraudulent, tortious, or inaccurate content, i.e., misinformation.
+6️⃣  Do not post any content that is medical advice or imply that you can give medical advice.
+    a. Do not use “Dr” or “MD” in your nickname.`,
+    flags: ['SuppressEmbeds'],
+  });
 
-  await (interaction.channel as TextChannel).send(stripIndents`
-    > **💀 3. Do not encourage unsafe usage!**
-    > **-** Don't encourage or enable dangerous drug use; don't spread false, dangerous, or misleading information about drugs.
-    > **-** Keep your dosage information and stash private unless it's relevant to a question. Posting absurd dosages to get a reaction will receive a reaction (a ban).
-    > **-** Hard drug use (beyond nicotine or THC) or driving on camera is not allowed in the voice rooms.
-    > **-** No substance identification - no one can tell you which drugs, or how much of them, you have just by looking at them. #harm-reduction
-    ${env.EMOJI_INVISIBLE}
-    `);
-
-  await (interaction.channel as TextChannel).send(stripIndents`
-    > **❤️ 4. Treat everyone with respect!**
-    > **-** Don't participate in behaviour that purposefully causes discomfort to others.
-    > **-** Don't submit anything that drastically disturbs the flow of chat without providing any added value.
-    > **-** That includes: Mic spam, reaction spam, taking six messages to formulate one sentence, etc.
-    > **-** Don't post content that is unnecessarily inflammatory, provocative, or controversial. Read the atmosphere, and recognize when you've gone too far.
-    ${env.EMOJI_INVISIBLE}
-    `);
+  await (interaction.channel as TextChannel).send({
+    content: `
+7️⃣  Do not post any content that violates another's privacy.
+    a. Do not post or collect personal information about channel members or doxing.
+    b. Do not post images of people expecting privacy or being unable to consent (children, intoxicated).
+    c. Do not disseminate content originally posted in any team-only areas.
+    d. Do not use network monitoring or discovery software to determine the site architecture or extract information about usage or users.
+8️⃣  Do not post content that bypasses moderation actions, i.e., ban evasion.
+    a. Do not make multiple/new accounts, change your IP, or do anything else to get around the action.
+9️⃣  Do not post any content that links to other communication services, e.g., other discords, matrix servers, etc.`,
+    flags: ['SuppressEmbeds'],
+  });
 }
 
 /**

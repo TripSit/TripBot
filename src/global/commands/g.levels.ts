@@ -1,6 +1,6 @@
 import { experienceGet, getUser } from '../utils/knex';
-import { ExperienceType } from '../@types/pgdb';
 import { getTotalLevel } from '../utils/experience';
+import { ExperienceType } from '../@types/pgdb';
 
 const F = f(__filename);
 
@@ -17,17 +17,17 @@ export async function levels(
   userId: string,
 ):Promise<string> {
   const userData = await getUser(userId, null);
-  const experienceData = await experienceGet(userData.id);
+  const experienceData = await experienceGet(10, undefined, 'TEXT' as ExperienceType, userData.id);
 
   if (!experienceData) {
     return 'No experience found for this user';
   }
 
-  // log.debug(F, `experienceData: ${JSON.stringify(experienceData, null, 2)}`);
+  log.debug(F, `experienceData: ${JSON.stringify(experienceData, null, 2)}`);
 
   let allExpPoints = 0;
   experienceData.forEach(exp => {
-    if (exp.type !== 'TOTAL' && exp.type !== 'IGNORED') {
+    if (exp.type !== 'VOICE' && exp.category !== 'TOTAL' && exp.category !== 'IGNORED') {
       allExpPoints += exp.total_points;
     }
   });
@@ -38,24 +38,26 @@ export async function levels(
   for (const row of experienceData) { // eslint-disable-line no-restricted-syntax
   // log.debug(F, `row: ${JSON.stringify(row, null, 2)}`);
     // Lowercase besides the first letter
-    const levelName = (row.type as ExperienceType).charAt(0).toUpperCase()
-    + (row.type as ExperienceType).slice(1).toLowerCase() as ExpTypeNames;
-    response += `**Level ${row.level} ${levelName}**`;
-    if (levelName === 'Tripsitter') {
-      response += `: Harm Reduction Center category
-      (Must have Helper role to get Sitter exp!)\n`;
-    }
-    if (levelName === 'Team') {
-      response += ': TeamTripsit category\n';
-    }
-    if (levelName === 'Developer') {
-      response += ': Development category\n';
-    }
-    if (levelName === 'General') {
-      response += ': Campground and Backstage\n';
-    }
-    if (levelName === 'Ignored') {
-      response += ': Botspam, just for fun\n';
+    const levelName = row.category.charAt(0).toUpperCase()
+      + row.category.slice(1).toLowerCase() as ExpTypeNames;
+    if (levelName !== 'Total') {
+      response += `**Level ${row.level} ${levelName}**`;
+      if (levelName === 'Tripsitter') {
+        response += `: Harm Reduction Center category
+        (Must have Helper role to get Sitter exp!)\n`;
+      }
+      if (levelName === 'Team') {
+        response += ': TeamTripsit category\n';
+      }
+      if (levelName === 'Developer') {
+        response += ': Development category\n';
+      }
+      if (levelName === 'General') {
+        response += ': Campground and Backstage\n';
+      }
+      if (levelName === 'Ignored') {
+        response += ': Botspam, just for fun\n';
+      }
     }
   }
 

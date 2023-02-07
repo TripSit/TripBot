@@ -9,7 +9,10 @@ import {
 import { setTimeout } from 'timers/promises';
 import { ReadyEvent } from '../@types/eventDef';
 import { checkGuildPermissions } from '../utils/checkPermissions';
-
+import { runTimer } from '../../global/utils/timer'; // eslint-disable-line
+import { runStats } from '../../global/utils/stats'; // eslint-disable-line
+import { runRss } from '../../global/utils/rssCheck';
+import { runVoiceCheck } from '../../global/utils/voiceExp';
 import { startStatusLoop } from '../utils/statusLoop';
 
 const F = f(__filename);
@@ -50,7 +53,13 @@ export const ready: ReadyEvent = {
         log.error(F, `I do not have the '${result.permission}' permission in ${hostGuild.name}!`);
         process.exit(1);
       }
-      Promise.all([getInvites(client)]).then(async () => {
+      Promise.all([
+        getInvites(client),
+        runTimer(),
+        runStats(),
+        runVoiceCheck(),
+        runRss(),
+      ]).then(async () => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
         log.info(F, `Discord finished booting in ${bootDuration}s!`);
         if (env.NODE_ENV !== 'development') {
