@@ -79,10 +79,13 @@ async function checkRss() {
       const channelBotlog = await guild.channels.fetch(feed.destination) as TextChannel;
 
       // Gets everything before "submitted by"
-      const body = mostRecentPost.contentSnippet.slice(
+      const bigBody = mostRecentPost.contentSnippet.slice(
         0,
         mostRecentPost.contentSnippet.indexOf('submitted'),
       );
+
+      // Gets the first 2000 characters of the body
+      const body = bigBody.slice(0, 2000);
 
       // Capitalizes the B in by and gets the username
       const submittedBy = `B${mostRecentPost.contentSnippet.slice(
