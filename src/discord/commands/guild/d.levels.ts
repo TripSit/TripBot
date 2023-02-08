@@ -176,7 +176,7 @@ export const dLevels: SlashCommand = {
     // log.debug(F, `${(interaction.member as GuildMember).displayName} is Tripsitter level ${targetData.text.GENERAL.level} and is ${(targetData.text.GENERAL.exp / targetData.text.GENERAL.nextLevel) * 100}% to level ${targetData.text.GENERAL.level + 1}`); // eslint-disable-line max-len
 
     // Create Canvas and Context
-    const canvasWidth = 918;
+    const canvasWidth = 921;
     const canvasHeight = layoutHeight;
     const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
     const context = canvasObj.getContext('2d');
@@ -192,8 +192,8 @@ export const dLevels: SlashCommand = {
     // Card
     context.fillStyle = cardLightColor;
     context.beginPath();
-    context.roundRect(0, 0, 918, 145, [19]);
-    context.roundRect(0, 154, 918, (layoutHeight - 154), [19]);
+    context.roundRect(20, 0, 901, 145, [19]);
+    context.roundRect(20, 154, 901, (layoutHeight - 154), [19]);
     context.fill();
     context.fillStyle = cardDarkColor;
     context.beginPath();
@@ -208,7 +208,7 @@ export const dLevels: SlashCommand = {
     context.roundRect(702, 78, 201, 51, [19]);
     // Level Bar and Rank Chips
     context.roundRect(18, 172, 51, (layoutHeight - 190), [19]);
-    context.roundRect(851, 172, 51, (layoutHeight - 190), [19]);
+    context.roundRect(852, 172, 51, (layoutHeight - 190), [19]);
     context.roundRect(87, 172, 579, 76, [19]);
     context.roundRect(702, 172, 132, 76, [19]);
     context.roundRect(87, 257, 579, 51, [19]);
@@ -235,8 +235,8 @@ export const dLevels: SlashCommand = {
     context.globalCompositeOperation = 'lighten';
     context.globalAlpha = 0.03;
     context.beginPath();
-    context.roundRect(0, 0, 918, 145, [19]);
-    context.roundRect(0, 154, 918, 412, [19]);
+    context.roundRect(0, 0, 921, 145, [19]);
+    context.roundRect(0, 154, 921, 412, [19]);
     context.clip();
     context.drawImage(Background, 0, 0);
     context.restore();
@@ -329,12 +329,12 @@ export const dLevels: SlashCommand = {
     context.textBaseline = 'middle';
     context.textAlign = 'center';
     context.save();
-    context.translate(918, 0);
+    context.translate(921, 0);
     context.rotate(90 * Math.PI /180 );
-    context.fillText('RANK', ((layoutHeight / 2) + 77), 43);
-    context.translate(layoutHeight, 918);
+    context.fillText('RANK', ((layoutHeight / 2) + 77), 45);
+    context.translate(layoutHeight, 921);
     context.rotate(180 * Math.PI / 180 );
-    context.fillText('LEVEL', ((layoutHeight / 2) - 77), 43);
+    context.fillText('LEVEL', ((layoutHeight / 2) - 77), 45);
     context.restore();
 
     // Number Formatter
@@ -369,7 +369,7 @@ export const dLevels: SlashCommand = {
     // Set a clip to prevent icons from being drawn outside of the card
     context.save();
     context.beginPath();
-    context.roundRect(0, 0, 918, (layoutHeight - 18), [19]);
+    context.roundRect(0, 0, 921, (layoutHeight - 18), [19]);
     context.clip();
     // Load Icon Images
     const Icons = await Canvas.loadImage('https://i.gyazo.com/9f0717d8a3ab093f5f16c119e4967a19.png');
@@ -378,7 +378,7 @@ export const dLevels: SlashCommand = {
     context.restore();
 
     // Process The Entire Card and Send it to Discord
-    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-profile-image.png' });
+    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-levels-image.png' });
     interaction.editReply({ files: [attachment] });
     return true;
   },

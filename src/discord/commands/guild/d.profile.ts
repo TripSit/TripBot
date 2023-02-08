@@ -174,8 +174,8 @@ export const dProfile: SlashCommand = {
     // Card
     context.fillStyle = cardLightColor;
     context.beginPath();
-    context.roundRect(0, 0, 675, 292, [19]);
-    context.roundRect(684, 0, 237, 292, [19]);
+    context.roundRect(0, 20, 675, 272, [19]);
+    context.roundRect(684, 20, 237, 272, [19]);
     context.fill();
     context.fillStyle = cardDarkColor;
     context.beginPath();
