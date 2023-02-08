@@ -176,6 +176,7 @@ export const dProfile: SlashCommand = {
     context.beginPath();
     context.roundRect(0, 0, 675, 292, [19]);
     context.roundRect(684, 0, 234, 292, [19]);
+    context.fill();
     context.fillStyle = cardDarkColor;
     context.beginPath();
     context.roundRect(0, 0, 675, 145, [19]);
@@ -274,9 +275,9 @@ export const dProfile: SlashCommand = {
     }
 
     // WIP: Camp Icon
-    const CampIconPath = 'https://i.gyazo.com/62a9db6c42ca3c03cc892b28f5d8b367.png';
-    const CampIcon = await Canvas.loadImage(CampIconPath);
-    context.drawImage(CampIcon, 547, 17);
+    // const CampIconPath = 'https://i.gyazo.com/62a9db6c42ca3c03cc892b28f5d8b367.png';
+    // const CampIcon = await Canvas.loadImage(CampIconPath);
+    // context.drawImage(CampIcon, 547, 17);
 
     try {
       const StatusIcon = await Canvas.loadImage(StatusIconPath);
@@ -303,7 +304,7 @@ export const dProfile: SlashCommand = {
     context.font = applyUsername(canvasObj, `${target.displayName}`);
     context.fillStyle = textColor;
     context.textBaseline = 'middle';
-    context.fillText(`${target.displayName}`, 146, 70);
+    context.fillText(`${target.displayName}`, 146, 73);
 
     // User Timezone and Birthday Text
     context.font = '25px futura';
@@ -317,9 +318,9 @@ export const dProfile: SlashCommand = {
         hour: 'numeric',
         minute: 'numeric',
       });
-      context.fillText(timestring, 210, 189);
+      context.fillText(timestring, 210, 192);
     } else {
-      context.fillText('NOT SET!', 210, 189);
+      context.fillText('NOT SET!', 210, 192);
     }
 
     let targetBirthday = {} as Date;
@@ -334,12 +335,12 @@ export const dProfile: SlashCommand = {
         itIsYourBirthday = true;
       }
       if (targetBirthday.getDate() < 10) {
-        context.fillText(`0${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 248);
+        context.fillText(`0${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 252);
       } else {
-        context.fillText(`${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 248);
+        context.fillText(`${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 252);
       }
     } else {
-      context.fillText('NOT SET!', 210, 248);
+      context.fillText('NOT SET!', 210, 252);
     }
 
     /**
@@ -360,28 +361,28 @@ export const dProfile: SlashCommand = {
     // Messages Sent Text
     if (targetData.totalTextExp) {
       const MessagesSent = targetData.totalTextExp / 20;
-      context.fillText(`${numFormatter(MessagesSent)}`, 429, 189);
+      context.fillText(`${numFormatter(MessagesSent)}`, 429, 192);
     } else {
-      context.fillText('0', 429, 189);
+      context.fillText('0', 429, 192);
     }
 
     // WIP: Voice Hours Text
     if (targetData.totalTextExp) {
       const minsInChat = (targetData.totalVoiceExp / 10) / 2;
-      context.fillText(`${numFormatter(minsInChat)}`, 429, 248);
+      context.fillText(`${numFormatter(minsInChat)}`, 429, 252);
     } else {
-      context.fillText('0', 429, 248);
+      context.fillText('0', 429, 252);
     }
 
     // Karma Text
-    context.fillText(`${numFormatter(targetData.karma_received)}`, 648, 189);
+    context.fillText(`${numFormatter(targetData.karma_received)}`, 648, 192);
 
     // Tokens Text
-    context.fillText(`${numFormatter(targetData.tokens)}`, 648, 248);
+    context.fillText(`${numFormatter(targetData.tokens)}`, 648, 252);
 
     // Level Text
     const totalTextData = await getTotalLevel(targetData.totalTextExp);
-    context.fillText(`${totalTextData.level}`, 894, 248);
+    context.fillText(`${totalTextData.level}`, 894, 252);
 
     // Get the first number of the level
     // const levelTier = Math.floor(totalData.level / 10);
