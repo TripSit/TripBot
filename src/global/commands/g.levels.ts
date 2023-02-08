@@ -103,7 +103,10 @@ export async function levels(
   // let response = `**Level ${totalData.level} Total**: : All experience combined\n`;
   for (const row of experienceData) { // eslint-disable-line no-restricted-syntax
     log.debug(F, `row: ${JSON.stringify(row, null, 2)}`);
-    if (row.type === 'TEXT' as ExperienceType && row.category !== 'TOTAL' as ExperienceCategory && row.category !== 'IGNORED' as ExperienceCategory) {
+    if (
+      row.type === 'TEXT' as ExperienceType
+      && row.category !== 'TOTAL' as ExperienceCategory
+      && row.category !== 'IGNORED' as ExperienceCategory) {
       results.text[row.category] = {
         level: row.level,
         exp: row.level_points,
@@ -111,7 +114,10 @@ export async function levels(
       };
       log.debug(F, `results.text: ${JSON.stringify(results.text, null, 2)}`);
     }
-    if (row.type === 'VOICE' as ExperienceType && row.category !== 'TOTAL' as ExperienceCategory && row.category !== 'IGNORED' as ExperienceCategory) {
+    if (
+      row.type === 'VOICE' as ExperienceType
+      && row.category !== 'TOTAL' as ExperienceCategory
+      && row.category !== 'IGNORED' as ExperienceCategory) {
       results.voice[row.category] = {
         level: row.level,
         exp: row.level_points,
