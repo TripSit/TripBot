@@ -175,41 +175,22 @@ export const dProfile: SlashCommand = {
     context.fillStyle = cardLightColor;
     context.beginPath();
     context.roundRect(0, 0, 675, 292, [19]);
-    context.fill();
-    context.beginPath();
     context.roundRect(684, 0, 234, 292, [19]);
-    context.fill();
     context.fillStyle = cardDarkColor;
     context.beginPath();
     context.roundRect(0, 0, 675, 145, [19]);
-    context.fill();
-    context.beginPath();
     context.roundRect(684, 0, 234, 206, [19]);
     context.fill();
     // Chips
     context.fillStyle = chipColor;
     context.beginPath();
     context.roundRect(18, 165, 201, 51, [19]);
-    context.fill();
-    context.beginPath();
     context.roundRect(18, 225, 201, 51, [19]);
-    context.fill();
-    context.beginPath();
     context.roundRect(237, 165, 201, 51, [19]);
-    context.fill();
-    context.beginPath();
     context.roundRect(237, 225, 201, 51, [19]);
-    context.fill();
-    context.beginPath();
     context.roundRect(456, 165, 201, 51, [19]);
-    context.fill();
-    context.beginPath();
     context.roundRect(456, 225, 201, 51, [19]);
-    context.fill();
-    context.beginPath();
     context.roundRect(702, 225, 201, 51, [19]);
-    context.fill();
-    context.beginPath();
     context.arc(603, 73, 54, 0, Math.PI * 2, true);
     context.fill();
     // Level Bar Circle BG
@@ -240,8 +221,8 @@ export const dProfile: SlashCommand = {
         context.globalCompositeOperation = 'lighten';
         context.globalAlpha = 0.03;
         context.beginPath();
-        context.roundRect(9, 9, 657, 274, [10]);
-        context.roundRect(693, 9, 216, 274, [10]);
+        context.roundRect(0, 0, 675, 292, [19]);
+        context.roundRect(684, 0, 234, 292, [19]);
         context.clip();
         context.drawImage(Background, 0, 0);
         context.restore();
@@ -321,7 +302,8 @@ export const dProfile: SlashCommand = {
     // Username Text
     context.font = applyUsername(canvasObj, `${target.displayName}`);
     context.fillStyle = textColor;
-    context.fillText(`${target.displayName}`, 146, 90);
+    context.textBaseline = 'middle';
+    context.fillText(`${target.displayName}`, 146, 70);
 
     // User Timezone and Birthday Text
     context.font = '25px futura';
@@ -335,9 +317,9 @@ export const dProfile: SlashCommand = {
         hour: 'numeric',
         minute: 'numeric',
       });
-      context.fillText(timestring, 210, 201);
+      context.fillText(timestring, 210, 189);
     } else {
-      context.fillText('NOT SET!', 210, 201);
+      context.fillText('NOT SET!', 210, 189);
     }
 
     let targetBirthday = {} as Date;
@@ -352,12 +334,12 @@ export const dProfile: SlashCommand = {
         itIsYourBirthday = true;
       }
       if (targetBirthday.getDate() < 10) {
-        context.fillText(`0${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 260);
+        context.fillText(`0${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 248);
       } else {
-        context.fillText(`${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 260);
+        context.fillText(`${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 248);
       }
     } else {
-      context.fillText('NOT SET!', 210, 260);
+      context.fillText('NOT SET!', 210, 248);
     }
 
     /**
@@ -378,28 +360,28 @@ export const dProfile: SlashCommand = {
     // Messages Sent Text
     if (targetData.totalTextExp) {
       const MessagesSent = targetData.totalTextExp / 20;
-      context.fillText(`${numFormatter(MessagesSent)}`, 429, 201);
+      context.fillText(`${numFormatter(MessagesSent)}`, 429, 189);
     } else {
-      context.fillText('0', 429, 201);
+      context.fillText('0', 429, 189);
     }
 
     // WIP: Voice Hours Text
     if (targetData.totalTextExp) {
       const minsInChat = (targetData.totalVoiceExp / 10) / 2;
-      context.fillText(`${numFormatter(minsInChat)}`, 429, 260);
+      context.fillText(`${numFormatter(minsInChat)}`, 429, 248);
     } else {
-      context.fillText('0', 429, 260);
+      context.fillText('0', 429, 248);
     }
 
     // Karma Text
-    context.fillText(`${numFormatter(targetData.karma_received)}`, 648, 201);
+    context.fillText(`${numFormatter(targetData.karma_received)}`, 648, 189);
 
-    // WIP: Tokens Text
-    context.fillText(`${numFormatter(targetData.tokens)}`, 648, 260);
+    // Tokens Text
+    context.fillText(`${numFormatter(targetData.tokens)}`, 648, 248);
 
     // Level Text
     const totalTextData = await getTotalLevel(targetData.totalTextExp);
-    context.fillText(`${totalTextData.level}`, 894, 260);
+    context.fillText(`${totalTextData.level}`, 894, 248);
 
     // Get the first number of the level
     // const levelTier = Math.floor(totalData.level / 10);
