@@ -157,7 +157,7 @@ export const dProfile: SlashCommand = {
     const targetData = await profile(target.id);
 
     // Create Canvas and Context
-    const canvasWidth = 918;
+    const canvasWidth = 921;
     const canvasHeight = 292;
     const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
     const context = canvasObj.getContext('2d');
@@ -175,30 +175,30 @@ export const dProfile: SlashCommand = {
     context.fillStyle = cardLightColor;
     context.beginPath();
     context.roundRect(0, 0, 675, 292, [19]);
-    context.roundRect(684, 0, 234, 292, [19]);
+    context.roundRect(684, 0, 237, 292, [19]);
     context.fill();
     context.fillStyle = cardDarkColor;
     context.beginPath();
     context.roundRect(0, 0, 675, 145, [19]);
-    context.roundRect(684, 0, 234, 206, [19]);
+    context.roundRect(684, 0, 237, 205, [19]);
     context.fill();
     // Chips
     context.fillStyle = chipColor;
     context.beginPath();
-    context.roundRect(18, 165, 201, 51, [19]);
-    context.roundRect(18, 225, 201, 51, [19]);
-    context.roundRect(237, 165, 201, 51, [19]);
-    context.roundRect(237, 225, 201, 51, [19]);
-    context.roundRect(456, 165, 201, 51, [19]);
-    context.roundRect(456, 225, 201, 51, [19]);
-    context.roundRect(702, 225, 201, 51, [19]);
+    context.roundRect(18, 163, 201, 51, [19]);
+    context.roundRect(18, 223, 201, 51, [19]);
+    context.roundRect(237, 163, 201, 51, [19]);
+    context.roundRect(237, 223, 201, 51, [19]);
+    context.roundRect(456, 163, 201, 51, [19]);
+    context.roundRect(456, 223, 201, 51, [19]);
+    context.roundRect(702, 223, 201, 51, [19]);
     // context.arc(603, 73, 54, 0, Math.PI * 2, true);
     context.fill();
     // Level Bar Circle BG
     context.strokeStyle = textColor;
     context.lineWidth = 18;
     context.beginPath();
-    context.arc(801, 104, 77, 0, 2 * Math.PI);
+    context.arc(802, 103, 76, 0, 2 * Math.PI);
     context.stroke();
 
     // WIP: Purchased Background
@@ -233,7 +233,7 @@ export const dProfile: SlashCommand = {
     // Load Icon Images
     const Icons = await Canvas.loadImage('https://i.gyazo.com/6669a36a7adf68996354bd7586cd7083.png');
     // const Icons = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'icons.png'));
-    context.drawImage(Icons, 5, 0, 913, 292);
+    context.drawImage(Icons, 5, -2, 913, 292);
 
     // Avatar Image
     const avatar = await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' }));
@@ -318,9 +318,9 @@ export const dProfile: SlashCommand = {
         hour: 'numeric',
         minute: 'numeric',
       });
-      context.fillText(timestring, 210, 192);
+      context.fillText(timestring, 210, 190);
     } else {
-      context.fillText('NOT SET!', 210, 192);
+      context.fillText('NOT SET!', 210, 190);
     }
 
     let targetBirthday = {} as Date;
@@ -335,12 +335,12 @@ export const dProfile: SlashCommand = {
         itIsYourBirthday = true;
       }
       if (targetBirthday.getDate() < 10) {
-        context.fillText(`0${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 252);
+        context.fillText(`0${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 250);
       } else {
-        context.fillText(`${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 252);
+        context.fillText(`${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 250);
       }
     } else {
-      context.fillText('NOT SET!', 210, 252);
+      context.fillText('NOT SET!', 210, 250);
     }
 
     /**
@@ -361,28 +361,28 @@ export const dProfile: SlashCommand = {
     // Messages Sent Text
     if (targetData.totalTextExp) {
       const MessagesSent = targetData.totalTextExp / 20;
-      context.fillText(`${numFormatter(MessagesSent)}`, 429, 192);
+      context.fillText(`${numFormatter(MessagesSent)}`, 429, 190);
     } else {
-      context.fillText('0', 429, 192);
+      context.fillText('0', 429, 190);
     }
 
     // WIP: Voice Hours Text
     if (targetData.totalTextExp) {
       const minsInChat = (targetData.totalVoiceExp / 10) / 2;
-      context.fillText(`${numFormatter(minsInChat)}`, 429, 252);
+      context.fillText(`${numFormatter(minsInChat)}`, 429, 250);
     } else {
-      context.fillText('0', 429, 252);
+      context.fillText('0', 429, 250);
     }
 
     // Karma Text
-    context.fillText(`${numFormatter(targetData.karma_received)}`, 648, 192);
+    context.fillText(`${numFormatter(targetData.karma_received)}`, 648, 190);
 
     // Tokens Text
-    context.fillText(`${numFormatter(targetData.tokens)}`, 648, 252);
+    context.fillText(`${numFormatter(targetData.tokens)}`, 648, 250);
 
     // Level Text
     const totalTextData = await getTotalLevel(targetData.totalTextExp);
-    context.fillText(`${totalTextData.level}`, 894, 252);
+    context.fillText(`${totalTextData.level}`, 894, 250);
 
     // Get the first number of the level
     // const levelTier = Math.floor(totalData.level / 10);
@@ -425,7 +425,7 @@ export const dProfile: SlashCommand = {
     try {
       // log.debug(F, `LevelImagePath: ${LevelImagePath}`);
       const LevelImage = await Canvas.loadImage(LevelImagePath);
-      context.drawImage(LevelImage, 756, 59, 90, 90);
+      context.drawImage(LevelImage, 758, 57, 90, 90);
     } catch (err) {
       log.error(F, `Error loading star image: ${err}`);
     }
@@ -453,7 +453,7 @@ export const dProfile: SlashCommand = {
     const startRadians = ((startDegrees - 90) * Math.PI) / 180;
     const endRadians = ((endDegrees - 90) * Math.PI) / 180;
 
-    context.arc(801, 104, 77, startRadians, endRadians);
+    context.arc(802, 103, 76, startRadians, endRadians);
     context.stroke();
 
     // context.save();
