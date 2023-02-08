@@ -244,9 +244,7 @@ export const dLevels: SlashCommand = {
       log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
       if (equippedBackground) {
         const imagePath = await imageGet(equippedBackground.value);
-        // const Background = await Canvas.loadImage('https://i.gyazo.com/adfbab1d3fdeadef74ec18ce6efe869c.png');
         const Background = await Canvas.loadImage(imagePath);
-        // const Background = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'background.png'));
         context.save();
         context.globalCompositeOperation = 'lighten';
         context.globalAlpha = 0.03;
