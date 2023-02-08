@@ -89,7 +89,7 @@ async function checkRss() {
 
       // Capitalizes the B in by and gets the username
       const submittedBy = `B${mostRecentPost.contentSnippet.slice(
-        mostRecentPost.contentSnippet.indexOf('submitted by') + 1,
+        mostRecentPost.contentSnippet.indexOf('submitted by') + 11,
         mostRecentPost.contentSnippet.indexOf('[link]'),
       ).replaceAll('    ', ' ')}`;
 
