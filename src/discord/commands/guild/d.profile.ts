@@ -192,7 +192,7 @@ export const dProfile: SlashCommand = {
     context.roundRect(456, 165, 201, 51, [19]);
     context.roundRect(456, 225, 201, 51, [19]);
     context.roundRect(702, 225, 201, 51, [19]);
-    context.arc(603, 73, 54, 0, Math.PI * 2, true);
+    // context.arc(603, 73, 54, 0, Math.PI * 2, true);
     context.fill();
     // Level Bar Circle BG
     context.strokeStyle = textColor;
@@ -470,11 +470,11 @@ export const dProfile: SlashCommand = {
     // Birthday Mode
     if (itIsYourBirthday) {
       log.debug(F, 'Birthday Match!');
-      context.font = '45px futura';
-      context.textAlign = 'center';
+      context.font = '40px futura';
+      context.textAlign = 'left';
       context.fillStyle = textColor;
-      context.fillText('HAPPY BIRTHDAY!', 467, 55);
-      const birthdayOverlay = await Canvas.loadImage('https://i.imgur.com/uOkR6uf.png');
+      context.fillText('HAPPY BIRTHDAY!', 146, 34);
+      const birthdayOverlay = await Canvas.loadImage('https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png');
       // const birthdayOverlay = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'birthday.png'));
       context.drawImage(birthdayOverlay, 0, 0, 934, 282);
     }
