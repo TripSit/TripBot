@@ -1,19 +1,13 @@
 import {
   Colors,
-  GuildMember,
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { leaderboard } from '../../../global/commands/g.leaderboard';
 import { startLog } from '../../utils/startLog';
-import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
-
-type RankType = { 'rank': number, 'id': string, 'level': number };
-type LeaderboardType = {
-  [key: string]: RankType[],
-};
 
 export default dLeaderboard;
 
@@ -29,87 +23,114 @@ export const dLeaderboard: SlashCommand = {
         { name: 'General', value: 'GENERAL' },
         { name: 'Tripsitter', value: 'TRIPSITTER' },
         { name: 'Developer', value: 'DEVELOPER' },
-        { name: 'Team Tripsit', value: 'TEAM' },
+        { name: 'Team', value: 'TEAM' },
         { name: 'Ignored', value: 'IGNORED' },
       )),
   async execute(interaction) {
     startLog(F, interaction);
+    // Immediately defer to buy us time to do calculations and such, otherwise there's a 3 second window to respond
     await interaction.deferReply();
+
+    // Get the category option from the slash command
     const categoryOption = interaction.options.getString('category');
-    const categoryName = categoryOption ?? 'OVERALL';
+    // If the category option is not null, convert it to lowercase, otherwise set it to 'overall'
+    const categoryChoice = categoryOption ? categoryOption.toLowerCase() : 'overall';
 
-    // Get the tripsit guild
-    const guild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID);
+    // Get the leaderboard data from the db, this looks like:
+    // leaderboardData = {
+    //   text: {
+    //     total: [] as RankData[],
+    //     tripsitter: [] as RankData[],
+    //     general: [] as RankData[],
+    //     developer: [] as RankData[],
+    //     team: [] as RankData[],
+    //     ignored: [] as RankData[],
+    //   },
+    //   voice: {
+    //     total: [] as RankData[],
+    //     tripsitter: [] as RankData[],
+    //     general: [] as RankData[],
+    //     developer: [] as RankData[],
+    //     team: [] as RankData[],
+    //     ignored: [] as RankData[],
+    //   },
+    // };
+    //
+    // Rank Data looks like:
+    // RankData = {
+    //   rank: number,
+    //   discordId: string,
+    //   level: number,
+    //   exp: number,
+    //   nextLevel: number,
+    // };
+    //
+    // The data is sorted by most experience, so the first entry in the array is the highest rank
+    // If there are no entries in the array, then there are no users in that category, but this wont happen in prod
+    const leaderboardData = await leaderboard();
 
-    const response = await leaderboard(categoryName);
-    const leaderboardVals = response.results as LeaderboardType;
-
-    // log.debug(F, `response: ${JSON.stringify(leaderboardVals, null, 2)}`);
-
+    // Create the embed that we will modify later
     const embed = embedTemplate()
-      .setTitle(response.title)
-      .setColor(Colors.Gold)
-      .setDescription(response.description);
+      .setTitle('Leaderboard')
+      .setColor(Colors.Gold);
 
-    const rankDict = {
-      OVERALL: 'Overall',
-      TOTAL: 'Total',
-      TRIPSITTER: 'Sitter',
-      GENERAL: 'Shitposter',
-      DEVELOPER: 'Codemonkey',
-      TEAM: 'Teamtalker',
-      IGNORED: 'Voidscreamer',
-    };
+    // Get the guild object from the client, do this outside the loop to save memory
+    const tripsitGuild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID); // eslint-disable-line
 
-    for (const [category, value] of Object.entries(leaderboardVals)) { // eslint-disable-line no-restricted-syntax
-    // Object.entries(leaderboardVals).forEach(([category, value]) => {
-      let row = 0;
-      let rowName = '';
-      // log.debug(F, `Category: ${category}`);
-      // log.debug(F, `rowName: ${rowName}`);
-      // log.debug(F, `row: ${row}`);
-      // log.debug(F, `Category name: ${category}`);
-      // Capitalize the first letter in user.rank
-      const categoryTitle = rankDict[category as keyof typeof rankDict];
-      const catNameCapitalized = categoryTitle.charAt(0).toUpperCase() + categoryTitle.slice(1);
-      // log.debug(F, `Proper name: ${catNameCapitalized}`);
-      for (const user of value) { // eslint-disable-line no-restricted-syntax
-        // log.debug(F, `user.id: ${user.id}`);
-        // log.debug(F, `row: ${row}`);
-        if (rowName !== catNameCapitalized && rowName !== '') {
-          rowName = catNameCapitalized;
-          embed.addFields({ name: '\u200B', value: '\u200B', inline: true });
-          // log.debug(F, `added first blank row`);
-          row += 1;
-          // log.debug(F, `row: ${row}`);
-          if (row < 3) {
-            // log.debug(F, `row is less than 3`);
-            embed.addFields({ name: '\u200B', value: '\u200B', inline: true });
-            // log.debug(F, `added second blank row`);
-            row = 0;
-          } else {
-            // log.debug(F, `row is not less than 3`);
-            row = 0;
+    // Create the message string that we will add to
+    let message = '' as string;
+    // Loop through the leaderboard data, first by the Type (text/voice)
+    for (const [type, typeData] of Object.entries(leaderboardData)) { // eslint-disable-line
+      log.debug(F, `Type: ${type}`);
+      // Set header to false, we'll use this later to determine if we need to add the type header
+      let header = false;
+      // Loop through the individual category's rank data
+      for (const [category, rankDataList] of Object.entries(typeData)) { // eslint-disable-line
+        log.debug(F, `Category: ${category}`);
+
+        // If the user chose a category, and the category we're on doesn't match the category they chose, skip it
+        if (categoryChoice !== 'overall' && categoryChoice !== category) continue; // eslint-disable-line
+
+        // If there are entries in the rank data list...
+        if (rankDataList.length > 0) {
+          // ...and the header hasnt been added yet, add the type header...
+          if (header === false) {
+            message += `** ### ${type.toUpperCase()} ### **\n`;
+            header = true;
           }
+          // ... otherwise just add the category header
+          message += `*${category.toUpperCase()}*\n`;
         }
-        rowName = catNameCapitalized;
 
-        // Get the user's discord username from the discord API
-        let member = {} as GuildMember;
-        try {
-          member = await guild.members.fetch(user.id); // eslint-disable-line no-await-in-loop
-        } catch (error) {
-          //
+        // Initialize rank at 0 so we can increment it
+        let rank = 0;
+        // Loop through the rank data list
+        for (const rankData of rankDataList) { // eslint-disable-line
+          log.debug(F, `rankData: ${JSON.stringify(rankData, null, 2)}`);
+          // RankData = {
+          //   rank: number,
+          //   discordId: string,
+          //   level: number,
+          //   exp: number,
+          //   nextLevel: number,
+          // };
+
+          // Get the discord member object from the guild object
+          const member = await tripsitGuild.members.fetch(rankData.discordId); // eslint-disable-line
+
+          // Add the rank, member name, and level to the message string
+          message += `${rank}. **${member.displayName}** - ${rankData.level} XP\n`;
+
+          // Increment the rank
+          rank += 1;
         }
-        embed.addFields({
-          name: `#${user.rank} ${rowName}`,
-          value: `L.${user.level} ${member.displayName}`,
-          inline: true,
-        });
-        row += 1;
       }
     }
 
+    // Set the embed description to the message string
+    embed.setDescription(message);
+
+    // Edit the interaction response with the embed. We need to edit because we already deferred above.
     await interaction.editReply({ embeds: [embed] });
 
     return true;
