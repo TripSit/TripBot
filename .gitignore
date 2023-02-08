@@ -366,3 +366,4 @@ node_modules_bak
 coverage/
 eslint-report.json
 coverage/
+src/discord/assets/img/backgrounds/*.png

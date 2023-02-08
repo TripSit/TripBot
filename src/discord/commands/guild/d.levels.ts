@@ -329,20 +329,36 @@ export const dLevels: SlashCommand = {
     context.textBaseline = 'middle';
     context.fillText(`${target.displayName}`, 146, 76);
 
+    const progressText = targetData.text.total.exp / targetData.text.total.nextLevel;
+    const progressVoice = targetData.voice.total.exp / targetData.voice.total.nextLevel;
+
+    const progressGeneral = targetData.text.GENERAL
+      ? targetData.text.GENERAL.exp / targetData.text.GENERAL.nextLevel
+      : 0;
+    const progressTripsitter = targetData.text.TRIPSITTER
+      ? targetData.text.TRIPSITTER.exp / targetData.text.TRIPSITTER.nextLevel
+      : 0;
+    const progressDeveloper = targetData.text.DEVELOPER
+      ? targetData.text.DEVELOPER.exp / targetData.text.DEVELOPER.nextLevel
+      : 0;
+    const progressTeam = targetData.text.TEAM
+      ? targetData.text.TEAM.exp / targetData.text.TEAM.nextLevel
+      : 0;
+
     // Progress Bars
     context.fillStyle = textColor;
     context.beginPath();
-    context.roundRect(87, 172, (targetData.text.total.exp / targetData.text.total.nextLevel) * 579, 76, [19]);
-    context.roundRect(87, 257, (targetData.text.GENERAL.exp / targetData.text.GENERAL.nextLevel) * 579, 51, [19]);
-    context.roundRect(87, 317, (targetData.text.voice.exp / targetData.text.voice.nextLevel) * 579, 51, [19]);
+    context.roundRect(87, 172, (progressText) * 579, 76, [19]);
+    context.roundRect(87, 257, (progressGeneral) * 579, 51, [19]);
+    context.roundRect(87, 317, (progressVoice) * 579, 51, [19]);
     if (layout > 1) {
-      context.roundRect(87, 377, (targetData.text.TRIPSITTER.exp / targetData.text.TRIPSITTER.nextLevel), 51, [19]);
+      context.roundRect(87, 377, (progressTripsitter), 51, [19]);
     }
     if (layout > 2) {
-      context.roundRect(87, 437, (targetData.text.DEVELOPER.exp / targetData.text.DEVELOPER.nextLevel), 51, [19]);
+      context.roundRect(87, 437, (progressDeveloper), 51, [19]);
     }
     if (layout > 3) {
-      context.roundRect(87, 497, (targetData.text.TEAM.exp / targetData.text.TEAM.nextLevel), 51, [19]);
+      context.roundRect(87, 497, (progressTeam), 51, [19]);
     }
     context.fill();
 
