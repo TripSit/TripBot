@@ -9,6 +9,9 @@ import Canvas from '@napi-rs/canvas';
 import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { levels } from '../../../global/commands/g.levels';
+import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
+import { inventoryGet } from '../../../global/utils/knex';
+import { imageGet } from '../../utils/imageGet';
 // import { getTotalLevel } from '../../../global/utils/experience';
 
 const F = f(__filename);
@@ -149,16 +152,35 @@ export const dLevels: SlashCommand = {
       ? interaction.options.getMember('target') as GuildMember
       : interaction.member as GuildMember;
 
-    const targetData = await levels(target.id);
+    // log.debug(F, `targetData: ${JSON.stringify(targetData, null, 2)}`);
+    // log.debug(F, `${(interaction.member as GuildMember).displayName} is Tripsitter level ${targetData.text.GENERAL.level} and is ${(targetData.text.GENERAL.exp / targetData.text.GENERAL.nextLevel) * 100}% to level ${targetData.text.GENERAL.level + 1}`); // eslint-disable-line max-len
+    var layoutHeight = 386;
+    var layout = 1;
+    if ((interaction.member as GuildMember).roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
+      var layoutHeight = 566;
+      var layout = 4;
+      log.debug(F, 'is teamtripsit');
+    }
+      else if ((interaction.member as GuildMember).roles.cache.has(env.ROLE_CONTRIBUTOR)) {
+      var layoutHeight = 506;
+      var layout = 3;
+      log.debug(F, 'is contributor');
+    }
+      else if ((interaction.member as GuildMember).roles.cache.has(env.ROLE_HELPER)) {
+      var layoutHeight = 446;
+      var layout = 2;
+      log.debug(F, 'is helper');
+    }
 
-    log.debug(F, `targetData: ${JSON.stringify(targetData, null, 2)}`);
-    log.debug(F, `${(interaction.member as GuildMember).displayName} is Tripsitter level ${targetData.text.GENERAL.level} and is ${(targetData.text.GENERAL.exp / targetData.text.GENERAL.nextLevel) * 100}% to level ${targetData.text.GENERAL.level + 1}`); // eslint-disable-line max-len
+    // log.debug(F, `targetData: ${JSON.stringify(targetData, null, 2)}`);
+    // log.debug(F, `${(interaction.member as GuildMember).displayName} is Tripsitter level ${targetData.text.GENERAL.level} and is ${(targetData.text.GENERAL.exp / targetData.text.GENERAL.nextLevel) * 100}% to level ${targetData.text.GENERAL.level + 1}`); // eslint-disable-line max-len
 
     // Create Canvas and Context
     const canvasWidth = 918;
-    const canvasHeight = 566;
+    const canvasHeight = layoutHeight;
     const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
     const context = canvasObj.getContext('2d');
+    log.debug(F, `canvasHeight: ${canvasHeight}`)
 
     // Choose color based on user's role
     const cardLightColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#141414';
@@ -171,71 +193,40 @@ export const dLevels: SlashCommand = {
     context.fillStyle = cardLightColor;
     context.beginPath();
     context.roundRect(0, 0, 918, 145, [19]);
-    context.fill();
-    context.beginPath();
-    context.roundRect(0, 154, 918, 412, [19]);
+    context.roundRect(0, 154, 918, (layoutHeight - 154), [19]);
     context.fill();
     context.fillStyle = cardDarkColor;
     context.beginPath();
     context.roundRect(0, 0, 684, 145, [19]);
-    context.fill();
-    context.beginPath();
-    context.roundRect(0, 154, 684, 412, [19]);
+    context.roundRect(0, 154, 684, (layoutHeight - 154), [19]);
     context.fill();
     // Top Right Chips
     context.fillStyle = chipColor;
     context.beginPath();
-    context.arc(603, 73, 54, 0, Math.PI * 2, true);
-    context.fill();
-    context.beginPath();
+    context.arc(612, 73, 54, 0, Math.PI * 2, true);
     context.roundRect(702, 18, 201, 51, [19]);
-    context.fill();
-    context.beginPath();
     context.roundRect(702, 78, 201, 51, [19]);
-    context.fill();
-    // Level Bar Chips
-    context.beginPath();
-    context.roundRect(18, 172, 51, 377, [19]);
-    context.fill();
-    context.beginPath();
-    context.roundRect(87, 172, 570, 76, [19]);
-    context.fill();
-    context.beginPath();
-    context.roundRect(87, 257, 570, 51, [19]);
-    context.fill();
-    context.beginPath();
-    context.roundRect(87, 317, 570, 51, [19]);
-    context.fill();
-    context.beginPath();
-    context.roundRect(87, 377, 570, 51, [19]);
-    context.fill();
-    context.beginPath();
-    context.roundRect(87, 437, 570, 51, [19]);
-    context.fill();
-    context.beginPath();
-    context.roundRect(87, 497, 570, 51, [19]);
-    context.fill();
-    // Far Right Chips
-    context.beginPath();
-    context.roundRect(851, 172, 51, 377, [19]);
-    context.fill();
-    context.beginPath();
+    // Level Bar and Rank Chips
+    context.roundRect(18, 172, 51, (layoutHeight - 190), [19]);
+    context.roundRect(851, 172, 51, (layoutHeight - 190), [19]);
+    context.roundRect(87, 172, 579, 76, [19]);
     context.roundRect(702, 172, 132, 76, [19]);
-    context.fill();
-    context.beginPath();
+    context.roundRect(87, 257, 579, 51, [19]);
     context.roundRect(702, 257, 132, 51, [19]);
-    context.fill();
-    context.beginPath();
+    context.roundRect(87, 317, 579, 51, [19]);
     context.roundRect(702, 317, 132, 51, [19]);
-    context.fill();
-    context.beginPath();
+    if (layout > 1) {
+    context.roundRect(87, 377, 579, 51, [19]);
     context.roundRect(702, 377, 132, 51, [19]);
-    context.fill();
-    context.beginPath();
+    }
+    if (layout > 2) {
+    context.roundRect(87, 437, 579, 51, [19]);
     context.roundRect(702, 437, 132, 51, [19]);
-    context.fill();
-    context.beginPath();
+    }
+    if (layout > 3) {
+    context.roundRect(87, 497, 579, 51, [19]);
     context.roundRect(702, 497, 132, 51, [19]);
+    }
     context.fill();
 
     // WIP: Purchased Background
@@ -249,11 +240,6 @@ export const dLevels: SlashCommand = {
     context.clip();
     context.drawImage(Background, 0, 0);
     context.restore();
-
-    // Load Icon Images
-    const Icons = await Canvas.loadImage('https://i.gyazo.com/9f0717d8a3ab093f5f16c119e4967a19.png');
-    // const Icons = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'icons.png'));
-    context.drawImage(Icons, 0, 0);
 
     // Avatar Image
     const avatar = await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' }));
@@ -304,7 +290,8 @@ export const dLevels: SlashCommand = {
     // WIP: Camp Icon
     const CampIconPath = 'https://i.gyazo.com/62a9db6c42ca3c03cc892b28f5d8b367.png';
     const CampIcon = await Canvas.loadImage(CampIconPath);
-    context.drawImage(CampIcon, 547, 17);
+    context.drawImage(CampIcon, 556, 17);
+    
     // WIP: Check to see if a user has bought a title in the shop
     // If so, move Username Text up so the title can fit underneath
 
@@ -322,7 +309,9 @@ export const dLevels: SlashCommand = {
     // Username Text
     context.font = applyUsername(canvasObj, `${target.displayName}`);
     context.fillStyle = textColor;
-    context.fillText(`${target.displayName}`, 146, 90);
+    context.textAlign = 'left';
+    context.textBaseline = 'middle';
+    context.fillText(`${target.displayName}`, 146, 76);
 
     // Choose and Draw the Level Image
     const LevelImagePath = 'https://i.gyazo.com/f614a14051dbc1366ce4de2ead98a519.png';
@@ -333,6 +322,60 @@ export const dLevels: SlashCommand = {
     } catch (err) {
       log.error(F, `Error loading star image: ${err}`);
     }
+
+    // Bar Labels
+    context.font = '25px futura';
+    context.fillStyle = '#ffffff';
+    context.textBaseline = 'middle';
+    context.textAlign = 'center';
+    context.save();
+    context.translate(918, 0);
+    context.rotate(90 * Math.PI /180 );
+    context.fillText('RANK', ((layoutHeight / 2) + 77), 43);
+    context.translate(layoutHeight, 918);
+    context.rotate(180 * Math.PI / 180 );
+    context.fillText('LEVEL', ((layoutHeight / 2) - 77), 43);
+    context.restore();
+
+    // Number Formatter
+    function numFormatter(num:number):string {
+      if (num > 999 && num < 1000000) {
+        return `${(num / 1000).toFixed(2)}K`;
+      }
+      if (num > 1000000) {
+        return `${(num / 1000000).toFixed(2)}M`;
+      }
+      return num.toFixed(0);
+    }
+
+    /**  Messages Sent Text
+    context.textAlign = 'right';
+    if (targetData.totalTextExp) {
+      const MessagesSent = targetData.totalTextExp / 20;
+      context.fillText(`${numFormatter(MessagesSent)}`, 894, 45);
+    } else {
+      context.fillText('0', 894, 45);
+    }
+
+    // Voice Hours Text
+    if (targetData.totalTextExp) {
+      const minsInChat = (targetData.totalVoiceExp / 10) / 2;
+      context.fillText(`${numFormatter(minsInChat)}`, 894, 105);
+    } else {
+      context.fillText('0', 894, 105);
+    }
+    */ 
+    // Icon Image
+    // Set a clip to prevent icons from being drawn outside of the card
+    context.save();
+    context.beginPath();
+    context.roundRect(0, 0, 918, (layoutHeight - 18), [19]);
+    context.clip();
+    // Load Icon Images
+    const Icons = await Canvas.loadImage('https://i.gyazo.com/9f0717d8a3ab093f5f16c119e4967a19.png');
+    // const Icons = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'icons.png'));
+    context.drawImage(Icons, 0, 0);
+    context.restore();
 
     // Process The Entire Card and Send it to Discord
     const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-profile-image.png' });

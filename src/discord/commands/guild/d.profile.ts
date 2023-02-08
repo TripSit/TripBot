@@ -304,7 +304,7 @@ export const dProfile: SlashCommand = {
     context.font = applyUsername(canvasObj, `${target.displayName}`);
     context.fillStyle = textColor;
     context.textBaseline = 'middle';
-    context.fillText(`${target.displayName}`, 146, 73);
+    context.fillText(`${target.displayName}`, 146, 76);
 
     // User Timezone and Birthday Text
     context.font = '25px futura';
