@@ -93,11 +93,13 @@ async function checkRss() {
         mostRecentPost.contentSnippet.indexOf('[link]'),
       ).replaceAll('    ', ' ')}`;
 
+      log.debug(F, `submittedBy: ${submittedBy}`);
+
       const embed = embedTemplate()
         .setAuthor({ name: 'New /r/TripSit post', iconURL: env.TS_ICON_URL })
         .setTitle(`${mostRecentPost.title}`)
         .setURL(mostRecentPost.link)
-        .setFooter({ text: submittedBy, iconURL: env.FLAME_ICON_URL })
+        .setFooter({ text: submittedBy ?? '', iconURL: env.FLAME_ICON_URL })
         .setTimestamp(new Date(mostRecentPost.pubDate));
 
       if (body.length > 0) {
