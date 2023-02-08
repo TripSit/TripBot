@@ -81,7 +81,7 @@ async function checkRss() {
       // Gets everything before "submitted by"
       const bigBody = mostRecentPost.contentSnippet.slice(
         0,
-        mostRecentPost.contentSnippet.indexOf('submitted'),
+        mostRecentPost.contentSnippet.indexOf('submitted by'),
       );
 
       // Gets the first 2000 characters of the body
@@ -89,7 +89,7 @@ async function checkRss() {
 
       // Capitalizes the B in by and gets the username
       const submittedBy = `B${mostRecentPost.contentSnippet.slice(
-        mostRecentPost.contentSnippet.indexOf('by') + 1,
+        mostRecentPost.contentSnippet.indexOf('submitted by') + 1,
         mostRecentPost.contentSnippet.indexOf('[link]'),
       ).replaceAll('    ', ' ')}`;
 
