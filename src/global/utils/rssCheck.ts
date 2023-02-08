@@ -72,7 +72,7 @@ async function checkRss() {
       const mostRecentPost = (await parser.parseURL(feed.url)).items[0];
       // log.debug(F, `mostRecentPost: ${JSON.stringify(mostRecentPost, null, 2)}`);
 
-      if (feed.last_post_id === mostRecentPost.id) return;
+      // if (feed.last_post_id === mostRecentPost.id) return;
 
       log.debug(F, `New post: ${JSON.stringify(mostRecentPost, null, 2)}`);
 
@@ -89,7 +89,7 @@ async function checkRss() {
 
       // Capitalizes the B in by and gets the username
       const submittedBy = `B${mostRecentPost.contentSnippet.slice(
-        mostRecentPost.contentSnippet.indexOf('submitted by') + 1,
+        mostRecentPost.contentSnippet.indexOf('submitted by') + 11,
         mostRecentPost.contentSnippet.indexOf('[link]'),
       ).replaceAll('    ', ' ')}`;
 
