@@ -79,22 +79,27 @@ async function checkRss() {
       const channelBotlog = await guild.channels.fetch(feed.destination) as TextChannel;
 
       // Gets everything before "submitted by"
-      const body = mostRecentPost.contentSnippet.slice(
+      const bigBody = mostRecentPost.contentSnippet.slice(
         0,
-        mostRecentPost.contentSnippet.indexOf('submitted'),
+        mostRecentPost.contentSnippet.indexOf('submitted by'),
       );
+
+      // Gets the first 2000 characters of the body
+      const body = bigBody.slice(0, 2000);
 
       // Capitalizes the B in by and gets the username
       const submittedBy = `B${mostRecentPost.contentSnippet.slice(
-        mostRecentPost.contentSnippet.indexOf('by') + 1,
+        mostRecentPost.contentSnippet.indexOf('submitted by') + 1,
         mostRecentPost.contentSnippet.indexOf('[link]'),
       ).replaceAll('    ', ' ')}`;
+
+      log.debug(F, `submittedBy: ${submittedBy}`);
 
       const embed = embedTemplate()
         .setAuthor({ name: 'New /r/TripSit post', iconURL: env.TS_ICON_URL })
         .setTitle(`${mostRecentPost.title}`)
         .setURL(mostRecentPost.link)
-        .setFooter({ text: submittedBy, iconURL: env.FLAME_ICON_URL })
+        .setFooter({ text: submittedBy ?? '', iconURL: env.FLAME_ICON_URL })
         .setTimestamp(new Date(mostRecentPost.pubDate));
 
       if (body.length > 0) {
