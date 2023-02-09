@@ -155,6 +155,7 @@ export const dProfile: SlashCommand = {
       : interaction.member as GuildMember;
 
     const targetData = await profile(target.id);
+    log.debug(F, `target id: ${target.id}`);
 
     // Create Canvas and Context
     const canvasWidth = 921;
@@ -203,7 +204,7 @@ export const dProfile: SlashCommand = {
 
     // WIP: Purchased Background
     // Check get fresh persona data
-    const [personaData] = await getPersonaInfo(interaction.user.id);
+    const [personaData] = await getPersonaInfo(target.user.id);
     // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
 
     if (personaData) {
@@ -366,12 +367,12 @@ export const dProfile: SlashCommand = {
       context.fillText('0', 429, 190);
     }
 
-    // WIP: Voice Hours Text
+    // Voice Hours Text
     if (targetData.totalTextExp) {
-      const minsInChat = (targetData.totalVoiceExp / 10) / 2;
-      context.fillText(`${numFormatter(minsInChat)}`, 429, 250);
+      const hoursInChat = (targetData.totalVoiceExp / 10 / 60);
+      context.fillText(`${numFormatter(hoursInChat)} HR`, 429, 250);
     } else {
-      context.fillText('0', 429, 250);
+      context.fillText('0 HR', 429, 250);
     }
 
     // Karma Text

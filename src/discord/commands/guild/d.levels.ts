@@ -9,6 +9,8 @@ import Canvas from '@napi-rs/canvas';
 import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { levels } from '../../../global/commands/g.levels';
+import { leaderboard } from '../../../global/commands/g.leaderboard';
+import { profile } from '../../../global/commands/g.profile';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
 import { imageGet } from '../../utils/imageGet';
@@ -138,7 +140,7 @@ export const dLevels: SlashCommand = {
     .setName('levels')
     .setDescription('Get someone\'s current experience levels!')
     .addUserOption(option => option
-      .setName('user')
+      .setName('target')
       .setDescription('User to lookup')),
   async execute(
     interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction,
@@ -157,8 +159,9 @@ export const dLevels: SlashCommand = {
       : interaction.member as GuildMember;
 
     const targetData = await levels(target.id);
-    log.debug(F, `targetData: ${JSON.stringify(targetData, null, 2)}`);
-    log.debug(F, `${(interaction.member as GuildMember).displayName} is Tripsitter level ${targetData.text.GENERAL.level} and is ${(targetData.text.GENERAL.exp / targetData.text.GENERAL.nextLevel) * 100}% to level ${targetData.text.GENERAL.level + 1}`); // eslint-disable-line max-len
+    const leaderboardData = await leaderboard();
+    const profileData = await profile(target.id);
+    log.debug(F, `target id: ${target.id}`);
     let layoutHeight = 386;
     let layout = 1;
     if ((interaction.member as GuildMember).roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
@@ -232,7 +235,7 @@ export const dLevels: SlashCommand = {
 
     // WIP: Purchased Background
     // Check get fresh persona data
-    const [personaData] = await getPersonaInfo(interaction.user.id);
+    const [personaData] = await getPersonaInfo(target.id);
     // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
 
     if (personaData) {
@@ -329,6 +332,7 @@ export const dLevels: SlashCommand = {
     context.textBaseline = 'middle';
     context.fillText(`${target.displayName}`, 146, 76);
 
+    // Progress Bars Calculate
     const progressText = targetData.text.total.exp / targetData.text.total.nextLevel;
     const progressVoice = targetData.voice.total.exp / targetData.voice.total.nextLevel;
 
@@ -344,28 +348,64 @@ export const dLevels: SlashCommand = {
     const progressTeam = targetData.text.TEAM
       ? targetData.text.TEAM.exp / targetData.text.TEAM.nextLevel
       : 0;
-
-    // Progress Bars
+    // Progress Bars Draw
     context.fillStyle = textColor;
     context.beginPath();
     context.roundRect(87, 172, (progressText) * 579, 76, [19]);
     context.roundRect(87, 257, (progressGeneral) * 579, 51, [19]);
     context.roundRect(87, 317, (progressVoice) * 579, 51, [19]);
     if (layout > 1) {
-      context.roundRect(87, 377, (progressTripsitter), 51, [19]);
+      context.roundRect(87, 377, (progressTripsitter) * 579, 51, [19]);
     }
     if (layout > 2) {
-      context.roundRect(87, 437, (progressDeveloper), 51, [19]);
+      context.roundRect(87, 437, (progressDeveloper) * 579, 51, [19]);
     }
     if (layout > 3) {
-      context.roundRect(87, 497, (progressTeam), 51, [19]);
+      context.roundRect(87, 497, (progressTeam) * 579, 51, [19]);
     }
     context.fill();
-
-    // Bar Labels
-    context.font = '25px futura';
+    // Progress Bars Level Text
+    context.font = '40px futura';
     context.fillStyle = '#ffffff';
     context.textBaseline = 'middle';
+    context.textAlign = 'right';
+    context.fillText(`${targetData.text.total.level}`, 657, 213);
+    context.font = '25px futura';
+    context.fillText(`${targetData.text.GENERAL.level}`, 657, 284);
+    context.fillText(`${targetData.voice.total.level}`, 657, 344);
+    if (layout > 1 && targetData.text.TRIPSITTER) {
+      context.fillText(`${targetData.text.TRIPSITTER.level}`, 657, 404);
+    } else {
+      context.fillText('0', 657, 404);
+    }
+    if (layout > 2 && targetData.text.DEVELOPER) {
+      context.fillText(`${targetData.text.DEVELOPER.level}`, 657, 464);
+    } else {
+      context.fillText('0', 657, 464);
+    }
+    if (layout > 3 && targetData.text.TEAM) {
+      context.fillText(`${targetData.text.TEAM.level}`, 657, 524);
+    } else {
+      context.fillText('0', 657, 524);
+    }
+    /* Rank Text
+    context.font = '40px futura';
+    context.textAlign = 'left';
+    context.fillText(`#${leaderboardData.text.total.rank}`, 729, 213);
+    context.font = '25px futura';
+     context.fillText(`#${targetData.text.GENERAL.rank}`, 729, 284);
+    context.fillText(`#${targetData.voice.total.rank}`, 729, 344);
+    if (layout > 1) {
+      context.fillText(`#${targetData.text.TRIPSITTER.rank}`, 729, 404);
+    }
+    if (layout > 2) {
+      context.fillText(`#${targetData.text.DEVELOPER.rank}`, 729, 464);
+    }
+    if (layout > 3) {
+      context.fillText(`#${targetData.text.TEAM.rank}`, 729, 524);
+    } */
+
+    // Bar Labels
     context.textAlign = 'center';
     context.save();
     context.translate(921, 0);
@@ -377,33 +417,33 @@ export const dLevels: SlashCommand = {
     context.restore();
 
     // Number Formatter
-    // function numFormatter(num:number):string {
-    //   if (num > 999 && num < 1000000) {
-    //     return `${(num / 1000).toFixed(2)}K`;
-    //   }
-    //   if (num > 1000000) {
-    //     return `${(num / 1000000).toFixed(2)}M`;
-    //   }
-    //   return num.toFixed(0);
-    // }
+    function numFormatter(num:number):string {
+      if (num > 999 && num < 1000000) {
+        return `${(num / 1000).toFixed(2)}K`;
+      }
+      if (num > 1000000) {
+        return `${(num / 1000000).toFixed(2)}M`;
+      }
+      return num.toFixed(0);
+    }
 
-    /**  Messages Sent Text
+    // Messages Sent Text
     context.textAlign = 'right';
-    if (targetData.totalTextExp) {
-      const MessagesSent = targetData.totalTextExp / 20;
+    if (profileData.totalTextExp) {
+      const MessagesSent = profileData.totalTextExp / 20;
       context.fillText(`${numFormatter(MessagesSent)}`, 894, 45);
     } else {
       context.fillText('0', 894, 45);
     }
 
     // Voice Hours Text
-    if (targetData.totalTextExp) {
-      const minsInChat = (targetData.totalVoiceExp / 10) / 2;
-      context.fillText(`${numFormatter(minsInChat)}`, 894, 105);
+    if (profileData.totalTextExp) {
+      const hoursInChat = (profileData.totalVoiceExp / 10 / 60);
+      context.fillText(`${numFormatter(hoursInChat)} HR`, 894, 105);
     } else {
-      context.fillText('0', 894, 105);
+      context.fillText('0 HR', 894, 105);
     }
-    */
+
     // Icon Images
     // Set a clip to prevent icons from being drawn outside of the card
     context.save();
@@ -416,7 +456,31 @@ export const dLevels: SlashCommand = {
     context.drawImage(Icons, 0, 0);
     context.restore();
     // Choose and Draw the Level Image
-    const LevelImagePath = 'https://i.gyazo.com/f614a14051dbc1366ce4de2ead98a519.png';
+    let LevelImagePath = 'https://i.gyazo.com/13daebdda4ca75ab59923396f255f7db.png';
+
+    if (targetData.text.total.level < 10) {
+      LevelImagePath = 'https://i.gyazo.com/13daebdda4ca75ab59923396f255f7db.png';
+    } else if (targetData.text.total.level < 20) {
+      LevelImagePath = 'https://i.gyazo.com/5d37a2d3193c4c7e8a033b6b2ed7cb7f.png';
+    } else if (targetData.text.total.level < 30) {
+      LevelImagePath = 'https://i.gyazo.com/161506f23b1907ac1280db26ead5a0a4.png';
+    } else if (targetData.text.total.level < 40) {
+      LevelImagePath = 'https://i.gyazo.com/4bd15a019f7fd5c881e196c38a8b8bf5.png';
+    } else if (targetData.text.total.level < 50) {
+      LevelImagePath = 'https://i.gyazo.com/ca0b1aca00a71a992c196ca0498efef3.png';
+    } else if (targetData.text.total.level < 60) {
+      LevelImagePath = 'https://i.gyazo.com/f614a14051dbc1366ce4de2ead98a519.png';
+    } else if (targetData.text.total.level < 70) {
+      LevelImagePath = 'https://i.gyazo.com/3844d103c034f16e781fd947f593895c.png';
+    } else if (targetData.text.total.level < 80) {
+      LevelImagePath = 'https://i.gyazo.com/0357a63887c1183d53827eb8ebb29ee3.png';
+    } else if (targetData.text.total.level < 90) {
+      LevelImagePath = 'https://i.gyazo.com/693948d030989ffa5bf5e381f471bac6.png';
+    } else if (targetData.text.total.level < 100) {
+      LevelImagePath = 'https://i.gyazo.com/eed9e28789262927cefe0a68b3126ed2.png';
+    } else if (targetData.text.total.level >= 100) {
+      LevelImagePath = 'https://i.gyazo.com/4428c08aaf82b7363fb7a327ce27a4c3.png';
+    }
     try {
       // log.debug(F, `LevelImagePath: ${LevelImagePath}`);
       const LevelImage = await Canvas.loadImage(LevelImagePath);
