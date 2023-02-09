@@ -162,17 +162,18 @@ export const dLevels: SlashCommand = {
     const leaderboardData = await leaderboard();
     const profileData = await profile(target.id);
     log.debug(F, `target id: ${target.id}`);
+    log.debug(F, `targetData: ${interaction.member}`);
     let layoutHeight = 386;
     let layout = 1;
-    if ((interaction.member as GuildMember).roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
+    if ((target as GuildMember).roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
       layoutHeight = 566;
       layout = 4;
       log.debug(F, 'is teamtripsit');
-    } else if ((interaction.member as GuildMember).roles.cache.has(env.ROLE_CONTRIBUTOR)) {
+    } else if ((target as GuildMember).roles.cache.has(env.ROLE_CONTRIBUTOR)) {
       layoutHeight = 506;
       layout = 3;
       log.debug(F, 'is contributor');
-    } else if ((interaction.member as GuildMember).roles.cache.has(env.ROLE_HELPER)) {
+    } else if ((target as GuildMember).roles.cache.has(env.ROLE_HELPER)) {
       layoutHeight = 446;
       layout = 2;
       log.debug(F, 'is helper');
