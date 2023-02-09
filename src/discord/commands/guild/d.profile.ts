@@ -85,9 +85,9 @@ const colorDefs = {
     textColor: '#9542ff',
   },
   [env.ROLE_DONOR_BLUE]: {
-    cardDarkColor: '#161d1f',
-    cardLightColor: '#283438',
-    chipColor: '#3a5760',
+    cardDarkColor: '#1a2022',
+    cardLightColor: '#2c383c',
+    chipColor: '#225161',
     textColor: '#22bef0',
   },
   [env.ROLE_DONOR_GREEN]: {
@@ -134,10 +134,10 @@ export default dProfile;
 export const dProfile: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('profile')
-    .setDescription('Return the user\'s profile!')
+    .setDescription('Get someone\'s profile!')
     .addUserOption(option => option
       .setName('target')
-      .setDescription('User to get info on!')),
+      .setDescription('User to lookup')),
   async execute(
     interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction,
   ) {
@@ -220,7 +220,7 @@ export const dProfile: SlashCommand = {
         const Background = await Canvas.loadImage(imagePath);
         // const Background = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'background.png'));
         context.save();
-        context.globalCompositeOperation = 'lighten';
+        context.globalCompositeOperation = 'lighter';
         context.globalAlpha = 0.03;
         context.beginPath();
         context.roundRect(0, 0, 675, 292, [19]);

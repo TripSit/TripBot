@@ -250,7 +250,7 @@ export const dLevels: SlashCommand = {
         const imagePath = await imageGet(equippedBackground.value);
         const Background = await Canvas.loadImage(imagePath);
         context.save();
-        context.globalCompositeOperation = 'lighten';
+        context.globalCompositeOperation = 'lighter';
         context.globalAlpha = 0.03;
         context.beginPath();
         context.roundRect(20, 0, 901, 145, [19]);
