@@ -146,7 +146,6 @@ export const dLevels: SlashCommand = {
     interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction,
   ) {
     // startLog(F, interaction);
-
     if (!interaction.guild) {
       interaction.reply('You can only use this command in a guild!');
       return false;
@@ -208,7 +207,7 @@ export const dLevels: SlashCommand = {
     // Top Right Chips
     context.fillStyle = chipColor;
     context.beginPath();
-    context.arc(612, 73, 54, 0, Math.PI * 2, true);
+    // context.arc(612, 73, 54, 0, Math.PI * 2, true); // CAMP ICON CHIP
     context.roundRect(702, 18, 201, 51, [19]);
     context.roundRect(702, 78, 201, 51, [19]);
     // Label Chips
@@ -254,8 +253,8 @@ export const dLevels: SlashCommand = {
         context.globalCompositeOperation = 'lighter';
         context.globalAlpha = 0.03;
         context.beginPath();
-        context.roundRect(20, 0, 901, 145, [19]);
-        context.roundRect(20, 154, 901, (layoutHeight - 154), [19]);
+        context.roundRect(0, 0, 921, 145, [19]);
+        context.roundRect(0, 154, 921, (layoutHeight - 154), [19]);
         context.clip();
         context.drawImage(Background, 0, 0);
         context.restore();
@@ -308,10 +307,11 @@ export const dLevels: SlashCommand = {
       log.error(F, `Error loading status icon: ${err}`);
     }
 
-    // WIP: Camp Icon
+    /* WIP: Camp Icon
     const CampIconPath = 'https://i.gyazo.com/62a9db6c42ca3c03cc892b28f5d8b367.png';
     const CampIcon = await Canvas.loadImage(CampIconPath);
     context.drawImage(CampIcon, 556, 17);
+    */
 
     // WIP: Check to see if a user has bought a title in the shop
     // If so, move Username Text up so the title can fit underneath
@@ -390,22 +390,22 @@ export const dLevels: SlashCommand = {
     } else {
       context.fillText('0', 657, 524);
     }
-    /* Rank Text
+    // Rank Text
     context.font = '40px futura';
     context.textAlign = 'left';
-    context.fillText(`#${leaderboardData.text.total.rank}`, 729, 213);
+    context.fillText(`#${rankData.TEXT.TOTAL}`, 711, 213);
     context.font = '25px futura';
-     context.fillText(`#${targetData.text.GENERAL.rank}`, 729, 284);
-    context.fillText(`#${targetData.voice.total.rank}`, 729, 344);
+    context.fillText(`#${rankData.TEXT.GENERAL}`, 711, 284);
+    context.fillText(`#${rankData.VOICE.TOTAL}`, 711, 344);
     if (layout > 1) {
-      context.fillText(`#${targetData.text.TRIPSITTER.rank}`, 729, 404);
+      context.fillText(`#${rankData.TEXT.TRIPSITTER}`, 711, 404);
     }
     if (layout > 2) {
-      context.fillText(`#${targetData.text.DEVELOPER.rank}`, 729, 464);
+      context.fillText(`#${rankData.TEXT.DEVELOPER}`, 711, 464);
     }
     if (layout > 3) {
-      context.fillText(`#${targetData.text.TEAM.rank}`, 729, 524);
-    } */
+      context.fillText(`#${rankData.TEXT.TEAM}`, 711, 524);
+    }
 
     // Bar Labels
     context.textAlign = 'center';

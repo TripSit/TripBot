@@ -193,7 +193,7 @@ export const dProfile: SlashCommand = {
     context.roundRect(456, 163, 201, 51, [19]);
     context.roundRect(456, 223, 201, 51, [19]);
     context.roundRect(702, 223, 201, 51, [19]);
-    // context.arc(603, 73, 54, 0, Math.PI * 2, true);
+    // context.arc(603, 73, 54, 0, Math.PI * 2, true); // CAMP ICON CHIP
     context.fill();
     // Level Bar Circle BG
     context.strokeStyle = textColor;
