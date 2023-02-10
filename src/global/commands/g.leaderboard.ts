@@ -190,11 +190,14 @@ export async function getRanks(
     .sum({ total_points: 'total_points' })
     .orderBy('total_points', 'desc');
 
-  rankResults.TEXT.TOTAL = parseInt(totalTextRank[0]?.count as string, 10) + 1 !== null
-    ? parseInt(totalTextRank[0]?.count as string, 10) + 1
+  log.debug(F, `totalVoiceRank: ${totalVoiceRank.length}`);
+  rankResults.TEXT.TOTAL = totalVoiceRank.length > 0
+    ? parseInt(totalTextRank[0].count as string, 10) + 1
     : 0;
-  rankResults.VOICE.TOTAL = parseInt(totalVoiceRank[0]?.count as string, 10) + 1 !== null
-    ? parseInt(totalVoiceRank[0]?.count as string, 10) + 1
+
+  log.debug(F, `totalVoiceRank: ${totalVoiceRank.length}`);
+  rankResults.VOICE.TOTAL = totalVoiceRank.length > 0
+    ? parseInt(totalVoiceRank[0].count as string, 10) + 1
     : 0;
 
   // log.debug(F, `rankResults: ${JSON.stringify(rankResults, null, 2)}`);
