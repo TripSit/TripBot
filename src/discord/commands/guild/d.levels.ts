@@ -234,7 +234,7 @@ export const dLevels: SlashCommand = {
     }
     context.fill();
 
-    // WIP: Purchased Background
+    // Purchased Background
     // Check get fresh persona data
     const [personaData] = await getPersonaInfo(target.id);
     // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
