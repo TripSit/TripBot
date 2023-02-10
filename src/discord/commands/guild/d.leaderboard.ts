@@ -3,7 +3,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import { leaderboard } from '../../../global/commands/g.leaderboard';
+import { getLeaderboard } from '../../../global/commands/g.leaderboard';
 import { startLog } from '../../utils/startLog';
 import { embedTemplate } from '../../utils/embedTemplate';
 
@@ -67,7 +67,7 @@ export const dLeaderboard: SlashCommand = {
     //
     // The data is sorted by most experience, so the first entry in the array is the highest rank
     // If there are no entries in the array, then there are no users in that category, but this wont happen in prod
-    const leaderboardData = await leaderboard();
+    const leaderboardData = await getLeaderboard();
 
     // Create the embed that we will modify later
     const embed = embedTemplate()

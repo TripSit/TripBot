@@ -3,7 +3,7 @@ import { expForNextLevel, getTotalLevel } from '../utils/experience';
 import { ExperienceCategory, ExperienceType } from '../@types/pgdb';
 // import { ExperienceType } from '../@types/pgdb';
 
-const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
 
 export default levels;
 
@@ -65,7 +65,7 @@ export async function levels(
     };
   }
 
-  log.debug(F, `experienceData: ${JSON.stringify(experienceData, null, 2)}`);
+  // log.debug(F, `experienceData: ${JSON.stringify(experienceData, null, 2)}`);
 
   let allTextExp = 0;
   experienceData.forEach(exp => {
@@ -102,7 +102,7 @@ export async function levels(
 
   // let response = `**Level ${totalData.level} Total**: : All experience combined\n`;
   for (const row of experienceData) { // eslint-disable-line no-restricted-syntax
-    log.debug(F, `row: ${JSON.stringify(row, null, 2)}`);
+    // log.debug(F, `row: ${JSON.stringify(row, null, 2)}`);
     if (
       row.type === 'TEXT' as ExperienceType
       && row.category !== 'TOTAL' as ExperienceCategory
@@ -112,7 +112,7 @@ export async function levels(
         exp: row.level_points,
         nextLevel: await expForNextLevel(row.level), // eslint-disable-line no-await-in-loop
       };
-      log.debug(F, `results.text: ${JSON.stringify(results.text, null, 2)}`);
+      // log.debug(F, `results.text: ${JSON.stringify(results.text, null, 2)}`);
     }
     if (
       row.type === 'VOICE' as ExperienceType
@@ -123,7 +123,7 @@ export async function levels(
         exp: row.level_points,
         nextLevel: await expForNextLevel(row.level), // eslint-disable-line no-await-in-loop
       };
-      log.debug(F, `results.voice: ${JSON.stringify(results.voice, null, 2)}`);
+      // log.debug(F, `results.voice: ${JSON.stringify(results.voice, null, 2)}`);
     }
     // log.debug(F, `row: ${JSON.stringify(row, null, 2)}`);
     // Lowercase besides the first letter
@@ -150,6 +150,6 @@ export async function levels(
     // }
   }
 
-  log.info(F, `results: ${results}`);
+  // log.info(F, `results: ${JSON.stringify(results, null, 2)}`);
   return results;
 }

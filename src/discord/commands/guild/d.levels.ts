@@ -9,7 +9,7 @@ import Canvas from '@napi-rs/canvas';
 import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { levels } from '../../../global/commands/g.levels';
-import { leaderboard } from '../../../global/commands/g.leaderboard';
+import { getRanks } from '../../../global/commands/g.leaderboard';
 import { profile } from '../../../global/commands/g.profile';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
@@ -159,21 +159,22 @@ export const dLevels: SlashCommand = {
       : interaction.member as GuildMember;
 
     const targetData = await levels(target.id);
-    const leaderboardData = await leaderboard();
+    const rankData = await getRanks(target.id);
+    log.debug(F, `rankData: ${JSON.stringify(rankData, null, 2)}`);
     const profileData = await profile(target.id);
     log.debug(F, `target id: ${target.id}`);
     log.debug(F, `targetData: ${interaction.member}`);
     let layoutHeight = 386;
     let layout = 1;
-    if ((target as GuildMember).roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
+    if (target.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
       layoutHeight = 566;
       layout = 4;
       log.debug(F, 'is teamtripsit');
-    } else if ((target as GuildMember).roles.cache.has(env.ROLE_CONTRIBUTOR)) {
+    } else if (target.roles.cache.has(env.ROLE_CONTRIBUTOR)) {
       layoutHeight = 506;
       layout = 3;
       log.debug(F, 'is contributor');
-    } else if ((target as GuildMember).roles.cache.has(env.ROLE_HELPER)) {
+    } else if (target.roles.cache.has(env.ROLE_HELPER)) {
       layoutHeight = 446;
       layout = 2;
       log.debug(F, 'is helper');
@@ -457,7 +458,7 @@ export const dLevels: SlashCommand = {
     context.drawImage(Icons, 0, 0);
     context.restore();
     // Choose and Draw the Level Image
-    let LevelImagePath = 'https://i.gyazo.com/13daebdda4ca75ab59923396f255f7db.png';
+    let LevelImagePath = '' as string;
 
     if (targetData.text.total.level < 10) {
       LevelImagePath = 'https://i.gyazo.com/13daebdda4ca75ab59923396f255f7db.png';

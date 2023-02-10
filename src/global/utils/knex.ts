@@ -421,9 +421,9 @@ export async function reactionroleGet(
 
 export async function experienceGet(
   limit:number,
-  category:ExperienceCategory | undefined,
-  type:ExperienceType | undefined,
-  userId:string | undefined,
+  category?:ExperienceCategory,
+  type?:ExperienceType,
+  userId?:string,
 ):Promise<UserExperience[]> {
   log.debug(F, `experienceGet started with: limit: ${limit}, category: ${category}, type: ${type}, userId: ${userId}`);
 
