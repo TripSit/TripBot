@@ -224,7 +224,7 @@ export const dProfile: SlashCommand = {
         context.globalAlpha = 0.03;
         context.beginPath();
         context.roundRect(0, 0, 675, 292, [19]);
-        context.roundRect(684, 0, 234, 292, [19]);
+        context.roundRect(684, 0, 237, 292, [19]);
         context.clip();
         context.drawImage(Background, 0, 0);
         context.restore();
