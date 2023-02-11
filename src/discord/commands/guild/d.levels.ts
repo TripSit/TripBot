@@ -274,7 +274,7 @@ export const dLevels: SlashCommand = {
     // Status Icon
     context.save();
     context.beginPath();
-    context.arc(109, 113, 21, 0, Math.PI * 2, true);
+    context.arc(110, 112, 21, 0, Math.PI * 2, true);
     context.closePath();
     context.fillStyle = cardDarkColor;
     context.fill();
@@ -302,7 +302,7 @@ export const dLevels: SlashCommand = {
 
     try {
       const StatusIcon = await Canvas.loadImage(StatusIconPath);
-      context.drawImage(StatusIcon, 88, 92);
+      context.drawImage(StatusIcon, 90, 92);
     } catch (err) {
       log.error(F, `Error loading status icon: ${err}`);
     }

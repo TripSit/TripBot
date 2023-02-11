@@ -254,75 +254,133 @@ export const dLeaderboard: SlashCommand = {
             } else if (rankPositions === 4) {
               context.translate(469, 161);
             }
-          }
-          context.fillStyle = cardLightColor;
-          context.beginPath();
-          context.roundRect(94, 0, 338, 76, [0, 19, 19, 0]);
-          context.fill();
+          
+            context.fillStyle = cardLightColor;
+            context.beginPath();
+            context.roundRect(0, 0, 428, 76, [19]);
+            context.fill();
 
-          // Purchased Background
-          // Check get fresh persona data
-          const [personaData] = await getPersonaInfo(member.id);
-          // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
+            // Purchased Background
+            // Check get fresh persona data
+            const [personaData] = await getPersonaInfo(member.id);
+            // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
 
-          if (personaData) {
-            // Get the existing inventory data
-            const inventoryData = await inventoryGet(personaData.id);
-            // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
+            if (personaData) {
+              // Get the existing inventory data
+              const inventoryData = await inventoryGet(personaData.id);
+              // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
 
-            const equippedBackground = inventoryData.find(item => item.equipped === true);
-            log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
-            if (equippedBackground) {
-              const imagePath = await imageGet(equippedBackground.value);
-              const Background = await Canvas.loadImage(imagePath);
-              context.save();
-              context.globalCompositeOperation = 'lighter';
-              context.globalAlpha = 0.03;
-              context.beginPath();
-              context.roundRect(94, 0, 338, 76, [0, 19, 19, 0]);
-              context.clip();
-              context.drawImage(Background, 0, 0, 500, 500);
-              context.restore();
+              const equippedBackground = inventoryData.find(item => item.equipped === true);
+              log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
+              if (equippedBackground) {
+                const imagePath = await imageGet(equippedBackground.value);
+                const Background = await Canvas.loadImage(imagePath);
+                context.save();
+                context.globalCompositeOperation = 'lighter';
+                context.globalAlpha = 0.03;
+                context.beginPath();
+                context.roundRect(0, 0, 428, 76, [19]);
+                context.clip();
+                context.drawImage(Background, 0, 0, 500, 500);
+                context.restore();
+              }
             }
-          }
-          // Draw Rank Number
-          context.fillStyle = '#ffffff';
-          context.font = '30px futura';
-          context.textAlign = 'left';
-          context.textBaseline = 'middle';
-          context.fillText(`#${rank}`, 0, 38);
-          // Draw Profile Picture
-          const avatar = await Canvas.loadImage(member.user.displayAvatarURL({ extension: 'jpg' }));
-          context.save();
-          context.beginPath();
-          context.arc(94, 38, 38, 0, Math.PI * 2, true);
-          context.closePath();
-          context.clip();
-          context.drawImage(avatar, 56, 0, 76, 76);
-          context.restore();
-          // Draw Username
-          const applyUsername = (canvas:Canvas.Canvas, text:string) => {
-            const usernameContext = canvas.getContext('2d');
-            let fontSize = 30;
-            do {
-              fontSize -= 2;
-              usernameContext.font = `${fontSize}px futura`;
-            } while (usernameContext.measureText(text).width > 250);
-            return usernameContext.font;
-          };
-          context.save();
-          context.font = applyUsername(canvasObj, `${member.displayName}`);
-          context.fillStyle = textColor;
-          context.textAlign = 'left';
-          context.textBaseline = 'middle';
-          context.fillText(`${member.displayName}`, 143, 38);
-          context.restore();
-          // Draw Level Number
-          context.fillStyle = textColor;
-          context.textAlign = 'right';
-          context.fillText(`${rankData.level}`, 417, 38);
-          context.restore();
+            // Draw Rank Number
+            context.fillStyle = textColor;
+            context.font = '30px futura';
+            context.textAlign = 'left';
+            context.textBaseline = 'middle';
+            context.fillText(`#${rank}`, 9, 38);
+            // Draw Profile Picture
+            const avatar = await Canvas.loadImage(member.user.displayAvatarURL({ extension: 'jpg' }));
+            context.save();
+            context.beginPath();
+            context.arc(103, 38, 38, 0, Math.PI * 2, true);
+            context.closePath();
+            context.clip();
+            context.drawImage(avatar, 65, 0, 76, 76);
+            context.restore();
+            // Draw Username
+            const applyUsername = (canvas:Canvas.Canvas, text:string) => {
+              const usernameContext = canvas.getContext('2d');
+              let fontSize = 30;
+              do {
+                fontSize -= 2;
+                usernameContext.font = `${fontSize}px futura`;
+              } while (usernameContext.measureText(text).width > 225);
+              return usernameContext.font;
+            };
+            context.save();
+            context.font = applyUsername(canvasObj, `${member.displayName}`);
+            context.fillStyle = textColor;
+            context.textAlign = 'left';
+            context.textBaseline = 'middle';
+            context.fillText(`${member.displayName}`, 152, 38);
+            context.restore();
+            // Draw Level Number
+            context.fillStyle = textColor;
+            context.textAlign = 'right';
+            context.fillText(`${rankData.level}`, 417, 38);
+            context.restore();
+          } else if (rankPositions > 4) {
+            // Draw Chip
+            if (rankPositions === 5) {
+              context.translate(18, 273);
+            } else if (rankPositions === 6) {
+              context.translate(307, 273);
+            } else if (rankPositions === 7) {
+              context.translate(614, 273);
+            } else if (rankPositions === 8) {
+              context.translate(18, 342);
+            } else if (rankPositions === 9) {
+              context.translate(307, 342);
+            } else if (rankPositions === 10) {
+              context.translate(614, 342);
+            }
+          
+            context.fillStyle = cardLightColor;
+            context.beginPath();
+            context.roundRect(0, 0, 289, 51, [19]);
+            context.fill();
 
+            // Draw Rank Number
+            context.fillStyle = textColor;
+            context.font = '25px futura';
+            context.textAlign = 'left';
+            context.textBaseline = 'middle';
+            context.fillText(`#${rank}`, 9, 38);
+            // Draw Profile Picture
+            const avatar = await Canvas.loadImage(member.user.displayAvatarURL({ extension: 'jpg' }));
+            context.save();
+            context.beginPath();
+            context.arc(94, 25, 25, 0, Math.PI * 2, true);
+            context.closePath();
+            context.clip();
+            context.drawImage(avatar, 25, 0, 51, 51);
+            context.restore();
+            // Draw Username
+            const applyUsername = (canvas:Canvas.Canvas, text:string) => {
+              const usernameContext = canvas.getContext('2d');
+              let fontSize = 30;
+              do {
+                fontSize -= 2;
+                usernameContext.font = `${fontSize}px futura`;
+              } while (usernameContext.measureText(text).width > 90);
+              return usernameContext.font;
+            };
+            context.save();
+            context.font = applyUsername(canvasObj, `${member.displayName}`);
+            context.fillStyle = textColor;
+            context.textAlign = 'left';
+            context.textBaseline = 'middle';
+            context.fillText(`${member.displayName}`, 143, 22);
+            context.restore();
+            // Draw Level Number
+            context.fillStyle = textColor;
+            context.textAlign = 'right';
+            context.fillText(`${rankData.level}`, 280, 22);
+            context.restore();
+          }
           // Increment the rank
           rank += 1;
           rankPositions += 1;
