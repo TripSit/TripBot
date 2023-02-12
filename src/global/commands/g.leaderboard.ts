@@ -1,7 +1,11 @@
 import { stripIndents } from 'common-tags';
-import { experienceGet, getUser } from '../utils/knex';
+import {
+  experienceGet, getUser, db,
+} from '../utils/knex';
 import { getTotalLevel } from '../utils/experience';
-import { ExperienceCategory, ExperienceType } from '../@types/pgdb';
+import {
+  ExperienceCategory, ExperienceType, UserExperience,
+} from '../@types/pgdb';
 
 const F = f(__filename);
 
@@ -18,6 +22,38 @@ const rankDict = {
   IGNORED: 'Voidscreamers',
 };
 
+// type RankData = {
+//   rank: number,
+//   discordId: string,
+//   level: number,
+//   exp: number,
+//   nextLevel: number,
+// };
+
+// type LeaderboardData = {
+//   [key: string]: {
+//     [key: string]: RankData[],
+//   },
+// };
+
+type UserRankData = {
+  TEXT: {
+    TOTAL: number,
+    TRIPSITTER: number,
+    GENERAL: number,
+    DEVELOPER: number,
+    TEAM: number,
+    IGNORED: number,
+  },
+  VOICE: {
+    TOTAL: number,
+    TRIPSITTER: number,
+    GENERAL: number,
+    DEVELOPER: number,
+    TEAM: number,
+    IGNORED: number,
+  },
+};
 export default leaderboard;
 
 /**
@@ -177,4 +213,102 @@ export async function leaderboard(
   log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
 
   return response;
+}
+
+export async function getRanks(
+  discordId: string,
+):Promise<UserRankData> {
+  // Grab all the text experience from the database
+
+  const rankResults = {
+    TEXT: {
+      TOTAL: 0,
+      TRIPSITTER: 0,
+      GENERAL: 0,
+      DEVELOPER: 0,
+      TEAM: 0,
+      IGNORED: 0,
+    },
+    VOICE: {
+      TOTAL: 0,
+      TRIPSITTER: 0,
+      GENERAL: 0,
+      DEVELOPER: 0,
+      TEAM: 0,
+      IGNORED: 0,
+    },
+  } as UserRankData;
+
+  const userData = await getUser(discordId, null);
+  const experienceData = await experienceGet(10, undefined, undefined, userData.id);
+
+  if (!experienceData) {
+    return rankResults;
+  }
+
+  let totalTextExp = 0 as number;
+  let totalVoiceExp = 0 as number;
+
+  const allExperience = await experienceGet(20, undefined, undefined, userData.id); // eslint-disable-line
+  for (const experienceData of allExperience) { // eslint-disable-line
+    // log.debug(F, `experienceData: ${JSON.stringify(experienceData, null, 2)}`);
+
+    // Get the count of people in that rank
+    const categoryRank = await db<UserExperience>('user_experience') // eslint-disable-line
+      .count('user_id')
+      .where('category', experienceData.category)
+      .andWhere('type', experienceData.type)
+      .andWhere('total_points', '>', experienceData.total_points);
+
+    rankResults[experienceData.type][experienceData.category] = parseInt(categoryRank[0].count as string, 10) + 1;
+
+    if (experienceData.type === 'TEXT') {
+      totalTextExp += experienceData.total_points;
+      // log.debug(F, `totalTextExp: ${totalTextExp} incremented by ${experienceData.total_points}`);
+    }
+    if (experienceData.type === 'VOICE') {
+      totalVoiceExp += experienceData.total_points;
+    }
+  }
+
+  const totalTextRank = await db<UserExperience>('user_experience')
+    .count('user_id')
+    .where('type', 'TEXT')
+    .andWhereNot('category', 'TOTAL')
+    .andWhereNot('category', 'IGNORED')
+    .andWhere('total_points', '>', totalTextExp)
+    .groupBy(['user_id'])
+    .sum({ total_points: 'total_points' })
+    .orderBy('total_points', 'desc');
+
+  // log.debug(F, `totalTextRank: ${totalTextRank.length}`);
+  // log.debug(F, `totalTextRank: ${JSON.stringify(totalTextRank, null, 2)}`);
+  rankResults.TEXT.TOTAL = totalTextRank.length > 0
+    ? totalTextRank.length + 1
+    : 0;
+
+  // totalTextRank.forEach(async user => {
+  //   // log.debug(F, `user: ${JSON.stringify(user, null, 2)}`);
+  //   const userData = await getUser(null, user.user_id); // eslint-disable-line
+  //   log.debug(F, `discordId: ${JSON.stringify(userData.discord_id, null, 2)}`);
+  // });
+
+  const totalVoiceRank = await db<UserExperience>('user_experience')
+    .count('user_id')
+    .where('total_points', '>', totalVoiceExp)
+    .andWhere('type', 'VOICE')
+    .andWhereNot('category', 'TOTAL')
+    .andWhereNot('category', 'IGNORED')
+    .groupBy(['user_id'])
+    .sum({ total_points: 'total_points' })
+    .orderBy('total_points', 'desc');
+
+  log.debug(F, `totalVoiceRank: ${totalVoiceRank.length}`);
+  rankResults.VOICE.TOTAL = totalVoiceRank.length > 0
+    ? totalVoiceRank.length + 1
+    : 0;
+
+  // log.debug(F, `rankResults: ${JSON.stringify(rankResults, null, 2)}`);
+
+  return rankResults;
 }

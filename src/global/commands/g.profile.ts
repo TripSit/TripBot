@@ -25,7 +25,7 @@ export async function profile(
 
   // Sum up every experience point as long as the type isnt ignored or total
   const totalTextExp = expData
-    .filter(exp => exp.type !== 'VOICE' && exp.category !== 'TOTAL' && exp.category !== 'IGNORED')
+    .filter(exp => exp.type === 'TEXT' && exp.category !== 'TOTAL' && exp.category !== 'IGNORED')
     .reduce((acc, exp) => acc + exp.total_points, 0);
 
   const totalVoiceExp = expData
