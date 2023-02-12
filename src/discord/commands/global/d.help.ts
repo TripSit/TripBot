@@ -33,7 +33,7 @@ export default dHelp;
 export const dHelp: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('help')
-    .setDescription('Information bout TripBot Commands'),
+    .setDescription('Information about TripBot Commands'),
   async execute(interaction) {
     startLog(F, interaction);
 

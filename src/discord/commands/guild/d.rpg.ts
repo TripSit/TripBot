@@ -984,7 +984,7 @@ export async function rpgWork(
       fail: {
         title: 'Raid Fail',
         description: stripIndents`
-          You're already raided Moonbear's office this week, give them a break!
+          You've already raided Moonbear's office this week, give them a break!
         `,
         color: Colors.Red,
       },
