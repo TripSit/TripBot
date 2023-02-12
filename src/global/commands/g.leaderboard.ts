@@ -212,7 +212,7 @@ export async function getRanks(
   // log.debug(F, `totalTextRank: ${JSON.stringify(totalTextRank, null, 2)}`);
   rankResults.TEXT.TOTAL = totalTextRank.length > 0
     ? totalTextRank.length + 1
-    : 0;
+    : 1;
 
   // totalTextRank.forEach(async user => {
   //   // log.debug(F, `user: ${JSON.stringify(user, null, 2)}`);
