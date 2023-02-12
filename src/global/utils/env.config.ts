@@ -22,6 +22,7 @@ export const env = {
   IMGURL_SECRET: process.env.IMGURL_SECRET,
   YOUTUBE_TOKEN: process.env.YOUTUBE_TOKEN,
   IMDB_TOKEN: process.env.IMDB_TOKEN,
+  LOGTAIL_TOKEN: process.env.LOGTAIL_TOKEN,
 
   POSTGRES_DBURL: process.env.POSTGRES_DBURL,
 

@@ -60,11 +60,17 @@ const myFormat = printf(({
 // We only want logtail logs in production
 let transportOptions = [];
 if (env.NODE_ENV === 'production') {
-  transportOptions = [
-    new transports.Console(),
-
-    new LogtailTransport(new Logtail('UHsXGDC8SgMzMNSNXeqyFpf7')),
-  ];
+  if (env.LOGTAIL_TOKEN) {
+    transportOptions = [
+      new transports.Console(),
+      new LogtailTransport(new Logtail(env.LOGTAIL_TOKEN)),
+    ];
+  } else {
+    console.error('No Logtail token found, not logging to Logtail'); // eslint-disable-line no-console
+    transportOptions = [
+      new transports.Console(),
+    ];
+  }
 } else {
   transportOptions = [
     new transports.Console(),

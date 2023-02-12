@@ -425,7 +425,7 @@ export async function experienceGet(
   type?:ExperienceType,
   userId?:string,
 ):Promise<UserExperience[]> {
-  log.debug(F, `experienceGet started with: limit: ${limit}, category: ${category}, type: ${type}, userId: ${userId}`);
+  // log.debug(F, `experienceGet started with: limit: ${limit}, category: ${category}, type: ${type}, userId: ${userId}`);
 
   if (env.POSTGRES_DBURL === undefined) return [];
   if (category) {
