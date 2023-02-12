@@ -1,6 +1,10 @@
-import { db, experienceGet, getUser } from '../utils/knex';
+import {
+  experienceGet, getUser, db,
+} from '../utils/knex';
 import { expForNextLevel, getTotalLevel } from '../utils/experience';
-import { ExperienceCategory, ExperienceType, UserExperience } from '../@types/pgdb';
+import {
+  ExperienceCategory, ExperienceType, UserExperience,
+} from '../@types/pgdb';
 
 const F = f(__filename);
 
@@ -17,6 +21,20 @@ type LeaderboardData = {
     [key: string]: RankData[],
   },
 };
+
+// type RankData = {
+//   rank: number,
+//   discordId: string,
+//   level: number,
+//   exp: number,
+//   nextLevel: number,
+// };
+
+// type LeaderboardData = {
+//   [key: string]: {
+//     [key: string]: RankData[],
+//   },
+// };
 
 type UserRankData = {
   TEXT: {
