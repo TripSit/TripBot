@@ -69,7 +69,7 @@ export const dH2flow: SlashCommand = {
       If you get enough ✨ then you're on your way to your first
       **🌊AquaBadge🔰** or **💖LoveCup🏆** or **🏃Move Medal🏅**!
       Get enough 🌊🔰, 💖🏆 or 🏃🏅 and you'll level up!
-      Level up enoough and we'll welcome you to the fabled
+      Level up enough and we'll welcome you to the fabled
       ☆ﾟ.*･｡ﾟ☆ﾟ.*･｡ﾟ🥇*H2Flow Club*🥇☆ﾟ.*･｡ﾟ☆ﾟ.*･｡ﾟ`)
       .setFooter({ text: `H2Flow Club Status: ${platinumClub}` })
       .addFields(
