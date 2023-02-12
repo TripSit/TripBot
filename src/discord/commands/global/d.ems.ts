@@ -25,7 +25,7 @@ export const dEms: SlashCommand = {
     emsInfo.forEach(entry => {
       const country = `(${entry.country})`;
       const website = `\n[Website](${entry.website})`;
-      const webchat = `\n[Webchat](${entry.website})`;
+      const webchat = `\n[Webchat](${entry.webchat})`;
       const phone = `\nCall: ${entry.phone}`;
       const text = `\nText: ${entry.text}`;
       embed.addFields(

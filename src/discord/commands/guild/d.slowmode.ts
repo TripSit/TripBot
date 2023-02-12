@@ -43,7 +43,7 @@ export const dSlowmode: SlashCommand = {
         .setRequired(true)))
     .addSubcommand(subcommand => subcommand
       .setName('off')
-      .setDescription('Turn on slowmode')),
+      .setDescription('Turn off slowmode')),
   async execute(interaction) {
     startLog(F, interaction);
 

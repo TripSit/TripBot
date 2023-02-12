@@ -17,7 +17,7 @@ const plink = 'Plink';
 const puddle = 'Puddle';
 const helloenjoy = 'Hello Enjoy';
 const softmurmur = 'Soft Murmur';
-const mandala = 'Draw A 3D Mandala';
+// const mandala = 'Draw A 3D Mandala';
 const waytogo = 'A Way To Go';
 const waterphysics = 'Water physics';
 const patterns = 'Patterns';
@@ -50,7 +50,7 @@ export const dTriptoys: SlashCommand = {
         { name: puddle, value: '5' },
         { name: helloenjoy, value: '6' },
         { name: softmurmur, value: '7' },
-        { name: mandala, value: '8' },
+        // { name: mandala, value: '8' },
         { name: waytogo, value: '9' },
         { name: waterphysics, value: '10' },
         { name: patterns, value: '11' },
@@ -81,7 +81,7 @@ export const dTriptoys: SlashCommand = {
       5: { name: puddle, value: '[Interact with paint-like soundwaves](http://iridescentpuddle.com/)', inline: true },
       6: { name: helloenjoy, value: '[Colorful game with music](https://helloenjoy.itch.io/hellorun)', inline: true },
       7: { name: softmurmur, value: '[Create your own mix of background noise](https://asoftmurmur.com/)', inline: true },
-      8: { name: mandala, value: '[Draw a mandala with different colors in 3d](https://askalice.me/mandala)', inline: true },
+      // 8: { name: mandala, value: '[Draw a mandala with different colors in 3d](https://askalice.me/mandala)', inline: true },
       9: { name: waytogo, value: '[Draw lines and walk through a forest while creating music](http://a-way-to-go.com/)', inline: true },
       10: { name: waterphysics, value: '[Create music by clicking dots on the roster](https://madebyevan.com/webgl-water/)', inline: true },
       11: { name: patterns, value: '[Chris Shier\'s animations](https://csh.bz/)', inline: true },
@@ -124,10 +124,10 @@ export const dTriptoys: SlashCommand = {
         { name: puddle, value: '[Interact with paint-like soundwaves](http://iridescentpuddle.com/)', inline: true },
         { name: helloenjoy, value: '[Colorful game with music](https://helloenjoy.itch.io/hellorun)', inline: true },
         { name: softmurmur, value: '[Create your own mix of background noise](https://asoftmurmur.com/)', inline: true },
-        { name: mandala, value: '[Draw a mandala with different colors in 3d](https://askalice.me/mandala)', inline: true },
+        // { name: mandala, value: '[Draw a mandala with different colors in 3d](https://askalice.me/mandala)', inline: true },
         { name: waytogo, value: '[Draw lines and walk through a forest while creating music](http://a-way-to-go.com/)', inline: true },
         { name: waterphysics, value: '[Create music by clicking dots on the roster](https://madebyevan.com/webgl-water/)', inline: true },
-        { name: 'Plasma Pong', value: '[Windows version of Pong with fluid dynamics](https://plasma-pong.en.softonic.com/)', inline: true },
+        // { name: 'Plasma Pong', value: '[Windows version of Pong with fluid dynamics](https://plasma-pong.en.softonic.com/)', inline: true },
         { name: strobe, value: '[Stare at the middle for 30 seconds for to experience an optical illusion](https://strobe.cool/)', inline: true },
         { name: lights, value: '[Musical experience to the tunes of Ellie Goulding\'s Lights](https://helloenjoy.itch.io/lights)', inline: true },
         { name: patapap, value: '[Press random keys on your keyboard for a musical and visual experience](https://www.patatap.com/)', inline: true },
