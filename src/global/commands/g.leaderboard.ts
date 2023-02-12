@@ -148,9 +148,12 @@ export async function getRanks(
     },
   } as UserRankData;
 
-  const userData = await getUser(discordId, null); // eslint-disable-line
+  const userData = await getUser(discordId, null);
+  const experienceData = await experienceGet(10, undefined, undefined, userData.id);
 
-  // log.debug(F, `userId: ${userData.id}`);
+  if (!experienceData) {
+    return rankResults;
+  }
 
   let totalTextExp = 0 as number;
   let totalVoiceExp = 0 as number;
@@ -170,6 +173,7 @@ export async function getRanks(
 
     if (experienceData.type === 'TEXT') {
       totalTextExp += experienceData.total_points;
+      // log.debug(F, `totalTextExp: ${totalTextExp} incremented by ${experienceData.total_points}`);
     }
     if (experienceData.type === 'VOICE') {
       totalVoiceExp += experienceData.total_points;
@@ -178,13 +182,25 @@ export async function getRanks(
 
   const totalTextRank = await db<UserExperience>('user_experience')
     .count('user_id')
-    .where('total_points', '>', totalTextExp)
-    .andWhere('type', 'TEXT')
+    .where('type', 'TEXT')
     .andWhereNot('category', 'TOTAL')
     .andWhereNot('category', 'IGNORED')
+    .andWhere('total_points', '>', totalTextExp)
     .groupBy(['user_id'])
     .sum({ total_points: 'total_points' })
     .orderBy('total_points', 'desc');
+
+  // log.debug(F, `totalTextRank: ${totalTextRank.length}`);
+  // log.debug(F, `totalTextRank: ${JSON.stringify(totalTextRank, null, 2)}`);
+  rankResults.TEXT.TOTAL = totalTextRank.length > 0
+    ? totalTextRank.length + 1
+    : 0;
+
+  // totalTextRank.forEach(async user => {
+  //   // log.debug(F, `user: ${JSON.stringify(user, null, 2)}`);
+  //   const userData = await getUser(null, user.user_id); // eslint-disable-line
+  //   log.debug(F, `discordId: ${JSON.stringify(userData.discord_id, null, 2)}`);
+  // });
 
   const totalVoiceRank = await db<UserExperience>('user_experience')
     .count('user_id')
@@ -197,13 +213,8 @@ export async function getRanks(
     .orderBy('total_points', 'desc');
 
   log.debug(F, `totalVoiceRank: ${totalVoiceRank.length}`);
-  rankResults.TEXT.TOTAL = totalVoiceRank.length > 0
-    ? parseInt(totalTextRank[0].count as string, 10) + 1
-    : 0;
-
-  log.debug(F, `totalVoiceRank: ${totalVoiceRank.length}`);
   rankResults.VOICE.TOTAL = totalVoiceRank.length > 0
-    ? parseInt(totalVoiceRank[0].count as string, 10) + 1
+    ? totalVoiceRank.length + 1
     : 0;
 
   // log.debug(F, `rankResults: ${JSON.stringify(rankResults, null, 2)}`);
