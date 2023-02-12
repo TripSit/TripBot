@@ -21,7 +21,7 @@ export default dProfile;
 const F = f(__filename);
 
 Canvas.GlobalFonts.registerFromPath(
-  path.resolve(__dirname, '../../assets/img/Futura.otf'),
+  path.resolve(__dirname, '../../assets/Futura.otf'),
   'futura',
 );
 
@@ -117,8 +117,7 @@ export const dProfile: SlashCommand = {
     }
 
     // Load Icon Images
-    const iconPath = await imageGet('profileIcons');
-    const Icons = await Canvas.loadImage(iconPath);
+    const Icons = await Canvas.loadImage(await imageGet('cardIcons'));
     context.drawImage(Icons, 5, -2, 913, 292);
 
     // Avatar Image
@@ -139,30 +138,22 @@ export const dProfile: SlashCommand = {
     context.fillStyle = cardDarkColor;
     context.fill();
     context.restore();
-    let StatusIconPath = 'https://i.gyazo.com/b2b1bf7d91acdb4ccc72dfde3d7075fc.png';
+    let StatusIconPath = await imageGet('iconOffline');
     if (target.presence) {
       if (target.presence.status === 'online') {
-        // StatusIconPath = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
-        StatusIconPath = 'https://i.gyazo.com/cd7b9e018d4818e4b6588cab5d5b019d.png';
+        StatusIconPath = await imageGet('iconOnline');
       } else if (target.presence.status === 'idle') {
-        // StatusIconPath = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
-        StatusIconPath = 'https://i.gyazo.com/df8f4a4ca2553d4d657ee82e4bf64a3a.png';
+        StatusIconPath = await imageGet('iconIdle');
       } else if (target.presence.status === 'dnd') {
-        // StatusIconPath = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
-        StatusIconPath = 'https://i.gyazo.com/a98f0e9dd72f6fb59af388d719d01e64.png';
+        StatusIconPath = await imageGet('iconDnd');
       }
     }
     // log.debug(F, `StatusIconPath: ${StatusIconPath}`);
-    try {
-      const StatusIcon = await Canvas.loadImage(StatusIconPath);
-      context.drawImage(StatusIcon, 90, 92);
-    } catch (err) {
-      log.error(F, `Error loading status icon: ${err}`);
-    }
+    const StatusIcon = await Canvas.loadImage(StatusIconPath);
+    context.drawImage(StatusIcon, 90, 92);
 
     // WIP: Camp Icon
-    // const CampIconPath = 'https://i.gyazo.com/62a9db6c42ca3c03cc892b28f5d8b367.png';
-    // const CampIcon = await Canvas.loadImage(CampIconPath);
+    // const CampIcon = await Canvas.loadImage(await imageGet('campIconA'));
     // context.drawImage(CampIcon, 547, 17);
 
     // WIP: Check to see if a user has bought a title in the shop
@@ -250,27 +241,27 @@ export const dProfile: SlashCommand = {
     let LevelImagePath = '' as string;
 
     if (totalTextData.level < 10) {
-      LevelImagePath = 'https://i.gyazo.com/13daebdda4ca75ab59923396f255f7db.png';
+      LevelImagePath = await imageGet('badgeVip0');
     } else if (totalTextData.level < 20) {
-      LevelImagePath = 'https://i.gyazo.com/5d37a2d3193c4c7e8a033b6b2ed7cb7f.png';
+      LevelImagePath = await imageGet('badgeVip1');
     } else if (totalTextData.level < 30) {
-      LevelImagePath = 'https://i.gyazo.com/161506f23b1907ac1280db26ead5a0a4.png';
+      LevelImagePath = await imageGet('badgeVip2');
     } else if (totalTextData.level < 40) {
-      LevelImagePath = 'https://i.gyazo.com/4bd15a019f7fd5c881e196c38a8b8bf5.png';
+      LevelImagePath = await imageGet('badgeVip3');
     } else if (totalTextData.level < 50) {
-      LevelImagePath = 'https://i.gyazo.com/ca0b1aca00a71a992c196ca0498efef3.png';
+      LevelImagePath = await imageGet('badgeVip4');
     } else if (totalTextData.level < 60) {
-      LevelImagePath = 'https://i.gyazo.com/f614a14051dbc1366ce4de2ead98a519.png';
+      LevelImagePath = await imageGet('badgeVip5');
     } else if (totalTextData.level < 70) {
-      LevelImagePath = 'https://i.gyazo.com/3844d103c034f16e781fd947f593895c.png';
+      LevelImagePath = await imageGet('badgeVip6');
     } else if (totalTextData.level < 80) {
-      LevelImagePath = 'https://i.gyazo.com/0357a63887c1183d53827eb8ebb29ee3.png';
+      LevelImagePath = await imageGet('badgeVip7');
     } else if (totalTextData.level < 90) {
-      LevelImagePath = 'https://i.gyazo.com/693948d030989ffa5bf5e381f471bac6.png';
+      LevelImagePath = await imageGet('badgeVip8');
     } else if (totalTextData.level < 100) {
-      LevelImagePath = 'https://i.gyazo.com/eed9e28789262927cefe0a68b3126ed2.png';
+      LevelImagePath = await imageGet('badgeVip9');
     } else if (totalTextData.level >= 100) {
-      LevelImagePath = 'https://i.gyazo.com/4428c08aaf82b7363fb7a327ce27a4c3.png';
+      LevelImagePath = await imageGet('badgeVip10');
     }
     // log.debug(F, `LevelImagePath: ${LevelImagePath}`);
     const LevelImage = await Canvas.loadImage(LevelImagePath);
@@ -293,22 +284,21 @@ export const dProfile: SlashCommand = {
     const startDegrees = 0;
     // End degrees is the percentage of the level * 360 degrees, or a full circle
     const endDegrees = 360 * percentageOfLevel;
-    log.debug(F, `startDegrees: ${startDegrees}`);
-    log.debug(F, `endDegrees: ${endDegrees}`);
+    // log.debug(F, `startDegrees: ${startDegrees}`);
+    // log.debug(F, `endDegrees: ${endDegrees}`);
 
     // Canvas thinks that the "start" of a circle is the 3 o'clock position,
     // so we need to subtract 90 degrees from the start and end degrees to "rotate" the circle
     const startRadians = ((startDegrees - 90) * Math.PI) / 180;
     const endRadians = ((endDegrees - 90) * Math.PI) / 180;
-    log.debug(F, `startRadians: ${startRadians}`);
-    log.debug(F, `endRadians: ${endRadians}`);
+    // log.debug(F, `startRadians: ${startRadians}`);
+    // log.debug(F, `endRadians: ${endRadians}`);
 
     // Circular Level Bar
     context.strokeStyle = textColor;
     context.lineCap = 'round';
     context.lineWidth = 18;
     context.beginPath();
-    // context.arc(801, 104, 77, 1.5 * Math.PI, (0.70 * 1.4999) * Math.PI, false);
     context.arc(802, 103, 76, startRadians, endRadians);
     context.stroke();
 
@@ -319,8 +309,7 @@ export const dProfile: SlashCommand = {
       context.textAlign = 'left';
       context.fillStyle = textColor;
       context.fillText('HAPPY BIRTHDAY!', 146, 34);
-      const birthdayOverlay = await Canvas.loadImage(await imageGet('birthday'));
-      // const birthdayOverlay = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'birthday.png'));
+      const birthdayOverlay = await Canvas.loadImage(await imageGet('cardBirthday'));
       context.drawImage(birthdayOverlay, 0, 0, 934, 282);
     }
 
