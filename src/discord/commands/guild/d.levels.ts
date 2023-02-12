@@ -14,126 +14,22 @@ import { profile } from '../../../global/commands/g.profile';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
 import { imageGet } from '../../utils/imageGet';
+import { startLog } from '../../utils/startLog';
+import { numFormatter } from './d.profile';
 // import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 // import { inventoryGet } from '../../../global/utils/knex';
 // import { imageGet } from '../../utils/imageGet';
 
 // import { getTotalLevel } from '../../../global/utils/experience';
 
+export default dLevels;
+
 const F = f(__filename);
 
 Canvas.GlobalFonts.registerFromPath(
-  path.resolve(__dirname, '../../assets/img/Futura.otf'),
+  path.resolve(__dirname, '../../assets/Futura.otf'),
   'futura',
 );
-
-const colorDefs = {
-  [env.ROLE_PURPLE]: {
-    cardDarkColor: '#19151e',
-    cardLightColor: '#2d2636',
-    chipColor: '#47335f',
-    textColor: '#b072ff',
-  },
-  [env.ROLE_BLUE]: {
-    cardDarkColor: '#161d1f',
-    cardLightColor: '#283438',
-    chipColor: '#3a5760',
-    textColor: '#5acff5',
-  },
-  [env.ROLE_GREEN]: {
-    cardDarkColor: '#151a16',
-    cardLightColor: '#252e28',
-    chipColor: '#31543d',
-    textColor: '#6de194',
-  },
-  [env.ROLE_PINK]: {
-    cardDarkColor: '#1e151b',
-    cardLightColor: '#352530',
-    chipColor: '#5f324f',
-    textColor: '#ff6dcd',
-  },
-  [env.ROLE_RED]: {
-    cardDarkColor: '#1f1616',
-    cardLightColor: '#382727',
-    chipColor: '#613838',
-    textColor: '#ff5f60',
-  },
-  [env.ROLE_ORANGE]: {
-    cardDarkColor: '#1d1814',
-    cardLightColor: '#342b24',
-    chipColor: '#5f422e',
-    textColor: '#ffa45f',
-  },
-  [env.ROLE_YELLOW]: {
-    cardDarkColor: '#1d1b14',
-    cardLightColor: '#333024',
-    chipColor: '#5e532d',
-    textColor: '#ffdd5d',
-  },
-  [env.ROLE_WHITE]: {
-    cardDarkColor: '#242424',
-    cardLightColor: '#404040',
-    chipColor: '#666666',
-    textColor: '#dadada',
-  },
-  [env.ROLE_BLACK]: {
-    cardDarkColor: '#0e0e0e',
-    cardLightColor: '#181818',
-    chipColor: '#262626',
-    textColor: '#626262',
-  },
-  [env.ROLE_DONOR_PURPLE]: {
-    cardDarkColor: '#1f1b25',
-    cardLightColor: '#372e42',
-    chipColor: '#432767',
-    textColor: '#9542ff',
-  },
-  [env.ROLE_DONOR_BLUE]: {
-    cardDarkColor: '#161d1f',
-    cardLightColor: '#283438',
-    chipColor: '#3a5760',
-    textColor: '#22bef0',
-  },
-  [env.ROLE_DONOR_GREEN]: {
-    cardDarkColor: '#1a211c',
-    cardLightColor: '#2d3b32',
-    chipColor: '#275c39',
-    textColor: '#45e47b',
-  },
-  [env.ROLE_DONOR_PINK]: {
-    cardDarkColor: '#261c23',
-    cardLightColor: '#44303d',
-    chipColor: '#682b52',
-    textColor: '#ff4ac1',
-  },
-  [env.ROLE_DONOR_RED]: {
-    cardDarkColor: '#241b1b',
-    cardLightColor: '#412e2e',
-    chipColor: '#662526',
-    textColor: '#ff3c3e',
-  },
-  [env.ROLE_DONOR_ORANGE]: {
-    cardDarkColor: '#241f1b',
-    cardLightColor: '#41362e',
-    chipColor: '#664225',
-    textColor: '#ff913b',
-  },
-  [env.ROLE_DONOR_YELLOW]: {
-    cardDarkColor: '#23211a',
-    cardLightColor: '#3f3b2c',
-    chipColor: '#655721',
-    textColor: '#ffd431',
-  },
-} as {
-  [key: string]: {
-    cardDarkColor: string;
-    cardLightColor: string;
-    chipColor: string;
-    textColor: string;
-  };
-};
-
-export default dLevels;
 
 export const dLevels: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -145,24 +41,30 @@ export const dLevels: SlashCommand = {
   async execute(
     interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction,
   ) {
-    // startLog(F, interaction);
+    const startTime = Date.now();
     if (!interaction.guild) {
       interaction.reply('You can only use this command in a guild!');
       return false;
     }
+    startLog(F, interaction);
     await interaction.deferReply();
 
     // Target is the option given, if none is given, it will be the user who used the command
     const target = interaction.options.getMember('target')
       ? interaction.options.getMember('target') as GuildMember
       : interaction.member as GuildMember;
+    // log.debug(F, `target id: ${target.id}`);
+    // log.debug(F, `targetData: ${JSON.stringify(target, null, 2)}`);
 
     const targetData = await levels(target.id);
+    // log.debug(F, `targetData: ${JSON.stringify(targetData, null, 2)}`);
+
     const rankData = await getRanks(target.id);
     log.debug(F, `rankData: ${JSON.stringify(rankData, null, 2)}`);
+
     const profileData = await profile(target.id);
-    log.debug(F, `target id: ${target.id}`);
-    log.debug(F, `targetData: ${interaction.member}`);
+    // log.debug(F, `profileData: ${JSON.stringify(profileData, null, 2)}`);
+
     let layoutHeight = 386;
     let layout = 1;
     if (target.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
@@ -284,32 +186,22 @@ export const dLevels: SlashCommand = {
     //   ? path.join(__dirname, '..', '..', 'assets', 'img', 'icons', `${target.presence?.status}.png`)
     //   : path.join(__dirname, '..', '..', 'assets', 'img', 'icons', 'offline.png');
 
-    // log.debug(F, `StatusIconPath: ${StatusIconPath}`);
-
-    let StatusIconPath = 'https://i.gyazo.com/b2b1bf7d91acdb4ccc72dfde3d7075fc.png';
+    let StatusIconPath = await imageGet('iconOffline');
     if (target.presence) {
       if (target.presence.status === 'online') {
-        // StatusIconPath = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
-        StatusIconPath = 'https://i.gyazo.com/cd7b9e018d4818e4b6588cab5d5b019d.png';
+        StatusIconPath = await imageGet('iconOnline');
       } else if (target.presence.status === 'idle') {
-        // StatusIconPath = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
-        StatusIconPath = 'https://i.gyazo.com/df8f4a4ca2553d4d657ee82e4bf64a3a.png';
+        StatusIconPath = await imageGet('iconIdle');
       } else if (target.presence.status === 'dnd') {
-        // StatusIconPath = `.\\src\\discord\\assets\\img\\icons\\${target.presence!.status}.png`;
-        StatusIconPath = 'https://i.gyazo.com/a98f0e9dd72f6fb59af388d719d01e64.png';
+        StatusIconPath = await imageGet('iconDnd');
       }
     }
-
-    try {
-      const StatusIcon = await Canvas.loadImage(StatusIconPath);
-      context.drawImage(StatusIcon, 90, 92);
-    } catch (err) {
-      log.error(F, `Error loading status icon: ${err}`);
-    }
+    // log.debug(F, `StatusIconPath: ${StatusIconPath}`);
+    const StatusIcon = await Canvas.loadImage(StatusIconPath);
+    context.drawImage(StatusIcon, 90, 92);
 
     /* WIP: Camp Icon
-    const CampIconPath = 'https://i.gyazo.com/62a9db6c42ca3c03cc892b28f5d8b367.png';
-    const CampIcon = await Canvas.loadImage(CampIconPath);
+    // const CampIcon = await Canvas.loadImage(await imageGet('campIconA'));
     context.drawImage(CampIcon, 556, 17);
     */
 
@@ -335,20 +227,20 @@ export const dLevels: SlashCommand = {
     context.fillText(`${target.displayName}`, 146, 76);
 
     // Progress Bars Calculate
-    const progressText = targetData.text.total.exp / targetData.text.total.nextLevel;
-    const progressVoice = targetData.voice.total.exp / targetData.voice.total.nextLevel;
+    const progressText = targetData.TEXT.TOTAL.level_exp / targetData.TEXT.TOTAL.nextLevel;
+    const progressVoice = targetData.VOICE.TOTAL.level_exp / targetData.VOICE.TOTAL.nextLevel;
 
-    const progressGeneral = targetData.text.GENERAL
-      ? targetData.text.GENERAL.exp / targetData.text.GENERAL.nextLevel
+    const progressGeneral = targetData.TEXT.GENERAL
+      ? targetData.TEXT.GENERAL.level_exp / targetData.TEXT.GENERAL.nextLevel
       : 0;
-    const progressTripsitter = targetData.text.TRIPSITTER
-      ? targetData.text.TRIPSITTER.exp / targetData.text.TRIPSITTER.nextLevel
+    const progressTripsitter = targetData.TEXT.TRIPSITTER
+      ? targetData.TEXT.TRIPSITTER.level_exp / targetData.TEXT.TRIPSITTER.nextLevel
       : 0;
-    const progressDeveloper = targetData.text.DEVELOPER
-      ? targetData.text.DEVELOPER.exp / targetData.text.DEVELOPER.nextLevel
+    const progressDeveloper = targetData.TEXT.DEVELOPER
+      ? targetData.TEXT.DEVELOPER.level_exp / targetData.TEXT.DEVELOPER.nextLevel
       : 0;
-    const progressTeam = targetData.text.TEAM
-      ? targetData.text.TEAM.exp / targetData.text.TEAM.nextLevel
+    const progressTeam = targetData.TEXT.TEAM
+      ? targetData.TEXT.TEAM.level_exp / targetData.TEXT.TEAM.nextLevel
       : 0;
     // Progress Bars Draw
     context.fillStyle = textColor;
@@ -371,22 +263,22 @@ export const dLevels: SlashCommand = {
     context.fillStyle = '#ffffff';
     context.textBaseline = 'middle';
     context.textAlign = 'right';
-    context.fillText(`${targetData.text.total.level}`, 657, 213);
+    context.fillText(`${targetData.TEXT.TOTAL.level}`, 657, 213);
     context.font = '25px futura';
-    context.fillText(`${targetData.text.GENERAL.level}`, 657, 284);
-    context.fillText(`${targetData.voice.total.level}`, 657, 344);
-    if (layout > 1 && targetData.text.TRIPSITTER) {
-      context.fillText(`${targetData.text.TRIPSITTER.level}`, 657, 404);
+    context.fillText(`${targetData.TEXT.GENERAL.level}`, 657, 284);
+    context.fillText(`${targetData.VOICE.TOTAL.level}`, 657, 344);
+    if (layout > 1 && targetData.TEXT.TRIPSITTER) {
+      context.fillText(`${targetData.TEXT.TRIPSITTER.level}`, 657, 404);
     } else {
       context.fillText('0', 657, 404);
     }
-    if (layout > 2 && targetData.text.DEVELOPER) {
-      context.fillText(`${targetData.text.DEVELOPER.level}`, 657, 464);
+    if (layout > 2 && targetData.TEXT.DEVELOPER) {
+      context.fillText(`${targetData.TEXT.DEVELOPER.level}`, 657, 464);
     } else {
       context.fillText('0', 657, 464);
     }
-    if (layout > 3 && targetData.text.TEAM) {
-      context.fillText(`${targetData.text.TEAM.level}`, 657, 524);
+    if (layout > 3 && targetData.TEXT.TEAM) {
+      context.fillText(`${targetData.TEXT.TEAM.level}`, 657, 524);
     } else {
       context.fillText('0', 657, 524);
     }
@@ -418,17 +310,6 @@ export const dLevels: SlashCommand = {
     context.fillText('LEVEL', ((layoutHeight / 2) - 77), 45);
     context.restore();
 
-    // Number Formatter
-    function numFormatter(num:number):string {
-      if (num > 999 && num < 1000000) {
-        return `${(num / 1000).toFixed(2)}K`;
-      }
-      if (num > 1000000) {
-        return `${(num / 1000000).toFixed(2)}M`;
-      }
-      return num.toFixed(0);
-    }
-
     // Messages Sent Text
     context.textAlign = 'right';
     if (profileData.totalTextExp) {
@@ -453,47 +334,149 @@ export const dLevels: SlashCommand = {
     context.roundRect(0, 0, 921, (layoutHeight - 18), [19]);
     context.clip();
     // Load Icon Images
-    const Icons = await Canvas.loadImage('https://i.gyazo.com/69d030886df6d0d260e2a293a6bc7894.png');
-    // const Icons = await Canvas.loadImage(path.join(__dirname, '..', '..', 'assets', 'img', 'cards', 'icons.png'));
+    const Icons = await Canvas.loadImage(await imageGet('cardLevelIcons'));
     context.drawImage(Icons, 0, 0);
     context.restore();
     // Choose and Draw the Level Image
     let LevelImagePath = '' as string;
 
-    if (targetData.text.total.level < 10) {
-      LevelImagePath = 'https://i.gyazo.com/13daebdda4ca75ab59923396f255f7db.png';
-    } else if (targetData.text.total.level < 20) {
-      LevelImagePath = 'https://i.gyazo.com/5d37a2d3193c4c7e8a033b6b2ed7cb7f.png';
-    } else if (targetData.text.total.level < 30) {
-      LevelImagePath = 'https://i.gyazo.com/161506f23b1907ac1280db26ead5a0a4.png';
-    } else if (targetData.text.total.level < 40) {
-      LevelImagePath = 'https://i.gyazo.com/4bd15a019f7fd5c881e196c38a8b8bf5.png';
-    } else if (targetData.text.total.level < 50) {
-      LevelImagePath = 'https://i.gyazo.com/ca0b1aca00a71a992c196ca0498efef3.png';
-    } else if (targetData.text.total.level < 60) {
-      LevelImagePath = 'https://i.gyazo.com/f614a14051dbc1366ce4de2ead98a519.png';
-    } else if (targetData.text.total.level < 70) {
-      LevelImagePath = 'https://i.gyazo.com/3844d103c034f16e781fd947f593895c.png';
-    } else if (targetData.text.total.level < 80) {
-      LevelImagePath = 'https://i.gyazo.com/0357a63887c1183d53827eb8ebb29ee3.png';
-    } else if (targetData.text.total.level < 90) {
-      LevelImagePath = 'https://i.gyazo.com/693948d030989ffa5bf5e381f471bac6.png';
-    } else if (targetData.text.total.level < 100) {
-      LevelImagePath = 'https://i.gyazo.com/eed9e28789262927cefe0a68b3126ed2.png';
-    } else if (targetData.text.total.level >= 100) {
-      LevelImagePath = 'https://i.gyazo.com/4428c08aaf82b7363fb7a327ce27a4c3.png';
+    if (targetData.TEXT.TOTAL.level < 10) {
+      LevelImagePath = await imageGet('badgeVip0');
+    } else if (targetData.TEXT.TOTAL.level < 20) {
+      LevelImagePath = await imageGet('badgeVip1');
+    } else if (targetData.TEXT.TOTAL.level < 30) {
+      LevelImagePath = await imageGet('badgeVip2');
+    } else if (targetData.TEXT.TOTAL.level < 40) {
+      LevelImagePath = await imageGet('badgeVip3');
+    } else if (targetData.TEXT.TOTAL.level < 50) {
+      LevelImagePath = await imageGet('badgeVip4');
+    } else if (targetData.TEXT.TOTAL.level < 60) {
+      LevelImagePath = await imageGet('badgeVip5');
+    } else if (targetData.TEXT.TOTAL.level < 70) {
+      LevelImagePath = await imageGet('badgeVip6');
+    } else if (targetData.TEXT.TOTAL.level < 80) {
+      LevelImagePath = await imageGet('badgeVip7');
+    } else if (targetData.TEXT.TOTAL.level < 90) {
+      LevelImagePath = await imageGet('badgeVip8');
+    } else if (targetData.TEXT.TOTAL.level < 100) {
+      LevelImagePath = await imageGet('badgeVip9');
+    } else if (targetData.TEXT.TOTAL.level >= 100) {
+      LevelImagePath = await imageGet('badgeVip10');
     }
-    try {
-      // log.debug(F, `LevelImagePath: ${LevelImagePath}`);
-      const LevelImage = await Canvas.loadImage(LevelImagePath);
-      context.drawImage(LevelImage, 97, 181, 58, 58);
-    } catch (err) {
-      log.error(F, `Error loading star image: ${err}`);
-    }
+    const LevelImage = await Canvas.loadImage(LevelImagePath);
+    context.drawImage(LevelImage, 97, 181, 58, 58);
 
     // Process The Entire Card and Send it to Discord
     const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-levels-image.png' });
     interaction.editReply({ files: [attachment] });
+
+    log.debug(F, `Total Time: ${Date.now() - startTime}ms`);
     return true;
   },
+};
+
+const colorDefs = {
+  [env.ROLE_PURPLE]: {
+    cardDarkColor: '#19151e',
+    cardLightColor: '#2d2636',
+    chipColor: '#47335f',
+    textColor: '#b072ff',
+  },
+  [env.ROLE_BLUE]: {
+    cardDarkColor: '#161d1f',
+    cardLightColor: '#283438',
+    chipColor: '#3a5760',
+    textColor: '#5acff5',
+  },
+  [env.ROLE_GREEN]: {
+    cardDarkColor: '#151a16',
+    cardLightColor: '#252e28',
+    chipColor: '#31543d',
+    textColor: '#6de194',
+  },
+  [env.ROLE_PINK]: {
+    cardDarkColor: '#1e151b',
+    cardLightColor: '#352530',
+    chipColor: '#5f324f',
+    textColor: '#ff6dcd',
+  },
+  [env.ROLE_RED]: {
+    cardDarkColor: '#1f1616',
+    cardLightColor: '#382727',
+    chipColor: '#613838',
+    textColor: '#ff5f60',
+  },
+  [env.ROLE_ORANGE]: {
+    cardDarkColor: '#1d1814',
+    cardLightColor: '#342b24',
+    chipColor: '#5f422e',
+    textColor: '#ffa45f',
+  },
+  [env.ROLE_YELLOW]: {
+    cardDarkColor: '#1d1b14',
+    cardLightColor: '#333024',
+    chipColor: '#5e532d',
+    textColor: '#ffdd5d',
+  },
+  [env.ROLE_WHITE]: {
+    cardDarkColor: '#242424',
+    cardLightColor: '#404040',
+    chipColor: '#666666',
+    textColor: '#dadada',
+  },
+  [env.ROLE_BLACK]: {
+    cardDarkColor: '#0e0e0e',
+    cardLightColor: '#181818',
+    chipColor: '#262626',
+    textColor: '#626262',
+  },
+  [env.ROLE_DONOR_PURPLE]: {
+    cardDarkColor: '#1f1b25',
+    cardLightColor: '#372e42',
+    chipColor: '#432767',
+    textColor: '#9542ff',
+  },
+  [env.ROLE_DONOR_BLUE]: {
+    cardDarkColor: '#161d1f',
+    cardLightColor: '#283438',
+    chipColor: '#3a5760',
+    textColor: '#22bef0',
+  },
+  [env.ROLE_DONOR_GREEN]: {
+    cardDarkColor: '#1a211c',
+    cardLightColor: '#2d3b32',
+    chipColor: '#275c39',
+    textColor: '#45e47b',
+  },
+  [env.ROLE_DONOR_PINK]: {
+    cardDarkColor: '#261c23',
+    cardLightColor: '#44303d',
+    chipColor: '#682b52',
+    textColor: '#ff4ac1',
+  },
+  [env.ROLE_DONOR_RED]: {
+    cardDarkColor: '#241b1b',
+    cardLightColor: '#412e2e',
+    chipColor: '#662526',
+    textColor: '#ff3c3e',
+  },
+  [env.ROLE_DONOR_ORANGE]: {
+    cardDarkColor: '#241f1b',
+    cardLightColor: '#41362e',
+    chipColor: '#664225',
+    textColor: '#ff913b',
+  },
+  [env.ROLE_DONOR_YELLOW]: {
+    cardDarkColor: '#23211a',
+    cardLightColor: '#3f3b2c',
+    chipColor: '#655721',
+    textColor: '#ffd431',
+  },
+} as {
+  [key: string]: {
+    cardDarkColor: string;
+    cardLightColor: string;
+    chipColor: string;
+    textColor: string;
+  };
 };
