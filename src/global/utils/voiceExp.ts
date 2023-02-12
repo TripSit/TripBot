@@ -76,7 +76,7 @@ async function checkVoice() {
           ));
           if ((env.NODE_ENV === 'production' && humansInChat && humansInChat.size > 1)
           || (env.NODE_ENV !== 'production' && humansInChat && humansInChat.size > 0)) {
-            log.debug(F, `There are ${humansInChat.size} humans in ${channel.name}`);
+            // log.debug(F, `There are ${humansInChat.size} humans in ${channel.name}`);
             // For each human in chat, check if they have been awarded voice exp in the last 5 minutes
             // If they have not, award them voice exp
             humansInChat.forEach(async member => {

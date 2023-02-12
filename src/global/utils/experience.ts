@@ -119,10 +119,10 @@ export async function experience(
     }
   }
 
-  log.debug(
-    F,
-    `[${channel.name}] (${categoryName}) {${typeName}} ${member.displayName}: ${origPoints} + ${expPoints} = ${experienceData.level_points} / ${expToLevel} > ${experienceData.level + 1})`, // eslint-disable-line max-len
-  );
+  // log.debug(
+  //   F,
+  //   `[${channel.name}] (${categoryName}) {${typeName}} ${member.displayName}: ${origPoints} + ${expPoints} = ${experienceData.level_points} / ${expToLevel} > ${experienceData.level + 1})`, // eslint-disable-line max-len
+  // );
 
   experienceData.last_message_at = new Date();
   experienceData.last_message_channel = channel.id;
