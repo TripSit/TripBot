@@ -72,7 +72,7 @@ export async function experience(
   }
 
   // Store how many points the user has right now for later use
-  const origPoints = experienceData.level_points;
+  // const origPoints = experienceData.level_points;
 
   const expInterval = type === 'TEXT' ? textExpInterval : voiceExpInterval;
 

@@ -7,22 +7,23 @@ declare global {
       DISCORD_CLIENT_ID: string;
       DISCORD_OWNER_ID: string;
       DISCORD_GUILD_ID: string;
-      DISCORD_CLIENT_SECRET: string;
       DISCORD_CLIENT_TOKEN: string;
-      DISCORD_CLIENT_REDIRECT_URI: string;
+      DISCORD_CLIENT_SECRET: string | undefined;
+      DISCORD_CLIENT_REDIRECT_URI: string | undefined;
 
-      GITHUB_TOKEN: string;
-      RAPID_TOKEN: string;
-      WOLFRAM_TOKEN: string;
-      IMGUR_ID: string;
-      IMGURL_SECRET: string;
-      YOUTUBE_TOKEN: string;
-      IMDB_TOKEN: string;
+      GITHUB_TOKEN: string | undefined;
+      RAPID_TOKEN: string | undefined;
+      WOLFRAM_TOKEN: string | undefined;
+      IMGUR_ID: string | undefined;
+      IMGURL_SECRET: string | undefined;
+      YOUTUBE_TOKEN: string | undefined;
+      IMDB_TOKEN: string | undefined;
+      LOGTAIL_TOKEN: string | undefined;
 
       POSTGRES_DBURL: string;
 
-      SONAR_URL: string;
-      SONAR_TOKEN: string;
+      SONAR_URL: string | undefined;
+      SONAR_TOKEN: string | undefined;
 
       HTTP_PORT?: number;
 
