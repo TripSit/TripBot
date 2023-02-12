@@ -27,7 +27,7 @@ export const dReport: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('report')
     .setDescription('Report a user')
-    .addStringOption(option => option
+    .addUserOption(option => option
       .setDescription('User to report!')
       .setRequired(true)
       .setName('target')),
@@ -51,11 +51,12 @@ export const dReport: SlashCommand = {
     //   .setDescription('Reporting...');
     // await interaction.editReply({embeds: [embed]});
 
-    const target = interaction.options.getString('target') as string;
-    // log.debug(F, `target: ${target}`);
-    const targetId = target.replace(/[<@!>]/g, '');
+    // const target = interaction.options.getString('target') as string;
+    // // log.debug(F, `target: ${target}`);
+    // const targetId = target.replace(/[<@!>]/g, '');
     // log.debug(F, `targetId: ${targetId}`);
-    const targetMember = await interaction.guild.members.fetch(targetId);
+    const target = interaction.options.getUser('target', true);
+    const targetMember = await interaction.guild.members.fetch(target.id);
     // log.debug(F, `targetMember: ${targetMember}`);
 
     const modal = new ModalBuilder()

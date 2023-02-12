@@ -19,7 +19,7 @@ export default experience;
 // Get random value between 15 and 25
 const expPoints = env.NODE_ENV === 'production'
   ? Math.floor(Math.random() * (25 - 15 + 1)) + 15
-  : 500;
+  : 30;
 
 // Value in miliseconds (1000 * 60 = 1 minute)
 const textExpInterval = env.NODE_ENV === 'production' ? 1000 * 60 * 1 : 1000 * 1;
