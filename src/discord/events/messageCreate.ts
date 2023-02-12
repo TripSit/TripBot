@@ -14,6 +14,7 @@ import { youAre } from '../utils/youAre';
 import { getUser } from '../../global/utils/knex';
 import { karma } from '../utils/karma';
 import { ExperienceCategory, ExperienceType } from '../../global/@types/pgdb';
+import { imagesOnly } from '../utils/imagesOnly';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 
@@ -52,6 +53,7 @@ export const messageCreate: MessageCreateEvent = {
     messageCommand(message);
     youAre(message);
     karma(message);
+    imagesOnly(message);
 
     // Don't run on bots
     if (message.author.bot) {
