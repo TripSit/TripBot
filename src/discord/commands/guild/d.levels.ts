@@ -154,7 +154,7 @@ export const dLevels: SlashCommand = {
         const Background = await Canvas.loadImage(imagePath);
         context.save();
         context.globalCompositeOperation = 'lighter';
-        context.globalAlpha = 0.03;
+        context.globalAlpha = 0.08;
         context.beginPath();
         context.roundRect(0, 0, 921, 145, [19]);
         context.roundRect(0, 154, 921, (layoutHeight - 154), [19]);
@@ -163,30 +163,23 @@ export const dLevels: SlashCommand = {
         context.restore();
       }
     }
-
-    // Avatar Image
-    const avatar = await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' }));
+    // Overly complicated avatar clip
     context.save();
+    context.beginPath();
+    context.arc(110, 112, 21, 0, Math.PI * 2);
+    context.arc(73, 73, 55, 0, Math.PI * 2, true);
+    context.closePath();
+    context.clip();
     context.beginPath();
     context.arc(73, 73, 54, 0, Math.PI * 2, true);
     context.closePath();
     context.clip();
+    // Avatar Image
+    const avatar = await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' }));
     context.drawImage(avatar, 18, 18, 109, 109);
     context.restore();
 
     // Status Icon
-    context.save();
-    context.beginPath();
-    context.arc(110, 112, 21, 0, Math.PI * 2, true);
-    context.closePath();
-    context.fillStyle = cardDarkColor;
-    context.fill();
-    context.restore();
-
-    // const StatusIconPath = target.presence
-    //   ? path.join(__dirname, '..', '..', 'assets', 'img', 'icons', `${target.presence?.status}.png`)
-    //   : path.join(__dirname, '..', '..', 'assets', 'img', 'icons', 'offline.png');
-
     let StatusIconPath = await imageGet('iconOffline');
     if (target.presence) {
       if (target.presence.status === 'online') {

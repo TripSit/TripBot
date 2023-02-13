@@ -121,24 +121,23 @@ export const dProfile: SlashCommand = {
     const Icons = await Canvas.loadImage(await imageGet('cardIcons'));
     context.drawImage(Icons, 5, -2, 913, 292);
 
-    // Avatar Image
-    const avatar = await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' }));
+    // Overly complicated avatar clip
     context.save();
+    context.beginPath();
+    context.arc(110, 112, 21, 0, Math.PI * 2);
+    context.arc(73, 73, 55, 0, Math.PI * 2, true);
+    context.closePath();
+    context.clip();
     context.beginPath();
     context.arc(73, 73, 54, 0, Math.PI * 2, true);
     context.closePath();
     context.clip();
+    // Avatar Image
+    const avatar = await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' }));
     context.drawImage(avatar, 18, 18, 109, 109);
     context.restore();
 
     // Status Icon
-    context.save();
-    context.beginPath();
-    context.arc(110, 112, 21, 0, Math.PI * 2, true);
-    context.closePath();
-    context.fillStyle = cardDarkColor;
-    context.fill();
-    context.restore();
     let StatusIconPath = await imageGet('iconOffline');
     if (target.presence) {
       if (target.presence.status === 'online') {
