@@ -69,11 +69,11 @@ describe(slashCommand.data.name, () => {
             value: stripIndents`[Create your own mix of background noise](https://asoftmurmur.com/)`,
             inline: true,
           },
-          {
-            name: 'Draw A 3D Mandala',
-            value: stripIndents`[Draw a mandala with different colors in 3d](https://askalice.me/mandala)`,
-            inline: true,
-          },
+          // {
+          //   name: 'Draw A 3D Mandala',
+          //   value: stripIndents`[Draw a mandala with different colors in 3d](https://askalice.me/mandala)`,
+          //   inline: true,
+          // },
           {
             name: 'A Way To Go',
             value: stripIndents`[Draw lines and walk through a forest while creating music](http://a-way-to-go.com/)`,
@@ -84,11 +84,11 @@ describe(slashCommand.data.name, () => {
             value: stripIndents`[Create music by clicking dots on the roster](https://madebyevan.com/webgl-water/)`,
             inline: true,
           },
-          {
-            name: 'Plasma Pong',
-            value: stripIndents`[Windows version of Pong with fluid dynamics](https://plasma-pong.en.softonic.com/)`,
-            inline: true,
-          },
+          // {
+          //   name: 'Plasma Pong',
+          //   value: stripIndents`[Windows version of Pong with fluid dynamics](https://plasma-pong.en.softonic.com/)`,
+          //   inline: true,
+          // },
           {
             name: 'Strobe',
             value: stripIndents`[Stare at the middle for 30 seconds for to experience an optical illusion](https://strobe.cool/)`,

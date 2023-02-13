@@ -37,7 +37,7 @@ describe(slashCommand.data.name, () => {
             name: 'Poison Control (USA)',
             value: stripIndents`
           [Website](https://www.poison.org)            
-          [Webchat](https://www.poison.org)            
+          [Webchat](https://triage.webpoisoncontrol.org)            
           Call: (800) 222-1222`,
             inline: true,
           },
@@ -59,7 +59,7 @@ describe(slashCommand.data.name, () => {
             name: 'Talktofrank (UK)',
             value: stripIndents`
           [Website](https://www.talktofrank.com)            
-          [Webchat](https://www.talktofrank.com)            
+          [Webchat](https://www.talktofrank.com/livechat)            
           Call: 0300 123 6600`,
             inline: true,
           },
@@ -91,7 +91,7 @@ describe(slashCommand.data.name, () => {
             name: 'Kids Help Phone (<18) (Canada)',
             value: stripIndents`
           [Website](https://kidshelpphone.ca/)            
-          [Webchat](https://kidshelpphone.ca/)                        
+          [Webchat](https://kidshelpphone.ca/live-chat-counselling/)                        
           Text: CONNECT to 686868`,
             inline: true,
           },
@@ -99,7 +99,7 @@ describe(slashCommand.data.name, () => {
             name: 'Samaritans (UK)',
             value: stripIndents`
           [Website](https://www.samaritans.org)            
-          [Webchat](https://www.samaritans.org)            
+          [Webchat](https://www.samaritans.org/how-we-can-help/contact-samaritan/)            
           Call: 116 123`,
             inline: true,
           },
@@ -107,7 +107,7 @@ describe(slashCommand.data.name, () => {
             name: 'Open Counseling Suicide Hotline List (Worldwide)',
             value: stripIndents`
           [Website](https://blog.opencounseling.com)            
-          [Webchat](https://blog.opencounseling.com)`,
+          [Webchat](https://blog.opencounseling.com/suicide-hotlines/)`,
             inline: true,
           },
         ],
