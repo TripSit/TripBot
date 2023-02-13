@@ -89,9 +89,10 @@ export const dLevels: SlashCommand = {
     log.debug(F, `canvasHeight: ${canvasHeight}`);
 
     // Choose color based on user's role
-    const cardLightColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#141414';
-    const cardDarkColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#101010';
-    const chipColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.chipColor || '#202225';
+    const cardLightColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#232323';
+    const cardDarkColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#141414';
+    const chipColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.chipColor || '#393939';
+    const barColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.barColor || '#b3b3b3';
     const textColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
 
     // Draw the card shape and chips
@@ -215,7 +216,7 @@ export const dLevels: SlashCommand = {
       do {
         fontSize -= 2;
         usernameContext.font = `${fontSize}px futura`;
-      } while (usernameContext.measureText(text).width > 380);
+      } while (usernameContext.measureText(text).width > 530); // LARGER LENGTH LIMIT WHILE CAMP ICON ISN'T ENABLED (DEFAULT IS 380)
       return usernameContext.font;
     };
 
@@ -243,7 +244,16 @@ export const dLevels: SlashCommand = {
       ? targetData.TEXT.TEAM.level_exp / targetData.TEXT.TEAM.nextLevel
       : 0;
     // Progress Bars Draw
-    context.fillStyle = textColor;
+    context.fillStyle = barColor;
+    context.save();
+    context.beginPath();
+    context.roundRect(87, 172, 579, 76, [19]);
+    context.roundRect(87, 257, 579, 51, [19]);
+    context.roundRect(87, 317, 579, 51, [19]);
+    context.roundRect(87, 377, 579, 51, [19]);
+    context.roundRect(87, 437, 579, 51, [19]);
+    context.roundRect(87, 497, 579, 51, [19]);
+    context.clip();
     context.beginPath();
     context.roundRect(87, 172, (progressText) * 579, 76, [19]);
     context.roundRect(87, 257, (progressGeneral) * 579, 51, [19]);
@@ -258,6 +268,7 @@ export const dLevels: SlashCommand = {
       context.roundRect(87, 497, (progressTeam) * 579, 51, [19]);
     }
     context.fill();
+    context.restore();
     // Progress Bars Level Text
     context.font = '40px futura';
     context.fillStyle = '#ffffff';
@@ -283,19 +294,37 @@ export const dLevels: SlashCommand = {
       context.fillText('0', 657, 524);
     }
     // Rank Text
+    // Rank Text Resize to fit
+    const applyRank = (canvas:Canvas.Canvas, text:string) => {
+      const rankContext = canvas.getContext('2d');
+      let fontSize = startingFontSize;
+      do {
+        fontSize -= 1;
+        rankContext.font = `${fontSize}px futura`;
+      } while (rankContext.measureText(text).width > 114); // LARGER LENGTH LIMIT WHILE CAMP ICON ISN'T ENABLED (DEFAULT IS 380)
+      return rankContext.font;
+    };
     context.font = '40px futura';
+    let startingFontSize = 40;
     context.textAlign = 'left';
+    context.font = applyRank(canvasObj, `#${rankData.TEXT.TOTAL}`);
     context.fillText(`#${rankData.TEXT.TOTAL}`, 711, 213);
     context.font = '25px futura';
+    startingFontSize = 25;
+    context.font = applyRank(canvasObj, `#${rankData.TEXT.GENERAL}`);
     context.fillText(`#${rankData.TEXT.GENERAL}`, 711, 284);
+    context.font = applyRank(canvasObj, `#${rankData.VOICE.TOTAL}`);
     context.fillText(`#${rankData.VOICE.TOTAL}`, 711, 344);
     if (layout > 1) {
+      context.font = applyRank(canvasObj, `#${rankData.TEXT.TRIPSITTER}`);
       context.fillText(`#${rankData.TEXT.TRIPSITTER}`, 711, 404);
     }
     if (layout > 2) {
+      context.font = applyRank(canvasObj, `#${rankData.TEXT.DEVELOPER}`);
       context.fillText(`#${rankData.TEXT.DEVELOPER}`, 711, 464);
     }
     if (layout > 3) {
+      context.font = applyRank(canvasObj, `#${rankData.TEXT.TEAM}`);
       context.fillText(`#${rankData.TEXT.TEAM}`, 711, 524);
     }
 
@@ -380,96 +409,112 @@ const colorDefs = {
     cardDarkColor: '#19151e',
     cardLightColor: '#2d2636',
     chipColor: '#47335f',
+    barColor: '#9661d9',
     textColor: '#b072ff',
   },
   [env.ROLE_BLUE]: {
     cardDarkColor: '#161d1f',
     cardLightColor: '#283438',
     chipColor: '#3a5760',
+    barColor: '#4baccc',
     textColor: '#5acff5',
   },
   [env.ROLE_GREEN]: {
     cardDarkColor: '#151a16',
     cardLightColor: '#252e28',
     chipColor: '#31543d',
+    barColor: '#59b879',
     textColor: '#6de194',
   },
   [env.ROLE_PINK]: {
     cardDarkColor: '#1e151b',
     cardLightColor: '#352530',
     chipColor: '#5f324f',
+    barColor: '#d95dae',
     textColor: '#ff6dcd',
   },
   [env.ROLE_RED]: {
     cardDarkColor: '#1f1616',
     cardLightColor: '#382727',
     chipColor: '#613838',
+    barColor: '#d95152',
     textColor: '#ff5f60',
   },
   [env.ROLE_ORANGE]: {
     cardDarkColor: '#1d1814',
     cardLightColor: '#342b24',
     chipColor: '#5f422e',
+    barColor: '#d98b51',
     textColor: '#ffa45f',
   },
   [env.ROLE_YELLOW]: {
     cardDarkColor: '#1d1b14',
     cardLightColor: '#333024',
     chipColor: '#5e532d',
+    barColor: '#a6903d',
     textColor: '#ffdd5d',
   },
   [env.ROLE_WHITE]: {
     cardDarkColor: '#242424',
     cardLightColor: '#404040',
     chipColor: '#666666',
+    barColor: '#b3b3b3',
     textColor: '#dadada',
   },
   [env.ROLE_BLACK]: {
     cardDarkColor: '#0e0e0e',
     cardLightColor: '#181818',
     chipColor: '#262626',
+    barColor: '#595959',
     textColor: '#626262',
   },
   [env.ROLE_DONOR_PURPLE]: {
     cardDarkColor: '#1f1b25',
     cardLightColor: '#372e42',
     chipColor: '#432767',
+    barColor: '#7f38d9',
     textColor: '#9542ff',
   },
   [env.ROLE_DONOR_BLUE]: {
     cardDarkColor: '#161d1f',
     cardLightColor: '#283438',
     chipColor: '#3a5760',
+    barColor: '#1da2cc',
     textColor: '#22bef0',
   },
   [env.ROLE_DONOR_GREEN]: {
     cardDarkColor: '#1a211c',
     cardLightColor: '#2d3b32',
     chipColor: '#275c39',
+    barColor: '#36b360',
     textColor: '#45e47b',
   },
   [env.ROLE_DONOR_PINK]: {
     cardDarkColor: '#261c23',
     cardLightColor: '#44303d',
     chipColor: '#682b52',
+    barColor: '#d93fa4',
     textColor: '#ff4ac1',
   },
   [env.ROLE_DONOR_RED]: {
     cardDarkColor: '#241b1b',
     cardLightColor: '#412e2e',
     chipColor: '#662526',
+    barColor: '#d93335',
     textColor: '#ff3c3e',
   },
   [env.ROLE_DONOR_ORANGE]: {
     cardDarkColor: '#241f1b',
     cardLightColor: '#41362e',
     chipColor: '#664225',
+    barColor: '#d96c36',
     textColor: '#ff913b',
   },
   [env.ROLE_DONOR_YELLOW]: {
     cardDarkColor: '#23211a',
     cardLightColor: '#3f3b2c',
     chipColor: '#655721',
+    barColor: '#d9bc4f',
     textColor: '#ffd431',
   },
 } as {
@@ -477,6 +522,7 @@ const colorDefs = {
     cardDarkColor: string;
     cardLightColor: string;
     chipColor: string;
+    barColor: string;
     textColor: string;
   };
 };
