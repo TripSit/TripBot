@@ -154,7 +154,7 @@ export const dLevels: SlashCommand = {
         const Background = await Canvas.loadImage(imagePath);
         context.save();
         context.globalCompositeOperation = 'lighter';
-        context.globalAlpha = 0.08;
+        context.globalAlpha = 0.03;
         context.beginPath();
         context.roundRect(0, 0, 921, 145, [19]);
         context.roundRect(0, 154, 921, (layoutHeight - 154), [19]);
