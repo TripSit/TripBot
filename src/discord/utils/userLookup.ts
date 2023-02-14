@@ -30,6 +30,13 @@ export async function getDiscordMember(
     memberCollection.forEach(member => {
       members.push(member);
     });
+  } else if (string.startsWith('@')) {
+    log.debug(F, `${string} is a string mention!`);
+    const memberCollection = await interaction.guild.members.fetch({ query: string.slice(1), limit: 10 });
+    // Add all members in that collection to the members list
+    memberCollection.forEach(member => {
+      members.push(member);
+    });
   } else {
     log.debug(F, `${string} is a username!`);
     const memberCollection = await interaction.guild.members.fetch({ query: string, limit: 10 });
