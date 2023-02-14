@@ -1,23 +1,19 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  // Colors,
   GuildMember,
-  ModalBuilder,
-  TextInputBuilder,
-  ActionRowBuilder,
-  ModalSubmitInteraction,
+  Colors,
 } from 'discord.js';
-import {
-  TextInputStyle,
-} from 'discord-api-types/v10';
 import { env } from 'process';
+import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { startLog } from '../../utils/startLog';
 // import {embedTemplate} from '../../utils/embedTemplate';
 import { moderate } from '../../../global/commands/g.moderate';
 // import log from '../../../global/utils/log';
 import { UserActionType } from '../../../global/@types/pgdb';
+import { getDiscordMember } from '../../utils/userLookup';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -27,10 +23,14 @@ export const dReport: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('report')
     .setDescription('Report a user')
-    .addUserOption(option => option
+    .addStringOption(option => option
       .setDescription('User to report!')
       .setRequired(true)
-      .setName('target')),
+      .setName('target'))
+    .addStringOption(option => option
+      .setDescription('Reason for reporting!')
+      .setRequired(true)
+      .setName('reason')),
 
   async execute(interaction: ChatInputCommandInteraction) {
     startLog(F, interaction);
@@ -45,51 +45,53 @@ export const dReport: SlashCommand = {
       return false;
     }
 
-    // await interaction.deferReply({ephemeral: true});
-    // const embed = embedTemplate()
-    //   .setColor(Colors.DarkBlue)
-    //   .setDescription('Reporting...');
-    // await interaction.editReply({embeds: [embed]});
+    const targetString = interaction.options.getString('target', true);
+    const reason = interaction.options.getString('reason', true);
 
-    // const target = interaction.options.getString('target') as string;
-    // // log.debug(F, `target: ${target}`);
-    // const targetId = target.replace(/[<@!>]/g, '');
-    // log.debug(F, `targetId: ${targetId}`);
-    const target = interaction.options.getUser('target', true);
-    const targetMember = await interaction.guild.members.fetch(target.id);
-    // log.debug(F, `targetMember: ${targetMember}`);
+    const targets = await getDiscordMember(interaction, targetString);
 
-    const modal = new ModalBuilder()
-      .setCustomId(`modModal~report~${interaction.id}`)
-      .setTitle('Tripbot report');
-    const privReasonInput = new TextInputBuilder()
-      .setLabel('Why are you reporting this user?')
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('Tell the team why you\'re doing this')
-      .setRequired(true)
-      .setCustomId('privReason');
+    if (targets.length > 1) {
+      const embed = embedTemplate()
+        .setColor(Colors.Red)
+        .setTitle('Found more than one user with with that value!')
+        .setDescription(stripIndents`
+          "${targetString}" returned ${targets.length} results!
 
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReasonInput);
-    modal.addComponents(firstActionRow);
+          Be more specific:
+          > **Mention:** @Moonbear
+          > **Tag:** moonbear#1234
+          > **ID:** 9876581237
+          > **Nickname:** MoonBear`);
+      await interaction.reply({ embeds: [embed], ephemeral: true });
+      return false;
+    }
 
-    await interaction.showModal(modal);
+    if (targets.length === 0) {
+      const embed = embedTemplate()
+        .setColor(Colors.Red)
+        .setTitle('Could not find that user!')
+        .setDescription(stripIndents`
+          "${targetString}" returned no results!
 
-    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('modModal');
-    interaction.awaitModalSubmit({ filter, time: 0 })
-      .then(async i => {
-        if (i.customId.split('~')[2] !== interaction.id) return;
-        const privReason = i.fields.getTextInputValue('privReason');
-        const result = await moderate(
-          i.member as GuildMember,
-          'REPORT' as UserActionType,
-          targetMember,
-          privReason,
-          null,
-          null,
-        );
-          // log.debug(F, `Result: ${result}`);
-        i.reply(result);
-      });
+          Try again with:
+          > **Mention:** @Moonbear
+          > **Tag:** moonbear#1234
+          > **ID:** 9876581237
+          > **Nickname:** MoonBear`);
+      await interaction.reply({ embeds: [embed], ephemeral: true });
+      return false;
+    }
+
+    const result = await moderate(
+      interaction.member as GuildMember,
+      'REPORT' as UserActionType,
+      targets[0],
+      reason,
+      null,
+      null,
+    );
+      // log.debug(F, `Result: ${result}`);
+    interaction.reply(result);
     return true;
   },
 };

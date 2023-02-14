@@ -11,36 +11,35 @@ export default getDiscordMember;
 export async function getDiscordMember(
   interaction:ChatInputCommandInteraction,
   string:string,
-):Promise<GuildMember> {
-  let member = {} as GuildMember;
-  if (!interaction.guild) return member;
+):Promise<GuildMember[]> {
+  const members = [] as GuildMember[];
+  if (!interaction.guild) return members;
   log.info(F, `string: ${string}`);
 
   if (string.startsWith('<@') && string.endsWith('>')) {
-    // log.debug(F, `${string} is a mention!`);
+    log.debug(F, `${string} is a mention!`);
     const id = string.replace(/[<@!>]/g, '');
-    member = await interaction.guild.members.fetch(id);
+    members.push(await interaction.guild.members.fetch(id));
   } else if (string.match(/^\d+$/)) {
-    // Use regex to see if the string is all numbers
-    // log.debug(F, `${string} is an ID!`);
-    member = await interaction.guild.members.fetch(string);
+    log.debug(F, `${string} is an ID!`);
+    members.push(await interaction.guild.members.fetch(string));
   } else if (string.includes('#')) {
-    // log.debug(F, `${string} is a tag!`);
-    const username = string.split('#')[0];
-    const searchCollection = await interaction.guild.members.fetch({ query: username, limit: 1 });
-    if (searchCollection.first() !== undefined) {
-      member = searchCollection.first() as GuildMember;
-    }
+    log.debug(F, `${string} is a tag!`);
+    const memberCollection = await interaction.guild.members.fetch({ query: string.split('#')[0], limit: 10 });
+    // Add all members in that collection to the members list
+    memberCollection.forEach(member => {
+      members.push(member);
+    });
   } else {
-    // log.debug(F, `${string} is a username(?)!`);
-    const searchCollection = await interaction.guild.members.fetch({ query: string, limit: 1 });
-    if (searchCollection.first() !== undefined) {
-      member = searchCollection.first() as GuildMember;
-    }
+    log.debug(F, `${string} is a username!`);
+    const memberCollection = await interaction.guild.members.fetch({ query: string, limit: 10 });
+    memberCollection.forEach(member => {
+      members.push(member);
+    });
   }
 
-  log.info(F, `getDiscordUser: ${member.user.tag} (${member.id})`);
-  return member;
+  log.info(F, `members: ${members.length} #1 = ${members[0]?.nickname}`);
+  return members;
 }
 
 export async function getDiscordUser(
