@@ -178,6 +178,7 @@ export async function tripsitmeOwned(
 
   const userData = await getUser(userId, null);
   const ticketData = await getOpenTicket(userData.id, null);
+  const guildData = await getGuild(interaction.guild.id);
 
   // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
@@ -194,13 +195,15 @@ export async function tripsitmeOwned(
     return;
   }
 
-  const metaChannelId = ticketData?.meta_thread_id ?? env.CHANNEL_TRIPSITMETA;
-  const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
-  await metaChannel.send({
-    content: stripIndents`${actor.displayName} has indicated that ${target.toString()} is receiving help!`,
-  });
-  if (metaChannelId !== env.CHANNEL_TRIPSITMETA) {
-    metaChannel.setName(`💛│${target.displayName}'s discussion!`);
+  const metaChannelId = ticketData?.meta_thread_id ?? guildData.channel_tripsitmeta;
+  if (metaChannelId) {
+    const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
+    await metaChannel.send({
+      content: stripIndents`${actor.displayName} has indicated that ${target.toString()} is receiving help!`,
+    });
+    if (metaChannelId !== guildData.channel_tripsitmeta) {
+      metaChannel.setName(`💛│${target.displayName}'s discussion!`);
+    }
   }
 
   // Update the ticket's name
