@@ -89,7 +89,7 @@ const testableCommands = [ // eslint-disable-line
   'leaderboard',
   'poll',
   'profile',
-  'remindme',
+  'remindMe',
   'reminder',
   'say',
   'timezone',
@@ -698,7 +698,7 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       await command.execute(testInteraction);
       return true;
     }
-    if (commandName === 'remindme') {
+    if (commandName === 'remindMe') {
       // Get existing reminders
       await interaction.channel.send(`> **${commandName}** - Getting existing record`);
       const reminderA = 'Test reminder A';

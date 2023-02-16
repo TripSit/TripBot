@@ -15,12 +15,12 @@ declare global {
       RAPID_TOKEN: string | undefined;
       WOLFRAM_TOKEN: string | undefined;
       IMGUR_ID: string | undefined;
-      IMGURL_SECRET: string | undefined;
+      IMGUR_SECRET: string | undefined;
       YOUTUBE_TOKEN: string | undefined;
       IMDB_TOKEN: string | undefined;
       LOGTAIL_TOKEN: string | undefined;
 
-      POSTGRES_DBURL: string;
+      POSTGRES_DB_URL: string;
 
       SONAR_URL: string | undefined;
       SONAR_TOKEN: string | undefined;
@@ -48,7 +48,7 @@ declare global {
       CHANNEL_KUDOS: string;
       CHANNEL_BESTOF: string;
       CHANNEL_SUGGESTIONS: string;
-      CATEGROY_HARMREDUCTIONCENTRE: string;
+      CATEGORY_HARMREDUCTIONCENTRE: string;
       CHANNEL_HOWTOHELP: string;
       CHANNEL_TRIPSITMETA: string;
       CHANNEL_TRIPSIT: string;

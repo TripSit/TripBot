@@ -18,8 +18,8 @@ export const validateEnv = () => {
     return false;
   }
 
-  if (!process.env.POSTGRES_DBURL) {
-    log.warn(F, 'Missing POSTGRES_DBURL: You wont be able to use the database!');
+  if (!process.env.POSTGRES_DB_URL) {
+    log.warn(F, 'Missing POSTGRES_DB_URL: You wont be able to use the database!');
   }
 
   // if (!process.env.DISCORD_CLIENT_SECRET) {

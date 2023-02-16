@@ -1,7 +1,7 @@
 import { experienceGet, getUser } from '../utils/knex';
 import { expForNextLevel, getTotalLevel } from '../utils/experience';
-// import { ExperienceCategory, ExperienceType } from '../@types/pgdb';
-// import { ExperienceType } from '../@types/pgdb';
+// import { ExperienceCategory, ExperienceType } from '../@types/database';
+// import { ExperienceType } from '../@types/database';
 
 const F = f(__filename); // eslint-disable-line
 

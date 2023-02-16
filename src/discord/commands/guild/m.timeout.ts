@@ -16,7 +16,7 @@ import { parseDuration } from '../../../global/utils/parseDuration';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 import { moderate } from '../../../global/commands/g.moderate';
-import { UserActionType } from '../../../global/@types/pgdb';
+import { UserActionType } from '../../../global/@types/database';
 
 const F = f(__filename);
 
@@ -37,7 +37,7 @@ export const mTimeout: MessageCommand = {
       .setCustomId(`timeoutModal~${interaction.id}`)
       .setTitle('Tripbot Timeout');
     const privReasonInput = new TextInputBuilder()
-      .setLabel('Why are you timouting this person?')
+      .setLabel('Why are you timeouting this person?')
       .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder('Tell the team why you are timeouting this user.')
       .setRequired(true)

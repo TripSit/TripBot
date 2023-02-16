@@ -5,7 +5,7 @@ import {
 import { getTotalLevel } from '../utils/experience';
 import {
   ExperienceCategory, ExperienceType, UserExperience,
-} from '../@types/pgdb';
+} from '../@types/database';
 
 const F = f(__filename);
 
@@ -15,11 +15,11 @@ type LeaderboardType = {
 };
 const rankDict = {
   TOTAL: 'Overall',
-  TRIPSITTER: 'Sitters',
-  GENERAL: 'Shitposters',
-  DEVELOPER: 'Codemonkies',
-  TEAM: 'Teamtalkers',
-  IGNORED: 'Voidscreamers',
+  TRIPSITTER: 'Trip Sitters',
+  GENERAL: 'Shit Posters',
+  DEVELOPER: 'Code Monkeys',
+  TEAM: 'Team Talkers',
+  IGNORED: 'Void Screamers',
 };
 
 // type RankData = {
@@ -74,13 +74,13 @@ export async function leaderboard(
     **Total**        - All experience combined
     **Sitter**       - Harm Reduction Center category
     (Must have Helper role to get Sitter exp!)
-    **Teamtalker**   - TeamTripsit category
-    **Codemonkey**   - Development category
-    **Shitposter**   - Campground and Backstage
+    **Team Talker**   - TeamTripsit category
+    **Code Monkey**   - Development category
+    **Shit Poster**   - Campground and Backstage
     `;
 
     // Grab all the user experience from the database
-    const allUserExperience = await experienceGet(3, undefined, 'TEXT' as ExperienceType, undefined);
+    const allUserExperience = await experienceGet(3, undefined, 'TEXT' as ExperienceType);
 
     // log.debug(F, `allUserExperience: ${JSON.stringify(allUserExperience, null, 2)}`);
 
@@ -112,7 +112,7 @@ export async function leaderboard(
 
     // Grab the top three of each experience category
     for (const category of ['TRIPSITTER', 'GENERAL', 'DEVELOPER', 'TEAM', 'IGNORED']) { // eslint-disable-line
-      const userExperience = await experienceGet(3, category as ExperienceCategory, 'TEXT' as ExperienceType, undefined);// eslint-disable-line
+      const userExperience = await experienceGet(3, category as ExperienceCategory, 'TEXT' as ExperienceType);// eslint-disable-line
       let categoryRank = 0;
       for (const user of userExperience) { // eslint-disable-line
         categoryRank += 1;
@@ -141,7 +141,7 @@ export async function leaderboard(
     description = 'Total Experience is the sum of all experience in all categories.';
 
     // Grab all the user experience from the database
-    const userExperience = await experienceGet(15, undefined, undefined, undefined);
+    const userExperience = await experienceGet(15);
 
     // log.debug(F, `userExperience: ${JSON.stringify(userExperience, null, 2)}`);
 
@@ -177,7 +177,7 @@ export async function leaderboard(
   } else {
     // Grab top 15 of that category
 
-    const userExperience = await experienceGet(15, categoryName as ExperienceCategory, 'TEXT' as ExperienceType, undefined);
+    const userExperience = await experienceGet(15, categoryName as ExperienceCategory, 'TEXT' as ExperienceType);
 
     // log.debug(F, `userExperience: ${JSON.stringify(userExperience, null, 2)}`);
 

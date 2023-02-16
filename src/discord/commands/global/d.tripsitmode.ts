@@ -23,7 +23,7 @@ import {
   TextInputStyle,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { TicketStatus } from '../../../global/@types/pgdb';
+import { TicketStatus } from '../../../global/@types/database';
 import {
   getGuild, getOpenTicket, getUser, ticketUpdate,
 } from '../../../global/utils/knex';
@@ -33,7 +33,7 @@ import { embedTemplate } from '../../utils/embedTemplate';
 // import {stripIndents} from 'common-tags';
 // import env from '../../../global/utils/env.config';
 // import log from '../../../global/utils/log';
-import { needsHelpmode, tripSitMe, tripsitmeResolve } from '../../utils/tripsitme';
+import { needsHelpMode, tripSitMe, tripsitmeResolve } from '../../utils/tripsitme';
 
 const F = f(__filename);
 
@@ -142,7 +142,7 @@ export const tripsitmode: SlashCommand = {
 
         // If a thread exists, re-apply needsHelp, update the thread, remind the user
         if (threadHelpUser.id) {
-          await needsHelpmode(interaction, target);
+          await needsHelpMode(interaction, target);
           const guildData = await getGuild(interaction.guild.id);
 
           const roleTripsitter = guildData.role_tripsitter
@@ -165,7 +165,7 @@ export const tripsitmode: SlashCommand = {
           // log.debug(F, `Rejected need for help`);
 
           let helpMessage = stripIndents`Hey ${target}, the team thinks you could still use some help, lets continue talking here!`; // eslint-disable-line max-len
-          // If the help ticket was created < 5 mins ago, dont re-ping the teanm
+          // If the help ticket was created < 5 mins ago, don't re-ping the team
           const createdDate = new Date(ticketData.reopened_at ?? ticketData.created_at);
           const now = new Date();
           const diff = now.getTime() - createdDate.getTime();

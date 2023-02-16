@@ -20,7 +20,7 @@ import { getUser, useractionsGet, useractionsSet } from '../utils/knex';
 import {
   UserActions,
   UserActionType,
-} from '../@types/pgdb';
+} from '../@types/database';
 import { last } from './g.last';
 
 const F = f(__filename);
@@ -100,11 +100,11 @@ const embedVariables = {
 
 const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
   new ButtonBuilder()
-    .setCustomId('acknowledgebtn')
+    .setCustomId('acknowledgeButton')
     .setLabel('I understand, it wont happen again!')
     .setStyle(ButtonStyle.Primary),
   new ButtonBuilder()
-    .setCustomId('refusalbtn')
+    .setCustomId('refusalButton')
     .setLabel('Nah, I do what I want!')
     .setStyle(ButtonStyle.Danger),
 );
@@ -378,7 +378,7 @@ export async function moderate(
   // Send the message to the mod channel
   if (command !== 'INFO') {
     const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
-    // We must send the mention outside of the embed, cuz mentions dont work in embeds
+    // We must send the mention outside of the embed, cuz mentions don't work in embeds
     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
     const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
     const timeoutDuration = duration ? ` for ${ms(duration, { long: true })}` : '';

@@ -11,7 +11,7 @@ import { startLog } from '../../utils/startLog';
 // import {embedTemplate} from '../../utils/embedTemplate';
 import { moderate } from '../../../global/commands/g.moderate';
 // import log from '../../../global/utils/log';
-import { UserActionType } from '../../../global/@types/pgdb';
+import { UserActionType } from '../../../global/@types/database';
 import { getDiscordMember } from '../../utils/userLookup';
 import { embedTemplate } from '../../utils/embedTemplate';
 

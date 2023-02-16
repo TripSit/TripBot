@@ -14,12 +14,12 @@ import { paginationEmbed } from '../../utils/pagination';
 const F = f(__filename);
 
 const button1 = new ButtonBuilder()
-  .setCustomId('previousbtn')
+  .setCustomId('previousButton')
   .setLabel('Previous')
   .setStyle(ButtonStyle.Danger);
 
 const button2 = new ButtonBuilder()
-  .setCustomId('nextbtn')
+  .setCustomId('nextButton')
   .setLabel('Next')
   .setStyle(ButtonStyle.Success);
 
@@ -90,7 +90,7 @@ export const dHelp: SlashCommand = {
     // funEmbed.addFields({ name: 'Youtube', value: getDesc('youtube') ?? '', inline: true });
     funEmbed.addFields({ name: 'Coinflip', value: getDesc('coinflip') ?? '', inline: true });
     funEmbed.addFields({ name: 'Lovebomb', value: getDesc('lovebomb') ?? '', inline: true });
-    funEmbed.addFields({ name: 'Remindme', value: getDesc('remindme') ?? '', inline: true });
+    funEmbed.addFields({ name: 'Remindme', value: getDesc('remindMe') ?? '', inline: true });
     funEmbed.addFields({ name: 'Convert', value: getDesc('convert') ?? '', inline: true });
     funEmbed.addFields({ name: 'Poll', value: getDesc('poll') ?? '', inline: true });
     // funEmbed.addFields({name: 'Youtube', value: getDesc('youtube'), inline: true});

@@ -24,7 +24,7 @@ export async function discordConnect(): Promise<void> {
       GatewayIntentBits.MessageContent,
       GatewayIntentBits.Guilds,
       GatewayIntentBits.GuildMembers,
-      GatewayIntentBits.GuildBans,
+      GatewayIntentBits.GuildModeration,
       GatewayIntentBits.GuildEmojisAndStickers,
       // GatewayIntentBits.GuildIntegrations,
       // GatewayIntentBits.GuildWebhooks,

@@ -37,7 +37,7 @@ describe(slashCommand.data.name, () => {
         url: 'https://tripsit.me/about/',
         description: stripIndents``,
         image: {
-          url: 'imgurl',
+          url: 'imgur',
         },
         fields: [
           {

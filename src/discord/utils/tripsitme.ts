@@ -37,7 +37,7 @@ import {
 import {
   UserTickets,
   TicketStatus,
-} from '../../global/@types/pgdb.d';
+} from '../../global/@types/database.d';
 import { startLog } from './startLog';
 import { embedTemplate } from './embedTemplate';
 
@@ -102,7 +102,7 @@ const memberOnly = 'This must be performed by a member of a guild!';
  * @param {GuildMember} interaction
  * @param {GuildMember} target
  * */
-export async function needsHelpmode(
+export async function needsHelpMode(
   interaction: ModalSubmitInteraction | ButtonInteraction | ChatInputCommandInteraction,
   target: GuildMember,
 ) {
@@ -368,7 +368,7 @@ export async function tripsitmeBackup(
     backupMessage += `and/or <@&${roleHelper.id}> `;
   }
 
-  backupMessage += stripIndents`team, ${actor} has inidicated they could use some backup!
+  backupMessage += stripIndents`team, ${actor} has indicated they could use some backup!
     
   Be sure to read the log so you have the context!`;
 
@@ -755,7 +755,7 @@ export async function tripSitMe(
   const target = (memberInput ?? interaction.member) as GuildMember;
   // log.debug(F, `target: ${target}`);
 
-  await needsHelpmode(interaction, target);
+  await needsHelpMode(interaction, target);
 
   // Get the tripsit channel from the guild
   const tripsitChannel = guildData.channel_tripsit
@@ -887,7 +887,7 @@ export async function tripSitMe(
 
   // log.debug(F, `newTicketData: ${JSON.stringify(newTicketData, null, 2)}`);
 
-  // Update thet ticket in the DB
+  // Update the ticket in the DB
   await ticketUpdate(newTicketData);
 
   return threadHelpUser;
@@ -975,7 +975,7 @@ export async function tripsitmeButton(
     }
 
     if (threadHelpUser.id) {
-      await needsHelpmode(interaction, target);
+      await needsHelpMode(interaction, target);
       const guildData = await getGuild(interaction.guild.id);
 
       let roleTripsitter = {} as Role;

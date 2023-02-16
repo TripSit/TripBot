@@ -1,12 +1,12 @@
 import { DateTime } from 'luxon';
-import { UserReminders } from '../@types/pgdb';
+import { UserReminders } from '../@types/database';
 import {
   getUser, reminderDel, reminderGet, reminderSet,
 } from '../utils/knex';
 
 const F = f(__filename);
 
-export default remindme;
+export default remindMe;
 
 /**
  *
@@ -17,7 +17,7 @@ export default remindme;
  * @param {Date | null} triggerAt
  * @return {any}
  */
-export async function remindme(
+export async function remindMe(
   command: 'get' | 'set' | 'delete',
   userId: string,
   recordNumber: number | null,
@@ -44,16 +44,16 @@ export async function remindme(
 
     const userData = await getUser(userId, null);
 
-    const unsorteddata = await reminderGet(userData.id);
+    const unsortedData = await reminderGet(userData.id);
 
-    if (unsorteddata.length === 0) {
-      response = 'You have no reminder records, you can use /remindme to add some!';
+    if (unsortedData.length === 0) {
+      response = 'You have no reminder records, you can use /remind_me to add some!';
       log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
       return response;
     }
 
     // Sort data based on the created_at property
-    const data = [...unsorteddata].sort((a, b) => {
+    const data = [...unsortedData].sort((a, b) => {
       if (a.created_at < b.created_at) {
         return -1;
       }
@@ -90,20 +90,20 @@ export async function remindme(
   if (command === 'get') {
     const userData = await getUser(userId, null);
 
-    const unsorteddata = await reminderGet(userData.id);
+    const unsortedData = await reminderGet(userData.id);
 
-    // log.debug(F, `Data: ${JSON.stringify(unsorteddata, null, 2)}`);
+    // log.debug(F, `Data: ${JSON.stringify(unsortedData, null, 2)}`);
 
-    // log.debug(F, `unsorteddata: ${unsorteddata.length}`);
+    // log.debug(F, `unsortedData: ${unsortedData.length}`);
 
-    if (unsorteddata.length === 0) {
-      response = 'You have no reminder records, you can use /remindme to add some!';
+    if (unsortedData.length === 0) {
+      response = 'You have no reminder records, you can use /remind_me to add some!';
       log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
       return response;
     }
 
     // Sort data based on the trigger_at property
-    const data = [...unsorteddata].sort((a, b) => {
+    const data = [...unsortedData].sort((a, b) => {
       if (a.trigger_at < b.trigger_at) {
         return -1;
       }

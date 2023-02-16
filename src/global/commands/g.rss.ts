@@ -1,5 +1,5 @@
 import { rssDel, rssGet, rssSet } from '../utils/knex';
-import { Rss } from '../@types/pgdb';
+import { Rss } from '../@types/database';
 
 const F = f(__filename); // eslint-disable-line
 

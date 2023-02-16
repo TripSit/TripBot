@@ -1,13 +1,10 @@
 import {
   Colors,
 } from 'discord.js';
-import { parse } from 'path';
 import { stripIndents } from 'common-tags';
 import { dRemindme } from '../commands/global/d.remindme';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../utils/testutils';
-import log from '../../global/utils/log'; // eslint-disable-line
 
-const PREFIX = parse(__filename).name; // eslint-disable-line
+const F = f(__filename); // eslint-disable-line
 
 const slashCommand = dRemindme;
 

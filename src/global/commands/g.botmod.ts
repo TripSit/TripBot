@@ -62,11 +62,11 @@ const embedVariables = {
 
 const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
   new ButtonBuilder()
-    .setCustomId('acknowledgebtn')
+    .setCustomId('acknowledgeButton')
     .setLabel('I understand, it wont happen again!')
     .setStyle(ButtonStyle.Primary),
   new ButtonBuilder()
-    .setCustomId('refusalbtn')
+    .setCustomId('refusalButton')
     .setLabel('Nah, I do what I want!')
     .setStyle(ButtonStyle.Danger),
 );
