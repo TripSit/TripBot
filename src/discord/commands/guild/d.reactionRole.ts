@@ -630,8 +630,11 @@ export async function processReactionRole(
 
         const channel = await i.guild?.channels.fetch(IC) as TextChannel;
 
+        const roleTeamtripsit = await i.guild?.roles.fetch(env.ROLE_TEAMTRIPSIT) as Role;
+
         if (channel.id === env.CHANNEL_TRIPSITMETA) {
           const intro = stripIndents`
+          Hey ${roleTeamtripsit} team!
           ${target} has joined as a ${role.name}, please welcome them!
           
           A little about them:
@@ -657,6 +660,7 @@ export async function processReactionRole(
           channel.send(intro);
         } else if (channel.id === env.CHANNEL_DEVELOPMENT) {
           const intro = stripIndents`
+          Hey ${roleTeamtripsit} team!
           ${target} has joined as a ${role.name}, please welcome them!
           
           A little about them:
