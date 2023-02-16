@@ -209,7 +209,7 @@ export const dLevels: SlashCommand = {
       do {
         fontSize -= 2;
         usernameContext.font = `${fontSize}px futura`;
-      } while (usernameContext.measureText(text).width > 530); // LARGER LENGTH LIMIT WHILE CAMP ICON ISN'T ENABLED (DEFAULT IS 380)
+      } while (usernameContext.measureText(text).width > 530);// LARGER LENGTH WHILE CAMP ISN'T ENABLED (DEFAULT IS 380)
       return usernameContext.font;
     };
 
@@ -294,7 +294,7 @@ export const dLevels: SlashCommand = {
       do {
         fontSize -= 1;
         rankContext.font = `${fontSize}px futura`;
-      } while (rankContext.measureText(text).width > 114); // LARGER LENGTH LIMIT WHILE CAMP ICON ISN'T ENABLED (DEFAULT IS 380)
+      } while (rankContext.measureText(text).width > 114);// LARGER LENGTH WHILE CAMP ISN'T ENABLED (DEFAULT IS 380)
       return rankContext.font;
     };
     context.font = '40px futura';
