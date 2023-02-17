@@ -197,6 +197,7 @@ export async function tripsitmeOwned(
 
   const metaChannelId = ticketData?.meta_thread_id ?? guildData.channel_tripsitmeta;
   if (metaChannelId) {
+    log.debug(F, `metaChannelId: ${metaChannelId}`);
     const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
     await metaChannel.send({
       content: stripIndents`${actor.displayName} has indicated that ${target.toString()} is receiving help!`,
