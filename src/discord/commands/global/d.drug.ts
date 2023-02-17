@@ -326,13 +326,15 @@ export const dDrug: SlashCommand = {
       return false;
     }
 
-    const response = interaction.options.getString('response');
+    const section = interaction.options.getString('section');
+
+    log.debug(F, `section: ${section} | drugName: ${drugName} | drugData: ${JSON.stringify(drugData, null, 2)}`);
 
     embed.setColor(Colors.Purple);
     embed.setTitle(`🌐 ${drugData.name} Information`);
     embed.setURL(`https://wiki.tripsit.me/wiki/${drugName}`);
 
-    if (response === 'dosage') {
+    if (section === 'dosage') {
       embed = await addDosages(embed, drugData);
       interaction.reply({ embeds: [embed], ephemeral });
       return true;
@@ -340,7 +342,7 @@ export const dDrug: SlashCommand = {
 
     embed = await addSummary(embed, drugData);
 
-    if (response === 'summary') {
+    if (section === 'summary') {
       interaction.reply({ embeds: [embed], ephemeral });
       return true;
     }
