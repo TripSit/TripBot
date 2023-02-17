@@ -49,7 +49,7 @@ export const dProfile: SlashCommand = {
 
     const values = await Promise.allSettled([
       await interaction.deferReply(),
-      // Get the target's profile data from the database
+    // Get the target's profile data from the database
       await profile(target.id),
       // Check get fresh persona data
       await getPersonaInfo(target.user.id),
@@ -334,6 +334,17 @@ export function numFormatter(num:number):string {
     return `${(num / 1000000).toFixed(2)}M`;
   }
   return num.toFixed(0);
+}
+
+// Number Formatter Voice
+export function numFormatterVoice(num:number):string {
+  if (num > 999 && num < 1000000) {
+    return `${(num / 1000).toFixed(1)}K`;
+  }
+  if (num > 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`;
+  }
+  return num.toFixed(1);
 }
 
 const colorDefs = {
