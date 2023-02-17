@@ -10,7 +10,7 @@ import {
 import { getOpenTicket, ticketUpdate } from '../../global/utils/knex';
 import {
   TicketStatus,
-} from '../../global/@types/pgdb';
+} from '../../global/@types/database';
 
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 

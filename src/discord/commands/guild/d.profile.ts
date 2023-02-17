@@ -9,7 +9,7 @@ import {
 import Canvas from '@napi-rs/canvas';
 import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
-import { profile } from '../../../global/commands/g.profile';
+import { profile, ProfileData } from '../../../global/commands/g.profile';
 import { startLog } from '../../utils/startLog';
 import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
@@ -41,16 +41,34 @@ export const dProfile: SlashCommand = {
       return false;
     }
     startLog(F, interaction);
-    await interaction.deferReply();
 
     // Target is the option given, if none is given, it will be the user who used the command
     const target = interaction.options.getMember('target')
       ? interaction.options.getMember('target') as GuildMember
       : interaction.member as GuildMember;
 
-    // Get the target's profile data from the database
-    const targetData = await profile(target.id);
-    // log.debug(F, `target id: ${target.id}`);
+    const values = await Promise.allSettled([
+      await interaction.deferReply(),
+      // Get the target's profile data from the database
+      await profile(target.id),
+      // Check get fresh persona data
+      await getPersonaInfo(target.user.id),
+      // Load Icon Images
+      await Canvas.loadImage(await imageGet('cardIcons')),
+      // Get the status icon
+      await Canvas.loadImage(await imageGet(`icon_${target.presence?.status}`)),
+      // Get the avatar image
+      await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
+      // Get the birthday card overlay
+      await Canvas.loadImage(await imageGet('cardBirthday')),
+    ]);
+
+    const targetData = values[1].status === 'fulfilled' ? values[1].value : {} as ProfileData;
+    const [personaData] = values[2].status === 'fulfilled' ? values[2].value : [];
+    const Icons = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
+    const StatusIcon = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
+    const avatar = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
+    const birthdayOverlay = values[6].status === 'fulfilled' ? values[6].value : {} as Canvas.Image;
 
     // Create Canvas and Context
     const canvasWidth = 921;
@@ -91,8 +109,7 @@ export const dProfile: SlashCommand = {
     context.fill();
 
     // WIP: Purchased Background
-    // Check get fresh persona data
-    const [personaData] = await getPersonaInfo(target.user.id);
+
     // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
 
     if (personaData) {
@@ -117,8 +134,6 @@ export const dProfile: SlashCommand = {
       }
     }
 
-    // Load Icon Images
-    const Icons = await Canvas.loadImage(await imageGet('cardIcons'));
     context.drawImage(Icons, 5, -2, 913, 292);
 
     // Overly complicated avatar clip
@@ -133,23 +148,9 @@ export const dProfile: SlashCommand = {
     context.closePath();
     context.clip();
     // Avatar Image
-    const avatar = await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' }));
     context.drawImage(avatar, 18, 18, 109, 109);
     context.restore();
 
-    // Status Icon
-    let StatusIconPath = await imageGet('iconOffline');
-    if (target.presence) {
-      if (target.presence.status === 'online') {
-        StatusIconPath = await imageGet('iconOnline');
-      } else if (target.presence.status === 'idle') {
-        StatusIconPath = await imageGet('iconIdle');
-      } else if (target.presence.status === 'dnd') {
-        StatusIconPath = await imageGet('iconDnd');
-      }
-    }
-    // log.debug(F, `StatusIconPath: ${StatusIconPath}`);
-    const StatusIcon = await Canvas.loadImage(StatusIconPath);
     context.drawImage(StatusIcon, 90, 92);
 
     // WIP: Camp Icon
@@ -239,32 +240,31 @@ export const dProfile: SlashCommand = {
 
     // Choose and Draw the Level Image
     let LevelImagePath = '' as string;
-
     if (totalTextData.level < 10) {
-      LevelImagePath = await imageGet('badgeVip0');
+      LevelImagePath = 'badgeVip0';
     } else if (totalTextData.level < 20) {
-      LevelImagePath = await imageGet('badgeVip1');
+      LevelImagePath = 'badgeVip1';
     } else if (totalTextData.level < 30) {
-      LevelImagePath = await imageGet('badgeVip2');
+      LevelImagePath = 'badgeVip2';
     } else if (totalTextData.level < 40) {
-      LevelImagePath = await imageGet('badgeVip3');
+      LevelImagePath = 'badgeVip3';
     } else if (totalTextData.level < 50) {
-      LevelImagePath = await imageGet('badgeVip4');
+      LevelImagePath = 'badgeVip4';
     } else if (totalTextData.level < 60) {
-      LevelImagePath = await imageGet('badgeVip5');
+      LevelImagePath = 'badgeVip5';
     } else if (totalTextData.level < 70) {
-      LevelImagePath = await imageGet('badgeVip6');
+      LevelImagePath = 'badgeVip6';
     } else if (totalTextData.level < 80) {
-      LevelImagePath = await imageGet('badgeVip7');
+      LevelImagePath = 'badgeVip7';
     } else if (totalTextData.level < 90) {
-      LevelImagePath = await imageGet('badgeVip8');
+      LevelImagePath = 'badgeVip8';
     } else if (totalTextData.level < 100) {
-      LevelImagePath = await imageGet('badgeVip9');
+      LevelImagePath = 'badgeVip9';
     } else if (totalTextData.level >= 100) {
-      LevelImagePath = await imageGet('badgeVip10');
+      LevelImagePath = 'badgeVip10';
     }
     // log.debug(F, `LevelImagePath: ${LevelImagePath}`);
-    const LevelImage = await Canvas.loadImage(LevelImagePath);
+    const LevelImage = await Canvas.loadImage(await imageGet(LevelImagePath));
     context.drawImage(LevelImage, 758, 57);
 
     // Level Bar Circle BG
@@ -278,7 +278,7 @@ export const dProfile: SlashCommand = {
     let percentageOfLevel = 0;
     const expToLevel = await expForNextLevel(totalTextData.level);
     percentageOfLevel = (totalTextData.level_points / expToLevel);
-    log.debug(F, `percentageOfLevel: ${percentageOfLevel}`);
+    // log.debug(F, `percentageOfLevel: ${percentageOfLevel}`);
 
     // Start at the 0 degrees position, in human terms, the 12 o'clock position
     const startDegrees = 0;
@@ -309,7 +309,6 @@ export const dProfile: SlashCommand = {
       context.textAlign = 'left';
       context.fillStyle = textColor;
       context.fillText('HAPPY BIRTHDAY!', 146, 34);
-      const birthdayOverlay = await Canvas.loadImage(await imageGet('cardBirthday'));
       context.drawImage(birthdayOverlay, 0, 0, 934, 282);
     }
 

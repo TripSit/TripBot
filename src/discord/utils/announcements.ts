@@ -189,7 +189,7 @@ export async function announcements(message:Message) {
   //   `Determine psychedelic dosages with </psychedelic_calc:1017060823279087661>`,
   //   `Show a reagent chart with </reagents:969761968586100799>`,
   //   `When necessary, lay down in the </recovery:966500308048031756> position to stay safe!`,
-  //   `Set reminders with </remindme:1009840858998251602>`,
+  //   `Set reminders with </remind_me:1009840858998251602>`,
   //   `Someone causing issues? </report:966403343746490504> them!`,
   //   `Set your </timezone:1020034430103982123> to let people know when you're sleeping!`,
   //   `Pull up a random topic with </topic:1009840858478166040>`,

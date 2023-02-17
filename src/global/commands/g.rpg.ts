@@ -1,4 +1,4 @@
-import { Personas } from '../@types/pgdb';
+import { Personas } from '../@types/database';
 import { getUser, personaGet, personaSet } from '../utils/knex';
 
 const F = f(__filename); // eslint-disable-line

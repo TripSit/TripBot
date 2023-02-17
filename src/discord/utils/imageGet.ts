@@ -45,10 +45,10 @@ export async function downloadImage(
 }
 
 const imageDef = {
-  iconOnline: { path: './src/discord/assets/img/icons/online.png', url: 'https://i.gyazo.com/cd7b9e018d4818e4b6588cab5d5b019d.png' },
-  iconOffline: { path: './src/discord/assets/img/icons/offline.png', url: 'https://i.gyazo.com/b2b1bf7d91acdb4ccc72dfde3d7075fc.png' },
-  iconDnd: { path: './src/discord/assets/img/icons/dnd.png', url: 'https://i.gyazo.com/a98f0e9dd72f6fb59af388d719d01e64.png' },
-  iconIdle: { path: './src/discord/assets/img/icons/idle.png', url: 'https://i.gyazo.com/df8f4a4ca2553d4d657ee82e4bf64a3a.png' },
+  icon_online: { path: './src/discord/assets/img/icons/online.png', url: 'https://i.gyazo.com/cd7b9e018d4818e4b6588cab5d5b019d.png' },
+  icon_offline: { path: './src/discord/assets/img/icons/offline.png', url: 'https://i.gyazo.com/b2b1bf7d91acdb4ccc72dfde3d7075fc.png' },
+  icon_dnd: { path: './src/discord/assets/img/icons/dnd.png', url: 'https://i.gyazo.com/a98f0e9dd72f6fb59af388d719d01e64.png' },
+  icon_idle: { path: './src/discord/assets/img/icons/idle.png', url: 'https://i.gyazo.com/df8f4a4ca2553d4d657ee82e4bf64a3a.png' },
   badgeVip0: { path: './src/discord/assets/img/badges/vip0.png', url: 'https://i.gyazo.com/13daebdda4ca75ab59923396f255f7db.png' },
   badgeVip1: { path: './src/discord/assets/img/badges/vip1.png', url: 'https://i.gyazo.com/5d37a2d3193c4c7e8a033b6b2ed7cb7f.png' },
   badgeVip2: { path: './src/discord/assets/img/badges/vip2.png', url: 'https://i.gyazo.com/161506f23b1907ac1280db26ead5a0a4.png' },

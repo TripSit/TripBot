@@ -1,5 +1,5 @@
 import { getUser } from '../utils/knex';
-import { Users } from '../@types/pgdb.d';
+import { Users } from '../@types/database.d';
 
 const F = f(__filename);
 

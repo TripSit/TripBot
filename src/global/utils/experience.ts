@@ -10,7 +10,7 @@ import { stripIndents } from 'common-tags';
 import {
   experienceGet, experienceUpdate, getUser,
 } from './knex';
-import { UserExperience, ExperienceType, ExperienceCategory } from '../@types/pgdb';
+import { UserExperience, ExperienceType, ExperienceCategory } from '../@types/database';
 
 const F = f(__filename); // eslint-disable-line
 
@@ -21,12 +21,12 @@ const expPoints = env.NODE_ENV === 'production'
   ? Math.floor(Math.random() * (25 - 15 + 1)) + 15
   : 30;
 
-// Value in miliseconds (1000 * 60 = 1 minute)
+// Value in milliseconds (1000 * 60 = 1 minute)
 const textExpInterval = env.NODE_ENV === 'production' ? 1000 * 60 * 1 : 1000 * 1;
 const voiceExpInterval = env.NODE_ENV === 'production' ? 1000 * 60 * 2 : 1000 * 5;
 
 /**
- * This takes a messsage and gives the user experience
+ * This takes a message and gives the user experience
  * @param {Message} message The message object to check
  */
 export async function experience(
@@ -96,8 +96,8 @@ export async function experience(
 
   if (expToLevel <= experienceData.level_points) {
     experienceData.level += 1;
-    const channelTripbotlogs = await channel.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-    await channelTripbotlogs.send(stripIndents`${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`);
+    const channelTripbotLogs = await channel.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+    await channelTripbotLogs.send(stripIndents`${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`);
     // log.debug(F, `${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`);
     experienceData.level_points -= expToLevel;
 

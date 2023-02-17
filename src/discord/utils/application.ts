@@ -36,7 +36,7 @@ const F = f(__filename);
 // "your application was denied because..."
 const rejectionMessages = {
   tooNew: 'your Discord account is too new. Let\'s get to know each other for a while, eh? To be transparent, the minimum account age for our helpers is 1 month(s) (subject to change) for consideration. We will review again in the future.',
-  misinformation: 'we have noted a few instances of you, perhaps unintinetinally, posting misinformation. Weighing the pros with the cons, we think it would be better to hold off on this pending a better view of how you interact with the primary community. Please ensure that, moving forward, any claims that you present as fact are able to be substantiated with a reputable source of information.',
+  misinformation: 'we have noted a few instances of you, perhaps unintentionally, posting misinformation. Weighing the pros with the cons, we think it would be better to hold off on this pending a better view of how you interact with the primary community. Please ensure that, moving forward, any claims that you present as fact are able to be substantiated with a reputable source of information.',
   discrepancies: 'your application contained some discrepancies with regards to your prior volunteer history, age, exaggerations, or fabrications of involvement in activities mentioned in your application.',
   enabling: 'we have found in your personal user history where you have directly advocated harmful practices. This is easy to do when you get carried away, and we understand that drug use is fun and not always to be taken seriously, but we have reservations for this reason. This can always change, though, over time!',
   demerits: 'in reviewing your file, we found that you have been reprimanded or penalized on the network too many times to consider you for a role that exposes vulnerable users to, at times, no one else but you. Please continue to interact in our network and let us know in a few months if you would like to be reconsidered.',
@@ -273,7 +273,7 @@ export async function applicationReject(
   // Check if the thread was created in the last 24 hours
   if (threadCreated && threadCreated.getTime() > Date.now() - 86400000) {
     // log.debug(F, `Thread created in the last 24 hours!`);
-    interaction.reply({ content: 'Woah there, please give the team at least 24 until the next day to act on this application!', ephemeral: true });
+    interaction.reply({ content: 'Whoa there, please give the team at least 24 until the next day to act on this application!', ephemeral: true });
     return;
   }
 
@@ -323,7 +323,7 @@ export async function applicationApprove(
   // Check if the thread was created in the last 24 hours
   if (threadCreated && threadCreated.getTime() > Date.now() - 86400000) {
     // log.debug(F, `Thread created in the last 24 hours!`);
-    interaction.reply({ content: 'Woah there, please give the team at least 24 until the next day to act on this application!', ephemeral: true });
+    interaction.reply({ content: 'Whoa there, please give the team at least 24 until the next day to act on this application!', ephemeral: true });
     return;
   }
 
@@ -354,7 +354,7 @@ export async function applicationApprove(
     if (role.id === env.ROLE_HELPER) {
       const channelTripsitmeta = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSITMETA) as TextChannel;
       const channelTripsit = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
-      const hrCategory = await interaction.guild?.channels.fetch(env.CATEGROY_HARMREDUCTIONCENTRE) as CategoryChannel;
+      const hrCategory = await interaction.guild?.channels.fetch(env.CATEGORY_HARMREDUCTIONCENTRE) as CategoryChannel;
       await channelTripsitmeta.send(stripIndents`
       Please welcome our newest ${role.name}, ${target}! We're excited to have you here! 
       
@@ -410,7 +410,7 @@ export async function applicationApprove(
       > No coding experience is necessary to help make the discord an awesome place to be =)
 
       ${channelTripbot}
-      > Our ombi-bot Tripbot has made it's way into the discord server!
+      > Our homemade Tripbot has made it's way into the discord server!
       > This is a somewhat complex bot that is continually growing to meet the needs of TripSit.
       > It also can be added to other servers to provide a subset of harm reduction features to the public
 

@@ -13,7 +13,7 @@ import { youAre } from '../utils/youAre';
 // import { modmailDMInteraction, modmailThreadInteraction } from '../commands/guild/modmail';
 import { getUser } from '../../global/utils/knex';
 import { karma } from '../utils/karma';
-import { ExperienceCategory, ExperienceType } from '../../global/@types/pgdb';
+import { ExperienceCategory, ExperienceType } from '../../global/@types/database';
 import { imagesOnly } from '../utils/imagesOnly';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -48,7 +48,7 @@ export const messageCreate: MessageCreateEvent = {
     // Disabled for testing
     // thoughtPolice(message);
 
-    // This needs to run here beacuse the widgetbot peeps will use this and they are "bot users"
+    // This needs to run here because the widget bot peeps will use this and they are "bot users"
     // This handles ~ commands
     messageCommand(message);
     youAre(message);
@@ -100,7 +100,7 @@ async function getCategory(channel:TextChannel):Promise<ExperienceCategory> {
         experienceCategory = 'TEAM' as ExperienceCategory;
       } else if (channel.parent.parent.id === env.CATEGORY_DEVELOPMENT) {
         experienceCategory = 'DEVELOPER' as ExperienceCategory;
-      } else if (channel.parent.parent.id === env.CATEGROY_HARMREDUCTIONCENTRE) {
+      } else if (channel.parent.parent.id === env.CATEGORY_HARMREDUCTIONCENTRE) {
         experienceCategory = 'TRIPSITTER' as ExperienceCategory;
       } else if (channel.parent.parent.id === env.CATEGORY_GATEWAY) {
         experienceCategory = 'IGNORED' as ExperienceCategory;
@@ -111,7 +111,7 @@ async function getCategory(channel:TextChannel):Promise<ExperienceCategory> {
       experienceCategory = 'TEAM' as ExperienceCategory;
     } else if (channel.parent.id === env.CATEGORY_DEVELOPMENT) {
       experienceCategory = 'DEVELOPER' as ExperienceCategory;
-    } else if (channel.parent.id === env.CATEGROY_HARMREDUCTIONCENTRE) {
+    } else if (channel.parent.id === env.CATEGORY_HARMREDUCTIONCENTRE) {
       experienceCategory = 'TRIPSITTER' as ExperienceCategory;
     } else if (channel.parent.id === env.CATEGORY_GATEWAY) {
       experienceCategory = 'IGNORED' as ExperienceCategory;

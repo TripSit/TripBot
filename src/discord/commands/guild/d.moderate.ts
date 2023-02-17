@@ -16,8 +16,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import { moderate } from '../../../global/commands/g.moderate';
 import { startLog } from '../../utils/startLog'; // eslint-disable-line
-import { ModAction } from '../../../global/@types/database';
-import { UserActionType } from '../../../global/@types/pgdb';
+import { UserActionType } from '../../../global/@types/database';
 
 const F = f(__filename);
 
@@ -226,10 +225,10 @@ export const mod: SlashCommand = {
         } catch (e) {
           // log.error(F, `${e}`);
         }
-        const modalCommand = i.customId.split('~')[1] as ModAction;
+        const modalCommand = i.customId.split('~')[1] as UserActionType;
         const result = await moderate(
           actor as GuildMember,
-          modalCommand as UserActionType,
+          modalCommand,
           targetMember,
           privReason,
           pubReason,

@@ -17,14 +17,14 @@ import {
   UserTickets,
   // TicketStatus,
   // DiscordGuilds,
-} from '../@types/pgdb.d';
+} from '../@types/database.d';
  // eslint-disable-line
 
 const F = f(__filename); // eslint-disable-line
 
 export const db = knex({
   client: 'pg',
-  connection: env.POSTGRES_DBURL,
+  connection: env.POSTGRES_DB_URL,
 });
 
 /**
@@ -39,7 +39,7 @@ export async function getUser(
   // log.debug(F, `getUser started with: discordId: ${discordId} | userId: ${userId}`);
   let data = {} as Users | undefined;
 
-  if (env.POSTGRES_DBURL === undefined) {
+  if (env.POSTGRES_DB_URL === undefined) {
     return {
       id: 'abc-123-asdf',
       email: null,
@@ -67,7 +67,7 @@ export async function getUser(
     } as Users;
   }
 
-  // log.debug(F, 'PGDB initialized!');
+  // log.debug(F, 'Database initialized!');
 
   if (discordId) {
     data = await db<Users>('users')
@@ -102,7 +102,7 @@ export async function getUser(
 export async function getGuild(guildId:string) {
 // log.debug(F, `getGuild started with: guildId: ${guildId}`);
 
-  if (env.POSTGRES_DBURL === undefined) {
+  if (env.POSTGRES_DB_URL === undefined) {
     return {
       id: 'abc-123-xyz',
       is_banned: false,
@@ -149,7 +149,7 @@ export async function getOpenTicket(
 
   let ticketData = {} as UserTickets | undefined;
 
-  if (env.POSTGRES_DBURL === undefined) {
+  if (env.POSTGRES_DB_URL === undefined) {
     return {
       id: 'abc-123-xyz',
       user_id: '123-abc-xyz',
@@ -199,7 +199,7 @@ export async function reminderGet(
   userId?: string,
 ):Promise<UserReminders[]> {
 // log.debug(F, `reminderGet started with: userId: ${userId}`);
-  if (env.POSTGRES_DBURL === undefined) {
+  if (env.POSTGRES_DB_URL === undefined) {
     return [] as UserReminders[];
   }
   if (userId) {
@@ -220,7 +220,7 @@ export async function reminderSet(
   reminder: UserReminders,
 ):Promise<void> {
 // log.debug(F, 'reminderSet started');
-  if (env.POSTGRES_DBURL === undefined) return;
+  if (env.POSTGRES_DB_URL === undefined) return;
   await db<UserReminders>('user_reminders')
     .insert(reminder);
 }
@@ -234,7 +234,7 @@ export async function reminderDel(
   userId?:string,
 ):Promise<void> {
 // log.debug(F, `reminderDel started with: id: ${id}`);
-  if (env.POSTGRES_DBURL === undefined) return;
+  if (env.POSTGRES_DB_URL === undefined) return;
   if (userId) {
     await db<UserReminders>('user_reminders')
       .where('user_id', userId)
@@ -252,7 +252,7 @@ export async function ticketGet(
   user_id?:string,
 ):Promise<UserTickets[] | UserTickets | undefined> {
 // log.debug(F, 'ticketGet started');
-  if (env.POSTGRES_DBURL === undefined) {
+  if (env.POSTGRES_DB_URL === undefined) {
     return [] as UserTickets[];
   }
   if (user_id) {
@@ -286,7 +286,7 @@ export async function ticketDel(
   id:string,
 ):Promise<void> {
 // log.debug(F, `ticketDel started with: id: ${id}`);
-  if (env.POSTGRES_DBURL === undefined) return;
+  if (env.POSTGRES_DB_URL === undefined) return;
   await db<UserTickets>('user_reminders')
     .delete()
     .where('id', id);
@@ -301,7 +301,7 @@ export async function ticketUpdate(
   value:UserTickets,
 ):Promise<void> {
   log.debug(F, `ticketUpdate started with: value: ${JSON.stringify(value)}`);
-  if (env.POSTGRES_DBURL === undefined) return;
+  if (env.POSTGRES_DB_URL === undefined) return;
   await db<UserTickets>('user_tickets')
     .insert(value)
     .onConflict('id')
@@ -315,7 +315,7 @@ export async function ticketUpdate(
  */
 export async function usersGetMindsets():Promise<Users[]> {
 // log.debug(F, 'usersGetMindsets started');
-  if (env.POSTGRES_DBURL === undefined) {
+  if (env.POSTGRES_DB_URL === undefined) {
     return [] as Users[];
   }
   return db<Users>('users')
@@ -327,7 +327,7 @@ export async function usersUpdate(
   value:Users,
 ):Promise<void> {
 // log.debug(F, `usersUpdate started with: value: ${value}`);
-  if (env.POSTGRES_DBURL === undefined) return;
+  if (env.POSTGRES_DB_URL === undefined) return;
   await db<Users>('users')
     .insert(value)
     .onConflict('discord_id')
@@ -338,7 +338,7 @@ export async function guildUpdate(
   value:DiscordGuilds,
 ):Promise<void> {
 // log.debug(F, `guildUpdate started with: value: ${value}`);
-  if (env.POSTGRES_DBURL === undefined) return;
+  if (env.POSTGRES_DB_URL === undefined) return;
   await db<DiscordGuilds>('discord_guilds')
     .insert(value)
     .onConflict('id')
@@ -349,7 +349,7 @@ export async function rssGet(
   guildId:string,
 ):Promise<Rss[]> {
 // log.debug(F, 'rssGet started');
-  if (env.POSTGRES_DBURL === undefined) {
+  if (env.POSTGRES_DB_URL === undefined) {
     return [] as Rss[];
   }
   return db<Rss>('rss')
@@ -361,7 +361,7 @@ export async function rssSet(
   value:Rss,
 ):Promise<void> {
 // log.debug(F, 'rssSet started');
-  if (env.POSTGRES_DBURL === undefined) return;
+  if (env.POSTGRES_DB_URL === undefined) return;
   await db<Rss>('rss')
     .insert(value)
     .onConflict(['guild_id', 'destination'])
@@ -373,7 +373,7 @@ export async function rssDel(
   destination:string,
 ):Promise<void> {
 // log.debug(F, 'rssDel started');
-  if (env.POSTGRES_DBURL === undefined) return;
+  if (env.POSTGRES_DB_URL === undefined) return;
   await db<Rss>('rss')
     .where('guild_id', guild_id)
     .andWhere('destination', destination)
@@ -386,7 +386,7 @@ export async function incrementPoint(
   value:number,
 ):Promise<void> {
 // log.debug(F, 'incrementPoint started');
-  if (env.POSTGRES_DBURL === undefined) return;
+  if (env.POSTGRES_DB_URL === undefined) return;
   await db<Users>('users')
     .increment(pointType, value)
     .where('discord_id', userId)
@@ -399,7 +399,7 @@ export async function incrementKarma(
   value:1 | -1,
 ):Promise<string[]> {
 // log.debug(F, 'incrementKarma started');
-  if (env.POSTGRES_DBURL === undefined) return [];
+  if (env.POSTGRES_DB_URL === undefined) return [];
   return db<Users>('users')
     .increment(pointType, value)
     .where('discord_id', userId)
@@ -411,7 +411,7 @@ export async function reactionroleGet(
   reactionId:string,
 ):Promise<ReactionRoles | undefined> {
 // log.debug(F, 'reactionroleGet started');
-  if (env.POSTGRES_DBURL === undefined) return undefined;
+  if (env.POSTGRES_DB_URL === undefined) return undefined;
   return db<ReactionRoles>('reaction_roles')
     .select('*')
     .where('message_id', messageId)
@@ -425,9 +425,10 @@ export async function experienceGet(
   type?:ExperienceType,
   userId?:string,
 ):Promise<UserExperience[]> {
-  // log.debug(F, `experienceGet started with: limit: ${limit}, category: ${category}, type: ${type}, userId: ${userId}`);
+  // log.debug(F,
+  // `experienceGet started with: limit: ${limit}, category: ${category}, type: ${type}, userId: ${userId}`);
 
-  if (env.POSTGRES_DBURL === undefined) return [];
+  if (env.POSTGRES_DB_URL === undefined) return [];
   if (category) {
     if (type) {
       if (userId) {
@@ -498,7 +499,7 @@ export async function experienceDel(
   userId:string,
 ):Promise<UserExperience[]> {
 // log.debug(F, 'experienceDel started');
-  if (env.POSTGRES_DBURL === undefined) return [];
+  if (env.POSTGRES_DB_URL === undefined) return [];
   return db<UserExperience>('user_experience')
     .where('user_id', userId)
     .del();
@@ -508,7 +509,7 @@ export async function experienceUpdate(
   data:UserExperience,
 ):Promise<void> {
 // log.debug(F, 'experienceUpdate started');
-  if (env.POSTGRES_DBURL === undefined) return;
+  if (env.POSTGRES_DB_URL === undefined) return;
   await db<UserExperience>('user_experience')
     .insert(data)
     .onConflict(['user_id', 'category', 'type'])
@@ -519,7 +520,7 @@ export async function idoseGet(
   userId:string,
 ):Promise<UserDrugDoses[]> {
 // log.debug(F, 'idoseGet started');
-  if (env.POSTGRES_DBURL === undefined) return [];
+  if (env.POSTGRES_DB_URL === undefined) return [];
   return db<UserDrugDoses>('user_drug_doses')
     .select('*')
     .where('user_id', userId);
@@ -529,7 +530,7 @@ export async function idoseSet(
   data:UserDrugDoses,
 ):Promise<void> {
 // log.debug(F, 'idoseSet started');
-  if (env.POSTGRES_DBURL === undefined) return;
+  if (env.POSTGRES_DB_URL === undefined) return;
   await db<UserDrugDoses>('user_drug_doses')
     .insert(data);
 }
@@ -539,7 +540,7 @@ export async function idoseDel(
   userId?:string,
 ):Promise<UserDrugDoses[]> {
 // log.debug(F, 'idoseDel started');
-  if (env.POSTGRES_DBURL === undefined) return [];
+  if (env.POSTGRES_DB_URL === undefined) return [];
   if (userId) {
     return db<UserDrugDoses>('user_drug_doses')
       .where('user_id', userId)
@@ -555,7 +556,7 @@ export async function drugGet(
   drugName?:string,
 ):Promise<DrugNames[]> {
 // log.debug(F, 'drugGet started');
-  if (env.POSTGRES_DBURL === undefined) return [];
+  if (env.POSTGRES_DB_URL === undefined) return [];
   if (drugName) {
     return db<DrugNames>('drug_names')
       .select('*')
@@ -574,7 +575,7 @@ export async function useractionsGet(
   type?:string,
 ):Promise<UserActions[]> {
 // log.debug(F, 'useractionsGet started');
-  if (env.POSTGRES_DBURL === undefined) return [];
+  if (env.POSTGRES_DB_URL === undefined) return [];
   if (type) {
     return db<UserActions>('user_actions')
       .select('*')
@@ -594,7 +595,7 @@ export async function useractionsSet(
   data:UserActions,
 ):Promise<void> {
 // log.debug(F, 'useractionsGet started');
-  if (env.POSTGRES_DBURL === undefined) return;
+  if (env.POSTGRES_DB_URL === undefined) return;
   await db<UserActions>('user_actions')
     .insert(data)
     .onConflict('id')
@@ -605,7 +606,7 @@ export async function personaGet(
   userId:string,
 ):Promise<Personas[]> {
 // log.debug(F, 'useractionsGet started');
-  if (env.POSTGRES_DBURL === undefined) return [];
+  if (env.POSTGRES_DB_URL === undefined) return [];
   return db<Personas>('personas')
     .select('*')
     .where('user_id', userId)
@@ -616,7 +617,7 @@ export async function personaSet(
   data:Personas,
 ):Promise<void> {
 // log.debug(F, 'useractionsGet started');
-  if (env.POSTGRES_DBURL === undefined) return;
+  if (env.POSTGRES_DB_URL === undefined) return;
   await db<Personas>('personas')
     .insert(data)
     .onConflict('user_id')
@@ -627,7 +628,7 @@ export async function inventoryGet(
   personaId:string,
 ):Promise<RpgInventory[]> {
 // log.debug(F, 'useractionsGet started');
-  if (env.POSTGRES_DBURL === undefined) return [];
+  if (env.POSTGRES_DB_URL === undefined) return [];
   return db<RpgInventory>('rpg_inventory')
     .select('*')
     .where('persona_id', personaId);
@@ -637,7 +638,7 @@ export async function inventorySet(
   data:RpgInventory,
 ):Promise<void> {
 // log.debug(F, 'useractionsGet started');
-  if (env.POSTGRES_DBURL === undefined) return;
+  if (env.POSTGRES_DB_URL === undefined) return;
   await db<RpgInventory>('rpg_inventory')
     .insert(data)
     .onConflict(['persona_id', 'value'])

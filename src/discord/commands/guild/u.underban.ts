@@ -15,7 +15,7 @@ import { UserCommand } from '../../@types/commandDef';
 import { moderate } from '../../../global/commands/g.moderate';
 import { startLog } from '../../utils/startLog';
 // import {startLog} from '../../utils/startLog';
-import { UserActionType } from '../../../global/@types/pgdb';
+import { UserActionType } from '../../../global/@types/database';
 
 const F = f(__filename);
 

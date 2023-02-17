@@ -1,9 +1,8 @@
-/* eslint-disable max-len */
 import { experienceGet, getUser, personaGet } from '../utils/knex';
 
-const F = f(__filename);
-
 export default profile;
+
+// const F = f(__filename);
 
 /**
  * Get profile info
@@ -13,17 +12,23 @@ export default profile;
 export async function profile(
   memberId: string,
 ):Promise<ProfileData> {
-  // log.debug(F, `memberId: ${memberId}`);
-
   const userData = await getUser(memberId, null);
-
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
-  const expData = await experienceGet(10, undefined, undefined, userData.id);
+  const values = await Promise.allSettled([
+    await experienceGet(10, undefined, undefined, userData.id),
+    await personaGet(userData.id),
+  ]);
+
+  // log.debug(F, `values: ${JSON.stringify(values, null, 2)} `);
+
+  const expData = values[0].status === 'fulfilled' ? values[0].value : [];
+  const [personaData] = values[1].status === 'fulfilled' ? values[1].value : [];
 
   // log.debug(F, `expData: ${JSON.stringify(expData, null, 2)}`);
+  // log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);
 
-  // Sum up every experience point as long as the type isnt ignored or total
+  // Sum up every experience point as long as the type isn't ignored or total
   const totalTextExp = expData
     .filter(exp => exp.type === 'TEXT' && exp.category !== 'TOTAL' && exp.category !== 'IGNORED')
     .reduce((acc, exp) => acc + exp.total_points, 0);
@@ -32,14 +37,13 @@ export async function profile(
     .filter(exp => exp.type === 'VOICE' && exp.category !== 'TOTAL' && exp.category !== 'IGNORED')
     .reduce((acc, exp) => acc + exp.total_points, 0);
 
-  const [personaData] = await personaGet(userData.id);
-
   let tokens = 0;
   if (personaData) {
     tokens = personaData.tokens;
   }
 
-  const profileData = {
+  // log.info(F, `response: ${JSON.stringify(profileData, null, 2)}`);
+  return {
     birthday: userData.birthday,
     timezone: userData.timezone,
     karma_given: userData.karma_given,
@@ -48,11 +52,9 @@ export async function profile(
     totalVoiceExp,
     tokens,
   };
-  log.info(F, `response: ${JSON.stringify(profileData, null, 2)}`);
-  return profileData;
 }
 
-type ProfileData = {
+export type ProfileData = {
   birthday: Date | null,
   timezone: string | null,
   karma_given: number,

@@ -110,11 +110,11 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     verifyButton(interaction);
     return;
   }
-  if (buttonID === 'acknowledgebtn') {
+  if (buttonID === 'acknowledgeButton') {
     acceptWarning(interaction);
     return;
   }
-  if (buttonID === 'refusalbtn') {
+  if (buttonID === 'refusalButton') {
     refuseWarning(interaction);
     return;
   }

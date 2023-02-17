@@ -33,7 +33,7 @@ const tripsitUrl = 'http://www.tripsit.me';
 type RoleDef = { name: string; value: string };
 
 const colorRoles = [
-  { name: '💖 Tuplp', value: env.ROLE_RED },
+  { name: '💖 Tulip', value: env.ROLE_RED },
   { name: '🧡 Marigold', value: env.ROLE_ORANGE },
   { name: '💛 Daffodil', value: env.ROLE_YELLOW },
   { name: '💚 Waterlily', value: env.ROLE_GREEN },
@@ -150,14 +150,14 @@ export async function setupTemplateReactionRole(
     const rolePink = await guild.roles.fetch(env.ROLE_PINK) as Role;
     const roleWhite = await guild.roles.fetch(env.ROLE_WHITE) as Role;
 
-    const redEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colortulip') as GuildEmoji;
-    const orangeEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colormarigold') as GuildEmoji;
-    const yellowEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colordaffodil') as GuildEmoji;
-    const greenEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorwaterlily') as GuildEmoji;
-    const blueEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorbluebell') as GuildEmoji;
-    const purpleEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorhyacinth') as GuildEmoji;
-    const pinkEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorazalea') as GuildEmoji;
-    const whiteEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorsnowdrop') as GuildEmoji;
+    const redEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_tulip') as GuildEmoji;
+    const orangeEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_marigold') as GuildEmoji;
+    const yellowEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_daffodil') as GuildEmoji;
+    const greenEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_waterlily') as GuildEmoji;
+    const blueEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_bluebell') as GuildEmoji;
+    const purpleEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_hyacinth') as GuildEmoji;
+    const pinkEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_azalea') as GuildEmoji;
+    const whiteEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_snowdrop') as GuildEmoji;
 
     const embed = embedTemplate()
       .setAuthor({ name: 'Colors', iconURL: env.TS_ICON_URL, url: tripsitUrl })
@@ -229,14 +229,14 @@ export async function setupTemplateReactionRole(
     const roleDonorPink = await guild.roles.fetch(env.ROLE_DONOR_PINK) as Role;
     const roleDonorBlack = await guild.roles.fetch(env.ROLE_BLACK) as Role;
 
-    const redEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorruby') as GuildEmoji;
-    const orangeEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorsunstone') as GuildEmoji;
-    const yellowEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorcitrine') as GuildEmoji;
-    const greenEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorjade') as GuildEmoji;
-    const blueEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorsapphire') as GuildEmoji;
-    const purpleEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'coloramethyst') as GuildEmoji;
-    const pinkEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorpezzottaite') as GuildEmoji;
-    const blackEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'colorlabradorite') as GuildEmoji;
+    const redEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_ruby') as GuildEmoji;
+    const orangeEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_sunstone') as GuildEmoji;
+    const yellowEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_citrine') as GuildEmoji;
+    const greenEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_jade') as GuildEmoji;
+    const blueEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_sapphire') as GuildEmoji;
+    const purpleEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_amethyst') as GuildEmoji;
+    const pinkEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_pezzottaite') as GuildEmoji;
+    const blackEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_labradorite') as GuildEmoji;
 
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
@@ -372,11 +372,11 @@ export async function setupTemplateReactionRole(
     const pronounAny = await guild.roles.fetch(env.ROLE_PRONOUN_ANY) as Role;
     const pronounAsk = await guild.roles.fetch(env.ROLE_PRONOUN_ASK) as Role;
 
-    const emojiHe = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounhehim') as GuildEmoji;
-    const emojiShe = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounsheher') as GuildEmoji;
-    const emojiThey = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronountheythem') as GuildEmoji;
-    const emojiAny = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounanypronouns') as GuildEmoji;
-    const emojiAsk = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronounaskme') as GuildEmoji;
+    const emojiHe = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronoun_he') as GuildEmoji;
+    const emojiShe = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronoun_she') as GuildEmoji;
+    const emojiThey = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronoun_they') as GuildEmoji;
+    const emojiAny = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronoun_any') as GuildEmoji;
+    const emojiAsk = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronoun_ask') as GuildEmoji;
 
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
@@ -526,7 +526,7 @@ export async function processReactionRole(
         .setCustomId('reason')
         .setLabel('You can optionally tell us why!')
         .setPlaceholder(`We'll use this to try and improve our process!`) // eslint-disable-line
-        .setValue('I just dont want to anymore')
+        .setValue('I just don\'t want to anymore')
         .setMaxLength(2000)
         .setStyle(TextInputStyle.Paragraph)));
       await interaction.showModal(modal);
@@ -569,7 +569,7 @@ export async function processReactionRole(
 
   // const channelTripsitmeta = await guild.channels.fetch(env.CHANNEL_TRIPSITMETA) as TextChannel;
   const channelTripsit = await guild.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
-  const hrCategory = await guild.channels.fetch(env.CATEGROY_HARMREDUCTIONCENTRE) as CategoryChannel;
+  const hrCategory = await guild.channels.fetch(env.CATEGORY_HARMREDUCTIONCENTRE) as CategoryChannel;
   const devCategory = await guild.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
   const channelTripcord = await guild.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
   const channelTripbot = await guild.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
@@ -630,8 +630,11 @@ export async function processReactionRole(
 
         const channel = await i.guild?.channels.fetch(IC) as TextChannel;
 
+        const roleTeamtripsit = await i.guild?.roles.fetch(env.ROLE_TEAMTRIPSIT) as Role;
+
         if (channel.id === env.CHANNEL_TRIPSITMETA) {
           const intro = stripIndents`
+          Hey ${roleTeamtripsit} team!
           ${target} has joined as a ${role.name}, please welcome them!
           
           A little about them:
@@ -657,6 +660,7 @@ export async function processReactionRole(
           channel.send(intro);
         } else if (channel.id === env.CHANNEL_DEVELOPMENT) {
           const intro = stripIndents`
+          Hey ${roleTeamtripsit} team!
           ${target} has joined as a ${role.name}, please welcome them!
           
           A little about them:
@@ -681,7 +685,7 @@ export async function processReactionRole(
           > No coding experience is necessary to help make the discord an awesome place to be =)
     
           ${channelTripbot}
-          > Our ombi-bot Tripbot has made it's way into the discord server!
+          > Our homemade Tripbot has made it's way into the discord server!
           > This is a somewhat complex bot that is continually growing to meet the needs of TripSit.
           > It also can be added to other servers to provide a subset of harm reduction features to the public
 

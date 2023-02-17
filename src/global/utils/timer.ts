@@ -16,11 +16,11 @@ import {
 } from './knex';
 import {
   TicketStatus, UserTickets, TicketType,
-} from '../@types/pgdb.d';
+} from '../@types/database.d';
 
 const F = f(__filename);
 
-// Value in miliseconds (1000 * 60 = 1 minute)
+// Value in milliseconds (1000 * 60 = 1 minute)
 const interval = env.NODE_ENV === 'production' ? 1000 * 30 : 1000 * 10;
 
 export default runTimer;
@@ -210,22 +210,22 @@ async function checkMindsets() {
   if (mindsetRoleData.length > 0) {
     // Loop through each user
     // for (const user of mindsetRoleData) {
-    mindsetRoleData.forEach(async mindetUser => {
-      // log.debug(F, `mindsetUser: ${JSON.stringify(mindetUser, null, 2)}`);
-      // log.debug(F, `Expires: ${DateTime.fromJSDate(mindetUser.mindset_role_expires_at!) <= DateTime.local()}`);
+    mindsetRoleData.forEach(async mindsetUser => {
+      // log.debug(F, `mindsetUser: ${JSON.stringify(mindsetUser, null, 2)}`);
+      // log.debug(F, `Expires: ${DateTime.fromJSDate(mindsetUser.mindset_role_expires_at!) <= DateTime.local()}`);
 
       // Check if the user has a mindset role
-      if (mindetUser.mindset_role
-              && mindetUser.mindset_role_expires_at
-              && DateTime.fromJSDate(mindetUser.mindset_role_expires_at) <= DateTime.local()
-              && mindetUser.discord_id
+      if (mindsetUser.mindset_role
+              && mindsetUser.mindset_role_expires_at
+              && DateTime.fromJSDate(mindsetUser.mindset_role_expires_at) <= DateTime.local()
+              && mindsetUser.discord_id
       ) {
         // const expires = DateTime.fromJSDate(user.mindset_role_expires_at);
-        // log.debug(F, `${DateTime.fromJSDate(mindetUser.mindset_role_expires_at)}`); // eslint-disable-line max-len
+        // log.debug(F, `${DateTime.fromJSDate(mindsetUser.mindset_role_expires_at)}`); // eslint-disable-line max-len
         // Check if the user's mindset role has expired
         // Get the user's discord id
         // Get the user's discord object
-        const user = await global.client.users.fetch(mindetUser.discord_id);
+        const user = await global.client.users.fetch(mindsetUser.discord_id);
         const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
         if (user && guild) {
           const searchResults = await guild.members.search({ query: user.username });
@@ -234,7 +234,7 @@ async function checkMindsets() {
           if (searchResults.size > 0) {
             // Get the user's discord member object
             const member = await guild.members.fetch(user.id);
-            const role = await guild.roles.fetch(mindetUser.mindset_role);
+            const role = await guild.roles.fetch(mindsetUser.mindset_role);
             // log.debug(F, `member: ${JSON.stringify(member, null, 2)}`);
             // log.debug(F, `role: ${JSON.stringify(role, null, 2)}`);
             if (member && role) {
@@ -252,7 +252,7 @@ async function checkMindsets() {
               // log.debug(F, `Removed ${user.discord_id}'s ${user.mindset_role} role`);
               // Update the user's mindset role in the database
 
-              const updatedUser = mindetUser;
+              const updatedUser = mindsetUser;
               updatedUser.mindset_role = null;
               updatedUser.mindset_role_expires_at = null;
 
@@ -271,9 +271,9 @@ async function checkMindsets() {
 export async function runTimer() {
   /**
    * This timer runs every (INTERVAL) to determine if there are any tasks to perform
-   * This function uses setTimeout so that it can finish runing before the next loop
+   * This function uses setTimeout so that it can finish running before the next loop
    */
-  // log.debug(F, `PGDBURL: ${env.POSTGRES_DBURL}`);
+  // log.debug(F, `Database URL: ${env.POSTGRES_DB_URL}`);
   function checkTimers() {
     setTimeout(
       async () => {

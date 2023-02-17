@@ -20,6 +20,7 @@ import {
   SelectMenuComponentOptionData,
   AttachmentBuilder,
   GuildMember,
+  TextChannel,
 } from 'discord.js';
 import {
   APIEmbed,
@@ -34,14 +35,14 @@ import { startLog } from '../../utils/startLog';
 import {
   getUser, inventoryGet, inventorySet, personaSet,
 } from '../../../global/utils/knex';
-import { Personas, RpgInventory } from '../../../global/@types/pgdb';
+import { Personas, RpgInventory } from '../../../global/@types/database';
 import { imageGet } from '../../utils/imageGet';
 
 const F = f(__filename);
 
 export default dRpg;
 
-// Value in miliseconds (1000 * 60 * 1 = 1 minute)
+// Value in milliseconds (1000 * 60 * 1 = 1 minute)
 // const intervals = {
 //   quest: env.NODE_ENV === 'production' ? 1000 * 60 * 60 : 1000 * 1,
 //   dungeon: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 : 1000 * 1,
@@ -561,7 +562,7 @@ const genome = {
     mage: {
       label: 'Mage',
       value: 'mage',
-      description: 'A powerful spellcaster',
+      description: 'A powerful spell caster',
       emoji: '🧙',
     },
     rogue: {
@@ -673,23 +674,23 @@ const text = {
   quest: [
     'You find some missing children and return them to their parents.\nThe children give you the {tokens} tokens they found on their adventure.',
     'You find a lost puppy and return it to its owner.\nAs you were chasing the puppy you found {tokens} tokens on the ground, nice!',
-    'You find a lost cat and return it to its owner.\nThe cat caughs up a hairball.\nOh, that\'s actually {tokens} tokens!\nYou wipe them off and pocket them.',
+    'You find a lost cat and return it to its owner.\nThe cat coughs up a hairball.\nOh, that\'s actually {tokens} tokens!\nYou wipe them off and pocket them.',
     'You find a lost dog and return it to its owner.\nThe dog looks into your eyes and you feel a connection to their soul.\nYour pocket feels {tokens} tokens heavier.',
     'You find a lost bird and return it to its owner.\nThe bird gives you a really cool feather.\nYou trade the feather to some kid for {tokens} tokens.',
     'You find a lost fish and return it to its owner.\nHow do you lose a fish?\nYou decide not to ask and leave with your {tokens} tokens as soon as you can.',
-    'You borrow a metal decetor and find a lost ring.\nYou return the ring to its owner and they are so grateful they give you {tokens} tokens.',
+    'You borrow a metal detector and find a lost ring.\nYou return the ring to its owner and they are so grateful they give you {tokens} tokens.',
     'You find someone worried that their pill could be dangerous.\nYou use one of your fentanyl strips to make sure they can rule that out!\nThey\'re so grateful they give you {tokens} tokens.',
     'Someone asks if you can help make sure their bag of powder is what they think it is.\nYou use your test kit to help identify for them and they give you {tokens} tokens for keeping them safe.',
-    'You happen upon along with wide pupils and sweating in a tshirt.\nAfter an enthusiastic conversation that has no point you give them some gatorade that they down almost instantly.\nThey hug you and slip {tokens} tokens into your pocket.',
+    'You happen upon along with wide pupils and sweating in a t-shirt.\nAfter an enthusiastic conversation that has no point you give them some gatorade that they down almost instantly.\nThey hug you and slip {tokens} tokens into your pocket.',
     'You do some hunting and bring back some food for the town.\nThe town gives you {tokens} tokens for your troubles.',
     'You go fishing and bring back some food for the town.\nThe town gives you {tokens} tokens for your troubles.',
     'You go mining and bring back some ore for the town.\nThe town gives you {tokens} tokens for your troubles.',
     'You help build a new house in the town.\nThe town gives you {tokens} tokens for your troubles.',
   ],
   dungeon: [
-    'You voyaged to fight the evil wizard in the dark towner!\nBut they\'re just misunderstood and enjoy earth tones.\nThey appreciate the visit and gave you {tokens} tokens for your troubles.',
+    'You voyaged to fight the evil wizard in the dark tower!\nBut they\'re just misunderstood and enjoy earth tones.\nThey appreciate the visit and gave you {tokens} tokens for your troubles.',
     'You were tasked with killing a dragon that has looted the countryside!\nBut it was only feeding its baby dragon.\nYou taught the dragon how to farm and it gave you {tokens} Tokens.',
-    'You attempted to subdue the ogre known for assaulting people!\nBut it turns out they just hug too hard.\nYou taught them about personal boundries and they gave you {tokens} Tokens.',
+    'You attempted to subdue the ogre known for assaulting people!\nBut it turns out they just hug too hard.\nYou taught them about personal boundaries and they gave you {tokens} Tokens.',
     'You went to the local cave to fight the goblin king!\nBut it turns out he was just a goblin who wanted to be king.\nYou taught him about democracy and he gave you {tokens} Tokens.',
     'You journey to the dark forest to fight the evil witch!\nBut they turn out to be a gardner with too much property.\nYou taught her about landscapers and she gave you {tokens} Tokens.',
   ],
@@ -765,7 +766,7 @@ export const dRpg: SlashCommand = {
     // - Rock, Paper, Scissors - Play a game of rock, paper, scissors
     //
     // The user can also view their persona stats:
-    // - Inventory - View their inventory and equip/unequip items
+    // - Inventory - View their inventory and equip/un-equip items
     // - Stats - View their stats and level them up
     // - Guild - View their guild and join/leave a guild
     const subcommand = interaction.options.getSubcommand();
@@ -777,7 +778,10 @@ export const dRpg: SlashCommand = {
       'coinflip',
       'roulette',
     ];
-    const message = quietCommands.includes(subcommand)
+
+    const channelRpg = await interaction.guild?.channels.fetch(process.env.CHANNEL_RPG as string) as TextChannel;
+
+    const message = quietCommands.includes(subcommand) || channelRpg.id !== interaction.channelId
       ? await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')], ephemeral: true })
       : await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')] });
 
@@ -790,7 +794,7 @@ export const dRpg: SlashCommand = {
 
     // Get the user's persona data
     let [personaData] = await getPersonaInfo(interaction.user.id);
-    // log.debug(F, `Inital Persona data: ${JSON.stringify(personaData, null, 2)}`);
+    // log.debug(F, `Initial Persona data: ${JSON.stringify(personaData, null, 2)}`);
 
     // If the user doesn't have persona data, create it
     if (!personaData) {
@@ -832,7 +836,7 @@ export const dRpg: SlashCommand = {
     // if (subcommand === 'blackjack') {
     //   await interaction.editReply(await rpgArcade(interaction));
     // }
-    // if (subcommand === 'slotmachine') {
+    // if (subcommand === 'slots') {
     //   await interaction.editReply(await rpgArcade(interaction));
     // }
 
@@ -981,7 +985,7 @@ export async function rpgWork(
       success: {
         title: 'Raid Success',
         description: stripIndents`
-          You stormed into Moonbear's office, russled their jimmies and stole {tokens} TripTokens!
+          You stormed into Moonbear's office, rustle their jimmies and stole {tokens} TripTokens!
         `,
         color: Colors.Green,
       },
@@ -1132,7 +1136,7 @@ export async function rpgShop(
   const rowShop = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(buttons.town);
 
-  // Everyone gets the town button, but only people with unpurchased items get the items select menu
+  // Everyone gets the town button, but only people with purchased items get the items select menu
   const componentList = [rowShop] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
   if (shopInventory.length > 0) { componentList.unshift(rowItems); }
 
@@ -1288,7 +1292,7 @@ export async function rpgShopInventory(
       `
     : '';
 
-  // Go through items.general and create a new object of items that the user doesnt have yet
+  // Go through items.general and create a new object of items that the user doesn't have yet
   const shopInventory = [...Object.values(items.general), ...Object.values(items.backgrounds)]
     .map(item => {
       if (!inventoryData.find(i => i.value === item.value)) {
@@ -1531,7 +1535,7 @@ export async function rpgHome(
   const files = [] as AttachmentBuilder[];
   if (equippedBackground) {
     const imagePath = await imageGet(equippedBackground.value);
-    log.debug(F, `equiped background imagePath: ${imagePath}`);
+    log.debug(F, `Equipped background imagePath: ${imagePath}`);
     files.push(new AttachmentBuilder(imagePath));
     embed.setThumbnail(`attachment://${equippedBackground.value}.png`);
     log.debug(F, 'Set thumbnail!');
@@ -1539,7 +1543,7 @@ export async function rpgHome(
 
   if (interaction.isStringSelectMenu() && backgroundData && backgroundData.effect === 'background') {
     const imagePath = await imageGet(backgroundData.effect_value);
-    log.debug(F, `imagePathasdfasdfasf: ${imagePath}`);
+    log.debug(F, `imagePath: ${imagePath}`);
     files.push(new AttachmentBuilder(imagePath));
     embed.setImage(`attachment://${backgroundData.effect_value}.png`);
     log.debug(F, 'Set image!');
@@ -1738,7 +1742,7 @@ export async function rpgHomeInventory(
       `
     : '';
 
-  // Go through items.general and create a new object of items that the user doesnt have yet
+  // Go through items.general and create a new object of items that the user doesn't have yet
   const homeInventory = [...Object.values(items.backgrounds)]
     .map(item => {
       if (inventoryData.find(i => i.value === item.value)) {

@@ -29,7 +29,7 @@ export async function youAre(message: Message): Promise<void> {
   // Determine if the message was sent in a TextChannel
   if (!(message.channel instanceof TextChannel)) return;
 
-  if (message.channel.parentId === env.CATEGROY_HARMREDUCTIONCENTRE) return;
+  if (message.channel.parentId === env.CATEGORY_HARMREDUCTIONCENTRE) return;
 
   const key = valMatch(content, /(\bis\b|\bare\b)\s+([\w\s\d]*?)(\s+)?(,|\.|\band\b|$)/, 5);
 

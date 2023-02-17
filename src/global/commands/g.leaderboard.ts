@@ -4,7 +4,7 @@ import {
 import { expForNextLevel, getTotalLevel } from '../utils/experience';
 import {
   ExperienceCategory, ExperienceType, UserExperience,
-} from '../@types/pgdb';
+} from '../@types/database';
 
 const F = f(__filename);
 

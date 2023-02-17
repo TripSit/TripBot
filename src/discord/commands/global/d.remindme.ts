@@ -9,7 +9,7 @@ import {
   ChannelType,
   ButtonStyle,
 } from 'discord-api-types/v10';
-import { remindme } from '../../../global/commands/g.remindme';
+import { remindMe } from '../../../global/commands/g.remindme';
 import { startLog } from '../../utils/startLog';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -19,15 +19,15 @@ import { paginationEmbed } from '../../utils/pagination';
 const F = f(__filename);
 
 const buttonList = [
-  new ButtonBuilder().setCustomId('previousbtn').setLabel('Previous').setStyle(ButtonStyle.Danger),
-  new ButtonBuilder().setCustomId('nextbtn').setLabel('Next').setStyle(ButtonStyle.Success),
+  new ButtonBuilder().setCustomId('previousButton').setLabel('Previous').setStyle(ButtonStyle.Danger),
+  new ButtonBuilder().setCustomId('nextButton').setLabel('Next').setStyle(ButtonStyle.Success),
 ];
 
 export default dRemindme;
 
 export const dRemindme: SlashCommand = {
   data: new SlashCommandBuilder()
-    .setName('remindme')
+    .setName('remind_me')
     .setDescription('Handle reminders!')
     .addSubcommand(subcommand => subcommand
       .setDescription('Set a reminder')
@@ -62,7 +62,7 @@ export const dRemindme: SlashCommand = {
     }
     // log.debug(F, `reminderDatetime: ${reminderDatetime}`);
 
-    const response = await remindme(
+    const response = await remindMe(
       command,
       interaction.user.id,
       record,
@@ -79,7 +79,7 @@ export const dRemindme: SlashCommand = {
       if (response !== null) {
         embed.setTitle('Your reminders');
         if (typeof response === 'string') {
-          embed.setDescription('You have no reminders! You can use /remindme to add some!');
+          embed.setDescription('You have no reminders! You can use /remind_me to add some!');
           interaction.reply({ embeds: [embed], ephemeral: true });
           return true;
         }
@@ -135,7 +135,7 @@ export const dRemindme: SlashCommand = {
         }
       } else {
         embed.setTitle('No reminders!');
-        embed.setDescription('You have no reminders! Use /remindme to add some!');
+        embed.setDescription('You have no reminders! Use /remind_me to add some!');
       }
       // log.debug(F, `book.length: ${book.length}`);
       if (book.length > 1) {

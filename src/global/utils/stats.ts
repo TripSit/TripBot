@@ -9,7 +9,7 @@ const F = f(__filename);
 
 const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
 
-// Value in miliseconds (1000 * 60 = 1 minute)
+// Value in milliseconds (1000 * 60 = 1 minute)
 // This needs to be 5 minutes for production, cuz discord has rate limits
 const interval = env.NODE_ENV === 'production' ? 1000 * 60 * 5 : 1000 * 10;
 
@@ -33,13 +33,16 @@ async function checkStats() {
       // log.debug(F, `Updated total members to ${memberCount}!`);
       // Check if the total members is divisible by 100
       if (memberCount % 100 === 0) {
-        // const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
+        const embed = embedTemplate()
+          .setTitle(newRecordString)
+          .setDescription(`We have reached ${memberCount} total members!`);
         const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
         if (channelLounge) {
-          const embed = embedTemplate()
-            .setTitle(newRecordString)
-            .setDescription(`We have reached ${memberCount} total members!`);
           await channelLounge.send({ embeds: [embed] });
+        }
+        const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
+        if (channelTeamtripsit) {
+          await channelTeamtripsit.send({ embeds: [embed] });
         }
       }
     }
@@ -65,13 +68,16 @@ async function checkStats() {
         await channelVerified.setName(name);
         // log.debug(F, `Updated verified members to ${members.size}!`);
         if (members.size % 100 === 0) {
-          // const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
+          const embed = embedTemplate()
+            .setTitle(newRecordString)
+            .setDescription(`We have reached ${members.size} verified members!`);
           const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
           if (channelLounge) {
-            const embed = embedTemplate()
-              .setTitle(newRecordString)
-              .setDescription(`We have reached ${members.size} verified members!`);
             await channelLounge.send({ embeds: [embed] });
+          }
+          const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
+          if (channelTeamtripsit) {
+            await channelTeamtripsit.send({ embeds: [embed] });
           }
         }
       }
@@ -103,13 +109,16 @@ async function checkStats() {
         maxCount = onlineCount;
         newGuild.max_online_members = maxCount;
         await guildUpdate(newGuild);
-        // const channelGeneral = await tripsitGuild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
+        const embed = embedTemplate()
+          .setTitle(newRecordString)
+          .setDescription(`We have reached ${maxCount} online members!`);
         const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
         if (channelLounge) {
-          const embed = embedTemplate()
-            .setTitle(newRecordString)
-            .setDescription(`We have reached ${maxCount} online members!`);
           await channelLounge.send({ embeds: [embed] });
+        }
+        const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
+        if (channelTeamtripsit) {
+          await channelTeamtripsit.send({ embeds: [embed] });
         }
 
         const channelMax = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_MAX);
@@ -140,7 +149,7 @@ async function checkStats() {
 export async function runStats() {
   /**
    * This timer runs every (INTERVAL) to determine if there are any tasks to perform
-   * This function uses setTimeout so that it can finish runing before the next loop
+   * This function uses setTimeout so that it can finish running before the next loop
    */
   function checkTimers() {
     setTimeout(

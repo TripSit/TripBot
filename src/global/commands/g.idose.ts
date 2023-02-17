@@ -9,7 +9,7 @@ import {
   DrugRoa,
   DrugMassUnit,
   UserDrugDoses,
-} from '../@types/pgdb.d';
+} from '../@types/database.d';
 
 const F = f(__filename);
 
@@ -55,9 +55,9 @@ export async function idose(
 
     const userData = await getUser(userId, null);
 
-    const unsorteddata = await idoseGet(userData.id);
+    const unsortedData = await idoseGet(userData.id);
 
-    if (unsorteddata.length === 0) {
+    if (unsortedData.length === 0) {
       return [{
         name: 'Error',
         value: 'You have no dose records, you can use /idose to add some!',
@@ -65,7 +65,7 @@ export async function idose(
     }
 
     // Sort data based on the created_at property
-    const data = [...unsorteddata].sort((a, b) => {
+    const data = [...unsortedData].sort((a, b) => {
       if (a.created_at < b.created_at) {
         return -1;
       }
@@ -118,19 +118,19 @@ export async function idose(
 
     // log.debug(F, `Getting data for ${userData.id}...`);
 
-    const unsorteddata = await idoseGet(userData.id);
+    const unsortedData = await idoseGet(userData.id);
 
-    if (unsorteddata.length === 0) {
+    if (unsortedData.length === 0) {
       return [{
         name: 'Error',
         value: 'You have no dose records, you can use /idose to add some!',
       }];
     }
 
-    // log.debug(F, `Data: ${JSON.stringify(unsorteddata, null, 2)}`);
+    // log.debug(F, `Data: ${JSON.stringify(unsortedData, null, 2)}`);
 
     // Sort data based on the created_at property
-    const data = [...unsorteddata].sort((a, b) => {
+    const data = [...unsortedData].sort((a, b) => {
       if (a.created_at < b.created_at) {
         return -1;
       }

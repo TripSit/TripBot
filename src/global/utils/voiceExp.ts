@@ -4,17 +4,17 @@ import {
   CategoryChannel,
   ChannelType,
 } from 'discord.js';
-import { ExperienceCategory, ExperienceType } from '../@types/pgdb';
+import { ExperienceCategory, ExperienceType } from '../@types/database';
 import { experience } from './experience';
 
 export default runVoiceCheck;
 
 const F = f(__filename);
 
-// Value in miliseconds (1000 * 60 = 1 minute)
+// Value in milliseconds (1000 * 60 = 1 minute)
 const timerInterval = env.NODE_ENV === 'production' ? 1000 * 60 : 1000 * 10;
 
-// Value in miliseconds (1000 * 60 = 1 minute)
+// Value in milliseconds (1000 * 60 = 1 minute)
 const expInterval = env.NODE_ENV === 'production' ? 1000 * 60 * 2 : 1000 * 5;
 
 const expPoints = env.NODE_ENV === 'production'
@@ -23,7 +23,7 @@ const expPoints = env.NODE_ENV === 'production'
 
 async function checkVoice() {
   // This function will run every minute and check every voice channel on the guild
-  // If someone satisifies the following conditions, they will be awarded voice exp
+  // If someone satisfies the following conditions, they will be awarded voice exp
   // 1. They are not a bot
   // 2. They are in a voice channel
   // 3. They have been in the voice channel for at least 5 minutes
@@ -49,7 +49,7 @@ async function checkVoice() {
       { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_CAMPGROUND },
       { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_BACKSTAGE },
       { category: 'TEAM' as ExperienceCategory, id: env.CATEGORY_TEAMTRIPSIT },
-      { category: 'TRIPSITTER' as ExperienceCategory, id: env.CATEGROY_HARMREDUCTIONCENTRE },
+      { category: 'TRIPSITTER' as ExperienceCategory, id: env.CATEGORY_HARMREDUCTIONCENTRE },
       { category: 'DEVELOPER' as ExperienceCategory, id: env.CATEGORY_DEVELOPMENT },
     ];
 
@@ -95,7 +95,7 @@ async function checkVoice() {
 export async function runVoiceCheck() {
   /**
    * This timer runs every (INTERVAL) to determine if there are any tasks to perform
-   * This function uses setTimeout so that it can finish runing before the next loop
+   * This function uses setTimeout so that it can finish running before the next loop
    */
   function checkTimers() {
     setTimeout(

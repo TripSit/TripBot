@@ -37,7 +37,7 @@ import {
 import {
   UserTickets,
   TicketStatus,
-} from '../../global/@types/pgdb.d';
+} from '../../global/@types/database.d';
 import { startLog } from './startLog';
 import { embedTemplate } from './embedTemplate';
 
@@ -102,7 +102,7 @@ const memberOnly = 'This must be performed by a member of a guild!';
  * @param {GuildMember} interaction
  * @param {GuildMember} target
  * */
-export async function needsHelpmode(
+export async function needsHelpMode(
   interaction: ModalSubmitInteraction | ButtonInteraction | ChatInputCommandInteraction,
   target: GuildMember,
 ) {
@@ -178,6 +178,7 @@ export async function tripsitmeOwned(
 
   const userData = await getUser(userId, null);
   const ticketData = await getOpenTicket(userData.id, null);
+  const guildData = await getGuild(interaction.guild.id);
 
   // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
@@ -194,13 +195,16 @@ export async function tripsitmeOwned(
     return;
   }
 
-  const metaChannelId = ticketData?.meta_thread_id ?? env.CHANNEL_TRIPSITMETA;
-  const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
-  await metaChannel.send({
-    content: stripIndents`${actor.displayName} has indicated that ${target.toString()} is receiving help!`,
-  });
-  if (metaChannelId !== env.CHANNEL_TRIPSITMETA) {
-    metaChannel.setName(`💛│${target.displayName}'s discussion!`);
+  const metaChannelId = ticketData?.meta_thread_id ?? guildData.channel_tripsitmeta;
+  if (metaChannelId) {
+    log.debug(F, `metaChannelId: ${metaChannelId}`);
+    const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
+    await metaChannel.send({
+      content: stripIndents`${actor.displayName} has indicated that ${target.toString()} is receiving help!`,
+    });
+    if (metaChannelId !== guildData.channel_tripsitmeta) {
+      metaChannel.setName(`💛│${target.displayName}'s discussion!`);
+    }
   }
 
   // Update the ticket's name
@@ -368,7 +372,7 @@ export async function tripsitmeBackup(
     backupMessage += `and/or <@&${roleHelper.id}> `;
   }
 
-  backupMessage += stripIndents`team, ${actor} has inidicated they could use some backup!
+  backupMessage += stripIndents`team, ${actor} has indicated they could use some backup!
     
   Be sure to read the log so you have the context!`;
 
@@ -433,6 +437,7 @@ export async function tripsitmeClose(
 
   const userData = await getUser(target.id, null);
   const ticketData = await getOpenTicket(userData.id, null);
+  const guildData = await getGuild(interaction.guild.id);
 
   // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
@@ -478,13 +483,15 @@ export async function tripsitmeClose(
     components: [row],
   });
 
-  const metaChannelId = ticketData?.meta_thread_id ?? env.CHANNEL_TRIPSITMETA;
-  const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
-  await metaChannel.send({
-    content: stripIndents`${actor.displayName} has indicated that ${target.toString()} no longer needs help!`,
-  });
-  if (metaChannelId !== env.CHANNEL_TRIPSITMETA) {
-    metaChannel.setName(`💙│${target.displayName}'s discussion!`);
+  const metaChannelId = ticketData?.meta_thread_id ?? guildData.channel_tripsitmeta;
+  if (metaChannelId) {
+    const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
+    await metaChannel.send({
+      content: stripIndents`${actor.displayName} has indicated that ${target.toString()} no longer needs help!`,
+    });
+    if (metaChannelId !== guildData.channel_tripsitmeta) {
+      metaChannel.setName(`💙│${target.displayName}'s discussion!`);
+    }
   }
 
   // Update the ticket status to closed
@@ -658,16 +665,13 @@ export async function tripsitmeResolve(
       });
     });
 
-  let metaChannelId = ticketData?.meta_thread_id;
-  if (metaChannelId === null && interaction.guild.id === env.GUILD_TRIPSIT) {
-    metaChannelId = env.CHANNEL_TRIPSITMETA;
-  }
-  if (metaChannelId !== null) {
+  const metaChannelId = ticketData?.meta_thread_id ?? guildData.channel_tripsitmeta;
+  if (metaChannelId) {
     const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
     await metaChannel.send({
       content: stripIndents`${actor.displayName} has indicated that they no longer need help!`,
     });
-    if (metaChannelId !== env.CHANNEL_TRIPSITMETA) {
+    if (metaChannelId !== guildData.channel_tripsitmeta) {
       metaChannel.setName(`💚│${target.displayName}'s discussion!`);
     }
   }
@@ -755,7 +759,7 @@ export async function tripSitMe(
   const target = (memberInput ?? interaction.member) as GuildMember;
   // log.debug(F, `target: ${target}`);
 
-  await needsHelpmode(interaction, target);
+  await needsHelpMode(interaction, target);
 
   // Get the tripsit channel from the guild
   const tripsitChannel = guildData.channel_tripsit
@@ -887,7 +891,7 @@ export async function tripSitMe(
 
   // log.debug(F, `newTicketData: ${JSON.stringify(newTicketData, null, 2)}`);
 
-  // Update thet ticket in the DB
+  // Update the ticket in the DB
   await ticketUpdate(newTicketData);
 
   return threadHelpUser;
@@ -975,7 +979,7 @@ export async function tripsitmeButton(
     }
 
     if (threadHelpUser.id) {
-      await needsHelpmode(interaction, target);
+      await needsHelpMode(interaction, target);
       const guildData = await getGuild(interaction.guild.id);
 
       let roleTripsitter = {} as Role;
@@ -1076,6 +1080,7 @@ export async function tripsitmeButton(
         await i.reply({ embeds: [embed], ephemeral: true });
       } catch (err) {
         log.error(F, `There was an error responding to the user! ${err}`);
+        log.debug(F, `Error: ${JSON.stringify(err, null, 2)}`);
       }
     });
 }

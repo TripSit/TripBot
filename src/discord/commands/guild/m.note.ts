@@ -15,7 +15,7 @@ import { MessageCommand } from '../../@types/commandDef';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 import { moderate } from '../../../global/commands/g.moderate';
-import { UserActionType } from '../../../global/@types/pgdb';
+import { UserActionType } from '../../../global/@types/database';
 
 const F = f(__filename);
 

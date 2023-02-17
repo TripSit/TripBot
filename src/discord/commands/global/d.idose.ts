@@ -15,14 +15,14 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import { paginationEmbed } from '../../utils/pagination';
-import { DrugRoa, DrugMassUnit } from '../../../global/@types/pgdb';
+import { DrugRoa, DrugMassUnit } from '../../../global/@types/database';
 import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
 const buttonList = [
-  new ButtonBuilder().setCustomId('previousbtn').setLabel('Previous').setStyle(ButtonStyle.Danger),
-  new ButtonBuilder().setCustomId('nextbtn').setLabel('Next').setStyle(ButtonStyle.Success),
+  new ButtonBuilder().setCustomId('previousButton').setLabel('Previous').setStyle(ButtonStyle.Danger),
+  new ButtonBuilder().setCustomId('nextButton').setLabel('Next').setStyle(ButtonStyle.Success),
 ];
 
 export default dIdose;
@@ -61,7 +61,7 @@ export const dIdose: SlashCommand = {
           { name: 'Inhaled', value: 'INHALED' },
           { name: 'Sublingual (Tongue)', value: 'SUBLINGUAL' },
           { name: 'Buccal (Gums)', value: 'BUCCAL' },
-          { name: 'Recatal (Butt)', value: 'RECTAL' },
+          { name: 'Rectal (Butt)', value: 'RECTAL' },
           { name: 'Intramuscular (IM)', value: 'INTRAMUSCULAR' },
           { name: 'Intravenous (IV)', value: 'INTRAVENOUS' },
           { name: 'Subcutanious (IM)', value: 'SUBCUTANIOUS' },

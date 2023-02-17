@@ -4,7 +4,7 @@ import { TextChannel } from 'discord.js';
 import { getVoiceConnection } from '@discordjs/voice';
 import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
-import { discordConnect } from './discord/dscrd'; // eslint-disable-line
+import { discordConnect } from './discord/discord'; // eslint-disable-line
 import { validateEnv } from './global/utils/env.validate'; // eslint-disable-line
 import { startLog } from './discord/utils/startLog'; // eslint-disable-line
 
@@ -29,10 +29,10 @@ start();
 process.on('unhandledRejection', async (error: Error) => {
   log.error(F, `ERROR: ${error.stack}`);
   if (env.NODE_ENV === 'production') {
-    const botlog = await client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+    const channel = await client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
-    const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
-    await botlog.send(`Hey ${tripbotdevrole}, I just got an error (start):
+    const role = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
+    await channel.send(`Hey ${role}, I just got an error (start):
     ${error.stack}
     `);
   }

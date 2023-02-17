@@ -13,7 +13,7 @@ import {
   TextChannel,
   ModalSubmitInteraction,
   Role,
-  Guild,
+  // Guild,
   GuildMember,
 } from 'discord.js';
 import {
@@ -32,7 +32,7 @@ import {
 import {
   UserTickets,
   TicketStatus,
-} from '../../../global/@types/pgdb.d';
+} from '../../../global/@types/database.d';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { startLog } from '../../utils/startLog';
@@ -126,17 +126,17 @@ Result: Re-show the prompt for the Im Good button
 Trigger: Send a message in the thread
 Result: "Sorry this ticket is resolved, the user will need to create a new ticket for you to send them a message"
 
-8a) Botbanned
+8a) Bot banned
 Trigger: Use the /botmod botban command to ban a user
 Result: Message is posted to the modlog room
 
-8c) Botbanned - send dm message
+8c) Bot banned - send dm message
 Trigger: Send a DM to the bot
 Result: bot responds in dm "sad beeps"
 
-8b) Botbanned - send thread message
+8b) Bot banned - send thread message
 Trigger: Send a message in the thread
-Result: Bot responds in thread "Sorry this user is botbanned, the user cannot see this, you must unpause to send a message"
+Result: Bot responds in thread "Sorry this user is bot banned, the user cannot see this, you must unpause to send a message"
 */
 
 const modMailOwn = 'modmailIssue~own';
@@ -511,13 +511,13 @@ export async function modmailCreate(
   const actor = interaction.user;
 
   // Get the tripsit guild
-  const tripsitGuild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
+  const tripsitGuild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID);
 
   let member = {} as GuildMember;
   try {
     member = await tripsitGuild.members.fetch(actor.id);
   } catch (error) {
-    // This just means the actor isnt in the guild
+    // This just means the actor isn't in the guild
   }
 
   // log.debug(F, `Member: ${JSON.stringify(member, null, 2)}!`);
@@ -680,14 +680,14 @@ export async function modmailCreate(
       }
 
       // Create the thread in the tripsit guild
-      const threadtype = channel.guild.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread;
-      // log.debug(F, `threadtype: ${threadtype}!`);
+      const threadType = channel.guild.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread;
+      // log.debug(F, `thread type: ${threadType}!`);
       // log.debug(F, `name: ${modmailVars[issueType].channelTitle}!`);
-      // log.debug(F, `reson: ${actor.username} submitted a(n) ${issueType} ticket!!`);
+      // log.debug(F, `reason: ${actor.username} submitted a(n) ${issueType} ticket!!`);
       const ticketThread = await channel.threads.create({
         name: modmailVars[issueType].channelTitle,
         autoArchiveDuration: 1440,
-        type: threadtype,
+        type: threadType,
         reason: `${actor.username} submitted a(n) ${issueType} ticket!`,
       });
         // log.debug(F, `Created thread ${ticketThread.id}`);
@@ -864,7 +864,7 @@ export async function modmailCreate(
  * @param {Message} message The message sent to the bot
  */
 export async function modmailDMInteraction(message:Message) {
-  // Dont run if the user mentions @everyone or @here.
+  // Don't run if the user mentions @everyone or @here.
   if (message.content.includes('@everyone') || message.content.includes('@here')) {
     await message.author.send('You\'re not allowed to use those mentions.');
     return;

@@ -14,12 +14,12 @@ import { paginationEmbed } from '../../utils/pagination';
 const F = f(__filename);
 
 const button1 = new ButtonBuilder()
-  .setCustomId('previousbtn')
+  .setCustomId('previousButton')
   .setLabel('Previous')
   .setStyle(ButtonStyle.Danger);
 
 const button2 = new ButtonBuilder()
-  .setCustomId('nextbtn')
+  .setCustomId('nextButton')
   .setLabel('Next')
   .setStyle(ButtonStyle.Success);
 
@@ -110,7 +110,7 @@ export const dHelp: SlashCommand = {
       funEmbed,
       tripsitEmbed,
     ];
-    paginationEmbed(interaction, book, buttonList, 120000);
+    paginationEmbed(interaction, book, buttonList, 0);
     return true;
   },
 };

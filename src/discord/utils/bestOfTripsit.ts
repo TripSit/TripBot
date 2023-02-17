@@ -12,7 +12,7 @@ import { stripIndents } from 'common-tags';
 
 const ignoredCategories = [
   env.CATEGORY_TEAMTRIPSIT,
-  env.CATEGROY_HARMREDUCTIONCENTRE,
+  env.CATEGORY_HARMREDUCTIONCENTRE,
 ];
 
 // How many votes are needed for each action, in production and dev
