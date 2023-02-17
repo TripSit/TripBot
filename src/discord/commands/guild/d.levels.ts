@@ -180,18 +180,19 @@ export const dLevels: SlashCommand = {
     context.restore();
 
     // Status Icon
-    let StatusIconPath = await imageGet('iconOffline');
+
+    let StatusIconPath = 'icon_offline';
     if (target.presence) {
       if (target.presence.status === 'online') {
-        StatusIconPath = await imageGet('iconOnline');
+        StatusIconPath = 'icon_online';
       } else if (target.presence.status === 'idle') {
-        StatusIconPath = await imageGet('iconIdle');
+        StatusIconPath = 'icon_idle';
       } else if (target.presence.status === 'dnd') {
-        StatusIconPath = await imageGet('iconDnd');
+        StatusIconPath = 'icon_dnd';
       }
     }
     // log.debug(F, `StatusIconPath: ${StatusIconPath}`);
-    const StatusIcon = await Canvas.loadImage(StatusIconPath);
+    const StatusIcon = await Canvas.loadImage(await imageGet(StatusIconPath));
     context.drawImage(StatusIcon, 90, 92);
 
     /* WIP: Camp Icon

@@ -1983,8 +1983,8 @@ export async function rpgArcadeGame(
   const rowBetsD = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(...bets.slice(15, 20));
 
-  log.debug(F, `rowWagers: ${JSON.stringify(rowWagers, null, 2)}`);
-  log.debug(F, `rowBetsA: ${JSON.stringify(rowBetsA, null, 2)}`);
+  // log.debug(F, `rowWagers: ${JSON.stringify(rowWagers, null, 2)}`);
+  // log.debug(F, `rowBetsA: ${JSON.stringify(rowBetsA, null, 2)}`);
 
   const components = [rowWagers, rowBetsA];
   if (rowBetsB.components.length > 0) components.push(rowBetsB);
