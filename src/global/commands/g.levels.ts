@@ -48,7 +48,7 @@ export async function levels(
   discordId: string,
 ):Promise<ExperienceData> {
   const userData = await getUser(discordId, null);
-  const experienceData = await experienceGet(10, undefined, undefined, userData.id);
+  const experienceData = await experienceGet(undefined, undefined, undefined, userData.id);
 
   const results = {
     TEXT: {

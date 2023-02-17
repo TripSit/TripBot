@@ -420,7 +420,7 @@ export async function reactionroleGet(
 }
 
 export async function experienceGet(
-  limit:number,
+  limitInput?:number,
   category?:ExperienceCategory,
   type?:ExperienceType,
   userId?:string,
@@ -428,6 +428,7 @@ export async function experienceGet(
   // log.debug(F,
   // `experienceGet started with: limit: ${limit}, category: ${category}, type: ${type}, userId: ${userId}`);
 
+  const limit = limitInput || 1000000;
   if (env.POSTGRES_DB_URL === undefined) return [];
   if (category) {
     if (type) {
@@ -477,9 +478,9 @@ export async function experienceGet(
   if (type) {
     return (await db<UserExperience>('user_experience')
       .select(db.ref('user_id'))
-      .where('type', type)
-      .andWhereNot('category', 'TOTAL')
+      .whereNot('category', 'TOTAL')
       .andWhereNot('category', 'IGNORED')
+      .andWhere('type', type)
       .groupBy(['user_id'])
       .sum({ total_points: 'total_points' })
       .orderBy('total_points', 'desc')

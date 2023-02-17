@@ -38,7 +38,7 @@ export async function experience(
   const userData = await getUser(member.id, null);
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
-  const [experienceData] = await experienceGet(1, category, type, userData.id);
+  const [experienceData] = await experienceGet(undefined, category, type, userData.id);
   // log.debug(F, `Start type: ${experienceData.type} | level: ${experienceData.level} | level_points: ${experienceData.level_points} | total_points: ${experienceData.total_points}`);
 
   // If the user has no experience, insert it, and we're done here
@@ -138,7 +138,7 @@ async function giveMilestone(
 ) {
   const userData = await getUser(member.id, null);
 
-  const allExpData = await experienceGet(10, undefined, 'TEXT' as ExperienceType, userData.id);
+  const allExpData = await experienceGet(undefined, undefined, 'TEXT' as ExperienceType, userData.id);
 
   // Calculate total experience points
   const totalExp = allExpData

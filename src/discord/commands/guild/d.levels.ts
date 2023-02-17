@@ -10,7 +10,7 @@ import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { levels } from '../../../global/commands/g.levels';
 import { getRanks } from '../../../global/commands/g.leaderboard';
-import { profile } from '../../../global/commands/g.profile';
+import { profile, ProfileData } from '../../../global/commands/g.profile';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
 import { imageGet } from '../../utils/imageGet';
@@ -25,6 +25,56 @@ import { numFormatter } from './d.profile';
 export default dLevels;
 
 const F = f(__filename);
+
+type ExperienceData = {
+  TEXT: {
+    TOTAL: {
+      level: number,
+      level_exp: number,
+      nextLevel: number,
+      total_exp: number,
+    },
+    [key: string]: {
+      level: number,
+      level_exp: number,
+      nextLevel: number,
+      total_exp: number,
+    },
+  },
+  VOICE: {
+    TOTAL: {
+      level: number,
+      level_exp: number,
+      nextLevel: number,
+      total_exp: number,
+    },
+    [key: string]: {
+      level: number,
+      level_exp: number,
+      nextLevel: number,
+      total_exp: number,
+    },
+  },
+};
+
+type UserRankData = {
+  TEXT: {
+    TOTAL: number,
+    TRIPSITTER: number,
+    GENERAL: number,
+    DEVELOPER: number,
+    TEAM: number,
+    IGNORED: number,
+  },
+  VOICE: {
+    TOTAL: number,
+    TRIPSITTER: number,
+    GENERAL: number,
+    DEVELOPER: number,
+    TEAM: number,
+    IGNORED: number,
+  },
+};
 
 Canvas.GlobalFonts.registerFromPath(
   path.resolve(__dirname, '../../assets/Futura.otf'),
@@ -47,23 +97,39 @@ export const dLevels: SlashCommand = {
       return false;
     }
     startLog(F, interaction);
-    await interaction.deferReply();
 
     // Target is the option given, if none is given, it will be the user who used the command
     const target = interaction.options.getMember('target')
       ? interaction.options.getMember('target') as GuildMember
       : interaction.member as GuildMember;
     // log.debug(F, `target id: ${target.id}`);
-    // log.debug(F, `targetData: ${JSON.stringify(target, null, 2)}`);
+    // log.debug(F, `experienceData: ${JSON.stringify(target, null, 2)}`);
 
-    const targetData = await levels(target.id);
-    // log.debug(F, `targetData: ${JSON.stringify(targetData, null, 2)}`);
+    const values = await Promise.allSettled([
+      await interaction.deferReply(),
+      // Get the target's profile data from the database
+      await profile(target.id),
+      // Check get fresh persona data
+      await getPersonaInfo(target.id),
+      // Get the levels of the user
+      await levels(target.id),
+      // Get the ranks of the user
+      await getRanks(target.id),
+      // Load Icon Images
+      await Canvas.loadImage(await imageGet('cardLevelIcons')),
+      // Get the status icon
+      await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
+      // Get the avatar image
+      await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
+    ]);
 
-    const rankData = await getRanks(target.id);
-    log.debug(F, `rankData: ${JSON.stringify(rankData, null, 2)}`);
-
-    const profileData = await profile(target.id);
-    // log.debug(F, `profileData: ${JSON.stringify(profileData, null, 2)}`);
+    const profileData = values[1].status === 'fulfilled' ? values[1].value : {} as ProfileData;
+    const [personaData] = values[2].status === 'fulfilled' ? values[2].value : [];
+    const experienceData = values[3].status === 'fulfilled' ? values[3].value : {} as ExperienceData;
+    const rankData = values[4].status === 'fulfilled' ? values[4].value : {} as UserRankData;
+    const Icons = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
+    const StatusIcon = values[6].status === 'fulfilled' ? values[6].value : {} as Canvas.Image;
+    const avatar = values[7].status === 'fulfilled' ? values[7].value : {} as Canvas.Image;
 
     let layoutHeight = 386;
     let layout = 1;
@@ -86,7 +152,7 @@ export const dLevels: SlashCommand = {
     const canvasHeight = layoutHeight;
     const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
     const context = canvasObj.getContext('2d');
-    log.debug(F, `canvasHeight: ${canvasHeight}`);
+    // log.debug(F, `canvasHeight: ${canvasHeight}`);
 
     // Choose color based on user's role
     const cardLightColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#232323';
@@ -139,7 +205,6 @@ export const dLevels: SlashCommand = {
 
     // Purchased Background
     // Check get fresh persona data
-    const [personaData] = await getPersonaInfo(target.id);
     // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
 
     if (personaData) {
@@ -148,7 +213,7 @@ export const dLevels: SlashCommand = {
       // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
 
       const equippedBackground = inventoryData.find(item => item.equipped === true);
-      log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
+      // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
       if (equippedBackground) {
         const imagePath = await imageGet(equippedBackground.value);
         const Background = await Canvas.loadImage(imagePath);
@@ -174,31 +239,14 @@ export const dLevels: SlashCommand = {
     context.arc(73, 73, 54, 0, Math.PI * 2, true);
     context.closePath();
     context.clip();
-    // Avatar Image
-    const avatar = await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' }));
+
     context.drawImage(avatar, 18, 18, 109, 109);
     context.restore();
 
-    // Status Icon
-
-    let StatusIconPath = 'icon_offline';
-    if (target.presence) {
-      if (target.presence.status === 'online') {
-        StatusIconPath = 'icon_online';
-      } else if (target.presence.status === 'idle') {
-        StatusIconPath = 'icon_idle';
-      } else if (target.presence.status === 'dnd') {
-        StatusIconPath = 'icon_dnd';
-      }
-    }
     // log.debug(F, `StatusIconPath: ${StatusIconPath}`);
-    const StatusIcon = await Canvas.loadImage(await imageGet(StatusIconPath));
     context.drawImage(StatusIcon, 90, 92);
 
-    /* WIP: Camp Icon
-    // const CampIcon = await Canvas.loadImage(await imageGet('campIconA'));
-    context.drawImage(CampIcon, 556, 17);
-    */
+    // context.drawImage(CampIcon, 556, 17);
 
     // WIP: Check to see if a user has bought a title in the shop
     // If so, move Username Text up so the title can fit underneath
@@ -222,20 +270,20 @@ export const dLevels: SlashCommand = {
     context.fillText(`${target.displayName}`, 146, 76);
 
     // Progress Bars Calculate
-    const progressText = targetData.TEXT.TOTAL.level_exp / targetData.TEXT.TOTAL.nextLevel;
-    const progressVoice = targetData.VOICE.TOTAL.level_exp / targetData.VOICE.TOTAL.nextLevel;
+    const progressText = experienceData.TEXT.TOTAL.level_exp / experienceData.TEXT.TOTAL.nextLevel;
+    const progressVoice = experienceData.VOICE.TOTAL.level_exp / experienceData.VOICE.TOTAL.nextLevel;
 
-    const progressGeneral = targetData.TEXT.GENERAL
-      ? targetData.TEXT.GENERAL.level_exp / targetData.TEXT.GENERAL.nextLevel
+    const progressGeneral = experienceData.TEXT.GENERAL
+      ? experienceData.TEXT.GENERAL.level_exp / experienceData.TEXT.GENERAL.nextLevel
       : 0;
-    const progressTripsitter = targetData.TEXT.TRIPSITTER
-      ? targetData.TEXT.TRIPSITTER.level_exp / targetData.TEXT.TRIPSITTER.nextLevel
+    const progressTripsitter = experienceData.TEXT.TRIPSITTER
+      ? experienceData.TEXT.TRIPSITTER.level_exp / experienceData.TEXT.TRIPSITTER.nextLevel
       : 0;
-    const progressDeveloper = targetData.TEXT.DEVELOPER
-      ? targetData.TEXT.DEVELOPER.level_exp / targetData.TEXT.DEVELOPER.nextLevel
+    const progressDeveloper = experienceData.TEXT.DEVELOPER
+      ? experienceData.TEXT.DEVELOPER.level_exp / experienceData.TEXT.DEVELOPER.nextLevel
       : 0;
-    const progressTeam = targetData.TEXT.TEAM
-      ? targetData.TEXT.TEAM.level_exp / targetData.TEXT.TEAM.nextLevel
+    const progressTeam = experienceData.TEXT.TEAM
+      ? experienceData.TEXT.TEAM.level_exp / experienceData.TEXT.TEAM.nextLevel
       : 0;
     // Progress Bars Draw
     context.fillStyle = barColor;
@@ -268,22 +316,22 @@ export const dLevels: SlashCommand = {
     context.fillStyle = '#ffffff';
     context.textBaseline = 'middle';
     context.textAlign = 'right';
-    context.fillText(`${targetData.TEXT.TOTAL.level}`, 657, 213);
+    context.fillText(`${experienceData.TEXT.TOTAL.level}`, 657, 213);
     context.font = '25px futura';
-    context.fillText(`${targetData.TEXT.GENERAL ? targetData.TEXT.GENERAL.level : 0}`, 657, 284);
-    context.fillText(`${targetData.VOICE.TOTAL.level}`, 657, 344);
-    if (layout > 1 && targetData.TEXT.TRIPSITTER) {
-      context.fillText(`${targetData.TEXT.TRIPSITTER.level}`, 657, 404);
+    context.fillText(`${experienceData.TEXT.GENERAL ? experienceData.TEXT.GENERAL.level : 0}`, 657, 284);
+    context.fillText(`${experienceData.VOICE.TOTAL.level}`, 657, 344);
+    if (layout > 1 && experienceData.TEXT.TRIPSITTER) {
+      context.fillText(`${experienceData.TEXT.TRIPSITTER.level}`, 657, 404);
     } else {
       context.fillText('0', 657, 404);
     }
-    if (layout > 2 && targetData.TEXT.DEVELOPER) {
-      context.fillText(`${targetData.TEXT.DEVELOPER.level}`, 657, 464);
+    if (layout > 2 && experienceData.TEXT.DEVELOPER) {
+      context.fillText(`${experienceData.TEXT.DEVELOPER.level}`, 657, 464);
     } else {
       context.fillText('0', 657, 464);
     }
-    if (layout > 3 && targetData.TEXT.TEAM) {
-      context.fillText(`${targetData.TEXT.TEAM.level}`, 657, 524);
+    if (layout > 3 && experienceData.TEXT.TEAM) {
+      context.fillText(`${experienceData.TEXT.TEAM.level}`, 657, 524);
     } else {
       context.fillText('0', 657, 524);
     }
@@ -356,37 +404,34 @@ export const dLevels: SlashCommand = {
     context.beginPath();
     context.roundRect(0, 0, 921, (layoutHeight - 18), [19]);
     context.clip();
-    // Load Icon Images
-    const Icons = await Canvas.loadImage(await imageGet('cardLevelIcons'));
     context.drawImage(Icons, 0, 0);
     context.restore();
     // Choose and Draw the Level Image
     let LevelImagePath = '' as string;
-
-    if (targetData.TEXT.TOTAL.level < 10) {
-      LevelImagePath = await imageGet('badgeVip0');
-    } else if (targetData.TEXT.TOTAL.level < 20) {
-      LevelImagePath = await imageGet('badgeVip1');
-    } else if (targetData.TEXT.TOTAL.level < 30) {
-      LevelImagePath = await imageGet('badgeVip2');
-    } else if (targetData.TEXT.TOTAL.level < 40) {
-      LevelImagePath = await imageGet('badgeVip3');
-    } else if (targetData.TEXT.TOTAL.level < 50) {
-      LevelImagePath = await imageGet('badgeVip4');
-    } else if (targetData.TEXT.TOTAL.level < 60) {
-      LevelImagePath = await imageGet('badgeVip5');
-    } else if (targetData.TEXT.TOTAL.level < 70) {
-      LevelImagePath = await imageGet('badgeVip6');
-    } else if (targetData.TEXT.TOTAL.level < 80) {
-      LevelImagePath = await imageGet('badgeVip7');
-    } else if (targetData.TEXT.TOTAL.level < 90) {
-      LevelImagePath = await imageGet('badgeVip8');
-    } else if (targetData.TEXT.TOTAL.level < 100) {
-      LevelImagePath = await imageGet('badgeVip9');
-    } else if (targetData.TEXT.TOTAL.level >= 100) {
-      LevelImagePath = await imageGet('badgeVip10');
+    if (experienceData.TEXT.TOTAL.level < 10) {
+      LevelImagePath = 'badgeVip0';
+    } else if (experienceData.TEXT.TOTAL.level < 20) {
+      LevelImagePath = 'badgeVip1';
+    } else if (experienceData.TEXT.TOTAL.level < 30) {
+      LevelImagePath = 'badgeVip2';
+    } else if (experienceData.TEXT.TOTAL.level < 40) {
+      LevelImagePath = 'badgeVip3';
+    } else if (experienceData.TEXT.TOTAL.level < 50) {
+      LevelImagePath = 'badgeVip4';
+    } else if (experienceData.TEXT.TOTAL.level < 60) {
+      LevelImagePath = 'badgeVip5';
+    } else if (experienceData.TEXT.TOTAL.level < 70) {
+      LevelImagePath = 'badgeVip6';
+    } else if (experienceData.TEXT.TOTAL.level < 80) {
+      LevelImagePath = 'badgeVip7';
+    } else if (experienceData.TEXT.TOTAL.level < 90) {
+      LevelImagePath = 'badgeVip8';
+    } else if (experienceData.TEXT.TOTAL.level < 100) {
+      LevelImagePath = 'badgeVip9';
+    } else if (experienceData.TEXT.TOTAL.level >= 100) {
+      LevelImagePath = 'badgeVip10';
     }
-    const LevelImage = await Canvas.loadImage(LevelImagePath);
+    const LevelImage = await Canvas.loadImage(await imageGet(LevelImagePath));
     context.drawImage(LevelImage, 97, 181, 58, 58);
 
     // Process The Entire Card and Send it to Discord

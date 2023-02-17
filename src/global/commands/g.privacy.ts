@@ -23,7 +23,7 @@ export async function privacy(
   // const userActions = await db<UserActions>('user_actions')
   //   .where('user_id', userData.id);
   const userDrugDoses = await idoseGet(userData.id);
-  const userExperience = await experienceGet(1, undefined, undefined, userData.id);
+  const userExperience = await experienceGet(undefined, undefined, undefined, userData.id);
   const userReminders = await reminderGet(userData.id);
   // const userTickets = await db<UserTickets>('user_tickets')
   //   .where('user_id', userData.id);
