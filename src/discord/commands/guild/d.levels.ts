@@ -270,7 +270,7 @@ export const dLevels: SlashCommand = {
     context.textAlign = 'right';
     context.fillText(`${targetData.TEXT.TOTAL.level}`, 657, 213);
     context.font = '25px futura';
-    context.fillText(`${targetData.TEXT.GENERAL.level}`, 657, 284);
+    context.fillText(`${targetData.TEXT.GENERAL ? targetData.TEXT.GENERAL.level : 0}`, 657, 284);
     context.fillText(`${targetData.VOICE.TOTAL.level}`, 657, 344);
     if (layout > 1 && targetData.TEXT.TRIPSITTER) {
       context.fillText(`${targetData.TEXT.TRIPSITTER.level}`, 657, 404);
