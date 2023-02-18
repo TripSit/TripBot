@@ -476,24 +476,91 @@ export async function experienceGet(
       .limit(limit);
   }
   if (type) {
-    return (await db<UserExperience>('user_experience')
-      .select(db.ref('user_id'))
-      .whereNot('category', 'TOTAL')
-      .andWhereNot('category', 'IGNORED')
-      .andWhere('type', type)
-      .groupBy(['user_id'])
-      .sum({ total_points: 'total_points' })
+    // return (await db<UserExperience>('user_experience')
+    //   .select(db.ref('user_id'))
+    //   .where('type', type)
+    //   .andWhereNot('category', 'TOTAL')
+    //   .andWhereNot('category', 'IGNORED')
+    //   .groupBy(['user_id'])
+    //   .sum({ total_points: 'total_points' })
+    //   .orderBy('total_points', 'desc')
+    //   .limit(limit)) as UserExperience[];
+    return db<UserExperience>('user_experience')
+      .select('*')
+      .where('type', type)
       .orderBy('total_points', 'desc')
-      .limit(limit)) as UserExperience[];
+      .limit(limit);
   }
-  return (await db<UserExperience>('user_experience')
-    .select(db.ref('user_id'))
-    .whereNot('category', 'TOTAL')
-    .andWhereNot('category', 'IGNORED')
-    .groupBy(['user_id'])
-    .sum({ total_points: 'total_points' })
+  return db<UserExperience>('user_experience')
+    .select('*')
     .orderBy('total_points', 'desc')
-    .limit(limit)) as UserExperience[];
+    .limit(limit);
+  // return (await db<UserExperience>('user_experience')
+  //   .select(db.ref('user_id'))
+  //   .whereNot('category', 'TOTAL')
+  //   .andWhereNot('category', 'IGNORED')
+  //   .groupBy(['user_id'])
+  //   .sum({ total_points: 'total_points' })
+  //   .orderBy('total_points', 'desc')
+  //   .limit(limit)) as UserExperience[];
+}
+
+type LeaderboardList = { discord_id: string, total_points: number }[];
+
+export async function experienceGetTop(
+  limitInput?:number,
+  category?:ExperienceCategory,
+  type?:ExperienceType,
+):Promise<LeaderboardList> {
+// log.debug(F, 'experienceGetTop started');
+  if (env.POSTGRES_DB_URL === undefined) return [] as LeaderboardList;
+  const limit = limitInput || 1000000;
+  if (category) {
+    if (type) { // NOSONAR
+      return (await db<{ discord_id: string, total_points: number }>('user_experience')
+        .join('users', 'users.id', '=', 'user_experience.user_id') // eslint-disable-line sonarjs/no-duplicate-string
+        .select(db.ref('users.discord_id')) // eslint-disable-line sonarjs/no-duplicate-string
+        .whereNot('user_experience.category', 'TOTAL')// eslint-disable-line sonarjs/no-duplicate-string
+        .andWhereNot('user_experience.category', 'IGNORED')
+        .andWhere('user_experience.category', category)
+        .andWhere('user_experience.type', type)
+        .groupBy(['users.discord_id'])
+        .sum({ total_points: 'user_experience.total_points' })// eslint-disable-line sonarjs/no-duplicate-string
+        .orderBy('total_points', 'desc')
+        .limit(limit)) as LeaderboardList;
+    }
+    return (await db<{ discord_id: string, total_points: number }>('user_experience')
+      .join('users', 'users.id', '=', 'user_experience.user_id')
+      .select(db.ref('users.discord_id'))
+      .whereNot('user_experience.category', 'TOTAL')
+      .andWhereNot('user_experience.category', 'IGNORED')
+      .andWhere('user_experience.category', category)
+      .groupBy(['users.discord_id'])
+      .sum({ total_points: 'user_experience.total_points' })
+      .orderBy('total_points', 'desc')
+      .limit(limit)) as LeaderboardList;
+  }
+  if (type) {
+    return (await db<{ discord_id: string, total_points: number }>('user_experience')
+      .join('users', 'users.id', '=', 'user_experience.user_id')
+      .select(db.ref('users.discord_id'))
+      .whereNot('user_experience.category', 'TOTAL')
+      .andWhereNot('user_experience.category', 'IGNORED')
+      .andWhere('user_experience.type', type)
+      .groupBy(['users.discord_id'])
+      .sum({ total_points: 'user_experience.total_points' })
+      .orderBy('total_points', 'desc')
+      .limit(limit)) as LeaderboardList;
+  }
+  return (await db<{ discord_id: string, total_points: number }>('user_experience')
+    .join('users', 'users.id', '=', 'user_experience.user_id')
+    .select(db.ref('users.discord_id'))
+    .whereNot('user_experience.category', 'TOTAL')
+    .andWhereNot('user_experience.category', 'IGNORED')
+    .groupBy(['users.discord_id'])
+    .sum({ total_points: 'user_experience.total_points' })
+    .orderBy('total_points', 'desc')
+    .limit(limit)) as LeaderboardList;
 }
 
 export async function experienceDel(

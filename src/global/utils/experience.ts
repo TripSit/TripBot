@@ -298,7 +298,8 @@ async function giveMilestone(
 
 export async function getTotalLevel(
   totalExp:number,
-):Promise<Omit<UserExperience, 'id' | 'user_id' | 'type' | 'category' | 'total_points' | 'last_message_at' | 'last_message_channel' | 'created_at'>> {
+):Promise<{ level: number, level_points: number }> {
+// ):Promise<Omit<UserExperience, 'id' | 'user_id' | 'type' | 'category' | 'total_points' | 'last_message_at' | 'last_message_channel' | 'created_at'>> {
   // log.debug('totalLevel', `totalExp: ${totalExp}`);
   let level = 0;
   let levelPoints = totalExp;

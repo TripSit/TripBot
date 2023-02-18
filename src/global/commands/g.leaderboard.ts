@@ -1,40 +1,54 @@
-import { stripIndents } from 'common-tags';
+// import { stripIndents } from 'common-tags';
 import {
-  experienceGet, getUser, db,
+  experienceGet,
+  getUser,
+  db,
+  experienceGetTop,
 } from '../utils/knex';
-import { getTotalLevel } from '../utils/experience';
+// import { getTotalLevel } from '../utils/experience';
 import {
-  ExperienceCategory, ExperienceType, UserExperience,
+  ExperienceCategory,
+  ExperienceType,
+  UserExperience,
 } from '../@types/database';
 
+export default getLeaderboard;
+
 const F = f(__filename);
-
-type RankType = { 'rank': number, 'id': string, 'level': number };
-type LeaderboardType = {
-  [key: string]: RankType[],
-};
-const rankDict = {
-  TOTAL: 'Overall',
-  TRIPSITTER: 'Trip Sitters',
-  GENERAL: 'Shit Posters',
-  DEVELOPER: 'Code Monkeys',
-  TEAM: 'Team Talkers',
-  IGNORED: 'Void Screamers',
-};
-
-// type RankData = {
-//   rank: number,
-//   discordId: string,
-//   level: number,
-//   exp: number,
-//   nextLevel: number,
+// type Ranking = { 'rank': number, 'id': string, 'level': number };
+// type LeaderboardType = {
+//   [key: string]: Ranking[],
 // };
 
-// type LeaderboardData = {
-//   [key: string]: {
-//     [key: string]: RankData[],
-//   },
+// const rankDict = {
+//   TOTAL: 'Overall',
+//   TRIPSITTER: 'Trip Sitters',
+//   GENERAL: 'Shit Posters',
+//   DEVELOPER: 'Code Monkeys',
+//   TEAM: 'Team Talkers',
+//   IGNORED: 'Void Screamers',
 // };
+
+type LeaderboardList = { discord_id: string, total_points: number }[];
+
+type LeaderboardData = {
+  TEXT: {
+    TOTAL: LeaderboardList,
+    TRIPSITTER: LeaderboardList,
+    GENERAL: LeaderboardList,
+    DEVELOPER: LeaderboardList,
+    TEAM: LeaderboardList,
+    IGNORED: LeaderboardList,
+  },
+  VOICE: {
+    TOTAL: LeaderboardList,
+    TRIPSITTER: LeaderboardList,
+    GENERAL: LeaderboardList,
+    DEVELOPER: LeaderboardList,
+    TEAM: LeaderboardList,
+    IGNORED: LeaderboardList,
+  },
+};
 
 type UserRankData = {
   TEXT: {
@@ -54,165 +68,43 @@ type UserRankData = {
     IGNORED: number,
   },
 };
-export default leaderboard;
 
-/**
- * Leaderboard info
- * @param {string} categoryName
- * @return {Promise<{results: LeaderboardType, title: string, description: string}>}
- */
-export async function leaderboard(
-  categoryName: string,
-):Promise<{ results: LeaderboardType, title: string, description: string | null }> {
-  let title = `Top 15 ${rankDict[categoryName as keyof typeof rankDict]}:`;
-  let description = null;
-  let results = {} as LeaderboardType;
+export async function getLeaderboard():Promise<LeaderboardData> {
+  const leaderboard = {
+    TEXT: {
+      TOTAL: [],
+      TRIPSITTER: [],
+      GENERAL: [],
+      DEVELOPER: [],
+      TEAM: [],
+      IGNORED: [],
+    },
+    VOICE: {
+      TOTAL: [],
+      TRIPSITTER: [],
+      GENERAL: [],
+      DEVELOPER: [],
+      TEAM: [],
+      IGNORED: [],
+    },
+  } as LeaderboardData;
 
-  if (categoryName === 'OVERALL') {
-    title = 'The top three members in each category:';
-    description = stripIndents`
-    **Total**        - All experience combined
-    **Sitter**       - Harm Reduction Center category
-    (Must have Helper role to get Sitter exp!)
-    **Team Talker**   - TeamTripsit category
-    **Code Monkey**   - Development category
-    **Shit Poster**   - Campground and Backstage
-    `;
+  // Grab all the user experience from the database
+  leaderboard.TEXT.TOTAL = await experienceGetTop(20, undefined, 'TEXT' as ExperienceType);
+  leaderboard.TEXT.TRIPSITTER = await experienceGetTop(20, 'TRIPSITTER' as ExperienceCategory, 'TEXT' as ExperienceType); // eslint-disable-line
+  leaderboard.TEXT.GENERAL = await experienceGetTop(20, 'GENERAL' as ExperienceCategory, 'TEXT' as ExperienceType); // eslint-disable-line
+  leaderboard.TEXT.DEVELOPER = await experienceGetTop(20, 'DEVELOPER' as ExperienceCategory, 'TEXT' as ExperienceType); // eslint-disable-line
+  leaderboard.TEXT.TEAM = await experienceGetTop(20, 'TEAM' as ExperienceCategory, 'TEXT' as ExperienceType);
+  leaderboard.TEXT.IGNORED = await experienceGetTop(20, 'IGNORED' as ExperienceCategory, 'TEXT' as ExperienceType); // eslint-disable-line
+  leaderboard.VOICE.TOTAL = await experienceGetTop(20, undefined, 'VOICE' as ExperienceType);
+  leaderboard.VOICE.TRIPSITTER = await experienceGetTop(20, 'TRIPSITTER' as ExperienceCategory, 'VOICE' as ExperienceType); // eslint-disable-line
+  leaderboard.VOICE.GENERAL = await experienceGetTop(20, 'GENERAL' as ExperienceCategory, 'VOICE' as ExperienceType); // eslint-disable-line
+  leaderboard.VOICE.DEVELOPER = await experienceGetTop(20, 'DEVELOPER' as ExperienceCategory, 'VOICE' as ExperienceType); // eslint-disable-line
+  leaderboard.VOICE.TEAM = await experienceGetTop(20, 'TEAM' as ExperienceCategory, 'VOICE' as ExperienceType);
+  leaderboard.VOICE.IGNORED = await experienceGetTop(20, 'IGNORED' as ExperienceCategory, 'VOICE' as ExperienceType); // eslint-disable-line
 
-    // Grab all the user experience from the database
-    const allUserExperience = await experienceGet(3, undefined, 'TEXT' as ExperienceType);
-
-    // log.debug(F, `allUserExperience: ${JSON.stringify(allUserExperience, null, 2)}`);
-
-    let rank = 0;
-    for (const user of allUserExperience) { // eslint-disable-line
-      rank += 1;
-      const userData = await getUser(null, user.user_id); // eslint-disable-line
-      if (!userData) {
-        log.error(F, `Could not find user with id ${user.user_id}`);
-      }
-      if (!userData.discord_id) {
-        log.error(F, `User ${user.user_id} does not have a discord id`);
-      }
-
-      if (userData && userData.discord_id && user.total_points) {
-        const totalData = await getTotalLevel(user.total_points); // eslint-disable-line
-
-        if (!results.TOTAL) {
-          results.TOTAL = [];
-        }
-
-        results.TOTAL.push({
-          rank,
-          id: userData.discord_id,
-          level: totalData.level,
-        });
-      }
-    }
-
-    // Grab the top three of each experience category
-    for (const category of ['TRIPSITTER', 'GENERAL', 'DEVELOPER', 'TEAM', 'IGNORED']) { // eslint-disable-line
-      const userExperience = await experienceGet(3, category as ExperienceCategory, 'TEXT' as ExperienceType);// eslint-disable-line
-      let categoryRank = 0;
-      for (const user of userExperience) { // eslint-disable-line
-        categoryRank += 1;
-        const userData = await getUser(null, user.user_id); // eslint-disable-line
-        if (!userData) {
-          log.error(F, `Could not find user with id ${user.user_id}`);
-        }
-        if (!userData.discord_id) {
-          log.error(F, `User ${user.user_id} does not have a discord id`);
-        }
-
-        if (userData && userData.discord_id && user.total_points) {
-          if (!results[category]) {
-            results[category] = [];
-          }
-          results[category].push({
-            rank: categoryRank,
-            id: userData.discord_id,
-            level: user.level,
-          });
-        }
-      }
-    }
-  } else if (categoryName === 'TOTAL') {
-    title = 'Top 15 users in all categories';
-    description = 'Total Experience is the sum of all experience in all categories.';
-
-    // Grab all the user experience from the database
-    const userExperience = await experienceGet(15);
-
-    // log.debug(F, `userExperience: ${JSON.stringify(userExperience, null, 2)}`);
-
-    let rank = 1;
-    for (const user of userExperience) { // eslint-disable-line
-    // userExperience.forEach(async user => {
-      const userData = await getUser(null, user.user_id); // eslint-disable-line
-      if (!userData) {
-        log.error(F, `Could not find user with id ${user.user_id}`);
-      }
-      if (!userData.discord_id) {
-        log.error(F, `User ${user.user_id} does not have a discord id`);
-      }
-      if (!user.total_points) {
-        log.error(F, `User ${user.user_id} has no total points`);
-      }
-
-      if (userData && userData.discord_id && user.total_points) {
-        const totalData = await getTotalLevel(user.total_points); // eslint-disable-line
-
-        if (!results.TOTAL) {
-          results.TOTAL = [];
-        }
-
-        results.TOTAL.push({
-          rank,
-          id: userData.discord_id,
-          level: totalData.level,
-        });
-        rank += 1;
-      }
-    }
-  } else {
-    // Grab top 15 of that category
-
-    const userExperience = await experienceGet(15, categoryName as ExperienceCategory, 'TEXT' as ExperienceType);
-
-    // log.debug(F, `userExperience: ${JSON.stringify(userExperience, null, 2)}`);
-
-    const rankList = [] as RankType[];
-    let i = 1;
-    for (const user of userExperience) { // eslint-disable-line
-    // userExperience.forEach(async user => {
-      const userData = await getUser(null, user.user_id); // eslint-disable-line
-      if (!userData) {
-        log.error(F, `Could not find user with id ${user.user_id}`);
-      }
-      if (!userData.discord_id) {
-        log.error(F, `User ${user.user_id} does not have a discord id`);
-      }
-      // log.debug(F, `userData: ${JSON.stringify(userData)}`);
-
-      if (userData && userData.discord_id) {
-        rankList.push({ rank: i, id: userData.discord_id, level: user.level });
-        i += 1;
-      }
-    }
-    // log.debug(F, `rankList: ${JSON.stringify(rankList, null, 2)}`);
-    results = {
-      [categoryName]: rankList,
-    };
-  }
-
-  const response = {
-    title,
-    description,
-    results,
-  };
-  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-
-  return response;
+  log.info(F, `leaderboard.TEXT.TOTAL: ${JSON.stringify(leaderboard.TEXT.TOTAL, null, 2)}`);
+  return leaderboard;
 }
 
 export async function getRanks(
@@ -240,7 +132,7 @@ export async function getRanks(
   } as UserRankData;
 
   const userData = await getUser(discordId, null);
-  const experienceData = await experienceGet(10, undefined, undefined, userData.id);
+  const experienceData = await experienceGet(undefined, undefined, undefined, userData.id);
 
   if (!experienceData) {
     return rankResults;
@@ -249,7 +141,16 @@ export async function getRanks(
   let totalTextExp = 0 as number;
   let totalVoiceExp = 0 as number;
 
-  const allExperience = await experienceGet(20, undefined, undefined, userData.id); // eslint-disable-line
+  const allExperience = (await db<UserExperience>('user_experience')
+    .join('users', 'users.id', '=', 'user_experience.user_id')
+    .select(db.ref('users.discord_id'))
+    .whereNot('user_experience.category', 'TOTAL')
+    .andWhereNot('user_experience.category', 'IGNORED')
+    .andWhere('user_experience.type', 'TEXT')
+    .groupBy(['users.discord_id'])
+    .sum({ total_points: 'user_experience.total_points' })
+    .orderBy('total_points', 'desc')) as UserExperience[];
+
   for (const experienceData of allExperience) { // eslint-disable-line
     // log.debug(F, `experienceData: ${JSON.stringify(experienceData, null, 2)}`);
 
@@ -295,15 +196,15 @@ export async function getRanks(
 
   const totalVoiceRank = await db<UserExperience>('user_experience')
     .count('user_id')
-    .where('total_points', '>', totalVoiceExp)
-    .andWhere('type', 'VOICE')
+    .where('type', 'VOICE')
     .andWhereNot('category', 'TOTAL')
     .andWhereNot('category', 'IGNORED')
+    .andWhere('total_points', '>', totalVoiceExp)
     .groupBy(['user_id'])
     .sum({ total_points: 'total_points' })
     .orderBy('total_points', 'desc');
 
-  log.debug(F, `totalVoiceRank: ${totalVoiceRank.length}`);
+  // log.debug(F, `totalVoiceRank: ${totalVoiceRank.length}`);
   rankResults.VOICE.TOTAL = totalVoiceRank.length > 0
     ? totalVoiceRank.length + 1
     : 0;

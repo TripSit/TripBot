@@ -1,19 +1,43 @@
+/* eslint-disable no-await-in-loop, no-restricted-syntax, no-continue */
+
 import {
+  ButtonBuilder,
+  ButtonStyle,
   Colors,
-  GuildMember,
+  // GuildMember,
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import { leaderboard } from '../../../global/commands/g.leaderboard';
+import {
+  getLeaderboard,
+  // leaderboard,
+} from '../../../global/commands/g.leaderboard';
 import { startLog } from '../../utils/startLog';
 import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { getTotalLevel } from '../../../global/utils/experience';
+import { paginationEmbed } from '../../utils/pagination';
 
 const F = f(__filename);
 
-type RankType = { 'rank': number, 'id': string, 'level': number };
-type LeaderboardType = {
-  [key: string]: RankType[],
-};
+const button1 = new ButtonBuilder()
+  .setCustomId('previousButton')
+  .setLabel('Previous')
+  .setStyle(ButtonStyle.Danger);
+
+const button2 = new ButtonBuilder()
+  .setCustomId('nextButton')
+  .setLabel('Next')
+  .setStyle(ButtonStyle.Success);
+
+const buttonList = [
+  button1,
+  button2,
+];
+
+// type RankType = { 'rank': number, 'id': string, 'level': number };
+// type LeaderboardType = {
+//   [key: string]: RankType[],
+// };
 
 export default dLeaderboard;
 
@@ -22,96 +46,75 @@ export const dLeaderboard: SlashCommand = {
     .setName('leaderboard')
     .setDescription('Show the experience leaderboard')
     .addStringOption(option => option.setName('category')
-      .setDescription('Which leaderboard? (Default: Overall)')
+      .setDescription('What category of experience? (Default: All)')
       .addChoices(
-        { name: 'Overall', value: 'OVERALL' },
+        { name: 'All', value: 'ALL' },
         { name: 'Total', value: 'TOTAL' },
         { name: 'General', value: 'GENERAL' },
         { name: 'Tripsitter', value: 'TRIPSITTER' },
         { name: 'Developer', value: 'DEVELOPER' },
         { name: 'Team Tripsit', value: 'TEAM' },
         { name: 'Ignored', value: 'IGNORED' },
+      ))
+    .addStringOption(option => option.setName('type')
+      .setDescription('What type of experience? (Default: All)')
+      .addChoices(
+        { name: 'All', value: 'ALL' },
+        { name: 'Text', value: 'TEXT' },
+        { name: 'Voice', value: 'VOICE' },
       )),
   async execute(interaction) {
+    const startTime = Date.now();
+    if (!interaction.guild) {
+      interaction.reply('You can only use this command in a guild!');
+      return false;
+    }
     startLog(F, interaction);
+
     await interaction.deferReply();
-    const categoryOption = interaction.options.getString('category');
-    const categoryName = categoryOption ?? 'OVERALL';
+    const categoryChoice = interaction.options.getString('category') ?? 'All';
+    const typeChoice = interaction.options.getString('type') ?? 'All';
 
-    // Get the tripsit guild
-    const guild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID);
+    const leaderboardData = await getLeaderboard();
+    const book = [];
 
-    const response = await leaderboard(categoryName);
-    const leaderboardVals = response.results as LeaderboardType;
-
-    // log.debug(F, `response: ${JSON.stringify(leaderboardVals, null, 2)}`);
-
-    const embed = embedTemplate()
-      .setTitle(response.title)
-      .setColor(Colors.Gold)
-      .setDescription(response.description);
-
-    const rankDict = {
-      OVERALL: 'Overall',
-      TOTAL: 'Total',
-      TRIPSITTER: 'Sitter',
-      GENERAL: 'Shitposter',
-      DEVELOPER: 'Codemonkey',
-      TEAM: 'Teamtalker',
-      IGNORED: 'Voidscreamer',
-    };
-
-    for (const [category, value] of Object.entries(leaderboardVals)) { // eslint-disable-line no-restricted-syntax
-    // Object.entries(leaderboardVals).forEach(([category, value]) => {
-      let row = 0;
-      let rowName = '';
-      // log.debug(F, `Category: ${category}`);
-      // log.debug(F, `rowName: ${rowName}`);
-      // log.debug(F, `row: ${row}`);
-      // log.debug(F, `Category name: ${category}`);
-      // Capitalize the first letter in user.rank
-      const categoryTitle = rankDict[category as keyof typeof rankDict];
-      const catNameCapitalized = categoryTitle.charAt(0).toUpperCase() + categoryTitle.slice(1);
-      // log.debug(F, `Proper name: ${catNameCapitalized}`);
-      for (const user of value) { // eslint-disable-line no-restricted-syntax
-        // log.debug(F, `user.id: ${user.id}`);
-        // log.debug(F, `row: ${row}`);
-        if (rowName !== catNameCapitalized && rowName !== '') {
-          rowName = catNameCapitalized;
-          embed.addFields({ name: '\u200B', value: '\u200B', inline: true });
-          // log.debug(F, `added first blank row`);
-          row += 1;
-          // log.debug(F, `row: ${row}`);
-          if (row < 3) {
-            // log.debug(F, `row is less than 3`);
-            embed.addFields({ name: '\u200B', value: '\u200B', inline: true });
-            // log.debug(F, `added second blank row`);
-            row = 0;
-          } else {
-            // log.debug(F, `row is not less than 3`);
-            row = 0;
-          }
+    for (const type of Object.keys(leaderboardData)) { // eslint-disable-line no-restricted-syntax
+      if (typeChoice !== 'All' && typeChoice !== type) {
+        continue; // eslint-disable-line no-continue
+      }
+      const typeKey = type as keyof typeof leaderboardData;
+      const typeData = leaderboardData[typeKey];
+      // log.debug(F, `typeKey: ${typeKey}, typeData: ${JSON.stringify(typeData, null, 2)}`);
+      for (const category of Object.keys(typeData)) {
+        if (categoryChoice !== 'All' && categoryChoice !== category) {
+          continue;
         }
-        rowName = catNameCapitalized;
-
-        // Get the user's discord username from the discord API
-        let member = {} as GuildMember;
-        try {
-          member = await guild.members.fetch(user.id); // eslint-disable-line no-await-in-loop
-        } catch (error) {
-          //
+        const categoryKey = category as keyof typeof typeData;
+        const categoryData = typeData[categoryKey];
+        log.debug(F, `categoryKey: ${categoryKey}, categoryData: ${JSON.stringify(categoryData, null, 2)}`);
+        if (categoryData.length === 0) {
+          continue;
         }
-        embed.addFields({
-          name: `#${user.rank} ${rowName}`,
-          value: `L.${user.level} ${member.displayName}`,
-          inline: true,
-        });
-        row += 1;
+        const descriptionText = await Promise.all(categoryData.map(async (user, index) => {
+          const levelData = await getTotalLevel(user.total_points);
+          return `#${index + 1} Lvl ${levelData.level} <@${user.discord_id}> (${user.total_points} XP)`;
+        }));
+
+        // Lowercase everything and then capitalize the first letter of type and category
+        const categoryString = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
+        const typeString = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+
+        const embed = embedTemplate()
+          .setTitle(`${typeString} ${categoryString} Leaderboard!`)
+          .setColor(Colors.Gold)
+          .setDescription(descriptionText.join('\n'));
+
+        book.push(embed);
       }
     }
 
-    await interaction.editReply({ embeds: [embed] });
-
+    paginationEmbed(interaction, book, buttonList, 0);
+    log.debug(F, `Total Time: ${Date.now() - startTime}ms`);
     return true;
   },
 };
