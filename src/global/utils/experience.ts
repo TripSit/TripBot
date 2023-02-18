@@ -38,7 +38,7 @@ export async function experience(
   const userData = await getUser(member.id, null);
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
-  const [experienceData] = await experienceGet(1, category, type, userData.id);
+  const [experienceData] = await experienceGet(undefined, category, type, userData.id);
   // log.debug(F, `Start type: ${experienceData.type} | level: ${experienceData.level} | level_points: ${experienceData.level_points} | total_points: ${experienceData.total_points}`);
 
   // If the user has no experience, insert it, and we're done here
@@ -138,7 +138,7 @@ async function giveMilestone(
 ) {
   const userData = await getUser(member.id, null);
 
-  const allExpData = await experienceGet(10, undefined, 'TEXT' as ExperienceType, userData.id);
+  const allExpData = await experienceGet(undefined, undefined, 'TEXT' as ExperienceType, userData.id);
 
   // Calculate total experience points
   const totalExp = allExpData
@@ -275,7 +275,7 @@ async function giveMilestone(
     // ) as Role;
     // // log.debug(F, `Previous role: ${previousRole.name} (${previousRole.id})`);
     // if (member?.roles.cache.has(previousRole.id)) {
-    //   log.debug(F, `Removing ${member} role ${previousRole.name} (${previousRole.id})`);
+    // log.debug(F, `Removing ${member} role ${previousRole.name} (${previousRole.id})`);
     //   member?.roles.remove(previousRole);
     // }
   }
@@ -289,7 +289,7 @@ async function giveMilestone(
       await channel.send(`${emojis} **${member} has reached Total Text level ${levelTier}0!** ${emojis}`);
     }
     // if (totalLevel >= 20) {
-    //   log.debug(F, `${emojis} **${member} has reached Total Text level ${totalLevel}!** ${emojis}`);
+    // log.debug(F, `${emojis} **${member} has reached Total Text level ${totalLevel}!** ${emojis}`);
     //   // const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
     //   // await channel.send(`${emojis} **${member} has reached Total Text level ${totalLevel}!** ${emojis}`);
     // }
@@ -298,7 +298,8 @@ async function giveMilestone(
 
 export async function getTotalLevel(
   totalExp:number,
-):Promise<Omit<UserExperience, 'id' | 'user_id' | 'type' | 'category' | 'total_points' | 'last_message_at' | 'last_message_channel' | 'created_at'>> {
+):Promise<{ level: number, level_points: number }> {
+// ):Promise<Omit<UserExperience, 'id' | 'user_id' | 'type' | 'category' | 'total_points' | 'last_message_at' | 'last_message_channel' | 'created_at'>> {
   // log.debug('totalLevel', `totalExp: ${totalExp}`);
   let level = 0;
   let levelPoints = totalExp;

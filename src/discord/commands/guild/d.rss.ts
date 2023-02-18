@@ -81,7 +81,7 @@ export const dRss: SlashCommand = {
       try {
         await parser.parseURL(url);
       } catch (e) {
-        log.debug(F, `Error parsing URL: ${e}`);
+        log.error(F, `Error parsing URL: ${e}`);
         await interaction.reply({
           content: 'This is not a valid RSS URL, please check it and try again!',
           ephemeral: true,
@@ -92,7 +92,7 @@ export const dRss: SlashCommand = {
       const channel = interaction.options.getChannel('add_to_channel');
       // log.debug(F, `channel: ${JSON.stringify(channel, null, 2)}`);
       if (!(channel instanceof TextChannel)) {
-        log.debug(F, 'channel is not a text channel');
+        // log.error(F, 'channel is not a text channel');
         // log.debug(F, `channel instanceof TextChannel: ${channel instanceof TextChannel}`);
         await interaction.reply({
           content: 'You must specify a text channel!',

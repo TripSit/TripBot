@@ -16,7 +16,7 @@ export async function profile(
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
   const values = await Promise.allSettled([
-    await experienceGet(10, undefined, undefined, userData.id),
+    await experienceGet(undefined, undefined, undefined, userData.id),
     await personaGet(userData.id),
   ]);
 

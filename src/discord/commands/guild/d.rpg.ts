@@ -786,10 +786,7 @@ export const dRpg: SlashCommand = {
       : await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')] });
 
     // Create a collector that will listen to buttons clicked by the user
-    const filter = (i: MessageComponentInteraction) => {
-      log.debug(F, `i.user.id: ${i.user.id}, interaction.user.id: ${interaction.user.id}`);
-      return i.user.id === interaction.user.id;
-    };
+    const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id;
     const collector = message.createMessageComponentCollector({ filter, time: 0 });
 
     // Get the user's persona data
@@ -804,7 +801,7 @@ export const dRpg: SlashCommand = {
         tokens: 0,
       } as Personas;
 
-      log.debug(F, `Setting Persona data: ${JSON.stringify(personaData, null, 2)}`);
+      // log.debug(F, `Setting Persona data: ${JSON.stringify(personaData, null, 2)}`);
 
       await setPersonaInfo(personaData);
       // await interaction.editReply({ embeds: [embedStart], components: states.setup.components });
@@ -842,7 +839,7 @@ export const dRpg: SlashCommand = {
 
     // Button collector
     collector.on('collect', async (i: MessageComponentInteraction) => {
-      log.debug(F, `Interaction: ${JSON.stringify(i.customId, null, 2)}`);
+    // log.debug(F, `Interaction: ${JSON.stringify(i.customId, null, 2)}`);
       if (i.customId === 'rpgTown') await i.update(await rpgTown(i));
       else if (i.customId === 'rpgWork') await i.update(await rpgWork(i, null));
       else if (i.customId === 'rpgShop') await i.update(await rpgShop(i));
@@ -1002,31 +999,31 @@ export async function rpgWork(
   if (command !== null) {
     const dbKey = `last_${command}`;
     const lastWork = personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] as Date;
-    log.debug(F, `lastWork: ${lastWork}`);
+    // log.debug(F, `lastWork: ${lastWork}`);
 
     let resetTime = {} as Date;
     let timeout = false;
     if (command === 'quest') {
       const currentHour = new Date().getHours();
-      log.debug(F, `currentHour: ${currentHour}`);
+      // log.debug(F, `currentHour: ${currentHour}`);
 
       resetTime = new Date(new Date().setHours(currentHour + 1, 0, 0, 0));
 
       if (lastWork) {
         const lastWorkHour = lastWork ? lastWork.getHours() : 0;
-        log.debug(F, `lastWorkHour: ${lastWorkHour}`);
+        // log.debug(F, `lastWorkHour: ${lastWorkHour}`);
         if (lastWorkHour === currentHour) {
           timeout = true;
         }
       }
     } else if (command === 'dungeon') {
       const currentDay = new Date().getDate();
-      log.debug(F, `currentDay: ${currentDay}`);
+      // log.debug(F, `currentDay: ${currentDay}`);
       resetTime = new Date(new Date(new Date().setDate(currentDay + 1)).setHours(0, 0, 0, 0));
 
       if (lastWork) {
         const lastWorkDay = lastWork ? lastWork.getDate() : 0;
-        log.debug(F, `lastWorkDay: ${lastWorkDay}`);
+        // log.debug(F, `lastWorkDay: ${lastWorkDay}`);
 
         // log.debug(F, `personaData1: ${JSON.stringify(personaData, null, 2)}`);
         // if (lastWork && (lastWork.getTime() + interval > new Date().getTime())) {
@@ -1036,7 +1033,7 @@ export async function rpgWork(
       }
     } else if (command === 'raid') {
       const lastMonday = getLastMonday(new Date());
-      log.debug(F, `lastMonday: ${lastMonday}`);
+      // log.debug(F, `lastMonday: ${lastMonday}`);
       resetTime = new Date(new Date(lastMonday.getTime() + 7 * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0));
 
       // Check if the last work was done after the last monday
@@ -1045,8 +1042,8 @@ export async function rpgWork(
       }
     }
 
-    log.debug(F, `resetTime: ${resetTime}`);
-    log.debug(F, `timeout: ${timeout}`);
+    // log.debug(F, `resetTime: ${resetTime}`);
+    // log.debug(F, `timeout: ${timeout}`);
 
     if (timeout) {
       return {
@@ -1068,7 +1065,7 @@ export async function rpgWork(
     let tokenMultiplier = inventoryData
       .filter(item => item.effect === 'tokenMultiplier')
       .reduce((acc, item) => acc + parseFloat(item.effect_value), 1);
-    log.debug(F, `tokenMultiplier (before donor): ${tokenMultiplier}`);
+    // log.debug(F, `tokenMultiplier (before donor): ${tokenMultiplier}`);
 
     // CHeck if the user who started this interaction has the patreon or booster roles
     const member = await interaction.guild?.members.fetch(interaction.user.id);
@@ -1078,7 +1075,7 @@ export async function rpgWork(
 
     // Round token multiplier to 1 decimal place
     tokenMultiplier = Math.round(tokenMultiplier * 10) / 10;
-    log.debug(F, `tokenMultiplier: ${tokenMultiplier}`);
+    // log.debug(F, `tokenMultiplier: ${tokenMultiplier}`);
 
     tokens *= tokenMultiplier;
 
@@ -1179,7 +1176,7 @@ export async function rpgShopChange(
     [choice] = interaction.values;
   }
 
-  log.debug(F, `choice: ${choice}`);
+  // log.debug(F, `choice: ${choice}`);
 
   // Get a list of shopInventory where the value does not equal the choice
   const filteredItems = Object.values(shopInventory).filter(item => item.value !== choice);
@@ -1221,7 +1218,7 @@ export async function rpgShopChange(
       effect_value: string;
       emoji: string;
     };
-    log.debug(F, `itemData (change): ${JSON.stringify(itemData, null, 2)}`);
+  // log.debug(F, `itemData (change): ${JSON.stringify(itemData, null, 2)}`);
   }
 
   const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
@@ -1257,7 +1254,7 @@ export async function rpgShopChange(
   const imageFiles = [] as AttachmentBuilder[];
   if (itemData && itemData.effect === 'background') {
     const imagePath = await imageGet(itemData.effect_value);
-    log.debug(F, `imagePath: ${imagePath}`);
+    // log.debug(F, `imagePath: ${imagePath}`);
     imageFiles.push(new AttachmentBuilder(imagePath));
     embed.setImage(`attachment://${itemData.effect_value}.png`);
   }
@@ -1281,7 +1278,7 @@ export async function rpgShopInventory(
 
   // Get the existing inventory data
   const inventoryData = await inventoryGet(personaData.id);
-  log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
+  // log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
 
   // Get a string display of the user's inventory
   const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
@@ -1306,7 +1303,7 @@ export async function rpgShopInventory(
       return null;
     })
     .filter(item => item !== null) as SelectMenuComponentOptionData[];
-  log.debug(F, `generalOptions: ${JSON.stringify(shopInventory, null, 2)}`);
+  // log.debug(F, `generalOptions: ${JSON.stringify(shopInventory, null, 2)}`);
   return {
     shopInventory,
     personaTokens: personaData.tokens,
@@ -1326,14 +1323,14 @@ export async function rpgShopAccept(
 
   // Check get fresh persona data
   const [personaData] = await getPersonaInfo(interaction.user.id);
-  log.debug(F, `personaData (Accept): ${JSON.stringify(personaData, null, 2)}`);
+  // log.debug(F, `personaData (Accept): ${JSON.stringify(personaData, null, 2)}`);
 
   // If the user confirms the information, save the persona information
   const itemComponent = interaction.message.components[0].components[0];
   const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
     (o:APISelectMenuOption) => o.default === true,
   );
-  log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
+  // log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
 
   const allItems = [...Object.values(items.general), ...Object.values(items.backgrounds)];
   const itemData = allItems.find(item => item.value === selectedItem?.value) as {
@@ -1349,11 +1346,11 @@ export async function rpgShopAccept(
     effect_value: string;
     emoji: string;
   };
-  log.debug(F, `itemData (accept): ${JSON.stringify(itemData, null, 2)}`);
+  // log.debug(F, `itemData (accept): ${JSON.stringify(itemData, null, 2)}`);
 
   // Check if the user has enough tokens to buy the item
   if (personaData.tokens < itemData.cost) {
-    log.debug(F, 'Not enough tokens to buy item');
+  // log.debug(F, 'Not enough tokens to buy item');
 
     const { embeds, components } = await rpgShopChange(interaction);
 
@@ -1371,7 +1368,7 @@ export async function rpgShopAccept(
     const imageFiles = [] as AttachmentBuilder[];
     if (itemData && itemData.effect === 'background') {
       const imagePath = await imageGet(itemData.effect_value);
-      log.debug(F, `imagePath: ${imagePath}`);
+      // log.debug(F, `imagePath: ${imagePath}`);
       imageFiles.push(new AttachmentBuilder(imagePath));
       embed.setImage(`attachment://${itemData.effect_value}.png`);
     }
@@ -1401,7 +1398,7 @@ export async function rpgShopAccept(
     effect_value: itemData.effect_value,
     emoji: itemData.emoji,
   } as RpgInventory;
-  log.debug(F, `personaInventory: ${JSON.stringify(newItem, null, 2)}`);
+  // log.debug(F, `personaInventory: ${JSON.stringify(newItem, null, 2)}`);
 
   await inventorySet(newItem);
 
@@ -1444,11 +1441,11 @@ export async function rpgHome(
   let defaultOption = '' as string;
   // Get the equipped background
   const equippedBackground = inventoryData.find(item => item.equipped === true);
-  log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
+  // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
   if (equippedBackground) {
     defaultOption = equippedBackground.value;
   }
-  log.debug(F, `defaultOption1: ${defaultOption} `);
+  // log.debug(F, `defaultOption1: ${defaultOption} `);
 
   // Get the item the user selected
   if (interaction.isButton()) {
@@ -1465,7 +1462,7 @@ export async function rpgHome(
     [defaultOption] = interaction.values;
   }
 
-  log.debug(F, `defaultOption2: ${defaultOption}`);
+  // log.debug(F, `defaultOption2: ${defaultOption}`);
 
   // Get a list of shopInventory where the value does not equal the choice
   // If there is no choice, it will return all items the user has
@@ -1507,7 +1504,7 @@ export async function rpgHome(
       effect_value: string;
       emoji: string;
     };
-    log.debug(F, `backgroundData (home change): ${JSON.stringify(backgroundData, null, 2)}`);
+  // log.debug(F, `backgroundData (home change): ${JSON.stringify(backgroundData, null, 2)}`);
   }
 
   // Set the item row
@@ -1535,18 +1532,18 @@ export async function rpgHome(
   const files = [] as AttachmentBuilder[];
   if (equippedBackground) {
     const imagePath = await imageGet(equippedBackground.value);
-    log.debug(F, `Equipped background imagePath: ${imagePath}`);
+    // log.debug(F, `Equipped background imagePath: ${imagePath}`);
     files.push(new AttachmentBuilder(imagePath));
     embed.setThumbnail(`attachment://${equippedBackground.value}.png`);
-    log.debug(F, 'Set thumbnail!');
+  // log.debug(F, 'Set thumbnail!');
   }
 
   if (interaction.isStringSelectMenu() && backgroundData && backgroundData.effect === 'background') {
     const imagePath = await imageGet(backgroundData.effect_value);
-    log.debug(F, `imagePath: ${imagePath}`);
+    // log.debug(F, `imagePath: ${imagePath}`);
     files.push(new AttachmentBuilder(imagePath));
     embed.setImage(`attachment://${backgroundData.effect_value}.png`);
-    log.debug(F, 'Set image!');
+  // log.debug(F, 'Set image!');
   }
 
   // Build out the home navigation buttons
@@ -1672,7 +1669,7 @@ export async function rpgHomeAccept(
   //   (o:APISelectMenuOption) => o.default === true,
   // );
 
-  log.debug(F, `selectedItem (accept home): ${JSON.stringify(selectedItem, null, 2)}`);
+  // log.debug(F, `selectedItem (accept home): ${JSON.stringify(selectedItem, null, 2)}`);
   // log.debug(F, `selectedName: ${JSON.stringify(selectedName, null, 2)}`);
   // log.debug(F, `selectedSpecies: ${JSON.stringify(selectedSpecies, null, 2)}`);
   // log.debug(F, `selectedClass: ${JSON.stringify(selectedClass, null, 2)}`);
@@ -1680,7 +1677,7 @@ export async function rpgHomeAccept(
 
   // Get the existing inventory data
   const inventoryData = await inventoryGet(personaData.id);
-  log.debug(F, `Persona home inventory (accept): ${JSON.stringify(inventoryData, null, 2)}`);
+  // log.debug(F, `Persona home inventory (accept): ${JSON.stringify(inventoryData, null, 2)}`);
 
   // Find the selectedItem in the inventoryData
   const chosenItem = inventoryData.find(item => item.value === selectedItem?.value);
@@ -1795,7 +1792,7 @@ export async function rpgHomeNameChange(
     }> => {
       const choice = i.fields.getTextInputValue('rpgNewName');
 
-      log.debug(F, `name: ${choice}`);
+      // log.debug(F, `name: ${choice}`);
 
       menus.name.setOptions([{
         label: choice,
@@ -1869,8 +1866,8 @@ export async function rpgArcade(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
-  log.debug(F, `personaData (Arcade): ${JSON.stringify(personaData, null, 2)}`);
+  // const [personaData] = await getPersonaInfo(interaction.user.id);
+  // log.debug(F, `personaData (Arcade): ${JSON.stringify(personaData, null, 2)}`);
 
   const rowArcade = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
@@ -1983,15 +1980,15 @@ export async function rpgArcadeGame(
   const rowBetsD = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(...bets.slice(15, 20));
 
-  log.debug(F, `rowWagers: ${JSON.stringify(rowWagers, null, 2)}`);
-  log.debug(F, `rowBetsA: ${JSON.stringify(rowBetsA, null, 2)}`);
+  // log.debug(F, `rowWagers: ${JSON.stringify(rowWagers, null, 2)}`);
+  // log.debug(F, `rowBetsA: ${JSON.stringify(rowBetsA, null, 2)}`);
 
   const components = [rowWagers, rowBetsA];
   if (rowBetsB.components.length > 0) components.push(rowBetsB);
   if (rowBetsC.components.length > 0) components.push(rowBetsC);
   if (rowBetsD.components.length > 0) components.push(rowBetsD);
 
-  log.debug(F, `components: ${JSON.stringify(components, null, 2)}`);
+  // log.debug(F, `components: ${JSON.stringify(components, null, 2)}`);
 
   if (!wagers[interaction.user.id]) {
     wagers[interaction.user.id] = {
@@ -2009,12 +2006,12 @@ export async function rpgArcadeGame(
 
   // Check get fresh persona data
   const [personaData] = await getPersonaInfo(interaction.user.id);
-  log.debug(F, `personaData (Coinflip): ${JSON.stringify(personaData, null, 2)}`);
+  // log.debug(F, `personaData (Coinflip): ${JSON.stringify(personaData, null, 2)}`);
 
   const currentBet = wagers[interaction.user.id].tokens;
-  log.debug(F, `currentBet: ${currentBet}`);
+  // log.debug(F, `currentBet: ${currentBet}`);
 
-  log.debug(F, `choice: ${choice}`);
+  // log.debug(F, `choice: ${choice}`);
   if (choice && currentBet === 0) {
     const noBetError = {
       embeds: [embedTemplate()
@@ -2039,7 +2036,7 @@ export async function rpgArcadeGame(
 
     const { options } = gameData[gameName as keyof typeof gameData];
     const result = rand(options);
-    log.debug(F, `result: ${result}`);
+    // log.debug(F, `result: ${result}`);
 
     let payout = 0;
     if (gameName === 'Coinflip') {
@@ -2059,7 +2056,7 @@ export async function rpgArcadeGame(
       else if ((choice === 'third') && ([3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36].includes(number))) payout = currentBet * 2;
     }
 
-    log.debug(F, `result: ${result}`);
+    // log.debug(F, `result: ${result}`);
     if (payout !== 0) {
       // The user won
       personaData.tokens += payout;
@@ -2110,7 +2107,7 @@ export async function rpgArcadeGame(
 
   // The user has clicked the shop button, send them the shop embed
   if (currentBet !== 0) {
-    log.debug(F, 'No choice made, but a bet was made, return the bet screen');
+  // log.debug(F, 'No choice made, but a bet was made, return the bet screen');
     return {
       embeds: [embedTemplate()
         .setAuthor(null)

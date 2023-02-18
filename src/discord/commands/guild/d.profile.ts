@@ -47,6 +47,8 @@ export const dProfile: SlashCommand = {
       ? interaction.options.getMember('target') as GuildMember
       : interaction.member as GuildMember;
 
+    // log.debug(F, `target.presence?.status: ${target.presence?.status}`);
+
     const values = await Promise.allSettled([
       await interaction.deferReply(),
     // Get the target's profile data from the database
@@ -56,14 +58,14 @@ export const dProfile: SlashCommand = {
       // Load Icon Images
       await Canvas.loadImage(await imageGet('cardIcons')),
       // Get the status icon
-      await Canvas.loadImage(await imageGet(`icon_${target.presence?.status}`)),
+      await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
       // Get the avatar image
       await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
       // Get the birthday card overlay
       await Canvas.loadImage(await imageGet('cardBirthday')),
     ]);
 
-    const targetData = values[1].status === 'fulfilled' ? values[1].value : {} as ProfileData;
+    const profileData = values[1].status === 'fulfilled' ? values[1].value : {} as ProfileData;
     const [personaData] = values[2].status === 'fulfilled' ? values[2].value : [];
     const Icons = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
     const StatusIcon = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
@@ -181,9 +183,9 @@ export const dProfile: SlashCommand = {
     context.font = '25px futura';
     context.textAlign = 'right';
     context.fillStyle = '#ffffff';
-    if (targetData.timezone) {
+    if (profileData.timezone) {
       const timestring = new Date().toLocaleTimeString('en-US', {
-        timeZone: targetData.timezone,
+        timeZone: profileData.timezone,
         hour12: true,
         hour: 'numeric',
         minute: 'numeric',
@@ -196,8 +198,8 @@ export const dProfile: SlashCommand = {
     // User Birthday
     let targetBirthday = {} as Date;
     let itIsYourBirthday = false;
-    if (targetData.birthday) {
-      targetBirthday = targetData.birthday;
+    if (profileData.birthday) {
+      targetBirthday = profileData.birthday;
       const today = new Date();
       if (today.getMonth() === targetBirthday.getMonth() && today.getDate() === targetBirthday.getDate()) {
         // log.debug(F, 'Birthday Match!');
@@ -213,29 +215,29 @@ export const dProfile: SlashCommand = {
     }
 
     // Messages Sent Text
-    if (targetData.totalTextExp) {
-      const MessagesSent = targetData.totalTextExp / 20;
+    if (profileData.totalTextExp) {
+      const MessagesSent = profileData.totalTextExp / 20;
       context.fillText(`${numFormatter(MessagesSent)}`, 429, 190);
     } else {
       context.fillText('0', 429, 190);
     }
 
     // Voice Hours Text
-    if (targetData.totalTextExp) {
-      const hoursInChat = (targetData.totalVoiceExp / 10 / 60);
+    if (profileData.totalTextExp) {
+      const hoursInChat = (profileData.totalVoiceExp / 10 / 60);
       context.fillText(`${numFormatter(hoursInChat)} HR`, 429, 250);
     } else {
       context.fillText('0 HR', 429, 250);
     }
 
     // Karma Text
-    context.fillText(`${numFormatter(targetData.karma_received)}`, 648, 190);
+    context.fillText(`${numFormatter(profileData.karma_received)}`, 648, 190);
 
     // Tokens Text
-    context.fillText(`${numFormatter(targetData.tokens)}`, 648, 250);
+    context.fillText(`${numFormatter(profileData.tokens)}`, 648, 250);
 
     // Level Text
-    const totalTextData = await getTotalLevel(targetData.totalTextExp);
+    const totalTextData = await getTotalLevel(profileData.totalTextExp);
     context.fillText(`${totalTextData.level}`, 894, 250);
 
     // Choose and Draw the Level Image
@@ -304,7 +306,7 @@ export const dProfile: SlashCommand = {
 
     // Birthday Mode
     if (itIsYourBirthday) {
-      log.debug(F, 'Birthday Match!');
+      // log.debug(F, 'Birthday Match!');
       context.font = '40px futura';
       context.textAlign = 'left';
       context.fillStyle = textColor;
@@ -316,7 +318,7 @@ export const dProfile: SlashCommand = {
     const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-profile-image.png' });
     interaction.editReply({ files: [attachment] });
 
-    log.debug(F, `Total Time: ${Date.now() - startTime}ms`);
+    log.info(F, `Total Time: ${Date.now() - startTime}ms`);
     return true;
   },
 };

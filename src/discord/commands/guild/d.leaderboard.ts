@@ -1,18 +1,22 @@
+/* eslint-disable no-await-in-loop, no-restricted-syntax, no-continue */
+
 import {
   SlashCommandBuilder,
-  // ChatInputCommandInteraction,
-  // UserContextMenuCommandInteraction,
-  // GuildMember,
   AttachmentBuilder,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
 import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
-import { getLeaderboard } from '../../../global/commands/g.leaderboard';
+import {
+  getLeaderboard,
+} from '../../../global/commands/g.leaderboard';
 import { startLog } from '../../utils/startLog';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
-import { inventoryGet } from '../../../global/utils/knex';
 import { imageGet } from '../../utils/imageGet';
+import {
+  inventoryGet,
+} from '../../../global/utils/knex';
+import { getTotalLevel } from '../../../global/utils/experience';
 
 export default dLeaderboard;
 
@@ -28,13 +32,22 @@ export const dLeaderboard: SlashCommand = {
     .setName('leaderboard')
     .setDescription('Show the experience leaderboard')
     .addStringOption(option => option.setName('category')
-      .setDescription('Which category? (Default: Total)')
+      .setDescription('What category of experience? (Default: All)')
       .addChoices(
+        { name: 'All', value: 'ALL' },
         { name: 'Total', value: 'TOTAL' },
         { name: 'Chat', value: 'GENERAL' },
         { name: 'Harm Reduction', value: 'TRIPSITTER' },
         { name: 'Development', value: 'DEVELOPER' },
         { name: 'Team Tripsit', value: 'TEAM' },
+        { name: 'Ignored', value: 'IGNORED' },
+      ))
+    .addStringOption(option => option.setName('type')
+      .setDescription('What type of experience? (Default: All)')
+      .addChoices(
+        { name: 'All', value: 'ALL' },
+        { name: 'Text', value: 'TEXT' },
+        { name: 'Voice', value: 'VOICE' },
       )),
   async execute(interaction) {
     const startTime = Date.now();
@@ -43,10 +56,11 @@ export const dLeaderboard: SlashCommand = {
       return false;
     }
     startLog(F, interaction);
+
     await interaction.deferReply();
 
-    const categoryName = interaction.options.getString('category') ?? 'Total';
-    const categoryValue = categoryName.toLowerCase();
+    const categoryChoice = interaction.options.getString('category') ?? 'All';
+    const typeChoice = interaction.options.getString('type') ?? 'All';
 
     // Create Canvas and Context
     const canvasWidth = 921;
@@ -68,27 +82,37 @@ export const dLeaderboard: SlashCommand = {
     context.font = '40px futura';
     context.fillStyle = '#ffffff';
     context.textAlign = 'center';
-    context.fillText(`TOP 10 - ${categoryName}`, 460, 47);
+    context.fillText(`TOP 10 - ${categoryChoice}`, 460, 47);
 
     // Get the leaderboard data from the db:
-    const leaderboardData = await getLeaderboard(categoryName.toUpperCase() as 'TOTAL' | 'GENERAL' | 'TRIPSITTER' | 'DEVELOPER' | 'TEAM'); // eslint-disable-line
+    const leaderboardData = await getLeaderboard(); // eslint-disable-line
 
     // Get the guild object from the client, do this outside the loop to save memory
     const tripsitGuild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID); // eslint-disable-line
 
     // Loop through the leaderboard data, first by the Type (text/voice)
-    for (const [type, typeData] of Object.entries(leaderboardData)) { // eslint-disable-line
-      log.debug(F, `Type: ${type}`);
-      // Loop through the individual category's rank data
-      for (const [category, rankDataList] of Object.entries(typeData)) { // eslint-disable-line
-        // If the user chose a category, and the category we're on doesn't match the category they chose, skip it
-        if (categoryValue !== category) continue; // eslint-disable-line
-        log.debug(F, `Category: ${category}`);
-        // Initialize rank at 0 so we can increment it
+    for (const type of Object.keys(leaderboardData)) { // eslint-disable-line no-restricted-syntax
+      if (typeChoice !== 'All' && typeChoice !== type) {
+        continue;
+      }
+      const typeKey = type as keyof typeof leaderboardData;
+      const typeData = leaderboardData[typeKey];
+      // log.debug(F, `typeKey: ${typeKey}, typeData: ${JSON.stringify(typeData, null, 2)}`);
+      for (const category of Object.keys(typeData)) {
+        if (categoryChoice !== 'All' && categoryChoice !== category) {
+          continue;
+        }
+        const categoryKey = category as keyof typeof typeData;
+        const categoryData = typeData[categoryKey];
+        // log.debug(F, `categoryKey: ${categoryKey}, categoryData: ${JSON.stringify(categoryData, null, 2)}`);
+        if (categoryData.length === 0) {
+          continue;
+        }
+
         let rank = 0;
         let rankPositions = 0;
         // Loop through the rank data list
-        for (const rankData of rankDataList) { // eslint-disable-line
+        for (const rankData of categoryData) { // eslint-disable-line
           // Increment the rank
           rank += 1;
           rankPositions += 1;
@@ -97,7 +121,7 @@ export const dLeaderboard: SlashCommand = {
 
           // Get the discord member object from the guild object
           const member = env.NODE_ENV === 'production'
-          ? await tripsitGuild.members.fetch(rankData.discordId) // eslint-disable-line
+          ? await tripsitGuild.members.fetch(rankData.discord_id) // eslint-disable-line
             : {
               id: '1234567890',
               roles: {
@@ -119,6 +143,8 @@ export const dLeaderboard: SlashCommand = {
           const cardLightColor = colorDefs[member.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#141414'; // eslint-disable-line
           const textColor = colorDefs[member.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
           context.save();
+
+          const levelData = await getTotalLevel(rankData.total_points);
 
           if (rankPositions <= 4) {
             // Draw Chip
@@ -196,7 +222,8 @@ export const dLeaderboard: SlashCommand = {
             // Draw Level Number
             context.fillStyle = textColor;
             context.textAlign = 'right';
-            context.fillText(`${rankData.level}`, 417, 38);
+
+            context.fillText(`${levelData.level}`, 417, 38);
             context.restore();
           } else if (rankPositions > 4) {
             // Draw Chip
@@ -254,7 +281,7 @@ export const dLeaderboard: SlashCommand = {
             // Draw Level Number
             context.fillStyle = textColor;
             context.textAlign = 'right';
-            context.fillText(`${rankData.level}`, 280, 22);
+            context.fillText(`${levelData.level}`, 280, 22);
             context.restore();
           }
         }

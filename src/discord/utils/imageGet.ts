@@ -6,7 +6,7 @@ import axios from 'axios';
 //   Client,
 // } from 'discord.js';
 
-const F = f(__filename);
+// const F = f(__filename);
 
 export default imageGet;
 
@@ -20,10 +20,10 @@ export async function imageGet(
   const { path, url } = imageDef[imageName];
   // log.debug(F, `Checking ${path}`);
   if (!fs.existsSync(path)) {
-    log.debug(F, `Downloading ${url} to ${path}`);
+    // log.debug(F, `Downloading ${url} to ${path}`);
     await downloadImage(url, path);
   } else {
-    log.debug(F, `Found ${path}`);
+    // log.debug(F, `Found ${path}`);
   }
   return path;
 }
