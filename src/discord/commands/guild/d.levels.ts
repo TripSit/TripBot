@@ -9,7 +9,6 @@ import Canvas from '@napi-rs/canvas';
 import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { levels } from '../../../global/commands/g.levels';
-import { getRanks } from '../../../global/commands/g.leaderboard';
 import { profile, ProfileData } from '../../../global/commands/g.profile';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
@@ -26,19 +25,21 @@ export default dLevels;
 
 const F = f(__filename);
 
-type ExperienceData = {
+type LevelData = {
   TEXT: {
     TOTAL: {
       level: number,
       level_exp: number,
       nextLevel: number,
       total_exp: number,
+      rank: number,
     },
     [key: string]: {
       level: number,
       level_exp: number,
       nextLevel: number,
       total_exp: number,
+      rank: number,
     },
   },
   VOICE: {
@@ -47,32 +48,15 @@ type ExperienceData = {
       level_exp: number,
       nextLevel: number,
       total_exp: number,
+      rank: number,
     },
     [key: string]: {
       level: number,
       level_exp: number,
       nextLevel: number,
       total_exp: number,
+      rank: number,
     },
-  },
-};
-
-type UserRankData = {
-  TEXT: {
-    TOTAL: number,
-    TRIPSITTER: number,
-    GENERAL: number,
-    DEVELOPER: number,
-    TEAM: number,
-    IGNORED: number,
-  },
-  VOICE: {
-    TOTAL: number,
-    TRIPSITTER: number,
-    GENERAL: number,
-    DEVELOPER: number,
-    TEAM: number,
-    IGNORED: number,
   },
 };
 
@@ -103,7 +87,7 @@ export const dLevels: SlashCommand = {
       ? interaction.options.getMember('target') as GuildMember
       : interaction.member as GuildMember;
     // log.debug(F, `target id: ${target.id}`);
-    // log.debug(F, `experienceData: ${JSON.stringify(target, null, 2)}`);
+    // log.debug(F, `levelData: ${JSON.stringify(target, null, 2)}`);
 
     const values = await Promise.allSettled([
       await interaction.deferReply(),
@@ -113,8 +97,6 @@ export const dLevels: SlashCommand = {
       await getPersonaInfo(target.id),
       // Get the levels of the user
       await levels(target.id),
-      // Get the ranks of the user
-      await getRanks(target.id),
       // Load Icon Images
       await Canvas.loadImage(await imageGet('cardLevelIcons')),
       // Get the status icon
@@ -125,26 +107,25 @@ export const dLevels: SlashCommand = {
 
     const profileData = values[1].status === 'fulfilled' ? values[1].value : {} as ProfileData;
     const [personaData] = values[2].status === 'fulfilled' ? values[2].value : [];
-    const experienceData = values[3].status === 'fulfilled' ? values[3].value : {} as ExperienceData;
-    const rankData = values[4].status === 'fulfilled' ? values[4].value : {} as UserRankData;
-    const Icons = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
-    const StatusIcon = values[6].status === 'fulfilled' ? values[6].value : {} as Canvas.Image;
-    const avatar = values[7].status === 'fulfilled' ? values[7].value : {} as Canvas.Image;
+    const levelData = values[3].status === 'fulfilled' ? values[3].value : {} as LevelData;
+    const Icons = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
+    const StatusIcon = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
+    const avatar = values[6].status === 'fulfilled' ? values[6].value : {} as Canvas.Image;
 
     let layoutHeight = 386;
     let layout = 1;
     if (target.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
       layoutHeight = 566;
       layout = 4;
-      log.debug(F, 'is teamtripsit');
+      // log.debug(F, 'is teamtripsit');
     } else if (target.roles.cache.has(env.ROLE_CONTRIBUTOR)) {
       layoutHeight = 506;
       layout = 3;
-      log.debug(F, 'is contributor');
+      // log.debug(F, 'is contributor');
     } else if (target.roles.cache.has(env.ROLE_HELPER)) {
       layoutHeight = 446;
       layout = 2;
-      log.debug(F, 'is helper');
+      // log.debug(F, 'is helper');
     }
 
     // Create Canvas and Context
@@ -270,20 +251,20 @@ export const dLevels: SlashCommand = {
     context.fillText(`${target.displayName}`, 146, 76);
 
     // Progress Bars Calculate
-    const progressText = experienceData.TEXT.TOTAL.level_exp / experienceData.TEXT.TOTAL.nextLevel;
-    const progressVoice = experienceData.VOICE.TOTAL.level_exp / experienceData.VOICE.TOTAL.nextLevel;
+    const progressText = levelData.TEXT.TOTAL.level_exp / levelData.TEXT.TOTAL.nextLevel;
+    const progressVoice = levelData.VOICE.TOTAL.level_exp / levelData.VOICE.TOTAL.nextLevel;
 
-    const progressGeneral = experienceData.TEXT.GENERAL
-      ? experienceData.TEXT.GENERAL.level_exp / experienceData.TEXT.GENERAL.nextLevel
+    const progressGeneral = levelData.TEXT.GENERAL
+      ? levelData.TEXT.GENERAL.level_exp / levelData.TEXT.GENERAL.nextLevel
       : 0;
-    const progressTripsitter = experienceData.TEXT.TRIPSITTER
-      ? experienceData.TEXT.TRIPSITTER.level_exp / experienceData.TEXT.TRIPSITTER.nextLevel
+    const progressTripsitter = levelData.TEXT.TRIPSITTER
+      ? levelData.TEXT.TRIPSITTER.level_exp / levelData.TEXT.TRIPSITTER.nextLevel
       : 0;
-    const progressDeveloper = experienceData.TEXT.DEVELOPER
-      ? experienceData.TEXT.DEVELOPER.level_exp / experienceData.TEXT.DEVELOPER.nextLevel
+    const progressDeveloper = levelData.TEXT.DEVELOPER
+      ? levelData.TEXT.DEVELOPER.level_exp / levelData.TEXT.DEVELOPER.nextLevel
       : 0;
-    const progressTeam = experienceData.TEXT.TEAM
-      ? experienceData.TEXT.TEAM.level_exp / experienceData.TEXT.TEAM.nextLevel
+    const progressTeam = levelData.TEXT.TEAM
+      ? levelData.TEXT.TEAM.level_exp / levelData.TEXT.TEAM.nextLevel
       : 0;
     // Progress Bars Draw
     context.fillStyle = barColor;
@@ -316,22 +297,22 @@ export const dLevels: SlashCommand = {
     context.fillStyle = '#ffffff';
     context.textBaseline = 'middle';
     context.textAlign = 'right';
-    context.fillText(`${experienceData.TEXT.TOTAL.level}`, 657, 213);
+    context.fillText(`${levelData.TEXT.TOTAL.level}`, 657, 213);
     context.font = '25px futura';
-    context.fillText(`${experienceData.TEXT.GENERAL ? experienceData.TEXT.GENERAL.level : 0}`, 657, 284);
-    context.fillText(`${experienceData.VOICE.TOTAL.level}`, 657, 344);
-    if (layout > 1 && experienceData.TEXT.TRIPSITTER) {
-      context.fillText(`${experienceData.TEXT.TRIPSITTER.level}`, 657, 404);
+    context.fillText(`${levelData.TEXT.GENERAL ? levelData.TEXT.GENERAL.level : 0}`, 657, 284);
+    context.fillText(`${levelData.VOICE.TOTAL.level}`, 657, 344);
+    if (layout > 1 && levelData.TEXT.TRIPSITTER) {
+      context.fillText(`${levelData.TEXT.TRIPSITTER.level}`, 657, 404);
     } else {
       context.fillText('0', 657, 404);
     }
-    if (layout > 2 && experienceData.TEXT.DEVELOPER) {
-      context.fillText(`${experienceData.TEXT.DEVELOPER.level}`, 657, 464);
+    if (layout > 2 && levelData.TEXT.DEVELOPER) {
+      context.fillText(`${levelData.TEXT.DEVELOPER.level}`, 657, 464);
     } else {
       context.fillText('0', 657, 464);
     }
-    if (layout > 3 && experienceData.TEXT.TEAM) {
-      context.fillText(`${experienceData.TEXT.TEAM.level}`, 657, 524);
+    if (layout > 3 && levelData.TEXT.TEAM) {
+      context.fillText(`${levelData.TEXT.TEAM.level}`, 657, 524);
     } else {
       context.fillText('0', 657, 524);
     }
@@ -349,25 +330,25 @@ export const dLevels: SlashCommand = {
     context.font = '40px futura';
     let startingFontSize = 40;
     context.textAlign = 'left';
-    context.font = applyRank(canvasObj, `#${rankData.TEXT.TOTAL}`);
-    context.fillText(`#${rankData.TEXT.TOTAL}`, 711, 213);
+    context.font = applyRank(canvasObj, `#${levelData.TEXT.TOTAL.rank}`);
+    context.fillText(`#${levelData.TEXT.TOTAL.rank}`, 711, 213);
     context.font = '25px futura';
     startingFontSize = 25;
-    context.font = applyRank(canvasObj, `#${rankData.TEXT.GENERAL}`);
-    context.fillText(`#${rankData.TEXT.GENERAL}`, 711, 284);
-    context.font = applyRank(canvasObj, `#${rankData.VOICE.TOTAL}`);
-    context.fillText(`#${rankData.VOICE.TOTAL}`, 711, 344);
+    context.font = applyRank(canvasObj, `#${levelData.TEXT.GENERAL.rank}`);
+    context.fillText(`#${levelData.TEXT.GENERAL.rank}`, 711, 284);
+    context.font = applyRank(canvasObj, `#${levelData.VOICE.TOTAL.rank}`);
+    context.fillText(`#${levelData.VOICE.TOTAL.rank}`, 711, 344);
     if (layout > 1) {
-      context.font = applyRank(canvasObj, `#${rankData.TEXT.TRIPSITTER}`);
-      context.fillText(`#${rankData.TEXT.TRIPSITTER}`, 711, 404);
+      context.font = applyRank(canvasObj, `#${levelData.TEXT.TRIPSITTER.rank}`);
+      context.fillText(`#${levelData.TEXT.TRIPSITTER.rank}`, 711, 404);
     }
     if (layout > 2) {
-      context.font = applyRank(canvasObj, `#${rankData.TEXT.DEVELOPER}`);
-      context.fillText(`#${rankData.TEXT.DEVELOPER}`, 711, 464);
+      context.font = applyRank(canvasObj, `#${levelData.TEXT.DEVELOPER.rank}`);
+      context.fillText(`#${levelData.TEXT.DEVELOPER.rank}`, 711, 464);
     }
     if (layout > 3) {
-      context.font = applyRank(canvasObj, `#${rankData.TEXT.TEAM}`);
-      context.fillText(`#${rankData.TEXT.TEAM}`, 711, 524);
+      context.font = applyRank(canvasObj, `#${levelData.TEXT.TEAM.rank}`);
+      context.fillText(`#${levelData.TEXT.TEAM.rank}`, 711, 524);
     }
 
     // Bar Labels
@@ -408,27 +389,27 @@ export const dLevels: SlashCommand = {
     context.restore();
     // Choose and Draw the Level Image
     let LevelImagePath = '' as string;
-    if (experienceData.TEXT.TOTAL.level < 10) {
+    if (levelData.TEXT.TOTAL.level < 10) {
       LevelImagePath = 'badgeVip0';
-    } else if (experienceData.TEXT.TOTAL.level < 20) {
+    } else if (levelData.TEXT.TOTAL.level < 20) {
       LevelImagePath = 'badgeVip1';
-    } else if (experienceData.TEXT.TOTAL.level < 30) {
+    } else if (levelData.TEXT.TOTAL.level < 30) {
       LevelImagePath = 'badgeVip2';
-    } else if (experienceData.TEXT.TOTAL.level < 40) {
+    } else if (levelData.TEXT.TOTAL.level < 40) {
       LevelImagePath = 'badgeVip3';
-    } else if (experienceData.TEXT.TOTAL.level < 50) {
+    } else if (levelData.TEXT.TOTAL.level < 50) {
       LevelImagePath = 'badgeVip4';
-    } else if (experienceData.TEXT.TOTAL.level < 60) {
+    } else if (levelData.TEXT.TOTAL.level < 60) {
       LevelImagePath = 'badgeVip5';
-    } else if (experienceData.TEXT.TOTAL.level < 70) {
+    } else if (levelData.TEXT.TOTAL.level < 70) {
       LevelImagePath = 'badgeVip6';
-    } else if (experienceData.TEXT.TOTAL.level < 80) {
+    } else if (levelData.TEXT.TOTAL.level < 80) {
       LevelImagePath = 'badgeVip7';
-    } else if (experienceData.TEXT.TOTAL.level < 90) {
+    } else if (levelData.TEXT.TOTAL.level < 90) {
       LevelImagePath = 'badgeVip8';
-    } else if (experienceData.TEXT.TOTAL.level < 100) {
+    } else if (levelData.TEXT.TOTAL.level < 100) {
       LevelImagePath = 'badgeVip9';
-    } else if (experienceData.TEXT.TOTAL.level >= 100) {
+    } else if (levelData.TEXT.TOTAL.level >= 100) {
       LevelImagePath = 'badgeVip10';
     }
     const LevelImage = await Canvas.loadImage(await imageGet(LevelImagePath));
@@ -438,7 +419,7 @@ export const dLevels: SlashCommand = {
     const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-levels-image.png' });
     interaction.editReply({ files: [attachment] });
 
-    log.debug(F, `Total Time: ${Date.now() - startTime}ms`);
+    log.info(F, `Total Time: ${Date.now() - startTime}ms`);
     return true;
   },
 };

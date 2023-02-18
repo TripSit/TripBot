@@ -547,7 +547,7 @@ export async function rules(interaction:ChatInputCommandInteraction) {
 
   // get the file name from the path
   const rulesFileName = rulesPath.split('/').pop();
-  log.debug(F, `rulesFileName: ${rulesFileName}`);
+  // log.debug(F, `rulesFileName: ${rulesFileName}`);
 
   const embed = embedTemplate()
     .setAuthor(null)

@@ -47,7 +47,7 @@ export const dProfile: SlashCommand = {
       ? interaction.options.getMember('target') as GuildMember
       : interaction.member as GuildMember;
 
-    log.debug(F, `target.presence?.status: ${target.presence?.status}`);
+    // log.debug(F, `target.presence?.status: ${target.presence?.status}`);
 
     const values = await Promise.allSettled([
       await interaction.deferReply(),
@@ -306,7 +306,7 @@ export const dProfile: SlashCommand = {
 
     // Birthday Mode
     if (itIsYourBirthday) {
-      log.debug(F, 'Birthday Match!');
+      // log.debug(F, 'Birthday Match!');
       context.font = '40px futura';
       context.textAlign = 'left';
       context.fillStyle = textColor;
@@ -318,7 +318,7 @@ export const dProfile: SlashCommand = {
     const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-profile-image.png' });
     interaction.editReply({ files: [attachment] });
 
-    log.debug(F, `Total Time: ${Date.now() - startTime}ms`);
+    log.info(F, `Total Time: ${Date.now() - startTime}ms`);
     return true;
   },
 };

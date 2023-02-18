@@ -275,7 +275,7 @@ async function giveMilestone(
     // ) as Role;
     // // log.debug(F, `Previous role: ${previousRole.name} (${previousRole.id})`);
     // if (member?.roles.cache.has(previousRole.id)) {
-    //   log.debug(F, `Removing ${member} role ${previousRole.name} (${previousRole.id})`);
+    // log.debug(F, `Removing ${member} role ${previousRole.name} (${previousRole.id})`);
     //   member?.roles.remove(previousRole);
     // }
   }
@@ -289,7 +289,7 @@ async function giveMilestone(
       await channel.send(`${emojis} **${member} has reached Total Text level ${levelTier}0!** ${emojis}`);
     }
     // if (totalLevel >= 20) {
-    //   log.debug(F, `${emojis} **${member} has reached Total Text level ${totalLevel}!** ${emojis}`);
+    // log.debug(F, `${emojis} **${member} has reached Total Text level ${totalLevel}!** ${emojis}`);
     //   // const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
     //   // await channel.send(`${emojis} **${member} has reached Total Text level ${totalLevel}!** ${emojis}`);
     // }

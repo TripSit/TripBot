@@ -91,7 +91,7 @@ export const dLeaderboard: SlashCommand = {
         }
         const categoryKey = category as keyof typeof typeData;
         const categoryData = typeData[categoryKey];
-        log.debug(F, `categoryKey: ${categoryKey}, categoryData: ${JSON.stringify(categoryData, null, 2)}`);
+        // log.debug(F, `categoryKey: ${categoryKey}, categoryData: ${JSON.stringify(categoryData, null, 2)}`);
         if (categoryData.length === 0) {
           continue;
         }
@@ -114,7 +114,7 @@ export const dLeaderboard: SlashCommand = {
     }
 
     paginationEmbed(interaction, book, buttonList, 0);
-    log.debug(F, `Total Time: ${Date.now() - startTime}ms`);
+    log.info(F, `Total Time: ${Date.now() - startTime}ms`);
     return true;
   },
 };

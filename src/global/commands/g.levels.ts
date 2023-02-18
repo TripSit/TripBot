@@ -1,27 +1,29 @@
-import { experienceGet, getUser } from '../utils/knex';
-import { expForNextLevel, getTotalLevel } from '../utils/experience';
-// import { ExperienceCategory, ExperienceType } from '../@types/database';
-// import { ExperienceType } from '../@types/database';
-
-const F = f(__filename); // eslint-disable-line
+/* eslint-disable no-await-in-loop, no-restricted-syntax, no-continue */
+import {
+  expForNextLevel,
+  getTotalLevel,
+} from '../utils/experience';
+import { getLeaderboard } from './g.leaderboard';
 
 export default levels;
 
-// type ExpTypeNames = 'Total' | 'Tripsitter' | 'Team' | 'Developer' | 'General' | 'Ignored';
+const F = f(__filename); // eslint-disable-line
 
-type ExperienceData = {
+type LevelData = {
   TEXT: {
     TOTAL: {
       level: number,
       level_exp: number,
       nextLevel: number,
       total_exp: number,
+      rank: number,
     },
     [key: string]: {
       level: number,
       level_exp: number,
       nextLevel: number,
       total_exp: number,
+      rank: number,
     },
   },
   VOICE: {
@@ -30,25 +32,22 @@ type ExperienceData = {
       level_exp: number,
       nextLevel: number,
       total_exp: number,
+      rank: number,
     },
     [key: string]: {
       level: number,
       level_exp: number,
       nextLevel: number,
       total_exp: number,
+      rank: number,
     },
   },
 };
-/**
- * Get a user's experience
- * @param {string} userId
- * @return {string}
- */
+
 export async function levels(
   discordId: string,
-):Promise<ExperienceData> {
-  const userData = await getUser(discordId, null);
-  const experienceData = await experienceGet(undefined, undefined, undefined, userData.id);
+):Promise<LevelData> {
+  const leaderboardData = await getLeaderboard();
 
   const results = {
     TEXT: {
@@ -57,6 +56,7 @@ export async function levels(
         level_exp: 0,
         nextLevel: 0,
         total_exp: 0,
+        rank: 0,
       },
     },
     VOICE: {
@@ -65,36 +65,44 @@ export async function levels(
         level_exp: 0,
         nextLevel: 0,
         total_exp: 0,
+        rank: 0,
       },
     },
-  } as ExperienceData;
+  } as LevelData;
 
-  if (!experienceData) {
-    return results;
-  }
-
-  experienceData.forEach(async exp => {
-    if (exp.category !== 'TOTAL' && exp.category !== 'IGNORED') {
-      results[exp.type].TOTAL.total_exp += exp.total_points;
-      results[exp.type][exp.category] = {
-        level: exp.level,
-        level_exp: exp.level_points,
-        nextLevel: await expForNextLevel(exp.level), // eslint-disable-line no-await-in-loop
-        total_exp: exp.total_points,
+  for (const type of Object.keys(leaderboardData)) { // eslint-disable-line no-restricted-syntax
+    const typeKey = type as keyof typeof leaderboardData;
+    const typeData = leaderboardData[typeKey];
+    // log.debug(F, `typeKey: ${typeKey}, typeData: ${JSON.stringify(typeData, null, 2)}`);
+    for (const category of Object.keys(typeData)) {
+      const categoryKey = category as keyof typeof typeData;
+      const categoryData = typeData[categoryKey];
+      // log.debug(F, `categoryKey: ${categoryKey}, categoryData: ${JSON.stringify(categoryData, null, 2)}`);
+      if (categoryData.length === 0) {
+        continue;
+      }
+      const userRank = categoryData.findIndex(user => user.discord_id === discordId);
+      // log.debug(F, `userRank: ${userRank}`);
+      if (userRank === -1) {
+        continue;
+      }
+      const userExperience = categoryData[userRank];
+      // log.debug(F, `userExperience: ${JSON.stringify(userExperience, null, 2)}`);
+      const levelData = await getTotalLevel(userExperience.total_points);
+      // log.debug(F, `levelData: ${JSON.stringify(levelData, null, 2)}`);
+      const nextLevel = await expForNextLevel(levelData.level);
+      // log.debug(F, `nextLevel: ${nextLevel}`);
+      results[typeKey][categoryKey] = {
+        level: levelData.level,
+        level_exp: levelData.level_points,
+        nextLevel,
+        total_exp: userExperience.total_points,
+        rank: userRank + 1,
       };
     }
-  });
+  }
 
-  const totalTextData = await getTotalLevel(results.TEXT.TOTAL.total_exp);
-  results.TEXT.TOTAL.level = totalTextData.level;
-  results.TEXT.TOTAL.level_exp = totalTextData.level_points;
-  results.TEXT.TOTAL.nextLevel = await expForNextLevel(totalTextData.level); // eslint-disable-line no-await-in-loop
+  // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
 
-  const totalVoiceData = await getTotalLevel(results.VOICE.TOTAL.total_exp);
-  results.VOICE.TOTAL.level = totalVoiceData.level;
-  results.VOICE.TOTAL.level_exp = totalVoiceData.level_points;
-  results.VOICE.TOTAL.nextLevel = await expForNextLevel(totalVoiceData.level); // eslint-disable-line no-await-in-loop
-
-  log.info(F, `results: ${JSON.stringify(results, null, 2)}`);
   return results;
 }

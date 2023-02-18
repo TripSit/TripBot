@@ -74,7 +74,7 @@ async function checkRss() {
 
       if (feed.last_post_id === mostRecentPost.id) return;
 
-      log.debug(F, `New post: ${JSON.stringify(mostRecentPost, null, 2)}`);
+      // log.debug(F, `New post: ${JSON.stringify(mostRecentPost, null, 2)}`);
 
       const channelBotlog = await guild.channels.fetch(feed.destination) as TextChannel;
 
@@ -93,7 +93,7 @@ async function checkRss() {
         mostRecentPost.contentSnippet.indexOf('[link]'),
       ).replaceAll('    ', ' ')}`;
 
-      log.debug(F, `submittedBy: ${submittedBy}`);
+      // log.debug(F, `submittedBy: ${submittedBy}`);
 
       const embed = embedTemplate()
         .setAuthor({ name: 'New /r/TripSit post', iconURL: env.TS_ICON_URL })

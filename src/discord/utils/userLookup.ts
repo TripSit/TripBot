@@ -17,28 +17,28 @@ export async function getDiscordMember(
   log.info(F, `string: ${string}`);
 
   if (string.startsWith('<@') && string.endsWith('>')) {
-    log.debug(F, `${string} is a mention!`);
+    // log.debug(F, `${string} is a mention!`);
     const id = string.replace(/[<@!>]/g, '');
     members.push(await interaction.guild.members.fetch(id));
   } else if (string.match(/^\d+$/)) {
-    log.debug(F, `${string} is an ID!`);
+    // log.debug(F, `${string} is an ID!`);
     members.push(await interaction.guild.members.fetch(string));
   } else if (string.includes('#')) {
-    log.debug(F, `${string} is a tag!`);
+    // log.debug(F, `${string} is a tag!`);
     const memberCollection = await interaction.guild.members.fetch({ query: string.split('#')[0], limit: 10 });
     // Add all members in that collection to the members list
     memberCollection.forEach(member => {
       members.push(member);
     });
   } else if (string.startsWith('@')) {
-    log.debug(F, `${string} is a string mention!`);
+    // log.debug(F, `${string} is a string mention!`);
     const memberCollection = await interaction.guild.members.fetch({ query: string.slice(1), limit: 10 });
     // Add all members in that collection to the members list
     memberCollection.forEach(member => {
       members.push(member);
     });
   } else {
-    log.debug(F, `${string} is a username!`);
+    // log.debug(F, `${string} is a username!`);
     const memberCollection = await interaction.guild.members.fetch({ query: string, limit: 10 });
     memberCollection.forEach(member => {
       members.push(member);
