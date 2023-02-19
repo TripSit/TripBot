@@ -191,12 +191,16 @@ async function checkTickets() {
         // log.debug(F, `Found ${threadList.threads.size} archived threads in Tripsit room`);
         threadList.threads.forEach(async thread => {
           // Check if the thread was created over a week ago
-          await thread.fetch();
-          if (DateTime.fromJSDate(thread.createdAt as Date) <= DateTime.local().minus({ days: 7 })) {
-            thread.delete();
-            // log.debug(F, `Thread ${thread.id} is deleted`);
-          } else {
-            // log.debug(F, `Thread ${thread.id} is not ready to be deleted ${thread.createdAt}`);
+          try {
+            await thread.fetch();
+            if (DateTime.fromJSDate(thread.createdAt as Date) <= DateTime.local().minus({ days: 7 })) {
+              thread.delete();
+              // log.debug(F, `Thread ${thread.id} is deleted`);
+            } else {
+              // log.debug(F, `Thread ${thread.id} is not ready to be deleted ${thread.createdAt}`);
+            }
+          } catch (err) {
+            // Thread was likely manually deleted
           }
         });
       }
