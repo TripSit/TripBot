@@ -110,7 +110,7 @@ export const dLeaderboard: SlashCommand = {
         const filteredList = descriptionText
           .filter(value => value !== null)
           .map((value, index) => `#${index + 1} ${value}`)
-          .slice(0, 10);
+          .slice(0, 20);
 
         // Lowercase everything and then capitalize the first letter of type and category
         const categoryString = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
