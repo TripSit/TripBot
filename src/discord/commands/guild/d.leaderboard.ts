@@ -48,20 +48,18 @@ export const dLeaderboard: SlashCommand = {
     .addStringOption(option => option.setName('category')
       .setDescription('What category of experience? (Default: All)')
       .addChoices(
-        { name: 'All', value: 'ALL' },
-        { name: 'Total', value: 'TOTAL' },
-        { name: 'General', value: 'GENERAL' },
-        { name: 'Tripsitter', value: 'TRIPSITTER' },
-        { name: 'Developer', value: 'DEVELOPER' },
-        { name: 'Team Tripsit', value: 'TEAM' },
-        { name: 'Ignored', value: 'IGNORED' },
+        { name: 'Total', value: 'Total' },
+        { name: 'General', value: 'General' },
+        { name: 'Tripsitter', value: 'Tripsitter' },
+        { name: 'Developer', value: 'Development' },
+        { name: 'Team Tripsit', value: 'Team' },
+        { name: 'Ignored', value: 'Ignored' },
       ))
     .addStringOption(option => option.setName('type')
       .setDescription('What type of experience? (Default: All)')
       .addChoices(
-        { name: 'All', value: 'ALL' },
-        { name: 'Text', value: 'TEXT' },
-        { name: 'Voice', value: 'VOICE' },
+        { name: 'Text', value: 'Text' },
+        { name: 'Voice', value: 'Voice' },
       )),
   async execute(interaction) {
     const startTime = Date.now();
@@ -74,19 +72,20 @@ export const dLeaderboard: SlashCommand = {
     await interaction.deferReply();
     const categoryChoice = interaction.options.getString('category') ?? 'All';
     const typeChoice = interaction.options.getString('type') ?? 'All';
+    log.debug(F, `categoryChoice: ${categoryChoice}, typeChoice: ${typeChoice}`);
 
     const leaderboardData = await getLeaderboard();
     const book = [];
 
     for (const type of Object.keys(leaderboardData)) { // eslint-disable-line no-restricted-syntax
-      if (typeChoice !== 'All' && typeChoice !== type) {
+      if (typeChoice !== 'All' && typeChoice.toUpperCase() !== type) {
         continue; // eslint-disable-line no-continue
       }
       const typeKey = type as keyof typeof leaderboardData;
       const typeData = leaderboardData[typeKey];
       // log.debug(F, `typeKey: ${typeKey}, typeData: ${JSON.stringify(typeData, null, 2)}`);
       for (const category of Object.keys(typeData)) {
-        if (categoryChoice !== 'All' && categoryChoice !== category) {
+        if (categoryChoice !== 'All' && categoryChoice.toUpperCase() !== category) {
           continue;
         }
         const categoryKey = category as keyof typeof typeData;
