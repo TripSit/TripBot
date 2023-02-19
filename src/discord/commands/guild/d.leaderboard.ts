@@ -72,10 +72,12 @@ export const dLeaderboard: SlashCommand = {
     await interaction.deferReply();
     const categoryChoice = interaction.options.getString('category') ?? 'All';
     const typeChoice = interaction.options.getString('type') ?? 'All';
-    log.debug(F, `categoryChoice: ${categoryChoice}, typeChoice: ${typeChoice}`);
+    // log.debug(F, `categoryChoice: ${categoryChoice}, typeChoice: ${typeChoice}`);
 
     const leaderboardData = await getLeaderboard();
     const book = [];
+
+    await interaction.guild?.members.fetch();
 
     for (const type of Object.keys(leaderboardData)) { // eslint-disable-line no-restricted-syntax
       if (typeChoice !== 'All' && typeChoice.toUpperCase() !== type) {
@@ -94,10 +96,21 @@ export const dLeaderboard: SlashCommand = {
         if (categoryData.length === 0) {
           continue;
         }
-        const descriptionText = await Promise.all(categoryData.map(async (user, index) => {
-          const levelData = await getTotalLevel(user.total_points);
-          return `#${index + 1} Lvl ${levelData.level} <@${user.discord_id}> (${user.total_points} XP)`;
+        // eslint-disable-next-line @typescript-eslint/no-loop-func
+        const descriptionText = await Promise.all(categoryData.map(async user => {
+          const member = interaction.guild?.members.cache.filter(m => m.id === user.discord_id);
+          if (member && member.size > 0) {
+            const levelData = await getTotalLevel(user.total_points);
+            return `Lvl ${levelData.level} <@${user.discord_id}> (${user.total_points} XP)`;
+          }
+          return null;
         }));
+
+        // prune null values, add rank #, and limit to 10
+        const filteredList = descriptionText
+          .filter(value => value !== null)
+          .map((value, index) => `#${index + 1} ${value}`)
+          .slice(0, 10);
 
         // Lowercase everything and then capitalize the first letter of type and category
         const categoryString = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
@@ -106,7 +119,7 @@ export const dLeaderboard: SlashCommand = {
         const embed = embedTemplate()
           .setTitle(`${typeString} ${categoryString} Leaderboard!`)
           .setColor(Colors.Gold)
-          .setDescription(descriptionText.join('\n'));
+          .setDescription(filteredList.join('\n'));
 
         book.push(embed);
       }
@@ -115,6 +128,11 @@ export const dLeaderboard: SlashCommand = {
     if (book.length === 0) {
       interaction.editReply(`No ${typeChoice} ${categoryChoice} found!`);
       return false;
+    }
+
+    if (book.length === 1) {
+      interaction.editReply({ embeds: [book[0]] });
+      return true;
     }
 
     paginationEmbed(interaction, book, buttonList, 0);
