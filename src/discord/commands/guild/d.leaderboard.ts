@@ -3,6 +3,8 @@
 import {
   SlashCommandBuilder,
   AttachmentBuilder,
+  Guild,
+  GuildMember,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
 import * as path from 'path';
@@ -22,6 +24,27 @@ export default dLeaderboard;
 
 const F = f(__filename);
 
+type LeaderboardList = { discord_id: string, total_points: number }[];
+
+type LeaderboardData = {
+  TEXT: {
+    TOTAL: LeaderboardList,
+    TRIPSITTER: LeaderboardList,
+    GENERAL: LeaderboardList,
+    DEVELOPER: LeaderboardList,
+    TEAM: LeaderboardList,
+    IGNORED: LeaderboardList,
+  },
+  VOICE: {
+    TOTAL: LeaderboardList,
+    TRIPSITTER: LeaderboardList,
+    GENERAL: LeaderboardList,
+    DEVELOPER: LeaderboardList,
+    TEAM: LeaderboardList,
+    IGNORED: LeaderboardList,
+  },
+};
+
 Canvas.GlobalFonts.registerFromPath(
   path.resolve(__dirname, '../../assets/Futura.otf'),
   'futura',
@@ -32,22 +55,20 @@ export const dLeaderboard: SlashCommand = {
     .setName('leaderboard')
     .setDescription('Show the experience leaderboard')
     .addStringOption(option => option.setName('category')
-      .setDescription('What category of experience? (Default: All)')
+      .setDescription('What category of experience? (Default: Total)')
       .addChoices(
-        { name: 'All', value: 'ALL' },
-        { name: 'Total', value: 'TOTAL' },
-        { name: 'Chat', value: 'GENERAL' },
-        { name: 'Harm Reduction', value: 'TRIPSITTER' },
-        { name: 'Development', value: 'DEVELOPER' },
-        { name: 'Team Tripsit', value: 'TEAM' },
-        { name: 'Ignored', value: 'IGNORED' },
+        { name: 'Total', value: 'Total' },
+        { name: 'Chat', value: 'General' },
+        { name: 'Harm Reduction', value: 'Tripsitter' },
+        { name: 'Development', value: 'Developer' },
+        { name: 'Team Tripsit', value: 'Team' },
+        { name: 'Ignored', value: 'Ignored' },
       ))
     .addStringOption(option => option.setName('type')
-      .setDescription('What type of experience? (Default: All)')
+      .setDescription('What type of experience? (Default: Text)')
       .addChoices(
-        { name: 'All', value: 'ALL' },
-        { name: 'Text', value: 'TEXT' },
-        { name: 'Voice', value: 'VOICE' },
+        { name: 'Text', value: 'Text' },
+        { name: 'Voice', value: 'Voice' },
       )),
   async execute(interaction) {
     const startTime = Date.now();
@@ -57,10 +78,19 @@ export const dLeaderboard: SlashCommand = {
     }
     startLog(F, interaction);
 
-    await interaction.deferReply();
+    const values = await Promise.allSettled([
+      await interaction.deferReply(),
+      // Get the leaderboard data from the db:
+      await getLeaderboard(),
+      // Get the guild object from the client, do this outside the loop to save memory
+      await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID),
+    ]);
 
-    const categoryChoice = interaction.options.getString('category') ?? 'All';
-    const typeChoice = interaction.options.getString('type') ?? 'All';
+    const leaderboardData = values[1].status === 'fulfilled' ? values[1].value : {} as LeaderboardData;
+    const tripsitGuild = values[2].status === 'fulfilled' ? values[2].value : {} as Guild;
+
+    const categoryChoice = interaction.options.getString('category') ?? 'Total';
+    const typeChoice = interaction.options.getString('type') ?? 'Text';
 
     // Create Canvas and Context
     const canvasWidth = 921;
@@ -82,209 +112,206 @@ export const dLeaderboard: SlashCommand = {
     context.font = '40px futura';
     context.fillStyle = '#ffffff';
     context.textAlign = 'center';
-    context.fillText(`TOP 10 - ${categoryChoice}`, 460, 47);
+    context.fillText(`Top 10 - ${typeChoice} ${categoryChoice}`, 460, 47);
 
-    // Get the leaderboard data from the db:
-    const leaderboardData = await getLeaderboard(); // eslint-disable-line
+    const typeKey = typeChoice.toUpperCase() as keyof typeof leaderboardData;
+    // log.debug(F, `typeKey: ${typeKey}`);
+    const typeData = leaderboardData[typeKey];
+    // log.debug(F, `typeData: ${JSON.stringify(typeData, null, 2)}`);
+    const categoryKey = categoryChoice.toUpperCase() as keyof typeof typeData;
+    // log.debug(F, `categoryKey: ${categoryKey}`);
+    const categoryData = typeData[categoryKey];
+    // log.debug(F, `categoryData: ${JSON.stringify(categoryData, null, 2)}`);
 
-    // Get the guild object from the client, do this outside the loop to save memory
-    const tripsitGuild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID); // eslint-disable-line
+    if (categoryData.length === 0) {
+      interaction.editReply(`No data found for ${typeChoice} ${categoryChoice}!`);
+      return false;
+    }
 
-    // Loop through the leaderboard data, first by the Type (text/voice)
-    for (const type of Object.keys(leaderboardData)) { // eslint-disable-line no-restricted-syntax
-      if (typeChoice !== 'All' && typeChoice !== type) {
-        continue;
-      }
-      const typeKey = type as keyof typeof leaderboardData;
-      const typeData = leaderboardData[typeKey];
-      // log.debug(F, `typeKey: ${typeKey}, typeData: ${JSON.stringify(typeData, null, 2)}`);
-      for (const category of Object.keys(typeData)) {
-        if (categoryChoice !== 'All' && categoryChoice !== category) {
-          continue;
-        }
-        const categoryKey = category as keyof typeof typeData;
-        const categoryData = typeData[categoryKey];
-        // log.debug(F, `categoryKey: ${categoryKey}, categoryData: ${JSON.stringify(categoryData, null, 2)}`);
-        if (categoryData.length === 0) {
-          continue;
-        }
+    let rank = 0;
+    let rankPositions = 0;
+    // Loop through the rank data list
+    for (const rankData of categoryData) {
+      // Increment the rank
+      rank += 1;
+      rankPositions += 1;
 
-        let rank = 0;
-        let rankPositions = 0;
-        // Loop through the rank data list
-        for (const rankData of categoryData) { // eslint-disable-line
-          // Increment the rank
-          rank += 1;
-          rankPositions += 1;
-
-          // log.debug(F, `rankData: ${JSON.stringify(rankData, null, 2)}`);
-
-          // Get the discord member object from the guild object
-          const member = env.NODE_ENV === 'production'
-          ? await tripsitGuild.members.fetch(rankData.discord_id) // eslint-disable-line
-            : {
-              id: '1234567890',
-              roles: {
-                color: {
-                  id: '1234567890',
-                },
+      // This will return a test user if the bot isn't in production
+      const rankValues = await Promise.allSettled([
+        env.NODE_ENV === 'production'
+          ? await tripsitGuild.members.fetch(rankData.discord_id)
+          : {
+            id: '1234567890',
+            roles: {
+              color: {
+                id: '1234567890',
               },
-              user: {
-                displayAvatarURL: () => 'https://cdn.discordapp.com/avatars/177537158419054592/a156668bbfd7e4f70a505fef639a75f5.webp', // eslint-disable-line
-              },
-              displayName: 'Test User',
-            };
+            },
+            user: {
+              displayAvatarURL: () => 'https://cdn.discordapp.com/avatars/177537158419054592/a156668bbfd7e4f70a505fef639a75f5.webp', // eslint-disable-line max-len
+            },
+            displayName: 'Test User',
+          },
+        await getTotalLevel(rankData.total_points),
+      ]);
 
-          // log.debug(F, `member: ${JSON.stringify(member, null, 2)}`);
+      // Get the discord member object from the guild object
+      const member = rankValues[0].status === 'fulfilled' ? rankValues[0].value : {} as GuildMember;
+      const levelData = rankValues[1].status === 'fulfilled' ? rankValues[1].value : {} as { level: number, level_points: number }; // eslint-disable-line max-len
 
-          // Draw basically everything else
-          context.textBaseline = 'middle';
-          // Choose color based on user's role
-          const cardLightColor = colorDefs[member.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#141414'; // eslint-disable-line
-          const textColor = colorDefs[member.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
-          context.save();
+      // log.debug(F, `member: ${JSON.stringify(member, null, 2)}`);
 
-          const levelData = await getTotalLevel(rankData.total_points);
+      // This will return a test user if the bot isn't in production
+      const memberValues = await Promise.allSettled([
+        await Canvas.loadImage(member.user.displayAvatarURL({ extension: 'jpg' })),
+        await getPersonaInfo(member.id),
+      ]);
 
-          if (rankPositions <= 4) {
-            // Draw Chip
-            if (rankPositions === 1) {
-              context.translate(18, 76);
-            } else if (rankPositions === 2) {
-              context.translate(469, 76);
-            } else if (rankPositions === 3) {
-              context.translate(18, 161);
-            } else if (rankPositions === 4) {
-              context.translate(469, 161);
-            }
+      const avatar = memberValues[0].status === 'fulfilled' ? memberValues[0].value : {} as Canvas.Image;
+      const [personaData] = memberValues[1].status === 'fulfilled' ? memberValues[1].value : [];
 
-            context.fillStyle = cardLightColor;
+      // Draw basically everything else
+      context.textBaseline = 'middle';
+      // Choose color based on user's role
+      const cardLightColor = colorDefs[member.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#141414';
+      const textColor = colorDefs[member.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
+      context.save();
+
+      if (rankPositions <= 4) {
+        // Draw Chip
+        if (rankPositions === 1) {
+          context.translate(18, 76);
+        } else if (rankPositions === 2) {
+          context.translate(469, 76);
+        } else if (rankPositions === 3) {
+          context.translate(18, 161);
+        } else if (rankPositions === 4) {
+          context.translate(469, 161);
+        }
+
+        context.fillStyle = cardLightColor;
+        context.beginPath();
+        context.roundRect(0, 0, 428, 76, [19]);
+        context.fill();
+
+        // Purchased Background
+        // Check get fresh persona data
+
+        if (personaData) {
+          // Get the existing inventory data
+          const inventoryData = await inventoryGet(personaData.id);
+          // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
+
+          const equippedBackground = inventoryData.find(item => item.equipped === true);
+          log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
+          if (equippedBackground) {
+            const imagePath = await imageGet(equippedBackground.value);
+            const Background = await Canvas.loadImage(imagePath);
+            context.save();
+            context.globalCompositeOperation = 'lighter';
+            context.globalAlpha = 0.03;
             context.beginPath();
             context.roundRect(0, 0, 428, 76, [19]);
-            context.fill();
-
-            // Purchased Background
-            // Check get fresh persona data
-            const [personaData] = await getPersonaInfo(member.id); // eslint-disable-line
-
-            if (personaData) {
-              // Get the existing inventory data
-              const inventoryData = await inventoryGet(personaData.id); // eslint-disable-line
-              // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
-
-              const equippedBackground = inventoryData.find(item => item.equipped === true);
-              log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
-              if (equippedBackground) {
-                const imagePath = await imageGet(equippedBackground.value); // eslint-disable-line
-                const Background = await Canvas.loadImage(imagePath); // eslint-disable-line
-                context.save();
-                context.globalCompositeOperation = 'lighter';
-                context.globalAlpha = 0.03;
-                context.beginPath();
-                context.roundRect(0, 0, 428, 76, [19]);
-                context.clip();
-                context.drawImage(Background, 0, 0, 500, 500);
-                context.restore();
-              }
-            }
-            // Draw Rank Number
-            context.fillStyle = textColor;
-            context.font = '30px futura';
-            context.textAlign = 'left';
-            context.textBaseline = 'middle';
-            context.fillText(`#${rank}`, 9, 38);
-            // Draw Profile Picture
-            const avatar = await Canvas.loadImage(member.user.displayAvatarURL({ extension: 'jpg' })); // eslint-disable-line
-            context.save();
-            context.beginPath();
-            context.arc(103, 38, 38, 0, Math.PI * 2, true);
-            context.closePath();
             context.clip();
-            context.drawImage(avatar, 65, 0, 76, 76);
-            context.restore();
-            // Draw Username
-            const applyUsername = (canvas:Canvas.Canvas, text:string) => {
-              const usernameContext = canvas.getContext('2d');
-              let fontSize = 30;
-              do {
-                fontSize -= 2;
-                usernameContext.font = `${fontSize}px futura`;
-              } while (usernameContext.measureText(text).width > 225);
-              return usernameContext.font;
-            };
-            context.save();
-            context.font = applyUsername(canvasObj, `${member.displayName}`);
-            context.fillStyle = textColor;
-            context.textAlign = 'left';
-            context.textBaseline = 'middle';
-            context.fillText(`${member.displayName}`, 152, 38);
-            context.restore();
-            // Draw Level Number
-            context.fillStyle = textColor;
-            context.textAlign = 'right';
-
-            context.fillText(`${levelData.level}`, 417, 38);
-            context.restore();
-          } else if (rankPositions > 4) {
-            // Draw Chip
-            if (rankPositions === 5) {
-              context.translate(18, 273);
-            } else if (rankPositions === 6) {
-              context.translate(307, 273);
-            } else if (rankPositions === 7) {
-              context.translate(614, 273);
-            } else if (rankPositions === 8) {
-              context.translate(18, 342);
-            } else if (rankPositions === 9) {
-              context.translate(307, 342);
-            } else if (rankPositions === 10) {
-              context.translate(614, 342);
-            }
-
-            context.fillStyle = cardLightColor;
-            context.beginPath();
-            context.roundRect(0, 0, 289, 51, [19]);
-            context.fill();
-
-            // Draw Rank Number
-            context.fillStyle = textColor;
-            context.font = '25px futura';
-            context.textAlign = 'left';
-            context.textBaseline = 'middle';
-            context.fillText(`#${rank}`, 9, 38);
-            // Draw Profile Picture
-            const avatar = await Canvas.loadImage(member.user.displayAvatarURL({ extension: 'jpg' })); // eslint-disable-line
-            context.save();
-            context.beginPath();
-            context.arc(94, 25, 25, 0, Math.PI * 2, true);
-            context.closePath();
-            context.clip();
-            context.drawImage(avatar, 25, 0, 51, 51);
-            context.restore();
-            // Draw Username
-            const applyUsername = (canvas:Canvas.Canvas, text:string) => {
-              const usernameContext = canvas.getContext('2d');
-              let fontSize = 30;
-              do {
-                fontSize -= 2;
-                usernameContext.font = `${fontSize}px futura`;
-              } while (usernameContext.measureText(text).width > 90);
-              return usernameContext.font;
-            };
-            context.save();
-            context.font = applyUsername(canvasObj, `${member.displayName}`);
-            context.fillStyle = textColor;
-            context.textAlign = 'left';
-            context.textBaseline = 'middle';
-            context.fillText(`${member.displayName}`, 143, 22);
-            context.restore();
-            // Draw Level Number
-            context.fillStyle = textColor;
-            context.textAlign = 'right';
-            context.fillText(`${levelData.level}`, 280, 22);
+            context.drawImage(Background, 0, 0, 500, 500);
             context.restore();
           }
         }
+        // Draw Rank Number
+        context.fillStyle = textColor;
+        context.font = '30px futura';
+        context.textAlign = 'left';
+        context.textBaseline = 'middle';
+        context.fillText(`#${rank}`, 9, 38);
+        // Draw Profile Picture
+        context.save();
+        context.beginPath();
+        context.arc(103, 38, 38, 0, Math.PI * 2, true);
+        context.closePath();
+        context.clip();
+        context.drawImage(avatar, 65, 0, 76, 76);
+        context.restore();
+        // Draw Username
+        const applyUsername = (canvas:Canvas.Canvas, text:string) => {
+          const usernameContext = canvas.getContext('2d');
+          let fontSize = 30;
+          do {
+            fontSize -= 2;
+            usernameContext.font = `${fontSize}px futura`;
+          } while (usernameContext.measureText(text).width > 225);
+          return usernameContext.font;
+        };
+        context.save();
+        context.font = applyUsername(canvasObj, `${member.displayName}`);
+        context.fillStyle = textColor;
+        context.textAlign = 'left';
+        context.textBaseline = 'middle';
+        context.fillText(`${member.displayName}`, 152, 38);
+        context.restore();
+        // Draw Level Number
+        context.fillStyle = textColor;
+        context.textAlign = 'right';
+
+        context.fillText(`${levelData.level}`, 417, 38);
+        context.restore();
+      } else if (rankPositions > 4) {
+        // Draw Chip
+        if (rankPositions === 5) {
+          context.translate(18, 273);
+        } else if (rankPositions === 6) {
+          context.translate(307, 273);
+        } else if (rankPositions === 7) {
+          context.translate(614, 273);
+        } else if (rankPositions === 8) {
+          context.translate(18, 342);
+        } else if (rankPositions === 9) {
+          context.translate(307, 342);
+        } else if (rankPositions === 10) {
+          context.translate(614, 342);
+        }
+
+        context.fillStyle = cardLightColor;
+        context.beginPath();
+        context.roundRect(0, 0, 289, 51, [19]);
+        context.fill();
+
+        // Draw Rank Number
+        context.fillStyle = textColor;
+        context.font = '25px futura';
+        context.textAlign = 'left';
+        context.textBaseline = 'middle';
+        context.fillText(`#${rank}`, 9, 38);
+
+        // Draw Profile Picture
+        context.save();
+        context.beginPath();
+        context.arc(94, 25, 25, 0, Math.PI * 2, true);
+        context.closePath();
+        context.clip();
+        context.drawImage(avatar, 25, 0, 51, 51);
+        context.restore();
+        // Draw Username
+        const applyUsername = (canvas:Canvas.Canvas, text:string) => {
+          const usernameContext = canvas.getContext('2d');
+          let fontSize = 30;
+          do {
+            fontSize -= 2;
+            usernameContext.font = `${fontSize}px futura`;
+          } while (usernameContext.measureText(text).width > 90);
+          return usernameContext.font;
+        };
+        context.save();
+        context.font = applyUsername(canvasObj, `${member.displayName}`);
+        context.fillStyle = textColor;
+        context.textAlign = 'left';
+        context.textBaseline = 'middle';
+        context.fillText(`${member.displayName}`, 143, 22);
+        context.restore();
+        // Draw Level Number
+        context.fillStyle = textColor;
+        context.textAlign = 'right';
+        context.fillText(`${levelData.level}`, 280, 22);
+        context.restore();
       }
     }
 
