@@ -112,6 +112,11 @@ export const dLeaderboard: SlashCommand = {
       }
     }
 
+    if (book.length === 0) {
+      interaction.editReply(`No ${typeChoice} ${categoryChoice} found!`);
+      return false;
+    }
+
     paginationEmbed(interaction, book, buttonList, 0);
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);
     return true;
