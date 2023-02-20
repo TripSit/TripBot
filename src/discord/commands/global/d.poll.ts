@@ -41,6 +41,33 @@ export const dPoll: SlashCommand = {
       .setRequired(true)),
   async execute(interaction) {
     startLog(F, interaction);
+
+    if (!interaction.channel) {
+      await interaction.reply('You need to be in a channel to use this command!');
+      return false;
+    }
+
+    if (interaction.channel.type === ChannelType.DM) {
+      await interaction.reply('You can\'t poll yourself!');
+      return false;
+    }
+
+    if (interaction.channel.type === ChannelType.GuildVoice) {
+      await interaction.reply('You can\'t poll a voice channel!');
+      return false;
+    }
+
+    const perms = await checkChannelPermissions(interaction.channel, [
+      'ViewChannel' as PermissionResolvable,
+      'SendMessages' as PermissionResolvable,
+      'AddReactions' as PermissionResolvable,
+    ]);
+
+    if (!perms.hasPermission) {
+      await interaction.reply({ content: `Please make sure I can ${perms.permission} here!`, ephemeral: true });
+      return false;
+    }
+
     // await interaction.deferReply({ephemeral: true});
     // interaction.reply({ content: 'Creating poll...', ephemeral: true });
     let question = interaction.options.getString('question');
@@ -55,21 +82,6 @@ export const dPoll: SlashCommand = {
 
     if (optionsArray.length > 9) {
       await interaction.reply('You can only have 9 options max!');
-      return false;
-    }
-
-    if (!interaction.channel) {
-      await interaction.reply('You need to be in a channel to use this command!');
-      return false;
-    }
-
-    if (interaction.channel.type === ChannelType.DM) {
-      await interaction.reply('You can\'t poll yourself!');
-      return false;
-    }
-
-    if (interaction.channel.type === ChannelType.GuildVoice) {
-      await interaction.reply('You can\'t poll a voice channel!');
       return false;
     }
 
@@ -124,20 +136,6 @@ export const dPoll: SlashCommand = {
       }
       // log.debug(F, `question: ${question}`);
       pollEmbed.setTitle(`**${question}**`);
-    }
-
-    const hasPostPermission = checkChannelPermissions(interaction.channel, [
-      'ViewChannel' as PermissionResolvable,
-      'SendMessages' as PermissionResolvable,
-      'AddReactions' as PermissionResolvable,
-    ]);
-
-    if (!hasPostPermission) {
-      await interaction.reply({
-        content: 'I do not have the right permissions! Please make sure I can View, Send Messages and React to messages here!', // eslint-disable-line
-        ephemeral: true,
-      });
-      return false;
     }
 
     await interaction.channel.send({ embeds: [pollEmbed] })

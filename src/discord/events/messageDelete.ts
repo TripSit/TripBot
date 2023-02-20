@@ -1,6 +1,7 @@
 import {
   TextChannel,
   Colors,
+  PermissionResolvable,
 } from 'discord.js';
 import {
   // ChannelType,
@@ -10,6 +11,7 @@ import {
   MessageDeleteEvent,
 } from '../@types/eventDef';
 import { embedTemplate } from '../utils/embedTemplate';
+import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
 // eslint-disable-line @typescript-eslint/no-unused-vars
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
@@ -26,8 +28,29 @@ export const messageDelete: MessageDeleteEvent = {
     log.info(F, `Message in ${message.channel} was deleted.`);
 
     const msglog = await message.client.channels.fetch(env.CHANNEL_MSGLOG) as TextChannel;
+    const channelPerms = await checkChannelPermissions(msglog, [
+      'ViewChannel' as PermissionResolvable,
+      'SendMessages' as PermissionResolvable,
+    ]);
+    if (!channelPerms.hasPermission) {
+      const guildOwner = await msglog.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${msglog} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${channelPerms.permission} in ${msglog}!`);
+      return;
+    }
 
     // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
+
+    const perms = await checkGuildPermissions(message.guild, [
+      'ViewAuditLog' as PermissionResolvable,
+    ]);
+
+    if (!perms.hasPermission) {
+      const guildOwner = await message.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${message.guild} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${perms.permission} in ${message.guild}!`);
+      return;
+    }
 
     const fetchedLogs = await message.guild.fetchAuditLogs({
       limit: 1,

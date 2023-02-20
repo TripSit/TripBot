@@ -1,4 +1,5 @@
 import {
+  PermissionResolvable,
   TextChannel,
 } from 'discord.js';
 import {
@@ -8,6 +9,7 @@ import {
 import {
   ChannelDeleteEvent,
 } from '../@types/eventDef';
+import { checkChannelPermissions } from '../utils/checkPermissions';
 
 const F = f(__filename);
 
@@ -24,9 +26,20 @@ export const channelDelete: ChannelDeleteEvent = {
     if (channel.guild.id !== env.DISCORD_GUILD_ID) return;
     log.info(F, `Channel ${channel.name} was deleted.`);
 
-    const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const channelAuditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
-    await auditlog.send(`Channel ${channel.name} was deleted.`);
+    const channelPerms = await checkChannelPermissions(channelAuditlog, [
+      'ViewChannel' as PermissionResolvable,
+      'SendMessages' as PermissionResolvable,
+    ]);
+    if (!channelPerms.hasPermission) {
+      const guildOwner = await channel.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${channelAuditlog} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${channelPerms.permission} in ${channelAuditlog}!`);
+      return;
+    }
+
+    await channelAuditlog.send(`Channel ${channel.name} was deleted.`);
 
     // const fetchedLogs = await channel.guild.fetchAuditLogs({
     //   limit: 1,
@@ -42,7 +55,7 @@ export const channelDelete: ChannelDeleteEvent = {
 
     // // Perform a coherence check to make sure that there's *something*
     // if (!deletionLog) {
-    //   await auditlog.send(`Channel ${channel.name} was created, but no relevant audit logs were found.`);
+    //   await channelAuditlog.send(`Channel ${channel.name} was created, but no relevant audit logs were found.`);
     //   return;
     // }
 
@@ -50,6 +63,6 @@ export const channelDelete: ChannelDeleteEvent = {
     //   ? `Channel ${channel.name} was deleted by ${deletionLog.executor.tag}.`
     //   : `Channel ${channel.name} was deleted, but the audit log was inconclusive.`;
 
-    // await auditlog.send(response);
+    // await channelAuditlog.send(response);
   },
 };

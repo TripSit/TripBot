@@ -1,4 +1,5 @@
 import {
+  PermissionResolvable,
   TextChannel,
 } from 'discord.js';
 import {
@@ -7,6 +8,7 @@ import {
 import {
   GuildBanRemoveEvent,
 } from '../@types/eventDef';
+import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
 
 const F = f(__filename);
 
@@ -21,6 +23,17 @@ export const guildBanRemove: GuildBanRemoveEvent = {
     if (ban.guild.id !== env.DISCORD_GUILD_ID) return;
     log.info(F, `Channel ${ban.user} was remove.`);
 
+    const perms = await checkGuildPermissions(ban.guild, [
+      'ViewAuditLog' as PermissionResolvable,
+    ]);
+
+    if (!perms.hasPermission) {
+      const guildOwner = await ban.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${ban.guild} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${perms.permission} in ${ban.guild}!`);
+      return;
+    }
+
     const fetchedLogs = await ban.guild.fetchAuditLogs({
       limit: 1,
       type: AuditLogEvent.MemberBanRemove,
@@ -29,11 +42,22 @@ export const guildBanRemove: GuildBanRemoveEvent = {
     // Since there's only 1 audit log entry in this collection, grab the first one
     const creationLog = fetchedLogs.entries.first();
 
-    const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const channel = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+
+    const channelPerms = await checkChannelPermissions(channel, [
+      'ViewChannel' as PermissionResolvable,
+      'SendMessages' as PermissionResolvable,
+    ]);
+    if (!channelPerms.hasPermission) {
+      const guildOwner = await channel.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${channel} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${channelPerms.permission} in ${channel}!`);
+      return;
+    }
 
     // Perform a coherence check to make sure that there's *something*
     if (!creationLog) {
-      await auditlog.send(`${ban.user} was unbaned, but no relevant audit logs were found.`);
+      await channel.send(`${ban.user} was unbaned, but no relevant audit logs were found.`);
       return;
     }
 
@@ -41,6 +65,6 @@ export const guildBanRemove: GuildBanRemoveEvent = {
       ? `Channel ${ban.user} was unbanned by ${creationLog.executor.tag}.`
       : `Channel ${ban.user} was unbanned, but the audit log was inconclusive.`;
 
-    await auditlog.send(response);
+    await channel.send(response);
   },
 };

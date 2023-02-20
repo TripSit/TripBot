@@ -1,4 +1,5 @@
 import {
+  PermissionResolvable,
   TextChannel,
 } from 'discord.js';
 import {
@@ -9,6 +10,7 @@ import {
 import {
   ChannelUpdateEvent,
 } from '../@types/eventDef';
+import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
 // import log from '../../global/utils/log';
 
 const F = f(__filename);
@@ -35,6 +37,17 @@ export const channelUpdate: ChannelUpdateEvent = {
 
     log.info(F, `Channel ${newChannel.name} was updated.`);
 
+    const perms = await checkGuildPermissions(newChannel.guild, [
+      'ViewAuditLog' as PermissionResolvable,
+    ]);
+
+    if (!perms.hasPermission) {
+      const guildOwner = await newChannel.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${newChannel.guild} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${perms.permission} in ${newChannel.guild}!`);
+      return;
+    }
+
     const fetchedLogs = await newChannel.guild.fetchAuditLogs({
       limit: 1,
       type: AuditLogEvent.ChannelUpdate,
@@ -43,11 +56,22 @@ export const channelUpdate: ChannelUpdateEvent = {
     // Since there's only 1 audit log entry in this collection, grab the first one
     const auditLog = fetchedLogs.entries.first();
 
-    const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const channel = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+
+    const channelPerms = await checkChannelPermissions(channel, [
+      'ViewChannel' as PermissionResolvable,
+      'SendMessages' as PermissionResolvable,
+    ]);
+    if (!channelPerms.hasPermission) {
+      const guildOwner = await newChannel.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${channel} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${channelPerms.permission} in ${channel}!`);
+      return;
+    }
 
     // Perform a coherence check to make sure that there's *something*
     if (!auditLog) {
-      await auditlog.send(`Channel ${newChannel.name} was updated, but no relevant audit logs were found.`);
+      await channel.send(`Channel ${newChannel.name} was updated, but no relevant audit logs were found.`);
       return;
     }
 
@@ -62,6 +86,6 @@ export const channelUpdate: ChannelUpdateEvent = {
       response += `\n${changes.join('\n')}`;
     }
 
-    await auditlog.send(response);
+    await channel.send(response);
   },
 };
