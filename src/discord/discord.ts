@@ -30,7 +30,7 @@ export async function discordConnect(): Promise<void> {
       // GatewayIntentBits.GuildWebhooks,
       GatewayIntentBits.GuildInvites,
       GatewayIntentBits.GuildVoiceStates,
-      GatewayIntentBits.GuildPresences,
+      // GatewayIntentBits.GuildPresences,
       GatewayIntentBits.GuildMessages,
       GatewayIntentBits.GuildMessageReactions,
       // GatewayIntentBits.GuildMessageTyping,
