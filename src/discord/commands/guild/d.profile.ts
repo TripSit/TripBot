@@ -338,6 +338,17 @@ export function numFormatter(num:number):string {
   return num.toFixed(0);
 }
 
+// Number Formatter Voice
+export function numFormatterVoice(num:number):string {
+  if (num > 999 && num < 1000000) {
+    return `${(num / 1000).toFixed(1)}K`;
+  }
+  if (num > 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`;
+  }
+  return num.toFixed(1);
+}
+
 const colorDefs = {
   [env.ROLE_PURPLE]: {
     cardDarkColor: '#19151e',

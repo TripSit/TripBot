@@ -14,7 +14,7 @@ import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
 import { imageGet } from '../../utils/imageGet';
 import { startLog } from '../../utils/startLog';
-import { numFormatter } from './d.profile';
+import { numFormatter, numFormatterVoice } from './d.profile';
 // import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 // import { inventoryGet } from '../../../global/utils/knex';
 // import { imageGet } from '../../utils/imageGet';
@@ -374,7 +374,7 @@ export const dLevels: SlashCommand = {
     // Voice Hours Text
     if (profileData.totalTextExp) {
       const hoursInChat = (profileData.totalVoiceExp / 10 / 60);
-      context.fillText(`${numFormatter(hoursInChat)} HR`, 894, 105);
+      context.fillText(`${numFormatterVoice(hoursInChat)} HR`, 894, 105);
     } else {
       context.fillText('0 HR', 894, 105);
     }
