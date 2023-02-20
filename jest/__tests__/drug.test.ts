@@ -2,8 +2,8 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dDrug } from '../../../src/discord/commands/global/d.drug';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../utils/testutils';
+import { dDrug } from '../../src/discord/commands/global/d.drug';
+import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dDrug;
 
@@ -133,7 +133,7 @@ describe(slashCommand.data.name, () => {
           },
         ],
       }),
-      ephemeral: false,
+      ephemeral: true,
     });
 
     expect(await executeCommandAndSpyReply(
@@ -242,7 +242,7 @@ describe(slashCommand.data.name, () => {
           },
         ],
       }),
-      ephemeral: false,
+      ephemeral: true,
     });
 
     // via MoonBear#1024 (177537158419054592) in TripSitDev (960606557622657026)
@@ -336,7 +336,7 @@ describe(slashCommand.data.name, () => {
           },
         ],
       }),
-      ephemeral: false,
+      ephemeral: true,
     });
   });
 });

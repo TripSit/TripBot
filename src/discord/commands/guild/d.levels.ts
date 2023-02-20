@@ -118,11 +118,11 @@ export const dLevels: SlashCommand = {
       layoutHeight = 566;
       layout = 4;
       // log.debug(F, 'is teamtripsit');
-    } else if (target.roles.cache.has(env.ROLE_CONTRIBUTOR)) {
+    } else if (target.roles.cache.has(env.ROLE_CONTRIBUTOR) || target.roles.cache.has(env.ROLE_DEVELOPER)) {
       layoutHeight = 506;
       layout = 3;
       // log.debug(F, 'is contributor');
-    } else if (target.roles.cache.has(env.ROLE_HELPER)) {
+    } else if (target.roles.cache.has(env.ROLE_HELPER) || target.roles.cache.has(env.ROLE_TRIPSITTER)) {
       layoutHeight = 446;
       layout = 2;
       // log.debug(F, 'is helper');
@@ -338,17 +338,26 @@ export const dLevels: SlashCommand = {
     context.fillText(`#${levelData.TEXT.GENERAL.rank}`, 711, 284);
     context.font = applyRank(canvasObj, `#${levelData.VOICE.TOTAL.rank}`);
     context.fillText(`#${levelData.VOICE.TOTAL.rank}`, 711, 344);
-    if (layout > 1) {
+    if (layout > 1 && levelData.TEXT.TRIPSITTER) {
       context.font = applyRank(canvasObj, `#${levelData.TEXT.TRIPSITTER.rank}`);
       context.fillText(`#${levelData.TEXT.TRIPSITTER.rank}`, 711, 404);
+    } else {
+      context.font = applyRank(canvasObj, '#0');
+      context.fillText('#0', 711, 404);
     }
-    if (layout > 2) {
+    if (layout > 2 && levelData.TEXT.DEVELOPER) {
       context.font = applyRank(canvasObj, `#${levelData.TEXT.DEVELOPER.rank}`);
       context.fillText(`#${levelData.TEXT.DEVELOPER.rank}`, 711, 464);
+    } else {
+      context.font = applyRank(canvasObj, '#0');
+      context.fillText('#0', 711, 464);
     }
-    if (layout > 3) {
+    if (layout > 3 && levelData.TEXT.TEAM) {
       context.font = applyRank(canvasObj, `#${levelData.TEXT.TEAM.rank}`);
       context.fillText(`#${levelData.TEXT.TEAM.rank}`, 711, 524);
+    } else {
+      context.font = applyRank(canvasObj, '#0');
+      context.fillText('#0', 711, 524);
     }
 
     // Bar Labels

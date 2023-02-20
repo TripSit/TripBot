@@ -20,6 +20,7 @@ import {
   // MessageFlags,
   MessageMentionTypes,
   ChatInputCommandInteraction,
+  PermissionResolvable,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -40,6 +41,7 @@ import {
 } from '../../global/@types/database.d';
 import { startLog } from './startLog';
 import { embedTemplate } from './embedTemplate';
+import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
 
 const F = f(__filename);
 
@@ -119,6 +121,17 @@ export async function needsHelpMode(
 
   const guildData = await getGuild(interaction.guild.id);
 
+  const perms = await checkGuildPermissions(interaction.guild, [
+    'ManageRoles' as PermissionResolvable,
+  ]);
+
+  if (!perms.hasPermission) {
+    const guildOwner = await interaction.guild.fetchOwner();
+    await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${interaction.guild} so I can run ${F}!` }); // eslint-disable-line
+    log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}!`);
+    return;
+  }
+
   let roleNeedshelp = {} as Role;
   if (guildData.role_needshelp) {
     roleNeedshelp = await interaction.guild.roles.fetch(guildData.role_needshelp) as Role;
@@ -139,11 +152,22 @@ export async function needsHelpMode(
   // Remove all roles, except team and vanity, from the target
   target.roles.cache.forEach(async role => {
     // log.debug(F, `role: ${role.name} - ${role.id}`);
+
     if (!ignoredRoles.includes(role.id)
     && !role.name.includes('@everyone')
     && role.id !== roleNeedshelp.id
     && role.comparePositionTo(myRole)) {
-      await target.roles.remove(role);
+      log.debug(F, `Removing role ${role.name} from ${target.displayName}`);
+      try {
+        await target.roles.remove(role);
+      } catch (err) {
+        log.error(F, `Error removing role from target: ${err}`);
+        await interaction.reply({
+          content: stripIndents`There was an error removing ${role.name} from ${target.displayName}!
+          Make sure the bot's role is higher than ${role.name} in the Role list!`,
+          ephemeral: true,
+        });
+      }
     }
   });
 
@@ -199,6 +223,17 @@ export async function tripsitmeOwned(
   if (metaChannelId) {
     // log.debug(F, `metaChannelId: ${metaChannelId}`);
     const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
+
+    const channelPerms = await checkChannelPermissions(metaChannel, [
+      'SendMessages' as PermissionResolvable,
+    ]);
+    if (!channelPerms.hasPermission) {
+      const guildOwner = await interaction.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${metaChannel} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${channelPerms.permission} in ${metaChannel}!`);
+      return;
+    }
+
     await metaChannel.send({
       content: stripIndents`${actor.displayName} has indicated that ${target.toString()} is receiving help!`,
     });
@@ -771,7 +806,43 @@ export async function tripSitMe(
     await interaction.reply({ content: 'No tripsit channel found! Make sure to run /setup tripsit', ephemeral: true });
     return null;
   }
-  // Create a new private thread in the channel
+
+  const channelPerms = await checkChannelPermissions(tripsitChannel, [
+    'SendMessages' as PermissionResolvable,
+    'ManageMessages' as PermissionResolvable,
+    'SendMessagesInThreads' as PermissionResolvable,
+    'ManageThreads' as PermissionResolvable,
+  ]);
+  if (!channelPerms.hasPermission) {
+    const guildOwner = await interaction.guild.fetchOwner();
+    await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${tripsitChannel} so I can run ${F}!` }); // eslint-disable-line
+    log.error(F, `Missing permission ${channelPerms.permission} in ${tripsitChannel}!`);
+    return null;
+  }
+
+  if (interaction.guild.premiumTier > 2) {
+    const threadPerms = await checkChannelPermissions(tripsitChannel, [
+      'CreatePrivateThreads' as PermissionResolvable,
+    ]);
+    if (!threadPerms.hasPermission) {
+      const guildOwner = await interaction.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${tripsitChannel} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${channelPerms.permission} in ${tripsitChannel}!`);
+      return null;
+    }
+  } else {
+    const threadPerms = await checkChannelPermissions(tripsitChannel, [
+      'CreatePublicThreads' as PermissionResolvable,
+    ]);
+    if (!threadPerms.hasPermission) {
+      const guildOwner = await interaction.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${tripsitChannel} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${channelPerms.permission} in ${tripsitChannel}!`);
+      return null;
+    }
+  }
+
+  // Create a new thread in the channel
   // If we're not in production we need to create a public thread
   const threadHelpUser = await tripsitChannel.threads.create({
     name: `🧡│${target.displayName}'s channel!`,
@@ -1066,6 +1137,14 @@ export async function tripsitmeButton(
       const intro = i.fields.getTextInputValue('introInput');
 
       const threadHelpUser = await tripSitMe(i, target, triage, intro) as ThreadChannel;
+
+      if (!threadHelpUser) {
+        const embed = embedTemplate()
+          .setColor(Colors.DarkBlue)
+          .setDescription(stripIndents`Hey ${interaction.member}, there was an error creating your help thread! The Guild owner should get a message with specifics!`);
+        await i.reply({ embeds: [embed], ephemeral: true });
+        return;
+      }
 
       const replyMessage = stripIndents`
       Hey ${target}, thank you for asking for assistance!

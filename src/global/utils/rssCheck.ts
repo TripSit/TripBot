@@ -76,7 +76,7 @@ async function checkRss() {
       try {
         [mostRecentPost] = (await parser.parseURL(feed.url)).items;
       } catch (error) {
-        log.debug(F, `Error parsing ${feed.url}: ${error}`);
+        // log.debug(F, `Error parsing ${feed.url}: ${error}`);
         return;
       }
       // log.debug(F, `mostRecentPost: ${JSON.stringify(mostRecentPost, null, 2)}`);

@@ -107,7 +107,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
     ];
     await message.channel.send(responses[Math.floor(Math.random() * responses.length)]);
   } else if (
-    (message.mentions.has(message.client.user) || sadStuff.includes(message.cleanContent.toLowerCase()))
+    sadStuff.some(word => message.cleanContent.includes(word))
     && message.channel.type !== ChannelType.DM) {
     if (message.author.bot) {
       // log.debug(F, Ignoring bot interaction);
