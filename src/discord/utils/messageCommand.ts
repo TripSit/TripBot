@@ -78,5 +78,18 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       '*beeps quietly*',
     ];
     await message.channel.send(responses[Math.floor(Math.random() * responses.length)]);
+  } else if (
+    (message.mentions.has(message.client.user) || message.cleanContent.includes('=(') || message.cleanContent.includes(':(') || message.cleanContent.toLowerCase().includes(':c'))
+    && message.channel.type !== ChannelType.DM) {
+    if (message.author.bot) {
+      // log.debug(F, Ignoring bot interaction);
+      return;
+    }
+    const responsesHugs = [
+      '💕💙💝*digitally hugs❣️* 💝💙💕',
+      '💕💙💝*hugs softly* 💝💙💕',
+      '💜💞💛*sends virtual hug*💛💞💜',
+    ];
+    await message.channel.send(responsesHugs[Math.floor(Math.random() * responsesHugs.length)]);
   }
 }
