@@ -90,7 +90,7 @@ export const dHelp: SlashCommand = {
     // funEmbed.addFields({ name: 'Youtube', value: getDesc('youtube') ?? '', inline: true });
     funEmbed.addFields({ name: 'Coinflip', value: getDesc('coinflip') ?? '', inline: true });
     funEmbed.addFields({ name: 'Lovebomb', value: getDesc('lovebomb') ?? '', inline: true });
-    funEmbed.addFields({ name: 'Remindme', value: getDesc('remindme') ?? '', inline: true });
+    funEmbed.addFields({ name: 'Remindme', value: getDesc('remind_me') ?? '', inline: true });
     funEmbed.addFields({ name: 'Convert', value: getDesc('convert') ?? '', inline: true });
     funEmbed.addFields({ name: 'Poll', value: getDesc('poll') ?? '', inline: true });
     // funEmbed.addFields({name: 'Youtube', value: getDesc('youtube'), inline: true});

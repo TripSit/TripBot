@@ -22,16 +22,13 @@ import {
 
 const F = f(__filename); // eslint-disable-line
 
+type LeaderboardList = { discord_id: string, total_points: number }[];
+
 export const db = knex({
   client: 'pg',
   connection: env.POSTGRES_DB_URL,
 });
 
-/**
- *  Get the User's info, or create it if it doesn't exist
- * @param {string | null} discordId
- * @param {string | null} userId
- */
 export async function getUser(
   discordId:string | null,
   userId:string | null,
@@ -39,55 +36,41 @@ export async function getUser(
   // log.debug(F, `getUser started with: discordId: ${discordId} | userId: ${userId}`);
   let data = {} as Users | undefined;
 
-  if (env.POSTGRES_DB_URL === undefined) {
-    return {
-      id: 'abc-123-asdf',
-      email: null,
-      username: null,
-      password_hash: null,
-      discord_id: '123456',
-      irc_id: null,
-      matrix_id: null,
-      timezone: 'America/New_York',
-      birthday: new Date(),
-      roles: null,
-      mindset_role: null,
-      mindset_role_expires_at: null,
-      karma_given: 10,
-      karma_received: 20,
-      sparkle_points: 30,
-      move_points: 40,
-      empathy_points: 50,
-      discord_bot_ban: false,
-      ticket_ban: false,
-      last_seen_at: new Date(),
-      last_seen_in: null,
-      joined_at: new Date(),
-      removed_at: null,
-    } as Users;
-  }
-
-  // log.debug(F, 'Database initialized!');
-
   if (discordId) {
-    data = await db<Users>('users')
-      .select('*')
-      .where('discord_id', discordId)
-      .first();
+    try {
+      data = await db<Users>('users')
+        .select('*')
+        .where('discord_id', discordId)
+        .first();
+    } catch (err) {
+      log.error(F, `Error getting user: ${err}`);
+      log.error(F, `discordId: ${discordId} | userId: ${userId}`);
+    }
+
     // log.debug(F, `data1: ${JSON.stringify(data, null, 2)}`);
     if (data === undefined) {
-      [data] = (await db<Users>('users')
-        .insert({ discord_id: discordId })
-        .returning('*'));
+      try {
+        [data] = (await db<Users>('users')
+          .insert({ discord_id: discordId })
+          .returning('*'));
       // log.debug(F, `data2: ${JSON.stringify(data, null, 2)}`);
+      } catch (err) {
+        log.error(F, `Error getting user: ${err}`);
+        log.error(F, `discordId: ${discordId} | userId: ${userId}`);
+      }
     }
   }
   if (userId) {
-    data = await db<Users>('users')
-      .select('*')
-      .where('id', userId)
-      .first();
+    try {
+      data = await db<Users>('users')
+        .select('*')
+        .where('id', userId)
+        .first();
     // log.debug(F, `data3: ${JSON.stringify(data, null, 2)}`);
+    } catch (err) {
+      log.error(F, `Error getting user: ${err}`);
+      log.error(F, `discordId: ${discordId} | userId: ${userId}`);
+    }
   }
 
   // log.debug(F, `data4: ${JSON.stringify(data, null, 2)}`);
@@ -95,12 +78,8 @@ export async function getUser(
   return data as Users;
 }
 
-/**
- *  Get the Guild's info, or create it if it doesn't exist
- * @param {string} guildId
- */
-export async function getGuild(guildId:string) {
-// log.debug(F, `getGuild started with: guildId: ${guildId}`);
+export async function getGuild(guildId:string):Promise<DiscordGuilds> {
+  // log.debug(F, `getGuild started with: guildId: ${guildId}`);
 
   if (env.POSTGRES_DB_URL === undefined) {
     return {
@@ -124,23 +103,30 @@ export async function getGuild(guildId:string) {
     } as DiscordGuilds;
   }
 
-  let data = await db<DiscordGuilds>('discord_guilds')
-    .select('*')
-    .where('id', guildId)
-    .first();
-  if (!data) {
-    [data] = (await db<DiscordGuilds>('discord_guilds')
-      .insert({ id: guildId })
-      .returning('*'));
+  let data = {} as DiscordGuilds | undefined;
+
+  try {
+    data = await db<DiscordGuilds>('discord_guilds')
+      .select('*')
+      .where('id', guildId)
+      .first();
+  } catch (err) {
+    log.error(F, `Error getting guild: ${err}`);
+    log.error(F, `guildId: ${guildId}`);
   }
-  return data;
+  if (!data) {
+    try {
+      [data] = (await db<DiscordGuilds>('discord_guilds')
+        .insert({ id: guildId })
+        .returning('*'));
+    } catch (err) {
+      log.error(F, `Error getting guild: ${err}`);
+      log.error(F, `guildId: ${guildId}`);
+    }
+  }
+  return data as DiscordGuilds;
 }
 
-/**
- *  Get open ticket info
- * @param {string | null} userId
- * @param {string | null} threadId
- */
 export async function getOpenTicket(
   userId: string | null,
   threadId: string | null,
@@ -170,31 +156,38 @@ export async function getOpenTicket(
   }
 
   if (threadId) {
-    ticketData = await db<UserTickets>('user_tickets')
-      .select('*')
-      .where('thread_id', threadId)
-      // .where('type', 'TRIPSIT')
-      .andWhereNot('status', 'CLOSED')
-      .andWhereNot('status', 'RESOLVED')
-      .andWhereNot('status', 'DELETED')
-      .first();
+    try {
+      ticketData = await db<UserTickets>('user_tickets')
+        .select('*')
+        .where('thread_id', threadId)
+        // .where('type', 'TRIPSIT')
+        .andWhereNot('status', 'CLOSED')
+        .andWhereNot('status', 'RESOLVED')
+        .andWhereNot('status', 'DELETED')
+        .first();
+    } catch (err) {
+      log.error(F, `Error getting open ticket: ${err}`);
+      log.error(F, `threadId: ${threadId} | userId: ${userId}`);
+    }
   }
   if (userId) {
-    ticketData = await db<UserTickets>('user_tickets')
-      .select('*')
-      .where('user_id', userId)
-      // .where('type', 'TRIPSIT')
-      .andWhereNot('status', 'CLOSED')
-      .andWhereNot('status', 'RESOLVED')
-      .andWhereNot('status', 'DELETED')
-      .first();
+    try {
+      ticketData = await db<UserTickets>('user_tickets')
+        .select('*')
+        .where('user_id', userId)
+        // .where('type', 'TRIPSIT')
+        .andWhereNot('status', 'CLOSED')
+        .andWhereNot('status', 'RESOLVED')
+        .andWhereNot('status', 'DELETED')
+        .first();
+    } catch (err) {
+      log.error(F, `Error getting open ticket: ${err}`);
+      log.error(F, `threadId: ${threadId} | userId: ${userId}`);
+    }
   }
   return ticketData;
 }
 
-/**
- *  Get reminders
- */
 export async function reminderGet(
   userId?: string,
 ):Promise<UserReminders[]> {
@@ -202,33 +195,42 @@ export async function reminderGet(
   if (env.POSTGRES_DB_URL === undefined) {
     return [] as UserReminders[];
   }
+  let reminders = [] as UserReminders[];
   if (userId) {
-    return db<UserReminders>('user_reminders')
-      .select('*')
-      .where('user_id', userId);
+    try {
+      reminders = await db<UserReminders>('user_reminders')
+        .select('*')
+        .where('user_id', userId);
+    } catch (err) {
+      log.error(F, `Error getting reminders: ${err}`);
+      log.error(F, `userId: ${userId}`);
+    }
   }
-  return db<UserReminders>('user_reminders')
-    .select('*');
+  try {
+    reminders = await db<UserReminders>('user_reminders')
+      .select('*');
+  } catch (err) {
+    log.error(F, `Error getting reminders: ${err}`);
+    log.error(F, `userId: ${userId}`);
+  }
+
+  return reminders;
 }
 
-/**
- *  Add reminders
- * @param {string | null} userId
- * @param {string | null} threadId
- */
 export async function reminderSet(
   reminder: UserReminders,
 ):Promise<void> {
 // log.debug(F, 'reminderSet started');
   if (env.POSTGRES_DB_URL === undefined) return;
-  await db<UserReminders>('user_reminders')
-    .insert(reminder);
+  try {
+    await db<UserReminders>('user_reminders')
+      .insert(reminder);
+  } catch (err) {
+    log.error(F, `Error setting reminder: ${err}`);
+    log.error(F, `reminder: ${reminder}`);
+  }
 }
 
-/**
- *  Delete reminder
- * @param {string} value
- */
 export async function reminderDel(
   id?:string,
   userId?:string,
@@ -236,18 +238,25 @@ export async function reminderDel(
 // log.debug(F, `reminderDel started with: id: ${id}`);
   if (env.POSTGRES_DB_URL === undefined) return;
   if (userId) {
-    await db<UserReminders>('user_reminders')
-      .where('user_id', userId)
-      .del();
+    try {
+      await db<UserReminders>('user_reminders')
+        .where('user_id', userId)
+        .del();
+    } catch (err) {
+      log.error(F, `Error deleting reminders: ${err}`);
+      log.error(F, `userId: ${userId} | id: ${id}`);
+    }
   }
-  await db<UserReminders>('user_reminders')
-    .delete()
-    .where('id', id);
+  try {
+    await db<UserReminders>('user_reminders')
+      .delete()
+      .where('id', id);
+  } catch (err) {
+    log.error(F, `Error deleting reminder: ${err}`);
+    log.error(F, `userId: ${userId} | id: ${id}`);
+  }
 }
 
-/**
- *  Get tickets
- */
 export async function ticketGet(
   user_id?:string,
 ):Promise<UserTickets[] | UserTickets | undefined> {
@@ -255,72 +264,85 @@ export async function ticketGet(
   if (env.POSTGRES_DB_URL === undefined) {
     return [] as UserTickets[];
   }
+  let tickets = {} as UserTickets[] | UserTickets | undefined;
   if (user_id) {
-    return db<UserTickets>('user_tickets')
-      .select('*')
-      .where('user_id', user_id)
-      .where('type', 'TRIPSIT')
-      .andWhereNot('status', 'CLOSED')
-      .andWhereNot('status', 'RESOLVED')
-      .andWhereNot('status', 'DELETED')
-      .first();
+    try {
+      tickets = await db<UserTickets>('user_tickets')
+        .select('*')
+        .where('user_id', user_id)
+        .where('type', 'TRIPSIT')
+        .andWhereNot('status', 'CLOSED')
+        .andWhereNot('status', 'RESOLVED')
+        .andWhereNot('status', 'DELETED')
+        .first();
+    } catch (err) {
+      log.error(F, `Error getting tickets: ${err}`);
+      log.error(F, `user_id: ${user_id}`);
+    }
+  }
+  try {
+    tickets = await db<UserTickets>('user_tickets')
+      .select(
+        db.ref('id'),
+        db.ref('archived_at'),
+        db.ref('status'),
+        db.ref('thread_id'),
+        db.ref('user_id'),
+        db.ref('deleted_at'),
+      );
+  } catch (err) {
+    log.error(F, `Error getting tickets: ${err}`);
+    log.error(F, `user_id: ${user_id}`);
   }
 
-  return db<UserTickets>('user_tickets')
-    .select(
-      db.ref('id'),
-      db.ref('archived_at'),
-      db.ref('status'),
-      db.ref('thread_id'),
-      db.ref('user_id'),
-      db.ref('deleted_at'),
-    );
+  return tickets;
 }
 
-/**
- *  Delete ticket
- * @param {string | null} userId
- * @param {string | null} threadId
- */
 export async function ticketDel(
   id:string,
 ):Promise<void> {
 // log.debug(F, `ticketDel started with: id: ${id}`);
   if (env.POSTGRES_DB_URL === undefined) return;
-  await db<UserTickets>('user_reminders')
-    .delete()
-    .where('id', id);
+  try {
+    await db<UserTickets>('user_reminders')
+      .delete()
+      .where('id', id);
+  } catch (err) {
+    log.error(F, `Error deleting ticket: ${err}`);
+    log.error(F, `id: ${id}`);
+  }
 }
 
-/**
- *  Update ticket
- * @param {string | null} userId
- * @param {string | null} threadId
- */
 export async function ticketUpdate(
   value:UserTickets,
 ):Promise<void> {
   // log.debug(F, `ticketUpdate started with: value: ${JSON.stringify(value)}`);
   if (env.POSTGRES_DB_URL === undefined) return;
-  await db<UserTickets>('user_tickets')
-    .insert(value)
-    .onConflict('id')
-    .merge();
+  try {
+    await db<UserTickets>('user_tickets')
+      .insert(value)
+      .onConflict('id')
+      .merge();
+  } catch (err) {
+    log.error(F, `Error updating ticket: ${err}`);
+    log.error(F, `value: ${value}`);
+  }
 }
 
-/**
- *  Update ticket
- * @param {string | null} userId
- * @param {string | null} threadId
- */
 export async function usersGetMindsets():Promise<Users[]> {
 // log.debug(F, 'usersGetMindsets started');
   if (env.POSTGRES_DB_URL === undefined) {
     return [] as Users[];
   }
-  return db<Users>('users')
-    .select('*')
-    .whereNotNull('mindset_role_expires_at');
+  let users = [] as Users[];
+  try {
+    users = await db<Users>('users')
+      .select('*')
+      .whereNotNull('mindset_role_expires_at');
+  } catch (err) {
+    log.error(F, `Error getting users: ${err}`);
+  }
+  return users;
 }
 
 export async function usersUpdate(
@@ -328,10 +350,15 @@ export async function usersUpdate(
 ):Promise<void> {
 // log.debug(F, `usersUpdate started with: value: ${value}`);
   if (env.POSTGRES_DB_URL === undefined) return;
-  await db<Users>('users')
-    .insert(value)
-    .onConflict('discord_id')
-    .merge();
+  try {
+    await db<Users>('users')
+      .insert(value)
+      .onConflict('discord_id')
+      .merge();
+  } catch (err) {
+    log.error(F, `Error updating user: ${err}`);
+    log.error(F, `value: ${value}`);
+  }
 }
 
 export async function guildUpdate(
@@ -339,10 +366,15 @@ export async function guildUpdate(
 ):Promise<void> {
 // log.debug(F, `guildUpdate started with: value: ${value}`);
   if (env.POSTGRES_DB_URL === undefined) return;
-  await db<DiscordGuilds>('discord_guilds')
-    .insert(value)
-    .onConflict('id')
-    .merge();
+  try {
+    await db<DiscordGuilds>('discord_guilds')
+      .insert(value)
+      .onConflict('id')
+      .merge();
+  } catch (err) {
+    log.error(F, `Error updating guild: ${err}`);
+    log.error(F, `value: ${JSON.stringify(value)}`);
+  }
 }
 
 export async function rssGet(
@@ -352,9 +384,16 @@ export async function rssGet(
   if (env.POSTGRES_DB_URL === undefined) {
     return [] as Rss[];
   }
-  return db<Rss>('rss')
-    .select('*')
-    .where('guild_id', guildId);
+  let rss = [] as Rss[];
+  try {
+    rss = await db<Rss>('rss')
+      .select('*')
+      .where('guild_id', guildId);
+  } catch (err) {
+    log.error(F, `Error getting rss: ${err}`);
+    log.error(F, `guildId: ${guildId}`);
+  }
+  return rss;
 }
 
 export async function rssSet(
@@ -362,10 +401,15 @@ export async function rssSet(
 ):Promise<void> {
 // log.debug(F, 'rssSet started');
   if (env.POSTGRES_DB_URL === undefined) return;
-  await db<Rss>('rss')
-    .insert(value)
-    .onConflict(['guild_id', 'destination'])
-    .merge();
+  try {
+    await db<Rss>('rss')
+      .insert(value)
+      .onConflict(['guild_id', 'destination'])
+      .merge();
+  } catch (err) {
+    log.error(F, `Error setting rss: ${err}`);
+    log.error(F, `value: ${value}`);
+  }
 }
 
 export async function rssDel(
@@ -374,10 +418,15 @@ export async function rssDel(
 ):Promise<void> {
 // log.debug(F, 'rssDel started');
   if (env.POSTGRES_DB_URL === undefined) return;
-  await db<Rss>('rss')
-    .where('guild_id', guild_id)
-    .andWhere('destination', destination)
-    .del();
+  try {
+    await db<Rss>('rss')
+      .where('guild_id', guild_id)
+      .andWhere('destination', destination)
+      .del();
+  } catch (err) {
+    log.error(F, `Error deleting rss: ${err}`);
+    log.error(F, `guild_id: ${guild_id} | destination: ${destination}`);
+  }
 }
 
 export async function incrementPoint(
@@ -387,10 +436,15 @@ export async function incrementPoint(
 ):Promise<void> {
 // log.debug(F, 'incrementPoint started');
   if (env.POSTGRES_DB_URL === undefined) return;
-  await db<Users>('users')
-    .increment(pointType, value)
-    .where('discord_id', userId)
-    .returning('*');
+  try {
+    await db<Users>('users')
+      .increment(pointType, value)
+      .where('discord_id', userId)
+      .returning('*');
+  } catch (err) {
+    log.error(F, `Error incrementing point: ${err}`);
+    log.error(F, `pointType: ${pointType} | userId: ${userId} | value: ${value}`);
+  }
 }
 
 export async function incrementKarma(
@@ -400,10 +454,17 @@ export async function incrementKarma(
 ):Promise<string[]> {
 // log.debug(F, 'incrementKarma started');
   if (env.POSTGRES_DB_URL === undefined) return [];
-  return db<Users>('users')
-    .increment(pointType, value)
-    .where('discord_id', userId)
-    .returning(['karma_received', 'karma_given']);
+  let karma = [] as string[];
+  try {
+    karma = await db<Users>('users')
+      .increment(pointType, value)
+      .where('discord_id', userId)
+      .returning(['karma_received', 'karma_given']);
+  } catch (err) {
+    log.error(F, `Error incrementing karma: ${err}`);
+    log.error(F, `pointType: ${pointType} | userId: ${userId} | value: ${value}`);
+  }
+  return karma;
 }
 
 export async function reactionroleGet(
@@ -412,11 +473,18 @@ export async function reactionroleGet(
 ):Promise<ReactionRoles | undefined> {
 // log.debug(F, 'reactionroleGet started');
   if (env.POSTGRES_DB_URL === undefined) return undefined;
-  return db<ReactionRoles>('reaction_roles')
-    .select('*')
-    .where('message_id', messageId)
-    .andWhere('reaction_id', reactionId)
-    .first();
+  let reactionRole = undefined as ReactionRoles | undefined;
+  try {
+    reactionRole = await db<ReactionRoles>('reaction_roles')
+      .select('*')
+      .where('message_id', messageId)
+      .andWhere('reaction_id', reactionId)
+      .first();
+  } catch (err) {
+    log.error(F, `Error getting reaction role: ${err}`);
+    log.error(F, `messageId: ${messageId} | reactionId: ${reactionId}`);
+  }
+  return reactionRole;
 }
 
 export async function experienceGet(
@@ -433,47 +501,77 @@ export async function experienceGet(
   if (category) {
     if (type) {
       if (userId) {
-        return db<UserExperience>('user_experience')
-          .where('user_id', userId)
-          .andWhere('category', category)
+        try {
+          return await db<UserExperience>('user_experience')
+            .where('user_id', userId)
+            .andWhere('category', category)
+            .andWhere('type', type)
+            .orderBy('total_points', 'desc')
+            .limit(limit);
+        } catch (err) {
+          log.error(F, `Error getting experience: ${err}`);
+          log.error(F, `userId: ${userId} | category: ${category} | type: ${type} | limit: ${limit}`);
+        }
+      }
+      try {
+        return await db<UserExperience>('user_experience')
+          .select('*')
+          .where('category', category)
           .andWhere('type', type)
           .orderBy('total_points', 'desc')
           .limit(limit);
+      } catch (err) {
+        log.error(F, `Error getting experience: ${err}`);
+        log.error(F, `userId: ${userId} | category: ${category} | type: ${type} | limit: ${limit}`);
       }
-      return db<UserExperience>('user_experience')
-        .select('*')
-        .where('category', category)
-        .andWhere('type', type)
-        .orderBy('total_points', 'desc')
-        .limit(limit);
     }
     if (userId) {
-      return db<UserExperience>('user_experience')
-        .where('user_id', userId)
-        .andWhere('category', category)
+      try {
+        return await db<UserExperience>('user_experience')
+          .where('user_id', userId)
+          .andWhere('category', category)
+          .orderBy('total_points', 'desc')
+          .limit(limit);
+      } catch (err) {
+        log.error(F, `Error getting experience: ${err}`);
+        log.error(F, `userId: ${userId} | category: ${category} | type: ${type} | limit: ${limit}`);
+      }
+    }
+    try {
+      return await db<UserExperience>('user_experience')
+        .select('*')
+        .where('category', category)
         .orderBy('total_points', 'desc')
         .limit(limit);
+    } catch (err) {
+      log.error(F, `Error getting experience: ${err}`);
+      log.error(F, `userId: ${userId} | category: ${category} | type: ${type} | limit: ${limit}`);
     }
-    return db<UserExperience>('user_experience')
-      .select('*')
-      .where('category', category)
-      .orderBy('total_points', 'desc')
-      .limit(limit);
   }
   if (userId) {
     if (type) {
-      return db<UserExperience>('user_experience')
+      try {
+        return await db<UserExperience>('user_experience')
+          .select('*')
+          .where('user_id', userId)
+          .andWhere('type', type)
+          .orderBy('total_points', 'desc')
+          .limit(limit);
+      } catch (err) {
+        log.error(F, `Error getting experience: ${err}`);
+        log.error(F, `userId: ${userId} | category: ${category} | type: ${type} | limit: ${limit}`);
+      }
+    }
+    try {
+      return await db<UserExperience>('user_experience')
         .select('*')
         .where('user_id', userId)
-        .andWhere('type', type)
         .orderBy('total_points', 'desc')
         .limit(limit);
+    } catch (err) {
+      log.error(F, `Error getting experience: ${err}`);
+      log.error(F, `userId: ${userId} | category: ${category} | type: ${type} | limit: ${limit}`);
     }
-    return db<UserExperience>('user_experience')
-      .select('*')
-      .where('user_id', userId)
-      .orderBy('total_points', 'desc')
-      .limit(limit);
   }
   if (type) {
     // return (await db<UserExperience>('user_experience')
@@ -485,16 +583,28 @@ export async function experienceGet(
     //   .sum({ total_points: 'total_points' })
     //   .orderBy('total_points', 'desc')
     //   .limit(limit)) as UserExperience[];
-    return db<UserExperience>('user_experience')
+    try {
+      return await db<UserExperience>('user_experience')
+        .select('*')
+        .where('type', type)
+        .orderBy('total_points', 'desc')
+        .limit(limit);
+    } catch (err) {
+      log.error(F, `Error getting experience: ${err}`);
+      log.error(F, `userId: ${userId} | category: ${category} | type: ${type} | limit: ${limit}`);
+    }
+  }
+  let total = [] as UserExperience[];
+  try {
+    total = await db<UserExperience>('user_experience')
       .select('*')
-      .where('type', type)
       .orderBy('total_points', 'desc')
       .limit(limit);
+  } catch (err) {
+    log.error(F, `Error getting experience: ${err}`);
+    log.error(F, `userId: ${userId} | category: ${category} | type: ${type} | limit: ${limit}`);
   }
-  return db<UserExperience>('user_experience')
-    .select('*')
-    .orderBy('total_points', 'desc')
-    .limit(limit);
+  return total;
   // return (await db<UserExperience>('user_experience')
   //   .select(db.ref('user_id'))
   //   .whereNot('category', 'TOTAL')
@@ -504,8 +614,6 @@ export async function experienceGet(
   //   .orderBy('total_points', 'desc')
   //   .limit(limit)) as UserExperience[];
 }
-
-type LeaderboardList = { discord_id: string, total_points: number }[];
 
 export async function experienceGetTop(
   limitInput?:number,
@@ -517,50 +625,72 @@ export async function experienceGetTop(
   const limit = limitInput || 1000000;
   if (category) {
     if (type) { // NOSONAR
+      try {
+        return (await db<{ discord_id: string, total_points: number }>('user_experience')
+          .join('users', 'users.id', '=', 'user_experience.user_id') // eslint-disable-line sonarjs/no-duplicate-string
+          .select(db.ref('users.discord_id')) // eslint-disable-line sonarjs/no-duplicate-string
+          .whereNot('user_experience.category', 'TOTAL')// eslint-disable-line sonarjs/no-duplicate-string
+          .andWhereNot('user_experience.category', 'IGNORED')
+          .andWhere('user_experience.category', category)
+          .andWhere('user_experience.type', type)
+          .groupBy(['users.discord_id'])
+          .sum({ total_points: 'user_experience.total_points' })// eslint-disable-line sonarjs/no-duplicate-string
+          .orderBy('total_points', 'desc')
+          .limit(limit)) as LeaderboardList;
+      } catch (err) {
+        log.error(F, `Error getting experience: ${err}`);
+        log.error(F, `category: ${category} | type: ${type} | limit: ${limit}`);
+      }
+    }
+    try {
       return (await db<{ discord_id: string, total_points: number }>('user_experience')
-        .join('users', 'users.id', '=', 'user_experience.user_id') // eslint-disable-line sonarjs/no-duplicate-string
-        .select(db.ref('users.discord_id')) // eslint-disable-line sonarjs/no-duplicate-string
-        .whereNot('user_experience.category', 'TOTAL')// eslint-disable-line sonarjs/no-duplicate-string
+        .join('users', 'users.id', '=', 'user_experience.user_id')
+        .select(db.ref('users.discord_id'))
+        .whereNot('user_experience.category', 'TOTAL')
         .andWhereNot('user_experience.category', 'IGNORED')
         .andWhere('user_experience.category', category)
-        .andWhere('user_experience.type', type)
         .groupBy(['users.discord_id'])
-        .sum({ total_points: 'user_experience.total_points' })// eslint-disable-line sonarjs/no-duplicate-string
+        .sum({ total_points: 'user_experience.total_points' })
         .orderBy('total_points', 'desc')
         .limit(limit)) as LeaderboardList;
+    } catch (err) {
+      log.error(F, `Error getting experience: ${err}`);
+      log.error(F, `category: ${category} | type: ${type} | limit: ${limit}`);
     }
-    return (await db<{ discord_id: string, total_points: number }>('user_experience')
-      .join('users', 'users.id', '=', 'user_experience.user_id')
-      .select(db.ref('users.discord_id'))
-      .whereNot('user_experience.category', 'TOTAL')
-      .andWhereNot('user_experience.category', 'IGNORED')
-      .andWhere('user_experience.category', category)
-      .groupBy(['users.discord_id'])
-      .sum({ total_points: 'user_experience.total_points' })
-      .orderBy('total_points', 'desc')
-      .limit(limit)) as LeaderboardList;
   }
   if (type) {
-    return (await db<{ discord_id: string, total_points: number }>('user_experience')
+    try {
+      return (await db<{ discord_id: string, total_points: number }>('user_experience')
+        .join('users', 'users.id', '=', 'user_experience.user_id')
+        .select(db.ref('users.discord_id'))
+        .whereNot('user_experience.category', 'TOTAL')
+        .andWhereNot('user_experience.category', 'IGNORED')
+        .andWhere('user_experience.type', type)
+        .groupBy(['users.discord_id'])
+        .sum({ total_points: 'user_experience.total_points' })
+        .orderBy('total_points', 'desc')
+        .limit(limit)) as LeaderboardList;
+    } catch (err) {
+      log.error(F, `Error getting experience: ${err}`);
+      log.error(F, `category: ${category} | type: ${type} | limit: ${limit}`);
+    }
+  }
+  let total = [] as LeaderboardList;
+  try {
+    total = (await db<{ discord_id: string, total_points: number }>('user_experience')
       .join('users', 'users.id', '=', 'user_experience.user_id')
       .select(db.ref('users.discord_id'))
       .whereNot('user_experience.category', 'TOTAL')
       .andWhereNot('user_experience.category', 'IGNORED')
-      .andWhere('user_experience.type', type)
       .groupBy(['users.discord_id'])
       .sum({ total_points: 'user_experience.total_points' })
       .orderBy('total_points', 'desc')
       .limit(limit)) as LeaderboardList;
+  } catch (err) {
+    log.error(F, `Error getting experience: ${err}`);
+    log.error(F, `category: ${category} | type: ${type} | limit: ${limit}`);
   }
-  return (await db<{ discord_id: string, total_points: number }>('user_experience')
-    .join('users', 'users.id', '=', 'user_experience.user_id')
-    .select(db.ref('users.discord_id'))
-    .whereNot('user_experience.category', 'TOTAL')
-    .andWhereNot('user_experience.category', 'IGNORED')
-    .groupBy(['users.discord_id'])
-    .sum({ total_points: 'user_experience.total_points' })
-    .orderBy('total_points', 'desc')
-    .limit(limit)) as LeaderboardList;
+  return total;
 }
 
 export async function experienceDel(
@@ -568,9 +698,16 @@ export async function experienceDel(
 ):Promise<UserExperience[]> {
 // log.debug(F, 'experienceDel started');
   if (env.POSTGRES_DB_URL === undefined) return [];
-  return db<UserExperience>('user_experience')
-    .where('user_id', userId)
-    .del();
+  let total = [] as UserExperience[];
+  try {
+    total = await db<UserExperience>('user_experience')
+      .where('user_id', userId)
+      .del();
+  } catch (err) {
+    log.error(F, `Error deleting experience: ${err}`);
+    log.error(F, `userId: ${userId}`);
+  }
+  return total;
 }
 
 export async function experienceUpdate(
@@ -578,10 +715,15 @@ export async function experienceUpdate(
 ):Promise<void> {
 // log.debug(F, 'experienceUpdate started');
   if (env.POSTGRES_DB_URL === undefined) return;
-  await db<UserExperience>('user_experience')
-    .insert(data)
-    .onConflict(['user_id', 'category', 'type'])
-    .merge();
+  try {
+    await db<UserExperience>('user_experience')
+      .insert(data)
+      .onConflict(['user_id', 'category', 'type'])
+      .merge();
+  } catch (err) {
+    log.error(F, `Error updating experience: ${err}`);
+    log.error(F, `data: ${JSON.stringify(data)}`);
+  }
 }
 
 export async function idoseGet(
@@ -589,9 +731,16 @@ export async function idoseGet(
 ):Promise<UserDrugDoses[]> {
 // log.debug(F, 'idoseGet started');
   if (env.POSTGRES_DB_URL === undefined) return [];
-  return db<UserDrugDoses>('user_drug_doses')
-    .select('*')
-    .where('user_id', userId);
+  const response = [] as UserDrugDoses[];
+  try {
+    return await db<UserDrugDoses>('user_drug_doses')
+      .select('*')
+      .where('user_id', userId);
+  } catch (err) {
+    log.error(F, `Error getting user drug doses: ${err}`);
+    log.error(F, `userId: ${userId}`);
+  }
+  return response;
 }
 
 export async function idoseSet(
@@ -599,8 +748,13 @@ export async function idoseSet(
 ):Promise<void> {
 // log.debug(F, 'idoseSet started');
   if (env.POSTGRES_DB_URL === undefined) return;
-  await db<UserDrugDoses>('user_drug_doses')
-    .insert(data);
+  try {
+    await db<UserDrugDoses>('user_drug_doses')
+      .insert(data);
+  } catch (err) {
+    log.error(F, `Error setting user drug doses: ${err}`);
+    log.error(F, `data: ${JSON.stringify(data)}`);
+  }
 }
 
 export async function idoseDel(
@@ -610,13 +764,25 @@ export async function idoseDel(
 // log.debug(F, 'idoseDel started');
   if (env.POSTGRES_DB_URL === undefined) return [];
   if (userId) {
-    return db<UserDrugDoses>('user_drug_doses')
-      .where('user_id', userId)
-      .del();
+    try {
+      return await db<UserDrugDoses>('user_drug_doses')
+        .where('user_id', userId)
+        .del();
+    } catch (err) {
+      log.error(F, `Error deleting user drug doses: ${err}`);
+      log.error(F, `userId: ${userId}`);
+    }
   }
-  return db<UserDrugDoses>('user_drug_doses')
-    .where('id', id)
-    .del();
+  let response = [] as UserDrugDoses[];
+  try {
+    response = await db<UserDrugDoses>('user_drug_doses')
+      .where('id', id)
+      .del();
+  } catch (err) {
+    log.error(F, `Error deleting user drug doses: ${err}`);
+    log.error(F, `id: ${id}`);
+  }
+  return response;
 }
 
 export async function drugGet(
@@ -625,17 +791,30 @@ export async function drugGet(
 ):Promise<DrugNames[]> {
 // log.debug(F, 'drugGet started');
   if (env.POSTGRES_DB_URL === undefined) return [];
+  let response = [] as DrugNames[];
   if (drugName) {
-    return db<DrugNames>('drug_names')
-      .select('*')
-      .where('name', drugName)
-      .orWhere('name', drugName.toLowerCase())
-      .orWhere('name', drugName.toUpperCase());
+    try {
+      response = await db<DrugNames>('drug_names')
+        .select('*')
+        .where('name', drugName)
+        .orWhere('name', drugName.toLowerCase())
+        .orWhere('name', drugName.toUpperCase());
+    } catch (err) {
+      log.error(F, `Error getting drug: ${err}`);
+      log.error(F, `drugName: ${drugName}`);
+    }
   }
-  return db<DrugNames>('drug_names')
-    .select('*')
-    .where('drug_id', drugId)
-    .andWhere('is_default', true);
+  try {
+    response = await db<DrugNames>('drug_names')
+      .select('*')
+      .where('drug_id', drugId)
+      .andWhere('is_default', true);
+  } catch (err) {
+    log.error(F, `Error getting drug: ${err}`);
+    log.error(F, `drugId: ${drugId}`);
+  }
+
+  return response;
 }
 
 export async function useractionsGet(
@@ -644,19 +823,33 @@ export async function useractionsGet(
 ):Promise<UserActions[]> {
 // log.debug(F, 'useractionsGet started');
   if (env.POSTGRES_DB_URL === undefined) return [];
+
+  let response = [] as UserActions[];
   if (type) {
-    return db<UserActions>('user_actions')
+    try {
+      response = await db<UserActions>('user_actions')
+        .select('*')
+        .where('user_id', userId)
+        .andWhere('type', type)
+        .andWhere('repealed_at', null)
+        .orderBy('created_at', 'desc');
+    } catch (err) {
+      log.error(F, `Error getting user actions: ${err}`);
+      log.error(F, `userId: ${userId}`);
+      log.error(F, `type: ${type}`);
+    }
+  }
+  try {
+    response = await db<UserActions>('user_actions')
       .select('*')
       .where('user_id', userId)
-      .andWhere('type', type)
-      .andWhere('repealed_at', null)
       .orderBy('created_at', 'desc');
+  } catch (err) {
+    log.error(F, `Error getting user actions: ${err}`);
+    log.error(F, `userId: ${userId}`);
   }
 
-  return db<UserActions>('user_actions')
-    .select('*')
-    .where('user_id', userId)
-    .orderBy('created_at', 'desc');
+  return response;
 }
 
 export async function useractionsSet(
@@ -664,10 +857,15 @@ export async function useractionsSet(
 ):Promise<void> {
 // log.debug(F, 'useractionsGet started');
   if (env.POSTGRES_DB_URL === undefined) return;
-  await db<UserActions>('user_actions')
-    .insert(data)
-    .onConflict('id')
-    .merge();
+  try {
+    await db<UserActions>('user_actions')
+      .insert(data)
+      .onConflict('id')
+      .merge();
+  } catch (err) {
+    log.error(F, `Error setting user actions: ${err}`);
+    log.error(F, `data: ${JSON.stringify(data)}`);
+  }
 }
 
 export async function personaGet(
@@ -675,10 +873,17 @@ export async function personaGet(
 ):Promise<Personas[]> {
 // log.debug(F, 'useractionsGet started');
   if (env.POSTGRES_DB_URL === undefined) return [];
-  return db<Personas>('personas')
-    .select('*')
-    .where('user_id', userId)
-    .orderBy('created_at', 'desc');
+  let response = [] as Personas[];
+  try {
+    response = await db<Personas>('personas')
+      .select('*')
+      .where('user_id', userId)
+      .orderBy('created_at', 'desc');
+  } catch (err) {
+    log.error(F, `Error getting personas: ${err}`);
+    log.error(F, `userId: ${userId}`);
+  }
+  return response;
 }
 
 export async function personaSet(
@@ -686,10 +891,15 @@ export async function personaSet(
 ):Promise<void> {
 // log.debug(F, 'useractionsGet started');
   if (env.POSTGRES_DB_URL === undefined) return;
-  await db<Personas>('personas')
-    .insert(data)
-    .onConflict('user_id')
-    .merge();
+  try {
+    await db<Personas>('personas')
+      .insert(data)
+      .onConflict('user_id')
+      .merge();
+  } catch (err) {
+    log.error(F, `Error setting personas: ${err}`);
+    log.error(F, `data: ${JSON.stringify(data)}`);
+  }
 }
 
 export async function inventoryGet(
@@ -697,9 +907,16 @@ export async function inventoryGet(
 ):Promise<RpgInventory[]> {
 // log.debug(F, 'useractionsGet started');
   if (env.POSTGRES_DB_URL === undefined) return [];
-  return db<RpgInventory>('rpg_inventory')
-    .select('*')
-    .where('persona_id', personaId);
+  let response = [] as RpgInventory[];
+  try {
+    response = await db<RpgInventory>('rpg_inventory')
+      .select('*')
+      .where('persona_id', personaId);
+  } catch (err) {
+    log.error(F, `Error getting inventory: ${err}`);
+    log.error(F, `personaId: ${personaId}`);
+  }
+  return response;
 }
 
 export async function inventorySet(
@@ -707,8 +924,13 @@ export async function inventorySet(
 ):Promise<void> {
 // log.debug(F, 'useractionsGet started');
   if (env.POSTGRES_DB_URL === undefined) return;
-  await db<RpgInventory>('rpg_inventory')
-    .insert(data)
-    .onConflict(['persona_id', 'value'])
-    .merge();
+  try {
+    await db<RpgInventory>('rpg_inventory')
+      .insert(data)
+      .onConflict(['persona_id', 'value'])
+      .merge();
+  } catch (err) {
+    log.error(F, `Error setting inventory: ${err}`);
+    log.error(F, `data: ${JSON.stringify(data)}`);
+  }
 }

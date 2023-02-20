@@ -506,6 +506,11 @@ export async function processReactionRole(
   const target = interaction.member as GuildMember;
 
   if (!interaction.guild) return;
+
+  if (!IM) {
+    await interaction.deferReply({ ephemeral: true });
+  }
+
   const { guild } = interaction;
 
   const role = await guild.roles.fetch(RID);
@@ -562,7 +567,7 @@ export async function processReactionRole(
         });
     } else {
       await target.roles.remove(role);
-      await interaction.reply({ content: `Removed role ${role.name}`, ephemeral: true });
+      await interaction.editReply({ content: `Removed role ${role.name}` });
     }
     return;
   }
@@ -581,9 +586,8 @@ export async function processReactionRole(
   if (IM) {
     if (!IC) {
       log.error(F, 'Intro message is true but intro channel is not set');
-      interaction.reply({
+      interaction.editReply({
         content: 'If the user must supply an intro message, you must supply what channel that message is sent!',
-        ephemeral: true,
       });
       return;
     }
@@ -704,7 +708,7 @@ export async function processReactionRole(
   } else if (IC) {
     const channel = await guild.channels.fetch(IC) as TextChannel;
     await target.roles.add(role);
-    await interaction.reply({ content: `Added role ${role.name}`, ephemeral: true });
+    await interaction.editReply({ content: `Added role ${role.name}` });
     // Post intro message to the channel
     channel.send(`${target} has joined as a ${role.name}, please welcome them!`);
   } else {
@@ -717,12 +721,12 @@ export async function processReactionRole(
     if (premiumColorIds.includes(role.id) && !isMod && !isTs && !isBooster && !isPatron) {
       // log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium
       //       (isMod: ${isMod}, isTs: ${isTs} isBooster: ${isBooster}, isPatron: ${isPatron})`);
-      interaction.reply({ content: 'You do not have permission to use that role!', ephemeral: true });
+      interaction.editReply({ content: 'You do not have permission to use that role!' });
       return;
     }
 
     await target.roles.add(role);
-    await interaction.reply({ content: `Added role ${role.name}`, ephemeral: true });
+    await interaction.editReply({ content: `Added role ${role.name}` });
 
     // Remove the other color roles if you're adding a color role
     if (colorIds.includes(role.id)) {

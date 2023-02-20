@@ -55,7 +55,7 @@ async function checkVoice() {
 
     // For each of the above types, check each voice channel in the category
     categoryDefs.forEach(async categoryDef => {
-      // log.debug(F, `Checking ${categoryDef.type} voice channels...`);
+      // log.debug(F, `Checking ${categoryDef.category} voice channels...`);
       const category = await client.channels.fetch(categoryDef.id) as CategoryChannel;
       category.children.cache.forEach(async channel => {
         // log.debug(F, `Checking ${channel.name}...`);

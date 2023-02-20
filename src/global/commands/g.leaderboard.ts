@@ -11,6 +11,7 @@ import {
 export default getLeaderboard;
 
 // const F = f(__filename);
+// const F = f(__filename);
 
 type LeaderboardList = { discord_id: string, total_points: number }[];
 

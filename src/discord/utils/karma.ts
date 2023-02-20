@@ -34,6 +34,10 @@ export async function karma(message: Message): Promise<void> {
     //   return event.reply('Don\'t be a Secretive Sally : - )');
     // }
 
-    // message.channel.send(`I would ${match[2]} to ${match[1]}`);
+    // if (match[2] === '++') {
+    //   message.channel.send(`I would upvote ${match[1]}`);
+    // } else {
+    //   message.channel.send(`I would downvote ${match[1]}`);
+    // }
   }
 }

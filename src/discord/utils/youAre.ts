@@ -4,6 +4,8 @@ import {
 
 export default youAre;
 
+const F = f(__filename);
+
 export function valMatch(
   input:string,
   regex:RegExp,
@@ -33,7 +35,10 @@ export async function youAre(message: Message): Promise<void> {
 
   const key = valMatch(content, /(\bis\b|\bare\b)\s+([\w\s\d]*?)(\s+)?(,|\.|\band\b|$)/, 5);
 
-  if (key && key[2] !== '' && (((Math.floor(Math.random() * (101)) / 1) === 1))) {
+  const chance = env.Node_ENV === 'production' ? (Math.floor(Math.random() * (101)) / 1) : 1;
+
+  log.debug(F, `Chance: ${chance}`);
+  if (key && key[2] !== '' && ((chance === 1))) {
     message.channel.send(`${message.member?.displayName}: You're ${key[2]}.`);
   }
 }

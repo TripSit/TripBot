@@ -21,7 +21,7 @@ import {
 //   env.ROLE_SOBER,
 // ];
 
-const F = f(__filename);
+// const F = f(__filename);
 
 export default guildMemberUpdate;
 
@@ -30,7 +30,7 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
   async execute(oldMember, newMember) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (newMember.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.info(F, `${newMember} was updated`);
+    // log.info(F, `${newMember} was updated`);
 
     const oldRoles = oldMember.roles.cache.map(role => role.id);
 

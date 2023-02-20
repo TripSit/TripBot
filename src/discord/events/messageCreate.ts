@@ -43,7 +43,7 @@ export const messageCreate: MessageCreateEvent = {
       return;
     }
 
-    // log.debug(F, `Message: ${JSON.stringify(message, null, 2)}!`);
+    // log.debug(F, `Message: ${JSON.stringify(message, null, 2)}`);
 
     // Disabled for testing
     // thoughtPolice(message);

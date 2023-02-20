@@ -30,10 +30,19 @@ async function getInvites(client: Client) {
   client.guilds.fetch();
   client.guilds.cache.forEach(async (guild:Guild) => {
     if (guild.id !== env.DISCORD_GUILD_ID) return;
-    // Fetch all Guild Invites
-    const firstInvites = await guild.invites.fetch();
-    // Set the key as Guild ID, and create a map which has the invite code, and the number of uses
-    global.guildInvites.set(guild.id, new Collection(firstInvites.map((invite:Invite) => [invite.code, invite.uses])));
+    const perms = await checkGuildPermissions(guild, [
+      'ManageGuild' as PermissionResolvable,
+    ]);
+
+    if (perms.hasPermission) {
+      // Fetch all Guild Invites
+      const firstInvites = await guild.invites.fetch();
+      // Set the key as Guild ID, and create a map which has the invite code, and the number of uses
+      global.guildInvites.set(guild.id, new Collection(firstInvites.map((invite:Invite) => [invite.code, invite.uses])));
+    } else {
+      const guildOwner = await guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${guild} so I can fetch invites!` }); // eslint-disable-line
+    }
   });
 }
 

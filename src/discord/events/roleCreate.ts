@@ -1,4 +1,5 @@
 import {
+  PermissionResolvable,
   TextChannel,
 } from 'discord.js';
 import {
@@ -7,6 +8,7 @@ import {
 import {
   RoleCreateEvent,
 } from '../@types/eventDef';
+import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
 
 const F = f(__filename);
 
@@ -21,6 +23,17 @@ export const roleCreate: RoleCreateEvent = {
     if (role.guild.id !== env.DISCORD_GUILD_ID) return;
     log.info(F, `Role ${role.name} was created.`);
 
+    const perms = await checkGuildPermissions(role.guild, [
+      'ViewAuditLog' as PermissionResolvable,
+    ]);
+
+    if (!perms.hasPermission) {
+      const guildOwner = await role.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${role.guild} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${perms.permission} in ${role.guild}!`);
+      return;
+    }
+
     const fetchedLogs = await role.guild.fetchAuditLogs({
       limit: 1,
       type: AuditLogEvent.RoleCreate,
@@ -29,11 +42,21 @@ export const roleCreate: RoleCreateEvent = {
     // Since there's only 1 audit log entry in this collection, grab the first one
     const auditLog = fetchedLogs.entries.first();
 
-    const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const channel = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const channelPerms = await checkChannelPermissions(channel, [
+      'ViewChannel' as PermissionResolvable,
+      'SendMessages' as PermissionResolvable,
+    ]);
+    if (!channelPerms.hasPermission) {
+      const guildOwner = await channel.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${channel} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${channelPerms.permission} in ${channel}!`);
+      return;
+    }
 
     // Perform a coherence check to make sure that there's *something*
     if (!auditLog) {
-      await auditlog.send(`${role.name} was created, but no relevant audit logs were found.`);
+      await channel.send(`${role.name} was created, but no relevant audit logs were found.`);
       return;
     }
 
@@ -41,6 +64,6 @@ export const roleCreate: RoleCreateEvent = {
       ? `Channel ${role.name} was created by ${auditLog.executor.tag}.`
       : `Channel ${role.name} was created, but the audit log was inconclusive.`;
 
-    await auditlog.send(response);
+    await channel.send(response);
   },
 };

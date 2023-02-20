@@ -6,6 +6,7 @@ import {
   PublicThreadChannel,
   PrivateThreadChannel,
   NewsChannel,
+  GuildBasedChannel,
 } from 'discord.js';
 
 const F = 'check'; // eslint-disable-line
@@ -191,7 +192,7 @@ export async function checkGuildPermissions(
  * @return {Promise<boolean>}
  */
 export async function checkChannelPermissions(
-  channel: TextChannel | PublicThreadChannel | PrivateThreadChannel | NewsChannel,
+  channel: TextChannel | PublicThreadChannel | PrivateThreadChannel | NewsChannel | GuildBasedChannel,
   permissionList:PermissionResolvable[],
 ):Promise<{
     hasPermission: boolean,

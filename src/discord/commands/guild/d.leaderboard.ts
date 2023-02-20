@@ -63,10 +63,18 @@ export const dLeaderboard: SlashCommand = {
         { name: 'Development', value: 'Developer' },
         { name: 'Team Tripsit', value: 'Team' },
         { name: 'Ignored', value: 'Ignored' },
+        { name: 'Total', value: 'Total' },
+        { name: 'General', value: 'General' },
+        { name: 'Tripsitter', value: 'Tripsitter' },
+        { name: 'Developer', value: 'Development' },
+        { name: 'Team Tripsit', value: 'Team' },
+        { name: 'Ignored', value: 'Ignored' },
       ))
     .addStringOption(option => option.setName('type')
       .setDescription('What type of experience? (Default: Text)')
       .addChoices(
+        { name: 'Text', value: 'Text' },
+        { name: 'Voice', value: 'Voice' },
         { name: 'Text', value: 'Text' },
         { name: 'Voice', value: 'Voice' },
       )),
@@ -269,6 +277,12 @@ export const dLeaderboard: SlashCommand = {
         } else if (rankPositions === 10) {
           context.translate(614, 342);
         }
+
+        // prune null values, add rank #, and limit to 10
+        const filteredList = descriptionText
+          .filter(value => value !== null)
+          .map((value, index) => `#${index + 1} ${value}`)
+          .slice(0, 20);
 
         context.fillStyle = cardLightColor;
         context.beginPath();

@@ -13,6 +13,34 @@ const helpCounter = new Map<string, number>();
 
 export default messageCommand;
 
+const sadStuff = [
+  ':(',
+  ':c',
+  ':<',
+  ':[',
+  '=(',
+  '=c',
+  '=[',
+  '=<',
+  '😦',
+  '😢',
+  '😭',
+  '😞',
+  '😔',
+  '😕',
+  '😟',
+  '😣',
+  '😖',
+  '😫',
+  '😩',
+  '😤',
+  '😠',
+  '😡',
+  '😶',
+  '😐',
+  '😑',
+];
+
 /**
  * Template
  * @param {Message} message The message that was sent
@@ -78,5 +106,26 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       '*beeps quietly*',
     ];
     await message.channel.send(responses[Math.floor(Math.random() * responses.length)]);
+  } else if (
+    (message.mentions.has(message.client.user) || sadStuff.includes(message.cleanContent.toLowerCase()))
+    && message.channel.type !== ChannelType.DM) {
+    if (message.author.bot) {
+      // log.debug(F, Ignoring bot interaction);
+      return;
+    }
+    const heartEmojis = [
+      '❤', '🧡', '💛', '💚', '💙', '💜',
+      '💝', '💖', '💗', '💘', '💕', '💞', '💓', '💟', '❣',
+    ];
+
+    const heartPrefix = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+    const heartSuffix = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+
+    const responsesHugs = [
+      `${heartPrefix} *digitally hugs* ${heartSuffix}`,
+      `${heartPrefix} *hugs softly* ${heartSuffix}`,
+      `${heartPrefix} *sends virtual hug* ${heartSuffix}`,
+    ];
+    await message.channel.send(responsesHugs[Math.floor(Math.random() * responsesHugs.length)]);
   }
 }
