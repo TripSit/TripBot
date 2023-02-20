@@ -4,7 +4,7 @@ import {
 
 export default youAre;
 
-const F = f(__filename);
+// const F = f(__filename);
 
 export function valMatch(
   input:string,
@@ -37,7 +37,7 @@ export async function youAre(message: Message): Promise<void> {
 
   // const chance = env.Node_ENV === 'production' ?  : 1;
 
-  log.debug(F, `Chance: ${chance}`);
+  // log.debug(F, `Chance: ${chance}`);
   if (key && key[2] !== '' && (((Math.floor(Math.random() * (101)) / 1) === 1))) {
     message.channel.send(`${message.member?.displayName}: You're ${key[2]}.`);
   }
