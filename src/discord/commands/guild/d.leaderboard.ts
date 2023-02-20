@@ -278,12 +278,6 @@ export const dLeaderboard: SlashCommand = {
           context.translate(614, 342);
         }
 
-        // prune null values, add rank #, and limit to 10
-        const filteredList = descriptionText
-          .filter(value => value !== null)
-          .map((value, index) => `#${index + 1} ${value}`)
-          .slice(0, 20);
-
         context.fillStyle = cardLightColor;
         context.beginPath();
         context.roundRect(0, 0, 289, 51, [19]);
