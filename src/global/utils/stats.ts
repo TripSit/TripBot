@@ -65,10 +65,13 @@ async function checkStats() {
   }
 
   // Determine how many people have the Verified role
+  await tripsitGuild.members.fetch();
   const roleVerified = await tripsitGuild.roles.fetch(env.ROLE_VERIFIED);
+  // log.debug(F, `roleVerified: ${roleVerified?.name} (${roleVerified?.id})`);
+
   if (roleVerified) {
     const { members } = roleVerified;
-    // log.debug(F, `Role verified members: ${members.size}`);
+    log.debug(F, `Role verified members: ${members.size}`);
     const channelVerified = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_VERIFIED);
     if (channelVerified) {
       // log.debug(F, `${members.size} / ${memberCount} = ${(members.size / memberCount) * 10000}`);

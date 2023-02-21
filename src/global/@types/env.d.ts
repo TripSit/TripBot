@@ -170,10 +170,8 @@ declare global {
       ROLE_CONTRIBUTOR: string;
       ROLE_OCCULT: string;
       ROLE_RECOVERY: string;
-      ROLE_MEMBER: string;
       ROLE_DJ: string;
       ROLE_VERIFIED: string;
-      ROLE_UNVERIFIED: string;
       ROLE_FRANK: string;
       ROLE_ALUMNI: string;
       ROLE_COLLABORATOR: string;

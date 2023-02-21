@@ -29,7 +29,7 @@ export async function verifyButton(interaction:ButtonInteraction): Promise<void>
   const member = await interaction.guild.members.fetch(interaction.user.id);
 
   if (member) {
-    const memberRole = await interaction.guild.roles.fetch(env.ROLE_MEMBER);
+    const memberRole = await interaction.guild.roles.fetch(env.ROLE_VERIFIED);
     let colorValue = 1;
 
     // log.debug(F, `member: ${member.roles.cache}`);
@@ -110,7 +110,7 @@ export async function verifyButton(interaction:ButtonInteraction): Promise<void>
       }
       await channelLounge.send({ embeds: [embed] });
     } else {
-      log.error(F, `memberRole ${env.ROLE_MEMBER} not found`);
+      log.error(F, `verifiedRole ${env.ROLE_VERIFIED} not found`);
       interaction.reply({ content: 'Something went wrong, please make sure the right role exists!' });
     }
   }
