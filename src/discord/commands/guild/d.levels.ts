@@ -334,10 +334,20 @@ export const dLevels: SlashCommand = {
     context.fillText(`#${levelData.TEXT.TOTAL.rank}`, 711, 213);
     context.font = '25px futura';
     startingFontSize = 25;
-    context.font = applyRank(canvasObj, `#${levelData.TEXT.GENERAL.rank}`);
-    context.fillText(`#${levelData.TEXT.GENERAL.rank}`, 711, 284);
-    context.font = applyRank(canvasObj, `#${levelData.VOICE.TOTAL.rank}`);
-    context.fillText(`#${levelData.VOICE.TOTAL.rank}`, 711, 344);
+    if (levelData.TEXT.GENERAL) {
+      context.font = applyRank(canvasObj, `#${levelData.TEXT.GENERAL.rank}`);
+      context.fillText(`#${levelData.TEXT.GENERAL.rank}`, 711, 284);
+    } else {
+      context.font = applyRank(canvasObj, '#0');
+      context.fillText('#0', 711, 284);
+    }
+    if (levelData.VOICE.TOTAL) {
+      context.font = applyRank(canvasObj, `#${levelData.VOICE.TOTAL.rank}`);
+      context.fillText(`#${levelData.VOICE.TOTAL.rank}`, 711, 344);
+    } else {
+      context.font = applyRank(canvasObj, '#0');
+      context.fillText('#0', 711, 344);
+    }
     if (layout > 1 && levelData.TEXT.TRIPSITTER) {
       context.font = applyRank(canvasObj, `#${levelData.TEXT.TRIPSITTER.rank}`);
       context.fillText(`#${levelData.TEXT.TRIPSITTER.rank}`, 711, 404);
