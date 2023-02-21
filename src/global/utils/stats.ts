@@ -71,7 +71,7 @@ async function checkStats() {
 
   if (roleVerified) {
     const { members } = roleVerified;
-    log.debug(F, `Role verified members: ${members.size}`);
+    // log.debug(F, `Role verified members: ${members.size}`);
     const channelVerified = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_VERIFIED);
     if (channelVerified) {
       // log.debug(F, `${members.size} / ${memberCount} = ${(members.size / memberCount) * 10000}`);
