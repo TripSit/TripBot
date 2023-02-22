@@ -119,7 +119,7 @@ async function checkLpm(interaction:ChatInputCommandInteraction) {
       await channel.messages.fetch(); // eslint-disable-line no-await-in-loop
     } catch (error) {
       const channelBotlog = await interaction.guild?.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel; // eslint-disable-line no-await-in-loop, max-len
-      channelBotlog.send(`Error fetching messages in ${channel.name} (${channel.id})`);
+      channelBotlog.send(`Error fetching messages in ${channel.name} (${channel.id}) (${channelId}) (${index}))`);
       return;
     }
     const messages = await channel.messages.fetch({ limit: 100 }); // eslint-disable-line no-await-in-loop
