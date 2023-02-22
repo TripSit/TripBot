@@ -6,6 +6,18 @@ declare global {
   var bootTime: Date; // eslint-disable-line
   var client: Client; // eslint-disable-line
   var announcements: string[]; // eslint-disable-line
+  var lpmDict: LpmDict; // eslint-disable-line
 }
 
 export {};
+
+export type LpmDict = {
+  [key: string]: {
+    position: number;
+    name: string;
+    lpm: number;
+    lph: number;
+    maxLpm: number;
+    maxLph: number;
+  }
+};

@@ -14,6 +14,7 @@ import { runStats } from '../utils/stats'; // eslint-disable-line
 import { runRss } from '../../global/utils/rssCheck';
 import { runVoiceCheck } from '../../global/utils/voiceExp';
 import { startStatusLoop } from '../utils/statusLoop';
+import { runLpm } from '../utils/lpm';
 
 const F = f(__filename);
 
@@ -68,6 +69,7 @@ export const ready: ReadyEvent = {
         runStats(),
         runVoiceCheck(),
         runRss(),
+        runLpm(),
       ]).then(async () => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
         log.info(F, `Discord finished booting in ${bootDuration}s!`);
