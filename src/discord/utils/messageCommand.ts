@@ -52,7 +52,7 @@ export async function messageCommand(message: Message): Promise<void> {
   if (message.guild.id !== env.DISCORD_GUILD_ID) return; // If not in tripsit ignore all messages
   const displayName = message.member ? message.member.displayName : message.author.username;
 
-  log.debug(F, `Message : ${JSON.stringify(message, null, 2)}`);
+  // log.debug(F, `Message : ${JSON.stringify(message, null, 2)}`);
 
   // log.debug(stripIndents`[${PREFIX}] ${displayName} said\
   // ${message.content} in ${(message.channel as GuildTextBasedChannel).name}!`);
