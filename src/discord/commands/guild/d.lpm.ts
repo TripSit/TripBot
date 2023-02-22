@@ -43,8 +43,10 @@ export const dLpm: SlashCommand = {
     function checkTimers() {
       setTimeout(
         async () => {
-          await checkLpm(msg);
-          checkTimers();
+          const anotherOne = await checkLpm(msg);
+          if (anotherOne) {
+            checkTimers();
+          }
         },
         interval,
       );
@@ -106,5 +108,10 @@ async function checkLpm(msg:Message) {
     }
   }
 
-  msg.edit({ embeds: [embed] });
+  try {
+    msg.edit({ embeds: [embed] });
+    return true;
+  } catch (error) {
+    return false;
+  }
 }
