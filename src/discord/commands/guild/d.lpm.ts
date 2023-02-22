@@ -60,25 +60,51 @@ async function checkLpm(msg:Message) {
     .setTitle('Lines per minute')
     .setColor(Colors.Blurple);
 
-  const channel = msg.channel as TextChannel;
-  await channel.messages.fetch();
-  const messages = await channel.messages.fetch({ limit: 100 });
-  const lines = messages.reduce((acc, cur) => {
-    if (cur.author.bot) return acc;
-    return acc + cur.content.split('\n').length;
-  }, 0);
-  if (lines > 0) {
-    const lastMessage = messages.last() as Message;
-    const minutes = (Date.now() - lastMessage.createdTimestamp) / 1000 / 60;
-    const lpm = Math.round((lines / minutes) * 100) / 100;
-    const lph = Math.round((lpm * 60) * 100) / 100;
-    const description = `Out of ${messages.size} messages sent since ${Math.round(minutes)} minutes ago, ${lines} were human lines for ${lpm} LPM or ${lph} LPH`;
-    // log.debug(F, description); // eslint-disable-line max-len
-    embed.setDescription(description); // eslint-disable-line max-len
-    msg.edit({ embeds: [embed] });
-  } else {
-    // log.debug(F, `No human lines found in ${channel.name} in the last two weeks (or ever)`);
-    embed.setDescription(`No human lines found in ${channel.name} in the last two weeks (or ever)`);
-    msg.edit({ embeds: [embed] });
+  const channels = [
+    env.CHANNEL_TRIPSITMETA,
+    env.CHANNEL_TRIPSIT,
+    env.CHANNEL_OPENTRIPSIT1,
+
+    env.CHANNEL_OPENTRIPSIT2,
+    env.CHANNEL_WEBTRIPSIT1,
+    env.CHANNEL_WEBTRIPSIT2,
+
+    env.CHANNEL_LOUNGE,
+    env.CHANNEL_VIPLOUNGE,
+    env.CHANNEL_GOLDLOUNGE,
+
+    env.CHANNEL_SANCTUARY,
+    env.CHANNEL_TREES,
+    env.CHANNEL_OPIATES,
+
+    env.CHANNEL_STIMULANTS,
+    env.CHANNEL_DISSOCIATIVES,
+    env.CHANNEL_PSYCHEDELICS,
+  ];
+
+  for (const channelId of channels) { // eslint-disable-line no-restricted-syntax
+    const channel = await msg.guild?.channels.fetch(channelId) as TextChannel; // eslint-disable-line no-await-in-loop
+    await channel.messages.fetch(); // eslint-disable-line no-await-in-loop
+    const messages = await channel.messages.fetch({ limit: 100 }); // eslint-disable-line no-await-in-loop
+    const lines = messages.reduce((acc, cur) => {
+      if (cur.author.bot) return acc;
+      return acc + cur.content.split('\n').length;
+    }, 0);
+    if (lines > 0) {
+      const lastMessage = messages.last() as Message;
+      const minutes = (Date.now() - lastMessage.createdTimestamp) / 1000 / 60;
+      const lpm = Math.round((lines / minutes) * 100) / 100;
+      const lph = Math.round((lpm * 60) * 100) / 100;
+      embed.addFields(
+        { name: channel.name, value: `${lpm} LPM\n${lph} LPH`, inline: true },
+      );
+      if (channelId === env.CHANNEL_LOUNGE) {
+        const description = `Out of ${messages.size} messages sent since ${Math.round(minutes)} minutes ago, ${lines} were human lines for ${lpm} LPM or ${lph} LPH`;
+        // log.debug(F, description);
+        embed.setDescription(description);
+      }
+    }
   }
+
+  msg.edit({ embeds: [embed] });
 }
