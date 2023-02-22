@@ -63,6 +63,10 @@ async function checkLpm(msg:Message) {
     .setColor(Colors.Blurple);
 
   const channels = [
+    env.CHANNEL_LOUNGE,
+    env.CHANNEL_VIPLOUNGE,
+    env.CHANNEL_GOLDLOUNGE,
+
     env.CHANNEL_TRIPSITMETA,
     env.CHANNEL_TRIPSIT,
     env.CHANNEL_OPENTRIPSIT1,
@@ -71,17 +75,13 @@ async function checkLpm(msg:Message) {
     env.CHANNEL_WEBTRIPSIT1,
     env.CHANNEL_WEBTRIPSIT2,
 
-    env.CHANNEL_LOUNGE,
-    env.CHANNEL_VIPLOUNGE,
-    env.CHANNEL_GOLDLOUNGE,
+    // env.CHANNEL_SANCTUARY,
+    // env.CHANNEL_TREES,
+    // env.CHANNEL_OPIATES,
 
-    env.CHANNEL_SANCTUARY,
-    env.CHANNEL_TREES,
-    env.CHANNEL_OPIATES,
-
-    env.CHANNEL_STIMULANTS,
-    env.CHANNEL_DISSOCIATIVES,
-    env.CHANNEL_PSYCHEDELICS,
+    // env.CHANNEL_STIMULANTS,
+    // env.CHANNEL_DISSOCIATIVES,
+    // env.CHANNEL_PSYCHEDELICS,
   ];
 
   for (const channelId of channels) { // eslint-disable-line no-restricted-syntax
