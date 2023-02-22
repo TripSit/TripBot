@@ -4,8 +4,8 @@ import {
 } from 'discord.js';
 // import { getGuild, guildUpdate } from './knex';
 
-import { embedTemplate } from '../../discord/utils/embedTemplate';
-import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
+import { embedTemplate } from './embedTemplate';
+import { checkChannelPermissions } from './checkPermissions';
 
 const F = f(__filename);
 

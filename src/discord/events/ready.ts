@@ -10,7 +10,7 @@ import { setTimeout } from 'timers/promises';
 import { ReadyEvent } from '../@types/eventDef';
 import { checkGuildPermissions } from '../utils/checkPermissions';
 import { runTimer } from '../../global/utils/timer'; // eslint-disable-line
-import { runStats } from '../../global/utils/stats'; // eslint-disable-line
+import { runStats } from '../utils/stats'; // eslint-disable-line
 import { runRss } from '../../global/utils/rssCheck';
 import { runVoiceCheck } from '../../global/utils/voiceExp';
 import { startStatusLoop } from '../utils/statusLoop';

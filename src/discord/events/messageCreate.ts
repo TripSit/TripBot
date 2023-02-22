@@ -14,32 +14,8 @@ const helpCounter = new Map<string, number>();
 export default messageCommand;
 
 const sadStuff = [
-  'sadface',
-  ':(',
-  ':c',
-  ':<',
-  ':[',
-  '=(',
-  '=c',
-  '=[',
-  '=<',
-  '😦',
-  '😢',
-  '😭',
-  '😞',
-  '😔',
-  '😕',
-  '😟',
-  '😣',
-  '😖',
-  '😫',
-  '😩',
-  '😤',
-  '😠',
-  '😡',
-  '😶',
-  '😐',
-  '😑',
+  '😦', '😢', '😭', '😞', '😔', '😕', '😟', '😣', '😖', '😫', '😩', '😤', '😠', '😡', '😶', '😐', '😑',
+  'sadface', ':(', ':c', ':<', ':[', '=(', '=c', '=[', '=<',
 ];
 
 /**
@@ -88,15 +64,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       await message.channel.send(`Hey ${displayName}, use /help to get a list of commands on discord!`);
     }
   } else if (message.content.startsWith(`_pokes <@${env.DISCORD_CLIENT_ID}>_`)) {
-    const faces = [
-      '( ͡° ͜ʖ ͡°)',
-      'uwu',
-      '😯',
-      '😳',
-      '😘',
-      '🫣',
-      '🤨',
-    ];
+    const faces = ['😯', '😳', '😘', '🫣', '🤨', '( ͡° ͜ʖ ͡°)', 'uwu'];
     await message.channel.send(faces[Math.floor(Math.random() * faces.length)]);
   } else if (
     message.cleanContent.toLowerCase().includes('tripbot')
@@ -105,13 +73,11 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       // log.debug(F, `Ignoring bot interaction`);
       return;
     }
-    const responses = [
-      '*boops quietly*',
-      '*beeps quietly*',
-    ];
+    const responses = ['*boops quietly*', '*beeps quietly*'];
     await message.channel.send(responses[Math.floor(Math.random() * responses.length)]);
   } else if (
-    sadStuff.some(word => (message.cleanContent.includes(word) && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))))
+    sadStuff.some(word => (message.cleanContent.includes(word)
+    && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))))
     && message.channel.type !== ChannelType.DM) {
     if (message.author.bot) return;
     const heartEmojis = [

@@ -2,7 +2,6 @@ import {
   Colors,
   SlashCommandBuilder,
   TextChannel,
-  Message,
   ChatInputCommandInteraction,
   time,
 } from 'discord.js';
@@ -18,23 +17,41 @@ const F = f(__filename);
 const interval = env.NODE_ENV === 'production' ? 1000 * 5 : 1000 * 3;
 
 const channels = [
-  env.CHANNEL_LOUNGE,
-  env.CHANNEL_VIPLOUNGE,
-  env.CHANNEL_GOLDLOUNGE,
+  // env.CATEGORY_HARMREDUCTIONCENTRE,
   env.CHANNEL_TRIPSITMETA,
   env.CHANNEL_TRIPSIT,
   env.CHANNEL_OPENTRIPSIT1,
   env.CHANNEL_OPENTRIPSIT2,
   env.CHANNEL_WEBTRIPSIT1,
   env.CHANNEL_WEBTRIPSIT2,
-
-  // env.CHANNEL_SANCTUARY,
-  // env.CHANNEL_TREES,
-  // env.CHANNEL_OPIATES,
-
-  // env.CHANNEL_STIMULANTS,
-  // env.CHANNEL_DISSOCIATIVES,
-  // env.CHANNEL_PSYCHEDELICS,
+  env.CHANNEL_CLOSEDTRIPSIT,
+  env.CHANNEL_RTRIPSIT,
+  // env.CATEGORY_BACKSTAGE,
+  env.CHANNEL_PETS,
+  env.CHANNEL_FOOD,
+  env.CHANNEL_OCCULT,
+  env.CHANNEL_MUSIC,
+  env.CHANNEL_MEMES,
+  env.CHANNEL_MOVIES,
+  env.CHANNEL_GAMING,
+  env.CHANNEL_SCIENCE,
+  env.CHANNEL_CREATIVE,
+  env.CHANNEL_COMPSCI,
+  env.CHANNEL_REPLICATIONS,
+  env.CHANNEL_PHOTOGRAPHY,
+  env.CHANNEL_RECOVERY,
+  // env.CATEGORY_CAMPGROUND,
+  env.CHANNEL_LOUNGE,
+  env.CHANNEL_VIPLOUNGE,
+  env.CHANNEL_GOLDLOUNGE,
+  env.CHANNEL_SANCTUARY,
+  env.CHANNEL_TREES,
+  env.CHANNEL_OPIATES,
+  env.CHANNEL_STIMULANTS,
+  env.CHANNEL_DEPRESSANTS,
+  env.CHANNEL_DISSOCIATIVES,
+  env.CHANNEL_PSYCHEDELICS,
+  env.CHANNEL_CAMPFIRE,
 ];
 
 export const dLpm: SlashCommand = {
@@ -103,16 +120,15 @@ async function checkLpm(interaction:ChatInputCommandInteraction) {
     const messages = await channel.messages.fetch({ limit: 100 }); // eslint-disable-line no-await-in-loop
     const lines = messages.reduce((acc, cur) => {
       if (cur.author.bot) return acc;
+      if (Date.now() - cur.createdTimestamp > 1000 * 60) return acc;
       return acc + cur.content.split('\n').length;
     }, 0);
+
     if (lines > 0) {
-      const lastMessage = messages.last() as Message;
-      const minutes = (Date.now() - lastMessage.createdTimestamp) / 1000 / 60;
-      const lpm = Math.round((lines / minutes) * 100) / 100;
       descriptions.push({
         position: index,
         name: channel.name,
-        lpm: `${lpm}`,
+        lpm: `${lines}`,
       });
     }
   }
