@@ -10,7 +10,7 @@ const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
 
 // Value in milliseconds (1000 * 60 = 1 minute)
 // This needs to be 5 minutes for production, cuz discord has rate limits
-const interval = env.NODE_ENV === 'production' ? 1000 * 60 * 5 : 1000 * 10;
+const interval = env.NODE_ENV === 'production' ? 1000 * 10 : 1000 * 5;
 
 const channels = [
   // env.CATEGORY_HARMREDUCTIONCENTRE,
