@@ -1,17 +1,12 @@
-// import { stripIndents } from 'common-tags';
 import {
   experienceGetTop,
 } from '../utils/knex';
-// import { getTotalLevel } from '../utils/experience';
 import {
   ExperienceCategory,
   ExperienceType,
 } from '../@types/database';
 
 export default getLeaderboard;
-
-// const F = f(__filename);
-// const F = f(__filename);
 
 type LeaderboardList = { discord_id: string, total_points: number }[];
 
@@ -68,6 +63,5 @@ export async function getLeaderboard():Promise<LeaderboardData> {
   leaderboard.VOICE.TEAM = await experienceGetTop(undefined, 'TEAM' as ExperienceCategory, 'VOICE' as ExperienceType);
   leaderboard.VOICE.IGNORED = await experienceGetTop(undefined, 'IGNORED' as ExperienceCategory, 'VOICE' as ExperienceType); // eslint-disable-line
 
-  // log.info(F, `leaderboard.TEXT.TOTAL: ${JSON.stringify(leaderboard.TEXT.TOTAL, null, 2)}`);
   return leaderboard;
 }
