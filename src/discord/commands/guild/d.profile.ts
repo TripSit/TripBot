@@ -140,22 +140,21 @@ export const dProfile: SlashCommand = {
 
     context.drawImage(Icons, 5, -2, 913, 292);
 
-    // Overly complicated avatar clip
+    // Overly complicated avatar clip (STATUS CLIP COMMENTED OUT)
     context.save();
-    context.beginPath();
-    context.arc(110, 112, 21, 0, Math.PI * 2);
-    context.arc(73, 73, 55, 0, Math.PI * 2, true);
-    context.closePath();
-    context.clip();
+    // context.beginPath();
+    // context.arc(110, 112, 21, 0, Math.PI * 2);
+    // context.arc(73, 73, 55, 0, Math.PI * 2, true);
+    // context.closePath();
+    // context.clip();
     context.beginPath();
     context.arc(73, 73, 54, 0, Math.PI * 2, true);
-    context.closePath();
+    // context.closePath();
     context.clip();
     // Avatar Image
     context.drawImage(avatar, 18, 18, 109, 109);
     context.restore();
-
-    context.drawImage(StatusIcon, 90, 92);
+    // context.drawImage(StatusIcon, 90, 92);
 
     // WIP: Camp Icon
     // const CampIcon = await Canvas.loadImage(await imageGet('campIconA'));
