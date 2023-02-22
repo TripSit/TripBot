@@ -51,6 +51,7 @@ const channels = [
 
 async function checkLpm() {
   const startTime = Date.now();
+  log.debug(F, 'Checking LPM...');
 
   if (!global.lpmDict) {
     global.lpmDict = {};
