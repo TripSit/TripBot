@@ -7,13 +7,14 @@ import {
 import { stripIndents } from 'common-tags';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-// const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
 
 const helpCounter = new Map<string, number>();
 
 export default messageCommand;
 
 const sadStuff = [
+  'sadface',
   ':(',
   ':c',
   ':<',
@@ -51,6 +52,8 @@ export async function messageCommand(message: Message): Promise<void> {
   if (message.guild.id !== env.DISCORD_GUILD_ID) return; // If not in tripsit ignore all messages
   const displayName = message.member ? message.member.displayName : message.author.username;
 
+  log.debug(F, `Message : ${JSON.stringify(message, null, 2)}`);
+
   // log.debug(stripIndents`[${PREFIX}] ${displayName} said\
   // ${message.content} in ${(message.channel as GuildTextBasedChannel).name}!`);
 
@@ -87,6 +90,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
   } else if (message.content.startsWith(`_pokes <@${env.DISCORD_CLIENT_ID}>_`)) {
     const faces = [
       '( ͡° ͜ʖ ͡°)',
+      'uwu',
       '😯',
       '😳',
       '😘',
@@ -95,7 +99,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
     ];
     await message.channel.send(faces[Math.floor(Math.random() * faces.length)]);
   } else if (
-    (message.mentions.has(message.client.user) || message.cleanContent.toLowerCase().includes('tripbot'))
+    message.cleanContent.toLowerCase().includes('tripbot')
     && message.channel.type !== ChannelType.DM) {
     if (message.author.bot) {
       // log.debug(F, `Ignoring bot interaction`);
@@ -107,25 +111,22 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
     ];
     await message.channel.send(responses[Math.floor(Math.random() * responses.length)]);
   } else if (
-    sadStuff.some(word => message.cleanContent.includes(word))
+    sadStuff.some(word => (message.cleanContent.includes(word) && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))))
     && message.channel.type !== ChannelType.DM) {
-    if (message.author.bot) {
-      // log.debug(F, Ignoring bot interaction);
-      return;
-    }
+    if (message.author.bot) return;
     const heartEmojis = [
-      '❤', '🧡', '💛', '💚', '💙', '💜',
-      '💝', '💖', '💗', '💘', '💕', '💞', '💓', '💟', '❣',
+      '❤', '🧡', '💛', '💚', '💙', '💜', '💝', '💖', '💗', '💘', '💕', '💞', '💓', '💟', '❣', '🫂',
     ];
 
-    const heartPrefix = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
-    const heartSuffix = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+    // const heartPrefix = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+    // const heartSuffix = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
 
-    const responsesHugs = [
-      `${heartPrefix} *digitally hugs* ${heartSuffix}`,
-      `${heartPrefix} *hugs softly* ${heartSuffix}`,
-      `${heartPrefix} *sends virtual hug* ${heartSuffix}`,
-    ];
-    await message.channel.send(responsesHugs[Math.floor(Math.random() * responsesHugs.length)]);
+    // const responsesHugs = [
+    //   `${heartPrefix} *digitally hugs* ${heartSuffix}`,
+    //   `${heartPrefix} *hugs softly* ${heartSuffix}`,
+    //   `${heartPrefix} *sends virtual hug* ${heartSuffix}`,
+    // ];
+    // await message.channel.send(responsesHugs[Math.floor(Math.random() * responsesHugs.length)]);
+    await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
   }
 }

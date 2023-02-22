@@ -2,8 +2,8 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dDrug } from '../../src/discord/commands/global/d.drug';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { dDrug } from '../../../src/discord/commands/global/d.drug';
+import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../utils/testutils';
 
 const slashCommand = dDrug;
 

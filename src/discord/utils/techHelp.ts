@@ -102,7 +102,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   await interaction.showModal(modal);
 
   const filter = (i:ModalSubmitInteraction) => i.customId.includes('techHelpSubmit');
-  interaction.awaitModalSubmit({ filter, time: 150000 })
+  interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
 

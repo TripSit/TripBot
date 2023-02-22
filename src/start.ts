@@ -19,6 +19,7 @@ async function start() {
   log.info(F, 'Initializing service!');
   if (!validateEnv()) return;
 
+  // log.debug(F, `Token length: ${env.DISCORD_CLIENT_TOKEN.length}`);
   if (env.DISCORD_CLIENT_TOKEN) {
     discordConnect();
   }

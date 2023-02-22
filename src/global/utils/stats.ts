@@ -2,7 +2,7 @@ import {
   PermissionResolvable,
   TextChannel,
 } from 'discord.js';
-import { getGuild, guildUpdate } from './knex';
+// import { getGuild, guildUpdate } from './knex';
 
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
@@ -65,7 +65,10 @@ async function checkStats() {
   }
 
   // Determine how many people have the Verified role
+  await tripsitGuild.members.fetch();
   const roleVerified = await tripsitGuild.roles.fetch(env.ROLE_VERIFIED);
+  // log.debug(F, `roleVerified: ${roleVerified?.name} (${roleVerified?.id})`);
+
   if (roleVerified) {
     const { members } = roleVerified;
     // log.debug(F, `Role verified members: ${members.size}`);
@@ -125,108 +128,108 @@ async function checkStats() {
   }
 
   // Determine the number of users currently online
-  const onlineCount = tripsitGuild.members.cache.filter(
-    member => member.presence?.status !== undefined && member.presence?.status !== 'offline',
-  ).size;
-  const channelOnline = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_ONLINE);
-  if (channelOnline) {
-    // log.debug(F, `onlineCount: ${onlineCount}`);
-    const name = `Online: ${onlineCount}`;
-    if (channelOnline.name !== name) {
-      const perms = await checkChannelPermissions(channelOnline, [
-        'ViewChannel' as PermissionResolvable,
-        'Connect' as PermissionResolvable,
-        'ManageChannels' as PermissionResolvable,
-      ]);
-      // log.debug(F, `perms: ${JSON.stringify(perms)}`);
-      if (!perms.hasPermission) {
-        log.error(F, `I do not have the '${perms.permission}' permission in ${channelOnline.name}!`);
-        return;
-      }
-      // log.debug(F, `Updating online members to ${name}!`);
-      channelOnline.setName(name);
-    }
-  }
+  // const onlineCount = tripsitGuild.members.cache.filter(
+  //   member => member.presence?.status !== undefined && member.presence?.status !== 'offline',
+  // ).size;
+  // const channelOnline = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_ONLINE);
+  // if (channelOnline) {
+  //   // log.debug(F, `onlineCount: ${onlineCount}`);
+  //   const name = `Online: ${onlineCount}`;
+  //   if (channelOnline.name !== name) {
+  //     const perms = await checkChannelPermissions(channelOnline, [
+  //       'ViewChannel' as PermissionResolvable,
+  //       'Connect' as PermissionResolvable,
+  //       'ManageChannels' as PermissionResolvable,
+  //     ]);
+  //     // log.debug(F, `perms: ${JSON.stringify(perms)}`);
+  //     if (!perms.hasPermission) {
+  //       log.error(F, `I do not have the '${perms.permission}' permission in ${channelOnline.name}!`);
+  //       return;
+  //     }
+  //     // log.debug(F, `Updating online members to ${name}!`);
+  //     channelOnline.setName(name);
+  //   }
+  // }
 
-  // Update the database's max_online_members if it's higher than the current value
-  // log.debug(F, `Getting guild data`);
-  const guildData = await getGuild(env.DISCORD_GUILD_ID);
-  if (guildData) {
-    // log.debug(F, `Updating guild data (max_online_members: ${guildData.max_online_members})`);
-    const newGuild = guildData;
-    if (guildData.max_online_members) {
-      // log.debug(F, `guildData.max_online_members: ${guildData.max_online_members}`);
-      let maxCount = guildData.max_online_members;
-      if (onlineCount > maxCount) {
-        // log.debug(F, `onlineCount (${onlineCount}) > maxCount (${maxCount})`);
-        maxCount = onlineCount;
-        newGuild.max_online_members = maxCount;
-        await guildUpdate(newGuild);
-        // log.debug(F, 'Test0');
-        const embed = embedTemplate()
-          .setTitle(newRecordString)
-          .setDescription(`We have reached ${maxCount} online members!`);
+  // // Update the database's max_online_members if it's higher than the current value
+  // // log.debug(F, `Getting guild data`);
+  // const guildData = await getGuild(env.DISCORD_GUILD_ID);
+  // if (guildData) {
+  //   // log.debug(F, `Updating guild data (max_online_members: ${guildData.max_online_members})`);
+  //   const newGuild = guildData;
+  //   if (guildData.max_online_members) {
+  //     // log.debug(F, `guildData.max_online_members: ${guildData.max_online_members}`);
+  //     let maxCount = guildData.max_online_members;
+  //     if (onlineCount > maxCount) {
+  //       // log.debug(F, `onlineCount (${onlineCount}) > maxCount (${maxCount})`);
+  //       maxCount = onlineCount;
+  //       newGuild.max_online_members = maxCount;
+  //       await guildUpdate(newGuild);
+  //       // log.debug(F, 'Test0');
+  //       const embed = embedTemplate()
+  //         .setTitle(newRecordString)
+  //         .setDescription(`We have reached ${maxCount} online members!`);
 
-        const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-        if (channelLounge) {
-          // log.debug(F, `channelLounge: ${channelLounge.name}`);
-          const channelPerms = await checkChannelPermissions(channelLounge, [
-            'SendMessages' as PermissionResolvable,
-          ]);
-          if (!channelPerms.hasPermission) {
-            log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelLounge.name}!`);
-            return;
-          }
-          await channelLounge.send({ embeds: [embed] });
-          // log.debug(F, `Sent new record message to ${channelLounge.name}!`);
-        }
-        // log.debug(F, 'TestA');
-        const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
-        if (channelTeamtripsit) {
-          // log.debug(F, `channelTeamtripsit: ${channelTeamtripsit.name}`);
-          const channelPerms = await checkChannelPermissions(channelTeamtripsit, [
-            'SendMessages' as PermissionResolvable,
-          ]);
-          if (!channelPerms.hasPermission) {
-            log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelTeamtripsit.name}!`);
-            return;
-          }
-          await channelTeamtripsit.send({ embeds: [embed] });
-          // log.debug(F, `Sent new record message to ${channelTeamtripsit.name}!`);
-        }
-        // log.debug(F, 'TestB');
+  //       const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
+  //       if (channelLounge) {
+  //         // log.debug(F, `channelLounge: ${channelLounge.name}`);
+  //         const channelPerms = await checkChannelPermissions(channelLounge, [
+  //           'SendMessages' as PermissionResolvable,
+  //         ]);
+  //         if (!channelPerms.hasPermission) {
+  //           log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelLounge.name}!`);
+  //           return;
+  //         }
+  //         await channelLounge.send({ embeds: [embed] });
+  //         // log.debug(F, `Sent new record message to ${channelLounge.name}!`);
+  //       }
+  //       // log.debug(F, 'TestA');
+  //       const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
+  //       if (channelTeamtripsit) {
+  //         // log.debug(F, `channelTeamtripsit: ${channelTeamtripsit.name}`);
+  //         const channelPerms = await checkChannelPermissions(channelTeamtripsit, [
+  //           'SendMessages' as PermissionResolvable,
+  //         ]);
+  //         if (!channelPerms.hasPermission) {
+  //           log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelTeamtripsit.name}!`);
+  //           return;
+  //         }
+  //         await channelTeamtripsit.send({ embeds: [embed] });
+  //         // log.debug(F, `Sent new record message to ${channelTeamtripsit.name}!`);
+  //       }
+  //       // log.debug(F, 'TestB');
 
-        const channelMax = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_MAX);
-        if (channelMax) {
-          // log.debug(F, `channelMax: ${channelMax.name}`);
-          const currentCount = parseInt(channelMax.name.split(': ')[1], 10);
-          if (maxCount > currentCount) {
-            const name = `Max: ${maxCount}`;
-            if (channelMax.name !== name) {
-              const channelPerms = await checkChannelPermissions(channelMax, [
-                'ViewChannel' as PermissionResolvable,
-                'Connect' as PermissionResolvable,
-                'ManageChannels' as PermissionResolvable,
-              ]);
-              if (!channelPerms.hasPermission) {
-                log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelMax.name}!`);
-                return;
-              }
-              channelMax.setName(`Max: ${maxCount}`);
-            }
-            // log.debug(F, `Updated max online members to ${maxCount}!`);
-          } else {
-            // log.debug(F, `Max members is already ${maxCount}!`);
-          }
-        }
-        // log.debug(F, 'TestC');
-      }
-    } else {
-      // log.debug(F, `Updating guild data (max_online_members: ${onlineCount})`);
-      newGuild.max_online_members = onlineCount;
-      await guildUpdate(newGuild);
-    }
-  }
+  //       const channelMax = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_MAX);
+  //       if (channelMax) {
+  //         // log.debug(F, `channelMax: ${channelMax.name}`);
+  //         const currentCount = parseInt(channelMax.name.split(': ')[1], 10);
+  //         if (maxCount > currentCount) {
+  //           const name = `Max: ${maxCount}`;
+  //           if (channelMax.name !== name) {
+  //             const channelPerms = await checkChannelPermissions(channelMax, [
+  //               'ViewChannel' as PermissionResolvable,
+  //               'Connect' as PermissionResolvable,
+  //               'ManageChannels' as PermissionResolvable,
+  //             ]);
+  //             if (!channelPerms.hasPermission) {
+  //               log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelMax.name}!`);
+  //               return;
+  //             }
+  //             channelMax.setName(`Max: ${maxCount}`);
+  //           }
+  //           // log.debug(F, `Updated max online members to ${maxCount}!`);
+  //         } else {
+  //           // log.debug(F, `Max members is already ${maxCount}!`);
+  //         }
+  //       }
+  //       // log.debug(F, 'TestC');
+  //     }
+  //   } else {
+  //     // log.debug(F, `Updating guild data (max_online_members: ${onlineCount})`);
+  //     newGuild.max_online_members = onlineCount;
+  //     await guildUpdate(newGuild);
+  //   }
+  // }
 }
 
 /**

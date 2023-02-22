@@ -1,7 +1,7 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  UserContextMenuCommandInteraction,
+  // UserContextMenuCommandInteraction,
   GuildMember,
   AttachmentBuilder,
 } from 'discord.js';
@@ -73,7 +73,7 @@ export const dLevels: SlashCommand = {
       .setName('target')
       .setDescription('User to lookup')),
   async execute(
-    interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction,
+    interaction:ChatInputCommandInteraction,
   ) {
     const startTime = Date.now();
     if (!interaction.guild) {
@@ -82,11 +82,26 @@ export const dLevels: SlashCommand = {
     }
     startLog(F, interaction);
 
+    const mockUser = env.NODE_ENV === 'production'
+      ? interaction.member as GuildMember
+      : {
+        id: '976332784090087455',
+        roles: {
+          color: {
+            id: '1234567890',
+          },
+        },
+        user: {
+          displayAvatarURL: () => 'https://cdn.discordapp.com/avatars/177537158419054592/a156668bbfd7e4f70a505fef639a75f5.webp', // eslint-disable-line max-len
+        },
+        displayName: 'Test User',
+      };
+
     // Target is the option given, if none is given, it will be the user who used the command
     const target = interaction.options.getMember('target')
       ? interaction.options.getMember('target') as GuildMember
-      : interaction.member as GuildMember;
-    // log.debug(F, `target id: ${target.id}`);
+      : mockUser as GuildMember;
+    log.debug(F, `target id: ${target.id}`);
     // log.debug(F, `levelData: ${JSON.stringify(target, null, 2)}`);
 
     const values = await Promise.allSettled([
@@ -100,7 +115,7 @@ export const dLevels: SlashCommand = {
       // Load Icon Images
       await Canvas.loadImage(await imageGet('cardLevelIcons')),
       // Get the status icon
-      await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
+      // await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
       // Get the avatar image
       await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
     ]);
@@ -109,9 +124,14 @@ export const dLevels: SlashCommand = {
     const [personaData] = values[2].status === 'fulfilled' ? values[2].value : [];
     const levelData = values[3].status === 'fulfilled' ? values[3].value : {} as LevelData;
     const Icons = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
-    const StatusIcon = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
-    const avatar = values[6].status === 'fulfilled' ? values[6].value : {} as Canvas.Image;
+    // const StatusIcon = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
+    const avatar = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
 
+    log.debug(F, `levelData: ${JSON.stringify(levelData, null, 2)}`);
+
+    // For debugging
+    // const layoutHeight = 566;
+    // const layout = 4;
     let layoutHeight = 386;
     let layout = 1;
     if (target.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
@@ -225,7 +245,7 @@ export const dLevels: SlashCommand = {
     context.restore();
 
     // log.debug(F, `StatusIconPath: ${StatusIconPath}`);
-    context.drawImage(StatusIcon, 90, 92);
+    // context.drawImage(StatusIcon, 90, 92);
 
     // context.drawImage(CampIcon, 556, 17);
 
@@ -334,10 +354,20 @@ export const dLevels: SlashCommand = {
     context.fillText(`#${levelData.TEXT.TOTAL.rank}`, 711, 213);
     context.font = '25px futura';
     startingFontSize = 25;
-    context.font = applyRank(canvasObj, `#${levelData.TEXT.GENERAL.rank}`);
-    context.fillText(`#${levelData.TEXT.GENERAL.rank}`, 711, 284);
-    context.font = applyRank(canvasObj, `#${levelData.VOICE.TOTAL.rank}`);
-    context.fillText(`#${levelData.VOICE.TOTAL.rank}`, 711, 344);
+    if (levelData.TEXT.GENERAL) {
+      context.font = applyRank(canvasObj, `#${levelData.TEXT.GENERAL.rank}`);
+      context.fillText(`#${levelData.TEXT.GENERAL.rank}`, 711, 284);
+    } else {
+      context.font = applyRank(canvasObj, '#0');
+      context.fillText('#0', 711, 284);
+    }
+    if (levelData.VOICE.TOTAL) {
+      context.font = applyRank(canvasObj, `#${levelData.VOICE.TOTAL.rank}`);
+      context.fillText(`#${levelData.VOICE.TOTAL.rank}`, 711, 344);
+    } else {
+      context.font = applyRank(canvasObj, '#0');
+      context.fillText('#0', 711, 344);
+    }
     if (layout > 1 && levelData.TEXT.TRIPSITTER) {
       context.font = applyRank(canvasObj, `#${levelData.TEXT.TRIPSITTER.rank}`);
       context.fillText(`#${levelData.TEXT.TRIPSITTER.rank}`, 711, 404);
