@@ -36,10 +36,13 @@ export const dLpm: SlashCommand = {
       setTimeout(
         async () => {
           try {
+            log.debug(F, 'Updating LPM message...');
+            await msg.fetch();
             msg.edit({ embeds: [await constructEmbed()] });
             checkTimers();
           } catch (error) {
-            //
+            log.debug(F, 'LPM message was deleted, stopping timer.');
+            // The message was deleted, stop the timer
           }
         },
         interval,
