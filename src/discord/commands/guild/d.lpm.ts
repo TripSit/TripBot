@@ -1,22 +1,14 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  ActionRowBuilder,
-  ModalBuilder,
-  TextInputBuilder,
   Colors,
   SlashCommandBuilder,
   TextChannel,
-  ModalSubmitInteraction,
   Message,
   ChatInputCommandInteraction,
+  time,
 } from 'discord.js';
-import {
-  TextInputStyle,
-} from 'discord-api-types/v10';
-import { stripIndents } from 'common-tags';
+
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { globalTemplate } from '../../../global/commands/_g.template';
 import { startLog } from '../../utils/startLog';
 
 export default dLpm;
@@ -29,11 +21,9 @@ const channels = [
   env.CHANNEL_LOUNGE,
   env.CHANNEL_VIPLOUNGE,
   env.CHANNEL_GOLDLOUNGE,
-
   env.CHANNEL_TRIPSITMETA,
   env.CHANNEL_TRIPSIT,
   env.CHANNEL_OPENTRIPSIT1,
-
   env.CHANNEL_OPENTRIPSIT2,
   env.CHANNEL_WEBTRIPSIT1,
   env.CHANNEL_WEBTRIPSIT2,
@@ -91,13 +81,23 @@ export const dLpm: SlashCommand = {
 
 async function checkLpm(interaction:ChatInputCommandInteraction) {
   // log.debug(F, 'Checking LPM...');
+  const startTime = Date.now();
   const embed = embedTemplate()
-    .setTitle('Lines per minute')
+    .setTitle('Lines per minute in top channels')
     .setColor(Colors.Blurple);
 
-  const descriptions = [['📜│Channel', 'LPM']] as string[][];
+  const descriptions = [
+    {
+      position: 0,
+      name: '📜│Channel',
+      lpm: 'LPM',
+    }] as {
+    position: number;
+    name: string;
+    lpm: string;
+  }[];
 
-  for (const channelId of channels) { // eslint-disable-line no-restricted-syntax
+  async function getLpm(channelId:string, index:number) {
     const channel = await interaction.guild?.channels.fetch(channelId) as TextChannel; // eslint-disable-line no-await-in-loop, max-len
     await channel.messages.fetch(); // eslint-disable-line no-await-in-loop
     const messages = await channel.messages.fetch({ limit: 100 }); // eslint-disable-line no-await-in-loop
@@ -109,27 +109,41 @@ async function checkLpm(interaction:ChatInputCommandInteraction) {
       const lastMessage = messages.last() as Message;
       const minutes = (Date.now() - lastMessage.createdTimestamp) / 1000 / 60;
       const lpm = Math.round((lines / minutes) * 100) / 100;
-      descriptions.push([channel.name, `${lpm}`]);
+      descriptions.push({
+        position: index,
+        name: channel.name,
+        lpm: `${lpm}`,
+      });
     }
   }
 
+  await Promise.all(channels.map(async (channelId, index) => {
+    await getLpm(channelId, index);
+  }));
+
   // Get the largest channel.name from descriptions
   const largestChannelLength = descriptions.reduce((acc, cur) => {
-    if (cur[0].length > acc) return cur[0].length;
+    if (cur.name.length > acc) return cur.name.length;
     return acc;
   }, 0);
 
-  // log.debug(F, `largestChannelLength: ${largestChannelLength}`);
+  // Sort descriptions by the position
+  descriptions.sort((a, b) => {
+    if (a.position > b.position) return 1;
+    if (a.position < b.position) return -1;
+    return 0;
+  });
 
   // For each channel name, add spaces to the end to make them all the same length
   const description = descriptions.map(d => {
-    const spaces = largestChannelLength - d[0].length;
+    const spaces = largestChannelLength - d.name.length;
     const spaceString = '\ '.repeat(spaces); // eslint-disable-line no-useless-escape
-    return `${d[0]}${spaceString} | ${d[1]}`;
+    return `${d.name}${spaceString} | ${d.lpm}`;
   }).join('\n');
 
   embed.setDescription(`\`\`\`${description}
-  \`\`\``);
+  \`\`\`
+  Updated ${time(new Date(), 'R')} in ${Date.now() - startTime} ms`);
 
   return embed;
 }
