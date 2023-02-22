@@ -63,6 +63,5 @@ export async function getLeaderboard():Promise<LeaderboardData> {
   leaderboard.VOICE.TEAM = await experienceGetTop(undefined, 'TEAM' as ExperienceCategory, 'VOICE' as ExperienceType);
   leaderboard.VOICE.IGNORED = await experienceGetTop(undefined, 'IGNORED' as ExperienceCategory, 'VOICE' as ExperienceType); // eslint-disable-line
 
-  // log.info(F, `leaderboard.TEXT.TOTAL: ${JSON.stringify(leaderboard.TEXT.TOTAL, null, 2)}`);
   return leaderboard;
 }
