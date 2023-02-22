@@ -1,16 +1,12 @@
-// import { stripIndents } from 'common-tags';
 import {
   experienceGetTop,
 } from '../utils/knex';
-// import { getTotalLevel } from '../utils/experience';
 import {
   ExperienceCategory,
   ExperienceType,
 } from '../@types/database';
 
 export default getLeaderboard;
-
-// const F = f(__filename);
 
 type LeaderboardList = { discord_id: string, total_points: number }[];
 
