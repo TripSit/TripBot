@@ -70,7 +70,7 @@ export const dProfile: SlashCommand = {
     const profileData = values[0].status === 'fulfilled' ? values[0].value : {} as ProfileData;
     const [personaData] = values[1].status === 'fulfilled' ? values[1].value : [];
     const Icons = values[2].status === 'fulfilled' ? values[2].value : {} as Canvas.Image;
-    const StatusIcon = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
+    // const StatusIcon = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
     const avatar = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
     const birthdayOverlay = values[5].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
 
