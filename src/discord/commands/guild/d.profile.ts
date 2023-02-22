@@ -60,7 +60,7 @@ export const dProfile: SlashCommand = {
       // Load Icon Images
       await Canvas.loadImage(await imageGet('cardIcons')),
       // Get the status icon
-      await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
+      // await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
       // Get the avatar image
       await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
       // Get the birthday card overlay
@@ -70,9 +70,9 @@ export const dProfile: SlashCommand = {
     const profileData = values[0].status === 'fulfilled' ? values[0].value : {} as ProfileData;
     const [personaData] = values[1].status === 'fulfilled' ? values[1].value : [];
     const Icons = values[2].status === 'fulfilled' ? values[2].value : {} as Canvas.Image;
-    const StatusIcon = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
-    const avatar = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
-    const birthdayOverlay = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
+    // const StatusIcon = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
+    const avatar = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
+    const birthdayOverlay = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
 
     // Create Canvas and Context
     const canvasWidth = 921;
@@ -140,22 +140,21 @@ export const dProfile: SlashCommand = {
 
     context.drawImage(Icons, 5, -2, 913, 292);
 
-    // Overly complicated avatar clip
+    // Overly complicated avatar clip (STATUS CLIP COMMENTED OUT)
     context.save();
-    context.beginPath();
-    context.arc(110, 112, 21, 0, Math.PI * 2);
-    context.arc(73, 73, 55, 0, Math.PI * 2, true);
-    context.closePath();
-    context.clip();
+    // context.beginPath();
+    // context.arc(110, 112, 21, 0, Math.PI * 2);
+    // context.arc(73, 73, 55, 0, Math.PI * 2, true);
+    // context.closePath();
+    // context.clip();
     context.beginPath();
     context.arc(73, 73, 54, 0, Math.PI * 2, true);
-    context.closePath();
+    // context.closePath();
     context.clip();
     // Avatar Image
     context.drawImage(avatar, 18, 18, 109, 109);
     context.restore();
-
-    context.drawImage(StatusIcon, 90, 92);
+    // context.drawImage(StatusIcon, 90, 92);
 
     // WIP: Camp Icon
     // const CampIcon = await Canvas.loadImage(await imageGet('campIconA'));

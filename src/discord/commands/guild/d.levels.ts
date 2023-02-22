@@ -82,26 +82,26 @@ export const dLevels: SlashCommand = {
     }
     startLog(F, interaction);
 
-    const mockUser = env.NODE_ENV === 'production'
-      ? interaction.member as GuildMember
-      : {
-        id: '976332784090087455',
-        roles: {
-          color: {
-            id: '1234567890',
-          },
-        },
-        user: {
-          displayAvatarURL: () => 'https://cdn.discordapp.com/avatars/177537158419054592/a156668bbfd7e4f70a505fef639a75f5.webp', // eslint-disable-line max-len
-        },
-        displayName: 'Test User',
-      };
+    // const mockUser = env.NODE_ENV === 'production'
+    //   ? interaction.member as GuildMember
+    //   : {
+    //     id: '976332784090087455',
+    //     roles: {
+    //       color: {
+    //         id: '1234567890',
+    //       },
+    //     },
+    //     user: {
+    //       displayAvatarURL: () => 'https://cdn.discordapp.com/avatars/177537158419054592/a156668bbfd7e4f70a505fef639a75f5.webp', // eslint-disable-line max-len
+    //     },
+    //     displayName: 'Test User',
+    //   };
 
     // Target is the option given, if none is given, it will be the user who used the command
     const target = interaction.options.getMember('target')
       ? interaction.options.getMember('target') as GuildMember
-      : mockUser as GuildMember;
-    log.debug(F, `target id: ${target.id}`);
+      : interaction.member as GuildMember;
+    // log.debug(F, `target id: ${target.id}`);
     // log.debug(F, `levelData: ${JSON.stringify(target, null, 2)}`);
 
     const values = await Promise.allSettled([
@@ -127,7 +127,7 @@ export const dLevels: SlashCommand = {
     // const StatusIcon = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
     const avatar = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
 
-    log.debug(F, `levelData: ${JSON.stringify(levelData, null, 2)}`);
+    // log.debug(F, `levelData: ${JSON.stringify(levelData, null, 2)}`);
 
     // For debugging
     // const layoutHeight = 566;
@@ -229,22 +229,20 @@ export const dLevels: SlashCommand = {
         context.restore();
       }
     }
-    // Overly complicated avatar clip
+    // Overly complicated avatar clip (STATUS CLIP COMMENTED OUT)
     context.save();
-    context.beginPath();
-    context.arc(110, 112, 21, 0, Math.PI * 2);
-    context.arc(73, 73, 55, 0, Math.PI * 2, true);
-    context.closePath();
-    context.clip();
+    // context.beginPath();
+    // context.arc(110, 112, 21, 0, Math.PI * 2);
+    // context.arc(73, 73, 55, 0, Math.PI * 2, true);
+    // context.closePath();
+    // context.clip();
     context.beginPath();
     context.arc(73, 73, 54, 0, Math.PI * 2, true);
-    context.closePath();
+    // context.closePath();
     context.clip();
 
     context.drawImage(avatar, 18, 18, 109, 109);
     context.restore();
-
-    // log.debug(F, `StatusIconPath: ${StatusIconPath}`);
     // context.drawImage(StatusIcon, 90, 92);
 
     // context.drawImage(CampIcon, 556, 17);
