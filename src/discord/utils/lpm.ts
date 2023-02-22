@@ -6,7 +6,7 @@ export default runLpm;
 
 const F = f(__filename);
 
-const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
+// const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
 
 // Value in milliseconds (1000 * 60 = 1 minute)
 // This needs to be 5 minutes for production, cuz discord has rate limits
@@ -51,7 +51,7 @@ const channels = [
 
 async function checkLpm() {
   const startTime = Date.now();
-  log.debug(F, 'Checking LPM...');
+  // log.debug(F, 'Checking LPM...');
 
   if (!global.lpmDict) {
     global.lpmDict = {};
@@ -86,13 +86,13 @@ async function checkLpm() {
         }
         if (global.lpmDict[channelId].maxLpm < linesMinute) {
           global.lpmDict[channelId].maxLpm = linesMinute;
-          const channelBotlog = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel; // eslint-disable-line no-await-in-loop, max-len
-          channelBotlog.send(`${newRecordString}\nNew max LPM in ${channel.name} (${channel.id}) (${channelId}) (${index})`);
+          // const channelBotlog = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel; // eslint-disable-line no-await-in-loop, max-len
+          // channelBotlog.send(`${newRecordString}\nNew max LPM in ${channel.name} (${channel.id}) (${channelId}) (${index})`);
         }
         if (global.lpmDict[channelId].maxLph < linesHour) {
           global.lpmDict[channelId].maxLph = linesHour;
-          const channelBotlog = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel; // eslint-disable-line no-await-in-loop, max-len
-          channelBotlog.send(`${newRecordString}\nNew max LPM in ${channel.name} (${channel.id}) (${channelId}) (${index})`);
+          // const channelBotlog = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel; // eslint-disable-line no-await-in-loop, max-len
+          // channelBotlog.send(`${newRecordString}\nNew max LPH in ${channel.name} (${channel.id}) (${channelId}) (${index})`);
         }
         global.lpmDict[channelId].position = index;
         global.lpmDict[channelId].name = channel.name;
