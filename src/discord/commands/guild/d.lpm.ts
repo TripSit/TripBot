@@ -39,7 +39,7 @@ const channels = [
   env.CHANNEL_COMPSCI,
   env.CHANNEL_REPLICATIONS,
   env.CHANNEL_PHOTOGRAPHY,
-  env.CHANNEL_RECOVERY,
+  // env.CHANNEL_RECOVERY,
   // env.CATEGORY_CAMPGROUND,
   env.CHANNEL_LOUNGE,
   env.CHANNEL_VIPLOUNGE,
@@ -51,7 +51,6 @@ const channels = [
   env.CHANNEL_DEPRESSANTS,
   env.CHANNEL_DISSOCIATIVES,
   env.CHANNEL_PSYCHEDELICS,
-  env.CHANNEL_CAMPFIRE,
 ];
 
 export const dLpm: SlashCommand = {
