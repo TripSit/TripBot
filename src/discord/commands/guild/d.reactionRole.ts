@@ -600,7 +600,7 @@ export async function processReactionRole(
       .setRequired(true)
       .setLabel('Tell us a bit about yourself!')
       .setPlaceholder(`Why do you want to be a ${role.name}?  This will be sent to the channel!`) // eslint-disable-line
-      .setMaxLength(2000)
+      .setMaxLength(1900)
       .setStyle(TextInputStyle.Paragraph)));
     await interaction.showModal(modal);
 
@@ -629,6 +629,9 @@ export async function processReactionRole(
         introMessage = i.fields.getTextInputValue('introduction');
         // log.debug(F, `introMessage: ${introMessage}`);
 
+        // Put a > in front of each line on introMessage
+        introMessage = introMessage.replace(/^(.*)$/gm, '> $1');
+
         await target.roles.add(role);
         await i.reply({ content: `Added role ${role.name}`, ephemeral: true });
 
@@ -638,39 +641,47 @@ export async function processReactionRole(
 
         if (channel.id === env.CHANNEL_TRIPSITMETA) {
           const intro = stripIndents`
-          Hey ${roleTeamtripsit} team!
-          ${target} has joined as a ${role.name}, please welcome them!
-          
+          Hey ${roleTeamtripsit}, ${target.displayName} has joined as a ${role.name}, please welcome them!
           A little about them:
-          > ${introMessage}
-
-          Some info for you ${target}; as a ${role.name}, some things have changed:
-    
+          ${introMessage}`;
+          await channel.send(intro);
+          const followup = stripIndents`Some important information for you ${target}!
           1) You now have access this this channel, which is used to coordinate with others!
-    
           - Please use this room to ask for help if you're overwhelmed, and feel free to make a thread if it gets busy!
-    
+          - Anyone can mark a thread as "owned" if someone is talking to the person in need, it doesn't mean "you" are helping them.
           2) You are able to receive and respond to help requests in the ${hrCategory}!
-    
-          - As people need help, a thread will be created in ${channelTripsit}.
-          - We use a thread in ${channelTripsit} to help the person in need, and talk here to coordinate with the team.
-          -- ${channelTripsit} threads are archived after 24 hours, and deleted after 7 days.
-        
-          For a refresher on tripsitting please see the following resources:
+          - As people need help, a thread will be created in ${channelTripsit} and you will get a notification that someone needs help.
+          - Talk with the user in the thread, please don't take the user into DM or voice channels.
+          - For a full guide on how the ticket system works, check out: <https://docs.google.com/document/d/19evj7v6nx67TDTUp8DZlu1rrTT5MuwvEZnQ_vDJbfSc/edit#heading=h.3qanhkv29thb>
+          - ${channelTripsit} threads are archived after 24 hours, and deleted after 7 days.
+          3) For a refresher on tripsitting please see the following resources:
           - <https://docs.google.com/document/d/1vE3jl9imdT3o62nNGn19k5HZVOkECF3jhjra8GkgvwE>
           - <https://wiki.tripsit.me/wiki/How_To_Tripsit_Online>
+          - Check the pins in this channel!
+          4) If you're overwhelmed, ask for backup
+          - Giving no information is better than giving the wrong information!
+          - If someone is underage, finish the session and ping a Moderator
+          -- Underage users can use the web-chat anonymously but are not allowed to socialize.
+          - We're here to give harm reduction facts and mild mental health support.
+          - We are NOT here to give medical advice, diagnose, or treat; or handle suicidal or self-harm situations.
+          - If it seems like someone could use mental health services you can refer them to:
+          Huddle Humans - Mental health support
+          <https://discord.gg/mentalhealth>
+          HealthyGamer - Mental health with a gaming twist
+          <https://discord.com/invite/H3yRwc7>
     
-          **If you have any questions, please reach out to a moderator or the team lead!**`;
-          channel.send(intro);
+          **If you have any questions, please reach out!**`;
+          await channel.send(followup);
         } else if (channel.id === env.CHANNEL_DEVELOPMENT) {
           const intro = stripIndents`
-          Hey ${roleTeamtripsit} team!
-          ${target} has joined as a ${role.name}, please welcome them!
+          Hey ${roleTeamtripsit} team, ${target} has joined as a ${role.name}, please welcome them!
           
           A little about them:
-          > ${introMessage}
+          ${introMessage}`;
 
-          Some info for you ${target}: 
+          channel.send(intro);
+
+          const followup = stripIndents`Some info for you ${target}: 
       
           Our ${devCategory} category holds the projects we're working on.
     
@@ -696,7 +707,8 @@ export async function processReactionRole(
           We have a ton of other channels, take your time to explore the threads!
 
           If you have any questions, please reach out to a moderator or the lead dev!`;
-          channel.send(intro);
+
+          channel.send(followup);
         } else {
           channel.send(stripIndents`
           ${target} has joined as a ${role.name}, please welcome them!

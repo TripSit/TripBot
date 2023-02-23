@@ -1,20 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  ActionRowBuilder,
-  ModalBuilder,
-  TextInputBuilder,
   Colors,
   SlashCommandBuilder,
-  TextChannel,
-  ModalSubmitInteraction,
-  Message,
+  time,
+  EmbedBuilder,
 } from 'discord.js';
-import {
-  TextInputStyle,
-} from 'discord-api-types/v10';
+
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { globalTemplate } from '../../../global/commands/_g.template';
 import { startLog } from '../../utils/startLog';
 
 export default dLpm;
@@ -30,22 +22,27 @@ export const dLpm: SlashCommand = {
   async execute(interaction) {
     startLog(F, interaction);
 
-    const embed = embedTemplate()
-      .setTitle('Lines per minute')
-      .setDescription('Loading...')
-      .setColor(Colors.Blurple);
-
     const msg = await interaction.reply({
-      embeds: [embed],
+      embeds: [embedTemplate()
+        .setTitle('Lines per minute')
+        .setDescription('Loading...')
+        .setColor(Colors.Blurple)],
       fetchReply: true,
     });
+
+    msg.edit({ embeds: [await constructEmbed()] });
 
     function checkTimers() {
       setTimeout(
         async () => {
-          const anotherOne = await checkLpm(msg);
-          if (anotherOne) {
+          try {
+            // log.debug(F, 'Updating LPM message...');
+            await msg.fetch();
+            msg.edit({ embeds: [await constructEmbed()] });
             checkTimers();
+          } catch (error) {
+            log.debug(F, 'LPM message was deleted, stopping timer.');
+            // The message was deleted, stop the timer
           }
         },
         interval,
@@ -57,61 +54,67 @@ export const dLpm: SlashCommand = {
   },
 };
 
-async function checkLpm(msg:Message) {
+async function constructEmbed():Promise<EmbedBuilder> {
   const embed = embedTemplate()
     .setTitle('Lines per minute')
+    .setDescription('Loading...')
     .setColor(Colors.Blurple);
 
-  const channels = [
-    env.CHANNEL_LOUNGE,
-    env.CHANNEL_VIPLOUNGE,
-    env.CHANNEL_GOLDLOUNGE,
+  if (global.lpmDict === undefined) {
+    // This should only happen if someone tries to run the command while the bot is booting
+    return embed;
+  }
 
-    env.CHANNEL_TRIPSITMETA,
-    env.CHANNEL_TRIPSIT,
-    env.CHANNEL_OPENTRIPSIT1,
-
-    env.CHANNEL_OPENTRIPSIT2,
-    env.CHANNEL_WEBTRIPSIT1,
-    env.CHANNEL_WEBTRIPSIT2,
-
-    // env.CHANNEL_SANCTUARY,
-    // env.CHANNEL_TREES,
-    // env.CHANNEL_OPIATES,
-
-    // env.CHANNEL_STIMULANTS,
-    // env.CHANNEL_DISSOCIATIVES,
-    // env.CHANNEL_PSYCHEDELICS,
-  ];
-
-  for (const channelId of channels) { // eslint-disable-line no-restricted-syntax
-    const channel = await msg.guild?.channels.fetch(channelId) as TextChannel; // eslint-disable-line no-await-in-loop
-    await channel.messages.fetch(); // eslint-disable-line no-await-in-loop
-    const messages = await channel.messages.fetch({ limit: 100 }); // eslint-disable-line no-await-in-loop
-    const lines = messages.reduce((acc, cur) => {
-      if (cur.author.bot) return acc;
-      return acc + cur.content.split('\n').length;
-    }, 0);
-    if (lines > 0) {
-      const lastMessage = messages.last() as Message;
-      const minutes = (Date.now() - lastMessage.createdTimestamp) / 1000 / 60;
-      const lpm = Math.round((lines / minutes) * 100) / 100;
-      const lph = Math.round((lpm * 60) * 100) / 100;
-      embed.addFields(
-        { name: channel.name, value: `${lpm} LPM\n${lph} LPH`, inline: true },
-      );
-      if (channelId === env.CHANNEL_LOUNGE) {
-        const description = `Out of ${messages.size} messages sent since ${Math.round(minutes)} minutes ago, ${lines} were human lines for ${lpm} LPM or ${lph} LPH`;
-        // log.debug(F, description);
-        embed.setDescription(description);
-      }
+  const outputDict = lpmDict as {
+    [key: string]: {
+      position: number;
+      name: string;
+      lpm: number | string;
+      lph: number | string;
+      maxLpm: number;
+      maxLph: number;
     }
-  }
+  };
+  outputDict.header = {
+    name: '📜|Channel',
+    lpm: 'LPM',
+    lph: 'LPH',
+    position: 0,
+    maxLpm: 0,
+    maxLph: 0,
+  };
 
-  try {
-    msg.edit({ embeds: [embed] });
-    return true;
-  } catch (error) {
-    return false;
-  }
+  const firstColLength = Object.entries(outputDict).reduce((acc, cur) => {
+    if (cur[1].name.length > acc) return cur[1].name.length;
+    return acc;
+  }, 0);
+
+  // Get the largest lpm from descriptions
+  const secondColLength = Object.entries(outputDict).reduce((acc, cur) => {
+    if (cur[1].lpm.toString().length > acc) return cur[1].lpm.toString().length;
+    return acc;
+  }, 0);
+
+  // Sort lpmDict by the position
+  const descriptions = Object.entries(outputDict).sort((a, b) => {
+    if (a[1].position < b[1].position) return -1;
+    if (a[1].position > b[1].position) return 1;
+    return 0;
+  }).map(d => d[1]);
+
+  // For each channel name, add spaces to the end to make them all the same length
+  const description = descriptions.map(d => {
+    const firstColSpaces = firstColLength - d.name.length;
+    const firstColSpaceString = ' '.repeat(firstColSpaces);
+
+    const secondColSpaces = secondColLength - d.lpm.toString().length;
+    const secondColSpaceString = ' '.repeat(secondColSpaces);
+
+    return `${d.name}${firstColSpaceString} | ${d.lpm}${secondColSpaceString} | ${d.lph}`;
+  }).join('\n');
+
+  embed.setDescription(`\`\`\`${description}
+      \`\`\`
+      Updated ${time(new Date(), 'R')}`);
+  return embed;
 }

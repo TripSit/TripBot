@@ -162,11 +162,12 @@ export async function needsHelpMode(
         await target.roles.remove(role);
       } catch (err) {
         log.error(F, `Error removing role from target: ${err}`);
-        await interaction.reply({
+        const guildOwner = await interaction.guild?.fetchOwner();
+        await guildOwner?.send({
           content: stripIndents`There was an error removing ${role.name} from ${target.displayName}!
-          Make sure the bot's role is higher than ${role.name} in the Role list!`,
-          ephemeral: true,
-        });
+            Please make sure I have the Manage Roles permission, or put this role above mine so I don't try to remove it.
+            If there's any questions please contact Moonbear#1024 on TripSit!` }); // eslint-disable-line
+        log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}! Sent the guild owner a DM!`);
       }
     }
   });
