@@ -38,9 +38,9 @@ import {
 import { Personas, RpgInventory } from '../../../global/@types/database';
 import { imageGet } from '../../utils/imageGet';
 
-const F = f(__filename);
-
 export default dRpg;
+
+const F = f(__filename);
 
 // Value in milliseconds (1000 * 60 * 1 = 1 minute)
 // const intervals = {
@@ -771,17 +771,17 @@ export const dRpg: SlashCommand = {
     // - Guild - View their guild and join/leave a guild
     const subcommand = interaction.options.getSubcommand();
 
-    const quietCommands = [
-      'quest',
-      'dungeon',
-      'raid',
-      'coinflip',
-      'roulette',
-    ];
+    // const quietCommands = [
+    //   'quest',
+    //   'dungeon',
+    //   'raid',
+    //   'coinflip',
+    //   'roulette',
+    // ];
 
-    const channelRpg = await interaction.guild?.channels.fetch(process.env.CHANNEL_RPG as string) as TextChannel;
+    const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
 
-    const message = quietCommands.includes(subcommand) || channelRpg.id !== interaction.channelId
+    const message = channelRpg.id !== interaction.channelId
       ? await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')], ephemeral: true })
       : await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')] });
 
