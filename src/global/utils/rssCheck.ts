@@ -104,12 +104,18 @@ async function checkRss() {
 
       // log.debug(F, `submittedBy: ${submittedBy}`);
 
-      const embed = embedTemplate()
-        .setAuthor({ name: 'New /r/TripSit post', iconURL: env.TS_ICON_URL })
-        .setTitle(`${mostRecentPost.title}`)
-        .setURL(mostRecentPost.link)
-        .setFooter({ text: submittedBy ?? '', iconURL: env.FLAME_ICON_URL })
-        .setTimestamp(new Date(mostRecentPost.pubDate));
+      const embed = embedTemplate();
+      try {
+        embed.setAuthor({ name: 'New /r/TripSit post', iconURL: env.TS_ICON_URL });
+        embed.setTitle(`${mostRecentPost.title.slice(0, 256)}`);
+        embed.setURL(mostRecentPost.link);
+        embed.setFooter({ text: submittedBy ?? '', iconURL: env.FLAME_ICON_URL });
+        embed.setTimestamp(new Date(mostRecentPost.pubDate));
+      } catch (error) {
+        log.debug(F, `Error creating embed: ${error}`);
+        log.debug(F, `mostRecentPost: ${JSON.stringify(mostRecentPost, null, 2)}`);
+        return;
+      }
 
       if (body.length > 0) {
         embed.setDescription(stripIndents`
