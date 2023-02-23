@@ -207,9 +207,9 @@ export const dProfile: SlashCommand = {
         itIsYourBirthday = true;
       }
       if (targetBirthday.getDate() < 10) {
-        context.fillText(`0${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 250);
+        context.fillText(`0${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 210, 250);
       } else {
-        context.fillText(`${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 205, 250);
+        context.fillText(`${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 210, 250);
       }
     } else {
       context.fillText('NOT SET!', 210, 250);
@@ -226,7 +226,7 @@ export const dProfile: SlashCommand = {
     // Voice Hours Text
     if (profileData.totalTextExp) {
       const hoursInChat = (profileData.totalVoiceExp / 10 / 60);
-      context.fillText(`${numFormatter(hoursInChat)} HR`, 429, 250);
+      context.fillText(`${numFormatterVoice(hoursInChat)} HR`, 429, 250);
     } else {
       context.fillText('0 HR', 429, 250);
     }
