@@ -2165,6 +2165,7 @@ export async function rpgArcadeAnimate(
 
     await (interaction as MessageComponentInteraction).update({ // eslint-disable-line no-await-in-loop
       embeds: [embed],
+      components: [],
     });
 
     await sleep(1 * 1000);
@@ -2259,7 +2260,7 @@ export async function rpgArcadeAnimate(
         { name: arrow, value: '🟥', inline: true },
         ...wheelBottom,
       );
-      await (interaction as MessageComponentInteraction).editReply({ embeds: [embed] }); // eslint-disable-line no-await-in-loop
+      await (interaction as MessageComponentInteraction).editReply({ embeds: [embed], components: [] }); // eslint-disable-line no-await-in-loop
       // await sleep(0.1 * 1000); // eslint-disable-line no-await-in-loop
     }
 
