@@ -191,6 +191,14 @@ export const dVoice: SlashCommand = {
             });
             return false;
           }
+        // Check if the target user is a moderator
+          if (target.roles.cache.has(env.ROLE_MODERATOR)) {
+            await interaction.reply({
+              content: 'You cannot ban a moderator!',
+              ephemeral: true,
+            });
+            return false;
+          }
         // Check if the target user is already banned, and unban them if so
           if (voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.ViewChannel) === false) {
             voiceChannel.permissionOverwrites.delete(target);
