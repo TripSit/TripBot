@@ -5,7 +5,7 @@ import {
 
 export default runLpm;
 
-// const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
 
 // const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
 
@@ -59,49 +59,84 @@ async function checkLpm() {
   }
 
   const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
-  // await guild.channels.fetch();
+  await guild.channels.fetch();
 
   async function getLpm(channelId:string, index:number) {
-    const channel = guild.channels.cache.get(channelId) as TextChannel; // eslint-disable-line no-await-in-loop, max-len
+    // const channel = await guild.channels.fetch(channelId) as TextChannel; // eslint-disable-line no-await-in-loop, max-len
+    const channel = guild.channels.cache.get(channelId) as TextChannel;
     const messages = await channel.messages.fetch({ limit: 100 }); // eslint-disable-line no-await-in-loop
-    const linesMinute = messages.reduce((acc, cur) => {
-      if (cur.author.bot) return acc;
+
+    // Filter bots out of messages
+    const filteredMessages = messages.filter(message => !message.author.bot);
+
+    const lines1 = filteredMessages.reduce((acc, cur) => {
       if (Date.now() - cur.createdTimestamp > 1000 * 60) return acc;
       return acc + cur.content.split('\n').length;
     }, 0);
-    const linesHour = messages.reduce((acc, cur) => {
-      if (cur.author.bot) return acc;
+
+    const lines5 = filteredMessages.reduce((acc, cur) => {
+      if (Date.now() - cur.createdTimestamp > 1000 * 60 * 5) return acc;
+      return acc + cur.content.split('\n').length;
+    }, 0);
+
+    const lines10 = filteredMessages.reduce((acc, cur) => {
+      if (Date.now() - cur.createdTimestamp > 1000 * 60 * 10) return acc;
+      return acc + cur.content.split('\n').length;
+    }, 0);
+
+    const lines30 = filteredMessages.reduce((acc, cur) => {
+      if (Date.now() - cur.createdTimestamp > 1000 * 60 * 30) return acc;
+      return acc + cur.content.split('\n').length;
+    }, 0);
+
+    const lines60 = filteredMessages.reduce((acc, cur) => {
       if (Date.now() - cur.createdTimestamp > 1000 * 60 * 60) return acc;
       return acc + cur.content.split('\n').length;
     }, 0);
 
-    if (linesMinute > 0 || linesHour > 0) {
+    if (lines5) {
       if (global.lpmDict[channelId]) {
-        if (global.lpmDict[channelId].lpm === linesMinute && global.lpmDict[channelId].lph === linesHour) {
+        // log.debug(F, `lpmdict: ${JSON.stringify(global.lpmDict[channelId])}`);
+        if (global.lpmDict[channelId].lp1 === lines1 && global.lpmDict[channelId].lp60 === lines60) {
           return;
         }
-        if (global.lpmDict[channelId].maxLpm < linesMinute) {
-          global.lpmDict[channelId].maxLpm = linesMinute;
-          // const channelBotlog = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel; // eslint-disable-line no-await-in-loop, max-len
-          // channelBotlog.send(`${newRecordString}\nNew max LPM in ${channel.name} (${channel.id}) (${channelId}) (${index})`);
+        if (global.lpmDict[channelId].lp1Max < lines1) {
+          global.lpmDict[channelId].lp1Max = lines1;
         }
-        if (global.lpmDict[channelId].maxLph < linesHour) {
-          global.lpmDict[channelId].maxLph = linesHour;
-          // const channelBotlog = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel; // eslint-disable-line no-await-in-loop, max-len
-          // channelBotlog.send(`${newRecordString}\nNew max LPH in ${channel.name} (${channel.id}) (${channelId}) (${index})`);
+        if (global.lpmDict[channelId].lp5Max < lines5) {
+          global.lpmDict[channelId].lp5Max = lines5;
+        }
+        if (global.lpmDict[channelId].lp10Max < lines10) {
+          global.lpmDict[channelId].lp10Max = lines10;
+        }
+        if (global.lpmDict[channelId].lp30Max < lines30) {
+          global.lpmDict[channelId].lp30Max = lines30;
+        }
+        if (global.lpmDict[channelId].lp60Max < lines60) {
+          global.lpmDict[channelId].lp60Max = lines60;
         }
         global.lpmDict[channelId].position = index;
         global.lpmDict[channelId].name = channel.name;
-        global.lpmDict[channelId].lpm = linesMinute;
-        global.lpmDict[channelId].lph = linesHour;
+        global.lpmDict[channelId].lp1 = lines1;
+        global.lpmDict[channelId].lp5 = lines5;
+        global.lpmDict[channelId].lp10 = lines10;
+        global.lpmDict[channelId].lp30 = lines30;
+        global.lpmDict[channelId].lp60 = lines60;
       } else {
         global.lpmDict[channelId] = {
           position: index,
           name: channel.name,
-          lpm: linesMinute,
-          lph: linesHour,
-          maxLpm: linesMinute,
-          maxLph: linesHour,
+          alert: 0,
+          lp1: lines1,
+          lp1Max: lines1,
+          lp5: lines5,
+          lp5Max: lines5,
+          lp10: lines10,
+          lp10Max: lines10,
+          lp30: lines30,
+          lp30Max: lines30,
+          lp60: lines60,
+          lp60Max: lines60,
         };
       }
     }
@@ -115,6 +150,7 @@ async function checkLpm() {
   } else {
     global.lpmTime = [Date.now() - startTime];
   }
+  // log.debug(F, `LPM check took ${Date.now() - startTime}ms`);
 }
 
 /**
