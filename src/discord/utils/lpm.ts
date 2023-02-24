@@ -14,6 +14,7 @@ const F = f(__filename); // eslint-disable-line
 const interval = env.NODE_ENV === 'production' ? 1000 * 10 : 1000 * 5;
 
 const channels = [
+  env.CHANNEL_LOUNGE,
   // env.CATEGORY_HARMREDUCTIONCENTRE,
   env.CHANNEL_TRIPSITMETA,
   env.CHANNEL_TRIPSIT,
@@ -38,7 +39,6 @@ const channels = [
   env.CHANNEL_PHOTOGRAPHY,
   // env.CHANNEL_RECOVERY,
   // env.CATEGORY_CAMPGROUND,
-  env.CHANNEL_LOUNGE,
   env.CHANNEL_VIPLOUNGE,
   env.CHANNEL_GOLDLOUNGE,
   env.CHANNEL_SANCTUARY,
