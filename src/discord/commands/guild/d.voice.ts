@@ -1,26 +1,18 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  ActionRowBuilder,
-  ModalBuilder,
-  TextInputBuilder,
   Colors,
   SlashCommandBuilder,
-  TextChannel,
-  ModalSubmitInteraction,
   GuildMember,
-  PermissionsBitField
+  PermissionsBitField,
+  EmbedBuilder,
+  VoiceBasedChannel,
 } from 'discord.js';
-import {
-  TextInputStyle,
-} from 'discord-api-types/v10';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { globalTemplate } from '../../../global/commands/_g.template';
 import { startLog } from '../../utils/startLog';
 
-const F = f(__filename);
-
 export default dVoice;
+
+const F = f(__filename);
 
 export const dVoice: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -45,235 +37,183 @@ export const dVoice: SlashCommand = {
       .addUserOption(option => option
         .setName('target')
         .setDescription('The user to ban')
+        .setRequired(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('mute')
+      .setDescription('Mute a user in your Tent')
+      .addUserOption(option => option
+        .setName('target')
+        .setDescription('The user to mute')
         .setRequired(true))),
   async execute(interaction) {
     startLog(F, interaction);
 
-    let command = interaction.options.getSubcommand() as 'lock' | 'hide' | 'ban' | 'rename';
+    const command = interaction.options.getSubcommand() as 'lock' | 'hide' | 'ban' | 'rename' | 'mute';
     const member = interaction.member as GuildMember;
     const target = interaction.options.getMember('target') as GuildMember;
     const newName = interaction.options.getString('name') as string;
-    const toggle = interaction.options.getSubcommand();
     const voiceChannel = member.voice.channel;
-    let verb = 'error';
-    console.log(`Command: ${command}`)
-    if (command === 'lock') {
+    let embed = embedTemplate()
+      .setTitle('Error')
+      .setColor(Colors.Red)
+      .setDescription('You can only use this command in a voice channel Tent that you own!');
 
-      // Check if user is in a voice channel
-      if (voiceChannel === null) {
-        await interaction.reply({
-          content: 'You need to be connected to a voice channel to use this command!',
-          ephemeral: true,
-        });
-        return false;
-      }
-      // Check if a user is in a Tent (Prevents mods from editing other channels accidentally)
-      else {
-        if (voiceChannel.name.includes('⛺') === false) {
-          await interaction.reply({
-            content: 'You can only use this command in a Tent!',
-            ephemeral: true,
-          });
-          return false;
-        }
-        // Check if a user is the one who created it
-        if (voiceChannel && (voiceChannel.permissionsFor(member).has(PermissionsBitField.Flags.MuteMembers))) {
-          console.log(`User has the "mute members" permission in ${voiceChannel.name}`);
-        // Check if the channel is already locked, and unlock it if so
-          if (voiceChannel.permissionsFor(env.ROLE_VERIFIED).has(PermissionsBitField.Flags.Connect) === false) {
-            console.log(`${voiceChannel.permissionsFor(env.ROLE_VERIFIED).has(PermissionsBitField.Flags.Connect)}`)
-            voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, {Connect: true});
-            verb = 'unlocked';
-            console.log('Channel was locked and has been unlocked')
-          }
-          // Else, lock the channel
-          else {
-            voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, {Connect: false});
-            verb = 'locked';
-            console.log('Channel is now locked')
-          }
-        }
-        else {
-        await interaction.reply({
-        content: 'You do not own this Tent!',
-        ephemeral: true,
-        });
-        console.log(`User does not have the "mute members" permission in ${voiceChannel.name}`);
-      }
-    
-      await interaction.reply({
-      content: `${voiceChannel} has been ${verb}`,
-      ephemeral: true,
-      });
-      return true;
+    // Check if user is in a voice channel
+    if (voiceChannel === null) {
+      await interaction.reply({ embeds: [embed], ephemeral: true });
+      return false;
     }
-    };
+
+    // Check if user is in a Tent
+    if (voiceChannel.name.includes('⛺') === false) {
+      await interaction.reply({ embeds: [embed], ephemeral: true });
+      return false;
+    }
+
+    // Check if a user is the one who created it, only users with MoveMembers permission can do this
+    if (!voiceChannel.permissionsFor(member).has(PermissionsBitField.Flags.MoveMembers)) {
+      await interaction.reply({ embeds: [embed], ephemeral: true });
+      return false;
+    }
+
+    // Check the user is trying to act on themselves
+    if (target === member) {
+      await interaction.reply({ embeds: [embed.setDescription('Stop playing with yourself!')], ephemeral: true });
+      return false;
+    }
+
+    // // Check if the target user is a moderator
+    // if (target.roles.cache.has(env.ROLE_MODERATOR)) {
+    //   await interaction.reply({ embeds: [embed.setDescription('You cannot ban a moderator!')], ephemeral: true });
+    //   return false;
+    // }
+
+    log.debug(F, `Command: ${command}`);
+    if (command === 'rename') {
+      embed = await tentRename(voiceChannel, newName);
+    }
+
+    if (command === 'lock') {
+      embed = await tentLock(voiceChannel);
+    }
 
     if (command === 'hide') {
-
-      // Check if user is in a voice channel
-      if (voiceChannel === null) {
-        await interaction.reply({
-          content: `You need to be connected to a Campfire Tent to use this command!`,
-          ephemeral: true,
-        });
-        return false;
-      }
-      // Check if a user is in a Tent (Prevents mods from editing other channels accidentally)
-      else {
-        if (voiceChannel.name.includes('⛺') === false) {
-          await interaction.reply({
-            content: 'You can only use this command in a Tent!',
-            ephemeral: true,
-          });
-          return false;
-        }
-        // Check if a user is the one who created it
-        if (voiceChannel && (voiceChannel.permissionsFor(member).has(PermissionsBitField.Flags.MuteMembers))) {
-        console.log(`User has the "mute members" permission in ${voiceChannel.name}`);
-        // Check if the channel is already hidden, and unhide it if so
-          if (voiceChannel.permissionsFor(env.ROLE_VERIFIED).has(PermissionsBitField.Flags.ViewChannel) === false) {
-            console.log(`${voiceChannel.permissionsFor(env.ROLE_VERIFIED).has(PermissionsBitField.Flags.ViewChannel)}`)
-            voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, {ViewChannel: true});
-            verb = 'unhidden';
-            console.log('Channel was hidden and has been unhidden')
-          }
-          // Else, lock the channel
-          else {
-            voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, {ViewChannel: false});
-            verb = 'hidden';
-            console.log('Channel is now hidden')
-          }
-        }
-        else {
-        await interaction.reply({
-        content: 'You do not own this Tent!',
-        ephemeral: true,
-        });
-        console.log(`User does not have the "mute members" permission in ${voiceChannel.name}`);
-      }
-    
-      await interaction.reply({
-      content: `${voiceChannel} has been ${verb}`,
-      ephemeral: true,
-      });
-      return true;
+      embed = await tentHide(voiceChannel);
     }
-    };
 
     if (command === 'ban') {
-
-      // Check if user is in a voice channel
-      if (voiceChannel === null) {
-        await interaction.reply({
-          content: `You need to be connected to a Campfire Tent to use this command!`,
-          ephemeral: true,
-        });
-        return false;
-      }
-      // Check if a user is in a Tent (Prevents mods from editing other channels accidentally)
-      else {
-        if (voiceChannel.name.includes('⛺') === false) {
-          await interaction.reply({
-            content: 'You can only use this command in a Tent!',
-            ephemeral: true,
-          });
-          return false;
-        }
-        // Check if a user is the one who created it
-        if (voiceChannel && (voiceChannel.permissionsFor(member).has(PermissionsBitField.Flags.MuteMembers))) {
-        console.log(`User has the "mute members" permission in ${voiceChannel.name}`);
-        // Check the user is not trying to ban themselves
-          if (target === member) {
-            await interaction.reply({
-              content: 'You cannot ban yourself!',
-              ephemeral: true,
-            });
-            return false;
-          }
-        // Check if the target user is a moderator
-          if (target.roles.cache.has(env.ROLE_MODERATOR)) {
-            await interaction.reply({
-              content: 'You cannot ban a moderator!',
-              ephemeral: true,
-            });
-            return false;
-          }
-        // Check if the target user is already banned, and unban them if so
-          if (voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.ViewChannel) === false) {
-            voiceChannel.permissionOverwrites.delete(target);
-            verb = 'unbanned and unhidden';
-            console.log('User was banned and has been unbanned')
-          }
-          // Else, ban the target user
-          else {
-            voiceChannel.permissionOverwrites.edit(target, {ViewChannel: false, Connect: false});
-            if (target.voice.channel === voiceChannel) {
-              target.voice.setChannel(null);
-            }
-            verb = 'banned and hidden';
-            console.log('User is now banned')
-          }
-        }
-        else {
-        await interaction.reply({
-        content: 'You do not own this Tent!',
-        ephemeral: true,
-        });
-        console.log(`User does not have the "mute members" permission in ${voiceChannel.name}`);
-      }
-    
-      await interaction.reply({
-      content: `${target} has been ${verb} from ${voiceChannel}`,
-      ephemeral: true,
-      });
-      return true;
+      embed = await tentBan(voiceChannel, target);
     }
-    };
 
-    if (command === 'rename') {
-
-      // Check if user is in a voice channel
-      if (voiceChannel === null) {
-        await interaction.reply({
-          content: `You need to be connected to a Campfire Tent to use this command!`,
-          ephemeral: true,
-        });
-        return false;
-      }
-      // Check if a user is in a Tent (Prevents mods from editing other channels accidentally)
-      else {
-        if (voiceChannel.name.includes('⛺') === false) {
-          await interaction.reply({
-            content: 'You can only use this command in a Tent!',
-            ephemeral: true,
-          });
-          return false;
-        }
-        // Check if a user is the one who created it
-        if (voiceChannel && (voiceChannel.permissionsFor(member).has(PermissionsBitField.Flags.MuteMembers))) {
-          console.log(`User has the "mute members" permission in ${voiceChannel.name}`);
-          voiceChannel.setName(`⛺│${newName}`);
-        }
-        else {
-          await interaction.reply({
-          content: 'You do not own this Tent!',
-          ephemeral: true,
-        });
-        console.log(`User does not have the "mute members" permission in ${voiceChannel.name}`);
-      }
-    
-      await interaction.reply({
-      content: `${voiceChannel} has been renamed`,
-      ephemeral: true,
-      });
-      return true;
+    if (command === 'mute') {
+      embed = await tentMute(voiceChannel, target);
     }
-    };
-    await interaction.reply({
-    content: `error`,
-    ephemeral: true,
-    });
+
+    await interaction.reply({ embeds: [embed], ephemeral: true });
     return true;
   },
 };
+
+async function tentRename(
+  voiceChannel: VoiceBasedChannel,
+  newName: string,
+):Promise<EmbedBuilder> {
+  voiceChannel.setName(`⛺│${newName}`);
+
+  log.debug(F, `${voiceChannel} hab been named to ${newName}`);
+
+  return embedTemplate()
+    .setTitle('Success')
+    .setColor(Colors.Green)
+    .setDescription(`${voiceChannel} has been renamed to ${newName}`);
+}
+
+async function tentLock(
+  voiceChannel: VoiceBasedChannel,
+):Promise<EmbedBuilder> {
+  let verb = '';
+
+  if (voiceChannel.permissionsFor(env.ROLE_VERIFIED).has(PermissionsBitField.Flags.Connect) === true) {
+    voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, { Connect: false });
+    verb = 'locked';
+  } else {
+    voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, { Connect: true });
+    verb = 'unlocked';
+  }
+
+  log.debug(F, `Channel is now ${verb}`);
+
+  return embedTemplate()
+    .setTitle('Success')
+    .setColor(Colors.Green)
+    .setDescription(`${voiceChannel} has been ${verb}`);
+}
+
+async function tentHide(
+  voiceChannel: VoiceBasedChannel,
+):Promise<EmbedBuilder> {
+  let verb = '';
+
+  if (voiceChannel.permissionsFor(env.ROLE_VERIFIED).has(PermissionsBitField.Flags.ViewChannel) === true) {
+    voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, { ViewChannel: false });
+    verb = 'hidden';
+  } else {
+    voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, { ViewChannel: true });
+    verb = 'unhidden';
+  }
+
+  log.debug(F, `Channel is now ${verb}`);
+
+  return embedTemplate()
+    .setTitle('Success')
+    .setColor(Colors.Green)
+    .setDescription(`${voiceChannel} has been ${verb}`);
+}
+
+async function tentBan(
+  voiceChannel: VoiceBasedChannel,
+  target: GuildMember,
+):Promise<EmbedBuilder> {
+  let verb = '';
+
+  if (voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.ViewChannel) === true) {
+    voiceChannel.permissionOverwrites.edit(target, { ViewChannel: false, Connect: false });
+    if (target.voice.channel === voiceChannel) {
+      target.voice.setChannel(null);
+    }
+    verb = 'banned and hidden';
+  } else {
+    voiceChannel.permissionOverwrites.edit(target, { ViewChannel: true, Connect: true });
+    verb = 'unbanned and unhidden';
+  }
+
+  log.debug(F, `${target.displayName} is now ${verb}`);
+
+  return embedTemplate()
+    .setTitle('Success')
+    .setColor(Colors.Green)
+    .setDescription(`${target} has been ${verb} from ${voiceChannel}`);
+}
+
+async function tentMute(
+  voiceChannel: VoiceBasedChannel,
+  target: GuildMember,
+):Promise<EmbedBuilder> {
+  let verb = '';
+
+  if (voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.Speak) === true) {
+    voiceChannel.permissionOverwrites.edit(target, { Speak: false });
+    verb = 'muted';
+    log.debug(F, 'User is now muted');
+  } else {
+    voiceChannel.permissionOverwrites.edit(target, { Speak: true });
+    verb = 'unmuted';
+  }
+
+  log.debug(F, `${target.displayName} is now ${verb}`);
+
+  return embedTemplate()
+    .setTitle('Success')
+    .setColor(Colors.Green)
+    .setDescription(`${target} has been ${verb} from ${voiceChannel}`);
+}

@@ -26,26 +26,43 @@ export async function pitchTent(
       {
         id: New.member.id,
         allow: [
-          PermissionsBitField.Flags.MuteMembers,
-          PermissionsBitField.Flags.DeafenMembers,
-          PermissionsBitField.Flags.MoveMembers,
-          PermissionsBitField.Flags.Connect,
           PermissionsBitField.Flags.ViewChannel,
+          PermissionsBitField.Flags.Connect,
+          PermissionsBitField.Flags.Speak,
+          PermissionsBitField.Flags.UseEmbeddedActivities,
+          PermissionsBitField.Flags.UseVAD,
+          // PermissionsBitField.Flags.MuteMembers,
+          // PermissionsBitField.Flags.DeafenMembers,
+          PermissionsBitField.Flags.MoveMembers,
+          PermissionsBitField.Flags.SendMessages,
+          PermissionsBitField.Flags.EmbedLinks,
+          PermissionsBitField.Flags.AttachFiles,
+          PermissionsBitField.Flags.AddReactions,
+          PermissionsBitField.Flags.UseExternalStickers,
+          PermissionsBitField.Flags.UseExternalEmojis,
+          PermissionsBitField.Flags.UseApplicationCommands,
+        ],
+      },
+      {
+        id: env.ROLE_VERIFIED,
+        allow: [
+          PermissionsBitField.Flags.ViewChannel,
+          PermissionsBitField.Flags.Connect,
+          PermissionsBitField.Flags.Speak,
+          PermissionsBitField.Flags.UseEmbeddedActivities,
+          PermissionsBitField.Flags.UseVAD,
+          PermissionsBitField.Flags.SendMessages,
+          PermissionsBitField.Flags.EmbedLinks,
+          PermissionsBitField.Flags.AttachFiles,
+          PermissionsBitField.Flags.AddReactions,
+          PermissionsBitField.Flags.UseExternalStickers,
+          PermissionsBitField.Flags.UseExternalEmojis,
+          PermissionsBitField.Flags.UseApplicationCommands,
         ],
       },
     ],
   }).then(newChannel => {
     New.member?.voice.setChannel(newChannel.id);
-    // newChannel.permissionOverwrites.set([
-    //   {
-    //     id: New.member as GuildMember,
-    //     allow: [
-    //       // PermissionsBitField.Flags.MuteMembers,
-    //       // PermissionsBitField.Flags.MoveMembers,
-    //       // PermissionsBitField.Flags.DeafenMembers,
-    //     ],
-    //   },
-    // ]);
   });
 }
 
