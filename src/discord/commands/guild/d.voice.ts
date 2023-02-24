@@ -62,19 +62,19 @@ export const dVoice: SlashCommand = {
         }
         // Check if user has mute members permission
         if (voiceChannel && (voiceChannel.permissionsFor(member).has(PermissionsBitField.Flags.MuteMembers))) {
-        console.log(`User has the "mute members" permission in ${voiceChannel.name}`);
+          console.log(`User has the "mute members" permission in ${voiceChannel.name}`);
         // Check if the channel is already locked, and unlock it if so
           if (voiceChannel.permissionsFor(env.ROLE_VERIFIED).has(PermissionsBitField.Flags.Connect) === false) {
-          console.log(`${voiceChannel.permissionsFor(env.ROLE_VERIFIED).has(PermissionsBitField.Flags.Connect)}`)
-          voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, {Connect: true});
-          verb = 'unlocked';
-          console.log('Channel was locked and has been unlocked')
+            console.log(`${voiceChannel.permissionsFor(env.ROLE_VERIFIED).has(PermissionsBitField.Flags.Connect)}`)
+            voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, {Connect: true});
+            verb = 'unlocked';
+            console.log('Channel was locked and has been unlocked')
           }
           // Else, lock the channel
           else {
-          voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, {Connect: false});
-          verb = 'locked';
-          console.log('Channel is now locked')
+            voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, {Connect: false});
+            verb = 'locked';
+            console.log('Channel is now locked')
           }
         }
         else {
@@ -117,16 +117,16 @@ export const dVoice: SlashCommand = {
         console.log(`User has the "mute members" permission in ${voiceChannel.name}`);
         // Check if the channel is already hidden, and unhide it if so
           if (voiceChannel.permissionsFor(env.ROLE_VERIFIED).has(PermissionsBitField.Flags.ViewChannel) === false) {
-          console.log(`${voiceChannel.permissionsFor(env.ROLE_VERIFIED).has(PermissionsBitField.Flags.ViewChannel)}`)
-          voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, {ViewChannel: true});
-          verb = 'unhidden';
-          console.log('Channel was hidden and has been unhidden')
+            console.log(`${voiceChannel.permissionsFor(env.ROLE_VERIFIED).has(PermissionsBitField.Flags.ViewChannel)}`)
+            voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, {ViewChannel: true});
+            verb = 'unhidden';
+            console.log('Channel was hidden and has been unhidden')
           }
           // Else, lock the channel
           else {
-          voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, {ViewChannel: false});
-          verb = 'hidden';
-          console.log('Channel is now hidden')
+            voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, {ViewChannel: false});
+            verb = 'hidden';
+            console.log('Channel is now hidden')
           }
         }
         else {
