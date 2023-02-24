@@ -44,11 +44,18 @@ export const dVoice: SlashCommand = {
       .addUserOption(option => option
         .setName('target')
         .setDescription('The user to mute')
+        .setRequired(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('cohost')
+      .setDescription('Make another member a co-host in your Tent')
+      .addUserOption(option => option
+        .setName('target')
+        .setDescription('The user to make co-host')
         .setRequired(true))),
   async execute(interaction) {
     startLog(F, interaction);
 
-    const command = interaction.options.getSubcommand() as 'lock' | 'hide' | 'ban' | 'rename' | 'mute';
+    const command = interaction.options.getSubcommand() as 'lock' | 'hide' | 'ban' | 'rename' | 'mute' | 'cohost';
     const member = interaction.member as GuildMember;
     const target = interaction.options.getMember('target') as GuildMember;
     const newName = interaction.options.getString('name') as string;
@@ -107,6 +114,10 @@ export const dVoice: SlashCommand = {
 
     if (command === 'mute') {
       embed = await tentMute(voiceChannel, target);
+    }
+
+    if (command === 'cohost') {
+      embed = await tentCohost(voiceChannel, target);
     }
 
     await interaction.reply({ embeds: [embed], ephemeral: true });
@@ -215,5 +226,28 @@ async function tentMute(
   return embedTemplate()
     .setTitle('Success')
     .setColor(Colors.Green)
-    .setDescription(`${target} has been ${verb} from ${voiceChannel}`);
+    .setDescription(`${target} has been ${verb} in ${voiceChannel}`);
+}
+
+async function tentCohost(
+  voiceChannel: VoiceBasedChannel,
+  target: GuildMember,
+):Promise<EmbedBuilder> {
+  let verb = '';
+
+  if (voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.MoveMembers) === false) {
+    voiceChannel.permissionOverwrites.edit(target, { MoveMembers: true });
+    verb = 'co-hosted';
+    log.debug(F, 'User is now muted');
+  } else {
+    voiceChannel.permissionOverwrites.edit(target, { MoveMembers: false });
+    verb = 'removed as a co-host';
+  }
+
+  log.debug(F, `${target.displayName} is now ${verb}`);
+
+  return embedTemplate()
+    .setTitle('Success')
+    .setColor(Colors.Green)
+    .setDescription(`${target} has been ${verb} in ${voiceChannel}`);
 }
