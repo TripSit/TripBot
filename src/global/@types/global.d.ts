@@ -7,6 +7,7 @@ declare global {
   var client: Client; // eslint-disable-line
   var announcements: string[]; // eslint-disable-line
   var lpmDict: LpmDict; // eslint-disable-line
+  var lpmTime: number[]; // eslint-disable-line
 }
 
 export {};

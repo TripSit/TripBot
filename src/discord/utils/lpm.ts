@@ -1,10 +1,11 @@
 import {
+  // GuildAuditLogs,
   TextChannel,
 } from 'discord.js';
 
 export default runLpm;
 
-const F = f(__filename);
+// const F = f(__filename);
 
 // const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
 
@@ -18,10 +19,10 @@ const channels = [
   env.CHANNEL_TRIPSIT,
   env.CHANNEL_OPENTRIPSIT1,
   env.CHANNEL_OPENTRIPSIT2,
-  // env.CHANNEL_WEBTRIPSIT1,
-  // env.CHANNEL_WEBTRIPSIT2,
-  // env.CHANNEL_CLOSEDTRIPSIT,
-  // env.CHANNEL_RTRIPSIT,
+  env.CHANNEL_WEBTRIPSIT1,
+  env.CHANNEL_WEBTRIPSIT2,
+  env.CHANNEL_CLOSEDTRIPSIT,
+  env.CHANNEL_RTRIPSIT,
   // env.CATEGORY_BACKSTAGE,
   env.CHANNEL_PETS,
   env.CHANNEL_FOOD,
@@ -57,16 +58,11 @@ async function checkLpm() {
     global.lpmDict = {};
   }
 
+  const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
+  // await guild.channels.fetch();
+
   async function getLpm(channelId:string, index:number) {
-    const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
-    const channel = await guild.channels.fetch(channelId) as TextChannel; // eslint-disable-line no-await-in-loop, max-len
-    try {
-      await channel.messages.fetch(); // eslint-disable-line no-await-in-loop
-    } catch (error) {
-      const channelBotlog = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel; // eslint-disable-line no-await-in-loop, max-len
-      channelBotlog.send(`Error fetching messages in ${channel.name} (${channel.id}) (${channelId}) (${index}))`);
-      return;
-    }
+    const channel = guild.channels.cache.get(channelId) as TextChannel; // eslint-disable-line no-await-in-loop, max-len
     const messages = await channel.messages.fetch({ limit: 100 }); // eslint-disable-line no-await-in-loop
     const linesMinute = messages.reduce((acc, cur) => {
       if (cur.author.bot) return acc;
@@ -114,7 +110,11 @@ async function checkLpm() {
   await Promise.all(channels.map(async (channelId, index) => {
     await getLpm(channelId, index + 1);
   }));
-  log.debug(F, `LPM check took ${Date.now() - startTime}ms`);
+  if (global.lpmTime) {
+    global.lpmTime.push(Date.now() - startTime);
+  } else {
+    global.lpmTime = [Date.now() - startTime];
+  }
 }
 
 /**
