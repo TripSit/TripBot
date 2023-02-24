@@ -23,14 +23,16 @@ export async function pitchTent(
     type: ChannelType.GuildVoice,
     parent: env.CATEGORY_CAMPGROUND,
     permissionOverwrites: [
-      { id: New.member.id, 
+      {
+        id: New.member.id,
         allow: [
-        PermissionsBitField.Flags.MuteMembers,
-        PermissionsBitField.Flags.DeafenMembers,
-        PermissionsBitField.Flags.MoveMembers,
-        PermissionsBitField.Flags.Connect,
-        PermissionsBitField.Flags.ViewChannel,
-      ] },
+          PermissionsBitField.Flags.MuteMembers,
+          PermissionsBitField.Flags.DeafenMembers,
+          PermissionsBitField.Flags.MoveMembers,
+          PermissionsBitField.Flags.Connect,
+          PermissionsBitField.Flags.ViewChannel,
+        ],
+      },
     ],
   }).then(newChannel => {
     New.member?.voice.setChannel(newChannel.id);
