@@ -183,6 +183,14 @@ export const dVoice: SlashCommand = {
         // Check if a user is the one who created it
         if (voiceChannel && (voiceChannel.permissionsFor(member).has(PermissionsBitField.Flags.MuteMembers))) {
         console.log(`User has the "mute members" permission in ${voiceChannel.name}`);
+        // Check the user is not trying to ban themselves
+          if (target === member) {
+            await interaction.reply({
+              content: 'You cannot ban yourself!',
+              ephemeral: true,
+            });
+            return false;
+          }
         // Check if the target user is already banned, and unban them if so
           if (voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.ViewChannel) === false) {
             voiceChannel.permissionOverwrites.delete(target);
@@ -192,6 +200,9 @@ export const dVoice: SlashCommand = {
           // Else, ban the target user
           else {
             voiceChannel.permissionOverwrites.edit(target, {ViewChannel: false, Connect: false});
+            if (target.voice.channel === voiceChannel) {
+              target.voice.setChannel(null);
+            }
             verb = 'banned and hidden';
             console.log('User is now banned')
           }
