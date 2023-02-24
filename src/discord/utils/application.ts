@@ -19,6 +19,7 @@ import {
   Role,
   PermissionsBitField,
   CategoryChannel,
+  PermissionResolvable,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -30,6 +31,7 @@ import { stripIndents } from 'common-tags';
 import { embedTemplate } from './embedTemplate';
 import { startLog } from './startLog'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { getGuild } from '../../global/utils/knex';
+import { checkChannelPermissions } from './checkPermissions';
 
 const F = f(__filename);
 
@@ -61,6 +63,53 @@ export async function applicationStart(
     return;
   }
   startLog(F, interaction);
+
+  if (!interaction.guild) {
+    interaction.reply('This command can only be used in a server!');
+    return;
+  }
+
+  // Get the application channel from the db
+  const channelApplicationsId = (await getGuild(interaction.guild.id)).channel_applications;
+  if (!channelApplicationsId) {
+    interaction.reply('The applications channel has not been set up yet!');
+    return;
+  }
+
+  const channelApplications = await interaction.guild.channels.fetch(channelApplicationsId) as TextChannel;
+
+  const channelPerms = await checkChannelPermissions(channelApplications, [
+    'SendMessages' as PermissionResolvable,
+  ]);
+  if (!channelPerms.hasPermission) {
+    const guildOwner = await interaction.guild?.fetchOwner();
+    await guildOwner?.send({ content: `Please make sure I can ${channelPerms.permission} in ${channelApplications} so I can run ${F}!` }); // eslint-disable-line
+    log.error(F, `Missing permission ${channelPerms.permission} in ${channelApplications}!`);
+    interaction.reply({ content: 'There was a permission issue, i\'ve notified the guild owner! Please try again later.', ephemeral: true });
+    return;
+  }
+
+  if (interaction.guild.premiumTier > 2) {
+    const threadPerms = await checkChannelPermissions(channelApplications, [
+      'CreatePrivateThreads' as PermissionResolvable,
+    ]);
+    if (!threadPerms.hasPermission) {
+      const guildOwner = await interaction.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${channelApplications} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${channelPerms.permission} in ${channelApplications}!`);
+      return;
+    }
+  } else {
+    const threadPerms = await checkChannelPermissions(channelApplications, [
+      'CreatePublicThreads' as PermissionResolvable,
+    ]);
+    if (!threadPerms.hasPermission) {
+      const guildOwner = await interaction.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${channelApplications} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${channelPerms.permission} in ${channelApplications}!`);
+      return;
+    }
+  }
 
   const roleRequestedId = interaction.values[0].split('~')[0];
   const roleReviewerId = interaction.values[0].split('~')[1];
@@ -107,14 +156,6 @@ export async function applicationStart(
       const reason = i.fields.getTextInputValue('reason');
       const skills = i.fields.getTextInputValue('skills');
 
-      // Get the application channel from the db
-      const channelApplicationsId = (await getGuild(i.guild.id)).channel_applications;
-      if (!channelApplicationsId) {
-        i.reply('The applications channel has not been set up yet!');
-        return;
-      }
-
-      const channelApplications = await i.guild.channels.fetch(channelApplicationsId) as TextChannel;
       const applicationThread = await channelApplications.threads.create({
         name: `💛│${actor.displayName}'s ${roleRequested.name} application!`,
         autoArchiveDuration: 1440,
