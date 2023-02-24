@@ -3,7 +3,7 @@ import {
   ChannelType,
   CategoryChannel,
   // GuildMember,
-  // PermissionsBitField,
+  PermissionsBitField,
 } from 'discord.js';
 
 // const F = f(__filename);
@@ -22,6 +22,16 @@ export async function pitchTent(
     name: `⛺│${New.member.displayName}'s tent`,
     type: ChannelType.GuildVoice,
     parent: env.CATEGORY_CAMPGROUND,
+    permissionOverwrites: [
+      { id: New.member.id, 
+        allow: [
+        PermissionsBitField.Flags.MuteMembers,
+        PermissionsBitField.Flags.DeafenMembers,
+        PermissionsBitField.Flags.MoveMembers,
+        PermissionsBitField.Flags.Connect,
+        PermissionsBitField.Flags.ViewChannel,
+      ] },
+    ],
   }).then(newChannel => {
     New.member?.voice.setChannel(newChannel.id);
     // newChannel.permissionOverwrites.set([
