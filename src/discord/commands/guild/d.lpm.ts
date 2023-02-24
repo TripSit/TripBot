@@ -113,8 +113,11 @@ async function constructEmbed():Promise<EmbedBuilder> {
     return `${d.name}${firstColSpaceString} | ${d.lpm}${secondColSpaceString} | ${d.lph}`;
   }).join('\n');
 
+  // Get the average of all global.lpmTime
+  const average = global.lpmTime.reduce((acc, cur) => acc + cur, 0) / global.lpmTime.length;
+
   embed.setDescription(`\`\`\`${description}
       \`\`\`
-      Updated ${time(new Date(), 'R')}`);
+      ${Math.round(average)}ms - ${time(new Date(), 'R')} `);
   return embed;
 }
