@@ -2066,6 +2066,7 @@ export async function rpgArcadeGame(
         gameName,
       };
       return {
+        content: null,
         embeds: [embedTemplate()
           .setAuthor(null)
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
@@ -2089,6 +2090,7 @@ export async function rpgArcadeGame(
       gameName,
     };
     return {
+      content: null,
       embeds: [embedTemplate()
         .setAuthor(null)
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
@@ -2109,6 +2111,7 @@ export async function rpgArcadeGame(
   if (currentBet !== 0) {
   // log.debug(F, 'No choice made, but a bet was made, return the bet screen');
     return {
+      content: null,
       embeds: [embedTemplate()
         .setAuthor(null)
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
@@ -2124,6 +2127,7 @@ export async function rpgArcadeGame(
   }
 
   return {
+    content: null,
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
