@@ -51,7 +51,7 @@ export const dLeaderboard: SlashCommand = {
         { name: 'Total', value: 'Total' },
         { name: 'General', value: 'General' },
         { name: 'Tripsitter', value: 'Tripsitter' },
-        { name: 'Developer', value: 'Development' },
+        { name: 'Developer', value: 'Developer' },
         { name: 'Team Tripsit', value: 'Team' },
         { name: 'Ignored', value: 'Ignored' },
       ))
@@ -72,7 +72,7 @@ export const dLeaderboard: SlashCommand = {
     await interaction.deferReply();
     const categoryChoice = interaction.options.getString('category') ?? 'All';
     const typeChoice = interaction.options.getString('type') ?? 'All';
-    // log.debug(F, `categoryChoice: ${categoryChoice}, typeChoice: ${typeChoice}`);
+    log.debug(F, `categoryChoice: ${categoryChoice}, typeChoice: ${typeChoice}`);
 
     const leaderboardData = await getLeaderboard();
     const book = [];
