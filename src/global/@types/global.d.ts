@@ -16,9 +16,16 @@ export type LpmDict = {
   [key: string]: {
     position: number;
     name: string;
-    lpm: number;
-    lph: number;
-    maxLpm: number;
-    maxLph: number;
+    alert: number;
+    lp1: number;
+    lp1Max: number;
+    lp5: number;
+    lp5Max: number;
+    lp10: number;
+    lp10Max: number;
+    lp30: number;
+    lp30Max: number;
+    lp60: number;
+    lp60Max: number;
   }
 };

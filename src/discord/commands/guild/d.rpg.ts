@@ -2066,6 +2066,7 @@ export async function rpgArcadeGame(
         gameName,
       };
       return {
+        content: null,
         embeds: [embedTemplate()
           .setAuthor(null)
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
@@ -2089,6 +2090,7 @@ export async function rpgArcadeGame(
       gameName,
     };
     return {
+      content: null,
       embeds: [embedTemplate()
         .setAuthor(null)
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
@@ -2109,6 +2111,7 @@ export async function rpgArcadeGame(
   if (currentBet !== 0) {
   // log.debug(F, 'No choice made, but a bet was made, return the bet screen');
     return {
+      content: null,
       embeds: [embedTemplate()
         .setAuthor(null)
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
@@ -2124,6 +2127,7 @@ export async function rpgArcadeGame(
   }
 
   return {
+    content: null,
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
@@ -2155,115 +2159,131 @@ export async function rpgArcadeAnimate(
   // }
 
   if (gameName === 'Coinflip') {
-    const spaceField = { name: '\u200B', value: '\u200B' };
-    const embed = embedTemplate()
-      .setAuthor(null)
-      .setFooter(null)
-      .setFields([
-        { name: '🪙', value: '🫱' },
-      ]);
-
     await (interaction as MessageComponentInteraction).update({ // eslint-disable-line no-await-in-loop
-      embeds: [embed],
+      embeds: [],
+      content: 'https://media.tenor.com/tewn7lzVDgcAAAAC/coin-flip-flip.gif',
+      components: [],
     });
 
-    await sleep(1 * 1000);
+    await sleep(4 * 1000);
 
-    await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-      embeds: [embed.setFields([
-        { name: '🪙', value: '👍' },
-      ])],
-    });
+    // const spaceField = { name: '\u200B', value: '\u200B' };
+    // const embed = embedTemplate()
+    //   .setAuthor(null)
+    //   .setFooter(null)
+    //   .setFields([
+    //     { name: '🪙', value: '🫱' },
+    //   ]);
 
-    await sleep(0.5 * 1000);
+    // await (interaction as MessageComponentInteraction).update({ // eslint-disable-line no-await-in-loop
+    //   embeds: [embed],
+    //   components: [],
+    // });
 
-    let height = 1;
-    const ceiling = 3;
-    while (height < ceiling) {
-      await sleep(0.25 * 1000); // eslint-disable-line no-await-in-loop
-      embed.setFields([{ name: '\u200B', value: '🪙' }]);
-      const spaceArray = Array(height).fill(spaceField);
-      if (spaceArray && spaceArray.length > 0) {
-        embed.addFields(spaceArray);
-      }
-      embed.addFields([{ name: '\u200B', value: '🫴' }]);
+    // await sleep(1 * 1000);
 
-      await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-        embeds: [embed],
-      });
-      height += 1;
-      // log.debug(F, `height up: ${height}`);
-    }
-    while (height > 0) {
-      await sleep(0.25 * 1000); // eslint-disable-line no-await-in-loop
-      embed.setFields([{ name: '\u200B', value: '🪙' }]);
-      const spaceArray = Array(height).fill({ name: '\u200B', value: '\u200B' });
-      if (spaceArray && spaceArray.length > 0) {
-        embed.addFields(spaceArray);
-      }
-      embed.addFields([{ name: '\u200B', value: '🫴' }]);
+    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+    //   embeds: [embed.setFields([
+    //     { name: '🪙', value: '👍' },
+    //   ])],
+    // });
 
-      await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-        embeds: [embed],
-      });
-      height -= 1;
-      // log.debug(F, `height down: ${height}`);
-    }
+    // await sleep(0.5 * 1000);
 
-    await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-      embeds: [embed.setFields([
-        { name: '🪙', value: '🫴' },
-      ])],
-    });
-    await sleep(0.5 * 1000);
+    // let height = 1;
+    // const ceiling = 3;
+    // while (height < ceiling) {
+    //   await sleep(0.25 * 1000); // eslint-disable-line no-await-in-loop
+    //   embed.setFields([{ name: '\u200B', value: '🪙' }]);
+    //   const spaceArray = Array(height).fill(spaceField);
+    //   if (spaceArray && spaceArray.length > 0) {
+    //     embed.addFields(spaceArray);
+    //   }
+    //   embed.addFields([{ name: '\u200B', value: '🫴' }]);
 
-    await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-      embeds: [embed.setFields([
-        { name: '🪙', value: '🫴', inline: true },
-      ])],
-    });
-    await sleep(1 * 1000);
+    //   await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+    //     embeds: [embed],
+    //   });
+    //   height += 1;
+    //   // log.debug(F, `height up: ${height}`);
+    // }
+    // while (height > 0) {
+    //   await sleep(0.25 * 1000); // eslint-disable-line no-await-in-loop
+    //   embed.setFields([{ name: '\u200B', value: '🪙' }]);
+    //   const spaceArray = Array(height).fill({ name: '\u200B', value: '\u200B' });
+    //   if (spaceArray && spaceArray.length > 0) {
+    //     embed.addFields(spaceArray);
+    //   }
+    //   embed.addFields([{ name: '\u200B', value: '🫴' }]);
+
+    //   await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+    //     embeds: [embed],
+    //   });
+    //   height -= 1;
+    //   // log.debug(F, `height down: ${height}`);
+    // }
+
+    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+    //   embeds: [embed.setFields([
+    //     { name: '🪙', value: '🫴' },
+    //   ])],
+    // });
+    // await sleep(0.5 * 1000);
+
+    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+    //   embeds: [embed.setFields([
+    //     { name: '🪙', value: '🫴', inline: true },
+    //   ])],
+    // });
+    // await sleep(1 * 1000);
   }
 
   if (gameName === 'Roulette') {
-    // Make an animation out of embeds that shows an arrow spinning
+    await (interaction as MessageComponentInteraction).update({ // eslint-disable-line no-await-in-loop
+      embeds: [],
+      content: 'https://media2.giphy.com/media/1DEJwfwdknKZq/giphy.gif',
+      components: [],
+    });
 
-    const wheelTop = [
-      { name: '\u200B', value: '⬛', inline: true },
-      { name: '\u200B', value: '🟥', inline: true },
-      { name: '\u200B', value: '⬛', inline: true },
-      { name: '🟥', value: '⬛', inline: true },
-    ];
-    const wheelBottom = [
-      { name: '🟥', value: '⬛', inline: true },
-      // { name: '🟥', value: '\u200B', inline: true },
-      // { name: '⬛', value: '\u200B', inline: true },
-      // { name: '🟥', value: '\u200B', inline: true },
-    ];
+    await sleep(4 * 1000);
+    //   // Make an animation out of embeds that shows an arrow spinning
 
-    const embed = embedTemplate()
-      .setAuthor(null)
-      .setFooter(null)
-      .setFields(
-        ...wheelTop,
-        { name: '⬆️', value: '🟥', inline: true },
-        ...wheelBottom,
-      );
-    await (interaction as MessageComponentInteraction).update({ embeds: [embed] }); // eslint-disable-line no-await-in-loop
-    await sleep(0.5 * 1000); // eslint-disable-line no-await-in-loop
+    //   const wheelTop = [
+    //     { name: '\u200B', value: '⬛', inline: true },
+    //     { name: '\u200B', value: '🟥', inline: true },
+    //     { name: '\u200B', value: '⬛', inline: true },
+    //     { name: '🟥', value: '⬛', inline: true },
+    //   ];
+    //   const wheelBottom = [
+    //     { name: '🟥', value: '⬛', inline: true },
+    //     // { name: '🟥', value: '\u200B', inline: true },
+    //     // { name: '⬛', value: '\u200B', inline: true },
+    //     // { name: '🟥', value: '\u200B', inline: true },
+    //   ];
 
-    const arrows = ['↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️', '⬆️', '↗️', '➡️', '↘️'];
-    for (const arrow of arrows) { // eslint-disable-line no-restricted-syntax
-      embed.setFields(
-        ...wheelTop,
-        { name: arrow, value: '🟥', inline: true },
-        ...wheelBottom,
-      );
-      await (interaction as MessageComponentInteraction).editReply({ embeds: [embed] }); // eslint-disable-line no-await-in-loop
-      // await sleep(0.1 * 1000); // eslint-disable-line no-await-in-loop
-    }
+    //   const embed = embedTemplate()
+    //     .setAuthor(null)
+    //     .setFooter(null)
+    //     .setFields(
+    //       ...wheelTop,
+    //       { name: '⬆️', value: '🟥', inline: true },
+    //       ...wheelBottom,
+    //     );
+    //   await (interaction as MessageComponentInteraction).update({ embeds: [embed] }); // eslint-disable-line no-await-in-loop
+    //   await sleep(0.5 * 1000); // eslint-disable-line no-await-in-loop
 
-    await sleep(2 * 1000);
+    //   const arrows = ['↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️', '⬆️', '↗️', '➡️', '↘️'];
+    //   for (const arrow of arrows) { // eslint-disable-line no-restricted-syntax
+    //     embed.setFields(
+    //       ...wheelTop,
+    //       { name: arrow, value: '🟥', inline: true },
+    //       ...wheelBottom,
+    //     );
+    //     await (interaction as MessageComponentInteraction).editReply({ embeds: [embed], components: [] }); // eslint-disable-line no-await-in-loop
+    //     // await sleep(0.1 * 1000); // eslint-disable-line no-await-in-loop
+    //   }
+
+  //   await sleep(2 * 1000);
   }
 }
 
