@@ -13,7 +13,8 @@ export async function wikiGuides():Promise<string[]> {
   const arr:string[] = [];
 
   // eslint-disable-next-line max-len
-  const response = await axios.get('https://wiki.tripsit.me/api.php?action=query&list=categorymembers&cmtitle=Category:Guides&format=json');
+
+  const response = await axios.get('https://wiki.tripsit.me/api.php?action=query&list=categorymembers&cmtitle=Category:Guides&format=json&cmlimit=9999');
 
   const result = response.data.query.categorymembers;
 
