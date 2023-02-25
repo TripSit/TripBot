@@ -6,11 +6,9 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcSolvent, calcSubstance } from '../../../global/commands/g.calcNasal';
 
+export default dTemplate;
 
-export default dCalcNasal;
-
-export const dCalcNasal: SlashCommand = {
-
+export const dTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_nasal') // there must be a better name for this
     .setDescription('Calculate how much of a substance or how much solvent you need to mix nose spray')
@@ -63,3 +61,4 @@ export const dCalcNasal: SlashCommand = {
     }
     return false;
   },
+};
