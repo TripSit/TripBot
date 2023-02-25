@@ -6,7 +6,6 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcSolvent, calcSubstance } from '../../../global/commands/g.calcNasal';
 
-
 export default dCalcNasal;
 
 export const dCalcNasal: SlashCommand = {
@@ -63,3 +62,5 @@ export const dCalcNasal: SlashCommand = {
     }
     return false;
   },
+
+};
