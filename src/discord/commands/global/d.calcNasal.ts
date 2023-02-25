@@ -1,22 +1,10 @@
-/* eslint-disable */
 import {
-  ActionRowBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  Colors,
   SlashCommandBuilder,
-  TextChannel,
-  ModalSubmitInteraction,
 } from 'discord.js';
-import {
-  TextInputStyle,
-} from 'discord-api-types/v10';
+
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcSolvent, calcSubstance } from '../../../global/commands/g.calcNasal';
-import { startLog } from '../../utils/startLog';
-
-const F = f(__filename);
 
 export default dTemplate;
 
@@ -49,32 +37,28 @@ export const dTemplate: SlashCommand = {
         .setDescription('Excreted ml per push (look at the packaging)')
         .setRequired(true))),
 
+  async execute(interaction) {
+    const command = interaction.options.getSubcommand();
 
-async execute(interaction) {
-  const command = interaction.options.getSubcommand();
-
-  
-
-    if(command == "solvent") {
-  
-
+    if (command === 'solvent') {
+      // eslint-disable-next-line max-len
       const solvent = await calcSolvent(interaction.options.getNumber('substance') as number, interaction.options.getNumber('mgpp') as number, interaction.options.getNumber('mlpp') as number);
-       let solventembed = embedTemplate().setTitle('Nasal spray calculator')
-              .setDescription(`You'll need ~${solvent}ml of solvent (water)`);
+      const solventembed = embedTemplate().setTitle('Nasal spray calculator')
+        .setDescription(`You'll need ~${solvent}ml of solvent (water)`);
 
-      interaction.reply({embeds: [solventembed]});
+      interaction.reply({ embeds: [solventembed] });
       return true;
-}    else if(command == "substance") {
-     
-
+    }
+    if (command === 'substance') {
+      // eslint-disable-next-line max-len
       const dose = await calcSubstance(interaction.options.getNumber('solvent') as number, interaction.options.getNumber('mgpp') as number, interaction.options.getNumber('mlpp') as number);
-      let substanceembed = embedTemplate()
-              .setTitle('Nasal spray calculator')
-              .setDescription(`You'll need ~${dose}mg of the substance`);
+      const substanceembed = embedTemplate()
+        .setTitle('Nasal spray calculator')
+        .setDescription(`You'll need ~${dose}mg of the substance`);
 
-      interaction.reply({embeds:[substanceembed]});     
-      return true;   
-}
-return false;
+      interaction.reply({ embeds: [substanceembed] });
+      return true;
+    }
+    return false;
   },
 };

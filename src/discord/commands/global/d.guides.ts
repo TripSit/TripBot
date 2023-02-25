@@ -1,16 +1,7 @@
 /* eslint-disable */
 import {
-  ActionRowBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  Colors,
   SlashCommandBuilder,
-  TextChannel,
-  ModalSubmitInteraction,
 } from 'discord.js';
-import {
-  TextInputStyle,
-} from 'discord-api-types/v10';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { wikiGuides } from '../../../global/commands/g.guides';
