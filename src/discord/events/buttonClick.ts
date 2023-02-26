@@ -17,7 +17,6 @@ import {
   modmailCreate, modmailActions,
 } from '../commands/guild/modmail';
 import { verifyButton } from '../utils/verifyButton';
-import { acceptWarning, refuseWarning } from '../utils/warnButtons';
 import { processReactionRole } from '../commands/guild/d.reactionRole';
 
 const F = f(__filename);
@@ -108,14 +107,6 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   }
   if (buttonID === 'memberbutton') {
     verifyButton(interaction);
-    return;
-  }
-  if (buttonID === 'acknowledgeButton') {
-    acceptWarning(interaction);
-    return;
-  }
-  if (buttonID === 'refusalButton') {
-    refuseWarning(interaction);
     return;
   }
 
