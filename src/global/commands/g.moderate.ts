@@ -436,6 +436,139 @@ export async function moderate(
 
   // If this is the info command then return with info
   if (command === 'INFO') {
+    // log.debug(F, `Member: ${JSON.stringify(target)}`);
+    // log.debug(F, `User: ${JSON.stringify(target.user)}`);
+    let trollScore = 0;
+    let tsReasoning = '';
+
+    // Calculate how like it is that this user is a troll.
+    // This is based off of factors like, how old is their account, do they have a profile picture, how many other guilds are they in, etc.
+    const diff = Math.abs(Date.now() - Date.parse(target.user.createdAt.toString()));
+    const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
+    const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
+    const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    if (years > 0) {
+      trollScore += 0;
+      tsReasoning += '+0 | Account was created at least a year ago\n';
+    } else if (years === 0 && months > 0) {
+      trollScore += 1;
+      tsReasoning += '+1 | Account was created months ago\n';
+    } else if (months === 0 && weeks > 0) {
+      trollScore += 2;
+      tsReasoning += '+2 | Account was created weeks ago\n';
+    } else if (weeks === 0 && days > 0) {
+      trollScore += 3;
+      tsReasoning += '+3 | Account was created days ago\n';
+    } else if (days === 0 && hours > 0) {
+      trollScore += 4;
+      tsReasoning += '+4 | Account was created hours ago\n';
+    } else if (hours === 0 && minutes > 0) {
+      trollScore += 5;
+      tsReasoning += '+5 | Account was created minutes ago\n';
+    } else if (minutes === 0 && seconds > 0) {
+      trollScore += 6;
+      tsReasoning += '+6 | Account was created seconds ago\n';
+    }
+
+    if (target.user.avatarURL()) {
+      trollScore += 0;
+      tsReasoning += '+0 | Account has a profile picture\n';
+    } else {
+      trollScore += 1;
+      tsReasoning += '+1 | Account does not have a profile picture\n';
+    }
+
+    if (target.user.bannerURL()) {
+      trollScore += 0;
+      tsReasoning += '+0 | Account has a banner\n';
+    } else {
+      trollScore += 1;
+      tsReasoning += '+1 | Account does not have a banner\n';
+    }
+
+    if (target.premiumSince) {
+      trollScore -= 1;
+      tsReasoning += '-1 | Account is boosting the guild\n';
+    } else {
+      trollScore += 0;
+      tsReasoning += '+0 | Account is not boosting the guild\n';
+    }
+
+    const errorUnknown = 'unknown-error';
+    const errorMember = 'unknown-member';
+    const errorPermission = 'no-permission';
+
+    await client.guilds.fetch();
+    const memberTest = await Promise.all(client.guilds.cache.map(async guild => {
+      try {
+        await guild.members.fetch(target.id);
+        log.debug(F, `User is in guild: ${guild.name}`);
+        return guild.name;
+      } catch (err:any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+        // log.debug(F, `Error: ${err} in ${guild.name}`);
+        if (err.code === 10007) {
+          return errorMember;
+        }
+        return errorUnknown;
+      }
+    }));
+
+    // count how many 'banned' appear in the array
+    const mutualGuilds = memberTest.filter(item => item !== errorUnknown && item !== errorMember);
+    log.debug(F, `mutualGuilds: ${mutualGuilds.join(', ')}`);
+
+    if (mutualGuilds.length > 0) {
+      trollScore += 0;
+      tsReasoning += `+0 | I currently share ${mutualGuilds.length} guilds with them\n`;
+    } else {
+      trollScore += mutualGuilds.length;
+      tsReasoning += `+1 | Account is only in this guild, that i can tell
+      `;
+    }
+
+    const bannedTest = await Promise.all(client.guilds.cache.map(async guild => {
+      try {
+        await guild.bans.fetch(target.id);
+        log.debug(F, `User is banned in guild: ${guild.name}`);
+        return guild.name;
+      } catch (err:any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+        // log.debug(F, `Error: ${err} in ${guild.name}`);
+        if (err.code === 50013) {
+          // log.debug(F, `I do not have permission to check if ${target.user.tag} is banned in ${guild.name}`);
+          return errorPermission;
+        }
+        if (err.code === 10026) {
+          // log.debug(F, `Ban not found for ${target.user.tag} in ${guild.name}`);
+          return 'not-found';
+        }
+        // return nothing
+        return errorUnknown;
+      }
+    }));
+
+    // count how many 'banned' appear in the array
+    const bannedGuilds = bannedTest.filter(item => item !== errorPermission && item !== 'not-found' && item !== errorUnknown);
+    log.debug(F, `Banned Guilds: ${bannedGuilds.join(', ')}`);
+
+    // count how many i didn't have permission to check
+    const noPermissionGuilds = bannedTest.filter(item => item === errorPermission);
+
+    if (bannedGuilds.length === 0) {
+      trollScore += 0;
+      tsReasoning += stripIndents`+0 | Not banned in any other guilds that I can tell
+      I could not check ${noPermissionGuilds.length} guilds due to permission issues\n`;
+    } else {
+      trollScore += bannedGuilds.length;
+      tsReasoning += stripIndents`+${bannedGuilds.length} | Account is banned in ${bannedGuilds.length} other guilds that I can see
+      I could not check ${noPermissionGuilds.length} guilds due to permission issues\n`;
+    }
+
+    modlogEmbed.setDescription(`**TripSit TrollScore: ${trollScore}**\n\`\`\`${tsReasoning}\`\`\`
+    ${modlogEmbed.data.description}`);
     return { embeds: [modlogEmbed], ephemeral: true };
   }
 
