@@ -8,6 +8,9 @@ import {
   TextChannel,
   Role,
   InteractionReplyOptions,
+  EmbedBuilder,
+  ThreadChannel,
+  MessageComponentInteraction,
 } from 'discord.js';
 import {
   ButtonStyle,
@@ -16,12 +19,17 @@ import {
 import { stripIndents } from 'common-tags';
 import ms from 'ms';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
-import { getUser, useractionsGet, useractionsSet } from '../utils/knex';
+import {
+  getUser, useractionsGet, useractionsSet, usersUpdate,
+} from '../utils/knex';
 import {
   UserActions,
   UserActionType,
+  Users,
 } from '../@types/database';
 import { last } from './g.last';
+
+export default moderate;
 
 const F = f(__filename);
 
@@ -41,12 +49,72 @@ const F = f(__filename);
 // ];
 
 const embedVariables = {
+  NOTE: {
+    embedColor: Colors.Yellow,
+    embedTitle: 'Note!',
+    verb: 'noted',
+  },
+  WARNING: {
+    embedColor: Colors.Yellow,
+    embedTitle: 'Warned!',
+    verb: 'warned',
+  },
+  FULL_BAN: {
+    embedColor: Colors.Red,
+    embedTitle: 'Banned!',
+    verb: 'banned',
+  },
+  'UN-FULL_BAN': {
+    embedColor: Colors.Green,
+    embedTitle: 'Un-banned!',
+    verb: 'un-banned',
+  },
+  TICKET_BAN: {
+    embedColor: Colors.Red,
+    embedTitle: 'Ticket Banned!',
+    verb: 'banned from using tickets',
+  },
+  'UN-TICKET_BAN': {
+    embedColor: Colors.Green,
+    embedTitle: 'Un-Ticket Banned!',
+    verb: 'allowed to submit tickets again',
+  },
+  DISCORD_BOT_BAN: {
+    embedColor: Colors.Red,
+    embedTitle: 'Discord Bot Banned!',
+    verb: 'banned from using the Discord bot',
+  },
+  'UN-DISCORD_BOT_BAN': {
+    embedColor: Colors.Green,
+    embedTitle: 'Un-Discord Bot Banned!',
+    verb: 'allowed to use the Discord bot again',
+  },
+  BAN_EVASION: {
+    embedColor: Colors.Red,
+    embedTitle: 'Ban Evasion!',
+    verb: 'banned for evasion',
+  },
+  'UN-BAN_EVASION': {
+    embedColor: Colors.Green,
+    embedTitle: 'Un-Ban Evasion!',
+    verb: 'un-banned for evasion',
+  },
+  UNDERBAN: {
+    embedColor: Colors.Red,
+    embedTitle: 'Underban!',
+    verb: 'banned for being underage',
+  },
+  'UN-UNDERBAN': {
+    embedColor: Colors.Green,
+    embedTitle: 'Un-Underban!',
+    verb: 'un-banned for being underage',
+  },
   TIMEOUT: {
     embedColor: Colors.Yellow,
     embedTitle: 'Timeout!',
     verb: 'timed out',
   },
-  UNTIMEOUT: {
+  'UN-TIMEOUT': {
     embedColor: Colors.Green,
     embedTitle: 'Untimeout!',
     verb: 'removed from time-out',
@@ -55,36 +123,6 @@ const embedVariables = {
     embedColor: Colors.Orange,
     embedTitle: 'Kicked!',
     verb: 'kicked',
-  },
-  FULL_BAN: {
-    embedColor: Colors.Red,
-    embedTitle: 'Banned!',
-    verb: 'banned',
-  },
-  UNBAN: {
-    embedColor: Colors.Green,
-    embedTitle: 'Un-banned!',
-    verb: 'un-banned',
-  },
-  UNDERBAN: {
-    embedColor: Colors.Blue,
-    embedTitle: 'Underbanned!',
-    verb: 'underbanned',
-  },
-  UNUNDERBAN: {
-    embedColor: Colors.Green,
-    embedTitle: 'Un-Underbanned!',
-    verb: 'un-underbanned',
-  },
-  WARNING: {
-    embedColor: Colors.Yellow,
-    embedTitle: 'Warned!',
-    verb: 'warned',
-  },
-  NOTE: {
-    embedColor: Colors.Yellow,
-    embedTitle: 'Note!',
-    verb: 'noted',
   },
   REPORT: {
     embedColor: Colors.Orange,
@@ -109,69 +147,111 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
     .setStyle(ButtonStyle.Danger),
 );
 
-export default moderate;
-
-/**
- * Takes a user and performs a moderation action on them
- * @param {GuildMember} actor
- * @param {string} command
- * @param {GuildMember} target
- * @param {string | null} privReason
- * @param {string | null} pubReason
- * @param {number | null} duration
- */
 export async function moderate(
   actor: GuildMember,
-  command: UserActionType | 'INFO' | 'UNBAN' | 'UNTIMEOUT' | 'UNUNDERBAN',
+  command: UserActionType | 'INFO' | 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-UNDERBAN' | 'UN-BAN_EVASION' | 'UN-TIMEOUT',
   target: GuildMember,
-  privReason: string | null,
-  pubReason: string | null,
+  internalNote: string | null,
+  description: string | null,
   duration: number | null,
 ):Promise<InteractionReplyOptions> {
   // log.debug(`${PREFIX}
   // actor: ${actor.user.tag}
   // command: ${command}
   // target: ${target.user.tag}
-  // privReason: ${privReason}
-  // pubReason: ${pubReason}
+  // internalNote: ${internalNote}
+  // description: ${description}
   // duration: ${duration}`);
 
-  // Send a message to the user
-  if (command !== 'REPORT' && command !== 'NOTE' && command !== 'INFO') {
-    const warnEmbed = embedTemplate()
+  const actorData = await getUser(actor.id, null);
+  const targetData = await getUser(target.id, null);
+
+  log.debug(F, `TargetData: ${JSON.stringify(targetData, null, 2)}`);
+
+  // If this is a Warn, ban, timeout or kick, send a message to the user
+  // Do this first cuz you can't do this if they're not in the guild
+  if (description !== '' && 'WARNING, FULL_BAN, TICKET_BAN, DISCORD_BOT_BAN, BAN_EVASION, UNDERBAN, TIMEOUT, KICK'.includes(command)) {
+    const embed = embedTemplate()
       .setColor(embedVariables[command as keyof typeof embedVariables].embedColor)
-      .setTitle(embedVariables[command as keyof typeof embedVariables].embedTitle)
-      .setDescription(stripIndents`
-    Hey ${target}, you have been ${embedVariables[command as keyof typeof embedVariables].verb}${duration && command === 'TIMEOUT' ? ` for ${ms(duration, { long: true })}` : ''} by Team TripSit:
+      .setTitle(embedVariables[command as keyof typeof embedVariables].embedTitle);
 
-    ${pubReason}
+    let body = stripIndents`
+      Hey ${target}, I'm sorry to inform that you've been ${embedVariables[command as keyof typeof embedVariables].verb}${duration && command === 'TIMEOUT' ? ` for ${ms(duration, { long: true })}` : ''} by Team TripSit:
 
-    **Do not message a moderator to talk about this!**
-    
-    ${command !== 'FULL_BAN' && command !== 'UNDERBAN' && command !== 'KICK'
-    ? 'You can respond to this bot and it will allow you to talk to the team privately!'
-    : 'You can send an email to appeals@tripsit.me to appeal this ban!'}
-    Please read the rules and be respectful of them.
+      ${description}
 
-    https://tripsit.me/rules 
-    `);
-    if (command !== 'FULL_BAN' && command !== 'UNDERBAN' && command !== 'KICK') {
+      **Do not message a moderator to talk about this!**
+    `;
+
+    if ('FULL_BAN, BAN_EVASION, UNDERBAN'.includes(command)) {
+      body = stripIndents`${body}\n\nYou can send an email to appeals@tripsit.me to appeal this ban! Evasion bans are permanent, and underban bans are permanent until you turn 18.`;
+    }
+
+    if ('WARNING, TICKET_BAN, DISCORD_BOT_BAN, TIMEOUT, KICK'.includes(command)) {
+      const channel = await client.channels.fetch(env.CHANNEL_HELPDESK);
+      body = stripIndents`${body}\n\nYou can discuss this with the mods in ${channel}. Do not argue the rules in public channels!`;
+    }
+
+    if ('TIMEOUT'.includes(command)) {
+      const channel = await client.channels.fetch(env.CHANNEL_HELPDESK);
+      body = stripIndents`${body}\n\nYou can discuss this with the mods in ${channel} when this expires. Do not argue the rules in public channels!`;
+    }
+
+    if ('WARNING, TIMEOUT, KICK'.includes(command)) {
+      body = stripIndents`${body}\n\nPlease review the rules so this doesn't happen again!\nhttps:// wiki.tripsit.me/wiki/Terms_of_Service`;
+    }
+
+    if ('KICK'.includes(command)) {
+      body = stripIndents`${body}\n\nIf you feel you can follow the rules you can rejoin here: https://discord.gg/tripsit`;
+    }
+
+    embed.setDescription(body);
+
+    if ('WARNING, TIMEOUT'.includes(command)) {
       try {
-        await target.user.send({ embeds: [warnEmbed], components: [warnButtons] });
+        const message = await target.user.send({ embeds: [embed], components: [warnButtons] });
+        const filter = (i: MessageComponentInteraction) => i.user.id === target.user.id;
+        const collector = message.createMessageComponentCollector({ filter, time: 0 });
+
+        collector.on('collect', async (i: MessageComponentInteraction) => {
+          if (i.customId === 'acknowledgeButton') {
+            const targetChan = await client.channels.fetch(targetData.mod_thread_id as string) as TextChannel;
+            if (targetChan) {
+              await targetChan.send({
+                embeds: [embedTemplate()
+                  .setColor(Colors.Green)
+                  .setDescription(`${target.user.username} has acknowledged their warning.`)],
+              });
+            }
+            // remove the components from the message
+            await i.update({ components: [] });
+            i.user.send('Thanks for understanding! We appreciate your cooperation and will consider this in the future!');
+          } else if (i.customId === 'refusalButton') {
+            const targetChan = await client.channels.fetch(targetData.mod_thread_id as string) as TextChannel;
+            await targetChan.send({
+              embeds: [embedTemplate()
+                .setColor(Colors.Red)
+                .setDescription(`${target.user.username} has refused their warning and was kicked.`)],
+            });
+            // remove the components from the message
+            await i.update({ components: [] });
+            i.user.send('Thanks for admitting this, you\'ve been removed from the guild. You can rejoin if you ever decide to cooperate.');
+            const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
+            await guild.members.kick(target.user.id, 'Refused to acknowledge warning');
+          }
+        });
       } catch (error) {
         // Ignore
       }
     } else {
       try {
-        await target.user.send({ embeds: [warnEmbed] });
+        await target.user.send({ embeds: [embed] });
       } catch (error) {
         // Ignore
       }
     }
   }
 
-  const actorData = await getUser(actor.id, null);
-  const targetData = await getUser(target.id, null);
   const noReason = 'No reason provided';
   let extraMessage = '';
 
@@ -180,8 +260,8 @@ export async function moderate(
     user_id: targetData.id,
     type: {} as UserActionType,
     ban_evasion_related_user: null as string | null,
-    description: pubReason ?? noReason as string,
-    internal_note: privReason ?? noReason as string | null,
+    description,
+    internal_note: internalNote,
     expires_at: null as Date | null,
     repealed_by: null as string | null,
     repealed_at: null as Date | null,
@@ -192,37 +272,36 @@ export async function moderate(
   // Perform actions
   if (command === 'TIMEOUT') {
     actionData.type = 'TIMEOUT' as UserActionType;
+    actionData.expires_at = new Date(Date.now() + (duration as number));
     try {
-      await target.timeout(duration, privReason ?? noReason);
+      await target.timeout(duration, internalNote ?? noReason);
     } catch (err) {
       log.error(F, `Error: ${err}`);
     }
-  } else if (command === 'UNTIMEOUT') {
+  } else if (command === 'UN-TIMEOUT') {
     actionData.type = 'TIMEOUT' as UserActionType;
     // Get the current timeout record from the DB
 
     const record = await useractionsGet(targetData.id, 'TIMEOUT');
 
-    if (record.length === 0) {
-      return {
-        content: `I couldn't find a timeout record for ${target.displayName}!`,
-        ephemeral: true,
-      };
+    if (record.length > 0) {
+      [actionData] = record;
     }
-
-    [actionData] = record;
 
     actionData.repealed_at = new Date();
     actionData.repealed_by = actorData.id;
 
     try {
-      await target.timeout(0, privReason ?? noReason);
-      // log.debug(F, `I untimeouted ${target.displayName} because\n '${privReason}'!`);
+      await target.timeout(0, internalNote ?? noReason);
+      // log.debug(F, `I untimeouted ${target.displayName} because\n '${internalNote}'!`);
     } catch (err) {
       log.error(F, `Error: ${err}`);
     }
   } else if (command === 'FULL_BAN') {
     actionData.type = 'FULL_BAN' as UserActionType;
+    targetData.removed_at = new Date();
+    await usersUpdate(targetData);
+
     try {
       const deleteMessageValue = duration ?? 0;
       if (deleteMessageValue > 0) {
@@ -232,73 +311,107 @@ export async function moderate(
       }
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       // log.debug(F, `Days to delete: ${deleteMessageValue}`);
-      // log.debug(F, `target: ${target.user.tag} | deleteMessageValue: ${deleteMessageValue} | privReason: ${privReason ?? noReason}`);
-      targetGuild.members.ban(target, { deleteMessageSeconds: deleteMessageValue, reason: privReason ?? noReason });
+      // log.debug(F, `target: ${target.user.tag} | deleteMessageValue: ${deleteMessageValue} | internalNote: ${internalNote ?? noReason}`);
+      targetGuild.members.ban(target, { deleteMessageSeconds: deleteMessageValue / 1000, reason: internalNote ?? noReason });
     } catch (err) {
       log.error(F, `Error: ${err}`);
     }
-  } else if (command === 'UNBAN') {
+  } else if (command === 'UN-FULL_BAN') {
     actionData.type = 'FULL_BAN' as UserActionType;
+
+    targetData.removed_at = null;
+    await usersUpdate(targetData);
 
     const record = await useractionsGet(targetData.id, 'FULL_BAN');
 
-    if (record.length === 0) {
-      return {
-        content: `I couldn't find a timeout record for ${target.displayName}!`,
-        ephemeral: true,
-      };
+    if (record.length > 0) {
+      [actionData] = record;
     }
-
-    [actionData] = record;
-
     actionData.repealed_at = new Date();
     actionData.repealed_by = actorData.id;
 
     try {
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       await targetGuild.bans.fetch();
-      await targetGuild.bans.remove(target.user, privReason ?? noReason);
+      await targetGuild.bans.remove(target.user, internalNote ?? noReason);
     } catch (err) {
       log.error(F, `Error: ${err}`);
     }
   } else if (command === 'UNDERBAN') {
     actionData.type = 'UNDERBAN' as UserActionType;
+    targetData.removed_at = new Date();
+    await usersUpdate(targetData);
     try {
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-      targetGuild.members.ban(target, { reason: privReason ?? noReason });
+      targetGuild.members.ban(target, { reason: internalNote ?? noReason });
     } catch (err) {
       log.error(F, `Error: ${err}`);
     }
-  } else if (command === 'UNUNDERBAN') {
+  } else if (command === 'UN-UNDERBAN') {
     actionData.type = 'UNDERBAN' as UserActionType;
+    targetData.removed_at = null;
+    await usersUpdate(targetData);
 
     const record = await useractionsGet(targetData.id, 'UNDERBAN');
-
-    if (record.length === 0) {
-      return {
-        content: `I couldn't find a timeout record for ${target.displayName}!`,
-        ephemeral: true,
-      };
+    if (record.length > 0) {
+      [actionData] = record;
     }
-
-    [actionData] = record;
-
     actionData.repealed_at = new Date();
     actionData.repealed_by = actorData.id;
 
     try {
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       await targetGuild.bans.fetch();
-      await targetGuild.bans.remove(target.user, privReason ?? noReason);
+      await targetGuild.bans.remove(target.user, internalNote ?? noReason);
     } catch (err) {
       log.error(F, `Error: ${err}`);
     }
   } else if (command === 'TICKET_BAN') {
     actionData.type = 'TICKET_BAN' as UserActionType;
+    targetData.ticket_ban = true;
+    await usersUpdate(targetData);
+  } else if (command === 'UN-TICKET_BAN') {
+    actionData.type = 'TICKET_BAN' as UserActionType;
+    targetData.ticket_ban = false;
+
+    await usersUpdate(targetData);
+
+    const record = await useractionsGet(targetData.id, 'UNDERBAN');
+    if (record.length > 0) {
+      [actionData] = record;
+    }
+    actionData.repealed_at = new Date();
+    actionData.repealed_by = actorData.id;
   } else if (command === 'DISCORD_BOT_BAN') {
     actionData.type = 'DISCORD_BOT_BAN' as UserActionType;
+    targetData.discord_bot_ban = true;
+    await usersUpdate(targetData);
+  } else if (command === 'UN-DISCORD_BOT_BAN') {
+    actionData.type = 'DISCORD_BOT_BAN' as UserActionType;
+    targetData.discord_bot_ban = false;
+    await usersUpdate(targetData);
+
+    const record = await useractionsGet(targetData.id, actionData.type);
+    if (record.length > 0) {
+      [actionData] = record;
+    }
+    actionData.repealed_at = new Date();
+    actionData.repealed_by = actorData.id;
   } else if (command === 'BAN_EVASION') {
     actionData.type = 'BAN_EVASION' as UserActionType;
+    targetData.removed_at = new Date();
+    await usersUpdate(targetData);
+  } else if (command === 'UN-BAN_EVASION') {
+    actionData.type = 'BAN_EVASION' as UserActionType;
+    targetData.removed_at = null;
+    await usersUpdate(targetData);
+
+    const record = await useractionsGet(targetData.id, actionData.type);
+    if (record.length > 0) {
+      [actionData] = record;
+    }
+    actionData.repealed_at = new Date();
+    actionData.repealed_by = actorData.id;
   } else if (command === 'NOTE') {
     actionData.type = 'NOTE' as UserActionType;
   } else if (command === 'REPORT') {
@@ -315,10 +428,67 @@ export async function moderate(
   }
 
   if (command !== 'INFO') {
-    // log.debug(F, `actionData: ${JSON.stringify(actionData, null, 2)}`);
+    // This needs to happen before creating the modlog embed
     await useractionsSet(actionData);
   }
 
+  const modlogEmbed = await userInfoEmbed(target, targetData, command);
+
+  // If this is the info command then return with info
+  if (command === 'INFO') {
+    return { embeds: [modlogEmbed], ephemeral: true };
+  }
+
+  let modThread = {} as ThreadChannel;
+  if (targetData.mod_thread_id) {
+    modThread = await global.client.channels.fetch(targetData.mod_thread_id) as ThreadChannel;
+  } else {
+    // Create a new thread in the mod channel
+    const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
+    modThread = await modChan.threads.create({
+      name: `${target.displayName}`,
+      autoArchiveDuration: 60,
+    });
+    // Save the thread id to the user
+    targetData.mod_thread_id = modThread.id;
+    await usersUpdate(targetData);
+  }
+
+  const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+  const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
+  const greeting = `Hey ${roleModerator}`;
+  const timeoutDuration = duration ? ` for ${ms(duration, { long: true })}` : '';
+  const summary = `${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} ${command === 'TIMEOUT' ? timeoutDuration : ''}`;
+
+  await modThread.send({
+    content: stripIndents`
+      ${command !== 'NOTE' ? greeting : ''}
+      ${summary}
+      **Reason:** ${internalNote ?? noReason}
+      **Note sent to user:** ${description !== '' ? description : '*No message sent to user*'}
+    `,
+    embeds: [modlogEmbed],
+  });
+  // log.debug(F, `sent a message to the moderators room`);
+  if (extraMessage) {
+    await modThread.send({ content: extraMessage });
+  }
+
+  const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+  modlog.send({ embeds: [modlogEmbed] });
+  // log.debug(F, `sent a message to the modlog room`);
+
+  // Return a message to the user who started this, confirming the user was acted on
+  // log.debug(F, `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
+  const desc = `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`;
+  const response = embedTemplate()
+    .setColor(Colors.Yellow)
+    .setDescription(desc);
+  log.info(F, `response: ${JSON.stringify(desc, null, 2)}`);
+  return { embeds: [response], ephemeral: true };
+}
+
+export async function userInfoEmbed(target:GuildMember, targetData:Users, command: string):Promise<EmbedBuilder> {
   const targetActionList = {
     TIMEOUT: [] as string[],
     KICK: [] as string[],
@@ -328,7 +498,6 @@ export async function moderate(
     NOTE: [] as string[],
     REPORT: [] as string[],
   };
-
   // Populate targetActionList from the db
 
   const targetActionListRaw = await useractionsGet(targetData.id);
@@ -343,9 +512,9 @@ export async function moderate(
   });
 
   // log.debug(F, `targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
-
   const modlogEmbed = embedTemplate()
     // eslint-disable-next-line
+    .setFooter(null)
     .setAuthor({ name: `${target.displayName} (${target.user.tag})`, iconURL: target.user.displayAvatarURL() })
     .setColor(embedVariables[command as keyof typeof embedVariables].embedColor)
     .addFields(
@@ -375,31 +544,6 @@ export async function moderate(
     modlogEmbed.addFields({ name: '# of Underbans', value: `${targetActionList.UNDERBAN.length}`, inline: true });
   }
 
-  // Send the message to the mod channel
-  if (command !== 'INFO') {
-    const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
-    // We must send the mention outside of the embed, cuz mentions don't work in embeds
-    const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-    const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
-    const timeoutDuration = duration ? ` for ${ms(duration, { long: true })}` : '';
-    const greeting = `Hey ${roleModerator}`;
-    const summary = `${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} ${command === 'TIMEOUT' ? timeoutDuration : ''}`;
-    await modChan.send({
-      content: stripIndents`
-      ${command !== 'NOTE' ? greeting : ''}
-      ${summary}
-      **PrivReason:** ${privReason ?? noReason}
-      ${pubReason ? `**PubReason:** ${pubReason}` : ''}
-    `,
-      embeds: [modlogEmbed],
-    });
-    // log.debug(F, `sent a message to the moderators room`);
-    if (extraMessage) {
-      await modChan.send({ content: extraMessage });
-    }
-  }
-
-  // If this is the info command then return with info
   if (command === 'INFO') {
     let infoString = stripIndents`
       ${targetActionList.FULL_BAN.length > 0 ? `**Bans**\n${targetActionList.FULL_BAN.join('\n')}` : ''}
@@ -415,27 +559,24 @@ export async function moderate(
     }
     // log.debug(F, `infoString: ${infoString}`);
     modlogEmbed.setDescription(infoString);
-    try {
-      log.info(F, `response: ${JSON.stringify(infoString, null, 2)}`);
-      return { embeds: [modlogEmbed], ephemeral: true };
-    } catch (err) {
-      log.error(F, `Error: ${err}`);
-    }
   }
 
-  // Send a message to the modlog room
-  if (command !== 'INFO') {
-    const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
-    modlog.send({ embeds: [modlogEmbed] });
-    // log.debug(F, `sent a message to the modlog room`);
-  }
+  return modlogEmbed;
+}
 
-  // Return a message to the user confirming the user was acted on
-  // log.debug(F, `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
-  const desc = `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`;
-  const response = embedTemplate()
-    .setColor(Colors.Yellow)
-    .setDescription(desc);
-  log.info(F, `response: ${JSON.stringify(desc, null, 2)}`);
-  return { embeds: [response], ephemeral: true };
+export async function linkThread(
+  discordId: string,
+  threadId: string,
+):Promise<string | null> {
+  // Get the targetData from the db
+  const targetData = await getUser(discordId, null);
+
+  if (targetData.mod_thread_id === null) {
+    // log.debug(F, `targetData.mod_thread_id is null, updating it`);
+    targetData.mod_thread_id = threadId;
+    await usersUpdate(targetData);
+    return null;
+  }
+  // log.debug(F, `targetData.mod_thread_id is not null, not updating it`);
+  return targetData.mod_thread_id;
 }
