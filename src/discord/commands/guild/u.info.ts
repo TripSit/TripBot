@@ -21,21 +21,14 @@ export const uInfo: UserCommand = {
   async execute(interaction) {
     startLog(F, interaction);
     await interaction.deferReply({ ephemeral: true });
-    const actor = interaction.member as GuildMember;
-    const target = interaction.options.data[0].member as GuildMember;
-
-    const result = await moderate(
-      actor,
+    await interaction.editReply(await moderate(
+      interaction.member as GuildMember,
       'INFO',
-      target,
+      interaction.options.data[0].member as GuildMember,
       null,
       null,
       null,
-    );
-
-    // log.debug(F, `Result: ${result}`);
-    await interaction.editReply(result);
-
+    ));
     return true;
   },
 };

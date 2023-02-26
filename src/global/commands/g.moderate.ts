@@ -166,11 +166,11 @@ export async function moderate(
   const actorData = await getUser(actor.id, null);
   const targetData = await getUser(target.id, null);
 
-  log.debug(F, `TargetData: ${JSON.stringify(targetData, null, 2)}`);
+  // log.debug(F, `TargetData: ${JSON.stringify(targetData, null, 2)}`);
 
   // If this is a Warn, ban, timeout or kick, send a message to the user
   // Do this first cuz you can't do this if they're not in the guild
-  if (description !== '' && 'WARNING, FULL_BAN, TICKET_BAN, DISCORD_BOT_BAN, BAN_EVASION, UNDERBAN, TIMEOUT, KICK'.includes(command)) {
+  if ((description !== '' && description !== null) && 'WARNING, FULL_BAN, TICKET_BAN, DISCORD_BOT_BAN, BAN_EVASION, UNDERBAN, TIMEOUT, KICK'.includes(command)) {
     const embed = embedTemplate()
       .setColor(embedVariables[command as keyof typeof embedVariables].embedColor)
       .setTitle(embedVariables[command as keyof typeof embedVariables].embedTitle);
@@ -458,14 +458,15 @@ export async function moderate(
   const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
   const greeting = `Hey ${roleModerator}`;
   const timeoutDuration = duration ? ` for ${ms(duration, { long: true })}` : '';
-  const summary = `${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName} ${command === 'TIMEOUT' ? timeoutDuration : ''}`;
+  const summary = `${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName}${command === 'TIMEOUT' ? timeoutDuration : ''}!`;
+  const anonSummary = `${target.displayName} was ${embedVariables[command as keyof typeof embedVariables].verb}${command === 'TIMEOUT' ? timeoutDuration : ''}!`;
 
   await modThread.send({
     content: stripIndents`
       ${command !== 'NOTE' ? greeting : ''}
       ${summary}
       **Reason:** ${internalNote ?? noReason}
-      **Note sent to user:** ${description !== '' ? description : '*No message sent to user*'}
+      **Note sent to user:** ${(description !== '' && description !== null) ? description : '*No message sent to user*'}
     `,
     embeds: [modlogEmbed],
   });
@@ -474,16 +475,23 @@ export async function moderate(
     await modThread.send({ content: extraMessage });
   }
 
+  const desc = stripIndents`
+    ${anonSummary}
+    **Reason:** ${internalNote ?? noReason}
+    **Note sent to user:** ${(description !== '' && description !== null) ? description : '*No message sent to user*'}
+  `;
+  const response = embedTemplate()
+    .setColor(Colors.Yellow)
+    .setDescription(desc)
+    .setFooter(null);
+
   const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
-  modlog.send({ embeds: [modlogEmbed] });
+  modlog.send({ embeds: [response] });
   // log.debug(F, `sent a message to the modlog room`);
 
   // Return a message to the user who started this, confirming the user was acted on
   // log.debug(F, `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
-  const desc = `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`;
-  const response = embedTemplate()
-    .setColor(Colors.Yellow)
-    .setDescription(desc);
+
   log.info(F, `response: ${JSON.stringify(desc, null, 2)}`);
   return { embeds: [response], ephemeral: true };
 }
@@ -567,11 +575,12 @@ export async function userInfoEmbed(target:GuildMember, targetData:Users, comman
 export async function linkThread(
   discordId: string,
   threadId: string,
+  override: boolean | null,
 ):Promise<string | null> {
   // Get the targetData from the db
   const targetData = await getUser(discordId, null);
 
-  if (targetData.mod_thread_id === null) {
+  if (targetData.mod_thread_id === null || override) {
     // log.debug(F, `targetData.mod_thread_id is null, updating it`);
     targetData.mod_thread_id = threadId;
     await usersUpdate(targetData);
