@@ -1,8 +1,11 @@
+import { stripIndents } from 'common-tags';
 import {
   ChatInputCommandInteraction,
+  Colors,
   GuildMember,
   User,
 } from 'discord.js';
+import { embedTemplate } from './embedTemplate';
 
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
@@ -11,10 +14,10 @@ export default getDiscordMember;
 export async function getDiscordMember(
   interaction:ChatInputCommandInteraction,
   string:string,
-):Promise<GuildMember[]> {
+):Promise<GuildMember | null> {
   const members = [] as GuildMember[];
-  if (!interaction.guild) return members;
-  log.info(F, `string: ${string}`);
+  if (!interaction.guild) return null;
+  // log.info(F, `string: ${string}`);
 
   if (string.startsWith('<@') && string.endsWith('>')) {
     log.debug(F, `${string} is a mention!`);
@@ -45,8 +48,41 @@ export async function getDiscordMember(
     });
   }
 
-  log.info(F, `members: ${members.length} #1 = ${members[0]?.nickname}`);
-  return members;
+  // log.info(F, `members: ${members.length} #1 = ${members[0]?.displayName}`);
+
+  if (members.length > 1) {
+    const embed = embedTemplate()
+      .setColor(Colors.Red)
+      .setTitle('Found more than one user with with that value!')
+      .setDescription(stripIndents`
+        "${string}" returned ${members.length} results!
+
+        Be more specific:
+        > **Mention:** @Moonbear
+        > **Tag:** moonbear#1234
+        > **ID:** 9876581237
+        > **Nickname:** MoonBear`);
+    await interaction.reply({ embeds: [embed], ephemeral: true });
+    return null;
+  }
+
+  if (members.length === 0) {
+    const embed = embedTemplate()
+      .setColor(Colors.Red)
+      .setTitle('Could not find that user!')
+      .setDescription(stripIndents`
+        "${string}" returned no results!
+
+        Try again with:
+        > **Mention:** @Moonbear
+        > **Tag:** moonbear#1234
+        > **ID:** 9876581237
+        > **Nickname:** MoonBear`);
+    await interaction.reply({ embeds: [embed], ephemeral: true });
+    return null;
+  }
+
+  return members[0];
 }
 
 export async function getDiscordUser(

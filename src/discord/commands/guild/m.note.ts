@@ -27,49 +27,34 @@ export const mNote: MessageCommand = {
     .setType(ApplicationCommandType.Message),
   async execute(interaction) {
     startLog(F, interaction);
-    const actor = interaction.member as GuildMember;
-    const target = interaction.targetMessage.member as GuildMember;
-    const message = interaction.targetMessage.cleanContent;
-    const messageUrl = interaction.targetMessage.url;
-
-    // log.debug(`${PREFIX} target: ${target}`);
-
-    const modal = new ModalBuilder()
+    await interaction.showModal(new ModalBuilder()
       .setCustomId(`noteModal~${interaction.id}`)
-      .setTitle('Tripbot Note');
-    const privReasonInput = new TextInputBuilder()
-      .setLabel('What are you noting about this person?')
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('Tell the team why you are noting this user.')
-      .setRequired(true)
-      .setCustomId('privReason');
-
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReasonInput);
-    modal.addComponents(firstActionRow);
-    await interaction.showModal(modal);
+      .setTitle('Tripbot Note')
+      .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+        .setLabel('What are you noting about this person?')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('Tell the team why you are noting this user.')
+        .setRequired(true)
+        .setCustomId('internalNote'))));
     const filter = (i:ModalSubmitInteraction) => i.customId.includes('noteModal');
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
         await i.deferReply({ ephemeral: true });
-        const privReason = stripIndents`
-        ${i.fields.getTextInputValue('privReason')}
-    
-        **The offending message**
-        > ${message}
-        ${messageUrl}
-        `;
-
-        const result = await moderate(
-          actor,
+        await i.editReply(await moderate(
+          interaction.member as GuildMember,
           'NOTE' as UserActionType,
-          target,
-          privReason,
+          interaction.targetMessage.member as GuildMember,
+          stripIndents`
+            ${i.fields.getTextInputValue('internalNote')}
+        
+            **The offending message**
+            > ${interaction.targetMessage.cleanContent}
+            ${interaction.targetMessage.url}
+          `,
           null,
           null,
-        );
-          // log.debug(F, `Result: ${result}`);
-        await i.editReply(result);
+        ));
       });
     return true;
   },
