@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import {
   SlashCommandBuilder,
   GuildMember,
@@ -19,7 +20,9 @@ export const dTimezone: SlashCommand = {
       .setDescription('Get someone\'s timezone!')
       .addUserOption(option => option
         .setName('user')
-        .setDescription('User to lookup')))
+        .setDescription('User to lookup'))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(subcommand => subcommand
       .setName('set')
       .setDescription('Set your timezone!')
@@ -47,10 +50,11 @@ export const dTimezone: SlashCommand = {
     // log.debug(F, `response: ${response}`);
 
     if (command === 'get') {
+      const ephemeral = (interaction.options.getBoolean('ephemeral') === true);
       if (response === null) {
-        interaction.reply(`${member.displayName} is a timeless treasure <3 (and has not set a time zone)`);
+        interaction.reply({ content: `${member.displayName} is a timeless treasure <3 (and has not set a time zone)`, ephemeral });
       } else {
-        interaction.reply(`${response} wherever ${member.displayName} is located.`);
+        interaction.reply({ content: `${response} wherever ${member.displayName} is located.`, ephemeral });
       }
     } else {
       interaction.reply({ content: response as string, ephemeral: true });

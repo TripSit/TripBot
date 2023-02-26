@@ -14,7 +14,9 @@ export default dAbout;
 export const dAbout: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('about')
-    .setDescription('Shows information about this bot!'),
+    .setDescription('Shows information about this bot!')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
     const tripsitInfo = await about();
@@ -45,7 +47,8 @@ export const dAbout: SlashCommand = {
           value: tripsitInfo.credits,
         },
       );
-    interaction.reply({ embeds: [embed] });
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ embeds: [embed], ephemeral });
     return true;
   },
 };

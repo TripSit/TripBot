@@ -7,7 +7,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { calcDxm } from '../../../global/commands/g.calcDxm';
 import { startLog } from '../../utils/startLog';
 import { embedTemplate } from '../../utils/embedTemplate';
-// import log from '../../../global/utils/log';
+
 const F = f(__filename);
 
 type DxmDataType = {
@@ -45,7 +45,9 @@ export const dCalcdxm: SlashCommand = {
         { name: 'Pure (mg)', value: 'Pure (mg)' },
         { name: '30mg Gelcaps (30 mg caps)', value: '30mg Gelcaps (30 mg caps)' },
       )
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
     // Calculate each plat min/max value
@@ -70,7 +72,8 @@ export const dCalcdxm: SlashCommand = {
       );
       header = false;
     });
-    interaction.reply({ embeds: [embed] });
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ embeds: [embed], ephemeral });
     return true;
   },
 };

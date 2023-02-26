@@ -34,7 +34,9 @@ export const dImgur: SlashCommand = {
         { name: 'Week', value: 'week' },
         { name: 'Month', value: 'month' },
         { name: 'Year', value: 'year' },
-      )),
+      ))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
     // Sometimes the API takes a few seconds to respond.
@@ -45,7 +47,8 @@ export const dImgur: SlashCommand = {
     // log.debug(F, `sort: ${sort}`);
     // log.debug(F, `window: ${window}`);
 
-    await interaction.deferReply();
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    await interaction.deferReply({ ephemeral });
 
     const sortStr = `${sort}/`;
     const windowStr = `${window}/`;

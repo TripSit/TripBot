@@ -66,7 +66,9 @@ export const dTriptoys: SlashCommand = {
         { name: mynoise, value: '21' },
         { name: mrdoobharmony, value: '22' },
         { name: ballsdemo, value: '23' },
-      )),
+      ))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
     const toyName = interaction.options.getString('toy') || '25';
@@ -143,7 +145,8 @@ export const dTriptoys: SlashCommand = {
       );
     }
 
-    interaction.reply({ embeds: [embed] });
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ embeds: [embed], ephemeral });
     return true;
   },
 };

@@ -33,7 +33,10 @@ export default dHelp;
 export const dHelp: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('help')
-    .setDescription('Information about TripBot Commands'),
+    .setDescription('Information about TripBot Commands')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
+
   async execute(interaction) {
     startLog(F, interaction);
 
@@ -110,7 +113,8 @@ export const dHelp: SlashCommand = {
       funEmbed,
       tripsitEmbed,
     ];
-    paginationEmbed(interaction, book, buttonList, 0);
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    paginationEmbed(interaction, book, buttonList, 0, ephemeral);
     return true;
   },
 };

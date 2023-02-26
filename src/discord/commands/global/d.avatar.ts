@@ -16,7 +16,9 @@ export const dAvatar: SlashCommand = {
     .setDescription('Shows a member\'s profile picture in large format.')
     .addUserOption(option => option.setName('user')
       .setDescription('user')
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
     // log.debug(F, `${JSON.stringify(interaction.options, null, 2)}`);
@@ -38,7 +40,8 @@ export const dAvatar: SlashCommand = {
     const embed = embedTemplate()
       .setTitle(`${member.displayName}'s Profile Picture`)
       .setImage(`${member.displayAvatarURL()}?size=4096`);
-    await interaction.reply({ embeds: [embed] });
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    await interaction.reply({ embeds: [embed], ephemeral });
     return true;
   },
 };

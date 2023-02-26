@@ -15,9 +15,8 @@ export const dTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('guides')
     .setDescription('Get a link to all the guides from our wiki')
-    .addBooleanOption(option => option
-      .setName('ephemeral')
-      .setDescription('Set to true to display privately')),
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
 
   async execute(interaction) {
@@ -36,7 +35,7 @@ export const dTemplate: SlashCommand = {
             .setDescription(`These are the guides currently available on our [Wiki](https://wiki.tripsit.me)\n\n${message}\nYou're welcome to contribute. :heart:`);
     
 
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') == true ? true : false);        
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);       
     interaction.reply({embeds: [embed], ephemeral: ephemeral});  
 
     return true;

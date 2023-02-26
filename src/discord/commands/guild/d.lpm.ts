@@ -21,9 +21,13 @@ const header = '```Channel    5min    10min   30min   60min```';
 export const dLpm: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('lpm')
-    .setDescription('Shows the lines per minute of the guild!'),
+    .setDescription('Shows the lines per minute of the guild!')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+
+    const ephemeral = (interaction.options.getBoolean('ephemeral') === true);
 
     const msg = await interaction.reply({
       embeds: [embedTemplate()
@@ -31,6 +35,7 @@ export const dLpm: SlashCommand = {
         .setDescription(header)
         .setColor(Colors.Blurple)
         .setFooter(null)],
+      ephemeral,
       fetchReply: true,
     });
 

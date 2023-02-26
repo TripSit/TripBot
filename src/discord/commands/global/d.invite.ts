@@ -17,7 +17,9 @@ export default dInvite;
 export const dInvite: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('invite')
-    .setDescription('Shows an invite link for this bot!'),
+    .setDescription('Shows an invite link for this bot!')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
     const inviteInfo = await invite();
@@ -45,7 +47,8 @@ export const dInvite: SlashCommand = {
         The ${isProd ? 'official support' : 'testing'} server is [${guildname} Discord](${inviteInfo.discord}).
         If you have issues/questions, join and talk with Moonbear!
       `);
-    interaction.reply({ embeds: [embed] });
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ embeds: [embed], ephemeral });
     return true;
   },
 };

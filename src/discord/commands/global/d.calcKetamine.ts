@@ -6,7 +6,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcKetamine } from '../../../global/commands/g.calcKetamine';
 import { startLog } from '../../utils/startLog';
-// import log from '../../../global/utils/log';
+
 const F = f(__filename);
 
 export default dCalcketamine;
@@ -25,7 +25,9 @@ export const dCalcketamine: SlashCommand = {
         { name: 'kg', value: 'kg' },
         { name: 'lbs', value: 'lbs' },
       )
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
     const givenWeight = interaction.options.getNumber('weight', true);
@@ -34,7 +36,7 @@ export const dCalcketamine: SlashCommand = {
 
     const embed = embedTemplate();
     if (weightUnits === 'kg' && givenWeight > 179) {
-      embed.setTitle('Please enter a weight less than 179 kg.');
+      embed.setTitle('Please enter a weight less than 179 kg.'); // what if a person is 200kg? =(
       interaction.reply({
         embeds: [embed],
         ephemeral: true,
@@ -65,7 +67,8 @@ export const dCalcketamine: SlashCommand = {
       },
     );
 
-    interaction.reply({ embeds: [embed] });
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ embeds: [embed], ephemeral });
     return true;
   },
 };

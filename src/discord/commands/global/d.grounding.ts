@@ -13,10 +13,13 @@ export default dGrounding;
 export const dGrounding: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('grounding')
-    .setDescription('Send an image with the 5-senses grounding exercise'),
+    .setDescription('Send an image with the 5-senses grounding exercise')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
-    interaction.reply(await grounding());
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ content: await grounding(), ephemeral });
     return true;
   },
 };

@@ -20,7 +20,9 @@ export const dDramacounter: SlashCommand = {
     .setDescription('How long since the last drama incident?!')
     .addSubcommand(subcommand => subcommand
       .setName('get')
-      .setDescription('Get the time since last drama.'))
+      .setDescription('Get the time since last drama.')
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(subcommand => subcommand
       .setName('set')
       .setDescription('Set the dramacounter >.<')
@@ -81,7 +83,8 @@ export const dDramacounter: SlashCommand = {
     if (command === 'get') {
       if (!response.lastDramaAt) {
         embed.setDescription('There has been no drama yet!');
-        await interaction.reply({ embeds: [embed] });
+        const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+        await interaction.reply({ embeds: [embed], ephemeral });
         return true;
       }
       embed.setDescription(

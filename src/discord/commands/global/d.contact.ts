@@ -16,7 +16,9 @@ export default dContact;
 export const dContact: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('contact')
-    .setDescription('How to contact TripSit!'),
+    .setDescription('How to contact TripSit!')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
     startLog(F, interaction);
@@ -37,7 +39,8 @@ export const dContact: SlashCommand = {
         { name: 'Drug Info Issues Email', value: `${contactInfo.contentEmail}`, inline: true },
       )
       .setFooter({ text: 'Thanks for asking!' });
-    interaction.reply({ embeds: [embed] });
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ embeds: [embed], ephemeral });
     return true;
   },
 };

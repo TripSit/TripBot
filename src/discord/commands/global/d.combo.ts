@@ -22,7 +22,9 @@ export const dCombo: SlashCommand = {
     .addStringOption(option => option.setName('second_drug')
       .setDescription('Pick the second drug')
       .setRequired(true)
-      .setAutocomplete(true)),
+      .setAutocomplete(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
     const drugA = interaction.options.getString('first_drug', true);
@@ -35,7 +37,8 @@ export const dCombo: SlashCommand = {
       .setDescription(results.description);
     if (results.thumbnail) embed.setThumbnail(results.thumbnail);
     if (results.color) embed.setColor(Colors[results.color as keyof typeof Colors]);
-    interaction.reply({ embeds: [embed] });
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ embeds: [embed], ephemeral });
     return true;
   },
 };

@@ -18,7 +18,9 @@ export const dImdb: SlashCommand = {
     .addStringOption(option => option
       .setName('title')
       .setDescription('Movie / Series title')
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
@@ -28,8 +30,9 @@ export const dImdb: SlashCommand = {
       interaction.reply({ content: 'You must enter a title.', ephemeral: true });
       return false;
     }
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
 
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply({ ephemeral });
 
     const result = await imdb(title);
 

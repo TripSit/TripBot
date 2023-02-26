@@ -17,7 +17,10 @@ export default dDonate;
 export const dDonate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('donate')
-    .setDescription('Shows different ways to support TripSit!'),
+    .setDescription('Shows different ways to support TripSit!')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
+
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
     const donateInfo = await donate();
@@ -44,7 +47,8 @@ export const dDonate: SlashCommand = {
         );
       }
     });
-    interaction.reply({ embeds: [embed] });
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ embeds: [embed], ephemeral });
     return true;
   },
 };

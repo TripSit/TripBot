@@ -13,7 +13,9 @@ export default dFact;
 export const dFact: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('fact')
-    .setDescription('Random fact'),
+    .setDescription('Random fact')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
     startLog(F, interaction);
@@ -24,7 +26,8 @@ export const dFact: SlashCommand = {
     const embed = embedTemplate();
     embed.setTitle(data);
 
-    interaction.reply({ embeds: [embed] });
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ embeds: [embed], ephemeral });
     return true;
   },
 };

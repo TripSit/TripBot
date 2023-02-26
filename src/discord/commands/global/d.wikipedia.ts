@@ -19,7 +19,9 @@ export const dWikipedia: SlashCommand = {
     .addStringOption(option => option
       .setName('query')
       .setDescription('Word to define')
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
     startLog(F, interaction);
@@ -30,7 +32,8 @@ export const dWikipedia: SlashCommand = {
       .setTitle(`Definition for ${query}`)
       .setDescription(await wikipedia(query));
 
-    interaction.reply({ embeds: [embed] });
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ embeds: [embed], ephemeral });
 
     return true;
   },

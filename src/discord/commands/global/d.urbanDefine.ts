@@ -18,7 +18,9 @@ export const dUrbandefine: SlashCommand = {
     .addStringOption(option => option
       .setName('define')
       .setDescription('What do you want to define?')
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
     startLog(F, interaction);
@@ -32,7 +34,8 @@ export const dUrbandefine: SlashCommand = {
 
     const embed = embedTemplate()
       .setDescription(stripIndents`${result}`);
-    interaction.reply({ embeds: [embed] });
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ embeds: [embed], ephemeral });
     return true;
   },
 };

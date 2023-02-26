@@ -27,7 +27,9 @@ export const dCalcbenzo: SlashCommand = {
     .addStringOption(option => option.setName('and_i_want_the_dose_of')
       .setDescription('Pick the second drug')
       .setAutocomplete(true)
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
     startLog(F, interaction);
@@ -52,7 +54,8 @@ export const dCalcbenzo: SlashCommand = {
         **Please make sure to research the substances thoroughly before using them.**
         It's a good idea to start with a lower dose than the calculator shows, since everybody can react differently to different substances.
         `);
-    interaction.reply({ embeds: [embed] });
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ embeds: [embed], ephemeral });
     return true;
   },
 };

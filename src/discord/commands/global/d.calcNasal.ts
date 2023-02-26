@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import {
   SlashCommandBuilder,
 } from 'discord.js';
@@ -24,7 +25,9 @@ export const dCalcNasal: SlashCommand = {
         .setRequired(true))
       .addNumberOption(option => option.setName('mlpp')
         .setDescription('Excreted ml per push (look at the packaging)')
-        .setRequired(true)))
+        .setRequired(true))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(subcommand => subcommand
       .setName('solvent')
       .setDescription('Calculate how much solvent to use for the given amount of the substance')
@@ -36,28 +39,32 @@ export const dCalcNasal: SlashCommand = {
         .setRequired(true))
       .addNumberOption(option => option.setName('mlpp')
         .setDescription('Excreted ml per push (look at the packaging)')
-        .setRequired(true))),
+        .setRequired(true))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you'))),
 
   async execute(interaction) {
     const command = interaction.options.getSubcommand();
 
     if (command === 'solvent') {
+      const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
       // eslint-disable-next-line max-len
       const solvent = await calcSolvent(interaction.options.getNumber('substance') as number, interaction.options.getNumber('mgpp') as number, interaction.options.getNumber('mlpp') as number);
       const solventembed = embedTemplate().setTitle('Nasal spray calculator')
         .setDescription(`You'll need ~${solvent}ml of solvent (water)`);
 
-      interaction.reply({ embeds: [solventembed] });
+      interaction.reply({ embeds: [solventembed], ephemeral });
       return true;
     }
     if (command === 'substance') {
       // eslint-disable-next-line max-len
+      const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
       const dose = await calcSubstance(interaction.options.getNumber('solvent') as number, interaction.options.getNumber('mgpp') as number, interaction.options.getNumber('mlpp') as number);
       const substanceembed = embedTemplate()
         .setTitle('Nasal spray calculator')
         .setDescription(`You'll need ~${dose}mg of the substance`);
 
-      interaction.reply({ embeds: [substanceembed] });
+      interaction.reply({ embeds: [substanceembed], ephemeral });
       return true;
     }
     return false;

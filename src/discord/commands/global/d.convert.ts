@@ -24,7 +24,9 @@ export const dConvert: SlashCommand = {
     .addStringOption(option => option.setName('into')
       .setDescription('Convert into?')
       .setRequired(true)
-      .setAutocomplete(true)),
+      .setAutocomplete(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
     startLog(F, interaction);
@@ -41,7 +43,9 @@ export const dConvert: SlashCommand = {
     const embed = embedTemplate()
       .setTitle(response);
 
-    interaction.reply({ embeds: [embed] });
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+
+    interaction.reply({ embeds: [embed], ephemeral });
     return true;
   },
 };

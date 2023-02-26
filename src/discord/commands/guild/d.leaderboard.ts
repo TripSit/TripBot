@@ -60,7 +60,9 @@ export const dLeaderboard: SlashCommand = {
       .addChoices(
         { name: 'Text', value: 'Text' },
         { name: 'Voice', value: 'Voice' },
-      )),
+      ))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     const startTime = Date.now();
     if (!interaction.guild) {
@@ -135,7 +137,8 @@ export const dLeaderboard: SlashCommand = {
       return true;
     }
 
-    paginationEmbed(interaction, book, buttonList, 0);
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    paginationEmbed(interaction, book, buttonList, 0, ephemeral);
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);
     return true;
   },

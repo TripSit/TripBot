@@ -20,12 +20,15 @@ export const dBreathe: SlashCommand = {
         { name: '2', value: '2' },
         { name: '3', value: '3' },
         { name: '4', value: '4' },
-      )),
+      ))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
     const choice = interaction.options.getString('exercise');
     const data = await breathe(choice);
-    interaction.reply(data);
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ content: data, ephemeral });
     return true;
   },
 };

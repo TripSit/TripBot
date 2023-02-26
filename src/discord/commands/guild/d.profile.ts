@@ -1,8 +1,6 @@
 /* eslint-disable max-len */
 import {
   SlashCommandBuilder,
-  ChatInputCommandInteraction,
-  UserContextMenuCommandInteraction,
   GuildMember,
   AttachmentBuilder,
 } from 'discord.js';
@@ -31,18 +29,21 @@ export const dProfile: SlashCommand = {
     .setDescription('Get someone\'s profile!')
     .addUserOption(option => option
       .setName('target')
-      .setDescription('User to lookup')),
+      .setDescription('User to lookup'))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(
-    interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction,
+    interaction,
   ) {
     const startTime = Date.now();
+    const ephemeral = (interaction.options.getBoolean('ephemeral') === true);
     if (!interaction.guild) {
-      interaction.reply('You can only use this command in a guild!');
+      interaction.reply({ content: 'You can only use this command in a guild!', ephemeral: true });
       return false;
     }
     startLog(F, interaction);
 
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral });
 
     // Target is the option given, if none is given, it will be the user who used the command
     const target = interaction.options.getMember('target')

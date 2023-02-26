@@ -12,10 +12,13 @@ export default dMagick8ball;
 export const dMagick8ball: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('magick8ball')
-    .setDescription('Ask the magick 8-ball a question!'),
+    .setDescription('Ask the magick 8-ball a question!')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
-    interaction.reply(await magick8Ball());
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ content: await magick8Ball(), ephemeral });
     return true;
   },
 };

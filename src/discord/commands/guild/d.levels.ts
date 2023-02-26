@@ -71,7 +71,9 @@ export const dLevels: SlashCommand = {
     .setDescription('Get someone\'s current experience levels!')
     .addUserOption(option => option
       .setName('target')
-      .setDescription('User to lookup')),
+      .setDescription('User to lookup'))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(
     interaction:ChatInputCommandInteraction,
   ) {
@@ -103,9 +105,9 @@ export const dLevels: SlashCommand = {
       : interaction.member as GuildMember;
     // log.debug(F, `target id: ${target.id}`);
     // log.debug(F, `levelData: ${JSON.stringify(target, null, 2)}`);
-
+    const ephemeral = (interaction.options.getBoolean('ephemeral') === true);
     const values = await Promise.allSettled([
-      await interaction.deferReply(),
+      await interaction.deferReply({ ephemeral }),
       // Get the target's profile data from the database
       await profile(target.id),
       // Check get fresh persona data

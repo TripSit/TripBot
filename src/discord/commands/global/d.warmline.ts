@@ -14,7 +14,9 @@ export default dWarmline;
 export const dWarmline: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('warmline')
-    .setDescription('(USA only) Need someone to talk to, but don\'t need a "hotline"?'),
+    .setDescription('(USA only) Need someone to talk to, but don\'t need a "hotline"?')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
     startLog(F, interaction);
@@ -41,7 +43,8 @@ export const dWarmline: SlashCommand = {
         },
       );
     });
-    interaction.reply({ embeds: [embed] });
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    interaction.reply({ embeds: [embed], ephemeral });
     return true;
   },
 };
