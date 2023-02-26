@@ -11,6 +11,7 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
+import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 // import {embedTemplate} from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';
@@ -107,6 +108,9 @@ export const mod: SlashCommand = {
         .setName('target')
         .setDescription('User to link!')
         .setRequired(true))
+      .addBooleanOption(option => option
+        .setName('override')
+        .setDescription('Override existing threads in the DB'))
       .setName('link_thread')),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
@@ -131,7 +135,10 @@ export const mod: SlashCommand = {
         return false;
       }
 
-      const result = await linkThread(target.id, interaction.channelId);
+      const override = interaction.options.getBoolean('override');
+
+      const result = await linkThread(target.id, interaction.channelId, override);
+
       if (result === null) {
         await interaction.reply({
           content: 'Successfully linked thread!',
@@ -140,7 +147,8 @@ export const mod: SlashCommand = {
       } else {
         const existingThread = await interaction.client.channels.fetch(result);
         await interaction.reply({
-          content: `Failed to link thread, this user has an existing thread: ${existingThread}`,
+          content: stripIndents`Failed to link thread, this user has an existing thread: ${existingThread}
+          Use the override parameter if you're sure!`,
           ephemeral: true,
         });
       }
