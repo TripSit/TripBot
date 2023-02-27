@@ -325,10 +325,24 @@ export async function applicationReject(
     const memberId = interaction.customId.split('~')[1];
     const roleId = interaction.customId.split('~')[2];
 
-    const target = await interaction.guild?.members.fetch(memberId);
-    const role = await interaction.guild?.roles.fetch(roleId);
-    if (!target || !role) {
-      interaction.reply({ content: 'Could not find target and/or role!', ephemeral: true });
+    let target = {} as GuildMember;
+    try {
+      target = await interaction.guild?.members.fetch(memberId);
+    } catch (e) {
+      interaction.reply({ content: 'Could not find target, are the still in the guild?', ephemeral: true });
+      return;
+    }
+
+    let role = {} as Role | null;
+    try {
+      role = await interaction.guild?.roles.fetch(roleId);
+    } catch (e) {
+      interaction.reply({ content: 'Could not find role, has it been deleted?', ephemeral: true });
+      return;
+    }
+
+    if (!role) {
+      interaction.reply({ content: 'Could not find role, has it been deleted?', ephemeral: true });
       return;
     }
 
