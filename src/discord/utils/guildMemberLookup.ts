@@ -25,10 +25,14 @@ export async function getDiscordMember(
     members.push(await interaction.guild.members.fetch(id));
   } else if (string.match(/^\d+$/)) {
     log.debug(F, `${string} is an ID!`);
-    members.push(await interaction.guild.members.fetch(string));
+    try {
+      members.push(await interaction.guild.members.fetch(string));
+    } catch (error) {
+      log.debug(F, `Error fetching member with ID ${string}, they may have left the guild!`);
+    }
   } else if (string.includes('#')) {
     log.debug(F, `${string} is a tag!`);
-    const memberCollection = await interaction.guild.members.fetch({ query: string.split('#')[0], limit: 10 });
+    const memberCollection = await interaction.guild.members.fetch({ query: string, limit: 10 });
     // Add all members in that collection to the members list
     memberCollection.forEach(member => {
       members.push(member);

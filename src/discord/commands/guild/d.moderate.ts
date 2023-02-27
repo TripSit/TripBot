@@ -19,6 +19,7 @@ import { moderate, linkThread } from '../../../global/commands/g.moderate';
 import { startLog } from '../../utils/startLog'; // eslint-disable-line
 import { UserActionType } from '../../../global/@types/database';
 import { getDiscordMember } from '../../utils/guildMemberLookup';
+import { getUser } from '../../../global/utils/knex';
 
 const F = f(__filename);
 
@@ -118,7 +119,6 @@ export const mod: SlashCommand = {
     const actor = interaction.member as GuildMember;
     const targetString = interaction.options.getString('target', true);
     const target = await getDiscordMember(interaction, targetString);
-    if (!target) return false;
     let command = interaction.options.getSubcommand().toUpperCase();
     if (command === 'BAN') {
       command = interaction.options.getString('type', true);
@@ -137,7 +137,20 @@ export const mod: SlashCommand = {
 
       const override = interaction.options.getBoolean('override');
 
-      const result = await linkThread(target.id, interaction.channelId, override);
+      let result = '' as string | null;
+      if (!target) {
+        const userData = await getUser(targetString, null);
+        if (!userData) {
+          await interaction.reply({
+            content: 'Failed to link thread, I could not find this user in the guild, and they do not exist in the database!',
+            ephemeral: true,
+          });
+          return false;
+        }
+        result = await linkThread(targetString, interaction.channelId, override);
+      } else {
+        result = await linkThread(target.id, interaction.channelId, override);
+      }
 
       if (result === null) {
         await interaction.reply({
@@ -155,6 +168,8 @@ export const mod: SlashCommand = {
 
       return true;
     }
+
+    if (!target) return false;
 
     const toggleCommands = 'FULL_BAN, TICKET_BAN, DISCORD_BOT_BAN, BAN_EVASION, UNDERBAN, TIMEOUT';
     // If the command is ban or timeout, get the value of toggle. If it's null, set it to 'ON'
