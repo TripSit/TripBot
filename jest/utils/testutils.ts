@@ -322,6 +322,26 @@ export async function executeCommandAndSpyReply(
   return spy;
 }
 
+export async function executeCommandAndSpyEditReply(
+  Command:SlashCommand,
+  content:{
+    context: 'tripsit' | 'guild' | 'dm',
+    id: string;
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[] | {
+      name: string;
+      type: number;
+      options: ToAPIApplicationCommandOptions[];
+    }[];
+  },
+) {
+  const { interaction, spy } = mockInteractionAndSpyEditReply(content);
+  // const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
+  await Command.execute(interaction);
+  return spy;
+}
+
 /* Spy 'editReply' */
 export function mockInteractionAndSpyEditReply(command:{
   context: 'tripsit' | 'guild' | 'dm',

@@ -66,7 +66,7 @@ export const dLeaderboard: SlashCommand = {
         { name: 'Total', value: 'Total' },
         { name: 'General', value: 'General' },
         { name: 'Tripsitter', value: 'Tripsitter' },
-        { name: 'Developer', value: 'Development' },
+        { name: 'Developer', value: 'Developer' },
         { name: 'Team Tripsit', value: 'Team' },
         { name: 'Ignored', value: 'Ignored' },
       ))

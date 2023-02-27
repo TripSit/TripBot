@@ -1,6 +1,6 @@
 {
   "name": "tripsit-tripbot",
-  "version": "6.0.3",
+  "version": "6.0.4",
   "description": "A bot for TripSit (and maybe the world)",
   "main": "start.ts",
   "engines": {
@@ -47,7 +47,7 @@
     "@discordjs/rest": "^1.5.0",
     "@discordjs/voice": "^0.14.0",
     "@logtail/node": "^0.1.17",
-    "@logtail/winston": "^0.2.0",
+    "@logtail/winston": "^0.1.17",
     "@napi-rs/canvas": "^0.1.34",
     "@octokit/rest": "^19.0.7",
     "@octokit/types": "^9.0.0",
