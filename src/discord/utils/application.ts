@@ -151,6 +151,8 @@ export async function applicationStart(
         return;
       }
 
+      await i.deferReply({ ephemeral: true });
+
       const actor = i.member as GuildMember;
 
       const reason = i.fields.getTextInputValue('reason');
@@ -291,7 +293,7 @@ export async function applicationStart(
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription('Thank you for your interest! We will try to get back to you as soon as possible!');
-      i.reply({ embeds: [embed], ephemeral: true });
+      i.editReply({ embeds: [embed] });
     });
 }
 
