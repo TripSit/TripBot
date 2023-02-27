@@ -39,6 +39,7 @@ describe(slashCommand.data.name, () => {
           Uptime: 0ms
         `,
       }),
+      ephemeral: false,
     });
   });
 });

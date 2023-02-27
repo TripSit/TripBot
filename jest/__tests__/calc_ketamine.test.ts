@@ -54,6 +54,7 @@ describe(slashCommand.data.name, () => {
           },
         ],
       }),
+      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyReply(
@@ -91,6 +92,7 @@ describe(slashCommand.data.name, () => {
           },
         ],
       }),
+      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyReply(

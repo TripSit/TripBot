@@ -44,6 +44,7 @@ describe(slashCommand.data.name, () => {
         color: Colors.Purple,
         title: 'What do you call a fake noodle? An impasta.',
       }),
+      ephemeral: false,
     });
   });
 });

@@ -40,6 +40,7 @@ describe(slashCommand.data.name, () => {
           [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
         `,
       }),
+      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyReply(
@@ -61,6 +62,7 @@ describe(slashCommand.data.name, () => {
           [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
         `,
       }),
+      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyReply(
@@ -82,6 +84,7 @@ describe(slashCommand.data.name, () => {
           [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
         `,
       }),
+      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyReply(
@@ -103,6 +106,7 @@ describe(slashCommand.data.name, () => {
           [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
         `,
       }),
+      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyReply(
@@ -124,6 +128,7 @@ describe(slashCommand.data.name, () => {
           [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
         `,
       }),
+      ephemeral: false,
     });
   });
 });

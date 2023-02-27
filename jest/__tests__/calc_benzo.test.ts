@@ -71,6 +71,7 @@ describe(slashCommand.data.name, () => {
           description: stripIndents`**Please make sure to research the substances thoroughly before using them.**
         It's a good idea to start with a lower dose than the calculator shows, since everybody can react differently to different substances.`, // eslint-disable-line
         }),
+        ephemeral: false,
       });
     });
 

@@ -49,6 +49,7 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`400 (ml)`, inline: true },
         ],
       }),
+      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyReply(
@@ -80,6 +81,7 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`45.2 (oz)`, inline: true },
         ],
       }),
+      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyReply(
@@ -111,6 +113,7 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`1333.33 (ml)`, inline: true },
         ],
       }),
+      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyReply(
@@ -142,6 +145,7 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`266.67 (15 mg caps)`, inline: true },
         ],
       }),
+      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyReply(
@@ -173,6 +177,7 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`4000 (mg)`, inline: true },
         ],
       }),
+      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyReply(
@@ -204,6 +209,7 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`133.33 (30 mg caps)`, inline: true },
         ],
       }),
+      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyReply(
@@ -235,6 +241,7 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`97.72 (30 mg tablets)`, inline: true },
         ],
       }),
+      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyReply(
@@ -266,6 +273,7 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`44.33 (30 mg tablets)`, inline: true },
         ],
       }),
+      ephemeral: false,
     });
   });
 });

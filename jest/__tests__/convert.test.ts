@@ -32,6 +32,7 @@ describe(slashCommand.data.name, () => {
         color: Colors.Purple,
         title: '123456 ft-us is 37.6295 km',
       }),
+      ephemeral: false,
     });
   });
 });

@@ -14,6 +14,7 @@ describe(slashCommand.data.name, () => {
       ),
     )).toHaveBeenCalledWith({
       content: 'https://i.imgur.com/nTEm0QE.png',
+      ephemeral: false,
     });
   });
 });

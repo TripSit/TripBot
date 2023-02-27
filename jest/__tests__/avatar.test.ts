@@ -34,6 +34,7 @@ describe(slashCommand.data.name, () => {
           url: 'https://cdn.discordapp.com/avatars/123456789/userAvatarUrl.webp?size=4096',
         },
       }),
+      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyReply(

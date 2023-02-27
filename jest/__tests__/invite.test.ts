@@ -45,6 +45,7 @@ describe(slashCommand.data.name, () => {
       The testing server is [TripSit Dev Discord](https://discord.gg/cNDsrMSY).
       If you have issues/questions, join and talk with Moonbear!`,
       }),
+      ephemeral: false,
     });
   });
 });

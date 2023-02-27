@@ -40,6 +40,7 @@ describe(slashCommand.data.name, () => {
           },
         ],
       }),
+      ephemeral: false,
     });
   });
 });

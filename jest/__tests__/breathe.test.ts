@@ -12,7 +12,7 @@ describe(slashCommand.data.name, () => {
         slashCommand.data,
         'dm',
       ),
-    )).toHaveBeenCalledWith('https://i.imgur.com/n5jBp45.gif');
+    )).toHaveBeenCalledWith({ content: 'https://i.imgur.com/n5jBp45.gif', ephemeral: false });
 
     expect(await executeCommandAndSpyReply(
       slashCommand,
@@ -21,7 +21,7 @@ describe(slashCommand.data.name, () => {
         slashCommand.data,
         'dm',
       ),
-    )).toHaveBeenCalledWith('https://i.imgur.com/n5jBp45.gif');
+    )).toHaveBeenCalledWith({ content: 'https://i.imgur.com/n5jBp45.gif', ephemeral: false });
 
     expect(await executeCommandAndSpyReply(
       slashCommand,
@@ -30,7 +30,7 @@ describe(slashCommand.data.name, () => {
         slashCommand.data,
         'dm',
       ),
-    )).toHaveBeenCalledWith('https://i.imgur.com/XbH6gP4.gif');
+    )).toHaveBeenCalledWith({ content: 'https://i.imgur.com/XbH6gP4.gif', ephemeral: false });
 
     expect(await executeCommandAndSpyReply(
       slashCommand,
@@ -39,7 +39,7 @@ describe(slashCommand.data.name, () => {
         slashCommand.data,
         'dm',
       ),
-    )).toHaveBeenCalledWith('https://i.imgur.com/g57i96f.gif');
+    )).toHaveBeenCalledWith({ content: 'https://i.imgur.com/g57i96f.gif', ephemeral: false });
 
     expect(await executeCommandAndSpyReply(
       slashCommand,
@@ -48,6 +48,6 @@ describe(slashCommand.data.name, () => {
         slashCommand.data,
         'dm',
       ),
-    )).toHaveBeenCalledWith('https://i.imgur.com/MkUcTPl.gif');
+    )).toHaveBeenCalledWith({ content: 'https://i.imgur.com/MkUcTPl.gif', ephemeral: false });
   });
 });

@@ -16,6 +16,6 @@ describe(slashCommand.data.name, () => {
         slashCommand.data,
         'tripsit',
       ),
-    )).toHaveBeenCalledWith(expect.any(String));
+    )).toHaveBeenCalledWith({ content: expect.any(String), ephemeral: false });
   });
 });

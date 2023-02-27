@@ -12,6 +12,6 @@ describe(slashCommand.data.name, () => {
         slashCommand.data,
         'dm',
       ),
-    )).toHaveBeenCalledWith('https://i.imgur.com/juzYjDl.png');
+    )).toHaveBeenCalledWith({ content: 'https://i.imgur.com/juzYjDl.png', ephemeral: false });
   });
 });
