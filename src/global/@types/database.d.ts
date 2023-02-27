@@ -197,7 +197,7 @@ export type Drugs = {
   id: string;
   summary: string | null;
   psychonaut_wiki_url: string | null;
-  erowid_experiences_url: string | null;
+  errowid_experiences_url: string | null;
   last_updated_by: string;
   updated_at: Date;
   created_at: Date;
@@ -270,8 +270,8 @@ export type UserActions = {
   user_id: string;
   type: UserActionType;
   ban_evasion_related_user: string | null;
-  description: string;
-  internal_note: string | null;
+  description: string | null;
+  internal_note: string;
   expires_at: Date | null;
   repealed_by: string | null;
   repealed_at: Date | null;
@@ -352,4 +352,5 @@ export type Users = {
   last_seen_in: string | null;
   joined_at: Date;
   removed_at: Date | null;
+  mod_thread_id: string | null;
 };
