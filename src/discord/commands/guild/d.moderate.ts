@@ -289,12 +289,24 @@ export const mod: SlashCommand = {
 
         if (command === 'TIMEOUT') {
           // If the command is timeout get the value
-          let timeoutInput = command === 'TIMEOUT'
-            ? i.fields.getTextInputValue('duration')
-            : null;
+          let timeoutInput = i.fields.getTextInputValue('duration');
 
           // If the value is blank, set it to 7 days, the maximum
-          if (command === 'TIMEOUT' && timeoutInput === '') timeoutInput = '7 days';
+          if (timeoutInput === '') timeoutInput = '7 days';
+
+          if (timeoutInput.length === 1) {
+            // If the input is a single number, assume it's days
+            const numberInput = parseInt(timeoutInput, 10);
+            if (Number.isNaN(numberInput)) {
+              await i.editReply({ content: 'Timeout must be a number!' });
+              return;
+            }
+            if (numberInput < 0 || numberInput > 7) {
+              await i.editReply({ content: 'Timeout must be between 0 and 7 days' });
+              return;
+            }
+            timeoutInput = `${timeoutInput} days`;
+          }
 
           log.debug(F, `timeoutInput: ${timeoutInput}`);
 
