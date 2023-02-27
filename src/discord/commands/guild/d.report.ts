@@ -2,18 +2,15 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   GuildMember,
-  Colors,
 } from 'discord.js';
 import { env } from 'process';
-import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { startLog } from '../../utils/startLog';
 // import {embedTemplate} from '../../utils/embedTemplate';
 import { moderate } from '../../../global/commands/g.moderate';
 // import log from '../../../global/utils/log';
 import { UserActionType } from '../../../global/@types/database';
-import { getDiscordMember } from '../../utils/userLookup';
-import { embedTemplate } from '../../utils/embedTemplate';
+import { getDiscordMember } from '../../utils/guildMemberLookup';
 
 const F = f(__filename);
 
@@ -48,44 +45,16 @@ export const dReport: SlashCommand = {
     const targetString = interaction.options.getString('target', true);
     const reason = interaction.options.getString('reason', true);
 
-    const targets = await getDiscordMember(interaction, targetString);
+    const target = await getDiscordMember(interaction, targetString);
 
-    if (targets.length > 1) {
-      const embed = embedTemplate()
-        .setColor(Colors.Red)
-        .setTitle('Found more than one user with with that value!')
-        .setDescription(stripIndents`
-          "${targetString}" returned ${targets.length} results!
-
-          Be more specific:
-          > **Mention:** @Moonbear
-          > **Tag:** moonbear#1234
-          > **ID:** 9876581237
-          > **Nickname:** MoonBear`);
-      await interaction.reply({ embeds: [embed], ephemeral: true });
-      return false;
-    }
-
-    if (targets.length === 0) {
-      const embed = embedTemplate()
-        .setColor(Colors.Red)
-        .setTitle('Could not find that user!')
-        .setDescription(stripIndents`
-          "${targetString}" returned no results!
-
-          Try again with:
-          > **Mention:** @Moonbear
-          > **Tag:** moonbear#1234
-          > **ID:** 9876581237
-          > **Nickname:** MoonBear`);
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+    if (!target) {
       return false;
     }
 
     const result = await moderate(
       interaction.member as GuildMember,
       'REPORT' as UserActionType,
-      targets[0],
+      target,
       reason,
       null,
       null,

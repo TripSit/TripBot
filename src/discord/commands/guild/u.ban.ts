@@ -27,69 +27,51 @@ export const uBan: UserCommand = {
     .setType(ApplicationCommandType.User),
   async execute(interaction) {
     startLog(F, interaction);
-    const actor = interaction.member as GuildMember;
-    const target = interaction.targetMember as GuildMember;
-
-    const modal = new ModalBuilder()
+    await interaction.showModal(new ModalBuilder()
       .setCustomId(`banModal~${interaction.id}`)
-      .setTitle('Tripbot Ban');
-    const privReasonInput = new TextInputBuilder()
-      .setLabel('Why are you banning this user?')
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('Tell the team why you are banning this user.')
-      .setRequired(true)
-      .setCustomId('privReason');
-    const pubReasonInput = new TextInputBuilder()
-      .setLabel('What should we tell the user?')
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('This will be sent to the user!')
-      .setRequired(true)
-      .setCustomId('pubReason');
-    const deleteMessages = new TextInputBuilder()
-      .setLabel('How many days of msg to remove?')
-      .setStyle(TextInputStyle.Short)
-      .setPlaceholder('Between 0 and 7 days (Default 0)')
-      .setCustomId('duration')
-      .setRequired(true);
-
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReasonInput);
-    const secondActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReasonInput);
-    const thirdActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(deleteMessages);
-    modal.addComponents(firstActionRow, secondActionRow, thirdActionRow);
-    await interaction.showModal(modal);
-
+      .setTitle('Tripbot Ban')
+      .addComponents(
+        new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+          .setLabel('Why are you banning this user?')
+          .setStyle(TextInputStyle.Paragraph)
+          .setPlaceholder('Tell the team why you are banning this user.')
+          .setRequired(true)
+          .setCustomId('internalNote')),
+        new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+          .setLabel('What should we tell the user?')
+          .setStyle(TextInputStyle.Paragraph)
+          .setPlaceholder('This will be sent to the user!')
+          .setRequired(false)
+          .setCustomId('description')),
+        new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+          .setLabel('How many days of msg to remove?')
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('Between 0 and 7 days (Default 0)')
+          .setRequired(false)
+          .setCustomId('duration')),
+      ));
     const filter = (i:ModalSubmitInteraction) => i.customId.includes('banModal');
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
         await i.deferReply({ ephemeral: true });
-        const privReason = i.fields.getTextInputValue('privReason');
-        const pubReason = i.fields.getTextInputValue('pubReason');
-        const durationInput = i.fields.getTextInputValue('duration');
+        const duration = i.fields.getTextInputValue('duration')
+          ? await parseDuration(i.fields.getTextInputValue('duration'))
+          : 0;
 
-        let duration = 0;
-        // Check if the given duration is a number between 0 and 7
-        const days = parseInt(durationInput, 10);
-        if (Number.isNaN(days) || days < 0 || days > 7) {
-          await i.editReply({ content: 'Invalid number of days! At least 0, maximum of 7.' });
+        if (duration > 604800000) {
+          await i.editReply('Cannot remove messages older than 7 days.');
           return;
         }
 
-        duration = durationInput
-          ? await parseDuration(`${days} days`)
-          : 0;
-        // log.debug(F, `duration: ${duration}`);
-
-        const result = await moderate(
-          actor,
+        await i.editReply(await moderate(
+          interaction.member as GuildMember,
           'FULL_BAN' as UserActionType,
-          target,
-          privReason,
-          pubReason,
+          interaction.targetMember as GuildMember,
+          i.fields.getTextInputValue('internalNote'),
+          i.fields.getTextInputValue('description'),
           duration,
-        );
-
-        await i.editReply(result);
+        ));
       });
     return true;
   },
