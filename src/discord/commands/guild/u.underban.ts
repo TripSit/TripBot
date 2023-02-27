@@ -16,6 +16,7 @@ import { moderate } from '../../../global/commands/g.moderate';
 import { startLog } from '../../utils/startLog';
 // import {startLog} from '../../utils/startLog';
 import { UserActionType } from '../../../global/@types/database';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -49,14 +50,19 @@ export const uUnderban: UserCommand = {
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
         await i.deferReply({ ephemeral: true });
-        await i.editReply(await moderate(
-          interaction.member as GuildMember,
-          'UNDERBAN' as UserActionType,
-          interaction.targetMember as GuildMember,
-          i.fields.getTextInputValue('internalNote'),
-          i.fields.getTextInputValue('description'),
-          null,
-        ));
+        const target = interaction.targetMember as GuildMember;
+        if (target) {
+          await i.editReply(await moderate(
+            interaction.member as GuildMember,
+            'UNDERBAN' as UserActionType,
+            interaction.targetMember as GuildMember,
+            i.fields.getTextInputValue('internalNote'),
+            i.fields.getTextInputValue('description'),
+            null,
+          ));
+        } else {
+          await i.editReply({ embeds: [embedTemplate().setTitle('Error').setDescription('This user is not in the server!')] });
+        }
       });
     return true;
   },
