@@ -282,6 +282,22 @@ export const env = {
   EMOJI_RESEARCHER: isProd ? '<:ts_researcher:979557718648057916>' : '<:ts_researcher:980934790867984415>',
   EMOJI_CONTRIBUTOR: isProd ? '<:ts_coder:979557703972163644>' : '<:ts_coder:980934790893142106>',
   EMOJI_CLEARMIND: isProd ? '<:ts_clearmind:979557762621136997>' : '<:ts_clearmind:980934790834442240>',
+  EMOJI_BACKGROUND: isProd ? '🖼' : '<:itemBackground:1079682074547601428>',
+  EMOJI_TOWN: isProd ? '🏘️' : '<:buttonTown:1079635651349205003>',
+  EMOJI_WORK: isProd ? '👷' : '<:buttonWork:1079640323581554740>',
+  EMOJI_SHOP: isProd ? '🛒' : '<:buttonShop:1079665080632885259>',
+  EMOJI_ARCADE: isProd ? '🎮' : '<:buttonArcade:1079717122789355520>',
+  EMOJI_HOME: isProd ? '🛖' : '<:buttonHome:1079635635251445830>',
+  EMOJI_QUEST: isProd ? '🗺️' : '<:buttonQuest:1079642399493587054>',
+  EMOJI_DUNGEON: isProd ? '🏰' : '<:buttonDungeon:1079640302488395796>',
+  EMOJI_RAID: isProd ? '👹' : '<:buttonRaid:1079640284402569227>',
+  EMOJI_BUY: isProd ? '🛒' : '<:buttonBuy:1079635646806761524>',
+  EMOJI_COINFLIP: isProd ? '🪙' : '<:buttonCoinflip:1079637631794692127>',
+  EMOJI_ROULETTE: isProd ? '🎲' : '<:buttonRoulette:1079637642804731924>',
+  EMOJI_TRIVIA: isProd ? '' : '<:buttonTrivia:1079707985133191168>',
+  EMOJI_BET: isProd ? '🪙' : '<:buttonBet:1079669112227242084>',
+  EMOJI_HEADS: isProd ? '🗿' : '<:buttonHeads:1079669180653125682>',
+  EMOJI_TAILS: isProd ? '🐍' : '<:buttonTails:1079669164555370559>',
 };
 
 export default env;

@@ -49,6 +49,8 @@ const F = f(__filename);
 //   raid: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 * 7 : 1000 * 1,
 // };
 
+const backgroundEmoji = env.EMOJI_BACKGROUND;
+
 function customButton(
   customId: string,
   label: string,
@@ -66,30 +68,31 @@ const buttons = {
   name: customButton('rpgName', 'Name', '📝'),
   accept: customButton('rpgAccept', 'Accept', '✅'),
   decline: customButton('rpgDecline', 'Decline', '❌'),
-  town: customButton('rpgTown', 'Town', '🏘️'),
-  work: customButton('rpgWork', 'Work', '👷'),
-  shop: customButton('rpgShop', 'Shop', '🛒'),
-  arcade: customButton('rpgArcade', 'Arcade', '🎮'),
-  home: customButton('rpgHome', 'Home', '🛖'),
-  quest: customButton('rpgQuest', 'Quest', '🗺️'),
-  dungeon: customButton('rpgDungeon', 'Dungeon', '🏰'),
-  raid: customButton('rpgRaid', 'Raid', '👹'),
+  town: customButton('rpgTown', 'Town', env.EMOJI_TOWN),
+  work: customButton('rpgWork', 'Work', env.EMOJI_WORK),
+  shop: customButton('rpgShop', 'Shop', env.EMOJI_SHOP),
+  arcade: customButton('rpgArcade', 'Arcade', env.EMOJI_ARCADE),
+  home: customButton('rpgHome', 'Home', env.EMOJI_HOME),
+  quest: customButton('rpgQuest', 'Quest', env.EMOJI_QUEST),
+  dungeon: customButton('rpgDungeon', 'Dungeon', env.EMOJI_DUNGEON),
+  raid: customButton('rpgRaid', 'Raid', env.EMOJI_RAID),
   inventory: customButton('rpgInventory', 'Inventory', '🎒'),
   stats: customButton('rpgStats', 'Stats', '📊'),
   guild: customButton('rpgGuild', 'Guild', '🏰'),
-  buy: customButton('rpgShopBuy', 'Buy', '🛒'),
+  buy: customButton('rpgShopBuy', 'Buy', env.EMOJI_BUY),
   slotMachine: customButton('rpgSlots', 'Slots', '🎰'),
-  coinFlip: customButton('rpgCoinFlip', 'CoinFlip', '🪙'),
-  roulette: customButton('rpgRoulette', 'Roulette', '🎲'),
+  coinFlip: customButton('rpgCoinFlip', 'CoinFlip', env.EMOJI_COINFLIP),
+  roulette: customButton('rpgRoulette', 'Roulette', env.EMOJI_ROULETTE),
   blackjack: customButton('rpgBlackjack', 'Blackjack', '🃏'),
-  wager1: customButton('rpgWager1', 'Bet 1', '🪙'),
-  wager10: customButton('rpgWager10', 'Bet 10', '🪙'),
-  wager100: customButton('rpgWager100', 'Bet 100', '🪙'),
-  wager1000: customButton('rpgWager1000', 'Bet 1000', '🪙'),
-  wager10000: customButton('rpgWager10000', 'Bet 10000', '🪙'),
-  wager100000: customButton('rpgWager100000', 'Bet 100000', '🪙'),
-  coinflipHeads: customButton('rpgCoinflipHeads', 'Heads', '🗿'),
-  coinflipTails: customButton('rpgCoinflipTails', 'Tails', '🐍'),
+  trivia: customButton('rpgTrivia', 'Trivia', env.EMOJI_TRIVIA),
+  wager1: customButton('rpgWager1', 'Bet 1', env.EMOJI_BET),
+  wager10: customButton('rpgWager10', 'Bet 10', env.EMOJI_BET),
+  wager100: customButton('rpgWager100', 'Bet 100', env.EMOJI_BET),
+  wager1000: customButton('rpgWager1000', 'Bet 1000', env.EMOJI_BET),
+  wager10000: customButton('rpgWager10000', 'Bet 10000', env.EMOJI_BET),
+  wager100000: customButton('rpgWager100000', 'Bet 100000', env.EMOJI_BET),
+  coinflipHeads: customButton('rpgCoinflipHeads', 'Heads', env.EMOJI_HEADS),
+  coinflipTails: customButton('rpgCoinflipTails', 'Tails', env.EMOJI_TAILS),
 
   rouletteRed: customButton('rpgRouletteRed', 'Red', '🟥'),
   rouletteBlack: customButton('rpgRouletteBlack', 'Black', '⬛'),
@@ -238,7 +241,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'DiamondChevron',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     Chevron: {
       label: 'Chevron',
@@ -251,7 +254,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Chevron',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     Concentric: {
       label: 'Concentric',
@@ -264,7 +267,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Concentric',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     CubeTunnels: {
       label: 'CubeTunnels',
@@ -277,7 +280,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'CubeTunnels',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     Leaves: {
       label: 'Leaves',
@@ -290,7 +293,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Leaves',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     SquareTwist: {
       label: 'SquareTwist',
@@ -303,7 +306,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'SquareTwist',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     SquareSpiral: {
       label: 'SquareSpiral',
@@ -316,7 +319,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'SquareSpiral',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     Noise: {
       label: 'Noise',
@@ -329,7 +332,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Noise',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     Squiggles: {
       label: 'Squiggles',
@@ -342,7 +345,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Squiggles',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     TriangleOverlap: {
       label: 'TriangleOverlap',
@@ -355,7 +358,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'TriangleOverlap',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     XandO: {
       label: 'XandO',
@@ -368,7 +371,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'XandO',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     Safari: {
       label: 'Safari',
@@ -381,7 +384,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Safari',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     LineLeaves: {
       label: 'LineLeaves',
@@ -394,7 +397,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'LineLeaves',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     ArcadeCarpet: {
       label: 'ArcadeCarpet',
@@ -407,7 +410,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'ArcadeCarpet',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     Topography: {
       label: 'Topography',
@@ -420,7 +423,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Topography',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     CoffeeSwirl: {
       label: 'CoffeeSwirl',
@@ -433,7 +436,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'CoffeeSwirl',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     SpaceIcons: {
       label: 'SpaceIcons',
@@ -446,7 +449,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'SpaceIcons',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     Plaid: {
       label: 'Plaid',
@@ -459,7 +462,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Plaid',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     Paisley: {
       label: 'Paisley',
@@ -472,7 +475,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Paisley',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     AbstractTriangles: {
       label: 'AbstractTriangles',
@@ -485,7 +488,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'AbstractTriangles',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     Memphis: {
       label: 'Memphis',
@@ -498,7 +501,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Memphis',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     Connected: {
       label: 'Connected',
@@ -511,7 +514,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Connected',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
     Binary: {
       label: 'Binary',
@@ -524,7 +527,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Binary',
-      emoji: '🖼',
+      emoji: backgroundEmoji,
     },
   },
 } as {
@@ -905,7 +908,7 @@ export async function rpgTown(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Town')
+      .setTitle(`${env.EMOJI_TOWN} Town`)
       .setDescription(stripIndents`
       You ${rand(text.enter)} TripTown, a new settlement on the edge of Triptopia, the TripSit Kingdom.
 
@@ -952,12 +955,12 @@ export async function rpgWork(
   const contracts = {
     quest: {
       success: {
-        title: 'Quest Success',
+        title: `${env.EMOJI_QUEST} Quest Success`,
         description: stripIndents`${rand(text.quest)}`,
         color: Colors.Green,
       },
       fail: {
-        title: 'Quest Fail',
+        title: `${env.EMOJI_QUEST} Quest Fail`,
         description: stripIndents`
           There are no more quests available at the moment. New quests are posted every hour!
         `,
@@ -966,12 +969,12 @@ export async function rpgWork(
     },
     dungeon: {
       success: {
-        title: 'Dungeon Success',
+        title: `${env.EMOJI_DUNGEON} Dungeon Success`,
         description: stripIndents`${rand(text.dungeon)}`,
         color: Colors.Green,
       },
       fail: {
-        title: 'Dungeon Fail',
+        title: `${env.EMOJI_DUNGEON} Dungeon Fail`,
         description: stripIndents`
           You already cleared a dungeon today, you're still tired and need to prepare.
         `,
@@ -980,14 +983,14 @@ export async function rpgWork(
     },
     raid: {
       success: {
-        title: 'Raid Success',
+        title: `${env.EMOJI_RAID} Raid Success`,
         description: stripIndents`
           You stormed into Moonbear's office, rustle their jimmies and stole {tokens} TripTokens!
         `,
         color: Colors.Green,
       },
       fail: {
-        title: 'Raid Fail',
+        title: `${env.EMOJI_RAID} Raid Fail`,
         description: stripIndents`
           You've already raided Moonbear's office this week, give them a break!
         `,
@@ -1107,7 +1110,7 @@ export async function rpgWork(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Work')
+      .setTitle(`${env.EMOJI_WORK} Work`)
       .setDescription(stripIndents`
       You are at work, you can go on a quest, clear a dungeon, or go on a raid.
     `)
@@ -1142,7 +1145,7 @@ export async function rpgShop(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Shop')
+      .setTitle(`${backgroundEmoji} Shop`)
       .setDescription(stripIndents`
       You are in the shop, you can buy some items to help you on your journey.
 
@@ -1242,7 +1245,7 @@ export async function rpgShopChange(
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-    .setTitle('Shop')
+    .setTitle(`${backgroundEmoji} Shop`)
     .setDescription(stripIndents`
       You are in the shop, you can buy some items to help you on your journey.
 
@@ -1360,7 +1363,7 @@ export async function rpgShopAccept(
     const embed = embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Shop')
+      .setTitle(`${env.EMOJI_SHOP} Shop`)
       .setDescription(stripIndents`**You do not have enough tokens to buy this item.**
     
     ${description}`)
@@ -1411,7 +1414,7 @@ export async function rpgShopAccept(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Shop')
+      .setTitle(`${env.EMOJI_SHOP} Shop`)
       .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemData.cost} TripTokens.**
       
       ${description}`)
@@ -1515,7 +1518,7 @@ export async function rpgHome(
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-    .setTitle('Home')
+    .setTitle(`${env.EMOJI_HOME} Home`)
     .setDescription(stripIndents`${message !== null ? message : ''}
 
       You ${rand(text.enter)} your home.
@@ -1873,6 +1876,7 @@ export async function rpgArcade(
     .addComponents(
       buttons.coinFlip,
       buttons.roulette,
+      buttons.trivia,
       // buttons.blackjack,
       // buttons.slotMachine,
       buttons.town,
@@ -1883,7 +1887,7 @@ export async function rpgArcade(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Games')
+      .setTitle(`${env.EMOJI_ARCADE} Arcade`)
       .setDescription(stripIndents`
         You ${rand(text.enter)} the arcade and see a variety of games.
       `)
