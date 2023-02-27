@@ -114,7 +114,6 @@ export const mod: SlashCommand = {
       .setName('link_thread')),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: true });
 
     const actor = interaction.member as GuildMember;
     const targetString = interaction.options.getString('target', true);
@@ -129,8 +128,9 @@ export const mod: SlashCommand = {
       if (!interaction.channel?.isThread()
       || !interaction.channel.parentId
       || interaction.channel.parentId !== env.CHANNEL_MODERATORS) {
-        await interaction.editReply({
+        await interaction.reply({
           content: 'This command can only be run inside of a mod thread!',
+          ephemeral: true,
         });
         return false;
       }
@@ -140,14 +140,16 @@ export const mod: SlashCommand = {
       const result = await linkThread(target.id, interaction.channelId, override);
 
       if (result === null) {
-        await interaction.editReply({
+        await interaction.reply({
           content: 'Successfully linked thread!',
+          ephemeral: true,
         });
       } else {
         const existingThread = await interaction.client.channels.fetch(result);
-        await interaction.editReply({
+        await interaction.reply({
           content: stripIndents`Failed to link thread, this user has an existing thread: ${existingThread}
           Use the override parameter if you're sure!`,
+          ephemeral: true,
         });
       }
 
@@ -186,6 +188,7 @@ export const mod: SlashCommand = {
     else if (command === 'UN-UNDERBAN') verb = 'removing underban on';
 
     if (command === 'INFO') {
+      await interaction.deferReply({ ephemeral: true });
       await interaction.editReply(await moderate(
         actor,
         'INFO',
