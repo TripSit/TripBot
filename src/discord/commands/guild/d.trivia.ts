@@ -39,7 +39,7 @@ import {
 } from '../../../global/utils/knex';
 import { Personas, RpgInventory } from '../../../global/@types/database';
 import { imageGet } from '../../utils/imageGet';
-const Trivia = require('trivia-api')
+const Trivia = require('trivia-api');
 const trivia = new Trivia({ encoding: 'url3986' });
 const F = f(__filename);
 
@@ -64,15 +64,16 @@ export const dTrivia: SlashCommand = {
     .addStringOption(option => option.setName('difficulty')
       .setDescription('The difficulty of the questions')
       .addChoices(
-        { name: 'Easy', value: 'easy' },
-        { name: 'Medium (50% bonus tokens)', value: 'medium' },
-        { name: 'Hard (100% bonus tokens)', value: 'hard' },
+        { name: 'Normal', value: 'easy' },
+        { name: 'Hard (50% bonus tokens)', value: 'medium' },
+        { name: 'Very Hard (100% bonus tokens)', value: 'hard' },
       )
       .setRequired(false)),
   async execute(interaction: ChatInputCommandInteraction) {
     const numberofQuestions = interaction.options.getString('amount') || '5';
     const amountofQuestions = parseInt(numberofQuestions)
     const chosenDifficulty = interaction.options.getString('difficulty') || 'easy';
+    const difficultyName = chosenDifficulty === 'easy' ? 'Normal' : chosenDifficulty === 'medium' ? 'Hard' : 'Very Hard';
     const bonus = chosenDifficulty === 'easy' ? 1 : chosenDifficulty === 'medium' ? 1.5 : 2;
     let score = 0;
     let timedOut = false;
@@ -85,6 +86,23 @@ export const dTrivia: SlashCommand = {
       type: 'multiple', // Only multiple choice questions
       difficulty: chosenDifficulty,
     });
+
+    // Get the user's persona data
+    let [personaData] = await getPersonaInfo(interaction.user.id);
+    // log.debug(F, `Initial Persona data: ${JSON.stringify(personaData, null, 2)}`);
+
+    // If the user doesn't have persona data, create it
+    if (!personaData) {
+      const userData = await getUser(interaction.user.id, null);
+      personaData = {
+        user_id: userData.id,
+        tokens: 0,
+      } as Personas;
+
+      // log.debug(F, `Setting Persona data: ${JSON.stringify(personaData, null, 2)}`);
+
+      await setPersonaInfo(personaData);
+    }
   
     for (let i = 0; (i < amountofQuestions); i++) {
 
@@ -95,14 +113,15 @@ export const dTrivia: SlashCommand = {
 
       const embed = new EmbedBuilder()
         .setColor(answerColor as ColorResolvable)
-        .setTitle(embedStatus)
-        .setDescription(questionAnswer)
+        .setTitle(`<:buttonTrivia:1079707985133191168> Trivia (${difficultyName})`)
+        .addFields({ name: `${embedStatus}`, value: `${questionAnswer}`})
         .addFields({ name: `Question ${i + 1} of ${numberofQuestions}`, value: question.question })
         .addFields({ name: 'Choices', value: [...answerMap.values()].join('\n') })
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
 
       if (i === 0) {
-        await interaction.reply({  // If it's the first question, send a new message
+        await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')]})
+        await interaction.editReply({  // If it's the first question, send a new message
           embeds: [embed],
           components: [
             new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -140,22 +159,22 @@ export const dTrivia: SlashCommand = {
         if (answer === question.correct_answer) {  // If the user answers correctly
           embedStatus = 'Correct!';
           answerColor = Colors.Green as ColorResolvable,
-          questionAnswer = `The answer was ${question.correct_answer}`;
+          questionAnswer = `The answer was **${question.correct_answer}**`;
           score++;
           await collected.update({
           });
         } else { // If the user answers incorrectly
           embedStatus = 'Incorrect!';
-          answerColor = Colors.Red as ColorResolvable,
-          questionAnswer = `The correct answer was ${question.correct_answer}`;
+          answerColor = Colors.Grey as ColorResolvable,
+          questionAnswer = `The correct answer was **${question.correct_answer}.**`;
           await collected.update({
           });
         }
 
       } catch (error) { // If the user doesn't answer in time
-        embedStatus = 'Time\'s up!'
+        embedStatus = `Time's up!`
         answerColor = Colors.Red as ColorResolvable,
-        questionAnswer = `The correct answer was ${question.correct_answer}`
+        questionAnswer = `The correct answer was **${question.correct_answer}.**`
         timedOut = true;
       }
 
@@ -163,12 +182,21 @@ export const dTrivia: SlashCommand = {
       if (timedOut) break;
     }
 
+    let payout = 0
+    if (score !== 0) { // The user won
+      payout = (score * bonus)
+      personaData.tokens += payout;
+      log.debug(F, `User scored: ${score}`)
+      log.debug(F, `User earned: ${payout} tokens`)
+    }
+
     if (!timedOut) {
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
-        .setTitle(embedStatus)
-        .setDescription(questionAnswer)
-        .addFields({ name: `That's all the questions!` , value: `You got ${score} out of ${numberofQuestions} questions correct, and earned ${(Math.ceil(score * bonus))} tokens!`})
+        .setTitle(`<:buttonTrivia:1079707985133191168> Trivia (${difficultyName})`)
+        .addFields({ name: `${embedStatus}`, value: `${questionAnswer}`})
+        .addFields({ name: `That's all the questions!`, value: ' '})
+        .addFields({ name: `You got ${score} out of ${numberofQuestions} questions correct, and earned ${payout} tokens!`, value: `You now have ${(personaData.tokens + payout)} tokens.`})
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
       await interaction.editReply({
         embeds: [embed],
@@ -178,9 +206,10 @@ export const dTrivia: SlashCommand = {
     } else {
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
-        .setTitle(embedStatus)
-        .setDescription(questionAnswer)
-        .addFields({name: `You ran out of time!`, value: `You got ${score} out of ${numberofQuestions} questions correct, and earned ${(Math.ceil(score * bonus))} tokens!`})
+        .setTitle(`<:buttonTrivia:1079707985133191168> Trivia (${difficultyName})`)
+        .addFields({ name: `${embedStatus}`, value: `${questionAnswer}.`})
+        .addFields({ name: `Be faster next time!`, value: ' '})
+        .addFields({ name: `You got ${score} out of ${numberofQuestions} questions correct, and earned ${payout} tokens!`, value: `You now have ${(personaData.tokens + payout)} tokens.`})
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
       await interaction.editReply({
         embeds: [embed],

@@ -21,6 +21,7 @@ import {
   AttachmentBuilder,
   GuildMember,
   TextChannel,
+  GuildEmoji,
 } from 'discord.js';
 import {
   APIEmbed,
@@ -66,30 +67,31 @@ const buttons = {
   name: customButton('rpgName', 'Name', '📝'),
   accept: customButton('rpgAccept', 'Accept', '✅'),
   decline: customButton('rpgDecline', 'Decline', '❌'),
-  town: customButton('rpgTown', 'Town', '🏘️'),
-  work: customButton('rpgWork', 'Work', '👷'),
-  shop: customButton('rpgShop', 'Shop', '🛒'),
-  arcade: customButton('rpgArcade', 'Arcade', '🎮'),
-  home: customButton('rpgHome', 'Home', '🛖'),
-  quest: customButton('rpgQuest', 'Quest', '🗺️'),
-  dungeon: customButton('rpgDungeon', 'Dungeon', '🏰'),
-  raid: customButton('rpgRaid', 'Raid', '👹'),
+  town: customButton('rpgTown', 'Town', '1079635651349205003'),
+  work: customButton('rpgWork', 'Work', '1079640323581554740'),
+  shop: customButton('rpgShop', 'Shop', '1079665080632885259'),
+  arcade: customButton('rpgArcade', 'Arcade', '1079632903643869275'),
+  home: customButton('rpgHome', 'Home', '1079635635251445830'),
+  quest: customButton('rpgQuest', 'Quest', '1079642399493587054'),
+  dungeon: customButton('rpgDungeon', 'Dungeon', '1079640302488395796'),
+  raid: customButton('rpgRaid', 'Raid', '1079640284402569227'),
   inventory: customButton('rpgInventory', 'Inventory', '🎒'),
   stats: customButton('rpgStats', 'Stats', '📊'),
   guild: customButton('rpgGuild', 'Guild', '🏰'),
-  buy: customButton('rpgShopBuy', 'Buy', '🛒'),
+  buy: customButton('rpgShopBuy', 'Buy', '1079635646806761524'),
   slotMachine: customButton('rpgSlots', 'Slots', '🎰'),
-  coinFlip: customButton('rpgCoinFlip', 'CoinFlip', '🪙'),
-  roulette: customButton('rpgRoulette', 'Roulette', '🎲'),
+  coinFlip: customButton('rpgCoinFlip', 'CoinFlip', '1079637631794692127'),
+  roulette: customButton('rpgRoulette', 'Roulette', '1079637642804731924'),
   blackjack: customButton('rpgBlackjack', 'Blackjack', '🃏'),
-  wager1: customButton('rpgWager1', 'Bet 1', '🪙'),
-  wager10: customButton('rpgWager10', 'Bet 10', '🪙'),
-  wager100: customButton('rpgWager100', 'Bet 100', '🪙'),
-  wager1000: customButton('rpgWager1000', 'Bet 1000', '🪙'),
-  wager10000: customButton('rpgWager10000', 'Bet 10000', '🪙'),
-  wager100000: customButton('rpgWager100000', 'Bet 100000', '🪙'),
-  coinflipHeads: customButton('rpgCoinflipHeads', 'Heads', '🗿'),
-  coinflipTails: customButton('rpgCoinflipTails', 'Tails', '🐍'),
+  trivia: customButton('rpgTrivia', 'Trivia', '1079707985133191168'),
+  wager1: customButton('rpgWager1', 'Bet 1', '1079669112227242084'),
+  wager10: customButton('rpgWager10', 'Bet 10', '1079669112227242084'),
+  wager100: customButton('rpgWager100', 'Bet 100', '1079669112227242084'),
+  wager1000: customButton('rpgWager1000', 'Bet 1000', '1079669112227242084'),
+  wager10000: customButton('rpgWager10000', 'Bet 10000', '1079669112227242084'),
+  wager100000: customButton('rpgWager100000', 'Bet 100000', '1079669112227242084'),
+  coinflipHeads: customButton('rpgCoinflipHeads', 'Heads', '1079669180653125682'),
+  coinflipTails: customButton('rpgCoinflipTails', 'Tails', '1079669164555370559'),
 
   rouletteRed: customButton('rpgRouletteRed', 'Red', '🟥'),
   rouletteBlack: customButton('rpgRouletteBlack', 'Black', '⬛'),
@@ -238,7 +240,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'DiamondChevron',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     Chevron: {
       label: 'Chevron',
@@ -251,7 +253,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Chevron',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     Concentric: {
       label: 'Concentric',
@@ -264,7 +266,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Concentric',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     CubeTunnels: {
       label: 'CubeTunnels',
@@ -277,7 +279,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'CubeTunnels',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     Leaves: {
       label: 'Leaves',
@@ -290,7 +292,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Leaves',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     SquareTwist: {
       label: 'SquareTwist',
@@ -303,7 +305,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'SquareTwist',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     SquareSpiral: {
       label: 'SquareSpiral',
@@ -316,7 +318,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'SquareSpiral',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     Noise: {
       label: 'Noise',
@@ -329,7 +331,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Noise',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     Squiggles: {
       label: 'Squiggles',
@@ -342,7 +344,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Squiggles',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     TriangleOverlap: {
       label: 'TriangleOverlap',
@@ -355,7 +357,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'TriangleOverlap',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     XandO: {
       label: 'XandO',
@@ -368,7 +370,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'XandO',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     Safari: {
       label: 'Safari',
@@ -381,7 +383,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Safari',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     LineLeaves: {
       label: 'LineLeaves',
@@ -394,7 +396,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'LineLeaves',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     ArcadeCarpet: {
       label: 'ArcadeCarpet',
@@ -407,7 +409,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'ArcadeCarpet',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     Topography: {
       label: 'Topography',
@@ -420,7 +422,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Topography',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     CoffeeSwirl: {
       label: 'CoffeeSwirl',
@@ -433,7 +435,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'CoffeeSwirl',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     SpaceIcons: {
       label: 'SpaceIcons',
@@ -446,7 +448,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'SpaceIcons',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     Plaid: {
       label: 'Plaid',
@@ -459,7 +461,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Plaid',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     Paisley: {
       label: 'Paisley',
@@ -472,7 +474,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Paisley',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     AbstractTriangles: {
       label: 'AbstractTriangles',
@@ -485,7 +487,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'AbstractTriangles',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     Memphis: {
       label: 'Memphis',
@@ -498,7 +500,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Memphis',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     Connected: {
       label: 'Connected',
@@ -511,7 +513,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Connected',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
     Binary: {
       label: 'Binary',
@@ -524,7 +526,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Binary',
-      emoji: '🖼',
+      emoji: '<:itemBackground:1079682074547601428>',
     },
   },
 } as {
@@ -905,7 +907,7 @@ export async function rpgTown(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Town')
+      .setTitle('<:buttonTown:1079635651349205003> Town')
       .setDescription(stripIndents`
       You ${rand(text.enter)} TripTown, a new settlement on the edge of Triptopia, the TripSit Kingdom.
 
@@ -952,12 +954,12 @@ export async function rpgWork(
   const contracts = {
     quest: {
       success: {
-        title: 'Quest Success',
+        title: '<:buttonQuest:1079642399493587054> Quest Success',
         description: stripIndents`${rand(text.quest)}`,
         color: Colors.Green,
       },
       fail: {
-        title: 'Quest Fail',
+        title: '<:buttonQuest:1079642399493587054> Quest Fail',
         description: stripIndents`
           There are no more quests available at the moment. New quests are posted every hour!
         `,
@@ -966,12 +968,12 @@ export async function rpgWork(
     },
     dungeon: {
       success: {
-        title: 'Dungeon Success',
+        title: '<:buttonDungeon:1079640302488395796> Dungeon Success',
         description: stripIndents`${rand(text.dungeon)}`,
         color: Colors.Green,
       },
       fail: {
-        title: 'Dungeon Fail',
+        title: '<:buttonDungeon:1079640302488395796> Dungeon Fail',
         description: stripIndents`
           You already cleared a dungeon today, you're still tired and need to prepare.
         `,
@@ -980,14 +982,14 @@ export async function rpgWork(
     },
     raid: {
       success: {
-        title: 'Raid Success',
+        title: '<:buttonRaid:1079640284402569227> Raid Success',
         description: stripIndents`
           You stormed into Moonbear's office, rustle their jimmies and stole {tokens} TripTokens!
         `,
         color: Colors.Green,
       },
       fail: {
-        title: 'Raid Fail',
+        title: '<:buttonRaid:1079640284402569227> Raid Fail',
         description: stripIndents`
           You've already raided Moonbear's office this week, give them a break!
         `,
@@ -1107,7 +1109,7 @@ export async function rpgWork(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Work')
+      .setTitle('<:buttonWork:1079640323581554740> Work')
       .setDescription(stripIndents`
       You are at work, you can go on a quest, clear a dungeon, or go on a raid.
     `)
@@ -1142,7 +1144,7 @@ export async function rpgShop(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Shop')
+      .setTitle('<:buttonShop:1079665080632885259> Shop')
       .setDescription(stripIndents`
       You are in the shop, you can buy some items to help you on your journey.
 
@@ -1242,7 +1244,7 @@ export async function rpgShopChange(
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-    .setTitle('Shop')
+    .setTitle('<:buttonShop:1079665080632885259> Shop')
     .setDescription(stripIndents`
       You are in the shop, you can buy some items to help you on your journey.
 
@@ -1360,7 +1362,7 @@ export async function rpgShopAccept(
     const embed = embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Shop')
+      .setTitle('<:buttonShop:1079665080632885259> Shop')
       .setDescription(stripIndents`**You do not have enough tokens to buy this item.**
     
     ${description}`)
@@ -1411,7 +1413,7 @@ export async function rpgShopAccept(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Shop')
+      .setTitle('<:buttonShop:1079665080632885259> Shop')
       .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemData.cost} TripTokens.**
       
       ${description}`)
@@ -1515,7 +1517,7 @@ export async function rpgHome(
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-    .setTitle('Home')
+    .setTitle('<:buttonHome:1079635635251445830> Home')
     .setDescription(stripIndents`${message !== null ? message : ''}
 
       You ${rand(text.enter)} your home.
@@ -1873,6 +1875,7 @@ export async function rpgArcade(
     .addComponents(
       buttons.coinFlip,
       buttons.roulette,
+      buttons.trivia,
       // buttons.blackjack,
       // buttons.slotMachine,
       buttons.town,
@@ -1883,7 +1886,7 @@ export async function rpgArcade(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Games')
+      .setTitle('<:buttonArcade:1079632903643869275> Arcade')
       .setDescription(stripIndents`
         You ${rand(text.enter)} the arcade and see a variety of games.
       `)
