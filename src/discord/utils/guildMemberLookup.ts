@@ -22,7 +22,11 @@ export async function getDiscordMember(
   if (string.startsWith('<@') && string.endsWith('>')) {
     log.debug(F, `${string} is a mention!`);
     const id = string.replace(/[<@!>]/g, '');
-    members.push(await interaction.guild.members.fetch(id));
+    try {
+      members.push(await interaction.guild.members.fetch(id));
+    } catch (error) {
+      log.debug(F, `Error fetching member with ID ${string}, they may have left the guild!`);
+    }
   } else if (string.match(/^\d+$/)) {
     log.debug(F, `${string} is an ID!`);
     try {
