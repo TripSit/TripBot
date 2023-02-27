@@ -51,7 +51,7 @@ export async function getQuestions(amount: number, type: string) {
 export const dTrivia: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('trivia')
-    .setDescription('Play a short trivia game with the bot')
+    .setDescription('Play a game of trivia to earn tokens!')
     .addStringOption(option => option.setName('amount')
       .setDescription('The amount of questions to answer')
       .addChoices(
@@ -71,32 +71,33 @@ export const dTrivia: SlashCommand = {
       .setRequired(false)),
   async execute(interaction: ChatInputCommandInteraction) {
     const numberofQuestions = interaction.options.getString('amount') || '5';
+    const amountofQuestions = parseInt(numberofQuestions)
     const chosenDifficulty = interaction.options.getString('difficulty') || 'easy';
     const bonus = chosenDifficulty === 'easy' ? 1 : chosenDifficulty === 'medium' ? 1.5 : 2;
     let score = 0;
     let timedOut = false;
     let answerColor = Colors.Purple as ColorResolvable;
-    let embedStatus = 'Welcome to Trivia!';
+    let embedStatus = `Starting trivia with ${numberofQuestions} questions!`;
     let questionAnswer = 'You have 30 seconds to answer each question.';
     const choices = ['A', 'B', 'C', 'D'];
-
-    for (let i = 0; i < 5; i++) {
-      const { results } = await trivia.getQuestions({
-        amount: numberofQuestions,
-        type: 'multiple', // Only multiple choice questions
-        difficulty: chosenDifficulty,
-      });
+    const { results } = await trivia.getQuestions({
+      amount: amountofQuestions,
+      type: 'multiple', // Only multiple choice questions
+      difficulty: chosenDifficulty,
+    });
+  
+    for (let i = 0; (i < amountofQuestions); i++) {
 
       const question = results[0]; // Get the first question from the array
       const answers = [...question.incorrect_answers, question.correct_answer]; // Combine the correct and incorrect answers
       answers.sort(() => Math.random() - 0.5); // Shuffle the answers (So the correct answer isn't always the last one)
-      const answerMap = new Map(answers.map((answer, index) => [choices[index], `${answer}`]));  // Map the answers to the choices (A, B, C, D)
+      const answerMap = new Map(answers.map((answer, index) => [choices[index], `**${choices[index]}:** ${answer}`]));  // Map the answers to the choices (A, B, C, D)
 
       const embed = new EmbedBuilder()
         .setColor(answerColor as ColorResolvable)
         .setTitle(embedStatus)
         .setDescription(questionAnswer)
-        .addFields({ name: `Question ${i + 1}`, value: question.question })
+        .addFields({ name: `Question ${i + 1} of ${numberofQuestions}`, value: question.question })
         .addFields({ name: 'Choices', value: [...answerMap.values()].join('\n') })
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
 
@@ -117,16 +118,6 @@ export const dTrivia: SlashCommand = {
       } else {
         await interaction.editReply({ // If not the first question, edit the previous message
           embeds: [embed],
-          components: [
-            new ActionRowBuilder<ButtonBuilder>().addComponents(
-              choices.map((choice) =>
-                new ButtonBuilder()
-                  .setCustomId(choice)
-                  .setLabel(choice)
-                  .setStyle(ButtonStyle.Success)
-              )
-            ),
-          ],
         });
       }
 
@@ -134,14 +125,15 @@ export const dTrivia: SlashCommand = {
         return interaction.user.id === interaction.user.id && answerMap.has(interaction.customId);
       };      
 
-      try { // Wait for the user to answer
+      try {
         const collected = await interaction.channel!.awaitMessageComponent({
           filter,
           time: 30000,
           componentType: ComponentType.Button,
         });
 
-        const answer = answerMap.get(collected.customId); // Get the answer from the map
+        let answer = answerMap.get(collected.customId); // Get the answer from the map
+        answer = answer!.substring(7)
         log.debug(F, `User chose: ${answer}`);
         log.debug(F, `Correct answer was: ${question.correct_answer}`);
 
@@ -161,6 +153,9 @@ export const dTrivia: SlashCommand = {
         }
 
       } catch (error) { // If the user doesn't answer in time
+        embedStatus = 'Time\'s up!'
+        answerColor = Colors.Red as ColorResolvable,
+        questionAnswer = `The correct answer was ${question.correct_answer}`
         timedOut = true;
       }
 
@@ -171,10 +166,9 @@ export const dTrivia: SlashCommand = {
     if (!timedOut) {
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
-        .setColor(answerColor as ColorResolvable)
         .setTitle(embedStatus)
         .setDescription(questionAnswer)
-        .addFields({ name: `That's all the questions!` , value: `You got ${score} out of 5 questions correct, and earned ${(Math.ceil(score * bonus))} tokens!`})
+        .addFields({ name: `That's all the questions!` , value: `You got ${score} out of ${numberofQuestions} questions correct, and earned ${(Math.ceil(score * bonus))} tokens!`})
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
       await interaction.editReply({
         embeds: [embed],
@@ -184,8 +178,9 @@ export const dTrivia: SlashCommand = {
     } else {
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
-        .setTitle('Time\'s up!')
-        .setDescription(`You got ${score} out of 5 questions correct, and earned ${(Math.ceil(score * bonus))} tokens!`)
+        .setTitle(embedStatus)
+        .setDescription(questionAnswer)
+        .addFields({name: `You ran out of time!`, value: `You got ${score} out of ${numberofQuestions} questions correct, and earned ${(Math.ceil(score * bonus))} tokens!`})
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
       await interaction.editReply({
         embeds: [embed],
