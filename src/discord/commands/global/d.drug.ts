@@ -303,6 +303,7 @@ export const dDrug: SlashCommand = {
     let embed = embedTemplate();
     // Check if the interaction is coming from DM
     const ephemeral = (interaction.options.getString('output') === 'private' || interaction.options.getString('output') === null) ?? false; // eslint-disable-line max-len
+    await interaction.deferReply({ ephemeral });
 
     // log.debug(F, `ephemeral: ${ephemeral} | interaction.channelId: ${interaction.channelId}`);
     if (interaction.channelId !== null && !ephemeral) {
@@ -312,7 +313,7 @@ export const dDrug: SlashCommand = {
     const drugName = interaction.options.getString('substance', true);
     // if (!drugName) {
     //   embed.setTitle('No drug name was provided');
-    //   interaction.reply({ embeds: [embed], ephemeral: true });
+    //   interaction.editReply({ embeds: [embed] });
     //   return false;
     // }
     const drugData = await drug(drugName) as CbSubstance;
@@ -322,7 +323,7 @@ export const dDrug: SlashCommand = {
       embed.setTitle(`${drugName} was not found`);
       embed.setDescription(stripIndents`...this shouldn\'t have happened, please tell the developer!`);
       // If this happens then something went wrong with the auto-complete
-      interaction.reply({ embeds: [embed], ephemeral: true });
+      interaction.editReply({ embeds: [embed] });
       return false;
     }
 
@@ -336,14 +337,14 @@ export const dDrug: SlashCommand = {
 
     if (section === 'dosage') {
       embed = await addDosages(embed, drugData);
-      interaction.reply({ embeds: [embed], ephemeral });
+      interaction.editReply({ embeds: [embed] });
       return true;
     }
 
     embed = await addSummary(embed, drugData);
 
     if (section === 'summary') {
-      interaction.reply({ embeds: [embed], ephemeral });
+      interaction.editReply({ embeds: [embed] });
       return true;
     }
 
@@ -472,7 +473,7 @@ export const dDrug: SlashCommand = {
     // Experiences
     await addExperiences(embed, drugData);
 
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.editReply({ embeds: [embed] });
 
     return true;
   },
