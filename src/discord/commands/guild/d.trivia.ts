@@ -215,7 +215,7 @@ export const dTrivia: SlashCommand = {
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
         .setTitle(`<:buttonTrivia:1079707985133191168> Trivia (${difficultyName})`)
-        .addFields({ name: `${embedStatus}`, value: `${questionAnswer}.`})
+        .addFields({ name: `${embedStatus}`, value: `${questionAnswer}`})
         .addFields({ name: `Be faster next time!`, value: ' '})
         .addFields({ name: `You got ${score} out of ${numberofQuestions} questions correct, and earned ${payout} tokens!`, value: `You now have ${(personaData.tokens + payout)} tokens.`})
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
