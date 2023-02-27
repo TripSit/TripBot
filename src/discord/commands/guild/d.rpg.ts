@@ -21,7 +21,6 @@ import {
   AttachmentBuilder,
   GuildMember,
   TextChannel,
-  GuildEmoji,
 } from 'discord.js';
 import {
   APIEmbed,
@@ -49,6 +48,8 @@ const F = f(__filename);
 //   dungeon: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 : 1000 * 1,
 //   raid: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 * 7 : 1000 * 1,
 // };
+
+const backgroundEmoji = '<:itemBackground:1079682074547601428>';
 
 function customButton(
   customId: string,
@@ -240,7 +241,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'DiamondChevron',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     Chevron: {
       label: 'Chevron',
@@ -253,7 +254,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Chevron',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     Concentric: {
       label: 'Concentric',
@@ -266,7 +267,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Concentric',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     CubeTunnels: {
       label: 'CubeTunnels',
@@ -279,7 +280,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'CubeTunnels',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     Leaves: {
       label: 'Leaves',
@@ -292,7 +293,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Leaves',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     SquareTwist: {
       label: 'SquareTwist',
@@ -305,7 +306,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'SquareTwist',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     SquareSpiral: {
       label: 'SquareSpiral',
@@ -318,7 +319,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'SquareSpiral',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     Noise: {
       label: 'Noise',
@@ -331,7 +332,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Noise',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     Squiggles: {
       label: 'Squiggles',
@@ -344,7 +345,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Squiggles',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     TriangleOverlap: {
       label: 'TriangleOverlap',
@@ -357,7 +358,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'TriangleOverlap',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     XandO: {
       label: 'XandO',
@@ -370,7 +371,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'XandO',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     Safari: {
       label: 'Safari',
@@ -383,7 +384,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Safari',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     LineLeaves: {
       label: 'LineLeaves',
@@ -396,7 +397,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'LineLeaves',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     ArcadeCarpet: {
       label: 'ArcadeCarpet',
@@ -409,7 +410,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'ArcadeCarpet',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     Topography: {
       label: 'Topography',
@@ -422,7 +423,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Topography',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     CoffeeSwirl: {
       label: 'CoffeeSwirl',
@@ -435,7 +436,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'CoffeeSwirl',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     SpaceIcons: {
       label: 'SpaceIcons',
@@ -448,7 +449,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'SpaceIcons',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     Plaid: {
       label: 'Plaid',
@@ -461,7 +462,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Plaid',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     Paisley: {
       label: 'Paisley',
@@ -474,7 +475,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Paisley',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     AbstractTriangles: {
       label: 'AbstractTriangles',
@@ -487,7 +488,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'AbstractTriangles',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     Memphis: {
       label: 'Memphis',
@@ -500,7 +501,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Memphis',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     Connected: {
       label: 'Connected',
@@ -513,7 +514,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Connected',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
     Binary: {
       label: 'Binary',
@@ -526,7 +527,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Binary',
-      emoji: '<:itemBackground:1079682074547601428>',
+      emoji: backgroundEmoji,
     },
   },
 } as {
@@ -1144,7 +1145,7 @@ export async function rpgShop(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('<:buttonShop:1079665080632885259> Shop')
+      .setTitle(`${backgroundEmoji} Shop`)
       .setDescription(stripIndents`
       You are in the shop, you can buy some items to help you on your journey.
 
@@ -1244,7 +1245,7 @@ export async function rpgShopChange(
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-    .setTitle('<:buttonShop:1079665080632885259> Shop')
+    .setTitle(`${backgroundEmoji} Shop`)
     .setDescription(stripIndents`
       You are in the shop, you can buy some items to help you on your journey.
 

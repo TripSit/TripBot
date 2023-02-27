@@ -1,7 +1,6 @@
 /* eslint-disable max-len */
 import {
   SlashCommandBuilder,
-  AttachmentBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   Colors,
@@ -23,7 +22,6 @@ import { startLog } from '../../utils/startLog';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
-import { imageGet } from '../../utils/imageGet';
 
 const F = f(__filename);
 
@@ -541,13 +539,13 @@ export async function rules(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  const rulesPath = await imageGet('rules');
+  // const rulesPath = await imageGet('rules');
 
-  const rulesFile = new AttachmentBuilder(rulesPath);
+  // const rulesFile = new AttachmentBuilder(rulesPath);
 
-  // get the file name from the path
-  const rulesFileName = rulesPath.split('/').pop();
-  // log.debug(F, `rulesFileName: ${rulesFileName}`);
+  // // get the file name from the path
+  // const rulesFileName = rulesPath.split('/').pop();
+  // // log.debug(F, `rulesFileName: ${rulesFileName}`);
 
   await (interaction.channel as TextChannel).send({
     content: `
