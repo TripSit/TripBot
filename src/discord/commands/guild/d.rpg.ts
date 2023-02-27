@@ -70,7 +70,7 @@ const buttons = {
   town: customButton('rpgTown', 'Town', '1079635651349205003'),
   work: customButton('rpgWork', 'Work', '1079640323581554740'),
   shop: customButton('rpgShop', 'Shop', '1079665080632885259'),
-  arcade: customButton('rpgArcade', 'Arcade', '1079632903643869275'),
+  arcade: customButton('rpgArcade', 'Arcade', '1079717122789355520'),
   home: customButton('rpgHome', 'Home', '1079635635251445830'),
   quest: customButton('rpgQuest', 'Quest', '1079642399493587054'),
   dungeon: customButton('rpgDungeon', 'Dungeon', '1079640302488395796'),
@@ -1886,7 +1886,7 @@ export async function rpgArcade(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('<:buttonArcade:1079632903643869275> Arcade')
+      .setTitle('<:buttonArcade:1079717122789355520> Arcade')
       .setDescription(stripIndents`
         You ${rand(text.enter)} the arcade and see a variety of games.
       `)

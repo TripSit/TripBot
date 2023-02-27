@@ -39,6 +39,7 @@ import {
 } from '../../../global/utils/knex';
 import { Personas, RpgInventory } from '../../../global/@types/database';
 import { imageGet } from '../../utils/imageGet';
+const he = require('he')
 const Trivia = require('trivia-api');
 const trivia = new Trivia({ encoding: 'url3986' });
 const F = f(__filename);
@@ -70,6 +71,7 @@ export const dTrivia: SlashCommand = {
       )
       .setRequired(false)),
   async execute(interaction: ChatInputCommandInteraction) {
+
     const numberofQuestions = interaction.options.getString('amount') || '5';
     const amountofQuestions = parseInt(numberofQuestions)
     const chosenDifficulty = interaction.options.getString('difficulty') || 'easy';
@@ -108,14 +110,20 @@ export const dTrivia: SlashCommand = {
 
       const question = results[0]; // Get the first question from the array
       const answers = [...question.incorrect_answers, question.correct_answer]; // Combine the correct and incorrect answers
+      const fixedQuestion = he.unescape(question.question); // Unescape HTML entities
+      const fixedCorrectAnswer = he.unescape(question.correct_answer);
+      const fixedIncorrectAnswers = he.unescape(...question.incorrect_answers);
+      const fixedAnswers = [...question.incorrect_answers, question.correct_answer];
+      // const fixedAnswers = he.unescape(answers)
+      log.debug(F, `Broken Question: ${question.question}, Fixed Question: ${fixedQuestion}`)
+      log.debug(F, `Broken Answer: ${answers}, Fixed Answer: ${fixedAnswers}`)
       answers.sort(() => Math.random() - 0.5); // Shuffle the answers (So the correct answer isn't always the last one)
-      const answerMap = new Map(answers.map((answer, index) => [choices[index], `**${choices[index]}:** ${answer}`]));  // Map the answers to the choices (A, B, C, D)
-
+      const answerMap = new Map(fixedAnswers.map((answer, index) => [choices[index], `**${choices[index]}:** ${answer}`]));  // Map the answers to the choices (A, B, C, D)
       const embed = new EmbedBuilder()
         .setColor(answerColor as ColorResolvable)
         .setTitle(`<:buttonTrivia:1079707985133191168> Trivia (${difficultyName})`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}`})
-        .addFields({ name: `Question ${i + 1} of ${numberofQuestions}`, value: question.question })
+        .addFields({ name: `Question ${i + 1} of ${numberofQuestions}`, value: fixedQuestion })
         .addFields({ name: 'Choices', value: [...answerMap.values()].join('\n') })
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
 
