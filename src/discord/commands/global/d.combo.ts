@@ -25,6 +25,7 @@ export const dCombo: SlashCommand = {
       .setAutocomplete(true)),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply();
     const drugA = interaction.options.getString('first_drug', true);
     const drugB = interaction.options.getString('second_drug', true);
 
@@ -35,7 +36,7 @@ export const dCombo: SlashCommand = {
       .setDescription(results.description);
     if (results.thumbnail) embed.setThumbnail(results.thumbnail);
     if (results.color) embed.setColor(Colors[results.color as keyof typeof Colors]);
-    interaction.reply({ embeds: [embed] });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };
