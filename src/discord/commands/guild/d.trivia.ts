@@ -146,21 +146,30 @@ export const dTrivia: SlashCommand = {
     }
     const questionList = await getQuestions(amountOfQuestions, chosenDifficulty);
 
-    for (let qNumber = 0; (qNumber < amountOfQuestions); qNumber += 1) {
+    let qNumber = 0;
+    for (qNumber = 0; (qNumber < amountOfQuestions); qNumber += 1) {
       // Get the first question from the array
       const [questionData] = questionList;
 
       const answerMap = new Map(questionData.all_answers.map((answer, index) => [choices[index], `**${choices[index]}:** ${answer}`])); // eslint-disable-line max-len
       const embed = new EmbedBuilder()
         .setColor(answerColor)
-        .setTitle(`<:buttonTrivia:1079707985133191168> Trivia (${difficultyName})`)
+        .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
         .addFields({ name: `Question ${qNumber + 1} of ${amountOfQuestions}`, value: questionData.question })
         .addFields({ name: 'Choices', value: [...answerMap.values()].join('\n') })
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
         
       if (qNumber === 0) {
         await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')] }); // eslint-disable-line no-await-in-loop, max-len
+        const startingEmbed = new EmbedBuilder()
+        .setColor(answerColor)
+        .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
+        .addFields({ name: `Starting Trivia with ${amountOfQuestions} questions...`, value: ` ` })
+        .addFields({ name: `Get ready!`, value: `You have 30 seconds to answer each question.` })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+        await interaction.editReply({ embeds: [startingEmbed] }); // eslint-disable-line no-await-in-loop, max-len
         // If it's the first question, send a new message
+        setTimeout(async function() { // Wait 5 seconds before sending the first question
         await interaction.editReply({ // eslint-disable-line no-await-in-loop
           embeds: [embed],
           components: [
@@ -173,6 +182,8 @@ export const dTrivia: SlashCommand = {
             ),
           ],
         });
+        }, 5000);
+
       } else {
         // If not the first question, edit the previous message
         setTimeout(async function() { // Wait 5 seconds before sending the next question
@@ -201,6 +212,21 @@ export const dTrivia: SlashCommand = {
           componentType: ComponentType.Button,
         });
 
+        if (collected) {
+          // Disable all buttons
+          const disabledButtons = choices.map((choice) =>
+            new ButtonBuilder()
+              .setCustomId(choice)
+              .setDisabled(true)
+              .setLabel(choice)
+              .setStyle(ButtonStyle.Success)
+          );
+      
+          await collected.update({
+            components: [new ActionRowBuilder<ButtonBuilder>().addComponents(disabledButtons)],
+          });
+        }
+
         let answer = answerMap.get(collected.customId); // Get the answer from the map
         answer = answer?.substring(7);
         log.debug(F, `User chose: ${answer}`);
@@ -210,11 +236,13 @@ export const dTrivia: SlashCommand = {
           score += 1;
           const embed = new EmbedBuilder()
           .setColor(Colors.Green as ColorResolvable)
-          .setTitle(`<:buttonTrivia:1079707985133191168> Trivia (${difficultyName})`)
+          .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
           .addFields({ name: `Correct!`, value: `The answer was **${questionData.correct_answer}.**` })
-          .addFields({ name: `Current Score:`, value: `${score} of ${(qNumber)}`})
+          .addFields({ name: `Current Score:`, value: `${score} of ${(qNumber + 1)}`})
           .addFields({ name: 'Next question in 5 seconds...', value: ' '})
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+          embedStatus = 'Correct!';
+          questionAnswer = `The answer was **${questionData.correct_answer}.**`;
           await interaction.editReply({
             embeds: [embed],
             components: [
@@ -230,11 +258,13 @@ export const dTrivia: SlashCommand = {
         } else { // If the user answers incorrectly
           const embed = new EmbedBuilder()
           .setColor(Colors.Grey as ColorResolvable)
-          .setTitle(`<:buttonTrivia:1079707985133191168> Trivia (${difficultyName})`)
+          .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
           .addFields({ name: `Incorrect!`, value: `The correct answer was **${questionData.correct_answer}.**` })
-          .addFields({ name: `Current Score:`, value: `${score} of ${(qNumber )}`})
+          .addFields({ name: `Current Score:`, value: `${score} of ${(qNumber + 1)}`})
           .addFields({ name: 'Next question in 5 seconds...', value: ' '})
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+          embedStatus = 'Incorrect!';
+          questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
           await interaction.editReply({ // eslint-disable-line no-await-in-loop
             embeds: [embed],
             components: [
@@ -271,7 +301,7 @@ export const dTrivia: SlashCommand = {
     if (!timedOut) {
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
-        .setTitle(`<:buttonTrivia:1079707985133191168> Trivia (${difficultyName})`)
+        .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
         .addFields({ name: 'That\'s all the questions!', value: ' ' })
         .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct, and earned ${payout} tokens!`, value: `You now have ${(personaData.tokens + payout)} tokens.` }) // eslint-disable-line max-len
@@ -283,15 +313,15 @@ export const dTrivia: SlashCommand = {
     } else {
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
-        .setTitle(`<:buttonTrivia:1079707985133191168> Trivia (${difficultyName})`)
+        .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
         .addFields({ name: 'Be faster next time!', value: ' ' })
-        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct, and earned ${payout} tokens!`, value: `You now have ${(personaData.tokens + payout)} tokens.` }) // eslint-disable-line max-len
+        .addFields({ name: `You got ${score} out of ${(qNumber + 1)} questions correct, and earned ${payout} tokens!`, value: `You now have ${(personaData.tokens + payout)} tokens.` }) // eslint-disable-line max-len
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
       await interaction.editReply({
         embeds: [embed],
         components: [],
-      });
+      })
     }
     return true;
   },
