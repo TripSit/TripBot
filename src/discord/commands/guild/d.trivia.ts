@@ -43,6 +43,12 @@ const optionDict = {
   },
 };
 
+const bonusMessageDict = {
+  easy: '',
+  medium: ' *(+50% difficulty bonus)*',
+  hard: ' *(+100% difficulty bonus)*',
+};
+
 type TriviaQuestion = {
   category: string;
   type: string;
@@ -121,12 +127,27 @@ export const dTrivia: SlashCommand = {
     const chosenDifficulty = interaction.options.getString('difficulty') || 'easy';
     const difficultyName = optionDict[chosenDifficulty as keyof typeof optionDict].name;
     const { bonus } = optionDict[chosenDifficulty as keyof typeof optionDict];
+    let bonusMessage = bonusMessageDict[chosenDifficulty as keyof typeof bonusMessageDict];
     let score = 0;
     let timedOut = false;
     let answerColor = Colors.Purple as ColorResolvable;
     let embedStatus = `Starting trivia with ${amountOfQuestions} questions!`;
     let questionAnswer = 'You have 30 seconds to answer each question.';
-    const choices = ['A', 'B', 'C', 'D'];
+    const choices = ['<:buttonBoxA:1079741192398438451>', '<:buttonBoxB:1079748167043653632>', '<:buttonBoxC:1079748173700005929>', '<:buttonBoxD:1079748179794350100>'];
+    const choiceEmoji = (choice: String) => { // emoji for the buttons without the emoji name
+      switch (choice) {
+        case '<:buttonBoxA:1079741192398438451>':
+          return '1079741192398438451';
+        case '<:buttonBoxB:1079748167043653632>':
+          return '1079748167043653632';
+        case '<:buttonBoxC:1079748173700005929>':
+          return '1079748173700005929';
+        case '<:buttonBoxD:1079748179794350100>':
+          return '1079748179794350100';
+        default:
+          return '❓';
+      }
+    };
 
     // Get the user's persona data
     let [personaData] = await getPersonaInfo(interaction.user.id);
@@ -151,7 +172,7 @@ export const dTrivia: SlashCommand = {
       // Get the first question from the array
       const [questionData] = questionList;
 
-      const answerMap = new Map(questionData.all_answers.map((answer, index) => [choices[index], `**${choices[index]}:** ${answer}`])); // eslint-disable-line max-len
+      const answerMap = new Map(questionData.all_answers.map((answer, index) => [choices[index], `**${choices[index]}** ${answer}`])); // eslint-disable-line max-len
       const embed = new EmbedBuilder()
         .setColor(answerColor)
         .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
@@ -177,12 +198,12 @@ export const dTrivia: SlashCommand = {
               choices.map(choice => new ButtonBuilder()
                 .setDisabled(false)
                 .setCustomId(choice)
-                .setLabel(choice)
-                .setStyle(ButtonStyle.Success)),
+                .setEmoji(choiceEmoji(choice))
+                .setStyle(ButtonStyle.Secondary)),
             ),
           ],
         });
-        }, 5000);
+        }, 1000);
 
       } else {
         // If not the first question, edit the previous message
@@ -194,12 +215,12 @@ export const dTrivia: SlashCommand = {
               choices.map(choice => new ButtonBuilder()
                 .setDisabled(false)
                 .setCustomId(choice)
-                .setLabel(choice)
-                .setStyle(ButtonStyle.Success)),
+                .setEmoji(choiceEmoji(choice))
+                .setStyle(ButtonStyle.Secondary)),
             ),
           ],
           });
-        }, 5000);
+        }, 1000);
       }
 
       // Filter for the buttons
@@ -218,8 +239,8 @@ export const dTrivia: SlashCommand = {
             new ButtonBuilder()
               .setCustomId(choice)
               .setDisabled(true)
-              .setLabel(choice)
-              .setStyle(ButtonStyle.Success)
+              .setEmoji(choiceEmoji(choice))
+              .setStyle(ButtonStyle.Secondary)
           );
       
           await collected.update({
@@ -228,7 +249,7 @@ export const dTrivia: SlashCommand = {
         }
 
         let answer = answerMap.get(collected.customId); // Get the answer from the map
-        answer = answer?.substring(7);
+        answer = answer?.substring(38);
         log.debug(F, `User chose: ${answer}`);
         log.debug(F, `Correct answer was: ${questionData.correct_answer}`);
 
@@ -250,8 +271,8 @@ export const dTrivia: SlashCommand = {
                 choices.map(choice => new ButtonBuilder()
                   .setDisabled(true)
                   .setCustomId(choice)
-                  .setLabel(choice)
-                  .setStyle(ButtonStyle.Success)),
+                  .setEmoji(choiceEmoji(choice))
+                  .setStyle(ButtonStyle.Secondary)),
               ),
             ],
           });
@@ -272,8 +293,8 @@ export const dTrivia: SlashCommand = {
                 choices.map(choice => new ButtonBuilder()
                   .setDisabled(true)
                   .setCustomId(choice)
-                  .setLabel(choice)
-                  .setStyle(ButtonStyle.Success)),
+                  .setEmoji(choiceEmoji(choice))
+                  .setStyle(ButtonStyle.Secondary)),
               ),
             ],
           });
@@ -288,23 +309,34 @@ export const dTrivia: SlashCommand = {
       questionList.splice(0, 1); // Remove the first question from the array
       if (timedOut) break;
     }
-
     let payout = 0;
-    if (score !== 0) { // The user won
-      payout = (score * bonus);
+    let perfectBonus = '';
+    if (score !== 0) { // The user got at least one question correct
+      if (score === amountOfQuestions) { // Bonus for getting all questions correct
+        payout = ((score * bonus) + (score * 1.5));
+        perfectBonus = ' ***(+50% perfect score bonus)***'
+      } else {
+        payout = (score * bonus);
+      }
+      log.debug(F, `Payout: ${payout} tokens`);
+      Math.round(payout);
+      log.debug(F, `Rounded Payout: ${payout} tokens`);
       personaData.tokens += payout;
       log.debug(F, `User scored: ${score}`);
       log.debug(F, `User earned: ${payout} tokens`);
       await setPersonaInfo(personaData);
+    } else {
+      bonusMessage = '';
     }
+     
 
     if (!timedOut) {
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
         .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
-        .addFields({ name: 'That\'s all the questions!', value: ' ' })
-        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct, and earned ${payout} tokens!`, value: `You now have ${(personaData.tokens + payout)} tokens.` }) // eslint-disable-line max-len
+        .addFields({ name: 'That\'s all the questions!', value: `You got ${score} out of ${amountOfQuestions} questions correct${perfectBonus}`})
+        .addFields({ name: `You earned ${payout} tokens!${bonusMessage}`, value: `You now have ${(personaData.tokens + payout)} tokens.` }) // eslint-disable-line max-len
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
       await interaction.editReply({
         embeds: [embed],
@@ -315,8 +347,8 @@ export const dTrivia: SlashCommand = {
         .setColor(Colors.Purple)
         .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
-        .addFields({ name: 'Be faster next time!', value: ' ' })
-        .addFields({ name: `You got ${score} out of ${(qNumber + 1)} questions correct, and earned ${payout} tokens!`, value: `You now have ${(personaData.tokens + payout)} tokens.` }) // eslint-disable-line max-len
+        .addFields({ name: 'Be faster next time!', value: `You got ${score} out of ${amountOfQuestions} questions correct${perfectBonus}`})
+        .addFields({ name: `You earned ${payout} tokens!${bonusMessage}`, value: `You now have ${(personaData.tokens + payout)} tokens.` }) // eslint-disable-line max-len
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
       await interaction.editReply({
         embeds: [embed],
