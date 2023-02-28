@@ -154,11 +154,10 @@ export const dTrivia: SlashCommand = {
       const embed = new EmbedBuilder()
         .setColor(answerColor)
         .setTitle(`<:buttonTrivia:1079707985133191168> Trivia (${difficultyName})`)
-        .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
         .addFields({ name: `Question ${qNumber + 1} of ${amountOfQuestions}`, value: questionData.question })
         .addFields({ name: 'Choices', value: [...answerMap.values()].join('\n') })
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
-
+        
       if (qNumber === 0) {
         await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')] }); // eslint-disable-line no-await-in-loop, max-len
         // If it's the first question, send a new message
@@ -167,6 +166,7 @@ export const dTrivia: SlashCommand = {
           components: [
             new ActionRowBuilder<ButtonBuilder>().addComponents(
               choices.map(choice => new ButtonBuilder()
+                .setDisabled(false)
                 .setCustomId(choice)
                 .setLabel(choice)
                 .setStyle(ButtonStyle.Success)),
@@ -175,9 +175,20 @@ export const dTrivia: SlashCommand = {
         });
       } else {
         // If not the first question, edit the previous message
-        await interaction.editReply({ // eslint-disable-line no-await-in-loop
-          embeds: [embed],
-        });
+        setTimeout(async function() { // Wait 5 seconds before sending the next question
+          await interaction.editReply({ // eslint-disable-line no-await-in-loop
+            embeds: [embed],
+            components: [
+            new ActionRowBuilder<ButtonBuilder>().addComponents(
+              choices.map(choice => new ButtonBuilder()
+                .setDisabled(false)
+                .setCustomId(choice)
+                .setLabel(choice)
+                .setStyle(ButtonStyle.Success)),
+            ),
+          ],
+          });
+        }, 5000);
       }
 
       // Filter for the buttons
@@ -196,16 +207,46 @@ export const dTrivia: SlashCommand = {
         log.debug(F, `Correct answer was: ${questionData.correct_answer}`);
 
         if (answer === questionData.correct_answer) { // If the user answers correctly
-          embedStatus = 'Correct!';
-          answerColor = Colors.Green as ColorResolvable;
-          questionAnswer = `The answer was **${questionData.correct_answer}**`;
           score += 1;
-          await collected.update({}); // eslint-disable-line no-await-in-loop
+          const embed = new EmbedBuilder()
+          .setColor(Colors.Green as ColorResolvable)
+          .setTitle(`<:buttonTrivia:1079707985133191168> Trivia (${difficultyName})`)
+          .addFields({ name: `Correct!`, value: `The answer was **${questionData.correct_answer}.**` })
+          .addFields({ name: `Current Score:`, value: `${score} of ${(qNumber)}`})
+          .addFields({ name: 'Next question in 5 seconds...', value: ' '})
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+          await interaction.editReply({
+            embeds: [embed],
+            components: [
+              new ActionRowBuilder<ButtonBuilder>().addComponents(
+                choices.map(choice => new ButtonBuilder()
+                  .setDisabled(true)
+                  .setCustomId(choice)
+                  .setLabel(choice)
+                  .setStyle(ButtonStyle.Success)),
+              ),
+            ],
+          });
         } else { // If the user answers incorrectly
-          embedStatus = 'Incorrect!';
-          answerColor = Colors.Grey as ColorResolvable;
-          questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
-          await collected.update({}); // eslint-disable-line no-await-in-loop
+          const embed = new EmbedBuilder()
+          .setColor(Colors.Grey as ColorResolvable)
+          .setTitle(`<:buttonTrivia:1079707985133191168> Trivia (${difficultyName})`)
+          .addFields({ name: `Incorrect!`, value: `The correct answer was **${questionData.correct_answer}.**` })
+          .addFields({ name: `Current Score:`, value: `${score} of ${(qNumber )}`})
+          .addFields({ name: 'Next question in 5 seconds...', value: ' '})
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+          await interaction.editReply({ // eslint-disable-line no-await-in-loop
+            embeds: [embed],
+            components: [
+              new ActionRowBuilder<ButtonBuilder>().addComponents(
+                choices.map(choice => new ButtonBuilder()
+                  .setDisabled(true)
+                  .setCustomId(choice)
+                  .setLabel(choice)
+                  .setStyle(ButtonStyle.Success)),
+              ),
+            ],
+          });
         }
       } catch (error) { // If the user doesn't answer in time
         embedStatus = 'Time\'s up!';

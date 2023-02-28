@@ -426,17 +426,17 @@ export async function setupTemplateReactionRole(
 
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setLabel(`Announcements`)
+        .setLabel(`${Announcements.name}`)
         .setCustomId(`"ID":"RR","RID":"${Announcements.id}"`)
         .setEmoji(emojiBell.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setLabel(`TripBot Updates`)
+        .setLabel(`${TripBotUpdates.name}`)
         .setCustomId(`"ID":"RR","RID":"${TripBotUpdates.id}"`)
         .setEmoji(emojiBell.identifier)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setLabel(`TripTown Notices`)
+        .setLabel(`${TripTownNotices.name}`)
         .setCustomId(`"ID":"RR","RID":"${TripTownNotices.id}"`)
         .setEmoji(emojiBell.identifier)
         .setStyle(ButtonStyle.Primary),
