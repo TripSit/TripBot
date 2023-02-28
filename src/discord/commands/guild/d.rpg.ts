@@ -669,6 +669,19 @@ const BetLossMessageList = [
   'I\'m sure you\'ll win it back...',
   'There is probably a better way to spend your money.',
   'I\'m sure you can find some more under the couch cushions...',
+  'Sheeeeeesh...',
+  'Sometimes you win, sometimes you lose.',
+  'It is what it is.',
+  'That\'s just how the cookie crumbles.',
+  'I promise the odds are perfectly fair!.',
+  'Perhaps it is time to take a break.',
+  'I hope you\'re ok with eating ramen',
+  'I hope you\'re not too upset.',
+  'Was it rigged? Who knows!',
+  'I triple checked the math, and can confirm you\'re just unlucky.',
+  'At least your wallet is a bit easier to carry now.',
+  'I\'ll pretend I didn\'t see that.',
+  'I promise I won\'t tell anyone.',
 ]
 
 const BetWinMessageList = [
@@ -682,6 +695,16 @@ const BetWinMessageList = [
   'Gee whiz!',
   'Time to party!',
   'Today is your lucky day!',
+  'You\'re gonna spend it wisely, right?',
+  'You\'re gonna buy me something nice, right?',
+  'Luck? Skill? Who knows!',
+  'Sometimes chance favors the prepared mind.',
+  'A.K.A. you\'re a lucky soul.',
+  'Free money!',
+  'It\'s a Christmas miracle!',
+  'Yo\'re going to need a bigger wallet.',
+  'I\'m so glad we could witness this special moment together.',
+  'Yippee!',
 ]
 
 const text = {
