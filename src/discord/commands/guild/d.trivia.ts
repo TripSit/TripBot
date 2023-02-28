@@ -407,7 +407,7 @@ export const dTrivia: SlashCommand = {
         .setColor(Colors.Purple)
         .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
-        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectBonus}`, value: `${scoreMessage}`})
+        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectBonus}`, value: `*${scoreMessage}*`})
         .addFields({ name: `You earned ${payout} tokens!${bonusMessage}`, value: `You now have ${(personaData.tokens + payout)} tokens.` }) // eslint-disable-line max-len
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
       await interaction.editReply({
@@ -420,7 +420,7 @@ export const dTrivia: SlashCommand = {
         .setColor(Colors.Purple)
         .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
-        .addFields({ name: `${timeOutMessage}`, value: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectBonus}`})
+        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectBonus}`, value: `*${timeOutMessage}*`})
         .addFields({ name: `You earned ${payout} tokens!${bonusMessage}`, value: `You now have ${(personaData.tokens + payout)} tokens.` }) // eslint-disable-line max-len
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
       await interaction.editReply({

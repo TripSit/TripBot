@@ -657,6 +657,33 @@ const genome = {
   }
 };
 
+const BetLossMessageList = [
+  'Let\'s just pretend you didn\'t lose anything.',
+  'Thank you for your donation.',
+  'You lost your bet, but you gained a friend.',
+  'We can still be friends, right?',
+  'Perhaps this is a sign that you should stop gambling.',
+  'Maybe you should try a different game.',
+  'I promise I\'ll spend it wisely.',
+  'I hope you didn\'t need that.',
+  'I\'m sure you\'ll win it back...',
+  'There is probably a better way to spend your money.',
+  'I\'m sure you can find some more under the couch cushions...',
+]
+
+const BetWinMessageList = [
+  'Free lunch!',
+  'Wowee!',
+  'I\'m jealous!',
+  'I hope you spend it wisely.',
+  'Looks like you\'re having lobster tonight!',
+  'Someone is feeling lucky!',
+  'Congratulations!',
+  'Gee whiz!',
+  'Time to party!',
+  'Today is your lucky day!',
+]
+
 const text = {
   enter: [
     'take a bus to',
@@ -2063,6 +2090,7 @@ export async function rpgArcadeGame(
     // log.debug(F, `result: ${result}`);
     if (payout !== 0) {
       // The user won
+      let BetOutcomeMessage = BetWinMessageList[Math.floor(Math.random() * BetWinMessageList.length)];
       personaData.tokens += payout;
       await personaSet(personaData);
       wagers[interaction.user.id] = {
@@ -2079,6 +2107,7 @@ export async function rpgArcadeGame(
             The ${object} came up **${result}** and you chose **${choice}**!
 
             **You won ${payout} tokens!**
+            *${BetOutcomeMessage}*
 
             You can bet ${personaData.tokens} tokens.
           `)
@@ -2087,6 +2116,7 @@ export async function rpgArcadeGame(
       };
     }
     // The user lost
+    let BetOutcomeMessage = BetLossMessageList[Math.floor(Math.random() * BetLossMessageList.length)];
     personaData.tokens -= currentBet;
     await personaSet(personaData);
     wagers[interaction.user.id] = {
@@ -2103,6 +2133,7 @@ export async function rpgArcadeGame(
             The ${object} came up **${result}** and you chose **${choice}**!
 
             **You lost ${currentBet} tokens!**
+            *${BetOutcomeMessage}*
 
             You can bet ${personaData.tokens} tokens.
           `)
