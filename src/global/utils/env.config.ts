@@ -315,6 +315,10 @@ export const env = {
   EMOJI_BET: isProd ? '🪙' : '<:buttonBet:1079669112227242084>',
   EMOJI_HEADS: isProd ? '🗿' : '<:buttonHeads:1079669180653125682>',
   EMOJI_TAILS: isProd ? '🐍' : '<:buttonTails:1079669164555370559>',
+  EMOJI_BUTTON_A: isProd ? '' : '<:buttonBoxA:1079741192398438451>',
+  EMOJI_BUTTON_B: isProd ? '🇧' : '<:buttonBoxB:1079748167043653632>',
+  EMOJI_BUTTON_C: isProd ? '🇨' : '<:buttonBoxC:1079748173700005929>',
+  EMOJI_BUTTON_D: isProd ? '🇩' : '<:buttonBoxD:1079748179794350100>',
 };
 
 export default env;
