@@ -203,7 +203,7 @@ export const dTrivia: SlashCommand = {
             ),
           ],
         });
-        }, 1000);
+        }, 5000);
 
       } else {
         // If not the first question, edit the previous message
@@ -220,7 +220,7 @@ export const dTrivia: SlashCommand = {
             ),
           ],
           });
-        }, 1000);
+        }, 5000);
       }
 
       // Filter for the buttons
