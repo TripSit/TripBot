@@ -26,6 +26,14 @@ export const validateEnv = () => {
   //   log.warn(F, 'Missing DISCORD_CLIENT_SECRET: I think this is an oauth thing?');
   // }
 
+  if (!process.env.MATRIX_HOMESERVER_URL) {
+    log.warn(F, 'Missing MATRIX_HOMESERVER_URL, won\'t be able to connect to matrix homeserver.');
+  }
+
+  if (!process.env.MATRIX_ACCESS_TOKEN) {
+    log.warn(F, 'Missing MATRIX_ACCESS_TOKEN, you won\'t be able to log into matrix');
+  }
+
   if (!process.env.GITHUB_TOKEN) {
     log.warn(F, 'Missing GITHUB_TOKEN: You wont be able to use /issue');
   }
