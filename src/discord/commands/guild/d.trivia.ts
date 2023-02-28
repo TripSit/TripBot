@@ -153,7 +153,7 @@ export const dTrivia: SlashCommand = {
       const answerMap = new Map(questionData.all_answers.map((answer, index) => [choices[index], `**${choices[index]}:** ${answer}`])); // eslint-disable-line max-len
       const embed = new EmbedBuilder()
         .setColor(answerColor)
-        .setTitle(`<:buttonTrivia:1079707985133191168> Trivia (${difficultyName})`)
+        .setTitle(`${env.EMOJI_TRIVIA} Trivia (${difficultyName})`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
         .addFields({ name: `Question ${qNumber + 1} of ${amountOfQuestions}`, value: questionData.question })
         .addFields({ name: 'Choices', value: [...answerMap.values()].join('\n') })
