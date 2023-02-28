@@ -681,7 +681,10 @@ const BetLossMessageList = [
   'I triple checked the math, and can confirm you\'re just unlucky.',
   'At least your wallet is a bit easier to carry now.',
   'I\'ll pretend I didn\'t see that.',
-  'I promise I won\'t tell anyone.',
+  'I promise I won\'t tell anyone.'
+  'Try drinking an Elixir of luck next time!'
+  'Maybe go buy a Slushy or something instead.'
+  'I hope you\'re not too Worried.'
 ]
 
 const BetWinMessageList = [
@@ -705,6 +708,10 @@ const BetWinMessageList = [
   'Yo\'re going to need a bigger wallet.',
   'I\'m so glad we could witness this special moment together.',
   'Yippee!',
+  'To the Moon!🐻',
+  'Ripe pickings from the money Trees!'
+  'Your pile of tokens will reach Space soon!'
+  'You could probably buy up to Seven Cats with that!'
 ]
 
 const text = {

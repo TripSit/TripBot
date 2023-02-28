@@ -58,6 +58,7 @@ const timeOutMessageList = [ // Random messages to display when the user runs ou
   'You were almost as slow as a snail!',
   'You were slower than a turtle!',
   'A sloth could have answered that faster!',
+  'Your brain is slower than a Zombie\'s!',
 ]
 
 const awfulScoreMessageList = [ // Random messages to display when the user got no questions right
@@ -71,6 +72,10 @@ const awfulScoreMessageList = [ // Random messages to display when the user got 
   'Let\'s just forget that ever happened...',
   '...',
   'I\'m speechless...',
+  'Sheeeeeesh...',
+  'Perhaps your brain is just a bit Foggy...',
+  'Is your brain feeling a bit Blurry?',
+  'Beep Bop Bloop... Error... Error... Error...'
 ]
 
 const badScoreMessageList = [ // Random messages to display when the user got less than half the questions right
@@ -80,6 +85,8 @@ const badScoreMessageList = [ // Random messages to display when the user got le
   'Better than nothing, I guess...',
   'You wouldn\'t want to vs my grandma...',
   'Come on, you can do better than that!',
+  'Try harder next time!',
+  'I\'ve heard eating Kiwifruit can help improve your memory...',
 
 ]
 
@@ -104,6 +111,7 @@ const perfectScoreMessageList = [ // Random messages to display when the user go
   'That last player could learn a thing or two from you!',
   'Very impressive!',
   'You\'re on a roll!',
+  'Is this even Reality?'
 ]
 
 
