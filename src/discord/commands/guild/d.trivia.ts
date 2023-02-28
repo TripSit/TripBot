@@ -49,6 +49,64 @@ const bonusMessageDict = {
   hard: ' *(+100% difficulty bonus)*',
 };
 
+
+const timeOutMessageList = [ // Random messages to display when the user runs out of time
+  'Be faster next time!',
+  'Be a bit quicker next time!',
+  'You were far too slow!',
+  'If you were any slower, you would have been going backwards!',
+  'You were almost as slow as a snail!',
+  'You were slower than a turtle!',
+  'A sloth could have answered that faster!',
+]
+
+const awfulScoreMessageList = [ // Random messages to display when the user got no questions right
+  'Yikes...',
+  'Ouch...',
+  'That was awful...',
+  'That was terrible...',
+  'That was horrible...',
+  'Were you even trying?',
+  'I\'ll pretend I didn\'t see that...',
+  'Let\'s just forget that ever happened...',
+  '...',
+  'I\'m speechless...',
+]
+
+const badScoreMessageList = [ // Random messages to display when the user got less than half the questions right
+  'Is that all you got?',
+  'You can do better than that!',
+  'Is that the best you can do?',
+  'Better than nothing, I guess...',
+  'You wouldn\'t want to vs my grandma...',
+  'Come on, you can do better than that!',
+
+]
+
+const goodScoreMessageList = [ // Random messages to display when the user got more than half the questions right
+  'Not bad!',
+  'Not too shabby!',
+  'Getting close!',
+  'Almost there!',
+  'You\'re getting there!',
+  'Now we\'re talking!',
+  'Let\'s see if you can keep it up!',
+  'Let\'s go for gold next time!',
+  'You\'re a natural!',
+]
+
+const perfectScoreMessageList = [ // Random messages to display when the user got all the questions right
+  'Now that\'s what I call a fine score!',
+  'You\'re a genius!',
+  'You\'re a trivia master!',
+  'You\'re a trivia god!',
+  'Have you ever considered being a professional trivia player?',
+  'That last player could learn a thing or two from you!',
+  'Very impressive!',
+  'You\'re on a roll!',
+]
+
+
 type TriviaQuestion = {
   category: string;
   type: string;
@@ -129,6 +187,7 @@ export const dTrivia: SlashCommand = {
     const { bonus } = optionDict[chosenDifficulty as keyof typeof optionDict];
     let bonusMessage = bonusMessageDict[chosenDifficulty as keyof typeof bonusMessageDict];
     let score = 0;
+    let scoreMessage = '';
     let timedOut = false;
     let answerColor = Colors.Purple as ColorResolvable;
     let embedStatus = `Starting trivia with ${amountOfQuestions} questions!`;
@@ -259,7 +318,7 @@ export const dTrivia: SlashCommand = {
           .setColor(Colors.Green as ColorResolvable)
           .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
           .addFields({ name: `Correct!`, value: `The answer was **${questionData.correct_answer}.**` })
-          .addFields({ name: `Current Score:`, value: `${score} of ${(qNumber + 1)}`})
+          .addFields({ name: `Current Score`, value: `${score} of ${(qNumber + 1)}`})
           .addFields({ name: 'Next question in 5 seconds...', value: ' '})
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
           embedStatus = 'Correct!';
@@ -331,11 +390,24 @@ export const dTrivia: SlashCommand = {
      
 
     if (!timedOut) {
+      if (score === 0) {
+        scoreMessage = awfulScoreMessageList[Math.floor(Math.random() * awfulScoreMessageList.length)];
+      }
+      if (score <= (amountOfQuestions / 2)) {
+        scoreMessage = badScoreMessageList[Math.floor(Math.random() * badScoreMessageList.length)];
+      }
+      if (score > (amountOfQuestions / 2)) {
+        scoreMessage = goodScoreMessageList[Math.floor(Math.random() * goodScoreMessageList.length)];
+      }
+      if (score === amountOfQuestions) {
+        scoreMessage = perfectScoreMessageList[Math.floor(Math.random() * perfectScoreMessageList.length)];
+      }
+      log.debug(F, `Score Message: ${scoreMessage}`);
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
         .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
-        .addFields({ name: 'That\'s all the questions!', value: `You got ${score} out of ${amountOfQuestions} questions correct${perfectBonus}`})
+        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectBonus}`, value: `${scoreMessage}`})
         .addFields({ name: `You earned ${payout} tokens!${bonusMessage}`, value: `You now have ${(personaData.tokens + payout)} tokens.` }) // eslint-disable-line max-len
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
       await interaction.editReply({
@@ -343,11 +415,12 @@ export const dTrivia: SlashCommand = {
         components: [],
       });
     } else {
+      const timeOutMessage = timeOutMessageList[Math.floor(Math.random() * timeOutMessageList.length)];
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
         .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
-        .addFields({ name: 'Be faster next time!', value: `You got ${score} out of ${amountOfQuestions} questions correct${perfectBonus}`})
+        .addFields({ name: `${timeOutMessage}`, value: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectBonus}`})
         .addFields({ name: `You earned ${payout} tokens!${bonusMessage}`, value: `You now have ${(personaData.tokens + payout)} tokens.` }) // eslint-disable-line max-len
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
       await interaction.editReply({
