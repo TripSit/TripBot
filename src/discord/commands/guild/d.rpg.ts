@@ -21,13 +21,16 @@ import {
   AttachmentBuilder,
   GuildMember,
   TextChannel,
+  ColorResolvable,
+  MessageReplyOptions,
 } from 'discord.js';
 import {
   APIEmbed,
   APISelectMenuOption,
-  ButtonStyle, TextInputStyle,
+  ButtonStyle, ComponentType, TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
+import he from 'he';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { getPersonaInfo, setPersonaInfo } from '../../../global/commands/g.rpg';
@@ -40,8 +43,11 @@ import { imageGet } from '../../utils/imageGet';
 
 export default dRpg;
 
+const Trivia = require('trivia-api');
+
 const F = f(__filename);
 
+const loadingString = 'Loading...';
 // Value in milliseconds (1000 * 60 * 1 = 1 minute)
 // const intervals = {
 //   quest: env.NODE_ENV === 'production' ? 1000 * 60 * 60 : 1000 * 1,
@@ -49,7 +55,7 @@ const F = f(__filename);
 //   raid: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 * 7 : 1000 * 1,
 // };
 
-const backgroundEmoji = '<:itemBackground:1079682074547601428>';
+const backgroundEmoji = env.EMOJI_BACKGROUND;
 
 function customButton(
   customId: string,
@@ -68,31 +74,32 @@ const buttons = {
   name: customButton('rpgName', 'Name', '📝'),
   accept: customButton('rpgAccept', 'Accept', '✅'),
   decline: customButton('rpgDecline', 'Decline', '❌'),
-  town: customButton('rpgTown', 'Town', '1079635651349205003'),
-  work: customButton('rpgWork', 'Work', '1079640323581554740'),
-  shop: customButton('rpgShop', 'Shop', '1079665080632885259'),
-  arcade: customButton('rpgArcade', 'Arcade', '1079717122789355520'),
-  home: customButton('rpgHome', 'Home', '1079635635251445830'),
-  quest: customButton('rpgQuest', 'Quest', '1079642399493587054'),
-  dungeon: customButton('rpgDungeon', 'Dungeon', '1079640302488395796'),
-  raid: customButton('rpgRaid', 'Raid', '1079640284402569227'),
+  start: customButton('rpgStart', 'Start', '🏁'),
+  town: customButton('rpgTown', 'Town', env.EMOJI_TOWN),
+  work: customButton('rpgWork', 'Work', env.EMOJI_WORK),
+  shop: customButton('rpgShop', 'Shop', env.EMOJI_SHOP),
+  arcade: customButton('rpgArcade', 'Arcade', env.EMOJI_ARCADE),
+  home: customButton('rpgHome', 'Home', env.EMOJI_HOME),
+  quest: customButton('rpgQuest', 'Quest', env.EMOJI_QUEST),
+  dungeon: customButton('rpgDungeon', 'Dungeon', env.EMOJI_DUNGEON),
+  raid: customButton('rpgRaid', 'Raid', env.EMOJI_RAID),
   inventory: customButton('rpgInventory', 'Inventory', '🎒'),
   stats: customButton('rpgStats', 'Stats', '📊'),
   guild: customButton('rpgGuild', 'Guild', '🏰'),
-  buy: customButton('rpgShopBuy', 'Buy', '1079635646806761524'),
+  buy: customButton('rpgShopBuy', 'Buy', env.EMOJI_BUY),
   slotMachine: customButton('rpgSlots', 'Slots', '🎰'),
-  coinFlip: customButton('rpgCoinFlip', 'CoinFlip', '1079637631794692127'),
-  roulette: customButton('rpgRoulette', 'Roulette', '1079637642804731924'),
+  coinFlip: customButton('rpgCoinFlip', 'CoinFlip', env.EMOJI_COINFLIP),
+  roulette: customButton('rpgRoulette', 'Roulette', env.EMOJI_ROULETTE),
   blackjack: customButton('rpgBlackjack', 'Blackjack', '🃏'),
-  trivia: customButton('rpgTrivia', 'Trivia', '1079707985133191168'),
-  wager1: customButton('rpgWager1', 'Bet 1', '1079669112227242084'),
-  wager10: customButton('rpgWager10', 'Bet 10', '1079669112227242084'),
-  wager100: customButton('rpgWager100', 'Bet 100', '1079669112227242084'),
-  wager1000: customButton('rpgWager1000', 'Bet 1000', '1079669112227242084'),
-  wager10000: customButton('rpgWager10000', 'Bet 10000', '1079669112227242084'),
-  wager100000: customButton('rpgWager100000', 'Bet 100000', '1079669112227242084'),
-  coinflipHeads: customButton('rpgCoinflipHeads', 'Heads', '1079669180653125682'),
-  coinflipTails: customButton('rpgCoinflipTails', 'Tails', '1079669164555370559'),
+  trivia: customButton('rpgTrivia', 'Trivia', env.EMOJI_TRIVIA),
+  wager1: customButton('rpgWager1', 'Bet 1', env.EMOJI_BET),
+  wager10: customButton('rpgWager10', 'Bet 10', env.EMOJI_BET),
+  wager100: customButton('rpgWager100', 'Bet 100', env.EMOJI_BET),
+  wager1000: customButton('rpgWager1000', 'Bet 1000', env.EMOJI_BET),
+  wager10000: customButton('rpgWager10000', 'Bet 10000', env.EMOJI_BET),
+  wager100000: customButton('rpgWager100000', 'Bet 100000', env.EMOJI_BET),
+  coinflipHeads: customButton('rpgCoinflipHeads', 'Heads', env.EMOJI_HEADS),
+  coinflipTails: customButton('rpgCoinflipTails', 'Tails', env.EMOJI_TAILS),
 
   rouletteRed: customButton('rpgRouletteRed', 'Red', '🟥'),
   rouletteBlack: customButton('rpgRouletteBlack', 'Black', '⬛'),
@@ -119,6 +126,44 @@ const buttons = {
   [key: string]: ButtonBuilder;
 };
 
+const difficulties = [
+  {
+    label: 'Easy Difficulty',
+    value: 'easy',
+    emoji: '🟢',
+    default: true,
+  },
+  {
+    label: 'Medium Difficulty',
+    value: 'medium',
+    emoji: '🟡',
+  },
+  {
+    label: 'Hard Difficulty',
+    value: 'hard',
+    emoji: '🔴',
+  },
+];
+
+const numberOfQuestions = [
+  {
+    label: '1 Question',
+    value: '1',
+    emoji: '1️⃣',
+  },
+  {
+    label: '5 Questions',
+    value: '5',
+    emoji: '5️⃣',
+    default: true,
+  },
+  {
+    label: '10 Questions',
+    value: '10',
+    emoji: '🔟',
+  },
+];
+
 const menus = {
   item: new StringSelectMenuBuilder()
     .setCustomId('rpgGeneralSelect')
@@ -144,6 +189,14 @@ const menus = {
   guild: new StringSelectMenuBuilder()
     .setCustomId('rpgGuild')
     .setPlaceholder('Select a guild'),
+  difficulty: new StringSelectMenuBuilder()
+    .setCustomId('rpgDifficulty')
+    .setPlaceholder('Easy')
+    .setOptions(difficulties),
+  questions: new StringSelectMenuBuilder()
+    .setCustomId('rpgQuestionLimit')
+    .setPlaceholder('How many questions?')
+    .setOptions(numberOfQuestions),
 } as {
   [key: string]: StringSelectMenuBuilder;
 };
@@ -685,7 +738,7 @@ const BetLossMessageList = [
   'Try drinking an Elixir of luck next time!',
   'Maybe go buy a Slushy or something instead.',
   'I hope you\'re not too Worried.',
-]
+];
 
 const BetWinMessageList = [
   'Free lunch!',
@@ -712,7 +765,7 @@ const BetWinMessageList = [
   'Ripe pickings from the money Trees!',
   'Your pile of tokens will reach Space soon!',
   'You could probably buy up to Seven Cats with that!',
-]
+];
 
 const text = {
   enter: [
@@ -800,7 +853,10 @@ export const dRpg: SlashCommand = {
       .setDescription('Go to the coinflip game'))
     .addSubcommand(subcommand => subcommand
       .setName('roulette')
-      .setDescription('Go to the roulette game')),
+      .setDescription('Go to the roulette game'))
+    .addSubcommand(subcommand => subcommand
+      .setName('trivia')
+      .setDescription('Go to the trivia parlor')),
   async execute(interaction) {
     startLog(F, interaction);
     // This command provides a RPG game for the user to play
@@ -842,8 +898,8 @@ export const dRpg: SlashCommand = {
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
 
     const message = channelRpg.id !== interaction.channelId
-      ? await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')], ephemeral: true })
-      : await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')] });
+      ? await interaction.reply({ embeds: [embedTemplate().setTitle(loadingString)], ephemeral: true })
+      : await interaction.reply({ embeds: [embedTemplate().setTitle(loadingString)] });
 
     // Create a collector that will listen to buttons clicked by the user
     const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id;
@@ -890,6 +946,10 @@ export const dRpg: SlashCommand = {
     if (subcommand === 'roulette') {
       await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette'));
     }
+    if (subcommand === 'trivia') {
+      await interaction.editReply(await rpgTrivia(interaction));
+    }
+
     // if (subcommand === 'blackjack') {
     //   await interaction.editReply(await rpgArcade(interaction));
     // }
@@ -911,6 +971,12 @@ export const dRpg: SlashCommand = {
       else if (i.customId === 'rpgWager10000') await i.update(await rpgArcadeWager(i));
       else if (i.customId === 'rpgCoinFlip') await i.update(await rpgArcadeGame(i, 'Coinflip'));
       else if (i.customId === 'rpgRoulette') await i.update(await rpgArcadeGame(i, 'Roulette'));
+
+      else if (i.customId === 'rpgTrivia') await i.update(await rpgTrivia(i));
+      else if (i.customId === 'rpgDifficulty') await i.update(await rpgTrivia(i));
+      else if (i.customId === 'rpgQuestionLimit') await i.update(await rpgTrivia(i));
+      else if (i.customId === 'rpgStart') await i.editReply(await rpgTrivia(i));
+
       else if (i.customId === 'rpgRouletteRed') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'red'));
       else if (i.customId === 'rpgRouletteBlack') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'black'));
       else if (i.customId === 'rpgRouletteFirst') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'first'));
@@ -965,7 +1031,7 @@ export async function rpgTown(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('<:buttonTown:1079635651349205003> Town')
+      .setTitle(`${env.EMOJI_TOWN} Town`)
       .setDescription(stripIndents`
       You ${rand(text.enter)} TripTown, a new settlement on the edge of Triptopia, the TripSit Kingdom.
 
@@ -1012,12 +1078,12 @@ export async function rpgWork(
   const contracts = {
     quest: {
       success: {
-        title: '<:buttonQuest:1079642399493587054> Quest Success',
+        title: `${env.EMOJI_QUEST} Quest Success`,
         description: stripIndents`${rand(text.quest)}`,
         color: Colors.Green,
       },
       fail: {
-        title: '<:buttonQuest:1079642399493587054> Quest Fail',
+        title: `${env.EMOJI_QUEST} Quest Fail`,
         description: stripIndents`
           There are no more quests available at the moment. New quests are posted every hour!
         `,
@@ -1026,12 +1092,12 @@ export async function rpgWork(
     },
     dungeon: {
       success: {
-        title: '<:buttonDungeon:1079640302488395796> Dungeon Success',
+        title: `${env.EMOJI_DUNGEON} Dungeon Success`,
         description: stripIndents`${rand(text.dungeon)}`,
         color: Colors.Green,
       },
       fail: {
-        title: '<:buttonDungeon:1079640302488395796> Dungeon Fail',
+        title: `${env.EMOJI_DUNGEON} Dungeon Fail`,
         description: stripIndents`
           You already cleared a dungeon today, you're still tired and need to prepare.
         `,
@@ -1040,14 +1106,14 @@ export async function rpgWork(
     },
     raid: {
       success: {
-        title: '<:buttonRaid:1079640284402569227> Raid Success',
+        title: `${env.EMOJI_RAID} Raid Success`,
         description: stripIndents`
           You stormed into Moonbear's office, rustle their jimmies and stole {tokens} TripTokens!
         `,
         color: Colors.Green,
       },
       fail: {
-        title: '<:buttonRaid:1079640284402569227> Raid Fail',
+        title: `${env.EMOJI_RAID} Raid Fail`,
         description: stripIndents`
           You've already raided Moonbear's office this week, give them a break!
         `,
@@ -1167,7 +1233,7 @@ export async function rpgWork(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('<:buttonWork:1079640323581554740> Work')
+      .setTitle(`${env.EMOJI_WORK} Work`)
       .setDescription(stripIndents`
       You are at work, you can go on a quest, clear a dungeon, or go on a raid.
     `)
@@ -1420,7 +1486,7 @@ export async function rpgShopAccept(
     const embed = embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('<:buttonShop:1079665080632885259> Shop')
+      .setTitle(`${env.EMOJI_SHOP} Shop`)
       .setDescription(stripIndents`**You do not have enough tokens to buy this item.**
     
     ${description}`)
@@ -1471,7 +1537,7 @@ export async function rpgShopAccept(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('<:buttonShop:1079665080632885259> Shop')
+      .setTitle(`${env.EMOJI_SHOP} Shop`)
       .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemData.cost} TripTokens.**
       
       ${description}`)
@@ -1575,7 +1641,7 @@ export async function rpgHome(
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-    .setTitle('<:buttonHome:1079635635251445830> Home')
+    .setTitle(`${env.EMOJI_HOME} Home`)
     .setDescription(stripIndents`${message !== null ? message : ''}
 
       You ${rand(text.enter)} your home.
@@ -1925,33 +1991,28 @@ export async function rpgHomeNameChange(
 export async function rpgArcade(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
-  // Check get fresh persona data
-  // const [personaData] = await getPersonaInfo(interaction.user.id);
-  // log.debug(F, `personaData (Arcade): ${JSON.stringify(personaData, null, 2)}`);
-
-  const rowArcade = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      buttons.coinFlip,
-      buttons.roulette,
-      buttons.trivia,
-      // buttons.blackjack,
-      // buttons.slotMachine,
-      buttons.town,
-    );
-
-  // The user has clicked the shop button, send them the shop embed
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('<:buttonArcade:1079717122789355520> Arcade')
+      .setTitle(`${env.EMOJI_ARCADE} Arcade`)
       .setDescription(stripIndents`
         You ${rand(text.enter)} the arcade and see a variety of games.
       `)
       .setColor(Colors.Green)],
-    components: [rowArcade],
+    components: [new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        buttons.coinFlip,
+        buttons.roulette,
+        buttons.trivia,
+        // buttons.blackjack,
+        // buttons.slotMachine,
+        buttons.town,
+      )],
   };
 }
+
+const trivia = new Trivia({ encoding: 'url3986' });
 
 type GameName = 'Coinflip' | 'Roulette' | 'Blackjack' | 'Slots';
 const gameData = {
@@ -2120,7 +2181,7 @@ export async function rpgArcadeGame(
     // log.debug(F, `result: ${result}`);
     if (payout !== 0) {
       // The user won
-      let BetOutcomeMessage = BetWinMessageList[Math.floor(Math.random() * BetWinMessageList.length)];
+      const BetOutcomeMessage = BetWinMessageList[Math.floor(Math.random() * BetWinMessageList.length)];
       personaData.tokens += payout;
       await personaSet(personaData);
       wagers[interaction.user.id] = {
@@ -2146,7 +2207,7 @@ export async function rpgArcadeGame(
       };
     }
     // The user lost
-    let BetOutcomeMessage = BetLossMessageList[Math.floor(Math.random() * BetLossMessageList.length)];
+    const BetOutcomeMessage = BetLossMessageList[Math.floor(Math.random() * BetLossMessageList.length)];
     personaData.tokens -= currentBet;
     await personaSet(personaData);
     wagers[interaction.user.id] = {
@@ -2206,6 +2267,318 @@ export async function rpgArcadeGame(
       .setColor(Colors.Green)],
     components,
   };
+}
+
+const optionDict = {
+  easy: {
+    name: 'Normal',
+    bonus: 1,
+  },
+  medium: {
+    name: 'Hard',
+    bonus: 1.5,
+  },
+  hard: {
+    name: 'Very Hard',
+    bonus: 2,
+  },
+};
+
+type TriviaQuestion = {
+  category: string;
+  type: string;
+  difficulty: string;
+  question: string;
+  correct_answer: string;
+  all_answers: string[];
+};
+
+export async function rpgTrivia(
+  interaction: MessageComponentInteraction | ChatInputCommandInteraction,
+  newGame?: boolean,
+):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
+  if (interaction.isButton() && interaction.customId === 'rpgStart' && !newGame) {
+    const difficultyComponent = interaction.message.components[1].components[0];
+    const selectedDifficulty = (difficultyComponent as StringSelectMenuComponent).options.find(
+      (o:APISelectMenuOption) => o.default === true,
+    );
+    const chosenDifficulty = selectedDifficulty?.value ?? 'easy';
+
+    const amountComponent = interaction.message.components[2].components[0];
+    const selectedAmount = (amountComponent as StringSelectMenuComponent).options.find(
+      (o:APISelectMenuOption) => o.default === true,
+    );
+    const amountOfQuestions = parseInt(selectedAmount?.value ?? '5', 10);
+
+    const difficultyName = optionDict[chosenDifficulty as keyof typeof optionDict].name;
+    const { bonus } = optionDict[chosenDifficulty as keyof typeof optionDict];
+    let score = 0;
+    let timedOut = false;
+    let answerColor = Colors.Purple as ColorResolvable;
+    let embedStatus = `Starting trivia with ${amountOfQuestions} questions!`;
+    let questionAnswer = 'You have 30 seconds to answer each question.';
+    const choices = ['A', 'B', 'C', 'D'];
+
+    // Get the user's persona data
+    let [personaData] = await getPersonaInfo(interaction.user.id);
+    // log.debug(F, `Initial Persona data: ${JSON.stringify(personaData, null, 2)}`);
+
+    // If the user doesn't have persona data, create it
+    if (!personaData) {
+      const userData = await getUser(interaction.user.id, null);
+      personaData = {
+        user_id: userData.id,
+        tokens: 0,
+      } as Personas;
+
+      // log.debug(F, `Setting Persona data: ${JSON.stringify(personaData, null, 2)}`);
+
+      await setPersonaInfo(personaData);
+    }
+    const questionList = await rpgTriviaGetQuestions(amountOfQuestions, chosenDifficulty);
+
+    for (let qNumber = 0; (qNumber < amountOfQuestions); qNumber += 1) {
+      // Get the first question from the array
+      const [questionData] = questionList;
+
+      const answerMap = new Map(questionData.all_answers.map((answer, index) => [choices[index], `**${choices[index]}:** ${answer}`])); // eslint-disable-line max-len
+      const embed = new EmbedBuilder()
+        .setColor(answerColor)
+        .setTitle(`${env.EMOJI_TRIVIA} Trivia (${difficultyName})`)
+        .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
+        .addFields({ name: `Question ${qNumber + 1} of ${amountOfQuestions}`, value: questionData.question })
+        .addFields({ name: 'Choices', value: [...answerMap.values()].join('\n') })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+
+      if (qNumber === 0) {
+        await interaction.reply({ embeds: [embedTemplate().setTitle(loadingString)] }); // eslint-disable-line no-await-in-loop, max-len
+        // If it's the first question, send a new message
+        await interaction.editReply({ // eslint-disable-line no-await-in-loop
+          embeds: [embed],
+          components: [
+            new ActionRowBuilder<ButtonBuilder>().addComponents(
+              choices.map(choice => new ButtonBuilder()
+                .setCustomId(choice)
+                .setLabel(choice)
+                .setStyle(ButtonStyle.Success)),
+            ),
+          ],
+        });
+      } else {
+        // If not the first question, edit the previous message
+        await interaction.editReply({ // eslint-disable-line no-await-in-loop
+          embeds: [embed],
+        });
+      }
+
+      // Filter for the buttons
+      const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id && answerMap.has(i.customId);
+      try {
+        if (!interaction.channel) throw new Error('Channel not found');
+        const collected = await interaction.channel.awaitMessageComponent({ // eslint-disable-line no-await-in-loop
+          filter,
+          time: 30000,
+          componentType: ComponentType.Button,
+        });
+
+        let answer = answerMap.get(collected.customId); // Get the answer from the map
+        answer = answer?.substring(7);
+        log.debug(F, `User chose: ${answer}`);
+        log.debug(F, `Correct answer was: ${questionData.correct_answer}`);
+
+        if (answer === questionData.correct_answer) { // If the user answers correctly
+          embedStatus = 'Correct!';
+          answerColor = Colors.Green as ColorResolvable;
+          questionAnswer = `The answer was **${questionData.correct_answer}**`;
+          score += 1;
+          await collected.update({}); // eslint-disable-line no-await-in-loop
+        } else { // If the user answers incorrectly
+          embedStatus = 'Incorrect!';
+          answerColor = Colors.Grey as ColorResolvable;
+          questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
+          await collected.update({}); // eslint-disable-line no-await-in-loop
+        }
+      } catch (error) { // If the user doesn't answer in time
+        embedStatus = 'Time\'s up!';
+        answerColor = Colors.Red as ColorResolvable;
+        questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
+        timedOut = true;
+      }
+
+      questionList.splice(0, 1); // Remove the first question from the array
+      if (timedOut) break;
+    }
+
+    let payout = 0;
+    if (score !== 0) { // The user won
+      payout = Math.ceil(score * bonus);
+      personaData.tokens += payout;
+      log.debug(F, `User scored: ${score}`);
+      log.debug(F, `User earned: ${payout} tokens`);
+      await setPersonaInfo(personaData);
+    }
+    let reply = {} as MessageReplyOptions;
+
+    if (!timedOut) {
+      const embed = new EmbedBuilder()
+        .setColor(Colors.Purple)
+        .setTitle(`${env.EMOJI_TRIVIA} Trivia (${difficultyName})`)
+        .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
+        .addFields({ name: 'That\'s all the questions!', value: ' ' })
+        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct, and earned ${payout} tokens!`, value: `You now have ${(personaData.tokens + payout)} tokens.` }) // eslint-disable-line max-len
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+      reply = {
+        embeds: [embed],
+        components: [
+          new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+              buttons.start,
+            ),
+          new ActionRowBuilder<StringSelectMenuBuilder>()
+            .addComponents(
+              menus.difficulty,
+            ),
+          new ActionRowBuilder<StringSelectMenuBuilder>()
+            .addComponents(
+              menus.questions,
+            ),
+        ],
+      };
+    } else {
+      const embed = new EmbedBuilder()
+        .setColor(Colors.Purple)
+        .setTitle(`${env.EMOJI_TRIVIA} Trivia (${difficultyName})`)
+        .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
+        .addFields({ name: 'Be faster next time!', value: ' ' })
+        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct, and earned ${payout} tokens!`, value: `You now have ${(personaData.tokens + payout)} tokens.` }) // eslint-disable-line max-len
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+      reply = {
+        embeds: [embed],
+        components: [
+          new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+              buttons.start,
+            ),
+          new ActionRowBuilder<StringSelectMenuBuilder>()
+            .addComponents(
+              menus.difficulty,
+            ),
+          new ActionRowBuilder<StringSelectMenuBuilder>()
+            .addComponents(
+              menus.questions,
+            ),
+        ],
+      };
+    }
+
+    return reply;
+  }
+
+  // Get the item the user selected
+  let selectedOption = '' as string;
+  if (interaction.isStringSelectMenu() && interaction.values) {
+    [selectedOption] = interaction.values;
+  }
+
+  log.debug(F, `selectedOption: ${selectedOption}`);
+
+  // Check if the selected option exists in the difficulties list
+  const difficultyOption = Object.values(difficulties).find(item => item.value === selectedOption);
+  // Check if the selected option exists in the number of questions list
+  const amountOption = Object.values(numberOfQuestions).find(item => item.value === selectedOption);
+
+  if (difficultyOption) {
+    log.debug(F, 'difficultyOption is not empty');
+    // Get a list of shopInventory where the value does not equal the choice
+    // If there is no choice, it will return all items the user has
+    const filteredDifficulties = Object.values(difficulties)
+      .filter(item => item.value !== selectedOption)
+      .map(item => ({ ...item, default: false }));
+    menus.difficulty.setOptions(filteredDifficulties);
+    const chosenDifficulty = difficulties.find(item => item.value === selectedOption);
+    if (chosenDifficulty) {
+      chosenDifficulty.default = true;
+      menus.difficulty.addOptions(chosenDifficulty);
+    }
+  }
+
+  if (amountOption) {
+    log.debug(F, 'amountOption is not empty');
+    const filteredOptions = Object.values(numberOfQuestions)
+      .filter(item => item.value !== selectedOption)
+      .map(item => ({ ...item, default: false }));
+    menus.questions.setOptions(filteredOptions);
+    const chosenQuestion = numberOfQuestions.find(item => item.value === selectedOption);
+    if (chosenQuestion) {
+      chosenQuestion.default = true;
+      menus.questions.addOptions(chosenQuestion);
+    }
+  }
+
+  return {
+    embeds: [embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
+      .setTitle(`${env.EMOJI_TRIVIA} Trivia`)
+      .setDescription(stripIndents`
+        You ${rand(text.enter)} the trivia parlor where you can test your knowledge of random facts!
+      `)
+      .setColor(Colors.Green)],
+    components: [
+      new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          buttons.start,
+        ),
+      new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          menus.difficulty,
+        ),
+      new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          menus.questions,
+        ),
+    ],
+  };
+}
+
+export async function rpgTriviaGetQuestions(
+  amount: number,
+  difficulty:string,
+):Promise<TriviaQuestion[]> {
+  // log.debug(F, `Getting question with difficulty: ${difficulty}...`);
+
+  const { results } = await trivia.getQuestions({ amount, type: 'multiple', difficulty });
+
+  // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
+
+  return results.map((questionData:{
+    category: string;
+    type: string;
+    difficulty: string;
+    question: string;
+    correct_answer: string;
+    incorrect_answers: string[];
+  }) => {
+    // const answers = [...questionData.incorrect_answers, questionData.correct_answer];
+    // Unescape HTML entities
+    const fixedQuestion = he.unescape(questionData.question);
+    const fixedCorrectAnswer = he.unescape(questionData.correct_answer);
+    const fixedIncorrectAnswers = he.unescape(questionData.incorrect_answers.join(', '));
+    const fixedAnswers = [fixedIncorrectAnswers.split(', '), fixedCorrectAnswer];
+    // log.debug(F, `Broken Question: ${questionData.question}, Fixed Question: ${fixedQuestion}`);
+    // log.debug(F, `Broken Answer: ${answers}, Fixed Answer: ${fixedAnswers}`);
+    // Shuffle the answers (So the correct answer isn't always the last one)
+    fixedAnswers.sort(() => Math.random() - 0.5);
+
+    return {
+      category: questionData.category,
+      type: questionData.type,
+      difficulty: questionData.difficulty,
+      question: fixedQuestion,
+      correct_answer: fixedCorrectAnswer,
+      all_answers: fixedAnswers,
+    } as TriviaQuestion;
+  });
 }
 
 export async function rpgArcadeAnimate(
