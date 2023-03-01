@@ -36,15 +36,6 @@ export const dBotstats: SlashCommand = {
       : 0;
     // log.debug(F, `uptime: ${uptime}`);
 
-    const command = '~drug "dxm" "dosage"';
-    const args = command.split(' ');
-    const commandName = args[0].toLowerCase().slice(1);
-    log.debug(F, `commandName: ${commandName}`);
-    const commandArgs = args.slice(1);
-    // remove the " from each arg
-    const commandArgsClean = commandArgs.map(arg => arg.replace(/"/g, ''));
-    log.debug(F, `commandArgsClean: ${commandArgsClean}`);
-
     // Create the embed
     const embed = embedTemplate();
     embed.setTitle('Bot Stats');
