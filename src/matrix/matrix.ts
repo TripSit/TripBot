@@ -5,6 +5,7 @@ import {
 } from 'matrix-bot-sdk';
 import * as commands from './commands';
 
+const F = f(__filename);
 export default startMatrix;
 
 // using simple FS storage for now, as postgresql doesn't work in codespaces anyway
@@ -19,6 +20,7 @@ AutojoinRoomsMixin.setupOnClient(client);
  * @param event
  * @returns
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleCommand(roomId: string, event: any) {
   // Don't handle unhelpful events (ones that aren't text messages, are redacted, or sent by us)
   if (event.content?.msgtype !== 'm.text') return;
@@ -26,19 +28,21 @@ async function handleCommand(roomId: string, event: any) {
 
   // ensure we're receiving a command
   if (event.content.body.startsWith('~') === false) return;
-  const list = event.content.body.replace('~', ' ').split(' ');
-  list.shift();
+  const list = event.content.body.replace('~', ' ').match(/(?:[^\s"]+|"[^"]*")+/g);
   const command = list[0];
-  console.log(list);
   // look if the command exists
   if (command in commands === false) { await client.replyNotice(roomId, event, `${command} not found`); return; }
 
   try {
-    // const args = list.shift();
-    const resp = await (commands as any)[command].default();
-    await client.replyNotice(roomId, event, resp);
+    // remove the 1st element of the list and only keep the args, also remove quotes
+    list.shift();
+    const args = list.map((arg:string) => arg.replace(/['"]+/g, ''));
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const resp = await (commands as any)[command].default.apply(null, args); // call the function and get a message back
+    await client.replyNotice(roomId, event, resp); // send the message in response to the user
   } catch (e) {
-    console.log(e);
+    log.error(F, e as string);
   }
 }
 
@@ -49,5 +53,5 @@ async function startMatrix() {
 // Before we start the bot, register our command handler
   client.on('room.message', handleCommand);
   // Now that everything is set up, start the bot. This will start the sync loop and run until killed.
-  client.start().then(() => console.log('Bot started!'));
+  client.start().then(() => log.info(F, 'Bot started!'));
 }
