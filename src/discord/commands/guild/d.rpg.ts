@@ -739,6 +739,7 @@ const BetLossMessageList = [
   'Try drinking an Elixir of luck next time!',
   'Maybe go buy a Slushy or something instead.',
   'I hope you\'re not too Worried.',
+  'Tip: Try not to lose next time.',
 ];
 
 const BetWinMessageList = [
@@ -2353,6 +2354,7 @@ const awfulScoreMessageList = [ // Random messages to display when the user got 
   'Perhaps your brain is just a bit Foggy...',
   'Is your brain feeling a bit Blurry?',
   'Beep Bop Bloop... Error... Error... Error...',
+  'Tip: A score of 0 is not a good score...',
 ];
 
 const badScoreMessageList = [ // Random messages to display when the user got less than half the questions right
@@ -2364,7 +2366,7 @@ const badScoreMessageList = [ // Random messages to display when the user got le
   'Come on, you can do better than that!',
   'Try harder next time!',
   'I\'ve heard eating Kiwifruit can help improve your memory...',
-
+  'Tip: You get more points for answering correctly!',
 ];
 
 const goodScoreMessageList = [ // Random messages to display when the user got more than half the questions right
@@ -2816,6 +2818,16 @@ export async function rpgTriviaGetQuestions(
 
   // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
 
+  function anticheat(str: string) {
+    const replacementMap: {[key: string]: string} = {
+      'a': 'α',
+      'e': 'є',
+      'u': 'υ',
+    };
+  
+    return str.replace(/[aet]/gi, (replacement: string) => replacementMap[replacement] || replacement);
+  }
+
   return results.map((questionData:{
     category: string;
     type: string;
@@ -2826,42 +2838,22 @@ export async function rpgTriviaGetQuestions(
   }) => {
     // const answers = [...questionData.incorrect_answers, questionData.correct_answer];
     // Unescape HTML entities
-    const fixedQuestion = he.unescape(questionData.question);
-    // replace vowels with emojis
-    const anticheatFixedQuestion = fixedQuestion.replace(/[aeiou]/gi, (vowel) => {
-      switch (vowel) {
-        case 'a':
-          return '𝚊';
-        case 'e':
-          return '𝘦';
-        case 'i':
-          return 'Ꭵ';
-        case 'o':
-          return '໐';
-        case 'u':
-          return 'υ';
-        default:
-          return vowel;
-      }
-    });
-    log.debug(F, `Fixed Question: ${fixedQuestion}, Anti-Cheat Fixed Question: ${anticheatFixedQuestion}`);
-    const fixedCorrectAnswer = he.unescape(questionData.correct_answer);
-    const fixedIncorrectAnswers = he.unescape(questionData.incorrect_answers.join('| '));
-    log.debug(F, `Incorrect Answers: ${questionData.incorrect_answers} Fixed Incorrect Answers: ${fixedIncorrectAnswers}`)
-    const fixedAnswers = [...fixedIncorrectAnswers.split('| '), fixedCorrectAnswer];
-    log.debug(F, `Fixed Answers: ${fixedAnswers}`)
+    const Question = anticheat(he.unescape(questionData.question));
+    const CorrectAnswer = anticheat(he.unescape(questionData.correct_answer));
+    const IncorrectAnswers = anticheat(he.unescape(questionData.incorrect_answers.join('| ')));
+    const Answers = [...IncorrectAnswers.split('| '), CorrectAnswer];
     // log.debug(F, `Broken Question: ${questionData.question}, Fixed Question: ${fixedQuestion}`);
     // log.debug(F, `Broken Answer: ${answers}, Fixed Answer: ${fixedAnswers}`);
     // Shuffle the answers (So the correct answer isn't always the last one)
-    fixedAnswers.sort(() => Math.random() - 0.5);
+    Answers.sort(() => Math.random() - 0.5);
 
     return {
       category: questionData.category,
       type: questionData.type,
       difficulty: questionData.difficulty,
-      question: anticheatFixedQuestion,
-      correct_answer: fixedCorrectAnswer,
-      all_answers: fixedAnswers,
+      question: Question,
+      correct_answer: CorrectAnswer,
+      all_answers: Answers,
     } as TriviaQuestion;
   });
 }
