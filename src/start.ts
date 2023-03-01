@@ -7,6 +7,7 @@ import { log } from './global/utils/log';
 import { discordConnect } from './discord/discord'; // eslint-disable-line
 import { validateEnv } from './global/utils/env.validate'; // eslint-disable-line
 import { startLog } from './discord/utils/startLog'; // eslint-disable-line
+import startMatrix from './matrix/matrix';
 
 global.bootTime = new Date();
 
@@ -21,7 +22,8 @@ async function start() {
 
   // log.debug(F, `Token length: ${env.DISCORD_CLIENT_TOKEN.length}`);
   if (env.DISCORD_CLIENT_TOKEN) {
-    discordConnect();
+    await discordConnect();
+    await startMatrix();
   }
 }
 
