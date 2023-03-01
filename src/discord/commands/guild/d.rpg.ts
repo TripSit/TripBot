@@ -2307,7 +2307,7 @@ const bonusDict = {
     perfectBonus: 3,
     perfectBonusMessage: ' *(+200% perfect bonus)*',
   },
-}
+};
 
 type TriviaQuestion = {
   category: string;
@@ -2464,7 +2464,6 @@ export async function rpgTrivia(
     const questionList = await rpgTriviaGetQuestions(amountOfQuestions, chosenDifficulty);
 
     for (let qNumber = 0; (qNumber < amountOfQuestions); qNumber += 1) {
-
       if (gameQuit === true) {
         break;
       }
@@ -2488,7 +2487,7 @@ export async function rpgTrivia(
           .addFields({ name: `Starting Trivia with ${amountOfQuestions} questions...`, value: ' ' })
           .addFields({ name: 'Get ready!', value: 'You have 30 seconds to answer each question.' })
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
-        await interaction.editReply({ embeds: [startingEmbed], components: [], }); // eslint-disable-line no-await-in-loop, max-len
+        await interaction.editReply({ embeds: [startingEmbed], components: [] }); // eslint-disable-line no-await-in-loop, max-len
         // If it's the first question, send a new message
         setTimeout(async () => { // Wait 5 seconds before sending the first question
           await interaction.editReply({ // eslint-disable-line no-await-in-loop
@@ -2585,9 +2584,9 @@ export async function rpgTrivia(
                     .setCustomId(choice)
                     .setEmoji(choiceEmoji(choice))
                     .setStyle(ButtonStyle.Secondary))
-                  .concat([
-                    buttons.quit,
-                  ]),
+                    .concat([
+                      buttons.quit,
+                    ]),
                 ),
             ],
           });
@@ -2617,8 +2616,6 @@ export async function rpgTrivia(
             ],
           });
         }
-
-
       } catch (error) { // If the user doesn't answer in time
         embedStatus = 'Time\'s up!';
         answerColor = Colors.Red as ColorResolvable;
@@ -2688,9 +2685,8 @@ export async function rpgTrivia(
             ),
         ],
       };
-
     } else if (gameQuit) {
-      let gameQuitMessage = gameQuitMessageList[Math.floor(Math.random() * gameQuitMessageList.length)];
+      const gameQuitMessage = gameQuitMessageList[Math.floor(Math.random() * gameQuitMessageList.length)];
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
         .setTitle(`${env.EMOJI_TRIVIA} Trivia *(${difficultyName})*`)
@@ -2716,7 +2712,6 @@ export async function rpgTrivia(
             ),
         ],
       };
-
     } else {
       const timeOutMessage = timeOutMessageList[Math.floor(Math.random() * timeOutMessageList.length)];
       const embed = new EmbedBuilder()
@@ -2827,12 +2822,12 @@ export async function rpgTriviaGetQuestions(
   // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
 
   function anticheat(str: string) {
-    const replacementMap: {[key: string]: string} = {
-      'a': 'α',
-      'e': 'є',
-      'u': 'υ',
+    const replacementMap: { [key: string]: string } = {
+      a: 'α',
+      e: 'є',
+      u: 'υ',
     };
-  
+
     return str.replace(/[aet]/gi, (replacement: string) => replacementMap[replacement] || replacement);
   }
 
