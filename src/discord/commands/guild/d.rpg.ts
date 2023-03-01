@@ -74,33 +74,33 @@ const buttons = {
   name: customButton('rpgName', 'Name', '📝'),
   accept: customButton('rpgAccept', 'Accept', '✅'),
   decline: customButton('rpgDecline', 'Decline', '❌'),
-  start: customButton('rpgStart', 'Start', '🏁'),
-  quit: customButton('rpgQuit', 'Quit', '🛑'),
-  town: customButton('rpgTown', 'Town', env.EMOJI_TOWN),
-  work: customButton('rpgWork', 'Work', env.EMOJI_WORK),
-  shop: customButton('rpgShop', 'Shop', env.EMOJI_SHOP),
-  arcade: customButton('rpgArcade', 'Arcade', env.EMOJI_ARCADE),
-  home: customButton('rpgHome', 'Home', env.EMOJI_HOME),
-  quest: customButton('rpgQuest', 'Quest', env.EMOJI_QUEST),
-  dungeon: customButton('rpgDungeon', 'Dungeon', env.EMOJI_DUNGEON),
-  raid: customButton('rpgRaid', 'Raid', env.EMOJI_RAID),
+  start: customButton('rpgStart', 'Start', env.EMOJI_START, ButtonStyle.Success),
+  quit: customButton('rpgQuit', 'Quit', env.EMOJI_QUIT, ButtonStyle.Danger),
+  town: customButton('rpgTown', 'Town', env.EMOJI_TOWN, ButtonStyle.Primary),
+  work: customButton('rpgWork', 'Work', env.EMOJI_WORK, ButtonStyle.Primary),
+  shop: customButton('rpgShop', 'Shop', env.EMOJI_SHOP, ButtonStyle.Primary),
+  arcade: customButton('rpgArcade', 'Arcade', env.EMOJI_ARCADE, ButtonStyle.Primary),
+  home: customButton('rpgHome', 'Home', env.EMOJI_HOME, ButtonStyle.Primary),
+  quest: customButton('rpgQuest', 'Quest', env.EMOJI_QUEST, ButtonStyle.Secondary),
+  dungeon: customButton('rpgDungeon', 'Dungeon', env.EMOJI_DUNGEON, ButtonStyle.Secondary),
+  raid: customButton('rpgRaid', 'Raid', env.EMOJI_RAID, ButtonStyle.Secondary),
   inventory: customButton('rpgInventory', 'Inventory', '🎒'),
   stats: customButton('rpgStats', 'Stats', '📊'),
   guild: customButton('rpgGuild', 'Guild', '🏰'),
-  buy: customButton('rpgShopBuy', 'Buy', env.EMOJI_BUY),
+  buy: customButton('rpgShopBuy', 'Buy', env.EMOJI_BUY, ButtonStyle.Success),
   slotMachine: customButton('rpgSlots', 'Slots', '🎰'),
-  coinFlip: customButton('rpgCoinFlip', 'CoinFlip', env.EMOJI_COINFLIP),
-  roulette: customButton('rpgRoulette', 'Roulette', env.EMOJI_ROULETTE),
+  coinFlip: customButton('rpgCoinFlip', 'CoinFlip', env.EMOJI_COINFLIP, ButtonStyle.Secondary),
+  roulette: customButton('rpgRoulette', 'Roulette', env.EMOJI_ROULETTE, ButtonStyle.Secondary),
   blackjack: customButton('rpgBlackjack', 'Blackjack', '🃏'),
-  trivia: customButton('rpgTrivia', 'Trivia', env.EMOJI_TRIVIA),
-  wager1: customButton('rpgWager1', 'Bet 1', env.EMOJI_BET),
-  wager10: customButton('rpgWager10', 'Bet 10', env.EMOJI_BET),
-  wager100: customButton('rpgWager100', 'Bet 100', env.EMOJI_BET),
-  wager1000: customButton('rpgWager1000', 'Bet 1000', env.EMOJI_BET),
-  wager10000: customButton('rpgWager10000', 'Bet 10000', env.EMOJI_BET),
-  wager100000: customButton('rpgWager100000', 'Bet 100000', env.EMOJI_BET),
-  coinflipHeads: customButton('rpgCoinflipHeads', 'Heads', env.EMOJI_HEADS),
-  coinflipTails: customButton('rpgCoinflipTails', 'Tails', env.EMOJI_TAILS),
+  trivia: customButton('rpgTrivia', 'Trivia', env.EMOJI_TRIVIA, ButtonStyle.Secondary),
+  wager1: customButton('rpgWager1', 'Bet 1', env.EMOJI_BETSMALL, ButtonStyle.Secondary),
+  wager10: customButton('rpgWager10', 'Bet 10', env.EMOJI_BETMEDIUM, ButtonStyle.Secondary),
+  wager100: customButton('rpgWager100', 'Bet 100', env.EMOJI_BETLARGE, ButtonStyle.Secondary),
+  wager1000: customButton('rpgWager1000', 'Bet 1000', env.EMOJI_BETHUGE, ButtonStyle.Secondary),
+  wager10000: customButton('rpgWager10000', 'Bet 10000', env.EMOJI_BETHUGE, ButtonStyle.Secondary),
+  wager100000: customButton('rpgWager100000', 'Bet 100000', env.EMOJI_BETHUGE, ButtonStyle.Secondary),
+  coinflipHeads: customButton('rpgCoinflipHeads', 'Heads', env.EMOJI_HEADS, ButtonStyle.Secondary),
+  coinflipTails: customButton('rpgCoinflipTails', 'Tails', env.EMOJI_TAILS, ButtonStyle.Secondary),
 
   rouletteRed: customButton('rpgRouletteRed', 'Red', '🟥'),
   rouletteBlack: customButton('rpgRouletteBlack', 'Black', '⬛'),
@@ -131,18 +131,18 @@ const difficulties = [
   {
     label: 'Normal Difficulty',
     value: 'easy',
-    emoji: '🟢',
+    emoji: env.EMOJI_NORMAL,
     default: true,
   },
   {
     label: 'Hard Difficulty (50% difficulty bonus)',
     value: 'medium',
-    emoji: '🟡',
+    emoji: env.EMOJI_HARD,
   },
   {
     label: 'Expert Difficulty (100% difficulty bonus)',
     value: 'hard',
-    emoji: '🔴',
+    emoji: env.EMOJI_EXPERT,
   },
 ];
 
@@ -150,18 +150,18 @@ const numberOfQuestions = [
   {
     label: '5 Questions (50% perfect bonus)',
     value: '5',
-    emoji: '5️⃣',
+    emoji: env.EMOJI_SHORT,
     default: true,
   },
   {
     label: '10 Questions (100% perfect bonus)',
     value: '10',
-    emoji: '🔟',
+    emoji: env.EMOJI_MEDIUM,
   },
   {
     label: '20 Questions (200% perfect bonus)',
     value: '20',
-    emoji: '2️⃣',
+    emoji: env.EMOJI_LONG,
   },
 ];
 
@@ -2315,6 +2315,18 @@ const bonusMessageDict = {
   hard: ' *(+100% difficulty bonus)*',
 };
 
+const gameQuitMessageList = [ // Random messages to display when the user quits the game
+  'If you\'re tired of starting over, stop giving up!',
+  'Believe in yourself more!',
+  'Come back later?',
+  'Did you leave the oven on?',
+  'Sometimes it\'s ok to cut your losses...',
+  'Perhaps another time?',
+  'Perhaps you should try a different game?',
+  'Did I do something wrong?',
+  'Was it something I said?',
+];
+
 const timeOutMessageList = [ // Random messages to display when the user runs out of time
   'Be faster next time!',
   'Be a bit quicker next time!',
@@ -2442,6 +2454,11 @@ export async function rpgTrivia(
     const questionList = await rpgTriviaGetQuestions(amountOfQuestions, chosenDifficulty);
 
     for (let qNumber = 0; (qNumber < amountOfQuestions); qNumber += 1) {
+
+      if (gameQuit === true) {
+        break;
+      }
+
       // Get the first question from the array
       const [questionData] = questionList;
 
@@ -2454,14 +2471,14 @@ export async function rpgTrivia(
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
 
       if (qNumber === 0) {
-        await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')] }); // eslint-disable-line no-await-in-loop, max-len
+        await (interaction as MessageComponentInteraction).update({});
         const startingEmbed = new EmbedBuilder()
           .setColor(answerColor)
           .setTitle(`${env.EMOJI_TRIVIA} Trivia *(${difficultyName})*`)
           .addFields({ name: `Starting Trivia with ${amountOfQuestions} questions...`, value: ' ' })
           .addFields({ name: 'Get ready!', value: 'You have 30 seconds to answer each question.' })
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
-        await interaction.editReply({ embeds: [startingEmbed] }); // eslint-disable-line no-await-in-loop, max-len
+        await interaction.editReply({ embeds: [startingEmbed], components: [], }); // eslint-disable-line no-await-in-loop, max-len
         // If it's the first question, send a new message
         setTimeout(async () => { // Wait 5 seconds before sending the first question
           await interaction.editReply({ // eslint-disable-line no-await-in-loop
@@ -2479,7 +2496,7 @@ export async function rpgTrivia(
               ),
             ],
           });
-        }, 1000);
+        }, 5000);
       } else {
         // If not the first question, edit the previous message
         setTimeout(async () => { // Wait 5 seconds before sending the next question
@@ -2502,7 +2519,7 @@ export async function rpgTrivia(
       }
 
       // Filter for the buttons
-      const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id && answerMap.has(i.customId);
+      const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id;
       try {
         if (!interaction.channel) throw new Error('Channel not found');
         const collected = await interaction.channel.awaitMessageComponent({ // eslint-disable-line no-await-in-loop
@@ -2510,6 +2527,13 @@ export async function rpgTrivia(
           time: 30000,
           componentType: ComponentType.Button,
         });
+
+        if (collected.customId === 'rpgQuit') {
+          gameQuit = true;
+          log.debug(F, 'User quit the game');
+          await collected.update({ // eslint-disable-line no-await-in-loop
+          });
+        }
 
         if (collected) {
           // Disable all buttons
@@ -2533,7 +2557,7 @@ export async function rpgTrivia(
           score += 1;
           embed = new EmbedBuilder()
             .setColor(Colors.Green as ColorResolvable)
-            .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
+            .setTitle(`${env.EMOJI_TRIVIA} Trivia *(${difficultyName})*`)
             .addFields({ name: 'Correct!', value: `The answer was **${questionData.correct_answer}.**` })
             .addFields({ name: 'Current Score', value: `${score} of ${(qNumber + 1)}` })
             .addFields({ name: 'Next question in 5 seconds...', value: ' ' })
@@ -2560,7 +2584,7 @@ export async function rpgTrivia(
         } else { // If the user answers incorrectly
           embed = new EmbedBuilder()
             .setColor(Colors.Grey as ColorResolvable)
-            .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
+            .setTitle(`${env.EMOJI_TRIVIA} Trivia *(${difficultyName})*`)
             .addFields({ name: 'Incorrect!', value: `The correct answer was **${questionData.correct_answer}.**` })
             .addFields({ name: 'Current Score:', value: `${score} of ${(qNumber + 1)}` })
             .addFields({ name: 'Next question in 5 seconds...', value: ' ' })
@@ -2593,8 +2617,7 @@ export async function rpgTrivia(
       }
 
       questionList.splice(0, 1); // Remove the first question from the array
-      if (timedOut) break;
-      // if (gameQuit) break;
+      if (timedOut) break; // If the user timed out, break the loop
     }
     let payout = 0;
     perfectScore = '';
@@ -2632,7 +2655,7 @@ export async function rpgTrivia(
       log.debug(F, `Score Message: ${scoreMessage}`);
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
-        .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
+        .setTitle(`${env.EMOJI_TRIVIA} Trivia *(${difficultyName})*`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
         .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectScore}`, value: `*${scoreMessage}*` }) // eslint-disable-line max-len
         .addFields({ name: `Earned: ${payout} tokens${bonusMessage}`, value: `Wallet: ${(personaData.tokens + payout)} tokens` }) // eslint-disable-line max-len
@@ -2655,11 +2678,40 @@ export async function rpgTrivia(
             ),
         ],
       };
+
+    } else if (gameQuit) {
+      let gameQuitMessage = gameQuitMessageList[Math.floor(Math.random() * gameQuitMessageList.length)];
+      const embed = new EmbedBuilder()
+        .setColor(Colors.Purple)
+        .setTitle(`${env.EMOJI_TRIVIA} Trivia *(${difficultyName})*`)
+        .addFields({ name: 'Game Quit.', value: ' ' })
+        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectScore}`, value: `${gameQuitMessage}` }) // eslint-disable-line max-len
+        .addFields({ name: `Earned: ${payout} tokens${bonusMessage}`, value: `Wallet: ${(personaData.tokens + payout)} tokens` }) // eslint-disable-line max-len
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+      reply = {
+        embeds: [embed],
+        components: [
+          new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+              buttons.start,
+              buttons.arcade,
+            ),
+          new ActionRowBuilder<StringSelectMenuBuilder>()
+            .addComponents(
+              menus.difficulty,
+            ),
+          new ActionRowBuilder<StringSelectMenuBuilder>()
+            .addComponents(
+              menus.questions,
+            ),
+        ],
+      };
+
     } else {
       const timeOutMessage = timeOutMessageList[Math.floor(Math.random() * timeOutMessageList.length)];
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
-        .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
+        .setTitle(`${env.EMOJI_TRIVIA} Trivia *(${difficultyName})*`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
         .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectScore}`, value: `*${timeOutMessage}*` }) // eslint-disable-line max-len
         .addFields({ name: `Earned: ${payout} tokens${bonusMessage}`, value: `Wallet: ${(personaData.tokens + payout)} tokens` }) // eslint-disable-line max-len
@@ -2775,10 +2827,28 @@ export async function rpgTriviaGetQuestions(
     // const answers = [...questionData.incorrect_answers, questionData.correct_answer];
     // Unescape HTML entities
     const fixedQuestion = he.unescape(questionData.question);
+    // replace vowels with emojis
+    const anticheatFixedQuestion = fixedQuestion.replace(/[aeiou]/gi, (vowel) => {
+      switch (vowel) {
+        case 'a':
+          return '𝚊';
+        case 'e':
+          return '𝘦';
+        case 'i':
+          return 'Ꭵ';
+        case 'o':
+          return '໐';
+        case 'u':
+          return 'υ';
+        default:
+          return vowel;
+      }
+    });
+    log.debug(F, `Fixed Question: ${fixedQuestion}, Anti-Cheat Fixed Question: ${anticheatFixedQuestion}`);
     const fixedCorrectAnswer = he.unescape(questionData.correct_answer);
-    const fixedIncorrectAnswers = he.unescape(questionData.incorrect_answers.join(', '));
+    const fixedIncorrectAnswers = he.unescape(questionData.incorrect_answers.join('| '));
     log.debug(F, `Incorrect Answers: ${questionData.incorrect_answers} Fixed Incorrect Answers: ${fixedIncorrectAnswers}`)
-    const fixedAnswers = [...fixedIncorrectAnswers.split(', '), fixedCorrectAnswer];
+    const fixedAnswers = [...fixedIncorrectAnswers.split('| '), fixedCorrectAnswer];
     log.debug(F, `Fixed Answers: ${fixedAnswers}`)
     // log.debug(F, `Broken Question: ${questionData.question}, Fixed Question: ${fixedQuestion}`);
     // log.debug(F, `Broken Answer: ${answers}, Fixed Answer: ${fixedAnswers}`);
@@ -2789,7 +2859,7 @@ export async function rpgTriviaGetQuestions(
       category: questionData.category,
       type: questionData.type,
       difficulty: questionData.difficulty,
-      question: fixedQuestion,
+      question: anticheatFixedQuestion,
       correct_answer: fixedCorrectAnswer,
       all_answers: fixedAnswers,
     } as TriviaQuestion;
