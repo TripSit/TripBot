@@ -631,13 +631,15 @@ export async function moderate(
 
 export async function userInfoEmbed(target:GuildMember, targetData:Users, command: string):Promise<EmbedBuilder> {
   const targetActionList = {
+    NOTE: [] as string[],
+    WARNING: [] as string[],
+    REPORT: [] as string[],
     TIMEOUT: [] as string[],
     KICK: [] as string[],
     FULL_BAN: [] as string[],
     UNDERBAN: [] as string[],
-    WARNING: [] as string[],
-    NOTE: [] as string[],
-    REPORT: [] as string[],
+    TICKET_BAN: [] as string[],
+    DISCORD_BOT_BAN: [] as string[],
   };
   // Populate targetActionList from the db
 
@@ -647,8 +649,10 @@ export async function userInfoEmbed(target:GuildMember, targetData:Users, comman
 
   // for (const action of targetActionListRaw) {
   targetActionListRaw.forEach(action => {
+    log.debug(F, `action: ${JSON.stringify(action, null, 2)}`);
     const actionString = `${action.type} (${time(action.created_at, 'R')}) - ${action.internal_note
       ?? 'No note provided'}`;
+    log.debug(F, `actionString: ${actionString}`);
     targetActionList[action.type as keyof typeof targetActionList].push(actionString);
   });
 

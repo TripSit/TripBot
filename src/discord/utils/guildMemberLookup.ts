@@ -22,13 +22,25 @@ export async function getDiscordMember(
   if (string.startsWith('<@') && string.endsWith('>')) {
     log.debug(F, `${string} is a mention!`);
     const id = string.replace(/[<@!>]/g, '');
-    members.push(await interaction.guild.members.fetch(id));
+    try {
+      members.push(await interaction.guild.members.fetch(id));
+    } catch (error) {
+      log.debug(F, `Error fetching member with ID ${string}, they may have left the guild!`);
+    }
   } else if (string.match(/^\d+$/)) {
     log.debug(F, `${string} is an ID!`);
-    members.push(await interaction.guild.members.fetch(string));
+    try {
+      members.push(await interaction.guild.members.fetch(string));
+    } catch (error) {
+      log.debug(F, `Error fetching member with ID ${string}, they may have left the guild!`);
+    }
   } else if (string.includes('#')) {
     log.debug(F, `${string} is a tag!`);
-    const memberCollection = await interaction.guild.members.fetch({ query: string.split('#')[0], limit: 10 });
+    // const memberCollection = await interaction.guild.members.fetch({ query: string, limit: 10 });
+    const memberCollection = await interaction.guild.members.fetch().then(memberList => memberList.filter(mem => mem.user.tag === string));
+
+    // log.debug(F, `memberCollection: ${memberCollection.size} #1 = ${memberCollection.first()?.displayName}`);
+
     // Add all members in that collection to the members list
     memberCollection.forEach(member => {
       members.push(member);

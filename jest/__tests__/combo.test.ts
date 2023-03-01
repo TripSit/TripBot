@@ -1,7 +1,7 @@
 import { stripIndents } from 'common-tags';
 import { Colors } from 'discord.js';
 import { dCombo } from '../../src/discord/commands/global/d.combo';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dCombo;
 
@@ -17,7 +17,7 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} first_drug:MDMA second_drug:Ketamine`,
@@ -37,7 +37,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} first_drug:booze second_drug:xanax`,
@@ -57,7 +57,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} first_drug:booze second_drug:Methamphetamine`,
@@ -77,7 +77,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} first_drug:Methamphetamine second_drug:booze`,
@@ -97,7 +97,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} first_drug:Alcohol second_drug:Oxycodone`,
@@ -117,7 +117,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} first_drug:Oxycodone second_drug:Alcohol`,
@@ -137,7 +137,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} first_drug:amphetamines second_drug:booze`,
@@ -157,7 +157,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} first_drug:booze second_drug:diazepam`,
@@ -177,7 +177,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} first_drug:diazepam second_drug:booze`,
@@ -197,7 +197,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} first_drug:boxxxxoze second_drug:diazepam`,
@@ -214,7 +214,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} first_drug:booze second_drug:diazxxxepam`,
@@ -231,7 +231,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} first_drug:Methamphetamine second_drug:Heroin`,

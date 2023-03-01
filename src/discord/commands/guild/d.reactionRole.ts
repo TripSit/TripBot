@@ -118,6 +118,7 @@ export const dReactionRole: SlashCommand = {
           { name: 'Premium Color', value: 'premium_color' },
           { name: 'Mindset', value: 'mindset' },
           { name: 'Pronoun', value: 'pronoun' },
+          { name: 'Notifications', value: 'notifications' },
         ))),
   async execute(interaction) {
     startlog(F, interaction);
@@ -410,6 +411,38 @@ export async function setupTemplateReactionRole(
     );
 
     await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
+  } else if (set === 'notifications') {
+    const embed = embedTemplate()
+      .setAuthor({ name: 'Notifications', iconURL: env.TS_ICON_URL, url: tripsitUrl })
+      .setDescription(stripIndents`Click the button(s) below to pick your notification(s) roles!`)
+      .setFooter({ text: 'Having one of these roles means you will receieve a @ ping notification for the respective topic.' })
+      .setColor(Colors.Yellow);
+
+    const Announcements = await guild.roles.fetch(env.ROLE_ANNOUNCEMENTS) as Role;
+    const TripBotUpdates = await guild.roles.fetch(env.ROLE_TRIPBOTUPDAES) as Role;
+    const TripTownNotices = await guild.roles.fetch(env.ROLE_TRIPTOWNNOTICES) as Role;
+
+    const emojiBell = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'ts_bell') as GuildEmoji;
+
+    const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel(`${Announcements.name}`)
+        .setCustomId(`"ID":"RR","RID":"${Announcements.id}"`)
+        .setEmoji(emojiBell.identifier)
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${TripBotUpdates.name}`)
+        .setCustomId(`"ID":"RR","RID":"${TripBotUpdates.id}"`)
+        .setEmoji(emojiBell.identifier)
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setLabel(`${TripTownNotices.name}`)
+        .setCustomId(`"ID":"RR","RID":"${TripTownNotices.id}"`)
+        .setEmoji(emojiBell.identifier)
+        .setStyle(ButtonStyle.Primary),
+    );
+
+    await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1] });
   }
 
   interaction.reply({ content: 'Reaction roles have been set up!', ephemeral: true });

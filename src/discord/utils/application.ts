@@ -151,6 +151,8 @@ export async function applicationStart(
         return;
       }
 
+      await i.deferReply({ ephemeral: true });
+
       const actor = i.member as GuildMember;
 
       const reason = i.fields.getTextInputValue('reason');
@@ -291,7 +293,7 @@ export async function applicationStart(
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription('Thank you for your interest! We will try to get back to you as soon as possible!');
-      i.reply({ embeds: [embed], ephemeral: true });
+      i.editReply({ embeds: [embed] });
     });
 }
 
@@ -323,10 +325,24 @@ export async function applicationReject(
     const memberId = interaction.customId.split('~')[1];
     const roleId = interaction.customId.split('~')[2];
 
-    const target = await interaction.guild?.members.fetch(memberId);
-    const role = await interaction.guild?.roles.fetch(roleId);
-    if (!target || !role) {
-      interaction.reply({ content: 'Could not find target and/or role!', ephemeral: true });
+    let target = {} as GuildMember;
+    try {
+      target = await interaction.guild?.members.fetch(memberId);
+    } catch (e) {
+      interaction.reply({ content: 'Could not find target, are the still in the guild?', ephemeral: true });
+      return;
+    }
+
+    let role = {} as Role | null;
+    try {
+      role = await interaction.guild?.roles.fetch(roleId);
+    } catch (e) {
+      interaction.reply({ content: 'Could not find role, has it been deleted?', ephemeral: true });
+      return;
+    }
+
+    if (!role) {
+      interaction.reply({ content: 'Could not find role, has it been deleted?', ephemeral: true });
       return;
     }
 
