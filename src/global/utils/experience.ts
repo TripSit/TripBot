@@ -103,6 +103,7 @@ export async function experience(
 
     if (experienceData.level % 10 === 0) {
       let id = '' as string;
+      // log.debug(F, `category: ${category}`);
       // log.debug(F, `experienceCategory: ${experienceCategory}`);
       if (category === 'GENERAL' as ExperienceCategory) {
         id = env.CHANNEL_LOUNGE;
@@ -112,7 +113,10 @@ export async function experience(
         id = env.CHANNEL_DEVELOPMENT;
       } else if (category === 'TEAM' as ExperienceCategory) {
         id = env.CHANNEL_TEAMTRIPSIT;
+      } else if (category === 'IGNORED' as ExperienceCategory) {
+        id = env.CHANNEL_BOTSPAM;
       }
+      // log.debug(F, `id: ${id}`);
       const announceChannel = await channel.guild.channels.fetch(id) as TextChannel;
       const emojis = [...announcementEmojis].sort(() => 0.5 - Math.random()).slice(0, 3); // Sort the array
       await announceChannel.send(`${emojis} **${member} has reached ${categoryName} ${typeName} level ${experienceData.level}!** ${emojis}`);
@@ -250,8 +254,9 @@ async function giveMilestone(
   //     }
   //   }
   // }
-
+  // log.debug(F, `LevelTier: ${levelTier}`);
   const role = await member.guild?.roles.fetch(roleDefs[levelTier as keyof typeof roleDefs].role) as Role;
+  // log.debug(F, `Role: ${role.name} (${role.id})`);
 
   // log.debug(F, `Role: ${role.name} (${role.id})`);
 
