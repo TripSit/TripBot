@@ -902,6 +902,8 @@ export async function tripSitMe(
 
       **Do not engage in DM**
       Keep things in the open where you have the team's support!
+
+      **→ Go to <#${threadHelpUser.id}>**
       `)
     .setFooter({ text: 'If you need help click the Backup button to summon Helpers and Tripsitters' });
 
