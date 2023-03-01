@@ -27,6 +27,8 @@ export const dCombo: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    await interaction.deferReply({ ephemeral });
     const drugA = interaction.options.getString('first_drug', true);
     const drugB = interaction.options.getString('second_drug', true);
 
@@ -37,8 +39,7 @@ export const dCombo: SlashCommand = {
       .setDescription(results.description);
     if (results.thumbnail) embed.setThumbnail(results.thumbnail);
     if (results.color) embed.setColor(Colors[results.color as keyof typeof Colors]);
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.reply({ embeds: [embed] });
     return true;
   },
 };
