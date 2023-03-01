@@ -77,9 +77,9 @@ const buttons = {
   start: customButton('rpgStart', 'Start', env.EMOJI_START, ButtonStyle.Success),
   quit: customButton('rpgQuit', 'Quit', env.EMOJI_QUIT, ButtonStyle.Danger),
   town: customButton('rpgTown', 'Town', env.EMOJI_TOWN, ButtonStyle.Primary),
-  work: customButton('rpgWork', 'Work', env.EMOJI_WORK, ButtonStyle.Primary),
-  shop: customButton('rpgShop', 'Shop', env.EMOJI_SHOP, ButtonStyle.Primary),
-  arcade: customButton('rpgArcade', 'Arcade', env.EMOJI_ARCADE, ButtonStyle.Primary),
+  bounties: customButton('rpgBounties', 'Bounties', env.EMOJI_BOUNTIES, ButtonStyle.Primary),
+  market: customButton('rpgMarket', 'Market', env.EMOJI_MARKET, ButtonStyle.Primary),
+  tavern: customButton('rpgTavern', 'Tavern', env.EMOJI_TAVERN, ButtonStyle.Primary),
   home: customButton('rpgHome', 'Home', env.EMOJI_HOME, ButtonStyle.Primary),
   quest: customButton('rpgQuest', 'Quest', env.EMOJI_QUEST, ButtonStyle.Secondary),
   dungeon: customButton('rpgDungeon', 'Dungeon', env.EMOJI_DUNGEON, ButtonStyle.Secondary),
@@ -87,7 +87,7 @@ const buttons = {
   inventory: customButton('rpgInventory', 'Inventory', env.EMOJI_INVENTORY, ButtonStyle.Primary),
   stats: customButton('rpgStats', 'Stats', '📊'),
   guild: customButton('rpgGuild', 'Guild', '🏰'),
-  buy: customButton('rpgShopBuy', 'Buy', env.EMOJI_BUY, ButtonStyle.Success),
+  buy: customButton('rpgMarketBuy', 'Buy', env.EMOJI_BUY, ButtonStyle.Success),
   slotMachine: customButton('rpgSlots', 'Slots', '🎰'),
   coinFlip: customButton('rpgCoinFlip', 'CoinFlip', env.EMOJI_COINFLIP, ButtonStyle.Secondary),
   roulette: customButton('rpgRoulette', 'Roulette', env.EMOJI_ROULETTE, ButtonStyle.Secondary),
@@ -453,9 +453,9 @@ const items = {
       effect_value: 'LineLeaves',
       emoji: backgroundEmoji,
     },
-    ArcadeCarpet: {
-      label: 'ArcadeCarpet',
-      value: 'ArcadeCarpet',
+    TavernCarpet: {
+      label: 'TavernCarpet',
+      value: 'TavernCarpet',
       description: 'Background',
       quantity: 1,
       weight: 0,
@@ -463,7 +463,7 @@ const items = {
       equipped: false,
       consumable: false,
       effect: 'background',
-      effect_value: 'ArcadeCarpet',
+      effect_value: 'TavernCarpet',
       emoji: backgroundEmoji,
     },
     Topography: {
@@ -830,14 +830,14 @@ export const dRpg: SlashCommand = {
       .setName('town')
       .setDescription('Go to TripTown!'))
     .addSubcommand(subcommand => subcommand
-      .setName('shop')
-      .setDescription('Go to the Shop!'))
+      .setName('market')
+      .setDescription('Go to the Market!'))
     .addSubcommand(subcommand => subcommand
       .setName('home')
       .setDescription('Go to your Home!'))
     .addSubcommand(subcommand => subcommand
-      .setName('work')
-      .setDescription('Go to the work center!'))
+      .setName('bounties')
+      .setDescription('Go to the bounty board!'))
     .addSubcommand(subcommand => subcommand
       .setName('quest')
       .setDescription('Quest and earn a token!'))
@@ -848,8 +848,8 @@ export const dRpg: SlashCommand = {
       .setName('raid')
       .setDescription('Raid a boss and earn 50 tokens!'))
     .addSubcommand(subcommand => subcommand
-      .setName('arcade')
-      .setDescription('Go to the arcade'))
+      .setName('tavern')
+      .setDescription('Go to the tavern'))
     .addSubcommand(subcommand => subcommand
       .setName('coinflip')
       .setDescription('Go to the coinflip game'))
@@ -872,7 +872,7 @@ export const dRpg: SlashCommand = {
     // - Dungeon - Grants 1 TripToken, can only be used once every 24 hours
     // - Raid - Grants 5 TripToken, can only be used once every 7 days
     //
-    // The user can also use their tokens to buy items from the shop:
+    // The user can also use their tokens to buy items from the market:
     // - Test Kit - 10% more tokens every time you gain tokens, costs 100 TripToken
     // - Scale - 20% more tokens every time you gain tokens, costs 200 TripToken
     // - Profile border - 30% more tokens every time you gain tokens, costs 300 TripToken
@@ -927,87 +927,87 @@ export const dRpg: SlashCommand = {
     if (subcommand === 'town') {
       await interaction.editReply(await rpgTown(interaction));
     }
-    if (subcommand === 'work') {
-      await interaction.editReply(await rpgWork(interaction, null));
+    if (subcommand === 'bounties') {
+      await interaction.editReply(await rpgBounties(interaction, null));
     }
     if (subcommand === 'quest' || subcommand === 'dungeon' || subcommand === 'raid') {
-      await interaction.editReply(await rpgWork(interaction, subcommand));
+      await interaction.editReply(await rpgBounties(interaction, subcommand));
     }
-    if (subcommand === 'shop') {
-      await interaction.editReply(await rpgShop(interaction));
+    if (subcommand === 'market') {
+      await interaction.editReply(await rpgMarket(interaction));
     }
     if (subcommand === 'home') {
       await interaction.editReply(await rpgHome(interaction, ''));
     }
-    if (subcommand === 'arcade') {
-      await interaction.editReply(await rpgArcade(interaction));
+    if (subcommand === 'tavern') {
+      await interaction.editReply(await rpgTavern(interaction));
     }
     if (subcommand === 'coinflip') {
-      await interaction.editReply(await rpgArcadeGame(interaction, 'Coinflip'));
+      await interaction.editReply(await rpgTavernGame(interaction, 'Coinflip'));
     }
     if (subcommand === 'roulette') {
-      await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette'));
+      await interaction.editReply(await rpgTavernGame(interaction, 'Roulette'));
     }
     if (subcommand === 'trivia') {
       await interaction.editReply(await rpgTrivia(interaction));
     }
 
     // if (subcommand === 'blackjack') {
-    //   await interaction.editReply(await rpgArcade(interaction));
+    //   await interaction.editReply(await rpgTavern(interaction));
     // }
     // if (subcommand === 'slots') {
-    //   await interaction.editReply(await rpgArcade(interaction));
+    //   await interaction.editReply(await rpgTavern(interaction));
     // }
 
     // Button collector
     collector.on('collect', async (i: MessageComponentInteraction) => {
     // log.debug(F, `Interaction: ${JSON.stringify(i.customId, null, 2)}`);
       if (i.customId === 'rpgTown') await i.update(await rpgTown(i));
-      else if (i.customId === 'rpgWork') await i.update(await rpgWork(i, null));
-      else if (i.customId === 'rpgShop') await i.update(await rpgShop(i));
-      else if (i.customId === 'rpgArcade') await i.update(await rpgArcade(i));
-      else if (i.customId === 'rpgWager1') await i.update(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager10') await i.update(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager100') await i.update(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager1000') await i.update(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager10000') await i.update(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgCoinFlip') await i.update(await rpgArcadeGame(i, 'Coinflip'));
-      else if (i.customId === 'rpgRoulette') await i.update(await rpgArcadeGame(i, 'Roulette'));
+      else if (i.customId === 'rpgBounties') await i.update(await rpgBounties(i, null));
+      else if (i.customId === 'rpgMarket') await i.update(await rpgMarket(i));
+      else if (i.customId === 'rpgTavern') await i.update(await rpgTavern(i));
+      else if (i.customId === 'rpgWager1') await i.update(await rpgTavernWager(i));
+      else if (i.customId === 'rpgWager10') await i.update(await rpgTavernWager(i));
+      else if (i.customId === 'rpgWager100') await i.update(await rpgTavernWager(i));
+      else if (i.customId === 'rpgWager1000') await i.update(await rpgTavernWager(i));
+      else if (i.customId === 'rpgWager10000') await i.update(await rpgTavernWager(i));
+      else if (i.customId === 'rpgCoinFlip') await i.update(await rpgTavernGame(i, 'Coinflip'));
+      else if (i.customId === 'rpgRoulette') await i.update(await rpgTavernGame(i, 'Roulette'));
 
       else if (i.customId === 'rpgTrivia') await i.update(await rpgTrivia(i));
       else if (i.customId === 'rpgDifficulty') await i.update(await rpgTrivia(i));
       else if (i.customId === 'rpgQuestionLimit') await i.update(await rpgTrivia(i));
       else if (i.customId === 'rpgStart') await i.editReply(await rpgTrivia(i));
 
-      else if (i.customId === 'rpgRouletteRed') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'red'));
-      else if (i.customId === 'rpgRouletteBlack') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'black'));
-      else if (i.customId === 'rpgRouletteFirst') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'first'));
-      else if (i.customId === 'rpgRouletteSecond') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'second'));
-      else if (i.customId === 'rpgRouletteThird') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'third'));
+      else if (i.customId === 'rpgRouletteRed') await i.editReply(await rpgTavernGame(i, 'Roulette', 'red'));
+      else if (i.customId === 'rpgRouletteBlack') await i.editReply(await rpgTavernGame(i, 'Roulette', 'black'));
+      else if (i.customId === 'rpgRouletteFirst') await i.editReply(await rpgTavernGame(i, 'Roulette', 'first'));
+      else if (i.customId === 'rpgRouletteSecond') await i.editReply(await rpgTavernGame(i, 'Roulette', 'second'));
+      else if (i.customId === 'rpgRouletteThird') await i.editReply(await rpgTavernGame(i, 'Roulette', 'third'));
 
-      else if (i.customId === 'rpgRouletteOdd') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'odds'));
-      else if (i.customId === 'rpgRouletteEven') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'evens'));
-      else if (i.customId === 'roulette1to12') await i.editReply(await rpgArcadeGame(i, 'Roulette', '1-12'));
-      else if (i.customId === 'roulette13to24') await i.editReply(await rpgArcadeGame(i, 'Roulette', '13-24'));
-      else if (i.customId === 'roulette25to36') await i.editReply(await rpgArcadeGame(i, 'Roulette', '25-36'));
+      else if (i.customId === 'rpgRouletteOdd') await i.editReply(await rpgTavernGame(i, 'Roulette', 'odds'));
+      else if (i.customId === 'rpgRouletteEven') await i.editReply(await rpgTavernGame(i, 'Roulette', 'evens'));
+      else if (i.customId === 'roulette1to12') await i.editReply(await rpgTavernGame(i, 'Roulette', '1-12'));
+      else if (i.customId === 'roulette13to24') await i.editReply(await rpgTavernGame(i, 'Roulette', '13-24'));
+      else if (i.customId === 'roulette25to36') await i.editReply(await rpgTavernGame(i, 'Roulette', '25-36'));
 
-      else if (i.customId === 'rpgRouletteHigh') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'high'));
-      else if (i.customId === 'rpgRouletteLow') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'low'));
-      else if (i.customId === 'rpgRouletteZero') await i.editReply(await rpgArcadeGame(i, 'Roulette', '0'));
+      else if (i.customId === 'rpgRouletteHigh') await i.editReply(await rpgTavernGame(i, 'Roulette', 'high'));
+      else if (i.customId === 'rpgRouletteLow') await i.editReply(await rpgTavernGame(i, 'Roulette', 'low'));
+      else if (i.customId === 'rpgRouletteZero') await i.editReply(await rpgTavernGame(i, 'Roulette', '0'));
 
-      else if (i.customId === 'rpgCoinflipHeads') await i.editReply(await rpgArcadeGame(i, 'Coinflip', 'heads'));
-      else if (i.customId === 'rpgCoinflipTails') await i.editReply(await rpgArcadeGame(i, 'Coinflip', 'tails'));
+      else if (i.customId === 'rpgCoinflipHeads') await i.editReply(await rpgTavernGame(i, 'Coinflip', 'heads'));
+      else if (i.customId === 'rpgCoinflipTails') await i.editReply(await rpgTavernGame(i, 'Coinflip', 'tails'));
       else if (i.customId === 'rpgHome') await i.update(await rpgHome(i, ''));
       else if (i.customId === 'rpgSpecies') await i.update(await rpgHome(i, ''));
       else if (i.customId === 'rpgClass') await i.update(await rpgHome(i, ''));
       else if (i.customId === 'rpgGuild') await i.update(await rpgHome(i, ''));
       else if (i.customId === 'rpgName') await rpgHomeNameChange(i);
       else if (i.customId === 'rpgAccept') await i.update(await rpgHomeAccept(i));
-      else if (i.customId === 'rpgGeneralSelect') await i.update(await rpgShopChange(i));
-      else if (i.customId === 'rpgShopBuy') await i.update(await rpgShopAccept(i));
+      else if (i.customId === 'rpgGeneralSelect') await i.update(await rpgMarketChange(i));
+      else if (i.customId === 'rpgMarketBuy') await i.update(await rpgMarketAccept(i));
       else if (i.customId === 'rpgBackgroundSelect') await i.update(await rpgHome(i, ''));
       else if (i.customId === 'rpgQuest' || i.customId === 'rpgDungeon' || i.customId === 'rpgRaid') {
-        await i.update(await rpgWork(i, i.customId.replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
+        await i.update(await rpgBounties(i, i.customId.replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
       }
     });
 
@@ -1023,9 +1023,9 @@ export async function rpgTown(
 
   const rowTown = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
-      buttons.work,
-      buttons.shop,
-      buttons.arcade,
+      buttons.bounties,
+      buttons.market,
+      buttons.tavern,
       buttons.home,
     );
 
@@ -1041,7 +1041,7 @@ export async function rpgTown(
       
       *You get the impression that you're one of the first people to visit.*
       
-      A recruitment center to take on jobs, and a small shop.
+      A recruitment center to take on jobs, and a small market.
   
       What would you like to do?`)
       .setColor(Colors.Green)],
@@ -1058,7 +1058,7 @@ function getLastMonday(d:Date) {
   return new Date(d);
 }
 
-export async function rpgWork(
+export async function rpgBounties(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
   command: 'quest' | 'dungeon' | 'raid' | null,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
@@ -1069,7 +1069,7 @@ export async function rpgWork(
   const inventoryData = await inventoryGet(personaData.id);
   // log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
 
-  const rowWork = new ActionRowBuilder<ButtonBuilder>()
+  const rowBounties = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       buttons.quest,
       buttons.dungeon,
@@ -1126,8 +1126,8 @@ export async function rpgWork(
 
   if (command !== null) {
     const dbKey = `last_${command}`;
-    const lastWork = personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] as Date;
-    // log.debug(F, `lastWork: ${lastWork}`);
+    const lastBounties = personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] as Date;
+    // log.debug(F, `lastBounties: ${lastBounties}`);
 
     let resetTime = {} as Date;
     let timeout = false;
@@ -1137,10 +1137,10 @@ export async function rpgWork(
 
       resetTime = new Date(new Date().setHours(currentHour + 1, 0, 0, 0));
 
-      if (lastWork) {
-        const lastWorkHour = lastWork ? lastWork.getHours() : 0;
-        // log.debug(F, `lastWorkHour: ${lastWorkHour}`);
-        if (lastWorkHour === currentHour) {
+      if (lastBounties) {
+        const lastBountiesHour = lastBounties ? lastBounties.getHours() : 0;
+        // log.debug(F, `lastBountiesHour: ${lastBountiesHour}`);
+        if (lastBountiesHour === currentHour) {
           timeout = true;
         }
       }
@@ -1149,13 +1149,13 @@ export async function rpgWork(
       // log.debug(F, `currentDay: ${currentDay}`);
       resetTime = new Date(new Date(new Date().setDate(currentDay + 1)).setHours(0, 0, 0, 0));
 
-      if (lastWork) {
-        const lastWorkDay = lastWork ? lastWork.getDate() : 0;
-        // log.debug(F, `lastWorkDay: ${lastWorkDay}`);
+      if (lastBounties) {
+        const lastBountiesDay = lastBounties ? lastBounties.getDate() : 0;
+        // log.debug(F, `lastBountiesDay: ${lastBountiesDay}`);
 
         // log.debug(F, `personaData1: ${JSON.stringify(personaData, null, 2)}`);
-        // if (lastWork && (lastWork.getTime() + interval > new Date().getTime())) {
-        if (lastWorkDay === currentDay) {
+        // if (lastBounties && (lastBounties.getTime() + interval > new Date().getTime())) {
+        if (lastBountiesDay === currentDay) {
           timeout = true;
         }
       }
@@ -1164,8 +1164,8 @@ export async function rpgWork(
       // log.debug(F, `lastMonday: ${lastMonday}`);
       resetTime = new Date(new Date(lastMonday.getTime() + 7 * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0));
 
-      // Check if the last work was done after the last monday
-      if (lastWork && lastWork.getTime() > lastMonday.getTime()) {
+      // Check if the last bounties was done after the last monday
+      if (lastBounties && lastBounties.getTime() > lastMonday.getTime()) {
         timeout = true;
       }
     }
@@ -1183,7 +1183,7 @@ export async function rpgWork(
             You can try again ${time(resetTime, 'R')}
             Wallet: ${personaData.tokens} tokens`)
           .setColor(contracts[command].fail.color)],
-        components: [rowWork],
+        components: [rowBounties],
       };
     }
 
@@ -1227,7 +1227,7 @@ export async function rpgWork(
           You can try again ${time(resetTime, 'R')}.
           Wallet: ${personaData.tokens} tokens`)
         .setColor(contracts[command].success.color)],
-      components: [rowWork],
+      components: [rowBounties],
     };
   }
 
@@ -1235,44 +1235,44 @@ export async function rpgWork(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-      .setTitle(`${env.EMOJI_WORK} Work`)
+      .setTitle(`${env.EMOJI_BOUNTIES} Bounties`)
       .setDescription(stripIndents`
-      You are at work, you can go on a quest, clear a dungeon, or go on a raid.
+      You are at the bounty board, you can go on a quest, clear a dungeon, or go on a raid.
     `)
       .setColor(Colors.Green)],
-    components: [rowWork],
+    components: [rowBounties],
   };
 }
 
-export async function rpgShop(
+export async function rpgMarket(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
-  // Get the info used in the shop
+  // Get the info used in the market
   const {
-    shopInventory,
+    marketInventory,
     personaTokens,
     personaInventory,
-  } = await rpgShopInventory(interaction);
+  } = await rpgMarketInventory(interaction);
 
-  // Create the shop buttons - This is a select menu
+  // Create the market buttons - This is a select menu
   const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(menus.item.setOptions(shopInventory));
+    .addComponents(menus.item.setOptions(marketInventory));
   // This is the row of nav buttons. It starts with the town button.
-  const rowShop = new ActionRowBuilder<ButtonBuilder>()
+  const rowMarket = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(buttons.town);
 
   // Everyone gets the town button, but only people with purchased items get the items select menu
-  const componentList = [rowShop] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
-  if (shopInventory.length > 0) { componentList.unshift(rowItems); }
+  const componentList = [rowMarket] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
+  if (marketInventory.length > 0) { componentList.unshift(rowItems); }
 
-  // The user has clicked the shop button, send them the shop embed
+  // The user has clicked the market button, send them the market embed
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-      .setTitle(`${env.EMOJI_SHOP} Shop`)
+      .setTitle(`${env.EMOJI_MARKET} Market`)
       .setDescription(stripIndents`
-      You are in the local shop, you can buy some items to help you on your journey.
+      You are in the local market, you can buy some items to help you on your journey.
 
       ${env.EMOJI_MULTIPLIER} ***Multipliers*** can be used to increase the amount of tokens you earn.
       ${env.EMOJI_BACKGROUND} ***Backgrounds*** can be used to personalize your /profile and /levels.
@@ -1286,15 +1286,15 @@ export async function rpgShop(
   };
 }
 
-export async function rpgShopChange(
+export async function rpgMarketChange(
   interaction:MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
-  // Get the info used in the shop
+  // Get the info used in the market
   const {
-    shopInventory,
+    marketInventory,
     personaTokens,
     personaInventory,
-  } = await rpgShopInventory(interaction);
+  } = await rpgMarketInventory(interaction);
 
   // Get the item the user selected
   let choice = '' as string;
@@ -1310,15 +1310,15 @@ export async function rpgShopChange(
 
   // log.debug(F, `choice: ${choice}`);
 
-  // Get a list of shopInventory where the value does not equal the choice
-  const filteredItems = Object.values(shopInventory).filter(item => item.value !== choice);
+  // Get a list of marketInventory where the value does not equal the choice
+  const filteredItems = Object.values(marketInventory).filter(item => item.value !== choice);
 
   // Reset the options menu to be empty
   menus.item.setOptions();
 
   menus.item.addOptions(filteredItems);
 
-  // Use shopInventory and find the item that matches the choice, make it default
+  // Use marketInventory and find the item that matches the choice, make it default
   let itemData = {} as {
     label: string;
     value: string;
@@ -1332,7 +1332,7 @@ export async function rpgShopChange(
     effect_value: string;
     emoji: string;
   };
-  const chosenItem = shopInventory.find(shopItem => shopItem.value === choice);
+  const chosenItem = marketInventory.find(marketItem => marketItem.value === choice);
   if (chosenItem) {
     chosenItem.default = true;
     menus.item.addOptions(chosenItem);
@@ -1356,27 +1356,27 @@ export async function rpgShopChange(
   const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
     .addComponents(menus.item);
 
-  const rowShop = new ActionRowBuilder<ButtonBuilder>()
+  const rowMarket = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       buttons.town,
     );
 
   if (chosenItem) {
-    rowShop.addComponents(
+    rowMarket.addComponents(
       buttons.buy.setLabel(`Buy ${chosenItem?.label}`),
     );
   }
 
   const components = menus.item.options.length === 0
-    ? [rowShop]
-    : [rowItems, rowShop];
+    ? [rowMarket]
+    : [rowItems, rowMarket];
 
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-    .setTitle(`${env.EMOJI_SHOP} Shop`)
+    .setTitle(`${env.EMOJI_MARKET} Market`)
     .setDescription(stripIndents`
-      You are in the local shop, you can buy some items to help you on your journey.
+      You are in the local market, you can buy some items to help you on your journey.
 
       ${env.EMOJI_MULTIPLIER} ***Multipliers*** can be used to increase the amount of tokens you earn.
       ${env.EMOJI_BACKGROUND} ***Backgrounds*** can be used to personalize your /profile and /levels.
@@ -1402,10 +1402,10 @@ export async function rpgShopChange(
   };
 }
 
-export async function rpgShopInventory(
+export async function rpgMarketInventory(
   interaction:MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<{
-    shopInventory:SelectMenuComponentOptionData[];
+    marketInventory:SelectMenuComponentOptionData[];
     personaTokens:number;
     personaInventory:string;
   }> {
@@ -1426,7 +1426,7 @@ export async function rpgShopInventory(
     : '';
 
   // Go through items.general and create a new object of items that the user doesn't have yet
-  const shopInventory = [...Object.values(items.general), ...Object.values(items.backgrounds)]
+  const marketInventory = [...Object.values(items.general), ...Object.values(items.backgrounds)]
     .map(item => {
       if (!inventoryData.find(i => i.value === item.value)) {
         return {
@@ -1439,23 +1439,23 @@ export async function rpgShopInventory(
       return null;
     })
     .filter(item => item !== null) as SelectMenuComponentOptionData[];
-  // log.debug(F, `generalOptions: ${JSON.stringify(shopInventory, null, 2)}`);
+  // log.debug(F, `generalOptions: ${JSON.stringify(marketInventory, null, 2)}`);
   return {
-    shopInventory,
+    marketInventory,
     personaTokens: personaData.tokens,
     personaInventory: inventoryString,
   };
 }
 
-export async function rpgShopAccept(
+export async function rpgMarketAccept(
   interaction:MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
-  // Get the info used in the shop
+  // Get the info used in the market
   // const {
-  //   shopInventory,
+  //   marketInventory,
   //   personaTokens,
   //   personaInventory,
-  // } = await rpgShopInventory(interaction);
+  // } = await rpgMarketInventory(interaction);
 
   // Check get fresh persona data
   const [personaData] = await getPersonaInfo(interaction.user.id);
@@ -1488,7 +1488,7 @@ export async function rpgShopAccept(
   if (personaData.tokens < itemData.cost) {
   // log.debug(F, 'Not enough tokens to buy item');
 
-    const { embeds, components } = await rpgShopChange(interaction);
+    const { embeds, components } = await rpgMarketChange(interaction);
 
     // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
     const { description } = JSON.parse(JSON.stringify((embeds as APIEmbed[])[0]));
@@ -1496,7 +1496,7 @@ export async function rpgShopAccept(
     const embed = embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-      .setTitle(`${env.EMOJI_SHOP} Shop`)
+      .setTitle(`${env.EMOJI_MARKET} Market`)
       .setDescription(stripIndents`**You do not have enough tokens to buy this item.**
     
     ${description}`)
@@ -1538,7 +1538,7 @@ export async function rpgShopAccept(
 
   await inventorySet(newItem);
 
-  const { embeds, components } = await rpgShopChange(interaction);
+  const { embeds, components } = await rpgMarketChange(interaction);
 
   // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
   const { description } = JSON.parse(JSON.stringify((embeds as APIEmbed[])[0]));
@@ -1547,7 +1547,7 @@ export async function rpgShopAccept(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-      .setTitle(`${env.EMOJI_SHOP} Shop`)
+      .setTitle(`${env.EMOJI_MARKET} Market`)
       .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemData.cost} TripTokens.**
       
       ${description}`)
@@ -1600,7 +1600,7 @@ export async function rpgHome(
 
   // log.debug(F, `defaultOption2: ${defaultOption}`);
 
-  // Get a list of shopInventory where the value does not equal the choice
+  // Get a list of marketInventory where the value does not equal the choice
   // If there is no choice, it will return all items the user has
   const filteredItems = Object.values(homeInventory).filter(item => item.value !== defaultOption);
 
@@ -1998,16 +1998,16 @@ export async function rpgHomeNameChange(
     });
 }
 
-export async function rpgArcade(
+export async function rpgTavern(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-      .setTitle(`${env.EMOJI_ARCADE} Arcade`)
+      .setTitle(`${env.EMOJI_TAVERN} Tavern`)
       .setDescription(stripIndents`
-        You ${rand(text.enter)} the arcade and see a variety of games.
+        You ${rand(text.enter)} the tavern and see a variety of games.
       `)
       .setColor(Colors.Green)],
     components: [new ActionRowBuilder<ButtonBuilder>()
@@ -2029,7 +2029,7 @@ const gameData = {
   Coinflip: {
     gameName: 'Coinflip' as GameName,
     instructions: stripIndents`Click the buttons below to set how many of your tokens you want to bet.
-    Click the heads or tails button to flip the coin, or you can go back to the arcade.
+    Click the heads or tails button to flip the coin, or you can go back to the tavern.
     If you win, you get the amount you bet.
     If you lose, you lose the amount you bet.`,
     object: 'coin',
@@ -2045,7 +2045,7 @@ const gameData = {
   Roulette: {
     gameName: 'Roulette' as GameName,
     instructions: stripIndents`Click the buttons below to set how many of your tokens you want to bet.
-    Click a bet button to place a bet on that outcome, or you can go back to the arcade.
+    Click a bet button to place a bet on that outcome, or you can go back to the tavern.
     
     Depending on what you picked and where the ball lands, you will win or lose your bet.
 
@@ -2078,7 +2078,7 @@ const gameData = {
   },
 };
 
-export async function rpgArcadeGame(
+export async function rpgTavernGame(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
   gameName: GameName,
   choice?: 'heads' | 'tails' | '0'
@@ -2095,7 +2095,7 @@ export async function rpgArcadeGame(
       buttons.wager10,
       buttons.wager100,
       buttons.wager1000,
-      buttons.arcade,
+      buttons.tavern,
     );
 
   const { bets } = gameData[gameName as keyof typeof gameData];
@@ -2163,7 +2163,7 @@ export async function rpgArcadeGame(
   }
 
   if (choice) {
-    await rpgArcadeAnimate(interaction, gameName);
+    await rpgTavernAnimate(interaction, gameName);
     const { object } = gameData[gameName as keyof typeof gameData];
 
     const { options } = gameData[gameName as keyof typeof gameData];
@@ -2243,7 +2243,7 @@ export async function rpgArcadeGame(
     };
   }
 
-  // The user has clicked the shop button, send them the shop embed
+  // The user has clicked the market button, send them the market embed
   if (currentBet !== 0) {
   // log.debug(F, 'No choice made, but a bet was made, return the bet screen');
     return {
@@ -2676,7 +2676,7 @@ export async function rpgTrivia(
           new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
               buttons.start,
-              buttons.arcade,
+              buttons.tavern,
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
@@ -2704,7 +2704,7 @@ export async function rpgTrivia(
           new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
               buttons.start,
-              buttons.arcade,
+              buttons.tavern,
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
@@ -2732,7 +2732,7 @@ export async function rpgTrivia(
           new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
               buttons.start,
-              buttons.arcade,
+              buttons.tavern,
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
@@ -2763,7 +2763,7 @@ export async function rpgTrivia(
 
   if (difficultyOption) {
     log.debug(F, 'difficultyOption is not empty');
-    // Get a list of shopInventory where the value does not equal the choice
+    // Get a list of marketInventory where the value does not equal the choice
     // If there is no choice, it will return all items the user has
     const filteredDifficulties = Object.values(difficulties)
       .filter(item => item.value !== selectedOption)
@@ -2802,7 +2802,7 @@ export async function rpgTrivia(
       new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           buttons.start,
-          buttons.arcade,
+          buttons.tavern,
         ),
       new ActionRowBuilder<StringSelectMenuBuilder>()
         .addComponents(
@@ -2866,7 +2866,7 @@ export async function rpgTriviaGetQuestions(
   });
 }
 
-export async function rpgArcadeAnimate(
+export async function rpgTavernAnimate(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
   gameName: GameName,
 ) {
@@ -3010,7 +3010,7 @@ export async function rpgArcadeAnimate(
   }
 }
 
-export async function rpgArcadeWager(
+export async function rpgTavernWager(
   interaction: MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
   let newBet = wagers[interaction.user.id].tokens;
@@ -3020,12 +3020,12 @@ export async function rpgArcadeWager(
   const [personaData] = await getPersonaInfo(interaction.user.id);
   if (personaData.tokens < newBet) {
     const notEnough = '**You don\'t have enough to bet that much**\n';
-    return rpgArcadeGame(interaction, wagers[interaction.user.id].gameName, undefined, notEnough);
+    return rpgTavernGame(interaction, wagers[interaction.user.id].gameName, undefined, notEnough);
   }
 
   wagers[interaction.user.id].tokens = newBet;
 
-  return rpgArcadeGame(interaction, wagers[interaction.user.id].gameName);
+  return rpgTavernGame(interaction, wagers[interaction.user.id].gameName);
 }
 
 function sleep(ms:number):Promise<void> {
