@@ -75,6 +75,7 @@ const buttons = {
   accept: customButton('rpgAccept', 'Accept', '✅'),
   decline: customButton('rpgDecline', 'Decline', '❌'),
   start: customButton('rpgStart', 'Start', '🏁'),
+  quit: customButton('rpgQuit', 'Quit', '🛑'),
   town: customButton('rpgTown', 'Town', env.EMOJI_TOWN),
   work: customButton('rpgWork', 'Work', env.EMOJI_WORK),
   shop: customButton('rpgShop', 'Shop', env.EMOJI_SHOP),
@@ -128,18 +129,18 @@ const buttons = {
 
 const difficulties = [
   {
-    label: 'Easy Difficulty',
+    label: 'Normal Difficulty',
     value: 'easy',
     emoji: '🟢',
     default: true,
   },
   {
-    label: 'Medium Difficulty',
+    label: 'Hard Difficulty (50% difficulty bonus)',
     value: 'medium',
     emoji: '🟡',
   },
   {
-    label: 'Hard Difficulty',
+    label: 'Expert Difficulty (100% difficulty bonus)',
     value: 'hard',
     emoji: '🔴',
   },
@@ -147,20 +148,20 @@ const difficulties = [
 
 const numberOfQuestions = [
   {
-    label: '1 Question',
-    value: '1',
-    emoji: '1️⃣',
-  },
-  {
-    label: '5 Questions',
+    label: '5 Questions (50% perfect bonus)',
     value: '5',
     emoji: '5️⃣',
     default: true,
   },
   {
-    label: '10 Questions',
+    label: '10 Questions (100% perfect bonus)',
     value: '10',
     emoji: '🔟',
+  },
+  {
+    label: '20 Questions (200% perfect bonus)',
+    value: '20',
+    emoji: '2️⃣',
   },
 ];
 
@@ -2279,10 +2280,25 @@ const optionDict = {
     bonus: 1.5,
   },
   hard: {
-    name: 'Very Hard',
+    name: 'Expert',
     bonus: 2,
   },
 };
+
+const bonusDict = {
+  5: {
+    perfectBonus: 1.5,
+    perfectBonusMessage: ' *(+50% perfect bonus)*',
+  },
+  10: {
+    perfectBonus: 2,
+    perfectBonusMessage: ' *(+100% perfect bonus)*',
+  },
+  20: {
+    perfectBonus: 3,
+    perfectBonusMessage: ' *(+200% perfect bonus)*',
+  },
+}
 
 type TriviaQuestion = {
   category: string;
@@ -2381,10 +2397,13 @@ export async function rpgTrivia(
 
     const difficultyName = optionDict[chosenDifficulty as keyof typeof optionDict].name;
     const { bonus } = optionDict[chosenDifficulty as keyof typeof optionDict];
+    const { perfectBonus } = bonusDict[amountOfQuestions as keyof typeof bonusDict];
+    let perfectScore = bonusDict[amountOfQuestions as keyof typeof bonusDict].perfectBonusMessage;
     let bonusMessage = bonusMessageDict[chosenDifficulty as keyof typeof bonusMessageDict];
     let score = 0;
     let scoreMessage = '';
     let timedOut = false;
+    let gameQuit = false;
     let answerColor = Colors.Purple as ColorResolvable;
     let embedStatus = `Starting trivia with ${amountOfQuestions} questions!`;
     let questionAnswer = 'You have 30 seconds to answer each question.';
@@ -2453,11 +2472,14 @@ export async function rpgTrivia(
                   .setDisabled(false)
                   .setCustomId(choice)
                   .setEmoji(choiceEmoji(choice))
-                  .setStyle(ButtonStyle.Secondary)),
+                  .setStyle(ButtonStyle.Secondary))
+                  .concat([
+                    buttons.quit,
+                  ]),
               ),
             ],
           });
-        }, 5000);
+        }, 1000);
       } else {
         // If not the first question, edit the previous message
         setTimeout(async () => { // Wait 5 seconds before sending the next question
@@ -2469,7 +2491,10 @@ export async function rpgTrivia(
                   .setDisabled(false)
                   .setCustomId(choice)
                   .setEmoji(choiceEmoji(choice))
-                  .setStyle(ButtonStyle.Secondary)),
+                  .setStyle(ButtonStyle.Secondary))
+                  .concat([
+                    buttons.quit,
+                  ]),
               ),
             ],
           });
@@ -2518,13 +2543,18 @@ export async function rpgTrivia(
           await interaction.editReply({ // eslint-disable-line no-await-in-loop
             embeds: [embed],
             components: [
-              new ActionRowBuilder<ButtonBuilder>().addComponents(
-                choices.map(choice => new ButtonBuilder()
-                  .setDisabled(true)
-                  .setCustomId(choice)
-                  .setEmoji(choiceEmoji(choice))
-                  .setStyle(ButtonStyle.Secondary)),
-              ),
+              new ActionRowBuilder<ButtonBuilder>()
+                .addComponents(
+                  // flatten the array of components containing the existing buttons
+                  choices.map(choice => new ButtonBuilder()
+                    .setDisabled(true)
+                    .setCustomId(choice)
+                    .setEmoji(choiceEmoji(choice))
+                    .setStyle(ButtonStyle.Secondary))
+                  .concat([
+                    buttons.quit,
+                  ]),
+                ),
             ],
           });
         } else { // If the user answers incorrectly
@@ -2545,11 +2575,16 @@ export async function rpgTrivia(
                   .setDisabled(true)
                   .setCustomId(choice)
                   .setEmoji(choiceEmoji(choice))
-                  .setStyle(ButtonStyle.Secondary)),
+                  .setStyle(ButtonStyle.Secondary))
+                  .concat([
+                    buttons.quit,
+                  ]),
               ),
             ],
           });
         }
+
+
       } catch (error) { // If the user doesn't answer in time
         embedStatus = 'Time\'s up!';
         answerColor = Colors.Red as ColorResolvable;
@@ -2559,15 +2594,16 @@ export async function rpgTrivia(
 
       questionList.splice(0, 1); // Remove the first question from the array
       if (timedOut) break;
+      // if (gameQuit) break;
     }
     let payout = 0;
-    let perfectBonus = '';
+    perfectScore = '';
     if (score !== 0) { // The user got at least one question correct
       if (score === amountOfQuestions) { // Bonus for getting all questions correct
-        payout = ((score * bonus) + (score * 1.5));
-        perfectBonus = ' ***(+50% perfect score bonus)***';
+        payout = ((score * (bonus + perfectBonus)));
       } else {
         payout = (score * bonus);
+        perfectScore = '';
       }
       log.debug(F, `Payout: ${payout} tokens`);
       log.debug(F, `Rounded Payout: ${payout} tokens`);
@@ -2598,8 +2634,8 @@ export async function rpgTrivia(
         .setColor(Colors.Purple)
         .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
-        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectBonus}`, value: `*${scoreMessage}*` }) // eslint-disable-line max-len
-        .addFields({ name: `You earned ${payout} tokens!${bonusMessage}`, value: `You now have ${(personaData.tokens + payout)} tokens.` }) // eslint-disable-line max-len
+        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectScore}`, value: `*${scoreMessage}*` }) // eslint-disable-line max-len
+        .addFields({ name: `Earned: ${payout} tokens${bonusMessage}`, value: `Wallet: ${(personaData.tokens + payout)} tokens` }) // eslint-disable-line max-len
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
       reply = {
         embeds: [embed],
@@ -2607,6 +2643,7 @@ export async function rpgTrivia(
           new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
               buttons.start,
+              buttons.arcade,
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
@@ -2624,8 +2661,8 @@ export async function rpgTrivia(
         .setColor(Colors.Purple)
         .setTitle(`<:buttonTrivia:1079707985133191168> Trivia *(${difficultyName})*`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
-        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectBonus}`, value: `*${timeOutMessage}*` }) // eslint-disable-line max-len
-        .addFields({ name: `You earned ${payout} tokens!${bonusMessage}`, value: `You now have ${(personaData.tokens + payout)} tokens.` }) // eslint-disable-line max-len
+        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectScore}`, value: `*${timeOutMessage}*` }) // eslint-disable-line max-len
+        .addFields({ name: `Earned: ${payout} tokens${bonusMessage}`, value: `Wallet: ${(personaData.tokens + payout)} tokens` }) // eslint-disable-line max-len
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
       reply = {
         embeds: [embed],
@@ -2633,6 +2670,7 @@ export async function rpgTrivia(
           new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
               buttons.start,
+              buttons.arcade,
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
@@ -2702,6 +2740,7 @@ export async function rpgTrivia(
       new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           buttons.start,
+          buttons.arcade,
         ),
       new ActionRowBuilder<StringSelectMenuBuilder>()
         .addComponents(
@@ -2738,7 +2777,9 @@ export async function rpgTriviaGetQuestions(
     const fixedQuestion = he.unescape(questionData.question);
     const fixedCorrectAnswer = he.unescape(questionData.correct_answer);
     const fixedIncorrectAnswers = he.unescape(questionData.incorrect_answers.join(', '));
-    const fixedAnswers = [fixedIncorrectAnswers.split(', '), fixedCorrectAnswer];
+    log.debug(F, `Incorrect Answers: ${questionData.incorrect_answers} Fixed Incorrect Answers: ${fixedIncorrectAnswers}`)
+    const fixedAnswers = [...fixedIncorrectAnswers.split(', '), fixedCorrectAnswer];
+    log.debug(F, `Fixed Answers: ${fixedAnswers}`)
     // log.debug(F, `Broken Question: ${questionData.question}, Fixed Question: ${fixedQuestion}`);
     // log.debug(F, `Broken Answer: ${answers}, Fixed Answer: ${fixedAnswers}`);
     // Shuffle the answers (So the correct answer isn't always the last one)
