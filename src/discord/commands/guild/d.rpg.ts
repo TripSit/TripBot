@@ -2480,7 +2480,7 @@ export async function rpgTrivia(
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
 
       if (qNumber === 0) {
-        await (interaction as MessageComponentInteraction).update({});
+        await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
         const startingEmbed = new EmbedBuilder()
           .setColor(answerColor)
           .setTitle(`${env.EMOJI_TRIVIA} Trivia *(${difficultyName})*`)
