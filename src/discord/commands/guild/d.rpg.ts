@@ -2401,6 +2401,12 @@ const perfectScoreMessageList = [ // Random messages to display when the user go
   'Is this even Reality?',
 ];
 
+export async function getNewTimer(seconds: number) {
+  const currentDate = new Date();
+  const newDate = new Date(currentDate.getTime() + seconds * 1000);
+  return newDate;
+}
+
 export async function rpgTrivia(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
@@ -2420,6 +2426,7 @@ export async function rpgTrivia(
     const difficultyName = optionDict[chosenDifficulty as keyof typeof optionDict].name;
     const { bonus } = optionDict[chosenDifficulty as keyof typeof optionDict];
     const { perfectBonus } = bonusDict[amountOfQuestions as keyof typeof bonusDict];
+    let questionTimer = await getNewTimer(6);
     let perfectScore = bonusDict[amountOfQuestions as keyof typeof bonusDict].perfectBonusMessage;
     let bonusMessage = bonusMessageDict[chosenDifficulty as keyof typeof bonusMessageDict];
     let score = 0;
@@ -2470,22 +2477,24 @@ export async function rpgTrivia(
 
       // Get the first question from the array
       const [questionData] = questionList;
-
       const answerMap = new Map(questionData.all_answers.map((answer, index) => [choices[index], `**${choices[index]}** ${answer}`])); // eslint-disable-line max-len
+      questionTimer = await getNewTimer(35);
       let embed = new EmbedBuilder()
         .setColor(answerColor)
         .setTitle(`${env.EMOJI_TRIVIA} Trivia *(${difficultyName})*`)
         .addFields({ name: `Question ${qNumber + 1} of ${amountOfQuestions}`, value: questionData.question })
         .addFields({ name: 'Choices', value: [...answerMap.values()].join('\n') })
+        .addFields({ name: `Time's up <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: ' '})
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
 
       if (qNumber === 0) {
         await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
+        questionTimer = await getNewTimer(6);
         const startingEmbed = new EmbedBuilder()
           .setColor(answerColor)
           .setTitle(`${env.EMOJI_TRIVIA} Trivia *(${difficultyName})*`)
-          .addFields({ name: `Starting Trivia with ${amountOfQuestions} questions...`, value: ' ' })
-          .addFields({ name: 'Get ready!', value: 'You have 30 seconds to answer each question.' })
+          .addFields({ name: `Loading Trivia with ${amountOfQuestions} questions...`, value: ' ' })
+          .addFields({ name: `Starting <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: 'Get ready!'})
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
         await interaction.editReply({ embeds: [startingEmbed], components: [] }); // eslint-disable-line no-await-in-loop, max-len
         // If it's the first question, send a new message
@@ -2505,7 +2514,7 @@ export async function rpgTrivia(
               ),
             ],
           });
-        }, 5000);
+        }, 4200);
       } else {
         // If not the first question, edit the previous message
         setTimeout(async () => { // Wait 5 seconds before sending the next question
@@ -2524,7 +2533,7 @@ export async function rpgTrivia(
               ),
             ],
           });
-        }, 5000);
+        }, 4200);
       }
 
       // Filter for the buttons
@@ -2563,13 +2572,14 @@ export async function rpgTrivia(
         log.debug(F, `Correct answer was: ${questionData.correct_answer}`);
 
         if (answer === questionData.correct_answer) { // If the user answers correctly
+          questionTimer = await getNewTimer(6);
           score += 1;
           embed = new EmbedBuilder()
             .setColor(Colors.Green as ColorResolvable)
             .setTitle(`${env.EMOJI_TRIVIA} Trivia *(${difficultyName})*`)
             .addFields({ name: 'Correct!', value: `The answer was **${questionData.correct_answer}.**` })
             .addFields({ name: 'Current Score', value: `${score} of ${(qNumber + 1)}` })
-            .addFields({ name: 'Next question in 5 seconds...', value: ' ' })
+            .addFields({ name: `Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: ' ' })
             .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
           embedStatus = 'Correct!';
           questionAnswer = `The answer was **${questionData.correct_answer}.**`;
@@ -2591,12 +2601,13 @@ export async function rpgTrivia(
             ],
           });
         } else { // If the user answers incorrectly
+          questionTimer = await getNewTimer(6);
           embed = new EmbedBuilder()
             .setColor(Colors.Grey as ColorResolvable)
             .setTitle(`${env.EMOJI_TRIVIA} Trivia *(${difficultyName})*`)
             .addFields({ name: 'Incorrect!', value: `The correct answer was **${questionData.correct_answer}.**` })
             .addFields({ name: 'Current Score:', value: `${score} of ${(qNumber + 1)}` })
-            .addFields({ name: 'Next question in 5 seconds...', value: ' ' })
+            .addFields({ name: `Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: ' ' })
             .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
           embedStatus = 'Incorrect!';
           questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
@@ -2791,6 +2802,16 @@ export async function rpgTrivia(
       .setTitle(`${env.EMOJI_TRIVIA} Trivia`)
       .setDescription(stripIndents`
         You ${rand(text.enter)} the trivia parlor where you can test your knowledge of random facts!
+
+        **How to play:**
+        - All questions are multiple choice.
+        - Select a difficulty and number of questions
+        - Answer the questions within 30 seconds
+
+        - Earn tokens for each correct answer
+        - Earn bonus tokens if you get all questions correct
+
+       *(Multiplayer coming soon!)*
       `)
       .setColor(Colors.Green)],
     components: [
