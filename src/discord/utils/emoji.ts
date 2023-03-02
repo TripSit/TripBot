@@ -12,7 +12,7 @@ const F = f(__filename); // eslint-disable-line
 export async function emojiCache(client: Client):Promise<void> {
   global.emojiGuildA = await client.guilds.fetch(env.DISCORD_EMOJI_GUILD_A);
   await global.emojiGuildA.emojis.fetch();
-  global.emoji = get;
+  global.emojiGet = get;
   global.buttons = {} as Buttons;
   global.buttons.name = await customButton('rpgName', 'Name', '📝', ButtonStyle.Primary);
   global.buttons.accept = await customButton('rpgAccept', 'Accept', '✅', ButtonStyle.Success);
@@ -70,7 +70,7 @@ async function customButton(
   emojiName: string,
   style?: ButtonStyle,
 ):Promise<ButtonBuilder> {
-  log.debug(F, `await customButton(${customId}, ${label}, ${emojiName}, ${style})`);
+  // log.debug(F, `await customButton(${customId}, ${label}, ${emojiName}, ${style})`);
   const button = new ButtonBuilder();
 
   button.setCustomId(customId);

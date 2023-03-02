@@ -9,7 +9,7 @@ declare global {
   var lpmDict: LpmDict; // eslint-disable-line
   var lpmTime: number[]; // eslint-disable-line
   var emojiGuildA: Guild; // eslint-disable-line
-  var emoji: (name:string) => Emoji; // eslint-disable-line
+  var emojiGet: (name:string) => Emoji; // eslint-disable-line
   var buttons: Buttons; // eslint-disable-line
 }
 

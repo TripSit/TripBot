@@ -964,7 +964,7 @@ export async function rpgTown(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-      .setTitle(`${emoji('buttonTown')} Town`)
+      .setTitle(`${emojiGet('buttonTown')} Town`)
       .setDescription(stripIndents`
       You ${rand(text.enter)} TripTown, a new settlement on the edge of Triptopia, the TripSit Kingdom.
 
@@ -1011,12 +1011,12 @@ export async function rpgBounties(
   const contracts = {
     quest: {
       success: {
-        title: `${emoji('buttonQuest')} Quest Success`,
+        title: `${emojiGet('buttonQuest')} Quest Success`,
         description: stripIndents`${rand(text.quest)}`,
         color: Colors.Green,
       },
       fail: {
-        title: `${emoji('buttonQuest')} Quest Fail`,
+        title: `${emojiGet('buttonQuest')} Quest Fail`,
         description: stripIndents`
           There are no more quests available at the moment. New quests are posted every hour!
         `,
@@ -1025,12 +1025,12 @@ export async function rpgBounties(
     },
     dungeon: {
       success: {
-        title: `${emoji('buttonDungeon')} Dungeon Success`,
+        title: `${emojiGet('buttonDungeon')} Dungeon Success`,
         description: stripIndents`${rand(text.dungeon)}`,
         color: Colors.Green,
       },
       fail: {
-        title: `${emoji('buttonDungeon')} Dungeon Fail`,
+        title: `${emojiGet('buttonDungeon')} Dungeon Fail`,
         description: stripIndents`
           You already cleared a dungeon today, you're still tired and need to prepare.
         `,
@@ -1039,14 +1039,14 @@ export async function rpgBounties(
     },
     raid: {
       success: {
-        title: `${emoji('buttonRaid')} Raid Success`,
+        title: `${emojiGet('buttonRaid')} Raid Success`,
         description: stripIndents`
           You stormed into Moonbear's office, rustle their jimmies and stole {tokens} TripTokens!
         `,
         color: Colors.Green,
       },
       fail: {
-        title: `${emoji('buttonRaid')} Raid Fail`,
+        title: `${emojiGet('buttonRaid')} Raid Fail`,
         description: stripIndents`
           You've already raided Moonbear's office this week, give them a break!
         `,
@@ -1166,7 +1166,7 @@ export async function rpgBounties(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-      .setTitle(`${emoji('buttonBounties')} Bounties`)
+      .setTitle(`${emojiGet('buttonBounties')} Bounties`)
       .setDescription(stripIndents`
       You are at the bounty board, you can go on a quest, clear a dungeon, or go on a raid.
     `)
@@ -1201,12 +1201,12 @@ export async function rpgMarket(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-      .setTitle(`${emoji('buttonMarket')} Market`)
+      .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`
       You are in the local market, you can buy some items to help you on your journey.
 
-      ${emoji('itemMultiplier')} ***Multipliers*** can be used to increase the amount of tokens you earn.
-      ${emoji('itemBackground')} ***Backgrounds*** can be used to personalize your /profile and /levels.
+      ${emojiGet('itemMultiplier')} ***Multipliers*** can be used to increase the amount of tokens you earn.
+      ${emojiGet('itemBackground')} ***Backgrounds*** can be used to personalize your /profile and /levels.
       ***More items coming soon! Check back later.***
       
       Wallet: ${personaTokens} tokens
@@ -1305,12 +1305,12 @@ export async function rpgMarketChange(
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-    .setTitle(`${emoji('buttonMarket')} Market`)
+    .setTitle(`${emojiGet('buttonMarket')} Market`)
     .setDescription(stripIndents`
       You are in the local market, you can buy some items to help you on your journey.
 
-      ${emoji('itemMultiplier')} ***Multipliers*** can be used to increase the amount of tokens you earn.
-      ${emoji('itemBackground')} ***Backgrounds*** can be used to personalize your /profile and /levels.
+      ${emojiGet('itemMultiplier')} ***Multipliers*** can be used to increase the amount of tokens you earn.
+      ${emojiGet('itemBackground')} ***Backgrounds*** can be used to personalize your /profile and /levels.
       ***More items coming soon! Check back later.***
 
       Wallet: ${personaTokens} tokens
@@ -1351,7 +1351,7 @@ export async function rpgMarketInventory(
   const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
   const inventoryString = inventoryData.length > 0
     ? stripIndents`
-    ${emoji('buttonInventory')} **Inventory**
+    ${emojiGet('buttonInventory')} **Inventory**
       ${inventoryList}
       `
     : '';
@@ -1427,7 +1427,7 @@ export async function rpgMarketAccept(
     const embed = embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-      .setTitle(`${emoji('buttonMarket')} Market`)
+      .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`**You do not have enough tokens to buy this item.**
     
     ${description}`)
@@ -1478,7 +1478,7 @@ export async function rpgMarketAccept(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-      .setTitle(`${emoji('buttonMarket')} Market`)
+      .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemData.cost} TripTokens.**
       
       ${description}`)
@@ -1582,7 +1582,7 @@ export async function rpgHome(
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-    .setTitle(`${emoji('buttonHome')} Home`)
+    .setTitle(`${emojiGet('buttonHome')} Home`)
     .setDescription(stripIndents`${message !== null ? message : ''}
 
       You ${rand(text.enter)} your home.
@@ -1801,7 +1801,7 @@ export async function rpgHomeInventory(
   const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
   const inventoryString = inventoryData.length > 0
     ? stripIndents`
-      ${emoji('buttonInventory')} **Inventory**
+      ${emojiGet('buttonInventory')} **Inventory**
       ${inventoryList}
       `
     : '';
@@ -1936,7 +1936,7 @@ export async function rpgArcade(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-      .setTitle(`${emoji('buttonArcade')} Arcade`)
+      .setTitle(`${emojiGet('buttonArcade')} Arcade`)
       .setDescription(stripIndents`
         You ${rand(text.enter)} the arcade and see a variety of games.
       `)
@@ -2362,17 +2362,17 @@ export async function rpgTrivia(
     let answerColor = Colors.Purple as ColorResolvable;
     let embedStatus = `Starting trivia with ${amountOfQuestions} questions!`;
     let questionAnswer = 'You have 30 seconds to answer each question.';
-    const choices = [emoji('buttonBoxA'), emoji('buttonBoxB'), emoji('buttonBoxC'), emoji('buttonBoxD')];
+    const choices = [emojiGet('buttonBoxA'), emojiGet('buttonBoxB'), emojiGet('buttonBoxC'), emojiGet('buttonBoxD')];
     const choiceEmoji = (choice: string) => { // emoji for the buttons without the emoji name
       switch (choice) {
-        case emoji('buttonBoxA'):
-          return emoji('buttonBoxA').slice(13, -1);
-        case emoji('buttonBoxB'):
-          return emoji('buttonBoxB').slice(13, -1);
-        case emoji('buttonBoxC'):
-          return emoji('buttonBoxC').slice(13, -1);
-        case emoji('buttonBoxD'):
-          return emoji('buttonBoxD').slice(13, -1);
+        case emojiGet('buttonBoxA'):
+          return emojiGet('buttonBoxA').slice(13, -1);
+        case emojiGet('buttonBoxB'):
+          return emojiGet('buttonBoxB').slice(13, -1);
+        case emojiGet('buttonBoxC'):
+          return emojiGet('buttonBoxC').slice(13, -1);
+        case emojiGet('buttonBoxD'):
+          return emojiGet('buttonBoxD').slice(13, -1);
         default:
           return '❓';
       }
@@ -2407,7 +2407,7 @@ export async function rpgTrivia(
       questionTimer = await getNewTimer(35); // eslint-disable-line no-await-in-loop
       let embed = new EmbedBuilder()
         .setColor(answerColor)
-        .setTitle(`${emoji('buttonTrivia')} Trivia *(${difficultyName})*`)
+        .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
         .addFields({ name: `Question ${qNumber + 1} of ${amountOfQuestions}`, value: questionData.question })
         .addFields({ name: 'Choices', value: [...answerMap.values()].join('\n') })
         .addFields({ name: `Time's up <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: ' ' })
@@ -2418,7 +2418,7 @@ export async function rpgTrivia(
         questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
         const startingEmbed = new EmbedBuilder()
           .setColor(answerColor)
-          .setTitle(`${emoji('buttonTrivia')} Trivia *(${difficultyName})*`)
+          .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
           .addFields({ name: `Loading Trivia with ${amountOfQuestions} questions...`, value: ' ' })
           .addFields({ name: `Starting <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: 'Get ready!' })
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
@@ -2502,7 +2502,7 @@ export async function rpgTrivia(
           score += 1;
           embed = new EmbedBuilder()
             .setColor(Colors.Green as ColorResolvable)
-            .setTitle(`${emoji('buttonTrivia')} Trivia *(${difficultyName})*`)
+            .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
             .addFields({ name: 'Correct!', value: `The answer was **${questionData.correct_answer}.**` })
             .addFields({ name: 'Current Score', value: `${score} of ${(qNumber + 1)}` })
             .addFields({ name: `Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: ' ' })
@@ -2530,7 +2530,7 @@ export async function rpgTrivia(
           questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
           embed = new EmbedBuilder()
             .setColor(Colors.Grey as ColorResolvable)
-            .setTitle(`${emoji('buttonTrivia')} Trivia *(${difficultyName})*`)
+            .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
             .addFields({ name: 'Incorrect!', value: `The correct answer was **${questionData.correct_answer}.**` })
             .addFields({ name: 'Current Score:', value: `${score} of ${(qNumber + 1)}` })
             .addFields({ name: `Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: ' ' })
@@ -2599,7 +2599,7 @@ export async function rpgTrivia(
       log.debug(F, `Score Message: ${scoreMessage}`);
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
-        .setTitle(`${emoji('buttonTrivia')} Trivia *(${difficultyName})*`)
+        .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
         .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectScore}`, value: `*${scoreMessage}*` }) // eslint-disable-line max-len
         .addFields({ name: `Earned: ${payout} tokens${bonusMessage}`, value: `Wallet: ${(personaData.tokens + payout)} tokens` }) // eslint-disable-line max-len
@@ -2626,7 +2626,7 @@ export async function rpgTrivia(
       const gameQuitMessage = gameQuitMessageList[Math.floor(Math.random() * gameQuitMessageList.length)];
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
-        .setTitle(`${emoji('buttonTrivia')} Trivia *(${difficultyName})*`)
+        .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
         .addFields({ name: 'Game Quit.', value: ' ' })
         .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectScore}`, value: `${gameQuitMessage}` }) // eslint-disable-line max-len
         .addFields({ name: `Earned: ${payout} tokens${bonusMessage}`, value: `Wallet: ${(personaData.tokens + payout)} tokens` }) // eslint-disable-line max-len
@@ -2653,7 +2653,7 @@ export async function rpgTrivia(
       const timeOutMessage = timeOutMessageList[Math.floor(Math.random() * timeOutMessageList.length)];
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
-        .setTitle(`${emoji('buttonTrivia')} Trivia *(${difficultyName})*`)
+        .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
         .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
         .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectScore}`, value: `*${timeOutMessage}*` }) // eslint-disable-line max-len
         .addFields({ name: `Earned: ${payout} tokens${bonusMessage}`, value: `Wallet: ${(personaData.tokens + payout)} tokens` }) // eslint-disable-line max-len
@@ -2725,7 +2725,7 @@ export async function rpgTrivia(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-      .setTitle(`${emoji('buttonTrivia')} Trivia`)
+      .setTitle(`${emojiGet('buttonTrivia')} Trivia`)
       .setDescription(stripIndents`
         You ${rand(text.enter)} the trivia parlor where you can test your knowledge of random facts!
 
