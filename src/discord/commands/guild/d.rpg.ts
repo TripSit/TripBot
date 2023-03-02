@@ -2403,8 +2403,7 @@ const perfectScoreMessageList = [ // Random messages to display when the user go
 
 export async function getNewTimer(seconds: number) {
   const currentDate = new Date();
-  const newDate = new Date(currentDate.getTime() + seconds * 1000);
-  return newDate;
+  return new Date(currentDate.getTime() + seconds * 1000);
 }
 
 export async function rpgTrivia(
@@ -2478,23 +2477,23 @@ export async function rpgTrivia(
       // Get the first question from the array
       const [questionData] = questionList;
       const answerMap = new Map(questionData.all_answers.map((answer, index) => [choices[index], `**${choices[index]}** ${answer}`])); // eslint-disable-line max-len
-      questionTimer = await getNewTimer(35);
+      questionTimer = await getNewTimer(35); // eslint-disable-line no-await-in-loop
       let embed = new EmbedBuilder()
         .setColor(answerColor)
         .setTitle(`${env.EMOJI_TRIVIA} Trivia *(${difficultyName})*`)
         .addFields({ name: `Question ${qNumber + 1} of ${amountOfQuestions}`, value: questionData.question })
         .addFields({ name: 'Choices', value: [...answerMap.values()].join('\n') })
-        .addFields({ name: `Time's up <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: ' '})
+        .addFields({ name: `Time's up <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: ' ' })
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
 
       if (qNumber === 0) {
         await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
-        questionTimer = await getNewTimer(6);
+        questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
         const startingEmbed = new EmbedBuilder()
           .setColor(answerColor)
           .setTitle(`${env.EMOJI_TRIVIA} Trivia *(${difficultyName})*`)
           .addFields({ name: `Loading Trivia with ${amountOfQuestions} questions...`, value: ' ' })
-          .addFields({ name: `Starting <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: 'Get ready!'})
+          .addFields({ name: `Starting <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: 'Get ready!' })
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
         await interaction.editReply({ embeds: [startingEmbed], components: [] }); // eslint-disable-line no-await-in-loop, max-len
         // If it's the first question, send a new message
@@ -2572,7 +2571,7 @@ export async function rpgTrivia(
         log.debug(F, `Correct answer was: ${questionData.correct_answer}`);
 
         if (answer === questionData.correct_answer) { // If the user answers correctly
-          questionTimer = await getNewTimer(6);
+          questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
           score += 1;
           embed = new EmbedBuilder()
             .setColor(Colors.Green as ColorResolvable)
@@ -2601,7 +2600,7 @@ export async function rpgTrivia(
             ],
           });
         } else { // If the user answers incorrectly
-          questionTimer = await getNewTimer(6);
+          questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
           embed = new EmbedBuilder()
             .setColor(Colors.Grey as ColorResolvable)
             .setTitle(`${env.EMOJI_TRIVIA} Trivia *(${difficultyName})*`)
