@@ -1,13 +1,52 @@
 import {
+  APIMessageComponentEmoji,
   ButtonBuilder,
   ButtonStyle,
   Client,
-  // ComponentEmojiResolvable,
-  // APIMessageComponentEmoji,
+  Emoji,
+  StringSelectMenuBuilder,
 } from 'discord.js';
-import { Buttons } from '../../global/@types/global';
+import { Buttons, Menus } from '../../global/@types/global';
 
 const F = f(__filename); // eslint-disable-line
+
+export const difficulties = [
+  {
+    label: 'Normal Difficulty',
+    value: 'easy',
+    emoji: 'menuNormal',
+    default: true,
+  },
+  {
+    label: 'Hard Difficulty (50% difficulty bonus)',
+    value: 'medium',
+    emoji: 'menuHard',
+  },
+  {
+    label: 'Expert Difficulty (100% difficulty bonus)',
+    value: 'hard',
+    emoji: 'menuExpert',
+  },
+];
+
+export const numberOfQuestions = [
+  {
+    label: '5 Questions (50% perfect bonus)',
+    value: '5',
+    emoji: 'menuShort',
+    default: true,
+  },
+  {
+    label: '10 Questions (100% perfect bonus)',
+    value: '10',
+    emoji: 'menuNormal',
+  },
+  {
+    label: '20 Questions (200% perfect bonus)',
+    value: '20',
+    emoji: 'menuLong',
+  },
+];
 
 export async function emojiCache(client: Client):Promise<void> {
   global.emojiGuildRPG = await client.guilds.fetch(env.DISCORD_EMOJI_GUILD_RPG);
@@ -67,6 +106,62 @@ export async function emojiCache(client: Client):Promise<void> {
   global.buttons.blackjackDouble = customButton('rpgBlackjackDouble', 'Double', '🃏', ButtonStyle.Primary);
   global.buttons.blackjackSplit = customButton('rpgBlackjackSplit', 'Split', '🃏', ButtonStyle.Primary);
   global.buttons.blackjackSurrender = customButton('rpgBlackjackSurrender', 'Surrender', '🃏', ButtonStyle.Primary);
+
+  global.menus = {} as Menus;
+  global.menus.item = new StringSelectMenuBuilder()
+    .setCustomId('rpgGeneralSelect')
+    .setPlaceholder('Select an item to buy');
+  global.menus.background = new StringSelectMenuBuilder()
+    .setCustomId('rpgBackgroundSelect')
+    .setPlaceholder('Select a background to use.');
+  global.menus.name = new StringSelectMenuBuilder()
+    .setCustomId('rpgNameDisplay')
+    .setPlaceholder('No Name!')
+    .setOptions([{
+      label: 'No Name',
+      value: 'nameless',
+      emoji: '👤',
+      default: true,
+    }]);
+  global.menus.class = new StringSelectMenuBuilder()
+    .setCustomId('rpgClass')
+    .setPlaceholder('Select a class');
+  global.menus.species = new StringSelectMenuBuilder()
+    .setCustomId('rpgSpecies')
+    .setPlaceholder('Pick a species');
+  global.menus.guild = new StringSelectMenuBuilder()
+    .setCustomId('rpgGuild')
+    .setPlaceholder('Select a guild');
+
+  // log.debug(F, `difficulties: ${JSON.stringify(difficulties)}`);
+  const diff = difficulties.map(d => ({
+    label: d.label,
+    value: d.value,
+    emoji: `<:${(get(d.emoji) as Emoji).identifier}>`,
+    default: d.default,
+  }));
+
+  // log.debug(F, `diff: ${JSON.stringify(diff, null, 2)}`);
+
+  global.menus.difficulty = new StringSelectMenuBuilder()
+    .setCustomId('rpgDifficulty')
+    .setPlaceholder('Easy')
+    .setOptions(diff);
+
+  // log.debug(F, `numberOfQuestions: ${JSON.stringify(numberOfQuestions)}`);
+  const qs = numberOfQuestions.map(q => ({
+    label: q.label,
+    value: q.value,
+    emoji: `<:${(get(q.emoji) as Emoji).identifier}>`,
+    default: q.default,
+  }));
+
+  // log.debug(F, `qs: ${JSON.stringify(qs, null, 2)}`);
+
+  global.menus.questions = new StringSelectMenuBuilder()
+    .setCustomId('rpgQuestionLimit')
+    .setPlaceholder('How many questions?')
+    .setOptions(qs);
 }
 
 function customButton(
@@ -76,33 +171,53 @@ function customButton(
   style?: ButtonStyle,
 ):ButtonBuilder {
   // log.debug(F, `await customButton(${customId}, ${label}, ${emojiName}, ${style})`);
-  const button = new ButtonBuilder();
-
-  button.setCustomId(customId);
-  button.setLabel(label);
-  button.setStyle(style || ButtonStyle.Success);
 
   // check if name is already an emoji and if so, return that
   if (emojiName.length < 4) {
-    button.setEmoji(emojiName);
-    return button;
+    return new ButtonBuilder()
+      .setEmoji(emojiName)
+      .setCustomId(customId)
+      .setLabel(label)
+      .setStyle(style || ButtonStyle.Success);
   }
 
-  button.setEmoji(get(emojiName));
+  // log.debug(F, `get(${emojiName}) = ${get(emojiName)}`);
 
-  return new ButtonBuilder();
+  const emoji = get(emojiName);
+  // log.debug(F, `emoji: ${JSON.stringify(emoji, null, 2)} (type: ${typeof emoji})`);
+
+  return new ButtonBuilder()
+    .setEmoji(emoji.id as string)
+    .setCustomId(customId)
+    .setLabel(label)
+    .setStyle(style || ButtonStyle.Success);
 }
 
-export function get(name:string):string {
+export function get(name:string):APIMessageComponentEmoji {
+  // log.debug(F, `await get(${name})`);
   if (!global.emojiGuildRPG) {
     throw new Error('Emoji cache not initialized!');
   }
 
+  if (name.startsWith('<:')) {
+    // log.debug(F, `name.startsWith('<:')`);
+    const emoji = name.match(/<:(.*):(\d+)>/);
+    // log.debug(F, `emoji: ${JSON.stringify(emoji, null, 2)}`);
+    if (!emoji) {
+      throw new Error(`Emoji ${name} not found!`);
+    }
+    return {
+      name: emoji[1],
+      id: emoji[2],
+    };
+  }
+
   const emojiName = global.emojiGuildRPG.emojis.cache.find(emoji => emoji.name === name)
     ?? global.emojiGuildRPG.emojis.cache.find(emoji => emoji.name === name);
+  // log.debug(F, `emojiName: ${emojiName}`);
   if (!emojiName) {
     throw new Error(`Emoji ${name} not found!`);
   }
 
-  return emojiName.name as string;
+  return emojiName as APIMessageComponentEmoji;
 }

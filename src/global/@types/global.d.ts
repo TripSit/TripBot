@@ -12,11 +12,23 @@ declare global {
   var emojiGuildMain: Guild; // eslint-disable-line
   var emojiGet: (name:string) => Emoji; // eslint-disable-line
   var buttons: Buttons; // eslint-disable-line
+  var menus: Menus; // eslint-disable-line
 }
 
 export {};
 
 export type GameName = 'Coinflip' | 'Roulette' | 'Blackjack' | 'Slots';
+
+export type Menus = {
+  item: StringSelectMenuBuilder,
+  background: StringSelectMenuBuilder,
+  name: StringSelectMenuBuilder,
+  class: StringSelectMenuBuilder,
+  species: StringSelectMenuBuilder,
+  guild: StringSelectMenuBuilder,
+  difficulty: StringSelectMenuBuilder,
+  questions: StringSelectMenuBuilder,
+};
 
 export type Buttons = {
   'name': ButtonBuilder,
