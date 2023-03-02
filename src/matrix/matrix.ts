@@ -3,6 +3,7 @@ import {
   SimpleFsStorageProvider,
   AutojoinRoomsMixin,
 } from 'matrix-bot-sdk';
+
 import * as commands from './commands';
 
 const F = f(__filename);
@@ -37,10 +38,13 @@ async function handleCommand(roomId: string, event: any) {
     // remove the 1st element of the list and only keep the args, also remove quotes
     list.shift();
     const args = list.map((arg:string) => arg.replace(/['"]+/g, ''));
+    // inject required arguments
+    args.unshift(roomId, event, client);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const resp = await (commands as any)[command].default.apply(null, args); // call the function and get a message back
-    await client.replyNotice(roomId, event, resp); // send the message in response to the user
+    await (commands as any)[command].default.apply(null, args); // run the command
+    return;
+    // await client.replyNotice(roomId, event, resp); // send the message in response to the user
   } catch (e) {
     log.error(F, e as string);
   }
@@ -53,5 +57,5 @@ async function startMatrix() {
 // Before we start the bot, register our command handler
   client.on('room.message', handleCommand);
   // Now that everything is set up, start the bot. This will start the sync loop and run until killed.
-  client.start().then(() => log.info(F, 'Bot started!'));
+  client.start().then(() => log.info(F, 'Matrix Bot started!'));
 }
