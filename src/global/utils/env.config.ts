@@ -304,7 +304,7 @@ export const env = {
   EMOJI_TOWN: isProd ? '🏘️' : '<:buttonTown:1080407223978692648>',
   EMOJI_BOUNTIES: isProd ? '👷' : '<:buttonBounties:1080407301552353351>',
   EMOJI_MARKET: isProd ? '🛒' : '<:buttonMarket:1080407342908199042>',
-  EMOJI_TAVERN: isProd ? '🎮' : '<:buttonTavern:1080455921450369094>',
+  EMOJI_ARCADE: isProd ? '🎮' : '<:buttonArcade:1080455921450369094>',
   EMOJI_START: isProd ? '🏁' : '<:buttonStart:1080470747983655012>',
   EMOJI_QUIT: isProd ? '🛑' : '<:buttonQuit:1080470765448736788>',
   EMOJI_HOME: isProd ? '🛖' : '<:buttonHome:1080454045455626240>',

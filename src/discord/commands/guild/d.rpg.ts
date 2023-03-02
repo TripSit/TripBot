@@ -79,7 +79,7 @@ const buttons = {
   town: customButton('rpgTown', 'Town', env.EMOJI_TOWN, ButtonStyle.Primary),
   bounties: customButton('rpgBounties', 'Bounties', env.EMOJI_BOUNTIES, ButtonStyle.Primary),
   market: customButton('rpgMarket', 'Market', env.EMOJI_MARKET, ButtonStyle.Primary),
-  tavern: customButton('rpgTavern', 'Tavern', env.EMOJI_TAVERN, ButtonStyle.Primary),
+  arcade: customButton('rpgArcade', 'Arcade', env.EMOJI_ARCADE, ButtonStyle.Primary),
   home: customButton('rpgHome', 'Home', env.EMOJI_HOME, ButtonStyle.Primary),
   quest: customButton('rpgQuest', 'Quest', env.EMOJI_QUEST, ButtonStyle.Secondary),
   dungeon: customButton('rpgDungeon', 'Dungeon', env.EMOJI_DUNGEON, ButtonStyle.Secondary),
@@ -453,9 +453,9 @@ const items = {
       effect_value: 'LineLeaves',
       emoji: backgroundEmoji,
     },
-    TavernCarpet: {
-      label: 'TavernCarpet',
-      value: 'TavernCarpet',
+    ArcadeCarpet: {
+      label: 'ArcadeCarpet',
+      value: 'ArcadeCarpet',
       description: 'Background',
       quantity: 1,
       weight: 0,
@@ -463,7 +463,7 @@ const items = {
       equipped: false,
       consumable: false,
       effect: 'background',
-      effect_value: 'TavernCarpet',
+      effect_value: 'ArcadeCarpet',
       emoji: backgroundEmoji,
     },
     Topography: {
@@ -848,8 +848,8 @@ export const dRpg: SlashCommand = {
       .setName('raid')
       .setDescription('Raid a boss and earn 50 tokens!'))
     .addSubcommand(subcommand => subcommand
-      .setName('tavern')
-      .setDescription('Go to the tavern'))
+      .setName('arcade')
+      .setDescription('Go to the arcade'))
     .addSubcommand(subcommand => subcommand
       .setName('coinflip')
       .setDescription('Go to the coinflip game'))
@@ -939,24 +939,24 @@ export const dRpg: SlashCommand = {
     if (subcommand === 'home') {
       await interaction.editReply(await rpgHome(interaction, ''));
     }
-    if (subcommand === 'tavern') {
-      await interaction.editReply(await rpgTavern(interaction));
+    if (subcommand === 'arcade') {
+      await interaction.editReply(await rpgArcade(interaction));
     }
     if (subcommand === 'coinflip') {
-      await interaction.editReply(await rpgTavernGame(interaction, 'Coinflip'));
+      await interaction.editReply(await rpgArcadeGame(interaction, 'Coinflip'));
     }
     if (subcommand === 'roulette') {
-      await interaction.editReply(await rpgTavernGame(interaction, 'Roulette'));
+      await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette'));
     }
     if (subcommand === 'trivia') {
       await interaction.editReply(await rpgTrivia(interaction));
     }
 
     // if (subcommand === 'blackjack') {
-    //   await interaction.editReply(await rpgTavern(interaction));
+    //   await interaction.editReply(await rpgArcade(interaction));
     // }
     // if (subcommand === 'slots') {
-    //   await interaction.editReply(await rpgTavern(interaction));
+    //   await interaction.editReply(await rpgArcade(interaction));
     // }
 
     // Button collector
@@ -965,38 +965,38 @@ export const dRpg: SlashCommand = {
       if (i.customId === 'rpgTown') await i.update(await rpgTown(i));
       else if (i.customId === 'rpgBounties') await i.update(await rpgBounties(i, null));
       else if (i.customId === 'rpgMarket') await i.update(await rpgMarket(i));
-      else if (i.customId === 'rpgTavern') await i.update(await rpgTavern(i));
-      else if (i.customId === 'rpgWager1') await i.update(await rpgTavernWager(i));
-      else if (i.customId === 'rpgWager10') await i.update(await rpgTavernWager(i));
-      else if (i.customId === 'rpgWager100') await i.update(await rpgTavernWager(i));
-      else if (i.customId === 'rpgWager1000') await i.update(await rpgTavernWager(i));
-      else if (i.customId === 'rpgWager10000') await i.update(await rpgTavernWager(i));
-      else if (i.customId === 'rpgCoinFlip') await i.update(await rpgTavernGame(i, 'Coinflip'));
-      else if (i.customId === 'rpgRoulette') await i.update(await rpgTavernGame(i, 'Roulette'));
+      else if (i.customId === 'rpgArcade') await i.update(await rpgArcade(i));
+      else if (i.customId === 'rpgWager1') await i.update(await rpgArcadeWager(i));
+      else if (i.customId === 'rpgWager10') await i.update(await rpgArcadeWager(i));
+      else if (i.customId === 'rpgWager100') await i.update(await rpgArcadeWager(i));
+      else if (i.customId === 'rpgWager1000') await i.update(await rpgArcadeWager(i));
+      else if (i.customId === 'rpgWager10000') await i.update(await rpgArcadeWager(i));
+      else if (i.customId === 'rpgCoinFlip') await i.update(await rpgArcadeGame(i, 'Coinflip'));
+      else if (i.customId === 'rpgRoulette') await i.update(await rpgArcadeGame(i, 'Roulette'));
 
       else if (i.customId === 'rpgTrivia') await i.update(await rpgTrivia(i));
       else if (i.customId === 'rpgDifficulty') await i.update(await rpgTrivia(i));
       else if (i.customId === 'rpgQuestionLimit') await i.update(await rpgTrivia(i));
       else if (i.customId === 'rpgStart') await i.editReply(await rpgTrivia(i));
 
-      else if (i.customId === 'rpgRouletteRed') await i.editReply(await rpgTavernGame(i, 'Roulette', 'red'));
-      else if (i.customId === 'rpgRouletteBlack') await i.editReply(await rpgTavernGame(i, 'Roulette', 'black'));
-      else if (i.customId === 'rpgRouletteFirst') await i.editReply(await rpgTavernGame(i, 'Roulette', 'first'));
-      else if (i.customId === 'rpgRouletteSecond') await i.editReply(await rpgTavernGame(i, 'Roulette', 'second'));
-      else if (i.customId === 'rpgRouletteThird') await i.editReply(await rpgTavernGame(i, 'Roulette', 'third'));
+      else if (i.customId === 'rpgRouletteRed') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'red'));
+      else if (i.customId === 'rpgRouletteBlack') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'black'));
+      else if (i.customId === 'rpgRouletteFirst') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'first'));
+      else if (i.customId === 'rpgRouletteSecond') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'second'));
+      else if (i.customId === 'rpgRouletteThird') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'third'));
 
-      else if (i.customId === 'rpgRouletteOdd') await i.editReply(await rpgTavernGame(i, 'Roulette', 'odds'));
-      else if (i.customId === 'rpgRouletteEven') await i.editReply(await rpgTavernGame(i, 'Roulette', 'evens'));
-      else if (i.customId === 'roulette1to12') await i.editReply(await rpgTavernGame(i, 'Roulette', '1-12'));
-      else if (i.customId === 'roulette13to24') await i.editReply(await rpgTavernGame(i, 'Roulette', '13-24'));
-      else if (i.customId === 'roulette25to36') await i.editReply(await rpgTavernGame(i, 'Roulette', '25-36'));
+      else if (i.customId === 'rpgRouletteOdd') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'odds'));
+      else if (i.customId === 'rpgRouletteEven') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'evens'));
+      else if (i.customId === 'roulette1to12') await i.editReply(await rpgArcadeGame(i, 'Roulette', '1-12'));
+      else if (i.customId === 'roulette13to24') await i.editReply(await rpgArcadeGame(i, 'Roulette', '13-24'));
+      else if (i.customId === 'roulette25to36') await i.editReply(await rpgArcadeGame(i, 'Roulette', '25-36'));
 
-      else if (i.customId === 'rpgRouletteHigh') await i.editReply(await rpgTavernGame(i, 'Roulette', 'high'));
-      else if (i.customId === 'rpgRouletteLow') await i.editReply(await rpgTavernGame(i, 'Roulette', 'low'));
-      else if (i.customId === 'rpgRouletteZero') await i.editReply(await rpgTavernGame(i, 'Roulette', '0'));
+      else if (i.customId === 'rpgRouletteHigh') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'high'));
+      else if (i.customId === 'rpgRouletteLow') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'low'));
+      else if (i.customId === 'rpgRouletteZero') await i.editReply(await rpgArcadeGame(i, 'Roulette', '0'));
 
-      else if (i.customId === 'rpgCoinflipHeads') await i.editReply(await rpgTavernGame(i, 'Coinflip', 'heads'));
-      else if (i.customId === 'rpgCoinflipTails') await i.editReply(await rpgTavernGame(i, 'Coinflip', 'tails'));
+      else if (i.customId === 'rpgCoinflipHeads') await i.editReply(await rpgArcadeGame(i, 'Coinflip', 'heads'));
+      else if (i.customId === 'rpgCoinflipTails') await i.editReply(await rpgArcadeGame(i, 'Coinflip', 'tails'));
       else if (i.customId === 'rpgHome') await i.update(await rpgHome(i, ''));
       else if (i.customId === 'rpgSpecies') await i.update(await rpgHome(i, ''));
       else if (i.customId === 'rpgClass') await i.update(await rpgHome(i, ''));
@@ -1025,7 +1025,7 @@ export async function rpgTown(
     .addComponents(
       buttons.bounties,
       buttons.market,
-      buttons.tavern,
+      buttons.arcade,
       buttons.home,
     );
 
@@ -1998,16 +1998,16 @@ export async function rpgHomeNameChange(
     });
 }
 
-export async function rpgTavern(
+export async function rpgArcade(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-      .setTitle(`${env.EMOJI_TAVERN} Tavern`)
+      .setTitle(`${env.EMOJI_ARCADE} Arcade`)
       .setDescription(stripIndents`
-        You ${rand(text.enter)} the tavern and see a variety of games.
+        You ${rand(text.enter)} the arcade and see a variety of games.
       `)
       .setColor(Colors.Green)],
     components: [new ActionRowBuilder<ButtonBuilder>()
@@ -2029,7 +2029,7 @@ const gameData = {
   Coinflip: {
     gameName: 'Coinflip' as GameName,
     instructions: stripIndents`Click the buttons below to set how many of your tokens you want to bet.
-    Click the heads or tails button to flip the coin, or you can go back to the tavern.
+    Click the heads or tails button to flip the coin, or you can go back to the arcade.
     If you win, you get the amount you bet.
     If you lose, you lose the amount you bet.`,
     object: 'coin',
@@ -2045,7 +2045,7 @@ const gameData = {
   Roulette: {
     gameName: 'Roulette' as GameName,
     instructions: stripIndents`Click the buttons below to set how many of your tokens you want to bet.
-    Click a bet button to place a bet on that outcome, or you can go back to the tavern.
+    Click a bet button to place a bet on that outcome, or you can go back to the arcade.
     
     Depending on what you picked and where the ball lands, you will win or lose your bet.
 
@@ -2078,7 +2078,7 @@ const gameData = {
   },
 };
 
-export async function rpgTavernGame(
+export async function rpgArcadeGame(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
   gameName: GameName,
   choice?: 'heads' | 'tails' | '0'
@@ -2095,7 +2095,7 @@ export async function rpgTavernGame(
       buttons.wager10,
       buttons.wager100,
       buttons.wager1000,
-      buttons.tavern,
+      buttons.arcade,
     );
 
   const { bets } = gameData[gameName as keyof typeof gameData];
@@ -2163,7 +2163,7 @@ export async function rpgTavernGame(
   }
 
   if (choice) {
-    await rpgTavernAnimate(interaction, gameName);
+    await rpgArcadeAnimate(interaction, gameName);
     const { object } = gameData[gameName as keyof typeof gameData];
 
     const { options } = gameData[gameName as keyof typeof gameData];
@@ -2673,7 +2673,7 @@ export async function rpgTrivia(
           new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
               buttons.start,
-              buttons.tavern,
+              buttons.arcade,
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
@@ -2700,7 +2700,7 @@ export async function rpgTrivia(
           new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
               buttons.start,
-              buttons.tavern,
+              buttons.arcade,
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
@@ -2727,7 +2727,7 @@ export async function rpgTrivia(
           new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
               buttons.start,
-              buttons.tavern,
+              buttons.arcade,
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
@@ -2797,7 +2797,7 @@ export async function rpgTrivia(
       new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           buttons.start,
-          buttons.tavern,
+          buttons.arcade,
         ),
       new ActionRowBuilder<StringSelectMenuBuilder>()
         .addComponents(
@@ -2861,7 +2861,7 @@ export async function rpgTriviaGetQuestions(
   });
 }
 
-export async function rpgTavernAnimate(
+export async function rpgArcadeAnimate(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
   gameName: GameName,
 ) {
@@ -3005,7 +3005,7 @@ export async function rpgTavernAnimate(
   }
 }
 
-export async function rpgTavernWager(
+export async function rpgArcadeWager(
   interaction: MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
   let newBet = wagers[interaction.user.id].tokens;
@@ -3015,12 +3015,12 @@ export async function rpgTavernWager(
   const [personaData] = await getPersonaInfo(interaction.user.id);
   if (personaData.tokens < newBet) {
     const notEnough = '**You don\'t have enough to bet that much**\n';
-    return rpgTavernGame(interaction, wagers[interaction.user.id].gameName, undefined, notEnough);
+    return rpgArcadeGame(interaction, wagers[interaction.user.id].gameName, undefined, notEnough);
   }
 
   wagers[interaction.user.id].tokens = newBet;
 
-  return rpgTavernGame(interaction, wagers[interaction.user.id].gameName);
+  return rpgArcadeGame(interaction, wagers[interaction.user.id].gameName);
 }
 
 function sleep(ms:number):Promise<void> {
