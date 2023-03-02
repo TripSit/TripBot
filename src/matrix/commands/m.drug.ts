@@ -77,10 +77,56 @@ async function mDrug(roomId: string, event:any, client:MatrixClient, substance:s
   }
 
   function getSummary() {
-    text = `Summary for ${drugData!.name}:\n\n${drugData!.summary}`;
-    html = `<b>Summary for ${drugData!.name}:</b><br><br>${(drugData!.summary)}`;
+    text = `Summary for ${drugData!.name}:\n\n${drugData!.summary}\nRead more on the wiki: https://wiki.tripsit.me/wiki/${drugData!.name}`;
+    html = `<b>Summary for ${drugData!.name}:</b><br><br>${(drugData!.summary)}<br><a href='https://wiki.tripsit.me/wiki/${drugData!.name}'>Read more on the wiki</a>`;
     return [text, html];
   }
+
+  function getCrossTolerances() {
+    text = `Known cross-tolerances for ${drugData!.name}:\n`;
+    html = `&#128256; <b> Known cross-tolerances for ${drugData!.name} &#128256;:</b><br><br>`;
+
+    if (drugData!.crossTolerances && drugData!.crossTolerances.length >= 1) {
+      const crossToleranceMap = drugData!.crossTolerances
+        .map(crossTolerance => crossTolerance[0].toUpperCase() + crossTolerance.substring(1));
+      text += stripIndents`${crossToleranceMap.join(', ')}`;
+      html += stripIndents`${crossToleranceMap.join(', ')}`;
+      return [text, html];
+    }
+   return false;
+  }
+
+  function getAddictionPotential() {
+    if (drugData!.addictionPotential) {
+      const addPot = drugData!.addictionPotential.toString();
+      const capitalized = addPot[0].toUpperCase() + addPot.substring(1);
+      text = `Addiction potential of ${drugData!.name}:\n ` + stripIndents`${addPot}`;
+      html = `&#128148;<b>Addiction potential of ${drugData!.name}</b> &#128148;:<br>` + stripIndents`${addPot}`;
+      return [text, html]
+    }
+    return false;
+  }
+
+  function getDuration() {
+    const roaNames = drugData!.roas.map(roa => roa.name);
+    let columns = 0;
+    let html = `&#9203; <b>Duration for ${drugData!.name} &#9203;</b>:<br>`
+    let text = `Duration for ${drugData!.name}:\n`
+    roaNames.forEach(roaName => {
+      if (columns < 3) {
+        const roaInfo = drugData!.roas.find(r => r.name === roaName);
+        if(roaInfo && roaInfo.duration) {
+          let durationString = '';
+          roaInfo.duration.forEach(d => {
+            durationString += `${d.name}: ${d.value}\n`;
+          });
+          html += `<b>${roaName}:</b> ` + stripIndents`${durationString}` + `<br>`;
+          text += `${roaName}:\n` + stripIndents`${durationString}` + `\n`;
+        }
+    }
+  });
+  return [text, html];
+}
 
   if (section === 'summary') {
     const summary = getSummary();
@@ -93,11 +139,13 @@ async function mDrug(roomId: string, event:any, client:MatrixClient, substance:s
       const dosage = getDosage();
       reply = RichReply.createFor(roomId, event, dosage[0], dosage[1]);
       client.sendMessage(roomId, reply);
+      return true;
     } else {
       html = `<b>Task failed successfully!</b><br><br>Sorry, i could not provide dosage information on ${substance}`;
       text = `Task failed successfully!\n\nSorry, i could not provide dosage information on ${substance}`;
       reply = RichReply.createFor(roomId, event, text, html);
       client.sendMessage(roomId, reply);
+      return false;
     }
 
     /**  case 'tolerance':
@@ -108,5 +156,26 @@ async function mDrug(roomId: string, event:any, client:MatrixClient, substance:s
       drugData.tolerance.map((i:string) => msgPart = `${i}\n`);
       return `〽️ **Tolerance information for ${substance}**\n\n${msgPart} 〽️`;* */
   }
+  if(section === 'duration') {
+    if(drugData.roas) {
+      const duration = getDuration();
+      reply = RichReply.createFor(roomId, event, duration[0], duration[1]);
+      client.sendMessage(roomId, reply);
+      return true;
+    } else {
+      html = `<b>Task failed successfully!</b><br><br>Sorry, i could not provide duration information on ${substance}`;
+      text = `Task failed successfully!\n\nSorry, i could not provide duration information on ${substance}`;
+      reply = RichReply.createFor(roomId, event, text, html);
+      client.sendMessage(roomId, reply);
+      return false;
+    }
+  }
+  if(section === 'addiction') {
+  const addiction = getAddictionPotential();
+  if(addiction === false) return client.replyNotice(roomId, event, `Sorry, i could not provide information on the addiction potential of ${drugData.name}`);
+  reply = RichReply.createFor(roomId, event, addiction[0], addiction[1]);
+  client.sendMessage(roomId, reply);
   return true;
+  }
+  return false;
 }
