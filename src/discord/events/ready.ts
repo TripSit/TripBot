@@ -14,6 +14,7 @@ import { runStats } from '../utils/stats'; // eslint-disable-line
 import { runRss } from '../../global/utils/rssCheck';
 import { runVoiceCheck } from '../../global/utils/voiceExp';
 import { startStatusLoop } from '../utils/statusLoop';
+import { emojiCache } from '../utils/emoji';
 // import { runLpm } from '../utils/lpm';
 
 const F = f(__filename);
@@ -69,6 +70,7 @@ export const ready: ReadyEvent = {
         runStats(),
         runVoiceCheck(),
         runRss(),
+        emojiCache(client),
         // runLpm(),
       ]).then(async () => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;

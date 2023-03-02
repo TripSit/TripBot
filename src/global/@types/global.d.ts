@@ -1,4 +1,4 @@
-import { Client } from 'discord.js';
+import { Client, Guild } from 'discord.js';
 
 declare global {
   var guildInvites: Collection; // eslint-disable-line
@@ -8,6 +8,8 @@ declare global {
   var announcements: string[]; // eslint-disable-line
   var lpmDict: LpmDict; // eslint-disable-line
   var lpmTime: number[]; // eslint-disable-line
+  var emojiGuildA: Guild; // eslint-disable-line
+  var emoji: (name:string) => Emoji; // eslint-disable-line
 }
 
 export {};
