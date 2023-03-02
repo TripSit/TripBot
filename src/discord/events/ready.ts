@@ -14,6 +14,7 @@ import { runStats } from '../utils/stats'; // eslint-disable-line
 import { runRss } from '../../global/utils/rssCheck';
 import { runVoiceCheck } from '../../global/utils/voiceExp';
 import { startStatusLoop } from '../utils/statusLoop';
+import { emojiCache } from '../utils/emoji';
 // import { runLpm } from '../utils/lpm';
 
 const F = f(__filename);
@@ -54,7 +55,6 @@ export const ready: ReadyEvent = {
   once: true,
   async execute(client) {
     await setTimeout(1000);
-    startStatusLoop(client);
     const hostGuild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
     await checkGuildPermissions(hostGuild, [
       'Administrator' as PermissionResolvable,
@@ -64,11 +64,13 @@ export const ready: ReadyEvent = {
         process.exit(1);
       }
       Promise.all([
+        startStatusLoop(client),
         getInvites(client),
         runTimer(),
         runStats(),
         runVoiceCheck(),
         runRss(),
+        emojiCache(client),
         // runLpm(),
       ]).then(async () => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;

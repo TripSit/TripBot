@@ -3,14 +3,12 @@ import {
   SlashCommandBuilder,
   ActionRowBuilder,
   ButtonBuilder,
-  Colors,
   ChatInputCommandInteraction,
   TextChannel,
   ModalBuilder,
   TextInputBuilder,
   ModalSubmitInteraction,
   PermissionResolvable,
-  Role,
   StringSelectMenuBuilder,
 } from 'discord.js';
 import {
@@ -20,7 +18,6 @@ import { stripIndent, stripIndents } from 'common-tags';
 import { getGuild, guildUpdate } from '../../../global/utils/knex';
 import { startLog } from '../../utils/startLog';
 import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
 
 const F = f(__filename);
@@ -147,18 +144,10 @@ export const prompt: SlashCommand = {
       await rules(interaction);
     } else if (command === 'starthere') {
       await starthere(interaction);
-    } else if (command === 'mindset') {
-      await mindsets(interaction);
-    } else if (command === 'color') {
-      await colors(interaction);
     } else if (command === 'tripsit') {
       await tripsit(interaction);
     } else if (command === 'ticketbooth') {
       await ticketbooth(interaction);
-    } else if (command === 'premiumcolors') {
-      await premiumColors(interaction);
-    } else if (command === 'pronouns') {
-      await pronouns(interaction);
     }
     if (!interaction.replied) {
       if (interaction.deferred) {
@@ -713,298 +702,4 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
     `;
 
   await (interaction.channel as TextChannel).send(message);
-}
-
-/**
- * The mindset prompt
- * @param {Interaction} interaction The interaction that triggered this
- */
-export async function mindsets(interaction:ChatInputCommandInteraction) {
-  startLog(F, interaction);
-  if (!(interaction.channel as TextChannel)) {
-    log.error(F, noChannel);
-    interaction.reply(channelOnly);
-    return;
-  }
-
-  const roleDrunk = await interaction.guild?.roles.fetch(env.ROLE_DRUNK) as Role;
-  const roleHigh = await interaction.guild?.roles.fetch(env.ROLE_HIGH) as Role;
-  const roleRolling = await interaction.guild?.roles.fetch(env.ROLE_ROLLING) as Role;
-  const roleTripping = await interaction.guild?.roles.fetch(env.ROLE_TRIPPING) as Role;
-  const roleDissociating = await interaction.guild?.roles.fetch(env.ROLE_DISSOCIATING) as Role;
-  const roleStimming = await interaction.guild?.roles.fetch(env.ROLE_STIMMING) as Role;
-  const roleSedated = await interaction.guild?.roles.fetch(env.ROLE_SEDATED) as Role;
-  const roleTalkative = await interaction.guild?.roles.fetch(env.ROLE_TALKATIVE) as Role;
-  const roleWorking = await interaction.guild?.roles.fetch(env.ROLE_WORKING) as Role;
-
-  const embed = embedTemplate()
-    .setDescription(stripIndents`
-      **React to this message to show your mindset!**
-    `)
-    // .setFooter({ text: 'These roles reset after 8 hours to (somewhat) accurately show your mindset!' })
-    .setFooter({ text: 'You can only pick one mindset at a time!' })
-    .setColor(Colors.Purple);
-
-  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setLabel(`${roleDrunk.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDrunk.id}"`)
-      .setEmoji(env.EMOJI_DRUNK)
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleHigh.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleHigh.id}"`)
-      .setEmoji(env.EMOJI_HIGH)
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleRolling.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleRolling.id}"`)
-      .setEmoji(env.EMOJI_ROLLING)
-      .setStyle(ButtonStyle.Primary),
-  );
-
-  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setLabel(`${roleTripping.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleTripping.id}"`)
-      .setEmoji(env.EMOJI_TRIPPING)
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleDissociating.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDissociating.id}"`)
-      .setEmoji(env.EMOJI_DISSOCIATING)
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleStimming.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleStimming.id}"`)
-      .setEmoji(env.EMOJI_STIMMING)
-      .setStyle(ButtonStyle.Primary),
-  );
-
-  const row3 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setLabel(`${roleSedated.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleSedated.id}"`)
-      .setEmoji(env.EMOJI_SEDATED)
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleTalkative.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleTalkative.id}"`)
-      .setEmoji(env.EMOJI_TALKATIVE)
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleWorking.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleWorking.id}"`)
-      .setEmoji(env.EMOJI_WORKING)
-      .setStyle(ButtonStyle.Primary),
-  );
-
-  await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2, row3] });
-}
-
-/**
- * The colors prompt
- * @param {Interaction} interaction The interaction that triggered this
- */
-export async function colors(interaction:ChatInputCommandInteraction) {
-  startLog(F, interaction);
-  if (!(interaction.channel as TextChannel)) {
-    log.error(F, noChannel);
-    interaction.reply(channelOnly);
-    return;
-  }
-
-  const roleRed = await interaction.guild?.roles.fetch(env.ROLE_RED) as Role;
-  const roleOrange = await interaction.guild?.roles.fetch(env.ROLE_ORANGE) as Role;
-  const roleYellow = await interaction.guild?.roles.fetch(env.ROLE_YELLOW) as Role;
-  const roleGreen = await interaction.guild?.roles.fetch(env.ROLE_GREEN) as Role;
-  const roleBlue = await interaction.guild?.roles.fetch(env.ROLE_BLUE) as Role;
-  const rolePurple = await interaction.guild?.roles.fetch(env.ROLE_PURPLE) as Role;
-  const rolePink = await interaction.guild?.roles.fetch(env.ROLE_PINK) as Role;
-  const roleBlack = await interaction.guild?.roles.fetch(env.ROLE_BLACK) as Role;
-
-  const embed = embedTemplate()
-    .setDescription('React to this message to set the color of your nickname!')
-    .setFooter({ text: 'You can only pick one color at a time!' })
-    .setColor(Colors.Blue);
-
-  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setLabel(`${roleRed.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleRed.id}"`)
-      .setEmoji('❤')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleOrange.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleOrange.id}"`)
-      .setEmoji('🧡')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleYellow.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleYellow.id}"`)
-      .setEmoji('💛')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleGreen.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleGreen.id}"`)
-      .setEmoji('💚')
-      .setStyle(ButtonStyle.Primary),
-  );
-
-  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setLabel(`${roleBlue.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleBlue.id}"`)
-      .setEmoji('💙')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${rolePurple.name}`)
-      .setCustomId(`"ID":"RR","RID":"${rolePurple.id}"`)
-      .setEmoji('💜')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${rolePink.name}`)
-      .setCustomId(`"ID":"RR","RID":"${rolePink.id}"`)
-      .setEmoji(env.EMOJI_PINKHEART)
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleBlack.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleBlack.id}"`)
-      .setEmoji('🖤')
-      .setStyle(ButtonStyle.Primary),
-  );
-
-  await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
-}
-
-/**
- * The premium colors prompt
- * @param {Interaction} interaction The interaction that triggered this
- */
-export async function premiumColors(interaction:ChatInputCommandInteraction) {
-  // startLog(F, interaction);
-  if (!(interaction.channel as TextChannel)) {
-    log.error(F, noChannel);
-    interaction.reply(channelOnly);
-    return;
-  }
-
-  const embed = embedTemplate()
-    .setDescription(stripIndents`Boosters and Patrons can access new colors!
-    React to this message to set the color of your nickname!`)
-    .setFooter({ text: 'You can only pick one color at a time, choose wisely!' })
-    .setColor(Colors.Blue);
-
-  const roleDonorRed = await interaction.guild?.roles.fetch(env.ROLE_DONOR_RED) as Role;
-  const roleDonorOrange = await interaction.guild?.roles.fetch(env.ROLE_DONOR_ORANGE) as Role;
-  const roleDonorYellow = await interaction.guild?.roles.fetch(env.ROLE_DONOR_YELLOW) as Role;
-  const roleDonorGreen = await interaction.guild?.roles.fetch(env.ROLE_DONOR_GREEN) as Role;
-  const roleDonorBlue = await interaction.guild?.roles.fetch(env.ROLE_DONOR_BLUE) as Role;
-  const roleDonorPurple = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PURPLE) as Role;
-  const roleDonorPink = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PINK) as Role;
-  const roleDonorWhite = await interaction.guild?.roles.fetch(env.ROLE_WHITE) as Role;
-
-  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setLabel(`${roleDonorRed.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorRed.id}"`)
-      .setEmoji('❤')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleDonorOrange.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorOrange.id}"`)
-      .setEmoji('🧡')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleDonorYellow.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorYellow.id}"`)
-      .setEmoji('💛')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleDonorGreen.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorGreen.id}"`)
-      .setEmoji('💚')
-      .setStyle(ButtonStyle.Primary),
-  );
-
-  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setLabel(`${roleDonorBlue.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorBlue.id}"`)
-      .setEmoji('💙')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleDonorPurple.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorPurple.id}"`)
-      .setEmoji('💜')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleDonorPink.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorPink.id}"`)
-      .setEmoji(env.EMOJI_PINKHEART)
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleDonorWhite.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorWhite.id}"`)
-      .setEmoji('🤍')
-      .setStyle(ButtonStyle.Primary),
-  );
-  await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
-}
-
-/**
- * The pronoun prompt
- * @param {Interaction} interaction The interaction that triggered this
- */
-export async function pronouns(interaction:ChatInputCommandInteraction) {
-  // startLog(F, interaction);
-  if (!(interaction.channel as TextChannel)) {
-    log.error(F, noChannel);
-    interaction.reply(channelOnly);
-    return;
-  }
-
-  const embed = embedTemplate()
-    .setDescription(stripIndents`Click a button below to pick your pronouns!`)
-    .setFooter({ text: 'You can only pick one pronoun at a time, choose wisely!' })
-    .setColor(Colors.Blue);
-
-  const pronounHe = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_HE) as Role;
-  const pronounShe = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_SHE) as Role;
-  const pronounThey = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_THEY) as Role;
-  const pronounAny = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_ANY) as Role;
-  const pronounAsk = await interaction.guild?.roles.fetch(env.ROLE_PRONOUN_ASK) as Role;
-
-  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setLabel(`${pronounHe.name}`)
-      .setCustomId(`"ID":"RR","RID":"${pronounHe.id}"`)
-      .setEmoji('👨')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${pronounShe.name}`)
-      .setCustomId(`"ID":"RR","RID":"${pronounShe.id}"`)
-      .setEmoji('👩')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${pronounThey.name}`)
-      .setCustomId(`"ID":"RR","RID":"${pronounThey.id}"`)
-      .setEmoji('🧑')
-      .setStyle(ButtonStyle.Primary),
-  );
-
-  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setLabel(`${pronounAny.name}`)
-      .setCustomId(`"ID":"RR","RID":"${pronounAny.id}"`)
-      .setEmoji('♾')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${pronounAsk.name}`)
-      .setCustomId(`"ID":"RR","RID":"${pronounAsk.id}"`)
-      .setEmoji('❔')
-      .setStyle(ButtonStyle.Primary),
-  );
-
-  await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
 }

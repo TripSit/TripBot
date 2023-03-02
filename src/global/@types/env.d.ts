@@ -233,26 +233,6 @@ declare global {
       // ROLE_DONOR_WHITE: string;
       // ROLE_DONOR_BLACK: string;
       ROLE_DONOR_PINK: string;
-      EMOJI_HELPER: string;
-      EMOJI_INVISIBLE: string;
-      EMOJI_DRUNK: string;
-      EMOJI_HIGH: string;
-      EMOJI_ROLLING: string;
-      EMOJI_TRIPPING: string;
-      EMOJI_DISSOCIATING: string;
-      EMOJI_STIMMING: string;
-      EMOJI_SEDATED: string;
-      EMOJI_SOBER: string;
-      EMOJI_TALKATIVE: string;
-      EMOJI_WORKING: string;
-      EMOJI_VOTEUP: string;
-      EMOJI_VOTEDOWN: string;
-      EMOJI_THUMBUP: string;
-      EMOJI_THUMBDOWN: string;
-      EMOJI_PINKHEART: string;
-      EMOJI_RESEARCHER: string;
-      EMOJI_CONTRIBUTOR: string;
-      EMOJI_CLEARMIND: string;
     }
   }
 }
