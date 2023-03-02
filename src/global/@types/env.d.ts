@@ -249,7 +249,6 @@ declare global {
       EMOJI_VOTEDOWN: string;
       EMOJI_THUMBUP: string;
       EMOJI_THUMBDOWN: string;
-      EMOJI_PINKHEART: string;
       EMOJI_RESEARCHER: string;
       EMOJI_CONTRIBUTOR: string;
       EMOJI_CLEARMIND: string;

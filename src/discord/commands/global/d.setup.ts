@@ -149,14 +149,10 @@ export const prompt: SlashCommand = {
       await starthere(interaction);
     } else if (command === 'mindset') {
       await mindsets(interaction);
-    } else if (command === 'color') {
-      await colors(interaction);
     } else if (command === 'tripsit') {
       await tripsit(interaction);
     } else if (command === 'ticketbooth') {
       await ticketbooth(interaction);
-    } else if (command === 'premiumcolors') {
-      await premiumColors(interaction);
     } else if (command === 'pronouns') {
       await pronouns(interaction);
     }
@@ -749,17 +745,17 @@ export async function mindsets(interaction:ChatInputCommandInteraction) {
     new ButtonBuilder()
       .setLabel(`${roleDrunk.name}`)
       .setCustomId(`"ID":"RR","RID":"${roleDrunk.id}"`)
-      .setEmoji(env.EMOJI_DRUNK)
+      .setEmoji(emojiGet('Alcohol'))
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setLabel(`${roleHigh.name}`)
       .setCustomId(`"ID":"RR","RID":"${roleHigh.id}"`)
-      .setEmoji(env.EMOJI_HIGH)
+      .setEmoji(emojiGet('Weed'))
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setLabel(`${roleRolling.name}`)
       .setCustomId(`"ID":"RR","RID":"${roleRolling.id}"`)
-      .setEmoji(env.EMOJI_ROLLING)
+      .setEmoji(emojiGet('Empathogens'))
       .setStyle(ButtonStyle.Primary),
   );
 
@@ -767,17 +763,17 @@ export async function mindsets(interaction:ChatInputCommandInteraction) {
     new ButtonBuilder()
       .setLabel(`${roleTripping.name}`)
       .setCustomId(`"ID":"RR","RID":"${roleTripping.id}"`)
-      .setEmoji(env.EMOJI_TRIPPING)
+      .setEmoji(emojiGet('Psychedelics'))
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setLabel(`${roleDissociating.name}`)
       .setCustomId(`"ID":"RR","RID":"${roleDissociating.id}"`)
-      .setEmoji(env.EMOJI_DISSOCIATING)
+      .setEmoji(emojiGet('Disassociatives'))
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setLabel(`${roleStimming.name}`)
       .setCustomId(`"ID":"RR","RID":"${roleStimming.id}"`)
-      .setEmoji(env.EMOJI_STIMMING)
+      .setEmoji(emojiGet('Stimulants'))
       .setStyle(ButtonStyle.Primary),
   );
 
@@ -785,172 +781,172 @@ export async function mindsets(interaction:ChatInputCommandInteraction) {
     new ButtonBuilder()
       .setLabel(`${roleSedated.name}`)
       .setCustomId(`"ID":"RR","RID":"${roleSedated.id}"`)
-      .setEmoji(env.EMOJI_SEDATED)
+      .setEmoji(emojiGet('Depressants'))
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setLabel(`${roleTalkative.name}`)
       .setCustomId(`"ID":"RR","RID":"${roleTalkative.id}"`)
-      .setEmoji(env.EMOJI_TALKATIVE)
+      .setEmoji(emojiGet('Talkative'))
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setLabel(`${roleWorking.name}`)
       .setCustomId(`"ID":"RR","RID":"${roleWorking.id}"`)
-      .setEmoji(env.EMOJI_WORKING)
+      .setEmoji(emojiGet('Working'))
       .setStyle(ButtonStyle.Primary),
   );
 
   await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2, row3] });
 }
 
-/**
- * The colors prompt
- * @param {Interaction} interaction The interaction that triggered this
- */
-export async function colors(interaction:ChatInputCommandInteraction) {
-  startLog(F, interaction);
-  if (!(interaction.channel as TextChannel)) {
-    log.error(F, noChannel);
-    interaction.reply(channelOnly);
-    return;
-  }
+// /**
+//  * The colors prompt
+//  * @param {Interaction} interaction The interaction that triggered this
+//  */
+// export async function colors(interaction:ChatInputCommandInteraction) {
+//   startLog(F, interaction);
+//   if (!(interaction.channel as TextChannel)) {
+//     log.error(F, noChannel);
+//     interaction.reply(channelOnly);
+//     return;
+//   }
 
-  const roleRed = await interaction.guild?.roles.fetch(env.ROLE_RED) as Role;
-  const roleOrange = await interaction.guild?.roles.fetch(env.ROLE_ORANGE) as Role;
-  const roleYellow = await interaction.guild?.roles.fetch(env.ROLE_YELLOW) as Role;
-  const roleGreen = await interaction.guild?.roles.fetch(env.ROLE_GREEN) as Role;
-  const roleBlue = await interaction.guild?.roles.fetch(env.ROLE_BLUE) as Role;
-  const rolePurple = await interaction.guild?.roles.fetch(env.ROLE_PURPLE) as Role;
-  const rolePink = await interaction.guild?.roles.fetch(env.ROLE_PINK) as Role;
-  const roleBlack = await interaction.guild?.roles.fetch(env.ROLE_BLACK) as Role;
+//   const roleRed = await interaction.guild?.roles.fetch(env.ROLE_RED) as Role;
+//   const roleOrange = await interaction.guild?.roles.fetch(env.ROLE_ORANGE) as Role;
+//   const roleYellow = await interaction.guild?.roles.fetch(env.ROLE_YELLOW) as Role;
+//   const roleGreen = await interaction.guild?.roles.fetch(env.ROLE_GREEN) as Role;
+//   const roleBlue = await interaction.guild?.roles.fetch(env.ROLE_BLUE) as Role;
+//   const rolePurple = await interaction.guild?.roles.fetch(env.ROLE_PURPLE) as Role;
+//   const rolePink = await interaction.guild?.roles.fetch(env.ROLE_PINK) as Role;
+//   const roleBlack = await interaction.guild?.roles.fetch(env.ROLE_BLACK) as Role;
 
-  const embed = embedTemplate()
-    .setDescription('React to this message to set the color of your nickname!')
-    .setFooter({ text: 'You can only pick one color at a time!' })
-    .setColor(Colors.Blue);
+//   const embed = embedTemplate()
+//     .setDescription('React to this message to set the color of your nickname!')
+//     .setFooter({ text: 'You can only pick one color at a time!' })
+//     .setColor(Colors.Blue);
 
-  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setLabel(`${roleRed.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleRed.id}"`)
-      .setEmoji('❤')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleOrange.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleOrange.id}"`)
-      .setEmoji('🧡')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleYellow.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleYellow.id}"`)
-      .setEmoji('💛')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleGreen.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleGreen.id}"`)
-      .setEmoji('💚')
-      .setStyle(ButtonStyle.Primary),
-  );
+//   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+//     new ButtonBuilder()
+//       .setLabel(`${roleRed.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${roleRed.id}"`)
+//       .setEmoji('❤')
+//       .setStyle(ButtonStyle.Primary),
+//     new ButtonBuilder()
+//       .setLabel(`${roleOrange.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${roleOrange.id}"`)
+//       .setEmoji('🧡')
+//       .setStyle(ButtonStyle.Primary),
+//     new ButtonBuilder()
+//       .setLabel(`${roleYellow.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${roleYellow.id}"`)
+//       .setEmoji('💛')
+//       .setStyle(ButtonStyle.Primary),
+//     new ButtonBuilder()
+//       .setLabel(`${roleGreen.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${roleGreen.id}"`)
+//       .setEmoji('💚')
+//       .setStyle(ButtonStyle.Primary),
+//   );
 
-  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setLabel(`${roleBlue.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleBlue.id}"`)
-      .setEmoji('💙')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${rolePurple.name}`)
-      .setCustomId(`"ID":"RR","RID":"${rolePurple.id}"`)
-      .setEmoji('💜')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${rolePink.name}`)
-      .setCustomId(`"ID":"RR","RID":"${rolePink.id}"`)
-      .setEmoji(env.EMOJI_PINKHEART)
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleBlack.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleBlack.id}"`)
-      .setEmoji('🖤')
-      .setStyle(ButtonStyle.Primary),
-  );
+//   const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+//     new ButtonBuilder()
+//       .setLabel(`${roleBlue.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${roleBlue.id}"`)
+//       .setEmoji('💙')
+//       .setStyle(ButtonStyle.Primary),
+//     new ButtonBuilder()
+//       .setLabel(`${rolePurple.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${rolePurple.id}"`)
+//       .setEmoji('💜')
+//       .setStyle(ButtonStyle.Primary),
+//     new ButtonBuilder()
+//       .setLabel(`${rolePink.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${rolePink.id}"`)
+//       .setEmoji(env.EMOJI_PINKHEART)
+//       .setStyle(ButtonStyle.Primary),
+//     new ButtonBuilder()
+//       .setLabel(`${roleBlack.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${roleBlack.id}"`)
+//       .setEmoji('🖤')
+//       .setStyle(ButtonStyle.Primary),
+//   );
 
-  await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
-}
+//   await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
+// }
 
-/**
- * The premium colors prompt
- * @param {Interaction} interaction The interaction that triggered this
- */
-export async function premiumColors(interaction:ChatInputCommandInteraction) {
-  // startLog(F, interaction);
-  if (!(interaction.channel as TextChannel)) {
-    log.error(F, noChannel);
-    interaction.reply(channelOnly);
-    return;
-  }
+// /**
+//  * The premium colors prompt
+//  * @param {Interaction} interaction The interaction that triggered this
+//  */
+// export async function premiumColors(interaction:ChatInputCommandInteraction) {
+//   // startLog(F, interaction);
+//   if (!(interaction.channel as TextChannel)) {
+//     log.error(F, noChannel);
+//     interaction.reply(channelOnly);
+//     return;
+//   }
 
-  const embed = embedTemplate()
-    .setDescription(stripIndents`Boosters and Patrons can access new colors!
-    React to this message to set the color of your nickname!`)
-    .setFooter({ text: 'You can only pick one color at a time, choose wisely!' })
-    .setColor(Colors.Blue);
+//   const embed = embedTemplate()
+//     .setDescription(stripIndents`Boosters and Patrons can access new colors!
+//     React to this message to set the color of your nickname!`)
+//     .setFooter({ text: 'You can only pick one color at a time, choose wisely!' })
+//     .setColor(Colors.Blue);
 
-  const roleDonorRed = await interaction.guild?.roles.fetch(env.ROLE_DONOR_RED) as Role;
-  const roleDonorOrange = await interaction.guild?.roles.fetch(env.ROLE_DONOR_ORANGE) as Role;
-  const roleDonorYellow = await interaction.guild?.roles.fetch(env.ROLE_DONOR_YELLOW) as Role;
-  const roleDonorGreen = await interaction.guild?.roles.fetch(env.ROLE_DONOR_GREEN) as Role;
-  const roleDonorBlue = await interaction.guild?.roles.fetch(env.ROLE_DONOR_BLUE) as Role;
-  const roleDonorPurple = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PURPLE) as Role;
-  const roleDonorPink = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PINK) as Role;
-  const roleDonorWhite = await interaction.guild?.roles.fetch(env.ROLE_WHITE) as Role;
+//   const roleDonorRed = await interaction.guild?.roles.fetch(env.ROLE_DONOR_RED) as Role;
+//   const roleDonorOrange = await interaction.guild?.roles.fetch(env.ROLE_DONOR_ORANGE) as Role;
+//   const roleDonorYellow = await interaction.guild?.roles.fetch(env.ROLE_DONOR_YELLOW) as Role;
+//   const roleDonorGreen = await interaction.guild?.roles.fetch(env.ROLE_DONOR_GREEN) as Role;
+//   const roleDonorBlue = await interaction.guild?.roles.fetch(env.ROLE_DONOR_BLUE) as Role;
+//   const roleDonorPurple = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PURPLE) as Role;
+//   const roleDonorPink = await interaction.guild?.roles.fetch(env.ROLE_DONOR_PINK) as Role;
+//   const roleDonorWhite = await interaction.guild?.roles.fetch(env.ROLE_WHITE) as Role;
 
-  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setLabel(`${roleDonorRed.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorRed.id}"`)
-      .setEmoji('❤')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleDonorOrange.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorOrange.id}"`)
-      .setEmoji('🧡')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleDonorYellow.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorYellow.id}"`)
-      .setEmoji('💛')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleDonorGreen.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorGreen.id}"`)
-      .setEmoji('💚')
-      .setStyle(ButtonStyle.Primary),
-  );
+//   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+//     new ButtonBuilder()
+//       .setLabel(`${roleDonorRed.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${roleDonorRed.id}"`)
+//       .setEmoji('❤')
+//       .setStyle(ButtonStyle.Primary),
+//     new ButtonBuilder()
+//       .setLabel(`${roleDonorOrange.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${roleDonorOrange.id}"`)
+//       .setEmoji('🧡')
+//       .setStyle(ButtonStyle.Primary),
+//     new ButtonBuilder()
+//       .setLabel(`${roleDonorYellow.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${roleDonorYellow.id}"`)
+//       .setEmoji('💛')
+//       .setStyle(ButtonStyle.Primary),
+//     new ButtonBuilder()
+//       .setLabel(`${roleDonorGreen.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${roleDonorGreen.id}"`)
+//       .setEmoji('💚')
+//       .setStyle(ButtonStyle.Primary),
+//   );
 
-  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setLabel(`${roleDonorBlue.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorBlue.id}"`)
-      .setEmoji('💙')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleDonorPurple.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorPurple.id}"`)
-      .setEmoji('💜')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleDonorPink.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorPink.id}"`)
-      .setEmoji(env.EMOJI_PINKHEART)
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setLabel(`${roleDonorWhite.name}`)
-      .setCustomId(`"ID":"RR","RID":"${roleDonorWhite.id}"`)
-      .setEmoji('🤍')
-      .setStyle(ButtonStyle.Primary),
-  );
-  await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
-}
+//   const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+//     new ButtonBuilder()
+//       .setLabel(`${roleDonorBlue.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${roleDonorBlue.id}"`)
+//       .setEmoji('💙')
+//       .setStyle(ButtonStyle.Primary),
+//     new ButtonBuilder()
+//       .setLabel(`${roleDonorPurple.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${roleDonorPurple.id}"`)
+//       .setEmoji('💜')
+//       .setStyle(ButtonStyle.Primary),
+//     new ButtonBuilder()
+//       .setLabel(`${roleDonorPink.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${roleDonorPink.id}"`)
+//       .setEmoji(env.EMOJI_PINKHEART)
+//       .setStyle(ButtonStyle.Primary),
+//     new ButtonBuilder()
+//       .setLabel(`${roleDonorWhite.name}`)
+//       .setCustomId(`"ID":"RR","RID":"${roleDonorWhite.id}"`)
+//       .setEmoji('🤍')
+//       .setStyle(ButtonStyle.Primary),
+//   );
+//   await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
+// }
 
 /**
  * The pronoun prompt

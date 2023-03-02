@@ -664,11 +664,11 @@ export async function tripsitmeResolve(
 
   let message:Message;
   await threadHelpUser.send(stripIndents`
-      ${env.EMOJI_INVISIBLE}
+      ${emojiGet('Invisible')}
       > **If you have a minute, your feedback is important to us!**
       > Please rate your experience with ${interaction.guild.name}'s service by reacting below.
       > Thank you!
-      ${env.EMOJI_INVISIBLE}
+      ${emojiGet('Invisible')}
       `)
     .then(async msg => {
       message = msg;
@@ -683,9 +683,9 @@ export async function tripsitmeResolve(
       const collector = message.createReactionCollector({ filter, time: 0 });
       collector.on('collect', async reaction => {
         await threadHelpUser.send(stripIndents`
-          ${env.EMOJI_INVISIBLE}
+          ${emojiGet('Invisible')}
           > Thank you for your feedback, here's a cookie! 🍪
-          ${env.EMOJI_INVISIBLE}
+          ${emojiGet('Invisible')}
           `);
         // log.debug(F, `Collected ${reaction.emoji.name} from ${threadHelpUser}`);
         const finalEmbed = embedTemplate()

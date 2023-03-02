@@ -8,7 +8,8 @@ declare global {
   var announcements: string[]; // eslint-disable-line
   var lpmDict: LpmDict; // eslint-disable-line
   var lpmTime: number[]; // eslint-disable-line
-  var emojiGuildA: Guild; // eslint-disable-line
+  var emojiGuildRPG: Guild; // eslint-disable-line
+  var emojiGuildMain: Guild; // eslint-disable-line
   var emojiGet: (name:string) => Emoji; // eslint-disable-line
   var buttons: Buttons; // eslint-disable-line
 }
