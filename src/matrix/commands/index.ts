@@ -1,8 +1,4 @@
 /**
- * export {* as calc_psychedelics} from './calcPsychedelics';
- * export {default as fooCommand} from ''./foo';
+ * the exported name must always be lowercase
  */
-
-export * as helloworld from './m.helloWorld';
-export * as test from './m.test';
-export * as echo from './m.echo';
+export * as drug from './m.drug';
