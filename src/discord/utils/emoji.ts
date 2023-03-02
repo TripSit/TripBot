@@ -4,7 +4,7 @@ import { Client, Emoji } from 'discord.js';
 
 export async function emojiCache(client: Client):Promise<void> {
   global.emojiGuildA = await client.guilds.fetch(env.DISCORD_EMOJI_GUILD_A);
-  await emojiGuildA.emojis.fetch();
+  await global.emojiGuildA.emojis.fetch();
   global.emoji = get;
 }
 
