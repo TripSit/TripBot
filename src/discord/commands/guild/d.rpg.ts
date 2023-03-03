@@ -2512,9 +2512,9 @@ export async function rpgTrivia(
     perfectScore = '';
     if (score !== 0) { // The user got at least one question correct
       if (score === amountOfQuestions) { // Bonus for getting all questions correct
-        payout = ((score * (bonus + perfectBonus)));
+        payout = (((score * 2) * (bonus + perfectBonus)));
       } else {
-        payout = (score * bonus);
+        payout = ((score * 2 ) * bonus);
         perfectScore = '';
       }
       log.debug(F, `Payout: ${payout} tokens`);
@@ -2728,8 +2728,8 @@ export async function rpgTrivia(
         - Select a difficulty and number of questions
         - Answer the questions within 30 seconds
 
-        - Earn tokens for each correct answer
-        - Earn bonus tokens if you get all questions correct
+        - Earn 2 tokens (plus difficulty bonus) for each correct answer
+        - Earn more bonus tokens if you get all questions correct
 
        *(Multiplayer coming soon!)*
       `)
