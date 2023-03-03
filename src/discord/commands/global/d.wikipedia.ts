@@ -25,6 +25,7 @@ export const dWikipedia: SlashCommand = {
 
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply();
 
     const query = (interaction.options.getString('query') as string);
 
@@ -32,8 +33,7 @@ export const dWikipedia: SlashCommand = {
       .setTitle(`Definition for ${query}`)
       .setDescription(await wikipedia(query));
 
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.editReply({ embeds: [embed] });
 
     return true;
   },

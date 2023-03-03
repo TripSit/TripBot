@@ -309,17 +309,17 @@ export async function setupTemplateReactionRole(
       new ButtonBuilder()
         .setLabel(`${roleDrunk.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDrunk.id}"`)
-        .setEmoji(env.EMOJI_DRUNK)
+        .setEmoji(emojiGet('Alcohol'))
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleHigh.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleHigh.id}"`)
-        .setEmoji(env.EMOJI_HIGH)
+        .setEmoji(emojiGet('Weed'))
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleRolling.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleRolling.id}"`)
-        .setEmoji(env.EMOJI_ROLLING)
+        .setEmoji(emojiGet('Empathogens'))
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -327,17 +327,17 @@ export async function setupTemplateReactionRole(
       new ButtonBuilder()
         .setLabel(`${roleTripping.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleTripping.id}"`)
-        .setEmoji(env.EMOJI_TRIPPING)
+        .setEmoji(emojiGet('Psychedelics'))
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleDissociating.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDissociating.id}"`)
-        .setEmoji(env.EMOJI_DISSOCIATING)
+        .setEmoji(emojiGet('Disassociatives'))
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleStimming.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleStimming.id}"`)
-        .setEmoji(env.EMOJI_STIMMING)
+        .setEmoji(emojiGet('Stimulants'))
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -345,17 +345,17 @@ export async function setupTemplateReactionRole(
       new ButtonBuilder()
         .setLabel(`${roleSedated.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleSedated.id}"`)
-        .setEmoji(env.EMOJI_SEDATED)
+        .setEmoji(emojiGet('Depressants'))
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleTalkative.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleTalkative.id}"`)
-        .setEmoji(env.EMOJI_TALKATIVE)
+        .setEmoji(emojiGet('Talkative'))
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleWorking.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleWorking.id}"`)
-        .setEmoji(env.EMOJI_WORKING)
+        .setEmoji(emojiGet('Working'))
         .setStyle(ButtonStyle.Primary),
     );
 

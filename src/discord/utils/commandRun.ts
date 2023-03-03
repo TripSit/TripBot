@@ -53,7 +53,7 @@ export async function commandRun(
         await interaction.editReply({ embeds: [embed] });
       }
       if (env.NODE_ENV === 'production') {
-        const botlog = await client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+        const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
         const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
         const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
         await botlog.send(`Hey ${tripbotdevrole}, I just got an error (commandRun: ${commandName}):
@@ -67,7 +67,7 @@ export async function commandRun(
         ephemeral: true,
       });
       if (env.NODE_ENV === 'production') {
-        const botlog = await client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+        const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
         const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
         const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
         await botlog.send(`Hey ${tripbotdevrole}, I just got an error (commandRun: ${commandName}):
