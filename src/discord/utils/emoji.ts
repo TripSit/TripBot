@@ -39,7 +39,7 @@ export const numberOfQuestions = [
   {
     label: '10 Questions (100% perfect bonus)',
     value: '10',
-    emoji: 'menuNormal',
+    emoji: 'menuMedium',
   },
   {
     label: '20 Questions (200% perfect bonus)',
