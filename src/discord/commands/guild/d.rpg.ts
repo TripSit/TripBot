@@ -5,7 +5,6 @@ import {
   ButtonBuilder,
   ActionRowBuilder,
   StringSelectMenuBuilder,
-  // ColorResolvable,
   MessageComponentInteraction,
   time,
   ChatInputCommandInteraction,
@@ -14,7 +13,6 @@ import {
   TextInputBuilder,
   ModalSubmitInteraction,
   StringSelectMenuComponent,
-  // StringSelectMenuInteraction,
   InteractionEditReplyOptions,
   InteractionUpdateOptions,
   SelectMenuComponentOptionData,
@@ -23,6 +21,7 @@ import {
   TextChannel,
   ColorResolvable,
   MessageReplyOptions,
+  Emoji,
 } from 'discord.js';
 import {
   APIEmbed,
@@ -43,6 +42,7 @@ import {
 import { Personas, RpgInventory } from '../../../global/@types/database';
 import { imageGet } from '../../utils/imageGet';
 import { GameName } from '../../../global/@types/global';
+import { difficulties, numberOfQuestions } from '../../utils/emoji';
 
 export default dRpg;
 
@@ -58,81 +58,6 @@ const loadingString = 'Loading...';
 //   raid: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 * 7 : 1000 * 1,
 // };
 
-const difficulties = [
-  {
-    label: 'Normal Difficulty',
-    value: 'easy',
-    emoji: 'menuNormal',
-    default: true,
-  },
-  {
-    label: 'Hard Difficulty (50% difficulty bonus)',
-    value: 'medium',
-    emoji: 'menuHard',
-  },
-  {
-    label: 'Expert Difficulty (100% difficulty bonus)',
-    value: 'hard',
-    emoji: 'menuExpert',
-  },
-];
-
-const numberOfQuestions = [
-  {
-    label: '5 Questions (50% perfect bonus)',
-    value: '5',
-    emoji: 'menuShort',
-    default: true,
-  },
-  {
-    label: '10 Questions (100% perfect bonus)',
-    value: '10',
-    emoji: 'menuNormal',
-  },
-  {
-    label: '20 Questions (200% perfect bonus)',
-    value: '20',
-    emoji: 'menuLong',
-  },
-];
-
-const menus = {
-  item: new StringSelectMenuBuilder()
-    .setCustomId('rpgGeneralSelect')
-    .setPlaceholder('Select an item to buy'),
-  background: new StringSelectMenuBuilder()
-    .setCustomId('rpgBackgroundSelect')
-    .setPlaceholder('Select a background to use.'),
-  name: new StringSelectMenuBuilder()
-    .setCustomId('rpgNameDisplay')
-    .setPlaceholder('No Name!')
-    .setOptions([{
-      label: 'No Name',
-      value: 'nameless',
-      emoji: '👤',
-      default: true,
-    }]),
-  class: new StringSelectMenuBuilder()
-    .setCustomId('rpgClass')
-    .setPlaceholder('Select a class'),
-  species: new StringSelectMenuBuilder()
-    .setCustomId('rpgSpecies')
-    .setPlaceholder('Pick a species'),
-  guild: new StringSelectMenuBuilder()
-    .setCustomId('rpgGuild')
-    .setPlaceholder('Select a guild'),
-  difficulty: new StringSelectMenuBuilder()
-    .setCustomId('rpgDifficulty')
-    .setPlaceholder('Easy')
-    .setOptions(difficulties),
-  questions: new StringSelectMenuBuilder()
-    .setCustomId('rpgQuestionLimit')
-    .setPlaceholder('How many questions?')
-    .setOptions(numberOfQuestions),
-} as {
-  [key: string]: StringSelectMenuBuilder;
-};
-
 const items = {
   general: {
     testkit: {
@@ -146,7 +71,7 @@ const items = {
       consumable: false,
       effect: 'tokenMultiplier',
       effect_value: '0.1',
-      emoji: 'itemMultiplier',
+      emoji: 'itemBonus',
     },
     scale: {
       label: 'Scale',
@@ -159,7 +84,7 @@ const items = {
       consumable: false,
       effect: 'tokenMultiplier',
       effect_value: '0.1',
-      emoji: 'itemMultiplier',
+      emoji: 'itemBonus',
     },
   },
   backgrounds: {
@@ -960,6 +885,8 @@ export async function rpgTown(
       global.buttons.home,
     );
 
+  // log.debug(F, `RPG Town End: ${JSON.stringify(rowTown)}`);
+
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
@@ -1205,7 +1132,7 @@ export async function rpgMarket(
       .setDescription(stripIndents`
       You are in the local market, you can buy some items to help you on your journey.
 
-      ${emojiGet('itemMultiplier')} ***Multipliers*** can be used to increase the amount of tokens you earn.
+      ${emojiGet('itemBonus')} ***Multipliers*** can be used to increase the amount of tokens you earn.
       ${emojiGet('itemBackground')} ***Backgrounds*** can be used to personalize your /profile and /levels.
       ***More items coming soon! Check back later.***
       
@@ -1309,7 +1236,7 @@ export async function rpgMarketChange(
     .setDescription(stripIndents`
       You are in the local market, you can buy some items to help you on your journey.
 
-      ${emojiGet('itemMultiplier')} ***Multipliers*** can be used to increase the amount of tokens you earn.
+      ${emojiGet('itemBonus')} ***Multipliers*** can be used to increase the amount of tokens you earn.
       ${emojiGet('itemBackground')} ***Backgrounds*** can be used to personalize your /profile and /levels.
       ***More items coming soon! Check back later.***
 
@@ -1351,7 +1278,7 @@ export async function rpgMarketInventory(
   const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
   const inventoryString = inventoryData.length > 0
     ? stripIndents`
-    ${emojiGet('buttonInventory')} **Inventory**
+    ${emojiGet('itemInventory')} **Inventory**
       ${inventoryList}
       `
     : '';
@@ -1360,11 +1287,14 @@ export async function rpgMarketInventory(
   const marketInventory = [...Object.values(items.general), ...Object.values(items.backgrounds)]
     .map(item => {
       if (!inventoryData.find(i => i.value === item.value)) {
+        log.debug(F, `item: ${JSON.stringify(item, null, 2)}`);
+        log.debug(F, `item.emoji: ${item.emoji}`);
+        log.debug(F, `emojiGet(item.emoji): ${emojiGet(item.emoji)}`);
         return {
           label: `${item.label} - ${item.cost} TT$`,
           value: item.value,
           description: `${item.description}`,
-          emoji: item.emoji,
+          emoji: emojiGet(item.emoji).id,
         };
       }
       return null;
@@ -1557,7 +1487,14 @@ export async function rpgHome(
   if (chosenItem) {
     chosenItem.default = true;
     menus.background.addOptions(chosenItem);
-    const allItems = [...Object.values(items.backgrounds)];
+    log.debug(F, `items.backgrounds: ${JSON.stringify(items.backgrounds, null, 2)}`);
+    // convert the emoji property into an emoji using emojiGet
+    const allItems = [...Object.values(items.backgrounds)].map(item => {
+      const newItem = item;
+      newItem.emoji = `<:${emojiGet('itemBackground').identifier}>`;
+      return item;
+    });
+    log.debug(F, `allItems: ${JSON.stringify(allItems, null, 2)}`);
     backgroundData = allItems.find(item => item.value === chosenItem?.value) as {
       label: string;
       value: string;
@@ -1576,8 +1513,10 @@ export async function rpgHome(
 
   // Set the item row
   const rowBackgrounds = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(menus.background);
+    .addComponents(global.menus.background);
 
+  log.debug(F, `backgroundData (home change): ${JSON.stringify(backgroundData, null, 2)}`);
+  log.debug(F, `Button home: ${JSON.stringify(emojiGet('buttonHome'), null, 2)}`);
   // Build the embed
   const embed = embedTemplate()
     .setAuthor(null)
@@ -1801,7 +1740,7 @@ export async function rpgHomeInventory(
   const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
   const inventoryString = inventoryData.length > 0
     ? stripIndents`
-      ${emojiGet('buttonInventory')} **Inventory**
+      ${emojiGet('itemInventory')} **Inventory**
       ${inventoryList}
       `
     : '';
@@ -1814,7 +1753,7 @@ export async function rpgHomeInventory(
           label: `${item.label} - ${item.cost} TT$`,
           value: item.value,
           description: `${item.description}`,
-          emoji: item.emoji,
+          emoji: emojiGet(item.emoji).id,
         };
       }
       return null;
@@ -2362,17 +2301,23 @@ export async function rpgTrivia(
     let answerColor = Colors.Purple as ColorResolvable;
     let embedStatus = `Starting trivia with ${amountOfQuestions} questions!`;
     let questionAnswer = 'You have 30 seconds to answer each question.';
-    const choices = [emojiGet('buttonBoxA'), emojiGet('buttonBoxB'), emojiGet('buttonBoxC'), emojiGet('buttonBoxD')];
+    const choices = [
+      `<:${emojiGet('buttonBoxA').identifier}>`,
+      `<:${emojiGet('buttonBoxB').identifier}>`,
+      `<:${emojiGet('buttonBoxC').identifier}>`,
+      `<:${emojiGet('buttonBoxD').identifier}>`,
+    ] as string[];
+    log.debug(F, `Choices: ${choices}`);
     const choiceEmoji = (choice: string) => { // emoji for the buttons without the emoji name
       switch (choice) {
-        case emojiGet('buttonBoxA'):
-          return emojiGet('buttonBoxA').slice(13, -1);
-        case emojiGet('buttonBoxB'):
-          return emojiGet('buttonBoxB').slice(13, -1);
-        case emojiGet('buttonBoxC'):
-          return emojiGet('buttonBoxC').slice(13, -1);
-        case emojiGet('buttonBoxD'):
-          return emojiGet('buttonBoxD').slice(13, -1);
+        case `<:${emojiGet('buttonBoxA').identifier}>`:
+          return emojiGet('buttonBoxA').id;
+        case `<:${emojiGet('buttonBoxB').identifier}>`:
+          return emojiGet('buttonBoxB').id;
+        case `<:${emojiGet('buttonBoxC').identifier}>`:
+          return emojiGet('buttonBoxC').id;
+        case `<:${emojiGet('buttonBoxD').identifier}>`:
+          return emojiGet('buttonBoxD').id;
         default:
           return '❓';
       }
@@ -2677,6 +2622,7 @@ export async function rpgTrivia(
         ],
       };
     }
+    log.debug(F, `Reply: ${JSON.stringify(reply, null, 2)}`);
     return reply;
   }
 
@@ -2689,19 +2635,39 @@ export async function rpgTrivia(
   log.debug(F, `selectedOption: ${selectedOption}`);
 
   // Check if the selected option exists in the difficulties list
-  const difficultyOption = Object.values(difficulties).find(item => item.value === selectedOption);
+  const difficultyOption = Object.values(difficulties.map(d => ({
+    label: d.label,
+    value: d.value,
+    emoji: emojiGet(d.emoji),
+    default: d.default,
+  }))).find(item => item.value === selectedOption);
   // Check if the selected option exists in the number of questions list
-  const amountOption = Object.values(numberOfQuestions).find(item => item.value === selectedOption);
+  const amountOption = Object.values(numberOfQuestions.map(q => ({
+    label: q.label,
+    value: q.value,
+    emoji: emojiGet(q.emoji),
+    default: q.default,
+  }))).find(item => item.value === selectedOption);
 
   if (difficultyOption) {
     log.debug(F, 'difficultyOption is not empty');
     // Get a list of marketInventory where the value does not equal the choice
     // If there is no choice, it will return all items the user has
-    const filteredDifficulties = Object.values(difficulties)
+    const filteredDifficulties = Object.values(difficulties.map(d => ({
+      label: d.label,
+      value: d.value,
+      emoji: `<:${(emojiGet(d.emoji) as Emoji).identifier}>`,
+      default: d.default,
+    })))
       .filter(item => item.value !== selectedOption)
       .map(item => ({ ...item, default: false }));
     menus.difficulty.setOptions(filteredDifficulties);
-    const chosenDifficulty = difficulties.find(item => item.value === selectedOption);
+    const chosenDifficulty = difficulties.map(d => ({
+      label: d.label,
+      value: d.value,
+      emoji: `<:${(emojiGet(d.emoji) as Emoji).identifier}>`,
+      default: d.default,
+    })).find(item => item.value === selectedOption);
     if (chosenDifficulty) {
       chosenDifficulty.default = true;
       menus.difficulty.addOptions(chosenDifficulty);
@@ -2710,16 +2676,44 @@ export async function rpgTrivia(
 
   if (amountOption) {
     log.debug(F, 'amountOption is not empty');
-    const filteredOptions = Object.values(numberOfQuestions)
+    const filteredOptions = Object.values(numberOfQuestions.map(q => ({
+      label: q.label,
+      value: q.value,
+      emoji: `<:${(emojiGet(q.emoji) as Emoji).identifier}>`,
+      default: q.default,
+    })))
       .filter(item => item.value !== selectedOption)
       .map(item => ({ ...item, default: false }));
     menus.questions.setOptions(filteredOptions);
-    const chosenQuestion = numberOfQuestions.find(item => item.value === selectedOption);
+    const chosenQuestion = numberOfQuestions.map(q => ({
+      label: q.label,
+      value: q.value,
+      emoji: `<:${(emojiGet(q.emoji) as Emoji).identifier}>`,
+      default: q.default,
+    })).find(item => item.value === selectedOption);
     if (chosenQuestion) {
       chosenQuestion.default = true;
       menus.questions.addOptions(chosenQuestion);
     }
   }
+
+  const components = [
+    new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        global.buttons.start,
+        global.buttons.arcade,
+      ),
+    new ActionRowBuilder<StringSelectMenuBuilder>()
+      .addComponents(
+        menus.difficulty,
+      ),
+    new ActionRowBuilder<StringSelectMenuBuilder>()
+      .addComponents(
+        menus.questions,
+      ),
+  ];
+
+  log.debug(F, `Components: ${JSON.stringify(components, null, 2)}`);
 
   return {
     embeds: [embedTemplate()
@@ -2740,21 +2734,7 @@ export async function rpgTrivia(
        *(Multiplayer coming soon!)*
       `)
       .setColor(Colors.Green)],
-    components: [
-      new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(
-          global.buttons.start,
-          global.buttons.arcade,
-        ),
-      new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(
-          menus.difficulty,
-        ),
-      new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(
-          menus.questions,
-        ),
-    ],
+    components,
   };
 }
 
