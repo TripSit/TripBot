@@ -1904,7 +1904,7 @@ export async function rpgArcadeGame(
   const gameData = {
     Coinflip: {
       gameName: 'Coinflip' as GameName,
-      instructions: stripIndents`**How to play:**
+      instructions: stripIndents`**How to play**
     - Set a bet amount using the buttons below
     - You can bet any amount by using a button more than once
     - Choose heads or tails to flip the coin
@@ -1923,14 +1923,14 @@ export async function rpgArcadeGame(
     },
     Roulette: {
       gameName: 'Roulette' as GameName,
-      instructions: stripIndents`**How to play:**
+      instructions: stripIndents`**How to play**
       - Set a bet amount using the buttons below
       - You can bet any amount by using a button more than once
       - Choose an option to bet on to spin the wheel
     
       - You win or lose depending on what you picked and where the ball lands
 
-      **Odds:**
+      **Odds**
       Red / Black / Even / Odd / High / Low - 1:1
       First / Second / Third - 2:1
       1-2 / 3-4 / 5-6 / 7-8 - 3:1
@@ -2396,7 +2396,7 @@ export async function rpgTrivia(
                   .setEmoji(choiceEmoji(choice))
                   .setStyle(ButtonStyle.Secondary))
                   .concat([
-                    global.buttons.quit,
+                    global.buttons.quit.setDisabled(false),
                   ]),
               ),
             ],
@@ -2415,7 +2415,7 @@ export async function rpgTrivia(
                   .setEmoji(choiceEmoji(choice))
                   .setStyle(ButtonStyle.Secondary))
                   .concat([
-                    global.buttons.quit,
+                    global.buttons.quit.setDisabled(false),
                   ]),
               ),
             ],
@@ -2446,7 +2446,10 @@ export async function rpgTrivia(
             .setCustomId(choice)
             .setDisabled(true)
             .setEmoji(choiceEmoji(choice))
-            .setStyle(ButtonStyle.Secondary));
+            .setStyle(ButtonStyle.Secondary))
+            .concat([
+              global.buttons.quit.setDisabled(false),
+            ]);
 
           await collected.update({ // eslint-disable-line no-await-in-loop
             components: [new ActionRowBuilder<ButtonBuilder>().addComponents(disabledButtons)],
@@ -2473,7 +2476,7 @@ export async function rpgTrivia(
             **Correct!**
             The answer was **${questionData.correct_answer}.**
             
-            **Current Score:**
+            **Current Score**
             Correct: ${questionsCorrect} of ${(qNumber + 1)}
             Streak: ${streak}
             
@@ -2486,14 +2489,13 @@ export async function rpgTrivia(
             components: [
               new ActionRowBuilder<ButtonBuilder>()
                 .addComponents(
-                  // flatten the array of components containing the existing buttons
                   choices.map(choice => new ButtonBuilder()
                     .setDisabled(true)
                     .setCustomId(choice)
                     .setEmoji(choiceEmoji(choice))
                     .setStyle(ButtonStyle.Secondary))
                     .concat([
-                      global.buttons.quit,
+                      global.buttons.quit.setDisabled(true),
                     ]),
                 ),
             ],
@@ -2508,7 +2510,7 @@ export async function rpgTrivia(
             **Incorrect!**
             The correct answer was **${questionData.correct_answer}.**
             
-            **Current Score:**
+            **Current Score**
             Correct: ${questionsCorrect} of ${(qNumber + 1)}
             Streak: ${streak}
             
@@ -2526,7 +2528,7 @@ export async function rpgTrivia(
                   .setEmoji(choiceEmoji(choice))
                   .setStyle(ButtonStyle.Secondary))
                   .concat([
-                    global.buttons.quit,
+                    global.buttons.quit.setDisabled(true),
                   ]),
               ),
             ],
@@ -2544,16 +2546,16 @@ export async function rpgTrivia(
     }
     let payout = 0;
     perfectScore = '';
-    if (score !== 0) { // The user got at least one question correct
+    if (questionsCorrect !== 0) { // The user got at least one question correct
       if (questionsCorrect === amountOfQuestions) { // Bonus for getting all questions correct
-        payout = ((score * (bonus + perfectBonus)));
+        payout = Math.ceil(2 * (score * (bonus + perfectBonus)));
       } else {
-        payout = (score * bonus);
+        payout = Math.ceil(2 * (score * bonus));
         perfectScore = '';
       }
       log.debug(F, `Payout: ${payout} tokens`);
       log.debug(F, `Rounded Payout: ${payout} tokens`);
-      personaData.tokens += Math.ceil(payout);
+      personaData.tokens += payout;
       log.debug(F, `User scored: ${score}`);
       log.debug(F, `User earned: ${payout} tokens`);
       await setPersonaInfo(personaData);
@@ -2583,7 +2585,7 @@ export async function rpgTrivia(
           `**${embedStatus}**
           ${questionAnswer}
 
-          Final Scores: 
+          **Final Scores** 
           Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
           Max Streak: **${maxStreak}** correct in a row
           *${scoreMessage}*
@@ -2616,10 +2618,10 @@ export async function rpgTrivia(
         .setColor(Colors.Purple)
         .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
         .setDescription(
-          `**${embedStatus}**
+          `**Game quit.**
           ${questionAnswer}
 
-          Final Scores: 
+          **Final Scores** 
           Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
           Max Streak: **${maxStreak}** questions correct in a row
           *${gameQuitMessage}*
@@ -2655,7 +2657,7 @@ export async function rpgTrivia(
           `**${embedStatus}**
           ${questionAnswer}
 
-          Final Scores: 
+          **Final Scores** 
           Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
           Max Streak: **${maxStreak}** correct in a row
           *${timeOutMessage}*
@@ -2784,7 +2786,7 @@ export async function rpgTrivia(
       .setDescription(stripIndents`
         You ${rand(text.enter)} the trivia parlor where you can test your knowledge of random facts!
 
-        **How to play:**
+        **How to play**
         - All questions are multiple choice
         - Select a difficulty and number of questions
         - Answer the questions within 30 seconds
