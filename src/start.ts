@@ -30,7 +30,7 @@ start();
 process.on('unhandledRejection', async (error: Error) => {
   log.error(F, `ERROR: ${error.stack}`);
   if (env.NODE_ENV === 'production') {
-    const channel = await client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+    const channel = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
     const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
     const role = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
     await channel.send(`Hey ${role}, I just got an error (start):
