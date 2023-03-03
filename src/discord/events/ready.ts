@@ -76,7 +76,7 @@ export const ready: ReadyEvent = {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
         log.info(F, `Discord finished booting in ${bootDuration}s!`);
         if (env.NODE_ENV !== 'development') {
-          const botlog = await client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+          const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
           const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
           const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
           await botlog.send(`Hey ${tripbotdevrole}, bot has restart! Booted in ${bootDuration} seconds`);

@@ -16,7 +16,7 @@ export const error: ErrorEvent = {
     // log.error(F, `errorObj.message: ${errorObj.message}`);
     log.error(F, `ERROR: ${errorObj.stack}`);
     if (env.NODE_ENV === 'production') {
-      const botlog = await client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+      const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
       const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
       const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
       await botlog.send(`Hey ${tripbotdevrole}, I just got an error (error):
