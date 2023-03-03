@@ -21,6 +21,7 @@ import {
   TextChannel,
   ColorResolvable,
   MessageReplyOptions,
+  Emoji,
 } from 'discord.js';
 import {
   APIEmbed,
@@ -2621,6 +2622,7 @@ export async function rpgTrivia(
         ],
       };
     }
+    log.debug(F, `Reply: ${JSON.stringify(reply, null, 2)}`);
     return reply;
   }
 
@@ -2651,11 +2653,21 @@ export async function rpgTrivia(
     log.debug(F, 'difficultyOption is not empty');
     // Get a list of marketInventory where the value does not equal the choice
     // If there is no choice, it will return all items the user has
-    const filteredDifficulties = Object.values(difficulties)
+    const filteredDifficulties = Object.values(difficulties.map(d => ({
+      label: d.label,
+      value: d.value,
+      emoji: `<:${(emojiGet(d.emoji) as Emoji).identifier}>`,
+      default: d.default,
+    })))
       .filter(item => item.value !== selectedOption)
       .map(item => ({ ...item, default: false }));
     menus.difficulty.setOptions(filteredDifficulties);
-    const chosenDifficulty = difficulties.find(item => item.value === selectedOption);
+    const chosenDifficulty = difficulties.map(d => ({
+      label: d.label,
+      value: d.value,
+      emoji: `<:${(emojiGet(d.emoji) as Emoji).identifier}>`,
+      default: d.default,
+    })).find(item => item.value === selectedOption);
     if (chosenDifficulty) {
       chosenDifficulty.default = true;
       menus.difficulty.addOptions(chosenDifficulty);
@@ -2664,16 +2676,44 @@ export async function rpgTrivia(
 
   if (amountOption) {
     log.debug(F, 'amountOption is not empty');
-    const filteredOptions = Object.values(numberOfQuestions)
+    const filteredOptions = Object.values(numberOfQuestions.map(q => ({
+      label: q.label,
+      value: q.value,
+      emoji: `<:${(emojiGet(q.emoji) as Emoji).identifier}>`,
+      default: q.default,
+    })))
       .filter(item => item.value !== selectedOption)
       .map(item => ({ ...item, default: false }));
     menus.questions.setOptions(filteredOptions);
-    const chosenQuestion = numberOfQuestions.find(item => item.value === selectedOption);
+    const chosenQuestion = numberOfQuestions.map(q => ({
+      label: q.label,
+      value: q.value,
+      emoji: `<:${(emojiGet(q.emoji) as Emoji).identifier}>`,
+      default: q.default,
+    })).find(item => item.value === selectedOption);
     if (chosenQuestion) {
       chosenQuestion.default = true;
       menus.questions.addOptions(chosenQuestion);
     }
   }
+
+  const components = [
+    new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        global.buttons.start,
+        global.buttons.arcade,
+      ),
+    new ActionRowBuilder<StringSelectMenuBuilder>()
+      .addComponents(
+        menus.difficulty,
+      ),
+    new ActionRowBuilder<StringSelectMenuBuilder>()
+      .addComponents(
+        menus.questions,
+      ),
+  ];
+
+  log.debug(F, `Components: ${JSON.stringify(components, null, 2)}`);
 
   return {
     embeds: [embedTemplate()
@@ -2694,21 +2734,7 @@ export async function rpgTrivia(
        *(Multiplayer coming soon!)*
       `)
       .setColor(Colors.Green)],
-    components: [
-      new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(
-          global.buttons.start,
-          global.buttons.arcade,
-        ),
-      new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(
-          menus.difficulty,
-        ),
-      new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(
-          menus.questions,
-        ),
-    ],
+    components,
   };
 }
 
