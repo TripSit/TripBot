@@ -801,6 +801,7 @@ export async function drugGet(
         .orWhere('name', drugName.toUpperCase());
     } catch (err) {
       log.error(F, `Error getting drug: ${err}`);
+      log.error(F, `drugId: ${drugId}`);
       log.error(F, `drugName: ${drugName}`);
     }
   }
@@ -812,6 +813,7 @@ export async function drugGet(
   } catch (err) {
     log.error(F, `Error getting drug: ${err}`);
     log.error(F, `drugId: ${drugId}`);
+    log.error(F, `drugName: ${drugName}`);
   }
 
   return response;
