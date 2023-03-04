@@ -41,7 +41,7 @@ export const dPoll: SlashCommand = {
       .setRequired(true)),
   async execute(interaction) {
     startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    await interaction.deferReply({ ephemeral: true });
 
     if (!interaction.channel) {
       await interaction.editReply('You need to be in a channel to use this command!');

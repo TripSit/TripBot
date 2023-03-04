@@ -136,7 +136,9 @@ export const dBirthday: SlashCommand = {
       .setDescription('Get someone\'s birthday!')
       .addUserOption(option => option
         .setName('user')
-        .setDescription('User to lookup')))
+        .setDescription('User to lookup'))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(subcommand => subcommand
       .setName('set')
       .setDescription('Set your birthday!')
@@ -164,6 +166,7 @@ export const dBirthday: SlashCommand = {
         .setName('day'))),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     let member = interaction.options.getMember('user');
     const monthInput = interaction.options.getString('month');

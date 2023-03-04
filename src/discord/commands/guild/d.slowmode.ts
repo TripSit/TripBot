@@ -46,7 +46,7 @@ export const dSlowmode: SlashCommand = {
       .setDescription('Turn off slowmode')),
   async execute(interaction) {
     startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    await interaction.deferReply({ ephemeral: true });
 
     const toggle = interaction.options.getSubcommand();
     const { channel } = interaction;

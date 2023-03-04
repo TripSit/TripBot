@@ -20,7 +20,9 @@ export const dLast: SlashCommand = {
     .addUserOption(option => option
       .setName('user')
       .setDescription('User to look up')
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });

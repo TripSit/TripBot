@@ -60,7 +60,7 @@ export const dReminder: SlashCommand = {
     .setDescription('Sends a reminder on what the channel is for!'),
   async execute(interaction) {
     startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    await interaction.deferReply({ ephemeral: true });
     if (!interaction.guild) {
       interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;

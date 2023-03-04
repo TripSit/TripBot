@@ -91,7 +91,7 @@ export const dRole: SlashCommand = {
         .setDescription('(Mod only, defaults to you) The user to remove the role.'))),
   async execute(interaction) {
     startlog(F, interaction);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    await interaction.deferReply({ ephemeral: true });
     if (!interaction.guild) return false;
     const command = interaction.options.getSubcommand();
     let role = {} as Role;

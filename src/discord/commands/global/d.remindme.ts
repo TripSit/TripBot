@@ -49,7 +49,7 @@ export const dRemindme: SlashCommand = {
       .setName('delete')),
   async execute(interaction) {
     startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    await interaction.deferReply({ ephemeral: true });
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const offset = interaction.options.getString('offset');
     const reminder = interaction.options.getString('reminder');

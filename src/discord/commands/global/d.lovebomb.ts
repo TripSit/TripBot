@@ -20,7 +20,7 @@ export const dlovebomb: SlashCommand = {
 
   async execute(interaction) {
     startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    await interaction.deferReply({ ephemeral: false });
     const message = `${[...heartEmojis].sort(() => 0.5 - Math.random()).slice(0, 30).join(' ')}`;
     interaction.editReply(message);
 

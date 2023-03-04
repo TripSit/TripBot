@@ -30,7 +30,7 @@ export const selftimeout: SlashCommand = {
       .setRequired(true)),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    await interaction.deferReply({ ephemeral: true });
     if (!interaction.guild) return false;
 
     const confirmation = interaction.options.getString('confirmation');

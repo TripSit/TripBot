@@ -16,7 +16,7 @@ export const dTopic: SlashCommand = {
     .setDescription('Sends a random topic!'),
   async execute(interaction) {
     startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    await interaction.deferReply({ ephemeral: false });
     // interaction.editReply({ embeds: [embedTemplate().setDescription(await topic())] });
     interaction.editReply(`Random New Topic: **${await topic()}**`);
     return true;

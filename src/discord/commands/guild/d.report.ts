@@ -31,7 +31,7 @@ export const dReport: SlashCommand = {
 
   async execute(interaction: ChatInputCommandInteraction) {
     startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    await interaction.deferReply({ ephemeral: true });
     // Only run on tripsit
     if (!interaction.guild) {
       await interaction.editReply({ content: 'This command can only be used in a server!' });

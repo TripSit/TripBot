@@ -54,7 +54,7 @@ export const dVoice: SlashCommand = {
         .setRequired(true))),
   async execute(interaction) {
     startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    await interaction.deferReply({ ephemeral: true });
 
     const command = interaction.options.getSubcommand() as 'lock' | 'hide' | 'ban' | 'rename' | 'mute' | 'cohost';
     const member = interaction.member as GuildMember;
