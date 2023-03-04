@@ -723,7 +723,7 @@ export async function tripSitMe(
   intro:string,
 ):Promise<ThreadChannel | null> {
   await startLog('tripSitMe', interaction);
-  await interaction.deferReply({ ephemeral: true });
+  // await interaction.deferReply({ ephemeral: true });
 
   // Lookup guild information for variables
   if (!interaction.guild) {
