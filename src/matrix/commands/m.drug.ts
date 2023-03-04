@@ -23,19 +23,20 @@ type RoaType = {
 };
 
 async function mDrug(roomId: string, event:any, client:MatrixClient, substance:string, section:string) {
-  let text:string = '';
-  let html:string = '';
   let reply:any;
 
   const drugData = await gDrug(substance);
   if (drugData === null) {
-    text = `Task failed successfully!\n\nSorry, i don't know that substance "${substance}". Perhaps check your spelling?`;
-    html = `<b>Task failed successfully!</b> &#129302;<br><br>Sorry, i don't know that substance "${substance}".<br>Perhaps check your spelling?`;
+    const text = `Task failed successfully!\n\nSorry, i don't know that substance "${substance}". Perhaps check your spelling?`;
+    const html = `<b>Task failed successfully!</b> &#129302;<br><br>Sorry, i don't know that substance "${substance}".<br>Perhaps check your spelling?`;
     reply = RichReply.createFor(roomId, event, text, html);
     return client.sendMessage(roomId, reply);
   }
 
   function getDosage() {
+    let html = '';
+    let text = '';
+    if (!drugData!.roas) return false;
     // Get a list of drug ROA names
     const roaNames = drugData!.roas.map(roa => roa.name);
 
@@ -67,7 +68,7 @@ async function mDrug(roomId: string, event:any, client:MatrixClient, substance:s
           roaInfo.dosage.forEach(d => {
             dosageString += `${d.name}: ${d.value}\n`;
           });
-          html += `&#9878; <b>Dosage for ${drugData!.name} (${roaName}) &#9878;:</b><br>${stripIndents`${dosageString}`}<br><br>`;
+          html += `&#9878; <b>Dosage for ${drugData!.name} (${roaName}) &#9878;:</b><br>${stripIndents`${dosageString.replaceAll('\n', '<br>')}`}<br><br>`;
           text += `Dosage for ${drugData!.name} (${roaName}): \n${stripIndents`${dosageString}`}\n\n`;
           dosageColumns += 1;
         }
@@ -77,14 +78,15 @@ async function mDrug(roomId: string, event:any, client:MatrixClient, substance:s
   }
 
   function getSummary() {
-    text = `Summary for ${drugData!.name}:\n\n${drugData!.summary}\nRead more on the wiki: https://wiki.tripsit.me/wiki/${drugData!.name}`;
-    html = `<b>Summary for ${drugData!.name}:</b><br><br>${(drugData!.summary)}<br><a href='https://wiki.tripsit.me/wiki/${drugData!.name}'>Read more on the wiki</a>`;
+    log.debug(F, 'summary');
+    const text = `Summary for ${drugData!.name}:\n\n${drugData!.summary}\nRead more on the wiki: https://wiki.tripsit.me/wiki/${drugData!.name}`;
+    const html = `<b>Summary for ${drugData!.name}:</b><br><br>${(drugData!.summary)}<br><a href='https://wiki.tripsit.me/wiki/${drugData!.name}'>Read more on the wiki</a>`;
     return [text, html];
   }
 
   function getCrossTolerances() {
-    text = `Known cross-tolerances for ${drugData!.name}:\n`;
-    html = `&#128256; <b> Known cross-tolerances for ${drugData!.name} &#128256;:</b><br><br>`;
+    let text = `Known cross-tolerances for ${drugData!.name}:\n`;
+    let html = `&#128256; <b> Known cross-tolerances for ${drugData!.name} &#128256;:</b><br><br>`;
 
     if (drugData!.crossTolerances && drugData!.crossTolerances.length >= 1) {
       const crossToleranceMap = drugData!.crossTolerances
@@ -93,40 +95,78 @@ async function mDrug(roomId: string, event:any, client:MatrixClient, substance:s
       html += stripIndents`${crossToleranceMap.join(', ')}`;
       return [text, html];
     }
-   return false;
+    return false;
+  }
+
+  function getExperiences() {
+    if (drugData!.experiencesUrl) {
+      const text = `Experiences from erowid:\n${drugData!.experiencesUrl.toString()}`;
+      const html = `<b>&#128064; Experiences from erowid &#128064;:</b><br>${drugData!.experiencesUrl.toString()}`;
+      return [text, html];
+    }
+    return false;
   }
 
   function getAddictionPotential() {
     if (drugData!.addictionPotential) {
       const addPot = drugData!.addictionPotential.toString();
-      const capitalized = addPot[0].toUpperCase() + addPot.substring(1);
-      text = `Addiction potential of ${drugData!.name}:\n ` + stripIndents`${addPot}`;
-      html = `&#128148;<b>Addiction potential of ${drugData!.name}</b> &#128148;:<br>` + stripIndents`${addPot}`;
-      return [text, html]
+      const text = `Addiction potential of ${drugData!.name}:\n ${stripIndents`${addPot}`}`;
+      const html = `&#128148;<b>Addiction potential of ${drugData!.name}</b> &#128148;:<br>${stripIndents`${addPot}`}`;
+      return [text, html];
     }
     return false;
   }
 
   function getDuration() {
-    const roaNames = drugData!.roas.map(roa => roa.name);
-    let columns = 0;
-    let html = `&#9203; <b>Duration for ${drugData!.name} &#9203;</b>:<br>`
-    let text = `Duration for ${drugData!.name}:\n`
+    if (!drugData!.roas) return false;
+    const roaNames:string[] = (drugData!.roas as RoaType[]).map(roa => roa.name);
+    const columns = 0;
+    let html = `&#9203; <b>Duration for ${drugData!.name} &#9203;</b>:<br>`;
+    let text = `Duration for ${drugData!.name}:\n`;
     roaNames.forEach(roaName => {
       if (columns < 3) {
         const roaInfo = drugData!.roas.find(r => r.name === roaName);
-        if(roaInfo && roaInfo.duration) {
+        if (roaInfo && roaInfo.duration) {
           let durationString = '';
           roaInfo.duration.forEach(d => {
             durationString += `${d.name}: ${d.value}\n`;
           });
-          html += `<b>${roaName}:</b> ` + stripIndents`${durationString}` + `<br>`;
-          text += `${roaName}:\n` + stripIndents`${durationString}` + `\n`;
+          html += `<b>${roaName}:</b> ${stripIndents`${durationString.replaceAll('\n', '<br>')}`}<br>`;
+          text += `${roaName}:\n${stripIndents`${durationString}`}\n`;
         }
+      }
+    });
+    return [text, html];
+  }
+
+  function getToxicity() {
+    if (!drugData!.toxicity) return false;
+    const toxicityMap = drugData!.toxicity.map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
+    const toxicityString = toxicityMap.join(', ');
+    const html = `<b>&#9763; Toxicity &#9763;</b><br>${toxicityString}`;
+    const text = `Toxicity:\n${toxicityString}`;
+    return [text, html];
+  }
+
+  function getTolerance() {
+    if (!drugData!.tolerance) return false;
+    let toleranceString = '';
+    if (drugData!.tolerance.full) {
+      const tolFullCap = drugData!.tolerance.full[0].toUpperCase() + drugData!.tolerance.full.substring(1);
+      toleranceString += `Full: ${tolFullCap}\n`;
     }
-  });
-  return [text, html];
-}
+    if (drugData!.tolerance.half) {
+      const tolHalfCap = drugData!.tolerance.half[0].toUpperCase() + drugData!.tolerance.half.substring(1);
+      toleranceString += `Half: ${tolHalfCap}\n`;
+    }
+    if (drugData!.tolerance.zero) {
+      const tolZeroCap = drugData!.tolerance.zero[0].toUpperCase() + drugData!.tolerance.zero.substring(1);
+      toleranceString += `Zero: ${tolZeroCap}\n`;
+    }
+    const html = `&#8599; <b>Tolerance information</b> &#8599;:<br>${toleranceString.replaceAll('\n', '<br>')}`;
+    const text = `Tolerance information:\n${toleranceString}`;
+    return [text, html];
+  }
 
   if (section === 'summary') {
     const summary = getSummary();
@@ -135,47 +175,67 @@ async function mDrug(roomId: string, event:any, client:MatrixClient, substance:s
     return true;
   }
   if (section === 'dosage') {
-    if (drugData.roas) {
-      const dosage = getDosage();
-      reply = RichReply.createFor(roomId, event, dosage[0], dosage[1]);
-      client.sendMessage(roomId, reply);
-      return true;
-    } else {
-      html = `<b>Task failed successfully!</b><br><br>Sorry, i could not provide dosage information on ${substance}`;
-      text = `Task failed successfully!\n\nSorry, i could not provide dosage information on ${substance}`;
-      reply = RichReply.createFor(roomId, event, text, html);
-      client.sendMessage(roomId, reply);
-      return false;
-    }
-
-    /**  case 'tolerance':
-      // eslint-disable-next-line no-case-declarations
-      let msgPart:string;
-      if (drugData.tolerance === null) return `Sorry, i have no information on tolerance for ${substance}`;
-      // eslint-disable-next-line no-return-assign
-      drugData.tolerance.map((i:string) => msgPart = `${i}\n`);
-      return `〽️ **Tolerance information for ${substance}**\n\n${msgPart} 〽️`;* */
+    const dosage = getDosage();
+    if (dosage === false) { client.replyNotice(roomId, event, `Sorry, i could not provide dosage information on ${drugData.name}`); return; }
+    reply = RichReply.createFor(roomId, event, dosage[0], dosage[1]);
+    client.sendMessage(roomId, reply);
+    return true;
   }
-  if(section === 'duration') {
-    if(drugData.roas) {
+  if (section === 'duration') {
+    if (drugData.roas) {
       const duration = getDuration();
+      if (duration === false) { client.replyNotice(roomId, event, `Sorry, i could not get duration information on ${drugData.name}`); return false; }
       reply = RichReply.createFor(roomId, event, duration[0], duration[1]);
       client.sendMessage(roomId, reply);
       return true;
-    } else {
-      html = `<b>Task failed successfully!</b><br><br>Sorry, i could not provide duration information on ${substance}`;
-      text = `Task failed successfully!\n\nSorry, i could not provide duration information on ${substance}`;
-      reply = RichReply.createFor(roomId, event, text, html);
-      client.sendMessage(roomId, reply);
-      return false;
     }
+    const html = `<b>Task failed successfully!</b><br><br>Sorry, i could not provide duration information on ${substance}`;
+    const text = `Task failed successfully!\n\nSorry, i could not provide duration information on ${substance}`;
+    reply = RichReply.createFor(roomId, event, text, html);
+    client.sendMessage(roomId, reply);
+    return false;
   }
-  if(section === 'addiction') {
-  const addiction = getAddictionPotential();
-  if(addiction === false) return client.replyNotice(roomId, event, `Sorry, i could not provide information on the addiction potential of ${drugData.name}`);
-  reply = RichReply.createFor(roomId, event, addiction[0], addiction[1]);
-  client.sendMessage(roomId, reply);
-  return true;
+  if (section === 'addiction') {
+    const addiction = getAddictionPotential();
+    if (addiction === false) return client.replyNotice(roomId, event, `Sorry, i could not provide information on the addiction potential of ${drugData.name}`);
+    reply = RichReply.createFor(roomId, event, addiction[0], addiction[1]);
+    client.sendMessage(roomId, reply);
+    return true;
   }
+  if (section === 'crosstolerances') {
+    const crossTolerances = getCrossTolerances();
+    if (crossTolerances === false) { client.replyNotice(roomId, event, `Sorry, i could not get information on cross tolerances from ${drugData.name}`); return false; }
+    reply = RichReply.createFor(roomId, event, crossTolerances[0], crossTolerances[1]);
+    client.sendMessage(roomId, reply);
+    return true;
+  }
+  if (section === 'toxicity') {
+    const toxicity = getToxicity();
+    if (toxicity === false) { client.replyNotice(roomId, event, `Sorry, i was unable to get toxicity information on ${drugData.name}`); return false; }
+    reply = RichReply.createFor(roomId, event, toxicity[0], toxicity[1]);
+    client.sendMessage(roomId, reply);
+    return true;
+  }
+
+  if (section === 'all') {
+    let allText:string = '';
+    let allHTML:string = '';
+
+    const functions = [getSummary, getDosage, getTolerance, getAddictionPotential, getCrossTolerances, getExperiences];
+    functions.forEach(f => {
+      const result = f();
+      log.debug(F, `run`);
+      console.log(result);
+
+      if (result) {
+        allText += `${result[0]}\n\n`;
+        allHTML += `${result[1]}<br><br>`;
+      }
+    });
+
+    reply = RichReply.createFor(roomId, event, allText, allHTML);
+    return client.sendMessage(roomId, reply);
+  }
+
   return false;
 }
