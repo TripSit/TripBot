@@ -1957,6 +1957,9 @@ export async function rpgArcadeGame(
       options: ['00', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36'],
     },
   };
+
+  const emojiName = `button${gameName}`;
+
   const { instructions } = gameData[gameName as keyof typeof gameData];
 
   const rowWagers = new ActionRowBuilder<ButtonBuilder>()
@@ -2059,6 +2062,7 @@ export async function rpgArcadeGame(
     }
 
     // log.debug(F, `result: ${result}`);
+
     if (payout !== 0) {
       // The user won
       const BetOutcomeMessage = BetWinMessageList[Math.floor(Math.random() * BetWinMessageList.length)];
@@ -2073,7 +2077,7 @@ export async function rpgArcadeGame(
         embeds: [embedTemplate()
           .setAuthor(null)
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-          .setTitle(`${emojiGet(`button${gameName}`)} ${gameName}`)
+          .setTitle(`${emojiGet(emojiName)} ${gameName}`)
           .setDescription(stripIndents`
             The ${object} came up **${result}** and you chose **${choice}**!
 
@@ -2099,7 +2103,7 @@ export async function rpgArcadeGame(
       embeds: [embedTemplate()
         .setAuthor(null)
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-        .setTitle(`${emojiGet(`button${gameName}`)} ${gameName}`)
+        .setTitle(`${emojiGet(emojiName)} ${gameName}`)
         .setDescription(stripIndents`
             The ${object} came up **${result}** and you chose **${choice}**!
 
@@ -2121,7 +2125,7 @@ export async function rpgArcadeGame(
       embeds: [embedTemplate()
         .setAuthor(null)
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-        .setTitle(`${emojiGet(`button${gameName}`)} ${gameName}`)
+        .setTitle(`${emojiGet(emojiName)} ${gameName}`)
         .setDescription(stripIndents`${message ?? ''}
           You are betting ${currentBet} tokens.
 
@@ -2137,7 +2141,7 @@ export async function rpgArcadeGame(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-      .setTitle(`${emojiGet(`button${gameName}`)} ${gameName}`)
+      .setTitle(`${emojiGet(emojiName)} ${gameName}`)
       .setDescription(stripIndents`You start a game of ${gameName}.
 
         ${instructions}
@@ -2592,7 +2596,8 @@ export async function rpgTrivia(
 
           Earned: **${payout} tokens**${bonusMessage} ${perfectScore}
           Wallet: ${(personaData.tokens + payout)} tokens
-          `)
+          `,
+        )
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
       reply = {
         embeds: [embed],
@@ -2628,7 +2633,8 @@ export async function rpgTrivia(
 
           Earned: **${payout} tokens**${bonusMessage}
           Wallet: ${(personaData.tokens + payout)} tokens
-          `)
+          `,
+        )
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
       reply = {
         embeds: [embed],
@@ -2664,7 +2670,8 @@ export async function rpgTrivia(
 
           Earned: **${payout} tokens**${bonusMessage}
           Wallet: ${(personaData.tokens + payout)} tokens
-          `)
+          `,
+        )
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
       reply = {
         embeds: [embed],
