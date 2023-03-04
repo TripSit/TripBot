@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import {
   SlashCommandBuilder,
   GuildMember,
@@ -19,7 +20,9 @@ export const dTimezone: SlashCommand = {
       .setDescription('Get someone\'s timezone!')
       .addUserOption(option => option
         .setName('user')
-        .setDescription('User to lookup')))
+        .setDescription('User to lookup'))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(subcommand => subcommand
       .setName('set')
       .setDescription('Set your timezone!')
@@ -30,6 +33,7 @@ export const dTimezone: SlashCommand = {
         .setAutocomplete(true))),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     const tzValue = interaction.options.getString('timezone');
     let member = interaction.options.getMember('user') as GuildMember | null;
@@ -48,12 +52,12 @@ export const dTimezone: SlashCommand = {
 
     if (command === 'get') {
       if (response === null) {
-        interaction.reply(`${member.displayName} is a timeless treasure <3 (and has not set a time zone)`);
+        interaction.editReply({ content: `${member.displayName} is a timeless treasure <3 (and has not set a time zone)` });
       } else {
-        interaction.reply(`${response} wherever ${member.displayName} is located.`);
+        interaction.editReply({ content: `${response} wherever ${member.displayName} is located.` });
       }
     } else {
-      interaction.reply({ content: response as string, ephemeral: true });
+      interaction.editReply({ content: response as string });
     }
     return true;
   },

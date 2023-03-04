@@ -91,6 +91,7 @@ export const dRole: SlashCommand = {
         .setDescription('(Mod only, defaults to you) The user to remove the role.'))),
   async execute(interaction) {
     startlog(F, interaction);
+    await interaction.deferReply({ ephemeral: true });
     if (!interaction.guild) return false;
     const command = interaction.options.getSubcommand();
     let role = {} as Role;
@@ -112,7 +113,7 @@ export const dRole: SlashCommand = {
     }
 
     if (!role) {
-      interaction.reply({ content: 'Role not found! Please use the dropdown menu', ephemeral: true });
+      interaction.editReply({ content: 'Role not found! Please use the dropdown menu' });
       return false;
     }
 
@@ -127,7 +128,7 @@ export const dRole: SlashCommand = {
     // If you're not a mod or tripsitter, you can't add anything that's not in the "safe" list
     if (!safeRoleList.includes(role.id) && !isMod && !isTs) {
       // log.debug(F, `role.id is ${role.id} and is not in the safe list. (isMod: ${isMod}, isTs: ${isTs})`);
-      interaction.reply({ content: 'You do not have permission to use that role!', ephemeral: true });
+      interaction.editReply({ content: 'You do not have permission to use that role!' });
       return false;
     }
 
@@ -135,7 +136,7 @@ export const dRole: SlashCommand = {
     if (premiumColorIds.includes(role.id) && !isMod && !isTs && !isDonor && !isPatron) {
       // log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium
       // (isMod: ${isMod}, isTs: ${isTs} isDonor: ${isDonor}, isPatron: ${isPatron})`);
-      interaction.reply({ content: 'You do not have permission to use that role!', ephemeral: true });
+      interaction.editReply({ content: 'You do not have permission to use that role!' });
       return false;
     }
 
@@ -178,12 +179,12 @@ export const dRole: SlashCommand = {
         await member.roles.remove([...otherMindsetRoles]);
       }
 
-      await interaction.reply({ content: `Added ${role.name} to ${member.displayName}!`, ephemeral: true });
+      await interaction.editReply({ content: `Added ${role.name} to ${member.displayName}!` });
     } else if (command === 'remove') {
       verb = 'removed';
       preposition = 'from';
       await member.roles.remove(role);
-      await interaction.reply({ content: `Removed ${role.name} from ${target}!`, ephemeral: true });
+      await interaction.editReply({ content: `Removed ${role.name} from ${target}!` });
     }
 
     const targetstring = target !== '' ? ` ${preposition} ${target}` : '';

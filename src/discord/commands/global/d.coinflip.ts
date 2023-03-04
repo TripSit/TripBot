@@ -12,10 +12,13 @@ export default dCoinflip;
 export const dCoinflip: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('coinflip')
-    .setDescription('Flip a coin'),
+    .setDescription('Flip a coin')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
-    interaction.reply(await coinflip());
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    interaction.editReply({ content: await coinflip() });
     return true;
   },
 

@@ -49,6 +49,7 @@ export const dRemindme: SlashCommand = {
       .setName('delete')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: true });
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const offset = interaction.options.getString('offset');
     const reminder = interaction.options.getString('reminder');
@@ -73,14 +74,14 @@ export const dRemindme: SlashCommand = {
     const embed = embedTemplate();
     const book = [] as EmbedBuilder[];
     if (command === 'delete') {
-      await interaction.reply({ content: response as string, ephemeral: true });
+      await interaction.editReply({ content: response as string });
     }
     if (command === 'get') {
       if (response !== null) {
         embed.setTitle('Your reminders');
         if (typeof response === 'string') {
           embed.setDescription('You have no reminders! You can use /remind_me to add some!');
-          interaction.reply({ embeds: [embed], ephemeral: true });
+          interaction.editReply({ embeds: [embed] });
           return true;
         }
 
@@ -141,18 +142,18 @@ export const dRemindme: SlashCommand = {
       if (book.length > 1) {
         paginationEmbed(interaction, book, buttonList);
       } else if (!interaction.channel) {
-        interaction.reply({ embeds: [embed], ephemeral: true });
+        interaction.editReply({ embeds: [embed] });
       } else if (interaction.channel.type === ChannelType.DM) {
-        interaction.reply({ embeds: [embed] });
+        interaction.editReply({ embeds: [embed] });
         // interaction.user.send({embeds: [embed]});
       } else {
-        interaction.reply({ embeds: [embed], ephemeral: true });
+        interaction.editReply({ embeds: [embed] });
         // interaction.user.send({embeds: [embed]});
       }
     }
     if (command === 'set') {
       if (reminderDatetime === null) {
-        interaction.reply({ content: 'Invalid date!', ephemeral: true });
+        interaction.editReply({ content: 'Invalid date!' });
         return false;
       }
 
@@ -162,7 +163,7 @@ export const dRemindme: SlashCommand = {
       // log.debug(F, `relative: ${relative}`);
 
       embed.setDescription(`${relative} I will remind you: ${reminder}`);
-      interaction.reply({ embeds: [embed], ephemeral: true });
+      interaction.editReply({ embeds: [embed] });
     }
     // log.debug(F, `Finsihed!`);
     return true;

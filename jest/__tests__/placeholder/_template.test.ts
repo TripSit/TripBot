@@ -1,11 +1,12 @@
 /* eslint-disable max-len */
-
 import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
 import { dAbout } from '../../../src/discord/commands/global/d.about';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../../utils/testutils';
 
 const slashCommand = dAbout;
 
@@ -19,9 +20,26 @@ const footerInfo = {
   text: 'Dose responsibly!',
 };
 
+let mock = {} as MockAdapter;
+
+beforeAll(() => {
+  mock = new MockAdapter(axios);
+});
+
+afterEach(() => {
+  mock.reset();
+});
+
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    mock.onGet('URL')
+      .reply(200, [
+        {
+          response: '',
+        },
+      ]);
+
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name}`,
@@ -49,16 +67,13 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name}`,
         slashCommand.data,
         'dm',
       ),
-    )).toHaveBeenCalledWith({
-      content: stripIndents`This command can only be used in a discord guild!`,
-      ephemeral: true,
-    });
+    )).toHaveBeenCalledWith({ content: stripIndents`This command can only be used in a discord guild!` });
   });
 });

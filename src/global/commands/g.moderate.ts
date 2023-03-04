@@ -569,7 +569,7 @@ export async function moderate(
 
     modlogEmbed.setDescription(`**TripSit TrollScore: ${trollScore}**\n\`\`\`${tsReasoning}\`\`\`
     ${modlogEmbed.data.description}`);
-    return { embeds: [modlogEmbed], ephemeral: true };
+    return { embeds: [modlogEmbed] };
   }
 
   let modThread = {} as ThreadChannel;
@@ -626,7 +626,7 @@ export async function moderate(
   // log.debug(F, `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
 
   log.info(F, `response: ${JSON.stringify(desc, null, 2)}`);
-  return { embeds: [response], ephemeral: true };
+  return { embeds: [response] };
 }
 
 export async function userInfoEmbed(target:GuildMember, targetData:Users, command: string):Promise<EmbedBuilder> {

@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { dTestkits } from '../../src/discord/commands/global/d.testkits';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dTestkits;
 
@@ -19,7 +19,7 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name}`,

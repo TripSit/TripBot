@@ -123,6 +123,19 @@ export const dReactionRole: SlashCommand = {
   async execute(interaction) {
     startlog(F, interaction);
     if (!interaction.guild) return false;
+    if (!interaction.guild) {
+      // log.debug(F, `no guild!`);
+      await interaction.reply(guildError);
+      return false;
+    }
+    if (!interaction.member) {
+      // log.debug(F, `no member!`);
+      await interaction.reply(memberError);
+    }
+    if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_DEVELOPER)) {
+      await interaction.reply({ content: 'You do not have permission to use this command!' });
+      return false;
+    }
     const subcommand = interaction.options.getSubcommand();
 
     if (subcommand === 'template') {
@@ -137,6 +150,7 @@ export const dReactionRole: SlashCommand = {
 export async function setupTemplateReactionRole(
   interaction:ChatInputCommandInteraction,
 ) {
+  await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
   const set = interaction.options.getString('set', true);
   if (!interaction.guild) return;
   const { guild } = interaction;
@@ -445,14 +459,12 @@ export async function setupTemplateReactionRole(
     await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1] });
   }
 
-  interaction.reply({ content: 'Reaction roles have been set up!', ephemeral: true });
+  interaction.editReply({ content: 'Reaction roles have been set up!' });
 }
 
 export async function setupCustomReactionRole(
   interaction:ChatInputCommandInteraction,
 ) {
-  const emoji = interaction.options.getString('emoji', true);
-  const role = interaction.options.getRole('role', true) as Role;
   const introMessage = interaction.options.getBoolean('intro_message')
     ? `"${interaction.options.getBoolean('intro_message')}"`
     : null;
@@ -460,64 +472,57 @@ export async function setupCustomReactionRole(
     ? `"${interaction.options.getChannel('intro_channel', true).id}"`
     : null;
 
-  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_DEVELOPER)) {
-    await interaction.reply({ content: 'You do not have permission to use this command!', ephemeral: true });
-    return false;
+  if (introMessage && !introChannel) {
+    await interaction.reply({
+      content: 'You must specify where you want the intro message to be posted!',
+      ephemeral: true,
+    });
+    return;
   }
 
-  // Display modal to get intro message from the user
-  const modal = new ModalBuilder()
+  const role = interaction.options.getRole('role', true) as Role;
+  await interaction.showModal(new ModalBuilder()
     .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
-    .setTitle(`${role.name} Description`);
-  modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-    .setCustomId('description')
-    .setRequired(true)
-    .setLabel('Describe this role!')
-      .setPlaceholder(`This will go into the embed to let people know what they're clicking on!`) // eslint-disable-line
-    .setMaxLength(2000)
-    .setStyle(TextInputStyle.Paragraph)));
-  await interaction.showModal(modal);
+    .setTitle(`${role.name} Description`)
+    .addComponents(new ActionRowBuilder<TextInputBuilder>()
+      .addComponents(new TextInputBuilder()
+        .setCustomId('description')
+        .setRequired(true)
+        .setLabel('Describe this role!')
+    .setPlaceholder(`This will go into the embed to let people know what they're clicking on!`) // eslint-disable-line
+        .setMaxLength(2000)
+        .setStyle(TextInputStyle.Paragraph))));
 
   // Collect a modal submit interaction
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
-      const {
-        II,
-      } = JSON.parse(`{${i.customId}}`);
-
+      const { II } = JSON.parse(`{${i.customId}}`);
       if (II !== interaction.id) return;
-      if (!i.guild) {
-        // log.debug(F, `no guild!`);
-        i.reply(guildError);
-        return;
-      }
-      if (!i.member) {
-        // log.debug(F, `no member!`);
-        i.reply(memberError);
-      }
+      await i.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+      await (interaction.channel as TextChannel).send({
+        embeds: [
+          embedTemplate()
+            .setFooter(null)
+            .setDescription(i.fields.getTextInputValue('description')),
+        ],
+        components: [
+          new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+              new ButtonBuilder()
+                .setCustomId(`"ID":"RR","RID":"${role.id}","IM":${introMessage},"IC":${introChannel}`)
+                .setEmoji(interaction.options.getString('emoji', true))
+                .setStyle(ButtonStyle.Primary),
+            ),
+        ],
+      });
 
-      const description = i.fields.getTextInputValue('description');
-
-      const embed = embedTemplate()
-        .setFooter(null)
-        .setDescription(description);
-
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`"ID":"RR","RID":"${role.id}","IM":${introMessage},"IC":${introChannel}`) // eslint-disable-line
-          .setEmoji(emoji)
-          .setStyle(ButtonStyle.Primary),
-      );
-      await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row] });
-
-      const channelBotlog = await i.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+      const channelBotlog = await i.guild?.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
       await channelBotlog.send(
         `${(interaction.member as GuildMember).displayName} created a new reaction role message`,
       );
-      i.reply({ content: 'Reaction role message created!', ephemeral: true });
+      await i.editReply({ content: 'Reaction role message created!' });
     });
-  return true;
 }
 
 export async function processReactionRole(
@@ -533,6 +538,18 @@ export async function processReactionRole(
     IM?:boolean,
     IC?:string,
   };
+  if (!interaction.guild) {
+    // log.debug(F, `no guild!`);
+    await interaction.reply(guildError);
+    return;
+  }
+  if (!interaction.member) {
+    // log.debug(F, `no member!`);
+    await interaction.reply(memberError);
+  }
+
+  const introMessageRequired = IM === true;
+  const channelProvided = IC;
 
   // log.debug(F, `RID: ${RID}, IM: ${IM}, IC: ${IC}`);
 
@@ -540,7 +557,7 @@ export async function processReactionRole(
 
   if (!interaction.guild) return;
 
-  if (!IM) {
+  if (!introMessageRequired) {
     await interaction.deferReply({ ephemeral: true });
   }
 
@@ -555,48 +572,36 @@ export async function processReactionRole(
 
   // If the user already has the role
   if (target.roles.cache.has(role.id)) {
-    if (IM !== undefined && IM !== null) {
+    if (introMessageRequired) {
       // Display modal to get intro message from the user
-      const modal = new ModalBuilder()
+      await interaction.showModal(new ModalBuilder()
         .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
-        .setTitle(`Are you sure you want to remove ${role.name}?`);
-      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setCustomId('reason')
-        .setLabel('You can optionally tell us why!')
-        .setPlaceholder(`We'll use this to try and improve our process!`) // eslint-disable-line
-        .setValue('I just don\'t want to anymore')
-        .setMaxLength(2000)
-        .setStyle(TextInputStyle.Paragraph)));
-      await interaction.showModal(modal);
+        .setTitle(`Are you sure you want to remove ${role.name}?`)
+        .addComponents(new ActionRowBuilder<TextInputBuilder>()
+          .addComponents(new TextInputBuilder()
+            .setCustomId('reason')
+            .setLabel('You can optionally tell us why!')
+            .setPlaceholder('We\'ll use this to try and improve our process!')
+            .setValue('I just don\'t want to anymore')
+            .setMaxLength(2000)
+            .setStyle(TextInputStyle.Paragraph))));
 
       // Collect a modal submit interaction
       const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
       interaction.awaitModalSubmit({ filter, time: 0 })
         .then(async i => {
           // log.debug(F, `${JSON.stringify(i.customId)}`);
-          const {
-            II,
-          } = JSON.parse(`{${i.customId}}`);
-
+          const { II } = JSON.parse(`{${i.customId}}`);
           if (II !== interaction.id) return;
-          if (!i.guild) {
-            // log.debug(F, `no guild!`);
-            i.reply(guildError);
-            return;
-          }
-          if (!i.member) {
-            // log.debug(F, `no member!`);
-            i.reply(memberError);
-          }
+          await i.deferReply({ ephemeral: true });
 
           await target.roles.remove(role);
-          await i.reply({ content: `Removed role ${role.name}`, ephemeral: true });
-
-          const channelAudit = await i.guild.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+          const channelAudit = await i.guild?.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
           const reason = i.fields.getTextInputValue('reason');
           await channelAudit.send(
             `${(i.member as GuildMember).displayName} removed role ${role.name} because: ${reason}`,
           );
+          await i.editReply({ content: `Removed role ${role.name}` });
         });
     } else {
       await target.roles.remove(role);
@@ -616,14 +621,7 @@ export async function processReactionRole(
   // const channelDevelopment = await guild.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
 
   let introMessage = '' as string;
-  if (IM) {
-    if (!IC) {
-      log.error(F, 'Intro message is true but intro channel is not set');
-      interaction.editReply({
-        content: 'If the user must supply an intro message, you must supply what channel that message is sent!',
-      });
-      return;
-    }
+  if (introMessageRequired) {
     // Display modal to get intro message from the user
     const modal = new ModalBuilder()
       .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
@@ -651,12 +649,12 @@ export async function processReactionRole(
         if (II !== interaction.id) return;
         if (!i.guild) {
           // log.debug(F, `no guild!`);
-          i.reply(guildError);
+          await i.reply(guildError);
           return;
         }
         if (!i.member) {
         // log.debug(F, `no member!`);
-          i.reply(memberError);
+          await i.reply(memberError);
         }
 
         introMessage = i.fields.getTextInputValue('introduction');
@@ -666,9 +664,9 @@ export async function processReactionRole(
         introMessage = introMessage.replace(/^(.*)$/gm, '> $1');
 
         await target.roles.add(role);
-        await i.reply({ content: `Added role ${role.name}`, ephemeral: true });
+        await i.reply({ content: `Added role ${role.name}` });
 
-        const channel = await i.guild?.channels.fetch(IC) as TextChannel;
+        const channel = await i.guild?.channels.fetch(channelProvided as string) as TextChannel;
 
         const roleTeamtripsit = await i.guild?.roles.fetch(env.ROLE_TEAMTRIPSIT) as Role;
 
@@ -750,8 +748,8 @@ export async function processReactionRole(
           > ${introMessage}`); // eslint-disable-line
         }
       });
-  } else if (IC) {
-    const channel = await guild.channels.fetch(IC) as TextChannel;
+  } else if (channelProvided) {
+    const channel = await guild.channels.fetch(channelProvided) as TextChannel;
     await target.roles.add(role);
     await interaction.editReply({ content: `Added role ${role.name}` });
     // Post intro message to the channel

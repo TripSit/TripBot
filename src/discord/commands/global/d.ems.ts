@@ -14,10 +14,13 @@ export default dEms;
 export const dEms: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('ems')
-    .setDescription('Information that may be helpful in a serious situation.'),
+    .setDescription('Information that may be helpful in a serious situation.')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
     const emsInfo = await ems();
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const embed = embedTemplate();
 
     embed.setTitle('EMS Information');
@@ -39,7 +42,7 @@ export const dEms: SlashCommand = {
         },
       );
     });
-    interaction.reply({ embeds: [embed] });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

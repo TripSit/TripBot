@@ -14,7 +14,7 @@ describe(slashCommand.data.name, () => {
     const stringCommand = `/${commandData.name}`;
     const command = getParsedCommand(stringCommand, commandData);
     // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
-    const spy = await executeCommandAndSpyReply(slashCommand, command);
+    const spy = await executeCommandAndSpyEditReply(slashCommand, command);
     expect(spy).toHaveBeenCalledWith(embedContaining({
       color: Colors.Purple,
       author: {

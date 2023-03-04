@@ -1,7 +1,7 @@
 // import { stripIndents } from 'common-tags';
 import { Colors } from 'discord.js';
 import { dRss } from '../../../src/discord/commands/guild/d.rss';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../../utils/testutils';
 
 const slashCommand = dRss;
 
@@ -17,7 +17,7 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} list`,
@@ -31,10 +31,9 @@ describe(slashCommand.data.name, () => {
         color: Colors.Purple,
         title: 'TripSit Guild has no RSS feeds!',
       }),
-      ephemeral: true,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} add url:https://www.reddit.com/r/TripSit/new.rss add_to_channel:TextChannel`,
@@ -49,10 +48,9 @@ describe(slashCommand.data.name, () => {
         title: 'RSS feed added to TextChannel!',
         description: 'I\'ve started watching https://www.reddit.com/r/TripSit/new.rss!',
       }),
-      ephemeral: true,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} list`,
@@ -67,10 +65,9 @@ describe(slashCommand.data.name, () => {
         title: 'TripSit Guild has the following RSS feeds:!',
         description: 'https://www.reddit.com/r/TripSit/new.rss -> <#123456789>',
       }),
-      ephemeral: true,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} remove remove_from_channel:TextChannel`,
@@ -84,10 +81,9 @@ describe(slashCommand.data.name, () => {
         color: Colors.Red,
         title: 'RSS feed removed from TextChannel!',
       }),
-      ephemeral: true,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} list`,
@@ -101,67 +97,51 @@ describe(slashCommand.data.name, () => {
         color: Colors.Purple,
         title: 'TripSit Guild has no RSS feeds!',
       }),
-      ephemeral: true,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} add url:https://www.reddit.com/r/TripSit/new.rss add_to_channel:VoiceChannel`,
         slashCommand.data,
         'tripsit',
       ),
-    )).toHaveBeenCalledWith({
-      content: 'You must specify a text channel!',
-      ephemeral: true,
-    });
+    )).toHaveBeenCalledWith({ content: 'You must specify a text channel!' });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} remove remove_from_channel:VoiceChannel`,
         slashCommand.data,
         'tripsit',
       ),
-    )).toHaveBeenCalledWith({
-      content: 'You must specify a text channel!',
-      ephemeral: true,
-    });
+    )).toHaveBeenCalledWith({ content: 'You must specify a text channel!' });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} add url:https://www.google.com add_to_channel:TextChannel`,
         slashCommand.data,
         'tripsit',
       ),
-    )).toHaveBeenCalledWith({
-      content: 'You must use a URL ending with .rss!',
-      ephemeral: true,
-    });
+    )).toHaveBeenCalledWith({ content: 'You must use a URL ending with .rss!' });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} add url:https://www.google.com.rss add_to_channel:TextChannel`,
         slashCommand.data,
         'tripsit',
       ),
-    )).toHaveBeenCalledWith({
-      content: 'This is not a valid RSS URL, please check it and try again!',
-      ephemeral: true,
-    });
+    )).toHaveBeenCalledWith({ content: 'This is not a valid RSS URL, please check it and try again!' });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} add url:https://www.reddit.com/r/TripSit/new.rss add_to_channel:TextChannel`,
         slashCommand.data,
         'dm',
       ),
-    )).toHaveBeenCalledWith({
-      content: 'This command can only be used in a guild!',
-      ephemeral: true,
-    });
+    )).toHaveBeenCalledWith({ content: 'This command can only be used in a guild!' });
   });
 });

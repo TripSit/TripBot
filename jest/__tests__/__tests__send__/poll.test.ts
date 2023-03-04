@@ -5,7 +5,7 @@ import { parse } from 'path';
 // import { stripIndents } from 'common-tags';
 import { dPoll } from '../commands/global/d.poll';
 import {
-  // executeCommandAndSpyReply,
+  // executeCommandAndSpyEditReply,
   executeCommandWithMockOptionsAndSpySentMessage,
   // embedContaining,
   getParsedCommand,

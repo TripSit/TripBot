@@ -18,10 +18,13 @@ export default dH2flow;
 export const dH2flow: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('h2flow')
-    .setDescription('Welcome to the H2Flow Club!'),
+    .setDescription('Welcome to the H2Flow Club!')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const data = await h2flow(interaction.user.id);
 
     const sparklePoints = data.sparkle_points;
@@ -90,7 +93,7 @@ export const dH2flow: SlashCommand = {
         },
       );
 
-    interaction.reply({ embeds: [embed] });
+    interaction.editReply({ embeds: [embed] });
 
     return false;
   },

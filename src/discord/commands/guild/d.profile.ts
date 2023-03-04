@@ -1,8 +1,6 @@
 /* eslint-disable max-len */
 import {
   SlashCommandBuilder,
-  ChatInputCommandInteraction,
-  UserContextMenuCommandInteraction,
   GuildMember,
   AttachmentBuilder,
 } from 'discord.js';
@@ -15,6 +13,7 @@ import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
 import { imageGet } from '../../utils/imageGet';
+import { Personas } from '../../../global/@types/database';
 
 export default dProfile;
 
@@ -31,18 +30,19 @@ export const dProfile: SlashCommand = {
     .setDescription('Get someone\'s profile!')
     .addUserOption(option => option
       .setName('target')
-      .setDescription('User to lookup')),
+      .setDescription('User to lookup'))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(
-    interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction,
+    interaction,
   ) {
+    startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const startTime = Date.now();
     if (!interaction.guild) {
-      interaction.reply('You can only use this command in a guild!');
+      interaction.editReply({ content: 'You can only use this command in a guild!' });
       return false;
     }
-    startLog(F, interaction);
-
-    await interaction.deferReply();
 
     // Target is the option given, if none is given, it will be the user who used the command
     const target = interaction.options.getMember('target')
@@ -68,7 +68,7 @@ export const dProfile: SlashCommand = {
     ]);
 
     const profileData = values[0].status === 'fulfilled' ? values[0].value : {} as ProfileData;
-    const [personaData] = values[1].status === 'fulfilled' ? values[1].value : [];
+    const personaData = values[1].status === 'fulfilled' ? values[1].value : {} as Personas;
     const Icons = values[2].status === 'fulfilled' ? values[2].value : {} as Canvas.Image;
     // const StatusIcon = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
     const avatar = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;

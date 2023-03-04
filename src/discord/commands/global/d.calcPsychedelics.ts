@@ -26,7 +26,9 @@ export const dCalcpsychedelics: SlashCommand = {
         .setDescription('Number of days since last dose?')
         .setRequired(true))
       .addNumberOption(option => option.setName('desired_dose')
-        .setDescription('ug of LSD')))
+        .setDescription('ug of LSD'))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(subcommand => subcommand
       .setName('mushrooms')
       .setDescription('Check mushroom tolerance information')
@@ -37,9 +39,12 @@ export const dCalcpsychedelics: SlashCommand = {
         .setDescription('Number of days since last dose?')
         .setRequired(true))
       .addNumberOption(option => option.setName('desired_dose')
-        .setDescription('g of mushrooms'))),
+        .setDescription('g of mushrooms'))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you'))),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     // log.debug(F, `${JSON.stringify(interaction.options, null, 2)}`);
     const lastDose = interaction.options.getNumber('last_dose', true);
     const desiredDose = interaction.options.getNumber('desired_dose');
@@ -68,7 +73,8 @@ export const dCalcpsychedelics: SlashCommand = {
         As all bodies and brains are different, results may vary. 
         [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
       `);
-    interaction.reply({ embeds: [embed] });
+
+    interaction.editReply({ embeds: [embed] });
 
     return true;
   },
