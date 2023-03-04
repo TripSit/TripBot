@@ -229,7 +229,7 @@ export default class MockDiscord {
         key => command[key].data !== undefined,
       ) as string].data.toJSON();
       // log.debug(F, `Command data: ${JSON.stringify(commandData, null, 2)}`);
-      log.debug(F, `Loaded global command: ${commandData.name}`);
+      // log.debug(F, `Loaded global command: ${commandData.name}`);
       this.client.commands.set(commandData, command);
       // this.client.application?.commands.create(commandData);
     });
@@ -246,7 +246,7 @@ export default class MockDiscord {
       const commandData = command[Object.keys(command).find(
         key => command[key].data !== undefined) as string].data.toJSON();  // eslint-disable-line
       // log.debug(F, `Command data: ${JSON.stringify(commandData, null, 2)}`);
-      log.debug(F, `Loaded global command: ${commandData.name}`);
+      // log.debug(F, `Loaded global command: ${commandData.name}`);
       this.client.commands.set(commandData, command);
       // this.client.application?.commands.create(commandData);
     });

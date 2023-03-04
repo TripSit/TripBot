@@ -171,7 +171,7 @@ export const mod: SlashCommand = {
       command = `UN-${command}`;
     }
 
-    log.debug(F, `${actor} ran ${command} on ${target}`);
+    // log.debug(F, `${actor} ran ${command} on ${target}`);
 
     let verb = '';
     if (command === 'NOTE') verb = 'noting';
@@ -276,7 +276,7 @@ export const mod: SlashCommand = {
 
           // Get the millisecond value of the input
           const days = await parseDuration(`${dayInput} days`);
-          log.debug(F, `days: ${days}`);
+          // log.debug(F, `days: ${days}`);
           duration = days;
         }
 
@@ -301,7 +301,7 @@ export const mod: SlashCommand = {
             timeoutInput = `${timeoutInput} days`;
           }
 
-          log.debug(F, `timeoutInput: ${timeoutInput}`);
+          // log.debug(F, `timeoutInput: ${timeoutInput}`);
 
           const timeout = timeoutInput !== null
             ? await parseDuration(timeoutInput)
@@ -313,7 +313,7 @@ export const mod: SlashCommand = {
             return;
           }
 
-          log.debug(F, `timeout: ${timeout}`);
+          // log.debug(F, `timeout: ${timeout}`);
           duration = timeout;
         }
 

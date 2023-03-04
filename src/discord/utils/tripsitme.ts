@@ -148,7 +148,7 @@ export async function needsHelpMode(
     && !role.name.includes('@everyone')
     && role.id !== roleNeedshelp.id
     && role.comparePositionTo(myRole)) {
-      log.debug(F, `Removing role ${role.name} from ${target.displayName}`);
+      // log.debug(F, `Removing role ${role.name} from ${target.displayName}`);
       try {
         await target.roles.remove(role);
       } catch (err) {

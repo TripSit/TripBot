@@ -673,6 +673,128 @@ const wagers = {} as {
   },
 };
 
+const optionDict = {
+  easy: {
+    name: 'Normal',
+    bonus: 1,
+  },
+  medium: {
+    name: 'Hard',
+    bonus: 1.5,
+  },
+  hard: {
+    name: 'Expert',
+    bonus: 2,
+  },
+};
+
+const bonusDict = {
+  5: {
+    perfectBonus: 1.5,
+    perfectBonusMessage: ' *(+50% perfect bonus)*',
+  },
+  10: {
+    perfectBonus: 2,
+    perfectBonusMessage: ' *(+100% perfect bonus)*',
+  },
+  20: {
+    perfectBonus: 3,
+    perfectBonusMessage: ' *(+200% perfect bonus)*',
+  },
+};
+
+type TriviaQuestion = {
+  category: string;
+  type: string;
+  difficulty: string;
+  question: string;
+  correct_answer: string;
+  all_answers: string[];
+};
+
+const bonusMessageDict = {
+  easy: '',
+  medium: ' *(+50% difficulty bonus)*',
+  hard: ' *(+100% difficulty bonus)*',
+};
+
+const gameQuitMessageList = [ // Random messages to display when the user quits the game
+  'If you\'re tired of starting over, stop giving up!',
+  'Believe in yourself more!',
+  'Come back later?',
+  'Did you leave the oven on?',
+  'Sometimes it\'s ok to cut your losses...',
+  'Perhaps another time?',
+  'Perhaps you should try a different game?',
+  'Did I do something wrong?',
+  'Was it something I said?',
+];
+
+const timeOutMessageList = [ // Random messages to display when the user runs out of time
+  'Be faster next time!',
+  'Be a bit quicker next time!',
+  'You were far too slow!',
+  'If you were any slower, you would have been going backwards!',
+  'You were almost as slow as a snail!',
+  'You were slower than a turtle!',
+  'A sloth could have answered that faster!',
+  'Your brain is slower than a Zombie\'s!',
+];
+
+const awfulScoreMessageList = [ // Random messages to display when the user got no questions right
+  'Yikes...',
+  'Ouch...',
+  'That was awful...',
+  'That was terrible...',
+  'That was horrible...',
+  'Were you even trying?',
+  'I\'ll pretend I didn\'t see that...',
+  'Let\'s just forget that ever happened...',
+  '...',
+  'I\'m speechless...',
+  'Sheeeeeesh...',
+  'Perhaps your brain is just a bit Foggy...',
+  'Is your brain feeling a bit Blurry?',
+  'Beep Bop Bloop... Error... Error... Error...',
+  'Tip: A score of 0 is not a good score...',
+];
+
+const badScoreMessageList = [ // Random messages to display when the user got less than half the questions right
+  'Is that all you got?',
+  'You can do better than that!',
+  'Is that the best you can do?',
+  'Better than nothing, I guess...',
+  'You wouldn\'t want to vs my grandma...',
+  'Come on, you can do better than that!',
+  'Try harder next time!',
+  'I\'ve heard eating Kiwifruit can help improve your memory...',
+  'Tip: You get more points for answering correctly!',
+];
+
+const goodScoreMessageList = [ // Random messages to display when the user got more than half the questions right
+  'Not bad!',
+  'Not too shabby!',
+  'Getting close!',
+  'Almost there!',
+  'You\'re getting there!',
+  'Now we\'re talking!',
+  'Let\'s see if you can keep it up!',
+  'Let\'s go for gold next time!',
+  'You\'re a natural!',
+];
+
+const perfectScoreMessageList = [ // Random messages to display when the user got all the questions right
+  'Now that\'s what I call a fine score!',
+  'You\'re a genius!',
+  'You\'re a trivia master!',
+  'You\'re a trivia god!',
+  'Have you ever considered being a professional trivia player?',
+  'That last player could learn a thing or two from you!',
+  'Very impressive!',
+  'You\'re on a roll!',
+  'Is this even Reality?',
+];
+
 function rand(array:string[]):string {
   return array[Math.floor(Math.random() * array.length)];
 }
@@ -2101,128 +2223,6 @@ export async function rpgArcadeGame(
     components,
   };
 }
-
-const optionDict = {
-  easy: {
-    name: 'Normal',
-    bonus: 1,
-  },
-  medium: {
-    name: 'Hard',
-    bonus: 1.5,
-  },
-  hard: {
-    name: 'Expert',
-    bonus: 2,
-  },
-};
-
-const bonusDict = {
-  5: {
-    perfectBonus: 1.5,
-    perfectBonusMessage: ' *(+50% perfect bonus)*',
-  },
-  10: {
-    perfectBonus: 2,
-    perfectBonusMessage: ' *(+100% perfect bonus)*',
-  },
-  20: {
-    perfectBonus: 3,
-    perfectBonusMessage: ' *(+200% perfect bonus)*',
-  },
-};
-
-type TriviaQuestion = {
-  category: string;
-  type: string;
-  difficulty: string;
-  question: string;
-  correct_answer: string;
-  all_answers: string[];
-};
-
-const bonusMessageDict = {
-  easy: '',
-  medium: ' *(+50% difficulty bonus)*',
-  hard: ' *(+100% difficulty bonus)*',
-};
-
-const gameQuitMessageList = [ // Random messages to display when the user quits the game
-  'If you\'re tired of starting over, stop giving up!',
-  'Believe in yourself more!',
-  'Come back later?',
-  'Did you leave the oven on?',
-  'Sometimes it\'s ok to cut your losses...',
-  'Perhaps another time?',
-  'Perhaps you should try a different game?',
-  'Did I do something wrong?',
-  'Was it something I said?',
-];
-
-const timeOutMessageList = [ // Random messages to display when the user runs out of time
-  'Be faster next time!',
-  'Be a bit quicker next time!',
-  'You were far too slow!',
-  'If you were any slower, you would have been going backwards!',
-  'You were almost as slow as a snail!',
-  'You were slower than a turtle!',
-  'A sloth could have answered that faster!',
-  'Your brain is slower than a Zombie\'s!',
-];
-
-const awfulScoreMessageList = [ // Random messages to display when the user got no questions right
-  'Yikes...',
-  'Ouch...',
-  'That was awful...',
-  'That was terrible...',
-  'That was horrible...',
-  'Were you even trying?',
-  'I\'ll pretend I didn\'t see that...',
-  'Let\'s just forget that ever happened...',
-  '...',
-  'I\'m speechless...',
-  'Sheeeeeesh...',
-  'Perhaps your brain is just a bit Foggy...',
-  'Is your brain feeling a bit Blurry?',
-  'Beep Bop Bloop... Error... Error... Error...',
-  'Tip: A score of 0 is not a good score...',
-];
-
-const badScoreMessageList = [ // Random messages to display when the user got less than half the questions right
-  'Is that all you got?',
-  'You can do better than that!',
-  'Is that the best you can do?',
-  'Better than nothing, I guess...',
-  'You wouldn\'t want to vs my grandma...',
-  'Come on, you can do better than that!',
-  'Try harder next time!',
-  'I\'ve heard eating Kiwifruit can help improve your memory...',
-  'Tip: You get more points for answering correctly!',
-];
-
-const goodScoreMessageList = [ // Random messages to display when the user got more than half the questions right
-  'Not bad!',
-  'Not too shabby!',
-  'Getting close!',
-  'Almost there!',
-  'You\'re getting there!',
-  'Now we\'re talking!',
-  'Let\'s see if you can keep it up!',
-  'Let\'s go for gold next time!',
-  'You\'re a natural!',
-];
-
-const perfectScoreMessageList = [ // Random messages to display when the user got all the questions right
-  'Now that\'s what I call a fine score!',
-  'You\'re a genius!',
-  'You\'re a trivia master!',
-  'You\'re a trivia god!',
-  'Have you ever considered being a professional trivia player?',
-  'That last player could learn a thing or two from you!',
-  'Very impressive!',
-  'You\'re on a roll!',
-  'Is this even Reality?',
-];
 
 export async function getNewTimer(seconds: number) {
   const currentDate = new Date();
