@@ -20,7 +20,7 @@ export const dReport: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('report')
     .setDescription('Report a user')
-    .addStringOption(option => option
+    .addUserOption(option => option
       .setDescription('User to report!')
       .setRequired(true)
       .setName('target'))
@@ -31,14 +31,15 @@ export const dReport: SlashCommand = {
 
   async execute(interaction: ChatInputCommandInteraction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: true });
     // Only run on tripsit
     if (!interaction.guild) {
-      await interaction.reply({ content: 'This command can only be used in a server!', ephemeral: true });
+      await interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;
     }
 
     if (interaction.guild.id !== env.DISCORD_GUILD_ID) {
-      await interaction.reply({ content: 'This command can only be used in the Tripsit server!', ephemeral: true });
+      await interaction.editReply({ content: 'This command can only be used in the Tripsit server!' });
       return false;
     }
 
@@ -60,7 +61,7 @@ export const dReport: SlashCommand = {
       null,
     );
       // log.debug(F, `Result: ${result}`);
-    interaction.reply(result);
+    interaction.editReply(result);
     return true;
   },
 };

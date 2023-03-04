@@ -74,7 +74,7 @@ export async function getDiscordMember(
         > **Tag:** moonbear#1234
         > **ID:** 9876581237
         > **Nickname:** MoonBear`);
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed] });
     return null;
   }
 
@@ -90,7 +90,7 @@ export async function getDiscordMember(
         > **Tag:** moonbear#1234
         > **ID:** 9876581237
         > **Nickname:** MoonBear`);
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed] });
     return null;
   }
 

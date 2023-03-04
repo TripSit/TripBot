@@ -24,17 +24,20 @@ type Double = {
 export const dJoke: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('joke')
-    .setDescription('Random jokes'),
+    .setDescription('Random jokes')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const data = await joke();
 
     const embed = embedTemplate();
     if (data.type === 'twopart') embed.setTitle((data as Double).setup).setDescription((data as Double).delivery);
     else embed.setTitle((data as Single).joke);
 
-    interaction.reply({ embeds: [embed] });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

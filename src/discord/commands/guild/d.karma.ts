@@ -20,9 +20,12 @@ export const dKarma: SlashCommand = {
     .addUserOption(option => option
       .setName('user')
       .setDescription('User to lookup')
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const member = interaction.options.getMember('user') as GuildMember;
 
     const response = await karma(member.id);
@@ -33,7 +36,7 @@ export const dKarma: SlashCommand = {
     const embed = embedTemplate()
       .setTitle(message);
       // .setFooter({text: `${quote}`});
-    interaction.reply({ embeds: [embed] });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

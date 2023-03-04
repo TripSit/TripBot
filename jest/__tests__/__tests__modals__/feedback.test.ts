@@ -1,9 +1,10 @@
-import { stripIndents } from 'common-tags';
-import { Colors } from 'discord.js';
-import { dBotstats } from '../../src/discord/commands/guild/d.botstats';
-import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import {
+  Colors,
+} from 'discord.js';
+import { dFeedback } from '../../../src/discord/commands/global/d.feedback';
+import { executeCommandModalAndSpyEditReply, embedContaining, getParsedCommand } from '../../utils/testutils';
 
-const slashCommand = dBotstats;
+const slashCommand = dFeedback;
 
 const authorInfo = {
   iconURL: 'https://i.gyazo.com/b48b08a853fefaafb6393837eec1a501.png',
@@ -17,7 +18,7 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyEditReply(
+    expect(await executeCommandModalAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name}`,
@@ -29,15 +30,9 @@ describe(slashCommand.data.name, () => {
         author: authorInfo,
         footer: footerInfo,
         color: Colors.Purple,
-        title: 'Bot Stats',
-        description: stripIndents`
-          Here are some stats about the bot!
-          Guilds: 1
-          Users: 1
-          Channels: 0
-          Commands: 78
-          Uptime: 0ms
-        `,
+        title: 'Thank you!',
+        url: 'https://tripsit.me/about/',
+        description: 'I\'ve submitted this feedback to the bot owner. \n\nYou\'re more than welcome to join the TripSit server and speak to Moonbear directly if you want! Check the /contact command for more info.', // eslint-disable-line max-len
       }),
     });
   });

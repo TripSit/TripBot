@@ -5,15 +5,7 @@ const F = f(__filename); // eslint-disable-line
 
 export default drug;
 
-/**
- * @param {string} drugName
- * @return {CbSubstance | null}
- */
-export async function drug(drugName:string):Promise<CbSubstance | null> {
-  if (drugDataAll === null || drugDataAll === undefined) {
-    return null;
-  }
-
+export async function drug(drugName:string):Promise<CbSubstance | undefined> {
   let drugData = (drugDataAll as CbSubstance[]).find(
     substance => substance.name.toLowerCase() === drugName.toLowerCase(),
   );
@@ -24,7 +16,7 @@ export async function drug(drugName:string):Promise<CbSubstance | null> {
       ),
     );
     if (!drugData) {
-      return null;
+      return drugData;
     }
   }
 

@@ -66,9 +66,12 @@ export const dTriptoys: SlashCommand = {
         { name: mynoise, value: '21' },
         { name: mrdoobharmony, value: '22' },
         { name: ballsdemo, value: '23' },
-      )),
+      ))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const toyName = interaction.options.getString('toy') || '25';
     const toyId = parseInt(toyName, 10);
     // log.debug(F, `toy_name: ${toyName}`);
@@ -143,7 +146,7 @@ export const dTriptoys: SlashCommand = {
       );
     }
 
-    interaction.reply({ embeds: [embed] });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

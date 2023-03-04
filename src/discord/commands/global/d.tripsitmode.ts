@@ -34,6 +34,7 @@ import { embedTemplate } from '../../utils/embedTemplate';
 // import env from '../../../global/utils/env.config';
 // import log from '../../../global/utils/log';
 import { needsHelpMode, tripSitMe, tripsitmeResolve } from '../../utils/tripsitme';
+// import { modmailDMInteraction } from '../archive/modmail';
 
 const F = f(__filename);
 
@@ -85,13 +86,11 @@ export const tripsitmode: SlashCommand = {
 
     const target = interaction.options.getMember('user') as GuildMember;
 
-    const actorIsAdmin = target.permissions.has(PermissionsBitField.Flags.Administrator);
-
     // Team check - Cannot be run on team members
     // If this user is a developer then this is a test run and ignore this check,
     // but we'll change the output down below to make it clear this is a test.
     let targetIsTeamMember = false;
-    if (!actorIsAdmin) {
+    if (!target.permissions.has(PermissionsBitField.Flags.Administrator)) {
       target.roles.cache.forEach(async role => {
         if (teamRoles.includes(role.id)) {
           targetIsTeamMember = true;
@@ -104,7 +103,7 @@ export const tripsitmode: SlashCommand = {
           .setColor(Colors.DarkBlue)
           .setDescription(teamMessage);
         if (!interaction.replied) {
-          await interaction.reply({ embeds: [embed], ephemeral: true });
+          await interaction.reply({ embeds: [embed] });
         }
         return false;
       }
@@ -121,8 +120,6 @@ export const tripsitmode: SlashCommand = {
         await interaction.reply(memberOnly);
         return false;
       }
-
-      // const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
 
       const userData = await getUser(target.id, null);
 
@@ -142,6 +139,8 @@ export const tripsitmode: SlashCommand = {
 
         // If a thread exists, re-apply needsHelp, update the thread, remind the user
         if (threadHelpUser.id) {
+          await interaction.deferReply({ ephemeral: true });
+
           await needsHelpMode(interaction, target);
           const guildData = await getGuild(interaction.guild.id);
 
@@ -155,13 +154,6 @@ export const tripsitmode: SlashCommand = {
             ? await interaction.guild.roles.fetch(guildData.role_needshelp) as Role
             : undefined;
 
-          // remind the user they have an open thread
-          const embed = embedTemplate()
-            .setColor(Colors.DarkBlue)
-            .setDescription(stripIndents`Hey ${interaction.member}, ${target.displayName} already has an open ticket!
-            I've re-applied the ${roleNeedshelp} role to them, and updated the thread.
-            Check your channel list or click '${threadHelpUser.toString()} to see!`);
-          await interaction.reply({ embeds: [embed], ephemeral: true });
           // log.debug(F, `Rejected need for help`);
 
           let helpMessage = stripIndents`Hey ${target}, the team thinks you could still use some help, lets continue talking here!`; // eslint-disable-line max-len
@@ -202,24 +194,35 @@ export const tripsitmode: SlashCommand = {
             await metaThread.setName(`💛│${target.displayName}'s discussion!`);
             // log.debug(F, `Pinged team in meta thread!`);
           }
+          // remind the user they have an open thread
+          const embed = embedTemplate()
+            .setColor(Colors.DarkBlue)
+            .setDescription(stripIndents`Hey ${interaction.member}, ${target.displayName} already has an open ticket!
+            I've re-applied the ${roleNeedshelp} role to them, and updated the thread.
+            Check your channel list or click '${threadHelpUser.toString()} to see!`);
+          await interaction.editReply({ embeds: [embed] });
           return true;
         }
       }
 
-      const modal = new ModalBuilder()
+      await interaction.showModal(new ModalBuilder()
         .setCustomId(`tripsitmeSubmit~${interaction.id}`)
-        .setTitle('TripSit Mode Activated!');
-      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setCustomId('triageInput')
-        .setLabel('What substance did they take, etc?')
-        .setPlaceholder('This will be posted in the channel for them to see!')
-        .setStyle(TextInputStyle.Short)));
-      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setCustomId('introInput')
-        .setLabel('What\'s going on with them?')
-        .setPlaceholder('This will be posted in the channel for them to see!')
-        .setStyle(TextInputStyle.Paragraph)));
-      await interaction.showModal(modal);
+        .setTitle('TripSit Mode Activated!')
+        .addComponents(
+          new ActionRowBuilder<TextInputBuilder>()
+            .addComponents(
+              new TextInputBuilder()
+                .setCustomId('triageInput')
+                .setLabel('What substance did they take, etc?')
+                .setPlaceholder('This will be posted in the channel for them to see!')
+                .setStyle(TextInputStyle.Short),
+            ),
+          new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+            .setCustomId('introInput')
+            .setLabel('What\'s going on with them?')
+            .setPlaceholder('This will be posted in the channel for them to see!')
+            .setStyle(TextInputStyle.Paragraph)),
+        ));
 
       const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeSubmit');
       await interaction.awaitModalSubmit({ filter, time: 0 })

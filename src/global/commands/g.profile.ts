@@ -1,3 +1,4 @@
+import { Personas } from '../@types/database';
 import { experienceGet, getUser, personaGet } from '../utils/knex';
 
 export default profile;
@@ -23,7 +24,7 @@ export async function profile(
   // log.debug(F, `values: ${JSON.stringify(values, null, 2)} `);
 
   const expData = values[0].status === 'fulfilled' ? values[0].value : [];
-  const [personaData] = values[1].status === 'fulfilled' ? values[1].value : [];
+  const personaData = values[1].status === 'fulfilled' ? values[1].value : {} as Personas;
 
   // log.debug(F, `expData: ${JSON.stringify(expData, null, 2)}`);
   // log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);

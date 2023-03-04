@@ -15,6 +15,7 @@ import { inventoryGet } from '../../../global/utils/knex';
 import { imageGet } from '../../utils/imageGet';
 import { startLog } from '../../utils/startLog';
 import { numFormatter, numFormatterVoice } from './d.profile';
+import { Personas } from '../../../global/@types/database';
 // import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 // import { inventoryGet } from '../../../global/utils/knex';
 // import { imageGet } from '../../utils/imageGet';
@@ -71,31 +72,18 @@ export const dLevels: SlashCommand = {
     .setDescription('Get someone\'s current experience levels!')
     .addUserOption(option => option
       .setName('target')
-      .setDescription('User to lookup')),
+      .setDescription('User to lookup'))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(
     interaction:ChatInputCommandInteraction,
   ) {
+    startLog(F, interaction);
     const startTime = Date.now();
     if (!interaction.guild) {
-      interaction.reply('You can only use this command in a guild!');
+      interaction.editReply('You can only use this command in a guild!');
       return false;
     }
-    startLog(F, interaction);
-
-    // const mockUser = env.NODE_ENV === 'production'
-    //   ? interaction.member as GuildMember
-    //   : {
-    //     id: '976332784090087455',
-    //     roles: {
-    //       color: {
-    //         id: '1234567890',
-    //       },
-    //     },
-    //     user: {
-    //       displayAvatarURL: () => 'https://cdn.discordapp.com/avatars/177537158419054592/a156668bbfd7e4f70a505fef639a75f5.webp', // eslint-disable-line max-len
-    //     },
-    //     displayName: 'Test User',
-    //   };
 
     // Target is the option given, if none is given, it will be the user who used the command
     const target = interaction.options.getMember('target')
@@ -103,9 +91,8 @@ export const dLevels: SlashCommand = {
       : interaction.member as GuildMember;
     // log.debug(F, `target id: ${target.id}`);
     // log.debug(F, `levelData: ${JSON.stringify(target, null, 2)}`);
-
     const values = await Promise.allSettled([
-      await interaction.deferReply(),
+      await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) }),
       // Get the target's profile data from the database
       await profile(target.id),
       // Check get fresh persona data
@@ -121,7 +108,7 @@ export const dLevels: SlashCommand = {
     ]);
 
     const profileData = values[1].status === 'fulfilled' ? values[1].value : {} as ProfileData;
-    const [personaData] = values[2].status === 'fulfilled' ? values[2].value : [];
+    const personaData = values[2].status === 'fulfilled' ? values[2].value : {} as Personas;
     const levelData = values[3].status === 'fulfilled' ? values[3].value : {} as LevelData;
     const Icons = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
     // const StatusIcon = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;

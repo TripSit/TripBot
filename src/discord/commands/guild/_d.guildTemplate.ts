@@ -1,11 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
   Colors,
   SlashCommandBuilder,
-  TextChannel,
   ModalSubmitInteraction,
 } from 'discord.js';
 import {
@@ -15,10 +13,11 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { globalTemplate } from '../../../global/commands/_g.template';
 import { startLog } from '../../utils/startLog';
-
-const F = f(__filename);
+import { getUser } from '../../../global/utils/knex';
 
 export default dTemplate;
+
+const F = f(__filename);
 
 export const dTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -50,38 +49,102 @@ export const dTemplate: SlashCommand = {
         .setRequired(true))
       .addMentionableOption(option => option.setName('mentionable')
         .setDescription('mentionable')
-        .setRequired(true))),
+        .setRequired(true))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you'))),
   async execute(interaction) {
     startLog(F, interaction);
+    // Below is if you just want a response (non-modal) command
+    // await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    // const input = i.fields.getTextInputValue('modalInput');
+    // const string = interaction.options.getString('string');
+    // const number = interaction.options.getNumber('number');
+    // const integer = interaction.options.getInteger('integer');
+    // const boolean = interaction.options.getBoolean('boolean');
+    // const user = interaction.options.getUser('user');
+    // const channel = interaction.options.getChannel('channel');
+    // const role = interaction.options.getRole('role');
+    // const mentionable = interaction.options.getMentionable('mentionable');
+    // const response = await globalTemplate();
+    // const userData = await getUser(i.user.id, null);
+    // const embed = embedTemplate()
+    //   .setTitle('Modal')
+    //   .setColor(Colors.Blurple)
+    //   .setDescription(`
+    //   Your user id: ${userData.id}
+    //   response: ${response}
+    //   string: ${string}
+    //   number: ${number}
+    //   integer: ${integer}
+    //   boolean: ${boolean}
+    //   user: ${user}
+    //   channel: ${channel}
+    //   role: ${role}
+    //   mentionable: ${mentionable}
+    //   input: ${input}
+    // `)
 
-    const string = interaction.options.getString('string');
-    const number = interaction.options.getNumber('number');
-    const integer = interaction.options.getInteger('integer');
-    const boolean = interaction.options.getBoolean('boolean');
-    const user = interaction.options.getUser('user');
-    const channel = interaction.options.getChannel('channel');
-    const role = interaction.options.getRole('role');
-    const mentionable = interaction.options.getMentionable('mentionable');
+    // await interaction.editReply({
+    //   embeds: [embed],
+    // });
 
-    // Create the modal
+    const firstRowOfFive = new ActionRowBuilder<TextInputBuilder>()
+      .addComponents(new TextInputBuilder()
+        .setCustomId('modalInput')
+        .setLabel('Input')
+        .setStyle(TextInputStyle.Paragraph));
+
+    const secondRowOfFive = new ActionRowBuilder<TextInputBuilder>()
+      .addComponents(new TextInputBuilder()
+        .setCustomId('modalInput')
+        .setLabel('Input')
+        .setStyle(TextInputStyle.Short));
+
     const modal = new ModalBuilder()
       .setCustomId(`modal~${interaction.id}`)
-      .setTitle('Modal');
-    const modalInput = new TextInputBuilder()
-      .setCustomId('modalInput')
-      .setLabel('Input')
-      .setStyle(TextInputStyle.Paragraph);
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(modalInput);
-    modal.addComponents(firstActionRow);
+      .setTitle('Modal')
+      .addComponents(firstRowOfFive, secondRowOfFive);
+
     await interaction.showModal(modal);
-    // log.debug(F, `displayed modal!`);
+
     const filter = (i:ModalSubmitInteraction) => i.customId.includes('feedbackReportModal');
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
-        // Collect the modal
         if (i.customId.split('~')[2] !== interaction.id) return;
-        i.deferReply({ ephemeral: true });
+        await i.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
         const input = i.fields.getTextInputValue('modalInput');
+        const string = interaction.options.getString('string');
+        const number = interaction.options.getNumber('number');
+        const integer = interaction.options.getInteger('integer');
+        const boolean = interaction.options.getBoolean('boolean');
+        const user = interaction.options.getUser('user');
+        const channel = interaction.options.getChannel('channel');
+        const role = interaction.options.getRole('role');
+        const mentionable = interaction.options.getMentionable('mentionable');
+
+        const response = await globalTemplate();
+        const userData = await getUser(i.user.id, null);
+
+        const embed = embedTemplate()
+          .setTitle('Modal')
+          .setColor(Colors.Blurple)
+          .setDescription(`
+          Your user id: ${userData.id}
+          response: ${response}
+          string: ${string} 
+          number: ${number}
+          integer: ${integer}
+          boolean: ${boolean}
+          user: ${user}
+          channel: ${channel}
+          role: ${role}
+          mentionable: ${mentionable}
+          input: ${input}
+        `);
+
+        await i.editReply({
+          embeds: [embed],
+        });
       });
     return true;
   },

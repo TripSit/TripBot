@@ -27,20 +27,22 @@ export const dCalcbenzo: SlashCommand = {
     .addStringOption(option => option.setName('and_i_want_the_dose_of')
       .setDescription('Pick the second drug')
       .setAutocomplete(true)
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const dosage = interaction.options.getNumber('i_have', true);
     const drugA = interaction.options.getString('mg_of', true);
     const drugB = interaction.options.getString('and_i_want_the_dose_of', true);
     const data = await calcBenzo(dosage, drugA, drugB);
 
     if (data === -1) {
-      interaction.reply({
+      interaction.editReply({
         content: stripIndents`There was an error during conversion!
         I've let the developer know, please try again with different parameters!`,
-        ephemeral: true,
       });
       return false;
     }
@@ -52,7 +54,7 @@ export const dCalcbenzo: SlashCommand = {
         **Please make sure to research the substances thoroughly before using them.**
         It's a good idea to start with a lower dose than the calculator shows, since everybody can react differently to different substances.
         `);
-    interaction.reply({ embeds: [embed] });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };
