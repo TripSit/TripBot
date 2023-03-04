@@ -122,8 +122,20 @@ export const dReactionRole: SlashCommand = {
         ))),
   async execute(interaction) {
     startlog(F, interaction);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     if (!interaction.guild) return false;
+    if (!interaction.guild) {
+      // log.debug(F, `no guild!`);
+      await interaction.reply(guildError);
+      return false;
+    }
+    if (!interaction.member) {
+      // log.debug(F, `no member!`);
+      await interaction.reply(memberError);
+    }
+    if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_DEVELOPER)) {
+      await interaction.reply({ content: 'You do not have permission to use this command!' });
+      return false;
+    }
     const subcommand = interaction.options.getSubcommand();
 
     if (subcommand === 'template') {
@@ -138,6 +150,7 @@ export const dReactionRole: SlashCommand = {
 export async function setupTemplateReactionRole(
   interaction:ChatInputCommandInteraction,
 ) {
+  await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
   const set = interaction.options.getString('set', true);
   if (!interaction.guild) return;
   const { guild } = interaction;
@@ -452,20 +465,6 @@ export async function setupTemplateReactionRole(
 export async function setupCustomReactionRole(
   interaction:ChatInputCommandInteraction,
 ) {
-  if (!interaction.guild) {
-    // log.debug(F, `no guild!`);
-    await interaction.reply(guildError);
-    return;
-  }
-  if (!interaction.member) {
-    // log.debug(F, `no member!`);
-    await interaction.reply(memberError);
-  }
-  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_DEVELOPER)) {
-    await interaction.reply({ content: 'You do not have permission to use this command!' });
-    return;
-  }
-
   const introMessage = interaction.options.getBoolean('intro_message')
     ? `"${interaction.options.getBoolean('intro_message')}"`
     : null;

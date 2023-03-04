@@ -72,7 +72,6 @@ export const dLeaderboard: SlashCommand = {
       return false;
     }
 
-    await interaction.deferReply();
     const categoryChoice = interaction.options.getString('category') ?? 'All';
     const typeChoice = interaction.options.getString('type') ?? 'All';
     log.debug(F, `categoryChoice: ${categoryChoice}, typeChoice: ${typeChoice}`);

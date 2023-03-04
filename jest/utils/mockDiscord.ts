@@ -609,7 +609,6 @@ export default class MockDiscord {
     //   },
     // );
     this.interaction.reply = jest.fn();
-    // this.interaction.deferReply = () => Promise.resolve({} as Promise<Message<boolean>>);
     this.interaction.deferReply = jest.fn();
     this.interaction.editReply = jest.fn();
     // this.interaction.followUp = jest.fn();

@@ -235,6 +235,7 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       if (!i.guild) return;
+      await i.deferReply({ ephemeral: true });
 
       const roleNeedshelp = interaction.options.getRole('needshelp');
       const roleTripsitter = interaction.options.getRole('tripsitter');

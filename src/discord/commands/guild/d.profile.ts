@@ -39,13 +39,10 @@ export const dProfile: SlashCommand = {
     startLog(F, interaction);
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const startTime = Date.now();
-    const ephemeral = (interaction.options.getBoolean('ephemeral') === true);
     if (!interaction.guild) {
       interaction.editReply({ content: 'You can only use this command in a guild!' });
       return false;
     }
-
-    await interaction.deferReply({ ephemeral });
 
     // Target is the option given, if none is given, it will be the user who used the command
     const target = interaction.options.getMember('target')

@@ -48,9 +48,6 @@ export const dImgur: SlashCommand = {
     // log.debug(F, `sort: ${sort}`);
     // log.debug(F, `window: ${window}`);
 
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    await interaction.deferReply({ ephemeral });
-
     const sortStr = `${sort}/`;
     const windowStr = `${window}/`;
 

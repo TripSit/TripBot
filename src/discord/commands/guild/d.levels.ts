@@ -79,7 +79,6 @@ export const dLevels: SlashCommand = {
     interaction:ChatInputCommandInteraction,
   ) {
     startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const startTime = Date.now();
     if (!interaction.guild) {
       interaction.editReply('You can only use this command in a guild!');
@@ -92,9 +91,8 @@ export const dLevels: SlashCommand = {
       : interaction.member as GuildMember;
     // log.debug(F, `target id: ${target.id}`);
     // log.debug(F, `levelData: ${JSON.stringify(target, null, 2)}`);
-    const ephemeral = (interaction.options.getBoolean('ephemeral') === true);
     const values = await Promise.allSettled([
-      await interaction.deferReply({ ephemeral }),
+      await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) }),
       // Get the target's profile data from the database
       await profile(target.id),
       // Check get fresh persona data

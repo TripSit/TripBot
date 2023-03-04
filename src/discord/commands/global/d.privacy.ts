@@ -25,7 +25,7 @@ export const dPrivacy: SlashCommand = {
         .setDescription('Enter your confirmation code to delete your data!'))),
   async execute(interaction) {
     startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    await interaction.deferReply({ ephemeral: true });
     const command = interaction.options.getSubcommand() as 'get' | 'delete';
     const embed = embedTemplate();
 

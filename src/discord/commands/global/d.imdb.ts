@@ -31,10 +31,6 @@ export const dImdb: SlashCommand = {
       interaction.editReply({ content: 'You must enter a title.' });
       return false;
     }
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-
-    await interaction.deferReply({ ephemeral });
-
     const result = await imdb(title);
 
     if (!result.title) {
@@ -59,9 +55,7 @@ export const dImdb: SlashCommand = {
       embed.addFields({ name: rating.source, value: rating.value, inline: true });
     });
 
-    // interaction.followUp({embeds: [embed]});
     await interaction.editReply({ embeds: [embed] });
-    // interaction.editReply({embeds: [embed]});
     return true;
   },
 };

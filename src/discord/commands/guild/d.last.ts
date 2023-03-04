@@ -33,8 +33,6 @@ export const dLast: SlashCommand = {
       return false;
     }
 
-    await interaction.deferReply();
-
     const target = interaction.options.getMember('user') as GuildMember;
     const actor = interaction.member as GuildMember;
     const roleModerator = await interaction.guild?.roles.fetch(env.ROLE_MODERATOR) as Role;
