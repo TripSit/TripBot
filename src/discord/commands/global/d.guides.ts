@@ -21,6 +21,7 @@ export const dTemplate: SlashCommand = {
 
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
 
 
     const guides = await wikiGuides();
@@ -35,8 +36,7 @@ export const dTemplate: SlashCommand = {
             .setDescription(`These are the guides currently available on our [Wiki](https://wiki.tripsit.me)\n\n${message}\nYou're welcome to contribute. :heart:`);
     
 
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);       
-    interaction.reply({embeds: [embed], ephemeral: ephemeral});  
+    interaction.editReply({embeds: [embed]});  
 
     return true;
   },

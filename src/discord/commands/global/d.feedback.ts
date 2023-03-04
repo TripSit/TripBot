@@ -24,21 +24,26 @@ export const dFeedback: SlashCommand = {
     .setDescription('Report a bug or other feedback to the bot dev team!'),
   async execute(interaction) {
     startLog(F, interaction);
-    // Create the modal
-    const modal = new ModalBuilder()
-      .setCustomId(`feedbackReportModal~${interaction.id}`)
-      .setTitle('TripBot Feedback Report');
-    const feedbackInput = new TextInputBuilder()
-      .setCustomId('feedbackReport')
-      .setLabel('What would you like to tell the bot dev team?')
-      .setStyle(TextInputStyle.Paragraph);
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(feedbackInput);
-    modal.addComponents(firstActionRow);
-    await interaction.showModal(modal);
+    await interaction.showModal(
+      new ModalBuilder()
+        .setCustomId(`feedbackReportModal~${interaction.id}`)
+        .setTitle('TripBot Feedback Report')
+        .addComponents(
+          new ActionRowBuilder<TextInputBuilder>()
+            .addComponents(
+              new TextInputBuilder()
+                .setCustomId('feedbackReport')
+                .setLabel('What would you like to tell the bot dev team?')
+                .setStyle(TextInputStyle.Paragraph),
+            ),
+        ),
+    );
+
     const filter = (i:ModalSubmitInteraction) => i.customId.includes('feedbackReportModal');
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
+        i.deferReply({ ephemeral: true });
         const guildName = ` in ${i.guild?.name}`;
         const guildMessage = `${i.guild ? guildName : 'DM'}`;
 
@@ -69,7 +74,7 @@ export const dFeedback: SlashCommand = {
           .setTitle('Thank you!')
           // eslint-disable-next-line max-len
           .setDescription('I\'ve submitted this feedback to the bot owner. \n\nYou\'re more than welcome to join the TripSit server and speak to Moonbear directly if you want! Check the /contact command for more info.');
-        i.reply({ embeds: [embed], ephemeral: true });
+        await i.editReply({ embeds: [embed] });
       });
     return true;
   },

@@ -1,7 +1,7 @@
 import { stripIndents } from 'common-tags';
 import { Colors } from 'discord.js';
 import { dAvatar } from '../../src/discord/commands/global/d.avatar';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dAvatar;
 
@@ -17,7 +17,7 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} user:@MoonBear#1024`,
@@ -34,19 +34,15 @@ describe(slashCommand.data.name, () => {
           url: 'https://cdn.discordapp.com/avatars/123456789/userAvatarUrl.webp?size=4096',
         },
       }),
-      ephemeral: false,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name}`,
         slashCommand.data,
         'dm',
       ),
-    )).toHaveBeenCalledWith({
-      content: stripIndents`This command can only be used in a discord guild!`,
-      ephemeral: true,
-    });
+    )).toHaveBeenCalledWith({ content: stripIndents`This command can only be used in a discord guild!` });
   });
 });

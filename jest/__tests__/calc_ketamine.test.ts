@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { dCalcketamine } from '../../src/discord/commands/global/d.calcKetamine';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dCalcketamine;
 
@@ -19,7 +19,7 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} weight:130.4 units:kg`,
@@ -54,10 +54,9 @@ describe(slashCommand.data.name, () => {
           },
         ],
       }),
-      ephemeral: false,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} weight:130.4 units:lbs`,
@@ -92,10 +91,9 @@ describe(slashCommand.data.name, () => {
           },
         ],
       }),
-      ephemeral: false,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} weight:180 units:kg`,
@@ -109,10 +107,9 @@ describe(slashCommand.data.name, () => {
         color: Colors.Purple,
         title: 'Please enter a weight less than 179 kg.',
       }),
-      ephemeral: true,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} weight:400 units:lbs`,
@@ -126,7 +123,6 @@ describe(slashCommand.data.name, () => {
         color: Colors.Purple,
         title: 'Please enter a weight less than 398 lbs.',
       }),
-      ephemeral: true,
     });
   });
 });

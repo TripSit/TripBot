@@ -25,6 +25,7 @@ export const dKarma: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const member = interaction.options.getMember('user') as GuildMember;
 
     const response = await karma(member.id);
@@ -35,8 +36,7 @@ export const dKarma: SlashCommand = {
     const embed = embedTemplate()
       .setTitle(message);
       // .setFooter({text: `${quote}`});
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

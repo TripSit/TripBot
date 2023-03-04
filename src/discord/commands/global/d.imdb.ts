@@ -24,10 +24,11 @@ export const dImdb: SlashCommand = {
 
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
 
     const title = interaction.options.getString('title', true);
     if (!title) {
-      interaction.reply({ content: 'You must enter a title.', ephemeral: true });
+      interaction.editReply({ content: 'You must enter a title.' });
       return false;
     }
     const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
@@ -37,7 +38,7 @@ export const dImdb: SlashCommand = {
     const result = await imdb(title);
 
     if (!result.title) {
-      interaction.reply({ content: `Could not find ${title}, make sure you're exact!`, ephemeral: true });
+      interaction.editReply({ content: `Could not find ${title}, make sure you're exact!` });
       return true;
     }
 
@@ -60,7 +61,7 @@ export const dImdb: SlashCommand = {
 
     // interaction.followUp({embeds: [embed]});
     await interaction.editReply({ embeds: [embed] });
-    // interaction.reply({embeds: [embed]});
+    // interaction.editReply({embeds: [embed]});
     return true;
   },
 };

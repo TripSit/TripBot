@@ -22,11 +22,9 @@ export const dSay: SlashCommand = {
       .setName('channel')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     if (!interaction.guild) {
-      interaction.reply({
-        content: 'This command can only be used in a server!',
-        ephemeral: true,
-      });
+      interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;
     }
 
@@ -39,10 +37,7 @@ export const dSay: SlashCommand = {
       await interaction.channel?.send(say);
     }
 
-    interaction.reply({
-      content: `I said '${say}' in ${channel ? channel.toString() : interaction.channel?.toString()}`,
-      ephemeral: true,
-    });
+    interaction.editReply({ content: `I said '${say}' in ${channel ? channel.toString() : interaction.channel?.toString()}` });
 
     const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {

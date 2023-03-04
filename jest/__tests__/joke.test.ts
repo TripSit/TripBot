@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import axios from 'axios';
 import { dJoke } from '../../src/discord/commands/global/d.joke';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dJoke;
 
@@ -30,7 +30,7 @@ describe(slashCommand.data.name, () => {
         },
       },
     });
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name}`,
@@ -44,7 +44,6 @@ describe(slashCommand.data.name, () => {
         color: Colors.Purple,
         title: 'What do you call a fake noodle? An impasta.',
       }),
-      ephemeral: false,
     });
   });
 });

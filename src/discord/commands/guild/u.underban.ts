@@ -61,7 +61,12 @@ export const uUnderban: UserCommand = {
             null,
           ));
         } else {
-          await i.editReply({ embeds: [embedTemplate().setTitle('Error').setDescription('This user is not in the server!')] });
+          await i.editReply({
+            embeds: [
+              embedTemplate()
+                .setTitle('Error')
+                .setDescription('This user is not in the server!')],
+          });
         }
       });
     return true;

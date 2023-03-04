@@ -39,6 +39,7 @@ export const dImgur: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     // Sometimes the API takes a few seconds to respond.
     const search = interaction.options.getString('search');
     const sort = interaction.options.getString('sort') || 'top';

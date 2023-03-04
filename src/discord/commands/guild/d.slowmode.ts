@@ -46,16 +46,14 @@ export const dSlowmode: SlashCommand = {
       .setDescription('Turn off slowmode')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
 
     const toggle = interaction.options.getSubcommand();
     const { channel } = interaction;
     const verb = toggle === 'on' ? 'enabled' : 'disabled';
 
     if (!(channel instanceof TextChannel)) {
-      await interaction.reply({
-        content: 'This command can only be used in a text channel',
-        ephemeral: true,
-      });
+      await interaction.editReply({ content: 'This command can only be used in a text channel' });
       return false;
     }
 
@@ -66,10 +64,7 @@ export const dSlowmode: SlashCommand = {
       await channel.setRateLimitPerUser(0);
     }
 
-    await interaction.reply({
-      content: `Slowmode ${verb} on ${channel}`,
-      ephemeral: true,
-    });
+    await interaction.editReply({ content: `Slowmode ${verb} on ${channel}` });
 
     const channelModerators = await interaction.guild?.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
     channelModerators.send({

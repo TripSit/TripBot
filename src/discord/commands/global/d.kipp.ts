@@ -17,6 +17,7 @@ export const dKipp: SlashCommand = {
 
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const happyEmojis = [
       '😀', '😃', '😄', '😊', '😁', '🥰', '😇', '😍', '😂', '🤣',
       '🙂', '😆', '😋', '😛', '🙃', '😜', '🤪', '😝', '🤗', '🤭',
@@ -37,7 +38,7 @@ export const dKipp: SlashCommand = {
       .setDescription(output)
       .setAuthor(null)
       .setFooter(null);
-    interaction.reply({ embeds: [embed] });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

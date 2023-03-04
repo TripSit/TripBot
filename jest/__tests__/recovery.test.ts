@@ -1,11 +1,11 @@
 import { dRecovery } from '../../src/discord/commands/global/d.recovery';
-import { executeCommandAndSpyReply, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dRecovery;
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name}`,
@@ -14,7 +14,6 @@ describe(slashCommand.data.name, () => {
       ),
     )).toHaveBeenCalledWith({
       content: 'https://i.imgur.com/nTEm0QE.png',
-      ephemeral: false,
     });
   });
 });

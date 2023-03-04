@@ -20,6 +20,7 @@ export const dBotstats: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     // Get the number of guilds the bot is in
     const guildCount = interaction.client.guilds.cache.size;
     // log.debug(F, `guildCount: ${guildCount}`);
@@ -49,8 +50,7 @@ export const dBotstats: SlashCommand = {
       Commands: ${commandCount.toString()}
       Uptime: ${ms(uptime)}
     `);
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

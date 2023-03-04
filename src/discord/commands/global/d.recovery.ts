@@ -17,11 +17,8 @@ export const dRecovery: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({
-      content: await recovery(),
-      ephemeral,
-    });
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    interaction.editReply({ content: await recovery() });
     return true;
   },
 };

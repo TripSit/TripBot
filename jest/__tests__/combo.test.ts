@@ -35,7 +35,6 @@ describe(slashCommand.data.name, () => {
         title: 'Mixing **MDMA** and **Ketamine**: ↗ Low Risk & Synergy ↗',
         description: stripIndents`These drugs work together to cause an effect greater than the sum of its parts, and they aren't likely to cause an adverse or undesirable reaction when used carefully. Additional research should always be done before combining drugs.`, // eslint-disable-line
       }),
-      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyEditReply(
@@ -56,7 +55,6 @@ describe(slashCommand.data.name, () => {
         title: 'Mixing **booze** and **xanax**: ☠️ Dangerous ☠️',
         description: stripIndents`These combinations are considered extremely harmful and should always be avoided. Reactions to these drugs taken in combination are highly unpredictable and have a potential to cause death.`, // eslint-disable-line
       }),
-      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyEditReply(
@@ -77,7 +75,6 @@ describe(slashCommand.data.name, () => {
         title: 'Mixing **booze** and **Methamphetamine**: ⚠️ Caution ⚠️',
         description: stripIndents`These combinations are not usually physically harmful, but may produce undesirable  effects, such as physical discomfort or overstimulation. Extreme use may cause physical health issues. Synergistic effects may be unpredictable. Care should be taken when choosing to use this combination.`, // eslint-disable-line
       }),
-      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyEditReply(
@@ -98,7 +95,6 @@ describe(slashCommand.data.name, () => {
         title: 'Mixing **Methamphetamine** and **booze**: ⚠️ Caution ⚠️',
         description: stripIndents`These combinations are not usually physically harmful, but may produce undesirable  effects, such as physical discomfort or overstimulation. Extreme use may cause physical health issues. Synergistic effects may be unpredictable. Care should be taken when choosing to use this combination.`, // eslint-disable-line
       }),
-      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyEditReply(
@@ -119,7 +115,6 @@ describe(slashCommand.data.name, () => {
         title: 'Mixing **Alcohol** and **Oxycodone**: ☠️ Dangerous ☠️',
         description: stripIndents`These combinations are considered extremely harmful and should always be avoided. Reactions to these drugs taken in combination are highly unpredictable and have a potential to cause death.`, // eslint-disable-line
       }),
-      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyEditReply(
@@ -140,7 +135,6 @@ describe(slashCommand.data.name, () => {
         title: 'Mixing **Oxycodone** and **Alcohol**: ☠️ Dangerous ☠️',
         description: stripIndents`These combinations are considered extremely harmful and should always be avoided. Reactions to these drugs taken in combination are highly unpredictable and have a potential to cause death.`, // eslint-disable-line
       }),
-      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyEditReply(
@@ -161,7 +155,6 @@ describe(slashCommand.data.name, () => {
         title: 'Mixing **amphetamines** and **booze**: ⚠️ Caution ⚠️',
         description: stripIndents`These combinations are not usually physically harmful, but may produce undesirable  effects, such as physical discomfort or overstimulation. Extreme use may cause physical health issues. Synergistic effects may be unpredictable. Care should be taken when choosing to use this combination.`, // eslint-disable-line
       }),
-      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyEditReply(
@@ -182,7 +175,6 @@ describe(slashCommand.data.name, () => {
         title: 'Mixing **booze** and **diazepam**: ☠️ Dangerous ☠️',
         description: stripIndents`These combinations are considered extremely harmful and should always be avoided. Reactions to these drugs taken in combination are highly unpredictable and have a potential to cause death.`, // eslint-disable-line
       }),
-      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyEditReply(
@@ -203,7 +195,6 @@ describe(slashCommand.data.name, () => {
         title: 'Mixing **diazepam** and **booze**: ☠️ Dangerous ☠️',
         description: stripIndents`These combinations are considered extremely harmful and should always be avoided. Reactions to these drugs taken in combination are highly unpredictable and have a potential to cause death.`, // eslint-disable-line
       }),
-      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyEditReply(
@@ -221,7 +212,6 @@ describe(slashCommand.data.name, () => {
         title: 'boxxxxoze was not found, make sure you spelled it correctly!',
         description: stripIndents`...this shouldn't have happened, please tell the developer!`, // eslint-disable-line
       }),
-      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyEditReply(
@@ -239,7 +229,6 @@ describe(slashCommand.data.name, () => {
         title: 'diazxxxepam was not found, make sure you spelled it correctly!',
         description: stripIndents`...this shouldn't have happened, please tell the developer!`, // eslint-disable-line
       }),
-      ephemeral: false,
     });
 
     expect(await executeCommandAndSpyEditReply(
@@ -262,7 +251,6 @@ describe(slashCommand.data.name, () => {
         [Methamphetamine](https://psychonautwiki.org/wiki/Methamphetamine)
         [Heroin](https://psychonautwiki.org/wiki/Heroin)`, // eslint-disable-line
       }),
-      ephemeral: false,
     });
   });
 });

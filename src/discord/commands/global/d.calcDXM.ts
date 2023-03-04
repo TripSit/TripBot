@@ -50,6 +50,7 @@ export const dCalcdxm: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     // Calculate each plat min/max value
     const givenWeight = interaction.options.getNumber('calc_weight', true);
     const weightUnits = interaction.options.getString('units', true);
@@ -72,8 +73,7 @@ export const dCalcdxm: SlashCommand = {
       );
       header = false;
     });
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

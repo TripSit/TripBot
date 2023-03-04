@@ -41,19 +41,20 @@ export const dPoll: SlashCommand = {
       .setRequired(true)),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
 
     if (!interaction.channel) {
-      await interaction.reply('You need to be in a channel to use this command!');
+      await interaction.editReply('You need to be in a channel to use this command!');
       return false;
     }
 
     if (interaction.channel.type === ChannelType.DM) {
-      await interaction.reply('You can\'t poll yourself!');
+      await interaction.editReply('You can\'t poll yourself!');
       return false;
     }
 
     if (interaction.channel.type === ChannelType.GuildVoice) {
-      await interaction.reply('You can\'t poll a voice channel!');
+      await interaction.editReply('You can\'t poll a voice channel!');
       return false;
     }
 
@@ -64,24 +65,24 @@ export const dPoll: SlashCommand = {
     ]);
 
     if (!perms.hasPermission) {
-      await interaction.reply({ content: `Please make sure I can ${perms.permission} here!`, ephemeral: true });
+      await interaction.editReply({ content: `Please make sure I can ${perms.permission} here!` });
       return false;
     }
 
     // await interaction.deferReply({ephemeral: true});
-    // interaction.reply({ content: 'Creating poll...', ephemeral: true });
+    // interaction.editReply({ content: 'Creating poll...': true });
     let question = interaction.options.getString('question');
     // log.debug(F, `question: ${question}`);
     const optionsString = interaction.options.getString('choices');
     // log.debug(F, `optionsString: ${optionsString}`);
     if (!question || !optionsString) {
-      await interaction.reply('You need to provide a question and options!');
+      await interaction.editReply('You need to provide a question and options!');
       return false;
     }
     const optionsArray = optionsString.split(',');
 
     if (optionsArray.length > 9) {
-      await interaction.reply('You can only have 9 options max!');
+      await interaction.editReply('You can only have 9 options max!');
       return false;
     }
 
@@ -146,7 +147,7 @@ export const dPoll: SlashCommand = {
         }
       });
 
-    await interaction.reply({ content: 'Done!', ephemeral: true });
+    await interaction.editReply({ content: 'Done!' });
     return true;
   },
 };

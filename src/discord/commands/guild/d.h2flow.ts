@@ -24,6 +24,7 @@ export const dH2flow: SlashCommand = {
 
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const data = await h2flow(interaction.user.id);
 
     const sparklePoints = data.sparkle_points;
@@ -92,8 +93,7 @@ export const dH2flow: SlashCommand = {
         },
       );
 
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.editReply({ embeds: [embed] });
 
     return false;
   },

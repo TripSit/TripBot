@@ -21,6 +21,7 @@ export const dTestkits: SlashCommand = {
 
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const emsInfo = await testkits();
     const embed = embedTemplate();
 
@@ -44,8 +45,7 @@ export const dTestkits: SlashCommand = {
         [How to use fent strips](https://dancesafe.org/you-may-be-using-fentanyl-testing-strips-incorrectly/)
         [More testkit resources on the TripSit wiki!](https://wiki.tripsit.me/wiki/Test_Kits)
         `);
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

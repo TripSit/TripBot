@@ -30,14 +30,14 @@ export const dJoke: SlashCommand = {
 
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const data = await joke();
 
     const embed = embedTemplate();
     if (data.type === 'twopart') embed.setTitle((data as Double).setup).setDescription((data as Double).delivery);
     else embed.setTitle((data as Single).joke);
 
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

@@ -21,10 +21,11 @@ export const dAvatar: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     // log.debug(F, `${JSON.stringify(interaction.options, null, 2)}`);
     // If this doesnt happen in a guild then ignore it
     if (!interaction.guild) {
-      interaction.reply({ content: 'This command can only be used in a discord guild!', ephemeral: true });
+      interaction.editReply({ content: 'This command can only be used in a discord guild!' });
       return false;
     }
 
@@ -40,8 +41,7 @@ export const dAvatar: SlashCommand = {
     const embed = embedTemplate()
       .setTitle(`${member.displayName}'s Profile Picture`)
       .setImage(`${member.displayAvatarURL()}?size=4096`);
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    await interaction.reply({ embeds: [embed], ephemeral });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

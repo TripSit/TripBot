@@ -292,23 +292,18 @@ export const dDrug: SlashCommand = {
         { name: 'Dosage', value: 'dosage' },
         { name: 'Summary', value: 'summary' },
       ))
-    .addStringOption(option => option.setName('output')
-      .setDescription('Post result publicly in chat? (Defaults to private)')
-      .addChoices(
-        { name: 'Public', value: 'public' },
-        { name: 'Private', value: 'private' },
-      )),
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     let embed = embedTemplate();
     // Check if the interaction is coming from DM
-    const ephemeral = (interaction.options.getString('output') === 'private' || interaction.options.getString('output') === null) ?? false; // eslint-disable-line max-len
-    await interaction.deferReply({ ephemeral });
 
     // log.debug(F, `ephemeral: ${ephemeral} | interaction.channelId: ${interaction.channelId}`);
-    if (interaction.channelId !== null && !ephemeral) {
-      embed.setFooter({ text: 'You can use this command in DM for privacy if you want!' });
-    }
+    // if (interaction.channelId !== null && !ephemeral) {
+    //   embed.setFooter({ text: 'You can use this command in DM for privacy if you want!' });
+    // }
     // log.debug(F, `ephemeral: ${ephemeral}`);
     const drugName = interaction.options.getString('substance', true);
     // if (!drugName) {

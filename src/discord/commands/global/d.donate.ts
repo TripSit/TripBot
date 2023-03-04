@@ -23,6 +23,7 @@ export const dDonate: SlashCommand = {
 
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const donateInfo = await donate();
     const embed = embedTemplate()
       .setColor(Colors.Purple)
@@ -47,8 +48,7 @@ export const dDonate: SlashCommand = {
         );
       }
     });
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

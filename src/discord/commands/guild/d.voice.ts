@@ -54,6 +54,7 @@ export const dVoice: SlashCommand = {
         .setRequired(true))),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
 
     const command = interaction.options.getSubcommand() as 'lock' | 'hide' | 'ban' | 'rename' | 'mute' | 'cohost';
     const member = interaction.member as GuildMember;
@@ -67,31 +68,31 @@ export const dVoice: SlashCommand = {
 
     // Check if user is in a voice channel
     if (voiceChannel === null) {
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
     // Check if user is in a Tent
     if (voiceChannel.name.includes('⛺') === false) {
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
     // Check if a user is the one who created it, only users with MoveMembers permission can do this
     if (!voiceChannel.permissionsFor(member).has(PermissionsBitField.Flags.MoveMembers)) {
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
     // Check the user is trying to act on themselves
     if (target === member) {
-      await interaction.reply({ embeds: [embed.setDescription('Stop playing with yourself!')], ephemeral: true });
+      await interaction.editReply({ embeds: [embed.setDescription('Stop playing with yourself!')] });
       return false;
     }
 
     // // Check if the target user is a moderator
     // if (target.roles.cache.has(env.ROLE_MODERATOR)) {
-    //   await interaction.reply({ embeds: [embed.setDescription('You cannot ban a moderator!')], ephemeral: true });
+    //   await interaction.editReply({ embeds: [embed.setDescription('You cannot ban a moderator!')] });
     //   return false;
     // }
 
@@ -120,7 +121,7 @@ export const dVoice: SlashCommand = {
       embed = await tentCohost(voiceChannel, target);
     }
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

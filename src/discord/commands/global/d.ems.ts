@@ -20,6 +20,7 @@ export const dEms: SlashCommand = {
   async execute(interaction) {
     startLog(F, interaction);
     const emsInfo = await ems();
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const embed = embedTemplate();
 
     embed.setTitle('EMS Information');
@@ -41,8 +42,7 @@ export const dEms: SlashCommand = {
         },
       );
     });
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

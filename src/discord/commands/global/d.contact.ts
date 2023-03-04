@@ -22,6 +22,7 @@ export const dContact: SlashCommand = {
 
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const contactInfo = await contact();
     const embed = embedTemplate()
       .setColor(Colors.Purple)
@@ -39,8 +40,7 @@ export const dContact: SlashCommand = {
         { name: 'Drug Info Issues Email', value: `${contactInfo.contentEmail}`, inline: true },
       )
       .setFooter({ text: 'Thanks for asking!' });
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

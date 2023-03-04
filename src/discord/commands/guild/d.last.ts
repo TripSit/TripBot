@@ -22,6 +22,8 @@ export const dLast: SlashCommand = {
       .setDescription('User to look up')
       .setRequired(true)),
   async execute(interaction) {
+    startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (interaction.guild) {
       if (interaction.guild.id !== env.DISCORD_GUILD_ID.toString()) {
@@ -30,7 +32,6 @@ export const dLast: SlashCommand = {
     } else {
       return false;
     }
-    startLog(F, interaction);
 
     interaction.deferReply();
 
@@ -44,10 +45,7 @@ export const dLast: SlashCommand = {
     await interaction.editReply({ content: `${response.lastMessage}` });
 
     if (actorIsMod) {
-      await interaction.followUp({
-        content: `Last ${response.messageCount} messages:\n${response.messageList}`,
-        ephemeral: true,
-      });
+      await interaction.followUp({ content: `Last ${response.messageCount} messages:\n${response.messageList}` });
     }
     return true;
   },

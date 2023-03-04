@@ -50,7 +50,6 @@ const Trivia = require('trivia-api');
 
 const F = f(__filename);
 
-const loadingString = 'Loading...';
 // Value in milliseconds (1000 * 60 * 1 = 1 minute)
 // const intervals = {
 //   quest: env.NODE_ENV === 'production' ? 1000 * 60 * 60 : 1000 * 1,
@@ -717,32 +716,8 @@ export const dRpg: SlashCommand = {
       .setDescription('Go to the trivia parlor')),
   async execute(interaction) {
     startLog(F, interaction);
-    // This command provides a RPG game for the user to play
-    // It starts with the setup subcommand which has the user setup their character including:
-    // - Name - string
-    // - Class - Warrior, Mage, Rogue, Cleric
-    // - Species - Human, Elf, Dwarf, Orc, Gnome, Halfling
-    //
-    // Once setup, the user can generate tokens in a few different ways:
-    // - Quest - Grants .1 TripToken, can only be used once every hour
-    // - Dungeon - Grants 1 TripToken, can only be used once every 24 hours
-    // - Raid - Grants 5 TripToken, can only be used once every 7 days
-    //
-    // The user can also use their tokens to buy items from the market:
-    // - Test Kit - 10% more tokens every time you gain tokens, costs 100 TripToken
-    // - Scale - 20% more tokens every time you gain tokens, costs 200 TripToken
-    // - Profile border - 30% more tokens every time you gain tokens, costs 300 TripToken
-    // - Profile background - 40% more tokens every time you gain tokens, costs 400 TripToken
-    //
-    // The user can also play some games to earn some tokens:
-    // - Blackjack - Play a game of blackjack
-    // - Coin Flip - Flip a coin or flip a coin 10 times
-    // - Rock, Paper, Scissors - Play a game of rock, paper, scissors
-    //
-    // The user can also view their persona stats:
-    // - Inventory - View their inventory and equip/un-equip items
-    // - Stats - View their stats and level them up
-    // - Guild - View their guild and join/leave a guild
+    const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
+    const message = await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
     const subcommand = interaction.options.getSubcommand();
 
     // const quietCommands = [
@@ -753,18 +728,12 @@ export const dRpg: SlashCommand = {
     //   'roulette',
     // ];
 
-    const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
-
-    const message = channelRpg.id !== interaction.channelId
-      ? await interaction.reply({ embeds: [embedTemplate().setTitle(loadingString)], ephemeral: true })
-      : await interaction.reply({ embeds: [embedTemplate().setTitle(loadingString)] });
-
     // Create a collector that will listen to buttons clicked by the user
     const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id;
     const collector = message.createMessageComponentCollector({ filter, time: 0 });
 
     // Get the user's persona data
-    let [personaData] = await getPersonaInfo(interaction.user.id);
+    let personaData = await getPersonaInfo(interaction.user.id);
     // log.debug(F, `Initial Persona data: ${JSON.stringify(personaData, null, 2)}`);
 
     // If the user doesn't have persona data, create it
@@ -875,7 +844,7 @@ export async function rpgTown(
   interaction:MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check if the user has a persona
-  // const [personaData] = await getPersonaInfo(interaction.user.id);
+  // const personaData = await getPersonaInfo(interaction.user.id);
 
   const rowTown = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
@@ -921,7 +890,7 @@ export async function rpgBounties(
   command: 'quest' | 'dungeon' | 'raid' | null,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check if the user has a persona
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
 
   // Get the existing inventory data
   const inventoryData = await inventoryGet(personaData.id);
@@ -1268,7 +1237,7 @@ export async function rpgMarketInventory(
     personaInventory:string;
   }> {
   // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
 
   // Get the existing inventory data
   const inventoryData = await inventoryGet(personaData.id);
@@ -1319,7 +1288,7 @@ export async function rpgMarketAccept(
   // } = await rpgMarketInventory(interaction);
 
   // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
   // log.debug(F, `personaData (Accept): ${JSON.stringify(personaData, null, 2)}`);
 
   // If the user confirms the information, save the persona information
@@ -1428,7 +1397,7 @@ export async function rpgHome(
   } = await rpgHomeInventory(interaction);
 
   // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
   // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
 
   // Get the existing inventory data
@@ -1649,7 +1618,7 @@ export async function rpgHomeAccept(
   interaction: MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
   // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
 
   // If the user confirms the information, save the persona information
   const backgroundComponent = interaction.message.components[0].components[0];
@@ -1730,7 +1699,7 @@ export async function rpgHomeInventory(
     personaInventory:string;
   }> {
   // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
 
   // Get the existing inventory data
   const inventoryData = await inventoryGet(personaData.id);
@@ -1771,7 +1740,7 @@ export async function rpgHomeNameChange(
   interaction: MessageComponentInteraction,
 ):Promise<void> {
   // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
 
   // When this button is clicked, a modal appears where the user can enter their name
   // Create the modal
@@ -1792,11 +1761,10 @@ export async function rpgHomeNameChange(
     && i.customId.split('~')[1] === interaction.id
     && i.guild !== null);
   await interaction.awaitModalSubmit({ filter: modalFilter, time: 0 })
-    .then(async (i):Promise<{
-      embed: EmbedBuilder,
-      components: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[],
-    }> => {
+    .then(async i => {
+      if (i.customId.split('~')[1] !== interaction.id) return;
       const choice = i.fields.getTextInputValue('rpgNewName');
+      await i.deferReply({ ephemeral: true });
 
       // log.debug(F, `name: ${choice}`);
 
@@ -1807,8 +1775,6 @@ export async function rpgHomeNameChange(
         default: true,
       }]);
 
-      await i.reply({ content: `Your name has been set to ${choice}`, ephemeral: true });
-
       const rowHome = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           global.buttons.name,
@@ -1817,19 +1783,6 @@ export async function rpgHomeNameChange(
           global.buttons.town,
         );
 
-      if (!personaData) {
-        return {
-          embed: embedTemplate()
-            .setAuthor(null)
-            .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-            .setTitle('Home')
-            .setDescription(stripIndents`
-            You are in your home, you can change your name, species, class and here.
-          `)
-            .setColor(Colors.Green),
-          components: [rowHome],
-        };
-      }
       const rowChangeNameDisplay = new ActionRowBuilder<StringSelectMenuBuilder>()
         .addComponents(menus.name);
 
@@ -1854,17 +1807,21 @@ export async function rpgHomeNameChange(
       const rowChangeGuild = new ActionRowBuilder<StringSelectMenuBuilder>()
         .addComponents(menus.guild);
 
-      return {
-        embed: embedTemplate()
-          .setAuthor(null)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-          .setTitle('Home')
-          .setDescription(stripIndents`
+      await i.editReply({
+        embeds: [
+          embedTemplate()
+            .setAuthor(null)
+            .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG `, iconURL: env.TS_ICON_URL })
+            .setTitle('Home')
+            .setDescription(stripIndents`
+            Your name has been set to ${choice}
+
             You are in your home, you can change your name, species, class and here.
           `)
-          .setColor(Colors.Green),
+            .setColor(Colors.Green),
+        ],
         components: [rowChangeNameDisplay, rowChangeSpecies, rowChangeClass, rowChangeGuild, rowHome],
-      };
+      });
     });
 }
 
@@ -2003,7 +1960,7 @@ export async function rpgArcadeGame(
   }
 
   // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
   // log.debug(F, `personaData (Coinflip): ${JSON.stringify(personaData, null, 2)}`);
 
   const currentBet = wagers[interaction.user.id].tokens;
@@ -2324,21 +2281,7 @@ export async function rpgTrivia(
     };
 
     // Get the user's persona data
-    let [personaData] = await getPersonaInfo(interaction.user.id);
-    // log.debug(F, `Initial Persona data: ${JSON.stringify(personaData, null, 2)}`);
-
-    // If the user doesn't have persona data, create it
-    if (!personaData) {
-      const userData = await getUser(interaction.user.id, null);
-      personaData = {
-        user_id: userData.id,
-        tokens: 0,
-      } as Personas;
-
-      // log.debug(F, `Setting Persona data: ${JSON.stringify(personaData, null, 2)}`);
-
-      await setPersonaInfo(personaData);
-    }
+    const personaData = await getPersonaInfo(interaction.user.id);
     const questionList = await rpgTriviaGetQuestions(amountOfQuestions, chosenDifficulty);
 
     for (let qNumber = 0; (qNumber < amountOfQuestions); qNumber += 1) {
@@ -2940,7 +2883,7 @@ export async function rpgArcadeWager(
   const bet = parseInt(interaction.customId.slice(8), 10);
   newBet += bet || 0;
 
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
   if (personaData.tokens < newBet) {
     const notEnough = '**You don\'t have enough to bet that much**\n';
     return rpgArcadeGame(interaction, wagers[interaction.user.id].gameName, undefined, notEnough);

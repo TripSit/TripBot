@@ -25,7 +25,7 @@ export const dWikipedia: SlashCommand = {
 
   async execute(interaction) {
     startLog(F, interaction);
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
 
     const query = (interaction.options.getString('query') as string);
 

@@ -1,7 +1,7 @@
 import { stripIndents } from 'common-tags';
 import { Colors } from 'discord.js';
 import { dBotstats } from '../../src/discord/commands/guild/d.botstats';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dBotstats;
 
@@ -17,7 +17,7 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name}`,
@@ -39,7 +39,6 @@ describe(slashCommand.data.name, () => {
           Uptime: 0ms
         `,
       }),
-      ephemeral: false,
     });
   });
 });

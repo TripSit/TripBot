@@ -872,20 +872,53 @@ export async function useractionsSet(
 
 export async function personaGet(
   userId:string,
-):Promise<Personas[]> {
+):Promise<Personas> {
 // log.debug(F, 'useractionsGet started');
-  if (env.POSTGRES_DB_URL === undefined) return [];
-  let response = [] as Personas[];
+  if (env.POSTGRES_DB_URL === undefined) {
+    return {
+      id: 'string',
+      user_id: 'string',
+      name: 'string',
+      class: 'string',
+      species: 'string',
+      guild: 'string',
+      tokens: 0,
+      trip_token_multiplier: 0,
+      last_quest: null,
+      last_dungeon: null,
+      last_raid: null,
+      created_at: new Date(),
+    } as Personas;
+  }
+
+  let data = {} as Personas | undefined;
+
   try {
-    response = await db<Personas>('personas')
+    data = await db<Personas>('personas')
       .select('*')
       .where('user_id', userId)
-      .orderBy('created_at', 'desc');
+      .first();
   } catch (err) {
     log.error(F, `Error getting personas: ${err}`);
     log.error(F, `userId: ${userId}`);
   }
-  return response;
+
+  // log.debug(F, `data1: ${JSON.stringify(data, null, 2)}`);
+  if (data === undefined) {
+    try {
+      [data] = (await db<Personas>('users')
+        .insert({
+          user_id: userId,
+          tokens: 0,
+        })
+        .returning('*'));
+    // log.debug(F, `data2: ${JSON.stringify(data, null, 2)}`);
+    } catch (err) {
+      log.error(F, `Error getting user: ${err}`);
+      log.error(F, `userId: ${userId}`);
+    }
+  }
+  return data as Personas;
 }
 
 export async function personaSet(

@@ -33,6 +33,7 @@ export const dTimezone: SlashCommand = {
         .setAutocomplete(true))),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     const tzValue = interaction.options.getString('timezone');
     let member = interaction.options.getMember('user') as GuildMember | null;
@@ -50,14 +51,13 @@ export const dTimezone: SlashCommand = {
     // log.debug(F, `response: ${response}`);
 
     if (command === 'get') {
-      const ephemeral = (interaction.options.getBoolean('ephemeral') === true);
       if (response === null) {
-        interaction.reply({ content: `${member.displayName} is a timeless treasure <3 (and has not set a time zone)`, ephemeral });
+        interaction.editReply({ content: `${member.displayName} is a timeless treasure <3 (and has not set a time zone)` });
       } else {
-        interaction.reply({ content: `${response} wherever ${member.displayName} is located.`, ephemeral });
+        interaction.editReply({ content: `${response} wherever ${member.displayName} is located.` });
       }
     } else {
-      interaction.reply({ content: response as string, ephemeral: true });
+      interaction.editReply({ content: response as string });
     }
     return true;
   },

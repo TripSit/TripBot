@@ -16,13 +16,15 @@ async function birthdayGet(
   interaction:ChatInputCommandInteraction,
   member:GuildMember,
 ) {
+  startLog(F, interaction);
+  await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
   const embed = embedTemplate();
 
   const response = await birthday('get', member.id, null, null);
 
   if (response === null) {
     embed.setTitle(`${member.displayName} is immortal! (Or has not set their birthday...)`);
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
   embed.setTitle(`${member.displayName}'s birthday is ${response.toFormat('LLLL d')}`);
@@ -42,7 +44,7 @@ async function birthdayGet(
   } else {
     embed.setDescription(`Only ${daysUntil.toFixed(0)} days left!`);
   }
-  await interaction.reply({ embeds: [embed] });
+  await interaction.editReply({ embeds: [embed] });
 }
 
 async function birthdaySet(
@@ -54,12 +56,12 @@ async function birthdaySet(
   let month = 0 as number;
 
   if (!monthInput) {
-    await interaction.reply({ content: 'You need to specify a month!', ephemeral: true });
+    await interaction.editReply({ content: 'You need to specify a month!' });
     return;
   }
 
   if (!day) {
-    await interaction.reply({ content: 'You need to specify a day!', ephemeral: true });
+    await interaction.editReply({ content: 'You need to specify a day!' });
     return;
   }
 
@@ -69,19 +71,19 @@ async function birthdaySet(
     if (month30.includes(monthInput.toLowerCase()) && day > 30) {
       const response = `${monthInput} only has 30 days!`;
       // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-      interaction.reply({ content: response, ephemeral: true });
+      interaction.editReply({ content: response });
       return;
     }
     if (month31.includes(monthInput.toLowerCase()) && day > 31) {
       const response = `${monthInput} only has 31 days!`;
       // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-      interaction.reply({ content: response, ephemeral: true });
+      interaction.editReply({ content: response });
       return;
     }
     if (monthInput.toLowerCase() === 'february' && day > 28) {
       const response = 'February only has 28 days!';
       // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-      interaction.reply({ content: response, ephemeral: true });
+      interaction.editReply({ content: response });
       return;
     }
     // const monthDict = {
@@ -119,7 +121,7 @@ async function birthdaySet(
     const response = await birthday('set', member.id, month, day);
     const embed = embedTemplate();
     embed.setTitle(`Set your birthday to ${(response as DateTime).toFormat('LLLL d')}`);
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.editReply({ embeds: [embed] });
   }
 }
 

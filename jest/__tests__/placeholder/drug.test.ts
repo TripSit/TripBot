@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { dDrug } from '../../../src/discord/commands/global/d.drug';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../../utils/testutils';
 
 const slashCommand = dDrug;
 
@@ -27,7 +27,7 @@ const durationLabelInsufflated = '⏳ Duration (Insufflated)';
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
     // /drug substance:Cannabidiol response:All public:True
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} substance:DMT`,
@@ -133,10 +133,9 @@ describe(slashCommand.data.name, () => {
           },
         ],
       }),
-      ephemeral: true,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} substance:DMT response:all public:true`,
@@ -242,12 +241,11 @@ describe(slashCommand.data.name, () => {
           },
         ],
       }),
-      ephemeral: true,
     });
 
     // via MoonBear#1024 (177537158419054592) in TripSitDev (960606557622657026)
     // with params: substance: Cannabis, response: summary, public: false
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} substance:DMT response:summary public:False`,
@@ -263,10 +261,9 @@ describe(slashCommand.data.name, () => {
         url: stripIndents`https://wiki.tripsit.me/wiki/DMT`,
         description: stripIndents`A popular and powerful psychedelic, typically used in two ways; either it is vapourised for a short 'breakthrough' experience, or it is taken in combination with an enzyme inhibitor for a long, intense trip (this is also known as ayahuasca or pharmahuasca).`, // eslint-disable-line
       }),
-      ephemeral: true,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} substance:DMT response:dosage public:true`,
@@ -336,7 +333,6 @@ describe(slashCommand.data.name, () => {
           },
         ],
       }),
-      ephemeral: true,
     });
   });
 });

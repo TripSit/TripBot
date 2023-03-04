@@ -5,7 +5,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { dInvite } from '../../src/discord/commands/global/d.invite';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dInvite;
 
@@ -21,7 +21,7 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name}`,
@@ -45,7 +45,6 @@ describe(slashCommand.data.name, () => {
       The testing server is [TripSit Dev Discord](https://discord.gg/cNDsrMSY).
       If you have issues/questions, join and talk with Moonbear!`,
       }),
-      ephemeral: false,
     });
   });
 });

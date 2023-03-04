@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { dTriptoys } from '../../src/discord/commands/global/d.triptoys';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dTriptoys;
 
@@ -20,7 +20,7 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name}`,
@@ -151,7 +151,6 @@ describe(slashCommand.data.name, () => {
           },
         ],
       }),
-      ephemeral: false,
     });
   });
 });

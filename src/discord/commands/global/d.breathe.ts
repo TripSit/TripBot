@@ -25,10 +25,10 @@ export const dBreathe: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const choice = interaction.options.getString('exercise');
     const data = await breathe(choice);
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({ content: data, ephemeral });
+    interaction.editReply({ content: data });
     return true;
   },
 };

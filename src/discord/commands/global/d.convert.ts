@@ -30,6 +30,7 @@ export const dConvert: SlashCommand = {
 
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const value = interaction.options.getNumber('value', true);
     const units = interaction.options.getString('units', true);
     const intoUnits = interaction.options.getString('into', true);
@@ -43,9 +44,7 @@ export const dConvert: SlashCommand = {
     const embed = embedTemplate()
       .setTitle(response);
 
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

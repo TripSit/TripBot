@@ -1069,12 +1069,13 @@ export const dBottest: SlashCommand = {
       )),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     if (!interaction.channel) {
-      await interaction.reply('This command must be used in a channel!');
+      await interaction.editReply('This command must be used in a channel!');
       return false;
     }
     // const scope = interaction.options.getString('scope') || 'All';
-    await interaction.reply('Testing commands!');
+    await interaction.editReply('Testing commands!');
 
     const results = {
       total: [] as string[],
@@ -1088,7 +1089,7 @@ export const dBottest: SlashCommand = {
         await testGuild(interaction, globalResults)
           .then(async guildResults => {
             if (!interaction.channel) {
-              await interaction.reply('This command must be used in a channel!');
+              await interaction.editReply('This command must be used in a channel!');
               return false;
             }
             // log.debug(F, `Guild results: ${JSON.stringify(guildResults)}`);

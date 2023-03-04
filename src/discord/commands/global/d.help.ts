@@ -39,6 +39,7 @@ export const dHelp: SlashCommand = {
 
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
 
     const globalCommands = await interaction.client.application.commands.fetch();
     const guildCommands = await interaction.client.application.commands.fetch({ guildId: env.DISCORD_GUILD_ID });
@@ -113,8 +114,7 @@ export const dHelp: SlashCommand = {
       funEmbed,
       tripsitEmbed,
     ];
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    paginationEmbed(interaction, book, buttonList, 0, ephemeral);
+    paginationEmbed(interaction, book, buttonList, 0);
     return true;
   },
 };

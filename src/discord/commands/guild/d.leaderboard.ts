@@ -64,12 +64,13 @@ export const dLeaderboard: SlashCommand = {
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
+    startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const startTime = Date.now();
     if (!interaction.guild) {
-      interaction.reply('You can only use this command in a guild!');
+      interaction.editReply('You can only use this command in a guild!');
       return false;
     }
-    startLog(F, interaction);
 
     await interaction.deferReply();
     const categoryChoice = interaction.options.getString('category') ?? 'All';
@@ -137,8 +138,7 @@ export const dLeaderboard: SlashCommand = {
       return true;
     }
 
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    paginationEmbed(interaction, book, buttonList, 0, ephemeral);
+    paginationEmbed(interaction, book, buttonList, 0);
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);
     return true;
   },

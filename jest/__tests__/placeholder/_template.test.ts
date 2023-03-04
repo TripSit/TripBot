@@ -5,7 +5,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { dAbout } from '../../../src/discord/commands/global/d.about';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../../utils/testutils';
 
 const slashCommand = dAbout;
 
@@ -21,7 +21,7 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name}`,
@@ -49,16 +49,13 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name}`,
         slashCommand.data,
         'dm',
       ),
-    )).toHaveBeenCalledWith({
-      content: stripIndents`This command can only be used in a discord guild!`,
-      ephemeral: true,
-    });
+    )).toHaveBeenCalledWith({ content: stripIndents`This command can only be used in a discord guild!` });
   });
 });

@@ -5,7 +5,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { dCalcpsychedelics } from '../../src/discord/commands/global/d.calcPsychedelics';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dCalcpsychedelics;
 
@@ -21,7 +21,7 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} lsd last_dose:300 days:3 desired_dose:400`,
@@ -40,10 +40,9 @@ describe(slashCommand.data.name, () => {
           [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
         `,
       }),
-      ephemeral: false,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} lsd last_dose:300 days:16 desired_dose:1200`,
@@ -62,10 +61,9 @@ describe(slashCommand.data.name, () => {
           [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
         `,
       }),
-      ephemeral: false,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} lsd last_dose:900 days:16`,
@@ -84,10 +82,9 @@ describe(slashCommand.data.name, () => {
           [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
         `,
       }),
-      ephemeral: false,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} mushrooms last_dose:3.5 days:3 desired_dose:4.5`,
@@ -106,10 +103,9 @@ describe(slashCommand.data.name, () => {
           [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
         `,
       }),
-      ephemeral: false,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} mushrooms last_dose:3.5 days:3`,
@@ -128,7 +124,6 @@ describe(slashCommand.data.name, () => {
           [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) 
         `,
       }),
-      ephemeral: false,
     });
   });
 });

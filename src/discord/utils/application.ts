@@ -58,14 +58,20 @@ const rejectionMessages = {
 export async function applicationStart(
   interaction: SelectMenuInteraction,
 ): Promise<void> {
+  startLog(F, interaction);
   if (interaction.values[0] === 'none') {
-    interaction.reply({ content: 'No application selected.', ephemeral: true });
+    interaction.reply({ content: 'No application selected.' });
     return;
   }
-  startLog(F, interaction);
 
   if (!interaction.guild) {
     interaction.reply('This command can only be used in a server!');
+    return;
+  }
+
+  if (!interaction.member) {
+    // log.debug(F, `no member!`);
+    interaction.reply('This must be performed by a member of a guild!');
     return;
   }
 
@@ -79,36 +85,15 @@ export async function applicationStart(
   const channelApplications = await interaction.guild.channels.fetch(channelApplicationsId) as TextChannel;
 
   const channelPerms = await checkChannelPermissions(channelApplications, [
+    'CreatePrivateThreads' as PermissionResolvable,
     'SendMessages' as PermissionResolvable,
   ]);
   if (!channelPerms.hasPermission) {
     const guildOwner = await interaction.guild?.fetchOwner();
     await guildOwner?.send({ content: `Please make sure I can ${channelPerms.permission} in ${channelApplications} so I can run ${F}!` }); // eslint-disable-line
     log.error(F, `Missing permission ${channelPerms.permission} in ${channelApplications}!`);
-    interaction.reply({ content: 'There was a permission issue, i\'ve notified the guild owner! Please try again later.', ephemeral: true });
+    interaction.reply({ content: 'There was a permission issue, i\'ve notified the guild owner! Please try again later.' });
     return;
-  }
-
-  if (interaction.guild.premiumTier > 2) {
-    const threadPerms = await checkChannelPermissions(channelApplications, [
-      'CreatePrivateThreads' as PermissionResolvable,
-    ]);
-    if (!threadPerms.hasPermission) {
-      const guildOwner = await interaction.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${channelApplications} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${channelPerms.permission} in ${channelApplications}!`);
-      return;
-    }
-  } else {
-    const threadPerms = await checkChannelPermissions(channelApplications, [
-      'CreatePublicThreads' as PermissionResolvable,
-    ]);
-    if (!threadPerms.hasPermission) {
-      const guildOwner = await interaction.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${channelApplications} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${channelPerms.permission} in ${channelApplications}!`);
-      return;
-    }
   }
 
   const roleRequestedId = interaction.values[0].split('~')[0];
@@ -116,40 +101,33 @@ export async function applicationStart(
   const roleRequested = await interaction.guild?.roles.fetch(roleRequestedId) as Role;
   const roleReviewer = await interaction.guild?.roles.fetch(roleReviewerId) as Role;
 
-  const modal = new ModalBuilder()
+  await interaction.showModal(new ModalBuilder()
     .setCustomId(`applicationSubmit~${interaction.id}`)
-    .setTitle(`${roleRequested.name} Application`);
-  modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-    .setCustomId('reason')
-    .setRequired(true)
-    .setLabel('Why do you want to help out?')
-    .setPlaceholder('This helps us get to know you a bit before you join the team!')
-    .setMaxLength(2000)
-    .setStyle(TextInputStyle.Paragraph)));
-  modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-    .setCustomId('skills')
-    .setRequired(true)
-    .setLabel('What skills can you bring to the team?')
-    .setPlaceholder(`What makes you qualified to be a ${roleRequested.name}? What can you bring to the team?`)
-    .setMaxLength(2000)
-    .setStyle(TextInputStyle.Paragraph)));
-  await interaction.showModal(modal);
+    .setTitle(`${roleRequested.name} Application`)
+    .addComponents(
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setCustomId('reason')
+          .setRequired(true)
+          .setLabel('Why do you want to help out?')
+          .setPlaceholder('This helps us get to know you a bit before you join the team!')
+          .setMaxLength(2000)
+          .setStyle(TextInputStyle.Paragraph)),
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setCustomId('skills')
+          .setRequired(true)
+          .setLabel('What skills can you bring to the team?')
+          .setPlaceholder(`What makes you qualified to be a ${roleRequested.name}? What can you bring to the team?`)
+          .setMaxLength(2000)
+          .setStyle(TextInputStyle.Paragraph)),
+    ));
 
   // Collect a modal submit interaction
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('applicationSubmit');
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
-      if (!i.guild) {
-        // log.debug(F, `no guild!`);
-        i.reply('This must be performed in a guild!');
-        return;
-      }
-      if (!i.member) {
-        // log.debug(F, `no member!`);
-        i.reply('This must be performed by a member of a guild!');
-        return;
-      }
 
       await i.deferReply({ ephemeral: true });
 
@@ -161,7 +139,7 @@ export async function applicationStart(
       const applicationThread = await channelApplications.threads.create({
         name: `💛│${actor.displayName}'s ${roleRequested.name} application!`,
         autoArchiveDuration: 1440,
-        type: i.guild?.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread,
+        type: ChannelType.PrivateThread,
         reason: `${actor.displayName} submitted an application!`,
         invitable: env.NODE_ENV === 'production' ? false : undefined,
       });
@@ -177,19 +155,19 @@ export async function applicationStart(
           },
           {
             name: 'Username',
-            value: `${i.member.user.username}#${i.member.user.discriminator}`,
+            value: `${i.member?.user.username}#${i.member?.user.discriminator}`,
             inline: true,
           },
           {
             name: 'ID',
-            value: `${i.member.user.id}`,
+            value: `${i.member?.user.id}`,
             inline: true,
           },
         )
         .addFields(
           {
             name: 'Created',
-            value: `${time((i.member.user as User).createdAt, 'R')}`,
+            value: `${time((i.member?.user as User).createdAt, 'R')}`,
             inline: true,
           },
         );
@@ -305,18 +283,18 @@ export async function applicationStart(
 export async function applicationReject(
   interaction: SelectMenuInteraction,
 ): Promise<void> {
+  startLog(F, interaction);
+  await interaction.deferReply({ ephemeral: false });
   if (!interaction.guild) {
-    interaction.reply('This command can only be used in a server!');
+    interaction.editReply('This command can only be used in a server!');
     return;
   }
-
-  startLog(F, interaction);
 
   const threadCreated = interaction.channel?.createdAt;
   // Check if the thread was created in the last 24 hours
   if (threadCreated && threadCreated.getTime() > Date.now() - 86400000) {
     // log.debug(F, `Thread created in the last 24 hours!`);
-    interaction.reply({ content: 'Whoa there, please give the team at least 24 until the next day to act on this application!', ephemeral: true });
+    interaction.editReply({ content: 'Whoa there, please give the team at least 24 until the next day to act on this application!' });
     return;
   }
 
@@ -329,7 +307,7 @@ export async function applicationReject(
     try {
       target = await interaction.guild?.members.fetch(memberId);
     } catch (e) {
-      interaction.reply({ content: 'Could not find target, are the still in the guild?', ephemeral: true });
+      interaction.editReply({ content: 'Could not find target, are the still in the guild?' });
       return;
     }
 
@@ -337,19 +315,19 @@ export async function applicationReject(
     try {
       role = await interaction.guild?.roles.fetch(roleId);
     } catch (e) {
-      interaction.reply({ content: 'Could not find role, has it been deleted?', ephemeral: true });
+      interaction.editReply({ content: 'Could not find role, has it been deleted?' });
       return;
     }
 
     if (!role) {
-      interaction.reply({ content: 'Could not find role, has it been deleted?', ephemeral: true });
+      interaction.editReply({ content: 'Could not find role, has it been deleted?' });
       return;
     }
 
     const rejectionReason = interaction.values[0];
     const rejectionWording = rejectionMessages[rejectionReason as keyof typeof rejectionMessages];
     // interaction.channel!.send(`${(interaction.member as GuildMember).displayName} rejected this application with reason code '${rejectionReason}'`);
-    interaction.reply(`${actor.displayName} rejected this application with reason code '${rejectionReason}'`);
+    interaction.editReply(`${actor.displayName} rejected this application with reason code '${rejectionReason}'`);
 
     const message = stripIndents`Thank you so much for your interest in helping out here at ${interaction.guild.name}. We review all applications with rigor and deep consideration, and the same was true for yours.
     At this time, the team has decided not to move forward, though your application has been saved and will be pulled as needed in the future unless rescinded.
@@ -360,7 +338,7 @@ export async function applicationReject(
     // log.debug(`[${PREFIX} - applicationReject] rejectionReason: ${rejectionWording}`);
     (interaction.channel as ThreadChannel).setName(`🖤│${target.displayName}'s ${role.name} application!`);
   } else {
-    interaction.reply({ content: 'You do not have permission to do that!', ephemeral: true });
+    interaction.editReply({ content: 'You do not have permission to do that!' });
   }
 }
 
@@ -376,43 +354,54 @@ export async function applicationApprove(
   if (!interaction.guild) return;
   const actor = (interaction.member as GuildMember);
 
+  if (!actor.permissions.has(PermissionFlagsBits.ManageRoles)) {
+    interaction.reply({
+      content: 'You do not have permission to modify roles!',
+      ephemeral: true,
+    });
+  }
+
   const threadCreated = interaction.channel?.createdAt;
   // Check if the thread was created in the last 24 hours
   if (threadCreated && threadCreated.getTime() > Date.now() - 86400000) {
     // log.debug(F, `Thread created in the last 24 hours!`);
-    interaction.reply({ content: 'Whoa there, please give the team at least 24 until the next day to act on this application!', ephemeral: true });
+    interaction.reply({
+      content: 'Whoa there, please give the team at least 24 until the next day to act on this application!',
+      ephemeral: true,
+    });
     return;
   }
 
-  if (actor.permissions.has(PermissionFlagsBits.ManageRoles)) {
-    // interaction.channel!.send(`${(interaction.member as GuildMember).displayName} accepted this application!`);
+  await interaction.deferReply({ ephemeral: false });
 
-    const memberId = interaction.customId.split('~')[1];
-    const roleId = interaction.customId.split('~')[2];
+  // interaction.channel!.send(`${(interaction.member as GuildMember).displayName} accepted this application!`);
 
-    const target = await interaction.guild?.members.fetch(memberId);
-    const role = await interaction.guild?.roles.fetch(roleId) as Role;
+  const memberId = interaction.customId.split('~')[1];
+  const roleId = interaction.customId.split('~')[2];
 
-    (interaction.channel as ThreadChannel).setName(`💚│${target.displayName}'s ${role.name} application1!`);
+  const target = await interaction.guild?.members.fetch(memberId);
+  const role = await interaction.guild?.roles.fetch(roleId) as Role;
 
-    // log.debug(`[${PREFIX} - applicationAccept] Giving ${target.displayName} ${role.name} role!`);
+  (interaction.channel as ThreadChannel).setName(`💚│${target.displayName}'s ${role.name} application1!`);
 
-    const myMember = interaction.guild.members.me as GuildMember;
-    const myRole = myMember.roles.highest;
+  // log.debug(`[${PREFIX} - applicationAccept] Giving ${target.displayName} ${role.name} role!`);
 
-    if (role.comparePositionTo(myRole) < 0) {
+  const myMember = interaction.guild.members.me as GuildMember;
+  const myRole = myMember.roles.highest;
+
+  if (role.comparePositionTo(myRole) < 0) {
     // log.debug(F, `Adding role ${role.name} to ${target.displayName}`);
-      target.roles.add(role);
-    } else {
-      interaction.reply(`I do not have permission to add the ${role.name} role to ${target.displayName}!`);
-      return;
-    }
+    target.roles.add(role);
+  } else {
+    interaction.editReply(`I do not have permission to add the ${role.name} role to ${target.displayName}!`);
+    return;
+  }
 
-    if (role.id === env.ROLE_HELPER) {
-      const channelTripsitmeta = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSITMETA) as TextChannel;
-      const channelTripsit = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
-      const hrCategory = await interaction.guild?.channels.fetch(env.CATEGORY_HARMREDUCTIONCENTRE) as CategoryChannel;
-      await channelTripsitmeta.send(stripIndents`
+  if (role.id === env.ROLE_HELPER) {
+    const channelTripsitmeta = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSITMETA) as TextChannel;
+    const channelTripsit = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
+    const hrCategory = await interaction.guild?.channels.fetch(env.CATEGORY_HARMREDUCTIONCENTRE) as CategoryChannel;
+    await channelTripsitmeta.send(stripIndents`
       Please welcome our newest ${role.name}, ${target}! We're excited to have you here! 
       
       As a ${role.name}, some things have changed:
@@ -436,18 +425,18 @@ export async function applicationApprove(
 
       If you have any questions, please reach out to a moderator or the team lead!
     `);
-    }
-    if (role.id === env.ROLE_CONTRIBUTOR) {
-      const devCategory = await interaction.guild?.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
-      const channelTripcord = await interaction.guild?.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
-      const channelTripbot = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
-      const channelTripmobile = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPMOBILE) as TextChannel;
-      const channelContent = await interaction.guild?.channels.fetch(env.CHANNEL_WIKICONTENT) as TextChannel;
-      const channelDevelopment = await interaction.guild?.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
-      // const channelIrc = await interaction.guild?.channels.fetch(env.CHANNEL_IRC) as TextChannel;
-      // const channelMatrix = await interaction.guild?.channels.fetch(env.CHANNEL_MATRIX) as TextChannel;
+  }
+  if (role.id === env.ROLE_CONTRIBUTOR) {
+    const devCategory = await interaction.guild?.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
+    const channelTripcord = await interaction.guild?.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
+    const channelTripbot = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
+    const channelTripmobile = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPMOBILE) as TextChannel;
+    const channelContent = await interaction.guild?.channels.fetch(env.CHANNEL_WIKICONTENT) as TextChannel;
+    const channelDevelopment = await interaction.guild?.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
+    // const channelIrc = await interaction.guild?.channels.fetch(env.CHANNEL_IRC) as TextChannel;
+    // const channelMatrix = await interaction.guild?.channels.fetch(env.CHANNEL_MATRIX) as TextChannel;
 
-      await channelDevelopment.send(stripIndents`
+    await channelDevelopment.send(stripIndents`
       Please welcome our newest ${role.name}, ${target}! We're excited to have you here! 
       
       Our ${devCategory} category holds the projects we're working on.
@@ -482,9 +471,6 @@ export async function applicationApprove(
       > If you want to make a change to the wiki, please make a new thread in this category.
       > *Changes to the wiki will only be made after given a credible source!*
     `);
-    }
-    interaction.reply(`${actor.displayName} accepted this application!`);
-  } else {
-    interaction.reply({ content: 'You do not have permission to modify roles!', ephemeral: true });
   }
+  interaction.editReply(`${actor.displayName} accepted this application!`);
 }

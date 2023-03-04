@@ -6,6 +6,9 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcSolvent, calcSubstance } from '../../../global/commands/g.calcNasal';
+import { startLog } from '../../utils/startLog';
+
+const F = f(__filename);
 
 export default dCalcNasal;
 
@@ -44,27 +47,27 @@ export const dCalcNasal: SlashCommand = {
         .setDescription('Set to "True" to show the response only to you'))),
 
   async execute(interaction) {
+    startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const command = interaction.options.getSubcommand();
 
     if (command === 'solvent') {
-      const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
       // eslint-disable-next-line max-len
       const solvent = await calcSolvent(interaction.options.getNumber('substance') as number, interaction.options.getNumber('mgpp') as number, interaction.options.getNumber('mlpp') as number);
       const solventembed = embedTemplate().setTitle('Nasal spray calculator')
         .setDescription(`You'll need ~${solvent}ml of solvent (water)`);
 
-      interaction.reply({ embeds: [solventembed], ephemeral });
+      interaction.editReply({ embeds: [solventembed] });
       return true;
     }
     if (command === 'substance') {
       // eslint-disable-next-line max-len
-      const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
       const dose = await calcSubstance(interaction.options.getNumber('solvent') as number, interaction.options.getNumber('mgpp') as number, interaction.options.getNumber('mlpp') as number);
       const substanceembed = embedTemplate()
         .setTitle('Nasal spray calculator')
         .setDescription(`You'll need ~${dose}mg of the substance`);
 
-      interaction.reply({ embeds: [substanceembed], ephemeral });
+      interaction.editReply({ embeds: [substanceembed] });
       return true;
     }
     return false;

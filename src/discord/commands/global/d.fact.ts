@@ -19,6 +19,7 @@ export const dFact: SlashCommand = {
 
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const data = await fact();
 
     // log.debug(F, `data: ${JSON.stringify(data, null, 2)}`);
@@ -26,8 +27,7 @@ export const dFact: SlashCommand = {
     const embed = embedTemplate();
     embed.setTitle(data);
 
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

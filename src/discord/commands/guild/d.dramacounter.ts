@@ -36,13 +36,11 @@ export const dDramacounter: SlashCommand = {
         .setRequired(true))),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const command = interaction.options.getSubcommand() as 'get' | 'set';
 
     if (!interaction.guild) {
-      interaction.reply({
-        content: 'This command can only be used in a server.',
-        ephemeral: true,
-      });
+      interaction.editReply({ content: 'This command can only be used in a server.' });
       return false;
     }
     // log.debug(F, `interaction.guild: ${JSON.stringify(interaction.guild, null, 2)}`);
@@ -53,10 +51,7 @@ export const dDramacounter: SlashCommand = {
       const dramaVal = interaction.options.getString('dramatime');
       // log.debug(F, `dramaVal: ${JSON.stringify(dramaVal, null, 2)}`);
       if (!dramaVal) {
-        interaction.reply({
-          content: 'You need to specify a time for the drama to have happened.',
-          ephemeral: true,
-        });
+        interaction.editReply({ content: 'You need to specify a time for the drama to have happened.' });
         return false;
       }
       const dramatimeValue = await parseDuration(dramaVal);
@@ -64,10 +59,7 @@ export const dDramacounter: SlashCommand = {
       const dramaIssue = interaction.options.getString('dramaissue');
       // log.debug(F, `dramaIssue: ${JSON.stringify(dramaIssue, null, 2)}`);
       if (!dramaIssue) {
-        interaction.reply({
-          content: 'You need to specify what the drama was.',
-          ephemeral: true,
-        });
+        interaction.editReply({ content: 'You need to specify what the drama was.' });
         return false;
       }
       dramaReason = dramaIssue;
@@ -83,14 +75,13 @@ export const dDramacounter: SlashCommand = {
     if (command === 'get') {
       if (!response.lastDramaAt) {
         embed.setDescription('There has been no drama yet!');
-        const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-        await interaction.reply({ embeds: [embed], ephemeral });
+        await interaction.editReply({ embeds: [embed] });
         return true;
       }
       embed.setDescription(
         `The last drama was ${time(new Date(response.lastDramaAt), 'R')}: ${response.dramaReason}`,
       );
-      await interaction.reply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
     } else {
       if (!response.lastDramaAt) {
         return false;
@@ -99,7 +90,7 @@ export const dDramacounter: SlashCommand = {
         stripIndents`The drama counter has been reset to ${time(new Date(response.lastDramaAt), 'R')} ago, \
       and the issue was: ${response.dramaReason}`,
       );
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.editReply({ embeds: [embed] });
     }
     return true;
   },

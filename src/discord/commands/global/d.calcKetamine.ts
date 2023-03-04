@@ -30,6 +30,7 @@ export const dCalcketamine: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const givenWeight = interaction.options.getNumber('weight', true);
 
     const weightUnits = interaction.options.getString('units', true) as 'kg' | 'lbs';
@@ -37,18 +38,12 @@ export const dCalcketamine: SlashCommand = {
     const embed = embedTemplate();
     if (weightUnits === 'kg' && givenWeight > 179) {
       embed.setTitle('Please enter a weight less than 179 kg.'); // what if a person is 200kg? =(
-      interaction.reply({
-        embeds: [embed],
-        ephemeral: true,
-      });
+      interaction.editReply({ embeds: [embed] });
       return false;
     }
     if (weightUnits === 'lbs' && givenWeight > 398) {
       embed.setTitle('Please enter a weight less than 398 lbs.');
-      interaction.reply({
-        embeds: [embed],
-        ephemeral: true,
-      });
+      interaction.editReply({ embeds: [embed] });
       return false;
     }
 
@@ -67,8 +62,7 @@ export const dCalcketamine: SlashCommand = {
       },
     );
 
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

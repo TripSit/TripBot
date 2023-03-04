@@ -13,6 +13,7 @@ import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
 import { imageGet } from '../../utils/imageGet';
+import { Personas } from '../../../global/@types/database';
 
 export default dProfile;
 
@@ -35,13 +36,14 @@ export const dProfile: SlashCommand = {
   async execute(
     interaction,
   ) {
+    startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const startTime = Date.now();
     const ephemeral = (interaction.options.getBoolean('ephemeral') === true);
     if (!interaction.guild) {
-      interaction.reply({ content: 'You can only use this command in a guild!', ephemeral: true });
+      interaction.editReply({ content: 'You can only use this command in a guild!' });
       return false;
     }
-    startLog(F, interaction);
 
     await interaction.deferReply({ ephemeral });
 
@@ -69,7 +71,7 @@ export const dProfile: SlashCommand = {
     ]);
 
     const profileData = values[0].status === 'fulfilled' ? values[0].value : {} as ProfileData;
-    const [personaData] = values[1].status === 'fulfilled' ? values[1].value : [];
+    const personaData = values[1].status === 'fulfilled' ? values[1].value : {} as Personas;
     const Icons = values[2].status === 'fulfilled' ? values[2].value : {} as Canvas.Image;
     // const StatusIcon = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
     const avatar = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;

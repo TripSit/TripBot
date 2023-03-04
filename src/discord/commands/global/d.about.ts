@@ -19,6 +19,7 @@ export const dAbout: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const tripsitInfo = await about();
     const embed = embedTemplate()
       .setColor(Colors.DarkBlue)
@@ -47,8 +48,7 @@ export const dAbout: SlashCommand = {
           value: tripsitInfo.credits,
         },
       );
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
-    interaction.reply({ embeds: [embed], ephemeral });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { dCalcdxm } from '../../src/discord/commands/global/d.calcDXM';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dCalcdxm;
 
@@ -20,7 +20,7 @@ const title = 'DXM Dosages';
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:kg taking:RoboCough (ml)`,
@@ -49,10 +49,9 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`400 (ml)`, inline: true },
         ],
       }),
-      ephemeral: false,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:kg taking:Robitussin DX (oz)`,
@@ -81,10 +80,9 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`45.2 (oz)`, inline: true },
         ],
       }),
-      ephemeral: false,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:kg taking:Robitussin DX (ml)`,
@@ -113,10 +111,9 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`1333.33 (ml)`, inline: true },
         ],
       }),
-      ephemeral: false,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:kg taking:Robitussin Gelcaps (15 mg caps)`,
@@ -145,10 +142,9 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`266.67 (15 mg caps)`, inline: true },
         ],
       }),
-      ephemeral: false,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:kg taking:Pure (mg)`,
@@ -177,10 +173,9 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`4000 (mg)`, inline: true },
         ],
       }),
-      ephemeral: false,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:kg taking:30mg Gelcaps (30 mg caps)`,
@@ -209,10 +204,9 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`133.33 (30 mg caps)`, inline: true },
         ],
       }),
-      ephemeral: false,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:kg taking:RoboTablets (30 mg tablets)`,
@@ -241,10 +235,9 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`97.72 (30 mg tablets)`, inline: true },
         ],
       }),
-      ephemeral: false,
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:lbs taking:RoboTablets (30 mg tablets)`,
@@ -273,7 +266,6 @@ describe(slashCommand.data.name, () => {
           { name: '\u200B', value: stripIndents`44.33 (30 mg tablets)`, inline: true },
         ],
       }),
-      ephemeral: false,
     });
   });
 });
