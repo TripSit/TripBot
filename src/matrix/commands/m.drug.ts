@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable sonarjs/no-nested-template-literals */
 /* eslint-disable max-len */
@@ -176,7 +177,7 @@ async function mDrug(roomId: string, event:any, client:MatrixClient, substance:s
   }
   if (section === 'dosage') {
     const dosage = getDosage();
-    if (dosage === false) { client.replyNotice(roomId, event, `Sorry, i could not provide dosage information on ${drugData.name}`); return; }
+    if (dosage === false) { client.replyNotice(roomId, event, `Sorry, i could not provide dosage information on ${drugData.name}`); return false; }
     reply = RichReply.createFor(roomId, event, dosage[0], dosage[1]);
     client.sendMessage(roomId, reply);
     return true;
@@ -218,22 +219,21 @@ async function mDrug(roomId: string, event:any, client:MatrixClient, substance:s
   }
 
   if (section === 'all') {
-    let allText:string = '';
-    let allHTML:string = '';
+    let html = '';
+    let text = '';
 
     const functions = [getSummary, getDosage, getTolerance, getAddictionPotential, getCrossTolerances, getExperiences];
     functions.forEach(f => {
       const result = f();
-      log.debug(F, `run`);
-      console.log(result);
+      log.debug(F, 'run');
 
       if (result) {
-        allText += `${result[0]}\n\n`;
-        allHTML += `${result[1]}<br><br>`;
+        text += `${result[0]}\n\n`;
+        html += `${result[1]}<br><br>`;
       }
     });
 
-    reply = RichReply.createFor(roomId, event, allText, allHTML);
+    reply = RichReply.createFor(roomId, event, text, html);
     return client.sendMessage(roomId, reply);
   }
 
