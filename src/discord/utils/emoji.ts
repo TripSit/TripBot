@@ -213,7 +213,7 @@ export function get(name:string):APIMessageComponentEmoji {
   }
 
   const emojiName = global.emojiGuildRPG.emojis.cache.find(emoji => emoji.name === name)
-    ?? global.emojiGuildRPG.emojis.cache.find(emoji => emoji.name === name);
+    ?? global.emojiGuildMain.emojis.cache.find(emoji => emoji.name === name);
   // log.debug(F, `emojiName: ${emojiName}`);
   if (!emojiName) {
     throw new Error(`Emoji ${name} not found!`);
