@@ -1861,10 +1861,13 @@ export async function rpgArcadeGame(
   const gameData = {
     Coinflip: {
       gameName: 'Coinflip' as GameName,
-      instructions: stripIndents`Click the buttons below to set how many of your tokens you want to bet.
-    Click the heads or tails button to flip the coin, or you can go back to the arcade.
-    If you win, you get the amount you bet.
-    If you lose, you lose the amount you bet.`,
+      instructions: stripIndents`**How to play**
+    - Set a bet amount using the buttons below
+    - You can bet any amount by using a button more than once
+    - Choose heads or tails to flip the coin
+
+    - If you win, you get the amount you bet
+    - If you lose, you lose the amount you bet`,
       object: 'coin',
       bets: [
         global.buttons.coinflipHeads,
@@ -1877,17 +1880,18 @@ export async function rpgArcadeGame(
     },
     Roulette: {
       gameName: 'Roulette' as GameName,
-      instructions: stripIndents`Click the buttons below to set how many of your tokens you want to bet.
-    Click a bet button to place a bet on that outcome, or you can go back to the arcade.
+      instructions: stripIndents`**How to play**
+      - Set a bet amount using the buttons below
+      - You can bet any amount by using a button more than once
+      - Choose an option to bet on to spin the wheel
     
-    Depending on what you picked and where the ball lands, you will win or lose your bet.
+      - You win or lose depending on what you picked and where the ball lands
 
-    **Odds**
-    "X:1" means you get X coins for every 1 you bet
-    > Red/Black/Even/Odd/High/Low: 1:1
-    > First/Second/Third: 2:1
-    > 1-2/3-4/5-6/7-8: 3:1
-    > 0: 8:1
+      **Odds**
+      Red / Black / Even / Odd / High / Low - 1:1
+      First / Second / Third - 2:1
+      1-2 / 3-4 / 5-6 / 7-8 - 3:1
+      0 -  8:1
     `,
       object: 'wheel',
       bets: [
@@ -1910,6 +1914,9 @@ export async function rpgArcadeGame(
       options: ['00', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36'],
     },
   };
+
+  const emojiName = `button${gameName}`;
+
   const { instructions } = gameData[gameName as keyof typeof gameData];
 
   const rowWagers = new ActionRowBuilder<ButtonBuilder>()
@@ -2012,6 +2019,7 @@ export async function rpgArcadeGame(
     }
 
     // log.debug(F, `result: ${result}`);
+
     if (payout !== 0) {
       // The user won
       const BetOutcomeMessage = BetWinMessageList[Math.floor(Math.random() * BetWinMessageList.length)];
@@ -2026,7 +2034,7 @@ export async function rpgArcadeGame(
         embeds: [embedTemplate()
           .setAuthor(null)
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-          .setTitle(gameName)
+          .setTitle(`${emojiGet(emojiName)} ${gameName}`)
           .setDescription(stripIndents`
             The ${object} came up **${result}** and you chose **${choice}**!
 
@@ -2052,7 +2060,7 @@ export async function rpgArcadeGame(
       embeds: [embedTemplate()
         .setAuthor(null)
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-        .setTitle(gameName)
+        .setTitle(`${emojiGet(emojiName)} ${gameName}`)
         .setDescription(stripIndents`
             The ${object} came up **${result}** and you chose **${choice}**!
 
@@ -2074,7 +2082,7 @@ export async function rpgArcadeGame(
       embeds: [embedTemplate()
         .setAuthor(null)
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-        .setTitle(gameName)
+        .setTitle(`${emojiGet(emojiName)} ${gameName}`)
         .setDescription(stripIndents`${message ?? ''}
           You are betting ${currentBet} tokens.
 
@@ -2090,7 +2098,7 @@ export async function rpgArcadeGame(
     embeds: [embedTemplate()
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
-      .setTitle(gameName)
+      .setTitle(`${emojiGet(emojiName)} ${gameName}`)
       .setDescription(stripIndents`You start a game of ${gameName}.
 
         ${instructions}
@@ -2251,6 +2259,9 @@ export async function rpgTrivia(
     let questionTimer = await getNewTimer(6);
     let perfectScore = bonusDict[amountOfQuestions as keyof typeof bonusDict].perfectBonusMessage;
     let bonusMessage = bonusMessageDict[chosenDifficulty as keyof typeof bonusMessageDict];
+    let questionsCorrect = 0;
+    let streak = 0;
+    let maxStreak = 0;
     let score = 0;
     let scoreMessage = '';
     let timedOut = false;
@@ -2296,9 +2307,15 @@ export async function rpgTrivia(
       let embed = new EmbedBuilder()
         .setColor(answerColor)
         .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-        .addFields({ name: `Question ${qNumber + 1} of ${amountOfQuestions}`, value: questionData.question })
-        .addFields({ name: 'Choices', value: [...answerMap.values()].join('\n') })
-        .addFields({ name: `Time's up <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: ' ' })
+        .setDescription(`
+        **Question ${qNumber + 1} of ${amountOfQuestions}**
+        ${questionData.question}
+        
+        **Choices**
+        ${[...answerMap.values()].join('\n')}
+
+        Streak: ${streak}
+        **Time's up <t:${Math.floor(questionTimer.getTime() / 1000)}:R>**`)
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
 
       if (qNumber === 0) {
@@ -2307,8 +2324,11 @@ export async function rpgTrivia(
         const startingEmbed = new EmbedBuilder()
           .setColor(answerColor)
           .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-          .addFields({ name: `Loading Trivia with ${amountOfQuestions} questions...`, value: ' ' })
-          .addFields({ name: `Starting <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: 'Get ready!' })
+          .setDescription(`
+          **Loading Trivia with ${amountOfQuestions} questions...**
+          
+          **Starting <t:${Math.floor(questionTimer.getTime() / 1000)}:R>**
+          Get ready!`)
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
         await interaction.editReply({ embeds: [startingEmbed], components: [] }); // eslint-disable-line no-await-in-loop, max-len
         // If it's the first question, send a new message
@@ -2323,7 +2343,7 @@ export async function rpgTrivia(
                   .setEmoji(choiceEmoji(choice))
                   .setStyle(ButtonStyle.Secondary))
                   .concat([
-                    global.buttons.quit,
+                    global.buttons.quit.setDisabled(false),
                   ]),
               ),
             ],
@@ -2342,7 +2362,7 @@ export async function rpgTrivia(
                   .setEmoji(choiceEmoji(choice))
                   .setStyle(ButtonStyle.Secondary))
                   .concat([
-                    global.buttons.quit,
+                    global.buttons.quit.setDisabled(false),
                   ]),
               ),
             ],
@@ -2373,7 +2393,10 @@ export async function rpgTrivia(
             .setCustomId(choice)
             .setDisabled(true)
             .setEmoji(choiceEmoji(choice))
-            .setStyle(ButtonStyle.Secondary));
+            .setStyle(ButtonStyle.Secondary))
+            .concat([
+              global.buttons.quit.setDisabled(false),
+            ]);
 
           await collected.update({ // eslint-disable-line no-await-in-loop
             components: [new ActionRowBuilder<ButtonBuilder>().addComponents(disabledButtons)],
@@ -2387,13 +2410,24 @@ export async function rpgTrivia(
 
         if (answer === questionData.correct_answer) { // If the user answers correctly
           questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
-          score += 1;
+          streak += 1;
+          if (streak > maxStreak) {
+            maxStreak = streak;
+          }
+          score += (1 * streak);
+          questionsCorrect += 1;
           embed = new EmbedBuilder()
             .setColor(Colors.Green as ColorResolvable)
             .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-            .addFields({ name: 'Correct!', value: `The answer was **${questionData.correct_answer}.**` })
-            .addFields({ name: 'Current Score', value: `${score} of ${(qNumber + 1)}` })
-            .addFields({ name: `Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: ' ' })
+            .setDescription(`
+            **Correct!**
+            The answer was **${questionData.correct_answer}.**
+            
+            **Current Score**
+            Correct: ${questionsCorrect} of ${(qNumber + 1)}
+            Streak: ${streak}
+            
+            Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
             .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
           embedStatus = 'Correct!';
           questionAnswer = `The answer was **${questionData.correct_answer}.**`;
@@ -2402,26 +2436,32 @@ export async function rpgTrivia(
             components: [
               new ActionRowBuilder<ButtonBuilder>()
                 .addComponents(
-                  // flatten the array of components containing the existing buttons
                   choices.map(choice => new ButtonBuilder()
                     .setDisabled(true)
                     .setCustomId(choice)
                     .setEmoji(choiceEmoji(choice))
                     .setStyle(ButtonStyle.Secondary))
                     .concat([
-                      global.buttons.quit,
+                      global.buttons.quit.setDisabled(true),
                     ]),
                 ),
             ],
           });
         } else { // If the user answers incorrectly
           questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
+          streak = 0;
           embed = new EmbedBuilder()
             .setColor(Colors.Grey as ColorResolvable)
             .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-            .addFields({ name: 'Incorrect!', value: `The correct answer was **${questionData.correct_answer}.**` })
-            .addFields({ name: 'Current Score:', value: `${score} of ${(qNumber + 1)}` })
-            .addFields({ name: `Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: ' ' })
+            .setDescription(`
+            **Incorrect!**
+            The correct answer was **${questionData.correct_answer}.**
+            
+            **Current Score**
+            Correct: ${questionsCorrect} of ${(qNumber + 1)}
+            Streak: ${streak}
+            
+            Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
             .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
           embedStatus = 'Incorrect!';
           questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
@@ -2435,7 +2475,7 @@ export async function rpgTrivia(
                   .setEmoji(choiceEmoji(choice))
                   .setStyle(ButtonStyle.Secondary))
                   .concat([
-                    global.buttons.quit,
+                    global.buttons.quit.setDisabled(true),
                   ]),
               ),
             ],
@@ -2453,16 +2493,16 @@ export async function rpgTrivia(
     }
     let payout = 0;
     perfectScore = '';
-    if (score !== 0) { // The user got at least one question correct
-      if (score === amountOfQuestions) { // Bonus for getting all questions correct
-        payout = ((score * (bonus + perfectBonus)));
+    if (questionsCorrect !== 0) { // The user got at least one question correct
+      if (questionsCorrect === amountOfQuestions) { // Bonus for getting all questions correct
+        payout = Math.ceil(2 * (score * (bonus + perfectBonus)));
       } else {
-        payout = (score * bonus);
+        payout = Math.ceil(2 * (score * bonus));
         perfectScore = '';
       }
       log.debug(F, `Payout: ${payout} tokens`);
       log.debug(F, `Rounded Payout: ${payout} tokens`);
-      personaData.tokens += Math.ceil(payout);
+      personaData.tokens += payout;
       log.debug(F, `User scored: ${score}`);
       log.debug(F, `User earned: ${payout} tokens`);
       await setPersonaInfo(personaData);
@@ -2472,25 +2512,35 @@ export async function rpgTrivia(
 
     let reply = {} as MessageReplyOptions;
     if (!timedOut) {
-      if (score === 0) {
+      if (questionsCorrect === 0) {
         scoreMessage = awfulScoreMessageList[Math.floor(Math.random() * awfulScoreMessageList.length)];
       }
-      if (score <= (amountOfQuestions / 2)) {
+      if (questionsCorrect <= (amountOfQuestions / 2)) {
         scoreMessage = badScoreMessageList[Math.floor(Math.random() * badScoreMessageList.length)];
       }
-      if (score > (amountOfQuestions / 2)) {
+      if (questionsCorrect > (amountOfQuestions / 2)) {
         scoreMessage = goodScoreMessageList[Math.floor(Math.random() * goodScoreMessageList.length)];
       }
-      if (score === amountOfQuestions) {
+      if (questionsCorrect === amountOfQuestions) {
         scoreMessage = perfectScoreMessageList[Math.floor(Math.random() * perfectScoreMessageList.length)];
       }
       log.debug(F, `Score Message: ${scoreMessage}`);
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
         .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-        .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
-        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectScore}`, value: `*${scoreMessage}*` }) // eslint-disable-line max-len
-        .addFields({ name: `Earned: ${payout} tokens${bonusMessage}`, value: `Wallet: ${(personaData.tokens + payout)} tokens` }) // eslint-disable-line max-len
+        .setDescription(
+          `**${embedStatus}**
+          ${questionAnswer}
+
+          **Final Scores** 
+          Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
+          Max Streak: **${maxStreak}** correct in a row
+          *${scoreMessage}*
+
+          Earned: **${payout} tokens**${bonusMessage} ${perfectScore}
+          Wallet: ${(personaData.tokens + payout)} tokens
+          `,
+        )
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
       reply = {
         embeds: [embed],
@@ -2515,9 +2565,19 @@ export async function rpgTrivia(
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
         .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-        .addFields({ name: 'Game Quit.', value: ' ' })
-        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectScore}`, value: `${gameQuitMessage}` }) // eslint-disable-line max-len
-        .addFields({ name: `Earned: ${payout} tokens${bonusMessage}`, value: `Wallet: ${(personaData.tokens + payout)} tokens` }) // eslint-disable-line max-len
+        .setDescription(
+          `**Game quit.**
+          ${questionAnswer}
+
+          **Final Scores** 
+          Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
+          Max Streak: **${maxStreak}** questions correct in a row
+          *${gameQuitMessage}*
+
+          Earned: **${payout} tokens**${bonusMessage}
+          Wallet: ${(personaData.tokens + payout)} tokens
+          `,
+        )
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
       reply = {
         embeds: [embed],
@@ -2542,9 +2602,19 @@ export async function rpgTrivia(
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
         .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-        .addFields({ name: `${embedStatus}`, value: `${questionAnswer}` })
-        .addFields({ name: `You got ${score} out of ${amountOfQuestions} questions correct.${perfectScore}`, value: `*${timeOutMessage}*` }) // eslint-disable-line max-len
-        .addFields({ name: `Earned: ${payout} tokens${bonusMessage}`, value: `Wallet: ${(personaData.tokens + payout)} tokens` }) // eslint-disable-line max-len
+        .setDescription(
+          `**${embedStatus}**
+          ${questionAnswer}
+
+          **Final Scores** 
+          Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
+          Max Streak: **${maxStreak}** correct in a row
+          *${timeOutMessage}*
+
+          Earned: **${payout} tokens**${bonusMessage}
+          Wallet: ${(personaData.tokens + payout)} tokens
+          `,
+        )
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
       reply = {
         embeds: [embed],
@@ -2666,13 +2736,14 @@ export async function rpgTrivia(
       .setDescription(stripIndents`
         You ${rand(text.enter)} the trivia parlor where you can test your knowledge of random facts!
 
-        **How to play:**
-        - All questions are multiple choice.
+        **How to play**
+        - All questions are multiple choice
         - Select a difficulty and number of questions
         - Answer the questions within 30 seconds
 
-        - Earn tokens for each correct answer
-        - Earn bonus tokens if you get all questions correct
+        - Earn 1 token (plus difficulty bonus) for each correct answer
+        - Earn a streak multiplier for each correct answer in a row
+        - Earn more bonus tokens if you get all questions correct
 
        *(Multiplayer coming soon!)*
       `)
