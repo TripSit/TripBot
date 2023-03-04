@@ -35,7 +35,7 @@ describe(slashCommand.data.name, () => {
           Guilds: 1
           Users: 1
           Channels: 0
-          Commands: 0
+          Commands: 78
           Uptime: 0ms
         `,
       }),

@@ -1,8 +1,8 @@
 import {
   Colors,
 } from 'discord.js';
-import { dCalcNasal } from '../../../src/discord/commands/global/d.calcNasal';
-import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../../utils/testutils';
+import { dCalcNasal } from '../../src/discord/commands/global/d.calcNasal';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dCalcNasal;
 

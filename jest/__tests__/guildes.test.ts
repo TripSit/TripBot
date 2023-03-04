@@ -4,8 +4,8 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dGuides } from '../../../src/discord/commands/global/d.guides';
-import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../../utils/testutils';
+import { dGuides } from '../../src/discord/commands/global/d.guides';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dGuides;
 
