@@ -335,7 +335,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
-      i.deferReply({ ephemeral: true });
+      await i.deferReply({ ephemeral: true });
 
       const channelApplications = interaction.options.getChannel('applications_channel', true);
       const guildData = await getGuild((interaction.guild as Guild).id);
@@ -374,7 +374,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
           value: 'none',
         },
       );
-      roleArray.forEach(role => {
+      roleArray.forEach(async role => {
         if (role[0]) {
           if (role[1]) {
           // log.debug(F, `role: ${role[0].name}`);
@@ -385,7 +385,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
               },
             );
           } else {
-            i.reply('Error: You must provide both a role and a reviewer role!');
+            await i.reply('Error: You must provide both a role and a reviewer role!');
           }
         }
       });

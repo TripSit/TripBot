@@ -41,7 +41,7 @@ export async function commandRun(
         if (interaction.deferred) {
           interaction.editReply(genericError);
         } else {
-          interaction.reply({
+          await interaction.reply({
             content: genericError,
             ephemeral: true,
           });
@@ -62,7 +62,7 @@ export async function commandRun(
       }
     } else {
       log.error(F, `ERROR: ${error}`);
-      interaction.reply({ content: 'There was an unexpected error while executing this command!' });
+      await interaction.reply({ content: 'There was an unexpected error while executing this command!' });
       if (env.NODE_ENV === 'production') {
         const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
         const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;

@@ -248,11 +248,7 @@ async function addDosages(
     let dosageColumns = 0;
     roaNames.forEach(roaName => {
       if (dosageColumns < 3) {
-        const roaInfo = (drugData.roas as RoaType[]).find((r:RoaType) => r.name === roaName);
-        if (!roaInfo) {
-          log.error(F, `Could not find roaInfo for ${roaName}`);
-          return;
-        }
+        const roaInfo = (drugData.roas as RoaType[]).find((r:RoaType) => r.name === roaName) as RoaType;
         if (roaInfo.dosage) {
           let dosageString = '';
           roaInfo.dosage.forEach(d => {
@@ -311,16 +307,24 @@ export const dDrug: SlashCommand = {
     //   interaction.editReply({ embeds: [embed] });
     //   return false;
     // }
-    const drugData = await drug(drugName) as CbSubstance;
-    // log.debug(F, `drugData: ${JSON.stringify(drugData, null, 2)}`);
+    const drugData = await drug(drugName);
 
-    if (drugData === null) {
+    if (!drugData) {
       embed.setTitle(`${drugName} was not found`);
       embed.setDescription(stripIndents`...this shouldn\'t have happened, please tell the developer!`);
       // If this happens then something went wrong with the auto-complete
       interaction.editReply({ embeds: [embed] });
       return false;
     }
+    // log.debug(F, `drugData: ${JSON.stringify(drugData, null, 2)}`);
+
+    // if (drugData === null) {
+    //   embed.setTitle(`${drugName} was not found`);
+    //   embed.setDescription(stripIndents`...this shouldn\'t have happened, please tell the developer!`);
+    //   // If this happens then something went wrong with the auto-complete
+    //   interaction.editReply({ embeds: [embed] });
+    //   return false;
+    // }
 
     const section = interaction.options.getString('section');
 
@@ -408,11 +412,7 @@ export const dDrug: SlashCommand = {
       embedRowColumns = 0;
       roaNames.forEach(roaName => {
         if (embedRowColumns < 3) {
-          const roaInfo = (drugData.roas as RoaType[]).find((r:RoaType) => r.name === roaName);
-          if (!roaInfo) {
-            log.error(F, `Could not find roaInfo for ${roaName}`);
-            return;
-          }
+          const roaInfo = (drugData.roas as RoaType[]).find((r:RoaType) => r.name === roaName) as RoaType;
           if (roaInfo.dosage) {
             let dosageString = '';
             roaInfo.dosage.forEach(d => {

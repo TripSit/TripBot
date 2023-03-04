@@ -454,12 +454,12 @@ export async function setupCustomReactionRole(
 ) {
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    interaction.reply(guildError);
+    await interaction.reply(guildError);
     return;
   }
   if (!interaction.member) {
     // log.debug(F, `no member!`);
-    interaction.reply(memberError);
+    await interaction.reply(memberError);
   }
   if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_DEVELOPER)) {
     await interaction.reply({ content: 'You do not have permission to use this command!' });
@@ -541,12 +541,12 @@ export async function processReactionRole(
   };
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    interaction.reply(guildError);
+    await interaction.reply(guildError);
     return;
   }
   if (!interaction.member) {
     // log.debug(F, `no member!`);
-    interaction.reply(memberError);
+    await interaction.reply(memberError);
   }
 
   const introMessageRequired = IM === true;
@@ -650,12 +650,12 @@ export async function processReactionRole(
         if (II !== interaction.id) return;
         if (!i.guild) {
           // log.debug(F, `no guild!`);
-          i.reply(guildError);
+          await i.reply(guildError);
           return;
         }
         if (!i.member) {
         // log.debug(F, `no member!`);
-          i.reply(memberError);
+          await i.reply(memberError);
         }
 
         introMessage = i.fields.getTextInputValue('introduction');

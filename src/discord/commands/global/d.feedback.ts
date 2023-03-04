@@ -39,11 +39,18 @@ export const dFeedback: SlashCommand = {
         ),
     );
 
-    const filter = (i:ModalSubmitInteraction) => i.customId.includes('feedbackReportModal');
+    const filter = (i:ModalSubmitInteraction) => {
+      log.debug(F, 'Checking if the modal is the right one');
+      return i.customId.includes('feedbackReportModal');
+    };
+    log.debug(F, 'Showing the modal');
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
+        log.debug(F, 'Modal submit interaction received');
         if (i.customId.split('~')[1] !== interaction.id) return;
-        i.deferReply({ ephemeral: true });
+        await i.deferReply({ ephemeral: true });
+        // eslint-disable-next-line sonarjs/no-nested-template-literals
+        log.debug(F, `Feedback report from ${i.user.tag} (${i.user.id})${i.guild ? ` in ${i.guild.name}` : 'DM'}`); // eslint-disable-line max-len
         const guildName = ` in ${i.guild?.name}`;
         const guildMessage = `${i.guild ? guildName : 'DM'}`;
 
@@ -76,6 +83,7 @@ export const dFeedback: SlashCommand = {
           .setDescription('I\'ve submitted this feedback to the bot owner. \n\nYou\'re more than welcome to join the TripSit server and speak to Moonbear directly if you want! Check the /contact command for more info.');
         await i.editReply({ embeds: [embed] });
       });
+    log.debug(F, 'Modal submit interaction listener set up');
     return true;
   },
 };

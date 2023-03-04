@@ -45,6 +45,7 @@ export async function downloadImage(
 }
 
 const imageDef = {
+  nasal_spray_dosage: { path: './src/discord/assets/img/nasal_spray_dosage.png', url: 'https://user-images.githubusercontent.com/1836049/218758611-c84f1e34-0f5b-43ac-90da-bd89b028f131.png' },
   icon_online: { path: './src/discord/assets/img/icons/online.png', url: 'https://i.gyazo.com/cd7b9e018d4818e4b6588cab5d5b019d.png' },
   icon_offline: { path: './src/discord/assets/img/icons/offline.png', url: 'https://i.gyazo.com/b2b1bf7d91acdb4ccc72dfde3d7075fc.png' },
   icon_dnd: { path: './src/discord/assets/img/icons/dnd.png', url: 'https://i.gyazo.com/a98f0e9dd72f6fb59af388d719d01e64.png' },

@@ -1,14 +1,15 @@
 /* eslint-disable max-len */
+
 import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import { dAbout } from '../../../src/discord/commands/global/d.about';
+import { dFact } from '../../../src/discord/commands/global/d.fact';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../../utils/testutils';
 
-const slashCommand = dAbout;
+const slashCommand = dFact;
 
 const authorInfo = {
   iconURL: 'https://i.gyazo.com/b48b08a853fefaafb6393837eec1a501.png',
@@ -32,10 +33,10 @@ afterEach(() => {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    mock.onGet('URL')
+    mock.onGet('https://facts-by-api-ninjas.p.rapidapi.com/v1/facts')
       .reply(200, [
         {
-          response: '',
+          fact: 'To make one pound of whole milk cheese, 10 pounds of whole milk is needed',
         },
       ]);
 
@@ -50,30 +51,9 @@ describe(slashCommand.data.name, () => {
       embeds: embedContaining({
         author: authorInfo,
         footer: footerInfo,
-        color: Colors.DarkBlue,
-        title: 'About TripBot',
-        url: 'https://tripsit.me/about/',
-        description: stripIndents``,
-        image: {
-          url: 'imgur',
-        },
-        fields: [
-          {
-            name: 'name',
-            value: stripIndents`desc`,
-            inline: true,
-          },
-        ],
+        color: Colors.Purple,
+        title: stripIndents`To make one pound of whole milk cheese, 10 pounds of whole milk is needed`,
       }),
     });
-
-    expect(await executeCommandAndSpyEditReply(
-      slashCommand,
-      getParsedCommand(
-        `/${slashCommand.data.name}`,
-        slashCommand.data,
-        'dm',
-      ),
-    )).toHaveBeenCalledWith({ content: stripIndents`This command can only be used in a discord guild!` });
   });
 });

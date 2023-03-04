@@ -60,25 +60,25 @@ export async function applicationStart(
 ): Promise<void> {
   startLog(F, interaction);
   if (interaction.values[0] === 'none') {
-    interaction.reply({ content: 'No application selected.' });
+    await interaction.reply({ content: 'No application selected.' });
     return;
   }
 
   if (!interaction.guild) {
-    interaction.reply('This command can only be used in a server!');
+    await interaction.reply('This command can only be used in a server!');
     return;
   }
 
   if (!interaction.member) {
     // log.debug(F, `no member!`);
-    interaction.reply('This must be performed by a member of a guild!');
+    await interaction.reply('This must be performed by a member of a guild!');
     return;
   }
 
   // Get the application channel from the db
   const channelApplicationsId = (await getGuild(interaction.guild.id)).channel_applications;
   if (!channelApplicationsId) {
-    interaction.reply('The applications channel has not been set up yet!');
+    await interaction.reply('The applications channel has not been set up yet!');
     return;
   }
 
@@ -92,7 +92,7 @@ export async function applicationStart(
     const guildOwner = await interaction.guild?.fetchOwner();
     await guildOwner?.send({ content: `Please make sure I can ${channelPerms.permission} in ${channelApplications} so I can run ${F}!` }); // eslint-disable-line
     log.error(F, `Missing permission ${channelPerms.permission} in ${channelApplications}!`);
-    interaction.reply({ content: 'There was a permission issue, i\'ve notified the guild owner! Please try again later.' });
+    await interaction.reply({ content: 'There was a permission issue, i\'ve notified the guild owner! Please try again later.' });
     return;
   }
 
@@ -355,7 +355,7 @@ export async function applicationApprove(
   const actor = (interaction.member as GuildMember);
 
   if (!actor.permissions.has(PermissionFlagsBits.ManageRoles)) {
-    interaction.reply({
+    await interaction.reply({
       content: 'You do not have permission to modify roles!',
       ephemeral: true,
     });
@@ -365,7 +365,7 @@ export async function applicationApprove(
   // Check if the thread was created in the last 24 hours
   if (threadCreated && threadCreated.getTime() > Date.now() - 86400000) {
     // log.debug(F, `Thread created in the last 24 hours!`);
-    interaction.reply({
+    await interaction.reply({
       content: 'Whoa there, please give the team at least 24 until the next day to act on this application!',
       ephemeral: true,
     });

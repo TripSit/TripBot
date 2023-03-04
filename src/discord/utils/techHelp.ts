@@ -25,7 +25,7 @@ const guildOnly = 'This command can only be used in a guild!';
 export async function techHelpClick(interaction:ButtonInteraction) {
   // log.debug(F, `Message: ${JSON.stringify(interaction, null, 2)}!`);
   if (!interaction.guild) {
-    interaction.reply({
+    await interaction.reply({
       content: guildOnly,
       ephemeral: true,
     });
@@ -38,7 +38,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
   if (!guildData.role_techhelp) {
     log.error(F, `- techHelpClick] techhelp role not found: ${interaction.guild.id}`);
-    interaction.reply({ content: 'The role provided could not be found!' });
+    await interaction.reply({ content: 'The role provided could not be found!' });
     return;
   }
 
@@ -46,7 +46,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
   if (!roleTechreview) {
     log.error(F, `- techHelpClick] roleTechreview not found: ${interaction.guild.id}`);
-    interaction.reply({ content: 'The role provided could not be found!' });
+    await interaction.reply({ content: 'The role provided could not be found!' });
     return;
   }
 

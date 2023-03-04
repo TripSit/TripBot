@@ -119,6 +119,6 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     command.execute(interaction);
   } catch (error) {
     log.error(F, error as string);
-    interaction.reply({ content: 'There was an error while executing this command!' });
+    await interaction.reply({ content: 'There was an error while executing this command!' });
   }
 }

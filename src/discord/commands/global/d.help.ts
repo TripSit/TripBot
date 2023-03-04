@@ -44,11 +44,6 @@ export const dHelp: SlashCommand = {
     const globalCommands = await interaction.client.application.commands.fetch();
     const guildCommands = await interaction.client.application.commands.fetch({ guildId: env.DISCORD_GUILD_ID });
 
-    /**
-     * Gets the description of a command
-     * @param {string} commandName
-     * @return {string}
-     */
     function getDesc(commandName:string):string | undefined {
       // log.debug(F, `getDesc: ${commandName}`);
       if (!globalCommands || !guildCommands) return undefined;

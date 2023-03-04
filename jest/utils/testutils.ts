@@ -11,6 +11,7 @@ import {
   Client,
   TextChannel,
   VoiceChannel,
+  ModalSubmitInteraction,
   // Channel,
   // Guild,
   // BaseChannel,
@@ -159,43 +160,81 @@ export function getParsedCommand(
 ) {
   // log.debug(F, `stringCommand: ${JSON.stringify(stringCommand, null, 2)}`);
   // log.debug(F, `commandData: ${JSON.stringify(commandData, null, 2)}`);
-  // log.debug(F, `commandData.options: ${JSON.stringify(commandData.options, null, 2)}`);
   const options = getNestedOptions(commandData.options); // @ts-ignore
   // log.debug(F, `getNestedOptions: ${JSON.stringify(options, null, 2)}`); // @ts-ignore
-  const optionsIndentifiers = options.map(option => `${option.name}:`);
+
+  // Get a list of the option names
+  const optionsNames = options.map(option => `${option.name}:`);
+  // log.debug(F, `optionsNames: ${JSON.stringify(optionsNames, null, 2)}`);
+
+  // Get a list of the options that are included in the stringCommand
   const requestedOptions = options.reduce((
     requestedOptions2:ToAPIApplicationCommandOptions[],
     option:ToAPIApplicationCommandOptions,
   ):ToAPIApplicationCommandOptions[] => {
-    const identifier = `${option.toJSON().name}:`;
-    const inclused = stringCommand.includes(identifier);
-    // log.debug(F, `identifier: ${identifier} | inclused: ${inclused}`);
-    if (!inclused) return requestedOptions2;
-    const remainder = stringCommand.split(identifier)[1];
+    const optionName = `${option.toJSON().name}:`;
+    const optionNameIncluded = stringCommand.includes(optionName);
+    // log.debug(F, `identifier: ${identifier} | optionNameIncluded: ${optionNameIncluded}`);
+
+    // If the option being reduced right now does was not used in the slash command return requestedOptions2
+    // This filters out options that were not used in the slash command
+    if (!optionNameIncluded) return requestedOptions2;
+
+    // Everything after the option's name
+    const remainder = stringCommand.split(optionName)[1];
     // log.debug(F, `remainder: ${JSON.stringify(remainder, null, 2)}`);
 
-    const nextoptions = remainder.split(' ');
-    // log.debug(F, `nextoptions: ${JSON.stringify(nextoptions, null, 2)}`);
+    // Everything after the option's value
+    const nextOptions = remainder.split(' ');
+    // log.debug(F, `nextOptions: ${JSON.stringify(nextOptions, null, 2)}`);
 
-    const nextOptionIdentifier = nextoptions.find(word => {
+    // Check if the next option's identifier is included in the slash command used
+    const nextOptionIdentifier = nextOptions.find(word => {
       const wordIdentifier = word.split(':')[0];
-      // log.debug(F, `word: ${word} | wordIdentifier: ${wordIdentifier}`);
-      return optionsIndentifiers.includes(`${wordIdentifier}:`);
+      // eslint-disable-next-line sonarjs/no-nested-template-literals, max-len
+      // log.debug(F, `word: ${word} | wordIdentifier: ${wordIdentifier} | ${optionsNames.includes(`${wordIdentifier}:`)}`);
+      return optionsNames.includes(`${wordIdentifier}:`);
     });
     // log.debug(F, `nextOptionIdentifier: ${JSON.stringify(nextOptionIdentifier, null, 2)}`);
 
+    // If there is another identifier in the list of options
     if (nextOptionIdentifier) {
+      // Get the value of the first option by removing the next option
       const value = remainder.split(nextOptionIdentifier)[0].trim();
       // log.debug(F, `value: ${JSON.stringify(value, null, 2)}`);
       const formattedValue = castToType(value, option.toJSON().type);
-      // log.debug(F, `formattedValue: ${JSON.stringify(formattedValue, null, 2)}`);
-      return [...requestedOptions2, { // @ts-ignore
+
+      if (option.toJSON().type === 6) {
+        // log.debug(F, 'option.toJSON().type === 6');
+        return [...requestedOptions2, { // @ts-ignore
+          name: option.toJSON().name,
+          value: '1223456789',
+          type: option.toJSON().type,
+          user: formattedValue,
+        }];
+      }
+
+      if (option.toJSON().type === 7) {
+        // log.debug(F, 'option.toJSON().type === 7');
+        return [...requestedOptions2, { // @ts-ignore
+          name: option.toJSON().name,
+          value: '1223456789',
+          type: option.toJSON().type,
+          channel: formattedValue,
+        }];
+      }
+
+      const optionData = {
         name: option.toJSON().name,
         value: formattedValue,
         type: option.toJSON().type,
-      }];
+      };
+      // log.debug(F, `optionData: ${JSON.stringify(optionData, null, 2)}`);
+      // @ts-ignore
+      return [...requestedOptions2, optionData];
     }
 
+    // If this is the last option in the slash command
     // log.debug(F, `remainderFinal: ${JSON.stringify(remainder, null, 2)}`);
     const formattedValue2 = castToType(remainder.trim(), option.toJSON().type);
     // log.debug(F, `formattedValue2: ${JSON.stringify(formattedValue2, null, 2)}`);
@@ -218,11 +257,16 @@ export function getParsedCommand(
         channel: formattedValue2,
       }];
     }
-    return [...requestedOptions2, { // @ts-ignore
+
+    const optionData = {
       name: option.toJSON().name,
       value: formattedValue2,
       type: option.toJSON().type,
-    }];
+    };
+
+    // log.debug(F, `optionData: ${JSON.stringify(optionData, null, 2)}`);
+    // @ts-ignore
+    return [...requestedOptions2, optionData];
   }, []);
   // log.debug(F, `requestedOptions: ${JSON.stringify(requestedOptions, null, 2)}`);
   const optionNames = options.map(option => option.toJSON().name);
@@ -320,6 +364,89 @@ export async function executeCommandAndSpyReply(
   // const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
   await Command.execute(interaction);
   return spy;
+}
+
+export async function executeCommandModalAndSpyEditReply(
+  Command:SlashCommand,
+  content:{
+    context: 'tripsit' | 'guild' | 'dm',
+    id: string;
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[] | {
+      name: string;
+      type: number;
+      options: ToAPIApplicationCommandOptions[];
+    }[];
+  },
+) {
+  // This function will run the function and spy when a modal has been responded
+  // It will then make a new interaction that submits the modal
+  // Then we will spy the editreply of this new interaction
+  const { interaction, spy } = mockInteractionAndSpyShowModal(content);
+  await Command.execute(interaction);
+
+  expect(spy).toHaveBeenCalled();
+
+  const modalInteraction = Reflect.construct(
+    ModalSubmitInteraction,
+    [
+      interaction.client,
+      {
+        data: {
+          custom_id: `feedbackReportModal~${interaction.id}`,
+          components: [],
+        },
+        user: interaction.user,
+        member: interaction.member,
+        // guild: interaction.guild,
+        // channel: interaction.channel,
+        type: 'MESSAGE_COMPONENT',
+        fields: {
+          getTextInputValue() {
+            return 'test';
+          },
+        },
+      },
+    ],
+  ) as ModalSubmitInteraction;
+  const spy2 = jest.spyOn(modalInteraction, 'editReply');
+
+  interaction.client.on('modalSubmit', (modalInteraction1:ModalSubmitInteraction) => {
+    log.debug(F, `modalInteraction: ${JSON.stringify(modalInteraction1, null, 2)}`);
+  });
+
+  const test = interaction.client.emit('interactionCreate', modalInteraction);
+  log.debug(F, `test: ${JSON.stringify(test, null, 2)}`);
+
+  // print out the listeners
+  const listeners = interaction.client.listeners('interactionCreate');
+  log.debug(F, `listeners: ${listeners}`);
+
+  const listeners2 = interaction.client.listeners('modalSubmit');
+  log.debug(F, `listeners2: ${JSON.stringify(listeners2, null, 2)}`);
+
+  return spy2;
+}
+
+export function mockInteractionAndSpyShowModal(command:{
+  // interaction.client.emit('modalSubmit', modalInteraction);
+  context: 'tripsit' | 'guild' | 'dm',
+  id: string;
+  name: string;
+  type: number;
+  options: ToAPIApplicationCommandOptions[] | {
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[];
+  }[];
+}) {
+  const discord = new MockDiscord({ command });
+  // console.log(discord);
+  const interaction = discord.getInteraction() as ChatInputCommandInteraction;
+  // console.log(interaction);
+  const spy = jest.spyOn(interaction, 'showModal');
+  return { interaction, spy };
 }
 
 export async function executeCommandAndSpyEditReply(
