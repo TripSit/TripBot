@@ -2357,7 +2357,7 @@ export async function rpgTrivia(
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
 
       if (qNumber === 0) {
-        await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
+        // await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
         questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
         const startingEmbed = new EmbedBuilder()
           .setColor(answerColor)
@@ -2421,8 +2421,8 @@ export async function rpgTrivia(
         if (collected.customId === 'rpgQuit') {
           gameQuit = true;
           log.debug(F, 'User quit the game');
-          await collected.update({ // eslint-disable-line no-await-in-loop
-          });
+          // await collected.update({ // eslint-disable-line no-await-in-loop
+          // });
         }
 
         if (collected) {
