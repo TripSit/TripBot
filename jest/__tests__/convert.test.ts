@@ -2,7 +2,7 @@ import {
   Colors,
 } from 'discord.js';
 import { dConvert } from '../../src/discord/commands/global/d.convert';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dConvert;
 
@@ -18,7 +18,7 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} value:123456 units:ft-us into:km`,

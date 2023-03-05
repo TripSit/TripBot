@@ -12,10 +12,13 @@ export default dCombochart;
 export const dCombochart: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('combochart')
-    .setDescription('Display TripSit\'s Combo Chart'),
+    .setDescription('Display TripSit\'s Combo Chart')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
-    interaction.reply(await combochart());
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    interaction.editReply({ content: await combochart() });
     return true;
   },
 };

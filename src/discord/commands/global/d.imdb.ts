@@ -18,23 +18,23 @@ export const dImdb: SlashCommand = {
     .addStringOption(option => option
       .setName('title')
       .setDescription('Movie / Series title')
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
 
     const title = interaction.options.getString('title', true);
     if (!title) {
-      interaction.reply({ content: 'You must enter a title.', ephemeral: true });
+      interaction.editReply({ content: 'You must enter a title.' });
       return false;
     }
-
-    await interaction.deferReply({ ephemeral: false });
-
     const result = await imdb(title);
 
     if (!result.title) {
-      interaction.reply({ content: `Could not find ${title}, make sure you're exact!`, ephemeral: true });
+      interaction.editReply({ content: `Could not find ${title}, make sure you're exact!` });
       return true;
     }
 
@@ -55,9 +55,7 @@ export const dImdb: SlashCommand = {
       embed.addFields({ name: rating.source, value: rating.value, inline: true });
     });
 
-    // interaction.followUp({embeds: [embed]});
     await interaction.editReply({ embeds: [embed] });
-    // interaction.reply({embeds: [embed]});
     return true;
   },
 };

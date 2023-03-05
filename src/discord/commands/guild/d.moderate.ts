@@ -128,10 +128,7 @@ export const mod: SlashCommand = {
       if (!interaction.channel?.isThread()
       || !interaction.channel.parentId
       || interaction.channel.parentId !== env.CHANNEL_MODERATORS) {
-        await interaction.reply({
-          content: 'This command can only be run inside of a mod thread!',
-          ephemeral: true,
-        });
+        await interaction.editReply({ content: 'This command can only be run inside of a mod thread!' });
         return false;
       }
 
@@ -141,10 +138,7 @@ export const mod: SlashCommand = {
       if (!target) {
         const userData = await getUser(targetString, null);
         if (!userData) {
-          await interaction.reply({
-            content: 'Failed to link thread, I could not find this user in the guild, and they do not exist in the database!',
-            ephemeral: true,
-          });
+          await interaction.editReply({ content: 'Failed to link thread, I could not find this user in the guild, and they do not exist in the database!' });
           return false;
         }
         result = await linkThread(targetString, interaction.channelId, override);
@@ -153,16 +147,12 @@ export const mod: SlashCommand = {
       }
 
       if (result === null) {
-        await interaction.reply({
-          content: 'Successfully linked thread!',
-          ephemeral: true,
-        });
+        await interaction.editReply({ content: 'Successfully linked thread!' });
       } else {
         const existingThread = await interaction.client.channels.fetch(result);
-        await interaction.reply({
+        await interaction.editReply({
           content: stripIndents`Failed to link thread, this user has an existing thread: ${existingThread}
           Use the override parameter if you're sure!`,
-          ephemeral: true,
         });
       }
 
@@ -217,40 +207,43 @@ export const mod: SlashCommand = {
 
     const modal = new ModalBuilder()
       .setCustomId(`modModal~${command}~${interaction.id}`)
-      .setTitle(`Tripbot ${command}`);
-
-    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setLabel(`Why are you ${verb} this user?`)
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('Tell other moderators why you\'re doing this')
-      .setRequired(true)
-      .setCustomId('internalNote')));
+      .setTitle(`Tripbot ${command}`)
+      .addComponents(new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setLabel(`Why are you ${verb} this user?`)
+          .setStyle(TextInputStyle.Paragraph)
+          .setPlaceholder('Tell other moderators why you\'re doing this')
+          .setRequired(true)
+          .setCustomId('internalNote')));
 
     // All commands except INFO, NOTE and REPORT can have a public reason sent to the user
     if (!'INFO NOTE REPORT'.includes(command)) {
-      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('What should we tell the user?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Tell the user why you\'re doing this')
-        .setRequired(command === 'WARNING')
-        .setCustomId('description')));
+      modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setLabel('What should we tell the user?')
+          .setStyle(TextInputStyle.Paragraph)
+          .setPlaceholder('Tell the user why you\'re doing this')
+          .setRequired(command === 'WARNING')
+          .setCustomId('description')));
     }
     // Only timeout and full ban can have a duration, but they're different, so separate.
     if (command === 'TIMEOUT') {
-      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('Timeout for how long?')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 7 days)')
-        .setRequired(false)
-        .setCustomId('duration')));
+      modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setLabel('Timeout for how long?')
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 7 days)')
+          .setRequired(false)
+          .setCustomId('duration')));
     }
     if (command === 'FULL_BAN') {
-      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('How many days of msg to remove?')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 0 days)')
-        .setRequired(false)
-        .setCustomId('days')));
+      modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setLabel('How many days of msg to remove?')
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 0 days)')
+          .setRequired(false)
+          .setCustomId('days')));
     }
 
     await interaction.showModal(modal);
@@ -323,19 +316,15 @@ export const mod: SlashCommand = {
           log.debug(F, `timeout: ${timeout}`);
           duration = timeout;
         }
-        log.debug(F, `duration: ${duration}`);
 
-        const modalCommand = i.customId.split('~')[1] as UserActionType;
-        const result = await moderate(
+        i.editReply(await moderate(
           actor,
-          modalCommand,
+          i.customId.split('~')[1] as UserActionType,
           target,
           internalNote,
           description,
           duration,
-        );
-        log.debug(F, `Result: ${result}`);
-        i.editReply(result);
+        ));
         // i.editReply({ embeds: [embedTemplate()] }); // For testing
       });
 

@@ -24,7 +24,7 @@ export const interactionCreate: InteractionCreateEvent = {
     const userData = await getUser(interaction.user.id, null);
     if (userData && userData.discord_bot_ban) {
       if (interaction.isRepliable()) {
-        interaction.reply({ content: '*beeps sadly*', ephemeral: true });
+        await interaction.reply({ content: '*beeps sadly*' });
       }
       return;
     }

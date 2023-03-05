@@ -32,7 +32,7 @@ import {
 import {
   UserTickets,
   TicketStatus,
-} from '../../../global/@types/database.d';
+} from '../../../global/@types/database';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { startLog } from '../../utils/startLog';

@@ -33,18 +33,17 @@ export default dHelp;
 export const dHelp: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('help')
-    .setDescription('Information about TripBot Commands'),
+    .setDescription('Information about TripBot Commands')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
+
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
 
     const globalCommands = await interaction.client.application.commands.fetch();
     const guildCommands = await interaction.client.application.commands.fetch({ guildId: env.DISCORD_GUILD_ID });
 
-    /**
-     * Gets the description of a command
-     * @param {string} commandName
-     * @return {string}
-     */
     function getDesc(commandName:string):string | undefined {
       // log.debug(F, `getDesc: ${commandName}`);
       if (!globalCommands || !guildCommands) return undefined;

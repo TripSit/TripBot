@@ -21,6 +21,7 @@ import {
   MessageMentionTypes,
   ChatInputCommandInteraction,
   PermissionResolvable,
+  Guild,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -108,33 +109,23 @@ export async function needsHelpMode(
   interaction: ModalSubmitInteraction | ButtonInteraction | ChatInputCommandInteraction,
   target: GuildMember,
 ) {
-  if (!interaction.guild) {
-    // log.debug(F, `no guild!`);
-    await interaction.reply(guildOnly);
-    return;
-  }
-  if (!interaction.member) {
-    // log.debug(F, `no member!`);
-    await interaction.reply(memberOnly);
-    return;
-  }
+  const guild = interaction.guild as Guild;
+  const guildData = await getGuild(guild.id);
 
-  const guildData = await getGuild(interaction.guild.id);
-
-  const perms = await checkGuildPermissions(interaction.guild, [
+  const perms = await checkGuildPermissions(guild, [
     'ManageRoles' as PermissionResolvable,
   ]);
 
   if (!perms.hasPermission) {
-    const guildOwner = await interaction.guild.fetchOwner();
-    await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${interaction.guild} so I can run ${F}!` }); // eslint-disable-line
-    log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}!`);
+    const guildOwner = await guild.fetchOwner();
+    await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${guild} so I can run ${F}!` }); // eslint-disable-line
+    log.error(F, `Missing permission ${perms.permission} in ${guild}!`);
     return;
   }
 
   let roleNeedshelp = {} as Role;
   if (guildData.role_needshelp) {
-    roleNeedshelp = await interaction.guild.roles.fetch(guildData.role_needshelp) as Role;
+    roleNeedshelp = await guild.roles.fetch(guildData.role_needshelp) as Role;
   }
 
   // Save the user's roles to the DB
@@ -147,7 +138,7 @@ export async function needsHelpMode(
 
   await usersUpdate(userData);
 
-  const myMember = await interaction.guild.members.fetch(interaction.client.user.id);
+  const myMember = await interaction.guild?.members.fetch(interaction.client.user.id) as GuildMember;
   const myRole = myMember.roles.highest;
   // Remove all roles, except team and vanity, from the target
   target.roles.cache.forEach(async role => {
@@ -177,9 +168,12 @@ export async function needsHelpMode(
     // log.debug(F, `Adding role ${roleNeedshelp.name} to ${target.displayName}`);
     await target.roles.add(roleNeedshelp);
   } catch (err) {
-    log.error(F, `Error adding role to target: ${err}`);
-    await interaction.reply(stripIndents`There was an error adding the NeedsHelp role!
-      Make sure the bot's role is higher than NeedsHelp in the Role list!`);
+    const guildOwner = await interaction.guild?.fetchOwner();
+    await guildOwner?.send({
+      content: stripIndents`There was an error adding the ${roleNeedshelp} to ${target.displayName}!
+          Please make sure I have the Manage Roles permission, or put this role above mine so I don't try to remove it.
+          If there's any questions please contact Moonbear#1024 on TripSit!` }); // eslint-disable-line
+    log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}! Sent the guild owner a DM!`);
   }
 }
 
@@ -190,9 +184,10 @@ export async function needsHelpMode(
 export async function tripsitmeOwned(
   interaction:ButtonInteraction,
 ) {
+  await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    await interaction.reply(guildOnly);
+    await interaction.editReply(guildOnly);
     return;
   }
   // log.debug(F, `tripsitmeOwned`);
@@ -212,11 +207,7 @@ export async function tripsitmeOwned(
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
-    if (interaction.deferred) {
-      await interaction.editReply({ embeds: [embed] });
-    } else {
-      await interaction.reply({ embeds: [embed] });
-    }
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
 
@@ -253,19 +244,16 @@ export async function tripsitmeOwned(
   await ticketUpdate(ticketData);
 
   // Reply to the user
-  await interaction.reply({ content: 'Thanks!', ephemeral: true });
+  await interaction.editReply({ content: 'Thanks!' });
 }
 
-/**
- * Handles the Meta Thread button
- * @param {ButtonInteraction} interaction
- * */
 export async function tripsitmeMeta(
   interaction:ButtonInteraction,
 ) {
+  await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    await interaction.reply(guildOnly);
+    await interaction.editReply(guildOnly);
     return;
   }
   // log.debug(F, `tripsitmeMeta`);
@@ -275,17 +263,17 @@ export async function tripsitmeMeta(
 
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    await interaction.reply(guildOnly);
+    await interaction.editReply(guildOnly);
     return;
   }
   if (!interaction.channel) {
     // log.debug(F, `no channel!`);
-    await interaction.reply('This must be performed in a channel!');
+    await interaction.editReply('This must be performed in a channel!');
     return;
   }
   if (!interaction.member) {
     // log.debug(F, `no member!`);
-    await interaction.reply('This must be performed by a member!');
+    await interaction.editReply('This must be performed by a member!');
     return;
   }
 
@@ -356,7 +344,7 @@ export async function tripsitmeMeta(
     allowedMentions: {},
   });
 
-  await interaction.reply({ content: 'Donezo!', ephemeral: true });
+  await interaction.editReply({ content: 'Donezo!' });
 }
 
 /**
@@ -366,15 +354,16 @@ export async function tripsitmeMeta(
 export async function tripsitmeBackup(
   interaction:ButtonInteraction,
 ) {
+  await interaction.deferReply({ ephemeral: true });
   // log.debug(F, `tripsitmeBackup`);
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    await interaction.reply(guildOnly);
+    await interaction.editReply(guildOnly);
     return;
   }
   if (!interaction.channel) {
     // log.debug(F, `no channel!`);
-    await interaction.reply('This must be performed in a channel!');
+    await interaction.editReply('This must be performed in a channel!');
     return;
   }
   const userId = interaction.customId.split('~')[1];
@@ -419,7 +408,7 @@ export async function tripsitmeBackup(
     await interaction.channel.send(backupMessage);
   }
 
-  await interaction.reply({ content: 'Backup message sent!', ephemeral: true });
+  await interaction.editReply({ content: 'Backup message sent!' });
 }
 
 /**
@@ -734,10 +723,11 @@ export async function tripSitMe(
   intro:string,
 ):Promise<ThreadChannel | null> {
   await startLog('tripSitMe', interaction);
+  // await interaction.deferReply({ ephemeral: true });
 
   // Lookup guild information for variables
   if (!interaction.guild) {
-    await interaction.reply({ content: 'This command can only be used in a server!', ephemeral: true });
+    await interaction.editReply({ content: 'This command can only be used in a server!' });
     return null;
   }
   const actor = interaction.member;
@@ -762,12 +752,12 @@ export async function tripSitMe(
 
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
-    await interaction.reply(guildOnly);
+    await interaction.editReply(guildOnly);
     return null;
   }
   if (!interaction.member) {
     // log.debug(F, `no member!`);
-    await interaction.reply(memberOnly);
+    await interaction.editReply(memberOnly);
     return null;
   }
 
@@ -804,7 +794,7 @@ export async function tripSitMe(
 
   if (!tripsitChannel.id) {
     // log.debug(F, `no tripsit channel!`);
-    await interaction.reply({ content: 'No tripsit channel found! Make sure to run /setup tripsit', ephemeral: true });
+    await interaction.editReply({ content: 'No tripsit channel found! Make sure to run /setup tripsit' });
     return null;
   }
 
@@ -971,24 +961,10 @@ export async function tripSitMe(
   return threadHelpUser;
 }
 
-/**
- * Handles the tripsit button
- * @param {ButtonInteraction} interaction
- */
 export async function tripsitmeButton(
   interaction:ButtonInteraction,
 ) {
   startLog(F, interaction);
-  if (!interaction.guild) {
-    // log.debug(F, `no guild!`);
-    await interaction.reply(guildOnly);
-    return;
-  }
-  if (!interaction.member) {
-    // log.debug(F, `no member!`);
-    await interaction.reply(memberOnly);
-    return;
-  }
   const target = interaction.member as GuildMember;
 
   // log.debug(F, `target: ${JSON.stringify(target, null, 2)}`);
@@ -1024,9 +1000,7 @@ export async function tripsitmeButton(
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription(teamMessage);
-      if (!interaction.replied) {
-        await interaction.reply({ embeds: [embed], ephemeral: true });
-      }
+      await interaction.reply({ embeds: [embed] });
       return;
     }
   }
@@ -1042,7 +1016,7 @@ export async function tripsitmeButton(
 
     let threadHelpUser = {} as ThreadChannel;
     try {
-      threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
+      threadHelpUser = await interaction.guild?.channels.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
     // log.debug(F, `There was an error updating the help thread, it was likely deleted`);
       // Update the ticket status to closed
@@ -1053,16 +1027,17 @@ export async function tripsitmeButton(
     }
 
     if (threadHelpUser.id) {
+      await interaction.deferReply({ ephemeral: true });
       await needsHelpMode(interaction, target);
-      const guildData = await getGuild(interaction.guild.id);
+      const guildData = await getGuild((interaction.guild as Guild).id);
 
       let roleTripsitter = {} as Role;
       let roleHelper = {} as Role;
       if (guildData.role_tripsitter) {
-        roleTripsitter = await interaction.guild.roles.fetch(guildData.role_tripsitter) as Role;
+        roleTripsitter = await interaction.guild?.roles.fetch(guildData.role_tripsitter) as Role;
       }
       if (guildData.role_helper) {
-        roleHelper = await interaction.guild.roles.fetch(guildData.role_helper) as Role;
+        roleHelper = await interaction.guild?.roles.fetch(guildData.role_helper) as Role;
       }
 
       // Remind the user that they have a channel open
@@ -1073,7 +1048,7 @@ export async function tripsitmeButton(
         .setDescription(stripIndents`Hey ${interaction.member}, you have an open session!
   
         Check your channel list or click '${threadHelpUser.toString()} to get help!`);
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.editReply({ embeds: [embed] });
       // log.debug(F, `Rejected need for help`);
 
       // Check if the created_by is in the last 5 minutes
@@ -1105,7 +1080,7 @@ export async function tripsitmeButton(
         } else {
           metaMessage = `${target.toString()} has indicated they need assistance!`;
         }
-        const metaThread = await interaction.guild.channels.fetch(ticketData.meta_thread_id) as ThreadChannel;
+        const metaThread = await interaction.guild?.channels.fetch(ticketData.meta_thread_id) as ThreadChannel;
         metaThread.setName(`💛│${target.displayName}'s discussion!`);
         await metaThread.send({
           content: metaMessage,
@@ -1119,23 +1094,27 @@ export async function tripsitmeButton(
     }
   }
 
-  const modal = new ModalBuilder()
+  await interaction.showModal(new ModalBuilder()
     .setCustomId(`tripsitmeSubmit~${interaction.id}`)
-    .setTitle('Tripsitter Help Request');
-  modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-    .setCustomId('triageInput')
-    .setLabel('What substance? How much taken? How long ago?')
-    .setStyle(TextInputStyle.Short)));
-  modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-    .setCustomId('introInput')
-    .setLabel('What\'s going on? Give us the details!')
-    .setStyle(TextInputStyle.Paragraph)));
-  await interaction.showModal(modal);
+    .setTitle('Tripsitter Help Request')
+    .addComponents(
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setCustomId('triageInput')
+          .setLabel('What substance? How much taken? How long ago?')
+          .setStyle(TextInputStyle.Short)),
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setCustomId('introInput')
+          .setLabel('What\'s going on? Give us the details!')
+          .setStyle(TextInputStyle.Paragraph)),
+    ));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeSubmit');
   await interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
+      await i.deferReply({ ephemeral: true });
       const triage = i.fields.getTextInputValue('triageInput');
       const intro = i.fields.getTextInputValue('introInput');
 
@@ -1145,7 +1124,7 @@ export async function tripsitmeButton(
         const embed = embedTemplate()
           .setColor(Colors.DarkBlue)
           .setDescription(stripIndents`Hey ${interaction.member}, there was an error creating your help thread! The Guild owner should get a message with specifics!`);
-        await i.reply({ embeds: [embed], ephemeral: true });
+        await i.editReply({ embeds: [embed] });
         return;
       }
 
@@ -1159,7 +1138,7 @@ export async function tripsitmeButton(
         .setColor(Colors.DarkBlue)
         .setDescription(replyMessage);
       try {
-        await i.reply({ embeds: [embed], ephemeral: true });
+        await i.editReply({ embeds: [embed] });
       } catch (err) {
         log.error(F, `There was an error responding to the user! ${err}`);
         log.error(F, `Error: ${JSON.stringify(err, null, 2)}`);

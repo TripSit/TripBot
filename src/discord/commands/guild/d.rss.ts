@@ -47,12 +47,10 @@ export const dRss: SlashCommand = {
       .setDescription('List all RSS feeds')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: true });
 
     if (!interaction.guild) {
-      interaction.reply({
-        content: 'This command can only be used in a guild!',
-        ephemeral: true,
-      });
+      interaction.editReply({ content: 'This command can only be used in a guild!' });
       return false;
     }
 
@@ -67,10 +65,7 @@ export const dRss: SlashCommand = {
     if (subcommand === 'add') {
       const url = interaction.options.getString('url', true);
       if (!url.endsWith('.rss')) {
-        await interaction.reply({
-          content: 'You must use a URL ending with .rss!',
-          ephemeral: true,
-        });
+        await interaction.editReply({ content: 'You must use a URL ending with .rss!' });
         return false;
       }
 
@@ -82,10 +77,7 @@ export const dRss: SlashCommand = {
         await parser.parseURL(url);
       } catch (e) {
         log.error(F, `Error parsing URL: ${e}`);
-        await interaction.reply({
-          content: 'This is not a valid RSS URL, please check it and try again!',
-          ephemeral: true,
-        });
+        await interaction.editReply({ content: 'This is not a valid RSS URL, please check it and try again!' });
         return false;
       }
 
@@ -94,10 +86,7 @@ export const dRss: SlashCommand = {
       if (!(channel instanceof TextChannel)) {
         // log.error(F, 'channel is not a text channel');
         // log.debug(F, `channel instanceof TextChannel: ${channel instanceof TextChannel}`);
-        await interaction.reply({
-          content: 'You must specify a text channel!',
-          ephemeral: true,
-        });
+        await interaction.editReply({ content: 'You must specify a text channel!' });
         return false;
       }
       await rssCreate(channel.id, interaction.guild.id, url);
@@ -122,10 +111,7 @@ export const dRss: SlashCommand = {
     } else if (subcommand === 'remove') {
       const channel = interaction.options.getChannel('remove_from_channel');
       if (!(channel instanceof TextChannel)) {
-        await interaction.reply({
-          content: 'You must specify a text channel!',
-          ephemeral: true,
-        });
+        await interaction.editReply({ content: 'You must specify a text channel!' });
         return false;
       }
       await rssDelete(channel.id, channel.guild.id);
@@ -133,7 +119,7 @@ export const dRss: SlashCommand = {
       embed.setTitle(`RSS feed ${verb} ${preposition} ${channel.name}!`);
     }
 
-    interaction.reply({ embeds: [embed], ephemeral: true });
+    interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

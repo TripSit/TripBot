@@ -101,19 +101,24 @@ export const dTemplate: SlashCommand = {
 
   async execute(interaction) {
     startLog(F, interaction);
-    const actor = interaction.member as GuildMember;
-    // log.debug(F, `Actor: ${actor}`);
-    let command = interaction.options.getSubcommand().toUpperCase() as GuildActionType | UserActionType;
-    // log.debug(F, `Command: ${command}`);
-    const group = interaction.options.getSubcommandGroup() as 'user' | 'guild';
-    // log.debug(F, `Group: ${group}`);
-    const targetId = interaction.options.getString('target', true);
-    // log.debug(F, `target: ${targetId}`);
-    const toggle = interaction.options.getString('toggle') ?? 'on' as 'on' | 'off';
-    // log.debug(F, `toggle: ${toggle}`);
 
-    if (toggle === 'off' && command === 'BOTBAN') {
-      command = `UN${command}`;
+    const group = interaction.options.getSubcommandGroup() as 'user' | 'guild';
+    const actor = interaction.member as GuildMember;
+    let command = interaction.options.getSubcommand().toUpperCase() as GuildActionType | UserActionType;
+    const targetId = interaction.options.getString('target', true);
+
+    if (command === 'BOTINFO') {
+      await interaction.deferReply({ ephemeral: true });
+      await interaction.editReply(await botmod(
+        interaction,
+        group,
+        actor,
+        command,
+        targetId,
+        null,
+        null,
+      ));
+      return true;
     }
 
     let verb = '';
@@ -125,47 +130,25 @@ export const dTemplate: SlashCommand = {
       verb = 'warning';
     } else if (command === 'BOTKICK') {
       verb = 'kicking';
-    } else if (command === 'BOTINFO') {
-      verb = 'getting info on';
-    }
-
-    if (command === 'BOTINFO') {
-      const result = await botmod(
-        interaction,
-        group,
-        actor,
-        'BOTINFO',
-        targetId,
-        null,
-        null,
-      );
-      // log.debug(F, `Result: ${result}`);
-      await interaction.reply(result);
-      return true;
     }
 
     const modal = new ModalBuilder()
       .setCustomId(`botModModal~${interaction.id}`)
-      .setTitle(`Tripbot bot ${command}`);
-    const privReasonInput = new TextInputBuilder()
-      .setLabel(`Why are you ${verb} this ${group}?`)
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('Tell the team why you\'re doing this')
-      .setRequired(true)
-      .setCustomId('privReason');
-    const pubReasonInput = new TextInputBuilder()
-      .setLabel(`What should we tell the ${group}?`)
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder(`Tell the ${group} why you're doing this`)
-      .setRequired(true)
-      .setCustomId('pubReason');
-
-    const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(privReasonInput);
-    modal.addComponents(firstActionRow);
+      .setTitle(`Tripbot bot ${command}`)
+      .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+        .setLabel(`Why are you ${verb} this ${group}?`)
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('Tell the team why you\'re doing this')
+        .setRequired(true)
+        .setCustomId('privReason')));
 
     if (['WARN', 'KICK', 'BAN', 'UNBAN'].includes(command)) {
-      const pubReasonText = new ActionRowBuilder<TextInputBuilder>().addComponents(pubReasonInput);
-      modal.addComponents(pubReasonText);
+      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+        .setLabel(`What should we tell the ${group}?`)
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder(`Tell ${group} why you're doing this`)
+        .setRequired(true)
+        .setCustomId('pubReason')));
     }
 
     await interaction.showModal(modal);
@@ -175,6 +158,12 @@ export const dTemplate: SlashCommand = {
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
         await i.deferReply({ ephemeral: true });
+        const toggle = interaction.options.getString('toggle') ?? 'on' as 'on' | 'off';
+
+        if (toggle === 'off' && command === 'BOTBAN') {
+          command = `UN${command}`;
+        }
+
         const privReason = i.fields.getTextInputValue('privReason');
         let pubReason = '';
         try {
@@ -182,8 +171,7 @@ export const dTemplate: SlashCommand = {
         } catch (e) {
           // ignore
         }
-        const result = await botmod(interaction, group, actor, command, targetId, privReason, pubReason);
-        await i.editReply(result);
+        await i.editReply(await botmod(interaction, group, actor, command, targetId, privReason, pubReason));
       });
     return false;
   },

@@ -10,6 +10,7 @@ import {
   ModalSubmitInteraction,
   PermissionResolvable,
   StringSelectMenuBuilder,
+  Guild,
 } from 'discord.js';
 import {
   ButtonStyle, TextInputStyle,
@@ -23,15 +24,11 @@ import { checkChannelPermissions } from '../../utils/checkPermissions';
 const F = f(__filename);
 
 const channelOnly = 'You must run this in the channel you want the prompt to be in!';
+const guildOnly = 'You must run this in the guild you want the prompt to be in!';
 const noChannel = 'how to tripsit: no channel';
 const roleQuestion = 'What role are people applying for?';
 const reviewerQuestion = 'What role reviews those applications?';
-/**
- * This command populates various channels with static prompts
- * This is actually kind of complicated, but not really, let me explain:
- * Each prompt generally allows a response from the user, like giving a role or sending a message
- * @param {Interaction} interaction The interaction that triggered this
- */
+
 export const prompt: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('setup')
@@ -134,7 +131,19 @@ export const prompt: SlashCommand = {
   //   .setName('premiumcolors')),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
-    // await interaction.deferReply({ ephemeral: true });
+
+    if (!interaction.channel) {
+      log.error(F, noChannel);
+      interaction.editReply(channelOnly);
+      return false;
+    }
+
+    if (!interaction.guild) {
+      log.error(F, 'how to tripsit: no guild');
+      interaction.editReply(guildOnly);
+      return false;
+    }
+
     const command = interaction.options.getSubcommand();
     if (command === 'applications') {
       await applications(interaction);
@@ -149,35 +158,11 @@ export const prompt: SlashCommand = {
     } else if (command === 'ticketbooth') {
       await ticketbooth(interaction);
     }
-    if (!interaction.replied) {
-      if (interaction.deferred) {
-        await interaction.editReply({ content: 'Donezo!' });
-      } else {
-        await interaction.reply({ content: 'Donezo!', ephemeral: true });
-      }
-    }
     return true;
   },
 };
 
-/**
- * The tripsit prompt
- * @param {Interaction} interaction The interaction that triggered this
- */
 export async function tripsit(interaction:ChatInputCommandInteraction) {
-  const guildOnly = 'You must run this in the guild you want the prompt to be in!';
-  if (!interaction.channel) {
-    log.error(F, noChannel);
-    interaction.reply(channelOnly);
-    return;
-  }
-
-  if (!interaction.guild) {
-    log.error(F, 'how to tripsit: no guild');
-    interaction.reply(guildOnly);
-    return;
-  }
-
   if (!await checkChannelPermissions(
     (interaction.channel as TextChannel),
     [
@@ -208,30 +193,8 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  // log.debug(`${PREFIX} bot has permission to post!`);
-
   const channelSanctuary = interaction.options.getChannel('sanctuary');
   const channelGeneral = interaction.options.getChannel('general');
-  const roleNeedshelp = interaction.options.getRole('needshelp');
-  const roleTripsitter = interaction.options.getRole('tripsitter');
-  const roleHelper = interaction.options.getRole('helper');
-  const channelTripsitmeta = interaction.options.getChannel('metatripsit');
-  const channelTripsit = interaction.channel as TextChannel;
-
-  const guildData = await getGuild(interaction.guild.id);
-
-  guildData.id = interaction.guild.id;
-  guildData.channel_sanctuary = channelSanctuary ? channelSanctuary.id : null;
-  guildData.channel_general = channelGeneral ? channelGeneral.id : null;
-  guildData.channel_tripsitmeta = channelTripsitmeta ? channelTripsitmeta.id : null;
-  guildData.channel_tripsit = channelTripsit.id;
-  guildData.role_needshelp = roleNeedshelp ? roleNeedshelp.id : null;
-  guildData.role_tripsitter = roleTripsitter ? roleTripsitter.id : null;
-  guildData.role_helper = roleHelper ? roleHelper.id : null;
-
-  // Save this info to the DB
-
-  await guildUpdate(guildData);
 
   let modalText = stripIndents`
     Welcome to ${(interaction.channel as TextChannel).name}!
@@ -252,26 +215,48 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
 
   modalText += '\n\nStay safe!\n\n';
 
-  // Create the modal
-  const modal = new ModalBuilder()
+  await interaction.showModal(new ModalBuilder()
     .setCustomId(`tripsitmeModal~${interaction.id}`)
-    .setTitle('Setup your TripSit room!');
+    .setTitle('Setup your TripSit room!')
+    .addComponents(
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(
+          new TextInputBuilder()
+            .setLabel('Intro Message')
+            .setValue(stripIndents`${modalText}`)
+            .setStyle(TextInputStyle.Paragraph)
+            .setRequired(true)
+            .setCustomId('introMessage'),
+        ),
+    ));
 
-  const body = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-    .setLabel('Intro Message')
-    .setValue(stripIndents`${modalText}`)
-    .setStyle(TextInputStyle.Paragraph)
-    .setRequired(true)
-    .setCustomId('introMessage'));
-  modal.addComponents([body]);
-  await interaction.showModal(modal);
-
-  // Collect a modal submit interaction
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeModal');
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       if (!i.guild) return;
+      await i.deferReply({ ephemeral: true });
+
+      const roleNeedshelp = interaction.options.getRole('needshelp');
+      const roleTripsitter = interaction.options.getRole('tripsitter');
+      const roleHelper = interaction.options.getRole('helper');
+      const channelTripsitmeta = interaction.options.getChannel('metatripsit');
+      const channelTripsit = interaction.channel as TextChannel;
+
+      const guildData = await getGuild((interaction.guild as Guild).id);
+
+      guildData.id = (interaction.guild as Guild).id;
+      guildData.channel_sanctuary = channelSanctuary ? channelSanctuary.id : null;
+      guildData.channel_general = channelGeneral ? channelGeneral.id : null;
+      guildData.channel_tripsitmeta = channelTripsitmeta ? channelTripsitmeta.id : null;
+      guildData.channel_tripsit = channelTripsit.id;
+      guildData.role_needshelp = roleNeedshelp ? roleNeedshelp.id : null;
+      guildData.role_tripsitter = roleTripsitter ? roleTripsitter.id : null;
+      guildData.role_helper = roleHelper ? roleHelper.id : null;
+
+      // Save this info to the DB
+
+      await guildUpdate(guildData);
 
       const introMessage = i.fields.getTextInputValue('introMessage');
 
@@ -286,27 +271,11 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
 
       // Create a new button
       await (i.channel as TextChannel).send({ content: introMessage, components: [row] });
-      i.reply({ content: 'Donezo!', ephemeral: true });
+      i.editReply({ content: 'Donezo!' });
     });
 }
 
-/**
- * The contributors prompt
- * @param {Interaction} interaction The interaction that triggered this
- */
 export async function applications(interaction:ChatInputCommandInteraction) {
-  // log.debug(F, `Setting up applications!`);
-  if (!interaction.channel) {
-    log.error(F, 'applications: no channel');
-    interaction.reply(channelOnly);
-    return;
-  }
-
-  if (!interaction.guild) {
-    interaction.reply('You must run this in a guild!');
-    return;
-  }
-
   if (!await checkChannelPermissions(
     (interaction.channel as TextChannel),
     [
@@ -322,78 +291,80 @@ export async function applications(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  const channelApplications = interaction.options.getChannel('applications_channel', true);
-
-  const guildData = await getGuild(interaction.guild.id);
-
-  guildData.id = interaction.guild.id;
-  guildData.channel_applications = channelApplications.id;
-
-  // Save this info to the DB
-  await guildUpdate(guildData);
-
-  /* eslint-disable no-unused-vars */
-  const roleRequestdA = interaction.options.getRole('application_role_a');
-  const roleReviewerA = interaction.options.getRole('application_reviewer_a');
-  const roleRequestdB = interaction.options.getRole('application_role_b');
-  const roleReviewerB = interaction.options.getRole('application_reviewer_b');
-  const roleRequestdC = interaction.options.getRole('application_role_c');
-  const roleReviewerC = interaction.options.getRole('application_reviewer_c');
-  const roleRequestdD = interaction.options.getRole('application_role_d');
-  const roleReviewerD = interaction.options.getRole('application_reviewer_d');
-  const roleRequestdE = interaction.options.getRole('application_role_e');
-  const roleReviewerE = interaction.options.getRole('application_reviewer_e');
-
-  const roleArray = [
-    [roleRequestdA, roleReviewerA],
-    [roleRequestdB, roleReviewerB],
-    [roleRequestdC, roleReviewerC],
-    [roleRequestdD, roleReviewerD],
-    [roleRequestdE, roleReviewerE],
-  ];
-
-  const modal = new ModalBuilder()
+  await interaction.showModal(new ModalBuilder()
     .setCustomId(`appModal~${interaction.id}`)
-    .setTitle('Tripsitter Help Request');
-  modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-    .setCustomId('appliationText')
-    .setLabel('What wording do you want to appear?')
-    .setStyle(TextInputStyle.Paragraph)
-    .setValue(stripIndent`
-    **Interested in helping out?**
+    .setTitle('Tripsitter Help Request')
+    .addComponents(
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(
+          new TextInputBuilder()
+            .setCustomId('appliationText')
+            .setLabel('What wording do you want to appear?')
+            .setStyle(TextInputStyle.Paragraph)
+            .setValue(stripIndent`
+              **Interested in helping out?**
 
-    Welcome to ${interaction.channel}! This channel allows you to apply for intern positions here at ${interaction.guild.name}!
+              Welcome to ${interaction.channel}! This channel allows you to apply for intern positions here at ${(interaction.guild as Guild).name}!
 
-    We want people who love ${interaction.guild.name}, want to contribute to its growth, and be part of our success!
+              We want people who love ${(interaction.guild as Guild).name}, want to contribute to its growth, and be part of our success!
 
-    We currently have two positions open:
+              We currently have two positions open:
 
-    * Helper
-    * Contributor
+              * Helper
+              * Contributor
 
-    **These are not formal roles, but rather a way to get access to the rooms to help out and prove you want to be a part of the org!**
-    
-    Both positions require that you have a short tenure on the org: 
-    While we appreciate the interest you should familiarize yourself with the culture before applying! 
-    If you have not been here that long please chat and get to know people before applying again (at least two weeks)!
-    
-    The **Helper** role is for people who want to help out in the tripsitting rooms.
-    As long as you have a general understanding of how drugs work and how hey interact with mental health conditions we do not require a formal education for users interested in taking on the helper role. 
-    While we do value lived/living experience with drug use it is not required to be an effective helper!
-    
-    The **Contributor** role is for people who want to help out in the back-end with development or other organizational work.
-    You don't need to code, but you should have some experience with the org and be able to contribute to the org in some way.
-    We appreciate all types of help: Not just coders, but anyone who wants to give input or test out new features!
-  
-    If you want to help out with ${interaction.guild.name}, please click the button below to fill out the application form.
-    `)));
-  await interaction.showModal(modal);
+              **These are not formal roles, but rather a way to get access to the rooms to help out and prove you want to be a part of the org!**
+              
+              Both positions require that you have a short tenure on the org: 
+              While we appreciate the interest you should familiarize yourself with the culture before applying! 
+              If you have not been here that long please chat and get to know people before applying again (at least two weeks)!
+              
+              The **Helper** role is for people who want to help out in the tripsitting rooms.
+              As long as you have a general understanding of how drugs work and how hey interact with mental health conditions we do not require a formal education for users interested in taking on the helper role. 
+              While we do value lived/living experience with drug use it is not required to be an effective helper!
+              
+              The **Contributor** role is for people who want to help out in the back-end with development or other organizational work.
+              You don't need to code, but you should have some experience with the org and be able to contribute to the org in some way.
+              We appreciate all types of help: Not just coders, but anyone who wants to give input or test out new features!
 
-  // Collect a modal submit interaction
+              If you want to help out with ${(interaction.guild as Guild).name}, please click the button below to fill out the application form.
+            `),
+        ),
+    ));
+
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('appModal');
-  interaction.awaitModalSubmit({ filter, time: 150000 })
+  interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
+      await i.deferReply({ ephemeral: true });
+
+      const channelApplications = interaction.options.getChannel('applications_channel', true);
+      const guildData = await getGuild((interaction.guild as Guild).id);
+      guildData.id = (interaction.guild as Guild).id;
+      guildData.channel_applications = channelApplications.id;
+
+      // Save this info to the DB
+      await guildUpdate(guildData);
+
+      /* eslint-disable no-unused-vars */
+      const roleRequestdA = interaction.options.getRole('application_role_a');
+      const roleReviewerA = interaction.options.getRole('application_reviewer_a');
+      const roleRequestdB = interaction.options.getRole('application_role_b');
+      const roleReviewerB = interaction.options.getRole('application_reviewer_b');
+      const roleRequestdC = interaction.options.getRole('application_role_c');
+      const roleReviewerC = interaction.options.getRole('application_reviewer_c');
+      const roleRequestdD = interaction.options.getRole('application_role_d');
+      const roleReviewerD = interaction.options.getRole('application_reviewer_d');
+      const roleRequestdE = interaction.options.getRole('application_role_e');
+      const roleReviewerE = interaction.options.getRole('application_reviewer_e');
+
+      const roleArray = [
+        [roleRequestdA, roleReviewerA],
+        [roleRequestdB, roleReviewerB],
+        [roleRequestdC, roleReviewerC],
+        [roleRequestdD, roleReviewerD],
+        [roleRequestdE, roleReviewerE],
+      ];
       const selectMenu = new StringSelectMenuBuilder()
         .setCustomId('applicationRoleSelectMenu')
         .setPlaceholder('Select role here!')
@@ -404,7 +375,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
           value: 'none',
         },
       );
-      roleArray.forEach(role => {
+      roleArray.forEach(async role => {
         if (role[0]) {
           if (role[1]) {
           // log.debug(F, `role: ${role[0].name}`);
@@ -415,7 +386,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
               },
             );
           } else {
-            i.reply('Error: You must provide both a role and a reviewer role!');
+            await i.reply('Error: You must provide both a role and a reviewer role!');
           }
         }
       });
@@ -427,27 +398,12 @@ export async function applications(interaction:ChatInputCommandInteraction) {
             .addComponents(selectMenu)],
         },
       );
-      i.reply({ content: 'Donezo!', ephemeral: true });
+      i.editReply({ content: 'Donezo!' });
     });
 }
 
-/**
- * The techhelp prompt
- * @param {Interaction} interaction The interaction that triggered this
- */
 export async function techhelp(interaction:ChatInputCommandInteraction) {
-  // log.debug(`${PREFIX} techhelp!`);
-  if (!(interaction.channel as TextChannel)) {
-    log.error(F, noChannel);
-    interaction.reply(channelOnly);
-    return;
-  }
-
-  if (!interaction.guild) {
-    interaction.reply('You must run this in a server!');
-    return;
-  }
-
+  await interaction.deferReply({ ephemeral: true });
   if (!await checkChannelPermissions(
     (interaction.channel as TextChannel),
     [
@@ -463,18 +419,18 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  const guildData = await getGuild(interaction.guild.id);
+  const guildData = await getGuild((interaction.guild as Guild).id);
 
-  guildData.id = interaction.guild.id;
+  guildData.id = (interaction.guild as Guild).id;
   guildData.role_techhelp = interaction.options.getRole('roletechreviewer', true).id;
 
   // Save this info to the DB
   await guildUpdate(guildData);
 
   let text = stripIndents`
-    Welcome to ${interaction.guild.name}'s technical help channel!
+    Welcome to ${(interaction.guild as Guild).name}'s technical help channel!
 
-    This channel can be used to get in contact with the ${interaction.guild.name}'s team for **technical** assistance/feedback!`;
+    This channel can be used to get in contact with the ${(interaction.guild as Guild).name}'s team for **technical** assistance/feedback!`;
 
   const channelTripsit = interaction.options.getChannel('tripsit');
   if (channelTripsit) {
@@ -507,35 +463,10 @@ Thanks for reading, stay safe!
 
   // Create a new button
   await (interaction.channel as TextChannel).send({ content: text, components: [row] });
-  interaction.reply({ content: 'Donezo!', ephemeral: true });
 }
 
-/**
- * The rules prompt
- * @param {Interaction} interaction The interaction that triggered this
- */
 export async function rules(interaction:ChatInputCommandInteraction) {
-  // log.debug(`${PREFIX} rules!`);
-  if (!(interaction.channel as TextChannel)) {
-    log.error(F, noChannel);
-    interaction.reply(channelOnly);
-    return;
-  }
-  const channelTripsit = await interaction.client.channels.fetch(env.CHANNEL_TRIPSIT);
-  if (!channelTripsit) {
-    log.error(F, noChannel);
-    interaction.reply('We can\'t find the tripsit channel!');
-    return;
-  }
-
-  // const rulesPath = await imageGet('rules');
-
-  // const rulesFile = new AttachmentBuilder(rulesPath);
-
-  // // get the file name from the path
-  // const rulesFileName = rulesPath.split('/').pop();
-  // // log.debug(F, `rulesFileName: ${rulesFileName}`);
-
+  await interaction.deferReply({ ephemeral: true });
   await (interaction.channel as TextChannel).send({
     content: `
 **By using and remaining connected to this discord you signify your agreement of TripSit's full terms and conditions: https://github.com/TripSit/rules/blob/main/termsofservice.md **
@@ -608,17 +539,8 @@ If you do not agree to this policy, do not use this site.
   });
 }
 
-/**
- * The ticketbooth prompt
- * @param {Interaction} interaction The interaction that triggered this
- */
 export async function ticketbooth(interaction:ChatInputCommandInteraction) {
-  if (!(interaction.channel as TextChannel)) {
-    log.error(F, noChannel);
-    interaction.reply(channelOnly);
-    return;
-  }
-  startLog(F, interaction);
+  await interaction.deferReply({ ephemeral: true });
   const channelTripsit = await interaction.client.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
   const channelSanctuary = await interaction.client.channels.fetch(env.CHANNEL_SANCTUARY) as TextChannel;
   const channelOpentripsit = await interaction.client.channels.fetch(env.CHANNEL_OPENTRIPSIT1) as TextChannel;
@@ -656,17 +578,8 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
   await (interaction.channel as TextChannel).send({ content: buttonText, components: [row] });
 }
 
-/**
- * The starthere prompt
- * @param {Interaction} interaction The interaction that triggered this
- */
 export async function starthere(interaction:ChatInputCommandInteraction) {
-  startLog(F, interaction);
-  if (!(interaction.channel as TextChannel)) {
-    log.error(F, noChannel);
-    interaction.reply(channelOnly);
-    return;
-  }
+  await interaction.deferReply({ ephemeral: true });
   // const channelIrc = await interaction.member.client.channels.fetch(CHANNEL_HELPDESK);
   // const channelQuestions = await interaction.client.channels.fetch(CHANNEL_DRUGQUESTIONS);
   const channelBotspam = await interaction.client.channels.fetch(env.CHANNEL_BOTSPAM);

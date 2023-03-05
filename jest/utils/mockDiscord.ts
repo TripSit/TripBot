@@ -16,13 +16,14 @@ import {
   ToAPIApplicationCommandOptions,
   ChatInputCommandInteraction,
   ReactionEmoji, // eslint-disable-line
-  Options, // eslint-disable-line
+  UserManager,
+  ClientApplication, // eslint-disable-line
   // ClientApplication,
   // FetchApplicationCommandOptions,
   // ApplicationCommandDataResolvable,
 } from 'discord.js';
-// import fs from 'fs';
-// import path, { parse } from 'path';
+import fs from 'fs';
+import path from 'path';
 // import { SlashCommand } from '../../discord/@types/commandDef';
 
 const F = f(__filename);  // eslint-disable-line
@@ -43,6 +44,8 @@ export default class MockDiscord {
 
   private user!: User;
 
+  private users!: UserManager;
+
   private guildMember!: GuildMember;
 
   public message!: Message;
@@ -58,6 +61,8 @@ export default class MockDiscord {
   private reaction!: MessageReaction;
 
   private reactionUser!: User;
+
+  private application!: ClientApplication;
 
   constructor(options:{
     message?: Message,
@@ -81,6 +86,8 @@ export default class MockDiscord {
     this.mockTextChannel(options?.command.context);
 
     this.mockUser();
+    this.mockUsers();
+    this.mockApplication();
     this.mockGuildMember(options?.command.context);
     this.mockMessage(options?.message?.content as string);
     this.mockInteracion(options?.command);
@@ -201,6 +208,48 @@ export default class MockDiscord {
     //   // this.client.commands.set(commandData, command);
     //   // this.client.application?.commands.create(commandData);
     // });
+  }
+
+  private mockApplication(): void {
+    this.client.application = Reflect.construct(ClientApplication, [
+      this.client,
+      { id: '1234567890' },
+    ]);
+
+    // Register global commands
+    const globalCommands = path.join(__dirname, '../../src/discord/commands/global');
+    const globalFiles = fs.readdirSync(globalCommands);
+    // log.debug(`[${PREFIX}] Global command files: ${globalFiles}`);
+    globalFiles.forEach(file => {
+      const filePath = path.join(globalCommands, file);
+      // log.debug(`[${PREFIX}] Loading global command: ${filePath}`);
+      const command = require(filePath); // eslint-disable-line
+      // log.debug(`[${PREFIX}] Command: ${JSON.stringify(command, null, 2)}`);
+      const commandData = command[Object.keys(command).find(
+        key => command[key].data !== undefined,
+      ) as string].data.toJSON();
+      // log.debug(F, `Command data: ${JSON.stringify(commandData, null, 2)}`);
+      log.debug(F, `Loaded global command: ${commandData.name}`);
+      this.client.commands.set(commandData, command);
+      // this.client.application?.commands.create(commandData);
+    });
+
+    // Register guild commands
+    const guildCommands = path.join(__dirname, '../../src/discord/commands/guild');
+    const guildFiles = fs.readdirSync(guildCommands);
+    // log.debug(`[${PREFIX}] Guild command files: ${guildFiles}`);
+    guildFiles.forEach(file => {
+      const filePath = path.join(guildCommands, file);
+      // log.debug(`[${PREFIX}] Loading global command: ${filePath}`);
+      const command = require(filePath); // eslint-disable-line
+      // log.debug(`[${PREFIX}] Command: ${JSON.stringify(command, null, 2)}`);
+      const commandData = command[Object.keys(command).find(
+        key => command[key].data !== undefined) as string].data.toJSON();  // eslint-disable-line
+      // log.debug(F, `Command data: ${JSON.stringify(commandData, null, 2)}`);
+      log.debug(F, `Loaded global command: ${commandData.name}`);
+      this.client.commands.set(commandData, command);
+      // this.client.application?.commands.create(commandData);
+    });
   }
 
   private mockGuild(
@@ -423,6 +472,12 @@ export default class MockDiscord {
     ]);
   }
 
+  private mockUsers(): void {
+    this.users = Reflect.construct(UserManager, [
+      this.client,
+    ]);
+  }
+
   private mockReactionUser(userId:string): void {
     this.reactionUser = Reflect.construct(User, [
       this.client,
@@ -554,11 +609,11 @@ export default class MockDiscord {
     //   },
     // );
     this.interaction.reply = jest.fn();
-    // this.interaction.deferReply = () => Promise.resolve({} as Promise<Message<boolean>>);
     this.interaction.deferReply = jest.fn();
     this.interaction.editReply = jest.fn();
     // this.interaction.followUp = jest.fn();
     this.interaction.guildId = this.guild?.id;
     this.interaction.isCommand = jest.fn(() => true);
+    this.interaction.showModal = jest.fn();
   }
 }
