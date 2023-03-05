@@ -521,25 +521,20 @@ export async function processReactionRole(
   }
 
   const introMessageRequired = IM === true;
-  const channelProvided = IC;
-
-  // log.debug(F, `RID: ${RID}, IM: ${IM}, IC: ${IC}`);
-
-  const target = interaction.member as GuildMember;
-
   if (!introMessageRequired) {
     await interaction.deferReply({ ephemeral: true });
   }
 
   const { guild } = interaction;
-
   const role = await guild.roles.fetch(RID);
-
   if (!role) {
     log.error(F, `Role ${RID} not found`);
     return;
   }
 
+  const channelProvided = IC;
+
+  const target = interaction.member as GuildMember;
   // If the user already has the role
   if (target.roles.cache.has(role.id)) {
     if (introMessageRequired) {
