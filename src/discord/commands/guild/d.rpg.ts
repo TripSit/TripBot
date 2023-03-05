@@ -20,7 +20,6 @@ import {
   GuildMember,
   TextChannel,
   ColorResolvable,
-  MessageReplyOptions,
   Emoji,
 } from 'discord.js';
 import {
@@ -43,8 +42,6 @@ import { Personas, RpgInventory } from '../../../global/@types/database';
 import { imageGet } from '../../utils/imageGet';
 import { GameName } from '../../../global/@types/global';
 import { difficulties, numberOfQuestions } from '../../utils/emoji';
-
-export default dRpg;
 
 const Trivia = require('trivia-api');
 
@@ -1087,7 +1084,7 @@ export async function rpgBounties(
       resetTime = new Date(new Date().setHours(currentHour + 1, 0, 0, 0));
 
       if (lastBounties) {
-        const lastBountiesHour = lastBounties ? lastBounties.getHours() : 0;
+        const lastBountiesHour = lastBounties.getHours();
         // log.debug(F, `lastBountiesHour: ${lastBountiesHour}`);
         if (lastBountiesHour === currentHour) {
           timeout = true;
@@ -1099,7 +1096,7 @@ export async function rpgBounties(
       resetTime = new Date(new Date(new Date().setDate(currentDay + 1)).setHours(0, 0, 0, 0));
 
       if (lastBounties) {
-        const lastBountiesDay = lastBounties ? lastBounties.getDate() : 0;
+        const lastBountiesDay = lastBounties.getDate();
         // log.debug(F, `lastBountiesDay: ${lastBountiesDay}`);
 
         // log.debug(F, `personaData1: ${JSON.stringify(personaData, null, 2)}`);
@@ -1312,7 +1309,7 @@ export async function rpgMarketChange(
 
   if (chosenItem) {
     rowMarket.addComponents(
-      global.buttons.buy.setLabel(`Buy ${chosenItem?.label}`),
+      global.buttons.buy.setLabel(`Buy ${chosenItem.label}`),
     );
   }
 
@@ -1454,7 +1451,7 @@ export async function rpgMarketAccept(
     ${description}`)
       .setColor(Colors.Red);
     const imageFiles = [] as AttachmentBuilder[];
-    if (itemData && itemData.effect === 'background') {
+    if (itemData.effect === 'background') {
       const imagePath = await imageGet(itemData.effect_value);
       // log.debug(F, `imagePath: ${imagePath}`);
       imageFiles.push(new AttachmentBuilder(imagePath));
@@ -2296,16 +2293,16 @@ export async function rpgTrivia(
     const difficultyName = optionDict[chosenDifficulty as keyof typeof optionDict].name;
     const { bonus } = optionDict[chosenDifficulty as keyof typeof optionDict];
     const { perfectBonus } = bonusDict[amountOfQuestions as keyof typeof bonusDict];
-    let questionTimer = await getNewTimer(6);
-    let perfectScore = bonusDict[amountOfQuestions as keyof typeof bonusDict].perfectBonusMessage;
+    let questionTimer = {} as Date;
+    // let perfectScore = '' as string;
     let bonusMessage = bonusMessageDict[chosenDifficulty as keyof typeof bonusMessageDict];
     let questionsCorrect = 0;
     let streak = 0;
     let maxStreak = 0;
     let score = 0;
     let scoreMessage = '';
-    let timedOut = false;
-    let gameQuit = false;
+    let timedOut = false as boolean;
+    let gameQuit = false as boolean;
     let answerColor = Colors.Purple as ColorResolvable;
     let embedStatus = `Starting trivia with ${amountOfQuestions} questions!`;
     let questionAnswer = 'You have 30 seconds to answer each question.';
@@ -2336,10 +2333,6 @@ export async function rpgTrivia(
     const questionList = await rpgTriviaGetQuestions(amountOfQuestions, chosenDifficulty);
 
     for (let qNumber = 0; (qNumber < amountOfQuestions); qNumber += 1) {
-      if (gameQuit === true) {
-        break;
-      }
-
       // Get the first question from the array
       const [questionData] = questionList;
       const answerMap = new Map(questionData.all_answers.map((answer, index) => [choices[index], `**${choices[index]}** ${answer}`])); // eslint-disable-line max-len
@@ -2412,65 +2405,61 @@ export async function rpgTrivia(
 
       // Filter for the buttons
       const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id;
-      try {
-        if (!interaction.channel) throw new Error('Channel not found');
-        const collected = await interaction.channel.awaitMessageComponent({ // eslint-disable-line no-await-in-loop
-          filter,
-          time: 30000,
-          componentType: ComponentType.Button,
-        });
+      if (!interaction.channel) throw new Error('Channel not found');
+      const collected = await interaction.channel.awaitMessageComponent({ // eslint-disable-line no-await-in-loop
+        filter,
+        time: 30000,
+        componentType: ComponentType.Button,
+      });
+      const disabledButtons = choices.map(choice => new ButtonBuilder()
+        .setCustomId(choice)
+        .setDisabled(true)
+        .setEmoji(choice)
+        .setStyle(ButtonStyle.Secondary))
+        .concat([
+          global.buttons.quit.setDisabled(false),
+        ]);
 
-        if (collected.customId === 'rpgQuit') {
-          gameQuit = true;
-          log.debug(F, 'User quit the game');
-          // await collected.update({ // eslint-disable-line no-await-in-loop
-          // });
+      await collected.update({ // eslint-disable-line no-await-in-loop
+        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(disabledButtons)],
+      });
+
+      if (collected.customId === 'rpgQuit') {
+        gameQuit = true;
+        log.debug(F, 'User quit the game');
+        break;
+      }
+
+      let answer = answerMap.get(collected.customId); // Get the answer from the map
+      answer = answer?.substring(38);
+      log.debug(F, `User chose: ${answer}`);
+      log.debug(F, `Correct answer was: ${questionData.correct_answer}`);
+
+      if (answer === questionData.correct_answer) { // If the user answers correctly
+        questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
+        streak += 1;
+        if (streak > maxStreak) {
+          maxStreak = streak;
         }
-
-        if (collected) {
-          // Disable all buttons
-          const disabledButtons = choices.map(choice => new ButtonBuilder()
-            .setCustomId(choice)
-            .setDisabled(true)
-            .setEmoji(choiceEmoji(choice))
-            .setStyle(ButtonStyle.Secondary))
-            .concat([
-              global.buttons.quit.setDisabled(false),
-            ]);
-
-          await collected.update({ // eslint-disable-line no-await-in-loop
-            components: [new ActionRowBuilder<ButtonBuilder>().addComponents(disabledButtons)],
-          });
-        }
-
-        let answer = answerMap.get(collected.customId); // Get the answer from the map
-        answer = answer?.substring(38);
-        log.debug(F, `User chose: ${answer}`);
-        log.debug(F, `Correct answer was: ${questionData.correct_answer}`);
-
-        if (answer === questionData.correct_answer) { // If the user answers correctly
-          questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
-          streak += 1;
-          if (streak > maxStreak) {
-            maxStreak = streak;
-          }
-          score += (1 * streak);
-          questionsCorrect += 1;
-          embed = new EmbedBuilder()
-            .setColor(Colors.Green as ColorResolvable)
-            .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-            .setDescription(`
-            **Correct!**
-            The answer was **${questionData.correct_answer}.**
-            
-            **Current Score**
-            Correct: ${questionsCorrect} of ${(qNumber + 1)}
-            Streak: ${streak}
-            
-            Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
-            .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
-          embedStatus = 'Correct!';
-          questionAnswer = `The answer was **${questionData.correct_answer}.**`;
+        score += (1 * streak);
+        questionsCorrect += 1;
+        embed = new EmbedBuilder()
+          .setColor(Colors.Green as ColorResolvable)
+          .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
+          .setDescription(`
+          **Correct!**
+          The answer was **${questionData.correct_answer}.**
+          
+          **Current Score**
+          Correct: ${questionsCorrect} of ${(qNumber + 1)}
+          Streak: ${streak}
+          
+          Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+        embedStatus = 'Correct!';
+        questionAnswer = `The answer was **${questionData.correct_answer}.**`;
+        // check if the interaction has timed out
+        if (interaction.isRepliable()) {
           await interaction.editReply({ // eslint-disable-line no-await-in-loop
             embeds: [embed],
             components: [
@@ -2487,24 +2476,32 @@ export async function rpgTrivia(
                 ),
             ],
           });
-        } else { // If the user answers incorrectly
-          questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
-          streak = 0;
-          embed = new EmbedBuilder()
-            .setColor(Colors.Grey as ColorResolvable)
-            .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-            .setDescription(`
-            **Incorrect!**
-            The correct answer was **${questionData.correct_answer}.**
-            
-            **Current Score**
-            Correct: ${questionsCorrect} of ${(qNumber + 1)}
-            Streak: ${streak}
-            
-            Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
-            .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
-          embedStatus = 'Incorrect!';
+        } else {
+          embedStatus = 'Time\'s up!';
+          answerColor = Colors.Red as ColorResolvable;
           questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
+          timedOut = true;
+          break; // If the user timed out, break the loop
+        }
+      } else { // If the user answers incorrectly
+        questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
+        streak = 0;
+        embed = new EmbedBuilder()
+          .setColor(Colors.Grey as ColorResolvable)
+          .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
+          .setDescription(`
+          **Incorrect!**
+          The correct answer was **${questionData.correct_answer}.**
+          
+          **Current Score**
+          Correct: ${questionsCorrect} of ${(qNumber + 1)}
+          Streak: ${streak}
+          
+          Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+        embedStatus = 'Incorrect!';
+        questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
+        if (interaction.isRepliable()) {
           await interaction.editReply({ // eslint-disable-line no-await-in-loop
             embeds: [embed],
             components: [
@@ -2520,25 +2517,23 @@ export async function rpgTrivia(
               ),
             ],
           });
+        } else {
+          embedStatus = 'Time\'s up!';
+          answerColor = Colors.Red as ColorResolvable;
+          questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
+          timedOut = true;
+          break; // If the user timed out, break the loop
         }
-      } catch (error) { // If the user doesn't answer in time
-        embedStatus = 'Time\'s up!';
-        answerColor = Colors.Red as ColorResolvable;
-        questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
-        timedOut = true;
       }
-
       questionList.splice(0, 1); // Remove the first question from the array
-      if (timedOut) break; // If the user timed out, break the loop
     }
     let payout = 0;
-    perfectScore = '';
     if (questionsCorrect !== 0) { // The user got at least one question correct
       if (questionsCorrect === amountOfQuestions) { // Bonus for getting all questions correct
         payout = Math.ceil(2 * (score * (bonus + perfectBonus)));
       } else {
         payout = Math.ceil(2 * (score * bonus));
-        perfectScore = '';
+        // perfectScore = '';
       }
       log.debug(F, `Payout: ${payout} tokens`);
       log.debug(F, `Rounded Payout: ${payout} tokens`);
@@ -2550,7 +2545,6 @@ export async function rpgTrivia(
       bonusMessage = '';
     }
 
-    let reply = {} as MessageReplyOptions;
     if (!timedOut) {
       if (questionsCorrect === 0) {
         scoreMessage = awfulScoreMessageList[Math.floor(Math.random() * awfulScoreMessageList.length)];
@@ -2566,7 +2560,7 @@ export async function rpgTrivia(
       }
       log.debug(F, `Score Message: ${scoreMessage}`);
       const embed = new EmbedBuilder()
-        .setColor(Colors.Purple)
+        .setColor(answerColor)
         .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
         .setDescription(
           `**${embedStatus}**
@@ -2577,12 +2571,12 @@ export async function rpgTrivia(
           Max Streak: **${maxStreak}** correct in a row
           *${scoreMessage}*
 
-          Earned: **${payout} tokens**${bonusMessage} ${perfectScore}
+          Earned: **${payout} tokens**${bonusMessage}
           Wallet: ${(personaData.tokens + payout)} tokens
           `,
         )
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
-      reply = {
+      return {
         embeds: [embed],
         components: [
           new ActionRowBuilder<ButtonBuilder>()
@@ -2600,7 +2594,8 @@ export async function rpgTrivia(
             ),
         ],
       };
-    } else if (gameQuit) {
+    }
+    if (gameQuit) {
       const gameQuitMessage = gameQuitMessageList[Math.floor(Math.random() * gameQuitMessageList.length)];
       const embed = new EmbedBuilder()
         .setColor(Colors.Purple)
@@ -2619,44 +2614,7 @@ export async function rpgTrivia(
           `,
         )
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
-      reply = {
-        embeds: [embed],
-        components: [
-          new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(
-              global.buttons.start,
-              global.buttons.arcade,
-            ),
-          new ActionRowBuilder<StringSelectMenuBuilder>()
-            .addComponents(
-              difficultyMenu,
-            ),
-          new ActionRowBuilder<StringSelectMenuBuilder>()
-            .addComponents(
-              questionsMenu,
-            ),
-        ],
-      };
-    } else {
-      const timeOutMessage = timeOutMessageList[Math.floor(Math.random() * timeOutMessageList.length)];
-      const embed = new EmbedBuilder()
-        .setColor(Colors.Purple)
-        .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-        .setDescription(
-          `**${embedStatus}**
-          ${questionAnswer}
-
-          **Final Scores** 
-          Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
-          Max Streak: **${maxStreak}** correct in a row
-          *${timeOutMessage}*
-
-          Earned: **${payout} tokens**${bonusMessage}
-          Wallet: ${(personaData.tokens + payout)} tokens
-          `,
-        )
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
-      reply = {
+      return {
         embeds: [embed],
         components: [
           new ActionRowBuilder<ButtonBuilder>()
@@ -2675,8 +2633,43 @@ export async function rpgTrivia(
         ],
       };
     }
-    log.debug(F, `Reply: ${JSON.stringify(reply, null, 2)}`);
-    return reply;
+
+    const timeOutMessage = timeOutMessageList[Math.floor(Math.random() * timeOutMessageList.length)];
+    const embed = new EmbedBuilder()
+      .setColor(Colors.Purple)
+      .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
+      .setDescription(
+        `**${embedStatus}**
+          ${questionAnswer}
+
+          **Final Scores** 
+          Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
+          Max Streak: **${maxStreak}** correct in a row
+          *${timeOutMessage}*
+
+          Earned: **${payout} tokens**${bonusMessage}
+          Wallet: ${(personaData.tokens + payout)} tokens
+          `,
+      )
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+    return {
+      embeds: [embed],
+      components: [
+        new ActionRowBuilder<ButtonBuilder>()
+          .addComponents(
+            global.buttons.start,
+            global.buttons.arcade,
+          ),
+        new ActionRowBuilder<StringSelectMenuBuilder>()
+          .addComponents(
+            difficultyMenu,
+          ),
+        new ActionRowBuilder<StringSelectMenuBuilder>()
+          .addComponents(
+            questionsMenu,
+          ),
+      ],
+    };
   }
 
   // Get the item the user selected
@@ -3041,3 +3034,5 @@ function sleep(ms:number):Promise<void> {
     setTimeout(resolve, ms);
   });
 }
+
+export default dRpg;
