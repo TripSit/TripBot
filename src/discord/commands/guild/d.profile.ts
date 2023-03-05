@@ -488,7 +488,7 @@ const colorDefs = {
   };
 };
 
- /* export async function getProfilePreview(target: GuildMember, imagePath: string, option: string): Promise<Buffer> {
+ export async function getProfilePreview(target: GuildMember, imagePath: string, option: string): Promise<Buffer> {
       const values = await Promise.allSettled([
 
       // Get the target's profile data from the database
@@ -712,7 +712,7 @@ const colorDefs = {
       LevelImagePath = 'badgeVip10';
     }
     // log.debug(F, `LevelImagePath: ${LevelImagePath}`); */
-    /* const LevelImage = await Canvas.loadImage(await imageGet(LevelImagePath));
+    const LevelImage = await Canvas.loadImage(await imageGet(LevelImagePath));
     context.drawImage(LevelImage, 758, 57);
 
     // Level Bar Circle BG
@@ -729,7 +729,7 @@ const colorDefs = {
     // log.debug(F, `percentageOfLevel: ${percentageOfLevel}`); */
 
     // Start at the 0 degrees position, in human terms, the 12 o'clock position
-    /* const startDegrees = 0;
+    const startDegrees = 0;
     // End degrees is the percentage of the level * 360 degrees, or a full circle
     const endDegrees = 180;
     // log.debug(F, `startDegrees: ${startDegrees}`);
@@ -760,6 +760,6 @@ const colorDefs = {
       context.drawImage(birthdayOverlay, 0, 0, 934, 282);
     } */
 
-    /* const attachment = await (canvasObj.encode('png'));
+    const attachment = await (canvasObj.encode('png'));
     return attachment;
-}; */
+}; 

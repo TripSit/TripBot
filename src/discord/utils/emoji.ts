@@ -59,8 +59,8 @@ export async function emojiCache(client: Client):Promise<void> {
 
   global.buttons = {} as Buttons;
   global.buttons.name = customButton('rpgName', 'Name', '📝', ButtonStyle.Primary);
-  global.buttons.accept = customButton('rpgAccept', 'Accept', '✅', ButtonStyle.Success);
-  global.buttons.decline = customButton('rpgDecline', 'Decline', '❌', ButtonStyle.Danger);
+  global.buttons.accept = customButton('rpgAccept', 'Accept', 'buttonAccept', ButtonStyle.Success);
+  global.buttons.decline = customButton('rpgDecline', 'Decline', 'buttonQuit', ButtonStyle.Danger);
   global.buttons.start = customButton('rpgStart', 'Start', 'buttonStart', ButtonStyle.Success);
   global.buttons.quit = customButton('rpgQuit', 'Quit', 'buttonQuit', ButtonStyle.Danger);
   global.buttons.town = customButton('rpgTown', 'Town', 'buttonTown', ButtonStyle.Primary);
@@ -68,6 +68,7 @@ export async function emojiCache(client: Client):Promise<void> {
   global.buttons.market = customButton('rpgMarket', 'Market', 'buttonMarket', ButtonStyle.Primary);
   global.buttons.arcade = customButton('rpgArcade', 'Arcade', 'buttonArcade', ButtonStyle.Primary);
   global.buttons.home = customButton('rpgHome', 'Home', 'buttonHome', ButtonStyle.Primary);
+  global.buttons.help = customButton('rpgHelp', 'Help', 'buttonHelp', ButtonStyle.Primary);
   global.buttons.quest = customButton('rpgQuest', 'Quest', 'buttonQuest', ButtonStyle.Secondary);
   global.buttons.dungeon = customButton('rpgDungeon', 'Dungeon', 'buttonDungeon', ButtonStyle.Secondary);
   global.buttons.raid = customButton('rpgRaid', 'Raid', 'buttonRaid', ButtonStyle.Secondary);
@@ -75,6 +76,7 @@ export async function emojiCache(client: Client):Promise<void> {
   global.buttons.stats = customButton('rpgStats', 'Stats', '📊', ButtonStyle.Primary);
   global.buttons.guild = customButton('rpgGuild', 'Guild', '🏰', ButtonStyle.Primary);
   global.buttons.buy = customButton('rpgMarketBuy', 'Buy', 'buttonBuy', ButtonStyle.Success);
+  global.buttons.preview = customButton('rpgMarketPreview', 'Preview', 'buttonPreview', ButtonStyle.Secondary);
   global.buttons.slotMachine = customButton('rpgSlots', 'Slots', '🎰', ButtonStyle.Primary);
   global.buttons.coinFlip = customButton('rpgCoinFlip', 'CoinFlip', 'buttonCoinflip', ButtonStyle.Secondary);
   global.buttons.roulette = customButton('rpgRoulette', 'Roulette', 'buttonRoulette', ButtonStyle.Secondary);
