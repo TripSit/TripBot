@@ -2538,7 +2538,7 @@ export async function rpgTrivia(
           *${scoreMessage}*
 
           Earned: **${payout} tokens**${bonusMessage} ${perfectScore}
-          Wallet: ${(personaData.tokens + payout)} tokens
+          Wallet: ${(personaData.tokens)} tokens
           `,
         )
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
@@ -2575,7 +2575,7 @@ export async function rpgTrivia(
           *${gameQuitMessage}*
 
           Earned: **${payout} tokens**${bonusMessage}
-          Wallet: ${(personaData.tokens + payout)} tokens
+          Wallet: ${(personaData.tokens)} tokens
           `,
         )
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
@@ -2612,7 +2612,7 @@ export async function rpgTrivia(
           *${timeOutMessage}*
 
           Earned: **${payout} tokens**${bonusMessage}
-          Wallet: ${(personaData.tokens + payout)} tokens
+          Wallet: ${(personaData.tokens)} tokens
           `,
         )
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
