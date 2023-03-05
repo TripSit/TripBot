@@ -2237,9 +2237,47 @@ export async function getNewTimer(seconds: number) {
   return new Date(currentDate.getTime() + seconds * 1000);
 }
 
+type GameState = {
+  [key:string]: {
+    difficultyMenu: StringSelectMenuBuilder,
+    questionsMenu: StringSelectMenuBuilder,
+  }
+};
+
+const gameStates = {} as GameState;
+
 export async function rpgTrivia(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
+  log.debug(F, `GameStates: ${JSON.stringify(gameStates, null, 2)}`);
+
+  const questionsMenu = gameStates[interaction.user.id]
+    ? gameStates[interaction.user.id].questionsMenu
+    : new StringSelectMenuBuilder()
+      .setCustomId('rpgQuestionLimit')
+      .setPlaceholder('How many questions?')
+      .setOptions(numberOfQuestions.map(q => ({
+        label: q.label,
+        value: q.value,
+        emoji: `<:${(emojiGet(q.emoji) as Emoji).identifier}>`,
+        default: q.default,
+      })));
+
+  const difficultyMenu = gameStates[interaction.user.id]
+    ? gameStates[interaction.user.id].difficultyMenu
+    : new StringSelectMenuBuilder()
+      .setCustomId('rpgDifficulty')
+      .setPlaceholder('Easy')
+      .setOptions(difficulties.map(d => ({
+        label: d.label,
+        value: d.value,
+        emoji: `<:${(emojiGet(d.emoji) as Emoji).identifier}>`,
+        default: d.default,
+      })));
+
+  log.debug(F, `Questions Menu: ${JSON.stringify(questionsMenu, null, 2)}`);
+  log.debug(F, `Difficulty Menu: ${JSON.stringify(difficultyMenu, null, 2)}`);
+
   if (interaction.isButton() && interaction.customId === 'rpgStart') {
     const difficultyComponent = interaction.message.components[1].components[0];
     const selectedDifficulty = (difficultyComponent as StringSelectMenuComponent).options.find(
@@ -2552,11 +2590,11 @@ export async function rpgTrivia(
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
-              menus.difficulty,
+              difficultyMenu,
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
-              menus.questions,
+              questionsMenu,
             ),
         ],
       };
@@ -2589,11 +2627,11 @@ export async function rpgTrivia(
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
-              menus.difficulty,
+              difficultyMenu,
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
-              menus.questions,
+              questionsMenu,
             ),
         ],
       };
@@ -2626,11 +2664,11 @@ export async function rpgTrivia(
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
-              menus.difficulty,
+              difficultyMenu,
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
-              menus.questions,
+              questionsMenu,
             ),
         ],
       };
@@ -2644,7 +2682,6 @@ export async function rpgTrivia(
   if (interaction.isStringSelectMenu() && interaction.values) {
     [selectedOption] = interaction.values;
   }
-
   log.debug(F, `selectedOption: ${selectedOption}`);
 
   // Check if the selected option exists in the difficulties list
@@ -2654,14 +2691,6 @@ export async function rpgTrivia(
     emoji: emojiGet(d.emoji),
     default: d.default,
   }))).find(item => item.value === selectedOption);
-  // Check if the selected option exists in the number of questions list
-  const amountOption = Object.values(numberOfQuestions.map(q => ({
-    label: q.label,
-    value: q.value,
-    emoji: emojiGet(q.emoji),
-    default: q.default,
-  }))).find(item => item.value === selectedOption);
-
   if (difficultyOption) {
     log.debug(F, 'difficultyOption is not empty');
     // Get a list of marketInventory where the value does not equal the choice
@@ -2674,7 +2703,7 @@ export async function rpgTrivia(
     })))
       .filter(item => item.value !== selectedOption)
       .map(item => ({ ...item, default: false }));
-    menus.difficulty.setOptions(filteredDifficulties);
+    difficultyMenu.setOptions(filteredDifficulties);
     const chosenDifficulty = difficulties.map(d => ({
       label: d.label,
       value: d.value,
@@ -2683,10 +2712,34 @@ export async function rpgTrivia(
     })).find(item => item.value === selectedOption);
     if (chosenDifficulty) {
       chosenDifficulty.default = true;
-      menus.difficulty.addOptions(chosenDifficulty);
+      difficultyMenu.addOptions(chosenDifficulty);
+    }
+    // log.debug(F, `difficultyMenu: ${JSON.stringify(difficultyMenu, null, 2)}`);
+    if (gameStates[interaction.user.id]) {
+      gameStates[interaction.user.id].difficultyMenu = difficultyMenu;
+    } else {
+      gameStates[interaction.user.id] = {
+        difficultyMenu,
+        questionsMenu: new StringSelectMenuBuilder()
+          .setCustomId('rpgQuestionLimit')
+          .setPlaceholder('How many questions?')
+          .setOptions(numberOfQuestions.map(q => ({
+            label: q.label,
+            value: q.value,
+            emoji: `<:${(emojiGet(q.emoji) as Emoji).identifier}>`,
+            default: q.default,
+          }))),
+      };
     }
   }
 
+  // Check if the selected option exists in the number of questions list
+  const amountOption = Object.values(numberOfQuestions.map(q => ({
+    label: q.label,
+    value: q.value,
+    emoji: emojiGet(q.emoji),
+    default: q.default,
+  }))).find(item => item.value === selectedOption);
   if (amountOption) {
     log.debug(F, 'amountOption is not empty');
     const filteredOptions = Object.values(numberOfQuestions.map(q => ({
@@ -2697,7 +2750,7 @@ export async function rpgTrivia(
     })))
       .filter(item => item.value !== selectedOption)
       .map(item => ({ ...item, default: false }));
-    menus.questions.setOptions(filteredOptions);
+    questionsMenu.setOptions(filteredOptions);
     const chosenQuestion = numberOfQuestions.map(q => ({
       label: q.label,
       value: q.value,
@@ -2706,7 +2759,25 @@ export async function rpgTrivia(
     })).find(item => item.value === selectedOption);
     if (chosenQuestion) {
       chosenQuestion.default = true;
-      menus.questions.addOptions(chosenQuestion);
+      questionsMenu.addOptions(chosenQuestion);
+    }
+    gameStates[interaction.user.id].questionsMenu = questionsMenu;
+    // log.debug(F, `questionsMenu: ${JSON.stringify(questionsMenu, null, 2)}`);
+    if (gameStates[interaction.user.id]) {
+      gameStates[interaction.user.id].questionsMenu = questionsMenu;
+    } else {
+      gameStates[interaction.user.id] = {
+        difficultyMenu: new StringSelectMenuBuilder()
+          .setCustomId('rpgDifficulty')
+          .setPlaceholder('Easy')
+          .setOptions(difficulties.map(d => ({
+            label: d.label,
+            value: d.value,
+            emoji: `<:${(emojiGet(d.emoji) as Emoji).identifier}>`,
+            default: d.default,
+          }))),
+        questionsMenu,
+      };
     }
   }
 
@@ -2718,15 +2789,15 @@ export async function rpgTrivia(
       ),
     new ActionRowBuilder<StringSelectMenuBuilder>()
       .addComponents(
-        menus.difficulty,
+        difficultyMenu,
       ),
     new ActionRowBuilder<StringSelectMenuBuilder>()
       .addComponents(
-        menus.questions,
+        questionsMenu,
       ),
   ];
 
-  log.debug(F, `Components: ${JSON.stringify(components, null, 2)}`);
+  // log.debug(F, `Components: ${JSON.stringify(components, null, 2)}`);
 
   return {
     embeds: [embedTemplate()
