@@ -17,7 +17,6 @@ import {
   CategoryChannel,
   ChatInputCommandInteraction,
   Colors,
-  GuildEmoji,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -55,8 +54,7 @@ const premiumColorRoles = [
   { name: '💙 Sapphire', value: env.ROLE_DONOR_BLUE },
   { name: '💜 Amethyst', value: env.ROLE_DONOR_PURPLE },
   { name: '💗 Pezzottaite', value: env.ROLE_DONOR_PINK },
-  { name: '🖤 Laboradorite', value: env.ROLE_BLACK },
-
+  { name: '🖤 Labradorite', value: env.ROLE_BLACK },
 ] as RoleDef[];
 
 // log.debug(F, `Premium Color roles: ${JSON.stringify(premiumColorRoles, null, 2)}`);
@@ -133,7 +131,7 @@ export const dReactionRole: SlashCommand = {
       await interaction.reply(memberError);
     }
     if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_DEVELOPER)) {
-      await interaction.reply({ content: 'You do not have permission to use this command!' });
+      await interaction.reply({ content: 'You do not have permission to use this command!', ephemeral: true });
       return false;
     }
     const subcommand = interaction.options.getSubcommand();
@@ -165,15 +163,6 @@ export async function setupTemplateReactionRole(
     const rolePink = await guild.roles.fetch(env.ROLE_PINK) as Role;
     const roleWhite = await guild.roles.fetch(env.ROLE_WHITE) as Role;
 
-    const redEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_tulip') as GuildEmoji;
-    const orangeEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_marigold') as GuildEmoji;
-    const yellowEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_daffodil') as GuildEmoji;
-    const greenEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_waterlily') as GuildEmoji;
-    const blueEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_bluebell') as GuildEmoji;
-    const purpleEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_hyacinth') as GuildEmoji;
-    const pinkEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_azalea') as GuildEmoji;
-    const whiteEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_snowdrop') as GuildEmoji;
-
     const embed = embedTemplate()
       .setAuthor({ name: 'Colors', iconURL: env.TS_ICON_URL, url: tripsitUrl })
       .setDescription('React to this message to set the color of your nickname!')
@@ -184,22 +173,22 @@ export async function setupTemplateReactionRole(
       new ButtonBuilder()
         .setLabel(`${roleRed.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleRed.id}"`)
-        .setEmoji(redEmoji.identifier)
+        .setEmoji(emojiGet('TulipCircle').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleOrange.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleOrange.id}"`)
-        .setEmoji(orangeEmoji.identifier)
+        .setEmoji(emojiGet('MarigoldCircle').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleYellow.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleYellow.id}"`)
-        .setEmoji(yellowEmoji.identifier)
+        .setEmoji(emojiGet('DaffodilCircle').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleGreen.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleGreen.id}"`)
-        .setEmoji(greenEmoji.identifier)
+        .setEmoji(emojiGet('WaterlilyCircle').id)
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -207,22 +196,22 @@ export async function setupTemplateReactionRole(
       new ButtonBuilder()
         .setLabel(`${roleBlue.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleBlue.id}"`)
-        .setEmoji(blueEmoji.identifier)
+        .setEmoji(emojiGet('BluebellCircle').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(rolePurple.name)
         .setCustomId(`"ID":"RR","RID":"${rolePurple.id}"`)
-        .setEmoji(purpleEmoji.identifier)
+        .setEmoji(emojiGet('HyacinthCircle').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(rolePink.name)
         .setCustomId(`"ID":"RR","RID":"${rolePink.id}"`)
-        .setEmoji(pinkEmoji.identifier)
+        .setEmoji(emojiGet('AzaleaCircle').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(roleWhite.name)
         .setCustomId(`"ID":"RR","RID":"${roleWhite.id}"`)
-        .setEmoji(whiteEmoji.identifier)
+        .setEmoji(emojiGet('SnowdropCircle').id)
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -244,35 +233,26 @@ export async function setupTemplateReactionRole(
     const roleDonorPink = await guild.roles.fetch(env.ROLE_DONOR_PINK) as Role;
     const roleDonorBlack = await guild.roles.fetch(env.ROLE_BLACK) as Role;
 
-    const redEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_ruby') as GuildEmoji;
-    const orangeEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_sunstone') as GuildEmoji;
-    const yellowEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_citrine') as GuildEmoji;
-    const greenEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_jade') as GuildEmoji;
-    const blueEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_sapphire') as GuildEmoji;
-    const purpleEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_amethyst') as GuildEmoji;
-    const pinkEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_pezzottaite') as GuildEmoji;
-    const blackEmoji = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'color_labradorite') as GuildEmoji;
-
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setLabel(`${roleDonorRed.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorRed.id}"`)
-        .setEmoji(redEmoji.identifier)
+        .setEmoji(emojiGet('RubyCircle').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleDonorOrange.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorOrange.id}"`)
-        .setEmoji(orangeEmoji.identifier)
+        .setEmoji(emojiGet('SunstoneCircle').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleDonorYellow.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorYellow.id}"`)
-        .setEmoji(yellowEmoji.identifier)
+        .setEmoji(emojiGet('CitrineCircle').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleDonorGreen.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorGreen.id}"`)
-        .setEmoji(greenEmoji.identifier)
+        .setEmoji(emojiGet('JadeCircle').id)
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -280,22 +260,22 @@ export async function setupTemplateReactionRole(
       new ButtonBuilder()
         .setLabel(`${roleDonorBlue.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorBlue.id}"`)
-        .setEmoji(blueEmoji.identifier)
+        .setEmoji(emojiGet('SapphireCircle').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleDonorPurple.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorPurple.id}"`)
-        .setEmoji(purpleEmoji.identifier)
+        .setEmoji(emojiGet('AmethystCircle').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleDonorPink.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorPink.id}"`)
-        .setEmoji(pinkEmoji.identifier)
+        .setEmoji(emojiGet('PezzottaiteCircle').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleDonorBlack.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDonorBlack.id}"`)
-        .setEmoji(blackEmoji.identifier)
+        .setEmoji(emojiGet('LabradoriteCircle').id)
         .setStyle(ButtonStyle.Primary),
     );
     await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
@@ -323,17 +303,17 @@ export async function setupTemplateReactionRole(
       new ButtonBuilder()
         .setLabel(`${roleDrunk.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDrunk.id}"`)
-        .setEmoji(emojiGet('Alcohol'))
+        .setEmoji(emojiGet('Alcohol').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleHigh.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleHigh.id}"`)
-        .setEmoji(emojiGet('Weed'))
+        .setEmoji(emojiGet('Weed').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleRolling.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleRolling.id}"`)
-        .setEmoji(emojiGet('Empathogens'))
+        .setEmoji(emojiGet('Empathogens').id)
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -341,17 +321,17 @@ export async function setupTemplateReactionRole(
       new ButtonBuilder()
         .setLabel(`${roleTripping.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleTripping.id}"`)
-        .setEmoji(emojiGet('Psychedelics'))
+        .setEmoji(emojiGet('Psychedelics').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleDissociating.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleDissociating.id}"`)
-        .setEmoji(emojiGet('Disassociatives'))
+        .setEmoji(emojiGet('Dissociatives').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleStimming.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleStimming.id}"`)
-        .setEmoji(emojiGet('Stimulants'))
+        .setEmoji(emojiGet('Stimulants').id)
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -359,17 +339,17 @@ export async function setupTemplateReactionRole(
       new ButtonBuilder()
         .setLabel(`${roleSedated.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleSedated.id}"`)
-        .setEmoji(emojiGet('Depressants'))
+        .setEmoji(emojiGet('Depressants').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleTalkative.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleTalkative.id}"`)
-        .setEmoji(emojiGet('Talkative'))
+        .setEmoji(emojiGet('Talkative').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${roleWorking.name}`)
         .setCustomId(`"ID":"RR","RID":"${roleWorking.id}"`)
-        .setEmoji(emojiGet('Working'))
+        .setEmoji(emojiGet('Working').id)
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -387,27 +367,21 @@ export async function setupTemplateReactionRole(
     const pronounAny = await guild.roles.fetch(env.ROLE_PRONOUN_ANY) as Role;
     const pronounAsk = await guild.roles.fetch(env.ROLE_PRONOUN_ASK) as Role;
 
-    const emojiHe = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronoun_he') as GuildEmoji;
-    const emojiShe = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronoun_she') as GuildEmoji;
-    const emojiThey = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronoun_they') as GuildEmoji;
-    const emojiAny = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronoun_any') as GuildEmoji;
-    const emojiAsk = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'pronoun_ask') as GuildEmoji;
-
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setLabel(`${pronounHe.name}`)
         .setCustomId(`"ID":"RR","RID":"${pronounHe.id}"`)
-        .setEmoji(emojiHe.identifier)
+        .setEmoji(emojiGet('HeHim').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${pronounShe.name}`)
         .setCustomId(`"ID":"RR","RID":"${pronounShe.id}"`)
-        .setEmoji(emojiShe.identifier)
+        .setEmoji(emojiGet('SheHer').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${pronounThey.name}`)
         .setCustomId(`"ID":"RR","RID":"${pronounThey.id}"`)
-        .setEmoji(emojiThey.identifier)
+        .setEmoji(emojiGet('TheyThem').id)
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -415,12 +389,12 @@ export async function setupTemplateReactionRole(
       new ButtonBuilder()
         .setLabel(`${pronounAny.name}`)
         .setCustomId(`"ID":"RR","RID":"${pronounAny.id}"`)
-        .setEmoji(emojiAny.identifier)
+        .setEmoji(emojiGet('AnyPronouns').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${pronounAsk.name}`)
         .setCustomId(`"ID":"RR","RID":"${pronounAsk.id}"`)
-        .setEmoji(emojiAsk.identifier)
+        .setEmoji(emojiGet('AskMePronouns').id)
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -436,23 +410,21 @@ export async function setupTemplateReactionRole(
     const TripBotUpdates = await guild.roles.fetch(env.ROLE_TRIPBOTUPDAES) as Role;
     const TripTownNotices = await guild.roles.fetch(env.ROLE_TRIPTOWNNOTICES) as Role;
 
-    const emojiBell = guild.emojis.cache.find(e => e.name?.toLowerCase() === 'ts_bell') as GuildEmoji;
-
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setLabel(`${Announcements.name}`)
         .setCustomId(`"ID":"RR","RID":"${Announcements.id}"`)
-        .setEmoji(emojiBell.identifier)
+        .setEmoji(emojiGet('UpdatePing').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${TripBotUpdates.name}`)
         .setCustomId(`"ID":"RR","RID":"${TripBotUpdates.id}"`)
-        .setEmoji(emojiBell.identifier)
+        .setEmoji(emojiGet('UpdatePing').id)
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setLabel(`${TripTownNotices.name}`)
         .setCustomId(`"ID":"RR","RID":"${TripTownNotices.id}"`)
-        .setEmoji(emojiBell.identifier)
+        .setEmoji(emojiGet('UpdatePing').id)
         .setStyle(ButtonStyle.Primary),
     );
 
@@ -554,8 +526,6 @@ export async function processReactionRole(
   // log.debug(F, `RID: ${RID}, IM: ${IM}, IC: ${IC}`);
 
   const target = interaction.member as GuildMember;
-
-  if (!interaction.guild) return;
 
   if (!introMessageRequired) {
     await interaction.deferReply({ ephemeral: true });
