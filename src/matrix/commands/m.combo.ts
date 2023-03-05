@@ -6,6 +6,10 @@ import gCombo from '../../global/commands/g.combo';
 
 export default mCombo;
 
+export const name = 'combo';
+export const description = 'Quickly look up a drug combination.';
+export const usage = '~combo <drug A> <drug B>';
+
 const F = f(__filename);
 
 async function mCombo(roomId:string, event:any, client:MatrixClient, drugA:string, drugB:string):Promise<boolean> {

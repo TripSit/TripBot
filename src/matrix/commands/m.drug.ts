@@ -10,6 +10,10 @@ const F = f(__filename);
 
 export default mDrug;
 
+export const name = 'drug';
+export const description = 'Look up information about a substance';
+export const usage = '~drug <substance> <summary|dosage|duration|addiction|crosstolerances|toxicity|all>';
+
 type RoaType = {
   name: string,
   dosage?: {

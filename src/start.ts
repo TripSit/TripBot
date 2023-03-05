@@ -22,7 +22,7 @@ async function start() {
 
   // log.debug(F, `Token length: ${env.DISCORD_CLIENT_TOKEN.length}`);
   if (env.DISCORD_CLIENT_TOKEN) {
-    await discordConnect();
+    // await discordConnect();
     await startMatrix();
   }
 }
