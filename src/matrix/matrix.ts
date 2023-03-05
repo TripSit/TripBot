@@ -56,7 +56,6 @@ async function handleCommand(roomId: string, event: any) {
 async function startMatrix() {
 // Before we start the bot, register our command handler
   client.on('room.message', handleCommand);
-  client.on('event', (event) => console.log(event));
   // Now that everything is set up, start the bot. This will start the sync loop and run until killed.
   client.start().then(() => log.info(F, 'Matrix Bot started!'));
 }
