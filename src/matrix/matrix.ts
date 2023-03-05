@@ -10,7 +10,7 @@ const F = f(__filename);
 export default startMatrix;
 
 // using simple FS storage for now, as postgresql doesn't work in codespaces anyway
-const storage = new SimpleFsStorageProvider('tempStorage.json');
+const storage = new SimpleFsStorageProvider('cache/tripbot.json');
 // create the client and make it auto-join rooms on invite
 const client:MatrixClient = new MatrixClient(env.MATRIX_HOMESERVER_URL, env.MATRIX_ACCESS_TOKEN, storage);
 AutojoinRoomsMixin.setupOnClient(client);
