@@ -2761,8 +2761,6 @@ export async function rpgTrivia(
       chosenQuestion.default = true;
       questionsMenu.addOptions(chosenQuestion);
     }
-    gameStates[interaction.user.id].questionsMenu = questionsMenu;
-    // log.debug(F, `questionsMenu: ${JSON.stringify(questionsMenu, null, 2)}`);
     if (gameStates[interaction.user.id]) {
       gameStates[interaction.user.id].questionsMenu = questionsMenu;
     } else {
