@@ -21,6 +21,7 @@ import {
   TextChannel,
   ColorResolvable,
   Emoji,
+  ButtonInteraction,
 } from 'discord.js';
 import {
   APIEmbed,
@@ -42,6 +43,7 @@ import { Personas, RpgInventory } from '../../../global/@types/database';
 import { imageGet } from '../../utils/imageGet';
 import { GameName } from '../../../global/@types/global';
 import { difficulties, numberOfQuestions } from '../../utils/emoji';
+import { getProfilePreview } from './d.profile';
 
 const Trivia = require('trivia-api');
 
@@ -612,12 +614,12 @@ const BetWinMessageList = [
   'A.K.A. you\'re a lucky soul.',
   'Free money!',
   'It\'s a Christmas miracle!',
-  'Yo\'re going to need a bigger wallet.',
+  'You\'re going to need a bigger wallet.',
   'I\'m so glad we could witness this special moment together.',
   'Yippee!',
-  'To the Moon!🐻',
+  'To the Moon! Maybe you\'ll find some bears there.',
   'Ripe pickings from the money Trees!',
-  'Your pile of tokens will reach Space soon!',
+  'Your pile of tokens will reach Space soon! Apparently there\'s a lady up there.',
   'You could probably buy up to Seven Cats with that!',
 ];
 
@@ -813,14 +815,17 @@ export const dRpg: SlashCommand = {
       .setName('bounties')
       .setDescription('Go to the bounty board!'))
     .addSubcommand(subcommand => subcommand
+      .setName('help')
+      .setDescription('Learn how to play!'))
+    .addSubcommand(subcommand => subcommand
       .setName('quest')
-      .setDescription('Quest and earn a token!'))
+      .setDescription('Quest and earn 10 tokens!'))
     .addSubcommand(subcommand => subcommand
       .setName('dungeon')
-      .setDescription('Clear a dungeon and earn 10 tokens!'))
+      .setDescription('Clear a dungeon and earn 50 tokens!'))
     .addSubcommand(subcommand => subcommand
       .setName('raid')
-      .setDescription('Raid a boss and earn 50 tokens!'))
+      .setDescription('Raid a boss and earn 100 tokens!'))
     .addSubcommand(subcommand => subcommand
       .setName('arcade')
       .setDescription('Go to the arcade'))
@@ -880,6 +885,9 @@ export const dRpg: SlashCommand = {
     if (subcommand === 'market') {
       await interaction.editReply(await rpgMarket(interaction));
     }
+    if (subcommand === 'help') {
+      await interaction.editReply(await rpgHelp(interaction));
+    }
     if (subcommand === 'home') {
       await interaction.editReply(await rpgHome(interaction, ''));
     }
@@ -910,6 +918,7 @@ export const dRpg: SlashCommand = {
       else if (i.customId === 'rpgBounties') await i.update(await rpgBounties(i, null));
       else if (i.customId === 'rpgMarket') await i.update(await rpgMarket(i));
       else if (i.customId === 'rpgArcade') await i.update(await rpgArcade(i));
+      else if (i.customId === 'rpgHelp') await i.update(await rpgHelp(i));
       else if (i.customId === 'rpgWager1') await i.update(await rpgArcadeWager(i));
       else if (i.customId === 'rpgWager10') await i.update(await rpgArcadeWager(i));
       else if (i.customId === 'rpgWager100') await i.update(await rpgArcadeWager(i));
@@ -949,6 +958,7 @@ export const dRpg: SlashCommand = {
       else if (i.customId === 'rpgAccept') await i.update(await rpgHomeAccept(i));
       else if (i.customId === 'rpgGeneralSelect') await i.update(await rpgMarketChange(i));
       else if (i.customId === 'rpgMarketBuy') await i.update(await rpgMarketAccept(i));
+      else if (i.customId === 'rpgMarketPreview') await i.update(await rpgMarketPreview(i));
       else if (i.customId === 'rpgBackgroundSelect') await i.update(await rpgHome(i, ''));
       else if (i.customId === 'rpgQuest' || i.customId === 'rpgDungeon' || i.customId === 'rpgRaid') {
         await i.update(await rpgBounties(i, i.customId.replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
@@ -971,6 +981,7 @@ export async function rpgTown(
       global.buttons.market,
       global.buttons.arcade,
       global.buttons.home,
+      global.buttons.help,
     );
 
   // log.debug(F, `RPG Town End: ${JSON.stringify(rowTown)}`);
@@ -978,7 +989,7 @@ export async function rpgTown(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
       .setTitle(`${emojiGet('buttonTown')} Town`)
       .setDescription(stripIndents`
       You ${rand(text.enter)} TripTown, a new settlement on the edge of Triptopia, the TripSit Kingdom.
@@ -1123,7 +1134,7 @@ export async function rpgBounties(
       return {
         embeds: [embedTemplate()
           .setAuthor(null)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
           .setTitle(contracts[command].fail.title)
           .setDescription(stripIndents`${contracts[command].fail.description}
             You can try again ${time(resetTime, 'R')}
@@ -1167,7 +1178,7 @@ export async function rpgBounties(
     return {
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
         .setTitle(contracts[command].success.title)
         .setDescription(stripIndents`${contracts[command].success.description.replace('{tokens}', tokens.toString())}
           You can try again ${time(resetTime, 'R')}.
@@ -1180,7 +1191,7 @@ export async function rpgBounties(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
       .setTitle(`${emojiGet('buttonBounties')} Bounties`)
       .setDescription(stripIndents`
       You are at the bounty board, you can go on a quest, clear a dungeon, or go on a raid.
@@ -1215,7 +1226,7 @@ export async function rpgMarket(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
       .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`
       You are in the local market, you can buy some items to help you on your journey.
@@ -1307,7 +1318,12 @@ export async function rpgMarketChange(
       global.buttons.town,
     );
 
-  if (chosenItem) {
+  if (chosenItem && itemData.effect === 'background') {
+    rowMarket.addComponents(
+      global.buttons.buy.setLabel(`Buy ${chosenItem.label}`),
+      global.buttons.preview,
+    );
+  } else if (chosenItem) {
     rowMarket.addComponents(
       global.buttons.buy.setLabel(`Buy ${chosenItem.label}`),
     );
@@ -1319,7 +1335,7 @@ export async function rpgMarketChange(
 
   const embed = embedTemplate()
     .setAuthor(null)
-    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
     .setTitle(`${emojiGet('buttonMarket')} Market`)
     .setDescription(stripIndents`
       You are in the local market, you can buy some items to help you on your journey.
@@ -1396,6 +1412,75 @@ export async function rpgMarketInventory(
   };
 }
 
+export async function rpgMarketPreview(
+  interaction:MessageComponentInteraction,
+):Promise<InteractionUpdateOptions> {
+  // Get the info used in the market
+  // const {
+  //   marketInventory,
+  //   personaTokens,
+  //   personaInventory,
+  // } = await rpgMarketInventory(interaction);
+
+  // Check get fresh persona data
+  // const personaData = await getPersonaInfo(interaction.user.id);
+  // log.debug(F, `personaData (Accept): ${JSON.stringify(personaData, null, 2)}`);
+
+  // If the user confirms the information, save the persona information
+  const itemComponent = interaction.message.components[0].components[0];
+  const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
+    (o:APISelectMenuOption) => o.default === true,
+  );
+  // log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
+
+  const allItems = [...Object.values(items.general), ...Object.values(items.backgrounds)];
+  const itemData = allItems.find(item => item.value === selectedItem?.value) as {
+    label: string;
+    value: string;
+    description: string;
+    quantity: number;
+    weight: number;
+    cost: number;
+    equipped: boolean;
+    consumable: boolean;
+    effect: string;
+    effect_value: string;
+    emoji: string;
+  };
+  // log.debug(F, `itemData (accept): ${JSON.stringify(itemData, null, 2)}`);
+
+  const { embeds, components } = await rpgMarketChange(interaction);
+
+  // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
+  const { description } = JSON.parse(JSON.stringify((embeds as APIEmbed[])[0]));
+
+  const embed = embedTemplate()
+    .setAuthor(null)
+    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+    .setTitle(`${emojiGet('buttonMarket')} Market`)
+    .setDescription(stripIndents`
+  
+   ${description}`)
+    .setColor(Colors.Gold);
+
+  const imageFiles = [] as AttachmentBuilder[];
+  if (itemData && itemData.effect === 'background') {
+    const imagePath = await imageGet(itemData.effect_value);
+    const target = interaction.member as GuildMember;
+    const option = 'background';
+    const previewImage = await getProfilePreview(target, imagePath, option);
+    const attachment = new AttachmentBuilder(previewImage, { name: 'tripsit-profile-image.png' });
+    imageFiles.push(attachment);
+    embed.setImage('attachment://tripsit-profile-image.png');
+  }
+
+  return {
+    embeds: [embed],
+    components,
+    files: imageFiles,
+  };
+}
+
 export async function rpgMarketAccept(
   interaction:MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
@@ -1444,7 +1529,7 @@ export async function rpgMarketAccept(
 
     const embed = embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
       .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`**You do not have enough tokens to buy this item.**
     
@@ -1495,7 +1580,7 @@ export async function rpgMarketAccept(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
       .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemData.cost} TripTokens.**
       
@@ -1608,7 +1693,7 @@ export async function rpgHome(
   // Build the embed
   const embed = embedTemplate()
     .setAuthor(null)
-    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
     .setTitle(`${emojiGet('buttonHome')} Home`)
     .setDescription(stripIndents`${message !== null ? message : ''}
 
@@ -1930,7 +2015,7 @@ export async function rpgHomeNameChange(
         embeds: [
           embedTemplate()
             .setAuthor(null)
-            .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG `, iconURL: env.TS_ICON_URL })
+            .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG `, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
             .setTitle('Home')
             .setDescription(stripIndents`
             Your name has been set to ${choice}
@@ -1950,10 +2035,12 @@ export async function rpgArcade(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
       .setTitle(`${emojiGet('buttonArcade')} Arcade`)
       .setDescription(stripIndents`
         You ${rand(text.enter)} the arcade and see a variety of games.
+
+        ***More games coming soon!***
       `)
       .setColor(Colors.Green)],
     components: [new ActionRowBuilder<ButtonBuilder>()
@@ -2097,7 +2184,7 @@ export async function rpgArcadeGame(
     const noBetError = {
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
         .setTitle(gameName)
         .setDescription(stripIndents`
           **You can't start a game without first placing a bet!**
@@ -2152,7 +2239,7 @@ export async function rpgArcadeGame(
         content: null,
         embeds: [embedTemplate()
           .setAuthor(null)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
           .setTitle(`${emojiGet(emojiName)} ${gameName}`)
           .setDescription(stripIndents`
             The ${object} came up **${result}** and you chose **${choice}**!
@@ -2178,7 +2265,7 @@ export async function rpgArcadeGame(
       content: null,
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
         .setTitle(`${emojiGet(emojiName)} ${gameName}`)
         .setDescription(stripIndents`
             The ${object} came up **${result}** and you chose **${choice}**!
@@ -2200,7 +2287,7 @@ export async function rpgArcadeGame(
       content: null,
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
         .setTitle(`${emojiGet(emojiName)} ${gameName}`)
         .setDescription(stripIndents`${message ?? ''}
           You are betting ${currentBet} tokens.
@@ -2216,7 +2303,7 @@ export async function rpgArcadeGame(
     content: null,
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
       .setTitle(`${emojiGet(emojiName)} ${gameName}`)
       .setDescription(stripIndents`You start a game of ${gameName}.
 
@@ -2294,7 +2381,7 @@ export async function rpgTrivia(
     const { bonus } = optionDict[chosenDifficulty as keyof typeof optionDict];
     const { perfectBonus } = bonusDict[amountOfQuestions as keyof typeof bonusDict];
     let questionTimer = {} as Date;
-    // let perfectScore = '' as string;
+    // let perfectScore = bonusDict[amountOfQuestions as keyof typeof bonusDict].perfectBonusMessage;
     let bonusMessage = bonusMessageDict[chosenDifficulty as keyof typeof bonusMessageDict];
     let questionsCorrect = 0;
     let streak = 0;
@@ -2349,7 +2436,7 @@ export async function rpgTrivia(
 
         Streak: ${streak}
         **Time's up <t:${Math.floor(questionTimer.getTime() / 1000)}:R>**`)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
 
       if (qNumber === 0) {
         // await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
@@ -2362,55 +2449,67 @@ export async function rpgTrivia(
           
           **Starting <t:${Math.floor(questionTimer.getTime() / 1000)}:R>**
           Get ready!`)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
         await interaction.editReply({ embeds: [startingEmbed], components: [] }); // eslint-disable-line no-await-in-loop, max-len
         // If it's the first question, send a new message
-        setTimeout(async () => { // Wait 5 seconds before sending the first question
-          await interaction.editReply({ // eslint-disable-line no-await-in-loop
-            embeds: [embed],
-            components: [
-              new ActionRowBuilder<ButtonBuilder>().addComponents(
-                choices.map(choice => new ButtonBuilder()
-                  .setDisabled(false)
-                  .setCustomId(choice)
-                  .setEmoji(choiceEmoji(choice))
-                  .setStyle(ButtonStyle.Secondary))
-                  .concat([
-                    global.buttons.quit.setDisabled(false),
-                  ]),
-              ),
-            ],
-          });
-        }, 4200);
+        await sleep(5 * 1000); // eslint-disable-line no-await-in-loop
+        await interaction.editReply({ // eslint-disable-line no-await-in-loop
+          embeds: [embed],
+          components: [
+            new ActionRowBuilder<ButtonBuilder>().addComponents(
+              choices.map(choice => new ButtonBuilder()
+                .setDisabled(false)
+                .setCustomId(choice)
+                .setEmoji(choiceEmoji(choice))
+                .setStyle(ButtonStyle.Secondary))
+                .concat([
+                  global.buttons.quit.setDisabled(false),
+                ]),
+            ),
+          ],
+        });
       } else {
         // If not the first question, edit the previous message
-        setTimeout(async () => { // Wait 5 seconds before sending the next question
-          await interaction.editReply({ // eslint-disable-line no-await-in-loop
-            embeds: [embed],
-            components: [
-              new ActionRowBuilder<ButtonBuilder>().addComponents(
-                choices.map(choice => new ButtonBuilder()
-                  .setDisabled(false)
-                  .setCustomId(choice)
-                  .setEmoji(choiceEmoji(choice))
-                  .setStyle(ButtonStyle.Secondary))
-                  .concat([
-                    global.buttons.quit.setDisabled(false),
-                  ]),
-              ),
-            ],
-          });
-        }, 4200);
+        await sleep(5 * 1000); // eslint-disable-line no-await-in-loop
+        await interaction.editReply({ // eslint-disable-line no-await-in-loop
+          embeds: [embed],
+          components: [
+            new ActionRowBuilder<ButtonBuilder>().addComponents(
+              choices.map(choice => new ButtonBuilder()
+                .setDisabled(false)
+                .setCustomId(choice)
+                .setEmoji(choiceEmoji(choice))
+                .setStyle(ButtonStyle.Secondary))
+                .concat([
+                  global.buttons.quit.setDisabled(false),
+                ]),
+            ),
+          ],
+        });
       }
 
       // Filter for the buttons
       const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id;
       if (!interaction.channel) throw new Error('Channel not found');
-      const collected = await interaction.channel.awaitMessageComponent({ // eslint-disable-line no-await-in-loop
-        filter,
-        time: 30000,
-        componentType: ComponentType.Button,
-      });
+      let collected = {} as ButtonInteraction;
+      try {
+        collected = await interaction.channel.awaitMessageComponent({ // eslint-disable-line no-await-in-loop
+          filter,
+          time: 30000,
+          componentType: ComponentType.Button,
+        });
+      } catch (err) {
+        // If the user doesn't answer in time
+        log.debug(F, 'User did not answer in time');
+
+        embedStatus = 'Time\'s up!';
+        answerColor = Colors.Red as ColorResolvable;
+        questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
+        timedOut = true;
+      }
+
+      if (timedOut === true) break;
+
       const disabledButtons = choices.map(choice => new ButtonBuilder()
         .setCustomId(choice)
         .setDisabled(true)
@@ -2447,18 +2546,17 @@ export async function rpgTrivia(
           .setColor(Colors.Green as ColorResolvable)
           .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
           .setDescription(`
-          **Correct!**
-          The answer was **${questionData.correct_answer}.**
-          
-          **Current Score**
-          Correct: ${questionsCorrect} of ${(qNumber + 1)}
-          Streak: ${streak}
-          
-          Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+            **Correct!**
+            The answer was **${questionData.correct_answer}.**
+            
+            **Current Score**
+            Correct: ${questionsCorrect} of ${(qNumber + 1)}
+            Streak: ${streak}
+            
+            Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
         embedStatus = 'Correct!';
         questionAnswer = `The answer was **${questionData.correct_answer}.**`;
-        // check if the interaction has timed out
         if (interaction.isRepliable()) {
           await interaction.editReply({ // eslint-disable-line no-await-in-loop
             embeds: [embed],
@@ -2476,28 +2574,15 @@ export async function rpgTrivia(
                 ),
             ],
           });
-        } else {
-          embedStatus = 'Time\'s up!';
-          answerColor = Colors.Red as ColorResolvable;
-          questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
-          timedOut = true;
-          break; // If the user timed out, break the loop
         }
       } else { // If the user answers incorrectly
         questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
-        streak = 0;
         embed = new EmbedBuilder()
           .setColor(Colors.Grey as ColorResolvable)
           .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-          .setDescription(`
-          **Incorrect!**
-          The correct answer was **${questionData.correct_answer}.**
-          
-          **Current Score**
-          Correct: ${questionsCorrect} of ${(qNumber + 1)}
-          Streak: ${streak}
-          
-          Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
+          .addFields({ name: 'Incorrect!', value: `The correct answer was **${questionData.correct_answer}.**` })
+          .addFields({ name: 'Current Score:', value: `${score} of ${(qNumber + 1)}` })
+          .addFields({ name: `Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: ' ' })
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
         embedStatus = 'Incorrect!';
         questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
@@ -2528,6 +2613,7 @@ export async function rpgTrivia(
       questionList.splice(0, 1); // Remove the first question from the array
     }
     let payout = 0;
+    // perfectScore = '';
     if (questionsCorrect !== 0) { // The user got at least one question correct
       if (questionsCorrect === amountOfQuestions) { // Bonus for getting all questions correct
         payout = Math.ceil(2 * (score * (bonus + perfectBonus)));
@@ -2572,10 +2658,10 @@ export async function rpgTrivia(
           *${scoreMessage}*
 
           Earned: **${payout} tokens**${bonusMessage}
-          Wallet: ${(personaData.tokens + payout)} tokens
+          Wallet: ${(personaData.tokens)} tokens
           `,
         )
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
       return {
         embeds: [embed],
         components: [
@@ -2610,10 +2696,10 @@ export async function rpgTrivia(
           *${gameQuitMessage}*
 
           Earned: **${payout} tokens**${bonusMessage}
-          Wallet: ${(personaData.tokens + payout)} tokens
+          Wallet: ${(personaData.tokens)} tokens
           `,
         )
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
       return {
         embeds: [embed],
         components: [
@@ -2633,42 +2719,46 @@ export async function rpgTrivia(
         ],
       };
     }
-
     const timeOutMessage = timeOutMessageList[Math.floor(Math.random() * timeOutMessageList.length)];
     const embed = new EmbedBuilder()
       .setColor(Colors.Purple)
       .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
       .setDescription(
         `**${embedStatus}**
-          ${questionAnswer}
+        ${questionAnswer}
 
-          **Final Scores** 
-          Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
-          Max Streak: **${maxStreak}** correct in a row
-          *${timeOutMessage}*
+        **Final Scores** 
+        Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
+        Max Streak: **${maxStreak}** correct in a row
+        *${timeOutMessage}*
 
-          Earned: **${payout} tokens**${bonusMessage}
-          Wallet: ${(personaData.tokens + payout)} tokens
-          `,
+        Earned: **${payout} tokens**${bonusMessage}
+        Wallet: ${(personaData.tokens)} tokens
+        `,
       )
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+
+    log.debug(F, 'Trivia Game Ended');
+    log.debug(F, `Embed: ${JSON.stringify(embed, null, 2)}`);
+    const components = [
+      new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          global.buttons.start,
+          global.buttons.arcade,
+        ),
+      new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          difficultyMenu,
+        ),
+      new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          questionsMenu,
+        ),
+    ];
+    log.debug(F, `Components: ${JSON.stringify(components, null, 2)}`);
     return {
       embeds: [embed],
-      components: [
-        new ActionRowBuilder<ButtonBuilder>()
-          .addComponents(
-            global.buttons.start,
-            global.buttons.arcade,
-          ),
-        new ActionRowBuilder<StringSelectMenuBuilder>()
-          .addComponents(
-            difficultyMenu,
-          ),
-        new ActionRowBuilder<StringSelectMenuBuilder>()
-          .addComponents(
-            questionsMenu,
-          ),
-      ],
+      components,
     };
   }
 
@@ -2795,7 +2885,7 @@ export async function rpgTrivia(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
       .setTitle(`${emojiGet('buttonTrivia')} Trivia`)
       .setDescription(stripIndents`
         You ${rand(text.enter)} the trivia parlor where you can test your knowledge of random facts!
@@ -2875,7 +2965,7 @@ export async function rpgArcadeAnimate(
   //   await (interaction as MessageComponentInteraction).update({
   //     embeds: [embedTemplate()
   //       .setAuthor(null)
-  //       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL })
+  //       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
   //       .setTitle(gameName),
   //     ],
   //   });
@@ -3033,6 +3123,40 @@ function sleep(ms:number):Promise<void> {
   return new Promise(resolve => {
     setTimeout(resolve, ms);
   });
+}
+
+export async function rpgHelp(
+  interaction: MessageComponentInteraction | ChatInputCommandInteraction,
+):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
+  return {
+    embeds: [embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setTitle(`${emojiGet('buttonHelp')} Help`)
+      .setDescription(stripIndents`
+        You ${rand(text.enter)} the information centre and walk up to the help desk.
+
+        ***Welcome to TripSit's RPG!***
+        TripSit's RPG is a discord based RPG that plays out using discord embeds.
+
+        **How to play**
+        - Earn tokens by heading to the **Bounties** section and completing the tasks.
+        - Earn extra or gamble for more tokens by playing the **Arcade** games.
+        - Spend tokens in the **Market** to buy items for your */profile and /levels*.
+        - Head **Home** to equip items and see your inventory.
+
+        - Use the navigation buttons to move between any sections.
+        - Use the **/rpg** subcommands to quickly access most parts.
+
+        *This is still a work in progress.*
+        *Please report any bugs or suggestions to <@121115330637594625> or <@177537158419054592>.*
+      `)
+      .setColor(Colors.Blue)],
+    components: [new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        global.buttons.town,
+      )],
+  };
 }
 
 export default dRpg;
