@@ -21,6 +21,7 @@ import {
   TextChannel,
   ColorResolvable,
   Emoji,
+  ButtonInteraction,
 } from 'discord.js';
 import {
   APIEmbed,
@@ -2490,11 +2491,25 @@ export async function rpgTrivia(
       // Filter for the buttons
       const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id;
       if (!interaction.channel) throw new Error('Channel not found');
-      const collected = await interaction.channel.awaitMessageComponent({ // eslint-disable-line no-await-in-loop
-        filter,
-        time: 30000,
-        componentType: ComponentType.Button,
-      });
+      let collected = {} as ButtonInteraction;
+      try {
+        collected = await interaction.channel.awaitMessageComponent({ // eslint-disable-line no-await-in-loop
+          filter,
+          time: 30000,
+          componentType: ComponentType.Button,
+        });
+      } catch (err) {
+        // If the user doesn't answer in time
+        log.debug(F, 'User did not answer in time');
+
+        embedStatus = 'Time\'s up!';
+        answerColor = Colors.Red as ColorResolvable;
+        questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
+        timedOut = true;
+      }
+
+      if (timedOut === true) break;
+
       const disabledButtons = choices.map(choice => new ButtonBuilder()
         .setCustomId(choice)
         .setDisabled(true)
@@ -2722,23 +2737,28 @@ export async function rpgTrivia(
         `,
       )
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+
+    log.debug(F, 'Trivia Game Ended');
+    log.debug(F, `Embed: ${JSON.stringify(embed, null, 2)}`);
+    const components = [
+      new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          global.buttons.start,
+          global.buttons.arcade,
+        ),
+      new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          difficultyMenu,
+        ),
+      new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          questionsMenu,
+        ),
+    ];
+    log.debug(F, `Components: ${JSON.stringify(components, null, 2)}`);
     return {
       embeds: [embed],
-      components: [
-        new ActionRowBuilder<ButtonBuilder>()
-          .addComponents(
-            global.buttons.start,
-            global.buttons.arcade,
-          ),
-        new ActionRowBuilder<StringSelectMenuBuilder>()
-          .addComponents(
-            menus.difficulty,
-          ),
-        new ActionRowBuilder<StringSelectMenuBuilder>()
-          .addComponents(
-            menus.questions,
-          ),
-      ],
+      components,
     };
   }
 
