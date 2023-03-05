@@ -410,23 +410,22 @@ export async function executeCommandModalAndSpyEditReply(
       },
     ],
   ) as ModalSubmitInteraction;
-  const spy2 = jest.spyOn(modalInteraction, 'editReply');
 
-  interaction.client.on('modalSubmit', (modalInteraction1:ModalSubmitInteraction) => {
-    log.debug(F, `modalInteraction: ${JSON.stringify(modalInteraction1, null, 2)}`);
-  });
+  // interaction.client.on('modalSubmit', (modalInteraction1:ModalSubmitInteraction) => {
+  //   // log.debug(F, `modalInteraction: ${JSON.stringify(modalInteraction1, null, 2)}`);
+  // });
 
-  const test = interaction.client.emit('interactionCreate', modalInteraction);
-  log.debug(F, `test: ${JSON.stringify(test, null, 2)}`);
+  // const test = interaction.client.emit('interactionCreate', modalInteraction);
+  // log.debug(F, `test: ${JSON.stringify(test, null, 2)}`);
 
   // print out the listeners
-  const listeners = interaction.client.listeners('interactionCreate');
-  log.debug(F, `listeners: ${listeners}`);
+  // const listeners = interaction.client.listeners('interactionCreate');
+  // log.debug(F, `listeners: ${listeners}`);
 
-  const listeners2 = interaction.client.listeners('modalSubmit');
-  log.debug(F, `listeners2: ${JSON.stringify(listeners2, null, 2)}`);
+  // const listeners2 = interaction.client.listeners('modalSubmit');
+  // log.debug(F, `listeners2: ${JSON.stringify(listeners2, null, 2)}`);
 
-  return spy2;
+  return jest.spyOn(modalInteraction, 'editReply');
 }
 
 export function mockInteractionAndSpyShowModal(command:{

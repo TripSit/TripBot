@@ -74,7 +74,7 @@ export const dLeaderboard: SlashCommand = {
 
     const categoryChoice = interaction.options.getString('category') ?? 'All';
     const typeChoice = interaction.options.getString('type') ?? 'All';
-    log.debug(F, `categoryChoice: ${categoryChoice}, typeChoice: ${typeChoice}`);
+    // log.debug(F, `categoryChoice: ${categoryChoice}, typeChoice: ${typeChoice}`);
 
     const leaderboardData = await getLeaderboard();
     const book = [];

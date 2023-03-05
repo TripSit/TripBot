@@ -96,7 +96,7 @@ export const dVoice: SlashCommand = {
     //   return false;
     // }
 
-    log.debug(F, `Command: ${command}`);
+    // log.debug(F, `Command: ${command}`);
     if (command === 'rename') {
       embed = await tentRename(voiceChannel, newName);
     }
@@ -132,7 +132,7 @@ async function tentRename(
 ):Promise<EmbedBuilder> {
   voiceChannel.setName(`⛺│${newName}`);
 
-  log.debug(F, `${voiceChannel} hab been named to ${newName}`);
+  // log.debug(F, `${voiceChannel} hab been named to ${newName}`);
 
   return embedTemplate()
     .setTitle('Success')
@@ -153,7 +153,7 @@ async function tentLock(
     verb = 'unlocked';
   }
 
-  log.debug(F, `Channel is now ${verb}`);
+  // log.debug(F, `Channel is now ${verb}`);
 
   return embedTemplate()
     .setTitle('Success')
@@ -174,7 +174,7 @@ async function tentHide(
     verb = 'unhidden';
   }
 
-  log.debug(F, `Channel is now ${verb}`);
+  // log.debug(F, `Channel is now ${verb}`);
 
   return embedTemplate()
     .setTitle('Success')
@@ -199,7 +199,7 @@ async function tentBan(
     verb = 'unbanned and unhidden';
   }
 
-  log.debug(F, `${target.displayName} is now ${verb}`);
+  // log.debug(F, `${target.displayName} is now ${verb}`);
 
   return embedTemplate()
     .setTitle('Success')
@@ -216,13 +216,13 @@ async function tentMute(
   if (voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.Speak) === true) {
     voiceChannel.permissionOverwrites.edit(target, { Speak: false });
     verb = 'muted';
-    log.debug(F, 'User is now muted');
+    // log.debug(F, 'User is now muted');
   } else {
     voiceChannel.permissionOverwrites.edit(target, { Speak: true });
     verb = 'unmuted';
   }
 
-  log.debug(F, `${target.displayName} is now ${verb}`);
+  // log.debug(F, `${target.displayName} is now ${verb}`);
 
   return embedTemplate()
     .setTitle('Success')
@@ -239,13 +239,13 @@ async function tentCohost(
   if (voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.MoveMembers) === false) {
     voiceChannel.permissionOverwrites.edit(target, { MoveMembers: true });
     verb = 'co-hosted';
-    log.debug(F, 'User is now muted');
+    // log.debug(F, 'User is now muted');
   } else {
     voiceChannel.permissionOverwrites.edit(target, { MoveMembers: false });
     verb = 'removed as a co-host';
   }
 
-  log.debug(F, `${target.displayName} is now ${verb}`);
+  // log.debug(F, `${target.displayName} is now ${verb}`);
 
   return embedTemplate()
     .setTitle('Success')

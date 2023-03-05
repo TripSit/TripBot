@@ -506,7 +506,7 @@ export async function moderate(
     const memberTest = await Promise.all(client.guilds.cache.map(async guild => {
       try {
         await guild.members.fetch(target.id);
-        log.debug(F, `User is in guild: ${guild.name}`);
+        // log.debug(F, `User is in guild: ${guild.name}`);
         return guild.name;
       } catch (err:any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         // log.debug(F, `Error: ${err} in ${guild.name}`);
@@ -519,7 +519,7 @@ export async function moderate(
 
     // count how many 'banned' appear in the array
     const mutualGuilds = memberTest.filter(item => item !== errorUnknown && item !== errorMember);
-    log.debug(F, `mutualGuilds: ${mutualGuilds.join(', ')}`);
+    // log.debug(F, `mutualGuilds: ${mutualGuilds.join(', ')}`);
 
     if (mutualGuilds.length > 0) {
       trollScore += 0;
@@ -533,7 +533,7 @@ export async function moderate(
     const bannedTest = await Promise.all(client.guilds.cache.map(async guild => {
       try {
         await guild.bans.fetch(target.id);
-        log.debug(F, `User is banned in guild: ${guild.name}`);
+        // log.debug(F, `User is banned in guild: ${guild.name}`);
         return guild.name;
       } catch (err:any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         // log.debug(F, `Error: ${err} in ${guild.name}`);
@@ -552,7 +552,7 @@ export async function moderate(
 
     // count how many 'banned' appear in the array
     const bannedGuilds = bannedTest.filter(item => item !== errorPermission && item !== 'not-found' && item !== errorUnknown);
-    log.debug(F, `Banned Guilds: ${bannedGuilds.join(', ')}`);
+    // log.debug(F, `Banned Guilds: ${bannedGuilds.join(', ')}`);
 
     // count how many i didn't have permission to check
     const noPermissionGuilds = bannedTest.filter(item => item === errorPermission);
@@ -649,10 +649,10 @@ export async function userInfoEmbed(target:GuildMember, targetData:Users, comman
 
   // for (const action of targetActionListRaw) {
   targetActionListRaw.forEach(action => {
-    log.debug(F, `action: ${JSON.stringify(action, null, 2)}`);
+    // log.debug(F, `action: ${JSON.stringify(action, null, 2)}`);
     const actionString = `${action.type} (${time(action.created_at, 'R')}) - ${action.internal_note
       ?? 'No note provided'}`;
-    log.debug(F, `actionString: ${actionString}`);
+    // log.debug(F, `actionString: ${actionString}`);
     targetActionList[action.type as keyof typeof targetActionList].push(actionString);
   });
 

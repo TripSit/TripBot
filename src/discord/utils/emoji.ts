@@ -3,7 +3,6 @@ import {
   ButtonBuilder,
   ButtonStyle,
   Client,
-  Emoji,
   StringSelectMenuBuilder,
 } from 'discord.js';
 import { Buttons, Menus } from '../../global/@types/global';
@@ -134,36 +133,6 @@ export async function emojiCache(client: Client):Promise<void> {
   global.menus.guild = new StringSelectMenuBuilder()
     .setCustomId('rpgGuild')
     .setPlaceholder('Select a guild');
-
-  // log.debug(F, `difficulties: ${JSON.stringify(difficulties)}`);
-  const diff = difficulties.map(d => ({
-    label: d.label,
-    value: d.value,
-    emoji: `<:${(get(d.emoji) as Emoji).identifier}>`,
-    default: d.default,
-  }));
-
-  // log.debug(F, `diff: ${JSON.stringify(diff, null, 2)}`);
-
-  global.menus.difficulty = new StringSelectMenuBuilder()
-    .setCustomId('rpgDifficulty')
-    .setPlaceholder('Easy')
-    .setOptions(diff);
-
-  // log.debug(F, `numberOfQuestions: ${JSON.stringify(numberOfQuestions)}`);
-  const qs = numberOfQuestions.map(q => ({
-    label: q.label,
-    value: q.value,
-    emoji: `<:${(get(q.emoji) as Emoji).identifier}>`,
-    default: q.default,
-  }));
-
-  // log.debug(F, `qs: ${JSON.stringify(qs, null, 2)}`);
-
-  global.menus.questions = new StringSelectMenuBuilder()
-    .setCustomId('rpgQuestionLimit')
-    .setPlaceholder('How many questions?')
-    .setOptions(qs);
 }
 
 function customButton(

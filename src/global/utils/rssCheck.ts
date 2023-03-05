@@ -112,8 +112,8 @@ async function checkRss() {
         embed.setFooter({ text: submittedBy ?? '', iconURL: env.FLAME_ICON_URL });
         embed.setTimestamp(new Date(mostRecentPost.pubDate));
       } catch (error) {
-        log.debug(F, `Error creating embed: ${error}`);
-        log.debug(F, `mostRecentPost: ${JSON.stringify(mostRecentPost, null, 2)}`);
+        // log.debug(F, `Error creating embed: ${error}`);
+        // log.debug(F, `mostRecentPost: ${JSON.stringify(mostRecentPost, null, 2)}`);
         return;
       }
 
