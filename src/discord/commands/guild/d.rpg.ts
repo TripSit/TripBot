@@ -2279,6 +2279,8 @@ export async function rpgTrivia(
   log.debug(F, `Difficulty Menu: ${JSON.stringify(difficultyMenu, null, 2)}`);
 
   if (interaction.isButton() && interaction.customId === 'rpgStart') {
+    const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
+    await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
     const difficultyComponent = interaction.message.components[1].components[0];
     const selectedDifficulty = (difficultyComponent as StringSelectMenuComponent).options.find(
       (o:APISelectMenuOption) => o.default === true,
