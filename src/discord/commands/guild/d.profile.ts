@@ -140,6 +140,21 @@ export const dProfile: SlashCommand = {
 
     context.drawImage(Icons, 5, -2, 913, 292);
 
+    /* TEST: Border item
+    context.save();
+    context.beginPath();
+    context.roundRect(0, 0, 675, 292, [19]);
+    context.roundRect(684, 0, 237, 292, [19]);
+    context.clip();
+    context.globalAlpha = 1;
+    context.strokeStyle = '#000000';
+    context.lineWidth = 16;
+    context.stroke();
+    context.globalCompositeOperation = 'lighten';
+    context.strokeStyle = '#3a5760';
+    context.stroke();
+    context.restore(); */
+
     // Overly complicated avatar clip (STATUS CLIP COMMENTED OUT)
     context.save();
     // context.beginPath();
@@ -472,3 +487,279 @@ const colorDefs = {
     textColor: string;
   };
 };
+
+ /* export async function getProfilePreview(target: GuildMember, imagePath: string, option: string): Promise<Buffer> {
+      const values = await Promise.allSettled([
+
+      // Get the target's profile data from the database
+      // await profile(target.id),
+      // Check get fresh persona data
+      // await getPersonaInfo(target.user.id),
+      // Load Icon Images
+      
+      await Canvas.loadImage(await imageGet('cardIcons')),
+      // Get the status icon
+      // await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
+      // Get the avatar image
+      await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
+      // Get the birthday card overlay
+      // await Canvas.loadImage(await imageGet('cardBirthday')),
+    ]);
+
+    // const profileData = values[0].status === 'fulfilled' ? values[0].value : {} as ProfileData;
+    // const [personaData] = values[1].status === 'fulfilled' ? values[1].value : [];
+    const Icons = values[0].status === 'fulfilled' ? values[0].value : {} as Canvas.Image;
+    // const StatusIcon = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
+    const avatar = values[1].status === 'fulfilled' ? values[1].value : {} as Canvas.Image;
+    // const birthdayOverlay = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
+
+    // Create Canvas and Context
+    const canvasWidth = 921;
+    const canvasHeight = 292;
+    const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
+    const context = canvasObj.getContext('2d');
+
+    // Choose color based on user's role
+    const cardLightColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#232323';
+    const cardDarkColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#141414';
+    const chipColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.chipColor || '#393939';
+    const barColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.barColor || '#b3b3b3';
+    const textColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
+
+    // Draw the card shape
+    context.fillStyle = cardLightColor;
+    context.beginPath();
+    context.roundRect(0, 20, 675, 272, [19]);
+    context.roundRect(684, 20, 237, 272, [19]);
+    context.fill();
+    context.fillStyle = cardDarkColor;
+    context.beginPath();
+    context.roundRect(0, 0, 675, 145, [19]);
+    context.roundRect(684, 0, 237, 205, [19]);
+    context.fill();
+
+    // Draw the chips
+    context.fillStyle = chipColor;
+    context.beginPath();
+    context.roundRect(18, 163, 201, 51, [19]);
+    context.roundRect(18, 223, 201, 51, [19]);
+    context.roundRect(237, 163, 201, 51, [19]);
+    context.roundRect(237, 223, 201, 51, [19]);
+    context.roundRect(456, 163, 201, 51, [19]);
+    context.roundRect(456, 223, 201, 51, [19]);
+    context.roundRect(702, 223, 201, 51, [19]);
+    // context.arc(603, 73, 54, 0, Math.PI * 2, true); // CAMP ICON CHIP
+    context.fill();
+
+    // WIP: Purchased Background
+
+    // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
+
+    // Get the existing inventory data
+    // const inventoryData = await inventoryGet(personaData.id);
+    // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
+
+    // const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
+
+    if (option === 'background') {
+      const Background = await Canvas.loadImage(imagePath.toString());
+      context.save();
+      context.globalCompositeOperation = 'lighter';
+      context.globalAlpha = 0.03;
+      context.beginPath();
+      context.roundRect(0, 0, 675, 292, [19]);
+      context.roundRect(684, 0, 237, 292, [19]);
+      context.clip();
+      context.drawImage(Background, 0, 0);
+      context.restore();
+    }
+    
+  
+
+    context.drawImage(Icons, 5, -2, 913, 292);
+
+    // Overly complicated avatar clip (STATUS CLIP COMMENTED OUT)
+    context.save();
+    // context.beginPath();
+    // context.arc(110, 112, 21, 0, Math.PI * 2);
+    // context.arc(73, 73, 55, 0, Math.PI * 2, true);
+    // context.closePath();
+    // context.clip();
+    context.beginPath();
+    context.arc(73, 73, 54, 0, Math.PI * 2, true);
+    // context.closePath();
+    context.clip();
+    // Avatar Image
+    context.drawImage(avatar, 18, 18, 109, 109);
+    context.restore();
+    // context.drawImage(StatusIcon, 90, 92);
+
+    // WIP: Camp Icon
+    // const CampIcon = await Canvas.loadImage(await imageGet('campIconA'));
+    // context.drawImage(CampIcon, 547, 17);
+
+    // WIP: Check to see if a user has bought a title in the shop
+    // If so, move Username Text up so the title can fit underneath
+
+    // Username Text Resize to fit
+    const applyUsername = (canvas:Canvas.Canvas, text:string) => {
+      const usernameContext = canvas.getContext('2d');
+      let fontSize = 40;
+      do {
+        fontSize -= 2;
+        usernameContext.font = `${fontSize}px futura`;
+      } while (usernameContext.measureText(text).width > 530); // LARGER LENGTH LIMIT WHILE CAMP ICON ISN'T ENABLED (DEFAULT IS 380)
+      return usernameContext.font;
+    };
+
+    // Username Text
+    context.font = applyUsername(canvasObj, `${target.displayName}`);
+    context.fillStyle = textColor;
+    if (option === 'profiletitle') {
+      context.textBaseline = 'bottom';
+      context.fillText(`${target.displayName}`, 146, 76);
+      context.font = '30px futura';
+      context.textBaseline = 'top';
+      context.fillText('Your Custom Title Here', 146, 86);
+    } else {
+      context.textBaseline = 'middle';
+      context.fillText(`${target.displayName}`, 146, 76);
+    }
+
+    /* User Timezone
+    context.font = '25px futura';
+    context.textAlign = 'right';
+    context.fillStyle = '#ffffff';
+    if (profileData.timezone) {
+      const timestring = new Date().toLocaleTimeString('en-US', {
+        timeZone: profileData.timezone,
+        hour12: true,
+        hour: 'numeric',
+        minute: 'numeric',
+      });
+      context.fillText(timestring, 210, 190);
+    } else {
+      context.fillText('NOT SET!', 210, 190);
+    }
+
+    // User Birthday
+    let targetBirthday = {} as Date;
+    let itIsYourBirthday = false;
+    if (profileData.birthday) {
+      targetBirthday = profileData.birthday;
+      const today = new Date();
+      if (today.getMonth() === targetBirthday.getMonth() && today.getDate() === targetBirthday.getDate()) {
+        // log.debug(F, 'Birthday Match!');
+        itIsYourBirthday = true;
+      }
+      if (targetBirthday.getDate() < 10) {
+        context.fillText(`0${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 210, 250);
+      } else {
+        context.fillText(`${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 210, 250);
+      }
+    } else {
+      context.fillText('NOT SET!', 210, 250);
+    }
+
+    // Messages Sent Text
+    if (profileData.totalTextExp) {
+      const MessagesSent = profileData.totalTextExp / 20;
+      context.fillText(`${numFormatter(MessagesSent)}`, 429, 190);
+    } else {
+      context.fillText('0', 429, 190);
+    }
+
+    // Voice Hours Text
+    if (profileData.totalTextExp) {
+      const hoursInChat = (profileData.totalVoiceExp / 10 / 60);
+      context.fillText(`${numFormatterVoice(hoursInChat)} HR`, 429, 250);
+    } else {
+      context.fillText('0 HR', 429, 250);
+    }
+
+    // Karma Text
+    context.fillText(`${numFormatter(profileData.karma_received)}`, 648, 190);
+
+    // Tokens Text
+    context.fillText(`${numFormatter(profileData.tokens)}`, 648, 250);
+
+    // Level Text
+    const totalTextData = await getTotalLevel(profileData.totalTextExp);
+    context.fillText(`${totalTextData.level}`, 894, 250); */
+    /* // Choose and Draw the Level Image */
+    let LevelImagePath = '' as string;
+    // if (totalTextData.level < 10) { */
+    LevelImagePath = 'badgeVip0'; /*
+    } else if (totalTextData.level < 20) {
+      LevelImagePath = 'badgeVip1';
+    } else if (totalTextData.level < 30) {
+      LevelImagePath = 'badgeVip2';
+    } else if (totalTextData.level < 40) {
+      LevelImagePath = 'badgeVip3';
+    } else if (totalTextData.level < 50) {
+      LevelImagePath = 'badgeVip4';
+    } else if (totalTextData.level < 60) {
+      LevelImagePath = 'badgeVip5';
+    } else if (totalTextData.level < 70) {
+      LevelImagePath = 'badgeVip6';
+    } else if (totalTextData.level < 80) {
+      LevelImagePath = 'badgeVip7';
+    } else if (totalTextData.level < 90) {
+      LevelImagePath = 'badgeVip8';
+    } else if (totalTextData.level < 100) {
+      LevelImagePath = 'badgeVip9';
+    } else if (totalTextData.level >= 100) {
+      LevelImagePath = 'badgeVip10';
+    }
+    // log.debug(F, `LevelImagePath: ${LevelImagePath}`); */
+    /* const LevelImage = await Canvas.loadImage(await imageGet(LevelImagePath));
+    context.drawImage(LevelImage, 758, 57);
+
+    // Level Bar Circle BG
+    context.strokeStyle = chipColor;
+    context.lineWidth = 18;
+    context.beginPath();
+    context.arc(802, 103, 76, 0, 2 * Math.PI);
+    context.stroke();
+
+    /* // Level Bar Math
+    let percentageOfLevel = 0;
+    const expToLevel = await expForNextLevel(totalTextData.level);
+    percentageOfLevel = (totalTextData.level_points / expToLevel);
+    // log.debug(F, `percentageOfLevel: ${percentageOfLevel}`); */
+
+    // Start at the 0 degrees position, in human terms, the 12 o'clock position
+    /* const startDegrees = 0;
+    // End degrees is the percentage of the level * 360 degrees, or a full circle
+    const endDegrees = 180;
+    // log.debug(F, `startDegrees: ${startDegrees}`);
+    // log.debug(F, `endDegrees: ${endDegrees}`);
+
+    // Canvas thinks that the "start" of a circle is the 3 o'clock position,
+    // so we need to subtract 90 degrees from the start and end degrees to "rotate" the circle
+    const startRadians = ((startDegrees - 90) * Math.PI) / 180;
+    const endRadians = ((endDegrees - 90) * Math.PI) / 180;
+    // log.debug(F, `startRadians: ${startRadians}`);
+    // log.debug(F, `endRadians: ${endRadians}`);
+
+    // Circular Level Bar
+    context.strokeStyle = barColor;
+    context.lineCap = 'round';
+    context.lineWidth = 18;
+    context.beginPath();
+    context.arc(802, 103, 76, startRadians, endRadians);
+    context.stroke();
+
+     /* Birthday Mode
+    if (itIsYourBirthday) {
+      // log.debug(F, 'Birthday Match!');
+      context.font = '40px futura';
+      context.textAlign = 'left';
+      context.fillStyle = textColor;
+      context.fillText('HAPPY BIRTHDAY!', 146, 34);
+      context.drawImage(birthdayOverlay, 0, 0, 934, 282);
+    } */
+
+    /* const attachment = await (canvasObj.encode('png'));
+    return attachment;
+}; */
