@@ -8,7 +8,7 @@ export default mCombo;
 
 export const name = 'combo';
 export const description = 'Quickly look up a drug combination.';
-export const usage = '~combo <drug A> <drug B>';
+export const usage = '~combo [drugA] [drugB]';
 
 const F = f(__filename);
 

@@ -12,7 +12,7 @@ export default mDrug;
 
 export const name = 'drug';
 export const description = 'Look up information about a substance';
-export const usage = '~drug <substance> <summary|dosage|duration|addiction|crosstolerances|toxicity|all>';
+export const usage = '~drug [substance] (summary|dosage|duration|addiction|crosstolerances|toxicity|all)';
 
 type RoaType = {
   name: string,
@@ -27,7 +27,7 @@ type RoaType = {
   }[],
 };
 
-async function mDrug(roomId: string, event:any, client:MatrixClient, substance:string, section:string) {
+async function mDrug(roomId: string, event:any, client:MatrixClient, substance:string, section:string = '') {
   let reply:any;
 
   const drugData = await gDrug(substance);
@@ -222,7 +222,7 @@ async function mDrug(roomId: string, event:any, client:MatrixClient, substance:s
     return true;
   }
 
-  if (section === 'all') {
+  if (section === 'all' || section === '') {
     let html = '';
     let text = '';
 

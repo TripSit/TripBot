@@ -7,7 +7,7 @@ export default mBreathe;
 
 export const name = 'breathe';
 export const description = 'calming breathing exercises.';
-export const usage = '~breathe [1|2|3|4]';
+export const usage = '~breathe (1 | 2 | 3 | 4)';
 
 const F = f(__filename);
 
