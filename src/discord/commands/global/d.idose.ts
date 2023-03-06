@@ -106,7 +106,7 @@ export const dIdose: SlashCommand = {
     // offset: ${JSON.stringify(offset)}
     // `);
     // Make a new variable that is the current time minus the out variable
-    let date = new Date();
+    const date = new Date();
     if (offset) {
       const out = await parseDuration(offset);
       // log.debug(F, `out: ${out}`);
@@ -183,21 +183,12 @@ export const dIdose: SlashCommand = {
       // log.debug(F, `book.length: ${book.length}`);
       if (book.length > 1) {
         paginationEmbed(interaction, book, buttonList);
-      } else if (!interaction.channel) {
-        interaction.editReply({ embeds: [embed] });
-      } else if (interaction.channel.type === ChannelType.DM) {
-        interaction.editReply({ embeds: [embed] });
-        // interaction.user.send({embeds: [embed]});
       } else {
         interaction.editReply({ embeds: [embed] });
         // interaction.user.send({embeds: [embed]});
       }
     }
     if (command === 'set') {
-      if (date === null) {
-        date = new Date();
-      }
-
       if (roa === null) {
         return false;
       }

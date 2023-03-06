@@ -789,7 +789,7 @@ export async function drugGet(
   drugId?:string,
   drugName?:string,
 ):Promise<DrugNames[]> {
-// log.debug(F, 'drugGet started');
+  // log.debug(F, 'drugGet started');
   if (env.POSTGRES_DB_URL === undefined) return [];
   let response = [] as DrugNames[];
   if (drugName) {
@@ -801,19 +801,21 @@ export async function drugGet(
         .orWhere('name', drugName.toUpperCase());
     } catch (err) {
       log.error(F, `Error getting drug: ${err}`);
-      log.error(F, `drugId: ${drugId}`);
+      log.error(F, `drugId: ${drugId} (should be null)`);
       log.error(F, `drugName: ${drugName}`);
     }
   }
-  try {
-    response = await db<DrugNames>('drug_names')
-      .select('*')
-      .where('drug_id', drugId)
-      .andWhere('is_default', true);
-  } catch (err) {
-    log.error(F, `Error getting drug: ${err}`);
-    log.error(F, `drugId: ${drugId}`);
-    log.error(F, `drugName: ${drugName}`);
+  if (drugId) {
+    try {
+      response = await db<DrugNames>('drug_names')
+        .select('*')
+        .where('drug_id', drugId)
+        .andWhere('is_default', true);
+    } catch (err) {
+      log.error(F, `Error getting drug (id): ${err}`);
+      log.error(F, `drugId: ${drugId}`);
+      log.error(F, `drugName: ${drugName} (should be null)`);
+    }
   }
 
   return response;
