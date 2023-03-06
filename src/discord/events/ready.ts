@@ -24,7 +24,7 @@ global.guildInvites = new Collection();
 
 /**
  * This gets invites from the guild and stores them in the global.guildInvites object.
- * This must be done onReady because otherwise the Guild isnt ready
+ * This must be done onReady because otherwise the Guild isn't ready
  * @param {Client} client
  */
 async function getInvites(client: Client) {
@@ -40,7 +40,9 @@ async function getInvites(client: Client) {
       // Fetch all Guild Invites
       const firstInvites = await guild.invites.fetch();
       // Set the key as Guild ID, and create a map which has the invite code, and the number of uses
-      global.guildInvites.set(guild.id, new Collection(firstInvites.map((invite:Invite) => [invite.code, invite.uses])));
+      global.guildInvites
+        .set(guild.id, new Collection(firstInvites
+          .map((invite:Invite) => [invite.code, invite.uses])));
     } else {
       const guildOwner = await guild.fetchOwner();
       await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${guild} so I can fetch invites!` }); // eslint-disable-line
@@ -78,8 +80,8 @@ export const ready: ReadyEvent = {
         if (env.NODE_ENV !== 'development') {
           const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
           const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
-          const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
-          await botlog.send(`Hey ${tripbotdevrole}, bot has restart! Booted in ${bootDuration} seconds`);
+          const tripbotDevRole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
+          await botlog.send(`Hey ${tripbotDevRole}, bot has restart! Booted in ${bootDuration} seconds`);
         }
       });
     });

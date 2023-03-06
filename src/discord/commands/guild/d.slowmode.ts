@@ -1,27 +1,16 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  ActionRowBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  Colors,
   SlashCommandBuilder,
   TextChannel,
-  ModalSubmitInteraction,
   GuildMember,
 } from 'discord.js';
-import {
-  TextInputStyle,
-} from 'discord-api-types/v10';
 import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
-import { globalTemplate } from '../../../global/commands/_g.template';
 import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dSlowmode;
+export default dSlowMode;
 
-export const dSlowmode: SlashCommand = {
+export const dSlowMode: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('slowmode')
     .setDescription('Toggles slowmode on a channel')
@@ -29,7 +18,7 @@ export const dSlowmode: SlashCommand = {
       .setName('on')
       .setDescription('Turn on slowmode')
       .addStringOption(option => option.setName('limit')
-        .setDescription('How long between messags?')
+        .setDescription('How long between messages?')
         .addChoices(
           { name: '5s', value: '5' },
           { name: '10s', value: '10' },

@@ -7,9 +7,9 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import { about } from '../../../global/commands/g.about';
 import { startLog } from '../../utils/startLog';
 
-const F = f(__filename);
-
 export default dAbout;
+
+const F = f(__filename);
 
 export const dAbout: SlashCommand = {
   data: new SlashCommandBuilder()

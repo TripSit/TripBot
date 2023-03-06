@@ -222,7 +222,7 @@ async function autocompleteConvert(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteDrugnames(interaction:AutocompleteInteraction) {
+async function autocompleteDrugNames(interaction:AutocompleteInteraction) {
   const options = {
     shouldSort: true,
     threshold: 0.2,
@@ -261,7 +261,7 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
   if (!interaction.member) return;
 
   const colorRoles = [
-    { name: '💖 Tuplp', value: env.ROLE_RED },
+    { name: '💖 Tulip', value: env.ROLE_RED },
     { name: '🧡 Marigold', value: env.ROLE_ORANGE },
     { name: '💛 Daffodil', value: env.ROLE_YELLOW },
     { name: '💚 Waterlily', value: env.ROLE_GREEN },
@@ -341,7 +341,7 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
       }
     }
 
-    // Keep this here cuz while the team can remove any role, regular membesr can only remove roles they already have
+    // Keep this here cuz while the team can remove any role, regular members can only remove roles they already have
     if (command === 'remove') {
       const potentialRoles = [
         { name: 'NeedsHelp', value: env.ROLE_NEEDSHELP },
@@ -422,6 +422,6 @@ export async function autocomplete(interaction:AutocompleteInteraction):Promise<
   } else if (interaction.commandName === 'convert') {
     autocompleteConvert(interaction);
   } else { // If you don't need a specific autocomplete, return a list of drug names
-    await autocompleteDrugnames(interaction);
+    await autocompleteDrugNames(interaction);
   }
 }

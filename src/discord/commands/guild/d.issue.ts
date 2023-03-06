@@ -64,7 +64,7 @@ export const dIssue: SlashCommand = {
           new ActionRowBuilder<TextInputBuilder>()
             .addComponents(new TextInputBuilder()
               .setLabel('Issue Title')
-              .setPlaceholder('Sumarize the issue here!')
+              .setPlaceholder('Summarize the issue here!')
               .setStyle(TextInputStyle.Short)
               .setRequired(true)
               .setCustomId('issueTitle')),

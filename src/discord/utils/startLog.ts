@@ -24,21 +24,21 @@ export async function startLog(
   | SelectMenuInteraction
   | ModalSubmitInteraction,
 ): Promise<void> {
-  const guild = interaction.guild ? `in ${interaction.guild.name} (${interaction.guild?.id})` : 'in DM';
+  const guild = interaction.guild ? `in ${interaction.guild.name} (${interaction.guild.id})` : 'in DM';
   let message = `[${prefix}] via ${interaction.user.tag} (${interaction.user.id}) \
 ${guild}`;
   if (Object.hasOwn(interaction, 'options')) {
-    const interationOptions = (interaction as ChatInputCommandInteraction).options;
-    if (interationOptions.data && interationOptions.data.length > 0) {
-      // log.debug(F, `${JSON.stringify(interationOptions.data[0].options, null, 2)}`);
-      if (interationOptions.data[0].options !== undefined) {
-        message += ` subCommand: ${interationOptions.getSubcommand()}`;
-        if (interationOptions.data[0].options.length > 0) {
-          const paramStr = interationOptions.data[0].options?.map(o => `${o.name}: ${o.value}`);
+    const interactionOptions = (interaction as ChatInputCommandInteraction).options;
+    if (interactionOptions.data && interactionOptions.data.length > 0) {
+      // log.debug(F, `${JSON.stringify(interactionOptions.data[0].options, null, 2)}`);
+      if (interactionOptions.data[0].options !== undefined) {
+        message += ` subCommand: ${interactionOptions.getSubcommand()}`;
+        if (interactionOptions.data[0].options.length > 0) {
+          const paramStr = interactionOptions.data[0].options.map(o => `${o.name}: ${o.value}`);
           message += ` with params: ${paramStr.join(', ')}`;
         }
       } else {
-        const paramStr = interationOptions.data.map(o => `${o.name}: ${o.value}`);
+        const paramStr = interactionOptions.data.map(o => `${o.name}: ${o.value}`);
         message += ` with params: ${paramStr.join(', ')}`;
       }
     }

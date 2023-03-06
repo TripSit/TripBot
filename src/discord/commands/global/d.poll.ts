@@ -96,48 +96,46 @@ export const dPoll: SlashCommand = {
       .setDescription(stripIndents`${body}`)
       .setFooter({ text: `A poll by ${(interaction.member as GuildMember).displayName}` });
 
-    if (question !== undefined && question !== null && question !== '') {
-      // Check if the question has any mentions.
-      const mentions = question.match(/<.\d+>/g);
-      if (mentions) {
-        // log.debug(F, `mentions: ${mentions}`);
-        // Loop through each mention and replace it.
+    // Check if the question has any mentions.
+    const mentions = question.match(/<.\d+>/g);
+    if (mentions) {
+      // log.debug(F, `mentions: ${mentions}`);
+      // Loop through each mention and replace it.
         for (const mention of mentions) { // eslint-disable-line
-          // log.debug(F, `mention: ${mention}`);
-          const fullId = mention.replace(/[<>]/g, '');
-          // log.debug(F, `fullId: ${fullId}`);
-          // Check to see what kind of prefix the mention has.
-          const prefix = fullId[0];
-          // log.debug(F, `prefix: ${prefix}`);
-          const id = fullId.slice(1);
-          // log.debug(F, `id: ${id}`);
+        // log.debug(F, `mention: ${mention}`);
+        const fullId = mention.replace(/[<>]/g, '');
+        // log.debug(F, `fullId: ${fullId}`);
+        // Check to see what kind of prefix the mention has.
+        const prefix = fullId[0];
+        // log.debug(F, `prefix: ${prefix}`);
+        const id = fullId.slice(1);
+        // log.debug(F, `id: ${id}`);
 
-          let targetString = 'Unknown User' as string;
-          if (prefix === '@') {
+        let targetString = 'Unknown User' as string;
+        if (prefix === '@') {
             const target = await interaction.guild?.members.fetch(id); // eslint-disable-line
-            if (target) {
-              targetString = target.displayName;
-            }
-          } else if (prefix === '#') {
-            const target = await interaction.guild?.channels.fetch(id); // eslint-disable-line
-            if (target) {
-              targetString = target.name;
-            }
-          } else if (prefix === '&') {
-            const target = await interaction.guild?.roles.fetch(id); // eslint-disable-line
-            if (target) {
-              targetString = target.name;
-            }
+          if (target) {
+            targetString = target.displayName;
           }
-
-          // log.debug(F, `targetString: ${targetString}`);
-
-          question = question.replace(mention, targetString);
+        } else if (prefix === '#') {
+            const target = await interaction.guild?.channels.fetch(id); // eslint-disable-line
+          if (target) {
+            targetString = target.name;
+          }
+        } else if (prefix === '&') {
+            const target = await interaction.guild?.roles.fetch(id); // eslint-disable-line
+          if (target) {
+            targetString = target.name;
+          }
         }
+
+        // log.debug(F, `targetString: ${targetString}`);
+
+        question = question.replace(mention, targetString);
       }
-      // log.debug(F, `question: ${question}`);
-      pollEmbed.setTitle(`**${question}**`);
     }
+    // log.debug(F, `question: ${question}`);
+    pollEmbed.setTitle(`**${question}**`);
 
     await interaction.channel.send({ embeds: [pollEmbed] })
       .then(async (msg:Message) => {

@@ -111,7 +111,8 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
     ];
     await message.channel.send(responses[Math.floor(Math.random() * responses.length)]);
   } else if (
-    sadStuff.some(word => (message.cleanContent.includes(word) && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))))
+    sadStuff.some(word => (message.cleanContent.includes(word)
+     && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))))
     && message.channel.type !== ChannelType.DM) {
     if (message.author.bot) return;
     const heartEmojis = [

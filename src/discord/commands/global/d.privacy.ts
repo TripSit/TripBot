@@ -45,7 +45,7 @@ export const dPrivacy: SlashCommand = {
         embed.setTitle('Are you sure?') /* eslint-disable max-len */
           .setDescription(stripIndents`This will delete all data we have on you, except:
           1) Moderation actions taken against your Discord ID will remain on file for 6 months from the last time your user ID was seen.
-          2) If your user has been banned, your Discord ID and status of your ban will remain on file indefinately.
+          2) If your user has been banned, your Discord ID and status of your ban will remain on file indefinitely.
           
           In other words: If you're not banned and you don't interact with the bot for 6 months, your data will be deleted.
           

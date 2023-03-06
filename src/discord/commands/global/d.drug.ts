@@ -79,7 +79,7 @@ async function addClasses(
   return embed;
 }
 
-async function addCrosstolerance(
+async function addCrossTolerance(
   embed: EmbedBuilder,
   drugData: CbSubstance,
 ):Promise<EmbedBuilder> {
@@ -358,9 +358,9 @@ export const dDrug: SlashCommand = {
       embedRowColumns += 1;
     }
 
-    // CROSS TOLLERANCE
+    // CROSS TOLERANCE
     if (drugData.crossTolerances && drugData.crossTolerances.length >= 1) {
-      embed = await addCrosstolerance(embed, drugData);
+      embed = await addCrossTolerance(embed, drugData);
       embedRowColumns += 1;
     }
 

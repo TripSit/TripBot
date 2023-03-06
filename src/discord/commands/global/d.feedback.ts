@@ -46,8 +46,6 @@ export const dFeedback: SlashCommand = {
         // log.debug(F, 'Modal submit interaction received');
         if (i.customId.split('~')[1] !== interaction.id) return;
         await i.deferReply({ ephemeral: true });
-        // eslint-disable-next-line sonarjs/no-nested-template-literals
-        // log.debug(F, `Feedback report from ${i.user.tag} (${i.user.id})${i.guild ? ` in ${i.guild.name}` : 'DM'}`); // eslint-disable-line max-len
         const guildName = ` in ${i.guild?.name}`;
         const guildMessage = `${i.guild ? guildName : 'DM'}`;
 

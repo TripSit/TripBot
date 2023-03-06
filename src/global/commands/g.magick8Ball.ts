@@ -20,7 +20,7 @@ const answers = [
   'My reply is no',
   'My sources say no',
   'Outlook not so good',
-  'Very doubtfull',
+  'Very doubtful',
 ];
 
 export default magick8Ball;

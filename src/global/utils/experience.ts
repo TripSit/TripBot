@@ -269,9 +269,9 @@ async function giveMilestone(
     // Remove all previous roles
     previousRoles.forEach(async previousRole => {
       const removeRole = await member.guild?.roles.fetch(previousRole) as Role;
-      if (member?.roles.cache.has(removeRole.id)) {
+      if (member.roles.cache.has(removeRole.id)) {
         // log.debug(F, `Removing ${member.displayName} role ${removeRole.name} (${removeRole.id})`);
-        member?.roles.remove(removeRole);
+        member.roles.remove(removeRole);
       }
     });
 
@@ -286,9 +286,9 @@ async function giveMilestone(
   }
 
   // Check if the member already has the resulting role, and if not, add it
-  if (!member?.roles.cache.has(role.id)) {
+  if (!member.roles.cache.has(role.id)) {
     // log.debug(F, `Giving ${member.displayName} role ${role.name} (${role.id})`);
-    await member?.roles.add(role);
+    await member.roles.add(role);
     if (levelTier >= 2) {
       const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
       await channel.send(`${emojis} **${member} has reached Total Text level ${levelTier}0!** ${emojis}`);

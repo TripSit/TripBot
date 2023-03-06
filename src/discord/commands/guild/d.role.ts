@@ -13,7 +13,7 @@ export default dRole;
 type RoleDef = { name: string; value: string };
 
 const colorRoles = [
-  { name: '💖 Tuplp', value: env.ROLE_RED },
+  { name: '💖 Tulip', value: env.ROLE_RED },
   { name: '🧡 Marigold', value: env.ROLE_ORANGE },
   { name: '💛 Daffodil', value: env.ROLE_YELLOW },
   { name: '💚 Waterlily', value: env.ROLE_GREEN },
@@ -102,7 +102,7 @@ export const dRole: SlashCommand = {
     // Check if roleId contains any letters
     if (/[a-zA-Z]/.test(roleId)) {
       // log.debug(F, 'Role ID is not a number');
-      // If the role provided isnt an ID, try to find it by name
+      // If the role provided isn't an ID, try to find it by name
       const roleName = roleId.includes(' ') ? roleId.split(' ')[1].trim() : roleId;
       // log.debug(F, `Role name: ${roleName}`);
       // log.debug(F, `Role cache: ${interaction.guild.roles.cache}`);
@@ -187,9 +187,9 @@ export const dRole: SlashCommand = {
       await interaction.editReply({ content: `Removed ${role.name} from ${target}!` });
     }
 
-    const targetstring = target !== '' ? ` ${preposition} ${target}` : '';
+    const targetString = target !== '' ? ` ${preposition} ${target}` : '';
     const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-    await channelBotlog.send(`${(interaction.member as GuildMember).displayName} ${verb} ${role.name}${targetstring}`);
+    await channelBotlog.send(`${(interaction.member as GuildMember).displayName} ${verb} ${role.name}${targetString}`);
 
     return true;
   },

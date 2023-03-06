@@ -128,8 +128,12 @@ export async function applicationStart(
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
-
       await i.deferReply({ ephemeral: true });
+
+      if (!i.member) {
+        await i.editReply({ content: 'This must be performed by a member of a guild!' });
+        return;
+      }
 
       const actor = i.member as GuildMember;
 
@@ -155,19 +159,19 @@ export async function applicationStart(
           },
           {
             name: 'Username',
-            value: `${i.member?.user.username}#${i.member?.user.discriminator}`,
+            value: `${i.member.user.username}#${i.member.user.discriminator}`,
             inline: true,
           },
           {
             name: 'ID',
-            value: `${i.member?.user.id}`,
+            value: `${i.member.user.id}`,
             inline: true,
           },
         )
         .addFields(
           {
             name: 'Created',
-            value: `${time((i.member?.user as User).createdAt, 'R')}`,
+            value: `${time((i.member.user as User).createdAt, 'R')}`,
             inline: true,
           },
         );
@@ -303,15 +307,15 @@ export async function applicationReject(
     const memberId = interaction.customId.split('~')[1];
     const roleId = interaction.customId.split('~')[2];
 
-    let target = {} as GuildMember;
+    let target: GuildMember;
     try {
-      target = await interaction.guild?.members.fetch(memberId);
+      target = await interaction.guild.members.fetch(memberId);
     } catch (e) {
       interaction.editReply({ content: 'Could not find target, are the still in the guild?' });
       return;
     }
 
-    let role = {} as Role | null;
+    let role: Role | null;
     try {
       role = await interaction.guild?.roles.fetch(roleId);
     } catch (e) {

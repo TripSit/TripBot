@@ -17,9 +17,9 @@ type DxmDataType = {
   Fourth: { min: number, max: number };
 };
 
-export default dCalcdxm;
+export default dCalcDXM;
 
-export const dCalcdxm: SlashCommand = {
+export const dCalcDXM: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_dxm')
     .setDescription('Get DXM dosage information')

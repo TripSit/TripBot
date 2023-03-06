@@ -11,9 +11,9 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dCalcbenzo;
+export default dCalcBenzo;
 
-export const dCalcbenzo: SlashCommand = {
+export const dCalcBenzo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_benzo')
     .setDescription('This tool helps figure out how much of a given benzo dose converts into another benzo dose.')

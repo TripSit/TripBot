@@ -11,6 +11,8 @@ import {
   PermissionResolvable,
   StringSelectMenuBuilder,
   Guild,
+  // InteractionEditReplyOptions,
+  Message,
 } from 'discord.js';
 import {
   ButtonStyle, TextInputStyle,
@@ -20,6 +22,7 @@ import { getGuild, guildUpdate } from '../../../global/utils/knex';
 import { startLog } from '../../utils/startLog';
 import { SlashCommand } from '../../@types/commandDef';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
+// import { DiscordGuilds } from '../../../global/@types/database';
 
 const F = f(__filename);
 
@@ -112,6 +115,12 @@ export const prompt: SlashCommand = {
       .setDescription('rules info!')
       .setName('rules'))
     .addSubcommand(subcommand => subcommand
+      .setDescription('Set up a Counting channel!')
+      .setName('counting')
+      .addBooleanOption(option => option
+        .setDescription('Is this a hardcore room?')
+        .setName('hardcore')))
+    .addSubcommand(subcommand => subcommand
       .setDescription('starthere info!')
       .setName('starthere'))
     // .addSubcommand(subcommand => subcommand
@@ -157,10 +166,80 @@ export const prompt: SlashCommand = {
       await tripsit(interaction);
     } else if (command === 'ticketbooth') {
       await ticketbooth(interaction);
+    } else if (command === 'counting') {
+      await counting(interaction);
     }
     return true;
   },
 };
+
+type CountingData = {
+  channelId: string;
+  hardcore: boolean;
+  lastNumber: number;
+  lastNumberID: string;
+  lastNumberOn: Date;
+  lastNumberUser: string;
+  lastNumberGoodUser: string;
+  lastNumberBadUser: string;
+  highestNumber: number;
+  highestNumberId: string;
+  highestNumberOn: Date;
+  highestNumberUser: string;
+  highestNumberGoodUser: string;
+  highestNumberBadUser: string;
+};
+
+const countingData = [] as CountingData[];
+
+export async function countingGet(
+  channelID:string,
+):Promise<CountingData | undefined> {
+  return countingData.find(c => c.channelId === channelID);
+}
+
+export async function countingSet(data: CountingData) {
+  const index = countingData.findIndex(c => c.channelId === data.channelId);
+  if (index === -1) {
+    countingData.push(data);
+  } else {
+    countingData[index] = data;
+  }
+}
+
+export async function counting(interaction:ChatInputCommandInteraction):Promise<Message> {
+  const hardcore = interaction.options.getBoolean('hardcore');
+  const channel = interaction.channel as TextChannel;
+
+  const data = await countingGet(channel.id);
+
+  if (data) {
+    return interaction.editReply('This channel is already set up for counting!');
+  }
+
+  const countingMessage = await channel.send('1');
+  await countingMessage.react('👍');
+  await countingMessage.react('👎');
+
+  await countingSet({
+    channelId: channel.id,
+    hardcore: hardcore || false,
+    lastNumber: 1,
+    lastNumberID: countingMessage.id,
+    lastNumberOn: new Date(),
+    lastNumberUser: '',
+    lastNumberGoodUser: '',
+    lastNumberBadUser: '',
+    highestNumber: 1,
+    highestNumberId: countingMessage.id,
+    highestNumberOn: new Date(),
+    highestNumberUser: '',
+    highestNumberGoodUser: '',
+    highestNumberBadUser: '',
+  });
+
+  return interaction.editReply('Counting channel set up!');
+}
 
 export async function tripsit(interaction:ChatInputCommandInteraction) {
   if (!await checkChannelPermissions(
@@ -298,7 +377,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
-            .setCustomId('appliationText')
+            .setCustomId('applicationText')
             .setLabel('What wording do you want to appear?')
             .setStyle(TextInputStyle.Paragraph)
             .setValue(stripIndent`
@@ -347,23 +426,23 @@ export async function applications(interaction:ChatInputCommandInteraction) {
       await guildUpdate(guildData);
 
       /* eslint-disable no-unused-vars */
-      const roleRequestdA = interaction.options.getRole('application_role_a');
+      const roleRequestedA = interaction.options.getRole('application_role_a');
       const roleReviewerA = interaction.options.getRole('application_reviewer_a');
-      const roleRequestdB = interaction.options.getRole('application_role_b');
+      const roleRequestedB = interaction.options.getRole('application_role_b');
       const roleReviewerB = interaction.options.getRole('application_reviewer_b');
-      const roleRequestdC = interaction.options.getRole('application_role_c');
+      const roleRequestedC = interaction.options.getRole('application_role_c');
       const roleReviewerC = interaction.options.getRole('application_reviewer_c');
-      const roleRequestdD = interaction.options.getRole('application_role_d');
+      const roleRequestedD = interaction.options.getRole('application_role_d');
       const roleReviewerD = interaction.options.getRole('application_reviewer_d');
-      const roleRequestdE = interaction.options.getRole('application_role_e');
+      const roleRequestedE = interaction.options.getRole('application_role_e');
       const roleReviewerE = interaction.options.getRole('application_reviewer_e');
 
       const roleArray = [
-        [roleRequestdA, roleReviewerA],
-        [roleRequestdB, roleReviewerB],
-        [roleRequestdC, roleReviewerC],
-        [roleRequestdD, roleReviewerD],
-        [roleRequestdE, roleReviewerE],
+        [roleRequestedA, roleReviewerA],
+        [roleRequestedB, roleReviewerB],
+        [roleRequestedC, roleReviewerC],
+        [roleRequestedD, roleReviewerD],
+        [roleRequestedE, roleReviewerE],
       ];
       const selectMenu = new StringSelectMenuBuilder()
         .setCustomId('applicationRoleSelectMenu')
@@ -393,7 +472,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
 
       await (i.channel as TextChannel).send(
         {
-          content: stripIndents`${i.fields.getTextInputValue('appliationText')}`,
+          content: stripIndents`${i.fields.getTextInputValue('applicationText')}`,
           components: [new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(selectMenu)],
         },
@@ -436,7 +515,7 @@ export async function techhelp(interaction:ChatInputCommandInteraction) {
   if (channelTripsit) {
     text += `\n\n**If you need psychological help try ${channelTripsit.toString()}!**`;
   }
-  text += `\n\n**Discord-specific issues, feedback or questions** can be discussesed with the team via the **blue🟦button**.
+  text += `\n\n**Discord-specific issues, feedback or questions** can be discussed with the team via the **blue🟦button**.
 
 **Other issues, questions, feedback** can be privately discussed with the team with the **grey button**.
 
@@ -483,13 +562,13 @@ If you do not agree to this policy, do not use this site.
 
     > 💞 **2. Do not use TripSit for any purpose or in any manner which could impair any other party's use or enjoyment of this site.**
     > a. Do not post anything considered offensive/upsetting to those in an altered mindset without a spoiler and content warning tag.
-    > b. Do not post images with the intent of causing disruption, including flashing imagery, spamming images, or multiple gifs.
-    > c. Do not post pornography (including softcore), gore, depictions of acts of violence, or other offensive content.
+    > b. Do not post images with the intent of causing disruption, including flashing imagery, spamming images, or multiple GIFs.
+    > c. Do not post pornography (including soft core), gore, depictions of acts of violence, or other offensive content.
     > d. Do not display an offensive profile picture, including pornography of any kind.
     > e. Do not use an offensive nickname or one that could cause anxiety in others, e.g., law enforcement or dictators.
     > f. Do not post content that victimizes, harasses, degrades, or intimidates an individual or group based on race, ethnicity, religion, sexual orientation,  gender identification, drug of choice, level of addiction, mental health status, or other reasons.
     
-    > 💊 **3. Do not discuss, request, or post identifying information of websites, online vendors, or real-life people who sell or coordinate the purchase, distribution, or production of substances (legal, clearnet, or otherwise) or cryptocurrencies, i.e., no sourcing.**
+    > 💊 **3. Do not discuss, request, or post identifying information of websites, online vendors, or real-life people who sell or coordinate the purchase, distribution, or production of substances (legal, clear-net, or otherwise) or cryptocurrencies, i.e., no sourcing.**
     > a. Do not discuss the specifics or go in-depth into the mechanics of online vending.
     > b. Do not show drug packaging to show how a vendor delivered something.
     `,
@@ -569,7 +648,7 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId('memberbutton')
+        .setCustomId('memberButton')
         .setLabel('I understand where to find help and will follow the rules!')
         .setStyle(ButtonStyle.Success),
     );
@@ -597,7 +676,7 @@ export async function starthere(interaction:ChatInputCommandInteraction) {
     **Welcome to the TripSit Discord!**
     > TripSit has always been a bit...different.
     > Our discord is no exception: Even if you've been using discord for years please take a moment to read the info here.
-    > The information on this page can help you understand some of the intricaces of this guild!
+    > The information on this page can help you understand some of the intricacies of this guild!
     > **This guild is under active development and may make changes at any time!**
 
     **Remember: If you need help, join the ${channelTripsit} room and click the "I need assistance" button**

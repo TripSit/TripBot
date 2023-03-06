@@ -22,7 +22,7 @@ export default channelUpdate;
 export const channelUpdate: ChannelUpdateEvent = {
   name: 'channelUpdate',
   async execute(oldChannel, newChannel) {
-    // Dont run on DMs
+    // Don't run on DMs
     if (newChannel.type === ChannelType.DM) return;
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (newChannel.guild.id !== env.DISCORD_GUILD_ID) return;

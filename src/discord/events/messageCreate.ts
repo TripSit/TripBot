@@ -71,7 +71,6 @@ export const messageCreate: MessageCreateEvent = {
     && message.channel // Was not sent in a channel
     && (message.channel instanceof TextChannel) // Was not sent in a text channel
     && message.guild // Was not sent in a guild
-    && !message.author.bot // Was sent by a bot
     && !ignoredRoles.some(role => message.member?.roles.cache.has(role)) // Has a role that should be ignored
     ) {
       // Determine what kind of experience to give

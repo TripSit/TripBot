@@ -14,13 +14,13 @@ export async function about():Promise<AboutInfo> {
     name: 'TripSit',
     url: 'https://tripsit.me/',
     description: stripIndents`
-        This app is created by TripSit, an organisation which helps to provide factual information\
+        This app is created by TripSit, an organization which helps to provide factual information\
         about drugs and how to reduce the harms involved in using them.
         The official support server is [TripSit discord](https://discord.gg/TripSit). If you have issues/questions, join and talk with Moonbear!
       `,
     invite: stripIndents`
         [Click here to invite TripBot to your own server](https://discord.com/api/oauth2/authorize?client_id=957780726806380545&permissions=18432&scope=bot%20applications.commands).
-        Note: For advanced features you will need to give the bot more permissions at your discression.
+        Note: For advanced features you will need to give the bot more permissions at your discretion.
       `,
     disclaimer: stripIndents`
         Although we have a team dedicated to keeping the information on this app up to date,\

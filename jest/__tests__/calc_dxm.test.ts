@@ -2,10 +2,10 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dCalcdxm } from '../../src/discord/commands/global/d.calcDXM';
+import { dCalcDXM } from '../../src/discord/commands/global/d.calcDXM';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
-const slashCommand = dCalcdxm;
+const slashCommand = dCalcDXM;
 
 const authorInfo = {
   iconURL: 'https://i.gyazo.com/b48b08a853fefaafb6393837eec1a501.png',

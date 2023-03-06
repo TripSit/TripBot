@@ -21,7 +21,7 @@ export const messageReactionAdd: MessageReactionAddEvent = {
     if (messageReaction.message.guild?.id !== env.DISCORD_GUILD_ID) return;
     // log.info(F, `${user} added a reaction`);
 
-    // Dont run on bots
+    // Don't run on bots
     if (user.bot) {
       // log.debug(F, `Ignoring bot interaction`);
       return;

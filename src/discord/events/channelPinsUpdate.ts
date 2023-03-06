@@ -21,7 +21,7 @@ export default channelPinsUpdate;
 export const channelPinsUpdate: ChannelPinsUpdateEvent = {
   name: 'channelPinsUpdate',
   async execute(channel) {
-    // Dont run on DMs
+    // Don't run on DMs
     if (channel.type === ChannelType.DM) return;
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (channel.guild.id !== env.DISCORD_GUILD_ID) return;
@@ -69,7 +69,7 @@ export const channelPinsUpdate: ChannelPinsUpdateEvent = {
     if (pinLog.executor) {
       response = `Channel ${pinLog.executor.tag} pinned a message in ${channel.name}:`;
       // Get the message that was pinned
-      if ((channel as TextBasedChannel).messages === undefined) {
+      if ((channel as TextBasedChannel).messages !== undefined) {
         const message = await (channel as TextBasedChannel).messages.fetch(pinLog.extra.messageId);
         response += `
           > ${message.content}
