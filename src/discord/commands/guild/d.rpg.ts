@@ -56,6 +56,8 @@ const F = f(__filename);
 //   raid: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 * 7 : 1000 * 1,
 // };
 
+const timesUp = 'Time\'s up!';
+
 const items = {
   general: {
     testkit: {
@@ -2503,7 +2505,7 @@ export async function rpgTrivia(
         // If the user doesn't answer in time
         log.debug(F, 'User did not answer in time');
 
-        embedStatus = 'Time\'s up!';
+        embedStatus = timesUp;
         answerColor = Colors.Red as ColorResolvable;
         questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
         timedOut = true;
@@ -2575,15 +2577,28 @@ export async function rpgTrivia(
                 ),
             ],
           });
+        } else {
+          embedStatus = timesUp;
+          answerColor = Colors.Red as ColorResolvable;
+          questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
+          timedOut = true;
+          break; // If the user timed out, break the loop
         }
       } else { // If the user answers incorrectly
         questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
+        streak = 0;
         embed = new EmbedBuilder()
           .setColor(Colors.Grey as ColorResolvable)
           .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-          .addFields({ name: 'Incorrect!', value: `The correct answer was **${questionData.correct_answer}.**` })
-          .addFields({ name: 'Current Score:', value: `${score} of ${(qNumber + 1)}` })
-          .addFields({ name: `Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: ' ' })
+          .setDescription(`
+          **Incorrect!**
+          The correct answer was **${questionData.correct_answer}.**
+          
+          **Current Score**
+          Correct: ${questionsCorrect} of ${(qNumber + 1)}
+          Streak: ${streak}
+          
+          Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
         embedStatus = 'Incorrect!';
         questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
@@ -2604,7 +2619,7 @@ export async function rpgTrivia(
             ],
           });
         } else {
-          embedStatus = 'Time\'s up!';
+          embedStatus = timesUp;
           answerColor = Colors.Red as ColorResolvable;
           questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
           timedOut = true;
