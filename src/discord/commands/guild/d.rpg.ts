@@ -42,7 +42,7 @@ import {
 import { Personas, RpgInventory } from '../../../global/@types/database';
 import { imageGet } from '../../utils/imageGet';
 import { GameName } from '../../../global/@types/global';
-import { difficulties, numberOfQuestions } from '../../utils/emoji';
+import { customButton, difficulties, numberOfQuestions } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
 
 const Trivia = require('trivia-api');
@@ -55,6 +55,8 @@ const F = f(__filename);
 //   dungeon: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 : 1000 * 1,
 //   raid: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 * 7 : 1000 * 1,
 // };
+
+const timesUp = 'Time\'s up!';
 
 const items = {
   general: {
@@ -2469,8 +2471,7 @@ export async function rpgTrivia(
           ],
         });
       } else {
-        await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
-
+        // await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
         // If not the first question, edit the previous message
         await sleep(5 * 1000); // eslint-disable-line no-await-in-loop
         await interaction.editReply({ // eslint-disable-line no-await-in-loop
@@ -2503,26 +2504,27 @@ export async function rpgTrivia(
       } catch (err) {
         // If the user doesn't answer in time
         log.debug(F, 'User did not answer in time');
-
-        embedStatus = 'Time\'s up!';
+        embedStatus = timesUp;
         answerColor = Colors.Red as ColorResolvable;
         questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
         timedOut = true;
       }
-
       if (timedOut === true) break;
+      await collected.update({}); // eslint-disable-line no-await-in-loop
 
-      const disabledButtons = choices.map(choice => new ButtonBuilder()
-        .setCustomId(choice)
-        .setDisabled(true)
-        .setEmoji(choice)
-        .setStyle(ButtonStyle.Secondary))
-        .concat([
-          global.buttons.quit.setDisabled(false),
-        ]);
-
-      await collected.update({ // eslint-disable-line no-await-in-loop
-        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(disabledButtons)],
+      await collected.editReply({ // eslint-disable-line no-await-in-loop
+        components: [
+          new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+              choices.map(choice => new ButtonBuilder()
+                .setCustomId(choice)
+                .setDisabled(true)
+                .setEmoji(choice)
+                .setStyle(ButtonStyle.Secondary))
+                .concat([
+                  customButton('rpgQuit', 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(true),
+                ]),
+            )],
       });
 
       if (collected.customId === 'rpgQuit') {
@@ -2576,15 +2578,28 @@ export async function rpgTrivia(
                 ),
             ],
           });
+        } else {
+          embedStatus = timesUp;
+          answerColor = Colors.Red as ColorResolvable;
+          questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
+          timedOut = true;
+          break; // If the user timed out, break the loop
         }
       } else { // If the user answers incorrectly
         questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
+        streak = 0;
         embed = new EmbedBuilder()
           .setColor(Colors.Grey as ColorResolvable)
           .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-          .addFields({ name: 'Incorrect!', value: `The correct answer was **${questionData.correct_answer}.**` })
-          .addFields({ name: 'Current Score:', value: `${score} of ${(qNumber + 1)}` })
-          .addFields({ name: `Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`, value: ' ' })
+          .setDescription(`
+          **Incorrect!**
+          The correct answer was **${questionData.correct_answer}.**
+          
+          **Current Score**
+          Correct: ${questionsCorrect} of ${(qNumber + 1)}
+          Streak: ${streak}
+          
+          Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
         embedStatus = 'Incorrect!';
         questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
@@ -2605,7 +2620,7 @@ export async function rpgTrivia(
             ],
           });
         } else {
-          embedStatus = 'Time\'s up!';
+          embedStatus = timesUp;
           answerColor = Colors.Red as ColorResolvable;
           questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
           timedOut = true;

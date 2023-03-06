@@ -135,7 +135,7 @@ export async function emojiCache(client: Client):Promise<void> {
     .setPlaceholder('Select a guild');
 }
 
-function customButton(
+export function customButton(
   customId: string,
   label: string,
   emojiName: string,
