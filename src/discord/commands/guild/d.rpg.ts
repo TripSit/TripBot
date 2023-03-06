@@ -2276,8 +2276,8 @@ export async function rpgTrivia(
   log.debug(F, `Difficulty Menu: ${JSON.stringify(difficultyMenu, null, 2)}`);
 
   if (interaction.isButton() && interaction.customId === 'rpgStart') {
-    const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
-    await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
+    // const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
+    // await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
     const difficultyComponent = interaction.message.components[1].components[0];
     const selectedDifficulty = (difficultyComponent as StringSelectMenuComponent).options.find(
       (o:APISelectMenuOption) => o.default === true,
@@ -2352,7 +2352,7 @@ export async function rpgTrivia(
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
 
       if (qNumber === 0) {
-        // await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
+        await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
         questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
         const startingEmbed = new EmbedBuilder()
           .setColor(answerColor)
@@ -2383,6 +2383,8 @@ export async function rpgTrivia(
           });
         }, 4200);
       } else {
+        await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
+
         // If not the first question, edit the previous message
         setTimeout(async () => { // Wait 5 seconds before sending the next question
           await interaction.editReply({ // eslint-disable-line no-await-in-loop
