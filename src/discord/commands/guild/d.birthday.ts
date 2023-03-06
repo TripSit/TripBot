@@ -67,62 +67,60 @@ async function birthdaySet(
 
   const month30 = ['april', 'june', 'september', 'november'];
   const month31 = ['january', 'march', 'may', 'july', 'august', 'october', 'december'];
-  if (monthInput !== undefined && day !== undefined) {
-    if (month30.includes(monthInput.toLowerCase()) && day > 30) {
-      const response = `${monthInput} only has 30 days!`;
-      // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-      interaction.editReply({ content: response });
-      return;
-    }
-    if (month31.includes(monthInput.toLowerCase()) && day > 31) {
-      const response = `${monthInput} only has 31 days!`;
-      // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-      interaction.editReply({ content: response });
-      return;
-    }
-    if (monthInput.toLowerCase() === 'february' && day > 28) {
-      const response = 'February only has 28 days!';
-      // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-      interaction.editReply({ content: response });
-      return;
-    }
-    // const monthDict = {
-    //   'january': 0,
-    //   'february': 1,
-    //   'march': 2,
-    //   'april': 3,
-    //   'may': 4,
-    //   'june': 5,
-    //   'july': 6,
-    //   'august': 7,
-    //   'september': 8,
-    //   'october': 9,
-    //   'november': 10,
-    //   'december': 11,
-    // };
-
-    const monthDict = {
-      january: 1,
-      february: 2,
-      march: 3,
-      april: 4,
-      may: 5,
-      june: 6,
-      july: 7,
-      august: 8,
-      september: 9,
-      october: 10,
-      november: 11,
-      december: 12,
-    };
-
-    month = monthDict[monthInput.toLowerCase() as keyof typeof monthDict];
-
-    const response = await birthday('set', member.id, month, day);
-    const embed = embedTemplate();
-    embed.setTitle(`Set your birthday to ${(response as DateTime).toFormat('LLLL d')}`);
-    await interaction.editReply({ embeds: [embed] });
+  if (month30.includes(monthInput.toLowerCase()) && day > 30) {
+    const response = `${monthInput} only has 30 days!`;
+    // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
+    interaction.editReply({ content: response });
+    return;
   }
+  if (month31.includes(monthInput.toLowerCase()) && day > 31) {
+    const response = `${monthInput} only has 31 days!`;
+    // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
+    interaction.editReply({ content: response });
+    return;
+  }
+  if (monthInput.toLowerCase() === 'february' && day > 28) {
+    const response = 'February only has 28 days!';
+    // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
+    interaction.editReply({ content: response });
+    return;
+  }
+  // const monthDict = {
+  //   'january': 0,
+  //   'february': 1,
+  //   'march': 2,
+  //   'april': 3,
+  //   'may': 4,
+  //   'june': 5,
+  //   'july': 6,
+  //   'august': 7,
+  //   'september': 8,
+  //   'october': 9,
+  //   'november': 10,
+  //   'december': 11,
+  // };
+
+  const monthDict = {
+    january: 1,
+    february: 2,
+    march: 3,
+    april: 4,
+    may: 5,
+    june: 6,
+    july: 7,
+    august: 8,
+    september: 9,
+    october: 10,
+    november: 11,
+    december: 12,
+  };
+
+  month = monthDict[monthInput.toLowerCase() as keyof typeof monthDict];
+
+  const response = await birthday('set', member.id, month, day);
+  const embed = embedTemplate();
+  embed.setTitle(`Set your birthday to ${(response as DateTime).toFormat('LLLL d')}`);
+  await interaction.editReply({ embeds: [embed] });
 }
 
 export default dBirthday;

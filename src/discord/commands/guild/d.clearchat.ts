@@ -32,8 +32,8 @@ export const dClearchat: SlashCommand = {
     }
 
     const count = interaction.options.getInteger('count') || 99;
-    const deleteThreads = interaction.options.getBoolean('delete-threads') || true;
-    const deleteArchived = interaction.options.getBoolean('delete-archived-threads') || true;
+    const deleteThreads = interaction.options.getBoolean('delete-threads') === true;
+    const deleteArchived = interaction.options.getBoolean('delete-archived-threads') === true;
 
     // const count = interaction.options.getInteger('count');
     await interaction.editReply({ content: 'Clearing chat...' })

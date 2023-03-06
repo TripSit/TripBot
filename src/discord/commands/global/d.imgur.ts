@@ -52,7 +52,7 @@ export const dImgur: SlashCommand = {
     const windowStr = `${window}/`;
 
     // eslint-disable-next-line max-len
-    const query = `https://api.imgur.com/3/gallery/search/${sort !== null ? sortStr : ''}${window !== null ? windowStr : ''}?q=${search}`;
+    const query = `https://api.imgur.com/3/gallery/search/${sortStr}${windowStr}?q=${search}`;
     // log.debug(F, `query: ${query}`);
 
     const url = await imgurSearch(query);

@@ -22,7 +22,7 @@ export const roleUpdate: RoleUpdateEvent = {
     //   return;
     // }
 
-    // This is super spammy, need to rework
+    // This is super bad, need to rework
 
     // const perms = await checkGuildPermissions(sticker.guild, [
     //   'ViewAuditLog' as PermissionResolvable,

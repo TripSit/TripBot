@@ -134,11 +134,11 @@ export const mod: SlashCommand = {
 
       const override = interaction.options.getBoolean('override');
 
-      let result = '' as string | null;
+      let result: string | null;
       if (!target) {
         const userData = await getUser(targetString, null);
         if (!userData) {
-          await interaction.editReply({ content: 'Failed to link thread, I could not find this user in the guild, and they do not exist in the database!' });
+          await interaction.editReply({ content: 'Failed to link thread, I could not find this user in the guild, and they do not exist in the database!' }); // eslint-disable-line max-len
           return false;
         }
         result = await linkThread(targetString, interaction.channelId, override);
@@ -266,10 +266,10 @@ export const mod: SlashCommand = {
           let dayInput = parseInt(i.fields.getTextInputValue('days'), 10);
 
           // If no input was provided, default to 0 days
-          if (dayInput === null) dayInput = 0;
+          if (Number.isNaN(dayInput)) dayInput = 0;
 
           // If the input is a string, or outside the bounds, tell the user and return
-          if (dayInput && (Number.isNaN(dayInput) || (dayInput < 0 || dayInput > 7))) {
+          if (dayInput && (dayInput < 0 || dayInput > 7)) {
             await i.editReply({ content: 'Ban days must be at least 0 and at most 7!' });
             return;
           }

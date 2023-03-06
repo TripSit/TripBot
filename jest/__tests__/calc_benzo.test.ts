@@ -2,10 +2,10 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dCalcbenzo } from '../../src/discord/commands/global/d.calcBenzo';
+import { dCalcBenzo } from '../../src/discord/commands/global/d.calcBenzo';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
-const slashCommand = dCalcbenzo;
+const slashCommand = dCalcBenzo;
 
 const benzosNames = [
   { name: 'alprazolam', result: 31.45 },

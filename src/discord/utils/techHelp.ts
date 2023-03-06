@@ -42,10 +42,10 @@ export async function techHelpClick(interaction:ButtonInteraction) {
     return;
   }
 
-  const roleTechreview = await interaction.guild.roles.fetch(guildData.role_techhelp);
+  const roleTechReview = await interaction.guild.roles.fetch(guildData.role_techhelp);
 
-  if (!roleTechreview) {
-    log.error(F, `- techHelpClick] roleTechreview not found: ${interaction.guild.id}`);
+  if (!roleTechReview) {
+    log.error(F, `- techHelpClick] roleTechReview not found: ${interaction.guild.id}`);
     await interaction.reply({ content: 'The role provided could not be found!' });
     return;
   }
@@ -85,7 +85,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       const member = await i.guild.members.fetch(i.user.id);
       // log.debug(F, `member: ${JSON.stringify(member, null, 2)}!`);
       if (member) {
-        // Dont run if the user is on timeout
+        // Don't run if the user is on timeout
         if (member.communicationDisabledUntilTimestamp !== null) {
           await member.send(stripIndents`
           Hey!
@@ -122,7 +122,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       i.editReply({ embeds: [embed] });
 
       const message = stripIndents`
-        Hey ${roleTechreview}! ${actor} has submitted a new issue:
+        Hey ${roleTechReview}! ${actor} has submitted a new issue:
     
         > ${modalInput}
     

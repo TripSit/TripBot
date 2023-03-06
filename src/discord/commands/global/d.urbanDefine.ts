@@ -4,14 +4,14 @@ import {
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { urbandefine } from '../../../global/commands/g.urbandefine';
+import { urbanDefine } from '../../../global/commands/g.urbanDefine';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
-export default dUrbandefine;
+export default dUrbanDefine;
 
-export const dUrbandefine: SlashCommand = {
+export const dUrbanDefine: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('urban_define')
     .setDescription('Define a word on Urban Dictionary')
@@ -31,7 +31,7 @@ export const dUrbandefine: SlashCommand = {
       return false;
     }
 
-    const result = await urbandefine(term);
+    const result = await urbanDefine(term);
 
     const embed = embedTemplate()
       .setDescription(stripIndents`${result}`);

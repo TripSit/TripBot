@@ -3,14 +3,14 @@ import { stripIndents } from 'common-tags';
 
 const F = f(__filename);
 
-export default urbandefine;
+export default urbanDefine;
 
 /**
  * Birthday information of a user
  * @param {string} term
  * @return {string} definition
  */
-export async function urbandefine(term:string) {
+export async function urbanDefine(term:string) {
   const { data } = await axios.get(
     'https://mashape-community-urban-dictionary.p.rapidapi.com/define',
     {

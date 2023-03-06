@@ -65,6 +65,10 @@ export const dReminder: SlashCommand = {
       interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;
     }
+    if (!interaction.channel) {
+      interaction.editReply({ content: 'This command can only be used in a channel!' });
+      return false;
+    }
 
     // const { channelId } = interaction;
     // log.debug(F, `channelId: ${channelId}`);
@@ -86,7 +90,7 @@ export const dReminder: SlashCommand = {
       .setTitle(`REMINDER: ${reminderTitle}`)
       .setDescription(reminderText);
 
-    await interaction.channel?.send({ embeds: [reminder] });
+    await interaction.channel.send({ embeds: [reminder] });
 
     const botlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     if (botlog) {

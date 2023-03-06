@@ -6,7 +6,6 @@ import {
   EmbedField,
 } from 'discord.js';
 import {
-  ChannelType,
   ButtonStyle,
 } from 'discord-api-types/v10';
 import { remindMe } from '../../../global/commands/g.remindme';
@@ -82,7 +81,7 @@ export const dRemindme: SlashCommand = {
         if (typeof response === 'string') {
           embed.setDescription('You have no reminders! You can use /remind_me to add some!');
           interaction.editReply({ embeds: [embed] });
-          return true;
+          return false;
         }
 
         if (response.length > 24) {
@@ -141,22 +140,12 @@ export const dRemindme: SlashCommand = {
       // log.debug(F, `book.length: ${book.length}`);
       if (book.length > 1) {
         paginationEmbed(interaction, book, buttonList);
-      } else if (!interaction.channel) {
-        interaction.editReply({ embeds: [embed] });
-      } else if (interaction.channel.type === ChannelType.DM) {
-        interaction.editReply({ embeds: [embed] });
-        // interaction.user.send({embeds: [embed]});
       } else {
         interaction.editReply({ embeds: [embed] });
         // interaction.user.send({embeds: [embed]});
       }
     }
     if (command === 'set') {
-      if (reminderDatetime === null) {
-        interaction.editReply({ content: 'Invalid date!' });
-        return false;
-      }
-
       // const timeString = time(reminderDatetime).valueOf().toString();
       // log.debug(F, `timeString: ${timeString}`);
       const relative = time(reminderDatetime, 'R');
@@ -165,7 +154,7 @@ export const dRemindme: SlashCommand = {
       embed.setDescription(`${relative} I will remind you: ${reminder}`);
       interaction.editReply({ embeds: [embed] });
     }
-    // log.debug(F, `Finsihed!`);
+    // log.debug(F, `Finished!`);
     return true;
   },
 };

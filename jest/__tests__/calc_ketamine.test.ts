@@ -2,10 +2,10 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dCalcketamine } from '../../src/discord/commands/global/d.calcKetamine';
+import { dCalcKetamine } from '../../src/discord/commands/global/d.calcKetamine';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
-const slashCommand = dCalcketamine;
+const slashCommand = dCalcKetamine;
 
 const authorInfo = {
   iconURL: 'https://i.gyazo.com/b48b08a853fefaafb6393837eec1a501.png',

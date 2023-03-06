@@ -20,7 +20,7 @@ export default channelDelete;
 export const channelDelete: ChannelDeleteEvent = {
   name: 'channelDelete',
   async execute(channel) {
-    // Dont run on DMs
+    // Don't run on DMs
     if (channel.type === ChannelType.DM) return;
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (channel.guild.id !== env.DISCORD_GUILD_ID) return;

@@ -24,7 +24,7 @@ const F = f(__filename);
 export default buttonClick;
 
 /**
- * This runs whenever a buttion is clicked
+ * This runs whenever a button is clicked
  * @param {ButtonInteraction} interaction The interaction that initialized this
  * @param {Client} client The client that manages it
  * @return {Promise<void>}
@@ -105,7 +105,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     modmailCreate(interaction, 'APPEAL');
     return;
   }
-  if (buttonID === 'memberbutton') {
+  if (buttonID === 'memberButton') {
     verifyButton(interaction);
     return;
   }

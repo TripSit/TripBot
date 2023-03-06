@@ -28,15 +28,15 @@ export const dInvite: SlashCommand = {
     const devNotice = process.env.NODE_ENV === 'production'
       ? ''
       : 'This is a development version of the bot. Please use the production version for the best experience.';
-    const botname = isProd
+    const botName = isProd
       ? 'TripBot'
       : 'TripBot Dev';
-    const guildname = isProd
+    const guildName = isProd
       ? 'TripSit'
       : 'TripSit Dev';
     const embed = embedTemplate()
       .setColor(Colors.DarkBlue)
-      .setTitle(`Invite ${botname}`)
+      .setTitle(`Invite ${botName}`)
       .setURL(inviteInfo.bot)
       .setDescription(stripIndents`
         ${devNotice}
@@ -45,7 +45,7 @@ export const dInvite: SlashCommand = {
 
         Note: For advanced features you will need to give the bot more permissions.
 
-        The ${isProd ? 'official support' : 'testing'} server is [${guildname} Discord](${inviteInfo.discord}).
+        The ${isProd ? 'official support' : 'testing'} server is [${guildName} Discord](${inviteInfo.discord}).
         If you have issues/questions, join and talk with Moonbear!
       `);
     interaction.editReply({ embeds: [embed] });

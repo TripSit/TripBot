@@ -37,7 +37,7 @@ export const dSay: SlashCommand = {
       await interaction.channel?.send(say);
     }
 
-    interaction.editReply({ content: `I said '${say}' in ${channel ? channel.toString() : interaction.channel?.toString()}` });
+    interaction.editReply({ content: `I said '${say}' in ${channel ? channel.toString() : interaction.channel?.toString()}` }); // eslint-disable-line max-len
 
     const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {

@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /* eslint-disable no-unused-vars */
 
 import { stripIndents } from 'common-tags';
@@ -120,7 +121,6 @@ export const dReactionRole: SlashCommand = {
         ))),
   async execute(interaction) {
     startlog(F, interaction);
-    if (!interaction.guild) return false;
     if (!interaction.guild) {
       // log.debug(F, `no guild!`);
       await interaction.reply(guildError);
@@ -403,7 +403,7 @@ export async function setupTemplateReactionRole(
     const embed = embedTemplate()
       .setAuthor({ name: 'Notifications', iconURL: env.TS_ICON_URL, url: tripsitUrl })
       .setDescription(stripIndents`Click the button(s) below to pick your notification(s) roles!`)
-      .setFooter({ text: 'Having one of these roles means you will receieve a @ ping notification for the respective topic.' })
+      .setFooter({ text: 'Having one of these roles means you will receive a @ ping notification for the respective topic.' }) // eslint-disable-line max-len
       .setColor(Colors.Yellow);
 
     const Announcements = await guild.roles.fetch(env.ROLE_ANNOUNCEMENTS) as Role;

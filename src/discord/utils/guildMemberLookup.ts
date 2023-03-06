@@ -37,7 +37,8 @@ export async function getDiscordMember(
   } else if (string.includes('#')) {
     // log.debug(F, `${string} is a tag!`);
     // const memberCollection = await interaction.guild.members.fetch({ query: string, limit: 10 });
-    const memberCollection = await interaction.guild.members.fetch().then(memberList => memberList.filter(mem => mem.user.tag === string));
+    const memberCollection = await interaction.guild.members.fetch()
+      .then(memberList => memberList.filter(mem => mem.user.tag === string));
 
     // log.debug(F, `memberCollection: ${memberCollection.size} #1 = ${memberCollection.first()?.displayName}`);
 

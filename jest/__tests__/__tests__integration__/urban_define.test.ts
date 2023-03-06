@@ -5,13 +5,13 @@ import {
 } from 'discord.js';
 import { parse } from 'path';
 import { stripIndents } from 'common-tags';
-import { dUrbandefine } from '../commands/archive/d.urbanDefine';
+import { dUrbanDefine } from '../commands/archive/d.urbanDefine';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../../utils/testutils';
 import log from '../../global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line
 
-const slashCommand = dUrbandefine;
+const slashCommand = dUrbanDefine;
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {

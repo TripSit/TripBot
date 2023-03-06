@@ -14,7 +14,7 @@ import { bigBrother } from '../../global/utils/thoughtPolice';
 export default thoughtPolice;
 
 /**
- * This runs on every message to determine if a badword is used
+ * This runs on every message to determine if a bad word is used
  * @param {Message} message Message to scan
  * @return {Promise<void>}
  */

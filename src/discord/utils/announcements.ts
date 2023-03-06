@@ -119,12 +119,12 @@ export async function announcements(message:Message) {
     // 'Try to dose with a friend. Share with your friend any substances you have taken and how much. Communicate if you are not feeling well or if you need a break.',
     // 'Sleep is important! A sleep deficit can impair you more than drinking alcohol.',
     // 'Do not drive after dosing, even if you don\'t feel the effects',
-    // 'Redosing is not usually a good idea: Sometimes both doses will kick in, sometimes your tolerance will waste both doses',
+    // 'Re-dosing is not usually a good idea: Sometimes both doses will kick in, sometimes your tolerance will waste both doses',
     // 'LSD and Mushrooms share a tolerance! Check out /calc-psychedelics for more info',
     // 'When snorting, crush your powder as fine as possible and make sure everyone has their own straw. Alternate nostrils between hits.',
   ];
 
-  const channelAnnouncments = [
+  const chanAnnouncements = [
     `You can change your color and mindset in the ${channelStart.toString()}`,
     `Stay up to date with TripSit news in ${channelAnnouncements.toString()}`,
     `Make sure to follow the ${channelRules.toString()}!`,
@@ -195,8 +195,8 @@ export async function announcements(message:Message) {
   //   `Pull up a random topic with </topic:1009840858478166040>`,
   //   `Play with various </triptoys:1009840858998251603>`,
   //   `Check the definition of something with </urban_define:1009840858998251604>`,
-  //   `Want to talk but dont need help? Try a </warmline:1009840858998251605>`,
-  //   `Seach </youtube:1017060823279087663> for a fun video`,
+  //   `Want to talk but don't need help? Try a </warmline:1009840858998251605>`,
+  //   `Search </youtube:1017060823279087663> for a fun video`,
   // ];
 
   // const vipAnnouncements = [
@@ -214,10 +214,10 @@ export async function announcements(message:Message) {
   const embed = embedTemplate();
 
   const genAnnouncements = hrAnnouncements.concat(
-    channelAnnouncments,
+    chanAnnouncements,
   );
 
-  // const allAnncouneemnts = [
+  // const allAnnouncements = [
   //   genAnnouncements,
   //   vipAnnouncements,
   // ];
@@ -310,7 +310,7 @@ export async function announcements(message:Message) {
     } else if (messageCounter[message.channel.id] % frequency === 0) {
       // If the number of messages sent in the channel / by (frequency) has no remainder..
 
-      // log.debug(F, `genAccountment.length: ${genAnnouncements.length}`);
+      // log.debug(F, `genAnnouncements.length: ${genAnnouncements.length}`);
 
       const randomGenNumber = Math.floor(Math.random() * (genAnnouncements.length));
 

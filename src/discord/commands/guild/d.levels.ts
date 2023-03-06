@@ -257,7 +257,9 @@ export const dLevels: SlashCommand = {
 
     // Progress Bars Calculate
     const progressText = levelData.TEXT.TOTAL.level_exp / levelData.TEXT.TOTAL.nextLevel;
-    const progressVoice = levelData.VOICE.TOTAL.level_exp / levelData.VOICE.TOTAL.nextLevel;
+    const progressVoice = levelData.VOICE.TOTAL
+      ? levelData.VOICE.TOTAL.level_exp / levelData.VOICE.TOTAL.nextLevel
+      : 0;
 
     const progressGeneral = levelData.TEXT.GENERAL
       ? levelData.TEXT.GENERAL.level_exp / levelData.TEXT.GENERAL.nextLevel
@@ -305,7 +307,7 @@ export const dLevels: SlashCommand = {
     context.fillText(`${levelData.TEXT.TOTAL.level}`, 657, 213);
     context.font = '25px futura';
     context.fillText(`${levelData.TEXT.GENERAL ? levelData.TEXT.GENERAL.level : 0}`, 657, 284);
-    context.fillText(`${levelData.VOICE.TOTAL.level}`, 657, 344);
+    context.fillText(`${levelData.VOICE.TOTAL ? levelData.VOICE.TOTAL.level : 0}`, 657, 344);
     if (layout > 1 && levelData.TEXT.TRIPSITTER) {
       context.fillText(`${levelData.TEXT.TRIPSITTER.level}`, 657, 404);
     } else {

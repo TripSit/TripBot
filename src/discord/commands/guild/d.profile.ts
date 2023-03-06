@@ -597,7 +597,7 @@ export async function getProfilePreview(target: GuildMember, imagePath: string, 
   // Username Text
   context.font = applyUsername(canvasObj, `${target.displayName}`);
   context.fillStyle = textColor;
-  if (option === 'profiletitle') {
+  if (option === 'profileTitle') {
     context.textBaseline = 'bottom';
     context.fillText(`${target.displayName}`, 146, 76);
     context.font = '30px futura';
@@ -669,33 +669,33 @@ export async function getProfilePreview(target: GuildMember, imagePath: string, 
     const totalTextData = await getTotalLevel(profileData.totalTextExp);
     context.fillText(`${totalTextData.level}`, 894, 250); */
   /* // Choose and Draw the Level Image */
-  let LevelImagePath = '' as string;
-  // if (totalTextData.level < 10) { */
-  LevelImagePath = 'badgeVip0'; /*
-    } else if (totalTextData.level < 20) {
-      LevelImagePath = 'badgeVip1';
-    } else if (totalTextData.level < 30) {
-      LevelImagePath = 'badgeVip2';
-    } else if (totalTextData.level < 40) {
-      LevelImagePath = 'badgeVip3';
-    } else if (totalTextData.level < 50) {
-      LevelImagePath = 'badgeVip4';
-    } else if (totalTextData.level < 60) {
-      LevelImagePath = 'badgeVip5';
-    } else if (totalTextData.level < 70) {
-      LevelImagePath = 'badgeVip6';
-    } else if (totalTextData.level < 80) {
-      LevelImagePath = 'badgeVip7';
-    } else if (totalTextData.level < 90) {
-      LevelImagePath = 'badgeVip8';
-    } else if (totalTextData.level < 100) {
-      LevelImagePath = 'badgeVip9';
-    } else if (totalTextData.level >= 100) {
-      LevelImagePath = 'badgeVip10';
-    }
-    // log.debug(F, `LevelImagePath: ${LevelImagePath}`); */
-  const LevelImage = await Canvas.loadImage(await imageGet(LevelImagePath));
-  context.drawImage(LevelImage, 758, 57);
+  // let LevelImagePath: string;
+  // // if (totalTextData.level < 10) { /*
+  // LevelImagePath = 'badgeVip0';
+  //   } else if (totalTextData.level < 20) {
+  //     LevelImagePath = 'badgeVip1';
+  //   } else if (totalTextData.level < 30) {
+  //     LevelImagePath = 'badgeVip2';
+  //   } else if (totalTextData.level < 40) {
+  //     LevelImagePath = 'badgeVip3';
+  //   } else if (totalTextData.level < 50) {
+  //     LevelImagePath = 'badgeVip4';
+  //   } else if (totalTextData.level < 60) {
+  //     LevelImagePath = 'badgeVip5';
+  //   } else if (totalTextData.level < 70) {
+  //     LevelImagePath = 'badgeVip6';
+  //   } else if (totalTextData.level < 80) {
+  //     LevelImagePath = 'badgeVip7';
+  //   } else if (totalTextData.level < 90) {
+  //     LevelImagePath = 'badgeVip8';
+  //   } else if (totalTextData.level < 100) {
+  //     LevelImagePath = 'badgeVip9';
+  //   } else if (totalTextData.level >= 100) {
+  //     LevelImagePath = 'badgeVip10';
+  //   }
+  // log.debug(F, `LevelImagePath: ${LevelImagePath}`);
+  // const LevelImage = await Canvas.loadImage(await imageGet('badgeVip0'));
+  // context.drawImage(LevelImage, 758, 57);
 
   // Level Bar Circle BG
   context.strokeStyle = chipColor;
