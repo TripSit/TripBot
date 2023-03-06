@@ -55,7 +55,7 @@ export async function getUser(
           .returning('*'));
       // log.debug(F, `data2: ${JSON.stringify(data, null, 2)}`);
       } catch (err) {
-        log.error(F, `Error getting user: ${err}`);
+        log.error(F, `Error inserting user: ${err}`);
         log.error(F, `discordId: ${discordId} | userId: ${userId}`);
       }
     }
@@ -340,7 +340,7 @@ export async function usersGetMindsets():Promise<Users[]> {
       .select('*')
       .whereNotNull('mindset_role_expires_at');
   } catch (err) {
-    log.error(F, `Error getting users: ${err}`);
+    log.error(F, `Error getting users (mindsets): ${err}`);
   }
   return users;
 }
@@ -906,7 +906,7 @@ export async function personaGet(
   // log.debug(F, `data1: ${JSON.stringify(data, null, 2)}`);
   if (data === undefined) {
     try {
-      [data] = (await db<Personas>('users')
+      [data] = (await db<Personas>('personas')
         .insert({
           user_id: userId,
           tokens: 0,
