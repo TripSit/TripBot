@@ -55,7 +55,7 @@ export async function getUser(
           .returning('*'));
       // log.debug(F, `data2: ${JSON.stringify(data, null, 2)}`);
       } catch (err) {
-        log.error(F, `Error getting user: ${err}`);
+        log.error(F, `Error inserting user: ${err}`);
         log.error(F, `discordId: ${discordId} | userId: ${userId}`);
       }
     }
@@ -340,7 +340,7 @@ export async function usersGetMindsets():Promise<Users[]> {
       .select('*')
       .whereNotNull('mindset_role_expires_at');
   } catch (err) {
-    log.error(F, `Error getting users: ${err}`);
+    log.error(F, `Error getting users (mindsets): ${err}`);
   }
   return users;
 }
@@ -789,7 +789,7 @@ export async function drugGet(
   drugId?:string,
   drugName?:string,
 ):Promise<DrugNames[]> {
-// log.debug(F, 'drugGet started');
+  // log.debug(F, 'drugGet started');
   if (env.POSTGRES_DB_URL === undefined) return [];
   let response = [] as DrugNames[];
   if (drugName) {
@@ -801,19 +801,21 @@ export async function drugGet(
         .orWhere('name', drugName.toUpperCase());
     } catch (err) {
       log.error(F, `Error getting drug: ${err}`);
-      log.error(F, `drugId: ${drugId}`);
+      log.error(F, `drugId: ${drugId} (should be null)`);
       log.error(F, `drugName: ${drugName}`);
     }
   }
-  try {
-    response = await db<DrugNames>('drug_names')
-      .select('*')
-      .where('drug_id', drugId)
-      .andWhere('is_default', true);
-  } catch (err) {
-    log.error(F, `Error getting drug: ${err}`);
-    log.error(F, `drugId: ${drugId}`);
-    log.error(F, `drugName: ${drugName}`);
+  if (drugId) {
+    try {
+      response = await db<DrugNames>('drug_names')
+        .select('*')
+        .where('drug_id', drugId)
+        .andWhere('is_default', true);
+    } catch (err) {
+      log.error(F, `Error getting drug (id): ${err}`);
+      log.error(F, `drugId: ${drugId}`);
+      log.error(F, `drugName: ${drugName} (should be null)`);
+    }
   }
 
   return response;
@@ -906,7 +908,7 @@ export async function personaGet(
   // log.debug(F, `data1: ${JSON.stringify(data, null, 2)}`);
   if (data === undefined) {
     try {
-      [data] = (await db<Personas>('users')
+      [data] = (await db<Personas>('personas')
         .insert({
           user_id: userId,
           tokens: 0,
