@@ -292,7 +292,7 @@ export const dDrug: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
     let embed = embedTemplate();
     // Check if the interaction is coming from DM
 
