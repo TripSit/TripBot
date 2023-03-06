@@ -2469,8 +2469,7 @@ export async function rpgTrivia(
           ],
         });
       } else {
-        await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
-
+        // await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
         // If not the first question, edit the previous message
         await sleep(5 * 1000); // eslint-disable-line no-await-in-loop
         await interaction.editReply({ // eslint-disable-line no-await-in-loop
