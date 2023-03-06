@@ -2510,8 +2510,9 @@ export async function rpgTrivia(
         timedOut = true;
       }
       if (timedOut === true) break;
+      await collected.update({}); // eslint-disable-line no-await-in-loop
 
-      await collected.update({ // eslint-disable-line no-await-in-loop
+      await collected.editReply({ // eslint-disable-line no-await-in-loop
         components: [
           new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
