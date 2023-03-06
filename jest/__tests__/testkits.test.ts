@@ -34,7 +34,7 @@ describe(slashCommand.data.name, () => {
         title: 'Test Kit Resources and information!',
         description: stripIndents`
       [How to use a reagent test kit](https://dancesafe.org/testing-kit-instructions/)
-      [How to use fent strips](https://dancesafe.org/you-may-be-using-fentanyl-testing-strips-incorrectly/)
+      [How to use fentanyl strips](https://dancesafe.org/you-may-be-using-fentanyl-testing-strips-incorrectly/)
       [More testkit resources on the TripSit wiki!](https://wiki.tripsit.me/wiki/Test_Kits)
       `,
         fields: [

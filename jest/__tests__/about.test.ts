@@ -35,13 +35,13 @@ describe(slashCommand.data.name, () => {
         color: Colors.DarkBlue,
         title: 'About TripBot',
         url: 'https://tripsit.me/about/',
-        description: stripIndents`This app is created by TripSit, an organisation which helps to provide factual information        about drugs and how to reduce the harms involved in using them.
+        description: stripIndents`This app is created by TripSit, an organization which helps to provide factual information        about drugs and how to reduce the harms involved in using them.
               The official support server is [TripSit discord](https://discord.gg/TripSit). If you have issues/questions, join and talk with Moonbear!`,
         fields: [
           {
             name: 'Invite',
             value: stripIndents`[Click here to invite TripBot to your own server](https://discord.com/api/oauth2/authorize?client_id=957780726806380545&permissions=18432&scope=bot%20applications.commands).
-                  Note: For advanced features you will need to give the bot more permissions at your discression.`,
+                  Note: For advanced features you will need to give the bot more permissions at your discretion.`,
           },
           {
             name: 'Disclaimer',
