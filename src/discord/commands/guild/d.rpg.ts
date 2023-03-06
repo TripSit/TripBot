@@ -42,7 +42,7 @@ import {
 import { Personas, RpgInventory } from '../../../global/@types/database';
 import { imageGet } from '../../utils/imageGet';
 import { GameName } from '../../../global/@types/global';
-import { difficulties, numberOfQuestions } from '../../utils/emoji';
+import { customButton, difficulties, numberOfQuestions } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
 
 const Trivia = require('trivia-api');
@@ -2504,26 +2504,26 @@ export async function rpgTrivia(
       } catch (err) {
         // If the user doesn't answer in time
         log.debug(F, 'User did not answer in time');
-
         embedStatus = timesUp;
         answerColor = Colors.Red as ColorResolvable;
         questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
         timedOut = true;
       }
-
       if (timedOut === true) break;
 
-      const disabledButtons = choices.map(choice => new ButtonBuilder()
-        .setCustomId(choice)
-        .setDisabled(true)
-        .setEmoji(choice)
-        .setStyle(ButtonStyle.Secondary))
-        .concat([
-          global.buttons.quit.setDisabled(false),
-        ]);
-
       await collected.update({ // eslint-disable-line no-await-in-loop
-        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(disabledButtons)],
+        components: [
+          new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+              choices.map(choice => new ButtonBuilder()
+                .setCustomId(choice)
+                .setDisabled(true)
+                .setEmoji(choice)
+                .setStyle(ButtonStyle.Secondary))
+                .concat([
+                  customButton('rpgQuit', 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(true),
+                ]),
+            )],
       });
 
       if (collected.customId === 'rpgQuit') {
