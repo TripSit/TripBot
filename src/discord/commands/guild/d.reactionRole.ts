@@ -507,7 +507,7 @@ export async function processReactionRole(
     IC,
   } = JSON.parse(`{${interaction.customId}}`) as {
     RID:string,
-    IM?:boolean,
+    IM?:string,
     IC?:string,
   };
   if (!interaction.guild) {
@@ -520,10 +520,12 @@ export async function processReactionRole(
     await interaction.reply(memberError);
   }
 
-  const introMessageRequired = IM === true;
+  // log.debug(F, ` RID: ${RID} IM: ${IM} typeof IM: ${typeof IM} IC: ${IC} `);
+  const introMessageRequired = IM === 'true';
   if (!introMessageRequired) {
     await interaction.deferReply({ ephemeral: true });
   }
+  // log.debug(F, `introMessageRequired: ${introMessageRequired} `);
 
   const { guild } = interaction;
   const role = await guild.roles.fetch(RID);
@@ -634,6 +636,8 @@ export async function processReactionRole(
         const channel = await i.guild?.channels.fetch(channelProvided as string) as TextChannel;
 
         const roleTeamtripsit = await i.guild?.roles.fetch(env.ROLE_TEAMTRIPSIT) as Role;
+
+        // log.debug(F, `channelId: ${channel.id} | metaid = ${env.CHANNEL_TRIPSITMETA}`);
 
         if (channel.id === env.CHANNEL_TRIPSITMETA) {
           const intro = stripIndents`
