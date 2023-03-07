@@ -610,18 +610,19 @@ export async function processReactionRole(
         const {
           II,
         } = JSON.parse(`{${i.customId}}`);
+        i.deferReply({ ephemeral: true });
 
         // log.debug(F, `II: ${II}`);
 
         if (II !== interaction.id) return;
         if (!i.guild) {
           // log.debug(F, `no guild!`);
-          await i.reply(guildError);
+          await i.editReply(guildError);
           return;
         }
         if (!i.member) {
         // log.debug(F, `no member!`);
-          await i.reply(memberError);
+          await i.editReply(memberError);
         }
 
         introMessage = i.fields.getTextInputValue('introduction');
@@ -631,7 +632,7 @@ export async function processReactionRole(
         introMessage = introMessage.replace(/^(.*)$/gm, '> $1');
 
         await target.roles.add(role);
-        await i.reply({ content: `Added role ${role.name}` });
+        await i.editReply({ content: `Added role ${role.name}` });
 
         const channel = await i.guild?.channels.fetch(channelProvided as string) as TextChannel;
 
