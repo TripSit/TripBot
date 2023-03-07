@@ -128,7 +128,10 @@ export const mod: SlashCommand = {
       if (!interaction.channel?.isThread()
       || !interaction.channel.parentId
       || interaction.channel.parentId !== env.CHANNEL_MODERATORS) {
-        await interaction.editReply({ content: 'This command can only be run inside of a mod thread!' });
+        await interaction.reply({
+          content: 'This command can only be run inside of a mod thread!',
+          ephemeral: true,
+        });
         return false;
       }
 
@@ -138,7 +141,10 @@ export const mod: SlashCommand = {
       if (!target) {
         const userData = await getUser(targetString, null);
         if (!userData) {
-          await interaction.editReply({ content: 'Failed to link thread, I could not find this user in the guild, and they do not exist in the database!' }); // eslint-disable-line max-len
+          await interaction.reply({
+            content: 'Failed to link thread, I could not find this user in the guild, and they do not exist in the database!',
+            ephemeral: true,
+          }); // eslint-disable-line max-len
           return false;
         }
         result = await linkThread(targetString, interaction.channelId, override);
@@ -150,9 +156,10 @@ export const mod: SlashCommand = {
         await interaction.editReply({ content: 'Successfully linked thread!' });
       } else {
         const existingThread = await interaction.client.channels.fetch(result);
-        await interaction.editReply({
+        await interaction.reply({
           content: stripIndents`Failed to link thread, this user has an existing thread: ${existingThread}
           Use the override parameter if you're sure!`,
+          ephemeral: true,
         });
       }
 
@@ -193,6 +200,7 @@ export const mod: SlashCommand = {
     else if (command === 'UN-UNDERBAN') verb = 'removing underban on';
 
     if (command === 'INFO') {
+      log.debug(F, 'INFO command, deferring reply (ephemeral)');
       await interaction.deferReply({ ephemeral: true });
       await interaction.editReply(await moderate(
         actor,
