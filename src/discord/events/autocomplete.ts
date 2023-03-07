@@ -222,6 +222,12 @@ async function autocompleteConvert(interaction:AutocompleteInteraction) {
   }
 }
 
+// Get a list of drug names and aliases from drugDataAll
+const drugNames = drugDataAll.map(drug => ({
+  name: drug.name,
+  aliases: drug.aliases,
+}));
+
 async function autocompleteDrugNames(interaction:AutocompleteInteraction) {
   const options = {
     shouldSort: true,
@@ -235,7 +241,7 @@ async function autocompleteDrugNames(interaction:AutocompleteInteraction) {
       'aliases',
     ],
   };
-  const fuse = new Fuse(drugDataAll, options);
+  const fuse = new Fuse(drugNames, options);
   const focusedValue = interaction.options.getFocused();
   const results = fuse.search(focusedValue);
   let top25 = [];
