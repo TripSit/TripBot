@@ -836,10 +836,10 @@ export const dRpg: SlashCommand = {
       .setDescription('Go to the coinflip game'))
     .addSubcommand(subcommand => subcommand
       .setName('roulette')
-      .setDescription('Go to the roulette game'))
-    .addSubcommand(subcommand => subcommand
-      .setName('trivia')
-      .setDescription('Go to the trivia parlor')),
+      .setDescription('Go to the roulette game')),
+    // .addSubcommand(subcommand => subcommand
+    //   .setName('trivia')
+    //   .setDescription('Go to the trivia parlor')),
   async execute(interaction) {
     startLog(F, interaction);
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
@@ -902,9 +902,9 @@ export const dRpg: SlashCommand = {
     if (subcommand === 'roulette') {
       await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette'));
     }
-    if (subcommand === 'trivia') {
-      await interaction.editReply(await rpgTrivia(interaction));
-    }
+    // if (subcommand === 'trivia') {
+    //   await interaction.editReply(await rpgTrivia(interaction));
+    // }
 
     // if (subcommand === 'blackjack') {
     //   await interaction.editReply(await rpgArcade(interaction));
@@ -929,10 +929,10 @@ export const dRpg: SlashCommand = {
       else if (i.customId === 'rpgCoinFlip') await i.update(await rpgArcadeGame(i, 'Coinflip'));
       else if (i.customId === 'rpgRoulette') await i.update(await rpgArcadeGame(i, 'Roulette'));
 
-      else if (i.customId === 'rpgTrivia') await i.update(await rpgTrivia(i));
-      else if (i.customId === 'rpgDifficulty') await i.update(await rpgTrivia(i));
-      else if (i.customId === 'rpgQuestionLimit') await i.update(await rpgTrivia(i));
-      else if (i.customId === 'rpgStart') await i.editReply(await rpgTrivia(i));
+      // else if (i.customId === 'rpgTrivia') await i.update(await rpgTrivia(i));
+      // else if (i.customId === 'rpgDifficulty') await i.update(await rpgTrivia(i));
+      // else if (i.customId === 'rpgQuestionLimit') await i.update(await rpgTrivia(i));
+      // else if (i.customId === 'rpgStart') await i.editReply(await rpgTrivia(i));
 
       else if (i.customId === 'rpgRouletteRed') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'red'));
       else if (i.customId === 'rpgRouletteBlack') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'black'));
@@ -2049,7 +2049,7 @@ export async function rpgArcade(
       .addComponents(
         global.buttons.coinFlip,
         global.buttons.roulette,
-        global.buttons.trivia,
+        // global.buttons.trivia,
         // global.buttons.blackjack,
         // global.buttons.slotMachine,
         global.buttons.town,
