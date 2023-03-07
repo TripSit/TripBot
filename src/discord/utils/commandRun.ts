@@ -39,7 +39,7 @@ export async function commandRun(
       log.error(F, `ERROR: ${error.stack}`);
       if (!interaction.replied) {
         if (interaction.deferred) {
-          interaction.editReply(genericError);
+          await interaction.editReply(genericError);
         } else {
           await interaction.reply({
             content: genericError,
