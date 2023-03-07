@@ -4,7 +4,12 @@ import {
   CategoryChannel,
   // GuildMember,
   PermissionsBitField,
+  EmbedBuilder,
+  Colors,
+  TextChannel,
 } from 'discord.js';
+import { stripIndents } from 'common-tags';
+import { embedTemplate } from '../utils/embedTemplate';
 
 // const F = f(__filename);
 
@@ -19,7 +24,7 @@ export async function pitchTent(
   New:VoiceState,
 ): Promise<void> {
   New.member?.guild.channels.create({
-    name: `⛺│${New.member.displayName}'s tent`,
+    name: `⛺│ REAL ${New.member.displayName}'s tent`,
     type: ChannelType.GuildVoice,
     parent: env.CATEGORY_CAMPGROUND,
     permissionOverwrites: [
@@ -61,9 +66,36 @@ export async function pitchTent(
         ],
       },
     ],
-  }).then(newChannel => {
+  }).then(async newChannel => {
     New.member?.voice.setChannel(newChannel.id);
+    // const embed = embedTemplate()
+    //   .setAuthor(null)
+    //   .setColor(env.Colors_Green)
+    //   .setTitle('Commands for your tent')
+    //   .setDescription(` To undo a command, just type it again.
+    //   **/voice lock** - Locks your tent so no one else can join it
+    //   **/voice hide** - Hides your tent from the list of voice channels
+    //   **/voice rename** - Changes the name of your tent
+// 
+    //   **/voice mute @user** - Mutes a user for everyone in your tent
+    //   **/voice ban @user** - Bans a user from joining and seeing your tent
+    //   **/voice cohost @user** - Allows another user to use these commands
+    //   `);
+    newChannel = await newChannel.fetch();
+    await newChannel.send(`Welcome to your tent <@${New.member?.id}>!
+Manage your tent:
+
+**/voice lock** - Locks your tent so no one else can join it
+**/voice hide** - Hides your tent from the list of voice channels
+**/voice rename** - Changes the name of your tent
+**/voice mute @user** - Mutes a user for everyone in your tent
+**/voice ban @user** - Bans a user from joining and seeing your tent
+**/voice cohost @user** - Allows another user to use these commands
+To undo a command, just type it again.`);
+    // await newChannel.send({ embeds: [embed] });
   });
+  
+
 }
 
 /**
