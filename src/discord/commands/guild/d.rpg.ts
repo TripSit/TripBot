@@ -837,9 +837,9 @@ export const dRpg: SlashCommand = {
     .addSubcommand(subcommand => subcommand
       .setName('roulette')
       .setDescription('Go to the roulette game')),
-    // .addSubcommand(subcommand => subcommand
-    //   .setName('trivia')
-    //   .setDescription('Go to the trivia parlor')),
+  // .addSubcommand(subcommand => subcommand
+  //   .setName('trivia')
+  //   .setDescription('Go to the trivia parlor')),
   async execute(interaction) {
     startLog(F, interaction);
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
@@ -916,22 +916,23 @@ export const dRpg: SlashCommand = {
     // Button collector
     collector.on('collect', async (i: MessageComponentInteraction) => {
     // log.debug(F, `Interaction: ${JSON.stringify(i.customId, null, 2)}`);
-      if (i.customId === 'rpgTown') await i.update(await rpgTown(i));
-      else if (i.customId === 'rpgBounties') await i.update(await rpgBounties(i, null));
-      else if (i.customId === 'rpgMarket') await i.update(await rpgMarket(i));
-      else if (i.customId === 'rpgArcade') await i.update(await rpgArcade(i));
-      else if (i.customId === 'rpgHelp') await i.update(await rpgHelp(i));
-      else if (i.customId === 'rpgWager1') await i.update(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager10') await i.update(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager100') await i.update(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager1000') await i.update(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager10000') await i.update(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgCoinFlip') await i.update(await rpgArcadeGame(i, 'Coinflip'));
-      else if (i.customId === 'rpgRoulette') await i.update(await rpgArcadeGame(i, 'Roulette'));
+      await i.deferUpdate();
+      if (i.customId === 'rpgTown') await i.editReply(await rpgTown(i));
+      else if (i.customId === 'rpgBounties') await i.editReply(await rpgBounties(i, null));
+      else if (i.customId === 'rpgMarket') await i.editReply(await rpgMarket(i));
+      else if (i.customId === 'rpgArcade') await i.editReply(await rpgArcade(i));
+      else if (i.customId === 'rpgHelp') await i.editReply(await rpgHelp(i));
+      else if (i.customId === 'rpgWager1') await i.editReply(await rpgArcadeWager(i));
+      else if (i.customId === 'rpgWager10') await i.editReply(await rpgArcadeWager(i));
+      else if (i.customId === 'rpgWager100') await i.editReply(await rpgArcadeWager(i));
+      else if (i.customId === 'rpgWager1000') await i.editReply(await rpgArcadeWager(i));
+      else if (i.customId === 'rpgWager10000') await i.editReply(await rpgArcadeWager(i));
+      else if (i.customId === 'rpgCoinFlip') await i.editReply(await rpgArcadeGame(i, 'Coinflip'));
+      else if (i.customId === 'rpgRoulette') await i.editReply(await rpgArcadeGame(i, 'Roulette'));
 
-      // else if (i.customId === 'rpgTrivia') await i.update(await rpgTrivia(i));
-      // else if (i.customId === 'rpgDifficulty') await i.update(await rpgTrivia(i));
-      // else if (i.customId === 'rpgQuestionLimit') await i.update(await rpgTrivia(i));
+      // else if (i.customId === 'rpgTrivia') await i.editReply(await rpgTrivia(i));
+      // else if (i.customId === 'rpgDifficulty') await i.editReply(await rpgTrivia(i));
+      // else if (i.customId === 'rpgQuestionLimit') await i.editReply(await rpgTrivia(i));
       // else if (i.customId === 'rpgStart') await i.editReply(await rpgTrivia(i));
 
       else if (i.customId === 'rpgRouletteRed') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'red'));
@@ -952,18 +953,18 @@ export const dRpg: SlashCommand = {
 
       else if (i.customId === 'rpgCoinflipHeads') await i.editReply(await rpgArcadeGame(i, 'Coinflip', 'heads'));
       else if (i.customId === 'rpgCoinflipTails') await i.editReply(await rpgArcadeGame(i, 'Coinflip', 'tails'));
-      else if (i.customId === 'rpgHome') await i.update(await rpgHome(i, ''));
-      else if (i.customId === 'rpgSpecies') await i.update(await rpgHome(i, ''));
-      else if (i.customId === 'rpgClass') await i.update(await rpgHome(i, ''));
-      else if (i.customId === 'rpgGuild') await i.update(await rpgHome(i, ''));
+      else if (i.customId === 'rpgHome') await i.editReply(await rpgHome(i, ''));
+      else if (i.customId === 'rpgSpecies') await i.editReply(await rpgHome(i, ''));
+      else if (i.customId === 'rpgClass') await i.editReply(await rpgHome(i, ''));
+      else if (i.customId === 'rpgGuild') await i.editReply(await rpgHome(i, ''));
       else if (i.customId === 'rpgName') await rpgHomeNameChange(i);
-      else if (i.customId === 'rpgAccept') await i.update(await rpgHomeAccept(i));
-      else if (i.customId === 'rpgGeneralSelect') await i.update(await rpgMarketChange(i));
-      else if (i.customId === 'rpgMarketBuy') await i.update(await rpgMarketAccept(i));
-      else if (i.customId === 'rpgMarketPreview') await i.update(await rpgMarketPreview(i));
-      else if (i.customId === 'rpgBackgroundSelect') await i.update(await rpgHome(i, ''));
+      else if (i.customId === 'rpgAccept') await i.editReply(await rpgHomeAccept(i));
+      else if (i.customId === 'rpgGeneralSelect') await i.editReply(await rpgMarketChange(i));
+      else if (i.customId === 'rpgMarketBuy') await i.editReply(await rpgMarketAccept(i));
+      else if (i.customId === 'rpgMarketPreview') await i.editReply(await rpgMarketPreview(i));
+      else if (i.customId === 'rpgBackgroundSelect') await i.editReply(await rpgHome(i, ''));
       else if (i.customId === 'rpgQuest' || i.customId === 'rpgDungeon' || i.customId === 'rpgRaid') {
-        await i.update(await rpgBounties(i, i.customId.replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
+        await i.editReply(await rpgBounties(i, i.customId.replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
       }
     });
 
@@ -2183,7 +2184,8 @@ export async function rpgArcadeGame(
 
   // log.debug(F, `choice: ${choice}`);
   if (choice && currentBet === 0) {
-    const noBetError = {
+    // await (interaction as MessageComponentInteraction).editReply(noBetError);
+    return {
       embeds: [embedTemplate()
         .setAuthor(null)
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
@@ -2196,8 +2198,6 @@ export async function rpgArcadeGame(
         .setColor(Colors.Gold)],
       components,
     };
-    await (interaction as MessageComponentInteraction).update(noBetError);
-    return noBetError;
   }
 
   if (choice) {
@@ -2471,7 +2471,7 @@ export async function rpgTrivia(
           ],
         });
       } else {
-        // await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
+        // await (interaction as MessageComponentInteraction).editReply({}); // eslint-disable-line no-await-in-loop
         // If not the first question, edit the previous message
         await sleep(5 * 1000); // eslint-disable-line no-await-in-loop
         await interaction.editReply({ // eslint-disable-line no-await-in-loop
@@ -2979,7 +2979,7 @@ export async function rpgArcadeAnimate(
   gameName: GameName,
 ) {
   // if (env.NODE_ENV === 'development') {
-  //   await (interaction as MessageComponentInteraction).update({
+  //   await (interaction as MessageComponentInteraction).editReply({
   //     embeds: [embedTemplate()
   //       .setAuthor(null)
   //       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
@@ -2990,7 +2990,7 @@ export async function rpgArcadeAnimate(
   // }
 
   if (gameName === 'Coinflip') {
-    await (interaction as MessageComponentInteraction).update({ // eslint-disable-line no-await-in-loop
+    await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
       embeds: [],
       content: 'https://media.tenor.com/tewn7lzVDgcAAAAC/coin-flip-flip.gif',
       components: [],
@@ -3006,7 +3006,7 @@ export async function rpgArcadeAnimate(
     //     { name: '🪙', value: '🫱' },
     //   ]);
 
-    // await (interaction as MessageComponentInteraction).update({ // eslint-disable-line no-await-in-loop
+    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
     //   embeds: [embed],
     //   components: [],
     // });
@@ -3070,7 +3070,7 @@ export async function rpgArcadeAnimate(
   }
 
   if (gameName === 'Roulette') {
-    await (interaction as MessageComponentInteraction).update({ // eslint-disable-line no-await-in-loop
+    await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
       embeds: [],
       content: 'https://media2.giphy.com/media/1DEJwfwdknKZq/giphy.gif',
       components: [],
@@ -3100,7 +3100,7 @@ export async function rpgArcadeAnimate(
     //       { name: '⬆️', value: '🟥', inline: true },
     //       ...wheelBottom,
     //     );
-    //   await (interaction as MessageComponentInteraction).update({ embeds: [embed] }); // eslint-disable-line no-await-in-loop
+    //   await (interaction as MessageComponentInteraction).editReply({ embeds: [embed] }); // eslint-disable-line no-await-in-loop
     //   await sleep(0.5 * 1000); // eslint-disable-line no-await-in-loop
 
     //   const arrows = ['↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️', '⬆️', '↗️', '➡️', '↘️'];
