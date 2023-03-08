@@ -39,6 +39,13 @@ describe(slashCommand.data.name, () => {
       `,
         fields: [
           {
+            name: 'DanceSafe (Worldwide)',
+            value: stripIndents`
+          [Website](https://dancesafe.org/product-category/testing-strips/)            
+          [Info on the new test strips](https://dancesafe.org/fentanyl/)`,
+            inline: true,
+          },
+          {
             name: 'Dosetest (Worldwide)',
             value: stripIndents`
           [Website](https://dosetest.com/)            
