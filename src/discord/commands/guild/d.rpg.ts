@@ -41,8 +41,7 @@ import {
 } from '../../../global/utils/knex';
 import { Personas, RpgInventory } from '../../../global/@types/database';
 import { imageGet } from '../../utils/imageGet';
-import { GameName } from '../../../global/@types/global';
-import { customButton, difficulties, numberOfQuestions } from '../../utils/emoji';
+import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
 
 const Trivia = require('trivia-api');
@@ -667,6 +666,8 @@ const text = {
   ],
 };
 
+export type GameName = 'Coinflip' | 'Roulette' | 'Blackjack' | 'Slots';
+
 const wagers = {} as {
   [key: string]: {
     gameName: GameName,
@@ -843,7 +844,7 @@ export const dRpg: SlashCommand = {
   async execute(interaction) {
     startLog(F, interaction);
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
-    const message = await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
+    await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
     const subcommand = interaction.options.getSubcommand();
 
     // const quietCommands = [
@@ -853,10 +854,6 @@ export const dRpg: SlashCommand = {
     //   'coinflip',
     //   'roulette',
     // ];
-
-    // Create a collector that will listen to buttons clicked by the user
-    const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id;
-    const collector = message.createMessageComponentCollector({ filter, time: 0 });
 
     // Get the user's persona data
     let personaData = await getPersonaInfo(interaction.user.id);
@@ -912,62 +909,6 @@ export const dRpg: SlashCommand = {
     // if (subcommand === 'slots') {
     //   await interaction.editReply(await rpgArcade(interaction));
     // }
-
-    // Button collector
-    collector.on('collect', async (i: MessageComponentInteraction) => {
-    // log.debug(F, `Interaction: ${JSON.stringify(i.customId, null, 2)}`);
-      await i.deferUpdate();
-      if (i.customId === 'rpgTown') await i.editReply(await rpgTown(i));
-      else if (i.customId === 'rpgBounties') await i.editReply(await rpgBounties(i, null));
-      else if (i.customId === 'rpgMarket') await i.editReply(await rpgMarket(i));
-      else if (i.customId === 'rpgArcade') await i.editReply(await rpgArcade(i));
-      else if (i.customId === 'rpgHelp') await i.editReply(await rpgHelp(i));
-      else if (i.customId === 'rpgWager1') await i.editReply(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager10') await i.editReply(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager100') await i.editReply(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager1000') await i.editReply(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager10000') await i.editReply(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgCoinFlip') await i.editReply(await rpgArcadeGame(i, 'Coinflip'));
-      else if (i.customId === 'rpgRoulette') await i.editReply(await rpgArcadeGame(i, 'Roulette'));
-
-      // else if (i.customId === 'rpgTrivia') await i.editReply(await rpgTrivia(i));
-      // else if (i.customId === 'rpgDifficulty') await i.editReply(await rpgTrivia(i));
-      // else if (i.customId === 'rpgQuestionLimit') await i.editReply(await rpgTrivia(i));
-      // else if (i.customId === 'rpgStart') await i.editReply(await rpgTrivia(i));
-
-      else if (i.customId === 'rpgRouletteRed') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'red'));
-      else if (i.customId === 'rpgRouletteBlack') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'black'));
-      else if (i.customId === 'rpgRouletteFirst') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'first'));
-      else if (i.customId === 'rpgRouletteSecond') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'second'));
-      else if (i.customId === 'rpgRouletteThird') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'third'));
-
-      else if (i.customId === 'rpgRouletteOdd') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'odds'));
-      else if (i.customId === 'rpgRouletteEven') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'evens'));
-      else if (i.customId === 'roulette1to12') await i.editReply(await rpgArcadeGame(i, 'Roulette', '1-12'));
-      else if (i.customId === 'roulette13to24') await i.editReply(await rpgArcadeGame(i, 'Roulette', '13-24'));
-      else if (i.customId === 'roulette25to36') await i.editReply(await rpgArcadeGame(i, 'Roulette', '25-36'));
-
-      else if (i.customId === 'rpgRouletteHigh') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'high'));
-      else if (i.customId === 'rpgRouletteLow') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'low'));
-      else if (i.customId === 'rpgRouletteZero') await i.editReply(await rpgArcadeGame(i, 'Roulette', '0'));
-
-      else if (i.customId === 'rpgCoinflipHeads') await i.editReply(await rpgArcadeGame(i, 'Coinflip', 'heads'));
-      else if (i.customId === 'rpgCoinflipTails') await i.editReply(await rpgArcadeGame(i, 'Coinflip', 'tails'));
-      else if (i.customId === 'rpgHome') await i.editReply(await rpgHome(i, ''));
-      else if (i.customId === 'rpgSpecies') await i.editReply(await rpgHome(i, ''));
-      else if (i.customId === 'rpgClass') await i.editReply(await rpgHome(i, ''));
-      else if (i.customId === 'rpgGuild') await i.editReply(await rpgHome(i, ''));
-      else if (i.customId === 'rpgName') await rpgHomeNameChange(i);
-      else if (i.customId === 'rpgAccept') await i.editReply(await rpgHomeAccept(i));
-      else if (i.customId === 'rpgGeneralSelect') await i.editReply(await rpgMarketChange(i));
-      else if (i.customId === 'rpgMarketBuy') await i.editReply(await rpgMarketAccept(i));
-      else if (i.customId === 'rpgMarketPreview') await i.editReply(await rpgMarketPreview(i));
-      else if (i.customId === 'rpgBackgroundSelect') await i.editReply(await rpgHome(i, ''));
-      else if (i.customId === 'rpgQuest' || i.customId === 'rpgDungeon' || i.customId === 'rpgRaid') {
-        await i.editReply(await rpgBounties(i, i.customId.replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
-      }
-    });
-
     return true;
   },
 };
@@ -980,11 +921,11 @@ export async function rpgTown(
 
   const rowTown = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
-      global.buttons.bounties,
-      global.buttons.market,
-      global.buttons.arcade,
-      global.buttons.home,
-      global.buttons.help,
+      customButton(`rpgBounties,user:${interaction.user.id}`, 'Bounties', 'buttonBounties', ButtonStyle.Primary),
+      customButton(`rpgMarket,user:${interaction.user.id}`, 'Market', 'buttonMarket', ButtonStyle.Primary),
+      customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
+      customButton(`rpgHome,user:${interaction.user.id}`, 'Home', 'buttonHome', ButtonStyle.Primary),
+      customButton(`rpgHelp,user:${interaction.user.id}`, 'Help', 'buttonHelp', ButtonStyle.Primary),
     );
 
   // log.debug(F, `RPG Town End: ${JSON.stringify(rowTown)}`);
@@ -1031,10 +972,10 @@ export async function rpgBounties(
 
   const rowBounties = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
-      global.buttons.quest,
-      global.buttons.dungeon,
-      global.buttons.raid,
-      global.buttons.town,
+      customButton(`rpgQuest,user:${interaction.user.id}`, 'Quest', 'buttonQuest', ButtonStyle.Secondary),
+      customButton(`rpgDungeon,user:${interaction.user.id}`, 'Dungeon', 'buttonDungeon', ButtonStyle.Secondary),
+      customButton(`rpgRaid,user:${interaction.user.id}`, 'Raid', 'buttonRaid', ButtonStyle.Secondary),
+      customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
     );
 
   const contracts = {
@@ -1214,16 +1155,33 @@ export async function rpgMarket(
     personaInventory,
   } = await rpgMarketInventory(interaction);
 
+  // log.debug(F, `marketInventory: ${JSON.stringify(marketInventory, null, 2)}`);
+  // log.debug(F, `personaTokens: ${personaTokens}`);
+  // log.debug(F, `personaInventory: ${JSON.stringify(personaInventory, null, 2)}`);
+
   // Create the market buttons - This is a select menu
   const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(menus.item.setOptions(marketInventory));
+    .addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId(`rpgGeneralSelect,user:${interaction.user.id}`)
+        .setPlaceholder('Select an item to buy')
+        .setOptions(marketInventory),
+
+    );
   // This is the row of nav buttons. It starts with the town button.
   const rowMarket = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(buttons.town);
+    .addComponents(
+      customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
+    );
 
   // Everyone gets the town button, but only people with purchased items get the items select menu
   const componentList = [rowMarket] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
+  // log.debug(F, `marketInventory.length: ${marketInventory.length}`);
+  // log.debug(F, `componentList: ${JSON.stringify(componentList, null, 2)}`);
+
   if (marketInventory.length > 0) { componentList.unshift(rowItems); }
+
+  // log.debug(F, `componentList: ${JSON.stringify(componentList, null, 2)}`);
 
   // The user has clicked the market button, send them the market embed
   return {
@@ -1273,10 +1231,10 @@ export async function rpgMarketChange(
   // Get a list of marketInventory where the value does not equal the choice
   const filteredItems = Object.values(marketInventory).filter(item => item.value !== choice);
 
-  // Reset the options menu to be empty
-  menus.item.setOptions();
-
-  menus.item.addOptions(filteredItems);
+  const stringMenu = new StringSelectMenuBuilder()
+    .setOptions(filteredItems)
+    .setCustomId(`rpgGeneralSelect,user:${interaction.user.id}`)
+    .setPlaceholder('Select an item to buy');
 
   // Use marketInventory and find the item that matches the choice, make it default
   let itemData = {} as {
@@ -1295,7 +1253,7 @@ export async function rpgMarketChange(
   const chosenItem = marketInventory.find(marketItem => marketItem.value === choice);
   if (chosenItem) {
     chosenItem.default = true;
-    menus.item.addOptions(chosenItem);
+    stringMenu.addOptions(chosenItem);
     const allItems = [...Object.values(items.general), ...Object.values(items.backgrounds)];
     itemData = allItems.find(item => item.value === chosenItem?.value) as {
       label: string;
@@ -1314,25 +1272,25 @@ export async function rpgMarketChange(
   }
 
   const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(menus.item);
+    .addComponents(stringMenu);
 
   const rowMarket = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
-      global.buttons.town,
+      customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
     );
 
   if (chosenItem && itemData.effect === 'background') {
     rowMarket.addComponents(
-      global.buttons.buy.setLabel(`Buy ${chosenItem.label}`),
-      global.buttons.preview,
+      customButton(`rpgMarketBuy,user:${interaction.user.id}`, 'Buy', 'buttonBuy', ButtonStyle.Success).setLabel(`Buy ${chosenItem.label}`),
+      customButton(`rpgMarketPreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
     );
   } else if (chosenItem) {
     rowMarket.addComponents(
-      global.buttons.buy.setLabel(`Buy ${chosenItem.label}`),
+      customButton(`rpgMarketBuy,user:${interaction.user.id}`, 'Buy', 'buttonBuy', ButtonStyle.Success).setLabel(`Buy ${chosenItem.label}`),
     );
   }
 
-  const components = menus.item.options.length === 0
+  const components = stringMenu.options.length === 0
     ? [rowMarket]
     : [rowItems, rowMarket];
 
@@ -1394,9 +1352,9 @@ export async function rpgMarketInventory(
   const marketInventory = [...Object.values(items.general), ...Object.values(items.backgrounds)]
     .map(item => {
       if (!inventoryData.find(i => i.value === item.value)) {
-        log.debug(F, `item: ${JSON.stringify(item, null, 2)}`);
-        log.debug(F, `item.emoji: ${item.emoji}`);
-        log.debug(F, `emojiGet(item.emoji): ${emojiGet(item.emoji)}`);
+        // log.debug(F, `item: ${JSON.stringify(item, null, 2)}`);
+        // log.debug(F, `item.emoji: ${item.emoji}`);
+        // log.debug(F, `emojiGet(item.emoji): ${emojiGet(item.emoji)}`);
         return {
           label: `${item.label} - ${item.cost} TT$`,
           value: item.value,
@@ -1585,11 +1543,14 @@ export async function rpgMarketAccept(
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
       .setTitle(`${emojiGet('buttonMarket')} Market`)
-      .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemData.cost} TripTokens.**
+      .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemData.cost} TripTokens.
+      
+      IT was sent to your Home, where you will need to equip it!**
       
       ${description}`)
       .setColor(Colors.Green)],
     components,
+    files: [],
   };
 }
 
@@ -1642,8 +1603,10 @@ export async function rpgHome(
   const filteredItems = Object.values(homeInventory).filter(item => item.value !== defaultOption);
 
   // Reset the options menu to be empty
-  menus.background.setOptions();
-  menus.background.addOptions(filteredItems);
+  const backgroundMenu = new StringSelectMenuBuilder()
+    .setCustomId(`rpgBackgroundSelect,user:${interaction.user.id}`)
+    .setPlaceholder('Select a background to use.')
+    .setOptions(filteredItems);
 
   // Get the item the user chose and display that as the default option
   let backgroundData = {} as {
@@ -1662,15 +1625,15 @@ export async function rpgHome(
   const chosenItem = homeInventory.find(item => item.value === defaultOption);
   if (chosenItem) {
     chosenItem.default = true;
-    menus.background.addOptions(chosenItem);
-    log.debug(F, `items.backgrounds: ${JSON.stringify(items.backgrounds, null, 2)}`);
+    backgroundMenu.addOptions(chosenItem);
+    // log.debug(F, `items.backgrounds: ${JSON.stringify(items.backgrounds, null, 2)}`);
     // convert the emoji property into an emoji using emojiGet
     const allItems = [...Object.values(items.backgrounds)].map(item => {
       const newItem = item;
       newItem.emoji = `<:${emojiGet('itemBackground').identifier}>`;
       return item;
     });
-    log.debug(F, `allItems: ${JSON.stringify(allItems, null, 2)}`);
+    // log.debug(F, `allItems: ${JSON.stringify(allItems, null, 2)}`);
     backgroundData = allItems.find(item => item.value === chosenItem?.value) as {
       label: string;
       value: string;
@@ -1689,10 +1652,10 @@ export async function rpgHome(
 
   // Set the item row
   const rowBackgrounds = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(global.menus.background);
+    .addComponents(backgroundMenu);
 
-  log.debug(F, `backgroundData (home change): ${JSON.stringify(backgroundData, null, 2)}`);
-  log.debug(F, `Button home: ${JSON.stringify(emojiGet('buttonHome'), null, 2)}`);
+  // log.debug(F, `backgroundData (home change): ${JSON.stringify(backgroundData, null, 2)}`);
+  // log.debug(F, `Button home: ${JSON.stringify(emojiGet('buttonHome'), null, 2)}`);
   // Build the embed
   const embed = embedTemplate()
     .setAuthor(null)
@@ -1731,20 +1694,20 @@ export async function rpgHome(
   // Build out the home navigation buttons
   const rowHome = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
-    // global.buttons.name,
-    // global.buttons.accept,
-    // global.buttons.decline,
-      global.buttons.town,
+    // customButton(`rpgName,user:${interaction.user.id}`, 'Name', '📝', ButtonStyle.Primary),
+    // customButton(`rpgAccept,user:${interaction.user.id}`, 'Accept', 'buttonAccept', ButtonStyle.Success),
+    // customButton(`rpgDecline,user:${interaction.user.id}`, 'Decline', 'buttonQuit', ButtonStyle.Danger),
+      customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
     );
 
   if (chosenItem && interaction.isStringSelectMenu()) {
     rowHome.addComponents(
-      global.buttons.accept,
+      customButton(`rpgAccept,user:${interaction.user.id}`, 'Accept', 'buttonAccept', ButtonStyle.Success),
     );
   }
 
   // If the user has backgrounds, add the backgrounds row
-  const components = menus.background.options.length === 0
+  const components = backgroundMenu.options.length === 0
     ? [rowHome]
     : [rowBackgrounds, rowHome];
 
@@ -1756,11 +1719,17 @@ export async function rpgHome(
   // const filteredItems = Object.values(genome.species).filter(item => item.value !== choice);
 
   // // Reset the options menu to be empty
-  // menus.species.setOptions();
+  // new StringSelectMenuBuilder()
+  // .setCustomId('rpgSpecies,user:${interaction.user.id}')
+  // .setPlaceholder('Pick a species').setOptions();
 
-  // menus.species.addOptions(filteredItems);
+  // new StringSelectMenuBuilder()
+  // .setCustomId('rpgSpecies,user:${interaction.user.id}')
+  // .setPlaceholder('Pick a species').addOptions(filteredItems);
 
-  // menus.species.addOptions([
+  // new StringSelectMenuBuilder()
+  // .setCustomId('rpgSpecies,user:${interaction.user.id}')
+  // .setPlaceholder('Pick a species').addOptions([
   //   {
   //     label: { ...genome.species }[choice as keyof typeof genome.species].label,
   //     value: { ...genome.species }[choice as keyof typeof genome.species].value,
@@ -1772,7 +1741,15 @@ export async function rpgHome(
 
   // selectSpecies.addOptions(Object.values(speciesDef).filter(s => s.value !== choice));
 
-  // menus.name.setOptions([{
+  //       new StringSelectMenuBuilder()
+  // .setCustomId('rpgNameDisplay,user:${interaction.user.id}')
+  // .setPlaceholder('No Name!')
+  // .setOptions([{
+  //   label: choice,
+  //   value: choice,
+  //   emoji: '👤',
+  //   default: true,
+  // }]);.setOptions([{
   //   label: personaData.name,
   //   value: personaData.name,
   //   emoji: '👤',
@@ -1780,7 +1757,15 @@ export async function rpgHome(
   // }]);
 
   // const rowNameDisplay = new ActionRowBuilder<StringSelectMenuBuilder>()
-  //   .setComponents(menus.name);
+  //   .setComponents(      new StringSelectMenuBuilder()
+  // .setCustomId('rpgNameDisplay,user:${interaction.user.id}')
+  // .setPlaceholder('No Name!')
+  // .setOptions([{
+  //   label: choice,
+  //   value: choice,
+  //   emoji: '👤',
+  //   default: true,
+  // }]););
 
   // log.debug(F, `classDef: ${JSON.stringify(classDef, null, 2)}`);
   // const selectedClassList = { ...genome.classes };
@@ -1788,10 +1773,14 @@ export async function rpgHome(
   // selectedClassList[personaData.class as keyof typeof selectedClassList].default = true;
   // log.debug(F, `selectedClassList2: ${JSON.stringify(selectedClassList, null, 2)}`);
 
-  // menus.class.setOptions(Object.values({ ...selectedClassList }));
+  // new StringSelectMenuBuilder()
+  // .setCustomId('rpgClass,user:${interaction.user.id}')
+  // .setPlaceholder('Select a class').setOptions(Object.values({ ...selectedClassList }));
 
   // const rowChangeClass = new ActionRowBuilder<StringSelectMenuBuilder>()
-  // //   .setComponents(menus.class);
+  // //   .setComponents(new StringSelectMenuBuilder()
+  // .setCustomId('rpgClass,user:${interaction.user.id}')
+  // .setPlaceholder('Select a class'));
 
   // log.debug(F, `speciesDef: ${JSON.stringify(genome.species, null, 2)}`);
   // const selectedSpeciesList = { ...genome.species };
@@ -1800,17 +1789,25 @@ export async function rpgHome(
   // log.debug(F, `selectedSpeciesList2: ${JSON.stringify(selectedSpeciesList, null, 2)}`);
   // log.debug(F, `speciesDef2: ${JSON.stringify(genome.species, null, 2)}`);
 
-  // menus.species.setOptions(Object.values({ ...selectedSpeciesList }));
-  // const rowChangeSpecies = new ActionRowBuilder<StringSelectMenuBuilder>()
-  //   .addComponents(menus.species);
+  // new StringSelectMenuBuilder()
+  //   .setCustomId('rpgSpecies,user:${interaction.user.id}')
+  //   .setPlaceholder('Pick a species').setOptions(Object.values({ ...selectedSpeciesList }));
+  // // const rowChangeSpecies = new ActionRowBuilder<StringSelectMenuBuilder>()
+  //   .addComponents(new StringSelectMenuBuilder()
+  // .setCustomId('rpgSpecies,user:${interaction.user.id}')
+  // .setPlaceholder('Pick a species'));
 
   // const selectedGuildList = { ...genome.guilds };
   // selectedGuildList[personaData.guild as keyof typeof selectedGuildList].default = true;
   // log.debug(F, `Selected guild list: ${JSON.stringify(selectedGuildList, null, 2)}`);
 
-  // menus.guild.setOptions(Object.values(selectedGuildList));
-  // const rowChangeGuild = new ActionRowBuilder<StringSelectMenuBuilder>()
-  //   .addComponents(menus.guild);
+  // new StringSelectMenuBuilder()
+  //   .setCustomId('rpgGuild,user:${interaction.user.id}')
+  //   .setPlaceholder('Select a guild').setOptions(Object.values(selectedGuildList));
+  // // const rowChangeGuild = new ActionRowBuilder<StringSelectMenuBuilder>()
+  // //   .addComponents(new StringSelectMenuBuilder()
+  //   .setCustomId('rpgGuild,user:${interaction.user.id}')
+  //   .setPlaceholder('Select a guild'));
 
   // const { embeds, components } = await rpgHomeChange(interaction);
 
@@ -1959,7 +1956,7 @@ export async function rpgHomeNameChange(
     .setLabel('What do you want to name your persona?')
     .setStyle(TextInputStyle.Short)
     .setRequired(true)
-    .setCustomId('rpgNewName'));
+    .setCustomId(`rpgNewName,user:${interaction.user.id}`));
   modal.addComponents([body]);
   await interaction.showModal(modal);
 
@@ -1975,23 +1972,36 @@ export async function rpgHomeNameChange(
 
       // log.debug(F, `name: ${choice}`);
 
-      menus.name.setOptions([{
-        label: choice,
-        value: choice,
-        emoji: '👤',
-        default: true,
-      }]);
+      new StringSelectMenuBuilder()
+        .setCustomId(`rpgNameDisplay,user:${interaction.user.id}`)
+        .setPlaceholder('No Name!')
+        .setOptions([{
+          label: choice,
+          value: choice,
+          emoji: '👤',
+          default: true,
+        }]);
 
       const rowHome = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
-          global.buttons.name,
-          global.buttons.accept,
-          global.buttons.decline,
-          global.buttons.town,
+          customButton(`rpgName,user:${interaction.user.id}`, 'Name', '📝', ButtonStyle.Primary),
+          customButton(`rpgAccept,user:${interaction.user.id}`, 'Accept', 'buttonAccept', ButtonStyle.Success),
+          customButton(`rpgDecline,user:${interaction.user.id}`, 'Decline', 'buttonQuit', ButtonStyle.Danger),
+          customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
         );
 
       const rowChangeNameDisplay = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(menus.name);
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgNameDisplay,user:${interaction.user.id}`)
+            .setPlaceholder('No Name!')
+            .setOptions([{
+              label: choice,
+              value: choice,
+              emoji: '👤',
+              default: true,
+            }]),
+        );
 
       const selectedClassList = { ...genome.classes };
       selectedClassList[personaData.class as keyof typeof selectedClassList].default = true;
@@ -2002,17 +2012,29 @@ export async function rpgHomeNameChange(
       const selectedGuildList = { ...genome.guild };
       selectedGuildList[personaData.guild as keyof typeof selectedGuildList].default = true;
 
-      menus.class.setOptions(Object.values(selectedClassList));
       const rowChangeClass = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(menus.class);
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgClass,user:${interaction.user.id}`)
+            .setPlaceholder('Select a class')
+            .setOptions(Object.values(selectedClassList)),
+        );
 
-      menus.species.setOptions(Object.values(selectedSpeciesList));
       const rowChangeSpecies = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(menus.species);
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgSpecies,user:${interaction.user.id}`)
+            .setPlaceholder('Pick a species')
+            .setOptions(Object.values(selectedSpeciesList)),
+        );
 
-      menus.guild.setOptions(Object.values(selectedGuildList));
       const rowChangeGuild = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(menus.guild);
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgGuild,user:${interaction.user.id}`)
+            .setPlaceholder('Select a guild')
+            .setOptions(Object.values(selectedGuildList)),
+        );
 
       await i.editReply({
         embeds: [
@@ -2048,12 +2070,12 @@ export async function rpgArcade(
       .setColor(Colors.Green)],
     components: [new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
-        global.buttons.coinFlip,
-        global.buttons.roulette,
-        // global.buttons.trivia,
-        // global.buttons.blackjack,
-        // global.buttons.slotMachine,
-        global.buttons.town,
+        customButton(`rpgCoinFlip,user:${interaction.user.id}`, 'CoinFlip', 'buttonCoinflip', ButtonStyle.Secondary),
+        customButton(`rpgRoulette,user:${interaction.user.id}`, 'Roulette', 'buttonRoulette', ButtonStyle.Secondary),
+        // customButton(`rpgTrivia,user:${interaction.user.id}`, 'Trivia', 'buttonTrivia', ButtonStyle.Secondary),
+        // customButton(`rpgBlackjack,user:${interaction.user.id}`, 'Blackjack', '🃏', ButtonStyle.Primary),
+        // customButton(`rpgSlots,user:${interaction.user.id}`, 'Slots', '🎰', ButtonStyle.Primary),
+        customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
       )],
   };
 }
@@ -2067,6 +2089,7 @@ export async function rpgArcadeGame(
   | '1-12' | '13-24' | '25-36',
   message?: string,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
+  // log.debug(F, `Started rpgArcadeGame(${gameName}, ${choice}, ${message})`);
   const gameData = {
     Coinflip: {
       gameName: 'Coinflip' as GameName,
@@ -2079,8 +2102,8 @@ export async function rpgArcadeGame(
     - If you lose, you lose the amount you bet`,
       object: 'coin',
       bets: [
-        global.buttons.coinflipHeads,
-        global.buttons.coinflipTails,
+        customButton(`rpgCoinflipHeads,user:${interaction.user.id}`, 'Heads', 'buttonHeads', ButtonStyle.Secondary),
+        customButton(`rpgCoinflipTails,user:${interaction.user.id}`, 'Tails', 'buttonTails', ButtonStyle.Secondary),
       ],
       options: [
         'heads',
@@ -2104,21 +2127,19 @@ export async function rpgArcadeGame(
     `,
       object: 'wheel',
       bets: [
-        global.buttons.rouletteRed, //
-        global.buttons.rouletteBlack, //
-        global.buttons.rouletteFirst, //
-        global.buttons.rouletteSecond, //
-        global.buttons.rouletteThird, //
-
-        global.buttons.rouletteEven, //
-        global.buttons.rouletteOdd, //
-        global.buttons.roulette1to12, //
-        global.buttons.roulette13to24, //
-        global.buttons.roulette25to36, //
-
-        global.buttons.rouletteZero, //
-        global.buttons.rouletteHigh, //
-        global.buttons.rouletteLow, //
+        customButton(`rpgRouletteRed,user:${interaction.user.id}`, 'Red', 'buttonHalf', ButtonStyle.Secondary),
+        customButton(`rpgRouletteBlack,user:${interaction.user.id}`, 'Black', 'buttonHalf', ButtonStyle.Secondary),
+        customButton(`rpgRouletteFirst,user:${interaction.user.id}`, 'First Row', 'buttonRows', ButtonStyle.Secondary),
+        customButton(`rpgRouletteSecond,user:${interaction.user.id}`, 'Second Row', 'buttonRows', ButtonStyle.Secondary),
+        customButton(`rpgRouletteThird,user:${interaction.user.id}`, 'Third Row', 'buttonRows', ButtonStyle.Secondary),
+        customButton(`rpgRouletteEven,user:${interaction.user.id}`, 'Even', 'buttonBoxB', ButtonStyle.Secondary),
+        customButton(`rpgRouletteOdd,user:${interaction.user.id}`, 'Odd', 'buttonBoxA', ButtonStyle.Secondary),
+        customButton(`rpgRoulette1to12,user:${interaction.user.id}`, '1-12', 'menuNormal', ButtonStyle.Secondary),
+        customButton(`rpgRoulette13to24,user:${interaction.user.id}`, '13-24', 'menuHard', ButtonStyle.Secondary),
+        customButton(`rpgRoulette25to36,user:${interaction.user.id}`, '25-36', 'menuExpert', ButtonStyle.Secondary),
+        customButton(`rpgRouletteZero,user:${interaction.user.id}`, '0', 'menuEasy', ButtonStyle.Secondary),
+        customButton(`rpgRouletteHigh,user:${interaction.user.id}`, 'High', 'buttonUpDown', ButtonStyle.Secondary),
+        customButton(`rpgRouletteLow,user:${interaction.user.id}`, 'Low', 'buttonUpDown', ButtonStyle.Secondary),
       ],
       options: ['00', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36'],
     },
@@ -2130,11 +2151,11 @@ export async function rpgArcadeGame(
 
   const rowWagers = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
-      global.buttons.wager1,
-      global.buttons.wager10,
-      global.buttons.wager100,
-      global.buttons.wager1000,
-      global.buttons.arcade,
+      customButton(`rpgWager1,user:${interaction.user.id}`, 'Bet 1', 'buttonBetSmall', ButtonStyle.Success),
+      customButton(`rpgWager10,user:${interaction.user.id}`, 'Bet 10', 'buttonBetMedium', ButtonStyle.Success),
+      customButton(`rpgWager100,user:${interaction.user.id}`, 'Bet 100', 'buttonBetLarge', ButtonStyle.Success),
+      customButton(`rpgWager1000,user:${interaction.user.id}`, 'Bet 1000', 'buttonBetHuge', ButtonStyle.Success),
+      customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
     );
 
   const { bets } = gameData[gameName as keyof typeof gameData];
@@ -2335,12 +2356,50 @@ const gameStates = {} as GameState;
 export async function rpgTrivia(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
-  log.debug(F, `GameStates: ${JSON.stringify(gameStates, null, 2)}`);
+  // log.debug(F, `GameStates: ${JSON.stringify(gameStates, null, 2)}`);
+
+  const difficulties = [
+    {
+      label: 'Normal Difficulty',
+      value: 'easy',
+      emoji: 'menuNormal',
+      default: true,
+    },
+    {
+      label: 'Hard Difficulty (50% difficulty bonus)',
+      value: 'medium',
+      emoji: 'menuHard',
+    },
+    {
+      label: 'Expert Difficulty (100% difficulty bonus)',
+      value: 'hard',
+      emoji: 'menuExpert',
+    },
+  ];
+
+  const numberOfQuestions = [
+    {
+      label: '5 Questions (50% perfect bonus)',
+      value: '5',
+      emoji: 'menuShort',
+      default: true,
+    },
+    {
+      label: '10 Questions (100% perfect bonus)',
+      value: '10',
+      emoji: 'menuMedium',
+    },
+    {
+      label: '20 Questions (200% perfect bonus)',
+      value: '20',
+      emoji: 'menuLong',
+    },
+  ];
 
   const questionsMenu = gameStates[interaction.user.id]
     ? gameStates[interaction.user.id].questionsMenu
     : new StringSelectMenuBuilder()
-      .setCustomId('rpgQuestionLimit')
+      .setCustomId(`rpgQuestionLimit,user:${interaction.user.id}`)
       .setPlaceholder('How many questions?')
       .setOptions(numberOfQuestions.map(q => ({
         label: q.label,
@@ -2352,7 +2411,7 @@ export async function rpgTrivia(
   const difficultyMenu = gameStates[interaction.user.id]
     ? gameStates[interaction.user.id].difficultyMenu
     : new StringSelectMenuBuilder()
-      .setCustomId('rpgDifficulty')
+      .setCustomId(`rpgDifficulty,user:${interaction.user.id}`)
       .setPlaceholder('Easy')
       .setOptions(difficulties.map(d => ({
         label: d.label,
@@ -2361,8 +2420,8 @@ export async function rpgTrivia(
         default: d.default,
       })));
 
-  log.debug(F, `Questions Menu: ${JSON.stringify(questionsMenu, null, 2)}`);
-  log.debug(F, `Difficulty Menu: ${JSON.stringify(difficultyMenu, null, 2)}`);
+  // log.debug(F, `Questions Menu: ${JSON.stringify(questionsMenu, null, 2)}`);
+  // log.debug(F, `Difficulty Menu: ${JSON.stringify(difficultyMenu, null, 2)}`);
 
   if (interaction.isButton() && interaction.customId === 'rpgStart') {
     // const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
@@ -2401,7 +2460,7 @@ export async function rpgTrivia(
       `<:${emojiGet('buttonBoxC').identifier}>`,
       `<:${emojiGet('buttonBoxD').identifier}>`,
     ] as string[];
-    log.debug(F, `Choices: ${choices}`);
+    // log.debug(F, `Choices: ${choices}`);
     const choiceEmoji = (choice: string) => { // emoji for the buttons without the emoji name
       switch (choice) {
         case `<:${emojiGet('buttonBoxA').identifier}>`:
@@ -2461,11 +2520,11 @@ export async function rpgTrivia(
             new ActionRowBuilder<ButtonBuilder>().addComponents(
               choices.map(choice => new ButtonBuilder()
                 .setDisabled(false)
-                .setCustomId(choice)
+                .setCustomId(`${choice},user:${interaction.user.id}`)
                 .setEmoji(choiceEmoji(choice))
                 .setStyle(ButtonStyle.Secondary))
                 .concat([
-                  global.buttons.quit.setDisabled(false),
+                  customButton(`rpgQuit,user:${interaction.user.id}`, 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(false),
                 ]),
             ),
           ],
@@ -2480,11 +2539,11 @@ export async function rpgTrivia(
             new ActionRowBuilder<ButtonBuilder>().addComponents(
               choices.map(choice => new ButtonBuilder()
                 .setDisabled(false)
-                .setCustomId(choice)
+                .setCustomId(`${choice},user:${interaction.user.id}`)
                 .setEmoji(choiceEmoji(choice))
                 .setStyle(ButtonStyle.Secondary))
                 .concat([
-                  global.buttons.quit.setDisabled(false),
+                  customButton(`rpgQuit,user:${interaction.user.id}`, 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(false),
                 ]),
             ),
           ],
@@ -2503,7 +2562,7 @@ export async function rpgTrivia(
         });
       } catch (err) {
         // If the user doesn't answer in time
-        log.debug(F, 'User did not answer in time');
+        // log.debug(F, 'User did not answer in time');
         embedStatus = timesUp;
         answerColor = Colors.Red as ColorResolvable;
         questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
@@ -2517,7 +2576,7 @@ export async function rpgTrivia(
           new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
               choices.map(choice => new ButtonBuilder()
-                .setCustomId(choice)
+                .setCustomId(`${choice},user:${interaction.user.id}`)
                 .setDisabled(true)
                 .setEmoji(choice)
                 .setStyle(ButtonStyle.Secondary))
@@ -2529,14 +2588,14 @@ export async function rpgTrivia(
 
       if (collected.customId === 'rpgQuit') {
         gameQuit = true;
-        log.debug(F, 'User quit the game');
+        // log.debug(F, 'User quit the game');
         break;
       }
 
       let answer = answerMap.get(collected.customId); // Get the answer from the map
       answer = answer?.substring(38);
-      log.debug(F, `User chose: ${answer}`);
-      log.debug(F, `Correct answer was: ${questionData.correct_answer}`);
+      // log.debug(F, `User chose: ${answer}`);
+      // log.debug(F, `Correct answer was: ${questionData.correct_answer}`);
 
       if (answer === questionData.correct_answer) { // If the user answers correctly
         questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
@@ -2569,11 +2628,11 @@ export async function rpgTrivia(
                 .addComponents(
                   choices.map(choice => new ButtonBuilder()
                     .setDisabled(true)
-                    .setCustomId(choice)
+                    .setCustomId(`${choice},user:${interaction.user.id}`)
                     .setEmoji(choiceEmoji(choice))
                     .setStyle(ButtonStyle.Secondary))
                     .concat([
-                      global.buttons.quit.setDisabled(true),
+                      customButton(`rpgQuit,user:${interaction.user.id}`, 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(true),
                     ]),
                 ),
             ],
@@ -2610,11 +2669,11 @@ export async function rpgTrivia(
               new ActionRowBuilder<ButtonBuilder>().addComponents(
                 choices.map(choice => new ButtonBuilder()
                   .setDisabled(true)
-                  .setCustomId(choice)
+                  .setCustomId(`${choice},user:${interaction.user.id}`)
                   .setEmoji(choiceEmoji(choice))
                   .setStyle(ButtonStyle.Secondary))
                   .concat([
-                    global.buttons.quit.setDisabled(true),
+                    customButton(`rpgQuit,user:${interaction.user.id}`, 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(true),
                   ]),
               ),
             ],
@@ -2638,11 +2697,11 @@ export async function rpgTrivia(
         payout = Math.ceil(2 * (score * bonus));
         // perfectScore = '';
       }
-      log.debug(F, `Payout: ${payout} tokens`);
-      log.debug(F, `Rounded Payout: ${payout} tokens`);
+      // log.debug(F, `Payout: ${payout} tokens`);
+      // log.debug(F, `Rounded Payout: ${payout} tokens`);
       personaData.tokens += payout;
-      log.debug(F, `User scored: ${score}`);
-      log.debug(F, `User earned: ${payout} tokens`);
+      // log.debug(F, `User scored: ${score}`);
+      // log.debug(F, `User earned: ${payout} tokens`);
       await setPersonaInfo(personaData);
     } else {
       bonusMessage = '';
@@ -2661,7 +2720,7 @@ export async function rpgTrivia(
       if (questionsCorrect === amountOfQuestions) {
         scoreMessage = perfectScoreMessageList[Math.floor(Math.random() * perfectScoreMessageList.length)];
       }
-      log.debug(F, `Score Message: ${scoreMessage}`);
+      // log.debug(F, `Score Message: ${scoreMessage}`);
       const embed = new EmbedBuilder()
         .setColor(answerColor)
         .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
@@ -2684,8 +2743,8 @@ export async function rpgTrivia(
         components: [
           new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
-              global.buttons.start,
-              global.buttons.arcade,
+              customButton(`rpgStart,user:${interaction.user.id}`, 'Start', 'buttonStart', ButtonStyle.Success),
+              customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
@@ -2722,8 +2781,8 @@ export async function rpgTrivia(
         components: [
           new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
-              global.buttons.start,
-              global.buttons.arcade,
+              customButton(`rpgStart,user:${interaction.user.id}`, 'Start', 'buttonStart', ButtonStyle.Success),
+              customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
             ),
           new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
@@ -2755,13 +2814,13 @@ export async function rpgTrivia(
       )
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
 
-    log.debug(F, 'Trivia Game Ended');
-    log.debug(F, `Embed: ${JSON.stringify(embed, null, 2)}`);
+    // log.debug(F, 'Trivia Game Ended');
+    // log.debug(F, `Embed: ${JSON.stringify(embed, null, 2)}`);
     const components = [
       new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
-          global.buttons.start,
-          global.buttons.arcade,
+          customButton(`rpgStart,user:${interaction.user.id}`, 'Start', 'buttonStart', ButtonStyle.Success),
+          customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
         ),
       new ActionRowBuilder<StringSelectMenuBuilder>()
         .addComponents(
@@ -2772,7 +2831,7 @@ export async function rpgTrivia(
           questionsMenu,
         ),
     ];
-    log.debug(F, `Components: ${JSON.stringify(components, null, 2)}`);
+    // log.debug(F, `Components: ${JSON.stringify(components, null, 2)}`);
     return {
       embeds: [embed],
       components,
@@ -2784,7 +2843,7 @@ export async function rpgTrivia(
   if (interaction.isStringSelectMenu() && interaction.values) {
     [selectedOption] = interaction.values;
   }
-  log.debug(F, `selectedOption: ${selectedOption}`);
+  // log.debug(F, `selectedOption: ${selectedOption}`);
 
   // Check if the selected option exists in the difficulties list
   const difficultyOption = Object.values(difficulties.map(d => ({
@@ -2794,7 +2853,7 @@ export async function rpgTrivia(
     default: d.default,
   }))).find(item => item.value === selectedOption);
   if (difficultyOption) {
-    log.debug(F, 'difficultyOption is not empty');
+    // log.debug(F, 'difficultyOption is not empty');
     // Get a list of marketInventory where the value does not equal the choice
     // If there is no choice, it will return all items the user has
     const filteredDifficulties = Object.values(difficulties.map(d => ({
@@ -2823,7 +2882,7 @@ export async function rpgTrivia(
       gameStates[interaction.user.id] = {
         difficultyMenu,
         questionsMenu: new StringSelectMenuBuilder()
-          .setCustomId('rpgQuestionLimit')
+          .setCustomId(`rpgQuestionLimit,user:${interaction.user.id}`)
           .setPlaceholder('How many questions?')
           .setOptions(numberOfQuestions.map(q => ({
             label: q.label,
@@ -2843,7 +2902,7 @@ export async function rpgTrivia(
     default: q.default,
   }))).find(item => item.value === selectedOption);
   if (amountOption) {
-    log.debug(F, 'amountOption is not empty');
+    // log.debug(F, 'amountOption is not empty');
     const filteredOptions = Object.values(numberOfQuestions.map(q => ({
       label: q.label,
       value: q.value,
@@ -2868,7 +2927,7 @@ export async function rpgTrivia(
     } else {
       gameStates[interaction.user.id] = {
         difficultyMenu: new StringSelectMenuBuilder()
-          .setCustomId('rpgDifficulty')
+          .setCustomId(`rpgDifficulty,user:${interaction.user.id}`)
           .setPlaceholder('Easy')
           .setOptions(difficulties.map(d => ({
             label: d.label,
@@ -2884,8 +2943,8 @@ export async function rpgTrivia(
   const components = [
     new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
-        global.buttons.start,
-        global.buttons.arcade,
+        customButton(`rpgStart,user:${interaction.user.id}`, 'Start', 'buttonStart', ButtonStyle.Success),
+        customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
       ),
     new ActionRowBuilder<StringSelectMenuBuilder>()
       .addComponents(
@@ -3171,7 +3230,7 @@ export async function rpgHelp(
       .setColor(Colors.Blue)],
     components: [new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
-        global.buttons.town,
+        customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
       )],
   };
 }
