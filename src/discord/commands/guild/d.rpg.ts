@@ -1676,11 +1676,21 @@ export async function rpgHome(
   // If the select item has the 'background' effect, add the image to the embed
   const files = [] as AttachmentBuilder[];
   if (equippedBackground) {
-    const imagePath = await imageGet(equippedBackground.value);
-    // log.debug(F, `Equipped background imagePath: ${imagePath}`);
-    files.push(new AttachmentBuilder(imagePath));
-    embed.setThumbnail(`attachment://${equippedBackground.value}.png`);
-  // log.debug(F, 'Set thumbnail!');
+    if ((interaction as ButtonInteraction).customId && (interaction as ButtonInteraction).customId.split(',')[0] === 'rpgHomePreview') {
+      const imagePath = await imageGet(backgroundData.effect_value);
+      const target = interaction.member as GuildMember;
+      const option = 'background';
+      const previewImage = await getProfilePreview(target, imagePath, option);
+      const attachment = new AttachmentBuilder(previewImage, { name: 'tripsit-profile-image.png' });
+      files.push(attachment);
+      embed.setImage('attachment://tripsit-profile-image.png');
+    } else {
+      const imagePath = await imageGet(equippedBackground.value);
+      // log.debug(F, `Equipped background imagePath: ${imagePath}`);
+      files.push(new AttachmentBuilder(imagePath));
+      embed.setThumbnail(`attachment://${equippedBackground.value}.png`);
+      // log.debug(F, 'Set thumbnail!');
+    }
   }
 
   if (interaction.isStringSelectMenu() && backgroundData && backgroundData.effect === 'background') {
@@ -1700,9 +1710,10 @@ export async function rpgHome(
       customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
     );
 
-  if (chosenItem && interaction.isStringSelectMenu()) {
+  if (chosenItem && (interaction.isStringSelectMenu() || interaction.isButton())) {
     rowHome.addComponents(
       customButton(`rpgAccept,user:${interaction.user.id}`, 'Accept', 'buttonAccept', ButtonStyle.Success),
+      customButton(`rpgHomePreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
     );
   }
 

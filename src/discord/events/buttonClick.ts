@@ -69,6 +69,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     else if (interaction.customId.split(',')[0] === 'rpgCoinflipHeads') await interaction.editReply(await rpgArcadeGame(interaction, 'Coinflip', 'heads'));
     else if (interaction.customId.split(',')[0] === 'rpgCoinflipTails') await interaction.editReply(await rpgArcadeGame(interaction, 'Coinflip', 'tails'));
     else if (interaction.customId.split(',')[0] === 'rpgHome') await interaction.editReply(await rpgHome(interaction, ''));
+    else if (interaction.customId.split(',')[0] === 'rpgHomePreview') await interaction.editReply(await rpgHome(interaction, ''));
     else if (interaction.customId.split(',')[0] === 'rpgSpecies') await interaction.editReply(await rpgHome(interaction, ''));
     else if (interaction.customId.split(',')[0] === 'rpgClass') await interaction.editReply(await rpgHome(interaction, ''));
     else if (interaction.customId.split(',')[0] === 'rpgGuild') await interaction.editReply(await rpgHome(interaction, ''));
