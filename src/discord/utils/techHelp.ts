@@ -172,7 +172,7 @@ issue and will either help you or figure out how to get you help!`,
  * @param {ButtonInteraction} interaction The button that submitted this
  */
 export async function techHelpClose(interaction:ButtonInteraction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ ephemeral: false });
   if (!interaction.guild) {
     interaction.editReply({ content: guildOnly });
     return;
