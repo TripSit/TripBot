@@ -11,9 +11,9 @@ import { ReadyEvent } from '../@types/eventDef';
 import { checkGuildPermissions } from '../utils/checkPermissions';
 import { runTimer } from '../../global/utils/timer'; // eslint-disable-line
 import { runStats } from '../utils/stats'; // eslint-disable-line
-import { runRss } from '../../global/utils/rssCheck';
-import { runVoiceCheck } from '../../global/utils/voiceExp';
-import { startStatusLoop } from '../utils/statusLoop';
+import { runRss } from '../../global/utils/rssCheck'; // eslint-disable-line
+import { runVoiceCheck } from '../../global/utils/voiceExp'; // eslint-disable-line
+import { startStatusLoop } from '../utils/statusLoop'; // eslint-disable-line
 import { emojiCache } from '../utils/emoji';
 // import { runLpm } from '../utils/lpm';
 
@@ -66,12 +66,12 @@ export const ready: ReadyEvent = {
         process.exit(1);
       }
       Promise.all([
-        startStatusLoop(client),
+        // startStatusLoop(client),
         getInvites(client),
         runTimer(),
-        runStats(),
-        runVoiceCheck(),
-        runRss(),
+        // runStats(),
+        // runVoiceCheck(),
+        // runRss(),
         emojiCache(client),
         // runLpm(),
       ]).then(async () => {
