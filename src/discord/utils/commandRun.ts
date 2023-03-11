@@ -33,14 +33,16 @@ export async function commandRun(
   if (!command) return;
 
   try {
-    log.info(F, `commandRun executed in ${new Date().getTime() - startTime}ms`);
+    // log.info(F, `commandRun executed in ${new Date().getTime() - startTime}ms`);
     await command.execute(interaction);
-    log.info(F, `commandRun finished in ${new Date().getTime() - startTime}ms`);
+    // log.info(F, `commandRun finished in ${new Date().getTime() - startTime}ms`);
   } catch (error) {
     Error.stackTraceLimit = 25;
     const genericError = 'There was an error while executing this command!';
     if (error instanceof Error) {
       log.error(F, `ERROR: ${error.stack}`);
+      // log.debug(F, `ERROR: ${JSON.stringify(error, null, 2)}`);
+      if ((error as any).code === 10062) return;
       if (!interaction.replied) {
         if (interaction.deferred) {
           await interaction.editReply(genericError);

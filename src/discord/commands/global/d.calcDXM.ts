@@ -50,13 +50,13 @@ export const dCalcDXM: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     const startTime = new Date().getTime();
-    log.info(F, `Command started at ${startTime}`);
+    // log.info(F, `Command started at ${startTime}`);
     startLog(F, interaction);
-    log.info(F, `Printed startlog in ${new Date().getTime() - startTime}ms`);
-    const deferTime = new Date().getTime();
-    log.info(F, `Started Defer reply at ${deferTime}`);
-    // await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
-    log.info(F, `Defer reply took ${new Date().getTime() - deferTime}ms`);
+    // log.info(F, `Printed startlog in ${new Date().getTime() - startTime}ms`);
+    // const deferTime = new Date().getTime();
+    // log.info(F, `Started Defer reply at ${deferTime}`);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    // log.info(F, `Defer reply took ${new Date().getTime() - deferTime}ms`);
     // Calculate each plat min/max value
     const givenWeight = interaction.options.getNumber('calc_weight', true);
     const weightUnits = interaction.options.getString('units', true);
@@ -79,7 +79,7 @@ export const dCalcDXM: SlashCommand = {
       );
       header = false;
     });
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     log.info(F, `Command finished in ${new Date().getTime() - startTime}ms`);
     return true;
   },

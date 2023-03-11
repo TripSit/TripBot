@@ -24,7 +24,7 @@ export const interactionCreate: InteractionCreateEvent = {
   name: 'interactionCreate',
   async execute(interaction) {
     const startTime = new Date().getTime();
-    log.info(F, `${interaction.user.username} interactionCreate event started at ${startTime}`);
+    // log.info(F, `${interaction.user.username} interactionCreate event started at ${startTime}`);
 
     // Don't run anything if the interaction is from a bot
     if (interaction.user.bot) return;
@@ -32,13 +32,13 @@ export const interactionCreate: InteractionCreateEvent = {
     // See if the user exists in botBannedUsers
     log.debug(F, `botBannedUsers: ${JSON.stringify(botBannedUsers, null, 2)}`);
     if (botBannedUsers.includes(interaction.user.id)) {
-      log.info(F, `Got user ban status in ${new Date().getTime() - startTime}ms`);
+      // log.info(F, `Got user ban status in ${new Date().getTime() - startTime}ms`);
       if (interaction.isRepliable()) {
         await interaction.reply({ content: '*beeps sadly*', ephemeral: true });
       }
       return;
     }
-    log.info(F, `Got user ban status in ${new Date().getTime() - startTime}ms`);
+    // log.info(F, `Got user ban status in ${new Date().getTime() - startTime}ms`);
 
     // if (await db<Users>('users')
     //   .select(db.ref('id').as('id'))
