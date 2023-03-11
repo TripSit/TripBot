@@ -24,6 +24,8 @@ export async function commandRun(
   interaction: ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction,
   client: Client,
 ) {
+  const startTime = new Date().getTime();
+  log.info(F, `commandRun started at ${startTime}`);
   const { commandName } = interaction;
 
   const command = client.commands.get(commandName);
@@ -31,7 +33,9 @@ export async function commandRun(
   if (!command) return;
 
   try {
+    log.info(F, `commandRun executed in ${new Date().getTime() - startTime}ms`);
     await command.execute(interaction);
+    log.info(F, `commandRun finished in ${new Date().getTime() - startTime}ms`);
   } catch (error) {
     Error.stackTraceLimit = 25;
     const genericError = 'There was an error while executing this command!';

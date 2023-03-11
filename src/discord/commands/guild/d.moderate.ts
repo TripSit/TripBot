@@ -178,6 +178,8 @@ export const mod: SlashCommand = {
       command = `UN-${command}`;
     }
 
+    log.debug(F, `${actor} ran ${command} on ${target}`);
+
     // log.debug(F, `${actor} ran ${command} on ${target}`);
 
     let verb = '';
@@ -195,9 +197,11 @@ export const mod: SlashCommand = {
     else if (command === 'UN-TIMEOUT') verb = 'removing timeout on';
     else if (command === 'UN-FULL_BAN') verb = 'removing ban on';
     else if (command === 'UN-TICKET_BAN') verb = 'removing ticket ban on';
-    else if (command === 'UN-DISCORD_BOT_BAN') verb = 'removing discord bot ban on';
+    else if (command === 'UN-DISCORD_BOT_BAN') verb = 'removing bot ban on';
     else if (command === 'UN-BAN_EVASION') verb = 'removing ban evasion on';
     else if (command === 'UN-UNDERBAN') verb = 'removing underban on';
+
+    log.debug(F, `Verb: ${verb}`);
 
     if (command === 'INFO') {
       log.debug(F, 'INFO command, deferring reply (ephemeral)');

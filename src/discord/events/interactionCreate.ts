@@ -13,7 +13,8 @@ import { buttonClick } from './buttonClick';
 import { selectMenu } from './selectMenu';
 import { autocomplete } from './autocomplete';
 import { db, getUser } from '../../global/utils/knex'; // eslint-disable-line
-import { Users } from '../../global/@types/database';
+// import { Users } from '../../global/@types/database';
+import { botBannedUsers } from '../utils/populateBotBans';
 
 const F = f(__filename);  // eslint-disable-line
 
@@ -24,18 +25,32 @@ export const interactionCreate: InteractionCreateEvent = {
   async execute(interaction) {
     const startTime = new Date().getTime();
     log.info(F, `${interaction.user.username} interactionCreate event started at ${startTime}`);
+
+    // Don't run anything if the interaction is from a bot
     if (interaction.user.bot) return;
-    if (await db<Users>('users')
-      .select(db.ref('id').as('id'))
-      .where('discord_id', interaction.user.id)
-      .andWhere('discord_bot_ban', true)
-      .first()) {
+
+    // See if the user exists in botBannedUsers
+    log.debug(F, `botBannedUsers: ${JSON.stringify(botBannedUsers, null, 2)}`);
+    if (botBannedUsers.includes(interaction.user.id)) {
+      log.info(F, `Got user ban status in ${new Date().getTime() - startTime}ms`);
       if (interaction.isRepliable()) {
-        await interaction.reply({ content: '*beeps sadly*' });
+        await interaction.reply({ content: '*beeps sadly*', ephemeral: true });
       }
       return;
     }
     log.info(F, `Got user ban status in ${new Date().getTime() - startTime}ms`);
+
+    // if (await db<Users>('users')
+    //   .select(db.ref('id').as('id'))
+    //   .where('discord_id', interaction.user.id)
+    //   .andWhere('discord_bot_ban', true)
+    //   .first()) {
+    //   if (interaction.isRepliable()) {
+    //     await interaction.reply({ content: '*beeps sadly*' });
+    //   }
+    //   return;
+    // }
+    // log.info(F, `Got user ban status in ${new Date().getTime() - startTime}ms`);
 
     // const newStartTime = new Date().getTime();
     // const userData = await getUser(interaction.user.id, null);
@@ -57,6 +72,7 @@ export const interactionCreate: InteractionCreateEvent = {
     if (interaction.isChatInputCommand()) {
       // Slash command
       // log.debug(F, `Interaction isChatInputCommand!`);
+      log.info(F, `Decided to run command in ${new Date().getTime() - startTime}ms`);
       commandRun(interaction, client);
       return;
     }

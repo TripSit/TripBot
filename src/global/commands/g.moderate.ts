@@ -28,6 +28,7 @@ import {
   Users,
 } from '../@types/database';
 import { last } from './g.last';
+import { botBannedUsers } from '../../discord/utils/populateBotBans';
 
 export default moderate;
 
@@ -386,6 +387,7 @@ export async function moderate(
     actionData.type = 'DISCORD_BOT_BAN' as UserActionType;
     targetData.discord_bot_ban = true;
     await usersUpdate(targetData);
+    botBannedUsers.push(target.id);
   } else if (command === 'UN-DISCORD_BOT_BAN') {
     actionData.type = 'DISCORD_BOT_BAN' as UserActionType;
     targetData.discord_bot_ban = false;
@@ -397,6 +399,12 @@ export async function moderate(
     }
     actionData.repealed_at = new Date();
     actionData.repealed_by = actorData.id;
+
+    // Remove the user from the botBannedUsers list
+    const index = botBannedUsers.indexOf(target.id);
+    if (index > -1) {
+      botBannedUsers.splice(index, 1);
+    }
   } else if (command === 'BAN_EVASION') {
     actionData.type = 'BAN_EVASION' as UserActionType;
     targetData.removed_at = new Date();

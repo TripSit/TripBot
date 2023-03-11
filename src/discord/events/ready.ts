@@ -15,6 +15,7 @@ import { runRss } from '../../global/utils/rssCheck'; // eslint-disable-line
 import { runVoiceCheck } from '../../global/utils/voiceExp'; // eslint-disable-line
 import { startStatusLoop } from '../utils/statusLoop'; // eslint-disable-line
 import { emojiCache } from '../utils/emoji';
+import { populateBans } from '../utils/populateBotBans';
 // import { runLpm } from '../utils/lpm';
 
 const F = f(__filename);
@@ -66,13 +67,14 @@ export const ready: ReadyEvent = {
         process.exit(1);
       }
       Promise.all([
-        // startStatusLoop(client),
+        startStatusLoop(client),
         getInvites(client),
         runTimer(),
-        // runStats(),
-        // runVoiceCheck(),
-        // runRss(),
+        runStats(),
+        runVoiceCheck(),
+        runRss(),
         emojiCache(client),
+        populateBans(),
         // runLpm(),
       ]).then(async () => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
