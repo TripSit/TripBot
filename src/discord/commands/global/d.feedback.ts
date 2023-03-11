@@ -21,7 +21,7 @@ export default dFeedback;
 export const dFeedback: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('feedback')
-    .setDescription('Report a bug or other feedback to the bot dev team!'),
+    .setDescription('Share feedback or report a bug to the TripBot dev team!'),
   async execute(interaction) {
     startLog(F, interaction);
     await interaction.showModal(
