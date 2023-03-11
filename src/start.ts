@@ -30,6 +30,7 @@ start();
 process.on('unhandledRejection', async (error: Error) => {
   log.error(F, `ERROR: ${error.stack}`);
   if (env.NODE_ENV === 'production') {
+    if ((error as any).code === 10062) return;
     const channel = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
     const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
     const role = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
