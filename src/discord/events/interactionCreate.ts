@@ -23,7 +23,7 @@ export const interactionCreate: InteractionCreateEvent = {
   name: 'interactionCreate',
   async execute(interaction) {
     const startTime = new Date().getTime();
-    log.debug(F, `${interaction.user.username} interactionCreate event started at ${startTime}`);
+    log.info(F, `${interaction.user.username} interactionCreate event started at ${startTime}`);
     if (interaction.user.bot) return;
     if (await db<Users>('users')
       .select(db.ref('id').as('id'))
@@ -35,7 +35,7 @@ export const interactionCreate: InteractionCreateEvent = {
       }
       return;
     }
-    log.debug(F, `Got user ban status in ${new Date().getTime() - startTime}ms`);
+    log.info(F, `Got user ban status in ${new Date().getTime() - startTime}ms`);
 
     // const newStartTime = new Date().getTime();
     // const userData = await getUser(interaction.user.id, null);
