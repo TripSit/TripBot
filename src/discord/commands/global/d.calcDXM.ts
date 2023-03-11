@@ -55,7 +55,7 @@ export const dCalcDXM: SlashCommand = {
     log.info(F, `Printed startlog in ${new Date().getTime() - startTime}ms`);
     const deferTime = new Date().getTime();
     log.info(F, `Started Defer reply at ${deferTime}`);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    // await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     log.info(F, `Defer reply took ${new Date().getTime() - deferTime}ms`);
     // Calculate each plat min/max value
     const givenWeight = interaction.options.getNumber('calc_weight', true);
@@ -79,7 +79,7 @@ export const dCalcDXM: SlashCommand = {
       );
       header = false;
     });
-    await interaction.editReply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
     log.info(F, `Command finished in ${new Date().getTime() - startTime}ms`);
     return true;
   },
