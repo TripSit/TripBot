@@ -1,6 +1,7 @@
 import knex from 'knex';
 
 import {
+  Counting,
   DiscordGuilds,
   DrugNames,
   ExperienceCategory,
@@ -968,6 +969,39 @@ export async function inventorySet(
       .merge();
   } catch (err) {
     log.error(F, `Error setting inventory: ${err}`);
+    log.error(F, `data: ${JSON.stringify(data)}`);
+  }
+}
+
+export async function countingGet(
+  channelID:string,
+):Promise<Counting | undefined> {
+// log.debug(F, 'useractionsGet started');
+  if (env.POSTGRES_DB_URL === undefined) return undefined;
+  let response = {} as Counting | undefined;
+  try {
+    response = await db<Counting>('counting')
+      .select('*')
+      .where('channel_id', channelID)
+      .first();
+  } catch (err) {
+    log.error(F, `Error getting counting: ${err}`);
+    log.error(F, `channelID: ${channelID}`);
+  }
+  return response;
+}
+
+export async function countingSet(
+  data:Counting,
+):Promise<void> {
+  if (env.POSTGRES_DB_URL === undefined) return;
+  try {
+    await db<Counting>('counting')
+      .insert(data)
+      .onConflict(['channel_id', 'guild_id'])
+      .merge();
+  } catch (err) {
+    log.error(F, `Error setting counting: ${err}`);
     log.error(F, `data: ${JSON.stringify(data)}`);
   }
 }

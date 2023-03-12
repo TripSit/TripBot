@@ -81,7 +81,7 @@ export const dIdose: SlashCommand = {
         .setRequired(true))),
   async execute(interaction) {
     startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ ephemeral: (interaction.channel?.type !== ChannelType.DM) });
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const embed = embedTemplate();
     const book = [] as EmbedBuilder[];
