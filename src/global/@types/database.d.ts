@@ -1,6 +1,12 @@
 // The TypeScript definitions below are automatically generated.
 // Do not touch them, or risk, your modifications being lost.
 
+export enum CountingType {
+  Normal = 'NORMAL',
+  Hardcore = 'HARDCORE',
+  Token = 'TOKEN',
+}
+
 export enum DrugCategoryType {
   Common = 'COMMON',
   Psychoactive = 'PSYCHOACTIVE',
@@ -110,8 +116,9 @@ export type Counting = {
   id: string;
   guild_id: string;
   channel_id: string;
-  hardcore: boolean;
+  type: CountingType;
   current_number: number;
+  current_stakeholders: string | null;
   current_number_message_id: string;
   current_number_message_date: Date;
   current_number_message_author: string;

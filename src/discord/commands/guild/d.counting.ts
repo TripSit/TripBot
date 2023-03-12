@@ -12,9 +12,6 @@ import {
   time,
   Colors,
 } from 'discord.js';
-import {
-// TextInputStyle,
-} from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { SlashCommandBeta } from '../../@types/commandDef';
 // import { embedTemplate } from '../../utils/embedTemplate';
@@ -24,11 +21,19 @@ import { countingGetG, countingSetG } from '../../../global/commands/g.counting'
 import { sleep } from './d.bottest';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { Counting } from '../../../global/@types/database';
+import { getUser, personaGet, personaSet } from '../../../global/utils/knex';
 // import { getUser } from '../../../global/utils/knex';
 
 export default counting;
 
 const F = f(__filename);
+
+function calcTotalPot(
+  number:number,
+  users:number,
+):number {
+  return ((number * 10) * (number / 10)) * users;
+}
 
 export const counting: SlashCommandBeta = {
   data: new SlashCommandBuilder()
@@ -37,9 +42,14 @@ export const counting: SlashCommandBeta = {
     .addSubcommand(subcommand => subcommand
       .setName('setup')
       .setDescription('Set up a Counting channel!')
-      .addBooleanOption(option => option
-        .setDescription('Is this a hardcore room?')
-        .setName('hardcore')))
+      .addStringOption(option => option
+        .setDescription('What kind of counting game?')
+        .setName('type')
+        .addChoices(
+          { name: 'Hardcore', value: 'HARDCORE' },
+          { name: 'Token', value: 'TOKEN' },
+          { name: 'Normal', value: 'NORMAL' },
+        )))
     .addSubcommand(subcommand => subcommand
       .setName('scores')
       .setDescription('Get the scores for a Counting channel!')
@@ -50,7 +60,15 @@ export const counting: SlashCommandBeta = {
       .setDescription('Reset the counting channel!')
       .addIntegerOption(option => option
         .setDescription('The number to set the channel to')
-        .setName('number')))
+        .setName('number'))
+      .addStringOption(option => option
+        .setDescription('What kind of counting game?')
+        .setName('type')
+        .addChoices(
+          { name: 'Hardcore', value: 'HARDCORE' },
+          { name: 'Token', value: 'TOKEN' },
+          { name: 'Normal', value: 'NORMAL' },
+        )))
     .addSubcommand(subcommand => subcommand
       .setName('end')
       .setDescription('End the counting game!')),
@@ -62,7 +80,7 @@ export const counting: SlashCommandBeta = {
     if (command === 'setup') {
       response = await countingSetup(
         interaction.channel as TextChannel,
-        interaction.options.getBoolean('hardcore') ?? false,
+        (interaction.options.getString('type') ?? 'NORMAL') as 'HARDCORE' | 'TOKEN' | 'NORMAL',
         0,
         false,
       );
@@ -79,7 +97,7 @@ export const counting: SlashCommandBeta = {
 
 export async function countingSetup(
   channel:TextChannel,
-  hardcore:boolean,
+  type: 'HARDCORE' | 'TOKEN' | 'NORMAL',
   startingNumber:number,
   override:boolean,
 ):Promise<InteractionEditReplyOptions> {
@@ -93,23 +111,41 @@ export async function countingSetup(
     };
   }
 
-  embed
-    .setTitle(`Let's play a ${hardcore ? 'HARDCORE ' : ''}counting game!`)
-    .setDescription(stripIndents`
+  let description = `
 
-    The rules are simple:
-    1. You can only count up by 1
-    2. You must use numbers, I'm not smart enough to understand words can be numbers
-    3. You can only count once per day
-    4. You can react as many times as you want!
-    5. If you say the wrong number the count resets and ${hardcore
-    ? '**you will be kicked from the guild!** '
-    : 'everyone will be disappointed'}
-    6. Use /counting scores to see the scores for this channel
-    7. Mods can /counting reset to reset the channel if needed
-  
-    I'll start us off in the next message!
-    `);
+  The rules are simple:
+  1. You must post a number in chat that is 1 higher than the last number.
+  2. You must use numbers, I'm not smart enough to understand words can be numbers
+  3. You can only count once per day and you can't count twice in a row`;
+
+  if (type === 'HARDCORE') {
+    description += `
+    4. If you say the wrong number the count resets and **you will be kicked from the guild!**`;
+  }
+
+  if (type === 'TOKEN') {
+    description += `
+    4. Every time someone counts, tokens are added to the pot
+    5. At every multiple of 10 (10, 20, 30, etc) everyone who contributed gets a share from the pot
+    6. At any point someone can break the combo and take the pot for themselves!`;
+  }
+
+  if (type === 'NORMAL') {
+    description += `
+    4. If you say the wrong number the count resets and everyone will be disappointed`;
+  }
+
+  description += `
+
+  Use /counting scores to see the scores for this channel
+
+  Mods can /counting reset to reset the channel if needed
+
+  I'll start us off in the next message!`;
+
+  embed
+    .setTitle(`Let's play a ${type.toLowerCase()} counting game!`)
+    .setDescription(stripIndents`${description}`);
 
   const countingMessage = await channel.send({ embeds: [embed] });
 
@@ -118,12 +154,13 @@ export async function countingSetup(
   await countingSetG({
     guild_id: channel.guild.id,
     channel_id: channel.id,
-    hardcore,
+    type,
 
     current_number: startingNumber,
     current_number_message_id: countingMessage.id,
     current_number_message_date: new Date(),
     current_number_message_author: countingMessage.author.id,
+    current_stakeholders: '',
 
     last_number: data?.last_number ?? null,
     last_number_message_id: data?.last_number_message_id ?? null,
@@ -194,7 +231,12 @@ export async function countingReset(
   const data = await countingGetG(channel.id);
   if (!data) return { content: 'This channel is not set up for counting!' };
   const number = interaction.options.getInteger('number') ?? 0;
-  await countingSetup(channel, data.hardcore, number, true);
+  await countingSetup(
+    channel,
+    (interaction.options.getString('type') ?? 'normal') as 'HARDCORE' | 'TOKEN' | 'NORMAL',
+    number,
+    true,
+  );
   return { embeds: [embedTemplate().setTitle(`Counting channel reset to ${number}!`)] };
 }
 
@@ -204,21 +246,32 @@ export async function countMessage(message: Message): Promise<void> {
   const countingData = await countingGetG(message.channel.id);
   if (!countingData) return; // If not a counting channel then ignore all messages
 
+  log.debug(F, `countingData: ${JSON.stringify(countingData, null, 2)} `);
+
   // Process the new message. If it's the next number after current_number, then update the DB
   // If it's not the next number, then still update the db with the user who broke the combo
 
   // log.debug(F, `Message: ${message.cleanContent}`);
   const number = parseInt(message.cleanContent, 10);
-  // log.debug(F, `number: ${number}`);
+  log.debug(F, `number: ${number}`);
 
-  // log.debug(F, `isnan: ${Number.isNaN(number)}`);
+  log.debug(F, `isnan: ${Number.isNaN(number)}`);
 
   if (Number.isNaN(number)) {
-    await message.delete();
+    // await message.delete();
     return;
   }
 
   if (countingData.current_number === -1) {
+    await message.delete();
+    return;
+  }
+
+  // log.debug(F, `Message.author.id: ${message.author.id}`);
+  // log.debug(F, `countingData.current_number_message_author: ${countingData.current_number_message_author}`);
+  // log.debug(F, `env.DISCORD_OWNER_ID: ${env.DISCORD_OWNER_ID}`);
+  if (countingData.current_number_message_author === message.author.id
+    && message.author.id.toString() !== env.DISCORD_OWNER_ID.toString()) { // Allow the owner to spam (for testing)
     await message.delete();
     return;
   }
@@ -245,7 +298,7 @@ export async function countMessage(message: Message): Promise<void> {
 
       const recordUser = await message.guild.members.fetch(countingData.record_number_message_author);
       // Send a message to the channel
-      recordMessage = stripIndents`\n\n**A new record of ${countingData.current_number} was set by ${recordUser}**!
+      recordMessage = `\n\n**A new record of ${countingData.current_number} was set by ${recordUser}**!
       ${message.author} will go down in history as the one who broke the streak...`;
     }
 
@@ -255,10 +308,38 @@ export async function countMessage(message: Message): Promise<void> {
     await countingSetG(countingData);
 
     // If it's hardcore, kick the user
-    if (countingData.hardcore) {
+    if (countingData.type === 'HARDCORE') {
       // If the channel is hardcore then kick the user
       const member = await message.guild.members.fetch(message.author.id);
+
+      // Send the user an invite link to the guild
+      await message.author.send(`You broke the counting streak in hardcore counting game!
+      You can rejoin the guild here: https://discord.gg/tripsit`);
       await member.kick('Counting broke!');
+    }
+
+    // If it's token, take tokens from the pot
+    const stakeholderNumber = countingData.current_stakeholders
+      ? countingData.current_stakeholders.split(',').length
+      : 1;
+    const totalPot = calcTotalPot(number, stakeholderNumber);
+    if (countingData.type === 'TOKEN') {
+      // If the channel is token then take tokens from the pot
+
+      const userData = await getUser(message.author.id, null);
+      const personaData = await personaGet(userData.id);
+
+      personaData.tokens += totalPot;
+      await personaSet(personaData);
+    }
+
+    let endingMessage = '';
+    if (countingData.type === 'HARDCORE') {
+      endingMessage = '\n\nThey were kicked from the guild for this transgression!';
+    } else if (countingData.type === 'TOKEN') {
+      endingMessage = `\n\nThey stole ${totalPot} tokens from the pot!`;
+    } else {
+      endingMessage = '\n\nMake sure to point and laugh at them!';
     }
 
     // Send a message to the channel
@@ -267,10 +348,7 @@ export async function countMessage(message: Message): Promise<void> {
         embedTemplate()
           .setTitle('Combo Broken!')
           .setColor(Colors.Red)
-          .setDescription(stripIndents`Oh no, ${message.author} broke the combo...
-          ${recordMessage}${countingData.hardcore
-  ? '\nThey were kicked from the guild for this transgression!'
-  : '\nMake sure to point and laugh at them!'}`),
+          .setDescription(stripIndents`Oh no, ${message.author} broke the combo...${recordMessage}${endingMessage}`),
       ],
     });
 
@@ -284,7 +362,7 @@ export async function countMessage(message: Message): Promise<void> {
     // Start a new counting game
     await countingSetup(
       message.channel as TextChannel,
-      countingData.hardcore,
+      countingData.type,
       0,
       true,
     );
@@ -300,6 +378,75 @@ export async function countMessage(message: Message): Promise<void> {
   countingData.current_number_message_id = message.id;
   countingData.current_number_message_date = new Date();
   countingData.current_number_message_author = message.author.id;
+
+  if (countingData.current_stakeholders) {
+    if (!countingData.current_stakeholders.includes(message.author.id)) {
+    // Take countingData.current_stakeholders, turn it into an array, add the user, turn it back into a string
+      log.debug(F, `current_stakeholders: ${countingData.current_stakeholders}`);
+
+      countingData.current_stakeholders = countingData.current_stakeholders
+        .split(',')
+        .concat(message.author.id)
+        .join(',');
+      log.debug(F, `Member ${message.author.username} was added as a stakeholder`);
+      let welcomeMessage = `Welcome to the counting game ${message.author.username}!`;
+      if (countingData.type === 'TOKEN') {
+        welcomeMessage += '\nThis is a TOKEN game: Build the pot and get tokens every 10 levels, or break the combo and steal it all!'; // eslint-disable-line max-len
+      } else if (countingData.type === 'HARDCORE') {
+        welcomeMessage += '\nThis is a HARDCORE game: if you break the combo you will be kicked from the guild!';
+      }
+
+      await message.channel.send(welcomeMessage);
+    } else {
+      log.debug(F, `Member ${message.author.username} was already a stakeholder`);
+    }
+  } else {
+    countingData.current_stakeholders = message.author.id;
+    log.debug(F, `Created new stakeholders: ${countingData.current_stakeholders}`);
+  }
+
+  // If the number is the next number in the sequence and a multiple of 10
+  // Look up the persona of every user in the currentData.current_stakeholders string
+  // Give each of those personas a fraction of the pot: (totalPot / currentData.current_stakeholders.length)
+  // EG: (10 * 10) * (10 / 10) = 100
+  // EG: (20 * 10) * (20 / 10) = 400
+  // EG: (30 * 10) * (30 / 10) = 900
+  // EG: (40 * 10) * (40 / 10) = 1600
+  // EG: (50 * 10) * (50 / 10) = 2500
+
+  if (number % 10 === 0) {
+    // If the number is a multiple of 10
+    // Give each user a fraction of the pot
+    const stakeholderNumber = countingData.current_stakeholders.split(',').length;
+    const totalPot = calcTotalPot(number, stakeholderNumber);
+    const potPerUser = totalPot / stakeholderNumber;
+
+    // Look up the persona of every user in the currentData.current_stakeholders string
+    // Give each of those personas a fraction of the pot: (totalPot / currentData.current_stakeholders.length)
+    const stakeholderIds = countingData.current_stakeholders.split(',');
+    await Promise.all(stakeholderIds.map(async discordId => {
+      const userData = await getUser(discordId, null);
+      const persona = await personaGet(userData.id);
+      persona.tokens += potPerUser;
+      await personaSet(persona);
+      return persona;
+    }));
+
+    const embed = embedTemplate()
+      .setTitle('Payday!')
+      .setColor(Colors.Green)
+      .setDescription(stripIndents`The pot of ${totalPot} tokens has been claimed by ${stakeholderNumber} users!
+      Each user has been given ${potPerUser} tokens!
+
+      The pot grows bigger the higher the combo gets, and the amount of people who have contributed to the combo!`)
+      .setFooter({ text: 'totalPot = ((currentNumber * 10) * (currentNumber / 10)) * uniqueUsers' });
+
+    // Send a message to the channel
+    await message.channel.send({
+      embeds: [embed],
+    });
+  }
+
   await countingSetG(countingData);
 
   // log.debug(F, `countingData: ${JSON.stringify(countingData, null, 2)}`);
