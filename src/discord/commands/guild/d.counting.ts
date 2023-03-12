@@ -11,6 +11,7 @@ import {
   InteractionEditReplyOptions,
   time,
   Colors,
+  PermissionResolvable,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommandBeta } from '../../@types/commandDef';
@@ -22,6 +23,7 @@ import { sleep } from './d.bottest';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { Counting } from '../../../global/@types/database';
 import { getUser, personaGet, personaSet } from '../../../global/utils/knex';
+import { checkChannelPermissions } from '../../utils/checkPermissions';
 // import { getUser } from '../../../global/utils/knex';
 
 export default counting;
@@ -78,6 +80,20 @@ export const counting: SlashCommandBeta = {
     const command = interaction.options.getSubcommand();
     let response = { content: 'This command has not been setup yet!' } as InteractionEditReplyOptions;
     if (command === 'setup') {
+      // Check if the user can manage the channel role
+      if (!await checkChannelPermissions(
+        (interaction.channel as TextChannel),
+        [
+          'ManageChannel' as PermissionResolvable,
+        ],
+      )) {
+        // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
+        return interaction.editReply({
+          embeds: [embedTemplate()
+            .setTitle('You do not have permission to use this command!')
+            .setColor(Colors.Red)],
+        });
+      }
       response = await countingSetup(
         interaction.channel as TextChannel,
         (interaction.options.getString('type') ?? 'NORMAL') as 'HARDCORE' | 'TOKEN' | 'NORMAL',
@@ -89,6 +105,21 @@ export const counting: SlashCommandBeta = {
       response = await countingScores(interaction);
     }
     if (command === 'reset') {
+      // Check if the user can manage the channel role
+      if (!await checkChannelPermissions(
+        (interaction.channel as TextChannel),
+        [
+          'ManageChannel' as PermissionResolvable,
+        ],
+      )) {
+        // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
+        return interaction.editReply({
+          embeds: [embedTemplate()
+            .setTitle('You do not have permission to use this command!')
+            .setColor(Colors.Red)],
+        });
+      }
+
       response = await countingReset(interaction);
     }
     return interaction.editReply(response);
