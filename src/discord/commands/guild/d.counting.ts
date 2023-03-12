@@ -446,7 +446,7 @@ export async function countMessage(message: Message): Promise<void> {
   // EG: (40 * 10) * (40 / 10) = 1600
   // EG: (50 * 10) * (50 / 10) = 2500
 
-  if (number % 10 === 0) {
+  if (number % 10 === 0 && countingData.type === 'TOKEN') {
     // If the number is a multiple of 10
     // Give each user a fraction of the pot
     const stakeholderNumber = countingData.current_stakeholders.split(',').length;
