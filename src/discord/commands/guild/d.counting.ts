@@ -1,0 +1,306 @@
+import {
+  // ActionRowBuilder,
+  // ModalBuilder,
+  // TextInputBuilder,
+  // Colors,
+  SlashCommandBuilder,
+  // ModalSubmitInteraction,
+  ChatInputCommandInteraction,
+  Message,
+  TextChannel,
+  InteractionEditReplyOptions,
+  time,
+  Colors,
+} from 'discord.js';
+import {
+// TextInputStyle,
+} from 'discord-api-types/v10';
+import { stripIndents } from 'common-tags';
+import { SlashCommandBeta } from '../../@types/commandDef';
+// import { embedTemplate } from '../../utils/embedTemplate';
+// import { globalTemplate } from '../../../global/commands/_g.template';
+import { startLog } from '../../utils/startLog';
+import { countingGetG, countingSetG } from '../../../global/commands/g.counting';
+import { sleep } from './d.bottest';
+import { embedTemplate } from '../../utils/embedTemplate';
+import { Counting } from '../../../global/@types/database';
+// import { getUser } from '../../../global/utils/knex';
+
+export default counting;
+
+const F = f(__filename);
+
+export const counting: SlashCommandBeta = {
+  data: new SlashCommandBuilder()
+    .setName('counting')
+    .setDescription('All things with counting!')
+    .addSubcommand(subcommand => subcommand
+      .setName('setup')
+      .setDescription('Set up a Counting channel!')
+      .addBooleanOption(option => option
+        .setDescription('Is this a hardcore room?')
+        .setName('hardcore')))
+    .addSubcommand(subcommand => subcommand
+      .setName('scores')
+      .setDescription('Get the scores for a Counting channel!')
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you')))
+    .addSubcommand(subcommand => subcommand
+      .setName('reset')
+      .setDescription('Reset the counting channel!')
+      .addIntegerOption(option => option
+        .setDescription('The number to set the channel to')
+        .setName('number')))
+    .addSubcommand(subcommand => subcommand
+      .setName('end')
+      .setDescription('End the counting game!')),
+  async execute(interaction) {
+    startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
+    const command = interaction.options.getSubcommand();
+    let response = { content: 'This command has not been setup yet!' } as InteractionEditReplyOptions;
+    if (command === 'setup') {
+      response = await countingSetup(
+        interaction.channel as TextChannel,
+        interaction.options.getBoolean('hardcore') ?? false,
+        0,
+        false,
+      );
+    }
+    if (command === 'scores') {
+      response = await countingScores(interaction);
+    }
+    if (command === 'reset') {
+      response = await countingReset(interaction);
+    }
+    return interaction.editReply(response);
+  },
+};
+
+export async function countingSetup(
+  channel:TextChannel,
+  hardcore:boolean,
+  startingNumber:number,
+  override:boolean,
+):Promise<InteractionEditReplyOptions> {
+  const data = await countingGetG(channel.id);
+
+  const embed = embedTemplate();
+
+  if (data && !override) {
+    return {
+      embeds: [embed.setTitle('This channel is already set up for counting! Mods can /reset or /end it!')],
+    };
+  }
+
+  embed
+    .setTitle(`Let's play a ${hardcore ? 'HARDCORE ' : ''}counting game!`)
+    .setDescription(stripIndents`
+
+    The rules are simple:
+    1. You can only count up by 1
+    2. You must use numbers, I'm not smart enough to understand words can be numbers
+    3. You can only count once per day
+    4. You can react as many times as you want!
+    5. If you say the wrong number the count resets and ${hardcore
+    ? '**you will be kicked from the guild!** '
+    : 'everyone will be disappointed'}
+    6. Use /counting scores to see the scores for this channel
+    7. Mods can /counting reset to reset the channel if needed
+  
+    I'll start us off in the next message!
+    `);
+
+  const countingMessage = await channel.send({ embeds: [embed] });
+
+  await channel.send({ content: `${startingNumber}` });
+
+  await countingSetG({
+    guild_id: channel.guild.id,
+    channel_id: channel.id,
+    hardcore,
+
+    current_number: startingNumber,
+    current_number_message_id: countingMessage.id,
+    current_number_message_date: new Date(),
+    current_number_message_author: countingMessage.author.id,
+
+    last_number: data?.last_number ?? null,
+    last_number_message_id: data?.last_number_message_id ?? null,
+    last_number_message_date: data?.last_number_broken_date ?? null,
+    last_number_message_author: data?.last_number_message_author ?? null,
+    last_number_broken_by: data?.last_number_broken_by ?? null,
+    last_number_broken_date: data?.last_number_broken_date ?? null,
+
+    record_number: data?.record_number ?? 0,
+    record_number_message_id: data?.record_number_message_id ?? null,
+    record_number_message_date: data?.record_number_message_date ?? null,
+    record_number_message_author: data?.record_number_message_author ?? null,
+    record_number_broken_by: data?.record_number_broken_by ?? null,
+    record_number_broken_date: data?.record_number_broken_date ?? null,
+  } as Counting);
+
+  return { content: 'Counting channel set up!' };
+}
+
+export async function countingScores(
+  interaction:ChatInputCommandInteraction,
+):Promise<InteractionEditReplyOptions> {
+  // This function gets the scores for the counting channel
+  const channel = interaction.channel as TextChannel;
+  const data = await countingGetG(channel.id);
+  log.debug(F, `Data: ${JSON.stringify(data, null, 2)}`);
+  if (!data) return { content: 'This channel is not set up for counting!' };
+
+  const currentLink = `[${data.current_number}](https://discord.com/channels/${interaction.guildId}/${interaction.channelId}/${data.current_number_message_id})`; // eslint-disable-line max-len
+  const currentMember = await interaction.guild?.members.fetch(data.current_number_message_author as string);
+  let description = `
+  **Current Combo**
+  ${currentLink} - ${currentMember} ${time(data.current_number_message_date, 'R')}`;
+
+  if (data.last_number) {
+    const lastLink = `[${data.last_number}](https://discord.com/channels/${interaction.guildId}/${interaction.channelId}/${data.last_number_message_id})`; // eslint-disable-line max-len
+    const lastMember = await interaction.guild?.members.fetch(data.last_number_message_author as string);
+    const lastBreaker = await interaction.guild?.members.fetch(data.last_number_broken_by as string);
+    description += `
+
+    **Last Combo**
+    ${lastLink} - ${lastMember ?? 'unknown'} ${time(data.last_number_message_date as Date, 'R')}
+    Broken by ${lastBreaker ?? 'unknown'} ${time(data.last_number_broken_date as Date, 'R')}`;
+  }
+
+  if (data.record_number) {
+    const recordLink = `[${data.record_number}](https://discord.com/channels/${interaction.guildId}/${interaction.channelId}/${data.record_number_message_id})`; // eslint-disable-line max-len
+    const recordMember = await interaction.guild?.members.fetch(data.record_number_message_author as string);
+    const recordBreaker = await interaction.guild?.members.fetch(data.record_number_broken_by as string);
+    description += `
+
+    **Record Combo**
+    ${recordLink} - ${recordMember ?? 'unknown'} ${time(data.record_number_message_date as Date, 'R')}
+    Broken by ${recordBreaker ?? 'unknown'} ${time(data.record_number_broken_date as Date, 'R')}`;
+  }
+
+  const embed = embedTemplate()
+    .setTitle('Counting Scores')
+    .setDescription(stripIndents`${description}`);
+  return { embeds: [embed] };
+}
+
+export async function countingReset(
+  interaction:ChatInputCommandInteraction,
+):Promise<InteractionEditReplyOptions> {
+  // This function resets the counting channel
+  const channel = interaction.channel as TextChannel;
+  const data = await countingGetG(channel.id);
+  if (!data) return { content: 'This channel is not set up for counting!' };
+  const number = interaction.options.getInteger('number') ?? 0;
+  await countingSetup(channel, data.hardcore, number, true);
+  return { embeds: [embedTemplate().setTitle(`Counting channel reset to ${number}!`)] };
+}
+
+export async function countMessage(message: Message): Promise<void> {
+  if (!message.guild) return; // If not in a guild then ignore all messages
+  if (message.guild.id !== env.DISCORD_GUILD_ID) return; // If not in tripsit ignore all messages
+  const countingData = await countingGetG(message.channel.id);
+  if (!countingData) return; // If not a counting channel then ignore all messages
+
+  // Process the new message. If it's the next number after current_number, then update the DB
+  // If it's not the next number, then still update the db with the user who broke the combo
+
+  // log.debug(F, `Message: ${message.cleanContent}`);
+  const number = parseInt(message.cleanContent, 10);
+  // log.debug(F, `number: ${number}`);
+
+  // log.debug(F, `isnan: ${Number.isNaN(number)}`);
+
+  if (Number.isNaN(number)) {
+    await message.delete();
+    return;
+  }
+
+  if (countingData.current_number === -1) {
+    await message.delete();
+    return;
+  }
+
+  if (number !== countingData.current_number + 1) {
+    countingData.last_number = countingData.current_number;
+    countingData.last_number_message_id = countingData.current_number_message_id;
+    countingData.last_number_message_date = countingData.current_number_message_date;
+    countingData.last_number_message_author = countingData.current_number_message_author;
+    countingData.last_number_broken_by = message.author.id;
+    countingData.last_number_broken_date = new Date();
+
+    // If the number is not the next number in the sequence...
+    let recordMessage = '';
+    // Check if a new record was set
+    if (countingData.current_number > countingData.record_number) {
+      // If a new record was set then update the DB
+      countingData.record_number = countingData.current_number;
+      countingData.record_number_message_id = countingData.current_number_message_id;
+      countingData.record_number_message_date = countingData.current_number_message_date;
+      countingData.record_number_message_author = countingData.current_number_message_author;
+      countingData.record_number_broken_by = message.author.id;
+      countingData.record_number_broken_date = new Date();
+
+      const recordUser = await message.guild.members.fetch(countingData.record_number_message_author);
+      // Send a message to the channel
+      recordMessage = stripIndents`\n\n**A new record of ${countingData.current_number} was set by ${recordUser}**!
+      ${message.author} will go down in history as the one who broke the streak...`;
+    }
+
+    countingData.current_number = -1;
+
+    // Then update the DB with the user who broke the combo
+    await countingSetG(countingData);
+
+    // If it's hardcore, kick the user
+    if (countingData.hardcore) {
+      // If the channel is hardcore then kick the user
+      const member = await message.guild.members.fetch(message.author.id);
+      await member.kick('Counting broke!');
+    }
+
+    // Send a message to the channel
+    await message.channel.send({
+      embeds: [
+        embedTemplate()
+          .setTitle('Combo Broken!')
+          .setColor(Colors.Red)
+          .setDescription(stripIndents`Oh no, ${message.author} broke the combo...
+          ${recordMessage}${countingData.hardcore
+  ? '\nThey were kicked from the guild for this transgression!'
+  : '\nMake sure to point and laugh at them!'}`),
+      ],
+    });
+
+    // Send a message to the channel that the next game will start in 10 seconds.
+    // Wait 10 seconds, and then edit the message to a line that says "Starting new game in {relative time}"
+
+    const resetTime = new Date(new Date().getTime() + 10 * 1000);
+    const newMessage = await message.channel.send(`Starting new game ${time(resetTime, 'R')}`);
+    await sleep(10000);
+
+    // Start a new counting game
+    await countingSetup(
+      message.channel as TextChannel,
+      countingData.hardcore,
+      0,
+      true,
+    );
+
+    await newMessage.delete();
+
+    return;
+  }
+
+  // If the number is the next number in the sequence
+  // Then update the DB with the user who got the number right
+  countingData.current_number = number;
+  countingData.current_number_message_id = message.id;
+  countingData.current_number_message_date = new Date();
+  countingData.current_number_message_author = message.author.id;
+  await countingSetG(countingData);
+
+  // log.debug(F, `countingData: ${JSON.stringify(countingData, null, 2)}`);
+}

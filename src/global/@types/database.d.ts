@@ -83,6 +83,7 @@ export enum UserActionType {
 }
 
 export enum Table {
+  Counting = 'counting',
   DiscordGuilds = 'discord_guilds',
   DrugArticles = 'drug_articles',
   DrugCategories = 'drug_categories',
@@ -104,6 +105,29 @@ export enum Table {
   UserTickets = 'user_tickets',
   Users = 'users',
 }
+
+export type Counting = {
+  id: string;
+  guild_id: string;
+  channel_id: string;
+  hardcore: boolean;
+  current_number: number;
+  current_number_message_id: string;
+  current_number_message_date: Date;
+  current_number_message_author: string;
+  last_number: number | null;
+  last_number_message_id: string | null;
+  last_number_message_date: Date | null;
+  last_number_message_author: string | null;
+  last_number_broken_by: string | null;
+  last_number_broken_date: Date | null;
+  record_number: number;
+  record_number_message_id: string | null;
+  record_number_message_date: Date | null;
+  record_number_message_author: string | null;
+  record_number_broken_by: string | null;
+  record_number_broken_date: Date | null;
+};
 
 export type DiscordGuilds = {
   id: string;

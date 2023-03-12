@@ -11,8 +11,6 @@ import {
   PermissionResolvable,
   StringSelectMenuBuilder,
   Guild,
-  // InteractionEditReplyOptions,
-  Message,
 } from 'discord.js';
 import {
   ButtonStyle, TextInputStyle,
@@ -115,12 +113,6 @@ export const prompt: SlashCommand = {
       .setDescription('rules info!')
       .setName('rules'))
     .addSubcommand(subcommand => subcommand
-      .setDescription('Set up a Counting channel!')
-      .setName('counting')
-      .addBooleanOption(option => option
-        .setDescription('Is this a hardcore room?')
-        .setName('hardcore')))
-    .addSubcommand(subcommand => subcommand
       .setDescription('starthere info!')
       .setName('starthere'))
     // .addSubcommand(subcommand => subcommand
@@ -166,80 +158,10 @@ export const prompt: SlashCommand = {
       await tripsit(interaction);
     } else if (command === 'ticketbooth') {
       await ticketbooth(interaction);
-    } else if (command === 'counting') {
-      await counting(interaction);
     }
     return true;
   },
 };
-
-type CountingData = {
-  channelId: string;
-  hardcore: boolean;
-  lastNumber: number;
-  lastNumberID: string;
-  lastNumberOn: Date;
-  lastNumberUser: string;
-  lastNumberGoodUser: string;
-  lastNumberBadUser: string;
-  highestNumber: number;
-  highestNumberId: string;
-  highestNumberOn: Date;
-  highestNumberUser: string;
-  highestNumberGoodUser: string;
-  highestNumberBadUser: string;
-};
-
-const countingData = [] as CountingData[];
-
-export async function countingGet(
-  channelID:string,
-):Promise<CountingData | undefined> {
-  return countingData.find(c => c.channelId === channelID);
-}
-
-export async function countingSet(data: CountingData) {
-  const index = countingData.findIndex(c => c.channelId === data.channelId);
-  if (index === -1) {
-    countingData.push(data);
-  } else {
-    countingData[index] = data;
-  }
-}
-
-export async function counting(interaction:ChatInputCommandInteraction):Promise<Message> {
-  const hardcore = interaction.options.getBoolean('hardcore');
-  const channel = interaction.channel as TextChannel;
-
-  const data = await countingGet(channel.id);
-
-  if (data) {
-    return interaction.editReply('This channel is already set up for counting!');
-  }
-
-  const countingMessage = await channel.send('1');
-  await countingMessage.react('👍');
-  await countingMessage.react('👎');
-
-  await countingSet({
-    channelId: channel.id,
-    hardcore: hardcore || false,
-    lastNumber: 1,
-    lastNumberID: countingMessage.id,
-    lastNumberOn: new Date(),
-    lastNumberUser: '',
-    lastNumberGoodUser: '',
-    lastNumberBadUser: '',
-    highestNumber: 1,
-    highestNumberId: countingMessage.id,
-    highestNumberOn: new Date(),
-    highestNumberUser: '',
-    highestNumberGoodUser: '',
-    highestNumberBadUser: '',
-  });
-
-  return interaction.editReply('Counting channel set up!');
-}
 
 export async function tripsit(interaction:ChatInputCommandInteraction) {
   if (!await checkChannelPermissions(
