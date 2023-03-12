@@ -133,6 +133,7 @@ export async function countingSetup(
   override:boolean,
 ):Promise<InteractionEditReplyOptions> {
   const data = await countingGetG(channel.id);
+  log.debug(F, `data: ${JSON.stringify(data)}`);
 
   const embed = embedTemplate();
 
@@ -264,7 +265,7 @@ export async function countingReset(
   const number = interaction.options.getInteger('number') ?? 0;
   await countingSetup(
     channel,
-    (interaction.options.getString('type') ?? 'normal') as 'HARDCORE' | 'TOKEN' | 'NORMAL',
+    (interaction.options.getString('type') ?? 'NORMAL') as 'HARDCORE' | 'TOKEN' | 'NORMAL',
     number,
     true,
   );
