@@ -20,7 +20,7 @@ export const dReport: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('report')
     .setDescription('Report a user')
-    .addUserOption(option => option
+    .addStringOption(option => option
       .setDescription('User to report!')
       .setRequired(true)
       .setName('target'))
@@ -43,10 +43,10 @@ export const dReport: SlashCommand = {
       return false;
     }
 
-    const targetObj = interaction.options.getUser('target', true);
+    const targetString = interaction.options.getString('target', true);
     const reason = interaction.options.getString('reason', true);
 
-    const target = await getDiscordMember(interaction, targetObj.id);
+    const target = await getDiscordMember(interaction, targetString);
 
     if (!target) {
       return false;
