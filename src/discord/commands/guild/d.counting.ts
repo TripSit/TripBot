@@ -422,8 +422,8 @@ export async function countMessage(message: Message): Promise<void> {
         .split(',')
         .concat(message.author.id)
         .join(',');
-      log.debug(F, `Member ${message.author.username} was added as a stakeholder`);
-      let welcomeMessage = `Welcome to the counting game ${message.author.username}!`;
+      log.debug(F, `Member ${message.member?.displayName} was added as a stakeholder`);
+      let welcomeMessage = `Welcome to the counting game ${message.member?.displayName}!`;
       if (countingData.type === 'TOKEN') {
         welcomeMessage += '\nThis is a TOKEN game: Build the pot and get tokens every 10 levels, or break the combo and steal it all!'; // eslint-disable-line max-len
       } else if (countingData.type === 'HARDCORE') {
@@ -432,7 +432,7 @@ export async function countMessage(message: Message): Promise<void> {
 
       await message.channel.send(welcomeMessage);
     } else {
-      log.debug(F, `Member ${message.author.username} was already a stakeholder`);
+      log.debug(F, `Member ${message.member?.displayName} was already a stakeholder`);
     }
   } else {
     countingData.current_stakeholders = message.author.id;
