@@ -354,7 +354,7 @@ export async function countMessage(message: Message): Promise<void> {
     const stakeholderNumber = countingData.current_stakeholders
       ? countingData.current_stakeholders.split(',').length
       : 1;
-    const totalPot = calcTotalPot(number, stakeholderNumber);
+    const totalPot = calcTotalPot(countingData.current_number, stakeholderNumber);
     if (countingData.type === 'TOKEN') {
       // If the channel is token then take tokens from the pot
 
@@ -450,7 +450,7 @@ export async function countMessage(message: Message): Promise<void> {
     // If the number is a multiple of 10
     // Give each user a fraction of the pot
     const stakeholderNumber = countingData.current_stakeholders.split(',').length;
-    const totalPot = calcTotalPot(number, stakeholderNumber);
+    const totalPot = calcTotalPot(countingData.current_number + 1, stakeholderNumber);
     const potPerUser = totalPot / stakeholderNumber;
 
     // Look up the persona of every user in the currentData.current_stakeholders string
