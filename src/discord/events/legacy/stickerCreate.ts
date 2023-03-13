@@ -6,44 +6,44 @@ import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
 import {
-  GuildBanRemoveEvent,
-} from '../@types/eventDef';
-import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
+  StickerCreateEvent,
+} from '../../@types/eventDef';
+import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 
 const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default guildBanRemove;
+export default stickerCreate;
 
-export const guildBanRemove: GuildBanRemoveEvent = {
-  name: 'guildBanRemove',
-  async execute(ban) {
+export const stickerCreate: StickerCreateEvent = {
+  name: 'stickerCreate',
+  async execute(sticker) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (ban.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.info(F, `Channel ${ban.user} was remove.`);
+    if (!sticker.guild) return;
+    if (sticker.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.info(F, `Sticker ${sticker.name} was created.`);
 
-    const perms = await checkGuildPermissions(ban.guild, [
+    const perms = await checkGuildPermissions(sticker.guild, [
       'ViewAuditLog' as PermissionResolvable,
     ]);
 
     if (!perms.hasPermission) {
-      const guildOwner = await ban.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${ban.guild} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${perms.permission} in ${ban.guild}!`);
+      const guildOwner = await sticker.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${sticker.guild} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${perms.permission} in ${sticker.guild}!`);
       return;
     }
 
-    const fetchedLogs = await ban.guild.fetchAuditLogs({
+    const fetchedLogs = await sticker.guild.fetchAuditLogs({
       limit: 1,
-      type: AuditLogEvent.MemberBanRemove,
+      type: AuditLogEvent.StickerCreate,
     });
 
     // Since there's only 1 audit log entry in this collection, grab the first one
-    const creationLog = fetchedLogs.entries.first();
+    const auditLog = fetchedLogs.entries.first();
 
     const channel = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
-
     const channelPerms = await checkChannelPermissions(channel, [
       'ViewChannel' as PermissionResolvable,
       'SendMessages' as PermissionResolvable,
@@ -56,14 +56,14 @@ export const guildBanRemove: GuildBanRemoveEvent = {
     }
 
     // Perform a coherence check to make sure that there's *something*
-    if (!creationLog) {
-      await channel.send(`${ban.user} was unbaned, but no relevant audit logs were found.`);
+    if (!auditLog) {
+      await channel.send(`${sticker.name} was created, but no relevant audit logs were found.`);
       return;
     }
 
-    const response = creationLog.executor
-      ? `Channel ${ban.user} was unbanned by ${creationLog.executor.tag}.`
-      : `Channel ${ban.user} was unbanned, but the audit log was inconclusive.`;
+    const response = auditLog.executor
+      ? `Channel ${sticker.name} was created by ${auditLog.executor.tag}.`
+      : `Channel ${sticker.name} was created, but the audit log was inconclusive.`;
 
     await channel.send(response);
   },

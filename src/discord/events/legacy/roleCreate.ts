@@ -6,37 +6,37 @@ import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
 import {
-  EmojiDeleteEvent,
-} from '../@types/eventDef';
-import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
+  RoleCreateEvent,
+} from '../../@types/eventDef';
+import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 
 const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default emojiDelete;
+export default roleCreate;
 
-export const emojiDelete: EmojiDeleteEvent = {
-  name: 'emojiDelete',
-  async execute(emoji) {
+export const roleCreate: RoleCreateEvent = {
+  name: 'roleCreate',
+  async execute(role) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (emoji.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.info(F, `Emoji ${emoji.name} was deleted.`);
+    if (role.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.info(F, `Role ${role.name} was created.`);
 
-    const perms = await checkGuildPermissions(emoji.guild, [
+    const perms = await checkGuildPermissions(role.guild, [
       'ViewAuditLog' as PermissionResolvable,
     ]);
 
     if (!perms.hasPermission) {
-      const guildOwner = await emoji.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${emoji.guild} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${perms.permission} in ${emoji.guild}!`);
+      const guildOwner = await role.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${role.guild} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${perms.permission} in ${role.guild}!`);
       return;
     }
 
-    const fetchedLogs = await emoji.guild.fetchAuditLogs({
+    const fetchedLogs = await role.guild.fetchAuditLogs({
       limit: 1,
-      type: AuditLogEvent.EmojiDelete,
+      type: AuditLogEvent.RoleCreate,
     });
 
     // Since there's only 1 audit log entry in this collection, grab the first one
@@ -56,13 +56,13 @@ export const emojiDelete: EmojiDeleteEvent = {
 
     // Perform a coherence check to make sure that there's *something*
     if (!auditLog) {
-      await channel.send(`${emoji.name} was deleted, but no relevant audit logs were found.`);
+      await channel.send(`${role.name} was created, but no relevant audit logs were found.`);
       return;
     }
 
     const response = auditLog.executor
-      ? `Channel ${emoji.name} was deleted by ${auditLog.executor.tag}.`
-      : `Channel ${emoji.name} was deleted, but the audit log was inconclusive.`;
+      ? `Channel ${role.name} was created by ${auditLog.executor.tag}.`
+      : `Channel ${role.name} was created, but the audit log was inconclusive.`;
 
     await channel.send(response);
   },

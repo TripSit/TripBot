@@ -7,7 +7,7 @@ import {
 } from 'discord-api-types/v10';
 import {
   InviteDeleteEvent,
-} from '../@types/eventDef';
+} from '../../@types/eventDef';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 const F = f(__filename);

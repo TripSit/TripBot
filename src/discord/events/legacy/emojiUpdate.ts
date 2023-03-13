@@ -6,38 +6,37 @@ import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
 import {
-  StickerUpdateEvent,
-} from '../@types/eventDef';
-import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
+  EmojiUpdateEvent,
+} from '../../@types/eventDef';
+import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 
 const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default stickerUpdate;
+export default emojiUpdate;
 
-export const stickerUpdate: StickerUpdateEvent = {
-  name: 'stickerUpdate',
-  async execute(oldSticker, newSticker) {
+export const emojiUpdate: EmojiUpdateEvent = {
+  name: 'emojiUpdate',
+  async execute(oldEmoji, newEmoji) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (!newSticker.guild) return;
-    if (newSticker.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.info(F, `Sticker ${newSticker.name} was updated.`);
+    if (newEmoji.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.info(F, `Emoji ${newEmoji.name} was updated.`);
 
-    const perms = await checkGuildPermissions(newSticker.guild, [
+    const perms = await checkGuildPermissions(newEmoji.guild, [
       'ViewAuditLog' as PermissionResolvable,
     ]);
 
     if (!perms.hasPermission) {
-      const guildOwner = await newSticker.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${newSticker.guild} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${perms.permission} in ${newSticker.guild}!`);
+      const guildOwner = await newEmoji.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${newEmoji.guild} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${perms.permission} in ${newEmoji.guild}!`);
       return;
     }
 
-    const fetchedLogs = await newSticker.guild.fetchAuditLogs({
+    const fetchedLogs = await newEmoji.guild.fetchAuditLogs({
       limit: 1,
-      type: AuditLogEvent.StickerUpdate,
+      type: AuditLogEvent.EmojiUpdate,
     });
 
     // Since there's only 1 audit log entry in this collection, grab the first one
@@ -57,18 +56,19 @@ export const stickerUpdate: StickerUpdateEvent = {
 
     // Perform a coherence check to make sure that there's *something*
     if (!auditLog) {
-      await channel.send(`Sticker ${newSticker.name} was updated, but no relevant audit logs were found.`);
+      await channel.send(`Emoji ${newEmoji.name} was updated, but no relevant audit logs were found.`);
       return;
     }
 
     let response = '' as string;
+
     const changes = auditLog.changes.map(change => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`);
 
     if (auditLog.executor) {
-      response = `Sticker **${newSticker.toString()}** was updated by ${auditLog.executor.tag}:`;
+      response = `Emoji **${newEmoji.toString()}** was updated by ${auditLog.executor.tag}:`;
       response += `\n${changes.join('\n')}`; // eslint-disable-line max-len
     } else {
-      response = `Sticker ${newSticker.toString()} was updated, but the audit log was inconclusive.`;
+      response = `Emoji ${newEmoji.toString()} was updated, but the audit log was inconclusive.`;
       response += `\n${changes.join('\n')}`; // eslint-disable-line max-len
     }
 

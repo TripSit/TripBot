@@ -6,37 +6,38 @@ import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
 import {
-  RoleDeleteEvent,
-} from '../@types/eventDef';
-import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
+  ThreadCreateEvent,
+} from '../../@types/eventDef';
+import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 
 const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default roleDelete;
+export default threadCreate;
 
-export const roleDelete: RoleDeleteEvent = {
-  name: 'roleDelete',
-  async execute(role) {
+export const threadCreate: ThreadCreateEvent = {
+  name: 'threadCreate',
+  async execute(thread) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (role.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.info(F, `Role ${role.name} was deleted.`);
+    if (!thread.guild) return;
+    if (thread.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.info(F, `Thread ${thread.name} was created.`);
 
-    const perms = await checkGuildPermissions(role.guild, [
+    const perms = await checkGuildPermissions(thread.guild, [
       'ViewAuditLog' as PermissionResolvable,
     ]);
 
     if (!perms.hasPermission) {
-      const guildOwner = await role.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${role.guild} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${perms.permission} in ${role.guild}!`);
+      const guildOwner = await thread.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${thread.guild} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${perms.permission} in ${thread.guild}!`);
       return;
     }
 
-    const fetchedLogs = await role.guild.fetchAuditLogs({
+    const fetchedLogs = await thread.guild.fetchAuditLogs({
       limit: 1,
-      type: AuditLogEvent.RoleDelete,
+      type: AuditLogEvent.ThreadCreate,
     });
 
     // Since there's only 1 audit log entry in this collection, grab the first one
@@ -56,13 +57,13 @@ export const roleDelete: RoleDeleteEvent = {
 
     // Perform a coherence check to make sure that there's *something*
     if (!auditLog) {
-      await channel.send(`${role.name} was deleted, but no relevant audit logs were found.`);
+      await channel.send(`${thread.name} was created, but no relevant audit logs were found.`);
       return;
     }
 
     const response = auditLog.executor
-      ? `Channel ${role.name} was deleted by ${auditLog.executor.tag}.`
-      : `Channel ${role.name} was deleted, but the audit log was inconclusive.`;
+      ? `Channel ${thread.name} was created by ${auditLog.executor.tag}.`
+      : `Channel ${thread.name} was created, but the audit log was inconclusive.`;
 
     await channel.send(response);
   },

@@ -23,7 +23,13 @@ import {
   InvalidRequestWarningData,
   Snowflake,
   Collection,
+  GuildAuditLogsEntry,
 } from 'discord.js';
+
+export interface GuildAuditLogEntryCreateEvent {
+  name: string;
+  execute: (auditLogEntry: GuildAuditLogsEntry, guild: Guild) => Promise<void>;
+}
 
 export interface ChannelCreateEvent {
   name: string;

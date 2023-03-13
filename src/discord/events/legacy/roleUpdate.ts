@@ -6,7 +6,7 @@
 // } from 'discord-api-types/v10';
 import {
   RoleUpdateEvent,
-} from '../@types/eventDef';
+} from '../../@types/eventDef';
 // import env from '../../global/utils/env.config';
 // const F= f(__filename);
 

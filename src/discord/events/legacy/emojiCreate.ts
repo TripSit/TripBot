@@ -7,8 +7,8 @@ import {
 } from 'discord-api-types/v10';
 import {
   EmojiCreateEvent,
-} from '../@types/eventDef';
-import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
+} from '../../@types/eventDef';
+import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 
 const F = f(__filename);
 

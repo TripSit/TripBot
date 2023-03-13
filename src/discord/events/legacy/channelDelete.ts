@@ -8,8 +8,8 @@ import {
 } from 'discord-api-types/v10';
 import {
   ChannelDeleteEvent,
-} from '../@types/eventDef';
-import { checkChannelPermissions } from '../utils/checkPermissions';
+} from '../../@types/eventDef';
+import { checkChannelPermissions } from '../../utils/checkPermissions';
 
 const F = f(__filename);
 

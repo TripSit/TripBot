@@ -9,9 +9,9 @@ import {
 } from 'discord-api-types/v10';
 import {
   MessageDeleteEvent,
-} from '../@types/eventDef';
-import { embedTemplate } from '../utils/embedTemplate';
-import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
+} from '../../@types/eventDef';
+import { embedTemplate } from '../../utils/embedTemplate';
+import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 // eslint-disable-line @typescript-eslint/no-unused-vars
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 

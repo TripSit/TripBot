@@ -7,7 +7,7 @@ import {
 } from 'discord-api-types/v10';
 import {
   InviteCreateEvent,
-} from '../@types/eventDef';
+} from '../../@types/eventDef';
 
 const F = f(__filename);
 
