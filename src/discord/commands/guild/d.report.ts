@@ -20,7 +20,7 @@ export const dReport: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('report')
     .setDescription('Report a user')
-    .addUserOption(option => option
+    .addStringOption(option => option
       .setDescription('User to report!')
       .setRequired(true)
       .setName('target'))
