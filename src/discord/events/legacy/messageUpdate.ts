@@ -4,8 +4,8 @@ import {
 } from 'discord.js';
 import {
   MessageUpdateEvent,
-} from '../@types/eventDef';
-import { embedTemplate } from '../utils/embedTemplate'; // eslint-disable-line @typescript-eslint/no-unused-vars
+} from '../../@types/eventDef';
+import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-line @typescript-eslint/no-unused-vars
 // eslint-disable-line no-unused-vars
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 

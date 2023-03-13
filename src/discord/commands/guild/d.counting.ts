@@ -278,16 +278,16 @@ export async function countMessage(message: Message): Promise<void> {
   const countingData = await countingGetG(message.channel.id);
   if (!countingData) return; // If not a counting channel then ignore all messages
 
-  log.debug(F, `countingData: ${JSON.stringify(countingData, null, 2)} `);
+  // log.debug(F, `countingData: ${JSON.stringify(countingData, null, 2)} `);
 
   // Process the new message. If it's the next number after current_number, then update the DB
   // If it's not the next number, then still update the db with the user who broke the combo
 
   // log.debug(F, `Message: ${message.cleanContent}`);
   const number = parseInt(message.cleanContent, 10);
-  log.debug(F, `number: ${number}`);
+  // log.debug(F, `number: ${number}`);
 
-  log.debug(F, `isnan: ${Number.isNaN(number)}`);
+  // log.debug(F, `isnan: ${Number.isNaN(number)}`);
 
   if (Number.isNaN(number)) {
     // await message.delete();

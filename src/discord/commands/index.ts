@@ -4,7 +4,7 @@ import path from 'path';
 
 // import log from '../../global/utils/log';
 
-const F = f(__filename);
+const F = f(__filename);  // eslint-disable-line
 
 export default registerCommands;
 
@@ -34,6 +34,5 @@ export async function registerCommands(client: Client): Promise<void> {
         client.commands.set(functionName, command[goodKey]);
       });
   }
-  Promise.all([registerType('global'), registerType('guild')])
-    .then(() => log.debug(F, 'Commands loaded!'));
+  await Promise.all([registerType('global'), registerType('guild')]);
 }

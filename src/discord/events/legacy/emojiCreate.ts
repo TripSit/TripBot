@@ -6,44 +6,44 @@ import {
   AuditLogEvent,
 } from 'discord-api-types/v10';
 import {
-  StickerCreateEvent,
-} from '../@types/eventDef';
-import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
+  EmojiCreateEvent,
+} from '../../@types/eventDef';
+import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 
 const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default stickerCreate;
+export default emojiCreate;
 
-export const stickerCreate: StickerCreateEvent = {
-  name: 'stickerCreate',
-  async execute(sticker) {
+export const emojiCreate: EmojiCreateEvent = {
+  name: 'emojiCreate',
+  async execute(emoji) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (!sticker.guild) return;
-    if (sticker.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.info(F, `Sticker ${sticker.name} was created.`);
+    if (emoji.guild.id !== env.DISCORD_GUILD_ID) return;
+    log.info(F, `Emoji ${emoji.name} was created.`);
 
-    const perms = await checkGuildPermissions(sticker.guild, [
+    const perms = await checkGuildPermissions(emoji.guild, [
       'ViewAuditLog' as PermissionResolvable,
     ]);
 
     if (!perms.hasPermission) {
-      const guildOwner = await sticker.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${sticker.guild} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${perms.permission} in ${sticker.guild}!`);
+      const guildOwner = await emoji.guild.fetchOwner();
+      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${emoji.guild} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${perms.permission} in ${emoji.guild}!`);
       return;
     }
 
-    const fetchedLogs = await sticker.guild.fetchAuditLogs({
+    const fetchedLogs = await emoji.guild.fetchAuditLogs({
       limit: 1,
-      type: AuditLogEvent.StickerCreate,
+      type: AuditLogEvent.EmojiCreate,
     });
 
     // Since there's only 1 audit log entry in this collection, grab the first one
-    const auditLog = fetchedLogs.entries.first();
+    const creationLog = fetchedLogs.entries.first();
 
     const channel = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+
     const channelPerms = await checkChannelPermissions(channel, [
       'ViewChannel' as PermissionResolvable,
       'SendMessages' as PermissionResolvable,
@@ -56,14 +56,14 @@ export const stickerCreate: StickerCreateEvent = {
     }
 
     // Perform a coherence check to make sure that there's *something*
-    if (!auditLog) {
-      await channel.send(`${sticker.name} was created, but no relevant audit logs were found.`);
+    if (!creationLog) {
+      await channel.send(`${emoji.name} was created, but no relevant audit logs were found.`);
       return;
     }
 
-    const response = auditLog.executor
-      ? `Channel ${sticker.name} was created by ${auditLog.executor.tag}.`
-      : `Channel ${sticker.name} was created, but the audit log was inconclusive.`;
+    const response = creationLog.executor
+      ? `Channel ${emoji.name} was created by ${creationLog.executor.tag}.`
+      : `Channel ${emoji.name} was created, but the audit log was inconclusive.`;
 
     await channel.send(response);
   },

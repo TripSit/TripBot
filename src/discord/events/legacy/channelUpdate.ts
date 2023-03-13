@@ -9,8 +9,8 @@ import {
 
 import {
   ChannelUpdateEvent,
-} from '../@types/eventDef';
-import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
+} from '../../@types/eventDef';
+import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 // import log from '../../global/utils/log';
 
 const F = f(__filename);
