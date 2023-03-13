@@ -4,6 +4,7 @@ import {
   ThreadChannel,
 } from 'discord.js';
 import { DateTime } from 'luxon';
+import axios from 'axios';
 import {
   reminderGet,
   reminderDel,
@@ -286,6 +287,15 @@ async function checkMindsets() {
 }
 
 /**
+ * This function calls the uptime monitor to tell it that tripbot is alive
+ */
+async function callUptime() {
+  axios.get('https://uptime.tripsit.me/api/push/UyL8LkDKtG?status=up&msg=OK').catch(e => {
+    console.log(e);
+  });
+}
+
+/**
  * This function is called on start.ts and runs the timers
  */
 export async function runTimer() {
@@ -300,6 +310,7 @@ export async function runTimer() {
         await checkReminders();
         await checkTickets();
         await checkMindsets();
+        await callUptime();
 
         checkTimers();
       },
