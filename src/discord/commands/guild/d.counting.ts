@@ -427,7 +427,7 @@ export async function countMessage(message: Message): Promise<void> {
       if (countingData.type === 'TOKEN') {
         welcomeMessage += '\nThis is a TOKEN game: Build the pot and get tokens every 10 levels, or break the combo and steal it all!'; // eslint-disable-line max-len
       } else if (countingData.type === 'HARDCORE') {
-        welcomeMessage += '\nThis is a HARDCORE game: if you break the combo you will be kicked from the guild!';
+        welcomeMessage += '\nThis is a HARDCORE game: if you break the combo you will be timed out for 24 hours!';
       }
 
       await message.channel.send(welcomeMessage);
