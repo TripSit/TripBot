@@ -39,10 +39,14 @@ export async function commandRun(
   } catch (error) {
     Error.stackTraceLimit = 25;
     const genericError = 'There was an error while executing this command!';
+    const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
     if (error instanceof Error) {
       log.error(F, `ERROR: ${error.stack}`);
       // log.debug(F, `ERROR: ${JSON.stringify(error, null, 2)}`);
-      if ((error as any).code === 10062) return;
+      if ((error as any).code === 10062) {
+        await botlog.send('I just got an interaction error, this is still a problem');
+        return;
+      }
       if (!interaction.replied) {
         if (interaction.deferred) {
           await interaction.editReply(genericError);
@@ -59,7 +63,6 @@ export async function commandRun(
         await interaction.editReply({ embeds: [embed] });
       }
       if (env.NODE_ENV === 'production') {
-        const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
         const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
         const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
         await botlog.send(`Hey ${tripbotdevrole}, I just got an error (commandRun: ${commandName}):
@@ -70,7 +73,6 @@ export async function commandRun(
       log.error(F, `ERROR: ${error}`);
       await interaction.reply({ content: 'There was an unexpected error while executing this command!' });
       if (env.NODE_ENV === 'production') {
-        const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
         const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
         const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
         await botlog.send(`Hey ${tripbotdevrole}, I just got an error (commandRun: ${commandName}):
