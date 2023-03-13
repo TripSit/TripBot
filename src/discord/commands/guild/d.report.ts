@@ -43,10 +43,10 @@ export const dReport: SlashCommand = {
       return false;
     }
 
-    const targetString = interaction.options.getString('target', true);
+    const targetObj = interaction.options.getUser('target', true);
     const reason = interaction.options.getString('reason', true);
 
-    const target = await getDiscordMember(interaction, targetString);
+    const target = await getDiscordMember(interaction, targetObj.id);
 
     if (!target) {
       return false;
