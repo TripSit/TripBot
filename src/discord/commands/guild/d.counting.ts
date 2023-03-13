@@ -34,7 +34,8 @@ function calcTotalPot(
   number:number,
   users:number,
 ):number {
-  return ((number * 10) * (number / 10)) * users;
+  log.debug(F, `number: ${number}, users: ${users}`);
+  return Math.floor(((number * 10) * (number / 10)) * users);
 }
 
 export const counting: SlashCommandBeta = {
@@ -148,15 +149,17 @@ export async function countingSetup(
   The rules are simple:
   1. You must post a number in chat that is 1 higher than the last number.
   2. You must use numbers, I'm not smart enough to understand words can be numbers
-  3. You can only count once per day and you can't count twice in a row`;
+  3. You can't count twice in a row`;
 
   if (type === 'HARDCORE') {
     description += `
-    4. If you say the wrong number the count resets and **you will be kicked from the guild!**`;
+    This is a HARDCORE game which means:
+    4. If you say the wrong number the count resets and **you will be timed out for 24!**`;
   }
 
   if (type === 'TOKEN') {
     description += `
+    This is a TOKEN game which means:
     4. Every time someone counts, tokens are added to the pot
     5. At every multiple of 10 (10, 20, 30, etc) everyone who contributed gets a share from the pot
     6. At any point someone can break the combo and take the pot for themselves!`;
@@ -181,7 +184,8 @@ export async function countingSetup(
 
   const countingMessage = await channel.send({ embeds: [embed] });
 
-  await channel.send({ content: `${startingNumber}` });
+  const firstNumber = await channel.send({ content: `${startingNumber}` });
+  await firstNumber.react('👍');
 
   await countingSetG({
     guild_id: channel.guild.id,
@@ -334,20 +338,11 @@ export async function countMessage(message: Message): Promise<void> {
       ${message.author} will go down in history as the one who broke the streak...`;
     }
 
-    countingData.current_number = -1;
-
-    // Then update the DB with the user who broke the combo
-    await countingSetG(countingData);
-
-    // If it's hardcore, kick the user
     if (countingData.type === 'HARDCORE') {
-      // If the channel is hardcore then kick the user
+      // If the channel is hardcore then timeout the user
       const member = await message.guild.members.fetch(message.author.id);
-
-      // Send the user an invite link to the guild
-      await message.author.send(`You broke the counting streak in hardcore counting game!
-      You can rejoin the guild here: https://discord.gg/tripsit`);
-      await member.kick('Counting broke!');
+      // TImeout the user for 24 hours
+      await member.timeout(24 * 60 * 60 * 1000, 'Counting channel timeout');
     }
 
     // If it's token, take tokens from the pot
@@ -373,6 +368,12 @@ export async function countMessage(message: Message): Promise<void> {
     } else {
       endingMessage = '\n\nMake sure to point and laugh at them!';
     }
+
+    // Set this to -1 so that people can't start a new game while the countdown is playing
+    countingData.current_number = -1;
+
+    // Then update the DB with the user who broke the combo
+    await countingSetG(countingData);
 
     // Send a message to the channel
     await message.channel.send({
@@ -406,6 +407,7 @@ export async function countMessage(message: Message): Promise<void> {
 
   // If the number is the next number in the sequence
   // Then update the DB with the user who got the number right
+
   countingData.current_number = number;
   countingData.current_number_message_id = message.id;
   countingData.current_number_message_date = new Date();
@@ -480,6 +482,8 @@ export async function countMessage(message: Message): Promise<void> {
   }
 
   await countingSetG(countingData);
+
+  await message.react('👍');
 
   // log.debug(F, `countingData: ${JSON.stringify(countingData, null, 2)}`);
 }
