@@ -604,23 +604,24 @@ export async function moderate(
       // Save the thread id to the user
       targetData.mod_thread_id = modThread.id;
       await usersUpdate(targetData);
-      await modThread.send({
-        content: stripIndents`
-          ${command !== 'NOTE' ? greeting : ''}
-          ${summary}
-          **Reason:** ${internalNote ?? noReason}
-          **Note sent to user:** ${(description !== '' && description !== null) ? description : '*No message sent to user*'}
-        `,
-        embeds: [modlogEmbed],
-      });
-      // log.debug(F, `sent a message to the moderators room`);
-      if (extraMessage) {
-        await modThread.send({ content: extraMessage });
-      }
     } else {
       // log.debug(F, 'did not create modthread');
     }
   }
+  
+  await modThread.send({
+  content: stripIndents`
+    ${command !== 'NOTE' ? greeting : ''}
+    ${summary}
+    **Reason:** ${internalNote ?? noReason}
+    **Note sent to user:** ${(description !== '' && description !== null) ? description : '*No message sent to user*'}
+  `,
+  embeds: [modlogEmbed],
+});
+// log.debug(F, `sent a message to the moderators room`);
+if (extraMessage) {
+  await modThread.send({ content: extraMessage });
+}
 
   const desc = stripIndents`
     ${anonSummary}
