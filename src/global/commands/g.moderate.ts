@@ -608,7 +608,7 @@ export async function moderate(
       // log.debug(F, 'did not create modthread');
     }
   }
-  
+  if(targetData.mod_thread_id) {
   await modThread.send({
   content: stripIndents`
     ${command !== 'NOTE' ? greeting : ''}
@@ -622,7 +622,7 @@ export async function moderate(
 if (extraMessage) {
   await modThread.send({ content: extraMessage });
 }
-
+}
   const desc = stripIndents`
     ${anonSummary}
     **Reason:** ${internalNote ?? noReason}
