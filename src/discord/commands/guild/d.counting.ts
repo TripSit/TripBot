@@ -12,18 +12,20 @@ import {
   time,
   Colors,
   PermissionResolvable,
+  Collection,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
+import ms from 'ms';
 import { SlashCommandBeta } from '../../@types/commandDef';
 // import { embedTemplate } from '../../utils/embedTemplate';
 // import { globalTemplate } from '../../../global/commands/_g.template';
 import { startLog } from '../../utils/startLog';
 import { countingGetG, countingSetG } from '../../../global/commands/g.counting';
-import { sleep } from './d.bottest';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { Counting } from '../../../global/@types/database';
 import { getUser, personaGet, personaSet } from '../../../global/utils/knex';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
+import { sleep } from './d.bottest';
 // import { getUser } from '../../../global/utils/knex';
 
 export default counting;
@@ -37,6 +39,8 @@ function calcTotalPot(
   log.debug(F, `number: ${number}, users: ${users}`);
   return Math.floor(((number * 10) * (number / 10)) * users);
 }
+
+const warnedUsers = [] as string[];
 
 export const counting: SlashCommandBeta = {
   data: new SlashCommandBuilder()
@@ -144,12 +148,29 @@ export async function countingSetup(
     };
   }
 
+  let timeout = 0;
+  // Hardcore timeout is 1 hour, token timeout is 6 hours, normal timeout is 15 minutes
+  switch (type) {
+    case 'HARDCORE':
+      timeout = 60 * 60 * 1000;
+      break;
+    case 'TOKEN':
+      timeout = 6 * 60 * 60 * 1000;
+      break;
+    case 'NORMAL':
+      timeout = 15 * 60 * 1000;
+      break;
+    default:
+      timeout = 15 * 60 * 1000;
+      break;
+  }
+
   let description = `
 
   The rules are simple:
   1. You must post a number in chat that is 1 higher than the last number.
   2. You must use numbers, I'm not smart enough to understand words can be numbers
-  3. You can't count twice in a row`;
+  3. You can't count twice in a row, and you can only count every ${ms(timeout, { long: true })}`;
 
   if (type === 'HARDCORE') {
     description += `
@@ -312,7 +333,78 @@ export async function countMessage(message: Message): Promise<void> {
     return;
   }
 
+  let timeout = 0;
+  // Hardcore timeout is 1 hour, token timeout is 6 hours, normal timeout is 15 minutes
+  switch (countingData.type) {
+    case 'HARDCORE':
+      timeout = 1000 * 60 * 60;
+      break;
+    case 'TOKEN':
+      timeout = 1000 * 60 * 60 * 6;
+      break;
+    case 'NORMAL':
+      timeout = 1000 * 60 * 15;
+      break;
+    default:
+      timeout = 1000 * 60 * 15;
+      break;
+  }
+
+  // Get a collection of messages and then find the second to last message sent by the user
+  // If the last message was sent within the timeout period, then delete the current message
+  const channelMessages = await message.channel.messages.fetch({ before: message.id }) as Collection<string, Message<true>>;
+  const lastMessage = channelMessages
+    .filter(m => m.author.id === message.author.id)
+    .sort((a, b) => b.createdTimestamp - a.createdTimestamp)
+    .first();
+
+  // log.debug(F, `lastMessage: ${JSON.stringify(lastMessage, null, 2)}`);
+
+  if (lastMessage && lastMessage.createdTimestamp > Date.now() - (timeout)) {
+    await message.delete();
+    return;
+  }
+
   if (number !== countingData.current_number + 1) {
+    await message.channel.messages.fetch(countingData.current_number_message_id);
+
+    const stakeholderNumber = countingData.current_stakeholders
+      ? countingData.current_stakeholders.split(',').length
+      : 1;
+    const totalPot = calcTotalPot(countingData.current_number, stakeholderNumber);
+
+    // If the user does not exist in the stakeholders and has not been warned before
+    // warn them that they're breaking the combo and add them to the warned users list
+    if (countingData.current_stakeholders
+      && !countingData.current_stakeholders.split(',').includes(message.author.id)
+      && !warnedUsers.includes(message.author.id)) {
+      let messageReply = `Hey ${message.member?.displayName}, welcome to the counting game!
+      
+      You may not know, but you're breaking the combo!
+
+      The current number is ${countingData.current_number}, if you want to join the game, type the next number in the series!
+      `;
+      if (countingData.type === 'HARDCORE') {
+        messageReply += 'If you break the combo again, you\'ll be timed out for 24 hours!';
+      } else if (countingData.type === 'TOKEN') {
+        messageReply += `If you break the combo again, you'll steal ${totalPot} tokens and reset the counter for everyone else!`; // eslint-disable-line max-len
+      } else {
+        messageReply += 'If you break the combo again, you\'ll reset the combo!';
+      }
+
+      // add the user to the stakeholders to prevent them from being warned again
+      countingData.current_stakeholders = countingData.current_stakeholders
+        .split(',')
+        .concat(message.author.id)
+        .join(',');
+      await countingSetG(countingData);
+
+      warnedUsers.push(message.author.id);
+
+      await message.channel.send(messageReply);
+      return;
+    }
+
     countingData.last_number = countingData.current_number;
     countingData.last_number_message_id = countingData.current_number_message_id;
     countingData.last_number_message_date = countingData.current_number_message_date;
@@ -346,10 +438,6 @@ export async function countMessage(message: Message): Promise<void> {
     }
 
     // If it's token, take tokens from the pot
-    const stakeholderNumber = countingData.current_stakeholders
-      ? countingData.current_stakeholders.split(',').length
-      : 1;
-    const totalPot = calcTotalPot(countingData.current_number, stakeholderNumber);
     if (countingData.type === 'TOKEN') {
       // If the channel is token then take tokens from the pot
 
@@ -362,7 +450,7 @@ export async function countMessage(message: Message): Promise<void> {
 
     let endingMessage = '';
     if (countingData.type === 'HARDCORE') {
-      endingMessage = '\n\nThey were kicked from the guild for this transgression!';
+      endingMessage = '\n\nThey were timed out for 24 hours for this transgression!';
     } else if (countingData.type === 'TOKEN') {
       endingMessage = `\n\nThey stole ${totalPot} tokens from the pot!`;
     } else {
