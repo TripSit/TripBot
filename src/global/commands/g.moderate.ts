@@ -592,6 +592,19 @@ export async function moderate(
   if (targetData.mod_thread_id) {
     modThread = await global.client.channels.fetch(targetData.mod_thread_id) as ThreadChannel;
     log.debug(F, 'Mod thread exists');
+    await modThread.send({
+      content: stripIndents`
+      ${command !== 'NOTE' ? greeting : ''}
+      ${summary}
+      **Reason:** ${internalNote ?? noReason}
+      **Note sent to user:** ${(description !== '' && description !== null) ? description : '*No message sent to user*'}
+      `,
+      embeds: [modlogEmbed],
+     });
+// log.debug(F, `sent a message to the moderators room`);
+if (extraMessage) {
+await modThread.send({ content: extraMessage });
+}
   } else {
     // Create a new thread in the mod channel
     if (!internalNote?.toLowerCase().includes('vendor')) {
@@ -608,21 +621,7 @@ export async function moderate(
       // log.debug(F, 'did not create modthread');
     }
   }
-  if(targetData.mod_thread_id) {
-  await modThread.send({
-  content: stripIndents`
-    ${command !== 'NOTE' ? greeting : ''}
-    ${summary}
-    **Reason:** ${internalNote ?? noReason}
-    **Note sent to user:** ${(description !== '' && description !== null) ? description : '*No message sent to user*'}
-  `,
-  embeds: [modlogEmbed],
-});
-// log.debug(F, `sent a message to the moderators room`);
-if (extraMessage) {
-  await modThread.send({ content: extraMessage });
-}
-}
+  
   const desc = stripIndents`
     ${anonSummary}
     **Reason:** ${internalNote ?? noReason}
