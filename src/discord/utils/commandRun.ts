@@ -33,7 +33,7 @@ export async function commandRun(
   if (!command) return;
 
   try {
-    // log.info(F, `commandRun executed in ${new Date().getTime() - startTime}ms`);
+    log.info(F, `Executed the command in ${new Date().getTime() - startTime}ms`);
     await command.execute(interaction);
     // log.info(F, `commandRun finished in ${new Date().getTime() - startTime}ms`);
   } catch (error) {

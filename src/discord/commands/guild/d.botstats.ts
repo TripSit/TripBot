@@ -19,8 +19,12 @@ export const dBotstats: SlashCommand = {
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
+    const startTime = new Date().getTime();
+    log.info(F, `Command started at ${startTime}`);
     startLog(F, interaction);
+    log.info(F, 'Attempting to defer reply...');
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    log.info(F, `Reply deferred in ${new Date().getTime() - startTime}ms`);
     // Get the number of guilds the bot is in
     const guildCount = interaction.client.guilds.cache.size;
     // log.debug(F, `guildCount: ${guildCount}`);
