@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import {
   // ActionRowBuilder,
   // ModalBuilder,
@@ -15,7 +16,6 @@ import {
   Collection,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import ms from 'ms';
 import { SlashCommandBeta } from '../../@types/commandDef';
 // import { embedTemplate } from '../../utils/embedTemplate';
 // import { globalTemplate } from '../../../global/commands/_g.template';
@@ -68,6 +68,9 @@ export const counting: SlashCommandBeta = {
       .addIntegerOption(option => option
         .setDescription('The number to set the channel to')
         .setName('number'))
+      .addBooleanOption(option => option
+        .setName('purge')
+        .setDescription('Set to "True" to start completely fresh'))
       .addStringOption(option => option
         .setDescription('What kind of counting game?')
         .setName('type')
@@ -104,6 +107,7 @@ export const counting: SlashCommandBeta = {
         (interaction.options.getString('type') ?? 'NORMAL') as 'HARDCORE' | 'TOKEN' | 'NORMAL',
         0,
         false,
+        true,
       );
     }
     if (command === 'scores') {
@@ -136,6 +140,7 @@ export async function countingSetup(
   type: 'HARDCORE' | 'TOKEN' | 'NORMAL',
   startingNumber:number,
   override:boolean,
+  purge:boolean,
 ):Promise<InteractionEditReplyOptions> {
   const data = await countingGetG(channel.id);
   log.debug(F, `data: ${JSON.stringify(data)}`);
@@ -148,29 +153,12 @@ export async function countingSetup(
     };
   }
 
-  let timeout = 0;
-  // Hardcore timeout is 1 hour, token timeout is 6 hours, normal timeout is 15 minutes
-  switch (type) {
-    case 'HARDCORE':
-      timeout = 60 * 60 * 1000;
-      break;
-    case 'TOKEN':
-      timeout = 6 * 60 * 60 * 1000;
-      break;
-    case 'NORMAL':
-      timeout = 15 * 60 * 1000;
-      break;
-    default:
-      timeout = 15 * 60 * 1000;
-      break;
-  }
-
   let description = `
 
   The rules are simple:
   1. You must post a number in chat that is 1 higher than the last number.
-  2. You must use numbers, I'm not smart enough to understand words can be numbers
-  3. You can't count twice in a row, and you can only count every ${ms(timeout, { long: true })}`;
+  2. You must use numbers, I'm not smart enough to understand words can be numbers.
+  3. You can't count twice in a row.`;
 
   if (type === 'HARDCORE') {
     description += `
@@ -179,7 +167,7 @@ export async function countingSetup(
   }
 
   if (type === 'TOKEN') {
-    description += `
+    description += `${description.slice(-1)}, **and you can only count once every hour!**
     This is a TOKEN game which means:
     4. Every time someone counts, tokens are added to the pot
     5. At every multiple of 10 (10, 20, 30, etc) everyone who contributed gets a share from the pot
@@ -217,7 +205,7 @@ export async function countingSetup(
     current_number_message_id: countingMessage.id,
     current_number_message_date: new Date(),
     current_number_message_author: countingMessage.author.id,
-    current_stakeholders: '',
+    current_stakeholders: purge ? [] : data?.current_stakeholders ?? [],
 
     last_number: data?.last_number ?? null,
     last_number_message_id: data?.last_number_message_id ?? null,
@@ -293,6 +281,7 @@ export async function countingReset(
     (interaction.options.getString('type') ?? 'NORMAL') as 'HARDCORE' | 'TOKEN' | 'NORMAL',
     number,
     true,
+    interaction.options.getBoolean('purge') ?? false,
   );
   return { embeds: [embedTemplate().setTitle(`Counting channel reset to ${number}!`)] };
 }
@@ -333,35 +322,18 @@ export async function countMessage(message: Message): Promise<void> {
     return;
   }
 
-  let timeout = 0;
-  // Hardcore timeout is 1 hour, token timeout is 6 hours, normal timeout is 15 minutes
-  switch (countingData.type) {
-    case 'HARDCORE':
-      timeout = 1000 * 60 * 60;
-      break;
-    case 'TOKEN':
-      timeout = 1000 * 60 * 60 * 6;
-      break;
-    case 'NORMAL':
-      timeout = 1000 * 60 * 15;
-      break;
-    default:
-      timeout = 1000 * 60 * 15;
-      break;
-  }
-
   // Determine if the user has said a number in the last {timeout} period
-  const channelMessages = await message.channel.messages.fetch({ before: message.id }) as Collection<string, Message<true>>;
+  const channelMessages = await message.channel.messages.fetch(
+    { before: message.id },
+  ) as Collection<string, Message<true>>;
   const lastMessage = channelMessages
     .filter(m => m.author.id === message.author.id) // Messages sent by the user
     .filter(m => !Number.isNaN(parseInt(m.cleanContent, 10))) // That are numbers
-    .filter(m => m.createdTimestamp > Date.now() - (timeout)) // That are within the timeout period
+    .filter(m => m.createdTimestamp > Date.now() - (1000 * 60 * 60)) // That are within one hour
     .sort((a, b) => b.createdTimestamp - a.createdTimestamp) // Sorted by most recent
     .first(); // Get the first one
 
-  // log.debug(F, `lastMessage: ${JSON.stringify(lastMessage, null, 2)}`);
-
-  if (lastMessage) {
+  if (lastMessage && countingData.type === 'TOKEN') {
     await message.delete();
     return;
   }
@@ -486,6 +458,7 @@ export async function countMessage(message: Message): Promise<void> {
       message.channel as TextChannel,
       countingData.type,
       0,
+      true,
       true,
     );
 
