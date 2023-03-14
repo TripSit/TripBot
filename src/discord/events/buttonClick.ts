@@ -20,7 +20,7 @@ import {
 import { verifyButton } from '../utils/verifyButton';
 import { processReactionRole } from '../commands/guild/d.reactionRole';
 import {
-  rpgArcade, rpgArcadeGame, rpgArcadeWager, rpgBounties, rpgHelp, rpgHome, rpgHomeAccept, rpgHomeNameChange, rpgMarket, rpgMarketAccept, rpgMarketPreview, rpgTown,
+  rpgArcade, rpgArcadeGame, rpgArcadeWager, rpgBounties, rpgHelp, rpgHome, rpgHomeAccept, rpgHomeNameChange, rpgMarket, rpgMarketAccept, rpgMarketPreview, rpgTown, rpgTrivia,
 } from '../commands/guild/d.rpg';
 
 const F = f(__filename);
@@ -48,10 +48,10 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     else if (interaction.customId.split(',')[0] === 'rpgWager1000') await interaction.editReply(await rpgArcadeWager(interaction));
     else if (interaction.customId.split(',')[0] === 'rpgWager10000') await interaction.editReply(await rpgArcadeWager(interaction));
     else if (interaction.customId.split(',')[0] === 'rpgCoinFlip') await interaction.editReply(await rpgArcadeGame(interaction, 'Coinflip'));
-    // else if (interaction.customId.split(',')[0] === 'rpgTrivia') await interaction.editReply(await rpgTrivia(interaction));
-    // else if (interaction.customId.split(',')[0] === 'rpgDifficulty') await interaction.editReply(await rpgTrivia(interaction));
-    // else if (interaction.customId.split(',')[0] === 'rpgQuestionLimit') await interaction.editReply(await rpgTrivia(interaction));
-    // else if (interaction.customId.split(',')[0] === 'rpgStart') await interaction.editReply(await rpgTrivia(interaction));
+    else if (interaction.customId.split(',')[0] === 'rpgTrivia') await interaction.editReply(await rpgTrivia(interaction));
+    else if (interaction.customId.split(',')[0] === 'rpgDifficulty') await interaction.editReply(await rpgTrivia(interaction));
+    else if (interaction.customId.split(',')[0] === 'rpgQuestionLimit') await interaction.editReply(await rpgTrivia(interaction));
+    else if (interaction.customId.split(',')[0] === 'rpgStart') await interaction.editReply(await rpgTrivia(interaction));
     else if (interaction.customId.split(',')[0] === 'rpgRouletteRed') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'red'));
     else if (interaction.customId.split(',')[0] === 'rpgRouletteBlack') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'black'));
     else if (interaction.customId.split(',')[0] === 'rpgRouletteFirst') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'first'));

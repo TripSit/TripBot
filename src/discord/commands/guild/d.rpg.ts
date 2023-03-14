@@ -2434,7 +2434,7 @@ export async function rpgTrivia(
   // log.debug(F, `Questions Menu: ${JSON.stringify(questionsMenu, null, 2)}`);
   // log.debug(F, `Difficulty Menu: ${JSON.stringify(difficultyMenu, null, 2)}`);
 
-  if (interaction.isButton() && interaction.customId === 'rpgStart') {
+  if (interaction.isButton() && interaction.customId.split(',')[0] === 'rpgStart') {
     // const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
     // await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
     const difficultyComponent = interaction.message.components[1].components[0];
@@ -2511,7 +2511,7 @@ export async function rpgTrivia(
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
 
       if (qNumber === 0) {
-        await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
+        // await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
         questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
         const startingEmbed = new EmbedBuilder()
           .setColor(answerColor)
