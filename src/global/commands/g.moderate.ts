@@ -167,6 +167,7 @@ export async function moderate(
   const actorData = await getUser(actor.id, null);
   const targetData = await getUser(target.id, null);
   const vendorBan = internalNote?.toLowerCase().includes('vendor');
+  log.debug(F, `vendorBan: ${vendorBan}`);
 
   // log.debug(F, `TargetData: ${JSON.stringify(targetData, null, 2)}`);
 
@@ -597,10 +598,13 @@ export async function moderate(
     log.debug(F, 'Mod thread exists');
   }
 
-  if (!modThread && !vendorBan) {
+  log.debug(F, `Mod thread: ${JSON.stringify(modThread, null, 2)}`);
+
+  if (!modThread.id && !vendorBan) {
     // If the mod thread doesn't exist for whatever reason, maybe it got deleted, make a new one
     // If the user we're banning is a vendor, don't make a new one
     // Create a new thread in the mod channel
+    log.debug(F, 'creating mod thread');
     const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
     modThread = await modChan.threads.create({
       name: `${target.displayName}`,
@@ -610,6 +614,7 @@ export async function moderate(
     // Save the thread id to the user
     targetData.mod_thread_id = modThread.id;
     await usersUpdate(targetData);
+    log.debug(F, 'saved mod thread id to user');
   }
 
   if (!vendorBan) {
