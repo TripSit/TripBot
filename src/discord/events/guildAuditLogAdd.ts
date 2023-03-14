@@ -33,7 +33,7 @@ export const channelCreate: GuildAuditLogEntryCreateEvent = {
       .setFooter(null)
       .setTitle(`${auditLogEntry.targetType} ${auditLogEntry.actionType}`)
       .setDescription(stripIndents`
-      ${auditLogEntry.executor} ${auditLogEntry.actionType.toLowerCase()}ed ${auditLogEntry.target}\
+      ${auditLogEntry.executor} ${auditLogEntry.actionType.toLowerCase()}d ${JSON.stringify(auditLogEntry.target, null, 2)}\
       ${auditLogEntry.reason ? `\nReason: ${JSON.stringify(auditLogEntry.reason, null, 2)}` : ''}\
       ${auditLogEntry.extra ? `\nExtra: ${JSON.stringify(auditLogEntry.extra, null, 2)}` : ''} \
       ${changeString}
