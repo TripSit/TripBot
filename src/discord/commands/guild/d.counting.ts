@@ -350,17 +350,18 @@ export async function countMessage(message: Message): Promise<void> {
       break;
   }
 
-  // Get a collection of messages and then find the second to last message sent by the user
-  // If the last message was sent within the timeout period, then delete the current message
+  // Determine if the user has said a number in the last {timeout} period
   const channelMessages = await message.channel.messages.fetch({ before: message.id }) as Collection<string, Message<true>>;
   const lastMessage = channelMessages
-    .filter(m => m.author.id === message.author.id)
-    .sort((a, b) => b.createdTimestamp - a.createdTimestamp)
-    .first();
+    .filter(m => m.author.id === message.author.id) // Messages sent by the user
+    .filter(m => !Number.isNaN(parseInt(m.cleanContent, 10))) // That are numbers
+    .filter(m => m.createdTimestamp > Date.now() - (timeout)) // That are within the timeout period
+    .sort((a, b) => b.createdTimestamp - a.createdTimestamp) // Sorted by most recent
+    .first(); // Get the first one
 
   // log.debug(F, `lastMessage: ${JSON.stringify(lastMessage, null, 2)}`);
 
-  if (lastMessage && lastMessage.createdTimestamp > Date.now() - (timeout)) {
+  if (lastMessage) {
     await message.delete();
     return;
   }
