@@ -1,3 +1,4 @@
+/* eslint-disable no-lonely-if */
 /* eslint-disable max-len */
 import {
   time,
@@ -580,21 +581,6 @@ export async function moderate(
     return { embeds: [modlogEmbed] };
   }
 
-  let modThread = {} as ThreadChannel;
-  if (targetData.mod_thread_id) {
-    modThread = await global.client.channels.fetch(targetData.mod_thread_id) as ThreadChannel;
-  } else {
-    // Create a new thread in the mod channel
-    const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
-    modThread = await modChan.threads.create({
-      name: `${target.displayName}`,
-      autoArchiveDuration: 60,
-    });
-    // Save the thread id to the user
-    targetData.mod_thread_id = modThread.id;
-    await usersUpdate(targetData);
-  }
-
   const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
   const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
   const greeting = `Hey ${roleModerator}`;
@@ -602,18 +588,38 @@ export async function moderate(
   const summary = `${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${target.displayName}${command === 'TIMEOUT' ? timeoutDuration : ''}!`;
   const anonSummary = `${target.displayName} was ${embedVariables[command as keyof typeof embedVariables].verb}${command === 'TIMEOUT' ? timeoutDuration : ''}!`;
 
-  await modThread.send({
-    content: stripIndents`
-      ${command !== 'NOTE' ? greeting : ''}
-      ${summary}
-      **Reason:** ${internalNote ?? noReason}
-      **Note sent to user:** ${(description !== '' && description !== null) ? description : '*No message sent to user*'}
-    `,
-    embeds: [modlogEmbed],
-  });
-  // log.debug(F, `sent a message to the moderators room`);
-  if (extraMessage) {
-    await modThread.send({ content: extraMessage });
+  let modThread = {} as ThreadChannel;
+  if (targetData.mod_thread_id) {
+    modThread = await global.client.channels.fetch(targetData.mod_thread_id) as ThreadChannel;
+    log.debug(F, 'Mod thread exists');
+  } else {
+    // Create a new thread in the mod channel
+    if (!internalNote?.toLowerCase().includes('vendor')) {
+      const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
+      modThread = await modChan.threads.create({
+        name: `${target.displayName}`,
+        autoArchiveDuration: 60,
+      });
+      // log.debug(F, 'created modthread');
+      // Save the thread id to the user
+      targetData.mod_thread_id = modThread.id;
+      await usersUpdate(targetData);
+      await modThread.send({
+        content: stripIndents`
+          ${command !== 'NOTE' ? greeting : ''}
+          ${summary}
+          **Reason:** ${internalNote ?? noReason}
+          **Note sent to user:** ${(description !== '' && description !== null) ? description : '*No message sent to user*'}
+        `,
+        embeds: [modlogEmbed],
+      });
+      // log.debug(F, `sent a message to the moderators room`);
+      if (extraMessage) {
+        await modThread.send({ content: extraMessage });
+      }
+    } else {
+      // log.debug(F, 'did not create modthread');
+    }
   }
 
   const desc = stripIndents`
