@@ -34,6 +34,7 @@ const ignoredRoles = Object.values({
 export const messageCreate: MessageCreateEvent = {
   name: 'messageCreate',
   async execute(message) {
+    messageCommand(message);
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (message.guild && message.guild.id !== env.DISCORD_GUILD_ID) {
       return;
@@ -48,7 +49,6 @@ export const messageCreate: MessageCreateEvent = {
 
     // This needs to run here because the widget bot peeps will use this and they are "bot users"
     // This handles ~ commands
-    messageCommand(message);
 
     // Don't run on bots
     if (message.author.bot) return;
