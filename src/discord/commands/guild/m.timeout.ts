@@ -57,8 +57,8 @@ export const mTimeout: MessageCommand = {
         if (i.customId.split('~')[1] !== interaction.id) return;
         await i.deferReply({ ephemeral: true });
 
-        const duration = i.fields.getTextInputValue('duration')
-          ? await parseDuration(i.fields.getTextInputValue('duration'))
+        const duration = i.fields.getTextInputValue('timeoutDuration')
+          ? await parseDuration(i.fields.getTextInputValue('timeoutDuration'))
           : 604800000;
 
         if (duration > 604800000) {
