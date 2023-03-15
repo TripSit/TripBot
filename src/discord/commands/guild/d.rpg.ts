@@ -2579,6 +2579,7 @@ export async function rpgTrivia(
         questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
         timedOut = true;
       }
+
       if (timedOut === true) break;
       await collected.update({}); // eslint-disable-line no-await-in-loop
 
@@ -2597,16 +2598,16 @@ export async function rpgTrivia(
             )],
       });
 
-      if (collected.customId === 'rpgQuit') {
+      if (collected.customId.split(',')[0] === 'rpgQuit') {
         gameQuit = true;
         // log.debug(F, 'User quit the game');
         break;
       }
 
-      let answer = answerMap.get(collected.customId); // Get the answer from the map
+      let answer = answerMap.get(collected.customId.split(',')[0]); // Get the answer from the map
       answer = answer?.substring(38);
-      // log.debug(F, `User chose: ${answer}`);
-      // log.debug(F, `Correct answer was: ${questionData.correct_answer}`);
+      log.debug(F, `User chose: ${answer}`);
+      log.debug(F, `Correct answer was: ${questionData.correct_answer}`);
 
       if (answer === questionData.correct_answer) { // If the user answers correctly
         questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
