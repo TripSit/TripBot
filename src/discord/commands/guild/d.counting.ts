@@ -474,6 +474,7 @@ export async function countMessage(message: Message): Promise<void> {
   countingData.current_number_message_id = message.id;
   countingData.current_number_message_date = new Date();
   countingData.current_number_message_author = message.author.id;
+  await countingSetG(countingData);
 
   if (countingData.current_stakeholders) {
     if (!countingData.current_stakeholders.includes(message.author.id)) {
