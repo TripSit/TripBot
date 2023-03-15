@@ -37,7 +37,7 @@ function calcTotalPot(
   users:number,
 ):number {
   log.debug(F, `number: ${number}, users: ${users}`);
-  return Math.floor(((number * 10) * (number / 10)) * users);
+  return Math.floor((number * 10));
 }
 
 const warnedUsers = [] as string[];
@@ -170,7 +170,8 @@ export async function countingSetup(
     description += `${description.slice(-1)}, **and you can only count once every hour!**
     This is a TOKEN game which means:
     4. Every time someone counts, tokens are added to the pot
-    5. At every multiple of 10 (10, 20, 30, etc) everyone who contributed gets a share from the pot!`;
+    5. At every multiple of 10 (10, 20, 30, etc) everyone who contributed gets a share from the pot
+    6. At any point someone can break the combo and take the pot for themselves!`;
   }
 
   if (type === 'NORMAL') {
@@ -338,6 +339,13 @@ export async function countMessage(message: Message): Promise<void> {
   }
 
   if (number !== countingData.current_number + 1) {
+    await message.channel.messages.fetch(countingData.current_number_message_id);
+
+    const stakeholderNumber = countingData.current_stakeholders
+      ? countingData.current_stakeholders.split(',').length
+      : 1;
+    const totalPot = calcTotalPot(countingData.current_number, stakeholderNumber);
+
     // If the user does not exist in the stakeholders and has not been warned before
     // warn them that they're breaking the combo and add them to the warned users list
     if (countingData.current_stakeholders
@@ -351,6 +359,8 @@ export async function countMessage(message: Message): Promise<void> {
       `;
       if (countingData.type === 'HARDCORE') {
         messageReply += 'If you break the combo again, you\'ll be timed out for 24 hours!';
+      } else if (countingData.type === 'TOKEN') {
+        messageReply += `If you break the combo again, you'll steal ${totalPot} tokens and reset the counter for everyone else!`; // eslint-disable-line max-len
       } else {
         messageReply += 'If you break the combo again, you\'ll reset the combo!';
       }
@@ -400,18 +410,25 @@ export async function countMessage(message: Message): Promise<void> {
       await member.timeout(24 * 60 * 60 * 1000, 'Counting channel timeout');
     }
 
-    // // If it's token, take tokens from the pot
-    // if (countingData.type === 'TOKEN') {
-    //   // If the channel is token then take tokens from the pot
+    // If it's token, take tokens from the pot
+    if (countingData.type === 'TOKEN') {
+      // If the channel is token then take tokens from the pot
 
-    //   const userData = await getUser(message.author.id, null);
-    //   const personaData = await personaGet(userData.id);
+      const userData = await getUser(message.author.id, null);
+      const personaData = await personaGet(userData.id);
 
-    //   personaData.tokens += totalPot;
-    //   await personaSet(personaData);
-    // }
+      personaData.tokens += totalPot;
+      await personaSet(personaData);
+    }
 
-    const endingMessage = '\n\nMake sure to point and laugh at them!';
+    let endingMessage = '';
+    if (countingData.type === 'HARDCORE') {
+      endingMessage = '\n\nThey were timed out for 24 hours for this transgression!';
+    } else if (countingData.type === 'TOKEN') {
+      endingMessage = `\n\nThey stole ${totalPot} tokens from the pot!`;
+    } else {
+      endingMessage = '\n\nMake sure to point and laugh at them!';
+    }
 
     // Set this to -1 so that people can't start a new game while the countdown is playing
     countingData.current_number = -1;
@@ -470,7 +487,7 @@ export async function countMessage(message: Message): Promise<void> {
       log.debug(F, `Member ${message.member?.displayName} was added as a stakeholder`);
       let welcomeMessage = `Welcome to the counting game ${message.member?.displayName}!`;
       if (countingData.type === 'TOKEN') {
-        welcomeMessage += '\nThis is a TOKEN game: Build the pot and get tokens every 10 levels!'; // eslint-disable-line max-len
+        welcomeMessage += '\nThis is a TOKEN game: Build the pot and get tokens every 10 levels, or break the combo and steal it all!'; // eslint-disable-line max-len
       } else if (countingData.type === 'HARDCORE') {
         welcomeMessage += '\nThis is a HARDCORE game: if you break the combo you will be timed out for 24 hours!';
       }
@@ -518,7 +535,7 @@ export async function countMessage(message: Message): Promise<void> {
       Each user has been given ${potPerUser} tokens!
 
       The pot grows bigger the higher the combo gets, and the amount of people who have contributed to the combo!`)
-      .setFooter({ text: 'totalPot = ((currentNumber * 10) * (currentNumber / 10)) * uniqueUsers' });
+      .setFooter({ text: 'totalPot = (currentNumber * 10)' });
 
     // Send a message to the channel
     await message.channel.send({
