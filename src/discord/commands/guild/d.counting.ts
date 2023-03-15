@@ -338,7 +338,6 @@ export async function countMessage(message: Message): Promise<void> {
   }
 
   if (number !== countingData.current_number + 1) {
-    await message.channel.messages.fetch(countingData.current_number_message_id);
     // If the user does not exist in the stakeholders and has not been warned before
     // warn them that they're breaking the combo and add them to the warned users list
     if (countingData.current_stakeholders
