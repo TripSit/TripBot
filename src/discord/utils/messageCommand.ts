@@ -59,6 +59,10 @@ export async function messageCommand(message: Message): Promise<void> {
   const displayName = message.member ? message.member.displayName : message.author.username;
 
   // log.debug(F, `Message : ${JSON.stringify(message, null, 2)}`);
+  // log.debug(F, `sadStuff.some(word => (message.cleanContent.includes(word): ${sadStuff.some(word => message.cleanContent.includes(word))}`); // eslint-disable-line
+  // log.debug(F, `!(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':')): ${!(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))}`); // eslint-disable-line
+  // log.debug(F, `message.channel.type !== ChannelType.DM: ${message.channel.type !== ChannelType.DM}`); // eslint-disable-line
+  // log.debug(F, `message.guild.id !== env.DISCORD_GUILD_ID: ${message.guild.id} !== ${env.DISCORD_SERVER_ID}`); // eslint-disable-line
 
   // log.debug(stripIndents`[${PREFIX}] ${displayName} said\
   // ${message.content} in ${(message.channel as GuildTextBasedChannel).name}!`);
@@ -196,7 +200,8 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
      && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))))
     && message.channel.type !== ChannelType.DM) {
     if (message.author.bot) return;
-    if (message.guild.id !== env.DISCORD_SERVER_ID) return;
+    if (message.guild.id !== env.DISCORD_GUILD_ID) return;
+    // log.debug(F, 'Sad stuff detected');
     await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
   }
 }
