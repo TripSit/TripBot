@@ -170,8 +170,8 @@ export async function needsHelpMode(
   } catch (err) {
     const guildOwner = await interaction.guild?.fetchOwner();
     await guildOwner?.send({
-      content: stripIndents`There was an error adding the ${roleNeedshelp} to ${target.displayName}!
-          Please make sure I have the Manage Roles permission, or put this role above mine so I don't try to remove it.
+      content: stripIndents`There was an error adding the ${roleNeedshelp.name} role to ${target.displayName}!
+          Please make sure I have the Manage Roles permission, or put this role below mine so I can give it to people!
           If there's any questions please contact Moonbear#1024 on TripSit!` }); // eslint-disable-line
     log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}! Sent the guild owner a DM!`);
   }
@@ -211,7 +211,7 @@ export async function tripsitmeOwned(
     return;
   }
 
-  const metaChannelId = ticketData?.meta_thread_id ?? guildData.channel_tripsitmeta;
+  const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
   if (metaChannelId) {
     // log.debug(F, `metaChannelId: ${metaChannelId}`);
     const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
@@ -508,7 +508,7 @@ export async function tripsitmeClose(
     components: [row],
   });
 
-  const metaChannelId = ticketData?.meta_thread_id ?? guildData.channel_tripsitmeta;
+  const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
   if (metaChannelId) {
     const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
     await metaChannel.send({
@@ -592,7 +592,7 @@ export async function tripsitmeResolve(
     }
 
     // readd each role to the target
-    if (targetRoles) {
+    if (targetRoles.length > 0) {
       targetRoles.forEach(async roleId => {
         // log.debug(F, `Re-adding roleId: ${roleId}`);
         if (!interaction.guild) {
@@ -690,7 +690,7 @@ export async function tripsitmeResolve(
       });
     });
 
-  const metaChannelId = ticketData?.meta_thread_id ?? guildData.channel_tripsitmeta;
+  const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
   if (metaChannelId) {
     const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
     await metaChannel.send({
@@ -853,7 +853,10 @@ export async function tripSitMe(
       Someone from the ${roleTripsitter} ${guildData.role_helper ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
       When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
-      If you just would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
+
+      **If you'd like to reach out to mental health professionals you can check out the warmline directory: https://warmline.org/warmdir.html#directory**
+
+      **The wonderful people at the Fireside project can also help you through a rough trip. You can check them out: https://firesideproject.org/**
       `;
 
   const row = new ActionRowBuilder<ButtonBuilder>()
