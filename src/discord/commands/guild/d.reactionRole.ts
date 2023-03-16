@@ -610,7 +610,7 @@ export async function processReactionRole(
         const {
           II,
         } = JSON.parse(`{${i.customId}}`);
-        i.deferReply({ ephemeral: true });
+        await i.deferReply({ ephemeral: true });
 
         // log.debug(F, `II: ${II}`);
 
