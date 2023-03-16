@@ -854,7 +854,7 @@ export async function tripSitMe(
       If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.
       When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
 
-      **If you'd like to reach out to mental health professionals you can check out the warmline directory: https://warmline.org/warmdir.html#directory**
+      **Not in an emergency, but still want to talk to a mental health advisor? Warmlines provide non-crisis mental health support and guidance from trained volunteers. https://warmline.org/warmdir.html#directory**
 
       **The wonderful people at the Fireside project can also help you through a rough trip. You can check them out: https://firesideproject.org/**
       `;
