@@ -61,7 +61,7 @@ export const dReport: SlashCommand = {
       null,
     );
       // log.debug(F, `Result: ${result}`);
-    interaction.editReply(result);
+    await interaction.editReply(result);
     return true;
   },
 };

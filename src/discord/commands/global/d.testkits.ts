@@ -45,7 +45,7 @@ export const dTestkits: SlashCommand = {
         [How to use fentanyl strips](https://dancesafe.org/you-may-be-using-fentanyl-testing-strips-incorrectly/)
         [More testkit resources on the TripSit wiki!](https://wiki.tripsit.me/wiki/Test_Kits)
         `);
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

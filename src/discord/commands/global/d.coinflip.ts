@@ -18,7 +18,7 @@ export const dCoinflip: SlashCommand = {
   async execute(interaction) {
     startLog(F, interaction);
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
-    interaction.editReply({ content: await coinflip() });
+    await interaction.editReply({ content: await coinflip() });
     return true;
   },
 

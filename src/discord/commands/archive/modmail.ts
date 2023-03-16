@@ -213,7 +213,7 @@ export async function modmailActions(
     const ticketDataRaw = await getOpenTicket(null, interaction.channel.id);
 
     if (!ticketDataRaw) {
-      interaction.reply({ content: 'This ticket thread does not exist!', ephemeral: true });
+      await interaction.reply({ content: 'This ticket thread does not exist!', ephemeral: true });
       return;
     }
     ticketData = ticketDataRaw;
@@ -222,7 +222,7 @@ export async function modmailActions(
     const ticketDataRaw = await getOpenTicket(actorUserData.id, null);
 
     if (!ticketDataRaw) {
-      interaction.reply({ content: 'This user\'s ticket thread does not exist!', ephemeral: true });
+      await interaction.reply({ content: 'This user\'s ticket thread does not exist!', ephemeral: true });
       return;
     }
     ticketData = ticketDataRaw;
@@ -240,7 +240,7 @@ export async function modmailActions(
   const target = await interaction.client.users.fetch(targetUserData.discord_id);
   if (!ticketChannel) {
     // log.debug(F, `ticketChannel not found!`);
-    interaction.reply({ content: 'This user\'s ticket thread does not exist!', ephemeral: true });
+    await interaction.reply({ content: 'This user\'s ticket thread does not exist!', ephemeral: true });
     return;
   }
 
@@ -627,7 +627,7 @@ export async function modmailCreate(
       embed.setDescription(stripIndents`
         You already have an open session, you can talk to the team by responding here!
       `);
-      interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], ephemeral: true });
       return;
     }
   }
@@ -744,7 +744,7 @@ export async function modmailCreate(
             .setStyle(ButtonStyle.Success),
         );
 
-      i.reply({
+      await i.reply({
         embeds: [embedDM],
         components: issueType === 'TRIPSIT' ? [finishedButton] : undefined,
         ephemeral: false,

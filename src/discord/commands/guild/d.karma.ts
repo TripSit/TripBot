@@ -36,7 +36,7 @@ export const dKarma: SlashCommand = {
     const embed = embedTemplate()
       .setTitle(message);
       // .setFooter({text: `${quote}`});
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

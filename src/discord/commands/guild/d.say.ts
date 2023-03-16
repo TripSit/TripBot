@@ -24,7 +24,7 @@ export const dSay: SlashCommand = {
     startLog(F, interaction);
     await interaction.deferReply({ ephemeral: true });
     if (!interaction.guild) {
-      interaction.editReply({ content: 'This command can only be used in a server!' });
+      await interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;
     }
 
@@ -37,7 +37,7 @@ export const dSay: SlashCommand = {
       await interaction.channel?.send(say);
     }
 
-    interaction.editReply({ content: `I said '${say}' in ${channel ? channel.toString() : interaction.channel?.toString()}` }); // eslint-disable-line max-len
+    await interaction.editReply({ content: `I said '${say}' in ${channel ? channel.toString() : interaction.channel?.toString()}` }); // eslint-disable-line max-len
 
     const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {

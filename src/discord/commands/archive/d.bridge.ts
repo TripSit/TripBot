@@ -16,7 +16,7 @@ export const bridge: SlashCommand = {
   async execute(interaction) {
     // log.debug(F, `starting!`);
     const response = await bridgeWording();
-    interaction.reply(stripIndents`${response}`);
+    await interaction.reply(stripIndents`${response}`);
     return true;
   },
 };

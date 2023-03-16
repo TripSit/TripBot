@@ -39,7 +39,7 @@ export const dCombo: SlashCommand = {
       .setDescription(results.description);
     if (results.thumbnail) embed.setThumbnail(results.thumbnail);
     if (results.color) embed.setColor(Colors[results.color as keyof typeof Colors]);
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

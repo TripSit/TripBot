@@ -107,12 +107,12 @@ export const dinvite: SlashCommand = {
     const ircChannel = bridgeMap[discordChannel.id];
 
     if (ircChannel !== null && ircChannel !== undefined) {
-      interaction.reply(stripIndents`
+      await interaction.reply(stripIndents`
         ${interaction.member?.toString()} invites you to '/join ${ircChannel}' on IRC 😄
         This channel is 🔗'd to ${discordChannel} on Discord through the /bridge!
       `);
     } else {
-      interaction.reply({
+      await interaction.reply({
         content: `Sorry but ${discordChannel} isn't bridged to IRC, but maybe one day!`,
         ephemeral: true,
       });

@@ -58,7 +58,7 @@ export const dPrivacy: SlashCommand = {
       }
     }
 
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

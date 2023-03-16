@@ -135,13 +135,13 @@ export const prompt: SlashCommand = {
 
     if (!interaction.channel) {
       log.error(F, noChannel);
-      interaction.editReply(channelOnly);
+      await interaction.editReply(channelOnly);
       return false;
     }
 
     if (!interaction.guild) {
       log.error(F, 'how to tripsit: no guild');
-      interaction.editReply(guildOnly);
+      await interaction.editReply(guildOnly);
       return false;
     }
 
@@ -272,7 +272,7 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
 
       // Create a new button
       await (i.channel as TextChannel).send({ content: introMessage, components: [row] });
-      i.editReply({ content: 'Donezo!' });
+      await i.editReply({ content: 'Donezo!' });
     });
 }
 
@@ -399,7 +399,7 @@ export async function applications(interaction:ChatInputCommandInteraction) {
             .addComponents(selectMenu)],
         },
       );
-      i.editReply({ content: 'Donezo!' });
+      await i.editReply({ content: 'Donezo!' });
     });
 }
 

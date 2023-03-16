@@ -27,7 +27,7 @@ export const dUrbanDefine: SlashCommand = {
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const term = interaction.options.getString('define');
     if (!term) {
-      interaction.editReply({ content: 'You must enter a search query.' });
+      await interaction.editReply({ content: 'You must enter a search query.' });
       return false;
     }
 
@@ -35,7 +35,7 @@ export const dUrbanDefine: SlashCommand = {
 
     const embed = embedTemplate()
       .setDescription(stripIndents`${result}`);
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

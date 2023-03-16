@@ -37,7 +37,7 @@ export const dJoke: SlashCommand = {
     if (data.type === 'twopart') embed.setTitle((data as Double).setup).setDescription((data as Double).delivery);
     else embed.setTitle((data as Single).joke);
 
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

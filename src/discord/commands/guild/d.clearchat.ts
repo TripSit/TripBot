@@ -27,7 +27,7 @@ export const dClearchat: SlashCommand = {
     startLog(F, interaction);
     await interaction.deferReply({ ephemeral: true });
     if (!interaction.channel) {
-      interaction.editReply({ content: 'This command can only be used in a server!' });
+      await interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;
     }
 

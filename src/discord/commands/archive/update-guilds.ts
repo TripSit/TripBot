@@ -48,7 +48,7 @@
 //     const embed = template
 //       .embedTemplate()
 //       .setDescription(`${guildCount} guilds updated!`);
-//     interaction.reply({
+//     await interaction.reply({
 //       embeds: [embed],
 //       ephemeral: false,
 //     });

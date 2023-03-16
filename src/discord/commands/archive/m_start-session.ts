@@ -14,6 +14,6 @@
 //     .setType(ApplicationCommandType.Message),
 //   async execute(interaction) {
 //     const embed = template.embedTemplate().setTitle('I would start a #tripsit thread based on this message!');
-//     interaction.reply({ embeds: [embed] });
+//     await interaction.reply({ embeds: [embed] });
 //   },
 // };

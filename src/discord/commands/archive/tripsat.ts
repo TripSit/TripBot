@@ -81,12 +81,12 @@ export async function tripsat(
   await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) {
   // log.debug(F, `no guild!`);
-    interaction.reply('This must be performed in a guild!');
+    await interaction.reply('This must be performed in a guild!');
     return;
   }
   if (!interaction.member) {
   // log.debug(F, `no member!`);
-    interaction.reply('This must be performed by a member of a guild!');
+    await interaction.reply('This must be performed by a member of a guild!');
     return;
   }
 
@@ -100,7 +100,7 @@ export async function tripsat(
 
   if (meOrThem === 'me' && targetId !== actor.id) {
   // log.debug(F, `not the target!`);
-    interaction.reply({ content: 'Only the user receiving help can click this button!', ephemeral: true });
+    await interaction.reply({ content: 'Only the user receiving help can click this button!', ephemeral: true });
     return;
   }
 
@@ -142,7 +142,7 @@ export async function tripsat(
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
   // log.debug(F, `target ${target} does not need help!`);
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
 
@@ -162,7 +162,7 @@ export async function tripsat(
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription(message);
-      interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
 
       if (threadDiscussUser) {
         let metaUpdate = stripIndents`Hey team, ${target.nickname || target.user.username} said they're good \

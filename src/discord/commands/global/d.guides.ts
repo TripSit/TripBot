@@ -33,7 +33,7 @@ export const dGuides: SlashCommand = {
       .setTitle('Wiki Guides')
       .setDescription(`These are the guides currently available on our [Wiki](https://wiki.tripsit.me)\n\n${message}\nYou're welcome to contribute. :heart:`); // eslint-disable-line max-len
 
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
 
     return true;
   },

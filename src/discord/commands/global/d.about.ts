@@ -48,7 +48,7 @@ export const dAbout: SlashCommand = {
           value: tripsitInfo.credits,
         },
       );
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

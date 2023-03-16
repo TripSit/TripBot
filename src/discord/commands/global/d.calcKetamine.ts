@@ -38,12 +38,12 @@ export const dCalcKetamine: SlashCommand = {
     const embed = embedTemplate();
     if (weightUnits === 'kg' && givenWeight > 179) {
       embed.setTitle('Please enter a weight less than 179 kg.'); // what if a person is 200kg? =(
-      interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
       return false;
     }
     if (weightUnits === 'lbs' && givenWeight > 398) {
       embed.setTitle('Please enter a weight less than 398 lbs.');
-      interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
@@ -62,7 +62,7 @@ export const dCalcKetamine: SlashCommand = {
       },
     );
 
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

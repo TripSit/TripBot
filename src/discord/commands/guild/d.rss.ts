@@ -50,7 +50,7 @@ export const dRss: SlashCommand = {
     await interaction.deferReply({ ephemeral: true });
 
     if (!interaction.guild) {
-      interaction.editReply({ content: 'This command can only be used in a guild!' });
+      await interaction.editReply({ content: 'This command can only be used in a guild!' });
       return false;
     }
 
@@ -119,7 +119,7 @@ export const dRss: SlashCommand = {
       embed.setTitle(`RSS feed ${verb} ${preposition} ${channel.name}!`);
     }
 
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

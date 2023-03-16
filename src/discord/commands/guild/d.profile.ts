@@ -195,7 +195,7 @@ export const dProfile: SlashCommand = {
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const startTime = Date.now();
     if (!interaction.guild) {
-      interaction.editReply({ content: 'You can only use this command in a guild!' });
+      await interaction.editReply({ content: 'You can only use this command in a guild!' });
       return false;
     }
 
@@ -476,7 +476,7 @@ export const dProfile: SlashCommand = {
 
     // Process The Entire Card and Send it to Discord
     const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-profile-image.png' });
-    interaction.editReply({ files: [attachment] });
+    await interaction.editReply({ files: [attachment] });
 
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);
     return true;

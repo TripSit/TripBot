@@ -19,7 +19,7 @@ export const dGrounding: SlashCommand = {
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
-    interaction.editReply({ content: await grounding() });
+    await interaction.editReply({ content: await grounding() });
     return true;
   },
 };

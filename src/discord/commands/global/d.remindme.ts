@@ -80,7 +80,7 @@ export const dRemindme: SlashCommand = {
         embed.setTitle('Your reminders');
         if (typeof response === 'string') {
           embed.setDescription('You have no reminders! You can use /remind_me to add some!');
-          interaction.editReply({ embeds: [embed] });
+          await interaction.editReply({ embeds: [embed] });
           return false;
         }
 
@@ -141,7 +141,7 @@ export const dRemindme: SlashCommand = {
       if (book.length > 1) {
         paginationEmbed(interaction, book, buttonList);
       } else {
-        interaction.editReply({ embeds: [embed] });
+        await interaction.editReply({ embeds: [embed] });
         // interaction.user.send({embeds: [embed]});
       }
     }
@@ -152,7 +152,7 @@ export const dRemindme: SlashCommand = {
       // log.debug(F, `relative: ${relative}`);
 
       embed.setDescription(`${relative} I will remind you: ${reminder}`);
-      interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
     }
     // log.debug(F, `Finished!`);
     return true;

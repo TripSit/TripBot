@@ -275,7 +275,7 @@ export async function applicationStart(
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription('Thank you for your interest! We will try to get back to you as soon as possible!');
-      i.editReply({ embeds: [embed] });
+      await i.editReply({ embeds: [embed] });
     });
 }
 
@@ -290,7 +290,7 @@ export async function applicationReject(
   startLog(F, interaction);
   await interaction.deferReply({ ephemeral: false });
   if (!interaction.guild) {
-    interaction.editReply('This command can only be used in a server!');
+    await interaction.editReply('This command can only be used in a server!');
     return;
   }
 
@@ -298,7 +298,7 @@ export async function applicationReject(
   // Check if the thread was created in the last 24 hours
   if (threadCreated && threadCreated.getTime() > Date.now() - 86400000) {
     // log.debug(F, `Thread created in the last 24 hours!`);
-    interaction.editReply({ content: 'Whoa there, please give the team at least 24 until the next day to act on this application!' });
+    await interaction.editReply({ content: 'Whoa there, please give the team at least 24 until the next day to act on this application!' });
     return;
   }
 
@@ -311,7 +311,7 @@ export async function applicationReject(
     try {
       target = await interaction.guild.members.fetch(memberId);
     } catch (e) {
-      interaction.editReply({ content: 'Could not find target, are the still in the guild?' });
+      await interaction.editReply({ content: 'Could not find target, are the still in the guild?' });
       return;
     }
 
@@ -319,19 +319,19 @@ export async function applicationReject(
     try {
       role = await interaction.guild?.roles.fetch(roleId);
     } catch (e) {
-      interaction.editReply({ content: 'Could not find role, has it been deleted?' });
+      await interaction.editReply({ content: 'Could not find role, has it been deleted?' });
       return;
     }
 
     if (!role) {
-      interaction.editReply({ content: 'Could not find role, has it been deleted?' });
+      await interaction.editReply({ content: 'Could not find role, has it been deleted?' });
       return;
     }
 
     const rejectionReason = interaction.values[0];
     const rejectionWording = rejectionMessages[rejectionReason as keyof typeof rejectionMessages];
     // interaction.channel!.send(`${(interaction.member as GuildMember).displayName} rejected this application with reason code '${rejectionReason}'`);
-    interaction.editReply(`${actor.displayName} rejected this application with reason code '${rejectionReason}'`);
+    await interaction.editReply(`${actor.displayName} rejected this application with reason code '${rejectionReason}'`);
 
     const message = stripIndents`Thank you so much for your interest in helping out here at ${interaction.guild.name}. We review all applications with rigor and deep consideration, and the same was true for yours.
     At this time, the team has decided not to move forward, though your application has been saved and will be pulled as needed in the future unless rescinded.
@@ -342,7 +342,7 @@ export async function applicationReject(
     // log.debug(`[${PREFIX} - applicationReject] rejectionReason: ${rejectionWording}`);
     (interaction.channel as ThreadChannel).setName(`🖤│${target.displayName}'s ${role.name} application!`);
   } else {
-    interaction.editReply({ content: 'You do not have permission to do that!' });
+    await interaction.editReply({ content: 'You do not have permission to do that!' });
   }
 }
 
@@ -397,7 +397,7 @@ export async function applicationApprove(
     // log.debug(F, `Adding role ${role.name} to ${target.displayName}`);
     target.roles.add(role);
   } else {
-    interaction.editReply(`I do not have permission to add the ${role.name} role to ${target.displayName}!`);
+    await interaction.editReply(`I do not have permission to add the ${role.name} role to ${target.displayName}!`);
     return;
   }
 
@@ -476,5 +476,5 @@ export async function applicationApprove(
       > *Changes to the wiki will only be made after given a credible source!*
     `);
   }
-  interaction.editReply(`${actor.displayName} accepted this application!`);
+  await interaction.editReply(`${actor.displayName} accepted this application!`);
 }

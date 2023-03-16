@@ -174,7 +174,7 @@
 //       const embed = template.embedTemplate()
 //         .setColor(Colors.Red)
 //         .setDescription('target not found, are you sure they are in the server?');
-//       interaction.reply({ embeds: [embed], ephemeral: true });
+//       await interaction.reply({ embeds: [embed], ephemeral: true });
 //     // log.debug(F, `Target not found!`);
 //       return;
 //     }
@@ -257,7 +257,7 @@
 
 //     if (command === 'info') {
 //       // interaction.reply({ embeds: [target_embed], ephemeral: true, components: [mod_buttons] });
-//       interaction.reply({ embeds: [targetEmbed], ephemeral: true });
+//       await interaction.reply({ embeds: [targetEmbed], ephemeral: true });
 //     // log.debug(`${PREFIX} replied to user ${interaction.member.user.name} with info about ${target.user.name}`);
 //       return;
 //     }

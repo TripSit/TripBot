@@ -18,7 +18,7 @@ export const dTopic: SlashCommand = {
     startLog(F, interaction);
     await interaction.deferReply({ ephemeral: false });
     // interaction.editReply({ embeds: [embedTemplate().setDescription(await topic())] });
-    interaction.editReply(`Random New Topic: **${await topic()}**`);
+    await interaction.editReply(`Random New Topic: **${await topic()}**`);
     return true;
   },
 };

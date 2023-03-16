@@ -81,7 +81,7 @@ export const dLevels: SlashCommand = {
     startLog(F, interaction);
     const startTime = Date.now();
     if (!interaction.guild) {
-      interaction.editReply('You can only use this command in a guild!');
+      await interaction.editReply('You can only use this command in a guild!');
       return false;
     }
 
@@ -443,7 +443,7 @@ export const dLevels: SlashCommand = {
 
     // Process The Entire Card and Send it to Discord
     const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-levels-image.png' });
-    interaction.editReply({ files: [attachment] });
+    await interaction.editReply({ files: [attachment] });
 
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);
     return true;

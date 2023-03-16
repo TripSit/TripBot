@@ -62,11 +62,11 @@ export const dReminder: SlashCommand = {
     startLog(F, interaction);
     await interaction.deferReply({ ephemeral: true });
     if (!interaction.guild) {
-      interaction.editReply({ content: 'This command can only be used in a server!' });
+      await interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;
     }
     if (!interaction.channel) {
-      interaction.editReply({ content: 'This command can only be used in a channel!' });
+      await interaction.editReply({ content: 'This command can only be used in a channel!' });
       return false;
     }
 
@@ -77,7 +77,7 @@ export const dReminder: SlashCommand = {
     const reminderData = reminderDict[chanId];
     // log.debug(F, `reminderData: ${JSON.stringify(reminderData, null, 2)}`);
     if (!reminderData) {
-      interaction.editReply({ content: 'This command can only be used in a channel with a reminder!' });
+      await interaction.editReply({ content: 'This command can only be used in a channel with a reminder!' });
       return false;
     }
     const reminderTitle = reminderData[0];
@@ -96,7 +96,7 @@ export const dReminder: SlashCommand = {
     if (botlog) {
       await botlog.send(`${(interaction.member as GuildMember).displayName} sent a reminder to ${(interaction.channel as TextChannel).name}`);
     }
-    interaction.editReply({ content: 'Reminder sent!' });
+    await interaction.editReply({ content: 'Reminder sent!' });
     return true;
   },
 };

@@ -44,7 +44,7 @@ export const dConvert: SlashCommand = {
     const embed = embedTemplate()
       .setTitle(response);
 
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

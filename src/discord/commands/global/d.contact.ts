@@ -40,7 +40,7 @@ export const dContact: SlashCommand = {
         { name: 'Drug Info Issues Email', value: `${contactInfo.contentEmail}`, inline: true },
       )
       .setFooter({ text: 'Thanks for asking!' });
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

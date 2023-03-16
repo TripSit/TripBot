@@ -40,7 +40,7 @@ export const dCalcBenzo: SlashCommand = {
     const data = await calcBenzo(dosage, drugA, drugB);
 
     if (data === -1) {
-      interaction.editReply({
+      await interaction.editReply({
         content: stripIndents`There was an error during conversion!
         I've let the developer know, please try again with different parameters!`,
       });
@@ -54,7 +54,7 @@ export const dCalcBenzo: SlashCommand = {
         **Please make sure to research the substances thoroughly before using them.**
         It's a good idea to start with a lower dose than the calculator shows, since everybody can react differently to different substances.
         `);
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

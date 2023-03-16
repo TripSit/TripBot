@@ -104,7 +104,7 @@ export const dIssue: SlashCommand = {
 
         // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
 
-        i.editReply({
+        await i.editReply({
           embeds: [
             embedTemplate()
               .setColor(0x0099ff)

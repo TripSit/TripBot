@@ -27,7 +27,7 @@ export const dFact: SlashCommand = {
     const embed = embedTemplate();
     embed.setTitle(data);
 
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

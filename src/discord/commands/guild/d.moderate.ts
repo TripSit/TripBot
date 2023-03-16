@@ -329,7 +329,7 @@ export const mod: SlashCommand = {
           duration = timeout;
         }
 
-        i.editReply(await moderate(
+        await i.editReply(await moderate(
           actor,
           i.customId.split('~')[1] as UserActionType,
           target,

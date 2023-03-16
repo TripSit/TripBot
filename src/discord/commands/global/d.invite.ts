@@ -48,7 +48,7 @@ export const dInvite: SlashCommand = {
         The ${isProd ? 'official support' : 'testing'} server is [${guildName} Discord](${inviteInfo.discord}).
         If you have issues/questions, join and talk with Moonbear!
       `);
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

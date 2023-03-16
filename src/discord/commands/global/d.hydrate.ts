@@ -29,7 +29,7 @@ export const dHydrate: SlashCommand = {
       .setAuthor(null)
       .setFooter(null);
 
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

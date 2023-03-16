@@ -33,7 +33,7 @@ export const dWikipedia: SlashCommand = {
       .setTitle(`Definition for ${query}`)
       .setDescription(await wikipedia(query));
 
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
 
     return true;
   },

@@ -25,7 +25,7 @@ export const dAvatar: SlashCommand = {
     // log.debug(F, `${JSON.stringify(interaction.options, null, 2)}`);
     // If this doesn't happen in a guild then ignore it
     if (!interaction.guild) {
-      interaction.editReply({ content: 'This command can only be used in a discord guild!' });
+      await interaction.editReply({ content: 'This command can only be used in a discord guild!' });
       return false;
     }
 

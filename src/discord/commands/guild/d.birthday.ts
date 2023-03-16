@@ -70,19 +70,19 @@ async function birthdaySet(
   if (month30.includes(monthInput.toLowerCase()) && day > 30) {
     const response = `${monthInput} only has 30 days!`;
     // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-    interaction.editReply({ content: response });
+    await interaction.editReply({ content: response });
     return;
   }
   if (month31.includes(monthInput.toLowerCase()) && day > 31) {
     const response = `${monthInput} only has 31 days!`;
     // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-    interaction.editReply({ content: response });
+    await interaction.editReply({ content: response });
     return;
   }
   if (monthInput.toLowerCase() === 'february' && day > 28) {
     const response = 'February only has 28 days!';
     // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-    interaction.editReply({ content: response });
+    await interaction.editReply({ content: response });
     return;
   }
   // const monthDict = {

@@ -113,7 +113,7 @@ export const dRole: SlashCommand = {
     }
 
     if (!role) {
-      interaction.editReply({ content: 'Role not found! Please use the dropdown menu' });
+      await interaction.editReply({ content: 'Role not found! Please use the dropdown menu' });
       return false;
     }
 
@@ -128,7 +128,7 @@ export const dRole: SlashCommand = {
     // If you're not a mod or tripsitter, you can't add anything that's not in the "safe" list
     if (!safeRoleList.includes(role.id) && !isMod && !isTs) {
       // log.debug(F, `role.id is ${role.id} and is not in the safe list. (isMod: ${isMod}, isTs: ${isTs})`);
-      interaction.editReply({ content: 'You do not have permission to use that role!' });
+      await interaction.editReply({ content: 'You do not have permission to use that role!' });
       return false;
     }
 
@@ -136,7 +136,7 @@ export const dRole: SlashCommand = {
     if (premiumColorIds.includes(role.id) && !isMod && !isTs && !isDonor && !isPatron) {
       // log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium
       // (isMod: ${isMod}, isTs: ${isTs} isDonor: ${isDonor}, isPatron: ${isPatron})`);
-      interaction.editReply({ content: 'You do not have permission to use that role!' });
+      await interaction.editReply({ content: 'You do not have permission to use that role!' });
       return false;
     }
 

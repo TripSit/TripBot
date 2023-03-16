@@ -68,7 +68,7 @@ export const dLeaderboard: SlashCommand = {
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const startTime = Date.now();
     if (!interaction.guild) {
-      interaction.editReply('You can only use this command in a guild!');
+      await interaction.editReply('You can only use this command in a guild!');
       return false;
     }
 
@@ -128,12 +128,12 @@ export const dLeaderboard: SlashCommand = {
     }
 
     if (book.length === 0) {
-      interaction.editReply(`No ${typeChoice} ${categoryChoice} found!`);
+      await interaction.editReply(`No ${typeChoice} ${categoryChoice} found!`);
       return false;
     }
 
     if (book.length === 1) {
-      interaction.editReply({ embeds: [book[0]] });
+      await interaction.editReply({ embeds: [book[0]] });
       return true;
     }
 

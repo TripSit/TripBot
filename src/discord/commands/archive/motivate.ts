@@ -39,7 +39,7 @@
 //     }
 
 //     if (!interaction.replied) {
-//       interaction.reply({
+//       await interaction.reply({
 //         embeds: [embed],
 //         ephemeral: false,
 //       });

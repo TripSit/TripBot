@@ -28,13 +28,13 @@ export const dImdb: SlashCommand = {
 
     const title = interaction.options.getString('title', true);
     if (!title) {
-      interaction.editReply({ content: 'You must enter a title.' });
+      await interaction.editReply({ content: 'You must enter a title.' });
       return false;
     }
     const result = await imdb(title);
 
     if (!result.title) {
-      interaction.editReply({ content: `Could not find ${title}, make sure you're exact!` });
+      await interaction.editReply({ content: `Could not find ${title}, make sure you're exact!` });
       return true;
     }
 

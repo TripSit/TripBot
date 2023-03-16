@@ -184,7 +184,7 @@ export const dIdose: SlashCommand = {
       if (book.length > 1) {
         paginationEmbed(interaction, book, buttonList);
       } else {
-        interaction.editReply({ embeds: [embed] });
+        await interaction.editReply({ embeds: [embed] });
         // interaction.user.send({embeds: [embed]});
       }
     }
@@ -209,9 +209,9 @@ export const dIdose: SlashCommand = {
       embed.addFields(embedField);
 
       if (interaction.channel?.type === ChannelType.DM) {
-        interaction.editReply({ embeds: [embed] });
+        await interaction.editReply({ embeds: [embed] });
       } else {
-        interaction.editReply({ embeds: [embed] });
+        await interaction.editReply({ embeds: [embed] });
         await interaction.user.send({ embeds: [embed] });
       }
     }

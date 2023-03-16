@@ -87,7 +87,7 @@ export const dH2flow: SlashCommand = {
         },
       );
 
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
 
     return false;
   },

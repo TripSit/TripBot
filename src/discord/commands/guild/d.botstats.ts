@@ -54,7 +54,7 @@ export const dBotstats: SlashCommand = {
       Commands: ${commandCount.toString()}
       Uptime: ${ms(uptime)}
     `);
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

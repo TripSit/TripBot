@@ -431,7 +431,7 @@ export async function setupTemplateReactionRole(
     await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1] });
   }
 
-  interaction.editReply({ content: 'Reaction roles have been set up!' });
+  await interaction.editReply({ content: 'Reaction roles have been set up!' });
 }
 
 export async function setupCustomReactionRole(
@@ -734,7 +734,7 @@ export async function processReactionRole(
     if (premiumColorIds.includes(role.id) && !isMod && !isTs && !isBooster && !isPatron) {
       // log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium
       //       (isMod: ${isMod}, isTs: ${isTs} isBooster: ${isBooster}, isPatron: ${isPatron})`);
-      interaction.editReply({ content: 'You do not have permission to use that role!' });
+      await interaction.editReply({ content: 'You do not have permission to use that role!' });
       return;
     }
 

@@ -24,7 +24,7 @@ export async function verifyButton(interaction:ButtonInteraction): Promise<void>
   await interaction.deferReply({ ephemeral: true });
 
   if (!interaction.guild) {
-    interaction.editReply({ content: 'This command can only be used in a server!' });
+    await interaction.editReply({ content: 'This command can only be used in a server!' });
     return;
   }
 
@@ -95,7 +95,7 @@ export async function verifyButton(interaction:ButtonInteraction): Promise<void>
               Be safe, have fun, /report any issues!`);
 
       const channelLounge = await member.client.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-      interaction.editReply({
+      await interaction.editReply({
         content: stripIndents`
         Awesome! This channel will disappear when you click away, before you go:
         If you want to talk to the team about /anything/ you can start a new thread in ${channelTechhelp}
@@ -112,7 +112,7 @@ export async function verifyButton(interaction:ButtonInteraction): Promise<void>
       await channelLounge.send({ embeds: [embed] });
     } else {
       log.error(F, `verifiedRole ${env.ROLE_VERIFIED} not found`);
-      interaction.editReply({ content: 'Something went wrong, please make sure the right role exists!' });
+      await interaction.editReply({ content: 'Something went wrong, please make sure the right role exists!' });
     }
   }
 }

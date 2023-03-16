@@ -40,7 +40,7 @@ export const dDramacounter: SlashCommand = {
     const command = interaction.options.getSubcommand() as 'get' | 'set';
 
     if (!interaction.guild) {
-      interaction.editReply({ content: 'This command can only be used in a server.' });
+      await interaction.editReply({ content: 'This command can only be used in a server.' });
       return false;
     }
     // log.debug(F, `interaction.guild: ${JSON.stringify(interaction.guild, null, 2)}`);
@@ -51,7 +51,7 @@ export const dDramacounter: SlashCommand = {
       const dramaVal = interaction.options.getString('dramatime');
       // log.debug(F, `dramaVal: ${JSON.stringify(dramaVal, null, 2)}`);
       if (!dramaVal) {
-        interaction.editReply({ content: 'You need to specify a time for the drama to have happened.' });
+        await interaction.editReply({ content: 'You need to specify a time for the drama to have happened.' });
         return false;
       }
       const dramatimeValue = await parseDuration(dramaVal);
@@ -59,7 +59,7 @@ export const dDramacounter: SlashCommand = {
       const dramaIssue = interaction.options.getString('dramaissue');
       // log.debug(F, `dramaIssue: ${JSON.stringify(dramaIssue, null, 2)}`);
       if (!dramaIssue) {
-        interaction.editReply({ content: 'You need to specify what the drama was.' });
+        await interaction.editReply({ content: 'You need to specify what the drama was.' });
         return false;
       }
       dramaReason = dramaIssue;

@@ -77,7 +77,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       await i.deferReply({ ephemeral: true });
 
       if (!i.guild) {
-        interaction.editReply({ content: guildOnly });
+        await interaction.editReply({ content: guildOnly });
         return;
       }
 
@@ -96,7 +96,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
           return;
         }
       } else {
-        i.editReply('Thank you, we will respond to right here when we can!');
+        await i.editReply('Thank you, we will respond to right here when we can!');
       }
 
       // Get whatever they sent in the modal
@@ -119,7 +119,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       embed.setDescription(
         stripIndents`Thank you, check out ${ticketThread} to talk with a team member about your issue!`,
       );
-      i.editReply({ embeds: [embed] });
+      await i.editReply({ embeds: [embed] });
 
       const message = stripIndents`
         Hey ${roleTechReview}! ${actor} has submitted a new issue:
@@ -152,7 +152,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 export async function techHelpOwn(interaction:ButtonInteraction) {
   await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) {
-    interaction.editReply({ content: guildOnly });
+    await interaction.editReply({ content: guildOnly });
     return;
   }
   const issueType = interaction.customId.split('~')[1];
@@ -174,14 +174,14 @@ issue and will either help you or figure out how to get you help!`,
 export async function techHelpClose(interaction:ButtonInteraction) {
   await interaction.deferReply({ ephemeral: false });
   if (!interaction.guild) {
-    interaction.editReply({ content: guildOnly });
+    await interaction.editReply({ content: guildOnly });
     return;
   }
   const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
   const target = await interaction.guild.members.fetch(targetId);
 
-  interaction.editReply({
+  await interaction.editReply({
     content: stripIndents`${(interaction.member as GuildMember).displayName} has indicated that \
 this issue has been resolved!`,
   });

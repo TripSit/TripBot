@@ -118,11 +118,11 @@
 //       if (command === 'ban') {
 //         global.ircClient.say('tripbot', `${botPrefix}nunban ${target} ${reason}`);
 //         global.ircClient.say('#sandbox', `Sent: ${botPrefix}nunban ${target} ${reason}`);
-//         interaction.reply(`I un${command}ed ${target} because '${reason}'`);
+//         await interaction.reply(`I un${command}ed ${target} because '${reason}'`);
 //       } else if (command === 'quiet') {
 //         global.ircClient.say('tripbot', `${botPrefix}un${command} ${target} ${reason}`);
 //         global.ircClient.say('#sandbox', `Sent: ${botPrefix}un${command} ${target} ${reason}`);
-//         interaction.reply(`I un${command}ed ${target} because '${reason}'`);
+//         await interaction.reply(`I un${command}ed ${target} because '${reason}'`);
 //       }
 //       return;
 //     }
@@ -147,7 +147,7 @@
 //       log.error(F, `Error: ${err}`);
 //     }
 
-//     interaction.reply(`I ${command}ed ${target} ${channel ? `in ${channel}` : ''}${minutes ? ` for ${minutes} minutes` : ''} because '${reason}'`);
+//     await interaction.reply(`I ${command}ed ${target} ${channel ? `in ${channel}` : ''}${minutes ? ` for ${minutes} minutes` : ''} because '${reason}'`);
 //     // Extract actor data
 //     const [actorData, actorFbid] = await getUserInfo(actor);
 //     const actorAction = `${command}_received`;

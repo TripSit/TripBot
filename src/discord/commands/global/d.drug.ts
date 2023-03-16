@@ -304,7 +304,7 @@ export const dDrug: SlashCommand = {
     const drugName = interaction.options.getString('substance', true);
     // if (!drugName) {
     //   embed.setTitle('No drug name was provided');
-    //   interaction.editReply({ embeds: [embed] });
+    //   await interaction.editReply({ embeds: [embed] });
     //   return false;
     // }
     const drugData = await drug(drugName);
@@ -313,7 +313,7 @@ export const dDrug: SlashCommand = {
       embed.setTitle(`${drugName} was not found`);
       embed.setDescription(stripIndents`...this shouldn\'t have happened, please tell the developer!`);
       // If this happens then something went wrong with the auto-complete
-      interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
       return false;
     }
     // log.debug(F, `drugData: ${JSON.stringify(drugData, null, 2)}`);
@@ -322,7 +322,7 @@ export const dDrug: SlashCommand = {
     //   embed.setTitle(`${drugName} was not found`);
     //   embed.setDescription(stripIndents`...this shouldn\'t have happened, please tell the developer!`);
     //   // If this happens then something went wrong with the auto-complete
-    //   interaction.editReply({ embeds: [embed] });
+    //   await interaction.editReply({ embeds: [embed] });
     //   return false;
     // }
 
@@ -336,14 +336,14 @@ export const dDrug: SlashCommand = {
 
     if (section === 'dosage') {
       embed = await addDosages(embed, drugData);
-      interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
       return true;
     }
 
     embed = await addSummary(embed, drugData);
 
     if (section === 'summary') {
-      interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
       return true;
     }
 
@@ -468,7 +468,7 @@ export const dDrug: SlashCommand = {
     // Experiences
     await addExperiences(embed, drugData);
 
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
 
     return true;
   },

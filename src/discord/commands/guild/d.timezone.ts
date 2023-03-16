@@ -52,12 +52,12 @@ export const dTimezone: SlashCommand = {
 
     if (command === 'get') {
       if (response === null) {
-        interaction.editReply({ content: `${member.displayName} is a timeless treasure <3 (and has not set a time zone)` });
+        await interaction.editReply({ content: `${member.displayName} is a timeless treasure <3 (and has not set a time zone)` });
       } else {
-        interaction.editReply({ content: `${response} wherever ${member.displayName} is located.` });
+        await interaction.editReply({ content: `${response} wherever ${member.displayName} is located.` });
       }
     } else {
-      interaction.editReply({ content: response as string });
+      await interaction.editReply({ content: response as string });
     }
     return true;
   },
