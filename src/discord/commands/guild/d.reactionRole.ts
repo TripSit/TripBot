@@ -19,6 +19,7 @@ import {
   ChatInputCommandInteraction,
   Colors,
 } from 'discord.js';
+import { getUser } from '../../../global/utils/knex';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 
@@ -574,6 +575,18 @@ export async function processReactionRole(
       await target.roles.remove(role);
       await interaction.editReply({ content: `Removed role ${role.name}` });
     }
+    return;
+  }
+
+  const userData = await getUser(target.id, null);
+  // If the role being requested is the Helper or Contributor role, check if they have been banned first
+  if (role.id === env.ROLE_HELPER && userData.helper_role_ban) {
+    await interaction.editReply({ content: 'Unable to add this role. If you feel this is an error, please talk to the team!' });
+    return;
+  }
+
+  if (role.id === env.ROLE_CONTRIBUTOR && userData.contributor_role_ban) {
+    await interaction.editReply({ content: 'Unable to add this role. If you feel this is an error, please talk to the team!' });
     return;
   }
 

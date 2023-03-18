@@ -86,6 +86,8 @@ export enum UserActionType {
   Timeout = 'TIMEOUT',
   Report = 'REPORT',
   Kick = 'KICK',
+  HelperBan = 'HELPER_BAN',
+  ContributorBan = 'CONTRIBUTOR_BAN',
 }
 
 export enum Table {
@@ -384,4 +386,6 @@ export type Users = {
   joined_at: Date;
   removed_at: Date | null;
   mod_thread_id: string | null;
+  helper_role_ban: boolean;
+  contributor_role_ban: boolean;
 };

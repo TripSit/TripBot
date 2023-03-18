@@ -90,6 +90,26 @@ const embedVariables = {
     embedTitle: 'Un-Discord Bot Banned!',
     verb: 'allowed to use the Discord bot again',
   },
+  HELPER_BAN: {
+    embedColor: Colors.Red,
+    embedTitle: 'Helper Role Banned!',
+    verb: 'banned from using the Helper role',
+  },
+  'UN-HELPER_BAN': {
+    embedColor: Colors.Green,
+    embedTitle: 'Un-Helper Role Banned!',
+    verb: 'allowed to use the Helper role again',
+  },
+  CONTRIBUTOR_BAN: {
+    embedColor: Colors.Red,
+    embedTitle: 'Contributor Role Banned!',
+    verb: 'banned from using the Contributor role',
+  },
+  'UN-CONTRIBUTOR_BAN': {
+    embedColor: Colors.Green,
+    embedTitle: 'Un-Contributor Role Banned!',
+    verb: 'allowed to use the Contributor role again',
+  },
   BAN_EVASION: {
     embedColor: Colors.Red,
     embedTitle: 'Ban Evasion!',
@@ -150,7 +170,7 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
 
 export async function moderate(
   actor: GuildMember,
-  command: UserActionType | 'INFO' | 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-UNDERBAN' | 'UN-BAN_EVASION' | 'UN-TIMEOUT',
+  command: UserActionType | 'INFO' | 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-UNDERBAN' | 'UN-BAN_EVASION' | 'UN-TIMEOUT' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN',
   target: GuildMember,
   internalNote: string | null,
   description: string | null,
@@ -437,6 +457,38 @@ export async function moderate(
     }
   } else if (command === 'WARNING') {
     actionData.type = 'WARNING' as UserActionType;
+  } else if (command === 'HELPER_BAN') {
+    actionData.type = 'HELPER_BAN' as UserActionType;
+    targetData.helper_role_ban = true;
+    await usersUpdate(targetData);
+    botBannedUsers.push(target.id);
+  } else if (command === 'UN-HELPER_BAN') {
+    actionData.type = 'HELPER_BAN' as UserActionType;
+    targetData.helper_role_ban = false;
+    await usersUpdate(targetData);
+
+    const record = await useractionsGet(targetData.id, actionData.type);
+    if (record.length > 0) {
+      [actionData] = record;
+    }
+    actionData.repealed_at = new Date();
+    actionData.repealed_by = actorData.id;
+  } else if (command === 'CONTRIBUTOR_BAN') {
+    actionData.type = 'CONTRIBUTOR_BAN' as UserActionType;
+    targetData.contributor_role_ban = true;
+    await usersUpdate(targetData);
+    botBannedUsers.push(target.id);
+  } else if (command === 'UN-CONTRIBUTOR_BAN') {
+    actionData.type = 'CONTRIBUTOR_BAN' as UserActionType;
+    targetData.contributor_role_ban = false;
+    await usersUpdate(targetData);
+
+    const record = await useractionsGet(targetData.id, actionData.type);
+    if (record.length > 0) {
+      [actionData] = record;
+    }
+    actionData.repealed_at = new Date();
+    actionData.repealed_by = actorData.id;
   }
 
   if (command !== 'INFO') {
@@ -666,6 +718,8 @@ export async function userInfoEmbed(target:GuildMember, targetData:Users, comman
     UNDERBAN: [] as string[],
     TICKET_BAN: [] as string[],
     DISCORD_BOT_BAN: [] as string[],
+    HELPER_BAN: [] as string[],
+    CONTRIBUTOR_BAN: [] as string[],
   };
   // Populate targetActionList from the db
 

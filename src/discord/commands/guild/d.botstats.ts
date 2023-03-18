@@ -7,6 +7,9 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
+// import the drug_db_tripsit.json
+import drugDataTripsit from '../../../global/assets/data/drug_db_tripsit.json';
+import drugDataCombined from '../../../global/assets/data/drug_db_combined.json';
 
 const F = f(__filename);
 
@@ -53,6 +56,8 @@ export const dBotstats: SlashCommand = {
       Channels: ${channelCount.toString()}
       Commands: ${commandCount.toString()}
       Uptime: ${ms(uptime)}
+      TS Drug Database Size: ${Object.keys(drugDataTripsit).length}
+      TS+PW Drug Database Size: ${Object.keys(drugDataCombined).length}
     `);
     await interaction.editReply({ embeds: [embed] });
     return true;

@@ -116,7 +116,10 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
     // If the bot was mentioned
 
     // Check if the user sending the message is the bot owner
-    if ((message.content.toLowerCase().includes('upload') || message.content.toLowerCase().includes('steal')) && message.content.toLowerCase().includes('emoji')) {
+    if ((message.content.toLowerCase().includes('upload')
+    || message.content.toLowerCase().includes('steal')
+    || message.content.toLowerCase().includes('fetch')
+    ) && message.content.toLowerCase().includes('emoji')) {
       // Check if the user has the ManageEmojis permission
       if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
         await message.channel.send(stripIndents`Hey ${displayName}, you don't have the permission to upload emojis to this guild!`); // eslint-disable-line
@@ -162,7 +165,10 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
           : '';
         await replyMessage.edit(stripIndents`Uploaded ${emojiSuccessList.join(' ')} to ${message.guild.name}!${failedString}`); // eslint-disable-line
       }
-    } else if (message.content.toLowerCase().includes('upload') && message.content.toLowerCase().includes('sticker')) {
+    } else if ((message.content.toLowerCase().includes('upload')
+    || message.content.toLowerCase().includes('steal')
+    || message.content.toLowerCase().includes('fetch')
+    ) && message.content.toLowerCase().includes('sticker')) {
       // Check if the user has the ManageEmojis permission
       if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
         await message.channel.send(stripIndents`Hey ${displayName}, you don't have the permission to upload stickers to this guild!`); // eslint-disable-line
@@ -195,6 +201,8 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
         await phoenixMessage.edit('Phoenix protocol initiated... 68%');
         await sleep(1000);
         await phoenixMessage.edit(`Phoenix protocol deployed. Good luck ${message.member?.displayName} <3`);
+        await sleep(3000);
+        await phoenixMessage.delete();
         return;
       }
 

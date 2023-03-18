@@ -25,6 +25,10 @@ const F = f(__filename);
 
 export default mod;
 
+type ModAction = 'INFO' | 'BAN' | 'WARNING' | 'REPORT' | 'NOTE' | 'TIMEOUT' | 'KICK' | 'LINK' |
+'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN' | 'HELPER_BAN' | 'CONTRIBUTOR_BAN' |
+'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' | 'UN-TIMEOUT' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN';
+
 export const mod: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('mod')
@@ -52,6 +56,8 @@ export const mod: SlashCommand = {
           { name: 'Discord Bot Ban', value: 'DISCORD_BOT_BAN' },
           { name: 'Ban Evasion', value: 'BAN_EVASION' },
           { name: 'Underban', value: 'UNDERBAN' },
+          { name: 'Helper Ban', value: 'HELPER_BAN' },
+          { name: 'Contributor Ban', value: 'CONTRIBUTOR_BAN' },
         ))
       .addStringOption(option => option
         .setName('toggle')
@@ -112,19 +118,19 @@ export const mod: SlashCommand = {
       .addBooleanOption(option => option
         .setName('override')
         .setDescription('Override existing threads in the DB'))
-      .setName('link_thread')),
+      .setName('link')),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
 
     const actor = interaction.member as GuildMember;
     const targetString = interaction.options.getString('target', true);
     const target = await getDiscordMember(interaction, targetString);
-    let command = interaction.options.getSubcommand().toUpperCase();
+    let command = interaction.options.getSubcommand().toUpperCase() as ModAction;
     if (command === 'BAN') {
-      command = interaction.options.getString('type', true);
+      command = interaction.options.getString('type', true) as ModAction;
     }
 
-    if (command === 'LINK_THREAD') {
+    if (command === 'LINK') {
       if (!interaction.channel?.isThread()
       || !interaction.channel.parentId
       || interaction.channel.parentId !== env.CHANNEL_MODERATORS) {
@@ -175,7 +181,7 @@ export const mod: SlashCommand = {
       : null;
 
     if (toggle === 'OFF' && toggleCommands.includes(command)) {
-      command = `UN-${command}`;
+      command = `UN-${command}` as ModAction;
     }
 
     log.debug(F, `${actor} ran ${command} on ${target}`);
@@ -194,6 +200,10 @@ export const mod: SlashCommand = {
     else if (command === 'DISCORD_BOT_BAN') verb = 'discord bot banning';
     else if (command === 'BAN_EVASION') verb = 'evasion banning';
     else if (command === 'UNDERBAN') verb = 'underbanning';
+    else if (command === 'CONTRIBUTOR_BAN') verb = 'banning from Contributor on';
+    else if (command === 'HELPER_BAN') verb = 'banning from Helper on';
+    else if (command === 'UN-HELPER_BAN') verb = 'allowing Helper on ';
+    else if (command === 'UN-CONTRIBUTOR_BAN') verb = 'allowing Contributor on ';
     else if (command === 'UN-TIMEOUT') verb = 'removing timeout on';
     else if (command === 'UN-FULL_BAN') verb = 'removing ban on';
     else if (command === 'UN-TICKET_BAN') verb = 'removing ticket ban on';

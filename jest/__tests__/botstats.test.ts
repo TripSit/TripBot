@@ -37,6 +37,8 @@ describe(slashCommand.data.name, () => {
           Channels: 0
           Commands: 79
           Uptime: 0ms
+          TS Drug Database Size: 550
+          TS+PW Drug Database Size: 591
         `,
       }),
     });
