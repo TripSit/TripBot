@@ -122,7 +122,6 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
         await message.channel.send(stripIndents`Hey ${displayName}, you don't have the permission to upload emojis to this guild!`); // eslint-disable-line
         return;
       }
-      const replyMessage = await message.channel.send(stripIndents`Hey ${displayName}, uploading emojis...`); // eslint-disable-line
 
       // Upload all the emojis in the message to the guild
       let emojis = message.content.match(/<a?:\w+:\d+>/g);
@@ -134,6 +133,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       }
 
       if (emojis) {
+        const replyMessage = await message.channel.send(stripIndents`Hey ${displayName}, uploading emojis...`); // eslint-disable-line
         const emojiSuccessList = [];
         const emojiFailList = [];
         for (const emoji of emojis) { // eslint-disable-line
