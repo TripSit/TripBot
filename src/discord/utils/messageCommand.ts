@@ -64,6 +64,8 @@ export async function messageCommand(message: Message): Promise<void> {
   // log.debug(F, `message.channel.type !== ChannelType.DM: ${message.channel.type !== ChannelType.DM}`); // eslint-disable-line
   // log.debug(F, `message.guild.id !== env.DISCORD_GUILD_ID: ${message.guild.id} !== ${env.DISCORD_SERVER_ID}`); // eslint-disable-line
 
+  log.debug(F, `message.reference: ${JSON.stringify(message.content, null, 2)}`);
+
   // log.debug(stripIndents`[${PREFIX}] ${displayName} said\
   // ${message.content} in ${(message.channel as GuildTextBasedChannel).name}!`);
 
@@ -114,7 +116,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
     // If the bot was mentioned
 
     // Check if the user sending the message is the bot owner
-    if (message.content.toLowerCase().includes('upload') && message.content.toLowerCase().includes('emoji')) {
+    if ((message.content.toLowerCase().includes('upload') || message.content.toLowerCase().includes('steal')) && message.content.toLowerCase().includes('emoji')) {
       // Check if the user has the ManageEmojis permission
       if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
         await message.channel.send(stripIndents`Hey ${displayName}, you don't have the permission to upload emojis to this guild!`); // eslint-disable-line
@@ -123,7 +125,14 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       const replyMessage = await message.channel.send(stripIndents`Hey ${displayName}, uploading emojis...`); // eslint-disable-line
 
       // Upload all the emojis in the message to the guild
-      const emojis = message.content.match(/<a?:\w+:\d+>/g);
+      let emojis = message.content.match(/<a?:\w+:\d+>/g);
+
+      if (!emojis && message.reference && message.reference.messageId) {
+        // try to get emojis from the message reference
+        const referencedMessage = await message.channel.messages.fetch(message.reference.messageId);
+        emojis = referencedMessage.content.match(/<a?:\w+:\d+>/g);
+      }
+
       if (emojis) {
         const emojiSuccessList = [];
         const emojiFailList = [];
@@ -177,6 +186,27 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
 
         await message.channel.send(`Uploaded ${stickerList.join(' ')} to ${message.guild.name}!`); // eslint-disable-line
       }
+    } else if (message.author.id === env.DISCORD_OWNER_ID) {
+      if (message.content.toLowerCase().includes('initiate') && message.content.toLowerCase().includes('phoenix')) {
+        const phoenixMessage = await message.channel.send('Phoenix protocol initiated... ');
+        await sleep(1000);
+        await phoenixMessage.edit('Phoenix protocol initiated... 35%');
+        await sleep(1000);
+        await phoenixMessage.edit('Phoenix protocol initiated... 68%');
+        await sleep(1000);
+        await phoenixMessage.edit(`Phoenix protocol deployed. Good luck ${message.member?.displayName} <3`);
+        return;
+      }
+
+      const action = message.content.split(`<@${client.user?.id}>`)[1];
+      log.debug(F, `action: ${action}`);
+
+      // Replace all instances of "your" with "my", make the action first person
+      const actionFirstPerson = action.replace(/your/g, 'my');
+      log.debug(F, `actionFirstPerson: ${actionFirstPerson}`);
+
+      // If the user is the bot owner, do whatever they say
+      await message.channel.send(stripIndents`Sure thing ${displayName}! I will${actionFirstPerson}!`); // eslint-disable-line
     } else {
       await message.react('<:ts_heart:1085657783069851658>');
     }
