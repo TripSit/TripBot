@@ -150,7 +150,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
  * @param {ButtonInteraction} interaction The button that submitted this
  */
 export async function techHelpOwn(interaction:ButtonInteraction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ ephemeral: false });
   if (!interaction.guild) {
     await interaction.editReply({ content: guildOnly });
     return;
