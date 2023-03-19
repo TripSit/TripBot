@@ -17,8 +17,6 @@ export async function getDiscordMember(
 ):Promise<GuildMember | null> {
   const members = [] as GuildMember[];
   if (!interaction.guild) return null;
-  // log.info(F, `string: ${string}`);
-
   if (string.startsWith('<@') && string.endsWith('>')) {
     // log.debug(F, `${string} is a mention!`);
     const id = string.replace(/[<@!>]/g, '');
@@ -83,21 +81,6 @@ export async function getDiscordMember(
   }
 
   if (members.length === 0) {
-    const embed = embedTemplate()
-      .setColor(Colors.Red)
-      .setTitle('Could not find that user!')
-      .setDescription(stripIndents`
-        "${string}" returned no results!
-
-        Try again with:
-        > **Mention:** @Moonbear
-        > **Tag:** moonbear#1234
-        > **ID:** 9876581237
-        > **Nickname:** MoonBear`);
-    await interaction.reply({
-      embeds: [embed],
-      ephemeral: true,
-    });
     return null;
   }
 
@@ -105,20 +88,27 @@ export async function getDiscordMember(
 }
 
 export async function getDiscordUser(
-  interaction:ChatInputCommandInteraction,
   string:string,
-):Promise<User> {
+):Promise<User | null> {
   let user = {} as User;
-
-  // log.debug(F, `string: ${string}`);
 
   // Check if the string begins with <@ or ends with >
   if (string.startsWith('<@') && string.endsWith('>')) {
     // log.debug(F, `${string} is a mention!`);
-    user = await client.users.fetch(string.replace(/[<@!>]/g, ''));
-  } else if (BigInt(string)) {
+    try {
+      user = await client.users.fetch(string.replace(/[<@!>]/g, ''));
+    } catch (error) {
+      // log.debug(F, `Error fetching user with ID ${string}, they may have left the guild!`);
+      return null;
+    }
+  } else if (string.match(/^\d+$/)) {
     // log.debug(F, `${string} is an ID!`);
-    user = await client.users.fetch(string);
+    try {
+      user = await client.users.fetch(string);
+    } catch (error) {
+      // log.debug(F, `Error fetching user with ID ${string}, they may have left the guild!`);
+      return null;
+    }
   }
 
   // log.debug(F, `getDiscordUser: ${user.tag} (${user.id})`);

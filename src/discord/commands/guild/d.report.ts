@@ -2,8 +2,10 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   GuildMember,
+  Colors,
 } from 'discord.js';
 import { env } from 'process';
+import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { startLog } from '../../utils/startLog';
 // import {embedTemplate} from '../../utils/embedTemplate';
@@ -11,6 +13,7 @@ import { moderate } from '../../../global/commands/g.moderate';
 // import log from '../../../global/utils/log';
 import { UserActionType } from '../../../global/@types/database';
 import { getDiscordMember } from '../../utils/guildMemberLookup';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -49,6 +52,21 @@ export const dReport: SlashCommand = {
     const target = await getDiscordMember(interaction, targetString);
 
     if (!target) {
+      const embed = embedTemplate()
+        .setColor(Colors.Red)
+        .setTitle('Could not find that member/user!')
+        .setDescription(stripIndents`
+      "${targetString}" returned no results!
+
+      Try again with:
+      > **Mention:** @Moonbear
+      > **Tag:** moonbear#1234
+      > **ID:** 9876581237
+      > **Nickname:** MoonBear`);
+      await interaction.reply({
+        embeds: [embed],
+        ephemeral: true,
+      });
       return false;
     }
 

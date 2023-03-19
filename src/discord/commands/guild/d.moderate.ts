@@ -7,6 +7,8 @@ import {
   TextInputBuilder,
   ActionRowBuilder,
   ModalSubmitInteraction,
+  Colors,
+  User,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -18,8 +20,9 @@ import { parseDuration } from '../../../global/utils/parseDuration';
 import { moderate, linkThread } from '../../../global/commands/g.moderate';
 import { startLog } from '../../utils/startLog'; // eslint-disable-line
 import { UserActionType } from '../../../global/@types/database';
-import { getDiscordMember } from '../../utils/guildMemberLookup';
+import { getDiscordMember, getDiscordUser } from '../../utils/guildMemberLookup';
 import { getUser } from '../../../global/utils/knex';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -124,7 +127,7 @@ export const mod: SlashCommand = {
 
     const actor = interaction.member as GuildMember;
     const targetString = interaction.options.getString('target', true);
-    const target = await getDiscordMember(interaction, targetString);
+    let target = await getDiscordMember(interaction, targetString) as GuildMember | User;
     let command = interaction.options.getSubcommand().toUpperCase() as ModAction;
     if (command === 'BAN') {
       command = interaction.options.getString('type', true) as ModAction;
@@ -172,7 +175,48 @@ export const mod: SlashCommand = {
       return true;
     }
 
-    if (!target) return false;
+    if (!target && command !== 'FULL_BAN') {
+      const embed = embedTemplate()
+        .setColor(Colors.Red)
+        .setTitle('Could not find that member/user!')
+        .setDescription(stripIndents`
+        "${targetString}" returned no results!
+
+        Try again with:
+        > **Mention:** @Moonbear
+        > **Tag:** moonbear#1234
+        > **ID:** 9876581237
+        > **Nickname:** MoonBear`);
+      await interaction.reply({
+        embeds: [embed],
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    if (!target && command === 'FULL_BAN') {
+      // Look up the user and use that as the target
+      const discordUserData = await getDiscordUser(targetString);
+      if (!discordUserData) {
+        const embed = embedTemplate()
+          .setColor(Colors.Red)
+          .setTitle('Could not find that member/user!')
+          .setDescription(stripIndents`
+        "${targetString}" returned no results!
+
+        Try again with:
+        > **Mention:** @Moonbear
+        > **Tag:** moonbear#1234
+        > **ID:** 9876581237
+        > **Nickname:** MoonBear`);
+        await interaction.reply({
+          embeds: [embed],
+          ephemeral: true,
+        });
+        return false;
+      }
+      target = discordUserData;
+    }
 
     const toggleCommands = 'FULL_BAN, TICKET_BAN, DISCORD_BOT_BAN, BAN_EVASION, UNDERBAN, TIMEOUT';
     // If the command is ban or timeout, get the value of toggle. If it's null, set it to 'ON'
