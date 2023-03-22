@@ -200,7 +200,7 @@ export const dLevels: SlashCommand = {
       const inventoryData = await inventoryGet(personaData.id);
       // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
 
-      const equippedBackground = inventoryData.find(item => item.equipped === true);
+      const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
       // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
       if (equippedBackground) {
         const imagePath = await imageGet(equippedBackground.value);
