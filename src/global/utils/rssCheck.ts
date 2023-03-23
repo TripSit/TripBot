@@ -79,7 +79,7 @@ async function checkRss() {
         // log.debug(F, `Error parsing ${feed.url}: ${error}`);
         return;
       }
-      // log.debug(F, `mostRecentPost: ${JSON.stringify(mostRecentPost, null, 2)}`);
+      log.debug(F, `mostRecentPost: ${JSON.stringify(mostRecentPost, null, 2)}`);
 
       if (feed.last_post_id === mostRecentPost.id) return;
 
@@ -104,9 +104,14 @@ async function checkRss() {
 
       // log.debug(F, `submittedBy: ${submittedBy}`);
 
+      const subreddit = mostRecentPost.link.slice(
+        mostRecentPost.link.indexOf('/r/') + 3,
+        mostRecentPost.link.indexOf('/comments'),
+      );
+
       const embed = embedTemplate();
       try {
-        embed.setAuthor({ name: 'New /r/TripSit post', iconURL: env.TS_ICON_URL });
+        embed.setAuthor({ name: `New /r/${subreddit} post`, iconURL: env.TS_ICON_URL });
         embed.setTitle(`${mostRecentPost.title.slice(0, 256)}`);
         embed.setURL(mostRecentPost.link);
         embed.setFooter({ text: submittedBy, iconURL: env.FLAME_ICON_URL });
