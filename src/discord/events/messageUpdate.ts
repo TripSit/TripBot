@@ -4,8 +4,8 @@ import {
 } from 'discord.js';
 import {
   MessageUpdateEvent,
-} from '../../@types/eventDef';
-import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-line @typescript-eslint/no-unused-vars
+} from '../@types/eventDef';
+import { embedTemplate } from '../utils/embedTemplate'; // eslint-disable-line @typescript-eslint/no-unused-vars
 // eslint-disable-line no-unused-vars
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
@@ -41,7 +41,7 @@ export const messageUpdate: MessageUpdateEvent = {
       .setAuthor(null)
       .setFooter(null)
       .setColor(Colors.Yellow)
-      .setTitle(`${newMessage.member?.nickname} edited msg in ${(newMessage.channel as TextChannel).name}`);
+      .setDescription(`**${newMessage.member} edited [message](${newMessage.url}) in ${(newMessage.channel as TextChannel)}**`);
     try {
       embed.setURL(newMessage.url);
       embed.addFields([

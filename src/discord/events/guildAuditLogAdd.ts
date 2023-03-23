@@ -6,7 +6,7 @@ import {
 import {
   GuildAuditLogEntryCreateEvent,
 } from '../@types/eventDef';
-import embedTemplate from '../utils/embedTemplate'; // eslint-disable-line
+import { embedTemplate } from '../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -19,8 +19,12 @@ export const channelCreate: GuildAuditLogEntryCreateEvent = {
   async execute(auditLogEntry, guild) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (guild.id !== env.DISCORD_GUILD_ID) return;
+    // We have other scripts to handle message events
+    if (auditLogEntry.targetType === 'Message') {
+      return;
+    }
 
-    log.debug(F, `auditLogEntry: ${JSON.stringify(auditLogEntry, null, 2)}`);
+    // log.debug(F, `auditLogEntry: ${JSON.stringify(auditLogEntry, null, 2)}`);
 
     const channelAuditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
@@ -30,26 +34,25 @@ export const channelCreate: GuildAuditLogEntryCreateEvent = {
 
     const { executor } = auditLogEntry;
     log.debug(F, `executor: ${JSON.stringify(executor, null, 2)}`);
-    const action = `${auditLogEntry.actionType.toLowerCase()}d`;
-    log.debug(F, `action: ${JSON.stringify(action, null, 2)}`);
+    const actionType = `${auditLogEntry.actionType.toLowerCase()}d`;
+    log.debug(F, `actionType: ${JSON.stringify(actionType, null, 2)}`);
+    const targetType = auditLogEntry.targetType.toLowerCase();
+    log.debug(F, `targetType: ${JSON.stringify(targetType, null, 2)}`);
     const target = JSON.stringify(auditLogEntry.target, null, 2);
     log.debug(F, `target: ${JSON.stringify(target, null, 2)}`);
-    const reason = auditLogEntry.reason ? `\nReason: ${JSON.stringify(auditLogEntry.reason, null, 2)}` : '';
-    log.debug(F, `reason: ${JSON.stringify(reason, null, 2)}`);
-    const extra = auditLogEntry.extra ? `\nExtra: ${JSON.stringify(auditLogEntry.extra, null, 2)}` : '';
-    log.debug(F, `extra: ${JSON.stringify(extra, null, 2)}`);
+    // const reason = auditLogEntry.reason ? `\nReason: ${JSON.stringify(auditLogEntry.reason, null, 2)}` : '';
+    // log.debug(F, `reason: ${JSON.stringify(reason, null, 2)}`);
+    // const extra = auditLogEntry.extra ? `\nExtra: ${JSON.stringify(auditLogEntry.extra, null, 2)}` : '';
+    // log.debug(F, `extra: ${JSON.stringify(extra, null, 2)}`);
 
     const embed = embedTemplate()
       .setAuthor(null)
       .setFooter(null)
       .setTitle(`${auditLogEntry.targetType} ${auditLogEntry.actionType}`)
       .setDescription(stripIndents`
-      ${executor} ${action} ${target}\
-      ${reason}\
-      ${extra} \
-      ${changeString}
-    `);
-
+        ${executor} ${actionType} ${targetType} ${actionType !== 'deleted' ? auditLogEntry.target : ''}\
+        ${changeString}
+      `);
     switch (auditLogEntry.actionType) {
       case 'Create':
         embed.setColor(Colors.Green);
