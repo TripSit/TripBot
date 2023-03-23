@@ -69,7 +69,7 @@ export const messageDelete: MessageDeleteEvent = {
     let { author } = message;
     log.debug(F, `Author: ${JSON.stringify(author, null, 2)}`);
     log.debug(F, `Target: ${JSON.stringify(deletionLog?.target, null, 2)}`);
-    if (deletionLog && deletionLog.target.id === author.id && deletionLog.createdTimestamp > (startTime - 1)) {
+    if (deletionLog && author && deletionLog.target.id === author.id && deletionLog.createdTimestamp > (startTime - 1)) {
       log.debug(F, `Found relevant audit log: ${JSON.stringify(deletionLog, null, 2)}`);
       if (deletionLog.executor) {
         executorUser = deletionLog.executor;
@@ -100,8 +100,9 @@ export const messageDelete: MessageDeleteEvent = {
     log.debug(F, `Executor: ${JSON.stringify(executorUser, null, 2)}, Content: ${content}`);
 
     const executorMember = await message.guild.members.fetch(executorUser.id);
+    log.debug(F, `Executor Member: ${JSON.stringify(executorMember, null, 2)}, Content: ${content}`);
 
-    const authorName = author.username ?? 'Unknown Author';
+    const authorName = author ? author.username : 'Unknown Author';
     log.debug(F, `Author Name: ${authorName}`);
     // const channelName = message.channel ? (message.channel as TextChannel).name : 'Unknown';
 
@@ -112,7 +113,7 @@ export const messageDelete: MessageDeleteEvent = {
     //   content = message.content;
     // }
     const embed = embedTemplate()
-      .setDescription(`**${executorMember} deleted message in ${message.channel}**`)
+      .setDescription(`**${executorMember.id ?? 'Someone'} deleted message in ${message.channel}**`)
       .setAuthor(null)
       .setFooter(null)
       .setColor(Colors.Red);
