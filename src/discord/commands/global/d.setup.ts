@@ -11,9 +11,13 @@ import {
   PermissionResolvable,
   StringSelectMenuBuilder,
   Guild,
+  Colors,
+  EmbedBuilder,
+  // InteractionEditReplyOptions,
+  // GuildMember,
 } from 'discord.js';
 import {
-  ButtonStyle, TextInputStyle,
+  ButtonStyle, ChannelType, TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndent, stripIndents } from 'common-tags';
 import { getGuild, guildUpdate } from '../../../global/utils/knex';
@@ -132,16 +136,18 @@ export const prompt: SlashCommand = {
   //   .setName('premiumcolors')),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
+    // We cannot defer because some of the setup commands have modals
+    // await interaction.deferReply({ ephemeral: true });
 
     if (!interaction.channel) {
       log.error(F, noChannel);
-      await interaction.editReply(channelOnly);
+      await interaction.reply(channelOnly);
       return false;
     }
 
     if (!interaction.guild) {
       log.error(F, 'how to tripsit: no guild');
-      await interaction.editReply(guildOnly);
+      await interaction.reply(guildOnly);
       return false;
     }
 
@@ -163,58 +169,85 @@ export const prompt: SlashCommand = {
   },
 };
 
-export async function tripsit(interaction:ChatInputCommandInteraction) {
-  if (!await checkChannelPermissions(
-    (interaction.channel as TextChannel),
-    [
-      'ViewChannel' as PermissionResolvable,
-      'SendMessages' as PermissionResolvable,
-      'CreatePrivateThreads' as PermissionResolvable,
-      'CreatePublicThreads' as PermissionResolvable,
-      'SendMessagesInThreads' as PermissionResolvable,
-      'EmbedLinks' as PermissionResolvable,
-    ],
-  )) {
-    // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
+export async function tripsit(
+  interaction:ChatInputCommandInteraction,
+) {
+  if (!interaction.guild) return;
+  if (!interaction.channel) return;
+  if (interaction.channel.type !== ChannelType.GuildText) return;
+  // Can't defer cuz there's a modal
+  // await interaction.deferReply({ ephemeral: true });
+  const channelPerms = await checkChannelPermissions(interaction.channel, [
+    'ViewChannel' as PermissionResolvable,
+    'SendMessages' as PermissionResolvable,
+    'SendMessagesInThreads' as PermissionResolvable,
+    // 'CreatePublicThreads' as PermissionResolvable,
+    'CreatePrivateThreads' as PermissionResolvable,
+    // 'ManageMessages' as PermissionResolvable,
+    'ManageThreads' as PermissionResolvable,
+    // 'EmbedLinks' as PermissionResolvable,
+  ]);
+  if (!channelPerms.hasPermission) {
+    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${interaction.channel}!`);
+    await interaction.editReply({
+      content: stripIndents`Missing permissions in ${interaction.channel}!
+    In order to setup the tripsitting feature I need:
+    View Channel - to see the channel
+    Send Messages - to send messages
+    Create Private Threads - to create private threads
+    Send Messages in Threads - to send messages in threads
+    Manage Threads - to delete threads when they're done
+    `}); // eslint-disable-line
     return;
   }
 
-  if (!await checkChannelPermissions(
-    (interaction.options.getChannel('metatripsit') as TextChannel),
-    [
-      'ViewChannel' as PermissionResolvable,
-      'SendMessages' as PermissionResolvable,
-      'CreatePrivateThreads' as PermissionResolvable,
-      'CreatePublicThreads' as PermissionResolvable,
-      'SendMessagesInThreads' as PermissionResolvable,
-      'EmbedLinks' as PermissionResolvable,
-    ],
-  )) {
-    // log.debug(`${PREFIX} bot does NOT has permission to post!`);
+  const metaChannel = interaction.options.getChannel('metatripsit') as TextChannel;
+
+  const metaPerms = await checkChannelPermissions(metaChannel, [
+    'ViewChannel' as PermissionResolvable,
+    'SendMessages' as PermissionResolvable,
+    'SendMessagesInThreads' as PermissionResolvable,
+    // 'CreatePublicThreads' as PermissionResolvable,
+    'CreatePrivateThreads' as PermissionResolvable,
+    // 'ManageMessages' as PermissionResolvable,
+    'ManageThreads' as PermissionResolvable,
+    // 'EmbedLinks' as PermissionResolvable,
+  ]);
+  if (!metaPerms.hasPermission) {
+    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${metaChannel}!`);
+    await interaction.editReply({
+      content: stripIndents`Missing permissions in ${metaChannel}!
+    In order to setup the tripsitting feature I need:
+    View Channel - to see the channel
+    Send Messages - to send messages
+    Create Private Threads - to create private threads, when requested through the bot
+    Send Messages in Threads - to send messages in threads
+    Manage Threads - to delete threads when they're done
+    `}); // eslint-disable-line
     return;
   }
 
   const channelSanctuary = interaction.options.getChannel('sanctuary');
   const channelGeneral = interaction.options.getChannel('general');
 
-  let modalText = stripIndents`
-    Welcome to ${(interaction.channel as TextChannel).name}!
+  const titleText = '**Need to talk with a TripSitter? Click the button below!**';
+  const footerText = '🛑 Please do not message anyone directly! 🛑';
+  const modalText = stripIndents`
+    **Need mental health support?**
+    Check out [Huddle Humans](https://discord.gg/mentalhealth), a mental health universe!
 
-    **Need to talk with a TripSitter? Click the button below!**
-    Share what substance you're asking about, time and size of dose, and any other relevant info.
-    This will create a new thread and alert the community that you need assistance!
-    🛑 Please do not message Helpers or TripSitters directly! 🛑
-  `;
+    **Want professional mental health advisors?**
+    The [Warmline Directory](https://warmline.org/warmdir.html#directory) provides non-crisis mental health support and guidance from trained volunteers (US Only).
 
-  if (channelSanctuary) {
-    modalText += `\n\nDon't need immediate help but want a peaceful chat? Come to ${channelSanctuary.toString()}!`;
-  }
+    **Looking for voice chat?**
+    The wonderful people at the [Fireside project](https://firesideproject.org) can also help you through a rough trip! (US Only)
+  
+    **Having an emergency?**
+    We're not doctors: If you are in a medical emergency, please contact emergency medical services.
 
-  if (channelGeneral) {
-    modalText += `\n\nAll other topics of conversation are welcome in ${channelGeneral.toString()}!`;
-  }
-
-  modalText += '\n\nStay safe!\n\n';
+    **Are you suicidal?**
+    If you're having suicidal thoughts please contact your [local hotline](https://en.wikipedia.org/wiki/List_of_suicide_crisis_lines).
+    `;
 
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`tripsitmeModal~${interaction.id}`)
@@ -223,11 +256,29 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
+            .setLabel('Title')
+            .setValue(stripIndents`${titleText}`)
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+            .setCustomId('titleMessage'),
+        ),
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(
+          new TextInputBuilder()
             .setLabel('Intro Message')
             .setValue(stripIndents`${modalText}`)
             .setStyle(TextInputStyle.Paragraph)
             .setRequired(true)
             .setCustomId('introMessage'),
+        ),
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(
+          new TextInputBuilder()
+            .setLabel('Footer')
+            .setValue(stripIndents`${footerText}`)
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+            .setCustomId('footerMessage'),
         ),
     ));
 
@@ -260,19 +311,28 @@ export async function tripsit(interaction:ChatInputCommandInteraction) {
       await guildUpdate(guildData);
 
       const introMessage = i.fields.getTextInputValue('introMessage');
+      const titleMessage = i.fields.getTextInputValue('titleMessage');
+      const footerMessage = i.fields.getTextInputValue('footerMessage');
 
       // Create a new button embed
       const row = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           new ButtonBuilder()
             .setCustomId('tripsitmeClick')
-            .setLabel('I need assistance!')
+            .setLabel('I would like to talk to a tripsitter!')
             .setStyle(ButtonStyle.Primary),
         );
 
-      // Create a new button
-      await (i.channel as TextChannel).send({ content: introMessage, components: [row] });
-      await i.editReply({ content: 'Donezo!' });
+      // This should be an embed so that we can display hyperlinks
+      const embed = new EmbedBuilder()
+        .setTitle(titleMessage)
+        .setFooter({ text: footerMessage })
+        .setDescription(introMessage)
+        .setColor(Colors.Blue);
+
+      // We need to send the message, otherwise it has the "user used /setup tripsit" at the top
+      await (i.channel as TextChannel).send({ embeds: [embed], components: [row] });
+      await i.editReply({ content: 'Setup complete!' });
     });
 }
 

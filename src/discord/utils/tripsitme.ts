@@ -115,7 +115,6 @@ export async function needsHelpMode(
   const perms = await checkGuildPermissions(guild, [
     'ManageRoles' as PermissionResolvable,
   ]);
-
   if (!perms.hasPermission) {
     const guildOwner = await guild.fetchOwner();
     await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${guild} so I can run ${F}!` }); // eslint-disable-line
@@ -798,29 +797,6 @@ export async function tripSitMe(
     return null;
   }
 
-  const channelPerms = await checkChannelPermissions(tripsitChannel, [
-    'SendMessages' as PermissionResolvable,
-    'ManageMessages' as PermissionResolvable,
-    'SendMessagesInThreads' as PermissionResolvable,
-    'ManageThreads' as PermissionResolvable,
-  ]);
-  if (!channelPerms.hasPermission) {
-    const guildOwner = await interaction.guild.fetchOwner();
-    await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${tripsitChannel} so I can run ${F}!` }); // eslint-disable-line
-    log.error(F, `Missing permission ${channelPerms.permission} in ${tripsitChannel}!`);
-    return null;
-  }
-
-  const threadPerms = await checkChannelPermissions(tripsitChannel, [
-    'CreatePrivateThreads' as PermissionResolvable,
-  ]);
-  if (!threadPerms.hasPermission) {
-    const guildOwner = await interaction.guild.fetchOwner();
-    await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${tripsitChannel} so I can run ${F}!` }); // eslint-disable-line
-    log.error(F, `Missing permission ${channelPerms.permission} in ${tripsitChannel}!`);
-    return null;
-  }
-
   // Create a new thread in the channel
   // If we're not in production we need to create a public thread
   const threadHelpUser = await tripsitChannel.threads.create({
@@ -996,6 +972,69 @@ export async function tripsitmeButton(
     }
   }
 
+  const guildData = await getGuild(interaction.guild?.id as string);
+
+  // Get the tripsit channel from the guild
+  const tripsitChannel = guildData.channel_tripsit
+    ? await interaction.guild?.channels.fetch(guildData.channel_tripsit) as TextChannel
+    : {} as TextChannel;
+
+  const channelPerms = await checkChannelPermissions(tripsitChannel, [
+    'ViewChannel' as PermissionResolvable,
+    'SendMessages' as PermissionResolvable,
+    'SendMessagesInThreads' as PermissionResolvable,
+    // 'CreatePublicThreads' as PermissionResolvable,
+    'CreatePrivateThreads' as PermissionResolvable,
+    // 'ManageMessages' as PermissionResolvable,
+    'ManageThreads' as PermissionResolvable,
+    // 'EmbedLinks' as PermissionResolvable,
+  ]);
+  if (!channelPerms.hasPermission) {
+    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel}!`);
+    const guildOwner = await interaction.guild?.fetchOwner() as GuildMember;
+    await guildOwner.send({
+      content: stripIndents`Missing permissions in ${tripsitChannel}!
+      In order to setup the tripsitting feature I need:
+      View Channel - to see the channel
+      Send Messages - to send messages
+      Create Private Threads - to create private threads
+      Send Messages in Threads - to send messages in threads
+      Manage Threads - to delete threads when they're done
+      `}); // eslint-disable-line
+    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel}!`);
+    return;
+  }
+
+  const channelTripsitmeta = guildData.channel_tripsitmeta
+    ? await interaction.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel
+    : {} as TextChannel;
+
+  const metaPerms = await checkChannelPermissions(channelTripsitmeta, [
+    'ViewChannel' as PermissionResolvable,
+    'SendMessages' as PermissionResolvable,
+    'SendMessagesInThreads' as PermissionResolvable,
+    // 'CreatePublicThreads' as PermissionResolvable,
+    'CreatePrivateThreads' as PermissionResolvable,
+    // 'ManageMessages' as PermissionResolvable,
+    'ManageThreads' as PermissionResolvable,
+    // 'EmbedLinks' as PermissionResolvable,
+  ]);
+  if (!metaPerms.hasPermission) {
+    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${channelTripsitmeta}!`);
+    const guildOwner = await interaction.guild?.fetchOwner() as GuildMember;
+    await guildOwner.send({
+      content: stripIndents`Missing permissions in ${channelTripsitmeta}!
+        In order to setup the tripsitting feature I need:
+        View Channel - to see the channel
+        Send Messages - to send messages
+        Create Private Threads - to create private threads, when requested through the bot
+        Send Messages in Threads - to send messages in threads
+        Manage Threads - to delete threads when they're done
+        `}); // eslint-disable-line
+    log.error(F, `Missing permission ${metaPerms.permission} in ${tripsitChannel}!`);
+    return;
+  }
+
   const userData = await getUser(target.id, null);
 
   const ticketData = await getOpenTicket(userData.id, null);
@@ -1020,8 +1059,6 @@ export async function tripsitmeButton(
     if (threadHelpUser.id) {
       await interaction.deferReply({ ephemeral: true });
       await needsHelpMode(interaction, target);
-      const guildData = await getGuild((interaction.guild as Guild).id);
-
       let roleTripsitter = {} as Role;
       let roleHelper = {} as Role;
       if (guildData.role_tripsitter) {
