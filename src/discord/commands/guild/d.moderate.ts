@@ -255,7 +255,7 @@ export const mod: SlashCommand = {
     else if (command === 'UN-BAN_EVASION') verb = 'removing ban evasion on';
     else if (command === 'UN-UNDERBAN') verb = 'removing underban on';
 
-    log.debug(F, `Verb: ${verb}`);
+    // log.debug(F, `Verb: ${verb}`);
 
     if (command === 'INFO') {
       log.debug(F, 'INFO command, deferring reply (ephemeral)');

@@ -190,7 +190,13 @@ export async function moderate(
   const targetIsMember = (target as GuildMember).user !== undefined;
   const targetUser = (target as GuildMember).user ?? (target as User);
   const vendorBan = internalNote?.toLowerCase().includes('vendor');
-  log.debug(F, `vendorBan: ${vendorBan}`);
+
+  if (internalNote?.includes('MEP') || description?.includes('MEP')) {
+    return {
+      content: 'You cannot use the word "MEP" here.',
+      ephemeral: true,
+    };
+  }
 
   // log.debug(F, `TargetData: ${JSON.stringify(targetData, null, 2)}`);
 
@@ -641,7 +647,7 @@ export async function moderate(
 
   const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
   const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
-  const greeting = `Hey ${roleModerator}`;
+  // const modPing = `Hey ${roleModerator}`;
   const timeoutDuration = duration ? ` for ${ms(duration, { long: true })}` : '';
   const summary = `${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${(target as GuildMember).displayName ?? (target as User).username}${command === 'TIMEOUT' ? timeoutDuration : ''}!`;
   const anonSummary = `${(target as GuildMember).displayName ?? (target as User).username} was ${embedVariables[command as keyof typeof embedVariables].verb}${command === 'TIMEOUT' ? timeoutDuration : ''}!`;
@@ -649,12 +655,18 @@ export async function moderate(
   let modThread = {} as ThreadChannel;
   if (targetData.mod_thread_id) {
     log.debug(F, `Mod thread id exists: ${targetData.mod_thread_id}`);
-    modThread = await tripsitGuild.channels.fetch(targetData.mod_thread_id) as ThreadChannel;
-    log.debug(F, 'Mod thread exists');
+    try {
+      modThread = await tripsitGuild.channels.fetch(targetData.mod_thread_id) as ThreadChannel;
+      log.debug(F, 'Mod thread exists');
+    } catch (err) {
+      modThread = {} as ThreadChannel;
+      log.debug(F, 'Mod thread does not exist');
+    }
   }
 
-  log.debug(F, `Mod thread: ${JSON.stringify(modThread, null, 2)}`);
+  // log.debug(F, `Mod thread: ${JSON.stringify(modThread, null, 2)}`);
 
+  let newModThread = false;
   if (!modThread.id && !vendorBan) {
     // If the mod thread doesn't exist for whatever reason, maybe it got deleted, make a new one
     // If the user we're banning is a vendor, don't make a new one
@@ -670,15 +682,16 @@ export async function moderate(
     targetData.mod_thread_id = modThread.id;
     await usersUpdate(targetData);
     log.debug(F, 'saved mod thread id to user');
+    newModThread = true;
   }
 
   if (!vendorBan) {
     await modThread.send({
       content: stripIndents`
-      ${command !== 'NOTE' ? greeting : ''}
       ${summary}
       **Reason:** ${internalNote ?? noReason}
       **Note sent to user:** ${(description !== '' && description !== null && targetIsMember) ? description : '*No message sent to user*'}
+      ${command === 'NOTE' && !newModThread ? '' : roleModerator}
       `,
       embeds: [modlogEmbed],
     });
@@ -695,6 +708,7 @@ export async function moderate(
   `;
 
   const response = embedTemplate()
+    .setAuthor(null)
     .setColor(Colors.Yellow)
     .setDescription(desc)
     .setFooter(null);
@@ -706,7 +720,9 @@ export async function moderate(
   // Return a message to the user who started this, confirming the user was acted on
   // log.debug(F, `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
 
-  log.info(F, `response: ${JSON.stringify(desc, null, 2)}`);
+  // log.info(F, `response: ${JSON.stringify(desc, null, 2)}`);
+  // Take the existing description from response and add to it:
+  response.setDescription(`${response.data.description}\nYou can access their thread here: ${modThread}`);
   return { embeds: [response] };
 }
 

@@ -64,7 +64,7 @@ export async function messageCommand(message: Message): Promise<void> {
   // log.debug(F, `message.channel.type !== ChannelType.DM: ${message.channel.type !== ChannelType.DM}`); // eslint-disable-line
   // log.debug(F, `message.guild.id !== env.DISCORD_GUILD_ID: ${message.guild.id} !== ${env.DISCORD_SERVER_ID}`); // eslint-disable-line
 
-  log.debug(F, `message.reference: ${JSON.stringify(message.content, null, 2)}`);
+  // log.debug(F, `message.reference: ${JSON.stringify(message.content, null, 2)}`);
 
   // log.debug(stripIndents`[${PREFIX}] ${displayName} said\
   // ${message.content} in ${(message.channel as GuildTextBasedChannel).name}!`);
