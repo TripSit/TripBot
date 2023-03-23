@@ -69,11 +69,11 @@ describe(slashCommand.data.name, () => {
             value: stripIndents`[Create your own mix of background noise](https://asoftmurmur.com/)`,
             inline: true,
           },
-          // {
-          //   name: 'Draw A 3D Mandala',
-          //   value: stripIndents`[Draw a mandala with different colors in 3d](https://askalice.me/mandala)`,
-          //   inline: true,
-          // },
+          {
+            name: 'Patterns',
+            value: stripIndents`[Check out different patterns!](https://csh.bz/)`,
+            inline: true,
+          },
           {
             name: 'A Way To Go',
             value: stripIndents`[Draw lines and walk through a forest while creating music](http://a-way-to-go.com/)`,
