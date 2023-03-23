@@ -537,6 +537,8 @@ If you do not agree to this policy, do not use this site.
     flags: ['SuppressEmbeds'],
   });
 
+  const talkToModsChannel = await interaction.guild?.channels.fetch(env.CHANNEL_HELPDESK);
+
   await (interaction.channel as TextChannel).send({
     content: `
     \u200B
@@ -549,7 +551,8 @@ If you do not agree to this policy, do not use this site.
     > d. Do not display an offensive profile picture, including pornography of any kind.
     > e. Do not use an offensive nickname or one that could cause anxiety in others, e.g., law enforcement or dictators.
     > f. Do not post content that victimizes, harasses, degrades, or intimidates an individual or group based on race, ethnicity, religion, sexual orientation,  gender identification, drug of choice, level of addiction, mental health status, or other reasons.
-    
+    > g. Do not argue rules in public channels, take it to ${talkToModsChannel}.
+
     > 💊 **3. Do not discuss, request, or post identifying information of websites, online vendors, or real-life people who sell or coordinate the purchase, distribution, or production of substances (legal, clear-net, or otherwise) or cryptocurrencies, i.e., no sourcing.**
     > a. Do not discuss the specifics or go in-depth into the mechanics of online vending.
     > b. Do not show drug packaging to show how a vendor delivered something.
