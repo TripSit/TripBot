@@ -29,9 +29,13 @@ export const dWikipedia: SlashCommand = {
 
     const query = (interaction.options.getString('query') as string);
 
+    const wikiData = await wikipedia(query);
     const embed = embedTemplate()
-      .setTitle(`Definition for ${query}`)
-      .setDescription(await wikipedia(query));
+      .setAuthor(null)
+      .setTitle(wikiData.title)
+      .setURL(wikiData.url)
+      .setThumbnail(wikiData.thumbnail)
+      .setDescription(wikiData.description);
 
     await interaction.editReply({ embeds: [embed] });
 

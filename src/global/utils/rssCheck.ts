@@ -79,7 +79,7 @@ async function checkRss() {
         // log.debug(F, `Error parsing ${feed.url}: ${error}`);
         return;
       }
-      log.debug(F, `mostRecentPost: ${JSON.stringify(mostRecentPost, null, 2)}`);
+      // log.debug(F, `mostRecentPost: ${JSON.stringify(mostRecentPost, null, 2)}`);
 
       if (feed.last_post_id === mostRecentPost.id) return;
 
