@@ -294,7 +294,7 @@ export async function tripsitmeMeta(
     {
       name: `💛│${target.displayName}'s discussion!`,
       autoArchiveDuration: 1440,
-      type: interaction.guild.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread,
+      type: ChannelType.PrivateThread,
       reason: `${actor.displayName} created meta thread for ${target.displayName}`,
     },
   );
@@ -811,26 +811,14 @@ export async function tripSitMe(
     return null;
   }
 
-  if (interaction.guild.premiumTier > 2) {
-    const threadPerms = await checkChannelPermissions(tripsitChannel, [
-      'CreatePrivateThreads' as PermissionResolvable,
-    ]);
-    if (!threadPerms.hasPermission) {
-      const guildOwner = await interaction.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${tripsitChannel} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${channelPerms.permission} in ${tripsitChannel}!`);
-      return null;
-    }
-  } else {
-    const threadPerms = await checkChannelPermissions(tripsitChannel, [
-      'CreatePublicThreads' as PermissionResolvable,
-    ]);
-    if (!threadPerms.hasPermission) {
-      const guildOwner = await interaction.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${tripsitChannel} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${channelPerms.permission} in ${tripsitChannel}!`);
-      return null;
-    }
+  const threadPerms = await checkChannelPermissions(tripsitChannel, [
+    'CreatePrivateThreads' as PermissionResolvable,
+  ]);
+  if (!threadPerms.hasPermission) {
+    const guildOwner = await interaction.guild.fetchOwner();
+    await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${tripsitChannel} so I can run ${F}!` }); // eslint-disable-line
+    log.error(F, `Missing permission ${channelPerms.permission} in ${tripsitChannel}!`);
+    return null;
   }
 
   // Create a new thread in the channel
@@ -838,7 +826,7 @@ export async function tripSitMe(
   const threadHelpUser = await tripsitChannel.threads.create({
     name: `🧡│${target.displayName}'s channel!`,
     autoArchiveDuration: 1440,
-    type: interaction.guild.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread,
+    type: ChannelType.PrivateThread,
     reason: `${target.displayName} requested help`,
   });
 

@@ -110,7 +110,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       const ticketThread = await (i.channel as TextChannel).threads.create({
         name: `🧡│${actor.username}'s ${issueType} issue!`,
         autoArchiveDuration: 1440,
-        type: i.guild.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread,
+        type: ChannelType.PrivateThread,
         reason: `${actor.username} submitted a(n) ${issueType} issue`,
       });
       // log.debug(F, `Created meta-thread ${ticketThread.id}`);

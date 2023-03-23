@@ -680,7 +680,7 @@ export async function modmailCreate(
       }
 
       // Create the thread in the tripsit guild
-      const threadType = channel.guild.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread;
+      const threadType = ChannelType.PrivateThread;
       // log.debug(F, `thread type: ${threadType}!`);
       // log.debug(F, `name: ${modmailVars[issueType].channelTitle}!`);
       // log.debug(F, `reason: ${actor.username} submitted a(n) ${issueType} ticket!!`);
@@ -873,7 +873,7 @@ export async function modmailDMInteraction(message:Message) {
   const userData = await getUser(message.author.id, null);
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}!`);
 
-  if (userData && userData.ticket_ban) {
+  if (userData.ticket_ban) {
     // log.debug(F, `User ${message.author.tag} is banned from creating tickets.`);
     return;
   }
