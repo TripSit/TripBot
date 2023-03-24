@@ -815,7 +815,9 @@ export async function tripSitMe(
       Your issue: ${intro ? `\n${intro}` : noInfo}
 
       Someone from the ${roleTripsitter} ${guildData.role_helper ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
+
       If this is a medical emergency please contact your local emergency services: we do not call EMS on behalf of anyone.
+      
       When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
 
       **Not in an emergency, but still want to talk to a mental health advisor? Warmlines provide non-crisis mental health support and guidance from trained volunteers. https://warmline.org/warmdir.html#directory**
