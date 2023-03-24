@@ -453,6 +453,19 @@ export async function setupCustomReactionRole(
     return;
   }
 
+  const emojiInput = interaction.options.getString('emoji', true);
+  // Double check this is actually an emoji character and not a string
+  const regex = /<a?:.+?:\d{18}>|\p{Extended_Pictographic}/gu;
+  const emoji = emojiInput.match(regex);
+  log.debug(F, `Emoji: ${emoji}`);
+  if (!emoji) {
+    await interaction.reply({
+      content: 'That is not a valid emoji! Please try again.',
+      ephemeral: true,
+    });
+    return;
+  }
+
   const role = interaction.options.getRole('role', true) as Role;
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
@@ -472,7 +485,7 @@ export async function setupCustomReactionRole(
     .then(async i => {
       const { II } = JSON.parse(`{${i.customId}}`);
       if (II !== interaction.id) return;
-      await i.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+      await i.deferReply({ ephemeral: true });
       await (interaction.channel as TextChannel).send({
         embeds: [
           embedTemplate()
@@ -484,7 +497,7 @@ export async function setupCustomReactionRole(
             .addComponents(
               new ButtonBuilder()
                 .setCustomId(`"ID":"RR","RID":"${role.id}","IM":${introMessage},"IC":${introChannel}`)
-                .setEmoji(interaction.options.getString('emoji', true))
+                .setEmoji(emoji[0])
                 .setStyle(ButtonStyle.Primary),
             ),
         ],
