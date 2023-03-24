@@ -177,13 +177,13 @@ export async function moderate(
   description: string | null,
   duration: number | null,
 ):Promise<InteractionReplyOptions> {
-  // log.debug(`${PREFIX}
-  // actor: ${actor.user.tag}
-  // command: ${command}
-  // target: ${target.user.tag}
-  // internalNote: ${internalNote}
-  // description: ${description}
-  // duration: ${duration}`);
+  log.info(F, `
+  actor: ${actor}
+  command: ${command}
+  target: ${target}
+  internalNote: ${internalNote}
+  description: ${description}
+  duration: ${duration}`);
 
   const actorData = await getUser(actor.id, null);
   const targetData = await getUser(target.id, null);
@@ -345,7 +345,7 @@ export async function moderate(
       }
       const targetGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
       // log.debug(F, `Days to delete: ${deleteMessageValue}`);
-      // log.debug(F, `target: ${target.user.tag} | deleteMessageValue: ${deleteMessageValue} | internalNote: ${internalNote ?? noReason}`);
+      log.info(F, `target: ${targetUser.id} | deleteMessageValue: ${deleteMessageValue} | internalNote: ${internalNote ?? noReason}`);
       targetGuild.bans.create(targetUser, { deleteMessageSeconds: deleteMessageValue / 1000, reason: internalNote ?? noReason });
     } catch (err) {
       log.error(F, `Error: ${err}`);
