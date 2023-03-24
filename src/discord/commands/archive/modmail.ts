@@ -724,7 +724,7 @@ export async function modmailCreate(
           ` : ''}
 
           ${roleHelper.name} and ${roleTripsitter.name} will be with you as soon as they're available!
-          **If this is a medical emergency please contact your local /EMS: we do not call EMS on behalf of anyone.**
+          **If this is a medical emergency please contact your local emergency services: we do not call EMS on behalf of anyone.**
           If you just would like someone to talk to, check out the warmline directory: https://warmline.org/warmdir.html#directory
 
           When you're feeling better you can use the "I'm Good" button to let the team know you're okay!
