@@ -65,7 +65,7 @@ export const messageDelete: MessageDeleteEvent = {
 
     // Perform a coherence check to make sure that there's *something*
     let executorUser = {} as User;
-    let content = 'No content';
+    let content = 'No content'; // eslint-disable-line
     let { author } = message;
     log.debug(F, `Author: ${JSON.stringify(author, null, 2)}`);
     log.debug(F, `Target: ${JSON.stringify(deletionLog?.target, null, 2)}`);
@@ -103,7 +103,7 @@ export const messageDelete: MessageDeleteEvent = {
     log.debug(F, `Executor Member: ${JSON.stringify(executorMember, null, 2)}, Content: ${content}`);
 
     const authorName = author ? author.username : 'Unknown Author';
-    log.debug(F, `Author Name: ${authorName}`);
+    // log.debug(F, `Author Name: ${authorName}`);
     // const channelName = message.channel ? (message.channel as TextChannel).name : 'Unknown';
 
     // // const channel = await client.channels.fetch((deletionLog?.extra as { channel: string, count: number }).channel) as TextChannel;
@@ -113,19 +113,33 @@ export const messageDelete: MessageDeleteEvent = {
     //   content = message.content;
     // }
     const embed = embedTemplate()
-      .setDescription(`**${executorMember.id ?? 'Someone'} deleted message in ${message.channel}**`)
+      .setDescription(`**${executorMember ?? 'Someone'} deleted message in ${message.channel}**`)
       .setAuthor(null)
       .setFooter(null)
       .setColor(Colors.Red);
+
+    log.debug(F, `Author Name: ${authorName}, Content: ${content}`);
 
     if (authorName === 'Unknown Author' && content === 'No content') {
       embed.addFields([
         { name: authorName, value: 'Message not found in cache', inline: true },
       ]);
-    } else {
+    }
+
+    log.debug(F, `content.length: ${content.length}`);
+    if (content.length > 0 && content !== 'No content') {
       embed.addFields([
         { name: authorName, value: content.slice(0, 1023), inline: true },
       ]);
+    }
+
+    if (message.attachments.size > 0) {
+      message.attachments.forEach(async attachment => {
+        embed.setThumbnail(`${attachment.proxyURL}`);
+        // const file = new AttachmentBuilder(attachment.proxyURL);
+        await msglogChannel.send({ embeds: [embed] });
+      });
+      return;
     }
 
     await msglogChannel.send({ embeds: [embed] });
