@@ -1,12 +1,12 @@
 const F = f(__filename);
 
-export default ems;
+export default crisis;
 
 /**
  * Information about contacting the team!
  * @return {any} an object with information about the bot
  */
-export async function ems():Promise<HelpResource[]> {
+export async function crisis():Promise<HelpResource[]> {
   const response = [
     {
       name: 'Poison Control',

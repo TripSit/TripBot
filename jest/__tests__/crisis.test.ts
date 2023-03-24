@@ -2,10 +2,10 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dEms } from '../../src/discord/commands/global/d.ems';
+import { dCrisis } from '../../src/discord/commands/global/d.crisis';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
-const slashCommand = dEms;
+const slashCommand = dCrisis;
 
 const authorInfo = {
   iconURL: 'https://i.gyazo.com/b48b08a853fefaafb6393837eec1a501.png',

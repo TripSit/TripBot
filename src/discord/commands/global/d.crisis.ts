@@ -4,22 +4,22 @@ import {
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { ems } from '../../../global/commands/g.ems';
+import { crisis } from '../../../global/commands/g.crisis';
 import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
-export default dEms;
+export default dCrisis;
 
-export const dEms: SlashCommand = {
+export const dCrisis: SlashCommand = {
   data: new SlashCommandBuilder()
-    .setName('ems')
+    .setName('crisis')
     .setDescription('Information that may be helpful in a serious situation.')
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
-    const emsInfo = await ems();
+    const emsInfo = await crisis();
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const embed = embedTemplate();
 
