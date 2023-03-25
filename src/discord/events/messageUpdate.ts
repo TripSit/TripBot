@@ -22,7 +22,7 @@ export const messageUpdate: MessageUpdateEvent = {
     // log.info(F, `Message in ${newMessage.channel} was updated.`);
 
     // log.debug(F, `oldMessage: ${JSON.stringify(oldMessage, null, 2)}`);
-    log.debug(F, `newMessage: ${JSON.stringify(newMessage, null, 2)}`);
+    // log.debug(F, `newMessage: ${JSON.stringify(newMessage, null, 2)}`);
 
     // Don't run when bots update messages
     if (!newMessage.author) return;
