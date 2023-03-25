@@ -341,7 +341,10 @@ export async function tripsitmeMeta(
   await metaChannel.send({
     embeds: [embedTripsitter],
     components: [endSession],
-    allowedMentions: {},
+    allowedMentions: {
+      // parse: showMentions,
+      parse: ['users', 'roles'] as MessageMentionTypes[],
+    },
   });
 
   await interaction.editReply({ content: 'Donezo!' });
@@ -838,7 +841,7 @@ export async function tripSitMe(
     components: [row],
     allowedMentions: {
       // parse: showMentions,
-      parse: ['roles'] as MessageMentionTypes[],
+      parse: ['users', 'roles'] as MessageMentionTypes[],
     },
     flags: ['SuppressEmbeds'],
   }).then(async message => {
@@ -899,10 +902,12 @@ export async function tripSitMe(
     );
 
   await channelTripsitmeta.send({
-    content: 'testing',
     embeds: [embedTripsitter],
     components: [endSession],
-    allowedMentions: {},
+    allowedMentions: {
+      // parse: showMentions,
+      parse: ['users', 'roles'] as MessageMentionTypes[],
+    },
   });
   // log.debug(F, `Sent message to ${channelTripsitmeta.name} (${channelTripsitmeta.id})`);
 
@@ -1117,7 +1122,7 @@ export async function tripsitmeButton(
         content: helpMessage,
         allowedMentions: {
           // parse: showMentions,
-          parse: ['roles'],
+          parse: ['users', 'roles'] as MessageMentionTypes[],
         },
       });
       log.debug(F, 'Pinged user in help thread');
@@ -1136,7 +1141,7 @@ export async function tripsitmeButton(
           content: metaMessage,
           allowedMentions: {
             // parse: showMentions,
-            parse: ['roles'],
+            parse: ['users', 'roles'] as MessageMentionTypes[],
           },
         });
         log.debug(F, 'Pinged team in meta thread!');
