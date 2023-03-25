@@ -6,7 +6,8 @@ const isProd = process.env.NODE_ENV === 'production';
 
 export const env = {
   NODE_ENV: isProd ? 'production' : 'development',
-  DEBUG_LEVEL: isProd ? 'info' : 'debug',
+  // DEBUG_LEVEL: isProd ? 'info' : 'debug',
+  DEBUG_LEVEL: 'debug',
   DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,
   DISCORD_OWNER_ID: process.env.DISCORD_OWNER_ID,
   DISCORD_GUILD_ID: process.env.DISCORD_GUILD_ID,
