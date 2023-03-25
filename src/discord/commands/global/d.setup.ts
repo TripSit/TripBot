@@ -529,10 +529,10 @@ Thanks for reading, stay safe!
 export async function rules(interaction:ChatInputCommandInteraction) {
   await interaction.deferReply({ ephemeral: true });
   await (interaction.channel as TextChannel).send({
-    content: `
+    content: stripIndents`
 **By using and remaining connected to this discord you signify your agreement of TripSit's full terms and conditions: https://github.com/TripSit/rules/blob/main/termsofservice.md **
 If you do not agree to this policy, do not use this site.
- \n 
+\u200B
  `,
     flags: ['SuppressEmbeds'],
   });
@@ -540,8 +540,7 @@ If you do not agree to this policy, do not use this site.
   const talkToModsChannel = await interaction.guild?.channels.fetch(env.CHANNEL_HELPDESK);
 
   await (interaction.channel as TextChannel).send({
-    content: `
-    \u200B
+    content: stripIndents`
     > 🔞 **1. Do not connect to TripSit or use our services if you are under eighteen.**
 
     > 💞 **2. Do not use TripSit for any purpose or in any manner which could impair any other party's use or enjoyment of this site.**
@@ -556,13 +555,13 @@ If you do not agree to this policy, do not use this site.
     > 💊 **3. Do not discuss, request, or post identifying information of websites, online vendors, or real-life people who sell or coordinate the purchase, distribution, or production of substances (legal, clear-net, or otherwise) or cryptocurrencies, i.e., no sourcing.**
     > a. Do not discuss the specifics or go in-depth into the mechanics of online vending.
     > b. Do not show drug packaging to show how a vendor delivered something.
+    \u200B
     `,
     flags: ['SuppressEmbeds'],
   });
 
   await (interaction.channel as TextChannel).send({
-    content: `
-    \u200B
+    content: stripIndents`
     > 💀 **4. Do not post any content that encourages, promotes, or signifies the intent to engage in harmful practices.**
     > a. Do not encourage substance use. Discourage drug dosages, drug combinations, or any drug experimentation which could be reliably considered unsafe.
     > b. Do not post pictures or videos of drug consumption that glorify substance use, eg, “stash pics” or excessive dosages.
@@ -579,13 +578,13 @@ If you do not agree to this policy, do not use this site.
     > b. Do not post images of people expecting privacy or being unable to consent (children, intoxicated).
     > c. Do not disseminate content originally posted in any team-only areas.
     > d. Do not use network monitoring or discovery software to determine the site architecture or extract information about usage or users.
+    \u200B
     `,
     flags: ['SuppressEmbeds'],
   });
 
   await (interaction.channel as TextChannel).send({
-    content: `
-     \u200B
+    content: stripIndents`
     > 🔨 **8. Do not post content that bypasses moderation actions, i.e., ban evasion.**
     > a. Do not make multiple/new accounts, change your IP, or do anything else to get around the action.
     
