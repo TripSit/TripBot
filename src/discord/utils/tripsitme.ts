@@ -15,7 +15,7 @@ import {
   MessageReaction,
   User,
   // ChatInputCommandInteraction,
-  PermissionsBitField,
+  // PermissionsBitField,
   // TextChannel,
   // MessageFlags,
   MessageMentionTypes,
@@ -147,7 +147,7 @@ export async function needsHelpMode(
     && !role.name.includes('@everyone')
     && role.id !== roleNeedshelp.id
     && role.comparePositionTo(myRole)) {
-      // log.debug(F, `Removing role ${role.name} from ${target.displayName}`);
+      log.debug(F, `Removing role ${role.name} from ${target.displayName}`);
       try {
         await target.roles.remove(role);
       } catch (err) {
@@ -164,7 +164,7 @@ export async function needsHelpMode(
 
   // Add the needsHelp role to the target
   try {
-    // log.debug(F, `Adding role ${roleNeedshelp.name} to ${target.displayName}`);
+    log.debug(F, `Adding role ${roleNeedshelp.name} to ${target.displayName}`);
     await target.roles.add(roleNeedshelp);
   } catch (err) {
     const guildOwner = await interaction.guild?.fetchOwner();
@@ -174,6 +174,7 @@ export async function needsHelpMode(
           If there's any questions please contact Moonbear#1024 on TripSit!` }); // eslint-disable-line
     log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}! Sent the guild owner a DM!`);
   }
+  log.debug(F, 'Finished needshelp mode');
 }
 
 /**
@@ -463,7 +464,7 @@ export async function tripsitmeClose(
   const ticketData = await getOpenTicket(userData.id, null);
   const guildData = await getGuild(interaction.guild.id);
 
-  // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+  log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
   if (!ticketData) {
     const rejectMessage = `Hey ${interaction.member}, ${target.displayName} not have an open session!`;
@@ -726,10 +727,17 @@ export async function tripSitMe(
 
   // Lookup guild information for variables
   if (!interaction.guild) {
-    await interaction.editReply({ content: 'This command can only be used in a server!' });
+    // log.debug(F, `no guild!`);
+    await interaction.editReply(guildOnly);
     return null;
   }
-  const actor = interaction.member;
+  if (!interaction.member) {
+    // log.debug(F, `no member!`);
+    await interaction.editReply(memberOnly);
+    return null;
+  }
+
+  // const actor = interaction.member;
   const guildData = await getGuild(interaction.guild.id);
 
   // let backupMessage = 'Hey ';
@@ -748,17 +756,9 @@ export async function tripSitMe(
   if (guildData.channel_tripsitmeta) {
     channelTripsitmeta = await interaction.guild.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
   }
-
-  if (!interaction.guild) {
-    // log.debug(F, `no guild!`);
-    await interaction.editReply(guildOnly);
-    return null;
-  }
-  if (!interaction.member) {
-    // log.debug(F, `no member!`);
-    await interaction.editReply(memberOnly);
-    return null;
-  }
+  log.debug(F, `roleTripsitter: ${roleTripsitter.name} (${roleTripsitter.id})`);
+  log.debug(F, `roleHelper: ${roleHelper.name} (${roleHelper.id})`);
+  log.debug(F, `channelTripsitmeta: ${channelTripsitmeta.name} (${channelTripsitmeta.id})`);
 
   // log.debug(F, `submitted with |
   //   user: ${interaction.user.tag} (${interaction.user.id})
@@ -771,8 +771,8 @@ export async function tripSitMe(
   // `);
 
   // Determine if this command was initialized by an Admin (for testing)
-  const actorIsAdmin = (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
-  const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
+  // const actorIsAdmin = (actor as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator);
+  // const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
   // log.debug(F, `actorIsAdmin: ${actorIsAdmin}`);
   // log.debug(F, `showMentions: ${showMentions}`);
 
@@ -805,6 +805,7 @@ export async function tripSitMe(
     type: ChannelType.PrivateThread,
     reason: `${target.displayName} requested help`,
   });
+  log.debug(F, `threadHelpUser: ${threadHelpUser.name} (${threadHelpUser.id})`);
 
   const noInfo = '\n*No info given*';
   const firstMessage = stripIndents`
@@ -836,11 +837,22 @@ export async function tripSitMe(
     content: firstMessage,
     components: [row],
     allowedMentions: {
-      parse: showMentions,
+      // parse: showMentions,
+      parse: ['roles'] as MessageMentionTypes[],
     },
     flags: ['SuppressEmbeds'],
-  }).then(message => {
-    message.pin();
+  }).then(async message => {
+    log.debug(F, 'Pinning message');
+    try {
+      await message.pin();
+    } catch (error) {
+      log.error(F, `Failed to pin message: ${error}`);
+      const guildOwner = await interaction.guild?.fetchOwner();
+      await guildOwner?.send({
+        content: stripIndents`There was an error pinning a message in ${threadHelpUser.name}!
+          Please make sure I have the Manage Messages permission in this room!
+          If there's any questions please contact Moonbear#1024 on TripSit!` }); // eslint-disable-line
+    }
   });
 
   // log.debug(F, `Sent intro message to ${threadHelpUser.name} ${threadHelpUser.id}`);
@@ -887,6 +899,7 @@ export async function tripSitMe(
     );
 
   await channelTripsitmeta.send({
+    content: 'testing',
     embeds: [embedTripsitter],
     components: [endSession],
     allowedMentions: {},
@@ -938,8 +951,8 @@ export async function tripsitmeButton(
 
   // log.debug(F, `target: ${JSON.stringify(target, null, 2)}`);
 
-  const actorIsAdmin = target.permissions.has(PermissionsBitField.Flags.Administrator);
-  const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
+  // const actorIsAdmin = target.permissions.has(PermissionsBitField.Flags.Administrator);
+  // const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
 
   // const guildData = await getGuild(interaction.guild.id) as DiscordGuilds;
 
@@ -957,22 +970,22 @@ export async function tripsitmeButton(
   // If this user is a developer then this is a test run and ignore this check,
   // but we'll change the output down below to make it clear this is a test.
   let targetIsTeamMember = false;
-  if (!actorIsAdmin) {
-    target.roles.cache.forEach(async role => {
-      if (teamRoles.includes(role.id)) {
-        targetIsTeamMember = true;
-      }
-    });
-    if (targetIsTeamMember) {
-      // log.debug(F, `Target is a team member!`);
-      const teamMessage = stripIndents`You are a member of the team and cannot be publicly helped!`;
-      const embed = embedTemplate()
-        .setColor(Colors.DarkBlue)
-        .setDescription(teamMessage);
-      await interaction.reply({ embeds: [embed] });
-      return;
+  // if (!actorIsAdmin) {
+  target.roles.cache.forEach(async role => {
+    if (teamRoles.includes(role.id)) {
+      targetIsTeamMember = true;
     }
+  });
+  if (targetIsTeamMember) {
+    // log.debug(F, `Target is a team member!`);
+    const teamMessage = stripIndents`You are a member of the team and cannot be publicly helped!`;
+    const embed = embedTemplate()
+      .setColor(Colors.DarkBlue)
+      .setDescription(teamMessage);
+    await interaction.reply({ embeds: [embed] });
+    return;
   }
+  // }
 
   const guildData = await getGuild(interaction.guild?.id as string);
 
@@ -1058,9 +1071,12 @@ export async function tripsitmeButton(
     // log.debug(F, `Ticket: ${JSON.stringify(ticketData, null, 2)}`);
     }
 
+    log.debug(F, `ThreadHelpUser: ${threadHelpUser.name}`);
+
     if (threadHelpUser.id) {
       await interaction.deferReply({ ephemeral: true });
       await needsHelpMode(interaction, target);
+      log.debug(F, 'Added needshelp to user');
       let roleTripsitter = {} as Role;
       let roleHelper = {} as Role;
       if (guildData.role_tripsitter) {
@@ -1069,6 +1085,8 @@ export async function tripsitmeButton(
       if (guildData.role_helper) {
         roleHelper = await interaction.guild?.roles.fetch(guildData.role_helper) as Role;
       }
+      log.debug(F, `Helper Role : ${roleHelper.name}`);
+      log.debug(F, `Tripsitter Role : ${roleTripsitter.name}`);
 
       // Remind the user that they have a channel open
       // const recipient = '' as string;
@@ -1079,6 +1097,7 @@ export async function tripsitmeButton(
   
         Check your channel list or click '${threadHelpUser.toString()} to get help!`);
       await interaction.editReply({ embeds: [embed] });
+      log.debug(F, 'Told user they already have an open channel');
       // log.debug(F, `Rejected need for help`);
 
       // Check if the created_by is in the last 5 minutes
@@ -1097,10 +1116,11 @@ export async function tripsitmeButton(
       await threadHelpUser.send({
         content: helpMessage,
         allowedMentions: {
-          parse: showMentions,
+          // parse: showMentions,
+          parse: ['roles'],
         },
       });
-      // log.debug(F, `Pinged user in help thread`);
+      log.debug(F, 'Pinged user in help thread');
 
       if (ticketData.meta_thread_id) {
         let metaMessage = '';
@@ -1115,10 +1135,11 @@ export async function tripsitmeButton(
         await metaThread.send({
           content: metaMessage,
           allowedMentions: {
-            parse: showMentions,
+            // parse: showMentions,
+            parse: ['roles'],
           },
         });
-        // log.debug(F, `Pinged team in meta thread!`);
+        log.debug(F, 'Pinged team in meta thread!');
       }
       return;
     }

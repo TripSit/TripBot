@@ -23,7 +23,7 @@ import { stripIndent, stripIndents } from 'common-tags';
 import { getGuild, guildUpdate } from '../../../global/utils/knex';
 import { startLog } from '../../utils/startLog';
 import { SlashCommand } from '../../@types/commandDef';
-import { checkChannelPermissions } from '../../utils/checkPermissions';
+import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 // import { DiscordGuilds } from '../../../global/@types/database';
 
 const F = f(__filename);
@@ -175,6 +175,24 @@ export async function tripsit(
   if (!interaction.guild) return;
   if (!interaction.channel) return;
   if (interaction.channel.type !== ChannelType.GuildText) return;
+
+  const guildPerms = await checkGuildPermissions(interaction.guild, [
+    'ManageRoles' as PermissionResolvable,
+  ]);
+  if (!guildPerms.hasPermission) {
+    log.error(F, `Missing TS guild permission ${guildPerms.permission} in ${interaction.guild}!`);
+    await interaction.reply({
+      content: stripIndents`Missing ${guildPerms.permission} permission in ${interaction.guild}!
+    In order to setup the tripsitting feature I need:
+    Manage Roles - In order to take away roles and give them back
+    Part of the tripsitting process is to remove all of a user's roles so they can only see the tripsitting channel.
+    I then give them back their roles once they're done with the session.
+    My role needs to be higher than all other roles you want removed, so put moderators and admins above me in the list!`,
+      ephemeral: true,
+    });
+    return;
+  }
+
   // Can't defer cuz there's a modal
   // await interaction.deferReply({ ephemeral: true });
   const channelPerms = await checkChannelPermissions(interaction.channel, [
@@ -183,21 +201,24 @@ export async function tripsit(
     'SendMessagesInThreads' as PermissionResolvable,
     // 'CreatePublicThreads' as PermissionResolvable,
     'CreatePrivateThreads' as PermissionResolvable,
-    // 'ManageMessages' as PermissionResolvable,
+    'ManageMessages' as PermissionResolvable,
     'ManageThreads' as PermissionResolvable,
     // 'EmbedLinks' as PermissionResolvable,
   ]);
   if (!channelPerms.hasPermission) {
     log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${interaction.channel}!`);
-    await interaction.editReply({
-      content: stripIndents`Missing permissions in ${interaction.channel}!
+    await interaction.reply({
+      content: stripIndents`Missing ${channelPerms.permission} permission in ${interaction.channel}!
     In order to setup the tripsitting feature I need:
     View Channel - to see the channel
     Send Messages - to send messages
     Create Private Threads - to create private threads
     Send Messages in Threads - to send messages in threads
     Manage Threads - to delete threads when they're done
-    `}); // eslint-disable-line
+    Manage Messages - to pin the "im good" message to the top of the thread
+    `,
+      ephemeral: true,
+  }); // eslint-disable-line
     return;
   }
 
@@ -215,15 +236,17 @@ export async function tripsit(
   ]);
   if (!metaPerms.hasPermission) {
     log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${metaChannel}!`);
-    await interaction.editReply({
-      content: stripIndents`Missing permissions in ${metaChannel}!
+    await interaction.reply({
+      content: stripIndents`Missing ${metaPerms.permission} permission in ${metaChannel}!
     In order to setup the tripsitting feature I need:
     View Channel - to see the channel
     Send Messages - to send messages
     Create Private Threads - to create private threads, when requested through the bot
     Send Messages in Threads - to send messages in threads
     Manage Threads - to delete threads when they're done
-    `}); // eslint-disable-line
+    `,
+      ephemeral: true,
+  }); // eslint-disable-line
     return;
   }
 
