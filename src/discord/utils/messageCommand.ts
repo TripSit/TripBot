@@ -194,7 +194,8 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
         await message.channel.send(`Uploaded ${stickerList.join(' ')} to ${message.guild.name}!`); // eslint-disable-line
       }
     } else if (message.author.id === env.DISCORD_OWNER_ID) {
-      if (message.content.toLowerCase().includes('initiate') && message.content.toLowerCase().includes('phoenix')) {
+      // Just for fun, stuff that only moonbear can trigger
+      if (message.content.toLowerCase().includes('phoenix')) {
         const phoenixMessage = await message.channel.send('Phoenix protocol initiated... ');
         await sleep(1000);
         await phoenixMessage.edit('Phoenix protocol initiated... 35%');
@@ -204,18 +205,17 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
         await phoenixMessage.edit(`Phoenix protocol deployed. Good luck ${message.member?.displayName} <3`);
         await sleep(3000);
         await phoenixMessage.delete();
+        await message.delete();
         return;
       }
 
+      // Look for the ping and then take everything after that
       const action = message.content.split(`<@${client.user?.id}>`)[1];
-      log.debug(F, `action: ${action}`);
-
+      if (action) {
       // Replace all instances of "your" with "my", make the action first person
-      const actionFirstPerson = action.replace(/your/g, 'my');
-      log.debug(F, `actionFirstPerson: ${actionFirstPerson}`);
-
-      // If the user is the bot owner, do whatever they say
+        const actionFirstPerson = action.replace(/your/g, 'my');
       await message.channel.send(stripIndents`Sure thing ${displayName}! I will${actionFirstPerson}!`); // eslint-disable-line
+      }
     } else {
       await message.react('<:ts_heart:1085657783069851658>');
     }
