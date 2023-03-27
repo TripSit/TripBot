@@ -23,7 +23,7 @@ export const dCrisis: SlashCommand = {
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const embed = embedTemplate();
 
-    embed.setTitle('EMS Information');
+    embed.setTitle('Crisis Information');
     // for (const entry of emsInfo) {
     emsInfo.forEach(entry => {
       const country = `(${entry.country})`;
