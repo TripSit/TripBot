@@ -33,7 +33,8 @@ process.on('unhandledRejection', async (error: Error) => {
     const channel = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
 
     if ((error as any).code === 10062) {
-      await channel.send('I just got an interaction error, this is still a problem');
+      await channel.send(`I just got an "Unknown interaction" error, this is still a problem!
+      Check out https://github.com/discord/discord-api-docs/issues/5558 for details`);
       return;
     }
 
