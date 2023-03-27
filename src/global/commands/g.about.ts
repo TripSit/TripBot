@@ -42,7 +42,7 @@ export async function about():Promise<AboutInfo> {
       `,
     credits: stripIndents`
         The bot is built using the [Discord.js library](https://discordjs.guide/)
-        A majority of this code is original, and is available on [GitHub](https://github.com/tripsit/tripsit-discord-bot)
+        A majority of this code is original, and is available on [GitHub](https://github.com/TripSit/TripBot)
         The data is sourced from the [TripSit and Psychonaut Wiki API combined](https://github.com/NoahSaso/merge-psychonautwiki-tripsit-data)
         The DXM calculator comes from [Tripsit](https://github.com/TripSit/DXM-Calculator)
         The Benzo calculator comes from [Tripsit](https://github.com/TripSit/Benzo-Calculator)

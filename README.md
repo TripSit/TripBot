@@ -24,7 +24,7 @@ Use the tripsit-dev repo to do all this automatically!
 - If you don't use these credentials, change the env.config file
 
 ### Setup Tripbot
-1) Clone tripsit-discord-bot
+1) Clone TripBot
 2) Copy env.example to .env and fill in these fields. You only /need/ the discord stuff
 
 ### Run production
