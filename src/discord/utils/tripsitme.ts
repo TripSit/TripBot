@@ -618,7 +618,7 @@ export async function tripsitmeResolve(
 
   const ticketData = await getOpenTicket(userData.id, null);
 
-  // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+  log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
   if (ticketData === undefined || Object.entries(ticketData).length === 0) {
     const rejectMessage = `Hey ${interaction.member}, you do not have an open session!`;
