@@ -24,7 +24,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TripSit/tripsit-discord-bot.git"
+    "url": "git+https://github.com/TripSit/TripBot"
   },
   "keywords": [
     "Harm",
@@ -40,9 +40,9 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/TripSit/tripsit-discord-bot/issues"
+    "url": "https://github.com/TripSit/TripBot/issues"
   },
-  "homepage": "https://github.com/TripSit/tripsit-discord-bot#readme",
+  "homepage": "https://github.com/TripSit/TripBot#readme",
   "dependencies": {
     "@discordjs/rest": "^1.6.0",
     "@discordjs/voice": "^0.15.0",

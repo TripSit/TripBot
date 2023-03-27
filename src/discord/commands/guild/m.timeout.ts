@@ -56,7 +56,6 @@ export const mTimeout: MessageCommand = {
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
         await i.deferReply({ ephemeral: true });
-
         const duration = i.fields.getTextInputValue('timeoutDuration')
           ? await parseDuration(i.fields.getTextInputValue('timeoutDuration'))
           : 604800000;
@@ -69,7 +68,7 @@ export const mTimeout: MessageCommand = {
         await i.editReply(await moderate(
           interaction.member as GuildMember,
           'TIMEOUT' as UserActionType,
-          interaction.targetMessage.member as GuildMember,
+          interaction.targetMessage.member ?? interaction.targetMessage.author,
           stripIndents`
             > ${i.fields.getTextInputValue('internalNote')}
         

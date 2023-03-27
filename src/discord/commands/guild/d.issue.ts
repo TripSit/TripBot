@@ -110,7 +110,7 @@ export const dIssue: SlashCommand = {
               .setColor(0x0099ff)
               .setTitle('Issue created!')
               .setDescription(stripIndents`\
-                  Issue #${results.data.number} created on TripSit/tripsit-discord-bot
+                  Issue #${results.data.number} created on TripSit/TripBot!
                   Click here to view: ${results.data.html_url}`),
           ],
         });

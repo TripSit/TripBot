@@ -73,7 +73,7 @@ export const dHelp: SlashCommand = {
     hrEmbed.addFields({ name: 'Warmline', value: getDesc('warmline') ?? '', inline: true });
     hrEmbed.addFields({ name: 'KIPP', value: getDesc('kipp') ?? '', inline: true });
     hrEmbed.addFields({ name: 'Hydrate', value: getDesc('hydrate') ?? '', inline: true });
-    hrEmbed.addFields({ name: 'EMS', value: getDesc('ems') ?? '', inline: true });
+    hrEmbed.addFields({ name: 'Crisis', value: getDesc('crisis') ?? '', inline: true });
 
     const funEmbed = embedTemplate();
     funEmbed.setTitle('Other Modules');

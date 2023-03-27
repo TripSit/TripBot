@@ -26,7 +26,7 @@ export async function issue(
       const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
       await octokit.rest.issues.create({
         owner: 'TripSit',
-        repo: 'tripsit-discord-bot',
+        repo: 'TripBot',
         title,
         body,
       })
@@ -34,7 +34,7 @@ export async function issue(
           const issueNumber = response.data.number;
           octokit.rest.issues.addLabels({
             owner: 'TripSit',
-            repo: 'tripsit-discord-bot',
+            repo: 'TripBot',
             issue_number: issueNumber,
             labels,
           });

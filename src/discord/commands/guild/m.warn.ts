@@ -52,7 +52,7 @@ export const mWarn: MessageCommand = {
         await i.editReply(await moderate(
           interaction.member as GuildMember,
           'WARNING' as UserActionType,
-          interaction.targetMessage.member as GuildMember,
+          interaction.targetMessage.member ?? interaction.targetMessage.author,
           stripIndents`
         ${i.fields.getTextInputValue('internalNote')}
     
