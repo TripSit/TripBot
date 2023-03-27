@@ -81,9 +81,10 @@ export const ready: ReadyEvent = {
         log.info(F, `Discord finished booting in ${bootDuration}s!`);
         if (env.NODE_ENV !== 'development') {
           const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
-          const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
-          const tripbotDevRole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
-          await botlog.send(`Hey ${tripbotDevRole}, bot has restart! Booted in ${bootDuration} seconds`);
+          const botOwner = await client.users.fetch(env.DISCORD_OWNER_ID);
+          // const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
+          // const tripbotDevRole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
+          await botlog.send(`Hey ${botOwner}, bot has restart! Booted in ${bootDuration} seconds`);
         }
       });
     });

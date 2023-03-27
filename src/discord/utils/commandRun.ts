@@ -45,7 +45,7 @@ export async function commandRun(
       // log.debug(F, `ERROR: ${JSON.stringify(error, null, 2)}`);
       if ((error as any).code === 10062) {
         await botlog.send(`I just got an "Unknown interaction" error, this is still a problem!
-        Check out https://github.com/discord/discord-api-docs/issues/5558 for details`);
+        Check out <https://github.com/discord/discord-api-docs/issues/5558> for details`);
         return;
       }
       if (!interaction.replied) {
