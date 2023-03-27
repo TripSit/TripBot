@@ -31,7 +31,7 @@ describe(slashCommand.data.name, () => {
         color: Colors.Purple,
         author: authorInfo,
         footer: footerInfo,
-        title: 'EMS Information',
+        title: 'Crisis Information',
         fields: [
           {
             name: 'Poison Control (USA)',

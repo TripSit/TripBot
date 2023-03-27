@@ -109,7 +109,7 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: 'EMS',
+            name: 'Crisis Information',
             value: expect.any(String),
             inline: true,
           },
