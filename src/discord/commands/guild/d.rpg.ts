@@ -1574,7 +1574,7 @@ export async function rpgHome(
 
   let defaultOption = '' as string;
   // Get the equipped background
-  const equippedBackground = inventoryData.find(item => item.equipped === true);
+  const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
   // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
   if (equippedBackground) {
     defaultOption = equippedBackground.value;
