@@ -49,9 +49,9 @@ export const dReport: SlashCommand = {
     const targetString = interaction.options.getString('target', true);
     const reason = interaction.options.getString('reason', true);
 
-    const target = await getDiscordMember(interaction, targetString);
+    const targets = await getDiscordMember(interaction, targetString);
 
-    if (!target) {
+    if (!targets) {
       const embed = embedTemplate()
         .setColor(Colors.Red)
         .setTitle('Could not find that member/user!')
@@ -69,6 +69,27 @@ export const dReport: SlashCommand = {
       });
       return false;
     }
+
+    if (targets.length > 1) {
+      const embed = embedTemplate()
+        .setColor(Colors.Red)
+        .setTitle('Found more than one user with with that value!')
+        .setDescription(stripIndents`
+        "${targetString}" returned ${targets.length} results!
+
+        Be more specific:
+        > **Mention:** @Moonbear
+        > **Tag:** moonbear#1234
+        > **ID:** 9876581237
+        > **Nickname:** MoonBear`);
+      await interaction.reply({
+        embeds: [embed],
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    const [target] = targets;
 
     const result = await moderate(
       interaction.member as GuildMember,

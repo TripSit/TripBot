@@ -127,7 +127,30 @@ export const mod: SlashCommand = {
 
     const actor = interaction.member as GuildMember;
     const targetString = interaction.options.getString('target', true);
-    let target = await getDiscordMember(interaction, targetString) as GuildMember | User;
+    const targets = await getDiscordMember(interaction, targetString) as GuildMember[];
+
+    if (targets.length > 1) {
+      const embed = embedTemplate()
+        .setColor(Colors.Red)
+        .setTitle('Found more than one user with with that value!')
+        .setDescription(stripIndents`
+        "${targetString}" returned ${targets.length} results!
+
+        Be more specific:
+        > **Mention:** @Moonbear
+        > **Tag:** moonbear#1234
+        > **ID:** 9876581237
+        > **Nickname:** MoonBear`);
+      await interaction.reply({
+        embeds: [embed],
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    // This needs to also be a User because we can ban users who are not in the guild
+    let target = targets[0] as GuildMember | User;
+
     let command = interaction.options.getSubcommand().toUpperCase() as ModAction;
     if (command === 'BAN') {
       command = interaction.options.getString('type', true) as ModAction;
