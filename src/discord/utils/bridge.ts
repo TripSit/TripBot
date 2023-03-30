@@ -52,8 +52,6 @@ export async function bridgeMessage(message: Message): Promise<void> {
   // This will get us a list of channels linked to that internal channel.
   // For each entry, use the webhook to send a message to that external channel
 
-  log.debug(F, 'Checking if message should be sent through bridge');
-
   // log.debug(F, `Bridge DB: ${JSON.stringify(bridgeDb, null, 2)}`);
 
   // Internal message
