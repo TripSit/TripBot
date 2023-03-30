@@ -9,22 +9,21 @@ import {
   TextInputBuilder,
   ModalSubmitInteraction,
   PermissionResolvable,
-  StringSelectMenuBuilder,
   Guild,
   Colors,
   EmbedBuilder,
-  // InteractionEditReplyOptions,
-  // GuildMember,
 } from 'discord.js';
 import {
   ButtonStyle, ChannelType, TextInputStyle,
 } from 'discord-api-types/v10';
-import { stripIndent, stripIndents } from 'common-tags';
+import { stripIndents } from 'common-tags';
 import { getGuild, guildUpdate } from '../../../global/utils/knex';
 import { startLog } from '../../utils/startLog';
 import { SlashCommand } from '../../@types/commandDef';
 import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
-// import { DiscordGuilds } from '../../../global/@types/database';
+import { applicationSetup } from '../../utils/application';
+import { paginationEmbed } from '../../utils/pagination';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -40,7 +39,6 @@ export const prompt: SlashCommand = {
     .setDescription('Set up various channels and prompts!')
     .addSubcommand(subcommand => subcommand
       .setDescription('Tripsit info!')
-      .setName('tripsit')
       .addRoleOption(option => option
         .setDescription('What is your Tripsitter role?')
         .setName('tripsitter')
@@ -53,22 +51,14 @@ export const prompt: SlashCommand = {
         .setDescription('What is your Meta-tripsit channel?')
         .setName('metatripsit')
         .setRequired(true))
-      // .addChannelOption((option) => option
-      //   .setDescription('Do you have a sanctuary room?')
-      //   .setName('sanctuary'),
-      // )
-      // .addChannelOption((option) => option
-      //   .setDescription('Do you have a general room?')
-      //   .setName('general'),
-      // )
       .addRoleOption(option => option
         .setDescription('What is your Helper role?')
-        .setName('helper')))
+        .setName('helper'))
+      .setName('tripsit'))
     .addSubcommand(subcommand => subcommand
-      .setDescription('Set up the application page. 5 roles max!')
-      .setName('applications')
+      .setDescription('Set up the application post in this channel. 5 roles max!')
       .addChannelOption(option => option
-        .setDescription('What channel stores applications?')
+        .setDescription('What channel will have application threads?')
         .setName('applications_channel')
         .setRequired(true))
       .addRoleOption(option => option
@@ -102,38 +92,27 @@ export const prompt: SlashCommand = {
         .setName('application_role_e'))
       .addRoleOption(option => option
         .setDescription(reviewerQuestion)
-        .setName('application_reviewer_e')))
+        .setName('application_reviewer_e'))
+      .setName('applications'))
     .addSubcommand(subcommand => subcommand
       .setDescription('techhelp info!')
-      .setName('techhelp')
       .addRoleOption(option => option
         .setDescription('What role responds to tickets here?')
         .setName('roletechreviewer')
         .setRequired(true))
       .addChannelOption(option => option
         .setDescription('Do you have a tripsit room?')
-        .setName('tripsit')))
+        .setName('tripsit'))
+      .setName('techhelp'))
     .addSubcommand(subcommand => subcommand
       .setDescription('rules info!')
       .setName('rules'))
     .addSubcommand(subcommand => subcommand
-      .setDescription('starthere info!')
-      .setName('starthere'))
-    // .addSubcommand(subcommand => subcommand
-    //   .setDescription('mindset reaction roles!')
-    //   .setName('mindset'))
-    // .addSubcommand(subcommand => subcommand
-    //   .setDescription('color reaction roles')
-    //   .setName('color'))
-    .addSubcommand(subcommand => subcommand
       .setDescription('ticketbooth info!')
-      .setName('ticketbooth')),
-  // .addSubcommand(subcommand => subcommand
-  //   .setDescription('pronoun picker!')
-  //   .setName('pronouns'))
-  // .addSubcommand(subcommand => subcommand
-  //   .setDescription('donor color setup')
-  //   .setName('premiumcolors')),
+      .setName('ticketbooth'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Help on using the setup command!')
+      .setName('help')),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
     // We cannot defer because some of the setup commands have modals
@@ -153,21 +132,162 @@ export const prompt: SlashCommand = {
 
     const command = interaction.options.getSubcommand();
     if (command === 'applications') {
-      await applications(interaction);
+      await applicationSetup(interaction);
     } else if (command === 'techhelp') {
       await techhelp(interaction);
     } else if (command === 'rules') {
       await rules(interaction);
-    } else if (command === 'starthere') {
-      await starthere(interaction);
     } else if (command === 'tripsit') {
       await tripsit(interaction);
     } else if (command === 'ticketbooth') {
       await ticketbooth(interaction);
+    } else if (command === 'help') {
+      await help(interaction);
     }
     return true;
   },
 };
+
+export async function help(
+  interaction:ChatInputCommandInteraction,
+) {
+  const previousButton = new ButtonBuilder()
+    .setCustomId('previousButton')
+    .setLabel('Previous')
+    .setStyle(ButtonStyle.Danger);
+
+  const nextButton = new ButtonBuilder()
+    .setCustomId('nextButton')
+    .setLabel('Next')
+    .setStyle(ButtonStyle.Success);
+
+  const buttonList = [
+    previousButton,
+    nextButton,
+  ];
+
+  const tripsitEmbed = embedTemplate()
+    .setTitle('How To Setup TripSit Sessions')
+    .setDescription(stripIndents`
+    **What is a TripSit Session?**
+    This is TripSit's help system, basically a support ticket system for people on substances!
+
+    ** What does this to? **
+    This will create a message in the Tripsit room with a button to create a new thread.
+    When a user clicks this button they will be asked two vital questions for tripsitting, and then they submit the form.
+    The Needshelp role will be assigned to the user and the bot will try to remove every other role the user has.
+    This makes it so that people who need help are restricted to the Tripsit room and can't see any other channels.
+    The bot will then create a new thread in the Tripsit room and ping the user, along with the Tripsitters and optionally Helpers.
+    The user can then talk to the Tripsitters and Helpers in the thread.
+    When the user is done with their session, they can click  and the bot will reassign their roles.
+    
+    Full details on how to use this system can be found [on our learning portal](https://learn.pantheon.tripsit.me/mod/lesson/view.php?id=24)!
+
+    ** How do I set it up? **
+    1. Create a room where you want a message posted and threads created (Tripsit)
+    2. Create a room where people will talk about Tripsit encounters (Meta-tripsit)
+    3. Create a role that will be assigned to users who need help (Needshelp)
+    3a. Set up the permissions for this role so that it can only see the Tripsit room
+    4. Create a role that will respond to new sessions (Tripsitter)
+    5. (Optional) Create a secondary role that will respond to new sessions (Helper)
+    6. Run the /setup tripsit command with each of the above channels and roles
+
+    ** Troubleshooting **
+    If you have any issues with this system, please contact Moonbear on the TripSit guild! 
+    They're happy to give direct support to any problems you may have!
+    `);
+
+  const applicationsEmbed = embedTemplate()
+    .setTitle('How To Setup Applications')
+    .setDescription(stripIndents`
+    **What is an Application system?**
+    This is an application system to allow people to apply for roles in your guild!
+
+    ** What does this to? **
+    This will create a message in the room you run this command with a button.
+    When a user clicks this button they will be asked two questions:
+    1. Why do you want to help out?
+    2. What skills can you bring to the team?
+    The user submits this forum and a new thread is created in a separate channel for the team to discuss the application.
+    The thread is created in a separate room so that people cannot accidentally @ the user and add them to the thread.
+    There is a 24 hour cool down before an application can be accepted or rejected, to give everyone a chance to discuss the application.
+    There are a list of pre-defined responses that can be used to reject the application, if desired, but a custom response is usually better.
+
+    ** How do I set it up? **
+    1. Create a room where you want a message posted (Apply-Here)
+    2. Create a room where people will talk about applications (Applications)
+    3. Create a role that people can apply for (Tripsitter)
+    4. Create a role that will review applications (Moderator)
+    5. Run the /setup applications command with each of the above channels and roles
+
+    ** Troubleshooting **
+    If you have any issues with this system, please contact Moonbear on the TripSit guild! 
+    They're happy to give direct support to any problems you may have!
+    `);
+
+  const techHelpEmbed = embedTemplate()
+    .setTitle('How To Setup TechHelp')
+    .setDescription(stripIndents`
+    **What is a TechHelp system?**
+    This is a system to allow people to ask for help with technical issues in your guild!
+    This can be mod requests or whatever, it doesn't need to be technology related!
+
+    ** What does this to? **
+    This is a lot like the Tripsit Sessions system, with some changes:
+    1. The user is not restricted to a single room/thread.
+    2. There is no meta-channel for discussion, we assume you already have a #moderator room for that.
+    3. There is no "im good button" because the bot does not remove roles, but there is a "issue resolved" button.
+
+    ** How do I set it up? **
+    1. Create a room where you want a message posted (TechHelp)
+    2. Create a role that will respond to new sessions (Moderator)
+    3. Run the /setup techhelp command with each of the above channels and roles
+
+    ** Troubleshooting **
+    If you have any issues with this system, please contact Moonbear on the TripSit guild!
+    They're happy to give direct support to any problems you may have!
+    `);
+
+  const rulesEmbed = embedTemplate()
+    .setTitle('How To Setup  Rules')
+    .setDescription(stripIndents`
+    **What is a Rules system?**
+    This simply posts a series of rules that you may modify to your liking.
+    `);
+
+  const ticketboothEmbed = embedTemplate()
+    .setTitle('How To Setup Ticketbooth')
+    .setDescription(stripIndents`
+    **What is a Ticketbooth system?**
+    This sets up a 'front desk' type channel where users must read and click a button in order to see the rest of the guild.
+    This is useful for guilds that want to restrict access to the rest of the guild until a user has read the rules.
+
+    ** What does this to? **
+    This will create a message in the room you run this command with a button.
+    When a user clicks this button they will be given a role.
+
+    ** How do I set it up? **
+    1. Create a room where you want a message posted (Ticketbooth)
+    2. Create a role that will be assigned to users who click the button (Verified)
+    3. Setup permissions:
+    3a. Make sure that Everyone can see the Ticketbooth room, but not the rest of the guild.
+    3b. Make sure that Verified users can see the rest of the guild, but not the Ticketbooth room.
+    3. Run the /setup ticketbooth command with each of the above channels and roles
+
+    ** Troubleshooting **
+    If you have any issues with this system, please contact Moonbear on the TripSit guild!
+    They're happy to give direct support to any problems you may have!
+    `);
+
+  const book = [
+    tripsitEmbed,
+    applicationsEmbed,
+    techHelpEmbed,
+    rulesEmbed,
+    ticketboothEmbed,
+  ];
+  paginationEmbed(interaction, book, buttonList, 0);
+}
 
 export async function tripsit(
   interaction:ChatInputCommandInteraction,
@@ -359,134 +479,9 @@ export async function tripsit(
     });
 }
 
-export async function applications(interaction:ChatInputCommandInteraction) {
-  if (!await checkChannelPermissions(
-    (interaction.channel as TextChannel),
-    [
-      'ViewChannel' as PermissionResolvable,
-      'SendMessages' as PermissionResolvable,
-      'CreatePrivateThreads' as PermissionResolvable,
-      'CreatePublicThreads' as PermissionResolvable,
-      'SendMessagesInThreads' as PermissionResolvable,
-      'EmbedLinks' as PermissionResolvable,
-    ],
-  )) {
-    // log.debug(F, `bot does NOT has permission to post in ${interaction.channel}!`);
-    return;
-  }
-
-  await interaction.showModal(new ModalBuilder()
-    .setCustomId(`appModal~${interaction.id}`)
-    .setTitle('Tripsitter Help Request')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setCustomId('applicationText')
-            .setLabel('What wording do you want to appear?')
-            .setStyle(TextInputStyle.Paragraph)
-            .setValue(stripIndent`
-              **Interested in helping out?**
-
-              Welcome to ${interaction.channel}! This channel allows you to apply for intern positions here at ${(interaction.guild as Guild).name}!
-
-              We want people who love ${(interaction.guild as Guild).name}, want to contribute to its growth, and be part of our success!
-
-              We currently have two positions open:
-
-              * Helper
-              * Contributor
-
-              **These are not formal roles, but rather a way to get access to the rooms to help out and prove you want to be a part of the org!**
-              
-              Both positions require that you have a short tenure on the org: 
-              While we appreciate the interest you should familiarize yourself with the culture before applying! 
-              If you have not been here that long please chat and get to know people before applying again (at least two weeks)!
-              
-              The **Helper** role is for people who want to help out in the tripsitting rooms.
-              As long as you have a general understanding of how drugs work and how hey interact with mental health conditions we do not require a formal education for users interested in taking on the helper role. 
-              While we do value lived/living experience with drug use it is not required to be an effective helper!
-              
-              The **Contributor** role is for people who want to help out in the back-end with development or other organizational work.
-              You don't need to code, but you should have some experience with the org and be able to contribute to the org in some way.
-              We appreciate all types of help: Not just coders, but anyone who wants to give input or test out new features!
-
-              If you want to help out with ${(interaction.guild as Guild).name}, please click the button below to fill out the application form.
-            `),
-        ),
-    ));
-
-  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('appModal');
-  interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
-
-      const channelApplications = interaction.options.getChannel('applications_channel', true);
-      const guildData = await getGuild((interaction.guild as Guild).id);
-      guildData.id = (interaction.guild as Guild).id;
-      guildData.channel_applications = channelApplications.id;
-
-      // Save this info to the DB
-      await guildUpdate(guildData);
-
-      /* eslint-disable no-unused-vars */
-      const roleRequestedA = interaction.options.getRole('application_role_a');
-      const roleReviewerA = interaction.options.getRole('application_reviewer_a');
-      const roleRequestedB = interaction.options.getRole('application_role_b');
-      const roleReviewerB = interaction.options.getRole('application_reviewer_b');
-      const roleRequestedC = interaction.options.getRole('application_role_c');
-      const roleReviewerC = interaction.options.getRole('application_reviewer_c');
-      const roleRequestedD = interaction.options.getRole('application_role_d');
-      const roleReviewerD = interaction.options.getRole('application_reviewer_d');
-      const roleRequestedE = interaction.options.getRole('application_role_e');
-      const roleReviewerE = interaction.options.getRole('application_reviewer_e');
-
-      const roleArray = [
-        [roleRequestedA, roleReviewerA],
-        [roleRequestedB, roleReviewerB],
-        [roleRequestedC, roleReviewerC],
-        [roleRequestedD, roleReviewerD],
-        [roleRequestedE, roleReviewerE],
-      ];
-      const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId('applicationRoleSelectMenu')
-        .setPlaceholder('Select role here!')
-        .setMaxValues(1);
-      selectMenu.addOptions(
-        {
-          label: 'Select role here!',
-          value: 'none',
-        },
-      );
-      roleArray.forEach(async role => {
-        if (role[0]) {
-          if (role[1]) {
-          // log.debug(F, `role: ${role[0].name}`);
-            selectMenu.addOptions(
-              {
-                label: role[0].name,
-                value: `${role[0].id}~${role[1].id}`,
-              },
-            );
-          } else {
-            await i.reply('Error: You must provide both a role and a reviewer role!');
-          }
-        }
-      });
-
-      await (i.channel as TextChannel).send(
-        {
-          content: stripIndents`${i.fields.getTextInputValue('applicationText')}`,
-          components: [new ActionRowBuilder<StringSelectMenuBuilder>()
-            .addComponents(selectMenu)],
-        },
-      );
-      await i.editReply({ content: 'Donezo!' });
-    });
-}
-
-export async function techhelp(interaction:ChatInputCommandInteraction) {
+export async function techhelp(
+  interaction:ChatInputCommandInteraction,
+) {
   await interaction.deferReply({ ephemeral: true });
   if (!await checkChannelPermissions(
     (interaction.channel as TextChannel),
@@ -549,7 +544,9 @@ Thanks for reading, stay safe!
   await (interaction.channel as TextChannel).send({ content: text, components: [row] });
 }
 
-export async function rules(interaction:ChatInputCommandInteraction) {
+export async function rules(
+  interaction:ChatInputCommandInteraction,
+) {
   await interaction.deferReply({ ephemeral: true });
   await (interaction.channel as TextChannel).send({
     content: stripIndents`
@@ -625,7 +622,9 @@ If you do not agree to this policy, do not use this site.
   });
 }
 
-export async function ticketbooth(interaction:ChatInputCommandInteraction) {
+export async function ticketbooth(
+  interaction:ChatInputCommandInteraction,
+) {
   await interaction.deferReply({ ephemeral: true });
   const channelTripsit = await interaction.client.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
   const channelSanctuary = await interaction.client.channels.fetch(env.CHANNEL_SANCTUARY) as TextChannel;
@@ -662,43 +661,4 @@ export async function ticketbooth(interaction:ChatInputCommandInteraction) {
 
   // Create a new button
   await (interaction.channel as TextChannel).send({ content: buttonText, components: [row] });
-}
-
-export async function starthere(interaction:ChatInputCommandInteraction) {
-  await interaction.deferReply({ ephemeral: true });
-  // const channelIrc = await interaction.member.client.channels.fetch(CHANNEL_HELPDESK);
-  // const channelQuestions = await interaction.client.channels.fetch(CHANNEL_DRUGQUESTIONS);
-  const channelBotspam = await interaction.client.channels.fetch(env.CHANNEL_BOTSPAM);
-  // const channelSanctuary = await interaction.client.channels.fetch(CHANNEL_SANCTUARY);
-  // const channelGeneral = await interaction.client.channels.fetch(CHANNEL_GENERAL);
-  const channelTripsit = await interaction.client.channels.fetch(env.CHANNEL_TRIPSIT);
-  const channelRules = await interaction.client.channels.fetch(env.CHANNEL_RULES);
-
-  // **If someone has the "bot" tag they are talking from IRC!**
-  // > IRC is an older chat system where TripSit began: chat.tripsit.me
-  // > The 🔗 icon in the channel name means the channel is linked with IRC.
-  // > Users on IRC cannot see when you Reply to their message, or any custom emojis.
-
-  const message = stripIndents`
-    **Welcome to the TripSit Discord!**
-    > TripSit has always been a bit...different.
-    > Our discord is no exception: Even if you've been using discord for years please take a moment to read the info here.
-    > The information on this page can help you understand some of the intricacies of this guild!
-    > **This guild is under active development and may make changes at any time!**
-
-    **Remember: If you need help, join the ${channelTripsit} room and click the "I need assistance" button**
-    > This will create a new thread for you to talk with people who want to help you =)
-
-    **By chatting here you agree to abide the ${channelRules}**
-    > Many of our users are currently on a substance and appreciate a more gentle chat.
-    > We want this place to be inclusive and welcoming, if there is anything disrupting your stay here:
-    ***1*** Use the /report interface to report someone to the mod team! Also use Right Click > Apps > Report!
-    ***2*** Mention the @moderators to get attention from the mod team!
-    ***3*** Message TripBot and click the "I have a discord issue" button to start a thread with the team!
-
-    **We have our own custom bot!**
-    > Go crazy in ${channelBotspam} exploring the bot commands!
-    `;
-
-  await (interaction.channel as TextChannel).send(message);
 }
