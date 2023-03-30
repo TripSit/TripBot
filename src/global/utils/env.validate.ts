@@ -21,6 +21,9 @@ export const validateEnv = () => {
   if (!process.env.POSTGRES_DB_URL) {
     log.warn(F, 'Missing POSTGRES_DB_URL: You wont be able to use the database!');
   }
+  if (!process.env.KEYCLOAK_BASE_URL || !process.env.KEYCLOAK_REALM_NAME || !process.env.KEYCLOAK_CLIENT_ID || !process.env.KEYCLOAK_CLIENT_SECRET) {
+    log.warn(F, 'Missing keycloak credentials: You won\'t be able to interact with KeyCloak.');
+  }
 
   // if (!process.env.DISCORD_CLIENT_SECRET) {
   //   log.warn(F, 'Missing DISCORD_CLIENT_SECRET: I think this is an oauth thing?');

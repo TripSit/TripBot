@@ -23,6 +23,7 @@ AutojoinRoomsMixin.setupOnClient(client);
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleCommand(roomId: string, event: any) {
+  console.log('received msg');
   // Don't handle unhelpful events (ones that aren't text messages, are redacted, or sent by us)
   if (event.content?.msgtype !== 'm.text') return;
   if (event.sender === await client.getUserId()) return;
@@ -54,8 +55,14 @@ async function handleCommand(roomId: string, event: any) {
  * Start the matrix bot
  */
 async function startMatrix() {
+  console.log(client);
+  client.on('sync', (state, prevState, res) => {
+    if (state === 'SYNCING') {
+      console.log('Bot is syncing...');
+    }
+  });
 // Before we start the bot, register our command handler
-  client.on('room.message', handleCommand);
+  client.on('room.message', await handleCommand);
   // Now that everything is set up, start the bot. This will start the sync loop and run until killed.
-  client.start().then(() => log.info(F, 'Matrix Bot started!'));
+  await client.start().then(async() => { log.info(F, 'Matrix Bot started!'); console.log(await client.getJoinedRooms()); console.log(await client.getWhoAmI())});
 }
