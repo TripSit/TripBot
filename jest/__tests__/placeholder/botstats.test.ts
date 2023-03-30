@@ -1,7 +1,7 @@
 import { stripIndents } from 'common-tags';
 import { Colors } from 'discord.js';
-import { dBotstats } from '../../src/discord/commands/guild/d.botstats';
-import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { dBotstats } from '../../../src/discord/commands/guild/d.botstats';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../../utils/testutils';
 
 const slashCommand = dBotstats;
 
