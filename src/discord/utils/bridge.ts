@@ -18,7 +18,7 @@ const bridgeDb = [] as BridgeConfig[];
 
 bridgeDb.push({ // TS Dev
   internal_channel: '943599582921756732',
-  internal_webhook: 'https://discord.com/api/webhooks/1091112482535395429/F2afS2hADAPHYjZIL6fRm3iw3jx0s8Bi_kGDQyavxmYp7ya47o_8Yd7mHY-8nqPRfi_r', // eslint-disable-line
+  internal_webhook: 'https://discord.com/api/webhooks/1091117433844146187/ZknkSupuJasdgvdd7_eV4N8vlF_48Tlhp0vevGsHGil_GjumpC-upy7vw_0i9rBylwgM', // eslint-disable-line
   external_channel: '1052634261531926538',
   external_webhook: 'https://discord.com/api/webhooks/1090804782748418060/7fHgdyvJ2246ZAKKPMbfXIQi2xWjrPW_blLse5B8jDqFDSIARrUzyMxienuT3KfkXE_y', // eslint-disable-line
   status: 'active',
@@ -26,7 +26,7 @@ bridgeDb.push({ // TS Dev
 
 bridgeDb.push({ // MB server
   internal_channel: '943599582921756732',
-  internal_webhook: 'https://discord.com/api/webhooks/1091112482535395429/F2afS2hADAPHYjZIL6fRm3iw3jx0s8Bi_kGDQyavxmYp7ya47o_8Yd7mHY-8nqPRfi_r', // eslint-disable-line
+  internal_webhook: 'https://discord.com/api/webhooks/1091117433844146187/ZknkSupuJasdgvdd7_eV4N8vlF_48Tlhp0vevGsHGil_GjumpC-upy7vw_0i9rBylwgM', // eslint-disable-line
   external_channel: '1088437052439273605',
   external_webhook: 'https://discord.com/api/webhooks/1091100181937782925/nEDr9TNisCaj_sh_qqsn5QoZzY2ReuHCNfbIrR6i3apIQgjgvCXLRYvWGAcGquMM8HUC', // eslint-disable-line
   status: 'active',
@@ -35,6 +35,7 @@ bridgeDb.push({ // MB server
 export async function bridgeMessage(message: Message): Promise<void> {
   if (!message.guild) return; // If not in a guild then ignore all messages
   if (message.webhookId) return; // Don't run on webhook messages
+  if (message.author.bot) return; // Don't run on bot messages
   // This is the bridge utility
   // It will check the database to see if the message was sent in a channel that is configured to be bridged
   // If it is, it will send the message to the bridged channels using a webhook integration
@@ -53,25 +54,28 @@ export async function bridgeMessage(message: Message): Promise<void> {
 
   log.debug(F, 'Checking if message should be sent through bridge');
 
-  log.debug(F, `Bridge DB: ${JSON.stringify(bridgeDb, null, 2)}`);
+  // log.debug(F, `Bridge DB: ${JSON.stringify(bridgeDb, null, 2)}`);
 
   // Internal message
   if (message.guildId === env.DISCORD_GUILD_ID) {
+    if (message.guild.id !== '1088437051134857336' && message.guild.id !== '960606557622657026') return;
     log.debug(F, 'Message is from internal guild');
     log.debug(F, `Message channel: ${message.channel.id}`);
     const webhooks = [] as WebhookClient[];
     bridgeDb
       .forEach(bridge => {
-        if (bridge.internal_channel === message.channel.id && bridge.status === 'active') {
+        if (bridge.internal_channel === message.channel.id
+          && bridge.status === 'active'
+        ) {
           webhooks.push(new WebhookClient({ url: bridge.external_webhook }));
         }
       });
     if (webhooks.length === 0) return; // If there is no bridge config for this channel then ignore the message
     log.debug(F, 'Message should be sent through bridge');
-    log.debug(F, `webhooks: ${JSON.stringify(webhooks, null, 2)}`);
+    // log.debug(F, `webhooks: ${JSON.stringify(webhooks, null, 2)}`);
 
     webhooks.forEach(client => {
-      log.debug(F, `Client: ${JSON.stringify(client, null, 2)}`);
+      // log.debug(F, `Client: ${JSON.stringify(client, null, 2)}`);
       client.send({
         username: `${message.member?.displayName} (${message.guild?.name})`,
         avatarURL: message.author.avatarURL() ?? undefined,
@@ -82,8 +86,9 @@ export async function bridgeMessage(message: Message): Promise<void> {
 
   // External message
   if (message.guildId !== env.DISCORD_GUILD_ID) {
-    // log.debug(F, 'Message is from external guild');
-    // log.debug(F, `Message channel: ${message.channel.id}`);
+    if (message.guild.id !== '1088437051134857336' && message.guild.id !== '960606557622657026') return;
+    log.debug(F, 'Message is from external guild');
+    log.debug(F, `Message channel: ${message.channel.id}`);
     const bridgeConfig = bridgeDb.find(bridge => bridge.external_channel.toString() === message.channel.id.toString()
     && bridge.status === 'active');
     if (!bridgeConfig) return; // If there is no bridge config for this channel then ignore the message
@@ -101,6 +106,8 @@ export async function bridgeMessage(message: Message): Promise<void> {
         }
         return null;
       });
+
+    log.debug(F, `webhooks: ${JSON.stringify(webhooks, null, 2)}`);
 
     webhooks.forEach(client => {
       if (client === null) return;
