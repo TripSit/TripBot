@@ -36,6 +36,7 @@ export const messageCreate: MessageCreateEvent = {
   name: 'messageCreate',
   async execute(message) {
     messageCommand(message);
+    bridgeMessage(message);
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (message.guild && message.guild.id !== env.DISCORD_GUILD_ID) {
       return;
@@ -57,7 +58,6 @@ export const messageCreate: MessageCreateEvent = {
     youAre(message);
     karma(message);
     imagesOnly(message);
-    bridgeMessage(message);
 
     // Disabled for testing
     // thoughtPolice(message);
