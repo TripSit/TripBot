@@ -16,6 +16,7 @@ import { karma } from '../utils/karma';
 import { ExperienceCategory, ExperienceType } from '../../global/@types/database';
 import { imagesOnly } from '../utils/imagesOnly';
 import { countMessage } from '../commands/guild/d.counting';
+import { bridgeMessage } from '../utils/bridge';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 
@@ -56,6 +57,7 @@ export const messageCreate: MessageCreateEvent = {
     youAre(message);
     karma(message);
     imagesOnly(message);
+    bridgeMessage(message);
 
     // Disabled for testing
     // thoughtPolice(message);
