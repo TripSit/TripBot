@@ -21,7 +21,7 @@ bridgeDb.push({
   internal_webhook: 'https://discord.com/api/webhooks/1090804782748418060/7fHgdyvJ2246ZAKKPMbfXIQi2xWjrPW_blLse5B8jDqFDSIARrUzyMxienuT3KfkXE_y', // eslint-disable-line
   external_channel: '943599582921756732',
   external_webhook: 'https://discord.com/api/webhooks/1090804626602872882/Og7G5xBu48AN3tCXalUEsBRqf2PfYYnVIvKTcUOPvzFBH2yvy2uQkoCE2kRborRF6zeo', // eslint-disable-line
-  status: 'active',
+  status: 'paused',
 });
 
 bridgeDb.push({
