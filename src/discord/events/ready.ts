@@ -7,6 +7,8 @@ import {
   TextChannel,
 } from 'discord.js';
 import { setTimeout } from 'timers/promises';
+import { stripIndents } from 'common-tags';
+import ms from 'ms';
 import { ReadyEvent } from '../@types/eventDef';
 import { checkGuildPermissions } from '../utils/checkPermissions';
 import { runTimer } from '../../global/utils/timer'; // eslint-disable-line
@@ -16,6 +18,8 @@ import { runVoiceCheck } from '../../global/utils/voiceExp'; // eslint-disable-l
 import { startStatusLoop } from '../utils/statusLoop'; // eslint-disable-line
 import { emojiCache } from '../utils/emoji';
 import { populateBans } from '../utils/populateBotBans';
+import { fact } from '../../global/commands/g.fact';
+import { botStats } from '../../global/commands/g.botstats';
 // import { runLpm } from '../utils/lpm';
 
 const F = f(__filename);
@@ -79,13 +83,48 @@ export const ready: ReadyEvent = {
       ]).then(async () => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
         log.info(F, `Discord finished booting in ${bootDuration}s!`);
-        if (env.NODE_ENV !== 'development') {
-          const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
-          const botOwner = await client.users.fetch(env.DISCORD_OWNER_ID);
-          // const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
-          // const tripbotDevRole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
-          await botlog.send(`Hey ${botOwner}, bot has restart! Booted in ${bootDuration} seconds`);
-        }
+        // if (env.NODE_ENV !== 'development') {
+        const channelTripbot = await client.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
+        // log.debug(F, `channelTripbot: ${JSON.stringify(channelTripbot, null, 2)}`);
+        const botOwner = await client.users.fetch(env.DISCORD_OWNER_ID);
+        // log.debug(F, `botOwner: ${JSON.stringify(botOwner, null, 2)}`);
+        // const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
+        // const tripbotDevRole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
+        const newFact = await fact();
+        const statData = await botStats();
+        const drivePercentPadded = `${statData.driveUsage.toString()}%`.padEnd(3, ' ');
+        const memPercentPadded = `${statData.memUsage.toString()}%`.padEnd(3, ' ');
+        const cpuPercentPadded = `${statData.cpuUsage.toString()}%`.padEnd(3, ' ');
+        const guildStr = `Guilds:   ${statData.guildCount.toString()}`;
+        const channelStr = `Channels: ${statData.channelCount.toString()}`;
+        const userStr = `Users:    ${statData.userCount.toString()}`;
+        const commandStr = `Commands: ${statData.commandCount.toString()}`;
+        const pingStr = `Ping:     ${statData.ping.toString()}ms`;
+        const botUptimeStr = `Bot Up:   ${ms(statData.uptime)}`;
+
+        const networkStr = `Network:  ${statData.netDown} down, ${statData.netUp} up`;
+        const cpuStr = `CPU:      ${cpuPercentPadded} of ${statData.cpuCount.toString()} cores`;
+        const memStr = `Memory:   ${memPercentPadded} of ${statData.memTotal.toString()} MB`;
+        const driveStr = `Drive:    ${drivePercentPadded} of ${statData.driveTotal.toString()} GB`;
+        const dbStr = `Drug DB:  ${statData.tsDbSize.toString()} TS, ${statData.tsPwDbSize.toString()} TS+PW`;
+        const hostUptimeStr = `Host Up:  ${ms(statData.hostUptime)}`;
+
+        const columns = [
+          [guildStr, dbStr],
+          [channelStr, memStr],
+          [userStr, driveStr],
+          [commandStr, cpuStr],
+          [botUptimeStr, networkStr],
+          [pingStr, hostUptimeStr],
+        ];
+
+        const longest = columns.reduce((long, str) => Math.max(long, str[0].length), 0);
+        const message = columns.map(col => `${col[0].padEnd(longest)}  ${col[1]}`).join('\n');
+
+        await channelTripbot.send(stripIndents`
+        Hey ${botOwner} I just rebooted in ${bootDuration} seconds!
+        \`\`\`${message}\`\`\`*${newFact}*
+        `);
       });
     });
   },
