@@ -18,7 +18,7 @@ const bridgeDb = [] as BridgeConfig[];
 
 bridgeDb.push({ // TS Dev
   internal_channel: '943599582921756732',
-  internal_webhook: 'https://discord.com/api/webhooks/1090804626602872882/Og7G5xBu48AN3tCXalUEsBRqf2PfYYnVIvKTcUOPvzFBH2yvy2uQkoCE2kRborRF6zeo', // eslint-disable-line
+  internal_webhook: 'https://discord.com/api/webhooks/1091112482535395429/F2afS2hADAPHYjZIL6fRm3iw3jx0s8Bi_kGDQyavxmYp7ya47o_8Yd7mHY-8nqPRfi_r', // eslint-disable-line
   external_channel: '1052634261531926538',
   external_webhook: 'https://discord.com/api/webhooks/1090804782748418060/7fHgdyvJ2246ZAKKPMbfXIQi2xWjrPW_blLse5B8jDqFDSIARrUzyMxienuT3KfkXE_y', // eslint-disable-line
   status: 'active',
@@ -26,7 +26,7 @@ bridgeDb.push({ // TS Dev
 
 bridgeDb.push({ // MB server
   internal_channel: '943599582921756732',
-  internal_webhook: 'https://discord.com/api/webhooks/1090804626602872882/Og7G5xBu48AN3tCXalUEsBRqf2PfYYnVIvKTcUOPvzFBH2yvy2uQkoCE2kRborRF6zeo', // eslint-disable-line
+  internal_webhook: 'https://discord.com/api/webhooks/1091112482535395429/F2afS2hADAPHYjZIL6fRm3iw3jx0s8Bi_kGDQyavxmYp7ya47o_8Yd7mHY-8nqPRfi_r', // eslint-disable-line
   external_channel: '1088437052439273605',
   external_webhook: 'https://discord.com/api/webhooks/1091100181937782925/nEDr9TNisCaj_sh_qqsn5QoZzY2ReuHCNfbIrR6i3apIQgjgvCXLRYvWGAcGquMM8HUC', // eslint-disable-line
   status: 'active',
