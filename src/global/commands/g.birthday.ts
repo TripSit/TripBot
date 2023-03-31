@@ -26,7 +26,7 @@ export async function birthday(
 
     // log.debug(F, `Setting birthDate for ${memberId} to ${birthDate}`);
 
-    const userData = await getUser(memberId, null);
+    const userData = await getUser(memberId, null, null);
 
     userData.birthday = birthDate.toJSDate();
 
@@ -34,7 +34,7 @@ export async function birthday(
 
     response = birthDate;
   } else if (command === 'get') {
-    const userData = await getUser(memberId, null);
+    const userData = await getUser(memberId, null, null);
     if (userData.birthday !== null) {
       const birthDateRaw = userData.birthday;
       // log.debug(F, `birthDate: ${birthDate}`);

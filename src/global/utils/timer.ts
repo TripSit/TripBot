@@ -39,7 +39,7 @@ async function checkReminders() {
       if (reminder.trigger_at) {
         if (DateTime.fromJSDate(reminder.trigger_at) <= DateTime.local()) {
           // Get the user's discord id
-          const userData = await getUser(null, reminder.user_id);
+          const userData = await getUser(null, null, reminder.user_id);
 
           // Send the user a message
           if (userData && userData.discord_id) {
@@ -103,7 +103,7 @@ async function checkTickets() {
         }
 
         // Restore roles on the user
-        const userData = await getUser(null, ticket.user_id);
+        const userData = await getUser(null, null, ticket.user_id);
         if (userData.discord_id) {
           const discordUser = await global.client.users.fetch(userData.discord_id);
           if (discordUser) {

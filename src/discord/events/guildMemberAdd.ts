@@ -39,7 +39,7 @@ export const guildMemberAdd: GuildMemberAddEvent = {
       new Collection(newInvites.map(inviteEntry => [inviteEntry.code, inviteEntry.uses])),
     );
 
-    const userData = await getUser(member.id, null);
+    const userData = await getUser(member.id, null, null);
     userData.discord_id = member.id;
     userData.joined_at = new Date();
 

@@ -139,7 +139,7 @@ export const mod: SlashCommand = {
 
       let result = '' as string | null;
       if (!target) {
-        const userData = await getUser(targetString, null);
+        const userData = await getUser(targetString, null, null);
         if (!userData) {
           await interaction.reply({
             content: 'Failed to link thread, I could not find this user in the guild, and they do not exist in the database!',

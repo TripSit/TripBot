@@ -4,6 +4,7 @@ import {
   AutojoinRoomsMixin,
 } from 'matrix-bot-sdk';
 
+import { getUser } from '../global/utils/knex';
 import * as commands from './commands';
 
 const F = f(__filename);
@@ -24,7 +25,8 @@ AutojoinRoomsMixin.setupOnClient(client);
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleCommand(roomId: string, event: any) {
-  
+  // this creates an entry in the database for every user tripbot receives a message from, if it doesn't exist already.
+  await getUser(null, event.sender, null);
   // Don't handle unhelpful events (ones that aren't text messages, are redacted, or sent by us)
   if (event.content?.msgtype !== 'm.text') return;
   if (event.sender === await client.getUserId()) return;

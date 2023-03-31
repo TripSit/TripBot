@@ -31,28 +31,35 @@ export const db = knex({
 
 export async function getUser(
   discordId:string | null,
+  matrixId: string | null,
   userId:string | null,
 ):Promise<Users> {
   // log.debug(F, `getUser started with: discordId: ${discordId} | userId: ${userId}`);
   let data = {} as Users | undefined;
 
-  if (discordId) {
+  if (discordId || matrixId) {
     try {
       data = await db<Users>('users')
         .select('*')
-        .where('discord_id', discordId)
+        .where('discord_id', discordId).orWhere('matrix_id', matrixId)
         .first();
     } catch (err) {
       log.error(F, `Error getting user: ${err}`);
-      log.error(F, `discordId: ${discordId} | userId: ${userId}`);
+      log.error(F, `discordId: ${discordId} | matrixId: ${matrixId} userId: ${userId}`);
     }
 
     // log.debug(F, `data1: ${JSON.stringify(data, null, 2)}`);
     if (data === undefined) {
       try {
-        [data] = (await db<Users>('users')
-          .insert({ discord_id: discordId })
-          .returning('*'));
+        if (discordId) {
+          [data] = (await db<Users>('users')
+            .insert({ discord_id: discordId })
+            .returning('*'));
+        } else if (matrixId) {
+          [data] = (await db<Users>('users')
+            .insert({ matrix_id: matrixId })
+            .returning('*'));
+        }
       // log.debug(F, `data2: ${JSON.stringify(data, null, 2)}`);
       } catch (err) {
         log.error(F, `Error getting user: ${err}`);

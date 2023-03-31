@@ -53,7 +53,7 @@ export async function idose(
     }
     // log.debug(F, `Deleting record ${recordNumber}`);
 
-    const userData = await getUser(userId, null);
+    const userData = await getUser(userId, null, null);
 
     const unsortedData = await idoseGet(userData.id);
 
@@ -114,7 +114,7 @@ export async function idose(
     }];
   }
   if (command === 'get') {
-    const userData = await getUser(userId, null);
+    const userData = await getUser(userId, null, null);
 
     // log.debug(F, `Getting data for ${userData.id}...`);
 
@@ -204,7 +204,7 @@ export async function idose(
 
     // log.debug(F, `drugId: ${drugId}`);
 
-    const userData = await getUser(userId, null);
+    const userData = await getUser(userId, null, null);
 
     await idoseSet({
       user_id: userData.id,

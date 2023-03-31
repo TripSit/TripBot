@@ -77,7 +77,7 @@ export async function handleReactionRoles(
       // If this is a mindset emoji, set the end date
       if (mindsetEmojis.includes(`<:${reaction.emoji.identifier}>`)) {
         // Update the database
-        const userData = await getUser(user.id, null);
+        const userData = await getUser(user.id, null, null);
 
         userData.discord_id = user.id;
         userData.mindset_role = role.id;

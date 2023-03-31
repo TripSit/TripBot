@@ -142,7 +142,7 @@ export async function needsHelpMode(
   const targetRoleIds = target.roles.cache.map(role => role.id);
   // log.debug(F, `targetRoleIds: ${targetRoleIds}`);
 
-  const userData = await getUser(target.id, null);
+  const userData = await getUser(target.id, null, null);
   userData.roles = targetRoleIds.toString();
 
   await usersUpdate(userData);
@@ -201,7 +201,7 @@ export async function tripsitmeOwned(
 
   const target = await interaction.guild.members.fetch(userId);
 
-  const userData = await getUser(userId, null);
+  const userData = await getUser(userId, null, null);
   const ticketData = await getOpenTicket(userData.id, null);
   const guildData = await getGuild(interaction.guild.id);
 
@@ -289,7 +289,7 @@ export async function tripsitmeMeta(
     return;
   }
 
-  const userData = await getUser(userId, null);
+  const userData = await getUser(userId, null, null);
   const ticketData = await getOpenTicket(userData.id, null);
 
   if (!ticketData) {
@@ -381,7 +381,7 @@ export async function tripsitmeBackup(
   const actor = interaction.member as GuildMember;
   const target = await interaction.guild.members.fetch(userId);
 
-  const userData = await getUser(userId, null);
+  const userData = await getUser(userId, null, null);
   const ticketData = await getOpenTicket(userData.id, null);
 
   if (!ticketData) {
@@ -471,7 +471,7 @@ export async function tripsitmeClose(
     return;
   }
 
-  const userData = await getUser(target.id, null);
+  const userData = await getUser(target.id, null, null);
   const ticketData = await getOpenTicket(userData.id, null);
   const guildData = await getGuild(interaction.guild.id);
 
@@ -590,7 +590,7 @@ export async function tripsitmeResolve(
     channelTripsitmeta = await interaction.guild.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
   }
 
-  const userData = await getUser(target.id, null);
+  const userData = await getUser(target.id, null, null);
 
   if (userData.roles) {
     const myMember = await interaction.guild.members.fetch(interaction.client.user.id);
@@ -943,7 +943,7 @@ export async function tripSitMe(
   threadArchiveTime.setTime(archiveTime);
   // log.debug(F, `threadArchiveTime: ${threadArchiveTime}`);
 
-  const userData = await getUser(target.id, null);
+  const userData = await getUser(target.id, null, null);
 
   // Set ticket information
   const introStr = intro ? `\n${intro}` : noInfo;
@@ -1029,7 +1029,7 @@ export async function tripsitmeButton(
     }
   }
 
-  const userData = await getUser(target.id, null);
+  const userData = await getUser(target.id, null, null);
 
   const ticketData = await getOpenTicket(userData.id, null);
 

@@ -124,7 +124,7 @@ export const tripsitmode: SlashCommand = {
 
       // const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
 
-      const userData = await getUser(target.id, null);
+      const userData = await getUser(target.id, null, null);
 
       const ticketData = await getOpenTicket(userData.id, null);
 

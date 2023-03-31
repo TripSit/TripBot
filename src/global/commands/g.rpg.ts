@@ -6,7 +6,7 @@ const F = f(__filename); // eslint-disable-line
 export async function getPersonaInfo(
   discordId: string,
 ):Promise<Personas[]> {
-  const userData = await getUser(discordId, null);
+  const userData = await getUser(discordId, null, null);
 
   return personaGet(userData.id);
 }
