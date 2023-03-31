@@ -12,3 +12,4 @@ export * as calc_psychedelics from './m.calc_psychedelics';
 export * as grounding from './m.grounding';
 export * as combochart from './m.combochart';
 export * as help from './m.help';
+export * as test from './m.test';

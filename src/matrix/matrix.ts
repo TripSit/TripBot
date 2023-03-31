@@ -11,6 +11,7 @@ export default startMatrix;
 
 // using simple FS storage for now, as postgresql doesn't work in codespaces anyway
 const storage = new SimpleFsStorageProvider('cache/tripbot.json');
+
 // create the client and make it auto-join rooms on invite
 const client:MatrixClient = new MatrixClient(env.MATRIX_HOMESERVER_URL, env.MATRIX_ACCESS_TOKEN, storage);
 AutojoinRoomsMixin.setupOnClient(client);
@@ -23,7 +24,7 @@ AutojoinRoomsMixin.setupOnClient(client);
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleCommand(roomId: string, event: any) {
-  console.log('received msg');
+  
   // Don't handle unhelpful events (ones that aren't text messages, are redacted, or sent by us)
   if (event.content?.msgtype !== 'm.text') return;
   if (event.sender === await client.getUserId()) return;
@@ -55,14 +56,12 @@ async function handleCommand(roomId: string, event: any) {
  * Start the matrix bot
  */
 async function startMatrix() {
-  console.log(client);
-  client.on('sync', (state, prevState, res) => {
-    if (state === 'SYNCING') {
-      console.log('Bot is syncing...');
-    }
-  });
 // Before we start the bot, register our command handler
   client.on('room.message', await handleCommand);
+
   // Now that everything is set up, start the bot. This will start the sync loop and run until killed.
-  await client.start().then(async() => { log.info(F, 'Matrix Bot started!'); console.log(await client.getJoinedRooms()); console.log(await client.getWhoAmI())});
+  await client.start().then(async () => {
+    log.info(F, 'Matrix-Bot started!');
+    console.log(await client.getWhoAmI());
+  });
 }
