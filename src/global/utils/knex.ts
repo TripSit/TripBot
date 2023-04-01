@@ -93,9 +93,9 @@ export const database = {
     set: countingSet,
   },
   bridges: {
-    get: bridgeGet,
-    set: bridgeSet,
-    del: bridgeDel,
+    get: bridgesGet,
+    set: bridgesSet,
+    del: bridgesDel,
   },
 };
 
@@ -1075,80 +1075,42 @@ export async function countingSet(
   }
 }
 
-async function bridgeGet(
-  internalChannel: string | null,
-  externalGuild: string | null,
-  externalChannel: string | null,
+async function bridgesGet(
+  channelId: string | null,
 ):Promise<Bridges[]> {
-  let data = [] as Bridges[];
-  if (internalChannel) {
-    if (externalGuild) {
-      try {
-        data = await db<Bridges>('bridges')
-          .select('*')
-          .where('internal_channel', internalChannel)
-          .andWhere('external_guild', externalGuild);
-      } catch (err) {
-        log.error(F, `Error getting user: ${err}`);
-        log.error(F, `internalChannel: ${internalChannel} | externalChannel: ${externalChannel}`);
-      }
-    } else {
-      try {
-        data = await db<Bridges>('bridges')
-          .select('*')
-          .where('internal_channel', internalChannel);
-      } catch (err) {
-        log.error(F, `Error getting user: ${err}`);
-        log.error(F, `internalChannel: ${internalChannel} | externalChannel: ${externalChannel}`);
-      }
-    }
-  }
-  if (externalChannel) {
-    try {
-      data = await db<Bridges>('bridges')
-        .select('*')
-        .where('external_channel', externalChannel);
-    // log.debug(F, `data3: ${JSON.stringify(data, null, 2)}`);
-    } catch (err) {
-      log.error(F, `Error getting user: ${err}`);
-      log.error(F, `internalChannel: ${internalChannel} | userId: ${externalChannel}`);
-    }
+  if (env.POSTGRES_DB_URL === undefined) return [] as Bridges[];
+  let data = await db<Bridges>('bridges')
+    .select('*')
+    .where('internal_channel', channelId);
+
+  if (data.length === 0) {
+    data = await db<Bridges>('bridges')
+      .select('*')
+      .where('external_channel', channelId);
   }
 
   return data;
 }
 
-async function bridgeSet(
-  data: Bridges,
-):Promise<Bridges> {
-  if (env.POSTGRES_DB_URL === undefined) return {} as Bridges;
-  try {
-    await db<Bridges>('bridges')
-      .insert(data)
-      .onConflict(['internal_channel', 'external_guild'])
-      .merge();
-  } catch (err) {
-    log.error(F, `Error setting counting: ${err}`);
-    log.error(F, `data: ${JSON.stringify(data)}`);
-  }
-
-  return (await db<Bridges>('bridges')
-    .select('*')
-    .where('internal_channel', data.internal_channel)
-    .andWhere('external_guild', data.external_guild)
-    .first()) as Bridges;
-}
-
-async function bridgeDel(
-  data: Bridges,
+async function bridgesSet(
+  data: Bridges[],
 ):Promise<void> {
   if (env.POSTGRES_DB_URL === undefined) return;
-  try {
+  data.forEach(async bridge => {
+    await db<Bridges>('bridges')
+      .insert(bridge)
+      .onConflict(['internal_channel', 'external_channel'])
+      .merge();
+  });
+}
+
+async function bridgesDel(
+  data: Bridges[],
+):Promise<void> {
+  if (env.POSTGRES_DB_URL === undefined) return;
+  data.forEach(async bridge => {
     await db<Bridges>('bridges')
       .delete()
-      .where('id', data.id);
-  } catch (err) {
-    log.error(F, `Error deleting bridge: ${err}`);
-    log.error(F, `data: ${JSON.stringify(data)}`);
-  }
+      .where('id', bridge.id);
+  });
 }

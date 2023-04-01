@@ -2,6 +2,7 @@
 // Do not touch them, or risk, your modifications being lost.
 
 export enum BridgeStatus {
+  Pending = 'PENDING',
   Active = 'ACTIVE',
   Paused = 'PAUSED',
 }
@@ -123,11 +124,8 @@ export enum Table {
 export type Bridges = {
   id: string;
   internal_channel: string;
-  internal_webhook: string;
   status: BridgeStatus;
-  external_guild: string;
   external_channel: string;
-  external_webhook: string | null;
 };
 
 export type Counting = {
