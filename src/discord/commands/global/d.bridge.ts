@@ -12,6 +12,8 @@ import {
   InteractionEditReplyOptions,
   PermissionResolvable,
   GuildMember,
+  GuildChannel,
+  Channel,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -20,7 +22,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { bridgeConfirm, bridgeCreate, bridgePause, bridgeRemove, bridgeResume } from '../../../global/commands/g.bridge';
 import { startLog } from '../../utils/startLog';
-import { getUser } from '../../../global/utils/knex';
+import { database, getUser } from '../../../global/utils/knex';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
 import { stripIndents } from 'common-tags';
 
@@ -35,42 +37,29 @@ export const dBridge: SlashCommand = {
     .addSubcommand(subcommand => subcommand
       .setName('create')
       .setDescription('Create a bridge between two discord channels')
-      .addChannelOption(option => option.setName('internal_channel')
-        .setDescription('Channel on TripSit')
-        .setRequired(true))
       .addStringOption(option => option.setName('external_channel')
         .setDescription('Channel ID on the other guild')
         .setRequired(true))
       .addBooleanOption(option => option.setName('override')
-        .setDescription('Redo and existing bridge')
+        .setDescription('Redo an existing bridge')
         .setRequired(false)))
     .addSubcommand(subcommand => subcommand
       .setName('confirm')
       .setDescription('Confirm a bridge creation between two discord channels'))
-      // .addChannelOption(option => option.setName('external_channel')
-      //   .setDescription('Channel on your guild')
-      //   .setRequired(true)))
-      // .addStringOption(option => option.setName('internal_channel')
-      //   .setDescription('Channel ID on TripSit')
-      //   .setRequired(true)))
     .addSubcommand(subcommand => subcommand
       .setName('pause')
-      .setDescription('Pause a bridge between two discord channels')
-      .addChannelOption(option => option.setName('channel')
-        .setDescription('Channel on your guild')
-        .setRequired(true)))
+      .setDescription('Pause a bridge between two discord channels'))
     .addSubcommand(subcommand => subcommand
       .setName('resume')
-      .setDescription('Resume a bridge between two discord channels')
-      .addChannelOption(option => option.setName('chanel')
-        .setDescription('Channel on your guild')
-        .setRequired(true)))
+      .setDescription('Resume a bridge between two discord channels'))
+    .addSubcommand(subcommand => subcommand
+      .setName('info')
+      .setDescription('Get info on this bridge setup'))
     .addSubcommand(subcommand => subcommand
       .setName('remove')
       .setDescription('Remove a bridge between two discord channels')
-      .addChannelOption(option => option.setName('channel')
-        .setDescription('Channel on your guild')
-        .setRequired(true))),
+      .addChannelOption(option => option.setName('confirmation')
+        .setDescription('Confirmation Code'))),
   async execute(interaction) {
     startLog(F, interaction);
     await interaction.deferReply({ ephemeral: true });
@@ -88,6 +77,25 @@ export const dBridge: SlashCommand = {
       return false;
     }
 
+    // Check if the guild is a partner (or the home guild)
+    const guildData = await database.guilds.get(interaction.guild.id);
+    if (interaction.guild.id !== env.DISCORD_GUILD_ID 
+      && !guildData.partner 
+      && !guildData.supporter) {
+      await interaction.editReply({
+        embeds: [
+          embed
+            .setDescription(`This command can only be used in a partner guild!
+            If you are a partner and this is an error, please contact Moonbear.
+            If you are not a partner, tell Moonbear you're interested:
+            This is a new system and we're still figuring out how it works.
+            `)
+            .setColor(Colors.Red)
+          ],
+      });
+      return false;
+    }
+
     const command = interaction.options.getSubcommand();
 
     if (command === 'create') {
@@ -95,11 +103,13 @@ export const dBridge: SlashCommand = {
     } else if (command === 'confirm') {
       embed.setDescription(await confirm(interaction));
     } else if (command === 'pause') {
-      embed.setDescription(await bridgePause(interaction));
+      embed.setDescription(await pause(interaction));
     } else if (command === 'resume') {
-      embed.setDescription(await bridgeResume(interaction));
+      embed.setDescription(await resume(interaction));
     } else if (command === 'remove') {
-      embed.setDescription(await bridgeRemove(interaction));
+      embed.setDescription(await remove(interaction));
+    } else if (command === 'info') {
+      embed.setDescription(await info(interaction));
     }
 
     await interaction.editReply({
@@ -123,7 +133,7 @@ async function create(
     You likely want to use the /bridge confirm command instead!`;
   }
 
-  const internalChannel = interaction.options.getChannel('internal_channel', true);
+  const internalChannel = interaction.channel;
   if (!(internalChannel instanceof TextChannel)) {
     return 'Error: Internal channel is not a text channel.';
   }
@@ -145,7 +155,14 @@ async function create(
     return 'Error: External channel ID is not a number!';
   }
 
-  const externalChannel = await interaction.client.channels.fetch(externalChannelId);
+  let externalChannel = {} as Channel | null;
+  try {
+    externalChannel = await interaction.client.channels.fetch(externalChannelId);
+  } catch (error) { 
+    log.error(F, `Error fetching external channel: ${error}`);
+    return 'Error: This channel ID does not exist, did you enter the ID correctly?';
+  }
+
   if (!(externalChannel instanceof TextChannel)) {
     return 'Error: External channel is not a text channel.';
   }
@@ -186,7 +203,7 @@ async function create(
     internalWebhook.url,
     externalChannel.guild.id,
     externalChannel.id,
-    false,
+    interaction.options.getBoolean('override', false) ?? false,
   )
   if (bridgeInitialized.startsWith('Error')) {
     return bridgeInitialized;
@@ -200,7 +217,7 @@ async function create(
   });        
 
   return`Initializing bridge between ${internalChannel.guild.name}'s ${internalChannel} and ${externalChannel.guild.name}'s ${externalChannel}!
-  I've prompted the other guild to confirm the bridge. If they do not confirm within 5 minutes, the bridge will be cancelled.`;
+  I've prompted the other guild to confirm the bridge.`;
 
 }
 
@@ -280,4 +297,218 @@ async function confirm(
   This is the start of something beautiful, say hi!
   `;
 
+};
+
+async function pause(
+  interaction:ChatInputCommandInteraction,
+):Promise<string> {
+  // Check if the member doing this command has permissions to make channels
+  if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
+    return 'Error: You do not have the ManageChannel permission needed to pause a bridge!';
+  }
+
+  if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
+    // Get the bridges from the database that use this internal_channel
+    const bridges = await database.bridges.get(
+      (interaction.channel as TextChannel).id,
+      null,
+      null,
+    );
+
+    if (bridges.length === 0) {
+      return 'Error: No bridges found for this channel.';
+    }
+
+    const activeBridges = bridges.filter(bridge => bridge.status === 'ACTIVE');
+
+    if (activeBridges.length === 0) {
+      return 'Error: No active bridges found for this channel. Did you mean to use the /bridge resume command?';
+    }
+
+    // Pause all bridges
+    for (const bridge of activeBridges) {
+      await bridgePause(bridge.internal_channel, bridge.external_channel);
+    }
+
+    return `Paused ${bridges.length} bridge(s) connected to this room.`;
+  } else {
+    // Get the bridges from the database that use this external_channel
+    const [bridge] = await database.bridges.get(
+      null,
+      null,
+      (interaction.channel as TextChannel).id,
+    );
+
+    if (!bridge) {
+      return 'Error: No bridges found for this channel.';
+    }
+
+    if (bridge.status !== 'ACTIVE') {
+      return 'Error: No active bridges found for this channel. Did you mean to use the /bridge resume command?';
+    }
+
+    await bridgePause(bridge.internal_channel, (interaction.channel as TextChannel).id);
+
+    return `Paused bridge connected to this room.`;
+  }
+};
+
+async function resume(
+  interaction:ChatInputCommandInteraction,
+):Promise<string> {
+  // Check if the member doing this command has permissions to make channels
+  if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
+    return 'Error: You do not have the ManageChannel permission needed to resume a bridge!';
+  }
+
+  if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
+    // Get the bridges from the database that use this internal_channel
+    const bridges = await database.bridges.get(
+      (interaction.channel as TextChannel).id,
+      null,
+      null,
+    );
+
+    if (bridges.length === 0) {
+      return 'Error: No bridges found for this channel.';
+    }
+
+    const activeBridges = bridges.filter(bridge => bridge.status === 'PAUSED');
+
+    if (activeBridges.length === 0) {
+      return 'Error: No paused bridges found for this channel. Did you mean to use the /bridge pause command?';
+    }
+
+    // Resume all bridges
+    for (const bridge of activeBridges) {
+      await bridgeResume(bridge.internal_channel, bridge.external_channel);
+    }
+
+    return `Resumed ${bridges.length} bridge(s) connected to this room.`;
+  } else {
+    // Get the bridges from the database that use this external_channel
+    const [bridge] = await database.bridges.get(
+      null,
+      null,
+      (interaction.channel as TextChannel).id,
+    );
+
+    if (!bridge) {
+      return 'Error: No bridges found for this channel.';
+    }
+
+    if (bridge.status !== 'PAUSED') {
+      return 'Error: No paused bridges found for this channel. Did you mean to use the /bridge pause command?';
+    }
+
+    await bridgeResume(bridge.internal_channel, (interaction.channel as TextChannel).id);
+
+    return `Resumed bridge connected to this room.`;
+  }
+};
+
+async function remove(
+  interaction:ChatInputCommandInteraction,
+):Promise<string> {
+  // Check if the member doing this command has permissions to make channels
+  if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
+    return 'Error: You do not have the ManageChannel permission needed to resume a bridge!';
+  }
+
+  // Check if the 'confirmation' option was used make sure it matches the guild ID
+  const confirmation = interaction.options.getString('confirmation');
+
+  if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
+    // Get the bridges from the database that use this internal_channel
+    const bridges = await database.bridges.get(
+      (interaction.channel as TextChannel).id,
+      null,
+      null,
+    );
+
+    if (bridges.length === 0) {
+      return 'Error: No bridges found for this channel.';
+    }
+
+    if (confirmation !== interaction.guild?.id) {
+      return `Error: Are you sure you want to remove ${bridges.length} bridge(s) connected to this room? If so, please use the confirmation option with your guild id.`;
+    }
+
+    // Resume all bridges
+    for (const bridge of bridges) {
+      await bridgeRemove(bridge.internal_channel, bridge.external_channel);
+    }
+
+    return `Removed ${bridges.length} bridge(s) connected to this room.`;
+  } else {
+    // Get the bridges from the database that use this external_channel
+    const [bridge] = await database.bridges.get(
+      null,
+      (interaction.channel as TextChannel).id,
+      null,
+    );
+
+    if (!bridge) {
+      return 'Error: No bridges found for this channel.';
+    }
+
+    if (confirmation !== interaction.guild?.id) {
+      return `Error: Are you sure you want to remove this bridge? If so, please use the confirmation option using your guild ID as the confirmation code!`;
+    }
+
+    await bridgeResume(bridge.internal_channel, (interaction.channel as TextChannel).id);
+
+    return `Removed bridge connected to this room.`;
+  }
+};
+
+async function info(
+  interaction:ChatInputCommandInteraction,
+):Promise<string> {
+  // Check if the member doing this command has permissions to make channels
+  if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
+    return 'Error: You do not have the ManageChannel permission needed to resume a bridge!';
+  }
+
+  if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
+    // Get the bridges from the database that use this internal_channel
+    const bridges = await database.bridges.get(
+      (interaction.channel as TextChannel).id,
+      null,
+      null,
+    );
+
+    if (bridges.length === 0) {
+      return 'Error: No bridges found for this channel.';
+    }
+
+    let message = `This room is connected to ${bridges.length} other rooms:`
+
+    for (const bridge of bridges) {
+      const guild = await client.guilds.fetch(bridge.external_guild);
+      const channel = await guild.channels.fetch(bridge.external_channel) as TextChannel;
+
+      message += `
+      - ${guild.name} - ${channel.name}
+      `
+    };
+
+    return message;
+  } else {
+    // Get the bridges from the database that use this external_channel
+    const [bridge] = await database.bridges.get(
+      null,
+      (interaction.channel as TextChannel).id,
+      null,
+    );
+
+    if (!bridge) {
+      return 'Error: No bridges found for this channel.';
+    }
+
+    const internalChannel = await client.channels.fetch(bridge.internal_channel);
+    const guild = (internalChannel as TextChannel).guild;
+
+    return `This room is connected to ${guild} - ${internalChannel}`;
+  }
 };

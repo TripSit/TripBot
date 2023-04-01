@@ -1,5 +1,5 @@
 import {
-  Message, WebhookClient,
+  Message, MessageMentionTypes, WebhookClient,
 } from 'discord.js';
 import { database } from '../../global/utils/knex';
 
@@ -36,6 +36,7 @@ const F = f(__filename);  // eslint-disable-line
 export async function bridgeMessage(message: Message): Promise<void> {
   if (!message.guild) return; // If not in a guild then ignore all messages
   if (message.webhookId) return; // Don't run on webhook messages
+  if (message.author.bot) return; // Don't run on bot messages
   // This is the bridge utility
   // It will check the database to see if the message was sent in a channel that is configured to be bridged
   // If it is, it will send the message to the bridged channels using a webhook integration
@@ -80,12 +81,15 @@ export async function bridgeMessage(message: Message): Promise<void> {
     log.debug(F, 'Message should be sent through bridge');
     log.debug(F, `webhooks: ${JSON.stringify(webhooks, null, 2)}`);
 
+    log.debug(F, `Message: ${JSON.stringify(message, null, 2)}`);
+
     webhooks.forEach(client => {
-      log.debug(F, `Client: ${JSON.stringify(client, null, 2)}`);
       client.send({
         username: `${message.member?.displayName} (${message.guild?.name})`,
         avatarURL: message.author.avatarURL() ?? undefined,
         content: message.content,
+        files: message.attachments.size > 0 ? message.attachments.map(attachment => attachment.url) : undefined,
+        allowedMentions: { parse: ['users', 'roles'] as MessageMentionTypes[] },
       });
     });
   }
@@ -100,7 +104,7 @@ export async function bridgeMessage(message: Message): Promise<void> {
       message.channel.id,
     );
 
-    const bridgeConfig = bridges.find(bridge => bridge.status === 'ACTIVE');
+    const bridgeConfig = bridges.find(bridge => bridge.status === 'ACTIVE' && bridge.external_webhook);
     if (!bridgeConfig) return; // If there is no bridge config for this channel then ignore the message
     log.debug(F, 'Message should be sent through bridge');
     log.debug(F, `Bridge config: ${JSON.stringify(bridgeConfig, null, 2)}`);
@@ -126,11 +130,12 @@ export async function bridgeMessage(message: Message): Promise<void> {
 
     webhooks.forEach(client => {
       if (client === null) return;
-      log.debug(F, `Client: ${JSON.stringify(client, null, 2)}`);
       client.send({
         username: `${message.member?.displayName} (${message.guild?.name})`,
         avatarURL: message.author.avatarURL() ?? undefined,
         content: message.content,
+        files: message.attachments.size > 0 ? message.attachments.map(attachment => attachment.url) : undefined,
+        allowedMentions: { parse: ['users', 'roles'] as MessageMentionTypes[] },
       });
     });
   }

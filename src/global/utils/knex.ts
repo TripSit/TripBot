@@ -95,6 +95,7 @@ export const database = {
   bridges: {
     get: bridgeGet,
     set: bridgeSet,
+    del: bridgeDel,
   },
 };
 
@@ -1136,4 +1137,18 @@ async function bridgeSet(
     .where('internal_channel', data.internal_channel)
     .andWhere('external_guild', data.external_guild)
     .first()) as Bridges;
+}
+
+async function bridgeDel(
+  data: Bridges,
+):Promise<void> {
+  if (env.POSTGRES_DB_URL === undefined) return;
+  try {
+    await db<Bridges>('bridges')
+      .delete()
+      .where('id', data.id);
+  } catch (err) {
+    log.error(F, `Error deleting bridge: ${err}`);
+    log.error(F, `data: ${JSON.stringify(data)}`);
+  }
 }

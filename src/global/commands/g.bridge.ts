@@ -1,8 +1,9 @@
-import { ChatInputCommandInteraction } from 'discord.js';
 import { Bridges, BridgeStatus } from '../@types/database';
 import { database } from '../utils/knex';
 
 const F = f(__filename);
+
+const noBridgeError = 'Error: Bridge does not exist!';
 
 export async function bridgeCreate(
   internalChannel: string,
@@ -18,7 +19,7 @@ export async function bridgeCreate(
 
   if (existingBridge !== undefined && !override) {
     log.debug(F, `bridgeCreate: ${JSON.stringify(existingBridge, null, 2)}`);
-    return 'Error: Bridge already exists!';
+    return 'Error: Bridge already started! Use the override if you\'re sure!';
   }
 
   await database.bridges.set({
@@ -42,7 +43,7 @@ export async function bridgeConfirm(
   const [existingBridge] = await database.bridges.get(null, externalGuild, externalChannel);
 
   if (existingBridge === undefined) {
-    return 'Error: Bridge does not exist!';
+    return noBridgeError;
   }
 
   // Then update the bridge with the external webhook
@@ -54,22 +55,52 @@ export async function bridgeConfirm(
 }
 
 export async function bridgePause(
-  interaction:ChatInputCommandInteraction,
+  internalChannel: string,
+  externalChannel: string,
 ):Promise<string> {
-  log.debug(F, `bridgePause: ${JSON.stringify(interaction, null, 2)}`);
-  return 'Pausing bridge...';
+  const [existingBridge] = await database.bridges.get(internalChannel, null, externalChannel);
+
+  if (existingBridge === undefined) {
+    return noBridgeError;
+  }
+
+  await database.bridges.set({
+    ...existingBridge,
+    status: 'PAUSED' as BridgeStatus,
+  } as Bridges);
+
+  return 'Paused bridge';
 }
 
 export async function bridgeResume(
-  interaction:ChatInputCommandInteraction,
+  internalChannel: string,
+  externalChannel: string,
 ):Promise<string> {
-  log.debug(F, `bridgeResume: ${JSON.stringify(interaction, null, 2)}`);
-  return 'Resuming bridge...';
+  const [existingBridge] = await database.bridges.get(internalChannel, null, externalChannel);
+
+  if (existingBridge === undefined) {
+    return noBridgeError;
+  }
+
+  await database.bridges.set({
+    ...existingBridge,
+    status: 'ACTIVE' as BridgeStatus,
+  } as Bridges);
+
+  return 'Activated bridge';
 }
 
 export async function bridgeRemove(
-  interaction:ChatInputCommandInteraction,
+  internalChannel: string,
+  externalChannel: string,
 ):Promise<string> {
-  log.debug(F, `bridgeRemove: ${JSON.stringify(interaction, null, 2)}`);
-  return 'Removing bridge...';
+  const [existingBridge] = await database.bridges.get(internalChannel, null, externalChannel);
+
+  if (existingBridge === undefined) {
+    return noBridgeError;
+  }
+
+  await database.bridges.del(existingBridge);
+
+  return 'Removed bridge';
 }
