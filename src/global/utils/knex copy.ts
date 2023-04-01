@@ -1,7 +1,6 @@
 import knex from 'knex';
 
 import {
-  Bridges,
   Counting,
   DiscordGuilds,
   DrugNames,
@@ -30,73 +29,6 @@ export const db = knex({
   client: 'pg',
   connection: env.POSTGRES_DB_URL,
 });
-
-export const database = {
-  users: {
-    get: getUser,
-    getMindsets: usersGetMindsets,
-    set: usersUpdate,
-    incrementPoint,
-    incrementKarma,
-  },
-  guilds: {
-    get: getGuild,
-    set: guildUpdate,
-  },
-  tickets: {
-    getOpen: getOpenTicket,
-    get: ticketGet,
-    set: ticketUpdate,
-    del: ticketDel,
-  },
-  reminders: {
-    get: reminderGet,
-    set: reminderSet,
-    del: reminderDel,
-  },
-  rss: {
-    get: rssGet,
-    set: rssSet,
-    del: rssDel,
-  },
-  reactionRoles: {
-    get: reactionroleGet,
-  },
-  experience: {
-    get: experienceGet,
-    getTop: experienceGetTop,
-    del: experienceDel,
-    set: experienceUpdate,
-  },
-  doses: {
-    get: idoseGet,
-    set: idoseSet,
-    del: idoseDel,
-  },
-  drugs: {
-    get: drugGet,
-  },
-  actions: {
-    get: useractionsGet,
-    set: useractionsSet,
-  },
-  personas: {
-    get: personaGet,
-    set: personaSet,
-  },
-  inventory: {
-    get: inventoryGet,
-    set: inventorySet,
-  },
-  counting: {
-    get: countingGet,
-    set: countingSet,
-  },
-  bridges: {
-    get: bridgeGet,
-    set: bridgeSet,
-  },
-};
 
 export async function getUser(
   discordId:string | null,
@@ -1072,68 +1004,4 @@ export async function countingSet(
     log.error(F, `Error setting counting: ${err}`);
     log.error(F, `data: ${JSON.stringify(data)}`);
   }
-}
-
-async function bridgeGet(
-  internalChannel: string | null,
-  externalGuild: string | null,
-  externalChannel: string | null,
-):Promise<Bridges[]> {
-  let data = [] as Bridges[];
-  if (internalChannel) {
-    if (externalGuild) {
-      try {
-        data = await db<Bridges>('bridges')
-          .select('*')
-          .where('internal_channel', internalChannel)
-          .andWhere('external_guild', externalGuild);
-      } catch (err) {
-        log.error(F, `Error getting user: ${err}`);
-        log.error(F, `internalChannel: ${internalChannel} | externalChannel: ${externalChannel}`);
-      }
-    } else {
-      try {
-        data = await db<Bridges>('bridges')
-          .select('*')
-          .where('internal_channel', internalChannel);
-      } catch (err) {
-        log.error(F, `Error getting user: ${err}`);
-        log.error(F, `internalChannel: ${internalChannel} | externalChannel: ${externalChannel}`);
-      }
-    }
-  }
-  if (externalChannel) {
-    try {
-      data = await db<Bridges>('bridges')
-        .select('*')
-        .where('external_channel', externalChannel);
-    // log.debug(F, `data3: ${JSON.stringify(data, null, 2)}`);
-    } catch (err) {
-      log.error(F, `Error getting user: ${err}`);
-      log.error(F, `internalChannel: ${internalChannel} | userId: ${externalChannel}`);
-    }
-  }
-
-  return data;
-}
-
-async function bridgeSet(
-  data: Bridges,
-):Promise<Bridges> {
-  if (env.POSTGRES_DB_URL === undefined) return {} as Bridges;
-  try {
-    await db<Bridges>('bridges')
-      .insert(data)
-      .onConflict(['internal_channel', 'external_guild'])
-      .merge();
-  } catch (err) {
-    log.error(F, `Error setting counting: ${err}`);
-    log.error(F, `data: ${JSON.stringify(data)}`);
-  }
-
-  return (await db<Bridges>('bridges')
-    .select('*')
-    .where('internal_channel', data.internal_channel)
-    .andWhere('external_guild', data.external_guild)
-    .first()) as Bridges;
 }

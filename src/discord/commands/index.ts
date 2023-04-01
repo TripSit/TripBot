@@ -18,7 +18,7 @@ export async function registerCommands(client: Client): Promise<void> {
      *
      * @param {string} commandType The type of command either global or guild
      */
-  async function registerType(commandType:string) {
+  async function registerType(commandType: 'global' | 'guild' | 'partner') {
     client.commands = new Collection(); // eslint-disable-line no-param-reassign
 
     const commandDir = path.join(__dirname, '../commands');
@@ -34,5 +34,5 @@ export async function registerCommands(client: Client): Promise<void> {
         client.commands.set(functionName, command[goodKey]);
       });
   }
-  await Promise.all([registerType('global'), registerType('guild')]);
+  await Promise.all([registerType('global'), registerType('guild'), registerType('partner')]);
 }

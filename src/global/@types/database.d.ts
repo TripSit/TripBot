@@ -1,6 +1,11 @@
 // The TypeScript definitions below are automatically generated.
 // Do not touch them, or risk, your modifications being lost.
 
+export enum BridgeStatus {
+  Active = 'ACTIVE',
+  Paused = 'PAUSED',
+}
+
 export enum CountingType {
   Normal = 'NORMAL',
   Hardcore = 'HARDCORE',
@@ -91,6 +96,7 @@ export enum UserActionType {
 }
 
 export enum Table {
+  Bridges = 'bridges',
   Counting = 'counting',
   DiscordGuilds = 'discord_guilds',
   DrugArticles = 'drug_articles',
@@ -113,6 +119,16 @@ export enum Table {
   UserTickets = 'user_tickets',
   Users = 'users',
 }
+
+export type Bridges = {
+  id: string;
+  internal_channel: string;
+  internal_webhook: string;
+  status: BridgeStatus;
+  external_guild: string;
+  external_channel: string;
+  external_webhook: string | null;
+};
 
 export type Counting = {
   id: string;
