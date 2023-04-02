@@ -72,7 +72,10 @@ export async function messageCommand(message: Message): Promise<void> {
   if (message.content.startsWith('~')) {
     // If you try to use the old tripbot command prefix while inside of the tripsit guild
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
-    if (message.author.bot) return;
+
+    // This doesnt work cuz webchat users are bots
+    // if (message.author.bot) return;
+
     // Find the word that appears after ~
     const command = message.content.split(' ')[0].slice(1);
     // log.debug(F, `command: ${command}`);
