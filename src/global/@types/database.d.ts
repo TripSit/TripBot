@@ -63,6 +63,15 @@ export enum ExperienceType {
   Voice = 'VOICE',
 }
 
+export enum ReactionRoleType {
+  Color = 'COLOR',
+  PremiumColor = 'PREMIUM_COLOR',
+  Mindset = 'MINDSET',
+  Pronoun = 'PRONOUN',
+  Notification = 'NOTIFICATION',
+  Custom = 'CUSTOM',
+}
+
 export enum TicketStatus {
   Open = 'OPEN',
   Owned = 'OWNED',
@@ -287,6 +296,8 @@ export type ReactionRoles = {
   reaction_id: string;
   role_id: string;
   created_at: Date;
+  type: ReactionRoleType;
+  name: string;
 };
 
 export type RpgInventory = {
