@@ -2,7 +2,7 @@
 
 import { Message } from 'discord.js';
 
-const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
 
 export default awayMessage;
 
