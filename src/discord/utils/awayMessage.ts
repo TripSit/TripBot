@@ -7,8 +7,6 @@ const F = f(__filename);
 export default awayMessage;
 
 export async function awayMessage(message:Message): Promise<void> {
-  log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
-
   // Check if the message mentions the bot owner
   if (!message.mentions.users.has(env.DISCORD_OWNER_ID)) return;
 
