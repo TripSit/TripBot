@@ -8,7 +8,7 @@ import {
 } from '../@types/eventDef';
 import { embedTemplate } from '../utils/embedTemplate';
 
-const F = f(__filename); // eslint-disable-line no-undef
+const F = f(__filename); // eslint-disable-line
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
