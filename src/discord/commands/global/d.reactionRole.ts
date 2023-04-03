@@ -340,7 +340,7 @@ export async function setupCustomReactionRole(
   const myMember = interaction.guild.members.me as GuildMember;
   const myRole = myMember.roles.highest;
   // Double check that my role is above this role
-  if (role.comparePositionTo(myRole) < 0) {
+  if (role.comparePositionTo(myRole) > 0) {
     await interaction.reply({
       embeds: [
         embedTemplate()
@@ -491,6 +491,21 @@ export async function buttonReactionRole(
           await i.editReply({ content: `Removed role ${role.name}` });
         });
     } else {
+      const myMember = interaction.guild.members.me as GuildMember;
+      const myRole = myMember.roles.highest;
+      log.debug(F, `My role: ${myRole.name} (${myRole.position}) vs ${role.name} (${role.position})`);
+      log.debug(F, `My role position: ${role.comparePositionTo(myRole)}`);
+      if (role.comparePositionTo(myRole) > 0) {
+        await interaction.editReply({
+          embeds: [
+            embedTemplate()
+              .setDescription(stripIndents`Error: My role needs to be higher than the role you want to manage!
+              Please move my role above ${role} and try again, or re-do this reaction role`)
+              .setColor(Colors.Red),
+          ],
+        });
+        return;
+      }
       await target.roles.remove(role);
       await interaction.editReply({ content: `Removed role ${role.name}` });
     }
@@ -965,19 +980,24 @@ async function getGuildRole(
     roleType,
   );
   try {
+    log.debug(F, `Pulling role ${roleName} from database`);
     returnRole = await interaction.guild?.roles.fetch(
       (reactionroleData.find(role => role.name === roleName) as ReactionRoles).role_id,
     ) as Role;
+    log.debug(F, `Role ${returnRole} found in guild`);
   } catch (err) {
+    log.debug(F, `Role ${roleName} not found in database`);
     reactionroleData = reactionroleData.filter(role => role.name !== roleName);
     reactionroleData.push(...await createRoles(
       'COLOR' as ReactionRoleType,
       [{ name: 'Tulip', emoji: 'TulipCircle', color: 'ff5f60' }],
       interaction,
     ));
+    // log.debug(F, `RoleData: ${JSON.stringify(reactionroleData, null, 2)}`);
     returnRole = await interaction.guild.roles.fetch(
       (reactionroleData.find(role => role.name === 'Tulip') as ReactionRoles).role_id,
     ) as Role;
+    log.debug(F, `Role ${returnRole} found in guild`);
   }
   return returnRole;
 }
@@ -1013,7 +1033,7 @@ export async function createColorMessage(
   const roleRed = await getGuildRole('COLOR' as ReactionRoleType, 'Tulip', interaction);
   const roleOrange = await getGuildRole('COLOR' as ReactionRoleType, 'Marigold', interaction);
   const roleYellow = await getGuildRole('COLOR' as ReactionRoleType, 'Daffodil', interaction);
-  const roleGreen = await getGuildRole('COLOR' as ReactionRoleType, 'Jade', interaction);
+  const roleGreen = await getGuildRole('COLOR' as ReactionRoleType, 'Waterlily', interaction);
   const roleBlue = await getGuildRole('COLOR' as ReactionRoleType, 'Bluebell', interaction);
   const rolePurple = await getGuildRole('COLOR' as ReactionRoleType, 'Hyacinth', interaction);
   const rolePink = await getGuildRole('COLOR' as ReactionRoleType, 'Azalea', interaction);

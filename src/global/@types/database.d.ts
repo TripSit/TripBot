@@ -182,7 +182,6 @@ export type DiscordGuilds = {
   partner: boolean;
   supporter: boolean;
   premium_role_ids: string | null;
-  team_role_ids: string | null;
 };
 
 export type DrugArticles = {

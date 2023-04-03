@@ -1107,12 +1107,12 @@ export async function reactionroleGet(
   type:ReactionRoleType,
 ):Promise<ReactionRoles[]> {
   if (env.POSTGRES_DB_URL === undefined) return [] as ReactionRoles[];
-  log.debug(F, `
-    guildId: ${guildId}
-    channelId: ${channelId}
-    messageId: ${messageId}
-    type: ${type}
-  `);
+  // log.debug(F, `
+  //   guildId: ${guildId}
+  //   channelId: ${channelId}
+  //   messageId: ${messageId}
+  //   type: ${type}
+  // `);
   if (guildId !== null) {
     if (channelId !== null) {
       if (messageId !== null) {
