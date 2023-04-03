@@ -5,7 +5,6 @@
 import {
   MessageReactionRemoveEvent,
 } from '../@types/eventDef';
-import { handleReactionRoles } from '../utils/handleReactionRoles';
 import { chitragupta } from '../utils/chitragupta';
 
 const F = f(__filename);
@@ -42,8 +41,6 @@ export const messageReactionRemove: MessageReactionRemoveEvent = {
     }
 
     // log.info(F, `${user.username} (${user.id}) removed ${reaction.emoji.name}`);
-
-    await handleReactionRoles(reaction, user, false);
 
     // if (reaction.message.author?.bot) {
     //   // log.debug(F, `Ignoring bot interaction`);

@@ -18,77 +18,27 @@ import {
   CategoryChannel,
   ChatInputCommandInteraction,
   Colors,
+  ChannelType,
+  PermissionResolvable,
 } from 'discord.js';
-import { getUser } from '../../../global/utils/knex';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-
-const F = f(__filename);
+import {
+  database,
+  getUser,
+} from '../../../global/utils/knex';
+import { checkGuildPermissions } from '../../utils/checkPermissions';
+import { ReactionRoles, ReactionRoleType } from '../../../global/@types/database';
 
 export default dReactionRole;
 
+const F = f(__filename);
+
 const guildError = 'This must be performed in a guild!';
 const memberError = 'This must be performed by a member of a guild!';
-const tripsitUrl = 'http://www.tripsit.me';
-
+const loadingMessage = 'Loading please hold...';
+const creationReason = 'Tripbot Reaction role';
 type RoleDef = { name: string; value: string };
-
-const colorRoles = [
-  { name: '💖 Tulip', value: env.ROLE_RED },
-  { name: '🧡 Marigold', value: env.ROLE_ORANGE },
-  { name: '💛 Daffodil', value: env.ROLE_YELLOW },
-  { name: '💚 Waterlily', value: env.ROLE_GREEN },
-  { name: '💙 Bluebell', value: env.ROLE_BLUE },
-  { name: '💜 Hyacinth', value: env.ROLE_PURPLE },
-  { name: '💗 Azalea', value: env.ROLE_PINK },
-  { name: '🤍 Snowdrop', value: env.ROLE_WHITE },
-] as RoleDef[];
-
-// log.debug(F, `Color roles: ${JSON.stringify(colorRoles, null, 2)}`);
-// const colorNames = colorRoles.map(role => role.name);
-const colorIds = colorRoles.map(role => role.value);
-
-const premiumColorRoles = [
-  { name: '💖 Ruby', value: env.ROLE_DONOR_RED },
-  { name: '🧡 Sunstone', value: env.ROLE_DONOR_ORANGE },
-  { name: '💛 Citrine', value: env.ROLE_DONOR_YELLOW },
-  { name: '💚 Jade', value: env.ROLE_DONOR_GREEN },
-  { name: '💙 Sapphire', value: env.ROLE_DONOR_BLUE },
-  { name: '💜 Amethyst', value: env.ROLE_DONOR_PURPLE },
-  { name: '💗 Pezzottaite', value: env.ROLE_DONOR_PINK },
-  { name: '🖤 Labradorite', value: env.ROLE_BLACK },
-] as RoleDef[];
-
-// log.debug(F, `Premium Color roles: ${JSON.stringify(premiumColorRoles, null, 2)}`);
-// const premiumColorNames = premiumColorRoles.map(role => role.name);
-const premiumColorIds = premiumColorRoles.map(role => role.value);
-
-const mindsetRoles = [
-  { name: 'Drunk', value: env.ROLE_DRUNK },
-  { name: 'High', value: env.ROLE_HIGH },
-  { name: 'Rolling', value: env.ROLE_ROLLING },
-  { name: 'Tripping', value: env.ROLE_TRIPPING },
-  { name: 'Dissociating', value: env.ROLE_DISSOCIATING },
-  { name: 'Stimming', value: env.ROLE_STIMMING },
-  { name: 'Sedated', value: env.ROLE_SEDATED },
-  { name: 'Sober', value: env.ROLE_SOBER },
-] as RoleDef[];
-
-// log.debug(F, `Mindset roles: ${JSON.stringify(mindsetRoles, null, 2)}`);
-// const mindsetNames = mindsetRoles.map(role => role.name);
-const mindsetIds = mindsetRoles.map(role => role.value);
-
-// const pronounRoles = [
-//   { name: 'He/Him', value: env.ROLE_PRONOUN_HE },
-//   { name: 'She/Her', value: env.ROLE_PRONOUN_SHE },
-//   { name: 'They/Them', value: env.ROLE_PRONOUN_THEY },
-//   { name: 'Any', value: env.ROLE_PRONOUN_ANY },
-//   { name: 'Ask', value: env.ROLE_PRONOUN_ASK },
-// ] as RoleDef[];
-
-// log.debug(F, `Pronoun roles: ${JSON.stringify(pronounRoles, null, 2)}`);
-// const pronounNames = pronounRoles.map(role => role.name);
-// const pronounIds = pronounRoles.map(role => role.value);
 
 export const dReactionRole: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -101,12 +51,13 @@ export const dReactionRole: SlashCommand = {
         .setRequired(true)
         .setDescription('What role should be applied?'))
       .addStringOption(option => option.setName('emoji')
-        .setRequired(true)
         .setDescription('What emoji should be used?'))
+      .addStringOption(option => option.setName('label')
+        .setDescription('What should the button label say?'))
       .addBooleanOption(option => option.setName('intro_message')
         .setDescription('Do they need to provide an intro message?'))
       .addChannelOption(option => option.setName('intro_channel')
-        .setDescription('Where should the announcement be posted?')))
+        .setDescription('Where should the intro message be posted?')))
     .addSubcommand(subcommand => subcommand
       .setName('template')
       .setDescription('Display a pre-defined set of reaction role messages')
@@ -131,10 +82,37 @@ export const dReactionRole: SlashCommand = {
       // log.debug(F, `no member!`);
       await interaction.reply(memberError);
     }
-    if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_DEVELOPER)) {
-      await interaction.reply({ content: 'You do not have permission to use this command!', ephemeral: true });
+    if (!(interaction.member as GuildMember).permissions.has('ManageRoles' as PermissionResolvable)) {
+      await interaction.reply({ content: 'Error: You do not have the ManageRoles permission needed to create a reactionrole message!', ephemeral: true });
       return false;
     }
+
+    if (!interaction.guild) {
+      await interaction.editReply({ content: 'This command can only be used in a guild!' });
+      return false;
+    }
+
+    if (!interaction.channel) {
+      await interaction.editReply({ content: 'This command can only be used in a channel!' });
+      return false;
+    }
+
+    // Check that i have permission to add roles
+    const guildPerms = await checkGuildPermissions(interaction.guild, [
+      'ManageRoles' as PermissionResolvable,
+    ]);
+    if (!guildPerms.hasPermission) {
+      log.error(F, `Missing guild permission ${guildPerms.permission} in ${interaction.guild}!`);
+      await interaction.reply({
+        content: stripIndents`Missing ${guildPerms.permission} permission in ${interaction.guild}!
+      In order to setup the reaction roles feature I need:
+      Manage Roles - In order to give and take away roles from users
+      Note: My role needs to be higher than all other roles you want managed!`,
+        ephemeral: true,
+      });
+      return false;
+    }
+
     const subcommand = interaction.options.getSubcommand();
 
     if (subcommand === 'template') {
@@ -149,23 +127,90 @@ export const dReactionRole: SlashCommand = {
 export async function setupTemplateReactionRole(
   interaction:ChatInputCommandInteraction,
 ) {
-  await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
-  const set = interaction.options.getString('set', true);
+  await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) return;
-  const { guild } = interaction;
+  if (!interaction.member) return;
+  if (!interaction.channel) return;
+
+  const set = interaction.options.getString('set', true);
 
   if (set === 'color') {
-    const roleRed = await guild.roles.fetch(env.ROLE_RED) as Role;
-    const roleOrange = await guild.roles.fetch(env.ROLE_ORANGE) as Role;
-    const roleYellow = await guild.roles.fetch(env.ROLE_YELLOW) as Role;
-    const roleGreen = await guild.roles.fetch(env.ROLE_GREEN) as Role;
-    const roleBlue = await guild.roles.fetch(env.ROLE_BLUE) as Role;
-    const rolePurple = await guild.roles.fetch(env.ROLE_PURPLE) as Role;
-    const rolePink = await guild.roles.fetch(env.ROLE_PINK) as Role;
-    const roleWhite = await guild.roles.fetch(env.ROLE_WHITE) as Role;
+    const reactionMessage = await (interaction.channel as TextChannel).send({ content: loadingMessage });
+
+    let reactionroleData = await database.reactionRoles.get(
+      interaction.guild.id,
+      interaction.channel.id,
+      null,
+      'COLOR' as ReactionRoleType,
+    );
+    if (reactionroleData.length === 0) {
+      // Create the roles and store them in the db
+      const roleDataDict = [
+        { name: 'Tulip', emoji: 'TulipCircle', color: 'ff5f60' },
+        { name: 'Marigold', emoji: 'MarigoldCircle', color: 'ffa45f' },
+        { name: 'Daffodil', emoji: 'DaffodilCircle', color: 'ffdd5d' },
+        { name: 'Waterlily', emoji: 'WaterlilyCircle', color: '6de194' },
+        { name: 'Bluebell', emoji: 'BluebellCircle', color: '5acff5' },
+        { name: 'Hyacinth', emoji: 'HyacinthCircle', color: 'b072ff' },
+        { name: 'Azalea', emoji: 'AzaleaCircle', color: 'ff6dcd' },
+        { name: 'Snowdrop', emoji: 'SnowdropCircle', color: 'dadada' },
+      ];
+
+      await Promise.allSettled(roleDataDict.map(async roleData => {
+        const newRole = await interaction.guild?.roles.create( // eslint-disable-line no-await-in-loop
+          {
+            name: roleData.name,
+            color: `#${roleData.color}`,
+            mentionable: false,
+            icon: interaction.guild.premiumTier === 2 ? emojiGet(roleData.emoji).url : null,
+            reason: creationReason,
+          },
+        ) as Role;
+        await database.reactionRoles.set([{ // eslint-disable-line no-await-in-loop
+          guild_id: interaction.guild?.id,
+          channel_id: interaction.channel?.id,
+          message_id: reactionMessage.id,
+          role_id: newRole.id,
+          type: 'COLOR' as ReactionRoleType,
+          name: roleData.name,
+        } as ReactionRoles]);
+      }));
+
+      reactionroleData = await database.reactionRoles.get(
+        interaction.guild.id,
+        interaction.channel.id,
+        null,
+        'COLOR' as ReactionRoleType,
+      );
+    }
+
+    const roleRed = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Tulip') as ReactionRoles).role_id,
+    ) as Role;
+    const roleOrange = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Marigold') as ReactionRoles).role_id,
+    ) as Role;
+    const roleYellow = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Daffodil') as ReactionRoles).role_id,
+    ) as Role;
+    const roleGreen = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Waterlily') as ReactionRoles).role_id,
+    ) as Role;
+    const roleBlue = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Bluebell') as ReactionRoles).role_id,
+    ) as Role;
+    const rolePurple = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Hyacinth') as ReactionRoles).role_id,
+    ) as Role;
+    const rolePink = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Azalea') as ReactionRoles).role_id,
+    ) as Role;
+    const roleWhite = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Snowdrop') as ReactionRoles).role_id,
+    ) as Role;
 
     const embed = embedTemplate()
-      .setAuthor({ name: 'Colors', iconURL: env.TS_ICON_URL, url: tripsitUrl })
+      .setAuthor({ name: 'Colors' })
       .setDescription('React to this message to set the color of your nickname!')
       .setFooter({ text: 'You can only pick one color at a time!' })
       .setColor(Colors.Red);
@@ -218,21 +263,88 @@ export async function setupTemplateReactionRole(
 
     await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
   } else if (set === 'premium_color') {
+    const reactionMessage = await (interaction.channel as TextChannel).send({ content: loadingMessage });
+
+    let reactionroleData = await database.reactionRoles.get(
+      interaction.guild.id,
+      interaction.channel.id,
+      null,
+      'PREMIUM_COLOR' as ReactionRoleType,
+    );
+
+    if (reactionroleData.length === 0) {
+      // Create the roles and store them in the db
+      const roleDataDict = [
+        { name: 'Ruby', emoji: 'RubyCircle', color: 'ff3c3e' },
+        { name: 'Sunstone', emoji: 'SunstoneCircle', color: 'ff913b' },
+        { name: 'Citrine', emoji: 'CitrineCircle', color: 'ffd431' },
+        { name: 'Jade', emoji: 'JadeCircle', color: '45e47b' },
+        { name: 'Sapphire', emoji: 'BluebellCircle', color: '22bef0' },
+        { name: 'Amethyst', emoji: 'AmethystCircle', color: '9542ff' },
+        { name: 'Pezzottaite', emoji: 'PezzottaiteCircle', color: 'ff4ac1' },
+        { name: 'Labradorite', emoji: 'LabradoriteCircle', color: '626262' },
+      ];
+
+      for (const roleData of roleDataDict) { // eslint-disable-line no-restricted-syntax
+        const newRole = await interaction.guild.roles.create( // eslint-disable-line no-await-in-loop
+          {
+            name: roleData.name,
+            color: `#${roleData.color}`,
+            mentionable: false,
+            icon: interaction.guild.premiumTier === 2 ? emojiGet(roleData.emoji).url : null,
+            reason: creationReason,
+          },
+        );
+
+        await database.reactionRoles.set([{ // eslint-disable-line no-await-in-loop
+          guild_id: interaction.guild.id,
+          channel_id: interaction.channel.id,
+          message_id: reactionMessage.id,
+          role_id: newRole.id,
+          type: 'PREMIUM_COLOR' as ReactionRoleType,
+          name: roleData.name,
+        } as ReactionRoles]);
+      }
+
+      reactionroleData = await database.reactionRoles.get(
+        interaction.guild.id,
+        interaction.channel.id,
+        null,
+        'PREMIUM_COLOR' as ReactionRoleType,
+      );
+    }
+
+    const roleDonorRed = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Ruby') as ReactionRoles).role_id,
+    ) as Role;
+    const roleDonorOrange = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Sunstone') as ReactionRoles).role_id,
+    ) as Role;
+    const roleDonorYellow = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Citrine') as ReactionRoles).role_id,
+    ) as Role;
+    const roleDonorGreen = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Jade') as ReactionRoles).role_id,
+    ) as Role;
+    const roleDonorBlue = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Sapphire') as ReactionRoles).role_id,
+    ) as Role;
+    const roleDonorPurple = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Amethyst') as ReactionRoles).role_id,
+    ) as Role;
+    const roleDonorPink = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Pezzottaite') as ReactionRoles).role_id,
+    ) as Role;
+    const roleDonorBlack = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Labradorite') as ReactionRoles).role_id,
+    ) as Role;
+
     const embed = embedTemplate()
       .setDescription(stripIndents`Boosters and Patrons can access new colors!
-    React to this message to set the color of your nickname!`)
-      .setAuthor({ name: 'Premium Colors', iconURL: env.TS_ICON_URL, url: tripsitUrl })
+  React to this message to set the color of your nickname!`)
+      .setAuthor({ name: 'Premium Colors' })
       .setFooter({ text: 'You can only pick one color at a time, choose wisely!' })
       .setColor(Colors.Purple);
-
-    const roleDonorRed = await guild.roles.fetch(env.ROLE_DONOR_RED) as Role;
-    const roleDonorOrange = await guild.roles.fetch(env.ROLE_DONOR_ORANGE) as Role;
-    const roleDonorYellow = await guild.roles.fetch(env.ROLE_DONOR_YELLOW) as Role;
-    const roleDonorGreen = await guild.roles.fetch(env.ROLE_DONOR_GREEN) as Role;
-    const roleDonorBlue = await guild.roles.fetch(env.ROLE_DONOR_BLUE) as Role;
-    const roleDonorPurple = await guild.roles.fetch(env.ROLE_DONOR_PURPLE) as Role;
-    const roleDonorPink = await guild.roles.fetch(env.ROLE_DONOR_PINK) as Role;
-    const roleDonorBlack = await guild.roles.fetch(env.ROLE_BLACK) as Role;
 
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
@@ -279,20 +391,97 @@ export async function setupTemplateReactionRole(
         .setEmoji(emojiGet('LabradoriteCircle').id)
         .setStyle(ButtonStyle.Primary),
     );
-    await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
+    reactionMessage.edit({ content: null, embeds: [embed], components: [row1, row2] });
+    // await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
   } else if (set === 'mindset') {
-    const roleDrunk = await guild.roles.fetch(env.ROLE_DRUNK) as Role;
-    const roleHigh = await guild.roles.fetch(env.ROLE_HIGH) as Role;
-    const roleRolling = await guild.roles.fetch(env.ROLE_ROLLING) as Role;
-    const roleTripping = await guild.roles.fetch(env.ROLE_TRIPPING) as Role;
-    const roleDissociating = await guild.roles.fetch(env.ROLE_DISSOCIATING) as Role;
-    const roleStimming = await guild.roles.fetch(env.ROLE_STIMMING) as Role;
-    const roleSedated = await guild.roles.fetch(env.ROLE_SEDATED) as Role;
-    const roleTalkative = await guild.roles.fetch(env.ROLE_TALKATIVE) as Role;
-    const roleWorking = await guild.roles.fetch(env.ROLE_WORKING) as Role;
+    const reactionMessage = await (interaction.channel as TextChannel).send({ content: loadingMessage });
+
+    let reactionroleData = await database.reactionRoles.get(
+      interaction.guild.id,
+      interaction.channel.id,
+      null,
+      'MINDSET' as ReactionRoleType,
+    );
+
+    log.debug(F, `reactionRoleData: ${JSON.stringify(reactionroleData, null, 2)}`);
+
+    if (reactionroleData.length === 0) {
+      log.debug(F, 'Creating mindset roles');
+      // Create the roles and store them in the db
+      const roleDataDict = [
+        { name: 'Drunk', emoji: 'Alcohol', color: '000000' },
+        { name: 'High', emoji: 'Weed', color: '000000' },
+        { name: 'Rolling', emoji: 'Empathogens', color: '000000' },
+        { name: 'Tripping', emoji: 'Psychedelics', color: '000000' },
+        { name: 'Dissociated', emoji: 'Dissociatives', color: '000000' },
+        { name: 'Stimming', emoji: 'Stimulants', color: '000000' },
+        { name: 'Sedated', emoji: 'Depressants', color: '000000' },
+        { name: 'Talkative', emoji: 'Talkative', color: '000000' },
+        { name: 'Working', emoji: 'Working', color: '000000' },
+      ];
+
+      for (const roleData of roleDataDict) { // eslint-disable-line no-restricted-syntax
+        const newRole = await interaction.guild.roles.create( // eslint-disable-line no-await-in-loop
+          {
+            name: roleData.name,
+            color: `#${roleData.color}`,
+            mentionable: false,
+            icon: interaction.guild.premiumTier === 2 ? emojiGet(roleData.emoji).url : null,
+            reason: creationReason,
+          },
+        );
+
+        await database.reactionRoles.set([{ // eslint-disable-line no-await-in-loop
+          guild_id: interaction.guild.id,
+          channel_id: interaction.channel.id,
+          message_id: reactionMessage.id,
+          role_id: newRole.id,
+          type: 'MINDSET' as ReactionRoleType,
+          name: roleData.name,
+        } as ReactionRoles]);
+      }
+
+      reactionroleData = await database.reactionRoles.get(
+        interaction.guild.id,
+        interaction.channel.id,
+        null,
+        'MINDSET' as ReactionRoleType,
+      );
+    }
+
+    log.debug(F, `${reactionroleData.length} mindset roles got!`);
+    log.debug(F, `reactionRoleData: ${JSON.stringify(reactionroleData, null, 2)}`);
+
+    const roleDrunk = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Drunk') as ReactionRoles).role_id,
+    ) as Role;
+    const roleHigh = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'High') as ReactionRoles).role_id,
+    ) as Role;
+    const roleRolling = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Rolling') as ReactionRoles).role_id,
+    ) as Role;
+    const roleTripping = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Tripping') as ReactionRoles).role_id,
+    ) as Role;
+    const roleDissociating = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Dissociated') as ReactionRoles).role_id,
+    ) as Role;
+    const roleStimming = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Stimming') as ReactionRoles).role_id,
+    ) as Role;
+    const roleSedated = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Sedated') as ReactionRoles).role_id,
+    ) as Role;
+    const roleTalkative = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Talkative') as ReactionRoles).role_id,
+    ) as Role;
+    const roleWorking = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Working') as ReactionRoles).role_id,
+    ) as Role;
 
     const embed = embedTemplate()
-      .setAuthor({ name: 'Mindsets', iconURL: env.TS_ICON_URL, url: tripsitUrl })
+      .setAuthor({ name: 'Mindsets' })
       .setDescription(stripIndents`
         **React to this message to show your mindset!**
       `)
@@ -354,19 +543,83 @@ export async function setupTemplateReactionRole(
         .setStyle(ButtonStyle.Primary),
     );
 
-    await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2, row3] });
+    await reactionMessage.edit({ content: null, embeds: [embed], components: [row1, row2, row3] });
+    // await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2, row3] });
   } else if (set === 'pronoun') {
+    const reactionMessage = await (interaction.channel as TextChannel).send({ content: loadingMessage });
+
+    let reactionroleData = await database.reactionRoles.get(
+      interaction.guild.id,
+      interaction.channel.id,
+      null,
+      'PRONOUN' as ReactionRoleType,
+    );
+
+    log.debug(F, `Reactionrole data: ${JSON.stringify(reactionroleData)}`);
+
+    if (reactionroleData.length === 0) {
+      log.debug(F, 'No reactionrole data found, creating new roles');
+      // Create the roles and store them in the db
+      const roleDataDict = [
+        { name: 'AskMe', emoji: 'AskMePronouns', color: '000000' },
+        { name: 'AnyPronouns', emoji: 'AnyPronouns', color: '000000' },
+        { name: 'TheyThem', emoji: 'TheyThem', color: '000000' },
+        { name: 'SheHer', emoji: 'SheHer', color: '000000' },
+        { name: 'HeHim', emoji: 'HeHim', color: '000000' },
+      ];
+
+      for (const roleData of roleDataDict) { // eslint-disable-line no-restricted-syntax
+        const newRole = await interaction.guild.roles.create( // eslint-disable-line no-await-in-loop
+          {
+            name: roleData.name,
+            color: `#${roleData.color}`,
+            mentionable: false,
+            icon: interaction.guild.premiumTier === 2 ? emojiGet(roleData.emoji).url : null,
+            reason: creationReason,
+          },
+        );
+
+        await database.reactionRoles.set([{ // eslint-disable-line no-await-in-loop
+          guild_id: interaction.guild.id,
+          channel_id: interaction.channel.id,
+          message_id: reactionMessage.id,
+          role_id: newRole.id,
+          type: 'PRONOUN' as ReactionRoleType,
+          name: roleData.name,
+        } as ReactionRoles]);
+      }
+
+      reactionroleData = await database.reactionRoles.get(
+        interaction.guild.id,
+        interaction.channel.id,
+        null,
+        'PRONOUN' as ReactionRoleType,
+      );
+    }
+
+    log.debug(F, `Reactionrole data: ${JSON.stringify(reactionroleData)}`);
+
+    const pronounAsk = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'AskMe') as ReactionRoles).role_id,
+    ) as Role;
+    const pronounAny = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'AnyPronouns') as ReactionRoles).role_id,
+    ) as Role;
+    const pronounThey = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'TheyThem') as ReactionRoles).role_id,
+    ) as Role;
+    const pronounShe = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'SheHer') as ReactionRoles).role_id,
+    ) as Role;
+    const pronounHe = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'HeHim') as ReactionRoles).role_id,
+    ) as Role;
+
     const embed = embedTemplate()
-      .setAuthor({ name: 'Pronouns', iconURL: env.TS_ICON_URL, url: tripsitUrl })
+      .setAuthor({ name: 'Pronouns' })
       .setDescription(stripIndents`Click the button(s) below to pick your pronoun(s)!`)
       .setFooter({ text: 'You may pick as many pronoun roles as you want!' })
       .setColor(Colors.Blue);
-
-    const pronounHe = await guild.roles.fetch(env.ROLE_PRONOUN_HE) as Role;
-    const pronounShe = await guild.roles.fetch(env.ROLE_PRONOUN_SHE) as Role;
-    const pronounThey = await guild.roles.fetch(env.ROLE_PRONOUN_THEY) as Role;
-    const pronounAny = await guild.roles.fetch(env.ROLE_PRONOUN_ANY) as Role;
-    const pronounAsk = await guild.roles.fetch(env.ROLE_PRONOUN_ASK) as Role;
 
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
@@ -399,37 +652,120 @@ export async function setupTemplateReactionRole(
         .setStyle(ButtonStyle.Primary),
     );
 
-    await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
+    await reactionMessage.edit({ content: null, embeds: [embed], components: [row1, row2] });
+    // await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2] });
   } else if (set === 'notifications') {
+    const reactionMessage = await (interaction.channel as TextChannel).send({ content: loadingMessage });
+    const isHome = interaction.guild.id === env.DISCORD_GUILD_ID;
+
+    let reactionroleData = await database.reactionRoles.get(
+      interaction.guild.id,
+      interaction.channel.id,
+      null,
+      'NOTIFICATION' as ReactionRoleType,
+    );
+
+    if (reactionroleData.length === 0) {
+      // Create the roles and store them in the db
+      const roleDataDict = [
+        { name: 'Announcements', emoji: 'Announcement', color: '000000' },
+        { name: 'Voice Chatter', emoji: 'Discussion', color: '000000' },
+        { name: 'Activity Crew', emoji: 'Game', color: '000000' },
+      ];
+
+      if (isHome) {
+        roleDataDict.push({ name: 'TripBot Updates', emoji: 'Bot', color: '000000' });
+        roleDataDict.push({ name: 'TripTown Updates', emoji: 'buttonTown', color: '000000' });
+      }
+
+      for (const roleData of roleDataDict) { // eslint-disable-line no-restricted-syntax
+        const newRole = await interaction.guild.roles.create( // eslint-disable-line no-await-in-loop
+          {
+            name: roleData.name,
+            color: `#${roleData.color}`,
+            mentionable: false,
+            icon: interaction.guild.premiumTier === 2 ? emojiGet(roleData.emoji).url : null,
+            reason: creationReason,
+          },
+        );
+
+        await database.reactionRoles.set([{ // eslint-disable-line no-await-in-loop
+          guild_id: interaction.guild.id,
+          channel_id: interaction.channel.id,
+          message_id: reactionMessage.id,
+          role_id: newRole.id,
+          type: 'NOTIFICATION' as ReactionRoleType,
+          name: roleData.name,
+        } as ReactionRoles]);
+      }
+
+      reactionroleData = await database.reactionRoles.get(
+        interaction.guild.id,
+        interaction.channel.id,
+        null,
+        'NOTIFICATION' as ReactionRoleType,
+      );
+    }
+
+    const roleAnnouncements = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Announcements') as ReactionRoles).role_id,
+    ) as Role;
+    const roleVoiceChatter = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Voice Chatter') as ReactionRoles).role_id,
+    ) as Role;
+    const roleActivityCrew = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'Activity Crew') as ReactionRoles).role_id,
+    ) as Role;
+    const roleTripbotUpdates = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'TripBot Updates') as ReactionRoles).role_id,
+    ) as Role;
+    const roleTriptownUpdates = await interaction.guild.roles.fetch(
+      (reactionroleData.find(role => role.name === 'TripTown Updates') as ReactionRoles).role_id,
+    ) as Role;
+
     const embed = embedTemplate()
-      .setAuthor({ name: 'Notifications', iconURL: env.TS_ICON_URL, url: tripsitUrl })
-      .setDescription(stripIndents`Click the button(s) below to pick your notification(s) roles!`)
+      .setAuthor({ name: 'Notifications' })
+      .setDescription(stripIndents`Click the button${isHome ? 's' : ''} below to pick your notification role${isHome ? 's' : ''}!`)
       .setFooter({ text: 'Having one of these roles means you will receive a @ ping notification for the respective topic.' }) // eslint-disable-line max-len
       .setColor(Colors.Yellow);
 
-    const Announcements = await guild.roles.fetch(env.ROLE_ANNOUNCEMENTS) as Role;
-    const TripBotUpdates = await guild.roles.fetch(env.ROLE_TRIPBOTUPDAES) as Role;
-    const TripTownNotices = await guild.roles.fetch(env.ROLE_TRIPTOWNNOTICES) as Role;
+    const row1 = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        new ButtonBuilder()
+          .setLabel(`${roleAnnouncements.name}`)
+          .setCustomId(`"ID":"RR","RID":"${roleAnnouncements.id}"`)
+          .setEmoji(emojiGet('Announcement').id)
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setLabel(`${roleVoiceChatter.name}`)
+          .setCustomId(`"ID":"RR","RID":"${roleVoiceChatter.id}"`)
+          .setEmoji(emojiGet('Discussion').id)
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setLabel(`${roleActivityCrew.name}`)
+          .setCustomId(`"ID":"RR","RID":"${roleActivityCrew.id}"`)
+          .setEmoji(emojiGet('Game').id)
+          .setStyle(ButtonStyle.Primary),
+      );
 
-    const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setLabel(`${Announcements.name}`)
-        .setCustomId(`"ID":"RR","RID":"${Announcements.id}"`)
-        .setEmoji(emojiGet('UpdatePing').id)
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setLabel(`${TripBotUpdates.name}`)
-        .setCustomId(`"ID":"RR","RID":"${TripBotUpdates.id}"`)
-        .setEmoji(emojiGet('UpdatePing').id)
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setLabel(`${TripTownNotices.name}`)
-        .setCustomId(`"ID":"RR","RID":"${TripTownNotices.id}"`)
-        .setEmoji(emojiGet('UpdatePing').id)
-        .setStyle(ButtonStyle.Primary),
-    );
+    if (isHome) {
+      row1
+        .addComponents(
+          new ButtonBuilder()
+            .setLabel(`${roleTripbotUpdates.name}`)
+            .setCustomId(`"ID":"RR","RID":"${roleTripbotUpdates.id}"`)
+            .setEmoji(emojiGet('Bot').id)
+            .setStyle(ButtonStyle.Primary),
+          new ButtonBuilder()
+            .setLabel(`${roleTriptownUpdates.name}`)
+            .setCustomId(`"ID":"RR","RID":"${roleTriptownUpdates.id}"`)
+            .setEmoji(emojiGet('buttonTown').id)
+            .setStyle(ButtonStyle.Primary),
+        );
+    }
 
-    await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1] });
+    await reactionMessage.edit({ content: null, embeds: [embed], components: [row1] });
+    // await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1] });
   }
 
   await interaction.editReply({ content: 'Reaction roles have been set up!' });
@@ -438,14 +774,18 @@ export async function setupTemplateReactionRole(
 export async function setupCustomReactionRole(
   interaction:ChatInputCommandInteraction,
 ) {
-  const introMessage = interaction.options.getBoolean('intro_message')
-    ? `"${interaction.options.getBoolean('intro_message')}"`
+  if (!interaction.guild) return;
+  if (!interaction.member) return;
+  if (!interaction.channel) return;
+  const introMessageRequired = interaction.options.getBoolean('intro_message')
+    ? interaction.options.getBoolean('intro_message')
     : null;
-  const introChannel = interaction.options.getChannel('intro_channel')
-    ? `"${interaction.options.getChannel('intro_channel', true).id}"`
+  const messagePostChannel = interaction.options.getChannel('intro_channel')
+    ? interaction.options.getChannel('intro_channel')
     : null;
 
-  if (introMessage && !introChannel) {
+  // If an intro message is required, make sure they specified a channel
+  if (introMessageRequired && messagePostChannel === null) {
     await interaction.reply({
       content: 'You must specify where you want the intro message to be posted!',
       ephemeral: true,
@@ -453,12 +793,22 @@ export async function setupCustomReactionRole(
     return;
   }
 
-  const emojiInput = interaction.options.getString('emoji', true);
+  // Make sure the message channel is a text channel
+  if (messagePostChannel && messagePostChannel.type !== ChannelType.GuildText) {
+    await interaction.reply({
+      content: 'The intro message channel must be a text channel!',
+      ephemeral: true,
+    });
+    return;
+  }
+
   // Double check this is actually an emoji character and not a string
+  const emojiInput = interaction.options.getString('emoji');
   const regex = /<a?:.+?:\d{18}>|\p{Extended_Pictographic}/gu;
-  const emoji = emojiInput.match(regex);
-  log.debug(F, `Emoji: ${emoji}`);
-  if (!emoji) {
+  const emojiFound = emojiInput ? emojiInput.match(regex) : null;
+  log.debug(F, `emojiFound: ${emojiFound}`);
+
+  if (emojiInput && emojiInput.length > 0 && !emojiFound) {
     await interaction.reply({
       content: 'That is not a valid emoji! Please try again.',
       ephemeral: true,
@@ -466,18 +816,63 @@ export async function setupCustomReactionRole(
     return;
   }
 
+  if (emojiFound && emojiFound.length > 1) {
+    await interaction.reply({
+      content: 'You can only specify one emoji!',
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const emoji = emojiFound ? emojiFound[0] : null;
+  const label = interaction.options.getString('label') ? interaction.options.getString('label') : null;
+  // Check that at least either emoji or label is specified
+  if (!emoji && !label) {
+    await interaction.reply({
+      content: 'You must specify either an emoji or a label for the reaction role!',
+      ephemeral: true,
+    });
+    return;
+  }
+
   const role = interaction.options.getRole('role', true) as Role;
+  const myMember = interaction.guild.members.me as GuildMember;
+  const myRole = myMember.roles.highest;
+  // Double check that my role is above this role
+  if (role.comparePositionTo(myRole) < 0) {
+    await interaction.reply({
+      content: stripIndents`My role needs to be higher than the role you want to manage!
+    Please move my role above ${role} and try again.`,
+      ephemeral: true,
+    });
+    return;
+  }
+
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
     .setTitle(`${role.name} Description`)
-    .addComponents(new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(new TextInputBuilder()
-        .setCustomId('description')
-        .setRequired(true)
-        .setLabel('Describe this role!')
-    .setPlaceholder(`This will go into the embed to let people know what they're clicking on!`) // eslint-disable-line
-        .setMaxLength(2000)
-        .setStyle(TextInputStyle.Paragraph))));
+    .addComponents(
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(
+          new TextInputBuilder()
+            .setCustomId('title')
+            .setRequired(true)
+            .setLabel('Title the embed')
+        .setPlaceholder(`This will go above the description to highlight what this button does`) // eslint-disable-line
+            .setMaxLength(100)
+            .setStyle(TextInputStyle.Short),
+        ),
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(
+          new TextInputBuilder()
+            .setCustomId('description')
+            .setRequired(true)
+            .setLabel('Describe this role!')
+          .setPlaceholder(`This will go into the embed to let people know what they're clicking on!`) // eslint-disable-line
+            .setMaxLength(2000)
+            .setStyle(TextInputStyle.Paragraph),
+        ),
+    ));
 
   // Collect a modal submit interaction
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
@@ -486,32 +881,37 @@ export async function setupCustomReactionRole(
       const { II } = JSON.parse(`{${i.customId}}`);
       if (II !== interaction.id) return;
       await i.deferReply({ ephemeral: true });
+      const button = new ButtonBuilder()
+        .setCustomId(`"ID":"RR","RID":"${role.id}","IM":${introMessageRequired},"IC":${messagePostChannel}`)
+        .setStyle(ButtonStyle.Primary);
+      if (emoji) button.setEmoji(emoji);
+      if (label) button.setLabel(label);
+
       await (interaction.channel as TextChannel).send({
         embeds: [
           embedTemplate()
-            .setFooter(null)
-            .setDescription(i.fields.getTextInputValue('description')),
+            .setAuthor(null)
+            .setTitle(i.fields.getTextInputValue('title'))
+            .setDescription(i.fields.getTextInputValue('description'))
+            .setFooter(null),
         ],
         components: [
           new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
-              new ButtonBuilder()
-                .setCustomId(`"ID":"RR","RID":"${role.id}","IM":${introMessage},"IC":${introChannel}`)
-                .setEmoji(emoji[0])
-                .setStyle(ButtonStyle.Primary),
+              button,
             ),
         ],
       });
 
-      const channelBotlog = await i.guild?.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-      await channelBotlog.send(
-        `${(interaction.member as GuildMember).displayName} created a new reaction role message`,
-      );
+      // const channelBotlog = await i.guild?.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+      // await channelBotlog.send(
+      //   `${(interaction.member as GuildMember).displayName} created a new reaction role message`,
+      // );
       await i.editReply({ content: 'Reaction role message created!' });
     });
 }
 
-export async function processReactionRole(
+export async function buttonReactionRole(
   interaction:ButtonInteraction,
 ) {
   // log.debug(F, `Processing reaction role click Options: ${JSON.stringify(interaction.customId, null, 2)}`);
@@ -524,25 +924,20 @@ export async function processReactionRole(
     IM?:string,
     IC?:string,
   };
-  if (!interaction.guild) {
-    // log.debug(F, `no guild!`);
-    await interaction.reply(guildError);
-    return;
-  }
-  if (!interaction.member) {
-    // log.debug(F, `no member!`);
-    await interaction.reply(memberError);
-  }
+  if (!interaction.guild) return;
+  if (!interaction.member) return;
+  if (!interaction.channel) return;
 
   // log.debug(F, ` RID: ${RID} IM: ${IM} typeof IM: ${typeof IM} IC: ${IC} `);
   const introMessageRequired = IM === 'true';
+
+  // If the intro message isn't required, then there is no modal, so defer
   if (!introMessageRequired) {
     await interaction.deferReply({ ephemeral: true });
   }
   // log.debug(F, `introMessageRequired: ${introMessageRequired} `);
 
-  const { guild } = interaction;
-  const role = await guild.roles.fetch(RID);
+  const role = await interaction.guild.roles.fetch(RID);
   if (!role) {
     log.error(F, `Role ${RID} not found`);
     return;
@@ -551,7 +946,7 @@ export async function processReactionRole(
   const channelProvided = IC;
 
   const target = interaction.member as GuildMember;
-  // If the user already has the role
+  // If the user already has the role, remove it
   if (target.roles.cache.has(role.id)) {
     if (introMessageRequired) {
       // Display modal to get intro message from the user
@@ -592,6 +987,7 @@ export async function processReactionRole(
   }
 
   const userData = await getUser(target.id, null);
+
   // If the role being requested is the Helper or Contributor role, check if they have been banned first
   if (role.id === env.ROLE_HELPER && userData.helper_role_ban) {
     await interaction.editReply({ content: 'Unable to add this role. If you feel this is an error, please talk to the team!' });
@@ -604,11 +1000,11 @@ export async function processReactionRole(
   }
 
   // const channelTripsitmeta = await guild.channels.fetch(env.CHANNEL_TRIPSITMETA) as TextChannel;
-  const channelTripsit = await guild.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
-  const hrCategory = await guild.channels.fetch(env.CATEGORY_HARMREDUCTIONCENTRE) as CategoryChannel;
-  const devCategory = await guild.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
-  const channelTripcord = await guild.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
-  const channelTripbot = await guild.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
+  const channelTripsit = await interaction.guild.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
+  const hrCategory = await interaction.guild.channels.fetch(env.CATEGORY_HARMREDUCTIONCENTRE) as CategoryChannel;
+  const devCategory = await interaction.guild.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
+  const channelTripcord = await interaction.guild.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
+  const channelTripbot = await interaction.guild.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
   // const channelTripmobile = await guild.channels.fetch(env.CHANNEL_TRIPMOBILE) as TextChannel;
   // const channelContent = await guild.channels.fetch(env.CHANNEL_WIKICONTENT) as TextChannel;
   // const channelDevelopment = await guild.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
@@ -745,19 +1141,82 @@ export async function processReactionRole(
         }
       });
   } else if (channelProvided) {
-    const channel = await guild.channels.fetch(channelProvided) as TextChannel;
+    const channel = await interaction.guild.channels.fetch(channelProvided) as TextChannel;
     await target.roles.add(role);
     await interaction.editReply({ content: `Added role ${role.name}` });
     // Post intro message to the channel
     channel.send(`${target} has joined as a ${role.name}, please welcome them!`);
   } else {
-    const isMod = (interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR);
-    const isTs = (interaction.member as GuildMember).roles.cache.has(env.ROLE_TRIPSITTER);
-    const isBooster = (interaction.member as GuildMember).roles.cache.has(env.ROLE_BOOSTER);
+    const guildData = await database.guilds.get(interaction.guild.id);
+
+    const isTeam = guildData.team_role_ids !== null
+      ? (interaction.member as GuildMember).roles.cache.some(r => (guildData.team_role_ids as string).indexOf(r.id) >= 0)
+      : false;
+
+    const isPremium = guildData.premium_role_ids !== null
+      ? (interaction.member as GuildMember).roles.cache.some(r => (guildData.premium_role_ids as string).indexOf(r.id) >= 0)
+      : false;
+
+    const isBooster = (interaction.member as GuildMember).roles.cache.find(
+      roleData => roleData.tags?.premiumSubscriberRole === true,
+    ) !== undefined;
+
+    const isPurchaser = (interaction.member as GuildMember).roles.cache.find(
+      roleData => roleData.tags?.availableForPurchase === true,
+    ) !== undefined;
+
     const isPatron = (interaction.member as GuildMember).roles.cache.has(env.ROLE_PATRON);
 
+    const reactionrolePremiumColorData = await database.reactionRoles.get(
+      interaction.guild.id,
+      interaction.channel.id,
+      null,
+      'COLOR' as ReactionRoleType,
+    );
+
+    const premiumColorRoles = [];
+    if (reactionrolePremiumColorData.length > 0) {
+      const roleDonorRed = await interaction.guild.roles.fetch(
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Ruby') as ReactionRoles).role_id,
+      ) as Role;
+      const roleDonorOrange = await interaction.guild.roles.fetch(
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Sunstone') as ReactionRoles).role_id,
+      ) as Role;
+      const roleDonorYellow = await interaction.guild.roles.fetch(
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Citrine') as ReactionRoles).role_id,
+      ) as Role;
+      const roleDonorGreen = await interaction.guild.roles.fetch(
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Jade') as ReactionRoles).role_id,
+      ) as Role;
+      const roleDonorBlue = await interaction.guild.roles.fetch(
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Sapphire') as ReactionRoles).role_id,
+      ) as Role;
+      const roleDonorPurple = await interaction.guild.roles.fetch(
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Amethyst') as ReactionRoles).role_id,
+      ) as Role;
+      const roleDonorPink = await interaction.guild.roles.fetch(
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Pezzottaite') as ReactionRoles).role_id,
+      ) as Role;
+      const roleDonorBlack = await interaction.guild.roles.fetch(
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Labradorite') as ReactionRoles).role_id,
+      ) as Role;
+
+      premiumColorRoles.push({ name: `💖 ${roleDonorRed.name}`, value: roleDonorRed.id });
+      premiumColorRoles.push({ name: `🧡 ${roleDonorOrange.name}`, value: roleDonorOrange.id });
+      premiumColorRoles.push({ name: `💛 ${roleDonorYellow.name}`, value: roleDonorYellow.id });
+      premiumColorRoles.push({ name: `💚 ${roleDonorGreen.name}`, value: roleDonorGreen.id });
+      premiumColorRoles.push({ name: `💙 ${roleDonorBlue.name}`, value: roleDonorBlue.id });
+      premiumColorRoles.push({ name: `💜 ${roleDonorPurple.name}`, value: roleDonorPurple.id });
+      premiumColorRoles.push({ name: `💗 ${roleDonorPink.name}`, value: roleDonorPink.id });
+      premiumColorRoles.push({ name: `🖤 ${roleDonorBlack.name}`, value: roleDonorBlack.id });
+    }
+
+    // log.debug(F, `Premium Color roles: ${JSON.stringify(premiumColorRoles, null, 2)}`);
+    // const premiumColorNames = premiumColorRoles.map(role => role.name);
+    const premiumColorIds = premiumColorRoles.map(roleData => roleData.value);
+
     // You cant add a premium color if you're not a team member or a donor
-    if (premiumColorIds.includes(role.id) && !isMod && !isTs && !isBooster && !isPatron) {
+    if (premiumColorIds.includes(role.id) && !isTeam && !isPremium && !isBooster && !isPatron && !isPurchaser) {
       // log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium
       //       (isMod: ${isMod}, isTs: ${isTs} isBooster: ${isBooster}, isPatron: ${isPatron})`);
       await interaction.editReply({ content: 'You do not have permission to use that role!' });
@@ -767,6 +1226,54 @@ export async function processReactionRole(
     await target.roles.add(role);
     await interaction.editReply({ content: `Added role ${role.name}` });
 
+    const reactionroleColorData = await database.reactionRoles.get(
+      interaction.guild.id,
+      interaction.channel.id,
+      null,
+      'COLOR' as ReactionRoleType,
+    );
+
+    const colorRoles = [];
+    if (reactionroleColorData.length > 0) {
+      const roleRed = await interaction.guild.roles.fetch(
+        (reactionroleColorData.find(roleData => roleData.name === 'Tulip') as ReactionRoles).role_id,
+      ) as Role;
+      const roleOrange = await interaction.guild.roles.fetch(
+        (reactionroleColorData.find(roleData => roleData.name === 'Marigold') as ReactionRoles).role_id,
+      ) as Role;
+      const roleYellow = await interaction.guild.roles.fetch(
+        (reactionroleColorData.find(roleData => roleData.name === 'Daffodil') as ReactionRoles).role_id,
+      ) as Role;
+      const roleGreen = await interaction.guild.roles.fetch(
+        (reactionroleColorData.find(roleData => roleData.name === 'Waterlily') as ReactionRoles).role_id,
+      ) as Role;
+      const roleBlue = await interaction.guild.roles.fetch(
+        (reactionroleColorData.find(roleData => roleData.name === 'Bluebell') as ReactionRoles).role_id,
+      ) as Role;
+      const rolePurple = await interaction.guild.roles.fetch(
+        (reactionroleColorData.find(roleData => roleData.name === 'Hyacinth') as ReactionRoles).role_id,
+      ) as Role;
+      const rolePink = await interaction.guild.roles.fetch(
+        (reactionroleColorData.find(roleData => roleData.name === 'Azalea') as ReactionRoles).role_id,
+      ) as Role;
+      const roleWhite = await interaction.guild.roles.fetch(
+        (reactionroleColorData.find(roleData => roleData.name === 'Snowdrop') as ReactionRoles).role_id,
+      ) as Role;
+
+      colorRoles.push({ name: `💖 ${roleRed.name}`, value: roleRed.id });
+      colorRoles.push({ name: `🧡 ${roleOrange.name}`, value: roleOrange.id });
+      colorRoles.push({ name: `💛 ${roleYellow.name}`, value: roleYellow.id });
+      colorRoles.push({ name: `💚 ${roleGreen.name}`, value: roleGreen.id });
+      colorRoles.push({ name: `💙 ${roleBlue.name}`, value: roleBlue.id });
+      colorRoles.push({ name: `💜 ${rolePurple.name}`, value: rolePurple.id });
+      colorRoles.push({ name: `💗 ${rolePink.name}`, value: rolePink.id });
+      colorRoles.push({ name: `🤍 ${roleWhite.name}`, value: roleWhite.id });
+    }
+
+    log.debug(F, `Color roles: ${JSON.stringify(colorRoles, null, 2)}`);
+    // const colorNames = colorRoles.map(roleData => roleData.name);
+    const colorIds = colorRoles.map(roleData => roleData.value);
+
     // Remove the other color roles if you're adding a color role
     if (colorIds.includes(role.id)) {
       // log.debug(F, 'Removing other color roles');
@@ -774,12 +1281,63 @@ export async function processReactionRole(
       await target.roles.remove([...otherColorRoles, ...premiumColorIds]);
     }
 
-    // Remove the other premium mindset roles if you're adding a mindset role
+    // Remove the other premium color roles if you're adding a color role
     if (premiumColorIds.includes(role.id)) {
       // log.debug(F, 'Removing other premium color roles');
       const otherPremiumColorRoles = premiumColorIds.filter(r => r !== role.id);
       await target.roles.remove([...otherPremiumColorRoles, ...colorIds]);
     }
+
+    const reactionroleData = await database.reactionRoles.get(
+      interaction.guild.id,
+      interaction.channel.id,
+      null,
+      'MINDSET' as ReactionRoleType,
+    );
+
+    const roleDrunk = await interaction.guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Drunk') as ReactionRoles).role_id,
+    ) as Role;
+    const roleHigh = await interaction.guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'High') as ReactionRoles).role_id,
+    ) as Role;
+    const roleRolling = await interaction.guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Rolling') as ReactionRoles).role_id,
+    ) as Role;
+    const roleTripping = await interaction.guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Tripping') as ReactionRoles).role_id,
+    ) as Role;
+    const roleDissociating = await interaction.guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Dissociated') as ReactionRoles).role_id,
+    ) as Role;
+    const roleStimming = await interaction.guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Stimming') as ReactionRoles).role_id,
+    ) as Role;
+    const roleSedated = await interaction.guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Sedated') as ReactionRoles).role_id,
+    ) as Role;
+    const roleTalkative = await interaction.guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Talkative') as ReactionRoles).role_id,
+    ) as Role;
+    const roleWorking = await interaction.guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Working') as ReactionRoles).role_id,
+    ) as Role;
+
+    const mindsetRoles = [
+      { name: roleDrunk.name, value: roleDrunk.id },
+      { name: roleHigh.name, value: roleHigh.id },
+      { name: roleRolling.name, value: roleRolling.id },
+      { name: roleTripping.name, value: roleTripping.id },
+      { name: roleDissociating.name, value: roleDissociating.id },
+      { name: roleStimming.name, value: roleStimming.id },
+      { name: roleSedated.name, value: roleSedated.id },
+      { name: roleTalkative.name, value: roleTalkative.id },
+      { name: roleWorking.name, value: roleWorking.id },
+    ] as RoleDef[];
+
+    log.debug(F, `Mindset roles: ${JSON.stringify(mindsetRoles, null, 2)}`);
+    // const mindsetNames = mindsetRoles.map(role => role.name);
+    const mindsetIds = mindsetRoles.map(roleData => roleData.value);
 
     // Remove the other mindset roles if you're adding a mindset role
     if (mindsetIds.includes(role.id)) {
@@ -796,3 +1354,103 @@ export async function processReactionRole(
     // }
   }
 }
+
+// export async function emojiReactionRole(
+//   reaction:MessageReaction,
+//   user:User,
+//   add:boolean,
+// ): Promise<void> {
+//   const messageId = reaction.message.id;
+//   const reactionId = reaction.emoji.id ?? `${reaction.emoji.name}`;
+//   // log.debug(F, `messageId: ${messageId} | reactionId: ${reactionId}`);
+
+//   if (!reaction.message.guild) return;
+
+//   const ReactionRole = await reactionroleGet(messageId, reactionId);
+
+//   if (!ReactionRole) {
+//     // log.debug(F, `No reaction role found!`);
+//     return;
+//   }
+
+//   const member = await reaction.message.guild.members.fetch(user.id);
+//   const role = await reaction.message.guild.roles.fetch(ReactionRole.role_id);
+//   if (role && member) {
+//     // log.debug(F, `role: ${role.name}`);
+//     if (add) {
+//       // Add the role
+//       await member.roles.add(role);
+
+//       // Remove other reactions
+//       reaction.message.fetch();
+//       reaction.message.reactions.cache.each(r => {
+//         if (r.emoji.name !== reaction.emoji.name) {
+//           r.users.remove(user);
+//         }
+//       });
+
+//       // If this is a mindset emoji, set the end date
+//       if (mindsetEmojis.includes(`${reaction.emoji.name}`)) {
+//         // Update the database
+//         const userData = await getUser(user.id, null);
+
+//         userData.discord_id = user.id;
+//         userData.mindset_role = role.id;
+//         userData.mindset_role_expires_at = new Date(Date.now() + mindsetRemovalTime);
+
+//         await usersUpdate(userData);
+//       }
+
+//       // If this is the contributor role, send a message to the contributor room
+//       if (role.id === env.ROLE_CONTRIBUTOR) {
+//         const devCategory = await reaction.message.guild?.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
+//         // const channelTripcord = await reaction.message.guild?.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
+//         // const channelTripbot = await reaction.message.guild?.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
+//         // const channelContent = await reaction.message.guild?.channels.fetch(env.CHANNEL_CONTENT) as TextChannel;
+//         const channelDevelopment = await reaction.message.guild?.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
+//         // const channelIrc = await reaction.message.guild?.channels.fetch(env.CHANNEL_IRC) as TextChannel;
+//         // const channelMatrix = await reaction.message.guild?.channels.fetch(env.CHANNEL_MATRIX) as TextChannel;
+
+//         await channelDevelopment.send(stripIndents`
+//           Please welcome our newest ${role.name}, ${member}! We're excited to have you here!
+
+//           Our ${devCategory} category holds the projects we're working on.
+
+//           > **We encourage you to make a new thread whenever possible!**
+//           > This allows us to organize our efforts and not lose track of our thoughts!
+
+//           TripSit is run by volunteers, so things may be a bit slower than your day job.
+//           Almost all the code is open source and can be found on our GitHub: <http://github.com/tripsit>
+//           Discussion of changes happens mostly in the public channels in this category.
+//           If you have an idea or feedback, make a new thread or chime in to the discussion:
+//           We're happy to hear all sorts of input and ideas!
+//         `);
+//       }
+
+//       // Same of OCCULT
+//       if (role.id === env.ROLE_OCCULT) {
+//         const channelOccult = await reaction.message.guild?.channels.fetch(env.CHANNEL_OCCULT) as TextChannel;
+//         await channelOccult.send(stripIndents`
+//           Please welcome our newest ${role.name} member, ${member}! We're excited to have you here!
+
+//           This room is for discussion of occult topics such as religion, spirituality, psychonautics, and magic.
+//           If this isn't your cup of tea you can leave the room by removing the role, but please be respectful of others.
+//         `);
+//       }
+
+//       // Same of RECOVERY
+//       if (role.id === env.ROLE_RECOVERY) {
+//         const channelRecovery = await reaction.message.guild?.channels.fetch(env.CHANNEL_RECOVERY) as TextChannel;
+//         await channelRecovery.send(stripIndents`
+//           Please welcome our newest ${role.name} member, ${member}! We're excited to have you here!
+//           The recovery space on tripsit is new and we're still working on it, for now it will hide the drug rooms.
+//           No judgement if you don't want to be here or want to see those rooms, you can leave the room by removing the role.
+//         `);
+//       }
+//     } else {
+//       // Remove the role
+//       await member.roles.remove(role);
+//       // log.debug(F, `Removed role ${role.name} from ${user.username}`);
+//     }
+//   }
+// }

@@ -181,6 +181,8 @@ export type DiscordGuilds = {
   created_at: Date;
   partner: boolean;
   supporter: boolean;
+  premium_role_ids: string | null;
+  team_role_ids: string | null;
 };
 
 export type DrugArticles = {
@@ -293,7 +295,7 @@ export type ReactionRoles = {
   guild_id: string;
   channel_id: string;
   message_id: string;
-  reaction_id: string;
+  reaction_id: string | null;
   role_id: string;
   created_at: Date;
   type: ReactionRoleType;

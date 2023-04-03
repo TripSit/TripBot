@@ -19,6 +19,7 @@ import {
   UserTickets,
   // TicketStatus,
   // DiscordGuilds,
+  ReactionRoleType,
 } from '../@types/database.d';
  // eslint-disable-line
 
@@ -61,6 +62,8 @@ export const database = {
   },
   reactionRoles: {
     get: reactionroleGet,
+    set: reactionroleSet,
+    del: reactionroleDel,
   },
   experience: {
     get: experienceGet,
@@ -148,7 +151,9 @@ export async function getUser(
   return data as Users;
 }
 
-export async function getGuild(guildId:string):Promise<DiscordGuilds> {
+export async function getGuild(
+  guildId:string,
+):Promise<DiscordGuilds> {
   // log.debug(F, `getGuild started with: guildId: ${guildId}`);
 
   if (env.POSTGRES_DB_URL === undefined) {
@@ -535,26 +540,6 @@ export async function incrementKarma(
     log.error(F, `pointType: ${pointType} | userId: ${userId} | value: ${value}`);
   }
   return karma;
-}
-
-export async function reactionroleGet(
-  messageId:string,
-  reactionId:string,
-):Promise<ReactionRoles | undefined> {
-// log.debug(F, 'reactionroleGet started');
-  if (env.POSTGRES_DB_URL === undefined) return undefined;
-  let reactionRole = undefined as ReactionRoles | undefined;
-  try {
-    reactionRole = await db<ReactionRoles>('reaction_roles')
-      .select('*')
-      .where('message_id', messageId)
-      .andWhere('reaction_id', reactionId)
-      .first();
-  } catch (err) {
-    log.error(F, `Error getting reaction role: ${err}`);
-    log.error(F, `messageId: ${messageId} | reactionId: ${reactionId}`);
-  }
-  return reactionRole;
 }
 
 export async function experienceGet(
@@ -1112,5 +1097,84 @@ async function bridgesDel(
     await db<Bridges>('bridges')
       .delete()
       .where('id', bridge.id);
+  });
+}
+
+export async function reactionroleGet(
+  guildId:string | null,
+  channelId:string | null,
+  messageId:string | null,
+  type:ReactionRoleType,
+):Promise<ReactionRoles[]> {
+  if (env.POSTGRES_DB_URL === undefined) return [] as ReactionRoles[];
+  log.debug(F, `
+    guildId: ${guildId}
+    channelId: ${channelId}
+    messageId: ${messageId}
+    type: ${type}
+  `);
+  if (guildId !== null) {
+    if (channelId !== null) {
+      if (messageId !== null) {
+        if (type !== null) {
+          return db<ReactionRoles>('reaction_roles')
+            .select('*')
+            .where('guild_id', guildId)
+            .andWhere('channel_id', channelId)
+            .andWhere('message_id', messageId)
+            .andWhere('type', type);
+        }
+        return db<ReactionRoles>('reaction_roles')
+          .select('*')
+          .where('guild_id', guildId)
+          .andWhere('channel_id', channelId)
+          .andWhere('message_id', messageId);
+      }
+      if (type !== null) {
+        return db<ReactionRoles>('reaction_roles')
+          .select('*')
+          .where('guild_id', guildId)
+          .andWhere('channel_id', channelId)
+          .andWhere('type', type);
+      }
+      return db<ReactionRoles>('reaction_roles')
+        .select('*')
+        .where('guild_id', guildId)
+        .andWhere('channel_id', channelId);
+    }
+    if (type !== null) {
+      return db<ReactionRoles>('reaction_roles')
+        .select('*')
+        .where('guild_id', guildId)
+        .andWhere('type', type);
+    }
+    return db<ReactionRoles>('reaction_roles')
+      .select('*')
+      .where('guild_id', guildId);
+  }
+  return db<ReactionRoles>('reaction_roles')
+    .select('*');
+}
+
+async function reactionroleSet(
+  data: ReactionRoles[],
+):Promise<void> {
+  if (env.POSTGRES_DB_URL === undefined) return;
+  data.forEach(async role => {
+    await db<ReactionRoles>('reaction_roles')
+      .insert(role);
+    // .onConflict(['internal_channel', 'external_channel'])
+    // .merge();
+  });
+}
+
+async function reactionroleDel(
+  data: ReactionRoles[],
+):Promise<void> {
+  if (env.POSTGRES_DB_URL === undefined) return;
+  data.forEach(async role => {
+    await db<ReactionRoles>('reaction_roles')
+      .delete()
+      .where('id', role.id);
   });
 }
