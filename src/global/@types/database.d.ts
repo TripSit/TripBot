@@ -294,7 +294,7 @@ export type ReactionRoles = {
   id: string;
   guild_id: string;
   channel_id: string;
-  message_id: string;
+  message_id: string | null;
   reaction_id: string | null;
   role_id: string;
   created_at: Date;

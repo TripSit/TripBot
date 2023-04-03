@@ -18,7 +18,7 @@ import {
   modmailCreate, modmailActions,
 } from '../commands/archive/modmail';
 import { verifyButton } from '../utils/verifyButton';
-import { buttonReactionRole } from '../commands/guild/d.reactionRole';
+import { buttonReactionRole } from '../commands/global/d.reactionRole';
 import {
   rpgArcade, rpgArcadeGame, rpgArcadeWager, rpgBounties, rpgHelp, rpgHome, rpgHomeAccept, rpgHomeNameChange, rpgMarket, rpgMarketAccept, rpgMarketPreview, rpgTown, rpgTrivia,
 } from '../commands/guild/d.rpg';
