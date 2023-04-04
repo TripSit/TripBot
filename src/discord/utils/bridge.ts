@@ -35,11 +35,12 @@ export async function bridgeMessage(message: Message): Promise<void> {
 
   // Internal message
   if (message.guildId === env.DISCORD_GUILD_ID) {
+    const bridges = await database.bridges.get(message.channel.id);
+    if (bridges.length === 0) return; // If there is no bridge config for this channel then ignore the message
     log.debug(F, 'Message is from tripsit');
     log.debug(F, `Message channel: ${message.channel.id}`);
-    const webhooks = [] as WebhookClient[];
-    const bridges = await database.bridges.get(message.channel.id);
 
+    const webhooks = [] as WebhookClient[];
     bridges
       .forEach(async bridge => {
         if (bridge.internal_channel === message.channel.id
@@ -59,7 +60,6 @@ export async function bridgeMessage(message: Message): Promise<void> {
     if (webhooks.length === 0) return; // If there is no bridge config for this channel then ignore the message
     log.debug(F, 'Message should be sent through bridge');
     // log.debug(F, `webhooks: ${JSON.stringify(webhooks, null, 2)}`);
-
     // log.debug(F, `Message: ${JSON.stringify(message, null, 2)}`);
 
     webhooks.forEach(client => {
@@ -75,12 +75,11 @@ export async function bridgeMessage(message: Message): Promise<void> {
 
   // External message
   if (message.guildId !== env.DISCORD_GUILD_ID) {
-    log.debug(F, 'Message is from external guild');
-    log.debug(F, `Message channel: ${message.channel.id}`);
     const bridges = await database.bridges.get(message.channel.id);
-
     const bridgeConfig = bridges.find(bridge => bridge.status === 'ACTIVE');
     if (!bridgeConfig) return; // If there is no bridge config for this channel then ignore the message
+    log.debug(F, 'Message is from external guild');
+    log.debug(F, `Message channel: ${message.channel.id}`);
     log.debug(F, 'Message should be sent through bridge');
     log.debug(F, `Bridge config: ${JSON.stringify(bridgeConfig, null, 2)}`);
 
