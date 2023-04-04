@@ -295,7 +295,7 @@ async function checkMindsets() {
 async function callUptime() {
   if (env.NODE_ENV !== 'production') return;
   axios.get('https://uptime.tripsit.me/api/push/UyL8LkDKtG?status=up&msg=OK').catch(e => {
-    console.log(e);
+    log.debug(F, e);
   });
 }
 

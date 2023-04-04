@@ -28,9 +28,9 @@ const F = f(__filename);
 
 export default mod;
 
-type ModAction = 'INFO' | 'BAN' | 'WARNING' | 'REPORT' | 'NOTE' | 'TIMEOUT' | 'KICK' | 'LINK' |
-'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN' | 'HELPER_BAN' | 'CONTRIBUTOR_BAN' |
-'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' | 'UN-TIMEOUT' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN';
+type ModAction = 'INFO' | 'BAN' | 'WARNING' | 'REPORT' | 'NOTE' | 'TIMEOUT' | 'UN-CONTRIBUTOR_BAN' | 'UN-HELPER_BAN' |
+'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN' | 'HELPER_BAN' | 'CONTRIBUTOR_BAN' | 'LINK' |
+'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' | 'UN-TIMEOUT' | 'KICK';
 
 export const mod: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -174,7 +174,8 @@ export const mod: SlashCommand = {
         const userData = await getUser(targetString, null);
         if (!userData) {
           await interaction.reply({
-            content: 'Failed to link thread, I could not find this user in the guild, and they do not exist in the database!',
+            content: stripIndents`Failed to link thread, I could not find this user in the guild, \
+and they do not exist in the database!`,
             ephemeral: true,
           }); // eslint-disable-line max-len
           return false;

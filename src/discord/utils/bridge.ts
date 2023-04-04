@@ -1,36 +1,13 @@
 import {
-  Message, WebhookClient,
+  Message, MessageMentionTypes, TextChannel, WebhookClient,
 } from 'discord.js';
+import { database } from '../../global/utils/knex';
 
 export default bridgeMessage;
 
 const F = f(__filename);  // eslint-disable-line
 
-type BridgeConfig = {
-  internal_channel: string,
-  internal_webhook: string,
-  external_channel: string,
-  external_webhook: string,
-  status: 'paused' | 'active',
-};
-
-const bridgeDb = [] as BridgeConfig[];
-
-bridgeDb.push({ // TS Dev
-  internal_channel: '943599582921756732',
-  internal_webhook: 'https://discord.com/api/webhooks/1091117433844146187/ZknkSupuJasdgvdd7_eV4N8vlF_48Tlhp0vevGsHGil_GjumpC-upy7vw_0i9rBylwgM', // eslint-disable-line
-  external_channel: '1052634261531926538',
-  external_webhook: 'https://discord.com/api/webhooks/1090804782748418060/7fHgdyvJ2246ZAKKPMbfXIQi2xWjrPW_blLse5B8jDqFDSIARrUzyMxienuT3KfkXE_y', // eslint-disable-line
-  status: 'active',
-});
-
-bridgeDb.push({ // MB server
-  internal_channel: '943599582921756732',
-  internal_webhook: 'https://discord.com/api/webhooks/1091117433844146187/ZknkSupuJasdgvdd7_eV4N8vlF_48Tlhp0vevGsHGil_GjumpC-upy7vw_0i9rBylwgM', // eslint-disable-line
-  external_channel: '1088437052439273605',
-  external_webhook: 'https://discord.com/api/webhooks/1091100181937782925/nEDr9TNisCaj_sh_qqsn5QoZzY2ReuHCNfbIrR6i3apIQgjgvCXLRYvWGAcGquMM8HUC', // eslint-disable-line
-  status: 'active',
-});
+const tripsitBridgeName = 'Tripsit Bridge';
 
 export async function bridgeMessage(message: Message): Promise<void> {
   if (!message.guild) return; // If not in a guild then ignore all messages
@@ -52,69 +29,99 @@ export async function bridgeMessage(message: Message): Promise<void> {
   // This will get us a list of channels linked to that internal channel.
   // For each entry, use the webhook to send a message to that external channel
 
+  log.debug(F, 'Checking if message should be sent through bridge');
+
   // log.debug(F, `Bridge DB: ${JSON.stringify(bridgeDb, null, 2)}`);
 
   // Internal message
   if (message.guildId === env.DISCORD_GUILD_ID) {
-    if (message.guild.id !== '1088437051134857336' && message.guild.id !== '960606557622657026') return;
-    log.debug(F, 'Message is from internal guild');
+    log.debug(F, 'Message is from tripsit');
     log.debug(F, `Message channel: ${message.channel.id}`);
     const webhooks = [] as WebhookClient[];
-    bridgeDb
-      .forEach(bridge => {
+    const bridges = await database.bridges.get(message.channel.id);
+
+    bridges
+      .forEach(async bridge => {
         if (bridge.internal_channel === message.channel.id
-          && bridge.status === 'active'
+          && bridge.status === 'ACTIVE'
         ) {
-          webhooks.push(new WebhookClient({ url: bridge.external_webhook }));
+          const channel = await message.client.channels.fetch(bridge.external_channel) as TextChannel;
+          const webhookData = await channel.fetchWebhooks()
+            .then(webhookList => webhookList.find(webhook => webhook.name === tripsitBridgeName))
+            ?? await channel.createWebhook({
+              name: tripsitBridgeName,
+              reason: tripsitBridgeName,
+            });
+
+          webhooks.push(new WebhookClient({ url: webhookData.url }));
         }
       });
     if (webhooks.length === 0) return; // If there is no bridge config for this channel then ignore the message
     log.debug(F, 'Message should be sent through bridge');
     // log.debug(F, `webhooks: ${JSON.stringify(webhooks, null, 2)}`);
 
+    // log.debug(F, `Message: ${JSON.stringify(message, null, 2)}`);
+
     webhooks.forEach(client => {
-      // log.debug(F, `Client: ${JSON.stringify(client, null, 2)}`);
       client.send({
         username: `${message.member?.displayName} (${message.guild?.name})`,
         avatarURL: message.author.avatarURL() ?? undefined,
         content: message.content,
+        files: message.attachments.size > 0 ? message.attachments.map(attachment => attachment.url) : undefined,
+        allowedMentions: { parse: ['users', 'roles'] as MessageMentionTypes[] },
       });
     });
   }
 
   // External message
   if (message.guildId !== env.DISCORD_GUILD_ID) {
-    if (message.guild.id !== '1088437051134857336' && message.guild.id !== '960606557622657026') return;
     log.debug(F, 'Message is from external guild');
     log.debug(F, `Message channel: ${message.channel.id}`);
-    const bridgeConfig = bridgeDb.find(bridge => bridge.external_channel.toString() === message.channel.id.toString()
-    && bridge.status === 'active');
+    const bridges = await database.bridges.get(message.channel.id);
+
+    const bridgeConfig = bridges.find(bridge => bridge.status === 'ACTIVE');
     if (!bridgeConfig) return; // If there is no bridge config for this channel then ignore the message
     log.debug(F, 'Message should be sent through bridge');
-    // log.debug(F, `Bridge config: ${JSON.stringify(bridgeConfig, null, 2)}`);
+    log.debug(F, `Bridge config: ${JSON.stringify(bridgeConfig, null, 2)}`);
+
+    const tripsitWebhookData = await (message.channel as TextChannel).fetchWebhooks()
+      .then(webhookList => webhookList.find(webhook => webhook.name === tripsitBridgeName))
+      ?? await (message.channel as TextChannel).createWebhook({
+        name: tripsitBridgeName,
+        reason: tripsitBridgeName,
+      });
 
     const webhooks = [] as WebhookClient[];
-    webhooks.push(new WebhookClient({ url: bridgeConfig.internal_webhook }));
+    webhooks.push(new WebhookClient({ url: tripsitWebhookData.url }));
+
+    const bridgeDb = await database.bridges.get(bridgeConfig.internal_channel);
+
     bridgeDb
-      .forEach(bridge => {
-        if (bridge.internal_channel === bridgeConfig.internal_channel
-          && bridge.status === 'active'
+      .forEach(async bridge => {
+        if (bridge.status === 'ACTIVE'
           && bridge.external_channel.toString() !== message.channel.id.toString()) {
-          webhooks.push(new WebhookClient({ url: bridge.external_webhook }));
+          const channel = await message.client.channels.fetch(bridge.external_channel) as TextChannel;
+          const webhookData = await channel.fetchWebhooks()
+            .then(webhookList => webhookList.find(webhook => webhook.name === tripsitBridgeName))
+            ?? await channel.createWebhook({
+              name: tripsitBridgeName,
+              reason: tripsitBridgeName,
+            });
+          webhooks.push(new WebhookClient({ url: webhookData.url }));
         }
         return null;
       });
 
-    log.debug(F, `webhooks: ${JSON.stringify(webhooks, null, 2)}`);
-
-    webhooks.forEach(client => {
-      if (client === null) return;
+    webhooks.forEach(async client => {
       log.debug(F, `Client: ${JSON.stringify(client, null, 2)}`);
-      client.send({
+      const success = await client.send({
         username: `${message.member?.displayName} (${message.guild?.name})`,
         avatarURL: message.author.avatarURL() ?? undefined,
         content: message.content,
+        files: message.attachments.size > 0 ? message.attachments.map(attachment => attachment.url) : undefined,
+        allowedMentions: { parse: ['users', 'roles'] as MessageMentionTypes[] },
       });
+      log.debug(F, `Success: ${JSON.stringify(success, null, 2)}`);
     });
   }
 }

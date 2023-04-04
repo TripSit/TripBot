@@ -300,7 +300,7 @@ export async function tripsit(
     'ManageRoles' as PermissionResolvable,
   ]);
   if (!guildPerms.hasPermission) {
-    log.error(F, `Missing TS guild permission ${guildPerms.permission} in ${interaction.guild}!`);
+    log.error(F, `Missing guild permission ${guildPerms.permission} in ${interaction.guild}!`);
     await interaction.reply({
       content: stripIndents`Missing ${guildPerms.permission} permission in ${interaction.guild}!
     In order to setup the tripsitting feature I need:
