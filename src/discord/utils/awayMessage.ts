@@ -18,7 +18,7 @@ export async function awayMessage(message:Message): Promise<void> {
     const userTime = new Date().toLocaleString('en-US', { timeZone: userData.timezone });
     const userHour = new Date(userTime).getHours();
     // log.debug(F, `userHour: ${userHour}`);
-    if (userHour >= 20 || userHour <= 12) {
+    if (userHour >= 21 || userHour <= 7) {
       const channelMessages = await (message.channel as TextChannel).messages.fetch();
       const moonbearMessages = channelMessages.filter(msg => msg.author.id === env.DISCORD_OWNER_ID);
       const lastMessage = moonbearMessages.sort((a, b) => b.createdTimestamp - a.createdTimestamp).first();
