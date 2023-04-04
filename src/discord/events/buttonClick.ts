@@ -18,7 +18,7 @@ import {
   modmailCreate, modmailActions,
 } from '../commands/archive/modmail';
 import { verifyButton } from '../utils/verifyButton';
-import { processReactionRole } from '../commands/guild/d.reactionRole';
+import { buttonReactionRole } from '../commands/global/d.reactionRole';
 import {
   rpgArcade, rpgArcadeGame, rpgArcadeWager, rpgBounties, rpgHelp, rpgHome, rpgHomeAccept, rpgHomeNameChange, rpgMarket, rpgMarketAccept, rpgMarketPreview, rpgTown, rpgTrivia,
 } from '../commands/guild/d.rpg';
@@ -85,7 +85,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
   }
 
   if (buttonID.startsWith('"ID":"RR"')) {
-    await processReactionRole(interaction);
+    await buttonReactionRole(interaction);
     return;
   }
 

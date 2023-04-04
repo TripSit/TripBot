@@ -13,19 +13,19 @@ import { paginationEmbed } from '../../utils/pagination';
 
 const F = f(__filename);
 
-const button1 = new ButtonBuilder()
+const previousButton = new ButtonBuilder()
   .setCustomId('previousButton')
   .setLabel('Previous')
   .setStyle(ButtonStyle.Danger);
 
-const button2 = new ButtonBuilder()
+const nextButton = new ButtonBuilder()
   .setCustomId('nextButton')
   .setLabel('Next')
   .setStyle(ButtonStyle.Success);
 
 const buttonList = [
-  button1,
-  button2,
+  previousButton,
+  nextButton,
 ];
 
 export default dHelp;

@@ -8,7 +8,7 @@ import {
 } from '../@types/eventDef';
 import { embedTemplate } from '../utils/embedTemplate';
 
-const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
@@ -33,13 +33,13 @@ export const channelCreate: GuildAuditLogEntryCreateEvent = {
       .join('');
 
     const { executor } = auditLogEntry;
-    log.debug(F, `executor: ${JSON.stringify(executor, null, 2)}`);
+    // log.debug(F, `executor: ${JSON.stringify(executor, null, 2)}`);
     const actionType = `${auditLogEntry.actionType.toLowerCase()}d`;
-    log.debug(F, `actionType: ${JSON.stringify(actionType, null, 2)}`);
+    // log.debug(F, `actionType: ${JSON.stringify(actionType, null, 2)}`);
     const targetType = auditLogEntry.targetType.toLowerCase();
-    log.debug(F, `targetType: ${JSON.stringify(targetType, null, 2)}`);
-    const target = JSON.stringify(auditLogEntry.target, null, 2);
-    log.debug(F, `target: ${JSON.stringify(target, null, 2)}`);
+    // log.debug(F, `targetType: ${JSON.stringify(targetType, null, 2)}`);
+    // const target = JSON.stringify(auditLogEntry.target, null, 2);
+    // log.debug(F, `target: ${JSON.stringify(target, null, 2)}`);
     // const reason = auditLogEntry.reason ? `\nReason: ${JSON.stringify(auditLogEntry.reason, null, 2)}` : '';
     // log.debug(F, `reason: ${JSON.stringify(reason, null, 2)}`);
     // const extra = auditLogEntry.extra ? `\nExtra: ${JSON.stringify(auditLogEntry.extra, null, 2)}` : '';

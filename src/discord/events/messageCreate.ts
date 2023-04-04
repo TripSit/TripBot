@@ -16,6 +16,8 @@ import { karma } from '../utils/karma';
 import { ExperienceCategory, ExperienceType } from '../../global/@types/database';
 import { imagesOnly } from '../utils/imagesOnly';
 import { countMessage } from '../commands/guild/d.counting';
+import { bridgeMessage } from '../utils/bridge';
+import { awayMessage } from '../utils/awayMessage';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 
@@ -35,6 +37,8 @@ export const messageCreate: MessageCreateEvent = {
   name: 'messageCreate',
   async execute(message) {
     messageCommand(message);
+    bridgeMessage(message);
+    awayMessage(message);
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (message.guild && message.guild.id !== env.DISCORD_GUILD_ID) {
       return;

@@ -1,6 +1,12 @@
 // The TypeScript definitions below are automatically generated.
 // Do not touch them, or risk, your modifications being lost.
 
+export enum BridgeStatus {
+  Pending = 'PENDING',
+  Active = 'ACTIVE',
+  Paused = 'PAUSED',
+}
+
 export enum CountingType {
   Normal = 'NORMAL',
   Hardcore = 'HARDCORE',
@@ -57,6 +63,15 @@ export enum ExperienceType {
   Voice = 'VOICE',
 }
 
+export enum ReactionRoleType {
+  Color = 'COLOR',
+  PremiumColor = 'PREMIUM_COLOR',
+  Mindset = 'MINDSET',
+  Pronoun = 'PRONOUN',
+  Notification = 'NOTIFICATION',
+  Custom = 'CUSTOM',
+}
+
 export enum TicketStatus {
   Open = 'OPEN',
   Owned = 'OWNED',
@@ -91,6 +106,7 @@ export enum UserActionType {
 }
 
 export enum Table {
+  Bridges = 'bridges',
   Counting = 'counting',
   DiscordGuilds = 'discord_guilds',
   DrugArticles = 'drug_articles',
@@ -113,6 +129,13 @@ export enum Table {
   UserTickets = 'user_tickets',
   Users = 'users',
 }
+
+export type Bridges = {
+  id: string;
+  internal_channel: string;
+  status: BridgeStatus;
+  external_channel: string;
+};
 
 export type Counting = {
   id: string;
@@ -156,6 +179,9 @@ export type DiscordGuilds = {
   removed_at: Date | null;
   joined_at: Date;
   created_at: Date;
+  partner: boolean;
+  supporter: boolean;
+  premium_role_ids: string | null;
 };
 
 export type DrugArticles = {
@@ -267,10 +293,12 @@ export type ReactionRoles = {
   id: string;
   guild_id: string;
   channel_id: string;
-  message_id: string;
-  reaction_id: string;
+  message_id: string | null;
+  reaction_id: string | null;
   role_id: string;
   created_at: Date;
+  type: ReactionRoleType;
+  name: string;
 };
 
 export type RpgInventory = {
@@ -388,4 +416,7 @@ export type Users = {
   mod_thread_id: string | null;
   helper_role_ban: boolean;
   contributor_role_ban: boolean;
+  lastfm_username: string | null;
+  partner: boolean | null;
+  supporter: boolean | null;
 };

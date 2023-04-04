@@ -1,5 +1,6 @@
 import {
-  AutocompleteInteraction, GuildMember,
+  AutocompleteInteraction,
+  GuildMember,
 } from 'discord.js';
 import Fuse from 'fuse.js';
 
@@ -28,7 +29,7 @@ const pillColorNames:string[] = [];
 for (const color of pillColors) { // eslint-disable-line
   pillColorNames.push(Object.keys(color)[0]);
 }
-const defaultColors = pillColorNames.slice(0, 25);
+const defaultPillColors = pillColorNames.slice(0, 25);
 // log.debug(F, `pill_color_names: ${pill_color_names}`);
 
 const pillShapeNames:string[] = [];
@@ -56,7 +57,7 @@ async function autocompletePills(interaction:AutocompleteInteraction) {
       const listResults = top25.map(choice => ({ name: choice.item, value: choice.item }));
       interaction.respond(listResults);
     } else {
-      interaction.respond(defaultColors.map(choice => ({ name: choice, value: choice })));
+      interaction.respond(defaultPillColors.map(choice => ({ name: choice, value: choice })));
     }
   }
   if (focusedOption === 'shape') {
@@ -408,6 +409,67 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
   }
 }
 
+async function autocompleteColors(interaction:AutocompleteInteraction) {
+  const options = {
+    shouldSort: true,
+    keys: [
+      'color',
+    ],
+  };
+  const colorList = [
+    { color: 'Default', hex: '000000', id: 'DEFAULT' },
+    { color: 'Blurple', hex: '5865f2', id: 'BLURPLE' },
+    { color: 'Greyple', hex: '99aab5', id: 'GREYPLE' },
+    { color: 'White', hex: 'ffffff', id: 'WHITE' },
+    { color: 'Aqua', hex: '1abc9c', id: 'AQUA' },
+    { color: 'Green', hex: '57f287', id: 'GREEN' },
+    { color: 'Blue', hex: '3498db', id: 'BLUE' },
+    { color: 'Yellow', hex: 'fee75c', id: 'YELLOW' },
+    { color: 'Purple', hex: '9b59b6', id: 'PURPLE' },
+    { color: 'LuminousVividPink', hex: 'e91e63', id: 'LUMINOUS_VIVID_PINK' },
+    { color: 'Fuchsia', hex: 'eb459e', id: 'FUCHSIA' },
+    { color: 'Gold', hex: 'f1c40f', id: 'GOLD' },
+    { color: 'Orange', hex: 'e67e22', id: 'ORANGE' },
+    { color: 'Red', hex: 'ed4245', id: 'RED' },
+    { color: 'Navy', hex: '34495e', id: 'NAVY' },
+    { color: 'Grey', hex: '95a5a6', id: 'GREY' },
+    { color: 'DarkerGrey', hex: '7f8c8d', id: 'DARKER_GREY' },
+    { color: 'LightGrey', hex: 'bcc0c0', id: 'LIGHT_GREY' },
+    { color: 'DarkButNotBlack', hex: '2c2f33', id: 'DARK_BUT_NOT_BLACK' },
+    { color: 'NotQuiteBlack', hex: '23272a', id: 'NOT_QUITE_BLACK' },
+    { color: 'DarkNavy', hex: '2c3e50', id: 'DARK_NAVY' },
+    { color: 'DarkAqua', hex: '11806a', id: 'DARK_AQUA' },
+    { color: 'DarkGreen', hex: '1f8b4c', id: 'DARK_GREEN' },
+    { color: 'DarkBlue', hex: '206694', id: 'DARK_BLUE' },
+    { color: 'DarkPurple', hex: '71368a', id: 'DARK_PURPLE' },
+    { color: 'DarkVividPink', hex: 'ad1457', id: 'DARK_VIVID_PINK' },
+    { color: 'DarkGold', hex: 'c27c0e', id: 'DARK_GOLD' },
+    { color: 'DarkOrange', hex: 'a84300', id: 'DARK_ORANGE' },
+    { color: 'DarkRed', hex: '992d22', id: 'DARK_RED' },
+    { color: 'DarkGrey', hex: '979c9f', id: 'DARK_GREY' },
+  ];
+
+  const fuse = new Fuse(colorList, options);
+  const focusedValue = interaction.options.getFocused();
+  // log.debug(F, `focusedValue: ${focusedValue}`);
+  const results = fuse.search(focusedValue);
+  // log.debug(F, `Autocomplete results: ${results}`);
+  if (results.length > 0) {
+    const top25 = results.slice(0, 20);
+    const listResults = top25.map(choice => ({
+      name: choice.item.color,
+      value: choice.item.hex,
+    }));
+      // log.debug(F, `list_results: ${listResults}`);
+    interaction.respond(listResults);
+  } else {
+    const defaultDiscordColors = colorList.slice(0, 25);
+    const listResults = defaultDiscordColors.map(choice => ({ name: choice.color, value: choice.hex }));
+    // log.debug(F, `list_results: ${listResults}`);
+    interaction.respond(listResults);
+  }
+}
+
 export default autocomplete;
 /**
  * Handles autocomplete information
@@ -427,6 +489,8 @@ export async function autocomplete(interaction:AutocompleteInteraction):Promise<
     await autocompleteTimezone(interaction);
   } else if (interaction.commandName === 'convert') {
     autocompleteConvert(interaction);
+  } else if (interaction.commandName === 'reaction_role') {
+    autocompleteColors(interaction);
   } else { // If you don't need a specific autocomplete, return a list of drug names
     await autocompleteDrugNames(interaction);
   }
