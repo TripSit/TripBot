@@ -1,5 +1,6 @@
 import {
-  Message, MessageMentionTypes, TextChannel, Webhook, WebhookClient,
+  Collection,
+  Message, MessageMentionTypes, TextChannel, Webhook,
 } from 'discord.js';
 import { database } from '../../global/utils/knex';
 
@@ -8,6 +9,39 @@ export default bridgeMessage;
 const F = f(__filename);  // eslint-disable-line
 
 const tripsitBridgeName = 'Tripsit Bridge';
+
+const webhookCache = new Collection<string, Webhook>();
+
+export async function sendMessageToChannel(
+  channelId:string,
+  message: Message,
+):Promise<void> {
+  let webhookData = webhookCache.find(webhook => webhook.channelId === channelId);
+
+  // If the webhook isn't found in the cache...
+  if (!webhookData) {
+    const channel = await client.channels.fetch(channelId) as TextChannel;
+    log.debug(F, 'Fetching webhooks');
+    webhookData = (await channel.fetchWebhooks())
+      .find(webhook => webhook.name === tripsitBridgeName);
+    if (!webhookData) {
+      log.debug(F, 'Creating new webhook');
+      webhookData = await channel.createWebhook({
+        name: tripsitBridgeName,
+        reason: tripsitBridgeName,
+      });
+    }
+    webhookCache.set(webhookData.id, webhookData);
+  }
+
+  await webhookData.send({ // eslint-disable-line no-await-in-loop
+    username: `${message.member?.displayName} (${message.guild?.name})`,
+    avatarURL: message.author.avatarURL() ?? undefined,
+    content: message.content,
+    files: message.attachments.size > 0 ? message.attachments.map(attachment => attachment.url) : undefined,
+    allowedMentions: { parse: ['users', 'roles'] as MessageMentionTypes[] },
+  });
+}
 
 export async function bridgeMessage(message: Message): Promise<void> {
   if (!message.guild) return; // If not in a guild then ignore all messages
@@ -39,42 +73,13 @@ export async function bridgeMessage(message: Message): Promise<void> {
     if (internalBridgeDb.length === 0) return; // If there is no bridge config for this channel then ignore the message
     log.debug(F, `Message is from tripsit in ${(message.channel as TextChannel).name}`);
 
-    const webhooks = [] as WebhookClient[];
-    for (const bridge of internalBridgeDb) { // eslint-disable-line no-restricted-syntax
+    await Promise.all(internalBridgeDb.map(async bridge => {
       if (bridge.status === 'ACTIVE'
         && bridge.internal_channel === message.channel.id
       ) {
-        // eslint-disable-next-line no-await-in-loop
-        const externalChannel = await message.client.channels.fetch(bridge.external_channel) as TextChannel;
-        const webhookData = await externalChannel.fetchWebhooks() // eslint-disable-line no-await-in-loop
-          .then(webhookList => webhookList.find(webhook => webhook.name === tripsitBridgeName))
-          ?? await externalChannel.createWebhook({ // eslint-disable-line no-await-in-loop
-            name: tripsitBridgeName,
-            reason: tripsitBridgeName,
-          })
-            .then(async () => { // eslint-disable-line @typescript-eslint/no-loop-func
-              log.debug(F, 'Created new webhook');
-              const updatedWebhookList = await externalChannel.fetchWebhooks();
-              return updatedWebhookList.find(webhook => webhook.name === tripsitBridgeName);
-            }) as Webhook;
-        // log.debug(F, `Webhook: ${JSON.stringify(webhookData, null, 2)}`);
-        log.debug(F, `Webhook: ${JSON.stringify(webhookData.url, null, 2)}`);
-        webhooks.push(new WebhookClient({ url: webhookData.url }));
+        await sendMessageToChannel(bridge.external_channel, message);
       }
-    }
-    if (webhooks.length === 0) return; // If there is no bridge config for this channel then ignore the message
-    // log.debug(F, 'Message should be sent through bridge');
-
-    webhooks.forEach(client => {
-      log.debug(F, `Sending message to ${client.url}`);
-      client.send({
-        username: `${message.member?.displayName} (${message.guild?.name})`,
-        avatarURL: message.author.avatarURL() ?? undefined,
-        content: message.content,
-        files: message.attachments.size > 0 ? message.attachments.map(attachment => attachment.url) : undefined,
-        allowedMentions: { parse: ['users', 'roles'] as MessageMentionTypes[] },
-      });
-    });
+    }));
   }
 
   // External message
@@ -85,74 +90,15 @@ export async function bridgeMessage(message: Message): Promise<void> {
     if (!bridgeConfig) return; // If there is no bridge config for this channel then ignore the message
     log.debug(F, `Message is from ${message.guild.name}'s ${(message.channel as TextChannel).name}`);
 
-    const tripsitChannel = await message.client.channels.fetch(bridgeConfig.internal_channel) as TextChannel;
-    const tripsitWebhookData = await tripsitChannel.fetchWebhooks()
-      .then(webhookList => webhookList.find(webhook => webhook.name === tripsitBridgeName))
-      ?? await tripsitChannel.createWebhook({
-        name: tripsitBridgeName,
-        reason: tripsitBridgeName,
-      })
-        .then(async () => {
-          const updatedWebhookList = await tripsitChannel.fetchWebhooks();
-          return updatedWebhookList.find(webhook => webhook.name === tripsitBridgeName);
-        }) as Webhook;
-    log.debug(F, `Tripsit webhook: ${JSON.stringify(tripsitWebhookData.url, null, 2)} `);
+    await sendMessageToChannel(bridgeConfig.internal_channel, message);
 
-    const webhooks = [] as WebhookClient[];
-    webhooks.push(new WebhookClient({ url: tripsitWebhookData.url }));
     const internalBridgeDb = await database.bridges.get(bridgeConfig.internal_channel);
-    for (const bridge of internalBridgeDb) { // eslint-disable-line no-restricted-syntax
+    await Promise.all(internalBridgeDb.map(async bridge => {
       if (bridge.status === 'ACTIVE'
         && bridge.external_channel.toString() !== message.channel.id.toString()
       ) {
-        // eslint-disable-next-line no-await-in-loop
-        const externalChannel = await message.client.channels.fetch(bridge.external_channel) as TextChannel;
-        const webhookData = await externalChannel.fetchWebhooks() // eslint-disable-line no-await-in-loop
-          .then(webhookList => webhookList.find(webhook => webhook.name === tripsitBridgeName))
-          ?? await externalChannel.createWebhook({ // eslint-disable-line no-await-in-loop
-            name: tripsitBridgeName,
-            reason: tripsitBridgeName,
-          })
-            .then(async () => { // eslint-disable-line
-              log.debug(F, 'Created new webhook');
-              const updatedWebhookList = await externalChannel.fetchWebhooks();
-              return updatedWebhookList.find(webhook => webhook.name === tripsitBridgeName);
-            }) as Webhook;
-        // log.debug(F, `Webhook: ${JSON.stringify(webhookData, null, 2)}`);
-        log.debug(F, `Webhook: ${JSON.stringify(webhookData.url, null, 2)}`);
-        webhooks.push(new WebhookClient({ url: webhookData.url }));
+        await sendMessageToChannel(bridge.external_channel, message);
       }
-    }
-    // bridgeDb
-    //   .forEach(async bridge => {
-    //     if (bridge.status === 'ACTIVE'
-    //       && bridge.external_channel.toString() !== message.channel.id.toString()) {
-    //       const channel = await message.client.channels.fetch(bridge.external_channel) as TextChannel;
-    //       const webhookData = await channel.fetchWebhooks()
-    //         .then(webhookList => webhookList.find(webhook => webhook.name === tripsitBridgeName))
-    //         ?? await channel.createWebhook({
-    //           name: tripsitBridgeName,
-    //           reason: tripsitBridgeName,
-    //         })
-    //           .then(async () => {
-    //             const updatedWebhookList = await (message.channel as TextChannel).fetchWebhooks();
-    //             return updatedWebhookList.find(webhook => webhook.name === tripsitBridgeName);
-    //           }) as Webhook;
-    //       webhooks.push(new WebhookClient({ url: webhookData.url }));
-    //     }
-    //     return null;
-    //   });
-
-    webhooks.forEach(async client => {
-      log.debug(F, `Sending message to ${client.url}`);
-      await client.send({
-        username: `${message.member?.displayName} (${message.guild?.name})`,
-        avatarURL: message.author.avatarURL() ?? undefined,
-        content: message.content,
-        files: message.attachments.size > 0 ? message.attachments.map(attachment => attachment.url) : undefined,
-        allowedMentions: { parse: ['users', 'roles'] as MessageMentionTypes[] },
-      });
-      // log.debug(F, `Success: ${JSON.stringify(success, null, 2)}`);
-    });
+    }));
   }
 }
