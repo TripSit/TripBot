@@ -35,25 +35,26 @@ export async function bridgeMessage(message: Message): Promise<void> {
 
   // Internal message
   if (message.guildId === env.DISCORD_GUILD_ID) {
-    const bridgeDb = await database.bridges.get(message.channel.id);
-    if (bridgeDb.length === 0) return; // If there is no bridge config for this channel then ignore the message
+    const internalBridgeDb = await database.bridges.get(message.channel.id);
+    if (internalBridgeDb.length === 0) return; // If there is no bridge config for this channel then ignore the message
     log.debug(F, `Message is from tripsit in ${(message.channel as TextChannel).name}`);
 
     const webhooks = [] as WebhookClient[];
-    for (const bridge of bridgeDb) { // eslint-disable-line no-restricted-syntax
-      if (bridge.internal_channel === message.channel.id
-        && bridge.status === 'ACTIVE'
+    for (const bridge of internalBridgeDb) { // eslint-disable-line no-restricted-syntax
+      if (bridge.status === 'ACTIVE'
+        && bridge.internal_channel === message.channel.id
       ) {
-        const channel = await message.client.channels.fetch(bridge.external_channel) as TextChannel; // eslint-disable-line no-await-in-loop
-        const webhookData = await channel.fetchWebhooks() // eslint-disable-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop
+        const externalChannel = await message.client.channels.fetch(bridge.external_channel) as TextChannel;
+        const webhookData = await externalChannel.fetchWebhooks() // eslint-disable-line no-await-in-loop
           .then(webhookList => webhookList.find(webhook => webhook.name === tripsitBridgeName))
-          ?? await channel.createWebhook({ // eslint-disable-line no-await-in-loop
+          ?? await externalChannel.createWebhook({ // eslint-disable-line no-await-in-loop
             name: tripsitBridgeName,
             reason: tripsitBridgeName,
           })
             .then(async () => { // eslint-disable-line @typescript-eslint/no-loop-func
               log.debug(F, 'Created new webhook');
-              const updatedWebhookList = await channel.fetchWebhooks();
+              const updatedWebhookList = await externalChannel.fetchWebhooks();
               return updatedWebhookList.find(webhook => webhook.name === tripsitBridgeName);
             }) as Webhook;
         // log.debug(F, `Webhook: ${JSON.stringify(webhookData, null, 2)}`);
@@ -78,15 +79,13 @@ export async function bridgeMessage(message: Message): Promise<void> {
 
   // External message
   if (message.guildId !== env.DISCORD_GUILD_ID) {
-    const bridges = await database.bridges.get(message.channel.id);
-    const bridgeConfig = bridges.find(bridge => bridge.status === 'ACTIVE');
+    const externalBridgeDb = await database.bridges.get(message.channel.id);
+    if (externalBridgeDb.length === 0) return; // If there is no bridge config for this channel then ignore the message
+    const bridgeConfig = externalBridgeDb.find(bridge => bridge.status === 'ACTIVE');
     if (!bridgeConfig) return; // If there is no bridge config for this channel then ignore the message
     log.debug(F, `Message is from ${message.guild.name}'s ${(message.channel as TextChannel).name}`);
-    log.debug(F, `Bridge config: ${JSON.stringify(bridgeConfig, null, 2)}`);
 
-    // log.debug(F, `Getting channel: ${bridgeConfig.internal_channel}`);
     const tripsitChannel = await message.client.channels.fetch(bridgeConfig.internal_channel) as TextChannel;
-    // log.debug(F, `Tripsit channel: ${JSON.stringify(tripsitChannel, null, 2)}`);
     const tripsitWebhookData = await tripsitChannel.fetchWebhooks()
       .then(webhookList => webhookList.find(webhook => webhook.name === tripsitBridgeName))
       ?? await tripsitChannel.createWebhook({
@@ -97,30 +96,30 @@ export async function bridgeMessage(message: Message): Promise<void> {
           const updatedWebhookList = await tripsitChannel.fetchWebhooks();
           return updatedWebhookList.find(webhook => webhook.name === tripsitBridgeName);
         }) as Webhook;
-    log.debug(F, `Tripsit webhook: ${JSON.stringify(tripsitWebhookData, null, 2)} `);
+    log.debug(F, `Tripsit webhook: ${JSON.stringify(tripsitWebhookData.url, null, 2)} `);
 
     const webhooks = [] as WebhookClient[];
     webhooks.push(new WebhookClient({ url: tripsitWebhookData.url }));
-    const bridgeDb = await database.bridges.get(bridgeConfig.internal_channel);
-    for (const bridge of bridgeDb) { // eslint-disable-line no-restricted-syntax
+    const internalBridgeDb = await database.bridges.get(bridgeConfig.internal_channel);
+    for (const bridge of internalBridgeDb) { // eslint-disable-line no-restricted-syntax
       if (bridge.status === 'ACTIVE'
         && bridge.external_channel.toString() !== message.channel.id.toString()
       ) {
         // eslint-disable-next-line no-await-in-loop
-        const channel = await message.client.channels.fetch(bridge.external_channel) as TextChannel;
-        const webhookData = await channel.fetchWebhooks() // eslint-disable-line no-await-in-loop
+        const externalChannel = await message.client.channels.fetch(bridge.external_channel) as TextChannel;
+        const webhookData = await externalChannel.fetchWebhooks() // eslint-disable-line no-await-in-loop
           .then(webhookList => webhookList.find(webhook => webhook.name === tripsitBridgeName))
-          ?? await channel.createWebhook({ // eslint-disable-line
+          ?? await externalChannel.createWebhook({ // eslint-disable-line no-await-in-loop
             name: tripsitBridgeName,
             reason: tripsitBridgeName,
           })
             .then(async () => { // eslint-disable-line
               log.debug(F, 'Created new webhook');
-              const updatedWebhookList = await channel.fetchWebhooks();
+              const updatedWebhookList = await externalChannel.fetchWebhooks();
               return updatedWebhookList.find(webhook => webhook.name === tripsitBridgeName);
             }) as Webhook;
         // log.debug(F, `Webhook: ${JSON.stringify(webhookData, null, 2)}`);
-        // log.debug(F, `Webhook: ${JSON.stringify(webhookData.url, null, 2)}`);
+        log.debug(F, `Webhook: ${JSON.stringify(webhookData.url, null, 2)}`);
         webhooks.push(new WebhookClient({ url: webhookData.url }));
       }
     }
@@ -145,7 +144,7 @@ export async function bridgeMessage(message: Message): Promise<void> {
     //   });
 
     webhooks.forEach(async client => {
-      // log.debug(F, `Client: ${JSON.stringify(client, null, 2)}`);
+      log.debug(F, `Sending message to ${client.url}`);
       await client.send({
         username: `${message.member?.displayName} (${message.guild?.name})`,
         avatarURL: message.author.avatarURL() ?? undefined,
